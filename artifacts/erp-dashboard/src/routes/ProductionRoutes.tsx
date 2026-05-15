@@ -3,23 +3,17 @@
  * @description Frontend route definition.
  */
 
-import { lazy } from "react";
-
-const ERPProduction = lazy(() => import("@/pages/ERPProduction"));
-const ProductionReport = lazy(() => import("@/pages/ProductionReport"));
+import { lazy } from "react";const ProductionReport = lazy(() => import("@/pages/ProductionReport"));
 const ProductionOrder360 = lazy(() => import("@/pages/ProductionOrder360"));
 const PlanningBoard = lazy(() => import("@/pages/PlanningBoard"));
 const AIProductionPlanning = lazy(() => import("@/pages/AIProductionPlanning"));
 const AIReservation = lazy(() => import("@/pages/AIReservation"));
 const PapkaOrders = lazy(() => import("@/pages/PapkaOrders"));
 const OrderCreationWizard = lazy(() => import("@/pages/OrderCreationWizard"));
-const OrderApprovalWorkflow = lazy(() => import("@/pages/OrderApprovalWorkflow"));
 const PPDashboard = lazy(() => import("@/pages/PPDashboard"));
 const BOMManagement = lazy(() => import("@/pages/BOMManagement"));
 const RoutingConfiguration = lazy(() => import("@/pages/RoutingConfiguration"));
 const CapacityPlanning = lazy(() => import("@/pages/CapacityPlanning"));
-const Technology = lazy(() => import("@/pages/Technology"));
-const TechDashboard = lazy(() => import("@/pages/TechDashboard"));
 const TechApproval = lazy(() => import("@/pages/TechApproval"));
 const TechCards = lazy(() => import("@/pages/TechCards"));
 const TechPPExtended = lazy(() => import("@/pages/TechPPExtended"));
@@ -31,16 +25,12 @@ const MESProducts = lazy(() => import("@/pages/MESProducts"));
 const MESDowntimes = lazy(() => import("@/pages/MESDowntimes"));
 const MESWorkerAssignments = lazy(() => import("@/pages/MESWorkerAssignments"));
 const MESExtended = lazy(() => import("@/pages/MESExtended"));
-const InkCoverageCalculator = lazy(() => import("@/pages/InkCoverageCalculator"));
-const ImpositionCalculator  = lazy(() => import("@/pages/ImpositionCalculator"));
 const QCDashboard = lazy(() => import("@/pages/QCDashboard"));
-const QCModule = lazy(() => import("@/pages/QCModule"));
 const QCApproval = lazy(() => import("@/pages/QCApproval"));
 const QCFinalInspection = lazy(() => import("@/pages/QCFinalInspection"));
 const QCExtended = lazy(() => import("@/pages/QCExtended"));
 const DesignDashboard = lazy(() => import("@/pages/DesignDashboard"));
 const DesignOrders = lazy(() => import("@/pages/DesignOrders"));
-const DesignOrderDetail = lazy(() => import("@/pages/DesignOrderDetail"));
 const AIDesignGenerator = lazy(() => import("@/pages/AIDesignGenerator"));
 const DesignExtended = lazy(() => import("@/pages/DesignExtended"));
 const MRODashboard = lazy(() => import("@/pages/MRODashboard"));
@@ -48,11 +38,7 @@ const MROExtended = lazy(() => import("@/pages/MROExtended"));
 const IoTTablet = lazy(() => import("@/pages/IoTTablet"));
 const IoTDashboard = lazy(() => import("@/pages/IoTDashboard"));
 const IoTExtended = lazy(() => import("@/pages/IoTExtended"));
-const WarehouseMaterialKits = lazy(() => import("@/pages/WarehouseMaterialKits"));
 const WarehouseDailyView = lazy(() => import("@/pages/WarehouseDailyView"));
-const MrpMatrix = lazy(() => import("@/pages/MrpMatrix"));
-const CrpPage = lazy(() => import("@/pages/CrpPage"));
-
 // ARCHITECTURE.md §40 — TZ-06 AI Rejalashtirish dedicated sahifalar
 const AIShiftManagementPage = lazy(() => import("@/pages/ai-planning/AIShiftManagementPage"));
 const BottleneckAnalysisPage = lazy(() => import("@/pages/ai-planning/BottleneckAnalysisPage"));
@@ -77,7 +63,7 @@ const FacilityInventoryPage = lazy(() => import("@/pages/mro/FacilityInventoryPa
 const CanteenManagementPage = lazy(() => import("@/pages/mro/CanteenManagementPage"));
 
 export const PRODUCTION_ROUTES: [string, React.ComponentType][] = [
-  ['/erp-production',             ERPProduction],
+
   ['/production/orders',          ProductionReport],
   ['/production/orders/:id',      ProductionOrder360],
   ['/planning',                   PlanningBoard],
@@ -85,13 +71,12 @@ export const PRODUCTION_ROUTES: [string, React.ComponentType][] = [
   ['/pp/ai-reservation',          AIReservation],
   ['/papka-orders',               PapkaOrders],
   ['/order-create',               OrderCreationWizard],
-  ['/order-approval',             OrderApprovalWorkflow],
+
   ['/pp/dashboard',               PPDashboard],
   ['/erp/pp/bom',                 BOMManagement],
   ['/erp/pp/routing',             RoutingConfiguration],
   ['/erp/pp/capacity',            CapacityPlanning],
-  ['/technology',                 Technology],
-  ['/tech/dashboard-home',        TechDashboard],
+
   ['/tech-approval',              TechApproval],
   ['/tech-cards',                 TechCards],
   ['/tech/cards',                 TechCards],
@@ -106,8 +91,7 @@ export const PRODUCTION_ROUTES: [string, React.ComponentType][] = [
   ['/pp/parallel-processes',      TechPPExtended],
   ['/pp/rush-orders',             RushOrderPage],              // dedicated (TZ-06)
   ['/pp/bottleneck',              BottleneckAnalysisPage],     // dedicated (TZ-06)
-  ['/pp/mrp',                     MrpMatrix],
-  ['/pp/crp',                     CrpPage],
+
   ['/pp/demand-forecast',         DemandForecastingPage],      // dedicated (TZ-06)
   ['/pp/what-if',                 TechPPExtended],
   ['/pp/delivery-calculator',     TechPPExtended],
@@ -136,9 +120,7 @@ export const MES_ROUTES: [string, React.ComponentType][] = [
 
 export const QC_ROUTES: [string, React.ComponentType][] = [
   ['/qc/dashboard-home',    QCDashboard],
-  ['/qc-module',            QCModule],
-  ['/print/ink-coverage',   InkCoverageCalculator],
-  ['/print/imposition',     ImpositionCalculator],
+
   ['/qc/approval',          QCApproval],
   ['/qc/final',             QCFinalInspection],
   ['/qc/lab',               QCExtended],
@@ -157,7 +139,7 @@ export const QC_ROUTES: [string, React.ComponentType][] = [
 export const DESIGN_ROUTES: [string, React.ComponentType][] = [
   ['/design/dashboard',        DesignDashboard],
   ['/design/orders',           DesignOrders],
-  ['/design-orders/:id',       DesignOrderDetail],
+
   ['/design/generator',        AIDesignGenerator],
   ['/design/ai-review',        DesignExtended],
   ['/design/3d-mockup',        DesignExtended],
@@ -191,6 +173,6 @@ export const IOT_ROUTES: [string, React.ComponentType][] = [
   ['/iot/alerts',                 IoTExtended],
   ['/iot/tablet',                 IoTTablet],
   ['/iot/dashboard',              IoTDashboard],
-  ['/iot/material-kits',          WarehouseMaterialKits],
+
   ['/iot/daily-view',             WarehouseDailyView],
 ];
