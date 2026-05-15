@@ -10,7 +10,7 @@
 import { assertOk, unwrapOrThrow } from '@common/http-result';
 import { assertAuth } from '@common/assertions';
 import { BadRequestException, Body, Controller, Get, Headers, HttpCode, HttpStatus, Inject, Patch, Post, Req, Res, Logger, UnauthorizedException, UseInterceptors } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -293,8 +293,14 @@ export class AuthController {
 
   @Get('health')
   @Public()
-  @ApiOperation({ summary: 'Auth xizmati holati' })
+  @SkipThrottle()
+  @ApiOperation({ summary: 'Auth xizmati holati (no auth, no throttle — for health checks + load tests)' })
   health() {
-    return { status: 'ok', service: 'auth' };
+    return {
+      status: 'ok',
+      service: 'auth',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+    };
   }
 }
