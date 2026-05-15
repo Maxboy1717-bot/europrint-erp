@@ -113,7 +113,8 @@ import { HrAssetsModule } from './modules/hr-assets/hr-assets.module';
 
 // Faza 7 — New endpoint modules
 import { AdaptationModule } from './modules/adaptation/adaptation.module';
-import { CameraModule } from './modules/camera/camera.module';
+// CameraModule removed — its routes were dead code (no frontend usage). All
+// active camera functionality now lives under IotModule.
 import { Feedback360Module } from './modules/feedback-360/feedback-360.module';
 
 // Sprint 4 — Order-to-Cash Workflow
@@ -256,7 +257,6 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
 
     // ── Faza 7 — New endpoint modules ─────────────────────────────────────────
     AdaptationModule,
-    CameraModule,
     Feedback360Module,
 
     // ── Sprint 4 — Order-to-Cash Workflow ─────────────────────────────────────
