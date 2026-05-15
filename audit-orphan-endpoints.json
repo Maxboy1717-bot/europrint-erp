@@ -2232,15 +2232,6 @@
     "hasZod": false
   },
   {
-    "method": "GET",
-    "url": "/api/hr-v2/reception/badge/:badge_number",
-    "controller": "reception.controller",
-    "file": "apps\\api\\src\\modules\\hr\\reception\\reception.controller.ts",
-    "hasAuth": false,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
     "method": "POST",
     "url": "/api/hr/recruitment/pipeline/:id/nda-request",
     "controller": "hr-vacancies-pipeline.controller",

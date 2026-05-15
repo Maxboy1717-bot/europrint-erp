@@ -85,6 +85,23 @@ export class DailyReportController {
   @Get('department')
   async getDepartmentReports() { return { data: [], total: 0 }; }
 
+  @Get('department/:id')
+  async getDepartmentReportsById(@Param('id') id: string, @Query('date') date?: string) {
+    try {
+      const reportDate = date || _time.now().toISOString().split('T')[0];
+      const r = await this.svc.getByDate(reportDate);
+      if (!r.ok) {
+        this.logger.error(`getDepartmentReportsById: ${r.error?.message ?? 'unknown'}`);
+        return { data: [], total: 0, departmentId: id };
+      }
+      const rows = Array.isArray(r.data) ? r.data : [];
+      return { data: rows, total: rows.length, departmentId: id, date: reportDate };
+    } catch (e) {
+      this.logger.error(`getDepartmentReportsById: ${(e as Error).message}`);
+      return { data: [], total: 0, departmentId: id };
+    }
+  }
+
   @Get()
   async listReports(@Query('date') _date?: string, @Query('limit') _limit?: string) {
     return { data: [], total: 0 };

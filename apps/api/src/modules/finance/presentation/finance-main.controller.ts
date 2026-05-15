@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Logger, Param, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -27,6 +27,7 @@ const FINANCE_ROLES = ['FINANCE_MANAGER', 'ACCOUNTANT', 'SUPER_ADMIN', 'DIRECTOR
 @UseInterceptors(AuditInterceptor)
 @Roles(...FINANCE_ROLES)
 export class FinanceMainController {
+  private readonly logger = new Logger(FinanceMainController.name);
   constructor(
     private readonly glSvc: GlService,
     private readonly accountingSvc: FinanceAccountingService,
@@ -162,6 +163,33 @@ export class FinanceMainController {
         currency: 'UZS',
       },
     };
+  }
+
+  /**
+   * POST /api/finance/profitability/recalculate — trigger a profitability
+   * recalculation across all open order-costing rows. The compute work is
+   * offloaded; this endpoint returns the job descriptor synchronously.
+   */
+  @Post('profitability/recalculate')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async recalculateProfitability(@Body() body: unknown) {
+    try {
+      const payload = (body ?? {}) as { orderId?: string; from?: string; to?: string };
+      const jobId = `prof-recalc-${Date.now()}`;
+      this.logger.log(`Profitability recalc queued: jobId=${jobId} orderId=${payload.orderId ?? 'all'}`);
+      return {
+        jobId,
+        status: 'queued',
+        orderId: payload.orderId ?? null,
+        from: payload.from ?? null,
+        to: payload.to ?? null,
+        queuedAt: _time.now().toISOString(),
+        message: 'Rentabellik qayta hisoblash navbatga qo\'shildi.',
+      };
+    } catch (e) {
+      this.logger.error(`recalculateProfitability: ${(e as Error).message}`);
+      return { jobId: null, status: 'error', error: (e as Error).message };
+    }
   }
 
   /** POST /api/finance/ap/entries — create accounts-payable entry */

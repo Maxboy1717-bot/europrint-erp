@@ -175,4 +175,21 @@ export class HrDashboardStubsController {
   createOnboardingChecklist(@Body() body: Record<string, unknown>) {
     return { id: Date.now(), ...body, created: true };
   }
+
+  @Patch('onboarding-checklists/:id')
+  @HttpCode(HttpStatus.OK)
+  patchOnboardingChecklist(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    return { id, ...body, updated: true };
+  }
+
+  @Get('referrals/:id')
+  getReferralById(@Param('id') _id: string) {
+    return { referral: null };
+  }
+
+  @Patch('referrals/:id')
+  @HttpCode(HttpStatus.OK)
+  patchReferral(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    return { id, ...body, updated: true };
+  }
 }

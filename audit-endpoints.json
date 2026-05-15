@@ -541,6 +541,15 @@
   },
   {
     "method": "GET",
+    "url": "/api/agents/hr/performance",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
     "url": "/api/agents/hr/performance/:id",
     "controller": "agents.controller",
     "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
@@ -550,7 +559,25 @@
   },
   {
     "method": "GET",
+    "url": "/api/agents/hr/churn",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
     "url": "/api/agents/hr/churn/:id",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/hr/bonus",
     "controller": "agents.controller",
     "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
     "hasAuth": true,
@@ -641,6 +668,15 @@
   {
     "method": "GET",
     "url": "/api/agents/lms/expiry",
+    "controller": "agents.controller",
+    "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/agents/iot/sensor",
     "controller": "agents.controller",
     "file": "apps\\api\\src\\modules\\agents\\agents.controller.ts",
     "hasAuth": true,
@@ -10225,6 +10261,15 @@
   },
   {
     "method": "POST",
+    "url": "/api/finance/profitability/recalculate",
+    "controller": "finance-main.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-main.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
     "url": "/api/finance/ap/entries",
     "controller": "finance-main.controller",
     "file": "apps\\api\\src\\modules\\finance\\presentation\\finance-main.controller.ts",
@@ -10595,6 +10640,15 @@
   {
     "method": "GET",
     "url": "/api/reports/production-efficiency",
+    "controller": "reports.controller",
+    "file": "apps\\api\\src\\modules\\finance\\presentation\\reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/reports/profitability/export",
     "controller": "reports.controller",
     "file": "apps\\api\\src\\modules\\finance\\presentation\\reports.controller.ts",
     "hasAuth": false,
@@ -11243,6 +11297,15 @@
   {
     "method": "GET",
     "url": "/api/hr-v2/daily-reports/department",
+    "controller": "daily-report.controller",
+    "file": "apps\\api\\src\\modules\\hr\\daily-report\\daily-report.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr-v2/daily-reports/department/:id",
     "controller": "daily-report.controller",
     "file": "apps\\api\\src\\modules\\hr\\daily-report\\daily-report.controller.ts",
     "hasAuth": false,
@@ -11927,6 +11990,15 @@
   {
     "method": "PATCH",
     "url": "/api/hr-v2/pip/:id/acknowledge",
+    "controller": "pip.controller",
+    "file": "apps\\api\\src\\modules\\hr\\pip\\pip.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/hr-v2/pip/:id/complete",
     "controller": "pip.controller",
     "file": "apps\\api\\src\\modules\\hr\\pip\\pip.controller.ts",
     "hasAuth": false,
@@ -12755,6 +12827,33 @@
   {
     "method": "POST",
     "url": "/api/hr/onboarding-checklists",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/hr/onboarding-checklists/:id",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/referrals/:id",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/hr/referrals/:id",
     "controller": "hr-dashboard-stubs.controller",
     "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
     "hasAuth": false,
