@@ -74,7 +74,7 @@ export const menuGroupsSecurityInfra: Record<string, MenuGroup> = {
       { title: "Issiqlik Xaritasi", url: "camera-heatmap", icon: MapPin },
       { title: "AI TAHLIL", url: "", icon: BrainCircuit, separator: true },
       { title: "AI Nazorat Hub", url: "camera-ai", icon: BrainCircuit },
-      { title: "Sifat Nazorati", url: "camera-quality", icon: FileCheck },
+      { title: "Kamera Sifat Nazorati", url: "camera-quality", icon: FileCheck },
       { title: "Xodim Monitoring", url: "camera-employees", icon: Users },
       { title: "Xodim Reytingi", url: "camera-employee-ratings", icon: Trophy },
       { title: "AI Sozlamalar", url: "camera-settings", icon: Settings },

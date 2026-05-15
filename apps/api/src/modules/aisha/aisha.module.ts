@@ -32,6 +32,10 @@ import { VoiceController } from './presentation/controllers/voice.controller';
 import { AishaSseGateway } from './infrastructure/streaming/aisha-sse.gateway';
 import { WhisperService } from './application/voice/whisper.service';
 import { ElevenLabsService } from './application/voice/elevenlabs.service';
+import { ClaudeService } from './application/llm/claude.service';
+import { GeminiFallbackService } from './application/llm/gemini-fallback.service';
+import { BudgetTrackerService } from './application/llm/budget-tracker.service';
+import { ToolRegistry } from './application/tools/tool.registry';
 
 @Module({
   imports: [
@@ -44,6 +48,13 @@ import { ElevenLabsService } from './application/voice/elevenlabs.service';
     AishaConfig,
     WhisperService,
     ElevenLabsService,
+    // LLM stack — basic DI wiring. The chat controller checks AishaConfig
+    // before invoking ClaudeService so callers without an API key still get
+    // a graceful stub response (see chat.controller.ts).
+    ClaudeService,
+    GeminiFallbackService,
+    BudgetTrackerService,
+    ToolRegistry,
   ],
   controllers: [
     WakeConfigController,
@@ -51,6 +62,6 @@ import { ElevenLabsService } from './application/voice/elevenlabs.service';
     VoiceController,
     AishaSseGateway,
   ],
-  exports: [AishaConfig],
+  exports: [AishaConfig, ToolRegistry, ClaudeService],
 })
 export class AishaModule {}
