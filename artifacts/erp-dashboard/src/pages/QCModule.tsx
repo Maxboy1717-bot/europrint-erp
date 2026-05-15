@@ -38,8 +38,11 @@ import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 // ─── Route → initial tab ──────────────────────────────────────────────────────
 
 function getInitialTab(location: string): string {
+  // Standards (Normalar) tab — explicit URL hint
   if (location.includes("/qc/standards")) return "standards";
   if (location.includes("/qc/ai-analysis")) return "ai_analysis";
+  // /qc/tests va /qc/parameters — fizik tab default
+  // /qc-module — eskirgan, fizik tab default
   return "physical";
 }
 

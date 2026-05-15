@@ -67,10 +67,10 @@ const REDIRECT_PATHS = [
   '/erp-cameras', '/erp/cameras/reports', '/erp/cameras/heatmap',
   '/security/dashboard', '/crm', '/crm/dashboard', '/crm/leads',
   '/crm/deals', '/crm/contacts', '/crm/companies', '/crm/proposals',
-  '/crm/invoices', '/sd/quota-dashboard', '/erp/planning', '/erp/pp/mrp',
-  '/tech/dashboard', '/tech/approval', '/tech/parameters', '/tech/standards',
-  '/iot/live', '/europrint/director', '/qc/dashboard', '/qc/standards',
-  '/qc/parameters', '/qc/tests', '/succession-planning', '/feedback', '/logout',
+  '/crm/invoices', '/erp/planning', '/erp/pp/mrp',
+  '/tech/dashboard',
+  '/iot/live', '/europrint/director', '/qc/dashboard',
+  '/succession-planning', '/feedback', '/logout',
   '/order-workflow', '/sales',
 ];
 
@@ -154,7 +154,7 @@ export function AppRouter() {
       <Route path="/erp/cameras/reports"><RoleRoute roles={CAMERA_ROLES}><Redirect to="/camera-reports" /></RoleRoute></Route>
       <Route path="/erp/cameras/heatmap"><RoleRoute roles={CAMERA_ROLES}><Redirect to="/camera-heatmap" /></RoleRoute></Route>
       <Route path="/security/dashboard"><RoleRoute roles={CAMERA_ROLES}><Redirect to="/security" /></RoleRoute></Route>
-      <Route path="/sales"><RoleRoute roles={SALES_ROLES}><Redirect to="/erp/sales" /></RoleRoute></Route>
+      <Route path="/sales"><RoleRoute roles={SALES_ROLES}><Redirect to="/sd/dashboard" /></RoleRoute></Route>
       <Route path="/crm"><RoleRoute roles={SALES_ROLES}><Redirect to="/crm-workspace" /></RoleRoute></Route>
       <Route path="/crm/dashboard"><RoleRoute roles={SALES_ROLES}><Redirect to="/crm-workspace" /></RoleRoute></Route>
       <Route path="/crm/leads"><RoleRoute roles={SALES_ROLES}><Redirect to="/crm-workspace" /></RoleRoute></Route>
@@ -163,19 +163,17 @@ export function AppRouter() {
       <Route path="/crm/companies"><RoleRoute roles={SALES_ROLES}><Redirect to="/crm-workspace" /></RoleRoute></Route>
       <Route path="/crm/proposals"><RoleRoute roles={SALES_ROLES}><Redirect to="/crm-workspace" /></RoleRoute></Route>
       <Route path="/crm/invoices"><RoleRoute roles={SALES_ROLES}><Redirect to="/crm-workspace" /></RoleRoute></Route>
-      <Route path="/sd/quota-dashboard"><RoleRoute roles={SALES_ROLES}><Redirect to="/sd/dashboard/quota" /></RoleRoute></Route>
       <Route path="/erp/planning"><RoleRoute roles={PRODUCTION_ROLES}><Redirect to="/planning?tab=plans" /></RoleRoute></Route>
       <Route path="/erp/pp/mrp"><RoleRoute roles={PRODUCTION_ROLES}><Redirect to="/planning?tab=mrp" /></RoleRoute></Route>
+      {/* Legacy redirects — eski URL'lar yangi sahifalarga yo'naltirilgan.
+       *  Sidebar endi to'g'ridan-to'g'ri yangi URL'ga ishora qiladi, lekin
+       *  eski bookmark'lar ishlashi uchun redirect'lar saqlangan. */}
       <Route path="/tech/dashboard"><RoleRoute roles={PRODUCTION_ROLES}><Redirect to="/tech/dashboard-home" /></RoleRoute></Route>
-      <Route path="/tech/approval"><RoleRoute roles={PRODUCTION_ROLES}><Redirect to="/tech-approval" /></RoleRoute></Route>
-      <Route path="/tech/parameters"><RoleRoute roles={PRODUCTION_ROLES}><Redirect to="/tech-approval" /></RoleRoute></Route>
-      <Route path="/tech/standards"><RoleRoute roles={PRODUCTION_ROLES}><Redirect to="/tech-approval" /></RoleRoute></Route>
       <Route path="/iot/live"><RoleRoute roles={IOT_ROLES}><Redirect to="/iot/dashboard" /></RoleRoute></Route>
       <Route path="/europrint/director"><RoleRoute roles={DIRECTOR_ROLES}><Redirect to="/" /></RoleRoute></Route>
       <Route path="/qc/dashboard"><RoleRoute roles={QC_ROLES}><Redirect to="/qc/dashboard-home" /></RoleRoute></Route>
-      <Route path="/qc/standards"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
-      <Route path="/qc/parameters"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
-      <Route path="/qc/tests"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
+      {/* /qc/tests, /qc/parameters, /qc/standards endi QCModule'ga to'g'ridan-to'g'ri
+       *  registratsiya qilingan (ProductionRoutes.tsx) — redirect kerak emas. */}
       <Route path="/succession-planning"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/succession-planning" /></RoleRoute></Route>
       <Route path="/feedback"><Redirect to="/kanban" /></Route>
       <Route path="/logout"><Redirect to="/login" /></Route>

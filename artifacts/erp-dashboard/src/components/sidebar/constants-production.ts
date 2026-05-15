@@ -15,10 +15,10 @@ export const menuGroupsProduction: Record<string, MenuGroup> = {
   tz04: {
     title: "Sifat Nazorati",
     icon: ShieldCheck,
-    defaultUrl: "qc/dashboard",
+    defaultUrl: "qc/dashboard-home",
     items: [
       { title: "LABORATORIYA", url: "", icon: FlaskConical, separator: true },
-      { title: "QC Dashboard", url: "qc/dashboard", icon: BarChart3 },
+      { title: "QC Dashboard", url: "qc/dashboard-home", icon: BarChart3 },
       { title: "Qog'oz Parametrlari", url: "qc/lab", icon: FlaskConical },
       { title: "Material Testlari", url: "qc/tests", icon: Activity },
       { title: "Parametrlar", url: "qc/parameters", icon: ClipboardList },
@@ -43,10 +43,10 @@ export const menuGroupsProduction: Record<string, MenuGroup> = {
   tz05: {
     title: "Texnologiya",
     icon: Layers,
-    defaultUrl: "tech/approval",
+    defaultUrl: "tech-approval",
     items: [
       { title: "TEXNIK TASDIQ", url: "", icon: CheckCircle, separator: true },
-      { title: "Texnik Tasdiqlash", url: "tech/approval", icon: CheckCircle },
+      { title: "Texnik Tasdiqlash", url: "tech-approval", icon: CheckCircle },
       { title: "Texnik Kartalar", url: "tech/cards", icon: FileText },
       { title: "MATERIAL", url: "", icon: Package, separator: true },
       { title: "BOM Tarkib", url: "erp/pp/bom", icon: Package },
