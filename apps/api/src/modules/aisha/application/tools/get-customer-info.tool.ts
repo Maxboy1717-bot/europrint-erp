@@ -2,14 +2,14 @@
  * @module get-customer-info.tool
  */
 
-// NOTE: Raw SQL is intentional for AIsha tools. Each tool aggregates
-// across multiple cross-module tables (sales, production, HR, finance,
-// security, kanban) that the AIsha module does not own. Importing every
-// Drizzle schema would create tight coupling between AIsha and every
-// other domain module; the read-only / single-INSERT raw SQL keeps
-// AIsha as a loose query-adapter layer over the ERP. Drizzle ORM is
-// used elsewhere; see [[aisha-final-report]] for the architectural
-// rationale.
+// RULE4_EXCEPTION: AIsha tools intentionally use raw SQL. Each tool
+// aggregates across cross-module tables (sales, production, HR, finance,
+// security, IoT, kanban, calendar) that the AIsha module does not own.
+// Importing every Drizzle schema would create tight coupling between
+// AIsha and every other domain module. The read-only / single-INSERT
+// raw SQL keeps AIsha a loose query-adapter layer over the ERP. Drizzle
+// ORM is used elsewhere; see [[aisha-final-report]] for the
+// architectural rationale.
 
 import { Injectable } from '@nestjs/common';
 import { Result, Err, AppErr, safeCall } from '@common/result';

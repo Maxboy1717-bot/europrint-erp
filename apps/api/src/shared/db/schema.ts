@@ -95,6 +95,10 @@ export const pool = new Pool({ connectionString: effectiveConnString });
 export const db = drizzle(pool);
 
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
+// RULE4_EXCEPTION: `rawSql` is the project's parameterised raw-SQL escape
+// hatch. By definition it wraps `db.execute`; callers must already pass a
+// safely-parameterised `sql\`...\`` template. Used elsewhere for the few
+// queries Drizzle builders cannot express (lateral joins, complex CTEs).
 export const rawSql = (query: SQL): ReturnType<typeof db.execute> => db.execute(query);
 
 /**
@@ -102,6 +106,9 @@ export const rawSql = (query: SQL): ReturnType<typeof db.execute> => db.execute(
  * SECURITY: `q` MUST be a hard-coded string literal — never a user-controlled value.
  * For DML queries use `rawSql(sql\`...\`)` with template-literal parameterisation.
  */
+// RULE4_EXCEPTION: DDL-only helper. Drizzle has no builder API for CREATE
+// TABLE / ALTER TABLE / CREATE INDEX. Callers pass hard-coded string
+// literals from migration files.
 export const ddlRun = (q: SQL | SQLWrapper | string): ReturnType<typeof db.execute> =>
   db.execute(typeof q === 'string' ? sql.raw(q) : (q as SQL));
 
@@ -113,6 +120,9 @@ export const ddlRun = (q: SQL | SQLWrapper | string): ReturnType<typeof db.execu
 export async function runQuery<T = Record<string, unknown>>(
   q: SQL | SQLWrapper,
 ): Promise<T[] & { rows: T[] }> {
+  // RULE4_EXCEPTION: typed wrapper around `db.execute` for callers that
+  // already need raw SQL (analytics with LATERAL/UNNEST/window functions,
+  // multi-CTE pipelines). Drizzle builder API has no equivalent.
   const result = await db.execute(q as SQL);
   const arr = castTo<T[]>(Array.isArray(result) ? result : ((result as { rows?: unknown }).rows ?? []));
   return Object.assign(arr, { rows: arr });
