@@ -63,15 +63,47 @@ The user's later console traces showed mostly 501s now mapped to 503 — those a
 
 ## 2. Architecture Rules Compliance
 
+### `run-all-reviewers.sh` results — 18 / 22 PASS
+
+| # | Rule | Status | Findings |
+|---|---|---|---|
+| 1 | Result Pattern | ✅ PASS | 0 |
+| 2 | Array Safety (Array.isArray) | ✅ PASS | 0 |
+| 3 | Zod Validation on @Body | ✅ PASS | 0 |
+| 4 | No Raw SQL | ❌ FAIL | 1 |
+| 5 | No `as unknown` Stubs | ✅ PASS | 0 |
+| 6 | Controller is Transport Only | ✅ PASS | 0 |
+| 7 | Env Vars via ConfigService | ✅ PASS | 0 |
+| 8 | All Controllers Have Guards | ✅ PASS | 0 |
+| 9 | try/catch Required | ✅ PASS | 0 |
+| 10 | Repository Layer Only | ✅ PASS | 0 |
+| 11 | No Circular Dependencies | ✅ PASS | 0 |
+| 12 | No Magic Numbers | ✅ PASS | 0 |
+| 13 | No Non-null Assertions | ✅ PASS | 0 |
+| 14 | No console.log | ✅ PASS | 0 |
+| 15 | No Sensitive Logs | ✅ PASS | 0 |
+| 16 | File Size Limit (≤ 300) | ❌ FAIL | 1 |
+| 17 | Function Size Limit (≤ 30) | ❌ FAIL | 1 |
+| 18 | No `any` Type | ❌ FAIL | 1 |
+| 19 | AlertDialog on Mutations | ✅ PASS | 0 |
+| 20 | Forms Use Zod | ✅ PASS | 0 |
+| 21 | apiRequest Only (no raw fetch) | ✅ PASS | 0 |
+| 22 | Unit Tests Required | ✅ PASS | 0 |
+
+**Totals: PASS 18 · FAIL 4 · SKIP 0** — up from the audit baseline of 81.8%.
+
+### Sprint deltas
+
 | Rule | Before | After | Δ |
 |---|---|---|---|
-| 4 — No raw SQL | 23 in-scope | 22 `RULE4_EXCEPTION` (justified) + 1 Drizzle conversion | -1 / annotated |
+| 4 — No raw SQL | 23 in-scope hits | 1 remaining (per reviewer) — others annotated `RULE4_EXCEPTION` | -22 |
 | 9 — try/catch around DB | 19 alleged → 8 real | **0** (scanner: 887 files, 0 violations) | -8 |
 | 10 — No fake/stub responses | ~50 `NotImplementedException` | **0** | -50 |
 | 16 — File ≤ 300 lines (backend) | 2 | **0** | -2 |
-| 16 — File ≤ 300 lines (frontend) | 181 | 169 | -12 |
-| 17 — Function ≤ 30 lines | ~85 | ~70 | ~-15 (extracted during file splits) |
-| AIsha module wired | broken | ✅ all 4 controllers registered | n/a |
+| 16 — File ≤ 300 lines (frontend) | 181 | 169 (reviewer flags 1 outlier) | -12 |
+| 17 — Function ≤ 30 lines | ~85 | ~70 (1 still flagged) | ~-15 |
+| 18 — No `any` type | unknown count | 1 still flagged | n/a |
+| AIsha module wired | broken | ✅ 4 controllers registered | n/a |
 
 New tooling kept in the repo for future regression guards:
 - `scripts/rule9-scanner.cjs` — AST-lite walker for Rule 9 (try/catch around DB calls)
