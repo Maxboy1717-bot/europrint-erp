@@ -183,7 +183,7 @@ describe('LoginHandler — token issuance details', () => {
 
 describe('ChangePasswordHandler — every path', () => {
   it('returns NOT_FOUND when user missing', async () => {
-    const handler = new ChangePasswordHandler(makeRepo(null) as never);
+    const handler = new ChangePasswordHandler(makeRepo(null) as never, makeI18n());
     const r = await handler.execute({ userId: 1, oldPassword: 'o', newPassword: 'NewSecure!2026' });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('NOT_FOUND');
@@ -200,7 +200,7 @@ describe('ChangePasswordHandler — every path', () => {
   ])('rejects weak password (%s)', async (_, newPassword) => {
     const user = { changePassword: jest.fn().mockResolvedValue(true) };
     const repo = { findById: jest.fn().mockResolvedValue(user), save: jest.fn() };
-    const handler = new ChangePasswordHandler(repo as never);
+    const handler = new ChangePasswordHandler(repo as never, makeI18n());
     const r = await handler.execute({ userId: 1, oldPassword: 'o', newPassword });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('VALIDATION');
@@ -209,16 +209,16 @@ describe('ChangePasswordHandler — every path', () => {
   it('rejects when old password is wrong (user.changePassword returns false)', async () => {
     const user = { changePassword: jest.fn().mockResolvedValue(false) };
     const repo = { findById: jest.fn().mockResolvedValue(user), save: jest.fn() };
-    const handler = new ChangePasswordHandler(repo as never);
+    const handler = new ChangePasswordHandler(repo as never, makeI18n());
     const r = await handler.execute({ userId: 1, oldPassword: 'wrong', newPassword: 'NewSecure!2026' });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.message).toMatch(/old password/i);
+    if (!r.ok) expect(r.error.message).toMatch(/currentPasswordIncorrect|old password/i);
   });
 
   it('persists the user on success', async () => {
     const user = { changePassword: jest.fn().mockResolvedValue(true) };
     const repo = { findById: jest.fn().mockResolvedValue(user), save: jest.fn().mockResolvedValue(undefined) };
-    const handler = new ChangePasswordHandler(repo as never);
+    const handler = new ChangePasswordHandler(repo as never, makeI18n());
     const r = await handler.execute({ userId: 1, oldPassword: 'o', newPassword: 'NewSecure!2026' });
     expect(r.ok).toBe(true);
     expect(repo.save).toHaveBeenCalledWith(user);

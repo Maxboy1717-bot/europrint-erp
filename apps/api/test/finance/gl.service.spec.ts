@@ -7,6 +7,13 @@
 import { GlService } from '../../src/modules/finance/gl/gl.service';
 import { Ok, Err, AppErr } from '../../src/common/result';
 
+function makeI18n() {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as import('nestjs-i18n').I18nService;
+}
+
 function makeRepo(overrides: Partial<{
   findAllDocuments: jest.Mock;
   findAllAccounts: jest.Mock;
@@ -28,7 +35,7 @@ describe('GlService', () => {
   describe('findAllDocuments()', () => {
     it('returns paginated result with defaults when query empty', async () => {
       const repo = makeRepo();
-      const svc = new GlService(repo as never);
+      const svc = new GlService(repo as never, makeI18n());
 
       const r = await svc.findAllDocuments({});
 
@@ -44,7 +51,7 @@ describe('GlService', () => {
 
     it('computes correct offset for page=3, limit=25', async () => {
       const repo = makeRepo();
-      const svc = new GlService(repo as never);
+      const svc = new GlService(repo as never, makeI18n());
 
       await svc.findAllDocuments({ page: 3, limit: 25 });
 
@@ -55,7 +62,7 @@ describe('GlService', () => {
       const repo = makeRepo({
         findAllDocuments: jest.fn().mockResolvedValue(Err(AppErr('DB_ERROR', 'gone'))),
       });
-      const svc = new GlService(repo as never);
+      const svc = new GlService(repo as never, makeI18n());
 
       const r = await svc.findAllDocuments();
 
@@ -71,7 +78,7 @@ describe('GlService', () => {
   describe('findAccountById()', () => {
     it('returns Ok when account found', async () => {
       const repo = makeRepo();
-      const svc = new GlService(repo as never);
+      const svc = new GlService(repo as never, makeI18n());
 
       const r = await svc.findAccountById(1);
 
@@ -82,7 +89,7 @@ describe('GlService', () => {
       const repo = makeRepo({
         findAccountById: jest.fn().mockResolvedValue(Ok(null)),
       });
-      const svc = new GlService(repo as never);
+      const svc = new GlService(repo as never, makeI18n());
 
       const r = await svc.findAccountById(999);
 
@@ -94,7 +101,7 @@ describe('GlService', () => {
       const repo = makeRepo({
         findAccountById: jest.fn().mockResolvedValue(Err(AppErr('DB_ERROR', 'down'))),
       });
-      const svc = new GlService(repo as never);
+      const svc = new GlService(repo as never, makeI18n());
 
       const r = await svc.findAccountById(1);
 
@@ -106,7 +113,7 @@ describe('GlService', () => {
   describe('postDocument()', () => {
     it('rejects unbalanced debit/credit with BadRequest → BAD_REQUEST', async () => {
       const repo = makeRepo();
-      const svc = new GlService(repo as never);
+      const svc = new GlService(repo as never, makeI18n());
 
       const r = await svc.postDocument({ totalDebit: 100, totalCredit: 50 });
 
@@ -117,7 +124,7 @@ describe('GlService', () => {
 
     it('accepts balanced entries', async () => {
       const repo = makeRepo();
-      const svc = new GlService(repo as never);
+      const svc = new GlService(repo as never, makeI18n());
 
       const r = await svc.postDocument({ totalDebit: 100, totalCredit: 100 });
 
@@ -127,7 +134,7 @@ describe('GlService', () => {
 
     it('balanced with zero amounts is allowed', async () => {
       const repo = makeRepo();
-      const svc = new GlService(repo as never);
+      const svc = new GlService(repo as never, makeI18n());
 
       const r = await svc.postDocument({ totalDebit: 0, totalCredit: 0 });
 
@@ -138,7 +145,7 @@ describe('GlService', () => {
       const repo = makeRepo({
         postDocument: jest.fn().mockResolvedValue(Err(AppErr('DB_ERROR', 'fk violation'))),
       });
-      const svc = new GlService(repo as never);
+      const svc = new GlService(repo as never, makeI18n());
 
       const r = await svc.postDocument({ totalDebit: 50, totalCredit: 50 });
 
@@ -149,7 +156,7 @@ describe('GlService', () => {
   describe('seedAccounts()', () => {
     it('uses default chart when rows is empty', async () => {
       const repo = makeRepo();
-      const svc = new GlService(repo as never);
+      const svc = new GlService(repo as never, makeI18n());
 
       await svc.seedAccounts([]);
 
@@ -161,7 +168,7 @@ describe('GlService', () => {
 
     it('uses caller-supplied rows verbatim', async () => {
       const repo = makeRepo();
-      const svc = new GlService(repo as never);
+      const svc = new GlService(repo as never, makeI18n());
 
       await svc.seedAccounts([{ accountCode: '9999', accountName: 'X', accountType: 'asset' }]);
 
