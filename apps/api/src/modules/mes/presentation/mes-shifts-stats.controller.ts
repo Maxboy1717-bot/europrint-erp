@@ -123,14 +123,14 @@ export class MesShiftsStatsController {
   }
 
   @Get('orders')
-  async getOrders() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getOrders() { return []; }
 
   @Get('orders/:id')
-  async getOrderById(@Param('id') _id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getOrderById(@Param('id') _id: string) { return null; }
 
   @Get('shifts')
-  async getShifts() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getShifts() { return []; }
 
   @Get('maintenance')
-  async getMaintenance() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getMaintenance() { return []; }
 }

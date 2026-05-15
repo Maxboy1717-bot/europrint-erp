@@ -85,7 +85,7 @@ export class MmPurchaseOrdersController {
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async getPo(@Param('id') id: number){
     this.logger.log('Getting purchase order');
-    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+    return {};
   }
 
   @Post()

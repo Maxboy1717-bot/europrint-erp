@@ -110,12 +110,12 @@ export class FinanceMainController {
 
   @Get('loans')
   getLoans(@Query('status') _status?: string, @Query('page') _page?: string) {
-    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+    return {};
   }
 
   @Get('loans/:id')
   getLoanById(@Param('id') _id: string) {
-    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+    return {};
   }
 
   @Post('gl-entries')

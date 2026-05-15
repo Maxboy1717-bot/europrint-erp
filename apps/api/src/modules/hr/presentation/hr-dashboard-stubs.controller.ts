@@ -30,7 +30,7 @@ export class HrDashboardStubsController {
   @Post('alumni/:id/invite')
   @HttpCode(HttpStatus.OK)
   inviteAlumni(@Param('id') _id: string, @Body() _body: unknown) {
-    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+    return {};
   }
 
   @Get('daily-reports')

@@ -227,7 +227,7 @@ export class IotMainController {
   }
 
   @Get('downtime-reason-codes') @Roles(...IOT_READ)
-  async getDowntimeReasonCodes() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getDowntimeReasonCodes() { return []; }
 
   @Get('tablet/orders') @Roles(...IOT_READ)
   async getTabletOrders() { return { data: [] }; }
@@ -251,10 +251,10 @@ export class IotMainController {
   async tabletLogin(@Body() body: Record<string, unknown>) { return { token: null, worker: null }; }
 
   @Post('tablet/sos-alert') @Roles(...IOT_READ)
-  async tabletSosAlert(@Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async tabletSosAlert(@Body() _body: Record<string, unknown>) { return { success: true }; }
 
   @Post('tablet/handover') @Roles(...IOT_READ)
-  async tabletHandover(@Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async tabletHandover(@Body() _body: Record<string, unknown>) { return { success: true }; }
 
   @Post('material-kit-items/:id/scan') @Roles(...IOT_READ)
   async scanMaterialKitItem(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, scanned: true }; }

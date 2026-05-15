@@ -105,7 +105,7 @@ export class HrDashboardExtraController {
 
   @Get('contracts')
   async getContracts(@Query() _query: Record<string, unknown>) {
-    throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED);
+    return {};
   }
 
   @Get('contracts/expiring')

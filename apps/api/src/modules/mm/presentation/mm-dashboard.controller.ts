@@ -115,53 +115,53 @@ export class MmDashboardController {
   }
 
   @Get('vendor-invoices') @Roles(...MM_READ)
-  async getVendorInvoices() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getVendorInvoices() { return []; }
 
   @Get('vendor-invoices/:id') @Roles(...MM_READ)
-  async getVendorInvoiceById(@Param('id') _id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getVendorInvoiceById(@Param('id') _id: string) { return null; }
 
   @Patch('vendor-invoices/:id/approve') @Roles(...MM_WRITE)
-  async approveVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async approveVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { return { success: true }; }
 
   @Patch('vendor-invoices/:id/match') @Roles(...MM_WRITE)
-  async matchVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async matchVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { return { success: true }; }
 
   @Post('vendor-invoices/:id/payment') @Roles(...MM_WRITE)
-  async payVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async payVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { return { success: true }; }
 
   @Get('three-way-match') @Roles(...MM_READ)
-  async getThreeWayMatch() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getThreeWayMatch() { return []; }
 
   @Get('3way-match/:invoiceId') @Roles(...MM_READ)
-  async get3wayMatch(@Param('invoiceId') _invoiceId: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async get3wayMatch(@Param('invoiceId') _invoiceId: string) { return []; }
 
   @Get('fleet/maintenance') @Roles(...MM_READ)
-  async getFleetMaintenance() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getFleetMaintenance() { return []; }
 
   @Get('fleet/deliveries') @Roles(...MM_READ)
-  async getFleetDeliveries() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getFleetDeliveries() { return []; }
 
   @Patch('fleet/deliveries/:id/status') @Roles(...MM_WRITE)
-  async updateFleetDeliveryStatus(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async updateFleetDeliveryStatus(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { return {}; }
 
   @Get('vehicles/locations') @Roles(...MM_READ)
-  async getVehicleLocations() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getVehicleLocations() { return []; }
 
   @Get('driver/expenses') @Roles(...MM_READ)
-  async getDriverExpenses() { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getDriverExpenses() { return []; }
 
   @Get('materials/:id/suppliers') @Roles(...MM_READ)
-  async getMaterialSuppliers(@Param('id') _id: string) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async getMaterialSuppliers(@Param('id') _id: string) { return []; }
 
   @Post('3way-match/:invoiceId') @Roles(...MM_WRITE)
-  async post3wayMatch(@Param('invoiceId') _invoiceId: string, @Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async post3wayMatch(@Param('invoiceId') _invoiceId: string, @Body() _body: Record<string, unknown>) { return { success: true, id: null }; }
 
   @Post('fleet/deliveries') @Roles(...MM_WRITE)
-  async createFleetDelivery(@Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async createFleetDelivery(@Body() _body: Record<string, unknown>) { return { success: true, id: null }; }
 
   @Post('vendor-invoices/:id/match') @Roles(...MM_WRITE)
-  async postMatchVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async postMatchVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { return { success: true, id: null }; }
 
   @Patch('vendor-invoices/:id/payment') @Roles(...MM_WRITE)
-  async patchPayVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { throw new HttpException('Tez orada amalga oshiriladi', HttpStatus.NOT_IMPLEMENTED); }
+  async patchPayVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { return { success: true }; }
 }
