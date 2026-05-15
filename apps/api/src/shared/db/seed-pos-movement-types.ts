@@ -11,8 +11,9 @@
  * Idempotent — qayta ishga tushishi xavfsiz.
  */
 import { Logger } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
+import { sql, and, inArray, or, eq, isNull, asc } from 'drizzle-orm';
 import { db } from '@shared/db';
+import { posMovementTypes } from './schema-compat-2';
 
 interface MovementTypeSeed {
   code:      string;
@@ -38,9 +39,12 @@ export async function seedPosMovementTypes(): Promise<void> {
 
   for (const mt of MOVEMENT_TYPES) {
     try {
-      // INSERT ... WHERE NOT EXISTS, mavjud ustunlar (id, code, name, direction,
-      // is_active, created_at) — `id` qo'lda beriladi (jadval SERIAL emas).
-      // ON CONFLICT bilan ham himoyalanamiz (code UNIQUE bo'lsa).
+      // RULE4_EXCEPTION: legacy pos_movement_types uses a manual integer PK
+      // (not SERIAL), so the new id must be `(SELECT MAX(id) FROM …) + 1`
+      // inside a single INSERT-SELECT-WHERE-NOT-EXISTS statement to stay
+      // atomic and idempotent. Drizzle builders cannot express computing
+      // a primary key from a subquery while gating the insert on a
+      // NOT-EXISTS predicate against the same table.
       const result = await db.execute(sql`
         INSERT INTO pos_movement_types (id, code, name, direction, is_active, created_at)
         SELECT COALESCE((SELECT MAX(id) FROM pos_movement_types), 0) + 1,
@@ -67,14 +71,16 @@ export async function seedPosMovementTypes(): Promise<void> {
 
   // Hammasini faollashtirish (agar nofaol bo'lib qolgan bo'lsa)
   try {
-    await db.execute(sql`
-      UPDATE pos_movement_types
-         SET is_active = true
-       WHERE code IN ('EXTERNAL_IN','EXTERNAL_OUT','INTERNAL_ISSUE',
-                      'INTERNAL_RETURN','INTERNAL_TRANSFER','DAMAGE',
-                      'INVENTORY_ADJUST')
-         AND (is_active IS NULL OR is_active = false)
-    `);
+    const codes = MOVEMENT_TYPES.map((mt) => mt.code);
+    await db
+      .update(posMovementTypes)
+      .set({ isActive: true })
+      .where(
+        and(
+          inArray(posMovementTypes.code, codes),
+          or(isNull(posMovementTypes.isActive), eq(posMovementTypes.isActive, false)),
+        ),
+      );
   } catch (err) {
     logger.warn(`Faollashtirish xato: ${String(err)}`);
   }
@@ -86,15 +92,18 @@ export async function seedPosMovementTypes(): Promise<void> {
 
   // Tasdiqlash uchun jadval holatini ko'rsatish
   try {
-    const checkResult = await db.execute(sql`
-      SELECT code, name, direction, is_active
-      FROM pos_movement_types
-      ORDER BY id
-    `);
-    const rows = (checkResult as { rows?: Array<Record<string, unknown>> }).rows ?? [];
+    const rows = await db
+      .select({
+        code: posMovementTypes.code,
+        name: posMovementTypes.name,
+        direction: posMovementTypes.direction,
+        isActive: posMovementTypes.isActive,
+      })
+      .from(posMovementTypes)
+      .orderBy(asc(posMovementTypes.id));
     logger.log(`Hozir bazada ${rows.length} ta harakat turi mavjud:`);
     for (const r of rows) {
-      logger.log(`  - ${r['code']} | ${r['name']} | ${r['direction']} | active=${r['is_active']}`);
+      logger.log(`  - ${r.code} | ${r.name} | ${r.direction} | active=${r.isActive}`);
     }
   } catch { /* noop */ }
 }

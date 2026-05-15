@@ -29,6 +29,10 @@ export async function ensureDbInvariants(): Promise<void> {
 
   for (const c of DB_CONSTRAINTS) {
     try {
+      // RULE4_EXCEPTION: DDL-only — ALTER TABLE / ADD CONSTRAINT cannot be
+      // expressed via Drizzle builders. Constraint name + table name are
+      // looked up from a static, hard-coded constants list (DB_CONSTRAINTS),
+      // never user input.
       await db.execute(sql.raw(`
         DO $$
         BEGIN
@@ -63,6 +67,11 @@ export async function ensureSchemaAdditions(): Promise<void> {
   const migrations = [...SCHEMA_MIGRATIONS, ...TRIGGER_MIGRATIONS, ...CRM_MIGRATIONS];
   for (const m of migrations) {
     try {
+      // RULE4_EXCEPTION: idempotent DDL/trigger/function migrations.
+      // `m.sql` is sourced from hard-coded constant arrays in
+      // `./invariants/migrations-*.ts`, never user input — these are
+      // CREATE TABLE / CREATE INDEX / CREATE OR REPLACE FUNCTION /
+      // CREATE TRIGGER statements that Drizzle builders cannot express.
       await db.execute(sql.raw(m.sql));
       logger.log(`Schema addition OK: ${m.name}`);
     } catch (err) {
