@@ -62,20 +62,20 @@ function KpiCard({ icon: Icon, label, value, color = "text-primary" }: {
   );
 }
 
-const CATEGORIES = [
-  { value: "all", label: "Barcha kategoriya" },
-  { value: "qogoz", label: "Qog'oz" },
-  { value: "karton", label: "Karton" },
-  { value: "boyoq", label: "Bo'yoq" },
-  { value: "plyonka", label: "Plyonka" },
-  { value: "kimyoviy", label: "Kimyoviy" },
-  { value: "ehtiyot", label: "Ehtiyot qism" },
-  { value: "tayyor", label: "Tayyor mahsulot" },
-  { value: "boshqa", label: "Boshqa" },
-];
-
 export default function WMSMaterials() {
   const { t } = useTranslation('common');
+  const { t: tWms } = useTranslation('wms');
+  const CATEGORIES = [
+    { value: "all", label: tWms("categoryAll") },
+    { value: "qogoz", label: tWms("categoryPaper") },
+    { value: "karton", label: tWms("categoryCardboard") },
+    { value: "boyoq", label: tWms("categoryPaint") },
+    { value: "plyonka", label: tWms("categoryFilm") },
+    { value: "kimyoviy", label: tWms("categoryChemical") },
+    { value: "ehtiyot", label: tWms("categorySpare") },
+    { value: "tayyor", label: tWms("categoryFinished") },
+    { value: "boshqa", label: tWms("categoryOther") },
+  ];
   const params = useParams<{ id?: string }>();
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
@@ -178,7 +178,7 @@ export default function WMSMaterials() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             data-testid="input-material-search"
-            placeholder="Qidirish (nom yoki kod)..."
+            placeholder={tWms("searchByNameOrCode")}
             value={search}
             onChange={e => handleSearch(e.target.value)}
             className="pl-9"
@@ -220,7 +220,7 @@ export default function WMSMaterials() {
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                {(["#", "Kod", "Nomi", "Kategoriya", "Birlik", "Mavjud", "Min zaxira", "ABC", "Holat", ""]).map(h => (
+                {(["#", tWms("headerCode"), tWms("headerName"), tWms("headerCategory"), tWms("headerUnit"), tWms("headerAvailable"), tWms("headerMinStock"), "ABC", tWms("headerStatus"), ""]).map(h => (
                   <TableHead key={h} className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{h}</TableHead>
                 ))}
               </TableRow>
@@ -262,7 +262,7 @@ export default function WMSMaterials() {
                         <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => navigate(`/inventory/materials/${m.id}`)} data-testid={`action-view-360-${m.id}`}>
-                          <BarChart2 className="w-4 h-4 mr-2" />360° karta
+                          <BarChart2 className="w-4 h-4 mr-2" />{tWms("card360")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => { setEditMaterial(m); setDialogOpen(true); }} data-testid={`action-edit-${m.id}`}>

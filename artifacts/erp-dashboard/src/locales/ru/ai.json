@@ -232,5 +232,15 @@
   "texnologTasdiqlash": "Подтверждение технолога",
   "tezkor": "Быстрый",
   "xatolar": "Ошибки",
-  "yuklanish": "Загрузка"
+  "yuklanish": "Загрузка",
+  "aiScoreCalculated": "AI-балл рассчитан",
+  "aiServiceConnectFailed": "Не удалось подключиться к AI-сервису",
+  "probabilityCalculated": "Вероятность рассчитана",
+  "churnRiskEvaluated": "Риск оттока оценён",
+  "emailTemplateCreated": "Email-шаблон создан",
+  "nextActionIdentified": "Следующее действие определено",
+  "totalDeals": "Всего сделок",
+  "contactsCount": "Контакты",
+  "scored": "Оценено",
+  "churnAnalysis": "Анализ оттока"
 }

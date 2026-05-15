@@ -75,8 +75,13 @@ export function ChatLayout() {
     ? (members[activeRoomId] ?? []).map((m) => ({
         userId: String(m.userId),
         fullName: m.fullName,
-        employeeId: m.employeeId,
-        avatarUrl: m.avatarUrl,
+        employeeId:
+          typeof m.employeeId === 'number'
+            ? m.employeeId
+            : m.employeeId != null && /^\d+$/.test(String(m.employeeId))
+              ? Number(m.employeeId)
+              : null,
+        avatarUrl: m.avatarUrl ?? null,
       }))
     : [];
   const isChannelReadOnly =
@@ -85,9 +90,9 @@ export function ChatLayout() {
   const typingText = (() => {
     if (!typingUsers || typingUsers.size === 0) return null;
     const names = Array.from(typingUsers);
-    if (names.length === 1) return `${names[0]} yozmoqda...`;
-    if (names.length === 2) return `${names[0]} va ${names[1]} yozmoqda...`;
-    return `${names.length} kishi yozmoqda...`;
+    if (names.length === 1) return t("typingOne", { name: names[0] });
+    if (names.length === 2) return t("typingTwo", { name1: names[0], name2: names[1] });
+    return t("typingMany", { count: names.length });
   })();
 
   // ── Local state ──────────────────────────────────────────────────────────
@@ -132,7 +137,7 @@ export function ChatLayout() {
         })
         .catch(e => {
           console.error('Failed to load pinned message:', e);
-          toast({ title: 'Xato', description: String(e), variant: 'destructive' });
+          toast({ title: t('xato'), description: String(e), variant: 'destructive' });
         });
     },
     [joinRoom, setActiveRoomId, setInfoOpen, setThreadRootId, toast]
@@ -171,7 +176,7 @@ export function ChatLayout() {
       await apiRequest('POST', `${getChatApiBase()}/messages/${messageId}/reactions`, { emoji });
     } catch (e) {
       console.error('Failed to send reaction:', e);
-      toast({ title: 'Xato', description: String(e), variant: 'destructive' });
+      toast({ title: t('xato'), description: String(e), variant: 'destructive' });
     }
   }, [toast]);
 
@@ -192,7 +197,7 @@ export function ChatLayout() {
       await apiRequest('PATCH', `${getChatApiBase()}/messages/${msg.id}/pin`, { pin: !msg.isPinned });
     } catch (e) {
       console.error('Failed to pin message:', e);
-      toast({ title: 'Xato', description: String(e), variant: 'destructive' });
+      toast({ title: t('xato'), description: String(e), variant: 'destructive' });
     }
   }, [toast]);
 
@@ -202,10 +207,10 @@ export function ChatLayout() {
       const isImage = file.type.startsWith("image/");
       const maxSize = isImage ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
       if (file.size > maxSize) {
-        alert(`Fayl hajmi ${isImage ? "10MB" : "50MB"} dan oshmasligi kerak`);
+        alert(t("fileSizeLimitMsg", { limit: isImage ? "10MB" : "50MB" }));
         return;
       }
-      setUploadProgress("Yuklanmoqda...");
+      setUploadProgress(t("loading"));
       try {
         let uploadUrl: string;
         let publicUrl: string;
@@ -223,18 +228,18 @@ export function ChatLayout() {
           uploadUrl = data.uploadUrl;
           publicUrl = data.publicUrl;
         } catch (e) {
-          alert((e as Error).message || "Upload URL xatosi");
+          alert((e as Error).message || t("uploadUrlError"));
           return;
         }
-        setUploadProgress("Fayl yuklanmoqda...");
+        setUploadProgress(t("fileUploading"));
         const formData = new FormData();
         formData.append("file", file, file.name);
         // NOTE: This is a direct PUT to an external S3 presigned URL — NOT our backend.
         // apiRequest is intentionally NOT used here (it would inject our JWT into an
         // S3 request and break the presigned signature).
         const uploadRes = await fetch(uploadUrl, { method: "PUT", body: formData });
-        if (!uploadRes.ok) { alert("Fayl yuklashda xato"); return; }
-        setUploadProgress("Xabar yuborilmoqda...");
+        if (!uploadRes.ok) { alert(t("fileUploadError")); return; }
+        setUploadProgress(t("messageSending"));
         try {
           await apiRequest('POST', `${getChatApiBase()}/upload/complete`, {
             roomId: activeRoomId,
@@ -244,10 +249,10 @@ export function ChatLayout() {
             fileSize: file.size,
           });
         } catch {
-          alert("Xabar yuborishda xato");
+          alert(t("messageSendError"));
         }
       } catch {
-        alert("Upload xatosi");
+        alert(t("uploadError"));
       } finally {
         setUploadProgress(null);
       }

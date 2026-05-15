@@ -35,6 +35,7 @@ interface AddModuleDialogProps {
 
 export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialogProps) {
   const { t } = useTranslation("common");
+  const { t: tLms } = useTranslation("lms");
   const { toast } = useToast();
   const form = useForm<ModuleFormData>({
     resolver: zodResolver(moduleSchema),
@@ -58,16 +59,16 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/courses", courseId] });
       toast({
-        title: "Muvaffaqiyat",
-        description: "Modul muvaffaqiyatli yaratildi",
+        title: t("muvaffaqiyatli"),
+        description: tLms("moduleCreatedSuccessfully"),
       });
       onOpenChange(false);
       form.reset();
     },
     onError: () => {
       toast({
-        title: "Xatolik",
-        description: "Modul yaratishda xatolik yuz berdi",
+        title: t("xato"),
+        description: tLms("moduleCreateError"),
         variant: "destructive",
       });
     },
@@ -94,7 +95,7 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Modul nomi (O'zbek) <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>{tLms("moduleNameUz")} <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input {...field} placeholder={t("k1ModulAsoslar")} data-testid="input-module-title" />
                   </FormControl>
@@ -108,9 +109,9 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
               name="titleRu"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Modul nomi (Rus) <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>{tLms("moduleNameRu")} <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Модуль 1: Основы" data-testid="input-module-title-ru" />
+                    <Input {...field} placeholder={tLms("moduleNameRuPlaceholder")} data-testid="input-module-title-ru" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,7 +123,7 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tavsif (O'zbek)</FormLabel>
+                  <FormLabel>{tLms("descriptionUz")}</FormLabel>
                   <FormControl>
                     <Textarea {...field} placeholder={t("modulHaqidaQisqachaMalumot")} rows={2} data-testid="input-module-description" />
                   </FormControl>
@@ -136,9 +137,9 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
               name="descriptionRu"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tavsif (Rus)</FormLabel>
+                  <FormLabel>{tLms("descriptionRu")}</FormLabel>
                   <FormControl>
-                    <Textarea {...field} placeholder="Краткое описание модуля..." rows={2} data-testid="input-module-description-ru" />
+                    <Textarea {...field} placeholder={tLms("descriptionRuPlaceholder")} rows={2} data-testid="input-module-description-ru" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -156,7 +157,7 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
               </Button>
               <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit-module">
                 {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
-                Saqlash
+                {t("save")}
               </Button>
             </DialogFooter>
           </form>

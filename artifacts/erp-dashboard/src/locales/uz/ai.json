@@ -232,5 +232,15 @@
   "texnologTasdiqlash": "Texnolog tasdiqlash",
   "tezkor": "Tezkor amal",
   "xatolar": "Xatoliklar ro'yxati",
-  "yuklanish": "Yuklanish turi"
+  "yuklanish": "Yuklanish turi",
+  "aiScoreCalculated": "AI skori hisoblandi",
+  "aiServiceConnectFailed": "AI xizmatiga ulanib bo'lmadi",
+  "probabilityCalculated": "Ehtimollik hisoblandi",
+  "churnRiskEvaluated": "Churn xavfi baholandi",
+  "emailTemplateCreated": "Email shablon yaratildi",
+  "nextActionIdentified": "Keyingi harakat aniqlandi",
+  "totalDeals": "Jami bitimlar",
+  "contactsCount": "Kontaktlar",
+  "scored": "Baholangan",
+  "churnAnalysis": "Churn tahlili"
 }

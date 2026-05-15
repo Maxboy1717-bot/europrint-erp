@@ -33,6 +33,7 @@ import { QCBrak } from "./types";
 import { useTranslation } from '@/lib/i18n';
 export function DefectSection() {
   const { t } = useTranslation('common');
+  const { t: tQc } = useTranslation('qc');
   const { toast } = useToast();
   const [showDefectDialog, setShowDefectDialog] = useState(false);
   const [searchQ, setSearchQ] = useState("");
@@ -47,7 +48,7 @@ export function DefectSection() {
 
   const createDefect = useMutation({
     mutationFn: (data: Record<string, unknown>) => apiRequest("POST", "/api/qc/braks", data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/qc/braks"] }); setShowDefectDialog(false); toast({ title: "Brak qayd etildi" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/qc/braks"] }); setShowDefectDialog(false); toast({ title: tQc("defectRecorded") }); },
   });
 
   return (
@@ -64,10 +65,10 @@ export function DefectSection() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
-          { label: "Bugungi Brak", value: (brakStats?.todayCount as number) ?? 0, color: "text-[var(--ep-red)]" },
-          { label: "Jami Miqdor", value: ((brakStats?.totalQty as number) ?? 0) + " kg", color: "text-[var(--ep-yellow)]" },
-          { label: "Asosiy Sabab", value: (brakStats?.topReason as string) ?? "—", color: "text-[var(--ep-blue)]" },
-          { label: "Sifat Ko'rsatkichi", value: ((brakStats?.qualityRate as number) ?? 98) + "%", color: "text-[var(--ep-green)]" },
+          { label: tQc("todayDefects"), value: (brakStats?.todayCount as number) ?? 0, color: "text-[var(--ep-red)]" },
+          { label: tQc("totalAmount"), value: ((brakStats?.totalQty as number) ?? 0) + " kg", color: "text-[var(--ep-yellow)]" },
+          { label: tQc("topReason"), value: (brakStats?.topReason as string) ?? "—", color: "text-[var(--ep-blue)]" },
+          { label: tQc("qualityRate"), value: ((brakStats?.qualityRate as number) ?? 98) + "%", color: "text-[var(--ep-green)]" },
         ]).map(s => (
           <Card key={s.label}><CardContent className="pt-4 pb-3">
             <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
@@ -128,13 +129,13 @@ export function DefectSection() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Miqdor (kg)</Label>
+                <Label>{tQc("amountKg")}</Label>
                 <Input type="number" {...defectForm.register("quantity")} data-testid="input-defect-qty" />
                 {defectForm.formState.errors.quantity && <p className="text-xs text-destructive">{defectForm.formState.errors.quantity.message}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label>{t("milestone1")}</Label>
-                <Select onValueChange={v => defectForm.setValue("stage", v)} defaultValue="incoming">
+                <Select onValueChange={v => defectForm.setValue("stage", v as "production" | "incoming" | "finished")} defaultValue="incoming">
                   <SelectTrigger data-testid="select-defect-stage" className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="incoming">{t("kiruvchiNazorat")}</SelectItem>
@@ -157,7 +158,7 @@ export function DefectSection() {
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowDefectDialog(false)}>{t("Bekor")}</Button>
               <Button type="submit" disabled={createDefect.isPending} data-testid="button-save-defect">
-                {createDefect.isPending ? "Saqlanmoqda..." : "Saqlash"}
+                {createDefect.isPending ? t("saving") : t("save")}
               </Button>
             </DialogFooter>
           </form>

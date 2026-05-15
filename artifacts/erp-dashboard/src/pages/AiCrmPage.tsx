@@ -29,6 +29,7 @@ import {
 
 export default function AiCrmPage() {
   const { t } = useTranslation("common");
+  const { t: tAi } = useTranslation("ai");
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState("scoring");
@@ -53,52 +54,52 @@ export default function AiCrmPage() {
     mutationFn: (dealId: number) => aiApi.crmScoreLead(dealId),
     onSuccess: (data, dealId) => {
       setAiResults((prev) => ({ ...prev, [`score_${dealId}`]: data as AiScore }));
-      toast({ title: "AI skori hisoblandi" });
+      toast({ title: tAi("aiScoreCalculated") });
     },
-    onError: () => toast({ variant: "destructive", title: "Xatolik", description: "AI xizmatiga ulanib bo'lmadi" }),
+    onError: () => toast({ variant: "destructive", title: tAi("error"), description: tAi("aiServiceConnectFailed") }),
   });
 
   const probabilityMutation = useMutation({
     mutationFn: (dealId: number) => aiApi.crmDealProbability(dealId),
     onSuccess: (data, dealId) => {
       setAiResults((prev) => ({ ...prev, [`prob_${dealId}`]: data as AiScore }));
-      toast({ title: "Ehtimollik hisoblandi" });
+      toast({ title: tAi("probabilityCalculated") });
     },
-    onError: () => toast({ variant: "destructive", title: "Xatolik", description: "AI xizmatiga ulanib bo'lmadi" }),
+    onError: () => toast({ variant: "destructive", title: tAi("error"), description: tAi("aiServiceConnectFailed") }),
   });
 
   const churnMutation = useMutation({
     mutationFn: (contactId: number) => aiApi.crmChurnRisk(contactId),
     onSuccess: (data, contactId) => {
       setAiResults((prev) => ({ ...prev, [`churn_${contactId}`]: data as AiScore }));
-      toast({ title: "Churn xavfi baholandi" });
+      toast({ title: tAi("churnRiskEvaluated") });
     },
-    onError: () => toast({ variant: "destructive", title: "Xatolik", description: "AI xizmatiga ulanib bo'lmadi" }),
+    onError: () => toast({ variant: "destructive", title: tAi("error"), description: tAi("aiServiceConnectFailed") }),
   });
 
   const emailMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => aiApi.crmEmailTemplate(data),
     onSuccess: (data) => {
       setAiResults((prev) => ({ ...prev, email_template: data as AiScore }));
-      toast({ title: "Email shablon yaratildi" });
+      toast({ title: tAi("emailTemplateCreated") });
     },
-    onError: () => toast({ variant: "destructive", title: "Xatolik", description: "AI xizmatiga ulanib bo'lmadi" }),
+    onError: () => toast({ variant: "destructive", title: tAi("error"), description: tAi("aiServiceConnectFailed") }),
   });
 
   const nextActionMutation = useMutation({
     mutationFn: (dealId: number) => aiApi.crmNextBestAction(dealId),
     onSuccess: (data, dealId) => {
       setAiResults((prev) => ({ ...prev, [`action_${dealId}`]: data as AiScore }));
-      toast({ title: "Keyingi harakat aniqlandi" });
+      toast({ title: tAi("nextActionIdentified") });
     },
-    onError: () => toast({ variant: "destructive", title: "Xatolik", description: "AI xizmatiga ulanib bo'lmadi" }),
+    onError: () => toast({ variant: "destructive", title: tAi("error"), description: tAi("aiServiceConnectFailed") }),
   });
 
   const statCards = [
-    { icon: Target,     label: "Jami bitimlar", value: deals.length,    color: "text-[var(--ep-blue)]" },
-    { icon: Users,      label: "Kontaktlar",    value: contacts.length, color: "text-[var(--ep-green)]" },
-    { icon: Star,       label: "Baholangan",    value: Object.keys(aiResults).filter(k => k.startsWith("score_")).length, color: "text-[var(--ep-yellow)]" },
-    { icon: ShieldAlert,label: "Churn tahlili", value: Object.keys(aiResults).filter(k => k.startsWith("churn_")).length, color: "text-[var(--ep-red)]" },
+    { icon: Target,     label: tAi("totalDeals"),     value: deals.length,    color: "text-[var(--ep-blue)]" },
+    { icon: Users,      label: tAi("contactsCount"),  value: contacts.length, color: "text-[var(--ep-green)]" },
+    { icon: Star,       label: tAi("scored"),         value: Object.keys(aiResults).filter(k => k.startsWith("score_")).length, color: "text-[var(--ep-yellow)]" },
+    { icon: ShieldAlert,label: tAi("churnAnalysis"),  value: Object.keys(aiResults).filter(k => k.startsWith("churn_")).length, color: "text-[var(--ep-red)]" },
   ];
 
   return (
