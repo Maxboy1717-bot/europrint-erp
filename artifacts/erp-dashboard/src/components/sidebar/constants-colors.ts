@@ -21,6 +21,7 @@ export const moduleColors: Record<string, { bg: string; text: string; activeBg: 
   kanban:      { bg: "bg-fuchsia-500/10 hover:bg-[var(--ep-purple)]/90/20", text: "text-[var(--ep-purple)] dark:text-fuchsia-400", activeBg: "bg-[var(--ep-purple)] text-white", border: "border-fuchsia-500/30" },
   coordination: { bg: "bg-sky-500/10 hover:bg-[var(--ep-blue)]/90/20",   text: "text-[var(--ep-blue)] dark:text-sky-400",   activeBg: "bg-[var(--ep-blue)] text-white",  border: "border-sky-500/30" },
   chat:        { bg: "bg-blue-500/10 hover:bg-[var(--ep-blue)]/90/20",  text: "text-[var(--ep-blue)] dark:text-blue-400",  activeBg: "bg-[var(--ep-blue)] text-white", border: "border-blue-500/30" },
+  hidden:      { bg: "bg-gray-500/10 hover:bg-gray-500/20",            text: "text-gray-600 dark:text-gray-400",          activeBg: "bg-gray-600 text-white",         border: "border-gray-500/30" },
 };
 
 export const MODULE_PERMISSION_KEYS: Record<string, string> = {
@@ -44,6 +45,7 @@ export const MODULE_PERMISSION_KEYS: Record<string, string> = {
   kanban:       "OKR",
   coordination: "DIRECTOR",
   chat:         "CHAT",
+  // 'hidden' module is admin-only — kept out of permission map so only admins see it.
 };
 
 export const moduleAccentColors: Record<string, string> = {
@@ -53,5 +55,5 @@ export const moduleAccentColors: Record<string, string> = {
   tz10: "bg-indigo-700",  tz11: "bg-rose-600",    tz12: "bg-violet-700",
   tz13: "bg-red-600",     tz14: "bg-stone-600",   tz15: "bg-cyan-600",
   tz16: "bg-yellow-600",  tz17: "bg-slate-600",   kanban: "bg-fuchsia-700",
-  coordination: "bg-sky-600", chat: "bg-blue-600",
+  coordination: "bg-sky-600", chat: "bg-blue-600", hidden: "bg-gray-600",
 };

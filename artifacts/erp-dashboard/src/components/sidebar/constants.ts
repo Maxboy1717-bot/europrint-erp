@@ -7,8 +7,9 @@ import { menuGroupsFinance }        from "./constants-finance";
 import { menuGroupsHrLms }          from "./constants-hr-lms";
 import { menuGroupsSecurityInfra }  from "./constants-security-infra";
 import { menuGroupsAdminCoord }     from "./constants-admin-coord";
+import { menuGroupsHidden }         from "./constants-hidden";
 
-// ── Combined map (preserves declaration order: tz01 → tz17 → kanban → coordination → chat) ──
+// ── Combined map (declaration order: tz01 → tz17 → kanban → coordination → chat → hidden) ──
 export const menuGroups = {
   ...menuGroupsSalesCrm,        // tz01, tz02, tz03
   ...menuGroupsProduction,      // tz04, tz05, tz06, tz07
@@ -17,6 +18,7 @@ export const menuGroups = {
   ...menuGroupsHrLms,           // tz11, tz12
   ...menuGroupsSecurityInfra,   // tz13, tz14, tz15
   ...menuGroupsAdminCoord,      // tz16, tz17, kanban, coordination, chat
+  ...menuGroupsHidden,          // hidden (171 routed-but-not-in-sidebar pages)
 };
 
 // ── Colour and permission maps ──
