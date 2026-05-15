@@ -92,7 +92,12 @@ describe('AccountsPayable page', () => {
     const Wrapper = makeErrorWrapper();
     render(<AccountsPayable />, { wrapper: Wrapper });
     await waitFor(() => {
-      const retry = screen.queryByRole('button', { name: /qaytadan|retry/i });
+      // The shared error card renders a retry button whose label key is
+      // "qaytaUrinibKorish" (UZ) — match the prefix so localized variants
+      // still resolve.
+      const retry = screen.queryByRole('button', {
+        name: /qayta|retry|urin/i,
+      });
       expect(retry).not.toBeNull();
     });
   });

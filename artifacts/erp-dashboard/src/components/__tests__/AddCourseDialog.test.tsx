@@ -4,7 +4,7 @@
  * submit / cancel callbacks, duration field rendering.
  */
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestProviders } from '@/test/TestProviders';
 
@@ -99,7 +99,10 @@ describe('AddCourseDialog', () => {
       <AddCourseDialog open={true} onOpenChange={vi.fn()} />,
       { wrapper: TestProviders },
     );
-    expect(screen.getByText(/Yangi kurs/i)).toBeTruthy();
+    // useTranslation is mocked to return the i18n key as the fallback,
+    // so the visible title is the key (e.g. "addNewCourse") rather than
+    // the rendered Uzbek string. We just verify the dialog rendered.
+    expect(screen.getByText(/addNewCourse|Yangi kurs/i)).toBeTruthy();
   });
 
   it('renders course title input when form mounts', () => {
@@ -111,7 +114,7 @@ describe('AddCourseDialog', () => {
     expect(titleInput).toBeTruthy();
   });
 
-  it('submits with form data when save button is clicked', () => {
+  it('submits with form data when save button is clicked', async () => {
     render(
       <AddCourseDialog open={true} onOpenChange={vi.fn()} />,
       { wrapper: TestProviders },
@@ -119,10 +122,12 @@ describe('AddCourseDialog', () => {
     const title = screen.getByLabelText(/Kurs nomi/i) as HTMLInputElement;
     fireEvent.change(title, { target: { value: 'Yangi kurs' } });
     fireEvent.click(screen.getByTestId('button-submit'));
-    expect(apiRequestMock).toHaveBeenCalledWith(
-      'POST',
-      '/api/courses',
-      expect.objectContaining({ title: 'Yangi kurs' }),
+    await waitFor(() =>
+      expect(apiRequestMock).toHaveBeenCalledWith(
+        'POST',
+        '/api/courses',
+        expect.objectContaining({ title: 'Yangi kurs' }),
+      ),
     );
   });
 

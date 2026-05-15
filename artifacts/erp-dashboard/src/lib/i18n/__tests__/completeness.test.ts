@@ -131,8 +131,11 @@ describe('Constants', () => {
     expect([...SUPPORTED_LANGUAGES].sort()).toEqual(['ru', 'uz']);
   });
 
-  it('TRANSLATION_MODULES contains exactly 30 modules', () => {
-    expect(TRANSLATION_MODULES).toHaveLength(30);
+  it('TRANSLATION_MODULES contains at least the 30 core modules', () => {
+    // 30 core modules + page-scoped sub-namespaces (barcode, calc, contact, …)
+    // The list may grow as new sub-namespaces are added per page — only
+    // check the floor so adding more pages does not break this test.
+    expect(TRANSLATION_MODULES.length).toBeGreaterThanOrEqual(30);
   });
 
   it('TRANSLATION_MODULES contains expected module names', () => {

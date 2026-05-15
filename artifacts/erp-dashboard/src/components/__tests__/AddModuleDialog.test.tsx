@@ -47,7 +47,9 @@ describe('AddModuleDialog', () => {
       <AddModuleDialog open={true} onOpenChange={vi.fn()} courseId="c-1" />,
       { wrapper: TestProviders },
     );
-    expect(screen.getByText(/yangiModulQoshish/i)).toBeTruthy();
+    // i18n mocked to passthrough — multiple elements (title + label) may
+    // share the same translation key text.
+    expect(screen.getAllByText(/yangiModulQoshish/i).length).toBeGreaterThan(0);
   });
 
   it('renders module title input when open', () => {

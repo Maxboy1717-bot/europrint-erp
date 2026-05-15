@@ -47,7 +47,9 @@ describe('AddLessonDialog', () => {
       <AddLessonDialog open={true} onOpenChange={vi.fn()} moduleId="m-1" />,
       { wrapper: TestProviders },
     );
-    expect(screen.getByText(/yangiDarsQoshish/i)).toBeTruthy();
+    // i18n is mocked to passthrough keys; multiple elements may share the
+    // same key text (heading + description). Asserting at least one match.
+    expect(screen.getAllByText(/yangiDarsQoshish/i).length).toBeGreaterThan(0);
   });
 
   it('renders lesson title input when open', () => {

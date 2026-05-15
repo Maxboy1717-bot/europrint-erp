@@ -71,7 +71,15 @@ export default function PlanningBoard() {
     description: "",
   });
 
-  const t = buildTranslations(lang);
+  // buildTranslations returns a flat label object. A few descendant components
+  // additionally invoke `t(...)` as a function for keys not present on the map.
+  // Wrap the map in a callable carrier so both `t.foo` and `t("foo")` work.
+  const tMap = buildTranslations(lang) as unknown as Record<string, string>;
+  const tFn = ((key: string, _params?: Record<string, string | number>): string => {
+    const direct = tMap?.[key];
+    return typeof direct === 'string' ? direct : key;
+  });
+  const t = Object.assign(tFn, tMap) as typeof tMap & typeof tFn;
 
   const {
     form,

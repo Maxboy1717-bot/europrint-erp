@@ -64,8 +64,13 @@ describe('SDDashboard page', () => {
     const Wrapper = makeQueryWrapper({ responses });
     render(<SDDashboard />, { wrapper: Wrapper });
     await waitFor(() => {
-      const link = screen.getByRole('link', { name: /CRM/i });
-      expect(link).toHaveAttribute('href', '/crm-workspace');
+      // The dashboard renders multiple CRM-named anchors (sidebar entry,
+      // KPI tile, etc). We assert at least one points to /crm-workspace.
+      const links = screen.getAllByRole('link', { name: /CRM/i });
+      expect(links.length).toBeGreaterThan(0);
+      expect(
+        links.some((l) => l.getAttribute('href') === '/crm-workspace'),
+      ).toBe(true);
     });
   });
 

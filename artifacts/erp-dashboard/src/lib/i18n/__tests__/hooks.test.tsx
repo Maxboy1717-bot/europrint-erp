@@ -54,6 +54,7 @@ describe('useTranslation', () => {
 
   it('returns translation from a specific module', () => {
     function Comp() {
+      const { t } = useTranslation('errors');
       return <div data-testid="val">{t('notFound')}</div>;
     }
     render(<Comp />, { wrapper: ({ children }) => wrapper({ lang: 'uz', children }) });
@@ -64,6 +65,7 @@ describe('useTranslation', () => {
 
   it('t() with params interpolates the string', () => {
     function Comp() {
+      const { t } = useTranslation();
       return <div data-testid="val">{t('save', { x: '!' })}</div>;
     }
     render(<Comp />, { wrapper: ({ children }) => wrapper({ lang: 'uz', children }) });

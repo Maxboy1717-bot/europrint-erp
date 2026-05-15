@@ -25,7 +25,16 @@ import { EPErrorState } from "@/components/ep";
 
 export default function KanbanBoard() {
   const [lang] = useState<"uz" | "ru">("uz");
-  const t = T[lang] as unknown as typeof T.uz & ((key: string, params?: Record<string, string | number>) => string);
+  // BoardHeader and a few sections invoke `t(...)` as a function while
+  // dialogs read `t.someNested.key`. Wrap the translation map in a
+  // function carrier so both usage patterns work at runtime; the
+  // function variant falls back to the key itself when not found.
+  const tMap = T[lang] as Record<string, unknown>;
+  const tFn = ((key: string, _params?: Record<string, string | number>): string => {
+    const direct = tMap?.[key];
+    return typeof direct === 'string' ? direct : key;
+  }) as ((key: string, params?: Record<string, string | number>) => string);
+  const t = Object.assign(tFn, tMap) as typeof T.uz & ((key: string, params?: Record<string, string | number>) => string);
 
   const {
     selectedBoardId, setSelectedBoardId,

@@ -66,7 +66,9 @@ describe('GsdGraph', () => {
       <GsdGraph employeeId="e-1" />,
       { wrapper: TestProviders },
     );
-    expect(container.querySelector('[class*="skeleton"], .skeleton')).toBeTruthy();
+    // The Skeleton UI primitive renders an `animate-pulse` div, not a
+    // class literally named "skeleton".
+    expect(container.querySelector('.animate-pulse')).toBeTruthy();
   });
 
   it('renders empty placeholder when history is empty', () => {

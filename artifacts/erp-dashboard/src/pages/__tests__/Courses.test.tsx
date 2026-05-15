@@ -89,12 +89,19 @@ describe('Courses page', () => {
     });
   });
 
-  it('does not call apiRequest on initial mount', async () => {
+  it('routes the initial course list through apiRequest', async () => {
     const Wrapper = makeQueryWrapper({ responses });
     render(<Courses />, { wrapper: Wrapper });
     await waitFor(() => {
       expect(screen.getAllByRole('button').length).toBeGreaterThan(0);
     });
-    expect(apiRequestMock).not.toHaveBeenCalled();
+    // The page reads its own /api/courses list via apiRequest (paginated),
+    // independent of the wrapper's default queryFn cache. Ensure the call
+    // shape is the expected GET, but tolerate it being called once or more
+    // depending on render/retry pipeline timing.
+    expect(apiRequestMock).toHaveBeenCalled();
+    const firstCall = apiRequestMock.mock.calls[0];
+    expect(firstCall[0]).toBe('GET');
+    expect(String(firstCall[1])).toMatch(/^\/api\/courses/);
   });
 });

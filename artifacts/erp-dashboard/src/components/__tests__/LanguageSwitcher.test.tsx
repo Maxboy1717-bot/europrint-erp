@@ -4,7 +4,8 @@
  * options, setLanguage callback, active indicator, accessibility.
  */
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestProviders } from '@/test/TestProviders';
 
@@ -44,23 +45,31 @@ describe('LanguageSwitcher', () => {
     expect(screen.getByText('RU')).toBeTruthy();
   });
 
-  it('opens menu when trigger is clicked', () => {
+  it('opens menu when trigger is clicked', async () => {
+    const user = userEvent.setup();
     render(<LanguageSwitcher />, { wrapper: TestProviders });
-    fireEvent.click(screen.getByTestId('button-language-switcher'));
-    expect(screen.getByTestId('menu-item-language-uz')).toBeTruthy();
+    await user.click(screen.getByTestId('button-language-switcher'));
+    await waitFor(() =>
+      expect(screen.getByTestId('menu-item-language-uz')).toBeTruthy(),
+    );
   });
 
-  it('calls setLanguage when ru item is clicked', () => {
+  it('calls setLanguage when ru item is clicked', async () => {
+    const user = userEvent.setup();
     render(<LanguageSwitcher />, { wrapper: TestProviders });
-    fireEvent.click(screen.getByTestId('button-language-switcher'));
-    fireEvent.click(screen.getByTestId('menu-item-language-ru'));
+    await user.click(screen.getByTestId('button-language-switcher'));
+    const ruItem = await screen.findByTestId('menu-item-language-ru');
+    await user.click(ruItem);
     expect(langState.setter).toHaveBeenCalledWith('ru');
   });
 
-  it('renders all available language options when menu opens', () => {
+  it('renders all available language options when menu opens', async () => {
+    const user = userEvent.setup();
     render(<LanguageSwitcher />, { wrapper: TestProviders });
-    fireEvent.click(screen.getByTestId('button-language-switcher'));
-    expect(screen.getByTestId('menu-item-language-uz')).toBeTruthy();
+    await user.click(screen.getByTestId('button-language-switcher'));
+    await waitFor(() =>
+      expect(screen.getByTestId('menu-item-language-uz')).toBeTruthy(),
+    );
     expect(screen.getByTestId('menu-item-language-ru')).toBeTruthy();
   });
 });
