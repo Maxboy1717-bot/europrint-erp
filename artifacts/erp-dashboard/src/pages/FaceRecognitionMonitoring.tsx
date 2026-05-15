@@ -22,7 +22,7 @@ export default function FaceRecognitionMonitoring() {
   const { isAuthenticated } = useAuth();
   const t = labels[lang];
 
-  const { data: stats, isLoading: statsLoading, isError, refetch } = useQuery<RecognitionStats>({
+  const { data: stats, isLoading: statsLoading, isError, error, refetch } = useQuery<RecognitionStats>({
     queryKey: ["/api/camera/recognition-stats"],
   });
 
@@ -74,7 +74,7 @@ export default function FaceRecognitionMonitoring() {
     }
   };
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">

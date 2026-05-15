@@ -40,7 +40,7 @@ export default function MentorsPage() {
   const { t } = useTranslation("common");
   const [specialization, setSpecialization] = useState("");
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     Mentor[] | { data?: Mentor[] }
   >({
     queryKey: ["/api/mentors", specialization],
@@ -55,7 +55,7 @@ export default function MentorsPage() {
     ? rawData
     : (rawData as { data?: Mentor[] })?.data ?? [];
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

@@ -28,7 +28,7 @@ export default function AccountsPayable() {
   const [addOpen, setAddOpen] = useState(false);
   const [apForm, setApForm] = useState<ApFormState>(EMPTY_AP_FORM);
 
-  const { data: agingData, isLoading: agingLoading, isError, refetch } = useQuery<ApAgingData>({
+  const { data: agingData, isLoading: agingLoading, isError, error, refetch } = useQuery<ApAgingData>({
     queryKey: ["/api/ap/aging"],
   });
 
@@ -116,7 +116,7 @@ export default function AccountsPayable() {
     }
   };
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   if (agingLoading) {
     return (

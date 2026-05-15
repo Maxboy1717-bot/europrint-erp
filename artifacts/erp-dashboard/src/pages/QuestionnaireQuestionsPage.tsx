@@ -66,7 +66,7 @@ export default function QuestionnaireQuestionsPage() {
     is_required: true,
   });
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     QuestionnaireQuestion[] | { data?: QuestionnaireQuestion[] }
   >({
     queryKey: [...QUERY_KEY, searched],
@@ -106,7 +106,7 @@ export default function QuestionnaireQuestionsPage() {
     onError: () => toast({ title: "Xatolik", description: "O'chirishda muammo", variant: "destructive" }),
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

@@ -34,7 +34,7 @@ export default function SkillsMatrix() {
   const [confirmDeleteEmpSkillId, setConfirmDeleteEmpSkillId] = useState<string | null>(null);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
 
-  const { data: skills, isLoading: loadingSkills, isError, refetch } = useQuery({ queryKey: ["/api/hr/skills"] });
+  const { data: skills, isLoading: loadingSkills, isError, error, refetch } = useQuery({ queryKey: ["/api/hr/skills"] });
   const { data: employees } = useQuery({ queryKey: ["/api/hr/employees"] });
   const { data: employeeSkills, isLoading: loadingEmployeeSkills } = useQuery({ queryKey: ["/api/hr/employee-skills"] });
 
@@ -83,7 +83,7 @@ export default function SkillsMatrix() {
   const handleDeleteSkill = (id: string) => { setConfirmDeleteSkillId(id); };
   const handleDeleteEmployeeSkill = (id: string) => { setConfirmDeleteEmpSkillId(id); };
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">

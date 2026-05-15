@@ -89,7 +89,7 @@ export default function Employees() {
   const {
     data: employeesResponse,
     isLoading: employeesLoading,
-    isError: employeesError,
+    isError, error: employeesError,
     refetch: refetchEmployees,
   } = useQuery<{ items: EmployeeRow[]; total: number }>({
     queryKey: ["/api/employees"],

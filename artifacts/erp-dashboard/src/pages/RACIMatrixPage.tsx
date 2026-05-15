@@ -50,7 +50,7 @@ export default function RACIMatrixPage() {
     },
   });
 
-  const { data: tasks = [], isLoading: isLoadingTasks, isError, refetch } = useQuery<RACITask[]>({
+  const { data: tasks = [], isLoading: isLoadingTasks, isError, error, refetch } = useQuery<RACITask[]>({
     queryKey: ["/api/raci-crisis/tasks"],
   });
 
@@ -89,7 +89,7 @@ export default function RACIMatrixPage() {
   };
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {

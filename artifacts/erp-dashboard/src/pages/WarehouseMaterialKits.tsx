@@ -27,7 +27,7 @@ export default function WarehouseMaterialKits() {
 
   const t = useCallback((uz: string, ru: string) => lang === "uz" ? uz : ru, [lang]);
 
-  const { data: ordersData = [], isLoading: ordersLoading, refetch: refetchOrders, isError } = useQuery({
+  const { data: ordersData = [], isLoading: ordersLoading, refetch: refetchOrders, isError, error } = useQuery({
     queryKey: ["/api/iot-enhanced/orders-for-kits"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     refetchInterval: 60000,
@@ -108,7 +108,7 @@ export default function WarehouseMaterialKits() {
   );
 
   if (isError) {
-    return <EPErrorState onRetry={refetchOrders} />;
+    return <EPErrorState onRetry={refetchOrders}  error={error} />;
   }
 
   return (

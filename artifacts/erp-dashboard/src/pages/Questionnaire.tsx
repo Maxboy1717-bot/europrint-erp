@@ -33,7 +33,7 @@ export default function Questionnaire() {
   const {
     data: questions = [],
     isLoading: questionsLoading,
-    isError,
+    isError, error,
     refetch,
   } = useQuery<QuestionnaireQuestion[]>({
     queryKey: ["/api/questionnaire/questions"],
@@ -160,7 +160,7 @@ export default function Questionnaire() {
   // ------------------------------------------------------------------
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

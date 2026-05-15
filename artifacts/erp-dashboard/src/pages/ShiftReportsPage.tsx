@@ -77,7 +77,7 @@ export default function ShiftReportsPage() {
     notes: "",
   });
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     ShiftReport[] | { data?: ShiftReport[]; items?: ShiftReport[] }
   >({
     queryKey: QUERY_KEY,
@@ -110,7 +110,7 @@ export default function ShiftReportsPage() {
     onError: () => toast({ title: "Xatolik", description: "Yaratishda muammo", variant: "destructive" }),
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

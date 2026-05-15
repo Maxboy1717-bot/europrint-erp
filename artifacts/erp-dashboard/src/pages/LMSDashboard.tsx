@@ -34,7 +34,7 @@ export default function LMSDashboard() {
   const { t: tCommon } = useTranslation('common');
   const [activeTab, setActiveTab] = useState("overview");
 
-  const { data: courses = [], isLoading: isLoadingCourses, isError, refetch } = useQuery<Course[]>({ queryKey: ["/api/courses"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Course[] })?.data ?? []) });
+  const { data: courses = [], isLoading: isLoadingCourses, isError, error, refetch } = useQuery<Course[]>({ queryKey: ["/api/courses"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Course[] })?.data ?? []) });
   const { data: certificates = [], isLoading: isLoadingCertificates } = useQuery<Certificate[]>({ queryKey: ["/api/certificates"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Certificate[] })?.data ?? []) });
   const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({ queryKey: ["/api/users"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: User[] })?.data ?? []) });
   const { data: completionTrend = [] } = useQuery<{ month: string; completed: number; enrolled: number }[]>({ queryKey: ["/api/courses/completion-trend", language] });
@@ -66,7 +66,7 @@ export default function LMSDashboard() {
   const averageTestScore = courses.length > 0 ? Math.round((Array.isArray(courses) ? courses : []).reduce((sum, c) => sum + c.completionRate, 0) / courses.length) : 0;
   const topPerformers = [...users].sort((a, b) => (a.fullName || "").localeCompare(b.fullName || "")).slice(0, 5);
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   if (isLoading) {
     return (

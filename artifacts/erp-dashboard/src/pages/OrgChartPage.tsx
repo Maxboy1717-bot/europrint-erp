@@ -150,7 +150,7 @@ export default function OrgChartPage() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState<"" | "pdf" | "excel">("");
 
-  const { data, isLoading, isError, refetch} = useQuery<OrgChartData>({
+  const { data, isLoading, isError, error, refetch} = useQuery<OrgChartData>({
     queryKey: ["/api/org-chart/tree"],
   });
 
@@ -235,7 +235,7 @@ export default function OrgChartPage() {
   };
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {

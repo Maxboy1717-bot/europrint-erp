@@ -31,7 +31,7 @@ import { EPPageHeader, EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 export default function Analytics() {
   const { t } = useTranslation('common');
-  const { data: stats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useQuery<AnalyticsStats>({ queryKey: ["/api/analytics/stats"] });
+  const { data: stats, isLoading: statsLoading, isError, error: statsError, refetch: refetchStats } = useQuery<AnalyticsStats>({ queryKey: ["/api/analytics/stats"] });
   const { data: courseProgress = [], isLoading: courseProgressLoading } = useQuery<CourseProgressItem[]>({ queryKey: ["/api/analytics/course-progress"] });
   const { data: userActivity = [], isLoading: userActivityLoading } = useQuery<UserActivityItem[]>({ queryKey: ["/api/analytics/user-activity"] });
   const { data: testResults = [], isLoading: testResultsLoading } = useQuery<TestResultItem[]>({ queryKey: ["/api/analytics/test-results"] });

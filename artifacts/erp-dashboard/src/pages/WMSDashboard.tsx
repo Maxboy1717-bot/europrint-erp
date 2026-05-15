@@ -46,7 +46,7 @@ export default function WMSDashboard() {
     defaultValues: { materialId: 0, quantity: 0, reason: "" },
   });
 
-  const { data: kpis, isLoading: kpisLoading, isError, refetch } = useQuery<WMSKPIs>({
+  const { data: kpis, isLoading: kpisLoading, isError, error, refetch } = useQuery<WMSKPIs>({
     queryKey: ["/api/warehouse/dashboard/kpis"],
   });
   const { data: todayMovement, isLoading: movementLoading } = useQuery<MovementSummary>({
@@ -109,7 +109,7 @@ export default function WMSDashboard() {
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
   const totalAlerts = (alerts?.lowStockCount || 0) + (alerts?.pendingQC || 0) + (alerts?.overdueTasks || 0);
 
   return (

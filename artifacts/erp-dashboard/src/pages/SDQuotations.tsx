@@ -174,7 +174,7 @@ export default function SDQuotations() {
     );
   }
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   if (error) {
     return (

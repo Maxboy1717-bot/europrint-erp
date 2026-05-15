@@ -71,7 +71,7 @@ export default function EventsCalendar() {
   // Queries
   // -------------------------------------------------------------------------
 
-  const { data: eventsRaw, isLoading: loadingEvents, isError, refetch } = useQuery({
+  const { data: eventsRaw, isLoading: loadingEvents, isError, error, refetch } = useQuery({
     queryKey: EVENTS_KEY,
   });
 
@@ -191,7 +191,7 @@ export default function EventsCalendar() {
   // Render
   // -------------------------------------------------------------------------
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const isPending =
     createEventMutation.isPending || updateEventMutation.isPending;

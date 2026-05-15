@@ -47,7 +47,7 @@ export default function GLPostingMonitor() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
-  const { data: stats, isLoading: statsLoading, isError, refetch} = useQuery<GLStats>({
+  const { data: stats, isLoading: statsLoading, isError, error, refetch} = useQuery<GLStats>({
     queryKey: ["/api/integration/gl/stock-gl-postings/stats"],
   });
 
@@ -87,7 +87,7 @@ export default function GLPostingMonitor() {
   const totalAmount = stats?.byStatus?.reduce((sum, s) => sum + (parseFloat(String(s.totalAmount)) || 0), 0) || 0;
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

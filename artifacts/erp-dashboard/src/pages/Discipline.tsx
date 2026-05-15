@@ -50,7 +50,7 @@ export default function Discipline() {
   const {
     data: records = [],
     isLoading: recordsLoading,
-    isError: recordsError,
+    isError, error: recordsError,
     refetch: refetchRecords,
   } = useQuery<DisciplineWithUser[]>({
     queryKey: ["/api/hr/discipline-records"],

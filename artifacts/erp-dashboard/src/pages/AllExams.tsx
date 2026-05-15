@@ -18,7 +18,7 @@ import { EPErrorState, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 export default function AllExams() {
   const { t } = useTranslation('common');
-  const { data: regularAttempts = [], isLoading: isLoadingRegular, isError, refetch} = useQuery<Array<{
+  const { data: regularAttempts = [], isLoading: isLoadingRegular, isError, error, refetch} = useQuery<Array<{
     id: string;
     userName: string;
     testName: string;
@@ -56,7 +56,7 @@ export default function AllExams() {
   const isLoading = isLoadingRegular || isLoadingAI;
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {

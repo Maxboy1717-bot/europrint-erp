@@ -34,7 +34,7 @@ export default function MarketingBudget() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ category: "advertising", name: "", year: String(now.getFullYear()), month: "", plannedAmount: "", actualAmount: "", notes: "" });
 
-  const { data: items = [], isLoading, isError, refetch} = useQuery<MarketingBudgetItem[]>({
+  const { data: items = [], isLoading, isError, error, refetch} = useQuery<MarketingBudgetItem[]>({
     queryKey: ["/api/marketing/budget", { year }],
     select: selectArray<MarketingBudgetItem>,
   });
@@ -70,7 +70,7 @@ export default function MarketingBudget() {
   if (isLoading) return <div className="p-4"><Skeleton className="h-96 rounded-lg" /></div>;
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

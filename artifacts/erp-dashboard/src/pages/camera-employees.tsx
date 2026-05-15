@@ -58,7 +58,7 @@ interface TopEmployee {
 export default function CameraEmployees() {
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
 
-  const { data: productivity, isLoading: productivityLoading, isError, refetch} = useQuery<EmployeeProductivity[]>({
+  const { data: productivity, isLoading: productivityLoading, isError, error, refetch} = useQuery<EmployeeProductivity[]>({
     queryKey: ["/api/employee-productivity"]
   });
 
@@ -125,7 +125,7 @@ export default function CameraEmployees() {
   }
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

@@ -44,7 +44,7 @@ export default function AIInterviewPage() {
     defaultValues: { candidateId: "", jobTitle: "", language: "uz", scheduledAt: "" },
   });
 
-  const { data, isLoading, isError, refetch } = useQuery<InterviewsResponse>({
+  const { data, isLoading, isError, error, refetch } = useQuery<InterviewsResponse>({
     queryKey: ["/api/ai-hr/interviews?page=1&limit=20"],
   });
 
@@ -115,7 +115,7 @@ export default function AIInterviewPage() {
   };
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (selectedInterview) {

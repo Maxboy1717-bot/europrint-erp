@@ -92,7 +92,7 @@ export default function SevenFunctionsDashboard() {
   const { toast } = useToast();
   const [selectedFunctionId, setSelectedFunctionId] = useState<string | null>(null);
 
-  const { data: functions = [], isLoading: isLoadingFunctions, isError, refetch} = useQuery<CompanyFunction[]>({
+  const { data: functions = [], isLoading: isLoadingFunctions, isError, error, refetch} = useQuery<CompanyFunction[]>({
     queryKey: ["/api/seven-functions/functions"],
   });
 
@@ -125,7 +125,7 @@ export default function SevenFunctionsDashboard() {
   });
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {

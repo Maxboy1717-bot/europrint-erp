@@ -23,7 +23,7 @@ export default function GoalsKPI() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
-  const { data: goals = [], isLoading, isError, refetch } = useQuery<Goal[]>({
+  const { data: goals = [], isLoading, isError, error, refetch } = useQuery<Goal[]>({
     queryKey: ["/api/goals"],
   });
 
@@ -139,7 +139,7 @@ export default function GoalsKPI() {
   const completedGoals = (Array.isArray(goals) ? goals : []).filter(g => g.status === "completed");
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

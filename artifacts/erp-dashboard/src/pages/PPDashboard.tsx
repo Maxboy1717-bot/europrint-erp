@@ -28,7 +28,7 @@ import { EPErrorState, EPPageHeader } from "@/components/ep";
 export default function PPDashboard() {
   const { t } = useTranslation("production");
 
-  const { data: stats, isLoading, isError, refetch } = useQuery<ProductionStats>({
+  const { data: stats, isLoading, isError, error, refetch } = useQuery<ProductionStats>({
     queryKey: ["/api/production/stats"],
   });
   const { data: ordersData, isLoading: ordersLoading } = useQuery<Record<string, unknown>>({
@@ -108,7 +108,7 @@ export default function PPDashboard() {
     queryClient.invalidateQueries({ queryKey: ["/api/machine-tasks"] });
   };
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">

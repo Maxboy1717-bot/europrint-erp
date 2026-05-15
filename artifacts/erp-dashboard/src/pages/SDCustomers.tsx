@@ -66,7 +66,7 @@ export default function SDCustomers() {
   const {
     data: listData,
     isLoading,
-    isError,
+    isError, error,
     refetch,
   } = useQuery<{ data: Customer[] }>({
     queryKey: ["/api/sd/customers", { search, segFilter, statusFilter }],
@@ -194,7 +194,7 @@ export default function SDCustomers() {
       )}
 
       {isError ? (
-        <EPErrorState onRetry={refetch} />
+        <EPErrorState onRetry={refetch}  error={error} />
       ) : (
         <>
           <CustomerFilterBar

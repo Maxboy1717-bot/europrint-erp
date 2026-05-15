@@ -93,7 +93,7 @@ export default function Tests() {
 
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
   if (error) {
     return (

@@ -73,7 +73,7 @@ export default function WastePage() {
     },
   });
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<WasteRecord[] | { data?: WasteRecord[] }>({
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<WasteRecord[] | { data?: WasteRecord[] }>({
     queryKey: ["/api/waste/records"],
     queryFn: async () => {
       return await apiRequest("GET", "/api/waste/records");
@@ -106,7 +106,7 @@ export default function WastePage() {
     },
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const filtered = records.filter(r => {
     const name = (r.material_name ?? r.materialName ?? "").toLowerCase();

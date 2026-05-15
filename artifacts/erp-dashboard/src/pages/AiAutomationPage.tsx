@@ -43,7 +43,7 @@ export default function AiAutomationPage() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
 
-  const { data, isLoading, isError, refetch } = useQuery<AutomationStatus>({
+  const { data, isLoading, isError, error, refetch } = useQuery<AutomationStatus>({
     queryKey: ["/api/ai/automation/status"],
     queryFn: async () => {
       return await apiRequest("GET", "/api/ai/automation/status");
@@ -64,7 +64,7 @@ export default function AiAutomationPage() {
     },
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const runningJobs    = data?.runningJobs ?? [];
   const coverage       = data?.automationCoverage ?? {};

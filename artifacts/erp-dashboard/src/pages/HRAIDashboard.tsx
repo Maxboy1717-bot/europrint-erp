@@ -31,7 +31,7 @@ export default function HRAIDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
 
-  const { data: dashboard, isLoading: isLoadingDashboard, isError, refetch } = useQuery<DashboardData>({
+  const { data: dashboard, isLoading: isLoadingDashboard, isError, error, refetch } = useQuery<DashboardData>({
     queryKey: ["/api/ai-hr/dashboard"],
   });
 
@@ -93,7 +93,7 @@ export default function HRAIDashboard() {
   };
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {

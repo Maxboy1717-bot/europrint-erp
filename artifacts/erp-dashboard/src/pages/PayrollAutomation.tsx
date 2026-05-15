@@ -34,7 +34,7 @@ export default function PayrollAutomation() {
     MIN_WAGE: sysSettings?.minWage ?? 1120000,
   }), [sysSettings]);
 
-  const { data: contracts = [], isLoading: contractsLoading, isError, refetch } = useQuery<PayrollContract[]>({
+  const { data: contracts = [], isLoading: contractsLoading, isError, error, refetch } = useQuery<PayrollContract[]>({
     queryKey: ["/api/finance-extended/payroll-contracts"],
   });
 
@@ -67,7 +67,7 @@ export default function PayrollAutomation() {
   }, [contracts, calculations]);
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

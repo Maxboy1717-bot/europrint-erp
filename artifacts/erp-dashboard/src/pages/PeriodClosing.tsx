@@ -64,7 +64,7 @@ export default function PeriodClosing() {
   const [closePeriodDialogOpen, setClosePeriodDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<AccountingPeriod | null>(null);
 
-  const { data: periods = [], isLoading, refetch, isError} = useQuery<AccountingPeriod[]>({
+  const { data: periods = [], isLoading, refetch, isError, error} = useQuery<AccountingPeriod[]>({
     queryKey: ["/api/accounting/periods"],
   });
 
@@ -98,7 +98,7 @@ export default function PeriodClosing() {
   const closedPeriods = (Array.isArray(periods) ? periods : []).filter(p => p.status === "closed");
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

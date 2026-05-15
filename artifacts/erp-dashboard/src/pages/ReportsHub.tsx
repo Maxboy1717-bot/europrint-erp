@@ -42,7 +42,7 @@ export default function ReportsHub() {
   const {
     data: dashboard,
     isLoading: dashboardLoading,
-    isError,
+    isError, error,
     refetch,
   } = useQuery<DashboardData>({
     queryKey: ["/api/reports-hub/dashboard"],
@@ -132,7 +132,7 @@ export default function ReportsHub() {
   }
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   // -------------------------------------------------------------------------

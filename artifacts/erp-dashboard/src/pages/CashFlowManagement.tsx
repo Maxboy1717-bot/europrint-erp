@@ -56,7 +56,7 @@ export default function CashFlowManagement() {
     return params.toString();
   };
 
-  const { data: transactions = [], isLoading: transactionsLoading, isError, refetch } = useQuery<CashFlowTransaction[]>({
+  const { data: transactions = [], isLoading: transactionsLoading, isError, error, refetch } = useQuery<CashFlowTransaction[]>({
     queryKey: ["/api/cashflow/transactions", filterType, filterCategory, filterStartDate, filterEndDate, page],
     enabled: isAuthenticated,
     queryFn: async () => (await fetchWithAuth(`/api/cashflow/transactions?${buildQueryParams()}`)) as CashFlowTransaction[],
@@ -100,7 +100,7 @@ export default function CashFlowManagement() {
   });
 
   if (isError) {
-    return <div className="space-y-6"><EPErrorState onRetry={refetch} /></div>;
+    return <div className="space-y-6"><EPErrorState onRetry={refetch}  error={error} /></div>;
   }
 
   return (

@@ -70,7 +70,7 @@ export default function MarketingExhibitions() {
     status: "planned", startDate: "", endDate: "", budget: "", teamMembers: "",
   });
 
-  const { data: exhList = [], isLoading, isError, refetch} = useQuery<ExhibitionFull[]>({ queryKey: ["/api/marketing/exhibitions"], select: selectArray<ExhibitionFull> });
+  const { data: exhList = [], isLoading, isError, error, refetch} = useQuery<ExhibitionFull[]>({ queryKey: ["/api/marketing/exhibitions"], select: selectArray<ExhibitionFull> });
   const { data: leads = [] } = useQuery<ExhibitionLead[]>({
     queryKey: ["/api/marketing/exhibitions", selectedExh, "leads"],
     enabled: !!selectedExh,
@@ -147,7 +147,7 @@ export default function MarketingExhibitions() {
   if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-28 rounded-lg" />)}</div>;
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

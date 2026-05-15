@@ -25,7 +25,7 @@ export default function CameraAlerts() {
   const [filterSeverity, setFilterSeverity] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const { data: alerts, isLoading, isError, refetch } = useQuery<CameraAlert[]>({
+  const { data: alerts, isLoading, isError, error, refetch } = useQuery<CameraAlert[]>({
     queryKey: ["/api/camera-alerts"],
   });
 
@@ -65,7 +65,7 @@ export default function CameraAlerts() {
   const criticalAlerts = (Array.isArray(safeAlerts) ? safeAlerts : []).filter(a => a.severity === "critical" && !a.isResolved).length;
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {

@@ -34,7 +34,7 @@ export default function HRMap() {
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
 
-  const { data: employees = [], isLoading: empLoading, isError, refetch } = useQuery<Employee[]>({
+  const { data: employees = [], isLoading: empLoading, isError, error, refetch } = useQuery<Employee[]>({
     queryKey: [
       selectedDepartment === "all"
         ? "/api/hr-map/employees"
@@ -70,7 +70,7 @@ export default function HRMap() {
   );
   const factoryCenter: [number, number] = [FACTORY_LAT, FACTORY_LNG];
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   if (empLoading || statsLoading) {
     return (

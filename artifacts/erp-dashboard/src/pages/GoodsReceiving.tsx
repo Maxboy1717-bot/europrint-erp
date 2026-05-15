@@ -101,7 +101,7 @@ export default function GoodsReceiving() {
     );
   }
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2" data-testid="error-state">

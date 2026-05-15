@@ -52,12 +52,12 @@ export default function EmployeeDailyKPIPanel() {
     return Math.round((overallPreview + bonus - penalty) * 100) / 100;
   }, [overallPreview, watchedScores]);
 
-  const { data: kpiResponse, isLoading: kpiLoading, isError, refetch } = useQuery<KpiApiResponse>({
+  const { data: kpiResponse, isLoading: kpiLoading, isError, error, refetch } = useQuery<KpiApiResponse>({
     queryKey: [`/api/employee-kpi?dateFrom=${selectedDate}&dateTo=${selectedDate}`],
   });
   const records = kpiResponse?.records || [];
 
-  const { data: topResponse, isLoading: topLoading, isError: topError } = useQuery<TopPerformersApiResponse>({
+  const { data: topResponse, isLoading: topLoading, isError, error: topError } = useQuery<TopPerformersApiResponse>({
     queryKey: [`/api/employee-kpi/summary/top-performers?dateFrom=${selectedDate}&dateTo=${selectedDate}`],
   });
   const topPerformers = topResponse?.topPerformers || [];
@@ -127,7 +127,7 @@ export default function EmployeeDailyKPIPanel() {
     createMutation.mutate({ ...data, departmentId: selectedEmployee?.departmentId || null });
   }
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <div data-testid="employee-daily-kpi-panel">

@@ -30,7 +30,7 @@ export default function Mentorship() {
   const [isMentorshipDialogOpen, setIsMentorshipDialogOpen] = useState(false);
   const [deleteMentorshipId, setDeleteMentorshipId] = useState<string | null>(null);
 
-  const { data: mentorships, isLoading: loadingMentorships, isError, refetch } = useQuery<MentorshipRecord[]>({
+  const { data: mentorships, isLoading: loadingMentorships, isError, error, refetch } = useQuery<MentorshipRecord[]>({
     queryKey: ["/api/mentorships"],
   });
 
@@ -103,7 +103,7 @@ export default function Mentorship() {
   const uniqueMentees = new Set(mentorships?.map((m) => m.menteeId)).size || 0;
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

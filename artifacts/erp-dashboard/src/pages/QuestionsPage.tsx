@@ -39,7 +39,7 @@ export default function QuestionsPage() {
   const [form, setForm]             = useState<QuestionFormState>(DEFAULT_FORM);
 
   // ── Query ───────────────────────────────────────────────────────────────────
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     Question[] | { data?: Question[] }
   >({
     queryKey: [...QUERY_KEY, searched],
@@ -87,7 +87,7 @@ export default function QuestionsPage() {
   });
 
   // ── Render ──────────────────────────────────────────────────────────────────
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

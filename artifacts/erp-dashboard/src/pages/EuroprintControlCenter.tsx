@@ -54,7 +54,7 @@ import { useTranslation } from '@/lib/i18n';
 
 export default function EuroprintControlCenter() {
   const { t } = useTranslation("common");
-  const { data: businessRules = [], isLoading: rulesLoading, isError, refetch } =
+  const { data: businessRules = [], isLoading: rulesLoading, isError, error, refetch } =
     useQuery<BusinessRule[]>({ queryKey: ["/api/europrint-control/business-rules"] });
 
   const { data: units = [], isLoading: unitsLoading } =
@@ -204,7 +204,7 @@ export default function EuroprintControlCenter() {
   // -------------------------------------------------------------------------
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

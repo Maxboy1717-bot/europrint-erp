@@ -34,7 +34,7 @@ export default function TestDetail() {
   const [showAddQuestion, setShowAddQuestion] = useState(false);
   const [deleteTestDialog, setDeleteTestDialog] = useState(false);
 
-  const { data: test, isLoading: testLoading, isError, refetch} = useQuery<{
+  const { data: test, isLoading: testLoading, isError, error, refetch} = useQuery<{
     id: string;
     title: string;
     titleRu?: string;
@@ -132,7 +132,7 @@ export default function TestDetail() {
   };
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

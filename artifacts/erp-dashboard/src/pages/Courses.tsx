@@ -142,7 +142,7 @@ export default function Courses() {
 
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
   if (error) {
     return (

@@ -60,7 +60,7 @@ export default function StockReservation() {
     qualityGrade: "A",
   });
 
-  const { data: dashboard, isLoading: dashboardLoading, isError: dashboardError, refetch: refetchDashboard } = useQuery<DashboardData>({
+  const { data: dashboard, isLoading: dashboardLoading, isError, error: dashboardError, refetch: refetchDashboard } = useQuery<DashboardData>({
     queryKey: ["/api/ai-reservation/dashboard"],
   });
 

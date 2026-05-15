@@ -54,7 +54,7 @@ export default function HRLMSSkills() {
   const { t } = useTranslation("common");
   const [skillCategory, setSkillCategory] = useState<string>("all");
 
-  const { data: positionSkills, isError, isLoading, refetch} = useQuery<PositionSkill[]>({
+  const { data: positionSkills, isError, error, isLoading, refetch} = useQuery<PositionSkill[]>({
     queryKey: ["/api/integration/hr-lms/position-skills"],
   });
 
@@ -86,7 +86,7 @@ export default function HRLMSSkills() {
   }
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

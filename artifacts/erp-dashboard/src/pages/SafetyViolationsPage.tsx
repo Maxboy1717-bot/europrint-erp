@@ -49,7 +49,7 @@ export default function SafetyViolationsPage() {
   const [severityFilter, setSeverityFilter] = useState("all");
   const [statusFilter, setStatusFilter]     = useState("all");
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<SafetyViolation[] | { data?: SafetyViolation[] }>({
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<SafetyViolation[] | { data?: SafetyViolation[] }>({
     queryKey: ["/api/safety-violations", severityFilter, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams({ limit: "50" });
@@ -63,7 +63,7 @@ export default function SafetyViolationsPage() {
     ? rawData
     : (rawData as { data?: SafetyViolation[] })?.data ?? [];
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

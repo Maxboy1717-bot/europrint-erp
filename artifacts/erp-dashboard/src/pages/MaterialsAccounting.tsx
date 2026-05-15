@@ -52,7 +52,7 @@ export default function MaterialsAccounting() {
     data: movements = [],
     isLoading: movementsLoading,
     refetch: refetchMovements,
-    isError,
+    isError, error,
   } = useQuery<MaterialMovement[]>({
     queryKey: [
       "/api/accounting/materials",
@@ -124,7 +124,7 @@ export default function MaterialsAccounting() {
   // ---------------------------------------------------------------------------
 
   if (isError) {
-    return <EPErrorState onRetry={refetchMovements} />;
+    return <EPErrorState onRetry={refetchMovements}  error={error} />;
   }
 
   return (

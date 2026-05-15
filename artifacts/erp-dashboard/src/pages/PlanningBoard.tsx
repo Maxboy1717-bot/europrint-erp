@@ -111,7 +111,7 @@ export default function PlanningBoard() {
   const {
     data: operationsData,
     isLoading: isLoadingOps,
-    isError: isOpsError,
+    isError, error: isOpsError,
     refetch: refetchOps,
   } = useQuery({
     queryKey: ["/api/planning/operations", filters],

@@ -65,7 +65,7 @@ export default function MachineStatusPage() {
   const {
     data: statusRaw,
     isLoading: loadingStatus,
-    isError: errorStatus,
+    isError, error: errorStatus,
     refetch: refetchStatus,
   } = useQuery<MachineStatus[] | { data?: MachineStatus[] }>({
     queryKey: ["/api/iot/machine-status"],
@@ -79,7 +79,7 @@ export default function MachineStatusPage() {
   const {
     data: logsRaw,
     isLoading: loadingLogs,
-    isError: errorLogs,
+    isError, error: errorLogs,
     refetch: refetchLogs,
   } = useQuery<MachineLog[] | { data?: MachineLog[] }>({
     queryKey: ["/api/iot/machine-status-logs"],

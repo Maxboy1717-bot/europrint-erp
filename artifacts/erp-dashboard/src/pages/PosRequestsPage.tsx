@@ -69,7 +69,7 @@ export default function PosRequestsPage() {
     material_name: "", quantity: "", unit: "dona", department: "", priority: "normal", notes: "",
   });
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     PosRequest[] | { data?: PosRequest[] }
   >({
     queryKey: [...QUERY_KEY, statusFilter],
@@ -108,7 +108,7 @@ export default function PosRequestsPage() {
     onError: () => toast({ title: "Xatolik", description: "Yaratishda muammo", variant: "destructive" }),
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

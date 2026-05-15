@@ -23,7 +23,7 @@ export default function Certificates() {
   const [bonusAmount, setBonusAmount] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
 
-  const { data: certificates, isLoading, isError, refetch } = useQuery<Certificate[]>({
+  const { data: certificates, isLoading, isError, error, refetch } = useQuery<Certificate[]>({
     queryKey: ["/api/certificates"],
   });
 
@@ -114,7 +114,7 @@ export default function Certificates() {
   if (isError) {
     return (
       <div className="p-6">
-        <EPErrorState onRetry={refetch} />
+        <EPErrorState onRetry={refetch}  error={error} />
       </div>
     );
   }

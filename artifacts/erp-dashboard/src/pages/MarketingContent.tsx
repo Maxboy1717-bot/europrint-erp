@@ -59,7 +59,7 @@ export default function MarketingContent() {
   });
   const [aiPrompt, setAiPrompt] = useState("");
 
-  const { data: contentList = [], isLoading, isError, refetch} = useQuery<ContentPost[]>({
+  const { data: contentList = [], isLoading, isError, error, refetch} = useQuery<ContentPost[]>({
     queryKey: ["/api/marketing/content/posts"],
   });
 
@@ -157,7 +157,7 @@ export default function MarketingContent() {
   if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}</div>;
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

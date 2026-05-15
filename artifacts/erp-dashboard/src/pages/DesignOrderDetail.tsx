@@ -63,7 +63,7 @@ export default function DesignOrderDetail() {
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { data: orderData, isLoading: orderLoading, isError, refetch} = useQuery<DesignOrder>({
+  const { data: orderData, isLoading: orderLoading, isError, error, refetch} = useQuery<DesignOrder>({
     queryKey: ["/api/design/orders", orderId],
     enabled: !!orderId,
   });
@@ -135,7 +135,7 @@ export default function DesignOrderDetail() {
 
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
   if (!orderData) {
     return null;

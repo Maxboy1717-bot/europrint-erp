@@ -52,7 +52,7 @@ export default function Positions() {
   const {
     data: positions = [],
     isLoading,
-    isError,
+    isError, error,
     refetch,
   } = useQuery<Position[]>({
     queryKey: ["/api/positions"],
@@ -242,7 +242,7 @@ export default function Positions() {
       )}
 
       {isError ? (
-        <EPErrorState onRetry={refetch} />
+        <EPErrorState onRetry={refetch}  error={error} />
       ) : (
         <>
           <PositionsFilters

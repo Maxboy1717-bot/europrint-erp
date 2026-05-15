@@ -29,7 +29,7 @@ export default function ApprovalWorkflowPage() {
   const [form, setForm] = useState<WorkflowForm>(EMPTY_FORM);
 
   const endpoint = tab === "history" ? "/api/approval-workflow/history" : "/api/approval-workflow/pending";
-  const { data: rawData, isLoading, isError, refetch } = useQuery<Workflow[] | { data?: Workflow[] }>({
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<Workflow[] | { data?: Workflow[] }>({
     queryKey: ["/api/approval-workflow", tab],
     queryFn: async () => {
       return await apiRequest("GET", endpoint);
@@ -88,7 +88,7 @@ export default function ApprovalWorkflowPage() {
     },
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const filtered = workflows.filter(w => {
     const text = `${w.documentType ?? w.document_type ?? ""} ${w.documentNumber ?? w.document_number ?? ""} ${w.requestedBy ?? w.requested_by ?? ""}`.toLowerCase();

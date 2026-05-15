@@ -88,7 +88,7 @@ export default function ChartOfAccounts() {
   }
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (error) {

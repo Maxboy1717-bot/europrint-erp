@@ -71,7 +71,7 @@ const COLORS = ['#22c55e', '#eab308', '#ef4444', '#3b82f6', '#dc2626'];
 export default function CameraMachines() {
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
 
-  const { data: machines, isLoading: machinesLoading, isError, refetch} = useQuery<MachineStatus[]>({
+  const { data: machines, isLoading: machinesLoading, isError, error, refetch} = useQuery<MachineStatus[]>({
     queryKey: ["/api/machine-status-current"]
   });
 
@@ -127,7 +127,7 @@ export default function CameraMachines() {
   }
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

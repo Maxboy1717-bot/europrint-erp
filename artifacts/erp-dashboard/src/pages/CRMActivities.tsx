@@ -36,7 +36,7 @@ export default function CRMActivities() {
   const { t } = useTranslation("crm");
   const { t: tCommon } = useTranslation('common');
 
-  const { data: activities, isLoading, isError, refetch } = useQuery<Activity[]>({
+  const { data: activities, isLoading, isError, error, refetch } = useQuery<Activity[]>({
     queryKey: ["/api/crm/activities"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
@@ -103,7 +103,7 @@ export default function CRMActivities() {
   const pendingActivities   = filteredActivities.filter(a => a.status === "pending" || a.status === "in_progress");
   const completedActivities = filteredActivities.filter(a => a.status === "completed");
 
-  if (isError)   return <EPErrorState onRetry={refetch} />;
+  if (isError)   return <EPErrorState onRetry={refetch}  error={error} />;
   if (isLoading) return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-4">
       <Skeleton className="h-10 w-full rounded-lg" />

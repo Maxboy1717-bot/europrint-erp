@@ -55,7 +55,7 @@ export default function EmployeeStats() {
   const [isDisciplineDialogOpen, setIsDisciplineDialogOpen] = useState(false);
   const [isPersonalInfoDialogOpen, setIsPersonalInfoDialogOpen] = useState(false);
 
-  const { data: employee, isLoading: employeeLoading, isError, refetch } = useQuery<Employee>({
+  const { data: employee, isLoading: employeeLoading, isError, error, refetch } = useQuery<Employee>({
     queryKey: ["/api/employees", id],
   });
 
@@ -146,7 +146,7 @@ export default function EmployeeStats() {
   }
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (!employee) {

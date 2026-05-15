@@ -33,7 +33,7 @@ export default function WarehouseDailyView() {
   const dateLocale = lang === "uz" ? uz : ru;
   const formattedDate = format(selectedDate, "yyyy-MM-dd");
 
-  const { data: ordersData = [], isLoading: ordersLoading, refetch: refetchOrders, isError } = useQuery({
+  const { data: ordersData = [], isLoading: ordersLoading, refetch: refetchOrders, isError, error } = useQuery({
     queryKey: ['/api/warehouse/orders-by-date', formattedDate],
     queryFn: getQueryFn({ on401: "returnNull" }),
     refetchInterval: 30000,
@@ -109,7 +109,7 @@ export default function WarehouseDailyView() {
   );
 
   if (isError) {
-    return <EPErrorState onRetry={refetchOrders} />;
+    return <EPErrorState onRetry={refetchOrders}  error={error} />;
   }
 
   return (

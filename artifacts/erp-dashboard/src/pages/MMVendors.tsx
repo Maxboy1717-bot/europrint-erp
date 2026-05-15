@@ -54,7 +54,7 @@ export default function MMVendors() {
   const {
     data: vendors = [],
     isLoading,
-    isError,
+    isError, error,
     refetch,
   } = useQuery<Vendor[]>({
     queryKey: [VENDOR_QUERY_KEY],
@@ -220,7 +220,7 @@ export default function MMVendors() {
       )}
 
       {isError ? (
-        <EPErrorState onRetry={refetch} />
+        <EPErrorState onRetry={refetch}  error={error} />
       ) : (
         <VendorsTableCard
           vendors={filteredVendors}

@@ -61,7 +61,7 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
 
 export default function EuroprintControlPage() {
   const { t } = useTranslation("common");
-  const { data: dashboard, isLoading: loadingDash, isError: errDash, refetch: retryDash } =
+  const { data: dashboard, isLoading: loadingDash, isError, error: errDash, refetch: retryDash } =
     useQuery<AuditorDashboard | { data?: AuditorDashboard }>({
       queryKey: ["/api/europrint-control/auditor-dashboard"],
       queryFn: async () => {

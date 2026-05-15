@@ -36,7 +36,7 @@ export default function MarketingCalendar() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ title: "", content: "", platform: "telegram", type: "post", status: "planned", scheduledDate: "", assignedTo: "" });
 
-  const { data: entries, isLoading, isError, refetch} = useQuery<ContentCalendar[]>({
+  const { data: entries, isLoading, isError, error, refetch} = useQuery<ContentCalendar[]>({
     queryKey: ["/api/marketing/calendar", { month, year }],
     queryFn: async () => {
       const res = (await apiRequest('GET', `/api/marketing/calendar?month=${month}&year=${year}`)) as unknown as Response;
@@ -87,7 +87,7 @@ export default function MarketingCalendar() {
   if (isLoading) return <div className="p-4"><Skeleton className="h-96 rounded-lg" /></div>;
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

@@ -76,7 +76,7 @@ export default function DesignOrders() {
     },
   });
 
-  const { data: orders = [], isLoading, isError, refetch} = useQuery<DesignOrder[]>({
+  const { data: orders = [], isLoading, isError, error, refetch} = useQuery<DesignOrder[]>({
     queryKey: ["/api/design/orders"],
   });
 
@@ -156,7 +156,7 @@ export default function DesignOrders() {
 
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
   return (
     <div className="space-y-6">

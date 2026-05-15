@@ -26,7 +26,7 @@ export default function WarehouseIntegrations() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary, isError } = useQuery<IntegrationSummary>({
+  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary, isError, error } = useQuery<IntegrationSummary>({
     queryKey: ["/api/warehouse/integration/summary"],
   });
 
@@ -58,7 +58,7 @@ export default function WarehouseIntegrations() {
   };
 
   if (isError) {
-    return <EPErrorState onRetry={refetchSummary} />;
+    return <EPErrorState onRetry={refetchSummary}  error={error} />;
   }
 
   return (

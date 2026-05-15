@@ -76,7 +76,7 @@ export default function Adaptation() {
   const { t } = useTranslation("common");
   const [activeTab, setActiveTab] = useState("programs");
 
-  const { data: programs = [], isLoading: isLoadingPrograms, isError, refetch} = useQuery<AdaptationProgram[]>({
+  const { data: programs = [], isLoading: isLoadingPrograms, isError, error, refetch} = useQuery<AdaptationProgram[]>({
     queryKey: ["/api/adaptation/programs"],
   });
 
@@ -99,7 +99,7 @@ export default function Adaptation() {
   const isLoading = isLoadingPrograms || isLoadingEmployees || isLoadingFeedbacks || isLoadingEvents;
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {

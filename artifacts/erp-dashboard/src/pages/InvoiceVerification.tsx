@@ -65,7 +65,7 @@ export default function InvoiceVerification() {
   const [matchStatus, setMatchStatus] = useState<string>("all");
   const [selectedVendorInvoiceId, setSelectedVendorInvoiceId] = useState<string | null>(null);
 
-  const { data: invoicesData, isLoading, isError, refetch} = useQuery<InvoicesResponse>({
+  const { data: invoicesData, isLoading, isError, error, refetch} = useQuery<InvoicesResponse>({
     queryKey: ["/api/integration/invoice/vendor-invoices", matchStatus],
   });
 
@@ -113,7 +113,7 @@ export default function InvoiceVerification() {
   const mismatchCount = matchStats?.matchStats?.find(s => s.status === "mismatch")?.count || 0;
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

@@ -51,7 +51,7 @@ const TYPE_ICONS: Record<string, string> = {
 
 export default function IotSensorsPage() {
   const { t } = useTranslation("common");
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     Sensor[] | { data?: Sensor[] }
   >({
     queryKey: ["/api/iot/sensors"],
@@ -68,7 +68,7 @@ export default function IotSensorsPage() {
   const active   = sensors.filter(s => (s.is_active ?? s.isActive ?? s.status === "active")).length;
   const inactive = sensors.length - active;
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

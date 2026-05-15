@@ -67,7 +67,7 @@ const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6'
 export default function CameraQuality() {
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
 
-  const { data: defects, isLoading: defectsLoading, isError, refetch} = useQuery<QualityDefect[]>({
+  const { data: defects, isLoading: defectsLoading, isError, error, refetch} = useQuery<QualityDefect[]>({
     queryKey: ["/api/quality-defects-camera"]
   });
 
@@ -119,7 +119,7 @@ export default function CameraQuality() {
   }
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

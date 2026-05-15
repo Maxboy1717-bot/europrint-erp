@@ -45,7 +45,7 @@ export default function OrgDepartmentsPage() {
   const [newName, setNewName] = useState("");
   const [newCode, setNewCode] = useState("");
 
-  const { data: departments = [], isLoading, isError, refetch } = useQuery<Department[]>({
+  const { data: departments = [], isLoading, isError, error, refetch } = useQuery<Department[]>({
     queryKey: ["/api/core/departments"],
     select: (data) => (Array.isArray(data) ? data : (data as { data?: Department[] })?.data ?? []),
   });
@@ -80,7 +80,7 @@ export default function OrgDepartmentsPage() {
     },
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const filtered = departments.filter(d =>
     d.name?.toLowerCase().includes(search.toLowerCase()) ||

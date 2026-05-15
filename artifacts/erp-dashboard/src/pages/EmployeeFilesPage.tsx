@@ -63,7 +63,7 @@ export default function EmployeeFilesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ file_name: "", file_type: "other", file_url: "" });
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<EmployeeFile[] | { data?: EmployeeFile[]; files?: EmployeeFile[] }>({
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<EmployeeFile[] | { data?: EmployeeFile[]; files?: EmployeeFile[] }>({
     queryKey: ["/api/employee-files"],
   });
 
@@ -102,7 +102,7 @@ export default function EmployeeFilesPage() {
     },
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const filtered = files.filter(f => {
     const name = f.file_name ?? f.fileName ?? "";

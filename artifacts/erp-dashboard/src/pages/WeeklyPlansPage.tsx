@@ -54,7 +54,7 @@ export default function WeeklyPlansPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
 
-  const { data: plansData, isLoading, isError, refetch } = useQuery<{ data?: WeeklyPlan[]; plans?: WeeklyPlan[] } | WeeklyPlan[]>({
+  const { data: plansData, isLoading, isError, error, refetch } = useQuery<{ data?: WeeklyPlan[]; plans?: WeeklyPlan[] } | WeeklyPlan[]>({
     queryKey: ["/api/weekly-plans"],
   });
 
@@ -94,7 +94,7 @@ export default function WeeklyPlansPage() {
     },
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

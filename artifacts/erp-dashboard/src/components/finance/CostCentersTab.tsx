@@ -50,7 +50,7 @@ export function CostCentersTab() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<CostCenter | null>(null);
 
-  const { data: costCenters = [], isLoading, isError, refetch } = useQuery<CostCenter[]>({
+  const { data: costCenters = [], isLoading, isError, error, refetch } = useQuery<CostCenter[]>({
     queryKey: ["/api/fi/cost-centers"],
   });
 
@@ -136,7 +136,7 @@ export function CostCentersTab() {
     return (Array.isArray(users) ? users : []).find((u) => u.id === id)?.fullName || "-";
   };
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <div className="space-y-4">

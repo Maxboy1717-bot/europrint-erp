@@ -56,7 +56,7 @@ export default function BarcodeSystem() {
   const [isLabelPrintOpen, setIsLabelPrintOpen] = useState(false);
   const [batchForm, setBatchForm] = useState<BatchFormState>(DEFAULT_BATCH_FORM);
 
-  const { data: batches = [], isLoading: batchesLoading, isError: batchesError, refetch: refetchBatches } = useQuery<BatchData[]>({
+  const { data: batches = [], isLoading: batchesLoading, isError, error: batchesError, refetch: refetchBatches } = useQuery<BatchData[]>({
     queryKey: ["/api/warehouse/batches", materialFilter, warehouseFilter, statusFilter, searchQuery],
     queryFn: async () => {
       const params = new URLSearchParams();

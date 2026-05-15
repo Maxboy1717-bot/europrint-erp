@@ -33,7 +33,7 @@ export default function CourseDetail() {
   const [deleteModuleId, setDeleteModuleId] = useState<string | null>(null);
   const [deleteLessonId, setDeleteLessonId] = useState<string | null>(null);
 
-  const { data: course, isLoading, isError, refetch } = useQuery<{
+  const { data: course, isLoading, isError, error, refetch } = useQuery<{
     id: string;
     title: string;
     description: string;
@@ -106,7 +106,7 @@ export default function CourseDetail() {
   });
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {

@@ -48,7 +48,7 @@ export default function EmployeeZoneHistoryPage() {
   const [fromDate, setFromDate]     = useState("");
   const [toDate, setToDate]         = useState("");
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     ZoneEntry[] | { data?: ZoneEntry[] }
   >({
     queryKey: ["/api/employee-zone-history", searched, fromDate, toDate],
@@ -65,7 +65,7 @@ export default function EmployeeZoneHistoryPage() {
     ? rawData
     : (rawData as { data?: ZoneEntry[] })?.data ?? [];
 
-  if (isError && searched) return <EPErrorState onRetry={refetch} />;
+  if (isError && searched) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const doSearch = () => { if (employeeId) setSearched(employeeId); };
 

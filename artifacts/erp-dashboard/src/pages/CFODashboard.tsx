@@ -60,7 +60,7 @@ export default function CFODashboard() {
   const {
     data: dashboard,
     isLoading: dashboardLoading,
-    isError,
+    isError, error,
     refetch,
   } = useQuery<CFODashboardData>({ queryKey: ["/api/cfo/dashboard"] });
 
@@ -141,7 +141,7 @@ export default function CFODashboard() {
           status={periodBadge}
           actions={headerActions}
         />
-        <EPErrorState onRetry={refetch} />
+        <EPErrorState onRetry={refetch}  error={error} />
       </div>
     );
   }

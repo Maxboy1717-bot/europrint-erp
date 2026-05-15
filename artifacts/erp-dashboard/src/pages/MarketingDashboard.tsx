@@ -26,7 +26,7 @@ export default function MarketingDashboard() {
   const { data: hotLeads = [] } = useQuery<HotLead[]>({ queryKey: ["/api/marketing/ai/hot-leads"] });
   const { data: leadSources } = useQuery<LeadSourceSummary>({ queryKey: ["/api/marketing/leads/sources/summary"] });
 
-  const { data: stats, isLoading: statsLoading, isError, refetch } = useQuery<DashboardStats>({
+  const { data: stats, isLoading: statsLoading, isError, error, refetch } = useQuery<DashboardStats>({
     queryKey: ["/api/marketing/dashboard/stats"],
   });
 
@@ -56,7 +56,7 @@ export default function MarketingDashboard() {
   const convertedLeads = stats?.convertedLeads ?? 0;
   const totalLeads = stats?.totalLeads ?? 0;
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   if (statsLoading) {
     return (
