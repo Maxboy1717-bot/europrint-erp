@@ -19,7 +19,7 @@ interface AuthedReq extends FastifyRequest {
   user?: { id?: number; userId?: number; role?: string };
 }
 
-@Controller('api/aisha/wake')
+@Controller('aisha/wake')
 @UseGuards(JwtAuthGuard)
 export class WakeConfigController {
   private currentSensitivity: number;

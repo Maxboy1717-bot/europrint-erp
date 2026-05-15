@@ -10,7 +10,7 @@ import { Observable, Subject } from 'rxjs';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import type { StreamEvent } from '../../application/llm/claude.service';
 
-@Controller('api/aisha/stream')
+@Controller('aisha/stream')
 @UseGuards(JwtAuthGuard)
 export class AishaSseGateway {
   private readonly streams = new Map<string, Subject<MessageEvent>>();
