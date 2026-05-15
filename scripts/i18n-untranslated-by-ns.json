@@ -1,0 +1,318 @@
+{
+  "common.json": [
+    [
+      "hrEmail",
+      "HR email"
+    ],
+    [
+      "uclDValue",
+      "ucl || d.value"
+    ],
+    [
+      "blockedByMaterial",
+      "blocked_by_material"
+    ],
+    [
+      "newInProgressC0",
+      "NEW, IN_PROGRESS, C0:NEW..."
+    ],
+    [
+      "completionRateAverageScore",
+      "completion_rate, average_score, active_users"
+    ],
+    [
+      "aOverdueHours",
+      "a.overdue_hours"
+    ],
+    [
+      "socialApi",
+      "Social API"
+    ],
+    [
+      "externalIn",
+      "EXTERNAL_IN"
+    ],
+    [
+      "geminiVision",
+      "Gemini Vision"
+    ],
+    [
+      "europrintErp",
+      "EuroPrint ERP"
+    ],
+    [
+      "telegramId",
+      "Telegram ID"
+    ],
+    [
+      "quickRatio",
+      "Quick Ratio"
+    ],
+    [
+      "debtToEquity",
+      "Debt to Equity"
+    ],
+    [
+      "debtToAssets",
+      "Debt to Assets"
+    ],
+    [
+      "alumni",
+      "Alumni"
+    ],
+    [
+      "checklist",
+      "Checklist"
+    ],
+    [
+      "jpegPngWebp",
+      "JPEG, PNG, WebP"
+    ],
+    [
+      "europrintHr",
+      "EuroPrint HR"
+    ],
+    [
+      "hhUzTelegram",
+      "hh.uz, Telegram..."
+    ],
+    [
+      "k0Candidatecount",
+      "0 && candidateCount"
+    ],
+    [
+      "k0Salexpmax",
+      "0 && salExpMax"
+    ],
+    [
+      "scanBarcodeToAddProducts",
+      "Scan barcode to add products"
+    ],
+    [
+      "europrintPaper",
+      "EuroPrint Paper..."
+    ],
+    [
+      "variantprops",
+      "& VariantProps"
+    ],
+    [
+      "divBgDestructiveProgresspct",
+      "div]:bg-destructive\" : progressPct"
+    ],
+    [
+      "hrPerformanceAi",
+      "HR Performance AI"
+    ],
+    [
+      "k0Camerarejections",
+      "0 && cameraRejections"
+    ],
+    [
+      "zplZebraZplIi",
+      "ZPL — Zebra ZPL II"
+    ],
+    [
+      "eplEltronEpl2",
+      "EPL — Eltron EPL2"
+    ],
+    [
+      "awaitApirequest",
+      "await apiRequest"
+    ],
+    [
+      "forFetchFailures",
+      "for fetch failures,"
+    ],
+    [
+      "wUtilizationpct",
+      "w.utilizationPct"
+    ],
+    [
+      "interBold",
+      "Inter Bold"
+    ],
+    [
+      "interRegular",
+      "Inter Regular"
+    ],
+    [
+      "appleSamsung",
+      "Apple, Samsung..."
+    ],
+    [
+      "abcCompany",
+      "ABC Company"
+    ],
+    [
+      "macbookPro14",
+      "MacBook Pro 14"
+    ],
+    [
+      "hrOffboarding",
+      "HR — Offboarding"
+    ],
+    [
+      "tAchievementpct",
+      "t.achievementPct"
+    ],
+    [
+      "iserror",
+      ": isError ?"
+    ],
+    [
+      "aiPredictiveEngine",
+      "AI Predictive Engine"
+    ],
+    [
+      "k0Taskstartoffset",
+      "0 && taskStartOffset"
+    ],
+    [
+      "telegramInstagram",
+      "Telegram, Instagram..."
+    ],
+    [
+      "apiKey",
+      "API Key"
+    ],
+    [
+      "apiSecret",
+      "API Secret"
+    ],
+    [
+      "webhookSecret",
+      "Webhook Secret"
+    ],
+    [
+      "webhookUrllar",
+      "Webhook URL"
+    ],
+    [
+      "slug",
+      "Slug"
+    ],
+    [
+      "k1WelcomeBanner",
+      "1. Welcome Banner"
+    ],
+    [
+      "constTransitionsRecord",
+      "const transitions: Record"
+    ],
+    [
+      "previousPassrateUpLatestPassrate",
+      "previous.passRate ? \"up\" : latest.passRate"
+    ],
+    [
+      "qcExtended",
+      "QC Extended"
+    ],
+    [
+      "checkIn",
+      "➕ Check-in"
+    ],
+    [
+      "hrCapital9",
+      "HR Capital №9"
+    ],
+    [
+      "boomerangHire",
+      "🔄 Boomerang Hire"
+    ],
+    [
+      "zavodLlc",
+      "Zavod LLC"
+    ],
+    [
+      "gpt4oMini",
+      "GPT-4o Mini"
+    ],
+    [
+      "isout",
+      ": isOut ?"
+    ],
+    [
+      "post",
+      "✅ Post"
+    ],
+    [
+      "lMaterialcodeLQty",
+      "!l.materialCode || l.qty"
+    ],
+    [
+      "alfaTexLlc",
+      "Alfa-Tex LLC"
+    ],
+    [
+      "bin",
+      "🗂 Bin"
+    ],
+    [
+      "x42",
+      "x42"
+    ]
+  ],
+  "design.json": [
+    [
+      "ai",
+      "Adobe Illustrator"
+    ]
+  ],
+  "finance.json": [
+    [
+      "cfo.altman.title",
+      "Altman Z-Score"
+    ],
+    [
+      "quickRatio",
+      "Quick Ratio"
+    ]
+  ],
+  "navigation.json": [
+    [
+      "AI CRM",
+      "AI CRM"
+    ],
+    [
+      "Inline QC",
+      "Inline QC"
+    ],
+    [
+      "Alumni",
+      "Alumni"
+    ],
+    [
+      "HR ↔ LMS",
+      "HR ↔ LMS"
+    ],
+    [
+      "OEE Live",
+      "OEE Live"
+    ],
+    [
+      "TELEGRAM",
+      "TELEGRAM"
+    ],
+    [
+      "HR AI",
+      "AI HR"
+    ],
+    [
+      "Tablet PWA",
+      "Tablet PWA"
+    ]
+  ],
+  "production.json": [
+    [
+      "abcCompany",
+      "ABC Company"
+    ]
+  ],
+  "settings.json": [
+    [
+      "gpt4oMini",
+      "GPT-4o Mini"
+    ]
+  ]
+}
