@@ -29,6 +29,7 @@ const QCDashboard = lazy(() => import("@/pages/QCDashboard"));
 const QCApproval = lazy(() => import("@/pages/QCApproval"));
 const QCFinalInspection = lazy(() => import("@/pages/QCFinalInspection"));
 const QCExtended = lazy(() => import("@/pages/QCExtended"));
+const QCModule = lazy(() => import("@/pages/QCModule"));
 const DesignDashboard = lazy(() => import("@/pages/DesignDashboard"));
 const DesignOrders = lazy(() => import("@/pages/DesignOrders"));
 const AIDesignGenerator = lazy(() => import("@/pages/AIDesignGenerator"));
@@ -120,6 +121,15 @@ export const MES_ROUTES: [string, React.ComponentType][] = [
 
 export const QC_ROUTES: [string, React.ComponentType][] = [
   ['/qc/dashboard-home',    QCDashboard],
+  // Tabbed QCModule page hosts parameters / tests / standards. Each URL opens a
+  // different initial tab — see getInitialTab() in QCModule.tsx:
+  //   /qc/tests       → "physical" tab (default)
+  //   /qc/parameters  → "physical" tab
+  //   /qc/standards   → "standards" tab
+  ['/qc-module',            QCModule],
+  ['/qc/tests',             QCModule],
+  ['/qc/parameters',        QCModule],
+  ['/qc/standards',         QCModule],
 
   ['/qc/approval',          QCApproval],
   ['/qc/final',             QCFinalInspection],
