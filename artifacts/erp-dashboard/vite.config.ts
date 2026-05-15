@@ -10,6 +10,7 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { VitePWA } from "vite-plugin-pwa";
 import http from "http";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 const rawPort = process.env.PORT;
 const port = rawPort && !Number.isNaN(Number(rawPort)) && Number(rawPort) > 0
@@ -81,13 +82,40 @@ function posAuthDirectPlugin(nestUrl: string, prefix: string) {
   };
 }
 
+// Sentry source-map upload is enabled ONLY when SENTRY_AUTH_TOKEN is set.
+// Without the token, the plugin would throw at build time — keep it optional
+// so local builds and CI without Sentry secrets continue to work.
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN?.trim();
+const sentryOrg = process.env.SENTRY_ORG?.trim() || "europrint";
+const sentryProject = process.env.SENTRY_PROJECT?.trim() || "erp-dashboard";
+const sentryRelease = process.env.SENTRY_RELEASE?.trim();
+
 export default defineConfig({
   base: basePath,
+  // sourcemap must be enabled for Sentry to symbolicate stack traces.
+  // Hidden source-maps are uploaded to Sentry but not served to the browser.
+  build: {
+    sourcemap: sentryAuthToken ? "hidden" : false,
+    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    emptyOutDir: true,
+  },
   plugins: [
     posAuthDirectPlugin(nestApiUrl, basePrefix),
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),
+    ...(sentryAuthToken
+      ? [
+          sentryVitePlugin({
+            authToken: sentryAuthToken,
+            org: sentryOrg,
+            project: sentryProject,
+            release: sentryRelease ? { name: sentryRelease } : undefined,
+            // Only upload during real production builds (not dev server).
+            disable: process.env.NODE_ENV !== "production",
+          }),
+        ]
+      : []),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
@@ -273,10 +301,6 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   root: path.resolve(import.meta.dirname),
-  build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
-    emptyOutDir: true,
-  },
   server: {
     port,
     host: "0.0.0.0",
