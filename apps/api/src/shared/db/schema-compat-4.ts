@@ -18,6 +18,24 @@ export const logisticsRoutes = stub(pgTable('logistics_routes', {
   createdAt: ts('created_at').defaultNow(),
 }));
 
+/**
+ * @deprecated SCHEMA DISCREPANCY — this stub disagrees with two other definitions of `iot_sensors`:
+ *   - schema-ext-b-2.ts:259 — basic shape (id, name, type, machine_id, is_active, created_at)
+ *   - raw SQL in iot/application/commands/*.handler.ts — uses sensor_code/unit/min_threshold/
+ *     max_threshold/last_reading column names that exist in neither Drizzle definition.
+ *
+ * The production DB shape matches the RAW-SQL contract (sensor_code etc.). The Drizzle defs
+ * are out of date. Until a migration aligns them, the camelCase stub below is the only one
+ * used by Drizzle queries; switching modules from this stub to schema-ext-b-2.ts's
+ * iot_sensors will break them because that snake_case definition lacks the columns the
+ * sensors.repository.ts service expects.
+ *
+ * Future cleanup task:
+ *   1. Introspect the prod DB columns.
+ *   2. Rewrite schema-ext-b-2.ts iot_sensors to match.
+ *   3. Remove this stub.
+ *   4. Migrate sensors.repository.ts to the canonical schema.
+ */
 export const iotSensors = stub(pgTable('iot_sensors', {
   id: integer('id').primaryKey(),
   deviceCode: text('device_code').notNull().unique(),
