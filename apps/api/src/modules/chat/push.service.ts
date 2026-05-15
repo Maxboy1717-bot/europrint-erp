@@ -52,9 +52,20 @@ export class PushService {
   }
 
   async unregister(userId: string): Promise<Result<{ removed: number }>> {
-    const r = await this.pushRepo.deactivateForUser(userId);
-    if (!r.ok) return { ok: false, error: r.error };
-    return { ok: true, data: { removed: 1 } };
+    try {
+      const r = await this.pushRepo.deactivateForUser(userId);
+      if (!r.ok) return { ok: false, error: r.error };
+      return { ok: true, data: { removed: 1 } };
+    } catch (error) {
+      this.logger.error(
+        { method: 'unregister', userId, error },
+        'Database query failed',
+      );
+      return {
+        ok: false,
+        error: { code: 'DB_ERROR', message: `Failed to unregister push subscription: ${(error as Error).message}` },
+      };
+    }
   }
 
   async sendToUser(userId: string, payload: PushPayload): Promise<Result<{ delivered: number }>> {

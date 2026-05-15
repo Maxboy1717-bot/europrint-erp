@@ -151,7 +151,13 @@ export class DrizzleCoreRepo implements ICoreRepo {
       const result = await db.select().from(userPanels).where(eq(userPanels.userId, userId));
       if (result.length === 0) return Ok(null);
       return Ok(this.mapToPanel(result[0]));
-    } catch { return Ok(null); }
+    } catch (error) {
+      this.logger.error(
+        { method: 'findPanelByUserId', userId, error },
+        'Database query failed',
+      );
+      return Err(`Failed to fetch user panel: ${(error as Error).message}`);
+    }
   }
 
   async savePanelForUser(userId: string, layout: PanelLayout[], name?: string): Promise<Result<Panel>> {
@@ -180,7 +186,13 @@ export class DrizzleCoreRepo implements ICoreRepo {
       const result = await db.select().from(userPanels).where(eq(userPanels.isDefault, true));
       if (result.length === 0) return Ok(null);
       return Ok(this.mapToPanel(result[0]));
-    } catch { return Ok(null); }
+    } catch (error) {
+      this.logger.error(
+        { method: 'getDefaultPanel', error },
+        'Database query failed',
+      );
+      return Err(`Failed to fetch default panel: ${(error as Error).message}`);
+    }
   }
 
   private mapToDepartment(row: DbRow): Department {

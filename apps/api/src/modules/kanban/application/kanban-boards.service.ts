@@ -3,8 +3,8 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Inject, Injectable } from '@nestjs/common';
-import { Result } from '@common/result';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Result, Err } from '@common/result';
 import {
   IKanbanBoardsRepo,
   KANBAN_BOARDS_REPO,
@@ -19,6 +19,8 @@ import { sql } from 'drizzle-orm';
 
 @Injectable()
 export class KanbanBoardsService {
+  private readonly logger = new Logger(KanbanBoardsService.name);
+
   constructor(
     @Inject(KANBAN_BOARDS_REPO)
     private readonly boardsRepo: IKanbanBoardsRepo,
@@ -46,14 +48,22 @@ export class KanbanBoardsService {
   }
 
   async addColumn(boardId: string, body: Record<string, unknown>): Promise<Result<KanbanColumn>> {
-    const maxOrderResult = await this.boardsRepo.getMaxColumnOrder(boardId);
-    const maxOrder = maxOrderResult.ok ? maxOrderResult.data : 0;
-    return this.boardsRepo.addColumn({
-      board_id: boardId,
-      name: String(body.name || 'Yangi Ustun'),
-      sort_order: maxOrder + 1,
-      color: body.color != null ? String(body.color) : null,
-    });
+    try {
+      const maxOrderResult = await this.boardsRepo.getMaxColumnOrder(boardId);
+      const maxOrder = maxOrderResult.ok ? maxOrderResult.data : 0;
+      return await this.boardsRepo.addColumn({
+        board_id: boardId,
+        name: String(body.name || 'Yangi Ustun'),
+        sort_order: maxOrder + 1,
+        color: body.color != null ? String(body.color) : null,
+      });
+    } catch (error) {
+      this.logger.error(
+        { method: 'addColumn', boardId, columnName: body.name, error },
+        'Database query failed',
+      );
+      return Err(`Failed to add column: ${(error as Error).message}`);
+    }
   }
 
   updateColumn(boardId: string, columnId: string, body: Record<string, unknown>): Promise<Result<KanbanColumn>> {
@@ -119,26 +129,34 @@ export class KanbanBoardsService {
   }
 
   async addCard(boardId: string, body: Record<string, unknown>): Promise<Result<KanbanCard>> {
-    const rawCol   = body.columnId ?? body.column_id;
-    const columnId = rawCol != null ? String(rawCol) : null;
-    const rawOwner = body.ownerUserId ?? body.owner_user_id;
-    const ownerUserId = rawOwner != null ? String(rawOwner) : null;
-    const rawDue   = body.dueDate ?? body.due_date;
+    try {
+      const rawCol   = body.columnId ?? body.column_id;
+      const columnId = rawCol != null ? String(rawCol) : null;
+      const rawOwner = body.ownerUserId ?? body.owner_user_id;
+      const ownerUserId = rawOwner != null ? String(rawOwner) : null;
+      const rawDue   = body.dueDate ?? body.due_date;
 
-    const result = await this.boardsRepo.addCard({
-      board_id: boardId,
-      column_id: columnId,
-      title: String(body.title || 'Yangi vazifa'),
-      description: body.description != null ? String(body.description) : null,
-      priority: String(body.priority || 'normal'),
-      due_date: rawDue != null ? String(rawDue) : null,
-      owner_user_id: ownerUserId,
-    });
+      const result = await this.boardsRepo.addCard({
+        board_id: boardId,
+        column_id: columnId,
+        title: String(body.title || 'Yangi vazifa'),
+        description: body.description != null ? String(body.description) : null,
+        priority: String(body.priority || 'normal'),
+        due_date: rawDue != null ? String(rawDue) : null,
+        owner_user_id: ownerUserId,
+      });
 
-    if (result.ok && columnId && result.data?.id) {
-      this.robotSvc.onCardCreated({ cardId: result.data.id, boardId, columnId, ownerUserId }).catch(() => {});
+      if (result.ok && columnId && result.data?.id) {
+        this.robotSvc.onCardCreated({ cardId: result.data.id, boardId, columnId, ownerUserId }).catch(() => {});
+      }
+      return result;
+    } catch (error) {
+      this.logger.error(
+        { method: 'addCard', boardId, title: body.title, error },
+        'Database query failed',
+      );
+      return Err(`Failed to add card: ${(error as Error).message}`);
     }
-    return result;
   }
 
   deleteCard(id: string): Promise<Result<void>> {

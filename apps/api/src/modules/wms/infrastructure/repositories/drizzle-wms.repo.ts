@@ -165,9 +165,12 @@ export class DrizzleWmsRepository implements IWmsRepository {
         .set({ deleted_at: _time.now(), deleted_by: deletedBy })
         .where(and(eq(wms_stock.id, id), isNull(wms_stock.deleted_at)));
       return Ok(undefined);
-    } catch {
-      this.logger.error('Failed to soft-delete stock');
-      return Err('Soft-delete xatoligi');
+    } catch (error) {
+      this.logger.error(
+        { method: 'softDeleteStock', stockId: id, deletedBy, error },
+        'Database query failed',
+      );
+      return Err(`Failed to soft-delete stock: ${(error as Error).message}`);
     }
   }
 }
