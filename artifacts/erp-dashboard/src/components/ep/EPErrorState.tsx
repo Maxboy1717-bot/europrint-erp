@@ -45,7 +45,56 @@ interface EPErrorStateProps {
   variant?: "card" | "inline";
   /** Visual error severity — affects icon tint. */
   severity?: "error" | "warning";
+  /** Raw error object — shown as a diagnostic detail line below the description. */
+  error?: unknown;
+  /** Failed URL — shown so the user knows WHICH endpoint failed. */
+  url?: string;
   className?: string;
+}
+
+/** Translate raw error to a user-friendly title + description in Uzbek. */
+function describeError(error: unknown): { title: string; description: string; severity: 'error' | 'warning' } {
+  if (!error) {
+    return {
+      title: "Ma'lumotlarni yuklashda xatolik",
+      description: "Server javob bermayapti yoki internet aloqasi yo'q.",
+      severity: 'error',
+    };
+  }
+  const err = error as { status?: number; message?: string; name?: string };
+  const status = err.status;
+  const msg = err.message || String(error);
+
+  if (status === 401) return {
+    title: "Avtorizatsiya kerak",
+    description: "Sessiya muddati tugagan. Qaytadan kiring.",
+    severity: 'warning',
+  };
+  if (status === 403) return {
+    title: "Ruxsat yo'q",
+    description: "Bu sahifani ko'rish uchun ruxsatingiz yo'q.",
+    severity: 'warning',
+  };
+  if (status === 404) return {
+    title: "Topilmadi (404)",
+    description: "Bu endpoint backend'da yo'q yoki yo'q qilingan. Sahifa hali tayyor emas.",
+    severity: 'warning',
+  };
+  if (status === 500 || status === 502 || status === 503) return {
+    title: `Server xatosi (${status})`,
+    description: msg.length > 200 ? msg.slice(0, 200) + '…' : msg,
+    severity: 'error',
+  };
+  if (err.name === 'TypeError' && /fetch|network/i.test(msg)) return {
+    title: "Tarmoq xatosi",
+    description: "Backend ishlamayapti yoki kompyuter internet bilan ulanmagan.",
+    severity: 'error',
+  };
+  return {
+    title: "Ma'lumotlarni yuklashda xatolik",
+    description: msg.length > 200 ? msg.slice(0, 200) + '…' : msg,
+    severity: 'error',
+  };
 }
 
 export function EPErrorState({
@@ -54,17 +103,30 @@ export function EPErrorState({
   onRetry,
   retryLabel,
   variant = "card",
-  severity = "error",
+  severity,
+  error,
+  url,
   className,
 }: EPErrorStateProps) {
   const { t } = useTranslation("common");
-  const resolvedTitle = title ?? t("malumotlarniYuklashdaXatolik");
-  const resolvedDescription = description ?? t("serverJavobBermayaptiYokiInternet");
+  // If error is provided, derive a smart title/description/severity from it.
+  const derived = error ? describeError(error) : null;
+  const resolvedSeverity = severity ?? derived?.severity ?? 'error';
+  const resolvedTitle = title ?? derived?.title ?? t("malumotlarniYuklashdaXatolik");
+  const resolvedDescription = description ?? derived?.description ?? t("serverJavobBermayaptiYokiInternet");
   const resolvedRetryLabel = retryLabel ?? t("qaytaUrinibKorish");
   const palette =
-    severity === "warning"
+    resolvedSeverity === "warning"
       ? { soft: "var(--ep-yellow-soft)", solid: "var(--ep-yellow)" }
       : { soft: "var(--ep-red-soft)",    solid: "var(--ep-red)"    };
+
+  // Diagnostic detail: status + URL on a small line under the description.
+  const errAny = error as { status?: number } | null;
+  const diagnostic = error || url ? (
+    <p className="text-[11px] text-muted-foreground/70 font-mono mt-1 break-all">
+      {errAny?.status ? `${errAny.status} · ` : ''}{url || ''}
+    </p>
+  ) : null;
 
   const body = (
     <div className="flex flex-col items-center text-center gap-3">
@@ -79,6 +141,7 @@ export function EPErrorState({
         <p className="text-[13px] text-muted-foreground max-w-[420px]">
           {resolvedDescription}
         </p>
+        {diagnostic}
       </div>
       {onRetry && (
         <Button
