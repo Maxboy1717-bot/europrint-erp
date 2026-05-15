@@ -122,6 +122,24 @@ export class CamerasListController {
   async getOne(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.svc.getCameraById(id));
   }
+
+  /**
+   * Patch a camera's AI / activation flags. Used by the modern camera-AI hub
+   * (camera-ai-modern/api.ts → patchCameraAi). Accepts:
+   *   { aiCategories?, aiPrompt?, aiSensitivity?, aiEnabled?, isActive? }
+   * The cameras table has columns `ai_enabled` and `ai_sensitivity` directly;
+   * aiPrompt / aiCategories belong to camera_ai_configs and are passed through
+   * to the service to upsert in that side table.
+   */
+  @Patch(':id')
+  @Roles(...CAM_WRITE)
+  @UseInterceptors(AuditInterceptor)
+  async patchAi(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return unwrapOrThrow(await this.svc.patchCameraAi(id, body));
+  }
 }
 
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
