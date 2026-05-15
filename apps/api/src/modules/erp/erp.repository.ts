@@ -16,7 +16,7 @@ const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () 
 export class ErpRepository {
   async listProducts(limit: number, offset: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT mc.*, c.name AS category_name FROM material_cards mc LEFT JOIN material_categories c ON c.id = mc.category_id ORDER BY mc.name LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+      return exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -24,7 +24,7 @@ export class ErpRepository {
 
   async getProduct(id: number): Promise<Result<Row | null>>  {
   try {  
-      const r = await exec(sql`SELECT mc.*, c.name AS category_name FROM material_cards mc LEFT JOIN material_categories c ON c.id = mc.category_id WHERE mc.id = ${id}`);
+      const r = await exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category WHERE mc.id = ${id}`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
