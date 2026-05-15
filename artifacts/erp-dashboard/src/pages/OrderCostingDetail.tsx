@@ -24,8 +24,7 @@ export function OrderCostingDetailView({costingDetail, onBack, getStatusBadge }:
 
   const calculateMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiRequest("POST", `/api/order-costing/${id}/calculate`, {});
-      return res.json();
+      return await apiRequest("POST", `/api/order-costing/${id}/calculate`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/order-costing"] });

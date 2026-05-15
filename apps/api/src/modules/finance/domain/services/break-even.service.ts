@@ -1,4 +1,12 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   TO_CHAR(po.created_at, 'YYYY-MM') = ${period} period bucketing in a JOIN
+ *   predicate, and INSERT ... ON CONFLICT (product_name, period) DO UPDATE SET
+ *   ... = EXCLUDED.* upsert with composite conflict target.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
+/**
  * @module break-even.service
  * @description Break-even and operating-leverage analysis per product per
  *   period. Reads `cost_structure` (fixed cost, variable cost per unit,

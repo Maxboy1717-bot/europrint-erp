@@ -1,4 +1,12 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   Multi-predicate fuzzy board lookup using LOWER(name) LIKE '%...%' across
+ *   multiple OR'd patterns combined with type='sales' and deleted_at IS NULL,
+ *   plus dependent inserts into kanban_columns/kanban_cards using sub-selects
+ *   on dynamically discovered board/column IDs.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * order-created-kanban.handler.ts
  *
  * OrderCreatedEvent → avtomatik Kanban karta yaratish.

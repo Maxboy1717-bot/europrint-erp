@@ -7,6 +7,7 @@
  */
 
 import { Link } from "wouter";
+import { useTranslation } from '@/lib/i18n';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -18,7 +19,6 @@ import type {
   TranslationFn,
 } from "./WorkTabTypes";
 
-import { useTranslation } from "@/lib/i18n";
 // ─── Operator production stats block ─────────────────────────────────────────
 
 interface OperatorProductionBlockProps {
@@ -130,7 +130,7 @@ export function OperatorProductionBlock({ employeeId, }: OperatorProductionBlock
 
 interface CurrentWorkplaceCardProps {
   employee: Employee;
-  t: TranslationFn;
+  t: TranslationFn & ((key: string) => string);
   tCommon: TranslationFn;
   orgStructureData:
     | { primary: OrgStructureAssignment; all: OrgStructureAssignment[] }
@@ -145,7 +145,6 @@ export function CurrentWorkplaceCard({
   orgStructureData,
   calculateWorkExperience,
 }: CurrentWorkplaceCardProps) {
-  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
@@ -221,7 +220,7 @@ export function CurrentWorkplaceCard({
 
 interface CkpAttestationCardProps {
   employee: Employee;
-  t: TranslationFn;
+  t: TranslationFn & ((key: string) => string);
   tCommon: TranslationFn;
 }
 
@@ -230,7 +229,6 @@ export function CkpAttestationCard({
   t,
   tCommon,
 }: CkpAttestationCardProps) {
-  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

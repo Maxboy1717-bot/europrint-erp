@@ -14,7 +14,6 @@ import {
 } from "recharts";
 import type { IotAlert } from "@shared/schema";
 import { OeeGauge, getSeverityBadge } from "./IotDashboardHelpers";
-import { useTranslation } from '@/lib/i18n';
 
 interface OeePoint { date: string; oee: number; availability: number; performance: number; quality: number }
 interface MachineOee  { availability: number; performance: number; quality: number; oee: number }
@@ -35,7 +34,6 @@ export function IotOeeAlertsTab({
   alerts, onResolveAlert, resolveAlertPending,
   t, tProd, language,
 }: Props) {
-  const { t } = useTranslation("common");
   return (
     <>
       {/* ── OEE Trend ── */}

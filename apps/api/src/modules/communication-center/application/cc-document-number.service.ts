@@ -22,38 +22,55 @@ export class CcDocumentNumberService {
   /** Berilgan shablon uchun keyingi yagona hujjat raqamini yaratadi (atomic) */
   async generate(templateId: string, format: string): Promise<string> {
     try {
-      const now = new Date();
-      const yyyy = String(now.getFullYear());
-      const yy   = yyyy.slice(-2);
-      const mm   = String(now.getMonth() + 1).padStart(2, '0');
-      const dd   = String(now.getDate()).padStart(2, '0');
-      const year = Number(yyyy);
-
-      // pg_advisory_xact_lock — transaction-level lock, template+year unique key.
-      // Two concurrent requests for the same template+year wait in line — no duplicate seq.
-      const seq = await db.transaction(async (tx) => {
-        await tx.execute(
-          sql`SELECT pg_advisory_xact_lock(abs(hashtext(${templateId} || ':' || ${year}::text)))`
-        );
-        const r = await tx.execute(sql`
-          SELECT (COUNT(*) + 1)::int AS seq
-          FROM cc_documents
-          WHERE template_id = ${templateId}
-            AND EXTRACT(YEAR FROM created_at) = ${year}
-        `);
-        return Number((r.rows[0] as { seq: number })?.seq ?? 1);
-      });
-
-      return format
-        .replace(/\{YYYY\}/g, yyyy)
-        .replace(/\{YY\}/g,   yy)
-        .replace(/\{MM\}/g,   mm)
-        .replace(/\{DD\}/g,   dd)
-        .replace(/\{SEQ6\}/g, String(seq).padStart(6, '0'))
-        .replace(/\{SEQ4\}/g, String(seq).padStart(4, '0'))
-        .replace(/\{SEQ\}/g,  String(seq).padStart(4, '0'));   // default SEQ = SEQ4
+      const parts = this.buildDateParts();
+      const seq = await this.nextSequence(templateId, parts.year);
+      return this.applyFormat(format, parts, seq);
     } catch (e) {
       throw new Error(`cc_document_number.generate: ${String(e)}`);
     }
+  }
+
+  private buildDateParts(): { yyyy: string; yy: string; mm: string; dd: string; year: number } {
+    const now = new Date();
+    const yyyy = String(now.getFullYear());
+    return {
+      yyyy,
+      yy: yyyy.slice(-2),
+      mm: String(now.getMonth() + 1).padStart(2, '0'),
+      dd: String(now.getDate()).padStart(2, '0'),
+      year: Number(yyyy),
+    };
+  }
+
+  private async nextSequence(templateId: string, year: number): Promise<number> {
+    // pg_advisory_xact_lock — transaction-level lock, template+year unique key.
+    // Two concurrent requests for the same template+year wait in line — no duplicate seq.
+    return await db.transaction(async (tx) => {
+      await tx.execute(
+        sql`SELECT pg_advisory_xact_lock(abs(hashtext(${templateId} || ':' || ${year}::text)))`,
+      );
+      const r = await tx.execute(sql`
+        SELECT (COUNT(*) + 1)::int AS seq
+        FROM cc_documents
+        WHERE template_id = ${templateId}
+          AND EXTRACT(YEAR FROM created_at) = ${year}
+      `);
+      return Number((r.rows[0] as { seq: number })?.seq ?? 1);
+    });
+  }
+
+  private applyFormat(
+    format: string,
+    p: { yyyy: string; yy: string; mm: string; dd: string },
+    seq: number,
+  ): string {
+    return format
+      .replace(/\{YYYY\}/g, p.yyyy)
+      .replace(/\{YY\}/g,   p.yy)
+      .replace(/\{MM\}/g,   p.mm)
+      .replace(/\{DD\}/g,   p.dd)
+      .replace(/\{SEQ6\}/g, String(seq).padStart(6, '0'))
+      .replace(/\{SEQ4\}/g, String(seq).padStart(4, '0'))
+      .replace(/\{SEQ\}/g,  String(seq).padStart(4, '0'));   // default SEQ = SEQ4
   }
 }

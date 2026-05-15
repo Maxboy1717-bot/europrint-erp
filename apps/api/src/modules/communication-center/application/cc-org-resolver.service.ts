@@ -32,65 +32,68 @@ export class CcOrgResolverService {
   // ── ichki: kod bo'yicha asosiy egasi ─────────────────────────────────
   private async resolveBase(positionCode: string, senderUserId: number): Promise<number> {
     const code = positionCode.trim().toUpperCase();
-
-    if (code === 'CEO') {
-      const r = await runQuery<{ head_user_id: number | null }>(sql`
-        SELECT head_user_id FROM org_departments
-        WHERE parent_id IS NULL AND head_user_id IS NOT NULL
-        ORDER BY id ASC LIMIT 1
-      `);
-      const id = r.rows[0]?.head_user_id ?? null;
-      if (!id) throw new BadRequestException('CEO orgsxemada belgilanmagan');
-      return id;
-    }
-
-    if (code === 'MANAGER_OF_SENDER') {
-      // sender → employee → manager_id → manager.user_id
-      const r = await runQuery<{ user_id: number | null }>(sql`
-        SELECT m.user_id
-        FROM employees e
-        LEFT JOIN employees m ON m.id = e.manager_id
-        WHERE e.user_id = ${senderUserId}
-        LIMIT 1
-      `);
-      const id = r.rows[0]?.user_id ?? null;
-      if (!id) throw new BadRequestException("Yuboruvchining bo'lim rahbari orgsxemada belgilanmagan");
-      return id;
-    }
-
-    if (code === 'DEPT_HEAD') {
-      // sender's department → org_departments.head_user_id (employees.department_id = org_departments.id deb hisoblaymiz)
-      const r = await runQuery<{ head_user_id: number | null }>(sql`
-        SELECT od.head_user_id
-        FROM employees e
-        LEFT JOIN org_departments od ON od.id = e.department_id
-        WHERE e.user_id = ${senderUserId}
-        LIMIT 1
-      `);
-      const id = r.rows[0]?.head_user_id ?? null;
-      if (!id) throw new BadRequestException("Yuboruvchining bo'lim rahbari topilmadi");
-      return id;
-    }
-
-    if (code.startsWith('POSITION:')) {
-      const posCode = code.slice('POSITION:'.length).trim();
-      if (!posCode) throw new BadRequestException('POSITION: kod ko\'rsatilmagan');
-      const r = await runQuery<{ user_id: number | null }>(sql`
-        SELECT e.user_id
-        FROM employees e
-        INNER JOIN positions p ON p.id = e.position_id
-        WHERE UPPER(p.code) = ${posCode}
-          AND COALESCE(e.is_active, true) = true
-          AND e.user_id IS NOT NULL
-        ORDER BY e.id ASC
-        LIMIT 1
-      `);
-      const id = r.rows[0]?.user_id ?? null;
-      if (!id) throw new BadRequestException(`Lavozim ${posCode} bo'sh — orgsxemada xodim biriktirilmagan`);
-      return id;
-    }
-
+    if (code === 'CEO')               return this.resolveCeo();
+    if (code === 'MANAGER_OF_SENDER') return this.resolveManagerOfSender(senderUserId);
+    if (code === 'DEPT_HEAD')         return this.resolveDeptHead(senderUserId);
+    if (code.startsWith('POSITION:')) return this.resolveByPosition(code);
     throw new BadRequestException(`Noma'lum tasdiqlash lavozim kodi: ${positionCode}`);
+  }
+
+  private async resolveCeo(): Promise<number> {
+    const r = await runQuery<{ head_user_id: number | null }>(sql`
+      SELECT head_user_id FROM org_departments
+      WHERE parent_id IS NULL AND head_user_id IS NOT NULL
+      ORDER BY id ASC LIMIT 1
+    `);
+    const id = r.rows[0]?.head_user_id ?? null;
+    if (!id) throw new BadRequestException('CEO orgsxemada belgilanmagan');
+    return id;
+  }
+
+  private async resolveManagerOfSender(senderUserId: number): Promise<number> {
+    // sender → employee → manager_id → manager.user_id
+    const r = await runQuery<{ user_id: number | null }>(sql`
+      SELECT m.user_id
+      FROM employees e
+      LEFT JOIN employees m ON m.id = e.manager_id
+      WHERE e.user_id = ${senderUserId}
+      LIMIT 1
+    `);
+    const id = r.rows[0]?.user_id ?? null;
+    if (!id) throw new BadRequestException("Yuboruvchining bo'lim rahbari orgsxemada belgilanmagan");
+    return id;
+  }
+
+  private async resolveDeptHead(senderUserId: number): Promise<number> {
+    // sender's department → org_departments.head_user_id
+    const r = await runQuery<{ head_user_id: number | null }>(sql`
+      SELECT od.head_user_id
+      FROM employees e
+      LEFT JOIN org_departments od ON od.id = e.department_id
+      WHERE e.user_id = ${senderUserId}
+      LIMIT 1
+    `);
+    const id = r.rows[0]?.head_user_id ?? null;
+    if (!id) throw new BadRequestException("Yuboruvchining bo'lim rahbari topilmadi");
+    return id;
+  }
+
+  private async resolveByPosition(code: string): Promise<number> {
+    const posCode = code.slice('POSITION:'.length).trim();
+    if (!posCode) throw new BadRequestException('POSITION: kod ko\'rsatilmagan');
+    const r = await runQuery<{ user_id: number | null }>(sql`
+      SELECT e.user_id
+      FROM employees e
+      INNER JOIN positions p ON p.id = e.position_id
+      WHERE UPPER(p.code) = ${posCode}
+        AND COALESCE(e.is_active, true) = true
+        AND e.user_id IS NOT NULL
+      ORDER BY e.id ASC
+      LIMIT 1
+    `);
+    const id = r.rows[0]?.user_id ?? null;
+    if (!id) throw new BadRequestException(`Lavozim ${posCode} bo'sh — orgsxemada xodim biriktirilmagan`);
+    return id;
   }
 
   // ── ichki: faol delegatsiya tekshiruvi ───────────────────────────────

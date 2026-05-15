@@ -24,7 +24,7 @@ export function useEmployeeFiles(id: string | undefined) {
 
   const uploadFileMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest('POST', `/api/employees/${id}/files`);
+      const response = await apiRequest('POST', `/api/employees/${id}/files`) as unknown as Response;
       if (!response.ok) throw new Error("Failed to upload file");
       return response.json();
     },

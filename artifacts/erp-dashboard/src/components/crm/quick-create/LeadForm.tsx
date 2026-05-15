@@ -79,7 +79,7 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
         comments:          data.comments          || null,
         assignedById:      data.assignedById      || null,
       };
-      return apiRequest("POST", "/api/crm/leads/quick", payload);
+      return apiRequest<Record<string, unknown>>("POST", "/api/crm/leads/quick", payload);
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/leads"] });

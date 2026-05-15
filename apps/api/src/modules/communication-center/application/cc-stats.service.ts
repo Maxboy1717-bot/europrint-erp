@@ -32,12 +32,34 @@ export class CcStatsService {
   async getKpi(userId: number, role: string): Promise<CcKpi> {
     const isPrivileged = ['admin', 'super_admin', 'director', 'ceo'].includes(role);
 
-    // 1. Asosiy ko'rsatkichlar
+    const summary = await this.loadSummary();
+    const today = await this.loadToday();
+    const byDepartment = await this.loadByDepartment(userId, isPrivileged);
+    const employeeWorkload = await this.loadEmployeeWorkload();
+
+    const totalActive  = Number(summary.total_active  ?? 0);
+    const overdueCount = Number(summary.overdue_count ?? 0);
+    const delayedCount = Number(summary.delayed_count ?? 0);
+
+    return {
+      avgResponseTimeHours: Number(summary.avg_resp ?? 0) || 0,
+      overdue24hPct:        totalActive > 0 ? Math.round((overdueCount / totalActive) * 1000) / 10 : 0,
+      delayedPct:           totalActive > 0 ? Math.round((delayedCount / totalActive) * 1000) / 10 : 0,
+      totalActive,
+      approvedToday:        Number(today.approved ?? 0),
+      rejectedToday:        Number(today.rejected ?? 0),
+      createdToday:         Number(today.created  ?? 0),
+      byDepartment,
+      employeeWorkload,
+      goals: { responseTimeTarget: 4, overdue24hTarget: 0, delayedTarget: 10 },
+    };
+  }
+
+  private async loadSummary(): Promise<{
+    avg_resp: string | null; total_active: string; overdue_count: string; delayed_count: string;
+  }> {
     const summary = await runQuery<{
-      avg_resp: string | null;
-      total_active: string;
-      overdue_count: string;
-      delayed_count: string;
+      avg_resp: string | null; total_active: string; overdue_count: string; delayed_count: string;
     }>(sql`
       WITH bh AS (
         SELECT document_id, MIN(moved_at) AS first_move
@@ -55,20 +77,13 @@ export class CcStatsService {
       FROM cc_documents d
       LEFT JOIN bh ON bh.document_id = d.id
       WHERE d.archived_at IS NULL
-    `).catch(() => ({ rows: [{
-      avg_resp: '0', total_active: '0', overdue_count: '0', delayed_count: '0',
-    }] }));
+    `).catch(() => ({ rows: [{ avg_resp: '0', total_active: '0', overdue_count: '0', delayed_count: '0' }] }));
+    return summary.rows[0] ?? { avg_resp: '0', total_active: '0', overdue_count: '0', delayed_count: '0' };
+  }
 
-    const x = summary.rows[0] ?? { avg_resp: '0', total_active: '0', overdue_count: '0', delayed_count: '0' };
-    const totalActive   = Number(x.total_active   ?? 0);
-    const overdueCount  = Number(x.overdue_count  ?? 0);
-    const delayedCount  = Number(x.delayed_count  ?? 0);
-
-    // 2. Bugungi hisoboblar (created/approved/rejected)
+  private async loadToday(): Promise<{ created: string; approved: string; rejected: string }> {
     // WHERE covers docs created OR updated today so approved/rejected today are not missed
-    const today = await runQuery<{
-      created: string; approved: string; rejected: string;
-    }>(sql`
+    const today = await runQuery<{ created: string; approved: string; rejected: string }>(sql`
       SELECT
         COUNT(*) FILTER (WHERE DATE(d.created_at) = CURRENT_DATE)::text AS created,
         COUNT(*) FILTER (WHERE DATE(d.updated_at) = CURRENT_DATE AND d.workflow_state = 'approved')::text AS approved,
@@ -77,17 +92,16 @@ export class CcStatsService {
       WHERE (d.created_at >= CURRENT_DATE OR d.updated_at >= CURRENT_DATE)
         AND d.archived_at IS NULL
     `).catch(() => ({ rows: [{ created: '0', approved: '0', rejected: '0' }] }));
-    const t = today.rows[0] ?? { created: '0', approved: '0', rejected: '0' };
+    return today.rows[0] ?? { created: '0', approved: '0', rejected: '0' };
+  }
 
-    // 3. Bo'lim bo'yicha
-    let byDepartment: CcKpi['byDepartment'] = [];
+  private async loadByDepartment(userId: number, isPrivileged: boolean): Promise<CcKpi['byDepartment']> {
     try {
       const deptFilter = isPrivileged ? sql`TRUE` : sql`
         e.department_id = (SELECT department_id FROM employees WHERE user_id = ${userId} LIMIT 1)
       `;
       const r = await runQuery<{
-        dept_id: number | null; dept_name: string | null;
-        cnt: string; overdue_cnt: string;
+        dept_id: number | null; dept_name: string | null; cnt: string; overdue_cnt: string;
       }>(sql`
         SELECT
           e.department_id::int                     AS dept_id,
@@ -104,20 +118,16 @@ export class CcStatsService {
         ORDER BY cnt DESC
         LIMIT 20
       `);
-      byDepartment = r.rows.map(row => ({
-        deptId:       row.dept_id,
-        deptName:     row.dept_name,
-        count:        Number(row.cnt),
-        overdueCount: Number(row.overdue_cnt),
+      return r.rows.map(row => ({
+        deptId: row.dept_id, deptName: row.dept_name,
+        count: Number(row.cnt), overdueCount: Number(row.overdue_cnt),
       }));
-    } catch { /* rows yo'q */ }
+    } catch { return []; }
+  }
 
-    // 4. Xodim yuklamasi (top 10)
-    let employeeWorkload: CcKpi['employeeWorkload'] = [];
+  private async loadEmployeeWorkload(): Promise<CcKpi['employeeWorkload']> {
     try {
-      const r = await runQuery<{
-        user_id: number; full_name: string | null; active_count: string;
-      }>(sql`
+      const r = await runQuery<{ user_id: number; full_name: string | null; active_count: string }>(sql`
         SELECT
           d.basket_owner_user_id                            AS user_id,
           NULLIF(TRIM(COALESCE(u.first_name,'') || ' ' || COALESCE(u.last_name,'')), '') AS full_name,
@@ -131,24 +141,11 @@ export class CcStatsService {
         ORDER BY COUNT(*) DESC
         LIMIT 10
       `);
-      employeeWorkload = r.rows.map(row => ({
+      return r.rows.map(row => ({
         userId:      row.user_id,
         fullName:    row.full_name,
         activeCount: Number(row.active_count),
       }));
-    } catch { /* noop */ }
-
-    return {
-      avgResponseTimeHours: Number(x.avg_resp ?? 0) || 0,
-      overdue24hPct:        totalActive > 0   ? Math.round((overdueCount / totalActive) * 1000) / 10 : 0,
-      delayedPct:           totalActive > 0 ? Math.round((delayedCount / totalActive) * 1000) / 10 : 0,
-      totalActive,
-      approvedToday:        Number(t.approved ?? 0),
-      rejectedToday:        Number(t.rejected ?? 0),
-      createdToday:         Number(t.created  ?? 0),
-      byDepartment,
-      employeeWorkload,
-      goals: { responseTimeTarget: 4, overdue24hTarget: 0, delayedTarget: 10 },
-    };
+    } catch { return []; }
   }
 }

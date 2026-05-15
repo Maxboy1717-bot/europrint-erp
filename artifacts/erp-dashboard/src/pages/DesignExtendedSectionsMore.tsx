@@ -111,6 +111,7 @@ interface CostingTabProps {
 }
 
 export function CostingTab({ costData, totalCost }: CostingTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">{t("dizaynXarajatKalkulyatori")}</CardTitle></CardHeader>

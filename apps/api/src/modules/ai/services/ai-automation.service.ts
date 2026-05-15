@@ -64,28 +64,32 @@ export class AiAutomationService {
       if (unscreened.length === 0) return;
       this.logger.log(`[AI-AUTO] ${unscreened.length} ta nomzod skrining`);
       for (const item of unscreened) {
-        try {
-          const screenR = await this.hrAi.screenCandidate(item.candidateId, SYSTEM_USER_ID);
-          if (!screenR.ok) continue;
-          const result = screenR.data as { score: number; recommendation: string; aiNotes: string; productivityCategory: string; weaknesses: string[] };
-          await this.repo.updateCandidateFunnelScreening(item.funnelId, {
-            screeningScore:        String(result.score),
-            initialScreeningNotes: `[AI] ${result.recommendation}: ${result.aiNotes.substring(0, MAX_NAME_LENGTH)}`,
-            productivityCategory:  result.productivityCategory,
-          });
-          if (result.score < 30 && result.recommendation === 'REJECT') {
-            await this.repo.rejectCandidateFunnel(
-              item.funnelId,
-              `[AI Avtomatik] Ball: ${result.score}/100. ${result.weaknesses.join('; ')}`,
-            );
-            this.logger.debug(`[AI-AUTO] Nomzod #${item.candidateId} rad etildi (${result.score})`);
-          }
-        } catch (err) {
-          this.logger.warn(`[AI-AUTO] Nomzod #${item.candidateId} xatosi: ${(err as Error).message}`);
-        }
+        await this.screenSingleCandidate(item);
       }
     } finally {
       this.isRunning['candidate_screen'] = false;
+    }
+  }
+
+  private async screenSingleCandidate(item: { candidateId: number; funnelId: number }): Promise<void> {
+    try {
+      const screenR = await this.hrAi.screenCandidate(item.candidateId, SYSTEM_USER_ID);
+      if (!screenR.ok) return;
+      const result = screenR.data as { score: number; recommendation: string; aiNotes: string; productivityCategory: string; weaknesses: string[] };
+      await this.repo.updateCandidateFunnelScreening(item.funnelId, {
+        screeningScore:        String(result.score),
+        initialScreeningNotes: `[AI] ${result.recommendation}: ${result.aiNotes.substring(0, MAX_NAME_LENGTH)}`,
+        productivityCategory:  result.productivityCategory,
+      });
+      if (result.score < 30 && result.recommendation === 'REJECT') {
+        await this.repo.rejectCandidateFunnel(
+          item.funnelId,
+          `[AI Avtomatik] Ball: ${result.score}/100. ${result.weaknesses.join('; ')}`,
+        );
+        this.logger.debug(`[AI-AUTO] Nomzod #${item.candidateId} rad etildi (${result.score})`);
+      }
+    } catch (err) {
+      this.logger.warn(`[AI-AUTO] Nomzod #${item.candidateId} xatosi: ${(err as Error).message}`);
     }
   }
 

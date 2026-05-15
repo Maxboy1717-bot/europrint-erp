@@ -75,8 +75,7 @@ export default function EmployeeFilesPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: typeof form) => {
-      const res = await apiRequest("POST", "/api/employee-files", dto);
-      return res.json();
+      return await apiRequest("POST", "/api/employee-files", dto);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employee-files"] });
@@ -91,8 +90,7 @@ export default function EmployeeFilesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiRequest("DELETE", `/api/employee-files/${id}`);
-      return res.json();
+      return await apiRequest("DELETE", `/api/employee-files/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employee-files"] });

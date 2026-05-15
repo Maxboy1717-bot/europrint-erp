@@ -12,6 +12,21 @@ import { AiDataRepository } from './ai-data.repository';
 import type { KpiExplanation, RiskAssessment, StrategicRecommendations, ExecutiveSummary } from './director-ai.types';
 export type { KpiExplanation, RiskAssessment, StrategicRecommendations, ExecutiveSummary };
 
+interface CompanyRiskData {
+  revenue?: number;
+  employees?: number;
+  activeDeals?: number;
+  openPositions?: number;
+  pendingInvoices?: number;
+}
+
+interface SummaryMetrics {
+  totalEmployees: number;
+  activeLeads: number;
+  activeDeals: number;
+  openPositions: number;
+}
+
 @Injectable()
 export class DirectorAiService {
   private readonly logger = new Logger(DirectorAiService.name);
@@ -85,13 +100,7 @@ JSON formatda:
   }
 
   async assessRisks(
-    companyData: {
-      revenue?: number;
-      employees?: number;
-      activeDeals?: number;
-      openPositions?: number;
-      pendingInvoices?: number;
-    },
+    companyData: CompanyRiskData,
     userId: number,
   ): Promise<RiskAssessment> {
     const prompt = `
@@ -153,76 +162,67 @@ JSON formatda:
   async generateExecutiveSummary(userId: number): Promise<Result<object, AppError>>{
     return safeCall(async () => {
       const today = _time.now();
-      const { totalEmployees, activeLeads, activeDeals, openPositions } =
-        await this.dataRepo.getExecutiveSummaryMetrics();
-  
-      const prompt = `
+      const metrics = await this.dataRepo.getExecutiveSummaryMetrics();
+      const prompt = this.buildSummaryPrompt(today, metrics);
+      const aiResult = await this.ai.call({
+        taskType: 'director.kpi_explain', prompt, maxTokens: 700, temperature: 0.4, userId,
+      });
+      if (isErr(aiResult)) {
+        this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
+        return this.buildSummaryFallback(today, metrics);
+      }
+      const parsed = this.parseSummaryJson(aiResult.data.text);
+      return parsed ?? this.buildSummaryFallback(today, metrics);
+    });
+  }
+
+  private buildSummaryPrompt(today: Date, m: SummaryMetrics): string {
+    return `
   EuroPrint bugungi ijroiya xulosasi.
-  
+
   REAL MA'LUMOTLAR (${today.toLocaleDateString('uz-UZ')}):
-  - Jami xodimlar: ${totalEmployees}
-  - Faol leadlar: ${activeLeads}
-  - Faol bitimlar: ${activeDeals}
-  - Rekruting funnelda: ${openPositions} nomzod
-  
+  - Jami xodimlar: ${m.totalEmployees}
+  - Faol leadlar: ${m.activeLeads}
+  - Faol bitimlar: ${m.activeDeals}
+  - Rekruting funnelda: ${m.openPositions} nomzod
+
   EuroPrint bosma kompaniyasi, Toshkent.
-  
+
   Qisqa ijroiya xulosasi (1 paragraf), asosiy metriklar va tavsiyalar.
-  
+
   JSON formatda:
   {
     "date": "${today.toISOString().split('T')[0]}",
     "headline": "...",
     "keyMetrics": [
-      {"name": "Xodimlar", "value": "${totalEmployees}", "trend": "STABLE"},
-      {"name": "Faol leadlar", "value": "${activeLeads}", "trend": "UP"},
-      {"name": "Faol bitimlar", "value": "${activeDeals}", "trend": "STABLE"}
+      {"name": "Xodimlar", "value": "${m.totalEmployees}", "trend": "STABLE"},
+      {"name": "Faol leadlar", "value": "${m.activeLeads}", "trend": "UP"},
+      {"name": "Faol bitimlar", "value": "${m.activeDeals}", "trend": "STABLE"}
     ],
     "alerts": ["..."],
     "recommendations": ["...", "..."],
     "overallHealth": "EXCELLENT|GOOD|FAIR|POOR"
   }
   `;
-  
-      const aiResult = await this.ai.call({
-        taskType: 'director.kpi_explain',
-        prompt,
-        maxTokens: 700,
-        temperature: 0.4,
-        userId,
-      });
-      if (isErr(aiResult)) {
-        this.logger.warn(`AI so'rovi xato: ${aiResult.error.message}`);
-        return {
-          date: today.toISOString().split('T')[0],
-          headline: 'EuroPrint kunlik holat',
-          keyMetrics: [
-            { name: 'Xodimlar', value: String(totalEmployees), trend: 'STABLE' },
-            { name: 'Leadlar', value: String(activeLeads), trend: 'STABLE' },
-          ],
-          alerts: [],
-          recommendations: [],
-          overallHealth: 'GOOD',
-        };
-      }
-  
-      const jsonMatch = aiResult.data.text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = safeJsonParse<ExecutiveSummary>(jsonMatch[0]);
-        if (parsed) return parsed;
-      }
-  
-      return {
-        date: today.toISOString().split('T')[0],
-        headline: 'EuroPrint kunlik holat',
-        keyMetrics: [
-          { name: 'Xodimlar', value: String(totalEmployees), trend: 'STABLE' },
-          { name: 'Leadlar', value: String(activeLeads), trend: 'STABLE' },
-        ],
-        alerts: [],
-        recommendations: [],
-        overallHealth: 'GOOD',
-      };
-    });
+  }
+
+  private parseSummaryJson(text: string): ExecutiveSummary | null {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    return safeJsonParse<ExecutiveSummary>(jsonMatch[0]) ?? null;
+  }
+
+  private buildSummaryFallback(today: Date, m: SummaryMetrics): ExecutiveSummary {
+    return {
+      date: today.toISOString().split('T')[0],
+      headline: 'EuroPrint kunlik holat',
+      keyMetrics: [
+        { name: 'Xodimlar', value: String(m.totalEmployees), trend: 'STABLE' },
+        { name: 'Leadlar', value: String(m.activeLeads), trend: 'STABLE' },
+      ],
+      alerts: [],
+      recommendations: [],
+      overallHealth: 'GOOD',
+    };
   }
 }

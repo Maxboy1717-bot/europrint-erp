@@ -70,39 +70,41 @@ export class KMeansService {
 
   silhouette(points: readonly Point[], assignments: number[], k: number): number {
     if (k === 1) return 0;
-
     const safePoints: Point[] = Array.isArray(points) ? [...points] : [];
     const n = safePoints.length;
     let totalSil = 0;
-
     for (let i = 0; i < n; i++) {
-      const myCluster = assignments[i];
-      const sameCluster = (Array.isArray(safePoints) ? safePoints : []).filter((_, idx) => assignments[idx] === myCluster && idx !== i);
-
-      const a = sameCluster.length
-        ? (Array.isArray(sameCluster) ? sameCluster : []).reduce((s: number, p: Point) => s + this.euclidean(safePoints[i], p), 0) / sameCluster.length
-        : 0;
-
-      let b = Infinity;
-      for (let c = 0; c < k; c++) {
-        if (c === myCluster) continue;
-        const clusterPts = (Array.isArray(safePoints) ? safePoints : []).filter((_, idx) => assignments[idx] === c);
-        if (!clusterPts.length) continue;
-        const avgDist = (Array.isArray(clusterPts) ? clusterPts : []).reduce((s: number, p: Point) => s + this.euclidean(safePoints[i], p), 0) / clusterPts.length;
-        if (avgDist < b) b = avgDist;
-      }
-
-      if (!isFinite(b)) {
-        totalSil += -1;
-        continue;
-      }
-
-      const maxAB = Math.max(a, b);
-      const sil = maxAB > 0 ? (b - a) / maxAB : 0;
-      totalSil += Math.max(-1, Math.min(1, sil));
+      totalSil += this.pointSilhouette(safePoints, assignments, k, i);
     }
-
     return totalSil / n;
+  }
+
+  private pointSilhouette(safePoints: Point[], assignments: number[], k: number, i: number): number {
+    const myCluster = assignments[i];
+    const a = this.intraClusterDist(safePoints, assignments, myCluster, i);
+    const b = this.nearestClusterDist(safePoints, assignments, k, myCluster, i);
+    if (!isFinite(b)) return -1;
+    const maxAB = Math.max(a, b);
+    const sil = maxAB > 0 ? (b - a) / maxAB : 0;
+    return Math.max(-1, Math.min(1, sil));
+  }
+
+  private intraClusterDist(safePoints: Point[], assignments: number[], myCluster: number, i: number): number {
+    const sameCluster = (Array.isArray(safePoints) ? safePoints : []).filter((_, idx) => assignments[idx] === myCluster && idx !== i);
+    if (!sameCluster.length) return 0;
+    return sameCluster.reduce((s: number, p: Point) => s + this.euclidean(safePoints[i], p), 0) / sameCluster.length;
+  }
+
+  private nearestClusterDist(safePoints: Point[], assignments: number[], k: number, myCluster: number, i: number): number {
+    let b = Infinity;
+    for (let c = 0; c < k; c++) {
+      if (c === myCluster) continue;
+      const clusterPts = (Array.isArray(safePoints) ? safePoints : []).filter((_, idx) => assignments[idx] === c);
+      if (!clusterPts.length) continue;
+      const avgDist = clusterPts.reduce((s: number, p: Point) => s + this.euclidean(safePoints[i], p), 0) / clusterPts.length;
+      if (avgDist < b) b = avgDist;
+    }
+    return b;
   }
 
   fit(

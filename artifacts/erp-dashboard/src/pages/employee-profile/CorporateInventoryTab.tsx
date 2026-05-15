@@ -20,7 +20,7 @@ export function CorporateInventoryTab({ employeeId, isHr }: CorporateInventoryTa
   const { data: items, isLoading } = useQuery<CorporateInventoryItem[]>({
     queryKey: ["/api/employees", employeeId, "corporate-inventory"],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/employees/${employeeId}/corporate-inventory`);
+      const res = (await apiRequest('GET', `/api/employees/${employeeId}/corporate-inventory`)) as unknown as Response;
       if (!res.ok) return [];
       const json = await res.json();
       return Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
@@ -30,8 +30,7 @@ export function CorporateInventoryTab({ employeeId, isHr }: CorporateInventoryTa
 
   const addMutation = useMutation({
     mutationFn: async (data: InventoryFormState) => {
-      const res = await apiRequest("POST", `/api/employees/${employeeId}/corporate-inventory`, data);
-      return res.json();
+      return await apiRequest("POST", `/api/employees/${employeeId}/corporate-inventory`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees", employeeId, "corporate-inventory"] });
@@ -44,8 +43,7 @@ export function CorporateInventoryTab({ employeeId, isHr }: CorporateInventoryTa
 
   const signMutation = useMutation({
     mutationFn: async (itemId: number) => {
-      const res = await apiRequest("PATCH", `/api/employees/${employeeId}/corporate-inventory/${itemId}/sign`, {});
-      return res.json();
+      return await apiRequest("PATCH", `/api/employees/${employeeId}/corporate-inventory/${itemId}/sign`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees", employeeId, "corporate-inventory"] });
@@ -55,8 +53,7 @@ export function CorporateInventoryTab({ employeeId, isHr }: CorporateInventoryTa
 
   const returnMutation = useMutation({
     mutationFn: async (itemId: number) => {
-      const res = await apiRequest("PATCH", `/api/employees/${employeeId}/corporate-inventory/${itemId}/return`, {});
-      return res.json();
+      return await apiRequest("PATCH", `/api/employees/${employeeId}/corporate-inventory/${itemId}/return`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees", employeeId, "corporate-inventory"] });

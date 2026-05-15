@@ -93,9 +93,7 @@ export default function IdealRasmPage() {
   const { data, isLoading, refetch } = useQuery<IdealRasmResponse>({
     queryKey: ["/api/ideal-rasm"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/ideal-rasm");
-      if (!res.ok) throw new Error("Yuklab bo'lmadi");
-      return res.json();
+      return await apiRequest('GET', "/api/ideal-rasm");
     },
     refetchInterval: 300_000,
   });
@@ -121,9 +119,7 @@ export default function IdealRasmPage() {
         targetKey,
         targetValue,
       }));
-      const res = await apiRequest('PUT', "/api/ideal-rasm", { targets: payload });
-      if (!res.ok) throw new Error("Yangilashda xatolik");
-      return res.json();
+      return await apiRequest('PUT', "/api/ideal-rasm", { targets: payload });
     },
     onSuccess: () => {
       toast({ title: "Maqsadlar yangilandi" });

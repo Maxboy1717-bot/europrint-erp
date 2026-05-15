@@ -21,7 +21,7 @@ export function DeadlineColumn({
   cards: CardWithOwner[];
   onCardClick: (card: CardWithOwner) => void;
   onAddCard?: () => void;
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string) => string);
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `deadline-${columnKey}`,

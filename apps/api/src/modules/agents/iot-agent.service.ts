@@ -1,6 +1,14 @@
 /**
  * AGENT 12: IoT/Kamera — sensor + anomaliya + RUL
  */
+
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM query builder cannot
+ *   express: target table `hr_ai_attendance` is not in the Drizzle schema
+ *   barrel, and the INSERT uses `NOW()` server-side timestamp expression for
+ *   captured_at rather than a JS-side Date value.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { sql } from 'drizzle-orm';

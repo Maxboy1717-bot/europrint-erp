@@ -42,9 +42,9 @@ export function RoomSettingsModal({ room, onClose }: Props) {
 
   const updateMutation = useMutation({
     mutationFn: async (data: { name?: string; description?: string; avatarEmoji?: string }) => {
-      const res = await apiRequest('PATCH', `/api/chat/rooms/${room.id}`, data);
+      const res = await apiRequest('PATCH', `/api/chat/rooms/${room.id}`, data) as unknown as Response;
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Server error" }));
+        const err = await res.json().catch(() => ({ error: "Server error" })) as { error?: string };
         throw new Error(err.error || "Failed to update room");
       }
       return res.json();
@@ -67,7 +67,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
 
   const muteMutation = useMutation({
     mutationFn: async (duration: string) => {
-      const res = await apiRequest('POST', `/api/chat/rooms/${room.id}/mute`, { duration });
+      const res = await apiRequest('POST', `/api/chat/rooms/${room.id}/mute`, { duration }) as unknown as Response;
       if (!res.ok) throw new Error("Failed to mute");
       return res.json();
     },
@@ -79,7 +79,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
 
   const archiveMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest('PATCH', `/api/chat/rooms/${room.id}`, { isArchived: true });
+      const res = await apiRequest('PATCH', `/api/chat/rooms/${room.id}`, { isArchived: true }) as unknown as Response;
       if (!res.ok) throw new Error("Failed to archive");
       return res.json();
     },

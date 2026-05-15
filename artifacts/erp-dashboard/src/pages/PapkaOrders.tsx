@@ -127,7 +127,7 @@ export default function PapkaOrders() {
   const activeCount = (Array.isArray(orders) ? orders : []).filter(o => ["new", "planning", "production"].includes(o.status)).length;
   const completedCount = (Array.isArray(orders) ? orders : []).filter(o => o.status === "completed").length;
 
-  const t = TRANSLATIONS[lang];
+  const tr = TRANSLATIONS[lang];
 
   if (isLoading) {
     return (
@@ -146,8 +146,8 @@ export default function PapkaOrders() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t.title}</b></>}
-        title={t.title}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{tr.title}</b></>}
+        title={tr.title}
         subtitle={t("ofsetBosmaPapkaVaQadoqlash")}
       />
         </div>
@@ -163,7 +163,7 @@ export default function PapkaOrders() {
           <Button onClick={handleNewOrder} data-testid="button-add-order"
             className="bg-primary text-white rounded-lg px-6 shadow-sm gap-2">
             <Plus className="h-4 w-4" />
-            {t.addOrder}
+            {tr.addOrder}
           </Button>
         </div>
       </div>

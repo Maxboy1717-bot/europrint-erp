@@ -26,7 +26,7 @@ import { WarehouseData, ZoneData, ZoneFormData, Lang, Translations, zoneSchema }
 
 interface ZonesTabProps {
   lang: Lang;
-  t: Translations;
+  t: Translations & ((key: string) => string);
 }
 
 export function ZonesTab({ lang, t }: ZonesTabProps) {
@@ -44,9 +44,7 @@ export function ZonesTab({ lang, t }: ZonesTabProps) {
     queryKey: ["/api/warehouse/warehouses", selectedWarehouseId, "zones"],
     queryFn: async () => {
       if (!selectedWarehouseId) return [];
-      const res = await apiRequest('GET', `/api/warehouse/warehouses/${selectedWarehouseId}/zones`);
-      if (!res.ok) throw new Error("Failed to fetch zones");
-      return res.json();
+      return await apiRequest('GET', `/api/warehouse/warehouses/${selectedWarehouseId}/zones`);
     },
     enabled: !!selectedWarehouseId,
   });

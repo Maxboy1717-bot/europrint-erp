@@ -33,7 +33,7 @@ export function TemplatesDialog({
   onOpenChange: (open: boolean) => void;
   boardId: string | null;
   columns: KanbanColumn[];
-  t: typeof T.uz & ((key: string, params?: Record<string, string | number>) => string);
+  t: typeof T.uz & ((key: string) => string) & ((key: string, params?: Record<string, string | number>) => string);
 }) {
   const t = tProp;
   const { toast } = useToast();

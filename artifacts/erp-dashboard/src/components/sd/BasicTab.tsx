@@ -59,16 +59,16 @@ export function BasicTab({ data, contacts, decisionMakers }: {
             </h3>
           </div>
           <div className="p-4 space-y-3">
-            <InfoRow icon={Building2} label={t("name")} value={d.title || d.name || "—"} bold />
+            <InfoRow icon={Building2} label={t("name")} value={String(d.title || d.name || "—")} bold />
             {d.customerCode && <InfoRow icon={Hash} label={t("mijozKodi")} value={d.customerCode} mono />}
             {d.stir && <InfoRow icon={Hash} label="STIR" value={d.stir} />}
             {d.industry && <InfoRow icon={Tag} label={t("soha")} value={d.industry} />}
             {d.address && <InfoRow icon={MapPin} label={t("address")} value={d.address} />}
-            {d.companyStructure && d.companyStructure !== 'independent' && (
+            {!!d.companyStructure && d.companyStructure !== 'independent' && (
               <div className="flex items-center gap-3 text-sm">
                 <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
                 <span className="text-xs text-muted-foreground w-20 shrink-0">{t("struktura")}</span>
-                <Badge variant="outline" className="text-[10px]">{structureLabel[d.companyStructure] || d.companyStructure}</Badge>
+                <Badge variant="outline" className="text-[10px]">{structureLabel[String(d.companyStructure)] || String(d.companyStructure)}</Badge>
               </div>
             )}
             {websites.map((w, i) => (

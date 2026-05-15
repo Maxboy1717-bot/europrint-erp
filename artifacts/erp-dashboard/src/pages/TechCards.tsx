@@ -48,7 +48,7 @@ export default function TechCards() {
   const { data: cards = [], isLoading } = useQuery<TechCard[]>({
     queryKey: ["/api/technology/cards"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/technology/cards");
+      const res = (await apiRequest('GET', "/api/technology/cards")) as unknown as Response;
       if (!res.ok) throw new Error("Kartalarni yuklashda xatolik");
       const raw: Record<string, unknown>[] = await res.json();
       return (Array.isArray(raw) ? raw : []).map(mapBackendCard);
@@ -58,7 +58,7 @@ export default function TechCards() {
   const { data: orders = [] } = useQuery<PapkaOrder[]>({
     queryKey: ["/api/papka-orders", "pending_tech"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/papka-orders?status=pending_tech");
+      const res = (await apiRequest('GET', "/api/papka-orders?status=pending_tech")) as unknown as Response;
       if (!res.ok) return [];
       const d = await res.json();
       return Array.isArray(d) ? d : (d.items ?? d.data ?? d.orders ?? []);
@@ -68,7 +68,7 @@ export default function TechCards() {
   // Mutations
   const optimizeMutation = useMutation({
     mutationFn: async (cardId: string) => {
-      const res = await apiRequest('GET', `/api/technology/cards/${cardId}/optimize`);
+      const res = (await apiRequest('GET', `/api/technology/cards/${cardId}/optimize`)) as unknown as Response;
       if (!res.ok) throw new Error("Optimizatsiya xatoligi");
       return res.json() as Promise<OptimizeResult>;
     },
@@ -101,7 +101,7 @@ export default function TechCards() {
 
   const handleViewCard = async (card: TechCard) => {
     try {
-      const res = await apiRequest('GET', `/api/technology/cards/${card.id}`);
+      const res = (await apiRequest('GET', `/api/technology/cards/${card.id}`)) as unknown as Response;
       setSelectedCard(res.ok ? mapBackendCard(await res.json()) : card);
     } catch {
       setSelectedCard(card);

@@ -10,7 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TrendingUp, AlertTriangle, PackageX, Bell } from "lucide-react";
 import type { TurnoverItem, DeadStockItem, RopAlert } from "./WmsAnalyticsTypes";
 import { EPStatusPill } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 // ─── TurnoverBar ─────────────────────────────────────────────────────────────
 
@@ -50,7 +49,6 @@ export function WmsKpiSummary({
   avgTurnover, deadStockCount, ropCount,
   turnoverLoading, deadStockLoading, ropLoading, t,
 }: KpiSummaryProps) {
-  const { t } = useTranslation("common");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <Card>

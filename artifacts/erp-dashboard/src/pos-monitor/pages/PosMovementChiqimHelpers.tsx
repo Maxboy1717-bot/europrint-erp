@@ -107,7 +107,7 @@ export function EmployeeSearch({ value, onChange }: EmployeeSearchProps) {
     if (q.length < 2) { setSuggestions([]); setOpen(false); return; }
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await apiRequest('GET', `/api/pos/employees?q=${encodeURIComponent(q)}`).then(r => r.json()) as EmployeeSuggestion[];
+        const res = await apiRequest('GET', `/api/pos/employees?q=${encodeURIComponent(q)}`).then(r => (r as unknown as Response).json()) as EmployeeSuggestion[];
         setSuggestions(Array.isArray(res) ? res.slice(0, 8) : []);
         setOpen(true);
       } catch { setSuggestions([]); }

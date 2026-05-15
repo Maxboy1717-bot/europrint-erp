@@ -18,79 +18,29 @@
  *     MAE  = (1/n) × Σ |yᵢ − ŷᵢ|                   linear, interpretable
  * @layer Domain Service (AI module — pure math)
  *
- * WHY THREE BASELINE METHODS
- *   These are the "fall-back" forecasters for cases the AI-driven
- *   `forecast-persistence.service` (Holt-Winters / Croston) can't handle
- *   well:
- *     - New SKUs with < 12 data points  → SMA (no trend, no seasonality)
- *     - Short cycle, recent-shift data  → EMA (adapts faster than SMA)
- *     - Steady linear trend             → linear regression
- *
- *   The "real" forecasters (Holt-Winters for seasonal, Croston for
- *   sporadic intermittent demand) live elsewhere because they need fit
- *   state. These three are stateless and safe for ad-hoc charting.
- *
- * WHY GRID SEARCH FOR EMA α (instead of analytical solution)
- *   The optimal α minimises Σ(yᵢ − ŷᵢ)² but the squared loss is not convex
- *   in α for this recurrence — analytical optimum needs derivative
- *   conditions that don't have a closed form. Grid search over
- *   α ∈ {0.05, 0.10, ..., 0.95} is fast (19 evals) and finds the optimum
- *   to ±0.05 — finer than the noise floor of our data.
- *
- *   For ML-grade tuning we'd use Brent's method, but the dashboards never
- *   need that resolution.
- *
- * WHY MAPE *AND* RMSE *AND* MAE
- *   MAPE is what business stakeholders ask for ("how off was the
- *   forecast?"). But MAPE diverges when actuals contain zeros — common
- *   for sporadic SKUs. RMSE handles that case but isn't scale-free.
- *   MAE is the median-friendly alternative when outliers shouldn't
- *   dominate. Returning all three lets the consumer pick.
- *
- * WHY R² IS RETURNED FOR LINEAR REGRESSION
- *   R² near 1 = a linear model is appropriate; R² near 0 = the data is
- *   not actually linear and the forecast is misleading. The CRM dashboard
- *   greys out the forecast line when R² < 0.3.
+ * Type definitions live in `./forecast.types.ts`.
  */
 
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum, safeAvg, safeDiv } from '@common/math/math-utils';
 import { Ok, Err, Result, AppError } from '@common/result';
+import {
+  ErrorMetrics,
+  SmaResult,
+  EmaResult,
+  GridSearchResult,
+  LinearRegressionResult,
+  makeErr,
+} from './forecast.types';
 
-export interface ErrorMetrics {
-  mape: number;
-  rmse: number;
-  mae: number;
-}
-
-export interface SmaResult {
-  values: number[];
-  metrics: ErrorMetrics;
-}
-
-export interface EmaResult {
-  smoothed: number[];
-  alpha: number;
-  metrics: ErrorMetrics;
-}
-
-export interface GridSearchResult {
-  alpha: number;
-  rmse: number;
-}
-
-export interface LinearRegressionResult {
-  slope: number;
-  intercept: number;
-  r2: number;
-  predicted: number[];
-  metrics: ErrorMetrics;
-}
-
-function makeErr(msg: string, code: AppError['code'] = 'VALIDATION'): AppError {
-  return { code, message: msg };
-}
+export type {
+  ErrorMetrics,
+  SmaResult,
+  EmaResult,
+  GridSearchResult,
+  LinearRegressionResult,
+};
 
 /**
  * TZ-06: SMA (Oddiy Ko'chma O'rtacha) + EMA (Eksponensial Silliqlash)

@@ -23,7 +23,7 @@ export function useGoodsReceivingData(statusFilter: string, dateFrom: string, da
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (dateFrom) params.append("dateFrom", dateFrom);
       if (dateTo) params.append("dateTo", dateTo);
-      const res = await apiRequest('GET', `/api/warehouse/goods-receipts?${params.toString()}`);
+      const res = await apiRequest('GET', `/api/warehouse/goods-receipts?${params.toString()}`) as unknown as Response;
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },

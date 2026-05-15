@@ -113,9 +113,7 @@ export default function PlanningBoard() {
       if (filters.status !== "all") params.append("status", filters.status);
       if (filters.startDate) params.append("startDate", filters.startDate);
       if (filters.endDate) params.append("endDate", filters.endDate);
-      const res = await apiRequest('GET', `/api/planning/operations?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch operations");
-      return res.json();
+      return await apiRequest('GET', `/api/planning/operations?${params.toString()}`);
     },
     enabled: !!isAuthenticated,
   });
@@ -124,9 +122,7 @@ export default function PlanningBoard() {
     queryKey: ["/api/planning/schedule", filters.startDate, filters.endDate],
     queryFn: async () => {
       const params = new URLSearchParams({ startDate: filters.startDate, endDate: filters.endDate });
-      const res = await apiRequest('GET', `/api/planning/schedule?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch schedule");
-      return res.json();
+      return await apiRequest('GET', `/api/planning/schedule?${params.toString()}`);
     },
     enabled: !!isAuthenticated && activeTab === "schedule",
   });

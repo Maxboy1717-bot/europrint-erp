@@ -40,8 +40,7 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
 
   const aiCalculateMutation = useMutation({
     mutationFn: async ({ employeeId, periodMonth }: { employeeId: string; periodMonth: string }) => {
-      const response = await apiRequest("POST", "/api/finance-extended/payroll/ai-calculate", { employeeId, periodMonth });
-      return response.json();
+      return await apiRequest("POST", "/api/finance-extended/payroll/ai-calculate", { employeeId, periodMonth });
     },
     onSuccess: (data: AIPayrollResult) => {
       setAiResult(data);

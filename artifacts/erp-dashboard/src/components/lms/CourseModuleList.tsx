@@ -46,13 +46,14 @@ function getLessonIcon(type: string) {
 }
 
 export function CourseModuleList({
-  modules,
+  modules = [],
   onAddModule,
   onAddLesson,
   onDeleteModule,
   onDeleteLesson,
 }: CourseModuleListProps) {
   const { t } = useTranslation("common");
+  const safeModules = Array.isArray(modules) ? modules : [];
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
@@ -66,7 +67,7 @@ export function CourseModuleList({
         </Button>
       </CardHeader>
       <CardContent>
-        {modules.length === 0 ? (
+        {safeModules.length === 0 ? (
           <div className="text-center py-12">
             <BookOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">{t("modullarMavjudEmas")}</h3>
@@ -78,7 +79,7 @@ export function CourseModuleList({
           </div>
         ) : (
           <Accordion type="single" collapsible className="w-full">
-            {modules.map((module, index) => (
+            {safeModules.map((module, index) => (
               <AccordionItem key={module.id} value={module.id}>
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-3 flex-1">

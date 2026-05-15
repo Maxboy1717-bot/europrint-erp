@@ -34,9 +34,15 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
     );
   }
 
-  private async ensureKanbanExtendedTables(): Promise<void> {
-    const ddls: string[] = [
-      // ── Core kanban tables (missing from earlier migrations) ───────────────
+  private buildCoreKanbanDdls(): string[] {
+    return [
+      ...this.buildChecklistDdls(),
+      ...this.buildCommentsAndWatchersDdls(),
+    ];
+  }
+
+  private buildChecklistDdls(): string[] {
+    return [
       `CREATE TABLE IF NOT EXISTS kanban_checklists (
         id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         card_id    TEXT NOT NULL,
@@ -45,7 +51,6 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_checklists_card_idx ON kanban_checklists (card_id)`,
-
       `CREATE TABLE IF NOT EXISTS kanban_checklist_items (
         id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         checklist_id TEXT NOT NULL,
@@ -57,7 +62,11 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         created_at   TIMESTAMPTZ DEFAULT NOW() NOT NULL
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_checklist_items_checklist_idx ON kanban_checklist_items (checklist_id)`,
+    ];
+  }
 
+  private buildCommentsAndWatchersDdls(): string[] {
+    return [
       `CREATE TABLE IF NOT EXISTS kanban_card_comments (
         id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         card_id    TEXT NOT NULL,
@@ -66,7 +75,6 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_card_comments_card_idx ON kanban_card_comments (card_id)`,
-
       `CREATE TABLE IF NOT EXISTS kanban_card_watchers (
         id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         card_id    TEXT NOT NULL,
@@ -75,8 +83,15 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         UNIQUE (card_id, user_id)
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_card_watchers_card_idx ON kanban_card_watchers (card_id)`,
+    ];
+  }
 
-      // ── Tags ──────────────────────────────────────────────────────────────
+  private buildTagsObserversDdls(): string[] {
+    return [...this.buildTagsDdls(), ...this.buildObserversDdls()];
+  }
+
+  private buildTagsDdls(): string[] {
+    return [
       `CREATE TABLE IF NOT EXISTS kanban_tags (
         id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name       TEXT NOT NULL,
@@ -85,7 +100,6 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_tags_board_idx ON kanban_tags (board_id)`,
-
       `CREATE TABLE IF NOT EXISTS kanban_card_tags (
         id         SERIAL PRIMARY KEY,
         card_id    TEXT NOT NULL,
@@ -94,8 +108,11 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         UNIQUE (card_id, tag_id)
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_card_tags_card_idx ON kanban_card_tags (card_id)`,
+    ];
+  }
 
-      // ── Observers ─────────────────────────────────────────────────────────
+  private buildObserversDdls(): string[] {
+    return [
       `CREATE TABLE IF NOT EXISTS kanban_observers (
         id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         card_id    TEXT NOT NULL,
@@ -104,8 +121,6 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         UNIQUE (card_id, user_id)
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_observers_card_idx ON kanban_observers (card_id)`,
-
-      // ── Co-executors ──────────────────────────────────────────────────────
       `CREATE TABLE IF NOT EXISTS kanban_co_executors (
         id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         card_id    TEXT NOT NULL,
@@ -114,8 +129,15 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         UNIQUE (card_id, user_id)
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_co_exec_card_idx ON kanban_co_executors (card_id)`,
+    ];
+  }
 
-      // ── Time tracking ─────────────────────────────────────────────────────
+  private buildTimeResultsFilesDdls(): string[] {
+    return [...this.buildTimeTrackDdls(), ...this.buildResultsDdls(), ...this.buildFilesDdls()];
+  }
+
+  private buildTimeTrackDdls(): string[] {
+    return [
       `CREATE TABLE IF NOT EXISTS kanban_time_tracks (
         id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         card_id          TEXT NOT NULL,
@@ -130,8 +152,11 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_time_card_idx ON kanban_time_tracks (card_id)`,
       `CREATE INDEX IF NOT EXISTS kanban_time_user_idx ON kanban_time_tracks (user_id)`,
+    ];
+  }
 
-      // ── Results ───────────────────────────────────────────────────────────
+  private buildResultsDdls(): string[] {
+    return [
       `CREATE TABLE IF NOT EXISTS kanban_results (
         id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         card_id       TEXT NOT NULL,
@@ -141,7 +166,6 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         updated_at    TIMESTAMPTZ DEFAULT NOW() NOT NULL
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_results_card_idx ON kanban_results (card_id)`,
-
       `CREATE TABLE IF NOT EXISTS kanban_result_files (
         id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         result_id  TEXT NOT NULL,
@@ -152,8 +176,11 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_result_files_result_idx ON kanban_result_files (result_id)`,
+    ];
+  }
 
-      // ── Files ─────────────────────────────────────────────────────────────
+  private buildFilesDdls(): string[] {
+    return [
       `CREATE TABLE IF NOT EXISTS kanban_files (
         id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         card_id        TEXT NOT NULL,
@@ -166,8 +193,15 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         deleted_at     TIMESTAMPTZ
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_files_card_idx ON kanban_files (card_id)`,
+    ];
+  }
 
-      // ── Notifications ─────────────────────────────────────────────────────
+  private buildNotificationsTemplatesDdls(): string[] {
+    return [...this.buildNotificationsDdls(), ...this.buildTemplatesDdls()];
+  }
+
+  private buildNotificationsDdls(): string[] {
+    return [
       `CREATE TABLE IF NOT EXISTS kanban_notifications (
         id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id    INTEGER NOT NULL,
@@ -181,8 +215,11 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_notif_user_idx ON kanban_notifications (user_id)`,
       `CREATE INDEX IF NOT EXISTS kanban_notif_read_idx ON kanban_notifications (is_read)`,
+    ];
+  }
 
-      // ── Templates ─────────────────────────────────────────────────────────
+  private buildTemplatesDdls(): string[] {
+    return [
       `CREATE TABLE IF NOT EXISTS kanban_templates (
         id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name            TEXT NOT NULL,
@@ -197,10 +234,11 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         deleted_at      TIMESTAMPTZ
       )`,
       `CREATE INDEX IF NOT EXISTS kanban_templates_board_idx ON kanban_templates (board_id)`,
+    ];
+  }
 
-      // ── kanban_cards column additions ─────────────────────────────────────
-      // These columns are required by acceptCard / completeCard / recurring cron.
-      // ADD COLUMN IF NOT EXISTS is idempotent in PG 9.6+.
+  private buildKanbanCardsAlterDdls(): string[] {
+    return [
       `ALTER TABLE kanban_cards ADD COLUMN IF NOT EXISTS accepted_at       TIMESTAMPTZ`,
       `ALTER TABLE kanban_cards ADD COLUMN IF NOT EXISTS accepted_by_id    TEXT`,
       `ALTER TABLE kanban_cards ADD COLUMN IF NOT EXISTS completed_at      TIMESTAMPTZ`,
@@ -209,7 +247,9 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
       `ALTER TABLE kanban_cards ADD COLUMN IF NOT EXISTS recurrence_end_date DATE`,
       `ALTER TABLE kanban_cards ADD COLUMN IF NOT EXISTS parent_card_id    TEXT`,
     ];
+  }
 
+  private async applyDdlList(ddls: string[]): Promise<number> {
     let created = 0;
     for (const ddl of ddls) {
       try {
@@ -219,6 +259,18 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
         this.logger.warn(`Sprint6Migration DDL skipped: ${String(e)}`);
       }
     }
+    return created;
+  }
+
+  private async ensureKanbanExtendedTables(): Promise<void> {
+    const ddls = [
+      ...this.buildCoreKanbanDdls(),
+      ...this.buildTagsObserversDdls(),
+      ...this.buildTimeResultsFilesDdls(),
+      ...this.buildNotificationsTemplatesDdls(),
+      ...this.buildKanbanCardsAlterDdls(),
+    ];
+    const created = await this.applyDdlList(ddls);
     this.logger.log(`Sprint6Migration: ${created}/${ddls.length} DDL statements applied`);
   }
 }

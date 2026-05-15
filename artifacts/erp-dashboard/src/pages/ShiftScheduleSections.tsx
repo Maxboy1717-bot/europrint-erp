@@ -214,6 +214,7 @@ interface SwapsTabProps {
 }
 
 export function SwapsTab({ swapLoading, swapRequests, pendingSwaps, isHR, isApprovePending, onApprove }: SwapsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

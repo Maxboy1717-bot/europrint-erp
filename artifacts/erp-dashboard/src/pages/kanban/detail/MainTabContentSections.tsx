@@ -36,7 +36,7 @@ import { getAvatar, getName, initials } from "./MainTabContentTypes";
 interface DescriptionFieldProps {
   card: CardWithOwner;
   onUpdate: (data: Partial<KanbanCard>) => void;
-  t: KanbanTranslations;
+  t: KanbanTranslations & ((key: string) => string);
 }
 
 export function DescriptionField({ card, onUpdate, t }: DescriptionFieldProps) {
@@ -59,7 +59,7 @@ export function DescriptionField({ card, onUpdate, t }: DescriptionFieldProps) {
 interface PriorityFieldProps {
   card: CardWithOwner;
   onUpdate: (data: Partial<KanbanCard>) => void;
-  t: KanbanTranslations;
+  t: KanbanTranslations & ((key: string) => string);
 }
 
 export function PriorityField({ card, onUpdate, t }: PriorityFieldProps) {
@@ -87,7 +87,7 @@ export function PriorityField({ card, onUpdate, t }: PriorityFieldProps) {
 interface DeadlineFieldProps {
   card: CardWithOwner;
   onUpdate: (data: Partial<KanbanCard>) => void;
-  t: KanbanTranslations;
+  t: KanbanTranslations & ((key: string) => string);
 }
 
 export function DeadlineField({ card, onUpdate, t }: DeadlineFieldProps) {
@@ -124,7 +124,7 @@ interface AssigneeFieldProps {
   card: CardWithOwner;
   employees: Employee[];
   onUpdate: (data: Partial<KanbanCard>) => void;
-  t: KanbanTranslations;
+  t: KanbanTranslations & ((key: string) => string);
 }
 
 export function AssigneeField({ card, employees, onUpdate, t }: AssigneeFieldProps) {
@@ -163,7 +163,7 @@ interface ObserversFieldProps {
   observers: ObserverWithUser[];
   onAddObserver: (userId: string) => void;
   onRemoveObserver: (observerId: string) => void;
-  t: KanbanTranslations;
+  t: KanbanTranslations & ((key: string) => string);
 }
 
 export function ObserversField({ card, employees, observers, onAddObserver, onRemoveObserver, t }: ObserversFieldProps) {
@@ -227,7 +227,7 @@ interface CoExecutorsFieldProps {
   coExecutors: CoExecutorWithUser[];
   onAddCoExecutor: (userId: string) => void;
   onRemoveCoExecutor: (coExecutorId: string) => void;
-  t: KanbanTranslations;
+  t: KanbanTranslations & ((key: string) => string);
 }
 
 export function CoExecutorsField({ card, employees, coExecutors, onAddCoExecutor, onRemoveCoExecutor, t }: CoExecutorsFieldProps) {

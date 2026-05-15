@@ -70,6 +70,7 @@ export function AiAssistantSection() {
 
 // ─── NPS panel ────────────────────────────────────────────────────────────────
 export function NpsPanel({ npsStats }: { npsStats: NpsStats | undefined }) {
+  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-xl p-6 overflow-hidden" data-testid="card-nps">
       <div className="flex items-center justify-between gap-4 mb-4">

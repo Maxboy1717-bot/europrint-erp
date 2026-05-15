@@ -38,7 +38,7 @@ import type { EmploymentContract, ContractForm, TranslationFn } from "./WorkTabT
 import { ContractCard } from "./WorkTabTables";
 
 interface ContractSectionProps {
-  t: TranslationFn;
+  t: TranslationFn & ((key: string) => string);
   tCommon: TranslationFn;
   contractDialogOpen: boolean;
   setContractDialogOpen: (open: boolean) => void;

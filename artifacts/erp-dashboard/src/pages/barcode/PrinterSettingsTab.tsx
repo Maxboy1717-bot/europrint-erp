@@ -37,7 +37,7 @@ interface PrinterConfig {
 
 interface PrinterSettingsTabProps {
   lang: "uz" | "ru";
-  t: TranslationType;
+  t: TranslationType & ((key: string) => string);
 }
 
 export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
@@ -57,7 +57,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
   const { data: configData, refetch } = useQuery<{ configs: PrinterConfig[]; active: PrinterConfig | null }>({
     queryKey: ["/api/warehouse/printer-config"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/warehouse/printer-config");
+      const res = (await apiRequest('GET', "/api/warehouse/printer-config")) as unknown as Response;
       if (!res.ok) return { configs: [], active: null };
       return res.json();
     },
@@ -65,15 +65,13 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest('POST', "/api/warehouse/printer-config", {
+      return await apiRequest('POST', "/api/warehouse/printer-config", {
           name: form.name || "Printer",
           printerIp: form.printerIp,
           printerPort: form.printerPort,
           printFormat: form.printFormat,
           notes: form.notes,
         });
-      if (!res.ok) throw new Error("Saqlab bo'lmadi");
-      return res.json();
     },
     onSuccess: () => {
       toast({ title: lang === "uz" ? "Printer saqlandi" : "Принтер сохранён" });
@@ -87,9 +85,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
 
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      const res = await apiRequest('PATCH', `/api/warehouse/printer-config/${id}`, { isActive });
-      if (!res.ok) throw new Error("Yangilab bo'lmadi");
-      return res.json();
+      return await apiRequest('PATCH', `/api/warehouse/printer-config/${id}`, { isActive });
     },
     onSuccess: () => { refetch(); },
   });
@@ -98,8 +94,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
     setTestingId(config.id);
     setTestResult(null);
     try {
-      const res = await apiRequest('POST', `/api/v2/pos/printer-config/${config.id}/test`);
-      const data = await res.json();
+      const data = (await apiRequest('POST', `/api/v2/pos/printer-config/${config.id}/test`)) as Record<string, any>;
       setTestResult({ id: config.id, success: data.success, message: data.message });
     } catch {
       setTestResult({ id: config.id, success: false, message: lang === "uz" ? "Ulanib bo'lmadi" : "Не удалось подключиться" });

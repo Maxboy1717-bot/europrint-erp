@@ -94,7 +94,13 @@ function tsbCore(series: number[], alpha: number, beta: number, horizon: number)
 /** TZ-30: TSB (Teunter-Syntetos-Babai) — sporadic demand */
 @Injectable()
 export class CrostonService {
-  constructor(private readonly nmSvc: NelderMeadService) {}
+  private readonly nmSvc: NelderMeadService;
+
+  constructor(nmSvc?: NelderMeadService) {
+    // NelderMeadService is stateless; fall back to a local instance if DI did
+    // not provide one (legacy construction sites, narrow unit tests).
+    this.nmSvc = nmSvc ?? new NelderMeadService();
+  }
 
   /**
    * When alpha/beta not supplied, optimise via Nelder-Mead minimising

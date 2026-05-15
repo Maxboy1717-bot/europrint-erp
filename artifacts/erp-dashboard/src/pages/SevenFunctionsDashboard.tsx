@@ -111,8 +111,7 @@ export default function SevenFunctionsDashboard() {
 
   const aiAnalysisMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/seven-functions/ai-analysis");
-      return res.json();
+      return await apiRequest("POST", "/api/seven-functions/ai-analysis");
     },
     onSuccess: (data: { summary?: string }) => {
       toast({

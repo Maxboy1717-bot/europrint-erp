@@ -55,8 +55,7 @@ export default function AIProductionPlanning() {
     queryKey: ["/api/ai-planning/plans", selectedPlan?.id, "batch-groups"],
     queryFn: async () => {
       if (!selectedPlan) return { batchGroups: [], totalMachines: 0 };
-      const r = await apiRequest('GET', `/api/ai-planning/plans/${selectedPlan.id}/batch-groups`);
-      return r.json();
+      return await apiRequest('GET', `/api/ai-planning/plans/${selectedPlan.id}/batch-groups`);
     },
     enabled: !!selectedPlan && detailTab === "batch",
   });

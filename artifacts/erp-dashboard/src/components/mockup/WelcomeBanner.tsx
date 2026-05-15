@@ -16,10 +16,10 @@ export function WelcomeBanner({
 }) {
   const { t } = useTranslation("common");
   const { user } = useAuth();
-  const displayName = userName ?? user?.full_name ?? user?.username ?? "Foydalanuvchi";
+  const displayName = userName ?? user?.fullName ?? user?.username ?? "Foydalanuvchi";
   const initials = displayName
     .split(/\s+/)
-    .map((s) => s[0]?.toUpperCase() ?? "")
+    .map((s: string) => s[0]?.toUpperCase() ?? "")
     .slice(0, 2)
     .join("");
 

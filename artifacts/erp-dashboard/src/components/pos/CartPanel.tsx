@@ -19,13 +19,14 @@ interface CartPanelProps {
 }
 
 export function CartPanel({
-  cart,
+  cart = [],
   setCart,
   updateQuantity,
   removeFromCart,
 }: CartPanelProps) {
   const { t } = useTranslation('finance');
   const { t: tCommon } = useTranslation('common');
+  const safeCart = Array.isArray(cart) ? cart : [];
 
   const handleClearCart = () => {
     if (!window.confirm('Savatni tozalab tashlamoqchimisiz?')) return;
@@ -36,9 +37,9 @@ export function CartPanel({
     <Card className="flex-1 flex flex-col min-h-0">
       <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-sm">
-          {t('products')} ({cart.length})
+          {t('products')} ({safeCart.length})
         </CardTitle>
-        {cart.length > 0 && (
+        {safeCart.length > 0 && (
           <Button
             variant="outline"
             size="sm"
@@ -50,7 +51,7 @@ export function CartPanel({
         )}
       </CardHeader>
       <CardContent className="p-0 flex-1 overflow-auto">
-        {cart.length === 0 ? (
+        {safeCart.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
             <ScanBarcode className="h-12 w-12 mb-2 opacity-30" />
             <p className="text-sm">{t("shtrixKodniSkanerlang")}</p>
@@ -68,7 +69,7 @@ export function CartPanel({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(Array.isArray(cart) ? cart : []).map((item) => (
+              {safeCart.map((item) => (
                 <TableRow key={item.productId} data-testid={`row-cart-item-${item.productId}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell>
                     <div>

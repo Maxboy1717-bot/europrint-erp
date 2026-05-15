@@ -39,21 +39,21 @@ export function CompanyDetailSheet({ companyId, onClose }: CompanyDetailSheetPro
   const { data: contacts = [] } = useQuery<Contact[]>({
     queryKey: ["/api/crm/companies", companyId, "contacts"],
     queryFn: () =>
-      apiRequest('GET', `/api/crm/companies/${companyId}/contacts`).then((res) => res.json()),
+      apiRequest('GET', `/api/crm/companies/${companyId}/contacts`).then((res) => (res as unknown as Response).json()),
     enabled: !!companyId,
   });
 
   const { data: deals = [] } = useQuery<Deal[]>({
     queryKey: ["/api/crm/companies", companyId, "deals"],
     queryFn: () =>
-      apiRequest('GET', `/api/crm/companies/${companyId}/deals`).then((res) => res.json()),
+      apiRequest('GET', `/api/crm/companies/${companyId}/deals`).then((res) => (res as unknown as Response).json()),
     enabled: !!companyId,
   });
 
   const { data: creditData } = useQuery<CreditLimit | null>({
     queryKey: ["/api/crm/companies", companyId, "credit"],
     queryFn: () =>
-      apiRequest('GET', `/api/crm/companies/${companyId}/credit`).then((res) => res.json()),
+      apiRequest('GET', `/api/crm/companies/${companyId}/credit`).then((res) => (res as unknown as Response).json()),
     enabled: !!companyId,
   });
 

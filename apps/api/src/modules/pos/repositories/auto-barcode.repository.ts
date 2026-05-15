@@ -1,4 +1,15 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   - Snake-case-to-camelCase column aliasing via "double-quoted" identifiers
+ *     (movementLineId, materialCardId, materialCode, batchNumber) needed by
+ *     the typedExecute<T> contract — Drizzle's select projection produces
+ *     snake_case property names and would require a mapping pass.
+ *   - LEFT JOIN material_cards with selective column projection that excludes
+ *     the joined table from the result shape; Drizzle's relational query
+ *     builder always materialises full joined rows.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module auto-barcode.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */

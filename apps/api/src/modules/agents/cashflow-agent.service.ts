@@ -21,47 +21,55 @@ export class CashflowAgentService {
     private readonly bus:   AgentEventBusService,
   ) {}
 
+  private async fetchCashFlowData(daysCount: number): Promise<{ startBalance: number; inflowMap: Map<string, number>; outflowMap: Map<string, number> }> {
+    const [startBalR, inflowR, outflowR] = await Promise.all([
+      runQuery<{ b: string }>(sql`
+        SELECT COALESCE(SUM(amount), 0)::text AS b FROM cash_transactions WHERE created_at < NOW()
+      `).catch(() => ({ rows: [{ b: '0' }] })),
+      runQuery<{ dt: string; amt: string }>(sql`
+        SELECT DATE(expected_date)::text AS dt, COALESCE(SUM(amount::numeric), 0)::text AS amt
+        FROM customer_payments
+        WHERE expected_date BETWEEN CURRENT_DATE AND CURRENT_DATE + (${daysCount} || ' days')::interval
+          AND status = 'pending'
+        GROUP BY DATE(expected_date)
+      `).catch(() => ({ rows: [] as { dt: string; amt: string }[] })),
+      runQuery<{ dt: string; amt: string }>(sql`
+        SELECT DATE(due_date)::text AS dt, COALESCE(SUM(amount::numeric), 0)::text AS amt
+        FROM sd_payments
+        WHERE due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + (${daysCount} || ' days')::interval
+          AND status = 'pending'
+        GROUP BY DATE(due_date)
+      `).catch(() => ({ rows: [] as { dt: string; amt: string }[] })),
+    ]);
+    return {
+      startBalance: Number(startBalR.rows[0]?.b ?? 0),
+      inflowMap: new Map(inflowR.rows.map(r => [r.dt, Number(r.amt)])),
+      outflowMap: new Map(outflowR.rows.map(r => [r.dt, Number(r.amt)])),
+    };
+  }
+
+  private buildCashFlowDays(daysCount: number, startBalance: number, inflowMap: Map<string, number>, outflowMap: Map<string, number>): Array<{ date: string; balance: number; inflow: number; outflow: number }> {
+    let runningBalance = startBalance;
+    const today = new Date();
+    const dayList: Array<{ date: string; balance: number; inflow: number; outflow: number }> = [];
+    for (let i = 0; i < daysCount; i++) {
+      const d = new Date(today.getTime());
+      d.setDate(d.getDate() + i);
+      const date = d.toISOString().split('T')[0];
+      const inflow = inflowMap.get(date) ?? 0;
+      const outflow = outflowMap.get(date) ?? 0;
+      runningBalance += inflow - outflow;
+      dayList.push({ date, balance: runningBalance, inflow, outflow });
+    }
+    return dayList;
+  }
+
   /** Kelgusi N kun pul oqimi bashorati (batch so'rovlar) */
   async forecastCashFlow(daysCount = 30): Promise<{ days: Array<{ date: string; balance: number; inflow: number; outflow: number }> }> {
     return this.audit.wrap({ agentName: this.AGENT, action: 'forecast_cashflow' }, async () => {
-      const [startBalR, inflowR, outflowR] = await Promise.all([
-        runQuery<{ b: string }>(sql`
-          SELECT COALESCE(SUM(amount), 0)::text AS b FROM cash_transactions WHERE created_at < NOW()
-        `).catch(() => ({ rows: [{ b: '0' }] })),
-
-        runQuery<{ dt: string; amt: string }>(sql`
-          SELECT DATE(expected_date)::text AS dt, COALESCE(SUM(amount::numeric), 0)::text AS amt
-          FROM customer_payments
-          WHERE expected_date BETWEEN CURRENT_DATE AND CURRENT_DATE + (${daysCount} || ' days')::interval
-            AND status = 'pending'
-          GROUP BY DATE(expected_date)
-        `).catch(() => ({ rows: [] as { dt: string; amt: string }[] })),
-
-        runQuery<{ dt: string; amt: string }>(sql`
-          SELECT DATE(due_date)::text AS dt, COALESCE(SUM(amount::numeric), 0)::text AS amt
-          FROM sd_payments
-          WHERE due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + (${daysCount} || ' days')::interval
-            AND status = 'pending'
-          GROUP BY DATE(due_date)
-        `).catch(() => ({ rows: [] as { dt: string; amt: string }[] })),
-      ]);
-
-      let runningBalance = Number(startBalR.rows[0]?.b ?? 0);
-      const inflowMap = new Map(inflowR.rows.map(r => [r.dt, Number(r.amt)]));
-      const outflowMap = new Map(outflowR.rows.map(r => [r.dt, Number(r.amt)]));
-
-      const today = new Date();
-      const dayList: Array<{ date: string; balance: number; inflow: number; outflow: number }> = [];
-      for (let i = 0; i < daysCount; i++) {
-        const d = new Date(today.getTime());
-        d.setDate(d.getDate() + i);
-        const date = d.toISOString().split('T')[0];
-        const inflow  = inflowMap.get(date)  ?? 0;
-        const outflow = outflowMap.get(date) ?? 0;
-        runningBalance += inflow - outflow;
-        dayList.push({ date, balance: runningBalance, inflow, outflow });
-      }
-      return { days: dayList };
+      const { startBalance, inflowMap, outflowMap } = await this.fetchCashFlowData(daysCount);
+      const days = this.buildCashFlowDays(daysCount, startBalance, inflowMap, outflowMap);
+      return { days };
     });
   }
 

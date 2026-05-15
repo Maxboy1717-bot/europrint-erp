@@ -19,7 +19,6 @@ import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type T, type Employee, type TaskFlowWithUsers } from "./kanban-types";
 import { EPStatusPill } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 export function FlowsDialog({
   open,
@@ -32,9 +31,8 @@ export function FlowsDialog({
   onOpenChange: (open: boolean) => void;
   boardId: string | null;
   employees: Employee[];
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string) => string);
 }) {
-  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [flowName, setFlowName] = useState("");
   const [flowType, setFlowType] = useState<"round_robin" | "least_busy" | "random">("round_robin");

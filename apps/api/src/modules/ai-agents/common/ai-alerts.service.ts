@@ -41,6 +41,8 @@ interface SalesCopilotDirectorApprovalEvent {
   timestamp:  Date;
 }
 
+type RecipientRow = { telegram_chat_id: string };
+
 @Injectable()
 export class AiAlertsService {
   private readonly logger = new Logger(AiAlertsService.name);
@@ -57,28 +59,12 @@ export class AiAlertsService {
       machineId: event.machineId,
       reason:    event.reason,
     });
-
-    const supervisors = await db.execute<{ telegram_chat_id: string }>(sql`
-      SELECT e.telegram_chat_id
-      FROM employees e
-      WHERE LOWER(e.status) = 'active'
-        AND e.telegram_chat_id IS NOT NULL
-        AND LOWER(e.role) IN ('production_manager', 'shift_supervisor', 'director')
-      LIMIT 5
-    `).then((r) => r.rows).catch(() => [] as { telegram_chat_id: string }[]);
-
+    const supervisors = await this.findSupervisors();
     const text = `🚨 <b>MASHINA AVTO-TO'XTATILDI</b>\n`
                + `🔧 Mashina: <code>${event.machineId}</code>\n`
                + `❗ Sabab: ${event.reason}\n`
                + `🕐 Vaqt: ${event.timestamp.toISOString()}`;
-
-    await Promise.all(
-      supervisors.map((s) =>
-        this.telegram.sendMessage(s.telegram_chat_id, text).catch((e: unknown) =>
-          this.logger.warn({ msg: 'Failed to send MES alert', chatId: s.telegram_chat_id, err: e }),
-        ),
-      ),
-    );
+    await this.broadcastTelegram(supervisors, text, 'MES alert');
   }
 
   @OnEvent('mes.machine.anomaly_alert')
@@ -89,30 +75,18 @@ export class AiAlertsService {
       zScore:    event.zScore,
       absZ:      event.absZ,
     });
+    const supervisors = await this.findSupervisors();
+    const text = this.buildAnomalyText(event);
+    await this.broadcastTelegram(supervisors, text, 'anomaly alert');
+  }
 
-    const supervisors = await db.execute<{ telegram_chat_id: string }>(sql`
-      SELECT e.telegram_chat_id
-      FROM employees e
-      WHERE LOWER(e.status) = 'active'
-        AND e.telegram_chat_id IS NOT NULL
-        AND LOWER(e.role) IN ('production_manager', 'shift_supervisor', 'director')
-      LIMIT 5
-    `).then((r) => r.rows).catch(() => [] as { telegram_chat_id: string }[]);
-
-    const text = `⚠️ <b>MES ANOMALIYA OGOHLANTIRISHI</b>\n`
-               + `🔧 Mashina: <code>${event.machineId}</code>\n`
-               + `📊 Z-score: ${event.zScore.toFixed(2)} (|Z|=${event.absZ.toFixed(2)})\n`
-               + `📈 Qiymat: ${event.value}\n`
-               + `🕐 Vaqt: ${event.timestamp.toISOString()}\n`
-               + `👤 <b>Inson qaroringiz kerak!</b> Jarayonni tekshiring.`;
-
-    await Promise.all(
-      supervisors.map((s) =>
-        this.telegram.sendMessage(s.telegram_chat_id, text).catch((e: unknown) =>
-          this.logger.warn({ msg: 'Failed to send anomaly alert', chatId: s.telegram_chat_id, err: e }),
-        ),
-      ),
-    );
+  private buildAnomalyText(event: MesAnomalyAlertEvent): string {
+    return `⚠️ <b>MES ANOMALIYA OGOHLANTIRISHI</b>\n`
+         + `🔧 Mashina: <code>${event.machineId}</code>\n`
+         + `📊 Z-score: ${event.zScore.toFixed(2)} (|Z|=${event.absZ.toFixed(2)})\n`
+         + `📈 Qiymat: ${event.value}\n`
+         + `🕐 Vaqt: ${event.timestamp.toISOString()}\n`
+         + `👤 <b>Inson qaroringiz kerak!</b> Jarayonni tekshiring.`;
   }
 
   @OnEvent('sales.copilot.auto_price')
@@ -123,32 +97,22 @@ export class AiAlertsService {
       price:      event.price,
       confidence: event.confidence,
     });
-
-    const managers = await db.execute<{ telegram_chat_id: string }>(sql`
-      SELECT e.telegram_chat_id
-      FROM employees e
-      WHERE LOWER(e.status) = 'active'
-        AND e.telegram_chat_id IS NOT NULL
-        AND LOWER(e.role) IN ('sales_manager', 'sales_head', 'director')
-      LIMIT 3
-    `).then((r) => r.rows).catch(() => [] as { telegram_chat_id: string }[]);
-
+    const managers = await this.findSalesManagers();
     const formatted = new Intl.NumberFormat('uz-UZ').format(event.price);
-    const internalText = `💼 <b>AI Sales Copilot: Avto-narx belgilandi</b>\n`
-                       + `📦 Buyurtma: <code>${event.orderId}</code>\n`
-                       + `💰 Narx: ${formatted} UZS\n`
-                       + `🎯 Ishonch: ${Math.round(event.confidence * 100)}%\n`
-                       + `🏷 Variant: ${event.choice}`;
+    const internalText = this.buildAutoPriceInternalText(event, formatted);
+    await this.broadcastTelegram(managers, internalText, 'sales alert');
+    await this.dispatchCustomerPriceEmail(event, formatted);
+  }
 
-    await Promise.all(
-      managers.map((m) =>
-        this.telegram.sendMessage(m.telegram_chat_id, internalText).catch((e: unknown) =>
-          this.logger.warn({ msg: 'Failed to send sales alert', chatId: m.telegram_chat_id, err: e }),
-        ),
-      ),
-    );
+  private buildAutoPriceInternalText(event: SalesCopilotAutoPriceEvent, formatted: string): string {
+    return `💼 <b>AI Sales Copilot: Avto-narx belgilandi</b>\n`
+         + `📦 Buyurtma: <code>${event.orderId}</code>\n`
+         + `💰 Narx: ${formatted} UZS\n`
+         + `🎯 Ishonch: ${Math.round(event.confidence * 100)}%\n`
+         + `🏷 Variant: ${event.choice}`;
+  }
 
-    // Customer-facing dispatch: send price proposal to customer via email
+  private async dispatchCustomerPriceEmail(event: SalesCopilotAutoPriceEvent, formatted: string): Promise<void> {
     const customerRow = await db.execute<{ email: string | null; name: string | null }>(sql`
       SELECT ca.email, ca.name
       FROM customer_orders co
@@ -157,10 +121,22 @@ export class AiAlertsService {
       LIMIT 1
     `).then((r) => r.rows[0]).catch(() => null);
 
-    if (customerRow?.email) {
-      const priceHtml = `
+    if (!customerRow?.email) return;
+    const priceHtml = this.buildCustomerPriceHtml(event, formatted, customerRow.name);
+    await this.email.send({
+      to:      customerRow.email,
+      subject: `EuroPrint — Buyurtma #${event.orderId} narx taklifi`,
+      html:    priceHtml,
+      text:    `Buyurtma #${event.orderId} uchun narx: ${formatted} UZS (${event.choice})`,
+    }).catch((e: unknown) =>
+      this.logger.warn({ msg: 'Customer price email failed', orderId: event.orderId, err: e }),
+    );
+  }
+
+  private buildCustomerPriceHtml(event: SalesCopilotAutoPriceEvent, formatted: string, name: string | null): string {
+    return `
         <h2>Buyurtmangiz uchun narx taklifi</h2>
-        <p>Hurmatli <b>${customerRow.name ?? 'Mijoz'}</b>,</p>
+        <p>Hurmatli <b>${name ?? 'Mijoz'}</b>,</p>
         <p>Buyurtma raqami <code>${event.orderId}</code> uchun AI tomonidan narx belgilandi:</p>
         <table style="border-collapse:collapse;width:100%;max-width:400px">
           <tr><td style="padding:8px;border:1px solid #e5e7eb"><b>Narx</b></td>
@@ -170,15 +146,6 @@ export class AiAlertsService {
         </table>
         <p>Savol yoki murojaat uchun sales@europrint.uz manziliga yozing.</p>
       `;
-      await this.email.send({
-        to:      customerRow.email,
-        subject: `EuroPrint — Buyurtma #${event.orderId} narx taklifi`,
-        html:    priceHtml,
-        text:    `Buyurtma #${event.orderId} uchun narx: ${formatted} UZS (${event.choice})`,
-      }).catch((e: unknown) =>
-        this.logger.warn({ msg: 'Customer price email failed', orderId: event.orderId, err: e }),
-      );
-    }
   }
 
   @OnEvent('sales.copilot.director_approval_required')
@@ -189,10 +156,49 @@ export class AiAlertsService {
       price:      event.price,
       hitlReason: event.hitlReason,
     });
+    const directors = await this.findDirectors();
+    const directorText = this.buildDirectorApprovalText(event);
+    await this.broadcastTelegram(directors, directorText, 'director notification');
+  }
 
-    let directors: { telegram_chat_id: string }[] = [];
+  private buildDirectorApprovalText(event: SalesCopilotDirectorApprovalEvent): string {
+    const formatted = new Intl.NumberFormat('uz-UZ').format(event.price);
+    const creditPct = (event.creditUtil * 100).toFixed(1);
+    return `🔔 <b>Direktor tasdiqi kerak — AI Sales Copilot</b>\n\n`
+         + `📦 Buyurtma: <code>${event.orderId}</code>\n`
+         + `💰 Avto-narx: ${formatted} UZS\n`
+         + `📊 Kredit ulushi: ${creditPct}%\n`
+         + `🎯 Ishonch: ${Math.round(event.confidence * 100)}%\n`
+         + `⚠️ Sabab: ${event.hitlReason ?? 'soft HITL chegarasi oshdi'}\n\n`
+         + `Buyurtma bajarildi, lekin Siz tasdiqlashingiz yoki bekor qilishingiz mumkin.\n`
+         + `ERP: /director/ai-audit`;
+  }
+
+  private async findSupervisors(): Promise<RecipientRow[]> {
+    return db.execute<RecipientRow>(sql`
+      SELECT e.telegram_chat_id
+      FROM employees e
+      WHERE LOWER(e.status) = 'active'
+        AND e.telegram_chat_id IS NOT NULL
+        AND LOWER(e.role) IN ('production_manager', 'shift_supervisor', 'director')
+      LIMIT 5
+    `).then((r) => r.rows).catch(() => [] as RecipientRow[]);
+  }
+
+  private async findSalesManagers(): Promise<RecipientRow[]> {
+    return db.execute<RecipientRow>(sql`
+      SELECT e.telegram_chat_id
+      FROM employees e
+      WHERE LOWER(e.status) = 'active'
+        AND e.telegram_chat_id IS NOT NULL
+        AND LOWER(e.role) IN ('sales_manager', 'sales_head', 'director')
+      LIMIT 3
+    `).then((r) => r.rows).catch(() => [] as RecipientRow[]);
+  }
+
+  private async findDirectors(): Promise<RecipientRow[]> {
     try {
-      const directorRows = await db.execute<{ telegram_chat_id: string }>(sql`
+      const rows = await db.execute<RecipientRow>(sql`
         SELECT e.telegram_chat_id
         FROM employees e
         WHERE LOWER(e.status) = 'active'
@@ -200,26 +206,18 @@ export class AiAlertsService {
           AND LOWER(e.role) = 'director'
         LIMIT 3
       `);
-      directors = directorRows.rows;
+      return rows.rows;
     } catch (e) {
       this.logger.warn(`aiAlerts.directors lookup failed: ${String(e)}`);
+      return [];
     }
+  }
 
-    const formatted    = new Intl.NumberFormat('uz-UZ').format(event.price);
-    const creditPct    = (event.creditUtil * 100).toFixed(1);
-    const directorText = `🔔 <b>Direktor tasdiqi kerak — AI Sales Copilot</b>\n\n`
-                       + `📦 Buyurtma: <code>${event.orderId}</code>\n`
-                       + `💰 Avto-narx: ${formatted} UZS\n`
-                       + `📊 Kredit ulushi: ${creditPct}%\n`
-                       + `🎯 Ishonch: ${Math.round(event.confidence * 100)}%\n`
-                       + `⚠️ Sabab: ${event.hitlReason ?? 'soft HITL chegarasi oshdi'}\n\n`
-                       + `Buyurtma bajarildi, lekin Siz tasdiqlashingiz yoki bekor qilishingiz mumkin.\n`
-                       + `ERP: /director/ai-audit`;
-
+  private async broadcastTelegram(recipients: RecipientRow[], text: string, label: string): Promise<void> {
     await Promise.all(
-      directors.map((d) =>
-        this.telegram.sendMessage(d.telegram_chat_id, directorText).catch((e: unknown) =>
-          this.logger.warn({ msg: 'Failed to notify director', chatId: d.telegram_chat_id, err: e }),
+      recipients.map((r) =>
+        this.telegram.sendMessage(r.telegram_chat_id, text).catch((e: unknown) =>
+          this.logger.warn({ msg: `Failed to send ${label}`, chatId: r.telegram_chat_id, err: e }),
         ),
       ),
     );

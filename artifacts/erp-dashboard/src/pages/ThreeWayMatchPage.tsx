@@ -63,8 +63,7 @@ export default function ThreeWayMatchPage() {
   const { data: rawData, isLoading, isError, refetch } = useQuery<MatchResult[] | { data?: MatchResult[] }>({
     queryKey: ["/api/3way-match/results"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/3way-match/results");
-      return res.json();
+      return await apiRequest("GET", "/api/3way-match/results");
     },
   });
 
@@ -74,12 +73,11 @@ export default function ThreeWayMatchPage() {
 
   const performMutation = useMutation({
     mutationFn: async (dto: typeof form) => {
-      const res = await apiRequest("POST", "/api/3way-match/perform", {
+      return await apiRequest("POST", "/api/3way-match/perform", {
         poId:            parseInt(dto.poId, 10),
         grId:            parseInt(dto.grId, 10),
         vendorInvoiceId: dto.vendorInvoiceId,
       });
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/3way-match/results"] });

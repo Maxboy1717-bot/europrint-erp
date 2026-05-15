@@ -73,8 +73,7 @@ export default function QuestionnaireQuestionsPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searched) params.set("templateId", searched);
-      const res = await apiRequest("GET", `/api/questionnaire-questions?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/questionnaire-questions?${params}`);
     },
   });
 
@@ -84,8 +83,7 @@ export default function QuestionnaireQuestionsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: typeof form) => {
-      const res = await apiRequest("POST", "/api/questionnaire-questions", dto);
-      return res.json();
+      return await apiRequest("POST", "/api/questionnaire-questions", dto);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -98,8 +96,7 @@ export default function QuestionnaireQuestionsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string | number) => {
-      const res = await apiRequest("DELETE", `/api/questionnaire-questions/${id}`);
-      return res.json();
+      return await apiRequest("DELETE", `/api/questionnaire-questions/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

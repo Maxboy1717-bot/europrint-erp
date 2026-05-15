@@ -102,64 +102,76 @@ export class CohortService {
     if (!orders.length) {
       return Err({ code: 'BAD_REQUEST', message: 'Buyurtmalar ro\'yxati bo\'sh' });
     }
+    const firstPurchaseMap = this.buildFirstPurchaseMap(orders);
+    const cohortMap = this.buildCohortMap(firstPurchaseMap);
+    const activityMap = this.buildActivityMap(orders, firstPurchaseMap);
+    const { rows, maxPeriod } = this.assembleRetentionRows(cohortMap, activityMap);
+    return Ok({ rows, maxPeriod });
+  }
 
+  private buildFirstPurchaseMap(orders: OrderRecord[]): Map<string, string> {
     const firstPurchaseMap = new Map<string, string>();
     for (const o of orders) {
       const month = toYearMonth(o.completedAt);
       const existing = firstPurchaseMap.get(o.customerId);
-      if (!existing || month < existing) {
-        firstPurchaseMap.set(o.customerId, month);
-      }
+      if (!existing || month < existing) firstPurchaseMap.set(o.customerId, month);
     }
+    return firstPurchaseMap;
+  }
 
+  private buildCohortMap(firstPurchaseMap: Map<string, string>): Map<string, Set<string>> {
     const cohortMap = new Map<string, Set<string>>();
     for (const [customerId, cohortMonth] of firstPurchaseMap) {
       if (!cohortMap.has(cohortMonth)) cohortMap.set(cohortMonth, new Set());
       cohortMap.get(cohortMonth)?.add(customerId);
     }
+    return cohortMap;
+  }
 
+  private buildActivityMap(orders: OrderRecord[], firstPurchaseMap: Map<string, string>): Map<string, Set<string>> {
     const activityMap = new Map<string, Set<string>>();
     for (const o of orders) {
       const key = `${firstPurchaseMap.get(o.customerId)}::${toYearMonth(o.completedAt)}`;
       if (!activityMap.has(key)) activityMap.set(key, new Set());
-      const activitySet = activityMap.get(key);
-      if (activitySet) activitySet.add(o.customerId);
+      activityMap.get(key)?.add(o.customerId);
     }
+    return activityMap;
+  }
 
+  private assembleRetentionRows(
+    cohortMap: Map<string, Set<string>>,
+    activityMap: Map<string, Set<string>>,
+  ): { rows: CohortRow[]; maxPeriod: number } {
     let maxPeriod = 0;
-
     const rows: CohortRow[] = [];
-    const sortedCohorts = [...cohortMap.keys()].sort();
-
-    for (const cohortMonth of sortedCohorts) {
+    for (const cohortMonth of [...cohortMap.keys()].sort()) {
       const cohortCustomers = cohortMap.get(cohortMonth);
       if (!cohortCustomers) continue;
-      const cohortSize = cohortCustomers.size;
-      const retentionByPeriod: Record<number, number> = {};
-
-      const activityMonths = new Set<string>();
-      for (const [key] of activityMap) {
-        if (key.startsWith(`${cohortMonth}::`)) {
-          activityMonths.add(key.replace(`${cohortMonth}::`, ''));
-        }
-      }
-
-      for (const actMonth of activityMonths) {
-        const period = monthDiff(cohortMonth, actMonth);
-        if (period < 0) continue;
-        const activeCustomers = activityMap.get(`${cohortMonth}::${actMonth}`);
-        if (!activeCustomers) continue;
-        const retained = ([...activeCustomers]).filter(id => cohortCustomers.has(id)).length;
-        retentionByPeriod[period] = safeDiv(retained, cohortSize);
-        if (period > maxPeriod) maxPeriod = period;
-      }
-
+      const { retentionByPeriod, cohortMaxPeriod } = this.computeCohortRetention(cohortMonth, cohortCustomers, activityMap);
+      if (cohortMaxPeriod > maxPeriod) maxPeriod = cohortMaxPeriod;
       retentionByPeriod[0] = 1.0;
-
-      rows.push({ cohortMonth, cohortSize, retentionByPeriod });
+      rows.push({ cohortMonth, cohortSize: cohortCustomers.size, retentionByPeriod });
     }
+    return { rows, maxPeriod };
+  }
 
-    return Ok({ rows, maxPeriod });
+  private computeCohortRetention(
+    cohortMonth: string,
+    cohortCustomers: Set<string>,
+    activityMap: Map<string, Set<string>>,
+  ): { retentionByPeriod: Record<number, number>; cohortMaxPeriod: number } {
+    const retentionByPeriod: Record<number, number> = {};
+    let cohortMaxPeriod = 0;
+    for (const [key, activeCustomers] of activityMap) {
+      if (!key.startsWith(`${cohortMonth}::`)) continue;
+      const actMonth = key.replace(`${cohortMonth}::`, '');
+      const period = monthDiff(cohortMonth, actMonth);
+      if (period < 0) continue;
+      const retained = [...activeCustomers].filter(id => cohortCustomers.has(id)).length;
+      retentionByPeriod[period] = safeDiv(retained, cohortCustomers.size);
+      if (period > cohortMaxPeriod) cohortMaxPeriod = period;
+    }
+    return { retentionByPeriod, cohortMaxPeriod };
   }
 
   async getCountOrderData(months: number): Promise<OrderRecord[]> {
@@ -209,57 +221,60 @@ export class CohortService {
     if (!orders.length) {
       return Err({ code: 'BAD_REQUEST', message: 'Buyurtmalar ro\'yxati bo\'sh' });
     }
+    const firstPurchaseMap = this.buildFirstPurchaseMap(orders);
+    const cohortRevenueMap = this.buildCohortRevenueMap(orders, firstPurchaseMap);
+    const cohortCustomers = this.buildCohortMap(firstPurchaseMap);
+    const periodRevMap = this.buildPeriodRevenueMap(orders, firstPurchaseMap);
+    const { rows, maxPeriod } = this.assembleRevenueRows(cohortCustomers, cohortRevenueMap, periodRevMap);
+    return Ok({ rows, maxPeriod });
+  }
 
-    const firstPurchaseMap = new Map<string, string>();
-    for (const o of orders) {
-      const month = toYearMonth(o.completedAt);
-      const existing = firstPurchaseMap.get(o.customerId);
-      if (!existing || month < existing) firstPurchaseMap.set(o.customerId, month);
-    }
-
+  private buildCohortRevenueMap(
+    orders: Array<OrderRecord & { revenue: number }>,
+    firstPurchaseMap: Map<string, string>,
+  ): Map<string, number> {
     const cohortRevenueMap = new Map<string, number>();
     for (const [customerId, cohortMonth] of firstPurchaseMap) {
       const cohortOrders = orders.filter(o => o.customerId === customerId && toYearMonth(o.completedAt) === cohortMonth);
       const rev = cohortOrders.reduce((s, o) => s + (o.revenue ?? 0), 0);
       cohortRevenueMap.set(cohortMonth, (cohortRevenueMap.get(cohortMonth) ?? 0) + rev);
     }
+    return cohortRevenueMap;
+  }
 
-    const cohortCustomers = new Map<string, Set<string>>();
-    for (const [customerId, cohortMonth] of firstPurchaseMap) {
-      if (!cohortCustomers.has(cohortMonth)) cohortCustomers.set(cohortMonth, new Set());
-      cohortCustomers.get(cohortMonth)?.add(customerId);
-    }
-
+  private buildPeriodRevenueMap(
+    orders: Array<OrderRecord & { revenue: number }>,
+    firstPurchaseMap: Map<string, string>,
+  ): Map<string, number> {
     const periodRevMap = new Map<string, number>();
     for (const o of orders) {
       const cohortMonth = firstPurchaseMap.get(o.customerId);
       if (!cohortMonth) continue;
-      const actMonth = toYearMonth(o.completedAt);
-      const key = `${cohortMonth}::${actMonth}`;
+      const key = `${cohortMonth}::${toYearMonth(o.completedAt)}`;
       periodRevMap.set(key, (periodRevMap.get(key) ?? 0) + (o.revenue ?? 0));
     }
+    return periodRevMap;
+  }
 
+  private assembleRevenueRows(
+    cohortCustomers: Map<string, Set<string>>,
+    cohortRevenueMap: Map<string, number>,
+    periodRevMap: Map<string, number>,
+  ): { rows: CohortRow[]; maxPeriod: number } {
     let maxPeriod = 0;
     const rows: CohortRow[] = [];
-
     for (const cohortMonth of [...cohortCustomers.keys()].sort()) {
       const baseRev = cohortRevenueMap.get(cohortMonth) ?? 1;
       const cohortSize = cohortCustomers.get(cohortMonth)?.size ?? 0;
       const retentionByPeriod: Record<number, number> = { 0: 1.0 };
-
-      const periodKeys = ([...periodRevMap.keys()]).filter(k => k.startsWith(`${cohortMonth}::`));
-      for (const key of periodKeys) {
-        const actMonth = key.replace(`${cohortMonth}::`, '');
-        const period = monthDiff(cohortMonth, actMonth);
+      for (const key of [...periodRevMap.keys()].filter(k => k.startsWith(`${cohortMonth}::`))) {
+        const period = monthDiff(cohortMonth, key.replace(`${cohortMonth}::`, ''));
         if (period < 0) continue;
-        const rev = periodRevMap.get(key) ?? 0;
-        retentionByPeriod[period] = safeDiv(rev, baseRev);
+        retentionByPeriod[period] = safeDiv(periodRevMap.get(key) ?? 0, baseRev);
         if (period > maxPeriod) maxPeriod = period;
       }
-
       rows.push({ cohortMonth, cohortSize, retentionByPeriod });
     }
-
-    return Ok({ rows, maxPeriod });
+    return { rows, maxPeriod };
   }
 }

@@ -13,7 +13,6 @@ import { ListTodo, CheckCircle2, AlertTriangle, Timer, Calendar } from "lucide-r
 import { format, isToday, isBefore, isThisWeek, startOfDay } from "date-fns";
 import { type CardWithOwner, type T, PRIORITY_CONFIG, formatTimeShort } from "./kanban-types";
 import { EPStatusPill } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 export function MyPlanView({
   cards,
@@ -24,9 +23,8 @@ export function MyPlanView({
   cards: CardWithOwner[];
   onCardClick: (card: CardWithOwner) => void;
   onToggleComplete: (card: CardWithOwner) => void;
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string) => string);
 }) {
-  const { t } = useTranslation("common");
   const groupedTasks = useMemo(() => {
     const today: CardWithOwner[] = [];
     const thisWeek: CardWithOwner[] = [];

@@ -134,6 +134,7 @@ export function ToolTestAdminTab({
   questions, questionsLoading, indicatorGroups,
   onAddQuestion, onEditQuestion, onDeleteQuestion,
 }: ToolTestAdminTabProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">

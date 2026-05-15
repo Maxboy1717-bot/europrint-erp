@@ -19,14 +19,13 @@ import { Plus, Filter, Calendar as CalendarIcon, Download, Pencil } from "lucide
 import type { PlanningOperation, PapkaOrder, Equipment, PlanningTranslationMap, PlanningFilters } from "./PlanningBoardTypes";
 import { exportOperationsCSV } from "./PlanningBoardTypes";
 import { EPPageHeader, EPLoader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // PlanningBoardHeader
 // ---------------------------------------------------------------------------
 
 interface PlanningBoardHeaderProps {
-  t: PlanningTranslationMap;
+  t: PlanningTranslationMap & ((key: string) => string);
   lang: "uz" | "ru";
   operationsData: { operations?: PlanningOperation[]; items?: PlanningOperation[] } | undefined;
   onToggleLang: () => void;
@@ -42,7 +41,6 @@ export function PlanningBoardHeader({
   onExport,
   onAddOperation,
 }: PlanningBoardHeaderProps) {
-  const { t } = useTranslation("common");
   const handleExport = () => {
     exportOperationsCSV(operationsData);
     onExport();
@@ -56,7 +54,7 @@ export function PlanningBoardHeader({
         </div>
         <div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t.title}</b></>}
+        breadcrumb={<><b className="text-foreground">{t.title}</b></>}
         title={t.title}
         subtitle={t.subtitle}
       />
@@ -98,7 +96,7 @@ export function PlanningBoardHeader({
 // ---------------------------------------------------------------------------
 
 interface PlanningFiltersCardProps {
-  t: PlanningTranslationMap;
+  t: PlanningTranslationMap & ((key: string) => string);
   filters: PlanningFilters;
   onFiltersChange: (filters: PlanningFilters) => void;
 }
@@ -184,7 +182,7 @@ export function PlanningFiltersCard({ t, filters, onFiltersChange }: PlanningFil
 // ---------------------------------------------------------------------------
 
 interface OperationsTableTabProps {
-  t: PlanningTranslationMap;
+  t: PlanningTranslationMap & ((key: string) => string);
   isLoadingOps: boolean;
   operationsData: { items?: PlanningOperation[] } | undefined;
   papkaOrdersList: PapkaOrder[];
@@ -244,7 +242,7 @@ export function OperationsTableTab({
                     <TableCell className="py-3 px-6 text-muted-foreground">{op.plannedEndTime}</TableCell>
                     <TableCell className="py-3 px-6">
                       <Badge className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", op.status === "completed" ? "bg-green-100 text-green-800" : op.status === "in_progress" ? "bg-amber-100 text-amber-800" : op.status === "cancelled" ? "bg-red-100 text-red-800" : "bg-primary/10 text-primary")}>
-                        {(t as Record<string, string>)[op.status] || op.status}
+                        {(t as unknown as Record<string, string>)[op.status] || op.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="py-3 px-6 text-right">

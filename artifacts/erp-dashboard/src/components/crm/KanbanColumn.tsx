@@ -42,8 +42,9 @@ interface KanbanColumnProps {
   onDealClick?: (dealId: number) => void;
 }
 
-export function KanbanColumn({ stage, deals, onDealClick }: KanbanColumnProps) {
+export function KanbanColumn({ stage, deals = [], onDealClick }: KanbanColumnProps) {
   const { t } = useTranslation("common");
+  const safeDeals = Array.isArray(deals) ? deals : [];
   const { setNodeRef, isOver } = useDroppable({
     id: stage.stageId,
     data: {
@@ -52,7 +53,7 @@ export function KanbanColumn({ stage, deals, onDealClick }: KanbanColumnProps) {
   });
 
   const currencyTotals: Record<string, number> = {};
-  (Array.isArray(deals) ? deals : []).forEach(deal => {
+  safeDeals.forEach(deal => {
     const cur = deal.currencyId ?? 'UZS';
     const amt = Number(deal.opportunity || 0);
     if (!isNaN(amt)) currencyTotals[cur] = (currencyTotals[cur] ?? 0) + amt;
@@ -83,7 +84,7 @@ export function KanbanColumn({ stage, deals, onDealClick }: KanbanColumnProps) {
             {stage.name}
           </CardTitle>
           <Badge variant="secondary" className="text-xs">
-            {deals.length}
+            {safeDeals.length}
           </Badge>
         </div>
         {totalDisplay && (
@@ -97,17 +98,17 @@ export function KanbanColumn({ stage, deals, onDealClick }: KanbanColumnProps) {
         <ScrollArea className="h-[calc(100vh-300px)]">
           <SortableContext
             id={stage.stageId}
-            items={(Array.isArray(deals) ? deals : []).map((d) => d.id)}
+            items={safeDeals.map((d) => d.id)}
             strategy={verticalListSortingStrategy}
           >
             <div className="space-y-3">
-              {(Array.isArray(deals) ? deals : []).map((deal) => (
+              {safeDeals.map((deal) => (
                 <DealCard key={deal.id} deal={deal} onClick={onDealClick} />
               ))}
             </div>
           </SortableContext>
 
-          {deals.length === 0 && (
+          {safeDeals.length === 0 && (
             <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
               {t("bosh")}
             </div>

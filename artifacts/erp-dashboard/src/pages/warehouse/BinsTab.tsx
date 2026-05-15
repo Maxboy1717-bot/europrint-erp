@@ -37,9 +37,7 @@ export function BinsTab({ lang, t }: BinsTabProps) {
     queryKey: ["/api/warehouse/warehouses", selectedWarehouseId, "zones"],
     queryFn: async () => {
       if (!selectedWarehouseId) return [];
-      const res = await apiRequest('GET', `/api/warehouse/warehouses/${selectedWarehouseId}/zones`);
-      if (!res.ok) throw new Error("Failed to fetch zones");
-      return res.json();
+      return await apiRequest('GET', `/api/warehouse/warehouses/${selectedWarehouseId}/zones`);
     },
     enabled: !!selectedWarehouseId,
   });
@@ -48,9 +46,7 @@ export function BinsTab({ lang, t }: BinsTabProps) {
     queryKey: ["/api/warehouse/warehouses", selectedWarehouseId, "bins"],
     queryFn: async () => {
       if (!selectedWarehouseId) return [];
-      const res = await apiRequest('GET', `/api/warehouse/warehouses/${selectedWarehouseId}/bins`);
-      if (!res.ok) throw new Error("Failed to fetch bins");
-      return res.json();
+      return await apiRequest('GET', `/api/warehouse/warehouses/${selectedWarehouseId}/bins`);
     },
     enabled: !!selectedWarehouseId,
   });
@@ -58,9 +54,7 @@ export function BinsTab({ lang, t }: BinsTabProps) {
   const { data: bin360Data, isLoading: is360Loading } = useQuery<Bin360Data>({
     queryKey: ["/api/warehouse/bins", viewing360BinId, "360"],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/warehouse/bins/${viewing360BinId}/360`);
-      if (!res.ok) throw new Error("Failed to fetch bin 360");
-      return res.json();
+      return await apiRequest('GET', `/api/warehouse/bins/${viewing360BinId}/360`);
     },
     enabled: !!viewing360BinId,
   });

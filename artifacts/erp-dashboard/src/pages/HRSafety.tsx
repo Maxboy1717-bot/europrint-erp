@@ -55,22 +55,22 @@ export default function HRSafety() {
   const { data: rawIncidents, isLoading: loadingIncidents } = useQuery<SafetyIncident[]>({ queryKey: ["/api/hr/safety/incidents"] });
   const incidents: SafetyIncident[] = Array.isArray(rawIncidents) ? rawIncidents
     : Array.isArray((rawIncidents as { data?: SafetyIncident[] } | undefined)?.data)
-      ? (rawIncidents as { data: SafetyIncident[] }).data : [];
+      ? (rawIncidents as unknown as { data: SafetyIncident[] }).data : [];
 
   const { data: rawPpe, isLoading: loadingPpe } = useQuery<PpeRecord[]>({ queryKey: ["/api/hr/safety/ppe-compliance"] });
   const ppeRecords: PpeRecord[] = Array.isArray(rawPpe) ? rawPpe
     : Array.isArray((rawPpe as { data?: PpeRecord[] } | undefined)?.data)
-      ? (rawPpe as { data: PpeRecord[] }).data : [];
+      ? (rawPpe as unknown as { data: PpeRecord[] }).data : [];
 
   const { data: rawTrainings, isLoading: loadingTrainings } = useQuery<SafetyTraining[]>({ queryKey: ["/api/hr/safety/trainings"] });
   const trainings: SafetyTraining[] = Array.isArray(rawTrainings) ? rawTrainings
     : Array.isArray((rawTrainings as { data?: SafetyTraining[] } | undefined)?.data)
-      ? (rawTrainings as { data: SafetyTraining[] }).data : [];
+      ? (rawTrainings as unknown as { data: SafetyTraining[] }).data : [];
 
   const { data: rawZones, isLoading: loadingZones } = useQuery<HazardZone[]>({ queryKey: ["/api/hr/safety/hazard-zones"] });
   const zones: HazardZone[] = Array.isArray(rawZones) ? rawZones
     : Array.isArray((rawZones as { data?: HazardZone[] } | undefined)?.data)
-      ? (rawZones as { data: HazardZone[] }).data : [];
+      ? (rawZones as unknown as { data: HazardZone[] }).data : [];
 
   const { data: rawSummary } = useQuery<SafetySummary>({ queryKey: ["/api/hr/safety/summary"] });
   const summary: SafetySummary | undefined = rawSummary && typeof rawSummary === "object" && !Array.isArray(rawSummary)

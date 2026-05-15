@@ -126,6 +126,7 @@ interface BenefitsTabProps {
 }
 
 export function BenefitsTab({ brand, newBenefit, setNewBenefit, onAdd, onRemove }: BenefitsTabProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="benefits">
       <Card>

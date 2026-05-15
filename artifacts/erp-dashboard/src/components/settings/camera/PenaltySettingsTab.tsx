@@ -8,8 +8,6 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
-import { useTranslation } from '@/lib/i18n';
-
 interface PenaltySettingsTabProps {
   language: "uz" | "ru";
   autoPenalty: boolean;
@@ -27,7 +25,6 @@ export function PenaltySettingsTab({
   setPenaltyAmount,
   t
 }: PenaltySettingsTabProps) {
-  const { t } = useTranslation("common");
   return (
     <Card className="bg-card border-none rounded-lg overflow-hidden shadow-none">
       <CardHeader className="bg-muted/40/50 py-4 px-6">
@@ -63,7 +60,7 @@ export function PenaltySettingsTab({
               disabled={!autoPenalty}
               data-testid="input-penalty-amount"
             />
-            <div className="absolute left-40 md:left-52 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("som1")}</div>
+            <div className="absolute left-40 md:left-52 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{"so'm"}</div>
           </div>
         </div>
       </CardContent>

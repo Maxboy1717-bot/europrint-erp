@@ -31,7 +31,6 @@ import type { UseFormReturn } from "react-hook-form";
 import type { FormData, Lang } from "./PapkaOrdersTypes";
 import { TRANSLATIONS } from "./PapkaOrdersTypes";
 import type { PapkaOrder } from "@shared/schema";
-import { useTranslation } from '@/lib/i18n';
 
 interface OrderDialogProps {
   open: boolean;
@@ -46,8 +45,7 @@ interface OrderDialogProps {
 export function OrderDialog({
   open, onOpenChange, editingOrder, form, onSubmit, isSubmitting, lang,
 }: OrderDialogProps) {
-  const { t } = useTranslation("common");
-  const t = TRANSLATIONS[lang];
+  const t = TRANSLATIONS[lang] as typeof TRANSLATIONS[Lang] & ((key: string) => string);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

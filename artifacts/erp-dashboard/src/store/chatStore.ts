@@ -54,7 +54,8 @@ export interface ChatMessage {
   fileName?: string;
   fileSize?: number;
   mimeType?: string;
-  messageType: "text" | "image" | "file" | "poll" | "system";
+  fileType?: string;
+  messageType: "text" | "image" | "file" | "poll" | "system" | "voice";
   isDeleted: boolean;
   isEdited?: boolean;
   isPinned?: boolean;

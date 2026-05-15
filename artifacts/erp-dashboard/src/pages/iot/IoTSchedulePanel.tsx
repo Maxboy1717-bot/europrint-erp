@@ -12,7 +12,6 @@ import { Play, Languages, LogOut, Settings, Barcode, Calendar, ListTodo } from "
 import { UseMutationResult } from "@tanstack/react-query";
 import { ProductionOrder, Equipment, ProductionSession, IotLang } from "./iot-types";
 import { EPPageHeader, EPLoader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 interface IoTSchedulePanelProps {
   lang: IotLang;
@@ -38,7 +37,6 @@ export function IoTSchedulePanel({
   ordersLoading, displayOrders, selectedOrder, setSelectedOrder,
   handleLogout, createSession,
 }: IoTSchedulePanelProps) {
-  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
 
   return (

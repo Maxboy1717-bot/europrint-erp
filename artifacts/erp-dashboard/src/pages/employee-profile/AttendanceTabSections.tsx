@@ -181,6 +181,7 @@ interface ZoneLogsSectionProps {
 }
 
 export function ZoneLogsSection({ zoneLogs, loadingZoneLogs }: ZoneLogsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

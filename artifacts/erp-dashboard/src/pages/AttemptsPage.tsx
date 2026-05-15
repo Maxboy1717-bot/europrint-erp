@@ -58,8 +58,7 @@ export default function AttemptsPage() {
     queryFn: async () => {
       const params = new URLSearchParams({ limit: "50" });
       if (statusFilter !== "all") params.set("status", statusFilter);
-      const res = await apiRequest("GET", `/api/attempts/all?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/attempts/all?${params}`);
     },
   });
 

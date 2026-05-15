@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import type { DailyOrder, MaterialKit, MaterialKitItem, Equipment } from "./WarehouseDailyViewTypes";
 import { STATUS_COLORS } from "./WarehouseDailyViewTypes";
-import { useTranslation } from '@/lib/i18n';
 
 interface CreateKitDialogProps {
   open: boolean;
@@ -37,7 +36,6 @@ export function CreateKitDialog({
   open, onOpenChange, selectedOrder, scheduledTime, setScheduledTime,
   selectedEquipmentId, setSelectedEquipmentId, equipment, onConfirm, isPending, t,
 }: CreateKitDialogProps) {
-  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

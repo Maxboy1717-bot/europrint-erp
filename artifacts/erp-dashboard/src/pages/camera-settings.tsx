@@ -21,10 +21,8 @@ import { TelegramSettingsTab } from "@/components/settings/camera/TelegramSettin
 import { PenaltySettingsTab } from "@/components/settings/camera/PenaltySettingsTab";
 import { CameraSettingsData } from "@/components/settings/camera/types";
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 export default function CameraSettings() {
-  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
   
@@ -156,8 +154,8 @@ export default function CameraSettings() {
             </Link>
           </div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("kameraSozlamalari")}</b></>}
-        title={t("kameraSozlamalari")}
+        breadcrumb={<><b className="text-foreground">{t.title}</b></>}
+        title={t.title}
         subtitle={t.subtitle}
       />
         </div>
@@ -202,11 +200,11 @@ export default function CameraSettings() {
           </TabsTrigger>
           <TabsTrigger value="prompts" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-prompts">
             <Bot className="h-4 w-4 mr-2" />
-            {t("aiPromptlar")}
+            {language === "uz" ? "AI Promptlar" : "AI Промпты"}
           </TabsTrigger>
           <TabsTrigger value="triggers" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-triggers">
             <Zap className="h-4 w-4 mr-2" />
-            {t("triggerQoidalar")}
+            {language === "uz" ? "Trigger qoidalar" : "Триггеры"}
           </TabsTrigger>
           <TabsTrigger value="alerts" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-alerts">
             <Bell className="h-4 w-4 mr-2" />

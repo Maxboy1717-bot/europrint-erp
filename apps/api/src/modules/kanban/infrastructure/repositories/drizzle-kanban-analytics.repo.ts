@@ -1,357 +1,117 @@
 /**
  * @module drizzle-kanban-analytics.repo
- * @description Analytics kanban repository: Results, Files,
- * Analytics & Stats, Legacy helpers.
+ * @description Analytics kanban repository facade — delegates to two sub-repos
+ *   to keep this file under 300 lines (Rule 16). Public method names + signatures
+ *   are unchanged so existing consumers (`drizzle-kanban-ext.repo`,
+ *   `kanban.module`) need no modifications.
+ *
+ *   Sub-repos:
+ *     - DrizzleKanbanResultsFilesRepository — Results + Files CRUD
+ *     - DrizzleKanbanStatsRepository       — Analytics, stats, legacy helpers
  */
 
-import { TashkentTimeService } from '@common/time';
-const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
-import { and, eq, desc, isNull, ne, sql } from 'drizzle-orm';
-import { db, kanban_tasks, runQuery } from '@shared/db';
-import { kanbanResults, kanbanResultFiles, kanbanFiles } from '@shared/db';
-import { safeCall, Result } from '@common/result';
-
-const COUNT_EXPR = sql<number>`count(*)::int`;
+import { Result } from '@common/result';
+import { DrizzleKanbanResultsFilesRepository } from './drizzle-kanban-results-files.repo';
+import { DrizzleKanbanStatsRepository } from './drizzle-kanban-stats.repo';
 
 @Injectable()
 export class DrizzleKanbanAnalyticsRepository {
+  constructor(
+    private readonly resultsFiles: DrizzleKanbanResultsFilesRepository,
+    private readonly stats: DrizzleKanbanStatsRepository,
+  ) {}
 
   // ─── Results ──────────────────────────────────────────────────────────────
 
-  async getCardResults(cardId: string): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () =>
-      db.select().from(kanbanResults)
-        .where(eq(kanbanResults.cardId, cardId))
-        .orderBy(desc(kanbanResults.createdAt)),
-    );
+  getCardResults(cardId: string): Promise<Result<Record<string, unknown>[]>> {
+    return this.resultsFiles.getCardResults(cardId);
   }
 
-  async createResult(cardId: string, createdById: number, description?: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanResults).values({
-        cardId,
-        createdById,
-        description: description ?? null,
-      }).returning();
-      if (!row) throw new Error('Natija yaratishda xato');
-      return row;
-    });
+  createResult(cardId: string, createdById: number, description?: string): Promise<Result<Record<string, unknown>>> {
+    return this.resultsFiles.createResult(cardId, createdById, description);
   }
 
-  async getResultFiles(resultId: string): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () =>
-      db.select().from(kanbanResultFiles)
-        .where(eq(kanbanResultFiles.resultId, resultId))
-        .orderBy(desc(kanbanResultFiles.createdAt)),
-    );
+  getResultFiles(resultId: string): Promise<Result<Record<string, unknown>[]>> {
+    return this.resultsFiles.getResultFiles(resultId);
   }
 
-  async deleteResultFile(fileId: string): Promise<Result<void>> {
-    return safeCall(async () => {
-      await db.delete(kanbanResultFiles).where(eq(kanbanResultFiles.id, fileId));
-    });
+  deleteResultFile(fileId: string): Promise<Result<void>> {
+    return this.resultsFiles.deleteResultFile(fileId);
   }
 
-  async addResultFile(resultId: string, data: {
+  addResultFile(resultId: string, data: {
     fileName: string; fileUrl: string; fileSize?: number; mimeType?: string;
   }): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanResultFiles).values({
-        resultId,
-        fileName: data.fileName,
-        fileUrl:  data.fileUrl,
-        fileSize: data.fileSize ?? null,
-        mimeType: data.mimeType ?? null,
-      }).returning();
-      if (!row) throw new Error('Natija faylini saqlashda xato');
-      return row;
-    });
+    return this.resultsFiles.addResultFile(resultId, data);
   }
 
   // ─── Files ────────────────────────────────────────────────────────────────
 
-  async getCardFiles(cardId: string): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () =>
-      db.select().from(kanbanFiles)
-        .where(and(eq(kanbanFiles.cardId, cardId), isNull(kanbanFiles.deletedAt)))
-        .orderBy(desc(kanbanFiles.createdAt)),
-    );
+  getCardFiles(cardId: string): Promise<Result<Record<string, unknown>[]>> {
+    return this.resultsFiles.getCardFiles(cardId);
   }
 
-  async createFile(data: {
+  createFile(data: {
     cardId: string; fileName: string; fileUrl: string;
     fileSize?: number; mimeType?: string; uploadedById?: number;
   }): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanFiles).values({
-        cardId: data.cardId,
-        fileName: data.fileName,
-        fileUrl: data.fileUrl,
-        fileSize: data.fileSize ?? null,
-        mimeType: data.mimeType ?? null,
-        uploadedById: data.uploadedById ?? null,
-      }).returning();
-      if (!row) throw new Error('Fayl saqlashda xato');
-      return row;
-    });
+    return this.resultsFiles.createFile(data);
   }
 
-  async deleteFile(fileId: string): Promise<Result<void>> {
-    return safeCall(async () => {
-      await db.update(kanbanFiles)
-        .set({ deletedAt: _time.now() })
-        .where(eq(kanbanFiles.id, fileId));
-    });
+  deleteFile(fileId: string): Promise<Result<void>> {
+    return this.resultsFiles.deleteFile(fileId);
   }
 
   // ─── Analytics & Stats ────────────────────────────────────────────────────
 
-  async getTaskStats(boardId?: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const boardFilter = boardId ? sql`AND board_id = ${boardId}` : sql``;
-      const today = _time.now().toISOString().split('T')[0];
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT
-          COUNT(*) FILTER (WHERE deleted_at IS NULL)                            AS total,
-          COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NOT NULL) AS completed,
-          COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NULL)   AS in_progress,
-          COUNT(*) FILTER (WHERE deleted_at IS NULL AND due_date < ${today} AND completed_at IS NULL) AS overdue,
-          COUNT(*) FILTER (WHERE deleted_at IS NULL AND due_date = ${today})    AS today_due
-        FROM kanban_cards
-        WHERE 1=1 ${boardFilter}
-      `);
-      const s = rows.rows[0] ?? {};
-      return {
-        total:      Number(s.total       ?? 0),
-        completed:  Number(s.completed   ?? 0),
-        inProgress: Number(s.in_progress ?? 0),
-        overdue:    Number(s.overdue     ?? 0),
-        todayDue:   Number(s.today_due   ?? 0),
-      };
-    });
+  getTaskStats(boardId?: string): Promise<Result<Record<string, unknown>>> {
+    return this.stats.getTaskStats(boardId);
   }
 
-  async getTeamMetrics(boardId?: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const boardFilter = boardId ? sql`AND kc.board_id = ${boardId}` : sql``;
-      const today = _time.now().toISOString().split('T')[0];
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT
-          kc.owner_user_id,
-          (u.first_name || ' ' || u.last_name) AS full_name,
-          u.email,
-          COUNT(*) FILTER (WHERE kc.deleted_at IS NULL)                              AS total,
-          COUNT(*) FILTER (WHERE kc.deleted_at IS NULL AND kc.completed_at IS NOT NULL) AS completed,
-          COUNT(*) FILTER (WHERE kc.deleted_at IS NULL AND kc.due_date < ${today} AND kc.completed_at IS NULL) AS overdue
-        FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
-        WHERE kc.owner_user_id IS NOT NULL ${boardFilter}
-        GROUP BY kc.owner_user_id, u.first_name, u.last_name, u.email
-        ORDER BY total DESC
-        LIMIT 50
-      `);
-      return {
-        employees: rows.rows.map((r) => ({
-          userId:    r.owner_user_id,
-          fullName:  r.full_name ?? 'Noma\'lum',
-          email:     r.email ?? '',
-          total:     Number(r.total     ?? 0),
-          completed: Number(r.completed ?? 0),
-          overdue:   Number(r.overdue   ?? 0),
-          rate:      Number(r.total) > 0 ? Math.round((Number(r.completed) / Number(r.total)) * 100) : 0,
-        })),
-      };
-    });
+  getTeamMetrics(boardId?: string): Promise<Result<Record<string, unknown>>> {
+    return this.stats.getTeamMetrics(boardId);
   }
 
-  async getOverdueInbox(boardId?: string): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () => {
-      const boardFilter = boardId ? sql`AND kc.board_id = ${boardId}` : sql``;
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT
-          kc.id, kc.title, kc.due_date, kc.priority, kc.owner_user_id,
-          kc.column_id, kc.board_id, kc.created_at, kc.updated_at,
-          (u.first_name || ' ' || u.last_name) AS owner_name,
-          kco.name   AS column_name,
-          kb.name    AS board_name,
-          EXTRACT(EPOCH FROM (NOW() - kc.created_at)) / 3600 AS hours_old
-        FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
-        LEFT JOIN kanban_columns kco ON kco.id::text = kc.column_id
-        LEFT JOIN kanban_boards kb ON kb.id::text = kc.board_id
-        WHERE kc.deleted_at IS NULL
-          AND kc.completed_at IS NULL
-          AND (
-            (kc.due_date < CURRENT_DATE)
-            OR (LOWER(kco.name) LIKE '%kiruvchi%' AND kc.created_at < NOW() - INTERVAL '24 hours')
-            OR (LOWER(kco.name) LIKE '%inbox%'    AND kc.created_at < NOW() - INTERVAL '24 hours')
-          )
-          ${boardFilter}
-        ORDER BY kc.due_date ASC NULLS LAST, kc.created_at ASC
-        LIMIT 100
-      `);
-      return rows.rows;
-    });
+  getOverdueInbox(boardId?: string): Promise<Result<Record<string, unknown>[]>> {
+    return this.stats.getOverdueInbox(boardId);
   }
 
-  async getEmployees(): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () => {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT id, (first_name || ' ' || last_name) AS full_name, email, is_active, phone
-        FROM users
-        WHERE is_active = TRUE
-        ORDER BY first_name, last_name
-        LIMIT 500
-      `);
-      return rows.rows;
-    });
+  getEmployees(): Promise<Result<Record<string, unknown>[]>> {
+    return this.stats.getEmployees();
   }
 
   // ─── Legacy helpers (keeping for backward compatibility) ──────────────────
 
-  async getSprintInfo(): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const active = await db.select({ count: COUNT_EXPR }).from(kanban_tasks)
-        .where(ne(kanban_tasks.status, 'done'));
-      const done = await db.select({ count: COUNT_EXPR }).from(kanban_tasks)
-        .where(eq(kanban_tasks.status, 'done'));
-      return {
-        activeSprint: { totalCards: Number(active[0]?.count ?? 0), completedCards: Number(done[0]?.count ?? 0) },
-        upcomingSprints: [],
-        completedSprints: [],
-      };
-    });
+  getSprintInfo(): Promise<Result<Record<string, unknown>>> {
+    return this.stats.getSprintInfo();
   }
 
-  async getMembers(): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () => {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT DISTINCT kc.owner_user_id AS user_id,
-               (u.first_name || ' ' || u.last_name) AS full_name, u.email
-        FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
-        WHERE kc.owner_user_id IS NOT NULL AND kc.deleted_at IS NULL
-        ORDER BY full_name
-      `);
-      return rows.rows;
-    });
+  getMembers(): Promise<Result<Record<string, unknown>[]>> {
+    return this.stats.getMembers();
   }
 
-  async getOverdueCards(): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () => {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT kc.*, (u.first_name || ' ' || u.last_name) AS owner_name
-        FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
-        WHERE kc.deleted_at IS NULL AND kc.completed_at IS NULL
-          AND kc.due_date < CURRENT_DATE
-        ORDER BY kc.due_date ASC
-        LIMIT 100
-      `);
-      return rows.rows;
-    });
+  getOverdueCards(): Promise<Result<Record<string, unknown>[]>> {
+    return this.stats.getOverdueCards();
   }
 
-  async getCardsByEmployee(employeeId: string): Promise<Result<Record<string, unknown>[]>> {
-    return safeCall(async () => {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT kc.*, kco.name AS column_name, kb.name AS board_name
-        FROM kanban_cards kc
-        LEFT JOIN kanban_columns kco ON kco.id::text = kc.column_id
-        LEFT JOIN kanban_boards kb ON kb.id::text = kc.board_id
-        WHERE kc.owner_user_id = ${employeeId} AND kc.deleted_at IS NULL
-        ORDER BY kc.created_at DESC
-      `);
-      return rows.rows;
-    });
+  getCardsByEmployee(employeeId: string): Promise<Result<Record<string, unknown>[]>> {
+    return this.stats.getCardsByEmployee(employeeId);
   }
 
-  async getProductivityReport(): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT
-          COUNT(*)                                                                AS total,
-          COUNT(*) FILTER (WHERE completed_at IS NOT NULL)                       AS completed,
-          COUNT(*) FILTER (WHERE due_date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
-          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')        AS last_7_days,
-          COUNT(*) FILTER (WHERE completed_at >= NOW() - INTERVAL '7 days')      AS completed_7_days
-        FROM kanban_cards WHERE deleted_at IS NULL
-      `);
-      const s = rows.rows[0] ?? {};
-      return {
-        period: 'all',
-        totalCards:     Number(s.total         ?? 0),
-        completedCards: Number(s.completed      ?? 0),
-        overdueCards:   Number(s.overdue        ?? 0),
-        last7Days:      Number(s.last_7_days    ?? 0),
-        completed7Days: Number(s.completed_7_days ?? 0),
-        generatedAt: _time.now().toISOString(),
-      };
-    });
+  getProductivityReport(): Promise<Result<Record<string, unknown>>> {
+    return this.stats.getProductivityReport();
   }
 
-  async getOverdueReport(): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT kc.id, kc.title, kc.due_date, kc.priority, kc.owner_user_id,
-               (u.first_name || ' ' || u.last_name) AS owner_name, kb.name AS board_name
-        FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
-        LEFT JOIN kanban_boards kb ON kb.id::text = kc.board_id
-        WHERE kc.deleted_at IS NULL AND kc.completed_at IS NULL
-          AND kc.due_date < CURRENT_DATE
-        ORDER BY kc.due_date ASC
-        LIMIT 200
-      `);
-      return {
-        overdueCards: rows.rows,
-        totalOverdue: rows.rows.length,
-        generatedAt: _time.now().toISOString(),
-      };
-    });
+  getOverdueReport(): Promise<Result<Record<string, unknown>>> {
+    return this.stats.getOverdueReport();
   }
 
-  async getAnalyticsSummary(): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT
-          COUNT(*)                                                                AS total,
-          COUNT(*) FILTER (WHERE completed_at IS NOT NULL)                       AS completed,
-          COUNT(*) FILTER (WHERE due_date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
-          COUNT(DISTINCT owner_user_id) FILTER (WHERE owner_user_id IS NOT NULL) AS active_users
-        FROM kanban_cards WHERE deleted_at IS NULL
-      `);
-      const s = rows.rows[0] ?? {};
-      return {
-        totalCards:     Number(s.total       ?? 0),
-        completedCards: Number(s.completed   ?? 0),
-        overdueCards:   Number(s.overdue     ?? 0),
-        activeUsers:    Number(s.active_users ?? 0),
-      };
-    });
+  getAnalyticsSummary(): Promise<Result<Record<string, unknown>>> {
+    return this.stats.getAnalyticsSummary();
   }
 
-  async getEmployeePerformance(): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT
-          kc.owner_user_id,
-          (u.first_name || ' ' || u.last_name) AS full_name,
-          COUNT(*) AS total,
-          COUNT(*) FILTER (WHERE kc.completed_at IS NOT NULL) AS completed,
-          COUNT(*) FILTER (WHERE kc.due_date < CURRENT_DATE AND kc.completed_at IS NULL) AS overdue
-        FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
-        WHERE kc.owner_user_id IS NOT NULL AND kc.deleted_at IS NULL
-        GROUP BY kc.owner_user_id, u.first_name, u.last_name
-        ORDER BY completed DESC
-        LIMIT 50
-      `);
-      return {
-        employees: rows.rows,
-        generatedAt: _time.now().toISOString(),
-      };
-    });
+  getEmployeePerformance(): Promise<Result<Record<string, unknown>>> {
+    return this.stats.getEmployeePerformance();
   }
 }

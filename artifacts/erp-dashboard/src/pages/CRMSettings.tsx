@@ -44,9 +44,7 @@ export default function CRMSettings() {
   const { data: fields = [], isLoading } = useQuery<CustomField[]>({
     queryKey: ["/api/crm/custom-fields", entityType],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/crm/custom-fields/${entityType}`);
-      if (!res.ok) throw new Error("Failed to load fields");
-      return res.json();
+      return await apiRequest('GET', `/api/crm/custom-fields/${entityType}`);
     },
   });
 

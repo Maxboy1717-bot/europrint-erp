@@ -176,5 +176,4 @@ export default function DirectorExtended() {
   );
 }
 
-// suppress unused import for tabMeta icon usage via meta
-void meta;
+// suppress unused import for tabMeta icon usage

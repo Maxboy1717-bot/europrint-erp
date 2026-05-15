@@ -93,7 +93,7 @@ export function useIoTTablet() {
         equipmentId: core.selectedEquipment?.id,
       });
       if (kitData.kit) {
-        const kitDetailsRes = await apiRequest('GET', `/api/iot/material-kits/${kitData.kit.id}`);
+        const kitDetailsRes = (await apiRequest('GET', `/api/iot/material-kits/${kitData.kit.id}`)) as unknown as Response;
         const kitDetails = await kitDetailsRes.json();
         core.setChecklistKitBarcode(kitDetails.barcode || kitData.kit.barcode || "");
         core.setChecklistMaterials(kitDetails.items || kitData.materials?.map(

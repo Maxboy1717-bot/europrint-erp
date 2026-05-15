@@ -165,7 +165,7 @@ export function MRPRunDialog({ open, onOpenChange, runForm, onFormChange, onCrea
             <Input
               value={runForm.runName}
               onChange={(e) => onFormChange({ ...runForm, runName: e.target.value })}
-              placeholder={t('mrpRun202401')}
+              placeholder={lang === "uz" ? "MRP-Run 2024-01" : "MRP-Run 2024-01"}
               data-testid="input-run-name"
             />
           </div>

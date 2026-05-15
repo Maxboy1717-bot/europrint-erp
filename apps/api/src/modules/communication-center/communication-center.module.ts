@@ -20,12 +20,13 @@ import { AgentsModule } from '../agents/agents.module';
 
 // Repositories
 import { CcBasketsRepository }            from './infrastructure/repositories/cc-baskets.repo';
-import { CcDocumentsRepository }          from './infrastructure/repositories/cc-documents.repo';
+import { CcDocumentsRepository, CcDocumentsReadRepo, CcDocumentsWriteRepo } from './infrastructure/repositories/cc-documents.repo';
 import { CcNotificationPrefsRepository }  from './infrastructure/repositories/cc-notification-prefs.repo';
 
 // Application services
 import { CcBasketsService }        from './application/cc-baskets.service';
 import { CcWorkflowService }       from './application/cc-workflow.service';
+import { CcWorkflowRejectService } from './application/cc-workflow-reject.service';
 import { CcPinService }            from './application/cc-pin.service';
 import { CcDocumentNumberService } from './application/cc-document-number.service';
 import { CcOrgResolverService }    from './application/cc-org-resolver.service';
@@ -69,11 +70,14 @@ import { CcEventListener } from './events/cc-event.listener';
   providers: [
     // repositories
     CcBasketsRepository,
+    CcDocumentsReadRepo,
+    CcDocumentsWriteRepo,
     CcDocumentsRepository,
     CcNotificationPrefsRepository,
     // application services
     CcBasketsService,
     CcWorkflowService,
+    CcWorkflowRejectService,
     CcPinService,
     CcDocumentNumberService,
     CcOrgResolverService,

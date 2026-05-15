@@ -157,14 +157,15 @@ export function useCRMWorkspace() {
 
   const moveItemMutation = useMutation({
     mutationFn: async ({ itemId, stageId }: { itemId: number; stageId: string }) => {
+      type MoveResult = { autoOrder?: { documentNumber: string } } | null;
       if (activeEntity === "leads") {
-        return apiRequest("PATCH", `/api/crm/leads/${itemId}/stage`, { statusId: stageId });
+        return apiRequest<MoveResult>("PATCH", `/api/crm/leads/${itemId}/stage`, { statusId: stageId });
       } else if (activeEntity === "deals") {
-        return apiRequest("PATCH", `/api/crm/deals/${itemId}/stage`, { stageId });
+        return apiRequest<MoveResult>("PATCH", `/api/crm/deals/${itemId}/stage`, { stageId });
       } else if (activeEntity === "proposals") {
-        return apiRequest("PATCH", `/api/crm-bitrix/proposals/${itemId}/stage`, { status: stageId });
+        return apiRequest<MoveResult>("PATCH", `/api/crm-bitrix/proposals/${itemId}/stage`, { status: stageId });
       } else if (activeEntity === "invoices") {
-        return apiRequest("PATCH", `/api/crm-bitrix/invoices/${itemId}/stage`, { status: stageId });
+        return apiRequest<MoveResult>("PATCH", `/api/crm-bitrix/invoices/${itemId}/stage`, { status: stageId });
       }
       return null;
     },
@@ -213,13 +214,13 @@ export function useCRMWorkspace() {
     if (!newStageId || typeof newStageId !== "string") return;
     const stages = activeEntity === "leads" ? LEAD_STAGES : activeEntity === "deals" ? DEAL_STAGES : activeEntity === "proposals" ? PROPOSAL_STAGES : activeEntity === "invoices" ? INVOICE_STAGES : LEAD_STAGES;
     if (!stages.some(s => s.stageId === newStageId)) return;
-    const items = safeArray(
+    const items = safeArray<FilterableEntity>(
       activeEntity === "leads" ? leads :
       activeEntity === "proposals" ? proposals :
       activeEntity === "invoices" ? invoices :
       deals
     );
-    const item = items.find(i => i.id === itemId);
+    const item = items.find((i: FilterableEntity) => i.id === itemId);
     const currentStageId =
       activeEntity === "leads" ? (item as Lead)?.statusId :
       activeEntity === "proposals" ? (item as Proposal)?.status :

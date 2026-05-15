@@ -25,6 +25,7 @@ export function LoadingScreen() {
 }
 
 export function SubmittingScreen() {
+  const { t } = useTranslation("common");
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
@@ -36,6 +37,7 @@ export function SubmittingScreen() {
 }
 
 export function ExpiredScreen() {
+  const { t } = useTranslation("common");
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="max-w-md w-full text-center">

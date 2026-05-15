@@ -13,7 +13,6 @@ import {
   Plus, MessageSquare, Send, Target, Bot, Paperclip, File, X, MoreVertical,
 } from "lucide-react";
 import { format } from "date-fns";
-import { useTranslation } from '@/lib/i18n';
 import {
   type ChatMessageWithUser,
   type Employee,
@@ -48,7 +47,6 @@ export function ChatPanel({
   employees = [],
   t,
 }: ChatPanelProps) {
-  const { t } = useTranslation("common");
   const [mentionQuery, setMentionQuery]   = useState<string | null>(null);
   const [mentionOpen,  setMentionOpen]    = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);

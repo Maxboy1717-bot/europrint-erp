@@ -30,6 +30,7 @@ interface GLDocument {
 
 
 function getStatusBadge(status: string) {
+  const { t } = useTranslation("common");
   switch (status) {
     case "draft":
       return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{t("draft")}</Badge>;

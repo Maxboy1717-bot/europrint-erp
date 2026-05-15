@@ -58,14 +58,14 @@ export function initSentry(): boolean {
   const release = process.env.SENTRY_RELEASE?.trim() || undefined;
   const isProduction = process.env.NODE_ENV === 'production';
 
-  Sentry.init({
+  // Cast to NodeOptions — Sentry v9 types are still settling around dsn placement.
+  const sentryOptions = {
     dsn,
     environment,
     release,
     tracesSampleRate: isProduction ? 0.1 : 1.0,
-    // Do NOT capture local breadcrumbs from sensitive headers
     sendDefaultPii: false,
-    beforeSend(event, hint) {
+    beforeSend(event: Sentry.ErrorEvent, hint: Sentry.EventHint) {
       // Drop auth-failure noise. HttpException stores status in originalException.
       const exc = hint?.originalException;
       if (exc instanceof HttpException) {
@@ -80,7 +80,8 @@ export function initSentry(): boolean {
       }
       return event;
     },
-  });
+  } as Sentry.NodeOptions;
+  Sentry.init(sentryOptions);
 
   sentryInitialized = true;
   bootstrapLogger.log(
@@ -124,7 +125,7 @@ export class SentryInterceptor implements NestInterceptor {
             user?: { id?: number | string; sub?: number | string };
           }>();
 
-          Sentry.withScope((scope) => {
+          Sentry.withScope((scope: Sentry.Scope) => {
             scope.setTag('http.method', req?.method ?? 'unknown');
             scope.setTag('http.url', req?.url ?? 'unknown');
             const requestId = req?.headers?.['x-request-id'];

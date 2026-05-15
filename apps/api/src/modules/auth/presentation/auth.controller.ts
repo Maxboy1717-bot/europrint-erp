@@ -49,7 +49,7 @@ const REFRESH_COOKIE_MAX_AGE_SEC = 7 * 24 * 60 * 60; // 7 days
  * Build cookie options. Marked `secure` only in production so local HTTP dev works.
  * `sameSite=strict` mitigates CSRF; combined with httpOnly it also neutralises XSS.
  */
-function accessCookieOpts(): {
+function accessCookieOpts(nodeEnv: string | undefined): {
   httpOnly: true;
   secure: boolean;
   sameSite: 'strict';
@@ -58,14 +58,14 @@ function accessCookieOpts(): {
 } {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: nodeEnv === 'production',
     sameSite: 'strict',
     path: '/',
     maxAge: ACCESS_COOKIE_MAX_AGE_SEC,
   };
 }
 
-function refreshCookieOpts(): {
+function refreshCookieOpts(nodeEnv: string | undefined): {
   httpOnly: true;
   secure: boolean;
   sameSite: 'strict';
@@ -74,7 +74,7 @@ function refreshCookieOpts(): {
 } {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: nodeEnv === 'production',
     sameSite: 'strict',
     path: '/api/auth',
     maxAge: REFRESH_COOKIE_MAX_AGE_SEC,
@@ -143,8 +143,8 @@ export class AuthController {
     // Phase 1: set httpOnly cookies in ADDITION to returning tokens in the body.
     // Old clients (Bearer-only) keep working; new clients use the cookie.
     if (typeof reply.setCookie === 'function') {
-      reply.setCookie(ACCESS_COOKIE_NAME, payload.accessToken, accessCookieOpts());
-      reply.setCookie(REFRESH_COOKIE_NAME, payload.refreshToken, refreshCookieOpts());
+      reply.setCookie(ACCESS_COOKIE_NAME, payload.accessToken, accessCookieOpts(this.configService.get<string>('NODE_ENV')));
+      reply.setCookie(REFRESH_COOKIE_NAME, payload.refreshToken, refreshCookieOpts(this.configService.get<string>('NODE_ENV')));
     }
 
     return payload;
@@ -281,7 +281,7 @@ export class AuthController {
       // Update the access_token cookie so subsequent requests pick up the new token
       // automatically. Refresh token cookie stays untouched (rotation handled elsewhere).
       if (typeof reply.setCookie === 'function') {
-        reply.setCookie(ACCESS_COOKIE_NAME, accessToken, accessCookieOpts());
+        reply.setCookie(ACCESS_COOKIE_NAME, accessToken, accessCookieOpts(this.configService.get<string>('NODE_ENV')));
       }
 
       return { accessToken };

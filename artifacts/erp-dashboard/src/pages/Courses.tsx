@@ -84,8 +84,7 @@ export default function Courses() {
         ...(search && { search }),
         ...(filter !== "all" && { filter }),
       });
-      const response = await apiRequest('GET', `/api/courses?${params}`);
-      return response.json();
+      return await apiRequest('GET', `/api/courses?${params}`);
     },
     enabled: !!isAuthenticated,
   });
@@ -233,8 +232,7 @@ export default function Courses() {
                   const courseToEdit = (Array.isArray(courses) ? courses : []).find(c => c.id === course.id);
                   if (courseToEdit) {
                     try {
-                      const response = await apiRequest('GET', `/api/courses/${course.id}`);
-                      const fullCourse = await response.json();
+                      const fullCourse = (await apiRequest('GET', `/api/courses/${course.id}`)) as Record<string, any>;
                       setEditingCourse({
                         id: fullCourse.id,
                         code: fullCourse.code,

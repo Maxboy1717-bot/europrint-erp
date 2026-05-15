@@ -29,7 +29,7 @@ type OverdueInboxData = {
   }[];
 };
 
-export function DashboardPanel({ t }: { t: typeof T.uz }) {
+export function DashboardPanel({ t }: { t: (key: string) => string }) {
   const { data: metrics, isLoading: metricsLoading } = useQuery<TeamMetrics>({
     queryKey: ['/api/kanban/dashboard/team-metrics'],
   });

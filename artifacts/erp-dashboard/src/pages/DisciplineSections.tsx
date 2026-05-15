@@ -17,7 +17,6 @@ import {
 import { formatDate } from "@/lib/format";
 import type { User as UserType } from "@shared/schema";
 import type { DisciplineWithUser, DialogType } from "./DisciplineTypes";
-import { useTranslation } from "@/lib/i18n";
 
 // ─── StatsCards ───────────────────────────────────────────────────────────────
 
@@ -144,7 +143,6 @@ export function RecordsTable({
   finalLabel, writtenLabel, sumLabel,
   tCommon, t,
 }: RecordsTableProps) {
-  const { t } = useTranslation("common");
   return (
     <div className="bg-card rounded-xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-6">

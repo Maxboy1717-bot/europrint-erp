@@ -130,7 +130,7 @@ export function ReclamationSection() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>{t("muammoTuri")}</Label>
-                <Select onValueChange={v => recForm.setValue("issueType", v)} defaultValue="other">
+                <Select onValueChange={v => recForm.setValue("issueType", v as "other" | "quantity" | "quality" | "delivery")} defaultValue="other">
                   <SelectTrigger data-testid="select-complaint-type" className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="quality">{t("sifatNuqsoni")}</SelectItem>

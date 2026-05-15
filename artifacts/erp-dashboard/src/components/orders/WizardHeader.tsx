@@ -23,7 +23,7 @@ export function WizardHeader({ t, lang, setLang, onSaveDraft }: WizardHeaderProp
         <h1 className="ep-h1 text-foreground">
           {titleFirst} <span className="font-bold text-primary">{titleRest.join(' ')}</span>
         </h1>
-        <p className="text-muted-foreground mt-1">{t("sotuvVaIshlabChiqarishYangi")}</p>
+        <p className="text-muted-foreground mt-1">{"Sotuv va ishlab chiqarish — Yangi buyurtma"}</p>
       </div>
       <div className="flex items-center gap-3">
         <div className="flex bg-muted/40 p-1 rounded-lg border border-border/30">

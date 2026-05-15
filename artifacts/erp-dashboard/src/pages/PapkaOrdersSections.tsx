@@ -27,7 +27,6 @@ import { format } from "date-fns";
 import type { PapkaOrder } from "@shared/schema";
 import type { Lang } from "./PapkaOrdersTypes";
 import { STATUS_CONFIG, TRANSLATIONS } from "./PapkaOrdersTypes";
-import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // Stats row
@@ -41,8 +40,7 @@ interface StatsRowProps {
 }
 
 export function StatsRow({ totalCount, activeCount, completedCount, lang }: StatsRowProps) {
-  const { t } = useTranslation("common");
-  const t = TRANSLATIONS[lang];
+  const t = TRANSLATIONS[lang] as typeof TRANSLATIONS[Lang] & ((key: string) => string);
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <div className="bg-card rounded-lg p-5">
@@ -94,8 +92,7 @@ export function OrdersList({
   orders, lang, searchQuery, statusFilter,
   onSearchChange, onStatusFilterChange, onEdit, onDelete, isDeletePending,
 }: OrdersListProps) {
-  const { t } = useTranslation("common");
-  const t = TRANSLATIONS[lang];
+  const t = TRANSLATIONS[lang] as typeof TRANSLATIONS[Lang] & ((key: string) => string);
   return (
     <div className="bg-card rounded-xl p-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-4">

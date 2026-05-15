@@ -6,6 +6,7 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useTranslation } from '@/lib/i18n';
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -14,7 +15,6 @@ import { TrendingUp, Clock, GraduationCap, BarChart3, RefreshCw } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import type { PerformanceTabProps } from "./PerformanceTabTypes";
-import { useTranslation } from "@/lib/i18n";
 
 // ─── Re-exports for convenience ───────────────────────────────────────────────
 export { MesSection } from "./PerformanceTabMesSections";
@@ -53,7 +53,6 @@ type KpiSummaryProps = Pick<
 export function KpiSummaryCards({
   t, loadingAbc, loadingProgress, abcData, courseProgress, attendanceStats, getGradeColor,
 }: KpiSummaryProps) {
-  const { t } = useTranslation("common");
   if (loadingAbc || loadingProgress) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">

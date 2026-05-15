@@ -5,7 +5,13 @@
 
 import { Module } from '@nestjs/common';
 import { TelegramBotsService } from './telegram-bots.service';
-import { TelegramBotsRepository } from './telegram-bots.repository';
+import {
+  TelegramBotsRepository,
+  TelegramBotsEmployeesRepo,
+  TelegramBotsEventsRepo,
+  TelegramBotsManagerRepo,
+  TelegramBotsProfileRepo,
+} from './telegram-bots.repository';
 import { TelegramBotsPipEventsService } from './telegram-bots-pip-events.service';
 import { TelegramBotsPipEventsRepository } from './telegram-bots-pip-events.repository';
 import { TelegramBotsCronService } from './telegram-bots-cron.service';
@@ -37,6 +43,10 @@ import { DocumentWorkflowModule } from '../document-workflow/document-workflow.m
     ReportBotDataRepository,
     ReportBotDataService,
     NotificationBotService,
+    TelegramBotsEmployeesRepo,
+    TelegramBotsEventsRepo,
+    TelegramBotsManagerRepo,
+    TelegramBotsProfileRepo,
     TelegramBotsRepository,
     TelegramBotsService,
     TelegramBotsPipEventsRepository,

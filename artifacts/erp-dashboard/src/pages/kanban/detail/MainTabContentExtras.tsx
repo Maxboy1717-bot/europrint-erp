@@ -157,7 +157,7 @@ interface TagsFieldProps {
   onNewTagNameChange: (val: string) => void;
   onAddTag: (name: string) => void;
   onRemoveTag: (tagId: string) => void;
-  t: KanbanTranslations;
+  t: KanbanTranslations & ((key: string) => string);
 }
 
 export function TagsField({ tags, newTagName, onNewTagNameChange, onAddTag, onRemoveTag, t }: TagsFieldProps) {

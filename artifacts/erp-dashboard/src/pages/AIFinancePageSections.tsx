@@ -24,6 +24,7 @@ import { useTranslation } from '@/lib/i18n';
 // ─── Badge helpers ─────────────────────────────────────────────────────────────
 
 function severityBadge(s: string) {
+  const { t } = useTranslation("common");
   if (s === "HIGH")   return <Badge variant="error">{t("high")}</Badge>;
   if (s === "MEDIUM") return <Badge variant="warning">{t("medium")}</Badge>;
   return                     <Badge variant="success">{t("low")}</Badge>;

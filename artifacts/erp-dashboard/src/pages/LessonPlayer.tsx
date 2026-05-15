@@ -39,16 +39,14 @@ export default function LessonPlayer() {
   const { data: course, isLoading: courseLoading } = useQuery<Course>({
     queryKey: ["/api/courses", id],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/courses/${id}`);
-      if (!res.ok) throw new Error("Kurs topilmadi");
-      return res.json();
+      return await apiRequest('GET', `/api/courses/${id}`);
     },
   });
 
   const { data: progressData } = useQuery<ProgressData>({
     queryKey: ["/api/lms/progress/my", id],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/lms/progress/my?courseId=${id}`);
+      const res = (await apiRequest('GET', `/api/lms/progress/my?courseId=${id}`)) as unknown as Response;
       if (!res.ok)
         return {
           completedLessonIds: [],
@@ -77,12 +75,11 @@ export default function LessonPlayer() {
       lessonId: number;
       courseId: number;
     }) => {
-      const res = await apiRequest("POST", "/api/lms/progress/complete", {
+      return await apiRequest("POST", "/api/lms/progress/complete", {
         userId: user?.id,
         lessonId: lId,
         courseId,
       });
-      return res.json();
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["/api/lms/progress/my", id] });

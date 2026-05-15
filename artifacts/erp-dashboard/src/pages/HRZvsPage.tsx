@@ -36,8 +36,7 @@ export default function HRZvsPage() {
     queryKey: ["/api/hr/zvs", statusFilter],
     queryFn: async () => {
       const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
-      const res = await apiRequest("GET", `/api/hr/zvs${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/hr/zvs${params}`);
     },
   });
 
@@ -49,11 +48,10 @@ export default function HRZvsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: ZvsFormState) => {
-      const res = await apiRequest("POST", "/api/hr/zvs", {
+      return await apiRequest("POST", "/api/hr/zvs", {
         ...dto,
         amount: parseFloat(dto.amount),
       });
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/zvs"] });
@@ -68,8 +66,7 @@ export default function HRZvsPage() {
 
   const approveMutation = useMutation({
     mutationFn: async ({ id, comment }: { id: string | number; comment: string }) => {
-      const res = await apiRequest("PATCH", `/api/hr/zvs/${id}/approve`, { comment: comment || null });
-      return res.json();
+      return await apiRequest("PATCH", `/api/hr/zvs/${id}/approve`, { comment: comment || null });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/zvs"] });
@@ -84,8 +81,7 @@ export default function HRZvsPage() {
 
   const rejectMutation = useMutation({
     mutationFn: async ({ id, comment }: { id: string | number; comment: string }) => {
-      const res = await apiRequest("PATCH", `/api/hr/zvs/${id}/reject`, { comment: comment || null });
-      return res.json();
+      return await apiRequest("PATCH", `/api/hr/zvs/${id}/reject`, { comment: comment || null });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/zvs"] });

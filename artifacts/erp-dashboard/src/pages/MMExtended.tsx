@@ -20,7 +20,7 @@ import { Truck, Plus, Building2, RefreshCw, ShoppingCart } from "lucide-react";
 import { ModuleSectionHeader } from "@/components/ModuleSectionHeader";
 import {
   URL_TAB_MAP, tabMeta, VendorSchema, fmtMoney,
-  type MMVendor, type PurchaseOrder,
+  type MMVendor, type PurchaseOrder, type GoodsReceipt,
   type MMVehicle, type MMDelivery, type MMFuelLog, type VendorFormValues,
 } from "./MMExtendedTypes";
 import { VendorDialog } from "./MMExtendedDialogs";

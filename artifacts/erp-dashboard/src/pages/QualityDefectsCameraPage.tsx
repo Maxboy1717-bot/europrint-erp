@@ -61,8 +61,7 @@ export default function QualityDefectsCameraPage() {
       const params = new URLSearchParams({ limit: "50" });
       if (statusFilter   !== "all") params.set("status",   statusFilter);
       if (severityFilter !== "all") params.set("severity", severityFilter);
-      const res = await apiRequest("GET", `/api/iot/quality-defects?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/iot/quality-defects?${params}`);
     },
     refetchInterval: 60_000,
   });

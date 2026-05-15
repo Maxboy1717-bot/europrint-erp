@@ -23,7 +23,6 @@ import {
   WifiOff,
 } from "lucide-react";
 import type { CameraData, WorkCenter, Translations, Language } from "./cameras-management-types";
-import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // CameraStatsCards
@@ -32,7 +31,7 @@ import { useTranslation } from '@/lib/i18n';
 interface CameraStatsCardsProps {
   total: number;
   active: number;
-  t: Translations;
+  t: Translations & ((key: string) => string);
 }
 
 export function CameraStatsCards({ total, active, t }: CameraStatsCardsProps) {
@@ -69,7 +68,7 @@ interface CameraTableProps {
   cameras: CameraData[];
   workCenters: WorkCenter[] | undefined;
   language: Language;
-  t: Translations;
+  t: Translations & ((key: string) => string);
   isDeletePending: boolean;
   onEdit: (camera: CameraData) => void;
   onDelete: (id: string) => void;
@@ -143,7 +142,7 @@ interface CameraRowProps {
   camera: CameraData;
   workCenters: WorkCenter[] | undefined;
   language: Language;
-  t: Translations;
+  t: Translations & ((key: string) => string);
   isDeletePending: boolean;
   onEdit: (camera: CameraData) => void;
   onDelete: (id: string) => void;
@@ -160,7 +159,6 @@ function CameraRow({
   onDelete,
   onToggleStatus,
 }: CameraRowProps) {
-  const { t } = useTranslation("common");
   const displayName = language === "uz" ? camera.name : (camera.nameRu ?? camera.name);
   const linkedCenter = workCenters?.find((wc) => wc.id === camera.workCenterId);
 

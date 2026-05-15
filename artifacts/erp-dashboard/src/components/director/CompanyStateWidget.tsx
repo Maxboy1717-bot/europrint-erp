@@ -21,7 +21,7 @@ export function CompanyStateWidget() {
   const { data: currentState, isLoading: currentLoad, isError: currentError, refetch: refetchCurrent } = useQuery<CompanyStateCurrent>({
     queryKey: ["/api/company-state/current"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/company-state/current");
+      const res = await apiRequest('GET', "/api/company-state/current") as unknown as Response;
       if (!res.ok) throw new Error("company-state/current failed");
       return res.json() as Promise<CompanyStateCurrent>;
     },
@@ -30,7 +30,7 @@ export function CompanyStateWidget() {
   const { data: historyData } = useQuery<CompanyStateHistory>({
     queryKey: ["/api/director/company-state/history"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/director/company-state/history");
+      const res = await apiRequest('GET', "/api/director/company-state/history") as unknown as Response;
       if (!res.ok) throw new Error("history failed");
       return res.json() as Promise<CompanyStateHistory>;
     },
@@ -53,7 +53,8 @@ export function CompanyStateWidget() {
   const revenuePct = currentState?.kpis?.revenue_pct ?? 0;
   const retentionPct = currentState?.kpis?.retention_pct ?? 100;
   const state = stateStatusMap[currentState?.status ?? "normal"] ?? stateStatusMap["normal"];
-  const history = historyData?.history ?? [];
+  const rawHistory = historyData?.history;
+  const history = Array.isArray(rawHistory) ? rawHistory : [];
 
   if (currentError) {
     return (

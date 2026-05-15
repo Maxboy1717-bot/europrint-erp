@@ -57,6 +57,11 @@ export {
 export { aiDecisionLog } from './schema-ai-agents';
 export type { AiDecisionLogRow, AiDecisionLogInsert } from './schema-ai-agents';
 
+// schema-aisha: AIsha voice assistant (conversations, tool calls, audit, approvals)
+export {
+  aishaConversations, aishaToolCalls, aishaVoiceAudit, aishaPendingApprovals,
+} from './schema-aisha';
+
 // schema-forecast: Talab prognozi (TZ-06/07/08)
 export { forecast_series } from './schema-forecast';
 

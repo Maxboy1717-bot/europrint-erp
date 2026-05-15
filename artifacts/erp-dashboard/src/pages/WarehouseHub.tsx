@@ -179,7 +179,7 @@ export default function WarehouseHub() {
   const handleScan = async () => {
     if (!scanInput.trim()) return;
     try {
-      const res = await apiRequest('GET', `/api/barcode-warehouse/barcodes/scan/${encodeURIComponent(scanInput.trim())}`);
+      const res = (await apiRequest('GET', `/api/barcode-warehouse/barcodes/scan/${encodeURIComponent(scanInput.trim())}`)) as unknown as Response;
       if (res.ok) {
         setScanResult(await res.json());
         setScanDialogOpen(true);

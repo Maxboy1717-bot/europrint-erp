@@ -25,7 +25,7 @@ export default function PosBarcPage() {
 
   const scanMutation = useMutation({
     mutationFn: async (barcode: string) => {
-      const res = await apiRequest("POST", "/api/pos/barcode/scan", { barcode });
+      const res = (await apiRequest("POST", "/api/pos/barcode/scan", { barcode })) as unknown as Response;
       return res.json() as Promise<ScanResult>;
     },
     onSuccess: (data) => {
@@ -49,7 +49,7 @@ export default function PosBarcPage() {
 
   const generateMutation = useMutation({
     mutationFn: async (prefix: string) => {
-      const res = await apiRequest("POST", "/api/pos/barcode/generate-ean13", { prefix });
+      const res = (await apiRequest("POST", "/api/pos/barcode/generate-ean13", { prefix })) as unknown as Response;
       return res.json() as Promise<GenerateResult>;
     },
     onSuccess: (data) => {

@@ -124,12 +124,12 @@ export default function ForecastAnalytics() {
   const buildChartData = () => {
     const base = series.map((v, i) => ({ period: `T${i + 1}`, actual: v }));
     if (!result) return base;
-    const r = result as Record<string, unknown>;
+    const r = result as unknown as Record<string, unknown>;
     const predicted = (r.predicted as number[] | undefined) ?? [];
     const fitted = (r.fitted as number[] | undefined) ?? [];
 
     if (fitted.length) {
-      fitted.forEach((v, i) => { (base[i] as Record<string, number>)["fitted"] = Math.round(v * 100) / 100; });
+      fitted.forEach((v, i) => { (base[i] as unknown as Record<string, number>)["fitted"] = Math.round(v * 100) / 100; });
     }
     predicted.forEach((v, j) => {
       const point: Record<string, string | number> = { period: `T${series.length + j + 1}`, predicted: Math.round(v * 100) / 100 };

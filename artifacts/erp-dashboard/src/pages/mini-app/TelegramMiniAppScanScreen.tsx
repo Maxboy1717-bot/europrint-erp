@@ -19,7 +19,7 @@ interface ScanScreenProps {
 
   // Camera
   isCameraMode: boolean;
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
   onStartCamera: () => void;
   onStopCamera: () => void;
 

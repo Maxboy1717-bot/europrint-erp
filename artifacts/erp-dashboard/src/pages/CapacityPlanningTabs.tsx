@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { CapacityListItem, ShiftCalendar, WorkCenter } from "./CapacityPlanningTypes";
 import { EPStatusPill } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
 // CapacityDataTab
@@ -86,7 +85,6 @@ export function ShiftCalendarTab({
   onCreateCalendar,
   t,
 }: ShiftCalendarTabProps) {
-  const { t } = useTranslation("common");
   const getWorkCenterName = (wcId: string) => {
     const wc = (Array.isArray(workCenters) ? workCenters : []).find((w) => w.id === wcId);
     return wc ? wc.name : wcId;

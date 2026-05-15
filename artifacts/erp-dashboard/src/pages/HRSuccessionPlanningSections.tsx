@@ -139,6 +139,7 @@ interface CandidatesTabProps {
 }
 
 export function CandidatesTab({ candidates, isLoading }: CandidatesTabProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

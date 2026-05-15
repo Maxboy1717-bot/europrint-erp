@@ -38,7 +38,7 @@ export function useAgentAlerts(limit = 20) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['/api/agents/alerts'] }),
   });
 
-  const alerts = list.data ?? [];
+  const alerts = Array.isArray(list.data) ? list.data : [];
   const unread = useMemo(() => alerts.filter(a => !a.isRead).length, [alerts]);
 
   return {

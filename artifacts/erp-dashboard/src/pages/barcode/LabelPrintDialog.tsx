@@ -28,7 +28,6 @@ import { useToast } from "@/hooks/use-toast";
 import type { BatchData } from "./barcode-types";
 import type { translations } from "./barcode-types";
 import { apiRequest } from '@/lib/queryClient';
-import { useTranslation } from '@/lib/i18n';
 
 type TranslationType = typeof translations.uz;
 
@@ -45,7 +44,7 @@ interface LabelPrintDialogProps {
   onOpenChange: (open: boolean) => void;
   batch: BatchData | null;
   lang: "uz" | "ru";
-  t: TranslationType;
+  t: TranslationType & ((key: string) => string);
 }
 
 export function LabelPrintDialog({
@@ -55,7 +54,6 @@ export function LabelPrintDialog({
   lang,
   t,
 }: LabelPrintDialogProps) {
-  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [format, setFormat] = useState<"ZPL" | "EPL" | "PDF">("ZPL");
   const [copies, setCopies] = useState(1);
@@ -66,7 +64,7 @@ export function LabelPrintDialog({
       if (!batch) throw new Error("Batch tanlanmagan");
 
       if (format === "PDF") {
-        const res = await apiRequest('POST', `/api/warehouse/label/print`, { batchId: batch.id, format: "PDF", copies });
+        const res = (await apiRequest('POST', `/api/warehouse/label/print`, { batchId: batch.id, format: "PDF", copies })) as unknown as Response;
         if (!res.ok) throw new Error("PDF generatsiyada xatolik");
 
         const blob = await res.blob();
@@ -85,7 +83,7 @@ export function LabelPrintDialog({
         } as LabelPrintResult;
       }
 
-      const res = await apiRequest('POST', `/api/warehouse/label/print`, { batchId: batch.id, format, copies });
+      const res = (await apiRequest('POST', `/api/warehouse/label/print`, { batchId: batch.id, format, copies })) as unknown as Response;
 
       if (!res.ok) throw new Error("Xatolik");
       return res.json() as Promise<LabelPrintResult>;

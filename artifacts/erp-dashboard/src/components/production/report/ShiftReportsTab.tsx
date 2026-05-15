@@ -30,7 +30,7 @@ export function ShiftReportsTab() {
   const { data, isLoading, refetch } = useQuery<{ reports: ShiftReport[] }>({
     queryKey: ["/api/production/shift-reports"],
     queryFn: async () => {
-      const r = await apiRequest('GET', "/api/production/shift-reports");
+      const r = await apiRequest('GET', "/api/production/shift-reports") as unknown as Response;
       if (!r.ok) throw new Error("Xato");
       return r.json();
     },

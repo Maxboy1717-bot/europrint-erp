@@ -56,8 +56,7 @@ export default function IotSensorsPage() {
   >({
     queryKey: ["/api/iot/sensors"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/iot/sensors");
-      return res.json();
+      return await apiRequest("GET", "/api/iot/sensors");
     },
     refetchInterval: 30_000,
   });

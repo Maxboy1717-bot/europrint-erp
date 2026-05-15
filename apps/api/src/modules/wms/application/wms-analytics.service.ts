@@ -1,4 +1,13 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   CTE (WITH movements_12m AS ..., last_move AS ...) used to pre-aggregate
+ *   inventory movements, correlated subqueries in SELECT for requisition lookup
+ *   (EXISTS, scalar-subquery SELECT pr.id ... LIMIT 1), regex predicate
+ *   ~ '^[0-9]+$' on text product_id, JOIN on type-cast id::varchar = product_id,
+ *   and EXTRACT(DAY FROM NOW() - ...) for days-since-movement computation.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module wms-analytics.service
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
@@ -89,7 +98,7 @@ export class WmsAnalyticsService {
         LIMIT 200
       `);
 
-      const items: TurnoverItem[] = (Array.isArray(rows.rows) ? rows.rows : []).map((r) => {
+      const items: TurnoverItem[] = (Array.isArray(rows?.rows) ? rows.rows : Array.isArray(rows) ? rows : []).map((r) => {
         const cogs = safeNum(r['annual_cogs']);
         const inv = safeNum(r['avg_inventory_value']);
         const inventoryTurnover = inv > 0 ? safeDiv(cogs, inv) : 0;
@@ -143,7 +152,7 @@ export class WmsAnalyticsService {
         LIMIT 100
       `);
 
-      const items: DeadStockItem[] = (Array.isArray(rows.rows) ? rows.rows : []).map((r) => ({
+      const items: DeadStockItem[] = (Array.isArray(rows?.rows) ? rows.rows : Array.isArray(rows) ? rows : []).map((r) => ({
         materialId: safeNum(r['material_id']),
         materialName: String(r['material_name'] ?? ''),
         unitOfMeasure: String(r['unit_of_measure'] ?? 'EA'),
@@ -202,7 +211,7 @@ export class WmsAnalyticsService {
         LIMIT 50
       `);
 
-      const alerts: RopAlert[] = (Array.isArray(rows.rows) ? rows.rows : []).map((r) => ({
+      const alerts: RopAlert[] = (Array.isArray(rows?.rows) ? rows.rows : Array.isArray(rows) ? rows : []).map((r) => ({
         materialId: safeNum(r['material_id']),
         materialCode: String(r['material_code'] ?? ''),
         materialName: String(r['material_name'] ?? ''),

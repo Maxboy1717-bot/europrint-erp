@@ -8,8 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FormData, Translation, BomHeader, Product } from "./types";
-import { useTranslation } from '@/lib/i18n';
-
 interface ProductsStepProps {
   formData: FormData;
   setFormData: (data: FormData) => void;
@@ -23,7 +21,7 @@ export function ProductsStep({
   t,
   filteredBoms,
 }: ProductsStepProps) {
-  const { t } = useTranslation("common");
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       {!formData.productId ? (
@@ -64,7 +62,7 @@ export function ProductsStep({
               <CardContent>
                 <div className="text-sm space-y-2 text-muted-foreground">
                   <div className="flex justify-between">
-                    <span>{t("bazaviy")}</span>
+                    <span>{"Bazaviy"}</span>
                     <span className="font-bold text-foreground">{item.bom.baseQuantity} {item.bom.baseUnit}</span>
                   </div>
                 </div>

@@ -22,7 +22,7 @@ export function ListView({
   cards: CardWithOwner[];
   columns: KanbanColumn[];
   onCardClick: (card: CardWithOwner) => void;
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string) => string);
 }) {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");

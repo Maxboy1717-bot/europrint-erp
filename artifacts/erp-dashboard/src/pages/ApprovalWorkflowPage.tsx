@@ -32,8 +32,7 @@ export default function ApprovalWorkflowPage() {
   const { data: rawData, isLoading, isError, refetch } = useQuery<Workflow[] | { data?: Workflow[] }>({
     queryKey: ["/api/approval-workflow", tab],
     queryFn: async () => {
-      const res = await apiRequest("GET", endpoint);
-      return res.json();
+      return await apiRequest("GET", endpoint);
     },
   });
 
@@ -43,11 +42,10 @@ export default function ApprovalWorkflowPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: WorkflowForm) => {
-      const res = await apiRequest("POST", "/api/approval-workflow/submit", {
+      return await apiRequest("POST", "/api/approval-workflow/submit", {
         ...dto,
         amount: dto.amount ? parseFloat(dto.amount) : 0,
       });
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/approval-workflow"] });
@@ -62,8 +60,7 @@ export default function ApprovalWorkflowPage() {
 
   const approveMutation = useMutation({
     mutationFn: async ({ id }: { id: string }) => {
-      const res = await apiRequest("POST", `/api/approval-workflow/approve/${id}`, { notes: reason || undefined });
-      return res.json();
+      return await apiRequest("POST", `/api/approval-workflow/approve/${id}`, { notes: reason || undefined });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/approval-workflow"] });
@@ -78,8 +75,7 @@ export default function ApprovalWorkflowPage() {
 
   const rejectMutation = useMutation({
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
-      const res = await apiRequest("POST", `/api/approval-workflow/reject/${id}`, { rejectionReason: reason });
-      return res.json();
+      return await apiRequest("POST", `/api/approval-workflow/reject/${id}`, { rejectionReason: reason });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/approval-workflow"] });

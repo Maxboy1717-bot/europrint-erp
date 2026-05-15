@@ -104,6 +104,7 @@ interface RequestsSectionProps {
 }
 
 export function RequestsSection({ internalReqs, onCreateClick }: RequestsSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">

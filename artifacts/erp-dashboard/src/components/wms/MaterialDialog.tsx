@@ -70,7 +70,7 @@ export function MaterialDialog({ open, onClose, editMaterial }: { open: boolean;
     setForm(f => ({ ...f, [field]: val }));
 
   const createMutation = useMutation({
-    mutationFn: (data: MaterialFormData) => apiRequest("POST", "/api/inventory/materials", data),
+    mutationFn: (data: MaterialFormData) => apiRequest<{ error?: string }>("POST", "/api/inventory/materials", data),
     onSuccess: (res) => {
       if (res.error) { toast({ title: "Xatolik", description: res.error, variant: "destructive" }); return; }
       queryClient.invalidateQueries({ queryKey: ["/api/inventory/materials"] });
@@ -81,7 +81,7 @@ export function MaterialDialog({ open, onClose, editMaterial }: { open: boolean;
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: MaterialFormData) => apiRequest("PUT", `/api/inventory/materials/${editMaterial?.id}`, data),
+    mutationFn: (data: MaterialFormData) => apiRequest<{ error?: string }>("PUT", `/api/inventory/materials/${editMaterial?.id}`, data),
     onSuccess: (res) => {
       if (res.error) { toast({ title: "Xatolik", description: res.error, variant: "destructive" }); return; }
       queryClient.invalidateQueries({ queryKey: ["/api/inventory/materials"] });

@@ -46,6 +46,7 @@ function getMonthName(month: number): string {
 }
 
 function getStatusBadge(status: string) {
+  const { t } = useTranslation("common");
   switch (status) {
     case "open":
       return <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/40">{"Open1"}</Badge>;

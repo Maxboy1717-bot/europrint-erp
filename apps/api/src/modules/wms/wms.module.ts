@@ -26,9 +26,15 @@ import { WmsCountsController } from './presentation/wms-counts.controller';
 import { WmsWarehouseGatewayController } from './presentation/wms-warehouse-gateway.controller';
 import { WmsBarcodeController } from './presentation/wms-barcode.controller';
 import { WmsCatalogController } from './presentation/wms-catalog.controller';
-import { WmsCatalogService } from './application/wms-catalog.service';
+import {
+  WmsCatalogService,
+  WmsCatalogAbcAgingExpiryService,
+  WmsCatalogStockTurnoverService,
+  WmsCatalogDashboardService,
+} from './application/wms-catalog.service';
 import { WmsIntegrationController } from './presentation/wms-integration.controller';
 import { WmsGatewayWarehousesController } from './presentation/wms-gateway-warehouses.controller';
+import { WmsGatewayWarehouseLotsController } from './presentation/wms-gateway-warehouse-lots.controller';
 import { WmsGatewayBinZoneController } from './presentation/wms-gateway-binszone.controller';
 import { WmsGatewayInventoryController } from './presentation/wms-gateway-inventory.controller';
 import { InventoryMaterialsController } from './presentation/inventory-materials.controller';
@@ -102,6 +108,7 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     WmsCountsController,
     WmsWarehouseGatewayController,
     WmsGatewayWarehousesController,
+    WmsGatewayWarehouseLotsController,
     WmsGatewayBinZoneController,
     WmsGatewayInventoryController,
     WmsBarcodeController,
@@ -141,6 +148,9 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     InventoryAdvancedRepository,
     WmsCrudRepository,
     WmsCrudService,
+    WmsCatalogAbcAgingExpiryService,
+    WmsCatalogStockTurnoverService,
+    WmsCatalogDashboardService,
     WmsCatalogService,
     EoqCalculatorService,
     SafetyStockService,

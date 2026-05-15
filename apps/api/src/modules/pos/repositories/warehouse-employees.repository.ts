@@ -1,4 +1,11 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   Multi-table JOINs with computed columns (COALESCE string concatenation
+ *   for fullName), shared SQL select-field fragment reused across queries,
+ *   and conditional notes append-on-update (COALESCE(notes,'') || ' ...').
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module warehouse-employees.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */

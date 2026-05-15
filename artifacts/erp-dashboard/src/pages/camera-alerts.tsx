@@ -55,7 +55,7 @@ export default function CameraAlerts() {
     },
   });
 
-  const t = buildTranslations(language);
+  const t = buildTranslations(language) as ReturnType<typeof buildTranslations> & ((key: string) => string);
   const safeAlerts = safeArray<CameraAlert>(alerts);
 
   const filteredAlerts = filterAlerts(safeAlerts, searchTerm, filterType, filterSeverity, filterStatus);

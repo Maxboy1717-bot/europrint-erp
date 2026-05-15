@@ -73,6 +73,7 @@ export const TRANSLATION_MODULES = [
   'movements',
   'myInventory',
   'nav',
+  'qc',
   'offline',
   'qcreview',
   'quarantine',

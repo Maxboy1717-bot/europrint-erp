@@ -75,7 +75,7 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
   const { data: assessments = [], isLoading } = useQuery<Assessment[]>({
     queryKey: ["/api/employees", employeeId, "assessments"],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/employees/${employeeId}/assessments`);
+      const res = (await apiRequest('GET', `/api/employees/${employeeId}/assessments`)) as unknown as Response;
       if (!res.ok) return [];
       const json = await res.json();
       return Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);

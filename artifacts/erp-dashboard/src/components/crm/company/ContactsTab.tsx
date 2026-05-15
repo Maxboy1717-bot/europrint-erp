@@ -27,8 +27,9 @@ interface ContactsTabProps {
   contacts: Contact[];
 }
 
-export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
+export function ContactsTab({ companyId, contacts = [] }: ContactsTabProps) {
   const { t } = useTranslation("common");
+  const safeContacts = Array.isArray(contacts) ? contacts : [];
   const [showLinkContactDialog, setShowLinkContactDialog] = useState(false);
   const [confirmUnlinkId, setConfirmUnlinkId] = useState<number | null>(null);
   const [linkContactId, setLinkContactId] = useState("");
@@ -72,14 +73,14 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
           {t("kontaktUlash")}
         </Button>
       </div>
-      {contacts.length === 0 ? (
+      {safeContacts.length === 0 ? (
         <div className="text-center text-muted-foreground py-8">
           <User className="h-8 w-8 mx-auto mb-2 opacity-30" />
           <p className="text-sm">{t("kontaktlarYoq")}</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {(Array.isArray(contacts) ? contacts : []).map((contact) => (
+          {safeContacts.map((contact) => (
             <div key={contact.id} className="flex items-center justify-between p-3 rounded-lg border">
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-sm flex items-center gap-1">

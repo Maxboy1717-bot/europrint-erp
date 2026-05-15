@@ -70,7 +70,7 @@ export interface TaskDetailSheetProps {
   columns:      KanbanColumn[];
   onUpdate:     (data: Partial<KanbanCard>) => void;
   onDelete:     () => void;
-  t:            typeof T.uz;
+  t: (key: string) => string;
 }
 
 /** Props for TaskDetailSheetHeader. */
@@ -103,5 +103,5 @@ export interface TaskDetailSheetActionsProps {
   completionReport:      string;
   onCompletionReportChange: (v: string) => void;
   onConfirmComplete:     () => void;
-  t:                     typeof T.uz;
+  t: (key: string) => string;
 }

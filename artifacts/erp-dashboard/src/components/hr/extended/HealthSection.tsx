@@ -16,10 +16,11 @@ interface HealthSectionProps {
 }
 
 export function HealthSection({
-  healthCheckups,
+  healthCheckups = [],
   healthStats,
 }: HealthSectionProps) {
   const { t } = useTranslation("common");
+  const safeHealth = Array.isArray(healthCheckups) ? healthCheckups : [];
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -51,9 +52,9 @@ export function HealthSection({
               <TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              {healthCheckups.length === 0 ? (
+              {safeHealth.length === 0 ? (
                 <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("tibbiyKorikMalumotlariYoq")}</TableCell></TableRow>
-              ) : (Array.isArray(healthCheckups) ? healthCheckups : []).map((h) => (
+              ) : safeHealth.map((h) => (
                 <TableRow key={h.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{h.departmentName}</TableCell>
                   <TableCell>{h.totalEmployees || "—"}</TableCell>

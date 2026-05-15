@@ -47,8 +47,7 @@ export default function MentorsPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (specialization) params.set("specialization", specialization);
-      const res = await apiRequest("GET", `/api/mentors?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/mentors?${params}`);
     },
   });
 

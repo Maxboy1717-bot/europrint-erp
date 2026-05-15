@@ -1,4 +1,14 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   Optimistic-lock UPDATE with COALESCE(version, 0) = ${expected} RETURNING
+ *   id and new version, and the atomic advance-payment CTE chain
+ *   (WITH existing_key AS ..., lock_update AS UPDATE ... RETURNING,
+ *    idempotency_insert AS INSERT ... ON CONFLICT DO NOTHING RETURNING)
+ *   that combines idempotency-key check, conditional UPDATE, and
+ *   key-write into a single statement. Drizzle has no CTE-with-DML composition.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module drizzle-sales-order.repo
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */

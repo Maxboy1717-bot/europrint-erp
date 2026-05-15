@@ -31,40 +31,39 @@ export class CreateUserHandler {
     @Inject(USER_REPO) private readonly userRepo: IUserRepo,
   ) {}
 
+  private async validateUniqueness(command: CreateUserCommand): Promise<CreateUserCommandResult | null> {
+    const existingUser = await this.userRepo.findByUsername(command.username);
+    if (existingUser) {
+      this.logger.warn('Username already exists: ' + command.username);
+      return Err(AppErr('CONFLICT', 'Username already exists'));
+    }
+    const existingEmail = await this.userRepo.findByEmail(command.email);
+    if (existingEmail) {
+      this.logger.warn('Email already exists: ' + command.email);
+      return Err(AppErr('CONFLICT', 'Email already exists'));
+    }
+    return null;
+  }
+
+  private async buildUserAggregate(command: CreateUserCommand): Promise<UserAggregate> {
+    const passwordHash = await bcrypt.hash(command.password, 10);
+    const user = UserAggregate.create(
+      command.username,
+      command.email,
+      passwordHash,
+      command.role,
+    );
+    if (command.departmentId) user.assignDepartment(command.departmentId);
+    if (command.positionId) user.assignPosition(command.positionId);
+    return user;
+  }
+
   async execute(command: CreateUserCommand): Promise<CreateUserCommandResult> {
-      const existingUser = await this.userRepo.findByUsername(command.username);
-      if (existingUser) {
-        this.logger.warn('Username already exists: ' + command.username);
-        return Err(AppErr('CONFLICT', 'Username already exists'));
-      }
-
-      const existingEmail = await this.userRepo.findByEmail(command.email);
-      if (existingEmail) {
-        this.logger.warn('Email already exists: ' + command.email);
-        return Err(AppErr('CONFLICT', 'Email already exists'));
-      }
-
-      const passwordHash = await bcrypt.hash(command.password, 10);
-
-      let user = UserAggregate.create(
-        command.username,
-        command.email,
-        passwordHash,
-        command.role,
-      );
-
-      if (command.departmentId) {
-        user.assignDepartment(command.departmentId);
-      }
-
-      if (command.positionId) {
-        user.assignPosition(command.positionId);
-      }
-
-      const savedUser = await this.userRepo.create(user);
-
-      this.logger.log('User created: ' + command.username);
-
-      return { ok: true, data: savedUser };
+    const conflict = await this.validateUniqueness(command);
+    if (conflict) return conflict;
+    const user = await this.buildUserAggregate(command);
+    const savedUser = await this.userRepo.create(user);
+    this.logger.log('User created: ' + command.username);
+    return { ok: true, data: savedUser };
   }
 }

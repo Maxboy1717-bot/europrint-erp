@@ -36,6 +36,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 function getRiskBadge(riskLevel: string | undefined) {
+  const { t } = useTranslation("common");
   switch (riskLevel) {
     case "low": return <Badge variant="success">{t("low")}</Badge>;
     case "medium": return <Badge variant="warning">{t("medium")}</Badge>;
@@ -51,7 +52,7 @@ export function QCAIAnalysisTab() {
   const { data: testsData, isLoading: testsLoading } = useQuery<QcMaterialTest[]>({
     queryKey: ["/api/qc/tests/recent"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/qc/tests/recent?limit=20");
+      const res = (await apiRequest('GET', "/api/qc/tests/recent?limit=20")) as unknown as Response;
       if (!res.ok) return [];
       return res.json();
     }

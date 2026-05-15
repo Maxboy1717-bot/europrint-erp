@@ -192,6 +192,7 @@ export function HrTab({ hrData, hrLoading }: { hrData: HrData | undefined; hrLoa
 }
 
 export function FinanceTab({ finData, finLoading }: { finData: FinData | undefined; finLoading: boolean }) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="finance" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{t("moliyaHolati")}</h2>

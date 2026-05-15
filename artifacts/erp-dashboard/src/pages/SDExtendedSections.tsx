@@ -145,6 +145,7 @@ interface QuotaPanelProps {
 }
 
 export function QuotaPanel({ managerStats }: QuotaPanelProps) {
+  const { t } = useTranslation("common");
   return (
     <TabsContent value="quota" className="space-y-4 mt-0">
       <Card className="bg-card border-none shadow-sm overflow-hidden">

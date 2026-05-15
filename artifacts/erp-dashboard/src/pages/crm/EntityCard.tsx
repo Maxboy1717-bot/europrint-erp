@@ -70,33 +70,33 @@ export function EntityCard({
   };
 
   const getPersonName = (): string => {
-    const raw = entity as Record<string, unknown>;
+    const raw = entity as unknown as Record<string, unknown>;
     return (raw["contact_name"] as string) ?? (raw["assignedByName"] as string) ?? getTitle();
   };
 
   const getCompany = (): string | null => {
     if (entityType === "leads")    return (entity as Lead).companyTitle ?? null;
     if (entityType === "contacts") return (entity as Contact).companyTitle ?? null;
-    const raw = entity as Record<string, unknown>;
+    const raw = entity as unknown as Record<string, unknown>;
     return (raw["companyTitle"] as string) ?? null;
   };
 
   const getPhone = (): string | null => {
     if ("phones" in entity && entity.phones?.[0]) return entity.phones[0].value;
-    const raw = entity as Record<string, unknown>;
+    const raw = entity as unknown as Record<string, unknown>;
     return (raw["contact_phone"] as string) ?? null;
   };
 
   const getEmail = (): string | null => {
     if ("emails" in entity && entity.emails?.[0]) return entity.emails[0].value;
-    const raw = entity as Record<string, unknown>;
+    const raw = entity as unknown as Record<string, unknown>;
     return (raw["contact_email"] as string) ?? null;
   };
 
   const getAmount = (): number | null => {
     if (entityType === "leads") {
       const lead = entity as Lead;
-      const raw  = entity as Record<string, unknown>;
+      const raw  = entity as unknown as Record<string, unknown>;
       const opp  =
         lead.opportunity ??
         (raw["opportunityAmount"] as number | undefined) ??
@@ -112,25 +112,25 @@ export function EntityCard({
 
   const getCurrency = (): string => {
     if (entityType === "deals") return (entity as Deal).currencyId ?? "UZS";
-    if (entityType === "leads") return ((entity as Record<string, unknown>)["currencyId"] as string) ?? "UZS";
+    if (entityType === "leads") return ((entity as unknown as Record<string, unknown>)["currencyId"] as string) ?? "UZS";
     return (entity as Proposal | Invoice).currency ?? "UZS";
   };
 
   const getDate = (): string => {
     const raw = entity as EntityData;
-    const d   = raw.dateCreate ?? (raw as Record<string, unknown>)["createdAt"] as string;
+    const d   = raw.dateCreate ?? (raw as unknown as Record<string, unknown>)["createdAt"] as string;
     if (!d) return "—";
     const dt = new Date(d);
     return isNaN(dt.getTime()) ? "—" : format(dt, "d.MM.yy", { locale: uz });
   };
 
   const getSource = (): string | null => {
-    const raw = entity as Record<string, unknown>;
+    const raw = entity as unknown as Record<string, unknown>;
     return (raw["sourceId"] as string) ?? (raw["source"] as string) ?? null;
   };
 
   const getPriority = (): string | null => {
-    const raw = entity as Record<string, unknown>;
+    const raw = entity as unknown as Record<string, unknown>;
     return (raw["priority"] as string) ?? null;
   };
 

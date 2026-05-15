@@ -15,7 +15,6 @@ import {
 import { Clock, Check, Calendar, X } from "lucide-react";
 import { format } from "date-fns";
 import type { UseMutationResult } from "@tanstack/react-query";
-import { useTranslation } from '@/lib/i18n';
 import {
   type Activity,
   priorityColors,
@@ -38,7 +37,6 @@ export function PendingActivitiesSection({
   cancelActivityMutation,
   t,
 }: PendingActivitiesSectionProps) {
-  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>
@@ -146,7 +144,6 @@ export function CompletedActivitiesSection({
   completedActivities,
   t,
 }: CompletedActivitiesSectionProps) {
-  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

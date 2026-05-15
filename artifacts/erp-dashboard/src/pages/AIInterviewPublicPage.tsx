@@ -27,10 +27,8 @@ import {
 } from "./AIInterviewPublicPageSections";
 import { InterviewingSection } from "./AIInterviewPublicPageInterview";
 import { apiRequest } from '@/lib/queryClient';
-import { useTranslation } from '@/lib/i18n';
 
 export default function AIInterviewPublicPage() {
-  const { t } = useTranslation("common");
   const [location] = useLocation();
   const token = location.split("/ai-interview/")[1]?.split("?")[0];
 
@@ -60,9 +58,7 @@ export default function AIInterviewPublicPage() {
   const { data: session, isLoading, error } = useQuery<SessionInfo>({
     queryKey: ["/api/hr/ai-interview/session", token, "validate"],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/hr-v2/ai-interview/session/${token}/validate`);
-      if (!res.ok) throw new Error("Invalid session");
-      return res.json();
+      return await apiRequest('GET', `/api/hr-v2/ai-interview/session/${token}/validate`);
     },
     retry: false,
     enabled: !!token,
@@ -102,8 +98,7 @@ export default function AIInterviewPublicPage() {
       setMicReady(false);
       if (!token) return;
       try {
-        const res = await apiRequest('POST', `/api/hr-v2/ai-interview/session/${token}/camera-rejected`);
-        const data = await res.json();
+        const data = (await apiRequest('POST', `/api/hr-v2/ai-interview/session/${token}/camera-rejected`)) as Record<string, any>;
         const newCount = data.rejections ?? cameraRejections + 1;
         setCameraRejections(newCount);
         if (data.cancelled) {
@@ -205,8 +200,7 @@ export default function AIInterviewPublicPage() {
         socketRef.current.emit("complete.interview");
         return { success: true };
       }
-      const res = await apiRequest('POST', `/api/hr-v2/ai-interview/session/${token}/submit`, data);
-      return res.json();
+      return await apiRequest('POST', `/api/hr-v2/ai-interview/session/${token}/submit`, data);
     },
     onSuccess: () => setStage("COMPLETED"),
   });

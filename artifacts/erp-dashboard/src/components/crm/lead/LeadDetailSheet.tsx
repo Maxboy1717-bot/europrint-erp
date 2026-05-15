@@ -86,7 +86,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
 
   const convertLeadMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", `/api/crm/leads/${leadId}/convert`, convertOptions);
+      return apiRequest<Record<string, unknown>>("POST", `/api/crm/leads/${leadId}/convert`, convertOptions);
     },
     onSuccess: (data: Record<string, unknown>) => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/leads"] });
@@ -109,7 +109,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
 
   const stageChangeMutation = useMutation({
     mutationFn: async (statusId: string) => {
-      return apiRequest("PATCH", `/api/crm/leads/${leadId}/stage`, { statusId });
+      return apiRequest<Record<string, unknown>>("PATCH", `/api/crm/leads/${leadId}/stage`, { statusId });
     },
     onSuccess: (data: Record<string, unknown>) => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/leads"] });

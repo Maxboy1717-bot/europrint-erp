@@ -27,13 +27,8 @@ export function TelegramWebhookActivation() {
     setIsActivating(true);
     try {
       const webhookUrl = `${window.location.origin}/api/marketing/webhook/telegram-customer`;
-      const res = await apiRequest('POST', "/api/marketing/settings/setup-telegram-webhook", { webhookUrl });
-      const data = await res.json();
-      if (res.ok) {
-        toast({ title: "Muvaffaqiyat", description: String(data.message) || "Telegram webhook faollashtirildi" });
-      } else {
-        toast({ title: "Xatolik", description: String(data.message) || data.error || "Webhook o'rnatishda xatolik", variant: "destructive" });
-      }
+      const data = (await apiRequest('POST', "/api/marketing/settings/setup-telegram-webhook", { webhookUrl })) as Record<string, any>;
+      toast({ title: "Muvaffaqiyat", description: String(data.message) || "Telegram webhook faollashtirildi" });
     } catch {
       toast({ title: "Xatolik", description: "Serverga ulanishda xatolik", variant: "destructive" });
     } finally {

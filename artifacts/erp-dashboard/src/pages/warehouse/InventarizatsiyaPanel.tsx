@@ -68,9 +68,7 @@ export function InventarizatsiyaPanel({ lang }: InventarizatsiyaPanelProps) {
   const { data: stats } = useQuery<InvStats>({
     queryKey: ["/api/warehouse/inventory-counts-stats"],
     queryFn: async () => {
-      const r = await apiRequest('GET', "/api/warehouse/inventory-counts-stats");
-      if (!r.ok) throw new Error("Stats load error");
-      return r.json();
+      return await apiRequest('GET', "/api/warehouse/inventory-counts-stats");
     },
   });
 
@@ -80,20 +78,16 @@ export function InventarizatsiyaPanel({ lang }: InventarizatsiyaPanelProps) {
       const params = new URLSearchParams();
       if (statusFilter) params.set("status", statusFilter);
       if (warehouseFilter) params.set("warehouse_id", warehouseFilter);
-      const r = await apiRequest('GET', `/api/warehouse/inventory-counts?${params}`);
-      if (!r.ok) throw new Error("Load error");
-      return r.json();
+      return await apiRequest('GET', `/api/warehouse/inventory-counts?${params}`);
     },
   });
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const r = await apiRequest('POST', "/api/warehouse/inventory-counts", {
+      return await apiRequest('POST', "/api/warehouse/inventory-counts", {
         count_type: "spot",
         count_date: new Date().toISOString(),
       });
-      if (!r.ok) throw new Error("Create error");
-      return r.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/warehouse/inventory-counts"] });

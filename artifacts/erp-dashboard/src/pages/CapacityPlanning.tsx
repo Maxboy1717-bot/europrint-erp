@@ -92,9 +92,7 @@ export default function CapacityPlanning() {
       queryKey: ["/api/erp/capacity/load-analysis", dateFrom, dateTo],
       queryFn: async () => {
         const params = new URLSearchParams({ startDate: dateFrom, endDate: dateTo });
-        const res = await apiRequest('GET', `/api/erp/capacity/load-analysis?${params}`);
-        if (!res.ok) throw new Error("Failed to fetch load analysis");
-        return res.json();
+        return await apiRequest('GET', `/api/erp/capacity/load-analysis?${params}`);
       },
       enabled: !!isAuthenticated,
     });

@@ -13,7 +13,6 @@ import { Package, Barcode, CheckCircle, Clock, Truck, RefreshCw, Search } from "
 import { formatDateTime } from "@/lib/format";
 import type { MaterialKit, PapkaOrder } from "./WarehouseMaterialKitsTypes";
 import { STATUS_BADGES } from "./WarehouseMaterialKitsTypes";
-import { useTranslation } from '@/lib/i18n';
 
 interface SummaryCardsProps {
   kits: MaterialKit[];
@@ -90,7 +89,6 @@ export function KitsTable({
   searchQuery, setSearchQuery, lang, onPrepare, onMarkReady, onOpenDetails,
   preparePending, markReadyPending, t,
 }: KitsTableProps) {
-  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-4">

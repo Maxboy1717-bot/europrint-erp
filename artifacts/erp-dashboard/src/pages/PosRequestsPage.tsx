@@ -76,8 +76,7 @@ export default function PosRequestsPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
-      const res = await apiRequest("GET", `/api/pos/requests?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/pos/requests?${params}`);
     },
   });
 
@@ -95,11 +94,10 @@ export default function PosRequestsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: typeof form) => {
-      const res = await apiRequest("POST", "/api/pos/requests", {
+      return await apiRequest("POST", "/api/pos/requests", {
         ...dto,
         quantity: dto.quantity ? parseFloat(dto.quantity) : 1,
       });
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

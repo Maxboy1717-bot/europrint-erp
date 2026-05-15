@@ -29,7 +29,6 @@ import {
 import { Link } from "wouter";
 import { apiRequest } from '@/lib/queryClient';
 import { EPPageHeader, EPStatusPill } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 
 interface EmployeeRating {
   id: string;
@@ -58,7 +57,6 @@ interface RatingsResponse {
 }
 
 export default function CameraEmployeeRatings() {
-  const { t } = useTranslation("common");
   const { isAuthenticated } = useAuth();
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
@@ -66,9 +64,7 @@ export default function CameraEmployeeRatings() {
   const { data: ratingsData, isLoading, isError } = useQuery<RatingsResponse>({
     queryKey: ["/api/camera-employee-ratings", period],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/camera-employee-ratings?period=${period}`);
-      if (!response.ok) throw new Error("Failed to fetch ratings");
-      return response.json();
+      return await apiRequest('GET', `/api/camera-employee-ratings?period=${period}`);
     },
     enabled: !!isAuthenticated,
   });
@@ -143,8 +139,8 @@ export default function CameraEmployeeRatings() {
             </Link>
           </div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xodimlarReytingi")}</b></>}
-        title={t("xodimlarReytingi")}
+        breadcrumb={<><b className="text-foreground">{t.title}</b></>}
+        title={t.title}
         subtitle={t.subtitle}
       />
         </div>
@@ -299,7 +295,7 @@ export default function CameraEmployeeRatings() {
                 <CardHeader className="bg-muted/40/50 py-4 px-6">
                   <CardTitle className="text-[14px] font-semibold font-bold flex items-center gap-2 text-foreground">
                     <Trophy className="h-4 w-4 text-[var(--ep-yellow)]" />
-                    {t("top3")}
+                    {t.topPerformers}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">

@@ -47,7 +47,7 @@ export interface SalaryForm {
 
 export interface WorkTabProps {
   employee: Employee;
-  t: TranslationFn;
+  t: TranslationFn & ((key: string) => string);
   tCommon: TranslationFn;
   orgStructureData:
     | { primary: OrgStructureAssignment; all: OrgStructureAssignment[] }

@@ -30,18 +30,19 @@ interface KanbanBoardViewProps {
   onDeleteColumn:       (columnId: string) => void;
   selectedBoardId:      string | null;
   activeCard:           CardWithOwner | null;
-  t:                    KanbanTranslations;
+  t: KanbanTranslations;
   onQuickAddColumnId?:  (id: string | number | null) => void;
 }
 
 export function KanbanBoardView({
   sensors, handleDragStart, handleDragEnd,
-  columns, cardsByColumn,
+  columns = [], cardsByColumn,
   setShowEditCard, setShowAddColumn, setShowQuickTask, setQuickTaskTitle,
   onDeleteColumn, selectedBoardId, activeCard,
   t: tProp, onQuickAddColumnId,
 }: KanbanBoardViewProps) {
   const t = tProp as unknown as KanbanTranslations & ((key: string) => string);
+  const safeColumns = Array.isArray(columns) ? columns : [];
   const [quickAddColumnId, setQuickAddColumnId] = useState<string | number | null>(null);
 
   return (
@@ -56,7 +57,7 @@ export function KanbanBoardView({
         style={{ WebkitOverflowScrolling: "touch", minHeight: 0, height: "100%" }}
       >
         <div className="flex gap-5 h-full" style={{ padding: "4px 8px 24px" }}>
-          {columns.length === 0 ? (
+          {safeColumns.length === 0 ? (
             <div
               className="flex flex-col items-center justify-center w-full py-24 gap-4"
               style={{ color: "#A0AEC0" }}
@@ -84,7 +85,7 @@ export function KanbanBoardView({
               </button>
             </div>
           ) : (
-            (Array.isArray(columns) ? columns : []).map(col => (
+            safeColumns.map(col => (
               <KanbanColumn
                 key={col.id}
                 column={col}
@@ -105,7 +106,7 @@ export function KanbanBoardView({
           )}
 
           {/* + Ustun qo'shish tugmasi */}
-          {columns.length > 0 && (
+          {safeColumns.length > 0 && (
             <div className="shrink-0 flex items-start" style={{ paddingTop: 4 }}>
               <button
                 onClick={() => setShowAddColumn(true)}

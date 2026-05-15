@@ -99,6 +99,7 @@ interface TopMaterialsCardProps {
 }
 
 export function TopMaterialsCard({ topMaterials, isLoading }: TopMaterialsCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-3">

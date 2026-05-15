@@ -21,9 +21,11 @@ interface WarehouseStatusCardProps {
 
 export function WarehouseStatusCard({ dash, wmsRental, wmsRentalLoad, validationIssueCount = 0, totalRules = 0 }: WarehouseStatusCardProps) {
   const { t } = useTranslation("common");
+  // `dash?.alerts` may be undefined when the dashboard query hasn't resolved
+  // (or returned an empty payload). Optional-chain the inner access too.
   const stats = [
-    { label: "Kritik materiallar", value: dash?.alerts.minStock ?? 0, ok: (dash?.alerts.minStock ?? 0) === 0, icon: AlertTriangle, desc: "min-stock ogohlantirishlari" },
-    { label: "IoT ogohlantirishlari", value: dash?.alerts.iot ?? 0, ok: (dash?.alerts.iot ?? 0) === 0, icon: Zap, desc: "so'nggi 8 soatda" },
+    { label: "Kritik materiallar", value: dash?.alerts?.minStock ?? 0, ok: (dash?.alerts?.minStock ?? 0) === 0, icon: AlertTriangle, desc: "min-stock ogohlantirishlari" },
+    { label: "IoT ogohlantirishlari", value: dash?.alerts?.iot ?? 0, ok: (dash?.alerts?.iot ?? 0) === 0, icon: Zap, desc: "so'nggi 8 soatda" },
     { label: "Tizim qoidalari", value: totalRules, ok: true, icon: CheckCircle, desc: `${validationIssueCount} ta muammo` },
   ];
 

@@ -11,10 +11,8 @@ import { apiRequest } from '@/lib/queryClient';
 import { IoTCompletionReportProps, CompletionStep } from "./IoTCompletionReportTypes";
 import { StepProgressBar, ResultsStep } from "./IoTCompletionReportSections";
 import { EvaluationStep, MaterialReturnStep, DoneStep } from "./IoTCompletionReportSteps";
-import { useTranslation } from '@/lib/i18n';
 
 export function IoTCompletionReport({ lang, open, onClose, completionReport, formatTime, tabletToken }: IoTCompletionReportProps) {
-  const { t } = useTranslation("common");
   const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
   const { toast } = useToast();
 
@@ -63,11 +61,10 @@ export function IoTCompletionReport({ lang, open, onClose, completionReport, for
     }
     setEvalSubmitting(true);
     try {
-      const res = await apiRequest('POST', `/api/iot/production-sessions/${sessionId}/evaluation`, {
+      await apiRequest('POST', `/api/iot/production-sessions/${sessionId}/evaluation`, {
         safetyScore, qualityScore, productivityScore, teamworkScore,
         issuesReported: issuesReported || undefined, suggestions: suggestions || undefined,
       });
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Xatolik"); }
       setEvalDone(true);
       toast({ title: t("Baholash saqlandi!", "Оценка сохранена!") });
       if (returnRequired) { setStep("material"); } else { setStep("done"); }
@@ -84,10 +81,9 @@ export function IoTCompletionReport({ lang, open, onClose, completionReport, for
     }
     setReturnSubmitting(true);
     try {
-      const res = await apiRequest('POST', `/api/iot/production-sessions/${sessionId}/material-return`, {
+      await apiRequest('POST', `/api/iot/production-sessions/${sessionId}/material-return`, {
         returnedQty: qty, unit: materialRemainder?.unit || "dona", notes: returnReason || undefined,
       });
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Xatolik"); }
       setReturnDone(true);
       toast({ title: t("Material qaytarildi!", "Материал возвращён!") });
       setStep("done");

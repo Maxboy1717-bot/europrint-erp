@@ -13,8 +13,8 @@ import { useTranslation } from '@/lib/i18n';
 interface RoomMember {
   userId: string;
   fullName: string;
-  employeeId?: string;
-  avatarUrl?: string;
+  employeeId?: string | number | null;
+  avatarUrl?: string | null;
 }
 
 interface Props {
@@ -52,7 +52,7 @@ export function MentionInput({
   const filteredMembers = mentionSearch !== null
     ? (Array.isArray(members) ? members : []).filter(m =>
         m.fullName.toLowerCase().includes(mentionSearch.toLowerCase()) ||
-        (m.employeeId || "").toLowerCase().includes(mentionSearch.toLowerCase())
+        String(m.employeeId ?? "").toLowerCase().includes(mentionSearch.toLowerCase())
       ).slice(0, 6)
     : [];
 

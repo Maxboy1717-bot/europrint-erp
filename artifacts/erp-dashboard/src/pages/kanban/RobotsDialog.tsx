@@ -16,7 +16,6 @@ import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import type { KanbanColumn, AutomationRobot } from "@shared/schema";
 import { type T, type Employee } from "./kanban-types";
-import { useTranslation } from '@/lib/i18n';
 
 export function RobotsDialog({
   open,
@@ -31,9 +30,8 @@ export function RobotsDialog({
   boardId: string | null;
   columns: KanbanColumn[];
   employees: Employee[];
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string) => string);
 }) {
-  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [showAddRobot, setShowAddRobot] = useState(false);
   const [newRobot, setNewRobot] = useState({

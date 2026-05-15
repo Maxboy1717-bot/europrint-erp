@@ -1,6 +1,14 @@
 /**
  * AGENT 7: HR Performance + Churn Prediction + Bonus Calculation
  */
+
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM query builder cannot
+ *   express: `NOW() - INTERVAL '30 days'` / `INTERVAL '3 hours'` date arithmetic
+ *   combined with COUNT(*)::text casts, plus target tables (hr_late_arrivals,
+ *   hr_daily_reports) are not present in the Drizzle schema barrel.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { sql } from 'drizzle-orm';

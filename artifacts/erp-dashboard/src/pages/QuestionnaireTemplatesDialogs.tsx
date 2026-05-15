@@ -201,6 +201,7 @@ export function QuestionDialog({
   onOpenNew,
   onSubmit,
 }: QuestionDialogProps) {
+  const { t } = useTranslation("common");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>

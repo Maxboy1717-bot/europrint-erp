@@ -17,7 +17,7 @@ export function GrowthTab({ growth }: { growth: SdGrowthData }) {
 
   const currentYear = new Date().getFullYear();
   const rate = growth.growthRate ?? 0;
-  const trend = growth.trend ?? (growth.totalOrders > 3 ? "growing" : growth.totalOrders > 0 ? "stable" : "new");
+  const trend = growth.trend ?? ((growth.totalOrders ?? 0) > 3 ? "growing" : (growth.totalOrders ?? 0) > 0 ? "stable" : "new");
 
   const trendConf: Record<string, { label: string; icon: typeof TrendingUp; cls: string; bg: string }> = {
     growing: { label: "O'sish tendensiyasi", icon: TrendingUp, cls: "text-[var(--ep-green)]", bg: "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800" },
@@ -57,7 +57,7 @@ export function GrowthTab({ growth }: { growth: SdGrowthData }) {
             )}
             {growth.totalOrders !== undefined && (
               <p className="text-xs text-muted-foreground mt-0.5">
-                Jami: {growth.totalOrders} ta buyurtma &middot; O'rtacha: {fmtMoney(growth.avgOrderValue || growth.totalRevenue / Math.max(1, growth.totalOrders))}
+                Jami: {growth.totalOrders} ta buyurtma &middot; O'rtacha: {fmtMoney(growth.avgOrderValue || (growth.totalRevenue ?? 0) / Math.max(1, growth.totalOrders ?? 0))}
               </p>
             )}
           </div>

@@ -1,4 +1,19 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   - NOT EXISTS (SELECT 1 FROM three_way_match_log WHERE movement_id = pm.id)
+ *     anti-join for findUnmatchedCompleted() — Drizzle's notInArray() requires
+ *     materialising the full subquery result, defeating the planner's
+ *     hash-anti-join optimisation for large match-log tables.
+ *   - Correlated scalar subquery `(SELECT SUM(quantity)::numeric FROM
+ *     pos_movement_lines WHERE movement_id = pm.id) AS qty` projected as a
+ *     column alongside the parent row — Drizzle requires aggregates to be
+ *     joined via groupBy() which would change the parent query shape.
+ *   - Snake_case → camelCase column aliasing on a 14-column projection
+ *     (movementId, movementNumber, purchaseOrderNo, qtyVariance, amountVariance,
+ *     matchStatus, etc.) consumed directly by the typedExecute<T> contract.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module three-way-match.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */

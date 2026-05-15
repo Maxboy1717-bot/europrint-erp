@@ -38,7 +38,7 @@ export function PinnedMessages({ roomId, canPin }: Props) {
   const { data: pinned = [], isLoading } = useQuery<PinnedMessage[]>({
     queryKey: ["chat-room-pinned-messages", roomId],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/chat/rooms/${roomId}/pinned-messages`);
+      const res = await apiRequest('GET', `/api/chat/rooms/${roomId}/pinned-messages`) as unknown as Response;
       if (!res.ok) throw new Error("Failed to load pinned messages");
       return res.json();
     },
@@ -48,7 +48,7 @@ export function PinnedMessages({ roomId, canPin }: Props) {
 
   const unpinMutation = useMutation({
     mutationFn: async (messageId: string) => {
-      const res = await apiRequest('DELETE', `/api/chat/messages/${messageId}/pin`);
+      const res = await apiRequest('DELETE', `/api/chat/messages/${messageId}/pin`) as unknown as Response;
       if (!res.ok) throw new Error("Failed to unpin");
       return res.json();
     },

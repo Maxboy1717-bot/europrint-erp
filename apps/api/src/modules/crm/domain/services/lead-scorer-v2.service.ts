@@ -128,15 +128,18 @@ export class LeadScorerV2Service {
     if (trainingData.length < 50) {
       return Err({ code: 'BAD_REQUEST', message: `Model o'qitish uchun kamida 50 ta lead kerak, ${trainingData.length} ta berildi` });
     }
-
     const features = (Array.isArray(trainingData) ? trainingData : []).map(d => this.buildFeatureVector(d.features));
     const labels = (Array.isArray(trainingData) ? trainingData : []).map(d => (d.converted ? 1 : 0));
+    const { weights, bias } = this.runSgd(features, labels);
+    this.model = { weights, bias, samplesCount: trainingData.length, trainedAt: new Date() };
+    return Ok({ ...this.model });
+  }
 
+  private runSgd(features: number[][], labels: number[]): { weights: number[]; bias: number } {
     const weights = new Array(FEATURE_DIM).fill(0);
     let bias = 0;
     const LR = 0.01;
     const EPOCHS = 200;
-
     for (let epoch = 0; epoch < EPOCHS; epoch++) {
       for (let i = 0; i < features.length; i++) {
         const pred = this.sigmoid(this.dotProduct(weights, features[i]) + bias);
@@ -147,15 +150,7 @@ export class LeadScorerV2Service {
         bias -= LR * error;
       }
     }
-
-    this.model = {
-      weights,
-      bias,
-      samplesCount: trainingData.length,
-      trainedAt: new Date(),
-    };
-
-    return Ok({ ...this.model });
+    return { weights, bias };
   }
 
   @Calculation('crm.leadScore.compute')

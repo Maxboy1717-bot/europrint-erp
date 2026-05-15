@@ -111,7 +111,7 @@ export function ChatWidget() {
   // setTimeout handles or call state setters on an unmounted component.
   useEffect(() => {
     return () => {
-      typingTimers.current.forEach((timer) => clearTimeout(timer));
+      Array.from(typingTimers.current.values()).forEach((timer) => clearTimeout(timer));
       typingTimers.current.clear();
       if (typingTimeout.current) {
         clearTimeout(typingTimeout.current);
@@ -181,7 +181,7 @@ export function ChatWidget() {
 
   const loadEmployees = useCallback(async (q?: string) => {
     try {
-      const res = await apiRequest('GET', `/api/chat/employees${q ? `?search=${encodeURIComponent(q)}` : ''}`);
+      const res = await apiRequest('GET', `/api/chat/employees${q ? `?search=${encodeURIComponent(q)}` : ''}`) as unknown as Response;
       if (res.ok) setEmployees(await res.json());
     } catch (e) {
       // WHY: failure here is non-critical — the employee list just stays

@@ -62,8 +62,8 @@ export default function PosMovementsPage() {
     setPage(1);
   };
 
-  const getTypeBadge = (t: string) => {
-    switch (t) {
+  const getTypeBadge = (type: string) => {
+    switch (type) {
       case "incoming":
         return <EPStatusPill tone="success">{t("kirim")}</EPStatusPill>;
       case "outgoing":
@@ -73,12 +73,12 @@ export default function PosMovementsPage() {
       case "adjustment":
         return <Badge className="bg-amber-100 text-amber-800">{t("tuzatish")}</Badge>;
       default:
-        return <Badge variant="outline">{t}</Badge>;
+        return <Badge variant="outline">{type}</Badge>;
     }
   };
 
-  const getTypeIcon = (t: string) => {
-    switch (t) {
+  const getTypeIcon = (type: string) => {
+    switch (type) {
       case "incoming":
         return <ArrowDownToLine className="h-3.5 w-3.5 text-[var(--ep-green)]" />;
       case "outgoing":

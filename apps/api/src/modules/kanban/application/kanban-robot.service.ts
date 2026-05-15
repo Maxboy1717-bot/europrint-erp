@@ -1,4 +1,13 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   Cross-board safety check via id::text comparison combined with dependent
+ *   INSERT ... SELECT statements for tag attachment, plus ON CONFLICT (card_id, tag_id)
+ *   DO NOTHING upserts on composite-key junction tables (kanban_card_tags).
+ *   Drizzle's onConflictDoNothing does not support multi-column unique targets
+ *   with dynamically resolved tag IDs from a sub-select.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module kanban-robot.service
  * @description Generic event→action automation engine for Kanban boards.
  *   Lets non-developers configure rules like "when a card moves to

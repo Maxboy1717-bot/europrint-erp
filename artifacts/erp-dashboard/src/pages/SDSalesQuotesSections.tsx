@@ -216,7 +216,7 @@ export function ProductParamsPanel({ calcForm, onCalcFormChange, isCalcPending, 
           <div key={opt.key} className="flex items-center gap-2">
             <Checkbox
               id={opt.key}
-              checked={!!(calcForm as Record<string, unknown>)[opt.key]}
+              checked={!!(calcForm as unknown as Record<string, unknown>)[opt.key]}
               onCheckedChange={v => onCalcFormChange(p => ({ ...p, [opt.key]: !!v }))}
               data-testid={`check-${opt.key}`}
             />

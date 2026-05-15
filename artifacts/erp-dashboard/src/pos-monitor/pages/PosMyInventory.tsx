@@ -370,9 +370,7 @@ export default function PosMyInventory() {
           >
             <span style={{ fontSize: 18 }}>⚠️</span>
             <span>
-              {t("myInventory.hrWarning").replace
-                ? t("myInventory.hrWarning")
-                : `Siz hali `}
+              {t("myInventory.hrWarning") ? t("myInventory.hrWarning") : `Siz hali `}
               {!t("myInventory.hrWarning").includes("{") &&
                 `Siz hali `}
               <strong>{pendingItems.length} turdagi</strong> material qaytarmagansiz.

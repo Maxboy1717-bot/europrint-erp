@@ -20,10 +20,11 @@ import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 // ─── Badge helpers ─────────────────────────────────────────────────────────────
 
-function trendBadge(t: string) {
-  if (t === "IMPROVING")  return <Badge variant="success">{t("yaxshilanmoqda")}</Badge>;
-  if (t === "WORSENING")  return <Badge variant="error">{t("yomonlashmoqda")}</Badge>;
-  return                         <Badge variant="info">{t("barqaror")}</Badge>;
+function trendBadge(trend: string) {
+  const { t } = useTranslation("common");
+  if (trend === "IMPROVING")  return <Badge variant="success">{t("yaxshilanmoqda")}</Badge>;
+  if (trend === "WORSENING")  return <Badge variant="error">{t("yomonlashmoqda")}</Badge>;
+  return                            <Badge variant="info">{t("barqaror")}</Badge>;
 }
 
 // ─── BudgetVarianceTab ────────────────────────────────────────────────────────

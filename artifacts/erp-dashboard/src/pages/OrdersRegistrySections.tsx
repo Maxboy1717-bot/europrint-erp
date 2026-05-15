@@ -165,6 +165,7 @@ interface OrdersTableProps {
 }
 
 export function OrdersTable({ entries, total, isLoading, isError, onRetry, onView }: OrdersTableProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="py-3 px-4 border-b">

@@ -56,8 +56,7 @@ export default function CompanyStatePage() {
   const { data, isLoading, isError, refetch } = useQuery<CompanyState>({
     queryKey: ["/api/company-state/current"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/company-state/current");
-      return res.json();
+      return await apiRequest("GET", "/api/company-state/current");
     },
   });
 

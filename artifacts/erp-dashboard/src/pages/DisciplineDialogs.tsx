@@ -14,7 +14,6 @@ import { History } from "lucide-react";
 import { formatDate } from "@/lib/format";
 import type { User as UserType } from "@shared/schema";
 import type { DisciplineWithUser, DialogType } from "./DisciplineTypes";
-import { useTranslation } from "@/lib/i18n";
 
 // ─── CreateRecordDialog ───────────────────────────────────────────────────────
 
@@ -145,7 +144,6 @@ export function EmployeeHistoryDialog({
   employees, employeeHistoryRecords,
   getTypeBadge, sumLabel, tCommon, t,
 }: EmployeeHistoryDialogProps) {
-  const { t } = useTranslation("common");
   const employeeName = (Array.isArray(employees) ? employees : []).find(
     (e) => e.id === selectedEmployeeHistory,
   )?.fullName;

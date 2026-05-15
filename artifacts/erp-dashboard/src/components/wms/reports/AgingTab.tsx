@@ -42,7 +42,7 @@ export function AgingTab({ t, daysThreshold, setDaysThreshold }: AgingTabProps) 
     queryKey: ["/api/warehouse/reports/aging", daysThreshold],
     queryFn: async () => {
       const params = new URLSearchParams({ daysThreshold });
-      const res = await apiRequest('GET', `/api/warehouse/reports/aging?${params}`);
+      const res = await apiRequest('GET', `/api/warehouse/reports/aging?${params}`) as unknown as Response;
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },

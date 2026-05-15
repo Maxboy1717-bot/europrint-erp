@@ -65,8 +65,7 @@ export default function EuroprintControlPage() {
     useQuery<AuditorDashboard | { data?: AuditorDashboard }>({
       queryKey: ["/api/europrint-control/auditor-dashboard"],
       queryFn: async () => {
-        const res = await apiRequest("GET", "/api/europrint-control/auditor-dashboard");
-        return res.json();
+        return await apiRequest("GET", "/api/europrint-control/auditor-dashboard");
       },
     });
 
@@ -74,8 +73,7 @@ export default function EuroprintControlPage() {
     useQuery<ModuleHealth[] | { data?: ModuleHealth[] }>({
       queryKey: ["/api/europrint-control/module-health"],
       queryFn: async () => {
-        const res = await apiRequest("GET", "/api/europrint-control/module-health");
-        return res.json();
+        return await apiRequest("GET", "/api/europrint-control/module-health");
       },
     });
 
@@ -83,8 +81,7 @@ export default function EuroprintControlPage() {
     useQuery<ValidationSummary | { data?: ValidationSummary }>({
       queryKey: ["/api/europrint-control/validation-summary"],
       queryFn: async () => {
-        const res = await apiRequest("GET", "/api/europrint-control/validation-summary");
-        return res.json();
+        return await apiRequest("GET", "/api/europrint-control/validation-summary");
       },
     });
 
@@ -92,8 +89,7 @@ export default function EuroprintControlPage() {
     useQuery<AuditLog[] | { data?: AuditLog[]; logs?: AuditLog[] }>({
       queryKey: ["/api/europrint-control/audit-logs"],
       queryFn: async () => {
-        const res = await apiRequest("GET", "/api/europrint-control/audit-logs?limit=20");
-        return res.json();
+        return await apiRequest("GET", "/api/europrint-control/audit-logs?limit=20");
       },
     });
 

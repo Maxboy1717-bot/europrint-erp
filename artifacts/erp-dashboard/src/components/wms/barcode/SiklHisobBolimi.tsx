@@ -21,7 +21,7 @@ export function SiklHisobBolimi() {
 
   const hisobMutation = useMutation({
     mutationFn: async (data: { barcodeId?: string; materialCardId?: string; countedQuantity: number; binId?: string; warehouseId?: string }) => {
-      const res = await apiRequest("POST", "/api/barcode-warehouse/cycle-count", data);
+      const res = await apiRequest<{ adjustmentAction?: string; message?: string }>("POST", "/api/barcode-warehouse/cycle-count", data);
       return res;
     },
     onSuccess: (data) => {

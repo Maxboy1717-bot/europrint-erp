@@ -36,16 +36,14 @@ export default function QCFinalInspection() {
   const { data: orders = [], isLoading } = useQuery<PapkaOrder[]>({
     queryKey: ["/api/papka-orders", "qc_final"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/qc/final-orders");
-      if (!res.ok) throw new Error("Buyurtmalarni yuklashda xatolik");
-      return res.json();
+      return await apiRequest('GET', "/api/qc/final-orders");
     }
   });
 
   const { data: inspections = [] } = useQuery<FinalInspection[]>({
     queryKey: ["/api/qc/final-inspections"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/qc/final-inspections");
+      const res = (await apiRequest('GET', "/api/qc/final-inspections")) as unknown as Response;
       if (!res.ok) return [];
       return res.json();
     }

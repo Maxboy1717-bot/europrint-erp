@@ -17,8 +17,8 @@ import { useTranslation } from '@/lib/i18n';
 export interface CameraCaptureCardProps {
   text: FaceRegTranslations;
   selectedEmployee: Employee | null;
-  videoRef: RefObject<HTMLVideoElement>;
-  canvasRef: RefObject<HTMLCanvasElement>;
+  videoRef: RefObject<HTMLVideoElement | null>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
   isStreaming: boolean;
   isLoading: boolean;
   modelsLoaded: boolean;

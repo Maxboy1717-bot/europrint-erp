@@ -10,7 +10,6 @@ import { Mic, MicOff, Video, VideoOff, CheckCircle, ChevronRight, Wifi, WifiOff 
 import type { TranscriptEntry, Question } from "./AIInterviewPublicPageTypes";
 
 import { EPLoader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
 interface TFn {
   (key: string): string;
 }
@@ -25,8 +24,8 @@ export interface InterviewingSectionProps {
   isMicActive: boolean;
   isCamActive: boolean;
   transcript: TranscriptEntry[];
-  transcriptEndRef: React.RefObject<HTMLDivElement>;
-  videoRef: React.RefObject<HTMLVideoElement>;
+  transcriptEndRef: React.RefObject<HTMLDivElement | null>;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
   isPendingSubmit: boolean;
   onAnswerChange: (v: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
@@ -42,7 +41,6 @@ export function InterviewingSection({
   isPendingSubmit, onAnswerChange, onKeyDown, onSubmitAnswer,
   onToggleMic, onToggleCamera, onFinalSubmit,
 }: InterviewingSectionProps) {
-  const { t } = useTranslation("common");
   const currentQuestion = questions[currentQIndex];
   const isLast = currentQIndex >= questions.length - 1;
   const allDone = questions.length > 0 && currentQIndex >= questions.length;

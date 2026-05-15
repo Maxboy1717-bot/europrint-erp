@@ -100,7 +100,7 @@ function RejectModal({
   onSubmit: (reason: string) => Promise<void>;
   t: (k: string) => string;
 }) {
-  const { t } = useTranslation("common");
+
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr]       = useState("");

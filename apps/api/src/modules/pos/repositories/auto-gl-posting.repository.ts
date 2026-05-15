@@ -1,4 +1,18 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   - SUM(quantity * COALESCE(unit_price, 0))::numeric line-total aggregation
+ *     in a single round-trip — Drizzle exposes sum() helper but not the
+ *     multiply-then-coalesce expression nor the ::numeric cast required so
+ *     the driver returns a number instead of pg's default text-for-numeric.
+ *   - "Smart NULL" filter pattern: `(${param}::date IS NULL OR col = ${param})`
+ *     used four times in getJournal() to make every filter optional without
+ *     rebuilding the SQL string per request — Drizzle's where()-chaining
+ *     requires conditional .where() calls and loses query-plan caching.
+ *   - COALESCE(total_amount, 0)::numeric AS total_amount + COALESCE(exchange_rate, 1)::numeric
+ *     projection-side defaulting for nullable monetary columns.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module auto-gl-posting.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */

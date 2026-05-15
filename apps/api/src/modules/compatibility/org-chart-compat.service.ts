@@ -68,53 +68,52 @@ export class OrgChartCompatService {
    */
   async getOrgTree(departmentId?: string): Promise<Result<OrgTreeData, AppError>> {
     return safeCall(async () => {
-      const deptFilter = departmentId
-        ? sql`WHERE d.id = ${parseInt(departmentId, 10)}`
-        : sql``;
-
-      const depts = await rawSql(sql`
-        SELECT
-          d.id::text                                  AS id,
-          COALESCE(d.name_uz, d.name, '')             AS name,
-          d.parent_id                                 AS "parentId",
-          d.manager_id                                AS "managerId",
-          COALESCE(
-            NULLIF(TRIM(mgr.first_name || ' ' || COALESCE(mgr.last_name, '')), ''),
-            d.vep
-          )                                           AS vep,
-          d.color,
-          d.icon,
-          d.level,
-          COUNT(e.id)::int                            AS "employeeCount"
-        FROM departments d
-        LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
-        LEFT JOIN employees mgr ON mgr.id = d.manager_id
-        ${deptFilter}
-        GROUP BY d.id, d.name, d.name_uz, d.parent_id, d.manager_id,
-                 d.vep, d.color, d.icon, d.level, d.sort_order,
-                 mgr.first_name, mgr.last_name
-        ORDER BY d.parent_id NULLS FIRST, d.sort_order, COALESCE(d.name_uz, d.name)
-      `);
-
+      const depts = await this.fetchDepartmentsForTree(departmentId);
       const deptList = dbRows<DeptRow>(depts);
       const safeList = Array.isArray(deptList) ? deptList : [];
       const tree = buildTree(safeList, null);
-
       const totalEmployees = safeList.reduce(
         (sum, d) => sum + Number(d.employeeCount ?? 0),
         0,
       );
-      const maxDepth = computeMaxDepth(tree);
-
       return {
         tree,
         stats: {
           totalDepartments: safeList.length,
           totalEmployees,
-          maxDepth,
+          maxDepth: computeMaxDepth(tree),
         },
       };
     });
+  }
+
+  private fetchDepartmentsForTree(departmentId?: string) {
+    const deptFilter = departmentId
+      ? sql`WHERE d.id = ${parseInt(departmentId, 10)}`
+      : sql``;
+    return rawSql(sql`
+      SELECT
+        d.id::text                                  AS id,
+        COALESCE(d.name_uz, d.name, '')             AS name,
+        d.parent_id                                 AS "parentId",
+        d.manager_id                                AS "managerId",
+        COALESCE(
+          NULLIF(TRIM(mgr.first_name || ' ' || COALESCE(mgr.last_name, '')), ''),
+          d.vep
+        )                                           AS vep,
+        d.color,
+        d.icon,
+        d.level,
+        COUNT(e.id)::int                            AS "employeeCount"
+      FROM departments d
+      LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
+      LEFT JOIN employees mgr ON mgr.id = d.manager_id
+      ${deptFilter}
+      GROUP BY d.id, d.name, d.name_uz, d.parent_id, d.manager_id,
+               d.vep, d.color, d.icon, d.level, d.sort_order,
+               mgr.first_name, mgr.last_name
+      ORDER BY d.parent_id NULLS FIRST, d.sort_order, COALESCE(d.name_uz, d.name)
+    `);
   }
 
   /**

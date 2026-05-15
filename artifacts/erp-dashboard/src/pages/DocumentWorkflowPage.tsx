@@ -26,6 +26,7 @@ import { AdminRoutingTab } from "./DocumentWorkflowPageDialogs";
 export default function DocumentWorkflowPage() {
   const { user } = useAuth();
   const { t } = useTranslation("hr");
+  const { t: tCommon } = useTranslation("common");
   const { toast } = useToast();
   const qc = useQueryClient();
 

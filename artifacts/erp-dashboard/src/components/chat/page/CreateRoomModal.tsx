@@ -57,11 +57,11 @@ export function CreateRoomModal({ open, onClose }: Props) {
       const res = await apiRequest('POST', "/api/chat/rooms/group", {
         name: name.trim(),
         memberIds: (Array.isArray(selected) ? selected : []).map((e) => e.id),
-      });
+      }) as unknown as Response;
       if (res.ok) {
         const room = await res.json();
         // Refresh full room list so the new room appears with correct member data
-        const refreshRes = await apiRequest('GET', "/api/chat/rooms");
+        const refreshRes = await apiRequest('GET', "/api/chat/rooms") as unknown as Response;
         if (refreshRes.ok) {
           const allRooms = await refreshRes.json();
           useChatStore.getState().setRooms(Array.isArray(allRooms) ? allRooms : []);

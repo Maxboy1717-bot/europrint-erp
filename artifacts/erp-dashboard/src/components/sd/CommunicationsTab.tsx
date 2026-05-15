@@ -99,9 +99,11 @@ export function CommunicationsTab({
     chat: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
   };
 
-  const items = communications?.recent || (Array.isArray(communications) ? communications : []);
-  const filtered = filter === "all" ? items : (Array.isArray(items) ? items : []).filter((i) => i.type === filter);
-  const upcoming = communications?.upcomingTasks || [];
+  const rawItems = communications?.recent || (Array.isArray(communications) ? communications : []);
+  const items = Array.isArray(rawItems) ? rawItems : [];
+  const filtered = filter === "all" ? items : items.filter((i) => i.type === filter);
+  const rawUpcoming = communications?.upcomingTasks || [];
+  const upcoming = Array.isArray(rawUpcoming) ? rawUpcoming : [];
 
   // Sentiment config
   const sentConf = sentiment ? {

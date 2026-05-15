@@ -41,10 +41,18 @@ const HW_NM_INIT = [0.3, 0.1, 0.3];
 
 @Injectable()
 export class HoltWintersService {
+  private readonly nmSvc: NelderMeadService;
+
   constructor(
     private readonly forecastSvc:  ForecastService,
-    private readonly nmSvc: NelderMeadService,
-  ) {}
+    nmSvc?: NelderMeadService,
+  ) {
+    // NelderMeadService is stateless; if DI did not provide one (e.g. legacy
+    // construction sites or focused unit tests that only need forecasting),
+    // instantiate a local copy. Safe in production: the optimizer has no
+    // side effects and identical instances are interchangeable.
+    this.nmSvc = nmSvc ?? new NelderMeadService();
+  }
 
   private _hwCore(
     series: readonly number[],

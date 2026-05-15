@@ -6,7 +6,20 @@
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 
-export type ModuleType = "sd" | "pp" | "mm" | "fi" | "hr" | "ai" | "default";
+export type ModuleType =
+  | "sd"
+  | "pp"
+  | "mm"
+  | "fi"
+  | "hr"
+  | "ai"
+  | "default"
+  | "finance"
+  | "iot"
+  | "pos"
+  | "admin"
+  | "security"
+  | "production";
 
 interface ModulePageProps {
   module: ModuleType;
@@ -65,6 +78,42 @@ const moduleStyles: Record<ModuleType, {
     iconColor: "text-muted-foreground",
     accentBorder: "border-l-muted-foreground",
     badge: "bg-muted-foreground text-white",
+  },
+  finance: {
+    headerBg: "bg-module-fi-light dark:bg-module-fi/10",
+    iconColor: "text-module-fi",
+    accentBorder: "border-l-module-fi",
+    badge: "bg-module-fi text-white",
+  },
+  iot: {
+    headerBg: "bg-primary/5 dark:bg-primary/10",
+    iconColor: "text-primary",
+    accentBorder: "border-l-primary",
+    badge: "bg-primary text-white",
+  },
+  pos: {
+    headerBg: "bg-module-sd-light dark:bg-module-sd/10",
+    iconColor: "text-module-sd",
+    accentBorder: "border-l-module-sd",
+    badge: "bg-module-sd text-white",
+  },
+  admin: {
+    headerBg: "bg-muted/30 dark:bg-muted/20",
+    iconColor: "text-muted-foreground",
+    accentBorder: "border-l-muted-foreground",
+    badge: "bg-muted-foreground text-white",
+  },
+  security: {
+    headerBg: "bg-destructive/5 dark:bg-destructive/10",
+    iconColor: "text-destructive",
+    accentBorder: "border-l-destructive",
+    badge: "bg-destructive text-white",
+  },
+  production: {
+    headerBg: "bg-module-pp-light dark:bg-module-pp/10",
+    iconColor: "text-module-pp",
+    accentBorder: "border-l-module-pp",
+    badge: "bg-module-pp text-white",
   },
 };
 

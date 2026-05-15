@@ -45,13 +45,14 @@ export function RoomInfoPanel({room, onClose }: Props) {
   const [showSettings, setShowSettings] = useState(false);
   const onlineUserIds = useChatStore((s) => s.onlineUserIds);
   const { data: members = [] } = useRoomMembers(room.id);
+  const membersTyped = members as ChatMember[];
 
-  const sortedMembers = [...members].sort((a: ChatMember, b: ChatMember) => {
+  const sortedMembers = [...membersTyped].sort((a: ChatMember, b: ChatMember) => {
     const order = { OWNER: 0, ADMIN: 1, MEMBER: 2 };
     return (order[a.role as keyof typeof order] ?? 3) - (order[b.role as keyof typeof order] ?? 3);
   });
 
-  const onlineCount = (Array.isArray(members) ? members : []).filter((m: ChatMember) => onlineUserIds.has(Number(m.userId))).length;
+  const onlineCount = (Array.isArray(membersTyped) ? membersTyped : []).filter((m: ChatMember) => onlineUserIds.has(Number(m.userId))).length;
   const canPin = room.memberRole === "OWNER" || room.memberRole === "ADMIN";
 
   const tabs: { key: InfoTab; label: string }[] = [
@@ -105,18 +106,18 @@ export function RoomInfoPanel({room, onClose }: Props) {
 
       {/* Tab nav */}
       <div className="flex border-b border-border/40 flex-shrink-0">
-        {(Array.isArray(tabs) ? tabs : []).map((t) => (
+        {(Array.isArray(tabs) ? tabs : []).map((tabItem) => (
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
+            key={tabItem.key}
+            onClick={() => setTab(tabItem.key)}
             className={cn(
               "flex-1 py-2 text-xs font-medium border-b-2 transition-colors",
-              tab === t.key
+              tab === tabItem.key
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            {t.label}
+            {tabItem.label}
           </button>
         ))}
       </div>

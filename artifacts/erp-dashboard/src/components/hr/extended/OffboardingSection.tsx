@@ -14,9 +14,10 @@ interface OffboardingSectionProps {
   offboardingChecklists: ChecklistItem[];
 }
 
-export function OffboardingSection({offboardingChecklists,
+export function OffboardingSection({offboardingChecklists = [],
 }: OffboardingSectionProps) {
   const { t } = useTranslation('common');
+  const safeOffboarding = Array.isArray(offboardingChecklists) ? offboardingChecklists : [];
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -24,7 +25,7 @@ export function OffboardingSection({offboardingChecklists,
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
-          { l: "Jarayondagilar", v: offboardingChecklists.length, c: "text-[var(--ep-blue)]", i: UserX },
+          { l: "Jarayondagilar", v: safeOffboarding.length, c: "text-[var(--ep-blue)]", i: UserX },
           { l: "Bu oy bo'shatilgan", v: "12", c: "text-[var(--ep-green)]", i: CheckCircle2 },
           { l: "O'rtacha muddat", v: "14 kun", c: "text-[var(--ep-primary)]", i: FileText },
           { l: "Exit-intervyu", v: "92%", c: "text-primary", i: FileText },
@@ -48,9 +49,9 @@ export function OffboardingSection({offboardingChecklists,
               <TableHead>{t("status28")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              {offboardingChecklists.length === 0 ? (
+              {safeOffboarding.length === 0 ? (
                 <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("faolOffboardingJarayonlariYoq")}</TableCell></TableRow>
-              ) : (Array.isArray(offboardingChecklists) ? offboardingChecklists : []).map((item) => (
+              ) : safeOffboarding.map((item) => (
                 <TableRow key={item.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{item.fullName || `Xodim #${item.userId}`}</TableCell>
                   <TableCell className="text-muted-foreground">{t('marketing')}</TableCell>

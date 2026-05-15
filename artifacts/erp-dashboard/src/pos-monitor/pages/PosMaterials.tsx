@@ -389,7 +389,7 @@ export default function PosMaterials() {
               </button>
             </div>
             <PosBarcodeScanner
-              onDetected={code => { setShowScanner(false); void handleBarcodeScan(code); }}
+              onDetected={(code: string) => { setShowScanner(false); void handleBarcodeScan(code); }}
               onClose={() => setShowScanner(false)}
             />
           </div>

@@ -227,6 +227,7 @@ interface FullChecklistCardProps {
 }
 
 export function FullChecklistCard({ oCase, checklist, onMarkItem, isPending }: FullChecklistCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="pb-3">

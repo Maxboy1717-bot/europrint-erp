@@ -9,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, CheckCircle, Clock, Percent, ArrowLeftRight, LogOut } from "lucide-react";
 import type { AttendanceRecord, AttendanceStats, ShiftSwapRecord, ZoneTrackingLog, TranslationFn } from "./profile-types";
 import { getEarlyDepartures } from "./AttendanceTabTypes";
-import { useTranslation } from '@/lib/i18n';
 import {
   AttendanceViewCard,
   DetailedStatsCard,
@@ -20,7 +19,7 @@ import {
 } from "./AttendanceTabSections";
 
 interface AttendanceTabProps {
-  t: TranslationFn;
+  t: TranslationFn & ((key: string) => string);
   tCommon: TranslationFn;
   loadingAttendance: boolean;
   attendanceStats: AttendanceStats;
@@ -36,7 +35,6 @@ export function AttendanceTab({
   t, tCommon, loadingAttendance, attendanceStats, attendancePieData, attendanceData,
   shiftSwaps, loadingShiftSwaps, zoneLogs, loadingZoneLogs,
 }: AttendanceTabProps) {
-  const { t } = useTranslation("common");
   const earlyDepartures = getEarlyDepartures(attendanceData);
   const [viewMode, setViewMode] = useState<"calendar" | "table">("calendar");
 

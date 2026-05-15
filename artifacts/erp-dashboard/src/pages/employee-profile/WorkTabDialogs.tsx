@@ -37,7 +37,7 @@ import type { SalaryHistoryRecord, SalaryForm, TranslationFn } from "./WorkTabTy
 import { SalaryHistoryTable } from "./WorkTabTables";
 
 interface SalarySectionProps {
-  t: TranslationFn;
+  t: TranslationFn & ((key: string) => string);
   tCommon: TranslationFn;
   salaryDialogOpen: boolean;
   setSalaryDialogOpen: (open: boolean) => void;

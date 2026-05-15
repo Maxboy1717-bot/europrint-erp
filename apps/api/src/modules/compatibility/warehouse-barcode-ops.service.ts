@@ -62,22 +62,7 @@ export class WarehouseBarcodeOpsService {
   
     });}
 
-  async bulkGenerateBarcodes(entityIds: string[], type: string){
-    return safeCall(async () => {
-    if (type !== 'batch' || entityIds.length === 0) {
-      return { message: { uz: '0 ta barcode yaratildi / yangilandi', ru: '0 штрих-кодов создано / обновлено' } };
-    }
-
-    // Pattern 1: single batch SELECT instead of N+1 per-id lookups
-    const lookup = await rawSql(sql`
-      SELECT wb.id AS batch_id, mc.id AS material_id, mc.barcode
-      FROM warehouse_batches wb
-      JOIN material_cards mc ON mc.id = wb.material_card_id
-      WHERE wb.id = ANY(${entityIds})
-    `);
-    const rows = dbRows(lookup) as Array<Record<string, unknown>>;
-
-    // Independent UPDATEs run in parallel (Pattern 2)
+  private async runBarcodeUpdatesForRows(rows: Array<Record<string, unknown>>): Promise<void> {
     const updates = rows
       .filter(row => row['material_id'] && !row['barcode'])
       .map(row => {
@@ -86,15 +71,23 @@ export class WarehouseBarcodeOpsService {
         return rawSql(sql`UPDATE material_cards SET barcode = ${barcode} WHERE id = ${matId}`);
       });
     await Promise.all(updates);
+  }
 
+  async bulkGenerateBarcodes(entityIds: string[], type: string){
+    return safeCall(async () => {
+    if (type !== 'batch' || entityIds.length === 0) {
+      return { message: { uz: '0 ta barcode yaratildi / yangilandi', ru: '0 штрих-кодов создано / обновлено' } };
+    }
+    // Pattern 1: single batch SELECT instead of N+1 per-id lookups
+    const lookup = await rawSql(sql`
+      SELECT wb.id AS batch_id, mc.id AS material_id, mc.barcode
+      FROM warehouse_batches wb JOIN material_cards mc ON mc.id = wb.material_card_id
+      WHERE wb.id = ANY(${entityIds})
+    `);
+    const rows = dbRows(lookup) as Array<Record<string, unknown>>;
+    await this.runBarcodeUpdatesForRows(rows);
     const count = rows.filter(row => row['material_id']).length;
-    return {
-      message: {
-        uz: `${count} ta barcode yaratildi / yangilandi`,
-        ru: `${count} штрих-кодов создано / обновлено`,
-      },
-    };
-
+    return { message: { uz: `${count} ta barcode yaratildi / yangilandi`, ru: `${count} штрих-кодов создано / обновлено` } };
     });}
 
   async getPrintPreview(id: string, type = 'batch'){

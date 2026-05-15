@@ -69,8 +69,7 @@ export default function MentorshipsPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
-      const res = await apiRequest("GET", `/api/mentorships?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/mentorships?${params}`);
     },
   });
 
@@ -80,8 +79,7 @@ export default function MentorshipsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: typeof form) => {
-      const res = await apiRequest("POST", "/api/mentorships", dto);
-      return res.json();
+      return await apiRequest("POST", "/api/mentorships", dto);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -94,8 +92,7 @@ export default function MentorshipsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string | number) => {
-      const res = await apiRequest("DELETE", `/api/mentorships/${id}`);
-      return res.json();
+      return await apiRequest("DELETE", `/api/mentorships/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

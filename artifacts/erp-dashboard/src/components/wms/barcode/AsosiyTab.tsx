@@ -41,9 +41,20 @@ export function AsosiyTab() {
     queryKey: ["/api/barcode-warehouse/dashboard"],
   });
 
-  const skanMutation = useMutation({
+  interface ScanResult {
+    materialName?: string;
+    barcode?: {
+      remainingQuantity?: number;
+      uom?: string;
+      status?: string;
+      barcodeId?: string;
+      lotNumber?: string | null;
+      currentLocation?: string | null;
+    };
+  }
+  const skanMutation = useMutation<ScanResult, Error, string>({
     mutationFn: async (barcodeId: string) => {
-      const res = await apiRequest("GET", `/api/barcode-warehouse/barcodes/scan/${encodeURIComponent(barcodeId)}`);
+      const res = await apiRequest<ScanResult>("GET", `/api/barcode-warehouse/barcodes/scan/${encodeURIComponent(barcodeId)}`);
       return res;
     },
     onSuccess: (data) => {
@@ -81,9 +92,9 @@ export function AsosiyTab() {
   const d = {
     barcodes:        { total: 0, available: 0, qcHold: 0, issued: 0, ...(dashboard?.barcodes ?? {}) },
     pickingTasks:    { pending: 0, ...(dashboard?.pickingTasks ?? {}) },
-    operatorDebts:   { count: 0, totalDebt: 0, ...((dashboard as Record<string, unknown>)?.operatorDebts as Record<string, unknown> ?? {}) },
-    exitControl:     { todayTotal: 0, todayBlocked: 0, ...((dashboard as Record<string, unknown>)?.exitControl as Record<string, unknown> ?? {}) },
-    printQueue:      { pending: 0, ...((dashboard as Record<string, unknown>)?.printQueue as Record<string, unknown> ?? {}) },
+    operatorDebts:   { count: 0, totalDebt: 0, ...((dashboard as unknown as Record<string, unknown>)?.operatorDebts as Record<string, unknown> ?? {}) },
+    exitControl:     { todayTotal: 0, todayBlocked: 0, ...((dashboard as unknown as Record<string, unknown>)?.exitControl as Record<string, unknown> ?? {}) },
+    printQueue:      { pending: 0, ...((dashboard as unknown as Record<string, unknown>)?.printQueue as Record<string, unknown> ?? {}) },
     recentMovements: Array.isArray(dashboard?.recentMovements) ? dashboard.recentMovements : [],
   };
 
@@ -109,8 +120,8 @@ export function AsosiyTab() {
             <div className="mt-3 p-3 rounded-md border">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="font-medium">{skanMutation.data.materialName || "Material"}</span>
-                <Badge className={statusRangi(skanMutation.data.barcode?.status)}>
-                  {statusNomi(skanMutation.data.barcode?.status)}
+                <Badge className={statusRangi(skanMutation.data.barcode?.status ?? '')}>
+                  {statusNomi(skanMutation.data.barcode?.status ?? '')}
                 </Badge>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 text-sm">

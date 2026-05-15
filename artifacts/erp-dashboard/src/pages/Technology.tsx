@@ -135,7 +135,7 @@ export default function Technology() {
   } = useQuery<TechOrder[]>({
     queryKey: ["/api/technology/orders", "pending_tech"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/technology/orders?status=pending_tech");
+      const res = (await apiRequest('GET', "/api/technology/orders?status=pending_tech")) as unknown as Response;
       if (!res.ok) {
         const body = await res.json().catch(() => ({})) as { error?: string };
         throw new Error(body.error ?? `Server xatosi: ${res.status}`);

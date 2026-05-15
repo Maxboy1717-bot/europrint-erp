@@ -29,7 +29,7 @@ export function FinanceTab({
   const { data: salaryBenchmark, isLoading: loadingBenchmark } = useQuery<SalaryBenchmark>({
     queryKey: ['/api/finance/salary-benchmark', userId],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/finance/salary-benchmark/${userId}`);
+      const res = (await apiRequest('GET', `/api/finance/salary-benchmark/${userId}`)) as unknown as Response;
       if (!res.ok) return null;
       return res.json();
     },

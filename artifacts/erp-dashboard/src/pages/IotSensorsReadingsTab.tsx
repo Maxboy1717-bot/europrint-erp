@@ -8,7 +8,6 @@ import { Activity, Cpu, Wind, Clock } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import type { IotSensor } from "@shared/schema";
 import { SENSOR_ICONS, getStatusColor, getStatusBadge } from "./IotDashboardHelpers";
-import { useTranslation } from '@/lib/i18n';
 
 interface Props {
   sensors: IotSensor[];
@@ -24,7 +23,6 @@ export function IotSensorsReadingsTab({
   sensors, selectedSensorId, setSelectedSensorId,
   readingsChartData, t, tProd, language,
 }: Props) {
-  const { t } = useTranslation("common");
   return (
     <>
       {/* ── Live Sensors ── */}

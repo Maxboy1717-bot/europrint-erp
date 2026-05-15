@@ -17,7 +17,7 @@ export class Sprint5MigrationService implements OnApplicationBootstrap {
     );
   }
 
-  private async ensureAiDecisionLog(): Promise<void> {
+  private async createAiDecisionLogTable(): Promise<void> {
     await ddlRun(sql`
       CREATE TABLE IF NOT EXISTS ai_decision_log (
         id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -36,10 +36,11 @@ export class Sprint5MigrationService implements OnApplicationBootstrap {
         created_at     TIMESTAMPTZ DEFAULT now()
       )
     `);
+  }
 
+  private async restoreEntityIdUuid(): Promise<void> {
     /* Restore entity_id to UUID if a previous migration had changed it to TEXT.
-       Delete any rows that cannot be coerced (non-UUID text values) to keep the
-       NOT NULL + UUID constraints satisfiable. */
+       Delete any rows that cannot be coerced (non-UUID text values). */
     await ddlRun(sql`
       DO $$
       BEGIN
@@ -59,14 +60,18 @@ export class Sprint5MigrationService implements OnApplicationBootstrap {
     `).catch((e: unknown) =>
       this.logger.warn({ msg: 'entity_id UUID restore skipped', err: (e as Error).message }),
     );
+  }
 
+  private async ensureBucketHourColumn(): Promise<void> {
     await ddlRun(sql`
       ALTER TABLE ai_decision_log
         ADD COLUMN IF NOT EXISTS bucket_hour TIMESTAMPTZ NOT NULL DEFAULT date_trunc('hour', now())
     `).catch((e: unknown) =>
       this.logger.debug({ msg: 'bucket_hour column already exists', err: (e as Error).message }),
     );
+  }
 
+  private async createAiDecisionLogIndexes(): Promise<void> {
     await ddlRun(sql`
       CREATE INDEX IF NOT EXISTS ai_decision_log_agent_idx
         ON ai_decision_log (agent_code, created_at DESC)
@@ -87,7 +92,13 @@ export class Sprint5MigrationService implements OnApplicationBootstrap {
     `).catch((e: unknown) =>
       this.logger.warn({ msg: 'ai_decision_log idempotency index creation skipped', err: e }),
     );
+  }
 
+  private async ensureAiDecisionLog(): Promise<void> {
+    await this.createAiDecisionLogTable();
+    await this.restoreEntityIdUuid();
+    await this.ensureBucketHourColumn();
+    await this.createAiDecisionLogIndexes();
     this.logger.log('Sprint-5 ai_decision_log table ensured');
   }
 }

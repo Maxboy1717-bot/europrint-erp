@@ -55,8 +55,7 @@ export default function ProductionFactsPage() {
   const { data: rawData, isLoading, isError, refetch } = useQuery<ProductionFact[] | { data?: ProductionFact[] }>({
     queryKey: ["/api/production-facts"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/production-facts");
-      return res.json();
+      return await apiRequest("GET", "/api/production-facts");
     },
   });
 
@@ -66,13 +65,12 @@ export default function ProductionFactsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: typeof form) => {
-      const res = await apiRequest("POST", "/api/production-facts", {
+      return await apiRequest("POST", "/api/production-facts", {
         ...dto,
         planned_qty: dto.planned_qty ? parseInt(dto.planned_qty, 10) : 0,
         actual_qty:  dto.actual_qty  ? parseInt(dto.actual_qty,  10) : 0,
         defect_qty:  dto.defect_qty  ? parseInt(dto.defect_qty,  10) : 0,
       });
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/production-facts"] });

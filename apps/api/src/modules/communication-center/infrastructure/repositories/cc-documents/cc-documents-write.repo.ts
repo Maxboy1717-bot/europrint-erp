@@ -2,6 +2,16 @@
  * @module cc-documents/cc-documents-write.repo
  * @description Mutating queries: createDraft / transition / approve / reject /
  *   cancel / version snapshot / body update / complaint / print log.
+ *
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   - INSERT ... RETURNING id::text AS id (typed text cast on returned UUID)
+ *   - JSONB inline cast (${JSON.stringify(...)}::jsonb)
+ *   - ON CONFLICT (document_id, version) DO NOTHING (composite-key upsert)
+ *   - SELECT ... FOR UPDATE (pessimistic row lock inside transaction)
+ *   - Inline interval arithmetic (NOW() + (${hours} || ' hours')::interval)
+ *   - Multi-statement audit trail writes inside db.transaction with
+ *     same-row UPDATE referencing prior column value (sender_user_id)
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
  */
 
 import { Injectable, Logger } from '@nestjs/common';

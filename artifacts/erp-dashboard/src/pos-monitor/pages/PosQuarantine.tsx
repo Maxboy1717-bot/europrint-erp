@@ -33,7 +33,7 @@ export default function PosQuarantine() {
     setLoading(true);
     try {
       const data = await quarantineApi.getList();
-      setItems(Array.isArray(data) ? data : []);
+      setItems(Array.isArray(data) ? (data as QuarantineItem[]) : []);
     } catch { setItems([]); } finally { setLoading(false); }
   }, []);
 

@@ -30,9 +30,8 @@ export class CrmMigrationService implements OnApplicationBootstrap {
     );
   }
 
-  private async alignCrmDeals(): Promise<void> {
-    const ddls: string[] = [
-      // ── Add columns the Drizzle schema expects but the old table lacks ───────
+  private buildAddColumnDdlsPart1(): string[] {
+    return [
       `ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS title TEXT DEFAULT ''`,
       `ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS category_id INTEGER DEFAULT 0`,
       `ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS stage_id VARCHAR(50) DEFAULT 'C0:NEW'`,
@@ -51,6 +50,11 @@ export class CrmMigrationService implements OnApplicationBootstrap {
       `ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS assigned_by_id INTEGER`,
       `ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS created_by_id INTEGER`,
       `ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS modify_by_id INTEGER`,
+    ];
+  }
+
+  private buildAddColumnDdlsPart2(): string[] {
+    return [
       `ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS date_create TIMESTAMPTZ DEFAULT NOW()`,
       `ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS date_modify TIMESTAMPTZ DEFAULT NOW()`,
       `ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS opened BOOLEAN DEFAULT true`,
@@ -67,19 +71,20 @@ export class CrmMigrationService implements OnApplicationBootstrap {
       `ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS next_activity_at TIMESTAMPTZ`,
       `ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`,
       `ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS metadata JSONB`,
+    ];
+  }
 
-      // ── Backfill from old columns ─────────────────────────────────────────
-      // title: derive from id if blank
+  private buildBackfillDdls(): string[] {
+    return [
       `UPDATE crm_deals SET title = 'Deal #' || id::text WHERE title IS NULL OR title = ''`,
-      // date_create / date_modify: copy from created_at / updated_at
       `UPDATE crm_deals SET date_create = COALESCE(created_at, NOW()) WHERE date_create IS NULL`,
       `UPDATE crm_deals SET date_modify = COALESCE(updated_at, NOW()) WHERE date_modify IS NULL`,
-      // assigned_by_id: copy from old manager_id
       `UPDATE crm_deals SET assigned_by_id = manager_id WHERE assigned_by_id IS NULL AND manager_id IS NOT NULL`,
-      // company_id: copy from old customer_id
       `UPDATE crm_deals SET company_id = customer_id WHERE company_id IS NULL AND customer_id IS NOT NULL`,
     ];
+  }
 
+  private async runDdls(ddls: string[]): Promise<number> {
     let applied = 0;
     for (const ddl of ddls) {
       try {
@@ -89,6 +94,16 @@ export class CrmMigrationService implements OnApplicationBootstrap {
         this.logger.warn(`CrmMigration DDL skipped: ${String(e)}`);
       }
     }
+    return applied;
+  }
+
+  private async alignCrmDeals(): Promise<void> {
+    const ddls = [
+      ...this.buildAddColumnDdlsPart1(),
+      ...this.buildAddColumnDdlsPart2(),
+      ...this.buildBackfillDdls(),
+    ];
+    const applied = await this.runDdls(ddls);
     this.logger.log(`CrmMigration: ${applied}/${ddls.length} statements applied`);
   }
 }

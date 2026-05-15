@@ -66,8 +66,7 @@ export default function WeeklyPlansPage() {
 
   const createMutation = useMutation({
     mutationFn: async ({ title, description }: { title: string; description: string }) => {
-      const res = await apiRequest("POST", "/api/weekly-plans", { title, description });
-      return res.json();
+      return await apiRequest("POST", "/api/weekly-plans", { title, description });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weekly-plans"] });
@@ -83,8 +82,7 @@ export default function WeeklyPlansPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiRequest("DELETE", `/api/weekly-plans/${id}`);
-      return res.json();
+      return await apiRequest("DELETE", `/api/weekly-plans/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/weekly-plans"] });

@@ -3,6 +3,15 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM query builder cannot
+ *   express: `NOW() - INTERVAL '1 minute'` rolling-window time filter on
+ *   telemetry stream, and target tables (mes_telemetry, mes_work_orders) are
+ *   not present in the Drizzle schema barrel. The UPDATE sets a computed
+ *   `pause_reason` containing an interpolated AI_AUTO_STOP reason string.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { safeDiv, stddev, safeAvg } from '@common/math/math-utils';
@@ -120,85 +129,113 @@ export class AiMesMonitorService implements OnModuleInit, OnModuleDestroy {
   }
 
   async detectAnomaly(machineId: string, value: number, workOrderId: string): Promise<AnomalyResult> {
-    const start         = Date.now();
+    const start = Date.now();
     const canonicalInput = { machineId, workOrderId, valueBucket: Math.round(value * 10) };
-    const inputHash      = this.logSvc.hashInput(canonicalInput);
+    const inputHash = this.logSvc.hashInput(canonicalInput);
 
     if (this.stoppedMachines.has(machineId)) {
       return { machineId, value, zScore: 0, isAnomaly: false, severity: 'AUTO_STOP' };
     }
+    const cachedResult = await this.tryCachedAnomaly(machineId, value, inputHash);
+    if (cachedResult) return cachedResult;
 
-    // 1-hour idempotency gate: if we already emitted an anomaly decision for this
-    // machine+workOrder combination within the last hour, skip re-execution.
+    const { zScore, absZ } = this.computeZScore(machineId, value);
+    const severity = this.classifySeverity(absZ);
+    const isAnomaly = absZ > Z_THRESHOLD;
+
+    await this.handleSeverityAction(severity, machineId, value, zScore);
+
+    if (isAnomaly) {
+      await this.logAnomalyDecision(machineId, workOrderId, canonicalInput, severity, zScore, isAnomaly, absZ, start);
+    }
+    return { machineId, value, zScore, isAnomaly, severity };
+  }
+
+  private async tryCachedAnomaly(machineId: string, value: number, inputHash: string): Promise<AnomalyResult | null> {
     const cached = await this.logSvc.findCachedDecision(AGENT_CODES.MES_MONITOR, inputHash).catch((err: unknown) => {
       this.logger.warn({ msg: 'MES cache lookup failed; computing fresh', machineId, err });
       return null;
     });
-    if (cached) {
-      const stored = cached.alternatives[0] as { zScore: number; isAnomaly: boolean; severity: AnomalyResult['severity'] } | undefined;
-      if (stored) {
-        return { machineId, value, zScore: stored.zScore, isAnomaly: stored.isAnomaly, severity: stored.severity };
-      }
-      const cachedSeverity = String(cached.action ?? 'NORMAL') as AnomalyResult['severity'];
-      const cachedZ        = typeof cached.confidence === 'number' ? cached.confidence * 5 : 0;
-      return { machineId, value, zScore: cachedZ, isAnomaly: cachedSeverity !== 'NORMAL', severity: cachedSeverity };
+    if (!cached) return null;
+    const stored = cached.alternatives[0] as { zScore: number; isAnomaly: boolean; severity: AnomalyResult['severity'] } | undefined;
+    if (stored) {
+      return { machineId, value, zScore: stored.zScore, isAnomaly: stored.isAnomaly, severity: stored.severity };
     }
+    const cachedSeverity = String(cached.action ?? 'NORMAL') as AnomalyResult['severity'];
+    const cachedZ = typeof cached.confidence === 'number' ? cached.confidence * 5 : 0;
+    return { machineId, value, zScore: cachedZ, isAnomaly: cachedSeverity !== 'NORMAL', severity: cachedSeverity };
+  }
 
+  private computeZScore(machineId: string, value: number): { zScore: number; absZ: number } {
     const buffer = this.rollingBuffers.get(machineId) ?? [];
     buffer.push(value);
     if (buffer.length > Z_ROLLING_WINDOW) buffer.shift();
     this.rollingBuffers.set(machineId, buffer);
+    const zScore = safeDiv(value - safeAvg(buffer), stddev(buffer));
+    return { zScore, absZ: Math.abs(zScore) };
+  }
 
-    const mean   = safeAvg(buffer);
-    const std    = stddev(buffer);
-    const zScore = safeDiv(value - mean, std);
-    const absZ   = Math.abs(zScore);
+  private classifySeverity(absZ: number): AnomalyResult['severity'] {
+    if (absZ > Z_AUTO_STOP_THRESHOLD) return 'AUTO_STOP';
+    if (absZ > Z_THRESHOLD) return 'ALERT';
+    return 'NORMAL';
+  }
 
-    let severity: AnomalyResult['severity'] = 'NORMAL';
-    if (absZ > Z_AUTO_STOP_THRESHOLD)      severity = 'AUTO_STOP';
-    else if (absZ > Z_THRESHOLD)           severity = 'ALERT';
-
-    const isAnomaly = absZ > Z_THRESHOLD;
-
+  private async handleSeverityAction(
+    severity: AnomalyResult['severity'],
+    machineId: string,
+    value: number,
+    zScore: number,
+  ): Promise<void> {
     if (severity === 'AUTO_STOP') {
-      const reason = `Z=${zScore.toFixed(2)}, value=${value}`;
-      this.stoppedMachines.set(machineId, { stoppedAt: new Date(), reason });
-      this.logger.error({ msg: 'Mashina avto-to\'xtatish', machineId, zScore, value });
-      this.events.emit('mes.machine.emergency_stop', { machineId, reason, timestamp: new Date() });
-
-      await db.execute(sql`
-        UPDATE mes_work_orders
-        SET status = 'PAUSED', paused_at = NOW(), pause_reason = ${`AI_AUTO_STOP: ${reason}`}
-        WHERE machine_id = ${machineId} AND status = 'IN_PROGRESS'
-      `).catch((err: unknown) => {
-        this.logger.error({ msg: 'Failed to persist auto-stop state', machineId, err });
-      });
+      await this.handleAutoStop(machineId, value, zScore);
     } else if (severity === 'ALERT') {
-      this.logger.warn({ msg: 'MES anomaly ALERT — HITL escalation required', machineId, zScore, value });
-      this.events.emit('mes.machine.anomaly_alert', {
-        machineId,
-        zScore,
-        value,
-        absZ: Math.abs(zScore),
-        timestamp: new Date(),
-      });
+      this.handleAlert(machineId, value, zScore);
     }
+  }
 
-    if (isAnomaly) {
-      const isTelemetry = workOrderId === 'telemetry';
-      await this.logSvc.log({
-        agentCode:    AGENT_CODES.MES_MONITOR,
-        entityType:   isTelemetry ? 'machine' : 'work_order',
-        entityId:     isTelemetry ? machineId : workOrderId,
-        inputData:    canonicalInput,
-        decision:     { action: severity, confidence: Math.min(1, absZ / 5), alternatives: [{ zScore, isAnomaly, severity }] },
-        confidence:   Math.min(1, absZ / 5),
-        modelVersion: AI_GEMINI_MODEL,
-        autoExecuted: severity === 'AUTO_STOP',
-        latencyMs:    Date.now() - start,
-      });
-    }
+  private async handleAutoStop(machineId: string, value: number, zScore: number): Promise<void> {
+    const reason = `Z=${zScore.toFixed(2)}, value=${value}`;
+    this.stoppedMachines.set(machineId, { stoppedAt: new Date(), reason });
+    this.logger.error({ msg: 'Mashina avto-to\'xtatish', machineId, zScore, value });
+    this.events.emit('mes.machine.emergency_stop', { machineId, reason, timestamp: new Date() });
+    await db.execute(sql`
+      UPDATE mes_work_orders
+      SET status = 'PAUSED', paused_at = NOW(), pause_reason = ${`AI_AUTO_STOP: ${reason}`}
+      WHERE machine_id = ${machineId} AND status = 'IN_PROGRESS'
+    `).catch((err: unknown) => {
+      this.logger.error({ msg: 'Failed to persist auto-stop state', machineId, err });
+    });
+  }
 
-    return { machineId, value, zScore, isAnomaly, severity };
+  private handleAlert(machineId: string, value: number, zScore: number): void {
+    this.logger.warn({ msg: 'MES anomaly ALERT — HITL escalation required', machineId, zScore, value });
+    this.events.emit('mes.machine.anomaly_alert', {
+      machineId, zScore, value, absZ: Math.abs(zScore), timestamp: new Date(),
+    });
+  }
+
+  private async logAnomalyDecision(
+    machineId: string,
+    workOrderId: string,
+    canonicalInput: unknown,
+    severity: AnomalyResult['severity'],
+    zScore: number,
+    isAnomaly: boolean,
+    absZ: number,
+    start: number,
+  ): Promise<void> {
+    const isTelemetry = workOrderId === 'telemetry';
+    await this.logSvc.log({
+      agentCode:    AGENT_CODES.MES_MONITOR,
+      entityType:   isTelemetry ? 'machine' : 'work_order',
+      entityId:     isTelemetry ? machineId : workOrderId,
+      inputData:    canonicalInput,
+      decision:     { action: severity, confidence: Math.min(1, absZ / 5), alternatives: [{ zScore, isAnomaly, severity }] },
+      confidence:   Math.min(1, absZ / 5),
+      modelVersion: AI_GEMINI_MODEL,
+      autoExecuted: severity === 'AUTO_STOP',
+      latencyMs:    Date.now() - start,
+    });
   }
 }

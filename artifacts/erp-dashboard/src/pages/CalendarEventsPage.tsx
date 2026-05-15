@@ -82,8 +82,7 @@ export default function CalendarEventsPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (typeFilter !== "all") params.set("type", typeFilter);
-      const res = await apiRequest("GET", `/api/calendar-events?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/calendar-events?${params}`);
     },
   });
 
@@ -93,12 +92,11 @@ export default function CalendarEventsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: typeof form) => {
-      const res = await apiRequest("POST", "/api/calendar-events", {
+      return await apiRequest("POST", "/api/calendar-events", {
         ...dto,
         startDate: dto.startDate ? new Date(dto.startDate).toISOString() : new Date().toISOString(),
         endDate:   dto.endDate   ? new Date(dto.endDate).toISOString() : undefined,
       });
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

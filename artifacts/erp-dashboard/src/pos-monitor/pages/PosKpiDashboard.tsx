@@ -6,8 +6,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { warehouseFeaturesApi } from "../api/pos-monitor.api";
-
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from "@/lib/i18n";
 interface WarehouseKpi {
   warehouseId: number; warehouseCode: string; warehouseName: string; warehouseType: string;
   totalMaterials: number; totalQuantity: number; totalValue: number;
@@ -61,8 +60,8 @@ export default function PosKpiDashboard() {
 
   useEffect(() => {
     void loadData();
-    const t = setInterval(() => void loadData(), 30000);
-    return () => clearInterval(t);
+    const interval = setInterval(() => void loadData(), 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (

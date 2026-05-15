@@ -5,7 +5,7 @@
 
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
-import { Result, Err } from '@common/types/result.type';
+import { Result, Err, Ok } from '@common/types/result.type';
 import { Lead } from '../../domain/aggregates/lead.aggregate';
 import { AIScore } from '../../domain/value-objects/ai-score.vo';
 import { LeadStatus } from '../../domain/value-objects/lead-status.vo';
@@ -37,17 +37,27 @@ export class CreateLeadHandler implements ICommandHandler<CreateLeadCommand> {
     if (existingLead.ok && existingLead.data) {
       return Err('Lead with this email already exists');
     }
+    const leadR = this.buildLead(command);
+    if (!leadR.ok) return leadR;
 
+    const saveResult = await this.leadRepo.save(leadR.data);
+    if (!saveResult.ok) {
+      this.logger.error({ msg: 'Failed to save lead', error: saveResult.error });
+      return Err('Failed to save lead');
+    }
+    this.logger.log({ msg: 'Lead created successfully', leadId: saveResult.data.getId() });
+    return saveResult;
+  }
+
+  private buildLead(command: CreateLeadCommand): Result<Lead> {
     const aiScoreResult = AIScore.create(Math.round(Math.random() * 100));
     if (!aiScoreResult.ok || !aiScoreResult.data) {
       return Err('Failed to generate AI score');
     }
-
     const statusResult = LeadStatus.create('new');
     if (!statusResult.ok || !statusResult.data) {
       return Err('Failed to set lead status');
     }
-
     const lead = Lead.create({
       companyId: command.companyId,
       firstName: command.firstName,
@@ -60,14 +70,6 @@ export class CreateLeadHandler implements ICommandHandler<CreateLeadCommand> {
       source: command.source,
       notes: command.notes,
     });
-
-    const saveResult = await this.leadRepo.save(lead);
-    if (!saveResult.ok) {
-      this.logger.error({ msg: 'Failed to save lead', error: saveResult.error });
-      return Err('Failed to save lead');
-    }
-
-    this.logger.log({ msg: 'Lead created successfully', leadId: saveResult.data.getId() });
-    return saveResult;
+    return Ok(lead);
   }
 }

@@ -63,8 +63,7 @@ export default function ApplicationResponsesPage() {
     queryFn: async () => {
       const params = new URLSearchParams({ limit: "50" });
       if (searched) params.set("applicationId", searched);
-      const res = await apiRequest("GET", `/api/application-responses?${params}`);
-      return res.json();
+      return await apiRequest("GET", `/api/application-responses?${params}`);
     },
   });
 

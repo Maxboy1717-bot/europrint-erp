@@ -13,6 +13,7 @@ import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 function leaveStatusBadge(status: string) {
+  const { t } = useTranslation("common");
   switch (status) {
     case "pending": return <EPStatusPill tone="warning">{t("Kutilmoqda")}</EPStatusPill>;
     case "approved": return <EPStatusPill tone="success">{t("approved")}</EPStatusPill>;
@@ -23,6 +24,7 @@ function leaveStatusBadge(status: string) {
 }
 
 function tripStatusBadge(status: string) {
+  const { t } = useTranslation("common");
   switch (status) {
     case "planned": return <EPStatusPill tone="info">{t("rejalashtirilgan")}</EPStatusPill>;
     case "in_progress": return <EPStatusPill tone="warning">{t("inProgress")}</EPStatusPill>;
@@ -100,10 +102,9 @@ export function LeaveRequestsSection({
 }: {
   leaveRequests: LeaveRequest[] | undefined;
   loading: boolean;
-  t: TranslationFn;
+  t: TranslationFn & ((key: string) => string);
   dialogTrigger: React.ReactNode;
 }) {
-  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">
@@ -172,6 +173,7 @@ export function SickLeavesSection({
   loading: boolean;
   dialogTrigger: React.ReactNode;
 }) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">
@@ -231,10 +233,9 @@ export function BusinessTripsSection({
 }: {
   businessTrips: BusinessTrip[] | undefined;
   loading: boolean;
-  t: TranslationFn;
+  t: TranslationFn & ((key: string) => string);
   dialogTrigger: React.ReactNode;
 }) {
-  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">

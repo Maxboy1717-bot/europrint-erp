@@ -46,42 +46,33 @@ export class GetMyPermissionsHandler {
     if (!userRes.ok) return Err(AppErr('INTERNAL', String(userRes.error)));
 
     const user = userRes.data;
-    if (!user) {
-      return Err(AppErr('NOT_FOUND', `User ${query.userId} not found`));
-    }
+    if (!user) return Err(AppErr('NOT_FOUND', `User ${query.userId} not found`));
 
-    // Admin rollar — barcha modullarga FULL, DB query'siz
     const isAdmin = user.role !== null && ADMIN_ROLES.includes(user.role);
-    if (isAdmin) {
-      return Ok(this.buildAdminPermissions(user));
-    }
+    if (isAdmin) return Ok(this.buildAdminPermissions(user));
+    if (user.positionId === null) return Ok(this.buildEmptyPermissions(user));
 
-    // Position bo'lmasa — bo'sh permission set
-    if (user.positionId === null) {
-      return Ok(this.buildEmptyPermissions(user));
-    }
-
-    // Cache tekshiruvi (best-effort)
     const cached = await this.tryGetFromCache(user.positionId);
     if (cached) {
       return Ok(this.assemblePermissions(user, cached.modules, cached.featureFlags, false));
     }
+    return this.loadFromDbAndCache(user, user.positionId);
+  }
 
-    // DB'dan o'qish — modules va features parallel
+  private async loadFromDbAndCache(
+    user: UserPositionRow,
+    positionId: number,
+  ): Promise<Result<MyPermissions>> {
     const [modulesRes, featuresRes] = await Promise.all([
-      this.repo.findModulePermissions(user.positionId),
-      this.repo.findFeatureFlags(user.positionId),
+      this.repo.findModulePermissions(positionId),
+      this.repo.findFeatureFlags(positionId),
     ]);
-
     if (!modulesRes.ok) return Err(AppErr('INTERNAL', String(modulesRes.error)));
     if (!featuresRes.ok) return Err(AppErr('INTERNAL', String(featuresRes.error)));
 
     const modules: ReadonlyArray<ModulePermission> = this.normalizeModules(modulesRes.data);
     const featureFlags: ReadonlyArray<string> = featuresRes.data;
-
-    // Cache'ga yozish (best-effort, xato bo'lsa loglab davom etamiz)
-    await this.trySetCache(user.positionId, modules, featureFlags);
-
+    await this.trySetCache(positionId, modules, featureFlags);
     return Ok(this.assemblePermissions(user, modules, featureFlags, false));
   }
 

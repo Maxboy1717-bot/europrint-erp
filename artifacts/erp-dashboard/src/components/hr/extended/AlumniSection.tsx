@@ -16,10 +16,11 @@ interface AlumniSectionProps {
 }
 
 export function AlumniSection({
-  alumniList,
+  alumniList = [],
   alumniStats,
 }: AlumniSectionProps) {
   const { t } = useTranslation("common");
+  const safeAlumni = Array.isArray(alumniList) ? alumniList : [];
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -50,9 +51,9 @@ export function AlumniSection({
               <TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              {alumniList.length === 0 ? (
+              {safeAlumni.length === 0 ? (
                 <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("alumniMalumotlariYoq")}</TableCell></TableRow>
-              ) : (Array.isArray(alumniList) ? alumniList : []).map((al) => (
+              ) : safeAlumni.map((al) => (
                 <TableRow key={al.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{al.fullName}</TableCell>
                   <TableCell className="text-muted-foreground">{al.lastPosition || "—"}</TableCell>

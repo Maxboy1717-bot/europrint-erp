@@ -26,7 +26,7 @@ import { WarehouseData, WarehouseFormData, Lang, Translations, warehouseSchema }
 
 interface WarehousesTabProps {
   lang: Lang;
-  t: Translations;
+  t: Translations & ((key: string) => string);
 }
 
 export function WarehousesTab({ lang, t }: WarehousesTabProps) {

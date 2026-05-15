@@ -71,8 +71,7 @@ export default function CandidatesPage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: typeof form) => {
-      const res = await apiRequest("POST", "/api/candidates", dto);
-      return res.json();
+      return await apiRequest("POST", "/api/candidates", dto);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/candidates"] });
@@ -87,8 +86,7 @@ export default function CandidatesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiRequest("DELETE", `/api/candidates/${id}`);
-      return res.json();
+      return await apiRequest("DELETE", `/api/candidates/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/candidates"] });

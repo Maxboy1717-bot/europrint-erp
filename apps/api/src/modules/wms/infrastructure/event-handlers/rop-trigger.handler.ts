@@ -1,4 +1,13 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   parameterised INTERVAL cast (NOW() - (${DEDUP_WINDOW})::interval) for
+ *   24-hour idempotency window, and the WITH new_req AS (INSERT ...
+ *   RETURNING id) INSERT INTO ... SELECT id, ... FROM new_req chained CTE
+ *   that creates the requisition header and one item in a single statement
+ *   to keep the operation atomic without an explicit transaction.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module rop-trigger.handler
  * @description Reorder-Point trigger: listens for stock-level changes and
  *   automatically creates a purchase requisition when a material drops

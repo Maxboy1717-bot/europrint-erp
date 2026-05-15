@@ -81,7 +81,7 @@ export function StatusBadge({ status }: { status: string }) {
 // ─── Sort icon ─────────────────────────────────────────────────────────────────
 
 function SortIcon({ dir }: { dir: SortDir }) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
   if (dir === "asc")  return <ChevronUp  className="w-3.5 h-3.5 text-primary" aria-label={t("ascending")} />;
   if (dir === "desc") return <ChevronDown className="w-3.5 h-3.5 text-primary" aria-label={t("descending")} />;
   return <ChevronsUpDown className="w-3.5 h-3.5 text-muted-foreground/50" aria-label={t("sortBy")} />;
@@ -185,6 +185,7 @@ export function DataTableRedesign<T extends { id: string | number }>({
   searchPlaceholder = "Qidirish...",
   isLoading = false,
 }: DataTableProps<T>) {
+  const { t } = useTranslation('common');
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);

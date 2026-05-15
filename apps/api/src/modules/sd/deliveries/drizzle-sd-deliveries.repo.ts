@@ -1,4 +1,12 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   findItemsByDeliveryId queries delivery_items which has no Drizzle schema
+ *   binding (legacy table), and the where-clause ${deliveries.id} = ${String(id)}
+ *   coercion uses raw sql template because the id column is varchar in the
+ *   shared schema while the API accepts numeric ids.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module drizzle-sd-deliveries.repo
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */

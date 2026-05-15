@@ -150,6 +150,7 @@ interface MentorshipCardProps {
 }
 
 export function MentorshipCard({ mentorshipData, loadingMentorship }: MentorshipCardProps) {
+  const { t } = useTranslation("common");
   return (
     <Card>
       <CardHeader>

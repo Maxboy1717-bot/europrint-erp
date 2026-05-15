@@ -18,7 +18,7 @@ export function TimeTrackingWidget({
   card: CardWithOwner;
   onStart: () => void;
   onStop: () => void;
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string) => string);
 }) {
   const [elapsed, setElapsed] = useState(0);
   const activeTrack = card.activeTimeTrack ?? card.active_time_track ?? null;

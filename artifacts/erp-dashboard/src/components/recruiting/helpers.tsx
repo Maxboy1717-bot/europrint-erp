@@ -211,7 +211,7 @@ export function ChannelStatusPanel({ vacancy, onUpdate }: { vacancy: Vacancy; on
   });
 
   const announceOnTelegramMutation = useMutation({
-    mutationFn: () => apiRequest("POST", `/api/hr/recruitment/vacancies/${vacancy.id}/telegram-announce`, {}),
+    mutationFn: () => apiRequest<{ ok?: boolean; message?: string }>("POST", `/api/hr/recruitment/vacancies/${vacancy.id}/telegram-announce`, {}),
     onSuccess: (data: { ok?: boolean; message?: string }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/vacancies"] });
       toast({ title: data?.ok ? "Telegram kanaliga e'lon yuborildi!" : "E'lon yuborilmadi", description: data?.message ?? "" });
@@ -220,7 +220,7 @@ export function ChannelStatusPanel({ vacancy, onUpdate }: { vacancy: Vacancy; on
   });
 
   const notifyAlumniMutation = useMutation({
-    mutationFn: () => apiRequest("POST", `/api/hr/recruitment/vacancies/${vacancy.id}/alumni-notify`, {}),
+    mutationFn: () => apiRequest<{ message?: string }>("POST", `/api/hr/recruitment/vacancies/${vacancy.id}/alumni-notify`, {}),
     onSuccess: (data: { message?: string }) => {
       toast({ title: `Alumni bildirishnomasi`, description: data?.message ?? "Yuborildi" });
     },
@@ -305,7 +305,7 @@ export function AIInterviewDialog({ entry, sessions }: { entry: PipelineEntry; s
   );
 
   const createSessionMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/hr-v2/ai-interview/sessions", {
+    mutationFn: () => apiRequest<{ interview_link?: string }>("POST", "/api/hr-v2/ai-interview/sessions", {
       candidate_name: entry.candidate_name,
       candidate_language: "uz",
       pipeline_entry_id: entry.id,

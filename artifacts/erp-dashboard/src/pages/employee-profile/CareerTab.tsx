@@ -41,9 +41,7 @@ export function CareerTab({ employeeId }: CareerTabProps) {
   const { data: careerData, isLoading } = useQuery<CareerData>({
     queryKey: ["/api/employees", employeeId, "career"],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/employees/${employeeId}/career`);
-      if (!res.ok) throw new Error("Failed to fetch career");
-      return res.json();
+      return await apiRequest('GET', `/api/employees/${employeeId}/career`);
     },
     enabled: !!employeeId,
   });

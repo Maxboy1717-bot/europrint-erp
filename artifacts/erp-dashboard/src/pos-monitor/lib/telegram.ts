@@ -7,14 +7,6 @@
  * the native back/close buttons.
  */
 
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp: TelegramWebApp;
-    };
-  }
-}
-
 interface TelegramWebApp {
   ready: () => void;
   expand: () => void;
@@ -65,7 +57,7 @@ export function isTelegramWebApp(): boolean {
 
 /** Returns the raw Telegram WebApp object (or null outside TG context). */
 export function getTelegramWebApp(): TelegramWebApp | null {
-  return window.Telegram?.WebApp ?? null;
+  return (window.Telegram?.WebApp as TelegramWebApp | undefined) ?? null;
 }
 
 /**
