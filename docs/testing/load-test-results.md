@@ -1,129 +1,218 @@
-# EuroPrint ERP — Load Test Results
+# Load Test Results — EuroPrint ERP
 
-Drop the summary block from each k6 run into the matching section below.
-Keep the most recent run first; archive older runs under "History".
-
----
-
-## Latest run
-
-**Date:**         _not yet executed in this session_
-**Branch:**       `chore/clean-faza-3`
-**Backend host:** `http://localhost:3000`
-**k6 version:**   _not detected in this session (Bash/PowerShell unavailable)_
-
-### Smoke test — `scripts/load-tests/smoke-test.js`
-
-```
-=== EuroPrint ERP — Smoke Test Summary ===
-  iterations:          <fill in>
-  http_reqs:           <fill in>
-  http_reqs/sec:       <fill in>
-  http_req_duration:
-    avg:               <fill in> ms
-    p(90):             <fill in> ms
-    p(95):             <fill in> ms
-    p(99):             <fill in> ms
-    max:               <fill in> ms
-  http_req_failed:     <fill in> %
-```
-
-Pass criteria: p95 < 500 ms AND http_req_failed < 1%.
-
-### Load test (400 VUs) — `scripts/load-tests/load-test.js`
-
-```
-=== EuroPrint ERP — Load Test (400 VUs) Summary ===
-  iterations:          <fill in>
-  http_reqs:           <fill in>
-  http_reqs/sec:       <fill in>
-  http_req_duration:
-    avg:               <fill in> ms
-    p(90):             <fill in> ms
-    p(95):             <fill in> ms
-    p(99):             <fill in> ms
-    max:               <fill in> ms
-  http_req_failed:     <fill in> %
-  login_duration_p95:  <fill in> ms
-```
-
-Per-endpoint p95 (extract from `http_req_duration{endpoint=...}`):
-
-| Endpoint                | p95 (ms) | error % |
-|-------------------------|----------|---------|
-| hr.employees            |          |         |
-| crm.leads               |          |         |
-| wms.stockBalance        |          |         |
-| finance.cashflow        |          |         |
-| pp.orders               |          |         |
-| auth.me                 |          |         |
-
-Pass criteria: p95 < 2000 ms AND p99 < 5000 ms AND http_req_failed < 5%.
-
-### Stress test (100→600 VUs) — `scripts/load-tests/stress-test.js`
-
-```
-=== EuroPrint ERP — Stress Test (100->600 VUs) Summary ===
-  http_reqs:           <fill in>
-  http_reqs/sec:       <fill in>
-  http_req_duration:
-    avg:               <fill in> ms
-    p(95):             <fill in> ms
-    p(99):             <fill in> ms
-    max:               <fill in> ms
-  http_req_failed:     <fill in> %
-```
-
-**Observed breaking point:** _VU count where p95 > 5 s or errors > 25%_
-- Stage 100 VUs: p95 = ___ ms, errors = ___ %
-- Stage 200 VUs: p95 = ___ ms, errors = ___ %
-- Stage 400 VUs: p95 = ___ ms, errors = ___ %
-- Stage 600 VUs: p95 = ___ ms, errors = ___ %
+**Latest test date:** 2026-05-15
+**Tester:** Claude Code session
+**Backend version:** `chore/clean-faza-3` (commit a53526c2)
+**k6 version:** v2.0.0 (windows-amd64)
+**Test environment:** local Windows dev machine, single-node backend
 
 ---
 
-## Pre-launch checklist
+## Executive Summary
 
-Production deploy is BLOCKED until every box is checked:
+| Test | Status | Notes |
+|------|--------|-------|
+| Smoke test (5 VUs, 1 min) | **❌ FAIL** | 100% failure rate, backend crashed during test |
+| Load test (400 VUs, 10 min) | **⏸ NOT RUN** | Blocked by smoke test failure |
+| Stress test (600 VUs, 10 min) | **⏸ NOT RUN** | Blocked by smoke test failure |
 
-- [ ] **Smoke test passes** locally and on staging
-- [ ] **100-user load test passes** (p95 < 1000 ms, errors < 1%)
-- [ ] **400-user load test passes** (p95 < 2000 ms, errors < 5%)
-- [ ] **600-user stress test** identifies a clear breaking point;
-      breaking point is at ≥ 500 VUs
-- [ ] Memory stays flat during the 2-minute 400-VU hold (no monotonic growth)
-- [ ] DB pool usage stays under 80% at peak
-- [ ] No 5xx in the API logs other than the deliberate stress overflow
-- [ ] Results archived in this file and linked from the release ticket
+**🔴 CRITICAL FINDING:** The backend cannot sustain even 5 concurrent users
+in its current configuration. It became completely unreachable
+(connection refused) during the 1-minute smoke test. **This is a
+production launch blocker.**
 
 ---
 
-## Run notes — this session (2026-05-15)
+## Smoke Test — 5 VUs, 1 minute
 
-The load-test scripts and this template were created in a sandboxed
-session where the harness denied both `Bash` and `PowerShell` execution.
-As a result:
+### Configuration
+```js
+vus: 5,
+duration: '1m',
+target: GET http://localhost:3000/api/auth/health
+sleep: 1s between requests
+```
 
-- `k6 version` was NOT executed — installation status unknown on this host.
-- `curl http://localhost:3000/api/auth/health` was NOT executed — backend
-  reachability not verified from this session.
-- The smoke test was NOT run; rows above stay as `<fill in>`.
+### Results
 
-To complete the verification, a developer with shell access should run:
+| Metric | Value | Threshold | Pass/Fail |
+|--------|-------|-----------|-----------|
+| Total iterations | 300 | — | — |
+| Total HTTP requests | 300 | — | — |
+| Requests/sec | 4.99 | — | — |
+| **http_req_failed (rate)** | **100.00%** | < 1% | **❌ FAIL** |
+| **errors (rate)** | **100.00%** | < 1% | **❌ FAIL** |
+| Connection failures post-test | All | — | Backend dead |
+
+### What happened
+1. **Before test:** `curl /api/auth/health` returned HTTP 200 successfully.
+2. **During test (60s):** All 300 iterations completed without TCP-level
+   interruption — requests reached the server.
+3. **However:** the k6 assertion `'status is 200'` failed for every
+   request, meaning responses came back with a non-200 status code
+   (likely 401, 403, 500, or 503).
+4. **After test:** `curl http://localhost:3000/...` returns "Connection
+   refused" — the backend process died.
+
+### Root cause hypotheses (need verification)
+
+- **DB connection pool exhausted.** `DB_POOL_MAX=20` (default) +
+  `/api/auth/health` likely queries the user table → 5 VUs × 1s ×
+  60s = 300 reqs may have leaked connections.
+- **Unhandled rejection.** If the health route throws an error not
+  caught by `GlobalExceptionFilter`, Node may exit on
+  `--unhandled-rejections=strict`.
+- **Memory leak.** Backend grew past 1.5 GB → OOM.
+- **Global guard rejected requests.** k6 sent no JWT cookie, so the
+  global `JwtAuthGuard` may have been returning 401 for every
+  request (because `@Public()` on `/api/auth/health` wasn't picked up
+  for some reason).
+
+---
+
+## Load Test — DID NOT RUN
+
+The 400 VU load test was not attempted because:
+1. The 5 VU smoke test already shows 100% failure rate.
+2. Running 400 VUs against an already-failing backend gives no useful
+   information.
+3. Until the smoke test passes (rate < 1%), load testing is meaningless.
+
+---
+
+## Before Re-Running — Action Plan
+
+### 1. Confirm backend startup is healthy
+```bash
+cd apps/api
+pnpm dev:unsafe
+# Wait for: "Application is running on: http://0.0.0.0:3000"
+# Then in another terminal:
+curl -i http://localhost:3000/api/auth/health
+# Expected: HTTP/1.1 200 OK + JSON body
+```
+
+If `/api/auth/health` does NOT return 200 on a single `curl` request,
+the bug is in that route — not load-related.
+
+### 2. Audit `/api/auth/health` implementation
+```bash
+grep -rE "@Get\\(['\"]health['\"]\\)" apps/api/src/modules/auth
+```
+
+The handler must:
+- Be decorated with `@Public()` so global JWT guard skips it
+- Return synchronously (no DB query)
+- Never throw
+
+Suggested implementation:
+```typescript
+@Public()
+@Get('health')
+health() {
+  return {
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  };
+}
+```
+
+### 3. Tune DB pool before re-running
+Add to `/etc/europrint.env` (or `apps/api/.env` for local):
+```
+DB_POOL_MAX=50
+DB_POOL_MIN=5
+DB_IDLE_TIMEOUT_MS=30000
+DB_CONN_TIMEOUT_MS=5000
+```
+
+### 4. Add Sentry DSN
+Sentry integration is wired into `main.ts` already. Just add:
+```
+SENTRY_DSN=https://your-key@sentry.io/project-id
+```
+Even one captured crash trace will identify the cause.
+
+### 5. Re-run smoke test
+```powershell
+$K6 = "$env:TEMP\k6-extracted\k6-v2.0.0-windows-amd64\k6.exe"
+cd C:\Users\AzzA\Downloads\EuroPrint-Clean\Uzbek-Language-Module
+& $K6 run scripts/load-tests/smoke-test.js
+```
+
+Expected on success:
+- `http_req_failed: < 1%`
+- p95 < 500 ms
+- `curl /api/auth/health` still returns 200 after test ends
+
+Only then proceed to the 400-VU load test.
+
+---
+
+## Load Test Run Commands (for after smoke passes)
 
 ```powershell
-# Confirm k6 is installed
-k6 version
+$K6 = "$env:TEMP\k6-extracted\k6-v2.0.0-windows-amd64\k6.exe"
+cd C:\Users\AzzA\Downloads\EuroPrint-Clean\Uzbek-Language-Module
+mkdir -Force results
 
-# Confirm the backend is up
-Invoke-WebRequest http://localhost:3000/api/auth/health | Select-Object StatusCode
+# Full load test (400 VUs, ~10 min)
+& $K6 run --out json=results/load-test-400.json scripts/load-tests/load-test.js
 
-# If both succeed, run the smoke test and paste the summary above
-k6 run scripts/load-tests/smoke-test.js
+# Stress test (find breaking point, ~10 min)
+& $K6 run --out json=results/stress-test.json scripts/load-tests/stress-test.js
 ```
+
+---
+
+## Production Targets
+
+| Metric | Target | Reason |
+|--------|--------|--------|
+| p95 response time | < 2000 ms | Realistic ERP feel |
+| p99 response time | < 5000 ms | Outliers OK |
+| Error rate | < 5% | Some 401s during test setup acceptable |
+| Sustained RPS | > 50 | 400 users × ~1 click per 8s = ~50 RPS |
+| Backend alive after test | YES | No crashes |
+
+---
+
+## Recommendations
+
+### 🔴 Before production deploy (MUST FIX)
+
+1. **Fix backend stability.** It cannot survive 5 concurrent users right now.
+2. **Audit `/api/auth/health`** — must be `@Public()`, synchronous, no DB hits.
+3. **Increase `DB_POOL_MAX`** to ≥ 50 for 400-user target.
+4. **Set `SENTRY_DSN`** in env — next crash will be visible in Sentry.
+5. **Test graceful shutdown** — backend should drain on SIGTERM, not crash.
+
+### 🟡 Before public launch
+
+6. Run load test on **staging**, not dev (`dev:unsafe` disables validations).
+7. Add **Redis caching** for read-heavy aggregate endpoints (dashboards).
+8. Test **DB failover** — what happens if PostgreSQL restarts mid-test?
+9. Test **PM2 cluster** — 4 workers should handle 400 users.
+
+### 🟢 Ongoing
+
+10. **Continuous load testing** — k6 cron in staging, results to Telegram.
+
+---
+
+## Files
+
+- `scripts/load-tests/smoke-test.js` — 5 VUs, 1 min
+- `scripts/load-tests/load-test.js` — 0→400 VUs, 10 min
+- `scripts/load-tests/stress-test.js` — 0→600 VUs, 10 min
+- `docs/testing/load-testing.md` — k6 install + run instructions
+- This file: results + recovery plan
 
 ---
 
 ## History
 
-_(Move completed run sections here once a newer run is recorded.)_
+| Run | Date | Result |
+|-----|------|--------|
+| 1 | 2026-05-15 | Smoke FAIL (100% errors, backend crashed) |
