@@ -60,7 +60,7 @@ export default function HRZnoPage() {
     purpose: "", amount: "", submitter_name: "", payment_date: "",
   });
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<ZnoRequest[] | { data?: ZnoRequest[]; items?: ZnoRequest[] }>({
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<ZnoRequest[] | { data?: ZnoRequest[]; items?: ZnoRequest[] }>({
     queryKey: ["/api/hr/zno", statusFilter],
     queryFn: async () => {
       const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
@@ -122,7 +122,7 @@ export default function HRZnoPage() {
     },
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const filtered = items.filter(r => {
     const text = `${r.purpose} ${r.submitter_name ?? r.submitterName ?? ""}`.toLowerCase();

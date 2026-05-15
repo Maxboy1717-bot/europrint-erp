@@ -56,7 +56,7 @@ export default function StrategicTasksPanel() {
   const [categoryName, setCategoryName] = useState("");
   const [categoryCode, setCategoryCode] = useState("");
 
-  const { data: dashboard, isLoading: dashLoading, isError, refetch } = useQuery<DashboardData>({
+  const { data: dashboard, isLoading: dashLoading, isError, error, refetch } = useQuery<DashboardData>({
     queryKey: ["/api/strategic/dashboard"],
   });
 
@@ -146,7 +146,7 @@ export default function StrategicTasksPanel() {
     (dashboard?.byStatus?.in_progress || 0) + (dashboard?.byStatus?.testing || 0);
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

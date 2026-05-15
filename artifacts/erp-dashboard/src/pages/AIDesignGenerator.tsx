@@ -35,7 +35,7 @@ export default function AIDesignGenerator() {
   const [activeTab, setActiveTab] = useState("generate");
   const [revisionsOrderId, setRevisionsOrderId] = useState<string | null>(null);
 
-  const { data: orders = [], isError, refetch } = useQuery<DesignOrder[]>({ queryKey: ["/api/design/orders"] });
+  const { data: orders = [], isError, error, refetch } = useQuery<DesignOrder[]>({ queryKey: ["/api/design/orders"] });
   const { data: templates = [] } = useQuery<Array<{ id: string; name: string }>>({ queryKey: ["/api/design/templates"] });
   const { data: dashboardData } = useQuery<DashboardSummary>({ queryKey: ["/api/design/dashboard/summary"] });
   const { data: revisions = [] } = useQuery<RevisionRecord[]>({
@@ -117,7 +117,7 @@ export default function AIDesignGenerator() {
     } catch { toast({ title: "Xatolik", variant: "destructive" }); }
   };
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <div className="flex flex-col flex-1 overflow-auto p-5 lg:p-6 gap-5">

@@ -71,7 +71,7 @@ export default function Departments() {
   const {
     data: departments = [],
     isLoading,
-    isError,
+    isError, error,
     refetch,
   } = useQuery<Department[]>({
     queryKey: ["/api/departments"],

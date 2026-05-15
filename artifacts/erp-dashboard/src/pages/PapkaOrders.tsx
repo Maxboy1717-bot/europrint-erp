@@ -31,7 +31,7 @@ export default function PapkaOrders() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const { data: ordersResponse, isLoading, isError, refetch } = useQuery<{
+  const { data: ordersResponse, isLoading, isError, error, refetch } = useQuery<{
     items: PapkaOrder[];
     total: number;
   }>({
@@ -138,7 +138,7 @@ export default function PapkaOrders() {
   }
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

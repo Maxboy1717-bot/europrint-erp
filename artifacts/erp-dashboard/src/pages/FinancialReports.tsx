@@ -41,7 +41,7 @@ export default function FinancialReports() {
   const [activeTab, setActiveTab] = useState("weekly");
   const [selectedPeriod, setSelectedPeriod] = useState("current-week");
 
-  const { data: weeklySummary, isLoading: weeklyLoading, isError, refetch } = useQuery<WeeklySummary>({
+  const { data: weeklySummary, isLoading: weeklyLoading, isError, error, refetch } = useQuery<WeeklySummary>({
     queryKey: ["/api/reports/weekly-summary", selectedPeriod],
   });
 
@@ -91,7 +91,7 @@ export default function FinancialReports() {
   };
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

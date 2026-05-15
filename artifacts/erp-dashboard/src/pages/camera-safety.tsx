@@ -63,7 +63,7 @@ const COLORS = ['#f97316', '#ef4444', '#eab308', '#3b82f6', '#22c55e', '#8b5cf6'
 export default function CameraSafety() {
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
 
-  const { data: violations, isLoading: violationsLoading, isError, refetch} = useQuery<SafetyViolation[]>({
+  const { data: violations, isLoading: violationsLoading, isError, error, refetch} = useQuery<SafetyViolation[]>({
     queryKey: ["/api/safety-violations"]
   });
 
@@ -116,7 +116,7 @@ export default function CameraSafety() {
   }
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

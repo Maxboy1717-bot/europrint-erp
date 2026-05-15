@@ -49,7 +49,7 @@ const getTrendBadge = (trend?: string) => {
 
 export default function EmployeeProductivityPage() {
   const { t } = useTranslation("common");
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     EmployeeProductivity[] | { data?: EmployeeProductivity[] }
   >({
     queryKey: ["/api/employee-productivity"],
@@ -62,7 +62,7 @@ export default function EmployeeProductivityPage() {
     ? rawData
     : (rawData as { data?: EmployeeProductivity[] })?.data ?? [];
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

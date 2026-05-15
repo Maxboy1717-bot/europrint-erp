@@ -28,7 +28,7 @@ export default function AccountsReceivable() {
   const [addOpen, setAddOpen] = useState(false);
   const [arForm, setArForm] = useState<ArFormState>(EMPTY_AR_FORM);
 
-  const { data: agingData, isLoading: agingLoading, isError, refetch } = useQuery<ArAgingData>({
+  const { data: agingData, isLoading: agingLoading, isError, error, refetch } = useQuery<ArAgingData>({
     queryKey: ["/api/ar/aging"],
   });
 
@@ -116,7 +116,7 @@ export default function AccountsReceivable() {
     }
   };
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   if (agingLoading) {
     return (

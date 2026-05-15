@@ -33,7 +33,7 @@ export default function CameraLiveMonitoring() {
   const [selectedVideoCamera, setSelectedVideoCamera] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
 
-  const { data: allCameras, isLoading: camerasLoading, isError, refetch } = useQuery<Camera[]>({
+  const { data: allCameras, isLoading: camerasLoading, isError, error, refetch } = useQuery<Camera[]>({
     queryKey: ["/api/cameras"],
     enabled: !!isAuthenticated,
     refetchInterval: autoRefresh ? 30000 : false,
@@ -65,7 +65,7 @@ export default function CameraLiveMonitoring() {
   };
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   const todayStr = new Date().toISOString().split("T")[0];

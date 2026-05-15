@@ -93,7 +93,7 @@ export default function HRCapitalCourses() {
   const { t } = useTranslation("hr");
   const [activeTab, setActiveTab] = useState("all");
 
-  const { data: courses = [], isLoading: isLoadingCourses, isError, refetch} = useQuery<
+  const { data: courses = [], isLoading: isLoadingCourses, isError, error, refetch} = useQuery<
     HRCapitalCourse[]
   >({
     queryKey: ["/api/hr-capital/courses"],
@@ -137,7 +137,7 @@ export default function HRCapitalCourses() {
   ];
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {

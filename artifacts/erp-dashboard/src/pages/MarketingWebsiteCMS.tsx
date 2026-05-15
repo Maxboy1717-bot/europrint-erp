@@ -38,7 +38,7 @@ export default function MarketingWebsiteCMS() {
   const [aiLang, setAiLang] = useState("uz");
   const [mainTab, setMainTab] = useState("blog");
 
-  const { data: posts = [], isLoading, isError, refetch} = useQuery<BlogPost[]>({
+  const { data: posts = [], isLoading, isError, error, refetch} = useQuery<BlogPost[]>({
     queryKey: ["/api/marketing/website/blog"],
     select: selectArray<BlogPost>,
   });
@@ -132,7 +132,7 @@ export default function MarketingWebsiteCMS() {
   const drafts = posts?.filter(p => !p.isPublished) || [];
 
   if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}</div>;
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-4" data-testid="marketing-website-cms">

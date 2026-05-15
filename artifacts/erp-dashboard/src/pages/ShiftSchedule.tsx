@@ -46,7 +46,7 @@ export default function ShiftSchedule() {
 
   const isHR = ["admin", "super_admin", "hr_manager", "manager", "director"].includes(authUser?.role ?? "");
 
-  const { data: rawEmployees = [], isLoading: empLoading, isError: empError, refetch: refetchEmps } = useQuery<Employee[]>({
+  const { data: rawEmployees = [], isLoading: empLoading, isError, error: empError, refetch: refetchEmps } = useQuery<Employee[]>({
     queryKey: ["/api/users"],
   });
 

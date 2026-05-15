@@ -56,7 +56,7 @@ export default function ApplicationResponsesPage() {
   const [applicationId, setApplicationId] = useState("");
   const [searched, setSearched]           = useState("");
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     ApplicationResponse[] | { data?: ApplicationResponse[]; total?: number }
   >({
     queryKey: ["/api/application-responses", searched],
@@ -71,7 +71,7 @@ export default function ApplicationResponsesPage() {
     ? rawData
     : (rawData as { data?: ApplicationResponse[] })?.data ?? [];
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

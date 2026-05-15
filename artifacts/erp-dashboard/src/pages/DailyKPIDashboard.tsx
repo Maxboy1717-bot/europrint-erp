@@ -21,7 +21,7 @@ export default function DailyKPIDashboard() {
   const { t } = useTranslation("common");
   const { dateFrom, dateTo } = getWeeklyDateRange();
 
-  const { data: todayMetrics, isLoading: todayLoading, refetch: refetchToday, isError } = useQuery<DailyMetrics>({ queryKey: ["/api/finance-extended/daily-metrics/today"] });
+  const { data: todayMetrics, isLoading: todayLoading, refetch: refetchToday, isError, error } = useQuery<DailyMetrics>({ queryKey: ["/api/finance-extended/daily-metrics/today"] });
   const { data: weeklyMetrics = [], isLoading: weeklyLoading } = useQuery<DailyMetrics[]>({ queryKey: ["/api/finance-extended/daily-metrics", { dateFrom, dateTo }] });
   const { data: aiInsightsRaw, isLoading: insightsLoading } = useQuery<{ insights: AiFinanceInsight[]; generatedAt: string } | AiFinanceInsight[]>({ queryKey: ["/api/ai/finance/insights"] });
   const aiInsights: AiFinanceInsight[] = Array.isArray(aiInsightsRaw)
@@ -35,7 +35,7 @@ export default function DailyKPIDashboard() {
 
   const netCashPositive = (todayMetrics?.dailyNetCash || 0) >= 0;
 
-  if (isError) return <EPErrorState onRetry={refetchToday} />;
+  if (isError) return <EPErrorState onRetry={refetchToday}  error={error} />;
 
   const kpiCards: { title: string; value: number; icon: React.ElementType; gradient: string; trend?: number; fallback?: string; isNetCash?: boolean }[] = [
     { title: "Pul qoldig'i", value: todayMetrics?.cashBalance || 0, icon: Wallet, gradient: "from-[#3563AC] to-[#2a55a0]", trend: todayMetrics?.cashTrend, fallback: "Kassalar va bank hisoblarida" },

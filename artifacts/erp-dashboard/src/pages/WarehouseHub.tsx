@@ -68,7 +68,7 @@ export default function WarehouseHub() {
     returnQty: "",
   });
 
-  const { data: warehouses = [], isLoading: whLoading, isError, refetch } = useQuery<WarehouseItem[]>({
+  const { data: warehouses = [], isLoading: whLoading, isError, error, refetch } = useQuery<WarehouseItem[]>({
     queryKey: ["/api/warehouse/warehouses"],
     select: selectArray<WarehouseItem>,
   });
@@ -199,7 +199,7 @@ export default function WarehouseHub() {
   const debtCount = operatorDebts.filter(d => d.status === "open").length;
 
   if (whLoading) return <div className="flex items-center justify-center h-screen bg-background"><EPLoader size={40} /></div>;
-  if (isError) return <div className="h-screen bg-background"><EPErrorState onRetry={refetch} /></div>;
+  if (isError) return <div className="h-screen bg-background"><EPErrorState onRetry={refetch}  error={error} /></div>;
   if (!selectedWarehouse) return <WarehouseDashboard />;
 
   return (

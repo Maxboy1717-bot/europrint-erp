@@ -53,7 +53,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function DesignDashboard() {
   const { t } = useTranslation("common");
-  const { data: stats, isLoading, isError, refetch } = useQuery<DesignStats>({
+  const { data: stats, isLoading, isError, error, refetch } = useQuery<DesignStats>({
     queryKey: ["/api/design/statistics"],
   });
 
@@ -75,7 +75,7 @@ export default function DesignDashboard() {
     { label: "Brend Shablonlar", value: stats?.totalTemplates || 0, desc: "Faol shablonlar", icon: FileText, accent: "text-[var(--ep-blue)]", testId: "text-templates" },
   ];
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">

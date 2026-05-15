@@ -63,7 +63,7 @@ export default function VendorPerformance() {
     },
   });
 
-  const { data: metrics, isLoading, isError, refetch} = useQuery<VendorMetric[]>({
+  const { data: metrics, isLoading, isError, error, refetch} = useQuery<VendorMetric[]>({
     queryKey: ["/api/integration/vendor-performance"],
   });
 
@@ -85,7 +85,7 @@ export default function VendorPerformance() {
   const totalSpend = (spendAnalysis || []).reduce((sum, s) => sum + (parseFloat(String(s.totalSpend)) || 0), 0);
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

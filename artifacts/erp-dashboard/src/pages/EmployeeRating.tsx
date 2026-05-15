@@ -58,7 +58,7 @@ export default function EmployeeRating() {
   const [periodYear, setPeriodYear] = useState(now.getFullYear().toString());
   const [periodMonth, setPeriodMonth] = useState((now.getMonth() + 1).toString());
 
-  const { data: ratingsData, isLoading, isError, refetch} = useQuery<RatingsResponse>({
+  const { data: ratingsData, isLoading, isError, error, refetch} = useQuery<RatingsResponse>({
     queryKey: ["/api/integration/employee-rating/ratings", periodYear, periodMonth],
   });
 
@@ -97,7 +97,7 @@ export default function EmployeeRating() {
   ];
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

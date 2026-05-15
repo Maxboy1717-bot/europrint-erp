@@ -189,7 +189,7 @@ export default function CrmFunnelAnalytics() {
   const [stageOpen, setStageOpen] = useState(false);
   const [stageForm, setStageForm] = useState({ dealId: "", stage: "" });
 
-  const { data, isLoading, isError, refetch } = useQuery<FunnelData>({
+  const { data, isLoading, isError, error, refetch } = useQuery<FunnelData>({
     queryKey: ["crm-funnel"],
     queryFn:  () => apiRequest("GET", "/api/crm/funnel"),
     retry: 1,
@@ -230,7 +230,7 @@ export default function CrmFunnelAnalytics() {
   });
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><EPLoader className="w-8 h-8 text-[var(--ep-blue)]" /></div>;
-  if (isError)   return <EPErrorState onRetry={refetch} />;
+  if (isError)   return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">

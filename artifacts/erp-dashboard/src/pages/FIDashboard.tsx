@@ -29,7 +29,7 @@ import { EPPageHeader, EPErrorState } from "@/components/ep";
 export default function FIDashboard() {
   const { t } = useTranslation("finance");
 
-  const { data: stats, isLoading, isError, refetch } = useQuery<{
+  const { data: stats, isLoading, isError, error, refetch } = useQuery<{
     revenue: number; expenses: number; unpaidInvoices?: number; unpaidAmount?: number;
   }>({
     queryKey: ["/api/fi/stats"],
@@ -42,7 +42,7 @@ export default function FIDashboard() {
     queryKey: ["/api/fi/recent-transactions"],
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const totalRevenue = stats?.revenue ?? 0;
   const totalExpenses = stats?.expenses ?? 0;

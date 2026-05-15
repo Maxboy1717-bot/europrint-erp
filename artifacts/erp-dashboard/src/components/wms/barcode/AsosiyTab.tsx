@@ -37,7 +37,7 @@ export function AsosiyTab() {
     printQueue: { pending: number };
     recentMovements?: RecentMovement[];
   }
-  const { data: dashboard, isLoading, isError, refetch} = useQuery<WMSDashboardData>({
+  const { data: dashboard, isLoading, isError, error, refetch} = useQuery<WMSDashboardData>({
     queryKey: ["/api/barcode-warehouse/dashboard"],
   });
 
@@ -75,7 +75,7 @@ export function AsosiyTab() {
   };
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {

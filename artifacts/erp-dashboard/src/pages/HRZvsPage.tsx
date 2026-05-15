@@ -32,7 +32,7 @@ export default function HRZvsPage() {
   const [comment, setComment]           = useState("");
   const [form, setForm]                 = useState<ZvsFormState>(EMPTY_FORM);
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<ZvsRequest[] | { data?: ZvsRequest[]; items?: ZvsRequest[] }>({
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<ZvsRequest[] | { data?: ZvsRequest[]; items?: ZvsRequest[] }>({
     queryKey: ["/api/hr/zvs", statusFilter],
     queryFn: async () => {
       const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
@@ -94,7 +94,7 @@ export default function HRZvsPage() {
     },
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const filtered = (Array.isArray(items) ? items : []).filter((r) => {
     const text = `${r.purpose} ${r.submitter_name ?? r.submitterName ?? ""}`.toLowerCase();

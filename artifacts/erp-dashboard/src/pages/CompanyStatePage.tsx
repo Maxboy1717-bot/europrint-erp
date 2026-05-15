@@ -53,14 +53,14 @@ const STATE_COLORS: Record<string, { bg: string; text: string; border: string }>
 
 export default function CompanyStatePage() {
   const { t } = useTranslation("common");
-  const { data, isLoading, isError, refetch } = useQuery<CompanyState>({
+  const { data, isLoading, isError, error, refetch } = useQuery<CompanyState>({
     queryKey: ["/api/company-state/current"],
     queryFn: async () => {
       return await apiRequest("GET", "/api/company-state/current");
     },
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const state    = data?.state ?? "normal";
   const label    = data?.label;

@@ -40,7 +40,7 @@ export default function MRODashboard() {
     defaultValues: { itemId: "", requestedQuantity: "", purpose: "", department: "" },
   });
 
-  const { data: items, isError: itemsError, refetch: refetchItems } = useQuery<MroItem[]>({ queryKey: ["/api/integration/mro/items"], enabled: !!isAuthenticated });
+  const { data: items, isError, error: itemsError, refetch: refetchItems } = useQuery<MroItem[]>({ queryKey: ["/api/integration/mro/items"], enabled: !!isAuthenticated });
   const { data: requests } = useQuery<MroRequest[]>({ queryKey: ["/api/integration/mro/requests"], enabled: !!isAuthenticated });
   const { data: equipment } = useQuery<MroEquipment[]>({ queryKey: ["/api/integration/mro/equipment"], enabled: !!isAuthenticated });
   const { data: stats } = useQuery<MroStats>({ queryKey: ["/api/integration/mro/stats"], enabled: !!isAuthenticated });

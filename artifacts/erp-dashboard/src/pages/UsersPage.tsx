@@ -34,7 +34,7 @@ export default function UsersPage() {
 
   const queryKey = ["/api/admin/users", page, roleFilter];
 
-  const { data, isLoading, isError, refetch } = useQuery<UsersResponse>({
+  const { data, isLoading, isError, error, refetch } = useQuery<UsersResponse>({
     queryKey,
     queryFn: () => {
       const params = new URLSearchParams({ page: String(page), limit: "20" });
@@ -89,7 +89,7 @@ export default function UsersPage() {
       toast({ title: "Xato", description: err.message, variant: "destructive" }),
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage module="hr" title={t("foydalanuvchilar")} icon={<UsersIcon className="h-5 w-5" />}>

@@ -33,7 +33,7 @@ export default function MarketingPR() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ title: "", type: "press_release", status: "planned", description: "", media: "", date: "", url: "" });
 
-  const { data: activities = [], isLoading, isError, refetch} = useQuery<PrActivity[]>({ queryKey: ["/api/marketing/pr"], select: selectArray<PrActivity> });
+  const { data: activities = [], isLoading, isError, error, refetch} = useQuery<PrActivity[]>({ queryKey: ["/api/marketing/pr"], select: selectArray<PrActivity> });
 
   const createMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => apiRequest("POST", "/api/marketing/pr", data),
@@ -68,7 +68,7 @@ export default function MarketingPR() {
   if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}</div>;
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

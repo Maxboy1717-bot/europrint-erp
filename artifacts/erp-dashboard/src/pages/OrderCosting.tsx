@@ -29,7 +29,7 @@ export default function OrderCosting() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const { data: costings = [], isLoading: costingsLoading, isError, refetch } = useQuery<OrderCostingType[]>({
+  const { data: costings = [], isLoading: costingsLoading, isError, error, refetch } = useQuery<OrderCostingType[]>({
     queryKey: ["/api/order-costing", statusFilter !== "all" ? { status: statusFilter } : {}],
   });
 
@@ -102,7 +102,7 @@ export default function OrderCosting() {
   }
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

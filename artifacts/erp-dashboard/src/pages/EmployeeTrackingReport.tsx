@@ -28,7 +28,7 @@ export default function EmployeeTrackingReport() {
   const {
     data: attendance = [],
     isLoading: attendanceLoading,
-    isError,
+    isError, error,
     refetch,
   } = useQuery<AttendanceRecord[]>({
     queryKey: [`/api/daily-attendance?date=${selectedDate}`],
@@ -100,7 +100,7 @@ export default function EmployeeTrackingReport() {
     setExpandedEmployee(expandedEmployee === employeeId ? null : employeeId);
   };
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <div className="flex flex-col gap-6 space-y-6">

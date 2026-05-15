@@ -77,7 +77,7 @@ export default function FinanceDashboard() {
     queryKey: ["/api/system-settings"],
   });
 
-  const { data: dashboard, isLoading: dashboardLoading, isError: dashboardError, refetch: refetchDashboard } = useQuery<DashboardStats>({
+  const { data: dashboard, isLoading: dashboardLoading, isError, error: dashboardError, refetch: refetchDashboard } = useQuery<DashboardStats>({
     queryKey: ["/api/finance/dashboard"],
   });
 

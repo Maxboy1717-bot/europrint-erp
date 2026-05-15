@@ -82,7 +82,7 @@ export default function ExpenseManagement() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const form = useForm({ resolver: zodResolver(expenseFormSchema), defaultValues: { category: "", purpose: "", amount: "", department: "", notes: "" } });
 
-  const { data: requestsData, isLoading, isError, refetch } = useQuery<ExpenseRequestsResponse>({
+  const { data: requestsData, isLoading, isError, error, refetch } = useQuery<ExpenseRequestsResponse>({
     queryKey: ["/api/integration/expense/expense-requests", statusFilter],
   });
 
@@ -143,7 +143,7 @@ export default function ExpenseManagement() {
   if (isError) {
     return (
       <div>
-        <EPErrorState onRetry={refetch} />
+        <EPErrorState onRetry={refetch}  error={error} />
       </div>
     );
   }

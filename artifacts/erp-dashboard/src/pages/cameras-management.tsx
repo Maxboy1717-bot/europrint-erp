@@ -44,7 +44,7 @@ export default function CamerasManagement() {
   // Queries
   // -------------------------------------------------------------------------
 
-  const { data: camerasRaw, isLoading, isError, refetch } = useQuery<CameraData[]>({
+  const { data: camerasRaw, isLoading, isError, error, refetch } = useQuery<CameraData[]>({
     queryKey: ["/api/cameras"],
   });
 
@@ -168,7 +168,7 @@ export default function CamerasManagement() {
   // Early returns
   // -------------------------------------------------------------------------
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   if (isLoading) {
     return (

@@ -74,7 +74,7 @@ export default function CapacityPlanning() {
   });
 
   // Queries
-  const { data: workCenters = [], isError: workCentersError, refetch: refetchWorkCenters } =
+  const { data: workCenters = [], isError, error: workCentersError, refetch: refetchWorkCenters } =
     useQuery<WorkCenter[]>({ queryKey: ["/api/erp/work-centers"], enabled: !!isAuthenticated });
 
   const { data: capacityList = [] } = useQuery<CapacityListItem[]>({

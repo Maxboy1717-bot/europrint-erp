@@ -33,7 +33,7 @@ export default function Settings() {
   const [settingsForm, setSettingsForm] = useState(DEFAULT_SETTINGS_FORM);
 
   // ── Queries ──────────────────────────────────────────────────────────────
-  const { data: positions, isError, refetch } = useQuery<Position[]>({
+  const { data: positions, isError, error, refetch } = useQuery<Position[]>({
     queryKey: ["/api/positions"],
   });
 
@@ -155,7 +155,7 @@ export default function Settings() {
     uploadMutation.mutate(formData);
   };
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   // ── Render ────────────────────────────────────────────────────────────────
   const patchSettings = (patch: Partial<typeof settingsForm>) =>

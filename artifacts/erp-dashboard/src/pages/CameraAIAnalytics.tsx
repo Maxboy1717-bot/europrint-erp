@@ -33,7 +33,7 @@ export default function CameraAIAnalytics() {
   const { t, language } = useTranslation('common');
   const l = cameraAiLabels[language] ?? cameraAiLabels.uz;
 
-  const { data: summary, isLoading: summaryLoading, isError, refetch } = useQuery<AISummary>({
+  const { data: summary, isLoading: summaryLoading, isError, error, refetch } = useQuery<AISummary>({
     queryKey: ["/api/camera-ai/summary"],
   });
   const { data: safetyTrends, isLoading: safetyLoading } = useQuery<SafetyTrendsData>({
@@ -53,7 +53,7 @@ export default function CameraAIAnalytics() {
   });
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

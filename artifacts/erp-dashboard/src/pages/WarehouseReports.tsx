@@ -36,7 +36,7 @@ export default function WarehouseReports() {
   const [daysThreshold, setDaysThreshold] = useState("90");
   const [daysAhead, setDaysAhead] = useState("30");
 
-  const { data: stockBalanceData, refetch: refetchStock, isError } = useQuery<StockBalanceData>({
+  const { data: stockBalanceData, refetch: refetchStock, isError, error } = useQuery<StockBalanceData>({
     queryKey: ["/api/warehouse/reports/stock-balance", category, lowStockOnly],
     enabled: activeTab === "stockBalance",
   });

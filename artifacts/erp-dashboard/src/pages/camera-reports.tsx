@@ -73,7 +73,7 @@ export default function CameraReports() {
   const [reportPeriod, setReportPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const { data: safetyStats, isLoading: loadingSafety, isError, refetch} = useQuery<SafetyStat[]>({
+  const { data: safetyStats, isLoading: loadingSafety, isError, error, refetch} = useQuery<SafetyStat[]>({
     queryKey: ["/api/camera-dashboard/safety-stats"]
   });
 
@@ -202,7 +202,7 @@ export default function CameraReports() {
   }
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

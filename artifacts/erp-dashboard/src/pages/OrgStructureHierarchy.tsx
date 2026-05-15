@@ -47,7 +47,7 @@ export default function OrgStructureHierarchy() {
   const [addParentId, setAddParentId] = useState<string | undefined>(undefined);
 
   const { data: stats } = useQuery<OrgStats>({ queryKey: ["/api/org-structure/stats"] });
-  const { data: hierarchyData, isLoading, isError, refetch } = useQuery<{ nodes: OrgNode[] }>({
+  const { data: hierarchyData, isLoading, isError, error, refetch } = useQuery<{ nodes: OrgNode[] }>({
     queryKey: ["/api/org-structure/hierarchy"],
   });
 
@@ -248,7 +248,7 @@ export default function OrgStructureHierarchy() {
         onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
       >
         {isLoading && <div className="flex items-center justify-center h-full"><div className="text-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3" /><p className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</p></div></div>}
-        {isError && <div className="flex items-center justify-center h-full"><EPErrorState onRetry={refetch} /></div>}
+        {isError && <div className="flex items-center justify-center h-full"><EPErrorState onRetry={refetch}  error={error} /></div>}
         {!isLoading && !isError && filteredNodes.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-3">
             <AlertCircle className="h-12 w-12 text-muted-foreground opacity-40" />

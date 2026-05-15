@@ -62,7 +62,7 @@ export default function GLDocuments() {
     queryParams.append("endDate", endDate);
   }
 
-  const { data: documents = [], isLoading, refetch, isError} = useQuery<GLDocument[]>({
+  const { data: documents = [], isLoading, refetch, isError, error} = useQuery<GLDocument[]>({
     queryKey: ["/api/accounting/gl-documents", { status: statusFilter, startDate, endDate }],
   });
 
@@ -132,7 +132,7 @@ export default function GLDocuments() {
 
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

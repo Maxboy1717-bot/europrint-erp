@@ -63,7 +63,7 @@ export default function OrderStatusPage() {
   const [orderId, setOrderId] = useState("");
   const [searched, setSearched] = useState("");
 
-  const { data: chainData, isLoading: loadingChain, isError: errorChain, refetch: refetchChain } =
+  const { data: chainData, isLoading: loadingChain, isError, error: errorChain, refetch: refetchChain } =
     useQuery<StatusChain | string[]>({
       queryKey: ["/api/order-status/chain"],
       queryFn: async () => {
@@ -81,7 +81,7 @@ export default function OrderStatusPage() {
       enabled: tab === "chain",
     });
 
-  const { data: logData, isLoading: loadingLog, isError: errorLog, refetch: refetchLog } =
+  const { data: logData, isLoading: loadingLog, isError, error: errorLog, refetch: refetchLog } =
     useQuery<StatusLog[] | { data?: StatusLog[] }>({
       queryKey: ["/api/order-status/log", searched],
       queryFn: async () => {

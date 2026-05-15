@@ -122,7 +122,7 @@ export default function MarketingCampaigns() {
   const [expandedStats, setExpandedStats] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({ name: "", description: "", type: "social", platform: "telegram", status: "draft", budget: "", startDate: "", endDate: "" });
 
-  const { data: campaigns = [], isLoading, isError, refetch } = useQuery<MarketingCampaign[]>({ queryKey: ["/api/marketing/campaigns"], select: selectArray<MarketingCampaign> });
+  const { data: campaigns = [], isLoading, isError, error, refetch } = useQuery<MarketingCampaign[]>({ queryKey: ["/api/marketing/campaigns"], select: selectArray<MarketingCampaign> });
 
   const createMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => apiRequest("POST", "/api/marketing/campaigns", data),
@@ -172,7 +172,7 @@ export default function MarketingCampaigns() {
 
   if (isLoading) return <div className="p-4 space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}</div>;
 
-  if (isError) return <div className="p-4"><EPErrorState onRetry={refetch} /></div>;
+  if (isError) return <div className="p-4"><EPErrorState onRetry={refetch}  error={error} /></div>;
 
   return (
     <div className="space-y-6" data-testid="marketing-campaigns">

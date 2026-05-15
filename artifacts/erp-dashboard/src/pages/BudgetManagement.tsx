@@ -83,7 +83,7 @@ export default function BudgetManagement() {
   const {
     data: budgets = [],
     isLoading: budgetsLoading,
-    isError: budgetsError,
+    isError, error: budgetsError,
     refetch: refetchBudgets,
   } = useQuery<Budget[]>({
     queryKey: ["/api/budgets", filterStatus, filterYear],

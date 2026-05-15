@@ -36,7 +36,7 @@ export default function RaciCrisisPage() {
   const {
     data: tasksRaw,
     isLoading: loadingTasks,
-    isError: errorTasks,
+    isError, error: errorTasks,
     refetch: refetchTasks,
   } = useQuery<RaciTask[] | { data?: RaciTask[] }>({
     queryKey: [...TASK_QUERY_KEY, statusFilter],
@@ -51,7 +51,7 @@ export default function RaciCrisisPage() {
   const {
     data: crisesRaw,
     isLoading: loadingCrises,
-    isError: errorCrises,
+    isError, error: errorCrises,
     refetch: refetchCrises,
   } = useQuery<Crisis[] | { data?: Crisis[] }>({
     queryKey: CRISIS_QUERY_KEY,

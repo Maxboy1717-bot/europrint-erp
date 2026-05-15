@@ -51,7 +51,7 @@ export default function AttemptsPage() {
   const { t } = useTranslation("common");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     Attempt[] | { data?: Attempt[] }
   >({
     queryKey: ["/api/attempts/all", statusFilter],
@@ -66,7 +66,7 @@ export default function AttemptsPage() {
     ? rawData
     : (rawData as { data?: Attempt[] })?.data ?? [];
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

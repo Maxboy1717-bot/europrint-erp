@@ -46,7 +46,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function AchievementsPage() {
   const { t } = useTranslation("common");
-  const { data: rawData, isLoading, isError, refetch } = useQuery<Achievement[] | { data?: Achievement[]; achievements?: Achievement[] }>({
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<Achievement[] | { data?: Achievement[]; achievements?: Achievement[] }>({
     queryKey: ["/api/achievements"],
     queryFn: async () => {
       return await apiRequest("GET", "/api/achievements");
@@ -59,7 +59,7 @@ export default function AchievementsPage() {
       ?? (rawData as { achievements?: Achievement[] })?.achievements
       ?? [];
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const totalPoints = achievements.reduce((sum, a) => sum + (a.points ?? 0), 0);
 

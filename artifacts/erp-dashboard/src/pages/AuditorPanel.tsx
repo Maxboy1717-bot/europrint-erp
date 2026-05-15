@@ -95,7 +95,7 @@ export default function AuditorPanel() {
     toast({ title: "Hisobot yuklandi", description: "Audit hisoboti CSV formatda yuklandi" });
   };
 
-  const { data: dashboard, isLoading: dashboardLoading, isError, refetch} = useQuery<AuditorDashboard>({
+  const { data: dashboard, isLoading: dashboardLoading, isError, error, refetch} = useQuery<AuditorDashboard>({
     queryKey: ["/api/europrint-control/auditor-dashboard"],
   });
 
@@ -156,7 +156,7 @@ export default function AuditorPanel() {
   ];
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

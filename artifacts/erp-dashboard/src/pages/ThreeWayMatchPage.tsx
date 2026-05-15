@@ -60,7 +60,7 @@ export default function ThreeWayMatchPage() {
   const [showPerform, setShowPerform] = useState(false);
   const [form, setForm] = useState({ poId: "", grId: "", vendorInvoiceId: "" });
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<MatchResult[] | { data?: MatchResult[] }>({
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<MatchResult[] | { data?: MatchResult[] }>({
     queryKey: ["/api/3way-match/results"],
     queryFn: async () => {
       return await apiRequest("GET", "/api/3way-match/results");
@@ -90,7 +90,7 @@ export default function ThreeWayMatchPage() {
     },
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const filtered = results.filter(r => {
     const inv = r.vendorInvoiceId ?? r.vendor_invoice_id ?? "";

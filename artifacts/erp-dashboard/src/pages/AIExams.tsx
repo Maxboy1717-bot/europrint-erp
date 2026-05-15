@@ -73,7 +73,7 @@ export default function AIExams() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const { data: attempts, isLoading, isError, refetch} = useQuery<AIExamAttempt[]>({
+  const { data: attempts, isLoading, isError, error, refetch} = useQuery<AIExamAttempt[]>({
     queryKey: ["/api/ai-exam/attempts"],
   });
 
@@ -131,7 +131,7 @@ export default function AIExams() {
 
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
   return (
     <div className="space-y-6">

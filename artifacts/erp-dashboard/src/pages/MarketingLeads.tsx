@@ -58,7 +58,7 @@ export default function MarketingLeads() {
   });
 
   // ── Queries ─────────────────────────────────────────────────────────────────
-  const { data: leads = [], isLoading, isError, refetch } =
+  const { data: leads = [], isLoading, isError, error, refetch } =
     useQuery<MarketingLead[]>({ queryKey: ["/api/marketing/leads"] });
 
   const { data: overdue = [] } =
@@ -195,7 +195,7 @@ export default function MarketingLeads() {
       </div>
     );
   }
-  if (isError) return <div className="p-4"><EPErrorState onRetry={refetch} /></div>;
+  if (isError) return <div className="p-4"><EPErrorState onRetry={refetch}  error={error} /></div>;
 
   return (
     <div className="space-y-6" data-testid="marketing-leads">

@@ -29,7 +29,7 @@ export default function MarketingSettings() {
   const [apiForm, setApiForm] = useState<ApiFormState>(DEFAULT_API_FORM);
   const [editApiId, setEditApiId] = useState<string | null>(null);
 
-  const { data: settings = [], isLoading, isError, refetch } = useQuery<MarketingSetting[]>({
+  const { data: settings = [], isLoading, isError, error, refetch } = useQuery<MarketingSetting[]>({
     queryKey: ["/api/marketing/settings"],
     select: selectArray<MarketingSetting>,
   });
@@ -129,7 +129,7 @@ export default function MarketingSettings() {
   if (isLoading) return <div className="p-4"><Skeleton className="h-96 rounded-lg" /></div>;
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

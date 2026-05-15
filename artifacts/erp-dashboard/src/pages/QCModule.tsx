@@ -66,7 +66,7 @@ export default function QCModule() {
   const [parameterCategory, setParameterCategory] = useState<string>("physical");
 
   // ── Queries ──
-  const { data: parametersData, isLoading: parametersLoading, isError, refetch } =
+  const { data: parametersData, isLoading: parametersLoading, isError, error, refetch } =
     useQuery<GroupedParametersData>({ queryKey: ["/api/qc/parameters/grouped"] });
 
   const { data: ordersData } = useQuery<PapkaOrder[]>({
@@ -149,7 +149,7 @@ export default function QCModule() {
     setParameterCategory(category); setEditingParameter(parameter ?? null); setParameterDialogOpen(true);
   };
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       {/* Page header */}

@@ -59,7 +59,7 @@ export default function CandidatesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ fullName: "", email: "", phone: "", position: "", status: "new" });
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<Candidate[] | { data?: Candidate[]; candidates?: Candidate[] }>({
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<Candidate[] | { data?: Candidate[]; candidates?: Candidate[] }>({
     queryKey: ["/api/candidates"],
   });
 
@@ -98,7 +98,7 @@ export default function CandidatesPage() {
     },
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const filtered = candidates.filter(c => {
     const name = c.fullName ?? c.full_name ?? "";

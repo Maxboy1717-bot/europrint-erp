@@ -47,7 +47,7 @@ export default function KnowledgeBasePage() {
   const categories = buildCategories(tCommon);
 
   // Data fetching
-  const { data: items = [], isLoading, isError, refetch } = useQuery<KnowledgeBase[]>({
+  const { data: items = [], isLoading, isError, error, refetch } = useQuery<KnowledgeBase[]>({
     queryKey: ["/api/knowledge-base"],
   });
 
@@ -189,7 +189,7 @@ export default function KnowledgeBasePage() {
     uploadMutation.isPending;
 
   // Render
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   if (isLoading) {
     return <KnowledgeBaseLoadingSkeleton addButtonLabel={tCommon("add")} />;

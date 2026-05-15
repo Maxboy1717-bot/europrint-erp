@@ -24,7 +24,7 @@ export default function WarehouseDirectory() {
   const [activeTab, setActiveTab] = useState("warehouses");
   const t = translations[lang];
 
-  const { data: warehouses = [], isError, refetch } = useQuery<WarehouseData[]>({
+  const { data: warehouses = [], isError, error, refetch } = useQuery<WarehouseData[]>({
     queryKey: ["/api/warehouse/warehouses"],
   });
 
@@ -50,7 +50,7 @@ export default function WarehouseDirectory() {
     enabled: warehouses.length > 0,
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">

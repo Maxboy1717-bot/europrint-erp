@@ -53,7 +53,7 @@ export default function ProductProfitability() {
     },
   });
 
-  const { data: topProfitable = [], isLoading: profitableLoading, isError, refetch } = useQuery<OrderCosting[]>({
+  const { data: topProfitable = [], isLoading: profitableLoading, isError, error, refetch } = useQuery<OrderCosting[]>({
     queryKey: ["/api/order-costing/top-profitable"],
   });
 
@@ -85,7 +85,7 @@ export default function ProductProfitability() {
   const distributionData = buildDistributionData(allCostings);
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

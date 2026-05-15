@@ -79,7 +79,7 @@ export default function FaceRegistration() {
   // Queries
 
   const {
-    data: employees = [], isLoading: employeesLoading, isError, refetch,
+    data: employees = [], isLoading: employeesLoading, isError, error, refetch,
   } = useQuery<Employee[]>({ queryKey: ['/api/employees-for-face'] });
 
   const { data: registeredFaces = [], isLoading: facesLoading } =
@@ -225,7 +225,7 @@ export default function FaceRegistration() {
   const canCaptureFace = livenessStatus === 'passed' && isStreaming && Boolean(selectedEmployee);
   const showLivenessUI = isStreaming && Boolean(selectedEmployee);
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   // Render
 

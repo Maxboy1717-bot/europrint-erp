@@ -110,7 +110,7 @@ export default function AccountantView() {
     toast({ title: "PDF hisobot", description: "PDF hisobot tayyorlanmoqda" });
   };
 
-  const { data: widgets = [], isError, refetch} = useQuery<RoleDashboardWidget[]>({
+  const { data: widgets = [], isError, error, refetch} = useQuery<RoleDashboardWidget[]>({
     queryKey: ["/api/europrint-control/dashboard/accountant"],
   });
 
@@ -132,7 +132,7 @@ export default function AccountantView() {
 
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (

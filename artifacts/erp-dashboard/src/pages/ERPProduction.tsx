@@ -22,14 +22,14 @@ export default function ERPProduction() {
   const { t } = useTranslation('production');
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  const { isError, refetch } = useQuery<WorkCenter[]>({
+  const { isError, error, refetch } = useQuery<WorkCenter[]>({
     queryKey: ["/api/erp/work-centers"],
   });
 
   if (isError) {
     return (
       <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-        <EPErrorState onRetry={refetch} />
+        <EPErrorState onRetry={refetch}  error={error} />
       </div>
     );
   }

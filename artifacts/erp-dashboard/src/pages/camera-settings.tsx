@@ -42,7 +42,7 @@ export default function CameraSettings() {
   const [autoPenalty, setAutoPenalty] = useState(true);
   const [penaltyAmount, setPenaltyAmount] = useState(50000);
 
-  const { data: settings, isLoading, isError, refetch} = useQuery<CameraSettingsData>({
+  const { data: settings, isLoading, isError, error, refetch} = useQuery<CameraSettingsData>({
     queryKey: ["/api/camera-settings"]
   });
 
@@ -127,7 +127,7 @@ export default function CameraSettings() {
   };
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {

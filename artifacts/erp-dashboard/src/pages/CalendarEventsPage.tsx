@@ -75,7 +75,7 @@ export default function CalendarEventsPage() {
     allDay: false,
   });
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     CalendarEvent[] | { data?: CalendarEvent[] }
   >({
     queryKey: [...QUERY_KEY, typeFilter],
@@ -107,7 +107,7 @@ export default function CalendarEventsPage() {
     onError: () => toast({ title: "Xatolik", description: "Yaratishda muammo", variant: "destructive" }),
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

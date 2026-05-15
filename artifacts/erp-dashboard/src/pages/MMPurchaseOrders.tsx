@@ -56,7 +56,7 @@ export default function MMPurchaseOrders() {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const { data: purchaseOrders = [], isLoading, isError, refetch} = useQuery<PurchaseOrderWithItems[]>({
+  const { data: purchaseOrders = [], isLoading, isError, error, refetch} = useQuery<PurchaseOrderWithItems[]>({
     queryKey: ["/api/mm/purchase-orders"],
   });
 
@@ -186,7 +186,7 @@ export default function MMPurchaseOrders() {
   if (isError) {
     return (
       <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-        <EPErrorState onRetry={refetch} />
+        <EPErrorState onRetry={refetch}  error={error} />
       </div>
     );
   }

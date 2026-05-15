@@ -52,7 +52,7 @@ export default function ProductionFactsPage() {
     actual_qty: "", defect_qty: "0", shift: "", operator: "", notes: "",
   });
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<ProductionFact[] | { data?: ProductionFact[] }>({
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<ProductionFact[] | { data?: ProductionFact[] }>({
     queryKey: ["/api/production-facts"],
     queryFn: async () => {
       return await apiRequest("GET", "/api/production-facts");
@@ -83,7 +83,7 @@ export default function ProductionFactsPage() {
     },
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   const filtered = facts.filter(f => {
     const name = (f.product_name ?? f.productName ?? "").toLowerCase();

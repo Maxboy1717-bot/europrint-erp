@@ -42,7 +42,7 @@ export default function HRDashboard() {
   // Data queries
   // -------------------------------------------------------------------------
 
-  const { data: employees = [], isLoading: isLoadingEmployees, isError, refetch } =
+  const { data: employees = [], isLoading: isLoadingEmployees, isError, error, refetch } =
     useQuery<UserWithAnalysis[]>({ queryKey: ["/api/users"] });
 
   const { data: abcAnalysis = [], isLoading: isLoadingABC } =
@@ -196,7 +196,7 @@ export default function HRDashboard() {
           title={tHr('humanResources')}
           subtitle={tHr('humanResourcesSubtitle')}
         />
-        <EPErrorState onRetry={refetch} />
+        <EPErrorState onRetry={refetch}  error={error} />
       </div>
     );
   }

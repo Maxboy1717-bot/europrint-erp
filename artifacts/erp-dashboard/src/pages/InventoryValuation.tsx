@@ -76,7 +76,7 @@ export default function InventoryValuation() {
     notes: "",
   });
 
-  const { data: inventoryCounts = [], isLoading: countsLoading, isError: countsError, refetch: refetchCounts } = useQuery<InventoryCount[]>({
+  const { data: inventoryCounts = [], isLoading: countsLoading, isError, error: countsError, refetch: refetchCounts } = useQuery<InventoryCount[]>({
     queryKey: ["/api/finance-extended/inventory-counts", { 
       warehouseId: warehouseFilter !== "all" ? warehouseFilter : undefined,
       status: statusFilter !== "all" ? statusFilter : undefined,

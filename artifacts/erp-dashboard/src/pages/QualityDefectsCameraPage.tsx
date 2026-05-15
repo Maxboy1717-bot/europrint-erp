@@ -53,7 +53,7 @@ export default function QualityDefectsCameraPage() {
   const [statusFilter, setStatusFilter]   = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     QualityDefect[] | { data?: QualityDefect[] }
   >({
     queryKey: ["/api/iot/quality-defects", statusFilter, severityFilter],
@@ -70,7 +70,7 @@ export default function QualityDefectsCameraPage() {
     ? rawData
     : (rawData as { data?: QualityDefect[] })?.data ?? [];
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

@@ -29,7 +29,7 @@ export default function IoTDashboard() {
   const { t: tCommon } = useTranslation('common');
 
   /* ── Dashboard summary ── */
-  const { data: dashboardData, isLoading: dashLoading, isError: dashError, refetch: refetchDash } = useQuery({
+  const { data: dashboardData, isLoading: dashLoading, isError, error: dashError, refetch: refetchDash } = useQuery({
     queryKey: ["/api/iot-sensors/dashboard"],
     queryFn: getQueryFn({ on401: "throw" }),
     refetchInterval: 30000,

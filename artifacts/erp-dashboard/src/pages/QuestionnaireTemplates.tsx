@@ -77,7 +77,7 @@ export default function QuestionnaireTemplates() {
   const {
     data: templates = [],
     isLoading: templatesLoading,
-    isError,
+    isError, error,
     refetch,
   } = useQuery<TemplateWithPosition[]>({ queryKey: [TEMPLATES_QUERY_KEY] });
 
@@ -115,7 +115,7 @@ export default function QuestionnaireTemplates() {
   // ---------------------------------------------------------------------------
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   const safeTemplates = Array.isArray(templates) ? templates : [];

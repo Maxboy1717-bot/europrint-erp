@@ -114,14 +114,14 @@ export default function CrmCohortAnalysis() {
   const { t } = useTranslation('crm');
   const [mode, setMode] = useState<CohortMode>("count");
 
-  const { data, isLoading, isError, refetch } = useQuery<CohortMatrix>({
+  const { data, isLoading, isError, error, refetch } = useQuery<CohortMatrix>({
     queryKey: ["crm-cohort", mode],
     queryFn:  () => apiRequest("GET", `/api/crm/cohort?months=12&mode=${mode}`),
     retry: 1,
   });
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><EPLoader className="w-8 h-8 text-[var(--ep-blue)]" /></div>;
-  if (isError)   return <EPErrorState onRetry={refetch} />;
+  if (isError)   return <EPErrorState onRetry={refetch}  error={error} />;
 
   const rowsWithM1  = data?.rows?.filter(r => r.retentionByPeriod[1] !== undefined) ?? [];
   const avgRetention = rowsWithM1.length

@@ -58,7 +58,7 @@ export default function PosInventoryCountsPage() {
   const [showCreate, setShowCreate]     = useState(false);
   const [form, setForm] = useState({ warehouse_id: "", notes: "" });
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     InventoryCount[] | { data?: InventoryCount[] }
   >({
     queryKey: [...QUERY_KEY, statusFilter],
@@ -86,7 +86,7 @@ export default function PosInventoryCountsPage() {
     onError: () => toast({ title: "Xatolik", description: "Yaratishda muammo", variant: "destructive" }),
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

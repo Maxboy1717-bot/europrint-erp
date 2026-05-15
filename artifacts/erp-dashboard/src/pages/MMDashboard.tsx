@@ -97,7 +97,7 @@ export default function MMDashboard() {
           title={t("materiallarBoshqaruvi")}
           subtitle={t("materiallarVaZaxiralarniBoshqaring")}
         />
-        <EPErrorState onRetry={refetch} />
+        <EPErrorState onRetry={refetch}  error={error} />
       </div>
     );
   }

@@ -62,7 +62,7 @@ export default function MentorshipsPage() {
   const [deleteId, setDeleteId]         = useState<string | number | null>(null);
   const [form, setForm] = useState({ mentor_id: "", mentee_id: "", goal: "", start_date: "" });
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     Mentorship[] | { data?: Mentorship[] }
   >({
     queryKey: [...QUERY_KEY, statusFilter],
@@ -102,7 +102,7 @@ export default function MentorshipsPage() {
     onError: () => toast({ title: "Xatolik", description: "O'chirishda muammo", variant: "destructive" }),
   });
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

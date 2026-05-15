@@ -27,12 +27,12 @@ import { EPErrorState } from "@/components/ep";
 
 export function KPICards() {
   const tr = useWasteTranslations();
-  const { data: dashboard, isLoading, isError, refetch } = useQuery<WasteDashboard>({
+  const { data: dashboard, isLoading, isError, error, refetch } = useQuery<WasteDashboard>({
     queryKey: ["/api/waste/dashboard"],
   });
 
   if (isError) {
-    return <EPErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {

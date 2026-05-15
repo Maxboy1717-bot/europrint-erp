@@ -42,7 +42,7 @@ export default function AIProductionPlanning() {
   const [blockReason, setBlockReason] = useState("");
 
   // ── Queries ────────────────────────────────────────────────────────────────
-  const { data: dashboard, isLoading: dashLoading, isError, refetch } = useQuery<DashboardData>({
+  const { data: dashboard, isLoading: dashLoading, isError, error, refetch } = useQuery<DashboardData>({
     queryKey: ["/api/ai-planning/dashboard"],
   });
   const { data: plans, isLoading: plansLoading } = useQuery<AiPlan[]>({
@@ -157,7 +157,7 @@ export default function AIProductionPlanning() {
     { label: "Rejalashtirilgan buyurtmalar", value: dashboard?.totalOrdersScheduled ?? 0, icon: BarChart3 },
   ];
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (

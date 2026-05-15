@@ -38,7 +38,7 @@ export default function RawMaterialsPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  const { data: rawData, isLoading, isError, refetch } = useQuery<
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery<
     RawMaterial[] | { data?: RawMaterial[]; total?: number; items?: RawMaterial[] }
   >({
     queryKey: ["/api/raw-materials", page, search],
@@ -55,7 +55,7 @@ export default function RawMaterialsPage() {
       ?? (rawData as { items?: RawMaterial[] })?.items
       ?? [];
 
-  if (isError) return <EPErrorState onRetry={refetch} />;
+  if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
     <ModulePage

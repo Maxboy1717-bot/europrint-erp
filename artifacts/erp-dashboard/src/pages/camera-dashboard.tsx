@@ -32,7 +32,7 @@ export default function CameraDashboard() {
   const {
     data: stats,
     isLoading: statsLoading,
-    isError,
+    isError, error,
     refetch: refetchStats,
   } = useQuery<DashboardStats>({ queryKey: ["/api/camera-dashboard/stats"] });
 
@@ -73,7 +73,7 @@ export default function CameraDashboard() {
   };
 
   // ---- guards ----
-  if (isError) return <EPErrorState onRetry={refetchStats} />;
+  if (isError) return <EPErrorState onRetry={refetchStats}  error={error} />;
 
   if (statsLoading) {
     return (
