@@ -131,7 +131,7 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-          <Label htmlFor="testTitle">Test nomi (O'zbek) *</Label>
+          <Label htmlFor="testTitle">{t("testNameUz")} *</Label>
             <Input
               id="testTitle"
               placeholder={t("texnikaXavfsizligiTesti")}
@@ -143,10 +143,10 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
           </div>
 
           <div className="space-y-1">
-          <Label htmlFor="testTitleRu">Test nomi (Rus) *</Label>
+          <Label htmlFor="testTitleRu">{t("testNameRu")} *</Label>
             <Input
               id="testTitleRu"
-              placeholder="Тест по технике безопасности"
+              placeholder={t("safetyTestPlaceholder")}
               value={formData.titleRu}
               onChange={(e) => setFormData({ ...formData, titleRu: e.target.value })}
               required
@@ -155,7 +155,7 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
           </div>
 
           <div className="space-y-1">
-          <Label htmlFor="testCourse">Kurs (ixtiyoriy)</Label>
+          <Label htmlFor="testCourse">{t("courseOptional")}</Label>
             <Select value={formData.courseId} onValueChange={(value) => setFormData({ ...formData, courseId: value })}>
               <SelectTrigger data-testid="select-test-course" className="h-9">
                 <SelectValue placeholder={t("kursniTanlang")} />
@@ -173,7 +173,7 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label htmlFor="testDepartment">Bo'lim (ixtiyoriy)</Label>
+          <Label htmlFor="testDepartment">{t("departmentOptional")}</Label>
               <Select value={formData.departmentId} onValueChange={(value) => setFormData({ ...formData, departmentId: value })}>
                 <SelectTrigger data-testid="select-test-department" className="h-9">
                   <SelectValue placeholder={t("bolimniTanlang")} />
@@ -190,7 +190,7 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
             </div>
 
             <div className="space-y-1">
-          <Label htmlFor="testPosition">Lavozim (ixtiyoriy)</Label>
+          <Label htmlFor="testPosition">{t("positionOptional")}</Label>
               <Select value={formData.positionId} onValueChange={(value) => setFormData({ ...formData, positionId: value })}>
                 <SelectTrigger data-testid="select-test-position" className="h-9">
                   <SelectValue placeholder={t("lavozimniTanlang")} />
@@ -223,7 +223,7 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
             </div>
 
             <div className="space-y-1">
-          <Label htmlFor="timeLimit">Vaqt (daqiqa)</Label>
+          <Label htmlFor="timeLimit">{t("timeMinutes")}</Label>
               <Input
                 id="timeLimit"
                 type="number"
@@ -271,7 +271,7 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
             </Button>
             <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit-test">
               {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
-              Yaratish
+              {t("create")}
             </Button>
           </DialogFooter>
         </form>

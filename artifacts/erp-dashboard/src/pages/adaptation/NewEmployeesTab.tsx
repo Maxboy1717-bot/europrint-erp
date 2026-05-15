@@ -144,7 +144,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
       mentorId: emp.mentorId ?? "",
       startDate: emp.startDate,
       endDate: emp.endDate ?? "",
-      status: emp.status,
+      status: emp.status as "failed" | "completed" | "in_progress" | "extended",
       progress: emp.progress,
       currentPhase: emp.currentPhase ?? "",
       notes: emp.notes ?? "",
@@ -169,7 +169,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
             </DialogTrigger>
             <DialogContent className="max-w-2xl p-6">
               <DialogHeader>
-                <DialogTitle className="text-[18px] font-semibold"> {editingEmployee?.id ? "Ma'lumotni tahrirlash" : "Yangi xodim qo'shish"}</DialogTitle>
+                <DialogTitle className="text-[18px] font-semibold"> {editingEmployee?.id ? t("editInfo") : t("addNewEmployee")}</DialogTitle>
               </DialogHeader>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div>
@@ -187,7 +187,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                   {form.formState.errors.userId && <p className="text-sm text-destructive mt-1">{form.formState.errors.userId.message}</p>}
                 </div>
                 <div>
-                  <Label>Dastur (ixtiyoriy)</Label>
+                  <Label>{t("programOptional")}</Label>
                   <Controller control={form.control} name="programId" render={({ field }) => (
                     <Select value={field.value ?? "none"} onValueChange={field.onChange}>
                       <SelectTrigger data-testid="select-program" className="h-9"><SelectValue placeholder={t("dasturniTanlang")} /></SelectTrigger>
@@ -201,7 +201,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                   )} />
                 </div>
                 <div>
-                  <Label>Mentor (ixtiyoriy)</Label>
+                  <Label>{t("mentorOptional")}</Label>
                   <Controller control={form.control} name="mentorId" render={({ field }) => (
                     <Select value={field.value ?? "none"} onValueChange={field.onChange}>
                       <SelectTrigger data-testid="select-mentor" className="h-9"><SelectValue placeholder={t("mentorniTanlang")} /></SelectTrigger>
@@ -221,7 +221,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                     {form.formState.errors.startDate && <p className="text-sm text-destructive mt-1">{form.formState.errors.startDate.message}</p>}
                   </div>
                   <div>
-                    <Label htmlFor="endDate">Tugash sanasi (ixtiyoriy)</Label>
+                    <Label htmlFor="endDate">{t("endDateOptional")}</Label>
                     <Input id="endDate" type="date" {...form.register("endDate")} data-testid="input-end-date" />
                   </div>
                 </div>
@@ -241,13 +241,13 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                     )} />
                   </div>
                   <div>
-                    <Label htmlFor="progress">Jarayon (%)</Label>
+                    <Label htmlFor="progress">{t("progressPercent")}</Label>
                     <Input id="progress" type="number" min="0" max="100" {...form.register("progress", { valueAsNumber: true })} data-testid="input-progress" />
                   </div>
                 </div>
                 <div className="flex justify-end">
                   <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending} data-testid="button-submit-employee">
-                    {editingEmployee?.id ? "Yangilash" : "Qo'shish"}
+                    {editingEmployee?.id ? t("update") : t("add")}
                   </Button>
                 </div>
               </form>
@@ -260,7 +260,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
           <TableHeader>
             <TableRow>
               <TableHead>{t("xodim1")}</TableHead>
-              <TableHead>Bo'lim / Lavozim</TableHead>
+              <TableHead>{t("departmentPosition")}</TableHead>
               <TableHead>{t("dastur")}</TableHead>
               <TableHead>{t("mentor")}</TableHead>
               <TableHead>{t("boshlanish")}</TableHead>
@@ -299,7 +299,7 @@ export function NewEmployeesTab({ employees, programs, users }: NewEmployeesTabP
                 </TableCell>
                 <TableCell>
                   <Badge variant={emp.status === "completed" ? "default" : emp.status === "in_progress" ? "secondary" : "destructive"}>
-                    {emp.status === "in_progress" ? "Jarayonda" : emp.status === "completed" ? "Yakunlangan" : emp.status === "extended" ? "Uzaytirilgan" : "Muvaffaqiyatsiz"}
+                    {emp.status === "in_progress" ? t("inProgress") : emp.status === "completed" ? t("yakunlangan") : emp.status === "extended" ? t("uzaytirilgan") : t("muvaffaqiyatsiz")}
                   </Badge>
                 </TableCell>
                 <TableCell>

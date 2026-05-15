@@ -7,6 +7,7 @@
 
 import { AppErr, AppError, Err, isErr, safeCall } from '@common/result';
 import { Injectable, Inject, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IAuthRepo } from '../../domain/repositories/i-auth.repo';
 import { AUTH_REPO } from '../../auth.tokens';
 import { PasswordValueObject } from '../../domain/value-objects/password.vo';
@@ -31,6 +32,7 @@ export class ChangePasswordHandler {
   private readonly logger = new Logger('ChangePasswordHandler');
   constructor(
     @Inject(AUTH_REPO) private readonly authRepo: IAuthRepo,
+    private readonly i18n: I18nService,
   ) {}
 
   /**
@@ -43,18 +45,18 @@ export class ChangePasswordHandler {
     const user = await this.authRepo.findById(command.userId);
     if (!user) {
       this.logger.warn('User not found');
-      return Err(AppErr('NOT_FOUND', 'User not found'));
+      return Err(AppErr('NOT_FOUND', await this.i18n.t('errors.userNotFound')));
     }
     const voResult = await safeCall(() => PasswordValueObject.create(command.newPassword), 'VALIDATION');
     if (isErr(voResult)) {
       this.logger.warn(`Password validation failed: ${voResult.error.message}`);
-      return Err(AppErr('VALIDATION', 'Password complexity requirements not met'));
+      return Err(AppErr('VALIDATION', await this.i18n.t('auth.passwordTooWeak')));
     }
     const newPasswordVo = voResult.data;
     const isChanged = await user.changePassword(command.oldPassword, newPasswordVo);
     if (!isChanged) {
       this.logger.warn('Old password verification failed');
-      return Err(AppErr('VALIDATION', 'Old password is incorrect'));
+      return Err(AppErr('VALIDATION', await this.i18n.t('auth.currentPasswordIncorrect')));
     }
     await this.authRepo.save(user);
     this.logger.log('Password changed successfully');

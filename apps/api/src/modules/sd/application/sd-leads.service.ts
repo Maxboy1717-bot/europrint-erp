@@ -4,12 +4,16 @@
  */
 
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { SdLeadsRepository } from './sd-leads.repository';
 
 @Injectable()
 export class SdLeadsService {
-  constructor(private readonly repo: SdLeadsRepository) {}
+  constructor(
+    private readonly repo: SdLeadsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async list(status: string | undefined, uid: number | null, pat: string | null, lim: number, off: number): Promise<Result<object, AppError>> {
     return this.repo.list(status, uid, pat, lim, off);
@@ -44,11 +48,12 @@ export class SdLeadsService {
   }
 
   async convert(lid: number, notesVal: unknown) {
+    const leadNotFoundMsg = await this.i18n.t('errors.leadNotFound');
     return safeCall(async () => {
       const leadResult = await this.repo.getLeadForConvert(lid);
       if (!leadResult.ok) throw new Error(leadResult.error.message);
       const lead = leadResult.data;
-      if (!lead) throw new NotFoundException(`Lead #${lid} topilmadi`);
+      if (!lead) throw new NotFoundException(leadNotFoundMsg);
       // Atomic: order INSERT + lead status UPDATE in one tx (was: 2 separate writes,
       // partial failure left orphan order + lead still re-convertible = duplicate orders)
       const orderResult = await this.repo.convertLeadToOrderAtomic(

@@ -16,7 +16,7 @@ export function Section4Checklist({ report }: { report: ReportData }) {
   const { t } = useTranslation("common");
   const checklistData = report.checklist_data ?? {};
   return (
-    <SectionBlock number={4} title="Tavsiyalar Tekshiruvi Natijalari (Cheklist)" icon={ClipboardCheck}>
+    <SectionBlock number={4} title={t("checklistResultsTitle")} icon={ClipboardCheck}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
         {(Array.isArray(CHECKLIST_ITEMS) ? CHECKLIST_ITEMS : []).map(item => {
           const entry = (checklistData as Record<string, { done: boolean; done_at?: string | null; note?: string }>)[item.key];
@@ -97,7 +97,7 @@ export function Section6Risks({ report }: { report: ReportData }) {
         const xulosaLine = report.final_notes_text.split("\n").find(l => l.startsWith("Xulosa:"));
         return xulosaLine ? (
           <div className="mb-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
-            <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Rekruter xulosasi (erkin matn)</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">{t("recruiterConclusionFreeText")}</p>
             <p className="text-sm text-gray-700 italic">"{xulosaLine.replace(/^Xulosa:\s*/, "")}"</p>
           </div>
         ) : null;
@@ -105,17 +105,17 @@ export function Section6Risks({ report }: { report: ReportData }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="border border-amber-200 rounded-lg p-3 bg-amber-50 print:bg-white">
           <p className="text-xs font-semibold text-amber-800 mb-2 flex items-center gap-1">
-            <AlertTriangle className="w-3.5 h-3.5" /> Xavf omillari (TOOL TEST tahlili)
+            <AlertTriangle className="w-3.5 h-3.5" /> {t("riskFactorsToolTest")}
           </p>
           {hasTool ? (
             <ul className="text-xs text-gray-700 space-y-1">
               {(Object.entries(toolTestResults) as [string, number][])
                 .filter(([, v]) => Math.abs(v) >= 80)
                 .map(([k, v]) => (
-                  <li key={k}>• {TOOL_TRAIT_LABELS[k]} ({k}) kompulsiv: {v > 0 ? "+" : ""}{v}</li>
+                  <li key={k}>• {TOOL_TRAIT_LABELS[k]} ({k}) {t("compulsiveLabel")} {v > 0 ? "+" : ""}{v}</li>
                 ))}
               {report.tool_test_score != null && report.tool_test_score < -30 && (
-                <li>• TOOL TEST umumiy ball past: {report.tool_test_score}</li>
+                <li>• {t("toolTestTotalScoreLow")} {report.tool_test_score}</li>
               )}
               {(Object.entries(toolTestResults) as [string, number][]).filter(([, v]) => Math.abs(v) >= 80).length === 0 &&
                (report.tool_test_score == null || report.tool_test_score >= -30) && (
@@ -125,7 +125,7 @@ export function Section6Risks({ report }: { report: ReportData }) {
                 <li>{t("chiquvchiOqimNomzodAsosanKetmoqchi")}</li>
               )}
               {motivLevel === 1 && (
-                <li>• Motivatsiya: faqat moddiy manfaat (Pul)</li>
+                <li>• {t("motivationOnlyMoney")}</li>
               )}
             </ul>
           ) : (
@@ -134,23 +134,23 @@ export function Section6Risks({ report }: { report: ReportData }) {
         </div>
         <div className="border border-green-200 rounded-lg p-3 bg-green-50 print:bg-white">
           <p className="text-xs font-semibold text-green-800 mb-2 flex items-center gap-1">
-            <CheckCircle className="w-3.5 h-3.5" /> Imkoniyatlar (TOOL TEST tahlili)
+            <CheckCircle className="w-3.5 h-3.5" /> {t("opportunitiesToolTest")}
           </p>
           {hasTool ? (
             <ul className="text-xs text-gray-700 space-y-1">
               {(Object.entries(toolTestResults) as [string, number][])
                 .filter(([, v]) => v >= 30 && v < 80)
                 .map(([k, v]) => (
-                  <li key={k}>• {TOOL_TRAIT_LABELS[k]} ({k}) kuchli: +{v}</li>
+                  <li key={k}>• {TOOL_TRAIT_LABELS[k]} ({k}) {t("strongLabel")} +{v}</li>
                 ))}
               {report.tool_test_score != null && report.tool_test_score >= 30 && (
-                <li>• TOOL TEST umumiy ball yuqori: +{report.tool_test_score}</li>
+                <li>• {t("toolTestTotalScoreHigh")} +{report.tool_test_score}</li>
               )}
               {report.flow_direction === "inflow" && (
                 <li>{t("kiruvchiOqimKompaniyagaKelmoqchi")}</li>
               )}
               {motivLevel != null && motivLevel >= 3 && (
-                <li>• Motivatsiya: {MOTIVATION_LABELS[motivLevel]?.label} darajasi (yuqori)</li>
+                <li>• {t("motivationLabel")} {MOTIVATION_LABELS[motivLevel]?.label} {t("levelHigh")}</li>
               )}
               {(Object.entries(toolTestResults) as [string, number][]).filter(([, v]) => v >= 30 && v < 80).length === 0 &&
                (report.tool_test_score == null || report.tool_test_score < 30) && (

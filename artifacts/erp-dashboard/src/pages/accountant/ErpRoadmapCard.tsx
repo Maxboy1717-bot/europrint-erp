@@ -107,8 +107,8 @@ export function ErpRoadmapCard() {
 
           <TabsContent value="phase1" className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
-              <EPStatusPill tone="info">1-BOSQICH</EPStatusPill>
-              <h3 className="text-lg font-bold">TO'LIQ TIZIM TAHLILI (O'zgartirish yo'q)</h3>
+              <EPStatusPill tone="info">{t("phase1")}</EPStatusPill>
+              <h3 className="text-lg font-bold">{t("phase1Title")}</h3>
             </div>
             
             <Accordion type="multiple" className="w-full">
@@ -123,9 +123,9 @@ export function ErpRoadmapCard() {
                   <div className="pl-6 space-y-2 text-sm text-muted-foreground">
                     <p>{t("aniqChiqar")}</p>
                     <ul className="list-disc pl-4 space-y-1">
-                      <li>Umumiy LOC (Lines of Code)</li>
+                      <li>{t("totalLoc")}</li>
                       <li>{t("fayllarSoni")}</li>
-                      <li>Frontend / Backend / DB nisbatlari</li>
+                      <li>{t("frontendBackendDbRatio")}</li>
                       <li>{t("ishlatilayotganTexnologiyalar")}</li>
                       <li>{t("runtimedaNimalarBoladi")}</li>
                     </ul>
@@ -160,9 +160,9 @@ export function ErpRoadmapCard() {
                     <div className="mt-2">
                       <p className="font-medium mb-1">{t('statusTurlari')}</p>
                       <div className="flex flex-wrap gap-2">
-                        <EPStatusPill tone="danger">TASDIQLANGAN MUAMMO</EPStatusPill>
-                        <EPStatusPill tone="neutral">KUTILGAN HOLAT</EPStatusPill>
-                        <Badge variant="outline">ANIQLASHTIRISH KERAK</Badge>
+                        <EPStatusPill tone="danger">{t("confirmedIssue")}</EPStatusPill>
+                        <EPStatusPill tone="neutral">{t("expectedState")}</EPStatusPill>
+                        <Badge variant="outline">{t("needsClarification")}</Badge>
                       </div>
                     </div>
                   </div>
@@ -173,7 +173,7 @@ export function ErpRoadmapCard() {
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
                     <Settings className="h-4 w-4 text-[var(--ep-blue)]" />
-                    <span>1.3 UI va tugmalar auditi</span>
+                    <span>{t("k13UiButtonsAudit")}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
@@ -203,7 +203,7 @@ export function ErpRoadmapCard() {
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-[var(--ep-blue)]" />
-                    <span>1.4 Biznes jarayonlar bo'yicha tahlil (MUHIM)</span>
+                    <span>{t("k14BusinessProcessAnalysis")}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
@@ -242,7 +242,7 @@ export function ErpRoadmapCard() {
 
           <TabsContent value="phase2" className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
-              <Badge className="bg-orange-500">2-BOSQICH</Badge>
+              <Badge className="bg-orange-500">{t("phase2")}</Badge>
               <h3 className="text-lg font-bold">{t("muammolarRoyxatiVaFixPlan")}</h3>
             </div>
             
@@ -261,17 +261,17 @@ export function ErpRoadmapCard() {
                 </div>
                 <div className="space-y-2">
                   <div className="p-3 border rounded-lg bg-background">
-                    <p className="font-bold text-primary mb-2">VAZIFA + YECHIM</p>
+                    <p className="font-bold text-primary mb-2">{t("taskAndSolution")}</p>
                     <div className="space-y-1 text-sm text-muted-foreground">
-                      <p>• Nima qilish kerak (aniq)</p>
-                      <p>• Qaysi qatlamda (UI/API/DB/AUTH)</p>
+                      <p>{t("whatToDoExact")}</p>
+                      <p>{t("whichLayer")}</p>
                       <p>{t("qandayYondashuvBilan")}</p>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="mt-4">
-                <p className="font-medium mb-2">USTUVORLIK:</p>
+                <p className="font-medium mb-2">{t("priorityLabel")}</p>
                 <div className="flex flex-wrap gap-2">
                   <EPStatusPill tone="danger">{t("kritik")}</EPStatusPill>
                   <Badge className="bg-orange-500">{t("high")}</Badge>
@@ -284,8 +284,8 @@ export function ErpRoadmapCard() {
 
           <TabsContent value="phase3" className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
-              <EPStatusPill tone="success">3-BOSQICH</EPStatusPill>
-              <h3 className="text-lg font-bold">KODLAB TUZATISH (IMPLEMENTATION)</h3>
+              <EPStatusPill tone="success">{t("phase3")}</EPStatusPill>
+              <h3 className="text-lg font-bold">{t("phase3Title")}</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -334,7 +334,7 @@ export function ErpRoadmapCard() {
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-[var(--ep-blue)] mt-0.5" />
-                    <span>Kim / qachon / nimadan nimaga</span>
+                    <span>{t("whoWhenFromTo")}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -349,7 +349,7 @@ export function ErpRoadmapCard() {
                 <CardContent className="text-sm space-y-2">
                   <div className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-[var(--ep-purple)] mt-0.5" />
-                    <span>Oy/yil yopilishi</span>
+                    <span>{t("monthYearClose")}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-[var(--ep-purple)] mt-0.5" />
@@ -404,7 +404,7 @@ export function ErpRoadmapCard() {
 
           <TabsContent value="phase4" className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
-              <Badge className="bg-purple-500">4-BOSQICH</Badge>
+              <Badge className="bg-purple-500">{t("phase4")}</Badge>
               <h3 className="text-lg font-bold">{t("ozbekistonUchunSapNearMoslashuv")}</h3>
             </div>
             
@@ -461,8 +461,8 @@ export function ErpRoadmapCard() {
 
           <TabsContent value="phase5" className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
-              <EPStatusPill tone="success">5-BOSQICH</EPStatusPill>
-              <h3 className="text-lg font-bold">YAKUNIY HISOBOT</h3>
+              <EPStatusPill tone="success">{t("phase5")}</EPStatusPill>
+              <h3 className="text-lg font-bold">{t("finalReportTitle")}</h3>
             </div>
             
             <Card className="bg-emerald-500/5 border-emerald-500/30">
@@ -494,7 +494,7 @@ export function ErpRoadmapCard() {
                   <div className="p-3 bg-background rounded-lg border">
                     <div className="flex items-center gap-2 mb-1">
                       <Shield className="h-4 w-4 text-[var(--ep-purple)]" />
-                      <span className="font-medium">UZ moslashuv</span>
+                      <span className="font-medium">{t("uzAdaptation")}</span>
                     </div>
                   </div>
                   <div className="p-3 bg-background rounded-lg border">

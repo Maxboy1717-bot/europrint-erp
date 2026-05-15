@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { errMsg } from "../hr-v2-error";
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron } from '@nestjs/schedule';
@@ -22,6 +23,7 @@ export class ShiftService {
   constructor(
     private readonly eventEmitter: EventEmitter2,
     private readonly repo: ShiftRepository,
+    private readonly i18n: I18nService,
   ) {}
 
   async assignShift(dto: {
@@ -49,14 +51,17 @@ export class ShiftService {
     fromShiftId: number;
     reason: string;
   }) {
+    const shiftNotFoundMsg = await this.i18n.t('errors.shiftNotFound');
+    const shiftNotForYouMsg = await this.i18n.t('errors.shiftNotForYou');
+    const leaveConflictMsg = "Xodim shu kunda ta'tilda";
     return safeCall(async () => {
       const fromShift = await this.repo.findShiftById(dto.fromShiftId);
-      if (!fromShift || !fromShift.ok || !fromShift.data) throw new BadRequestException('Shift topilmadi');
+      if (!fromShift || !fromShift.ok || !fromShift.data) throw new BadRequestException(shiftNotFoundMsg);
       if (fromShift.data.employee_id !== dto.fromEmployeeId) {
-        throw new BadRequestException('Bu shift siz uchun emas');
+        throw new BadRequestException(shiftNotForYouMsg);
       }
       const hasLeave = await this.repo.checkLeaveConflict(dto.toEmployeeId, fromShift.data.shift_date);
-      if (hasLeave) throw new BadRequestException("Xodim shu kunda ta'tilda");
+      if (hasLeave) throw new BadRequestException(leaveConflictMsg);
       const swapMeta = JSON.stringify({ reason: dto.reason, to_employee_id: dto.toEmployeeId });
       await this.repo.updateShiftStatus(dto.fromShiftId, 'swap_pending', swapMeta);
       this.eventEmitter.emit(HrV2Events.SHIFT_SWAP_REQUESTED, {

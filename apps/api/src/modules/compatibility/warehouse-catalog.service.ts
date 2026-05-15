@@ -4,6 +4,7 @@
  */
 
 import { Injectable , NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { db,
   rawSql} from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -13,6 +14,7 @@ import { safeCall, Result, AppError } from '@common/result';
 import { MAX_QUERY_LIMIT, MAX_LARGE_QUERY_LIMIT } from '@common/constants/app.constants';
 @Injectable()
 export class WarehouseCatalogService {
+  constructor(private readonly i18n: I18nService) {}
 
   async getMaterials(search?: string): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -75,6 +77,7 @@ export class WarehouseCatalogService {
     });}
 
   async createBatch(body: Record<string, unknown>){
+    const recordNotFoundMsg = await this.i18n.t('errors.recordNotFound');
     return safeCall(async () => {
     const result = await rawSql(sql`
       INSERT INTO warehouse_batches (batch_number, material_card_id, warehouse_id, quantity, remaining_quantity,
@@ -88,12 +91,13 @@ export class WarehouseCatalogService {
       RETURNING *
     `);
     const _found = dbRows(result)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(recordNotFoundMsg);
     return _found;
-  
+
     });}
 
   async updateBatch(id: string, body: Record<string, unknown>){
+    const recordNotFoundMsg = await this.i18n.t('errors.recordNotFound');
     return safeCall(async () => {
     // Fully parameterized COALESCE update — no sql.raw(), no string injection possible
     const result = await rawSql(sql`
@@ -115,7 +119,7 @@ export class WarehouseCatalogService {
       RETURNING *
     `);
     const _found = dbRows(result)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(recordNotFoundMsg);
     return _found;
 
     });}

@@ -96,7 +96,7 @@ export function POColumn({ pendingPOs, loading }: { pendingPOs: PurchaseOrder[];
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <ShoppingCart className="h-4 w-4 text-[var(--ep-blue)]" />
-          Xarid Buyurtmalari (Kutilayotgan Qabul)
+          {t("purchaseOrdersPendingReceipt")}
           <Badge className="ml-auto bg-blue-100 text-[var(--ep-blue)]">{pendingPOs.length}</Badge>
         </CardTitle>
       </CardHeader>
@@ -120,15 +120,15 @@ export function POColumn({ pendingPOs, loading }: { pendingPOs: PurchaseOrder[];
               <div className="text-muted-foreground">{po.vendor_name}</div>
               <div className="flex justify-between text-xs">
                 <span>{t("jami")}<strong>{formatCurrency(Number(po.total_amount), po.currency || "UZS")}</strong></span>
-                <span className="text-[var(--ep-primary)]">Qoldi: {formatCurrency(Number(po.pending_amount), po.currency || "UZS")}</span>
+                <span className="text-[var(--ep-primary)]">{t("remaining")} {formatCurrency(Number(po.pending_amount), po.currency || "UZS")}</span>
               </div>
               {po.delivery_date && (
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> Muddati: {po.delivery_date}
+                  <Clock className="h-3 w-3" /> {t("dueDateLabel")} {po.delivery_date}
                 </div>
               )}
               {Number(po.receipt_count) > 0 && (
-                <div className="text-xs text-[var(--ep-green)]">{po.receipt_count} ta qabul akti mavjud</div>
+                <div className="text-xs text-[var(--ep-green)]">{po.receipt_count} {t("receiptActsExist")}</div>
               )}
             </div>
           ))
@@ -145,7 +145,7 @@ export function GRNColumn({ goodsReceipts, loading }: { goodsReceipts: GoodsRece
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <Package className="h-4 w-4 text-[var(--ep-green)]" />
-          Qabul Aktlari (GRN)
+          {t("receiptActsGrn")}
           <Badge className="ml-auto bg-green-100 text-[var(--ep-green)]">{goodsReceipts.length}</Badge>
         </CardTitle>
       </CardHeader>
@@ -167,7 +167,7 @@ export function GRNColumn({ goodsReceipts, loading }: { goodsReceipts: GoodsRece
                 </Badge>
               </div>
               <div className="text-muted-foreground">{gr.vendorName}</div>
-              {gr.warehouseName && <div className="text-xs text-muted-foreground">Ombor: {gr.warehouseName}</div>}
+              {gr.warehouseName && <div className="text-xs text-muted-foreground">{t("warehouseLabel")} {gr.warehouseName}</div>}
               <div className="text-xs text-muted-foreground flex items-center gap-1">
                 <Clock className="h-3 w-3" /> {gr.receiptDate}
               </div>
@@ -197,7 +197,7 @@ export function InvoiceColumn({
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <FileText className="h-4 w-4 text-[var(--ep-purple)]" />
-          Fakturalar &amp; 3-Way Match
+          {t("invoicesThreeWayMatch")}
           <Badge className="ml-auto bg-purple-100 text-[var(--ep-purple)]">{vendorInvoices.length}</Badge>
         </CardTitle>
       </CardHeader>
@@ -224,7 +224,7 @@ export function InvoiceColumn({
                 <div className="text-muted-foreground">{inv.vendorName}</div>
                 <div className="flex justify-between text-xs">
                   <span>{t("jami")}<strong>{formatCurrency(Number(inv.totalAmount), inv.currency || "UZS")}</strong></span>
-                  {inv.dueDate && <span className="text-[var(--ep-primary)]">Muddat: {inv.dueDate}</span>}
+                  {inv.dueDate && <span className="text-[var(--ep-primary)]">{t("deadlineLabel")} {inv.dueDate}</span>}
                 </div>
                 <div className="flex items-center justify-between mt-1">
                   <div className="flex items-center gap-1">
@@ -252,15 +252,15 @@ export function InvoiceColumn({
                   </div>
                 </div>
                 {(inv.matchStatus === "unmatched" || inv.matchStatus === "mismatch") && !inv.purchaseOrderId && (
-                  <div className="text-xs text-[var(--ep-primary)] flex items-center gap-1"><Info className="h-3 w-3" /> PO ulangan emas</div>
+                  <div className="text-xs text-[var(--ep-primary)] flex items-center gap-1"><Info className="h-3 w-3" /> {t("poNotLinked")}</div>
                 )}
                 {inv.purchaseOrderId && !inv.goodsReceiptId && (
-                  <div className="text-xs text-[var(--ep-primary)] flex items-center gap-1"><Info className="h-3 w-3" /> GRN (Qabul akti) ulangan emas — Match uchun zarur</div>
+                  <div className="text-xs text-[var(--ep-primary)] flex items-center gap-1"><Info className="h-3 w-3" /> {t("grnNotLinkedRequired")}</div>
                 )}
                 {Number(inv.priceVariance) > 2 && (
                   <div className="text-xs text-[var(--ep-red)] flex items-center gap-1">
                     <AlertTriangle className="h-3 w-3" />
-                    Narx farqi: {Number(inv.priceVariance).toFixed(2)}% (±2% chegaradan oshdi)
+                    {t("priceVarianceLabel")} {Number(inv.priceVariance).toFixed(2)}% {t("priceVarianceExceeds")}
                   </div>
                 )}
                 {localResult && <MatchResultPanel result={localResult} />}

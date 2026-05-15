@@ -5,7 +5,17 @@
  * PIN tekshiriladi va `signature_hash` yaratiladi (audit uchun).
  */
 
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM query builder cannot
+ *   express: ON CONFLICT DO UPDATE WITH EXCLUDED column reference
+ *   (`ON CONFLICT (user_id) DO UPDATE SET pin_hash = EXCLUDED.pin_hash`) —
+ *   Drizzle's onConflictDoUpdate API does not support EXCLUDED. Target table
+ *   `cc_user_pins` is not present in the Drizzle schema barrel.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+
 import { Injectable, Logger, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { sql } from 'drizzle-orm';
@@ -15,10 +25,12 @@ import { runQuery } from '@shared/db';
 export class CcPinService {
   private readonly logger = new Logger(CcPinService.name);
 
+  constructor(private readonly i18n: I18nService) {}
+
   /** Yangi PIN o'rnatish yoki o'zgartirish (4-8 raqam) */
   async setPin(userId: number, pin: string): Promise<void> {
     if (!/^\d{4,8}$/.test(pin)) {
-      throw new BadRequestException("PIN 4 dan 8 raqamgacha bo'lishi kerak");
+      throw new BadRequestException(await this.i18n.t('errors.pinLengthInvalid'));
     }
     const pinHash = await bcrypt.hash(pin, 10);
     await runQuery(sql`
@@ -44,11 +56,11 @@ export class CcPinService {
     `);
     const row = r.rows[0];
     if (!row) {
-      throw new UnauthorizedException("PIN o'rnatilmagan. Avval profil sozlamalarida PIN qo'ying");
+      throw new UnauthorizedException(await this.i18n.t('errors.pinNotSet'));
     }
     const ok = await bcrypt.compare(pin, row.pin_hash);
     if (!ok) {
-      throw new UnauthorizedException("Noto'g'ri PIN");
+      throw new UnauthorizedException(await this.i18n.t('errors.pinIncorrect'));
     }
     // Imzo uchun deterministik hash — payload + userId + timestamp
     const ts = Date.now();

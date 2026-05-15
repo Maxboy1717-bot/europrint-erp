@@ -159,7 +159,7 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
                 name="duration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Davomiyligi (daqiqa)</FormLabel>
+                    <FormLabel>{t("durationMinutes")}</FormLabel>
                     <FormControl>
                       <Input {...field} type="number" placeholder="30" data-testid="input-duration" />
                     </FormControl>
@@ -174,7 +174,7 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Dars nomi (O'zbek) <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>{t("lessonNameUz")} <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input {...field} placeholder={t("kirishAsosiyTushunchalar")} data-testid="input-lesson-title" />
                   </FormControl>
@@ -188,9 +188,9 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
               name="titleRu"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Dars nomi (Rus) <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>{t("lessonNameRu")} <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Введение: Основные понятия" data-testid="input-lesson-title-ru" />
+                    <Input {...field} placeholder={t("introBasicsPlaceholder")} data-testid="input-lesson-title-ru" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -203,12 +203,12 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
                 name="filePath"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Video link (YouTube, Vimeo yoki boshqa) <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>{t("videoLinkLabel")} <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input {...field} type="url" placeholder="https://www.youtube.com/watch?v=..." data-testid="input-video-link" />
                     </FormControl>
                     <p className="text-sm text-muted-foreground">
-                      Video linkini kiriting (YouTube, Vimeo yoki boshqa video hosting)
+                      {t("enterVideoLinkHint")}
                     </p>
                     <FormMessage />
                   </FormItem>
@@ -237,7 +237,7 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
                 </div>
                 {filePath && (
                   <p className="text-sm text-muted-foreground">
-                    Yuklandi: {filePath}
+                    {t("uploadedLabel")} {filePath}
                   </p>
                 )}
               </div>
@@ -248,7 +248,7 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
               name="content"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kontent (O'zbek) <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>{t("contentUz")} <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Textarea {...field} placeholder={t("darsMazmuniYokiTavsifi")} rows={4} data-testid="input-lesson-content" />
                   </FormControl>
@@ -262,9 +262,9 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
               name="contentRu"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kontent (Rus) <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>{t("contentRu")} <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Textarea {...field} placeholder="Содержание или описание урока..." rows={4} data-testid="input-lesson-content-ru" />
+                    <Textarea {...field} placeholder={t("lessonContentPlaceholder")} rows={4} data-testid="input-lesson-content-ru" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -285,7 +285,7 @@ export function AddLessonDialog({open, onOpenChange, moduleId, onClose }: AddLes
               </Button>
               <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit-lesson">
                 {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
-                Saqlash
+                {t("save")}
               </Button>
             </DialogFooter>
           </form>

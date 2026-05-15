@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DELIVERY_FREE_THRESHOLD_UZS, DELIVERY_FEE_UZS } from '@common/constants/app.constants';
 import { ERP_EVENTS } from '@common/constants/erp-events.constants';
@@ -34,6 +35,7 @@ export class EcommerceService {
   constructor(
     private readonly repo: EcommerceRepository,
     private readonly events: EventEmitter2,
+    private readonly i18n: I18nService,
   ) {}
 
   async listCustomers(query: Record<string, unknown>): Promise<Result<object, AppError>> {
@@ -155,7 +157,7 @@ export class EcommerceService {
       const totalAmount = body['totalAmount'] as number | string | undefined;
 
       if (!customerPhone || !items || items.length === 0) {
-        throw new BadRequestException('Phone and items required');
+        throw new BadRequestException(await this.i18n.t('errors.phoneAndItemsRequired'));
       }
 
       const seqR = await this.repo.generateSequenceNumber('EP');

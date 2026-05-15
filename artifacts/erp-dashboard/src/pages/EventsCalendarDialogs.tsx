@@ -87,11 +87,11 @@ export function EventDialog({open,
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold"> {isEditing ? "Tadbirni tahrirlash" : "Tadbir yaratish"}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold"> {isEditing ? t("editEvent") : t("createEvent")}</DialogTitle>
           <DialogDescription>
             {isEditing
-              ? "Tadbir ma'lumotlarini yangilang"
-              : "Yangi kalendar tadbiri yarating"}
+              ? t("updateEventInfo")
+              : t("createCalendarEvent")}
           </DialogDescription>
         </DialogHeader>
 
@@ -103,7 +103,7 @@ export function EventDialog({open,
               <FormField control={form.control} name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sarlavha (O'zbekcha)</FormLabel>
+                    <FormLabel>{t("titleUzbek")}</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder={t("oquvMashguloti")} data-testid="input-event-title-uz" />
                     </FormControl>
@@ -114,9 +114,9 @@ export function EventDialog({open,
               <FormField control={form.control} name="titleRu"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sarlavha (Русский)</FormLabel>
+                    <FormLabel>{t("titleRussian")}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Учебное занятие" data-testid="input-event-title-ru" />
+                      <Input {...field} placeholder={t("titleRussianPlaceholder")} data-testid="input-event-title-ru" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -129,7 +129,7 @@ export function EventDialog({open,
               <FormField control={form.control} name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tavsif (O'zbekcha)</FormLabel>
+                    <FormLabel>{t("descriptionUzbek")}</FormLabel>
                     <FormControl>
                       <Textarea {...field} placeholder={t("tadbirTavsifi")} data-testid="input-event-desc-uz" />
                     </FormControl>
@@ -140,9 +140,9 @@ export function EventDialog({open,
               <FormField control={form.control} name="descriptionRu"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tavsif (Русский)</FormLabel>
+                    <FormLabel>{t("descriptionRussian")}</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Описание мероприятия..." data-testid="input-event-desc-ru" />
+                      <Textarea {...field} placeholder={t("descriptionRussianPlaceholder")} data-testid="input-event-desc-ru" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -170,7 +170,7 @@ export function EventDialog({open,
               <FormField control={form.control} name="startTime"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Boshlanish vaqti (ixtiyoriy)</FormLabel>
+                    <FormLabel>{t("startTimeOptional")}</FormLabel>
                     <FormControl>
                       <Input type="time" {...field} data-testid="input-start-time" />
                     </FormControl>
@@ -185,7 +185,7 @@ export function EventDialog({open,
               <FormField control={form.control} name="endDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tugash sanasi (ixtiyoriy)</FormLabel>
+                    <FormLabel>{t("endDateOptional")}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field}
                         min={form.watch("startDate") || new Date().toISOString().split("T")[0]}
@@ -200,7 +200,7 @@ export function EventDialog({open,
               <FormField control={form.control} name="endTime"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tugash vaqti (ixtiyoriy)</FormLabel>
+                    <FormLabel>{t("endTimeOptional")}</FormLabel>
                     <FormControl>
                       <Input type="time" {...field} data-testid="input-end-time" />
                     </FormControl>
@@ -228,9 +228,9 @@ export function EventDialog({open,
               <FormField control={form.control} name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Manzil (ixtiyoriy)</FormLabel>
+                    <FormLabel>{t("addressOptional")}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="A xona" data-testid="input-location" />
+                      <Input {...field} placeholder={t("roomA")} data-testid="input-location" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -239,7 +239,7 @@ export function EventDialog({open,
               <FormField control={form.control} name="maxParticipants"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Maksimal ishtirokchilar (ixtiyoriy)</FormLabel>
+                    <FormLabel>{t("maxParticipantsOptional")}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -277,7 +277,7 @@ export function EventDialog({open,
                 {t("cancel")}
               </Button>
               <Button type="submit" disabled={isPending} data-testid="button-submit">
-                {isEditing ? "Yangilash" : "Yaratish va xabarnoma yuborish"}
+                {isEditing ? t("update") : t("createAndNotify")}
               </Button>
             </div>
 

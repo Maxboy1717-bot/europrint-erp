@@ -14,6 +14,7 @@
  *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
  */
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { sql } from 'drizzle-orm';
@@ -41,6 +42,7 @@ export class InventoryAgentService {
     private readonly audit: AgentAuditService,
     private readonly bus:   AgentEventBusService,
     private readonly configService: ConfigService,
+    private readonly i18n: I18nService,
   ) {}
 
   /** 30 kunlik talab bashorati (harakatlanuvchi o'rtacha) */
@@ -196,7 +198,7 @@ export class InventoryAgentService {
         SELECT remaining_weight_kg::text AS remaining, status FROM warehouse_rolls WHERE id = ${args.rollDbId} FOR UPDATE
       `);
       const curRow = cur.rows[0];
-      if (!curRow) throw new NotFoundException('Roll topilmadi');
+      if (!curRow) throw new NotFoundException(await this.i18n.t('errors.rollNotFound'));
       const oldRemaining = Number(curRow.remaining);
       const newRemaining = Math.max(0, oldRemaining - args.usedWeightKg);
       const isLow   = newRemaining < 20 && newRemaining > 0;
@@ -224,7 +226,7 @@ export class InventoryAgentService {
       SELECT roll_id, article_code, remaining_weight_kg::text AS remaining, supplier_name
       FROM warehouse_rolls WHERE id = ${rollDbId} LIMIT 1
     `);
-    if (!r.rows[0]) throw new NotFoundException('Roll topilmadi');
+    if (!r.rows[0]) throw new NotFoundException(await this.i18n.t('errors.rollNotFound'));
     const x = r.rows[0];
     const baseUrl = this.configService.get<string>('PUBLIC_BASE_URL') ?? 'http://localhost:3001';
     const payload = JSON.stringify({
