@@ -116,11 +116,12 @@ export const queryClient = new QueryClient({
       // Log to console with rich context — visible in DevTools instantly.
       const url = (error as { url?: string })?.url;
       const status = (error as { status?: number })?.status;
+      // 501 NOT_IMPLEMENTED — bu xato emas, atayin stub javobi.
+      // Konsolga info darajada chiqaramiz, qizil [Query failed] xabari emas.
       // eslint-disable-next-line no-console
-      console.error(
-        `[Query failed]`,
-        { status, url, queryKey: query.queryKey, message: (error as Error)?.message },
-      );
+      const log = status === 501 ? console.info : console.error;
+      const tag = status === 501 ? '[Query stub 501]' : '[Query failed]';
+      log(tag, { status, url, queryKey: query.queryKey, message: (error as Error)?.message });
       queryErrorLog.set(JSON.stringify(query.queryKey), {
         error,
         url: url ?? String(query.queryKey[0] ?? ''),
