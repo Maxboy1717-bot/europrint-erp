@@ -1,4 +1,15 @@
 /**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   - COUNT(*) FILTER (WHERE ...) conditional aggregates in a single pass
+ *     for IoT dashboard equipment status breakdown (total/running/maintenance/
+ *     stopped) — Drizzle has no native FILTER clause and would require
+ *     four separate queries or CASE-based SUM workarounds.
+ *   - Legacy compatibility layer queries against tables (equipment,
+ *     production_sessions, downtime_events, defect_types, technology_cards,
+ *     products) that have no Drizzle schema definitions in lib/db/src/schema/.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
  * @module legacy-iot.service
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */

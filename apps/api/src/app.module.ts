@@ -83,7 +83,7 @@ import { EcommerceModule } from './modules/ecommerce/ecommerce.module';
 import { WebsiteModule } from './modules/website/website.module';
 
 // Legacy & Compatibility (minimallashtirilgan — asosiy route'lar ko'chirildi)
-import { LegacyModule } from './modules/legacy/legacy.module';
+import { LegacyModule } from './modules/general/legacy.module';
 import { CompatibilityModule } from './modules/compatibility/compatibility.module';
 
 // Cron + Telegram
