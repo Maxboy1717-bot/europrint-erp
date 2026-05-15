@@ -59,6 +59,7 @@ export const TRANSLATION_MODULES = [
   'logistics',
   'pos',
   'ai',
+  'aisha',
   'coordination',
   'print',
   // Sub-namespaces used by specific pages
