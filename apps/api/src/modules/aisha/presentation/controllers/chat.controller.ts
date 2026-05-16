@@ -102,34 +102,27 @@ export class AishaChatController {
     return { reply: reply.trim() || "AIsha javob bermadi (bo'sh oqim).", toolsUsed };
   }
 
+  private routeOrReply(sessionId: string, messageLength: number): ChatResponse | null {
+    if (!this.cfg.anthropicKey && !this.cfg.openaiKey && !this.cfg.googleAiKey) {
+      this.logger.log({ sessionId, messageLength }, 'AIsha chat invoked but no LLM provider key is configured');
+      return this.notConfiguredReply(sessionId);
+    }
+    if (!this.cfg.anthropicKey) {
+      this.logger.log({ sessionId, hasOpenai: !!this.cfg.openaiKey, hasGoogle: !!this.cfg.googleAiKey }, 'AIsha chat: non-Anthropic provider configured, fallback not implemented yet');
+      return this.errorReply(sessionId, 'Faqat Claude (Anthropic) provider qo\'llab-quvvatlanadi hozircha');
+    }
+    return null;
+  }
+
   @Post('chat')
   async chat(@Body() body: unknown): Promise<ChatResponse> {
     const dto = ChatRequestSchema.parse(body);
     const sessionId = dto.sessionId ?? randomUUID();
-
-    if (!this.cfg.anthropicKey && !this.cfg.openaiKey && !this.cfg.googleAiKey) {
-      this.logger.log(
-        { sessionId, messageLength: dto.message.length },
-        'AIsha chat invoked but no LLM provider key is configured',
-      );
-      return this.notConfiguredReply(sessionId);
-    }
-
-    if (!this.cfg.anthropicKey) {
-      // OpenAI / Google fallback not yet wired through — emit a friendly note.
-      this.logger.log(
-        { sessionId, hasOpenai: !!this.cfg.openaiKey, hasGoogle: !!this.cfg.googleAiKey },
-        'AIsha chat: non-Anthropic provider configured, fallback not implemented yet',
-      );
-      return this.errorReply(sessionId, 'Faqat Claude (Anthropic) provider qo\'llab-quvvatlanadi hozircha');
-    }
-
+    const routed = this.routeOrReply(sessionId, dto.message.length);
+    if (routed) return routed;
     try {
       const { reply, toolsUsed } = await this.collectClaudeReply(dto.message);
-      this.logger.log(
-        { sessionId, replyLength: reply.length, toolsUsed: toolsUsed.length },
-        'AIsha chat answered via Claude',
-      );
+      this.logger.log({ sessionId, replyLength: reply.length, toolsUsed: toolsUsed.length }, 'AIsha chat answered via Claude');
       return { success: true, data: { reply, sessionId, toolsUsed } };
     } catch (err) {
       const msg = (err as Error).message;
