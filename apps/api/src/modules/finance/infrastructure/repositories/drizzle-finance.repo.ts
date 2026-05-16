@@ -13,8 +13,8 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { db , runQuery, cfoConfigTable, settings } from '@shared/db';
+import { asc, eq, inArray, sql } from 'drizzle-orm';
 import { Result } from '@common/types/result.type';
 import {
   IFinanceRepo, FinanceRow,
@@ -47,8 +47,11 @@ export class FinanceRepository implements IFinanceRepo {
 
   async getSettingValue(settingKey: string): Promise<number> {
     try {
-      const r = await runQuery<{ value: string }>(sql`SELECT value FROM settings WHERE key = ${settingKey} LIMIT 1`);
-      const row = r.rows[0];
+      const rows = await db.select({ value: settings.value })
+        .from(settings)
+        .where(eq(settings.key, settingKey))
+        .limit(1);
+      const row = rows[0];
       return row?.value ? parseInt(row.value, 10) : 70;
     } catch (error: unknown) {
       this.logger.error(`Error fetching setting ${settingKey}: ${(error as Error).message}`);
@@ -308,20 +311,23 @@ export class FinanceRepository implements IFinanceRepo {
 
   async findCfoConfig(key: string): Promise<Result<CfoConfigRow | null>> {
     try {
-      const r = await runQuery<RawRow>(sql`
-        SELECT id, config_key, config_value, description, updated_at
-        FROM cfo_config WHERE config_key = ${key} LIMIT 1
-      `);
-      const row = r.rows[0];
+      const rows = await db.select({
+        id: cfoConfigTable.id,
+        config_key: cfoConfigTable.configKey,
+        config_value: cfoConfigTable.configValue,
+        description: cfoConfigTable.description,
+        updated_at: cfoConfigTable.updatedAt,
+      }).from(cfoConfigTable).where(eq(cfoConfigTable.configKey, key)).limit(1);
+      const row = rows[0];
       if (!row) return { ok: true, data: null };
       return {
         ok: true,
         data: {
-          id:          Number(row['id'] ?? 0),
-          configKey:   String(row['config_key'] ?? ''),
-          configValue: String(row['config_value'] ?? '0'),
-          description: row['description'] ? String(row['description']) : null,
-          updatedAt:   row['updated_at'] ? new Date(String(row['updated_at'])) : new Date(),
+          id:          Number(row.id ?? 0),
+          configKey:   String(row.config_key ?? ''),
+          configValue: String(row.config_value ?? '0'),
+          description: row.description ? String(row.description) : null,
+          updatedAt:   row.updated_at ? new Date(String(row.updated_at)) : new Date(),
         },
       };
     } catch (error: unknown) {
@@ -335,13 +341,13 @@ export class FinanceRepository implements IFinanceRepo {
       if (!Array.isArray(keys) || keys.length === 0) {
         return { ok: true, data: new Map<string, string>() };
       }
-      const r = await runQuery<RawRow>(sql`
-        SELECT config_key, config_value FROM cfo_config
-        WHERE config_key = ANY(${keys})
-      `);
+      const rows = await db.select({
+        config_key: cfoConfigTable.configKey,
+        config_value: cfoConfigTable.configValue,
+      }).from(cfoConfigTable).where(inArray(cfoConfigTable.configKey, keys));
       const map = new Map<string, string>();
-      for (const row of r.rows) {
-        map.set(String(row['config_key'] ?? ''), String(row['config_value'] ?? '0'));
+      for (const row of rows) {
+        map.set(String(row.config_key ?? ''), String(row.config_value ?? '0'));
       }
       return { ok: true, data: map };
     } catch (error: unknown) {
@@ -352,16 +358,19 @@ export class FinanceRepository implements IFinanceRepo {
 
   async findAllCfoConfig(): Promise<Result<CfoConfigRow[]>> {
     try {
-      const r = await runQuery<RawRow>(sql`
-        SELECT id, config_key, config_value, description, updated_at
-        FROM cfo_config ORDER BY config_key
-      `);
-      const data: CfoConfigRow[] = r.rows.map(row => ({
-        id:          Number(row['id'] ?? 0),
-        configKey:   String(row['config_key'] ?? ''),
-        configValue: String(row['config_value'] ?? '0'),
-        description: row['description'] ? String(row['description']) : null,
-        updatedAt:   row['updated_at'] ? new Date(String(row['updated_at'])) : new Date(),
+      const rows = await db.select({
+        id: cfoConfigTable.id,
+        config_key: cfoConfigTable.configKey,
+        config_value: cfoConfigTable.configValue,
+        description: cfoConfigTable.description,
+        updated_at: cfoConfigTable.updatedAt,
+      }).from(cfoConfigTable).orderBy(asc(cfoConfigTable.configKey));
+      const data: CfoConfigRow[] = rows.map(row => ({
+        id:          Number(row.id ?? 0),
+        configKey:   String(row.config_key ?? ''),
+        configValue: String(row.config_value ?? '0'),
+        description: row.description ? String(row.description) : null,
+        updatedAt:   row.updated_at ? new Date(String(row.updated_at)) : new Date(),
       }));
       return { ok: true, data };
     } catch (error: unknown) {
@@ -372,24 +381,29 @@ export class FinanceRepository implements IFinanceRepo {
 
   async upsertCfoConfig(input: { key: string; value: number }): Promise<Result<CfoConfigRow>> {
     try {
-      const r = await runQuery<RawRow>(sql`
-        INSERT INTO cfo_config (config_key, config_value, updated_at)
-        VALUES (${input.key}, ${String(input.value)}, now())
-        ON CONFLICT (config_key) DO UPDATE
-          SET config_value = EXCLUDED.config_value,
-              updated_at   = now()
-        RETURNING id, config_key, config_value, description, updated_at
-      `);
-      const row = r.rows[0];
+      const rows = await db.insert(cfoConfigTable)
+        .values({ configKey: input.key, configValue: String(input.value), updatedAt: new Date() })
+        .onConflictDoUpdate({
+          target: cfoConfigTable.configKey,
+          set: { configValue: String(input.value), updatedAt: new Date() },
+        })
+        .returning({
+          id: cfoConfigTable.id,
+          config_key: cfoConfigTable.configKey,
+          config_value: cfoConfigTable.configValue,
+          description: cfoConfigTable.description,
+          updated_at: cfoConfigTable.updatedAt,
+        });
+      const row = rows[0];
       if (!row) return { ok: false, error: { code: 'DB_ERROR', message: `CFO config key topilmadi: ${input.key}` } };
       return {
         ok: true,
         data: {
-          id:          Number(row['id'] ?? 0),
-          configKey:   String(row['config_key'] ?? ''),
-          configValue: String(row['config_value'] ?? '0'),
-          description: row['description'] ? String(row['description']) : null,
-          updatedAt:   row['updated_at'] ? new Date(String(row['updated_at'])) : new Date(),
+          id:          Number(row.id ?? 0),
+          configKey:   String(row.config_key ?? ''),
+          configValue: String(row.config_value ?? '0'),
+          description: row.description ? String(row.description) : null,
+          updatedAt:   row.updated_at ? new Date(String(row.updated_at)) : new Date(),
         },
       };
     } catch (error: unknown) {
