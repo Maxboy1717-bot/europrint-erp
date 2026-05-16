@@ -7,7 +7,7 @@
  * the explicit consent.
  */
 
-// RULE4_EXCEPTION: AIsha tools intentionally use raw SQL. Each tool
+// NOTE: (RULE4_EXCEPTION) AIsha tools intentionally use raw SQL. Each tool
 // aggregates across cross-module tables (sales, production, HR, finance,
 // security, IoT, kanban, calendar) that the AIsha module does not own.
 // Importing every Drizzle schema would create tight coupling between

@@ -22,6 +22,7 @@ import {
 } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
+import { I18nService } from 'nestjs-i18n';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { IotCameraService } from '../application/iot-camera.service';
@@ -37,7 +38,10 @@ const MANAGER_ROLES = ['production_manager', 'manager', 'super_admin', 'director
 @UseInterceptors(AuditInterceptor)
 @Controller('camera')
 export class IotCameraController {
-  constructor(private readonly svc: IotCameraService) {}
+  constructor(
+    private readonly svc: IotCameraService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get('cameras')
   async listCameras(@Query('status') status?: string, @Query('zone') zone?: string) {
@@ -94,7 +98,7 @@ export class IotCameraController {
   @Roles(...MANAGER_ROLES)
   async deleteCamera(@Param('id', ParseIntPipe) id: number) {
     await this.svc.deleteCamera(id);
-    return { message: "O'chirildi" };
+    return { message: await this.i18n.t('messages.deleted'), code: 'DELETED' };
   }
 
   @Get('cameras/:cameraId/zones')

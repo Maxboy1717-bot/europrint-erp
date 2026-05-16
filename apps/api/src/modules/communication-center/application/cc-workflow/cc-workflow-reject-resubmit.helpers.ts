@@ -21,6 +21,7 @@ export async function findMyRejectableApproval(
 ): Promise<RejectablePending> {
   const approvals = unwrapOrThrow(await docs.getPendingApprovalsAtStep(doc.id, doc.currentStepOrder));
   const mine = approvals.find(a => a.approverUserId === approverUserId && a.state === 'pending');
+  // I18N_LEAK: bare helper, no I18nService DI. Caller may translate via 'errors.noRejectPermission'.
   if (!mine) throw new ForbiddenException('Sizga bu hujjatni rad etish huquqi berilmagan');
   return mine;
 }

@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+import { I18nService } from 'nestjs-i18n';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -31,6 +32,7 @@ export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
+    private readonly i18n: I18nService,
   ) {}
 
   /**
@@ -75,7 +77,7 @@ export class JwtAuthGuard implements CanActivate {
     const token = this.extractToken(request);
 
     if (!token) {
-      throw new UnauthorizedException('Token topilmadi');
+      throw new UnauthorizedException(await this.i18n.t('auth.tokenRequired'));
     }
 
     try {
@@ -83,12 +85,12 @@ export class JwtAuthGuard implements CanActivate {
       // Payload validation — har bir token kamida `sub`/`id`/`userId` dan birini saqlashi shart.
       const userId = decoded['sub'] ?? decoded['id'] ?? decoded['userId'];
       if (!userId) {
-        throw new UnauthorizedException('Token payload yaroqsiz: foydalanuvchi identifikatori yo\'q');
+        throw new UnauthorizedException(await this.i18n.t('auth.tokenInvalid'));
       }
       // Muddat tugagani — additional sanity check (jwtService.verify also checks this)
       const exp = decoded['exp'] as number | undefined;
       if (exp && exp * 1000 < Date.now()) {
-        throw new UnauthorizedException('Token muddati tugagan');
+        throw new UnauthorizedException(await this.i18n.t('auth.tokenExpired'));
       }
 
       // Blacklist check — verify the access token has not been revoked via its jti claim.
@@ -103,7 +105,7 @@ export class JwtAuthGuard implements CanActivate {
             LIMIT 1
           `);
           if (blacklistResult.rows[0]?.is_revoked === true) {
-            throw new UnauthorizedException('Token bekor qilingan');
+            throw new UnauthorizedException(await this.i18n.t('auth.tokenRevoked'));
           }
         } catch (blacklistErr) {
           // Re-throw UnauthorizedException from blacklist check; ignore DB errors gracefully
@@ -116,7 +118,7 @@ export class JwtAuthGuard implements CanActivate {
       return true;
     } catch (err) {
       if (err instanceof UnauthorizedException) throw err;
-      throw new UnauthorizedException('Token yaroqsiz yoki muddati tugagan');
+      throw new UnauthorizedException(await this.i18n.t('auth.tokenInvalid'));
     }
   }
 }

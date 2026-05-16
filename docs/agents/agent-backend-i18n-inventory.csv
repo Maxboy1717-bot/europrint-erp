@@ -1,0 +1,99 @@
+file,line,snippet,recommended_fix
+apps/api/src/common/guards/roles.guard.ts,42,"throw new ForbiddenException('Ruxsat yoq');",i18n.t('errors.permissionDenied')
+apps/api/src/common/guards/roles.guard.ts,53,"throw new ForbiddenException('Ruxsat yoq');",i18n.t('errors.permissionDenied')
+apps/api/src/common/guards/jwt-auth.guard.ts,78,"throw new UnauthorizedException('Token topilmadi');",i18n.t('auth.tokenRequired')
+apps/api/src/common/guards/jwt-auth.guard.ts,86,"throw new UnauthorizedException('Token payload yaroqsiz: foydalanuvchi identifikatori yo\\'q');",i18n.t('auth.tokenInvalid')
+apps/api/src/common/guards/jwt-auth.guard.ts,91,"throw new UnauthorizedException('Token muddati tugagan');",i18n.t('auth.tokenExpired')
+apps/api/src/common/guards/jwt-auth.guard.ts,106,"throw new UnauthorizedException('Token bekor qilingan');",i18n.t('auth.tokenRevoked')
+apps/api/src/common/guards/jwt-auth.guard.ts,119,"throw new UnauthorizedException('Token yaroqsiz yoki muddati tugagan');",i18n.t('auth.tokenInvalid')
+apps/api/src/modules/sd/orders/orders.service.ts,77,"return { message: 'Buyurtma bekor qilindi' };",i18n.t('messages.orderCancelled') + add code field
+apps/api/src/modules/wms/warehouses/warehouses.service.ts,33,"throw new NotFoundException(`Ombor #${id} topilmadi`);",i18n.t('errors.warehouseNotFound')
+apps/api/src/modules/wms/warehouses/warehouses.service.ts,61,"return { message: 'Ombor deaktiv qilindi' };",i18n.t('messages.warehouseDeactivated')
+apps/api/src/modules/iot/presentation/iot-camera.controller.ts,97,"return { message: 'O\\'chirildi' };",i18n.t('messages.deleted')
+apps/api/src/modules/admin/presentation/controllers/admin-users.controller.ts,116,"throw new InternalServerErrorException('O\\'chirishda xato');",i18n.t('errors.deleteFailed')
+apps/api/src/modules/admin/presentation/controllers/admin-users.controller.ts,118,"return { message: 'Foydalanuvchi o\\'chirildi' };",i18n.t('messages.userDeleted')
+apps/api/src/modules/auth/presentation/auth.controller.ts,265,"throw new UnauthorizedException('Token muddati tugagan');",i18n.t('auth.tokenExpired')
+apps/api/src/modules/ecommerce/ecommerce.repository.ts,38,"throw new NotFoundException('Mijoz topilmadi');",i18n.t('errors.customerNotFound')
+apps/api/src/modules/ecommerce/ecommerce.repository.ts,59,"throw new NotFoundException('Mijoz topilmadi');",i18n.t('errors.customerNotFound')
+apps/api/src/modules/ecommerce/ecommerce.repository.ts,118,"throw new NotFoundException('Buyurtma topilmadi');",i18n.t('errors.orderNotFound')
+apps/api/src/modules/ecommerce/ecommerce.repository.ts,126,"throw new NotFoundException('Buyurtma topilmadi');",i18n.t('errors.orderNotFound')
+apps/api/src/modules/ecommerce/ecommerce.repository.ts,135,"throw new NotFoundException('Buyurtma topilmadi');",i18n.t('errors.orderNotFound')
+apps/api/src/modules/ecommerce/ecommerce-catalog.helper.ts,20,"throw new NotFoundException('Kategoriya topilmadi');",i18n.t('errors.categoryNotFound')
+apps/api/src/modules/ecommerce/ecommerce-catalog.helper.ts,36,"throw new NotFoundException('Kategoriya topilmadi');",i18n.t('errors.categoryNotFound')
+apps/api/src/modules/ecommerce/ecommerce-catalog.helper.ts,44,"throw new BadRequestException('Bu kategoriyada mahsulotlar mavjud. Avval mahsulotlarni boshqa kategoriyaga o\\'tkazing.');",i18n.t('errors.categoryHasProducts')
+apps/api/src/modules/ecommerce/ecommerce-catalog.helper.ts,60,"throw new NotFoundException('Mahsulot topilmadi');",i18n.t('errors.productNotFound')
+apps/api/src/modules/ecommerce/ecommerce-catalog.helper.ts,101,"throw new NotFoundException('Mahsulot topilmadi');",i18n.t('errors.productNotFound')
+apps/api/src/modules/ecommerce/ecommerce-catalog.helper.ts,117,"throw new NotFoundException('Mahsulot topilmadi');",i18n.t('errors.productNotFound')
+apps/api/src/modules/ecommerce/ecommerce.service.ts,122,"throw new BadRequestException('Noto\\'g\\'ri buyurtma holati');",i18n.t('errors.invalidOrderStatus')
+apps/api/src/modules/ecommerce/ecommerce.service.ts,123,"throw new BadRequestException('Noto\\'g\\'ri to\\'lov holati');",i18n.t('errors.invalidPaymentStatus')
+apps/api/src/modules/communication-center/presentation/cc-baskets.controller.ts,76,"throw new NotFoundException('Hujjat topilmadi');",i18n.t('errors.documentNotFound')
+apps/api/src/modules/communication-center/presentation/cc-baskets.controller.ts,80,"throw new ForbiddenException('Ruxsat yo\\'q');",i18n.t('errors.permissionDenied')
+apps/api/src/modules/communication-center/presentation/cc-baskets.controller.ts,93,"throw new ForbiddenException('Ruxsat yo\\'q');",i18n.t('errors.permissionDenied')
+apps/api/src/modules/order-workflow/presentation/guards/order-transition.guard.ts,50,"throw new ForbiddenException('Bu buyurtmaga ruxsatingiz yo\\'q');",i18n.t('errors.noOrderAccess')
+apps/api/src/modules/lms/enrollments/enrollments.service.ts,24,"throw new ConflictException('Foydalanuvchi allaqachon ushbu kursga yozilgan');",i18n.t('errors.alreadyEnrolled')
+apps/api/src/modules/director/presentation/strategic.controller.ts,116,"assertFound(data, 'Topilmadi');",i18n.t('errors.notFound')
+apps/api/src/modules/director/presentation/okr.controller.ts,53,"assertFound(data, 'Topilmadi');",i18n.t('errors.notFound')
+apps/api/src/modules/director/presentation/kaizen.controller.ts,64,"assertFound(data, 'Topilmadi');",i18n.t('errors.notFound')
+apps/api/src/modules/core/presentation/seven-functions.controller.ts,45,"assertFound(data, 'Topilmadi');",i18n.t('errors.notFound')
+apps/api/src/modules/lms/presentation/lms-enrollments.controller.ts,72,"assertRequired(userId, 'Foydalanuvchi aniqlanmadi');",I18N_LEAK note (helper signature pre-i18n)
+apps/api/src/modules/aisha/presentation/controllers/wake-config.controller.ts,45,"throw new ForbiddenException('Faqat direktor sensitivity\\'ni o\\'zgartira oladi');",I18N_LEAK note - rare director-only path
+apps/api/src/modules/agents/agents.controller.ts,132,"throw new BadRequestException('Base maosh to\\'g\\'ri kiritilmagan');",I18N_LEAK note - agent payload validation
+apps/api/src/modules/agents/agents.controller.ts,140,"throw new BadRequestException('Base maosh to\\'g\\'ri kiritilmagan');",I18N_LEAK note - agent payload validation
+apps/api/src/modules/ai/application/services/ai-router.service.ts,180,"throw new InternalServerErrorException('OpenAI javob bo`sh');",I18N_LEAK note - internal AI proxy
+apps/api/src/modules/ai/application/services/ai-router.service.ts,213,"throw new InternalServerErrorException('Gemini javob bo`sh');",I18N_LEAK note - internal AI proxy
+apps/api/src/modules/ai/application/services/ai-router.service.ts,240,"throw new InternalServerErrorException('Claude javob bo`sh');",I18N_LEAK note - internal AI proxy
+apps/api/src/modules/wms/presentation/wms-integration.controller.ts,50,"throw new BadRequestException('Ombor ID noto\\'g\\'ri');",I18N_LEAK note (validation message)
+apps/api/src/modules/communication-center/presentation/cc-public.controller.ts,86,"throw new NotFoundException('Hujjat topilmadi yoki QR kod noto\\'g\\'ri');",i18n.t('errors.documentOrQrNotFound')
+apps/api/src/modules/communication-center/presentation/cc-webhook.controller.ts,51,"throw new UnauthorizedException('X-CC-Signature header majburiy');",I18N_LEAK note - webhook handshake (operator-only)
+apps/api/src/modules/communication-center/presentation/cc-webhook.controller.ts,74,"throw new UnauthorizedException('HMAC imzosi noto\\'g\\'ri');",I18N_LEAK note - webhook security
+apps/api/src/modules/communication-center/application/cc-workflow/cc-workflow-reject-resubmit.helpers.ts,24,"throw new ForbiddenException('Sizga bu hujjatni rad etish huquqi berilmagan');",i18n.t('errors.noRejectPermission')
+apps/api/src/modules/communication-center/application/cc-workflow/cc-workflow-approve.helpers.ts,104,"throw new ForbiddenException('Sizga bu hujjatni tasdiqlash huquqi berilmagan yoki allaqachon imzolagansiz');",i18n.t('errors.noApprovePermission')
+apps/api/src/modules/communication-center/application/cc-org-resolver.service.ts,49,"throw new BadRequestException('CEO orgsxemada belgilanmagan');",I18N_LEAK note - org-schema misconfig
+apps/api/src/modules/communication-center/application/cc-org-resolver.service.ts,63,"throw new BadRequestException('Yuboruvchining bo\\'lim rahbari orgsxemada belgilanmagan');",I18N_LEAK note - org-schema misconfig
+apps/api/src/modules/communication-center/application/cc-org-resolver.service.ts,77,"throw new BadRequestException('Yuboruvchining bo\\'lim rahbari topilmadi');",I18N_LEAK note - org-schema misconfig
+apps/api/src/modules/communication-center/application/cc-org-resolver.service.ts,83,"throw new BadRequestException('POSITION: kod ko\\'rsatilmagan');",I18N_LEAK note - org-schema misconfig
+apps/api/src/modules/finance/domain/aggregates/budget.aggregate.ts,62,"throw new InternalServerErrorException('Faqat kutayotgan byudjet tasdiqlanadi');",i18n.t('errors.onlyPendingApprovable')
+apps/api/src/modules/finance/domain/aggregates/budget.aggregate.ts,72,"throw new InternalServerErrorException('Faqat draft byudjet taqdim etiladi');",i18n.t('errors.onlyDraftSubmittable')
+apps/api/src/modules/finance/domain/aggregates/budget.aggregate.ts,80,"throw new InternalServerErrorException('Faqat kutayotgan byudjet rad etiladi');",i18n.t('errors.onlyPendingRejectable')
+apps/api/src/modules/finance/domain/aggregates/budget.aggregate.ts,88,"throw new InternalServerErrorException('Faqat tasdiqlangan byudjetni yopish mumkin');",i18n.t('errors.onlyApprovedClosable')
+apps/api/src/modules/hr/domain/aggregates/leave-request.aggregate.ts,51,"throw new InternalServerErrorException('Faqat pending so\\'rov tasdiqlanadi');",i18n.t('errors.onlyPendingApprovable')
+apps/api/src/modules/hr/domain/aggregates/leave-request.aggregate.ts,61,"throw new InternalServerErrorException('Faqat pending so\\'rov rad etiladi');",i18n.t('errors.onlyPendingRejectable')
+apps/api/src/modules/hr/domain/aggregates/leave-request.aggregate.ts,77,"throw new InternalServerErrorException('Bu ta\\'til so\\'rovini bekor qilib bo\\'lmaydi');",i18n.t('errors.leaveCancelNotAllowed')
+apps/api/src/modules/director/domain/aggregates/approval-request.aggregate.ts,31,"throw new InternalServerErrorException('Faqat pending so\\'rov tasdiqlanadi');",i18n.t('errors.onlyPendingApprovable')
+apps/api/src/modules/director/domain/aggregates/approval-request.aggregate.ts,41,"throw new InternalServerErrorException('Faqat pending so\\'rov rad etiladi');",i18n.t('errors.onlyPendingRejectable')
+apps/api/src/modules/director/domain/aggregates/approval-request.aggregate.ts,44,"throw new InternalServerErrorException('Rad etish sababi kamida 5 ta belgi');",i18n.t('errors.rejectReasonTooShort')
+apps/api/src/modules/hr/shift/shift.service.ts,80,"throw new BadRequestException('Swap so\\'rov topilmadi yoki allaqachon tasdiqlangan');",I18N_LEAK note - shift swap edge case
+apps/api/src/modules/hr/inspection/inspection.controller.ts,56,"throw new InternalServerErrorException('Referans rasm saqlashda xato');",I18N_LEAK note - inspection upload
+apps/api/src/modules/hr/inspection/inspection.controller.ts,94,"throw new InternalServerErrorException('Inspeksiya saqlashda xato');",I18N_LEAK note - inspection upload
+apps/api/src/modules/hr/inspection/inspection.controller.ts,107,"throw new InternalServerErrorException('Chek-list saqlashda xato');",I18N_LEAK note - inspection upload
+apps/api/src/modules/kanban/application/kanban.service.ts,139,"throw new BadRequestException('WIP limit kamida 1 bo\\'lishi kerak');",i18n.t('errors.wipLimitMin')
+apps/api/src/modules/agents/inventory-agent.service.ts,185,"throw new BadRequestException('Bu roll allaqachon ro\\'yxatga olingan: ' + args.rollId);",I18N_LEAK note - agent operation
+apps/api/src/modules/compatibility/resources.service.ts,256,"throw new NotFoundException('Lavozim topilmadi');",i18n.t('errors.positionNotFound')
+apps/api/src/modules/remaining/ideal-rasm.service.ts,62,"throw new NotFoundException('Maqsad topilmadi');",I18N_LEAK note - target not found (legacy)
+apps/api/src/modules/compatibility/document-workflow-v2.service.ts,105,"throw new BadRequestException('Hujjat yaratish bajarilmadi');",i18n.t('errors.documentCreationFailed')
+apps/api/src/modules/compatibility/document-workflow-v2.controller.ts,95,"throw new BadRequestException('Rad etish sababi majburiy');",i18n.t('errors.rejectReasonRequired')
+apps/api/src/modules/admin/application/services/admin-extra.service.ts,102,"return { id, message: 'Topilmadi' };",i18n.t('errors.notFound')
+apps/api/src/modules/director/application/zvs.service.ts,81,"return Err({ code: 'BAD_REQUEST', message: 'Topilmadi' });",i18n.t('errors.notFound')
+apps/api/src/modules/director/application/zvs.service.ts,106,"return Err({ code: 'BAD_REQUEST', message: 'Topilmadi' });",i18n.t('errors.notFound')
+apps/api/src/modules/director/application/coordination.service.ts,47,"return Err({ code: 'BAD_REQUEST', message: 'Topilmadi' });",i18n.t('errors.notFound')
+apps/api/src/modules/director/application/coordination.service.ts,61,"return Err({ code: 'BAD_REQUEST', message: 'Topilmadi' });",i18n.t('errors.notFound')
+apps/api/src/modules/director/application/coordination.service.ts,94,"return Err({ code: 'BAD_REQUEST', message: 'Topilmadi' });",i18n.t('errors.notFound')
+apps/api/src/modules/director/application/coordination.service.ts,111,"return Err({ code: 'BAD_REQUEST', message: 'Topilmadi' });",i18n.t('errors.notFound')
+apps/api/src/modules/director/application/coordination.service.ts,125,"return Err({ code: 'BAD_REQUEST', message: 'Topilmadi' });",i18n.t('errors.notFound')
+apps/api/src/modules/director/application/zno.repository.ts,71,"return Ok(r[0] ?? { message: 'Yangilandi' });",I18N_LEAK note - repository default response
+apps/api/src/modules/director/application/strategic.repository.ts,39,"return (rows[0] ?? { message: 'Yangilandi' }) as Row;",I18N_LEAK note - repository default response
+apps/api/src/modules/director/application/strategic.repository.ts,129,"return (rows[0] ?? { message: 'Yangilandi' }) as Row;",I18N_LEAK note - repository default response
+apps/api/src/modules/director/application/strategic.repository.ts,158,"return (rows[0] ?? { message: 'Yangilandi' }) as Row;",I18N_LEAK note - repository default response
+apps/api/src/modules/director/application/coordination.repository.ts,77,"return (rows[0] ?? { message: 'Yangilandi' }) as Row;",I18N_LEAK note - repository default response
+apps/api/src/modules/director/application/coordination.repository.ts,153,"return (rows[0] ?? { message: 'Yangilandi' }) as Row;",I18N_LEAK note - repository default response
+apps/api/src/modules/director/application/okr.repository.ts,57,"return (rows[0] ?? { message: 'Yangilandi' }) as Row;",I18N_LEAK note - repository default response
+apps/api/src/modules/director/application/okr.repository.ts,104,"return (rows[0] ?? { message: 'Yangilandi' }) as Row;",I18N_LEAK note - repository default response
+apps/api/src/modules/director/application/kaizen.repository.ts,49,"return Ok(r[0] ?? { message: 'Yangilandi' });",I18N_LEAK note - repository default response
+apps/api/src/modules/core/application/seven-functions.repository.ts,76,"return (rows[0] ?? { message: 'Yangilandi' }) as Row;",I18N_LEAK note - repository default response
+apps/api/src/modules/core/application/seven-functions.repository.ts,126,"return (rows[0] ?? { message: 'Yangilandi' }) as Row;",I18N_LEAK note - repository default response
+apps/api/src/modules/remaining/weekly-plan.service.ts,102,"return Err('Ruxsat yo\\'q');",I18N_LEAK note - Result message (not direct HTTP)
+apps/api/src/modules/remaining/weekly-plan.service.ts,116,"return Err('Ruxsat yo\\'q');",I18N_LEAK note - Result message (not direct HTTP)
+apps/api/src/modules/lms/application/services/lms-core.service.ts,33,"return Err('Foydalanuvchi aniqlanmadi');",I18N_LEAK note - service Result
+apps/api/src/modules/lms/application/services/lms-core.service.ts,38,"return Err('Foydalanuvchi aniqlanmadi');",I18N_LEAK note - service Result
+apps/api/src/modules/lms/application/services/lms-core.service.ts,43,"return Err('Foydalanuvchi aniqlanmadi');",I18N_LEAK note - service Result
+apps/api/src/main.ts,93,"message: `Login uchun juda ko'p urinish. ${retryAfter}s dan keyin qayta urinib ko\\'ring.`",I18N_LEAK note - rate-limit middleware (pre-DI)

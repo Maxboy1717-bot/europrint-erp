@@ -41,6 +41,14 @@ export class QcDefectsExtendedController {
     return unwrapOrThrow(await this.svc.listBraks(sessionId ? safeInt(sessionId, 0) : null, safeInt(limit, 50), safeInt(offset, 0)));
   }
 
+  // Alias for /defects/extended — FE DefectManagementPage queries this path. Registered
+  // before /defects/:id so the literal "extended" segment isn't captured as an id param.
+  @Get('defects/extended')
+  async listDefectsExtended(@Query('limit') limit?: string, @Query('offset') offset?: string) {
+    const rows = unwrapOrThrow(await this.svc.listBraks(null, safeInt(limit, 50), safeInt(offset, 0))) as unknown[];
+    return { items: Array.isArray(rows) ? rows : [] };
+  }
+
   @Get('braks/stats')
   async getBrakStats(@Query('from') from?: string, @Query('to') to?: string) {
     return unwrapOrThrow(await this.svc.getBrakStats(from, to));

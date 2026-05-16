@@ -119,8 +119,8 @@ export class EcommerceService {
       const paymentStatus = body.paymentStatus as string | undefined;
       const validStatuses = ['new', 'confirmed', 'in_production', 'ready', 'shipped', 'delivered', 'cancelled'];
       const validPaymentStatuses = ['pending', 'paid', 'refunded'];
-      if (status && !validStatuses.includes(status)) throw new BadRequestException("Noto'g'ri buyurtma holati");
-      if (paymentStatus && !validPaymentStatuses.includes(paymentStatus)) throw new BadRequestException("Noto'g'ri to'lov holati");
+      if (status && !validStatuses.includes(status)) throw new BadRequestException(await this.i18n.t('errors.invalidOrderStatus'));
+      if (paymentStatus && !validPaymentStatuses.includes(paymentStatus)) throw new BadRequestException(await this.i18n.t('errors.invalidPaymentStatus'));
       const updateData: Record<string, unknown> = { updatedAt: _time.now() };
       if (status) updateData.status = status;
       if (paymentStatus) updateData.paymentStatus = paymentStatus;

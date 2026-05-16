@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { ONE_MB } from '@common/constants/app.constants';
 import { AdminExtraRepository } from '../../infrastructure/repositories/admin-extra.repo';
@@ -27,7 +28,10 @@ export interface SystemStatus {
 export class AdminExtraService {
   private readonly logger = new Logger(AdminExtraService.name);
 
-  constructor(private readonly repo: AdminExtraRepository) {}
+  constructor(
+    private readonly repo: AdminExtraRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   getRoles(): RoleDefinition[] {
     return [
@@ -97,9 +101,10 @@ export class AdminExtraService {
   }
 
   async getAlertById(id: number): Promise<Result<object, AppError>> {
+    const notFoundMsg = await this.i18n.t('errors.notFound');
     return safeCall(async () => {
       const r = await this.repo.findAlertById(id);
-      if (!r.ok || r.data === null) return { id, message: 'Topilmadi' };
+      if (!r.ok || r.data === null) return { id, message: notFoundMsg };
       return r.data as object;
     });
   }

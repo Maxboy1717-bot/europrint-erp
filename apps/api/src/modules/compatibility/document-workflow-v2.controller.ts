@@ -8,6 +8,7 @@ import {
   UseGuards, UseInterceptors, BadRequestException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -25,7 +26,10 @@ import { DocumentWorkflowV2Service } from './document-workflow-v2.service';
 )
 @Controller('hr-v2/workflow')
 export class DocumentWorkflowV2Controller {
-  constructor(private readonly svc: DocumentWorkflowV2Service) {}
+  constructor(
+    private readonly svc: DocumentWorkflowV2Service,
+    private readonly i18n: I18nService,
+  ) {}
 
   /**
    * GET /api/hr-v2/workflow/routes
@@ -92,7 +96,7 @@ export class DocumentWorkflowV2Controller {
     @CurrentUser() user: { id: number },
   ) {
     if (!body.reason) {
-      throw new BadRequestException('Rad etish sababi majburiy');
+      throw new BadRequestException(await this.i18n.t('errors.rejectReasonRequired'));
     }
     return unwrapOrInternal(await this.svc.rejectStep(instanceId, user.id, body.reason));
   }
