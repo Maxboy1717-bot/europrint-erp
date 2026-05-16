@@ -26,7 +26,7 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CrmFollowupCompatService } from '../application/crm-followup-compat.service';
-import { safeInt } from '../../hr/common/db-rows';
+import { safeInt } from '@common/db/db-rows';
 import { z } from 'zod';
 
 const FollowupSchema = z.object({

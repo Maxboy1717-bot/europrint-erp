@@ -635,3 +635,106 @@ Tasks safe to dispatch **in parallel** (no shared file) within the same sprint:
 - 100% of CQRS-named handlers actually registered on the bus.
 - 100% of controllers transport-only (no `runQuery`/`sql\`` calls).
 - Backend boots and serves `/api/aisha/chat` end-to-end with the AIsha tool round-trip.
+
+---
+
+## ADDENDUM — Audit-discovered backlog (appended 2026-05-17)
+
+Post-sprint independent audit (`docs/ddd-deep-audit.md` + 4 dimension reports) measured honest score **~67-71/100** vs the sprint's claimed **93/100**. Below are 17 NEW tasks the original 30-task plan did NOT scope. Each item has file:line evidence in `docs/ddd-deep-audit.md`.
+
+### P0-audit — silent-failure blockers (must fix in 1-2 sprints)
+
+#### `PA0-1` — Fix Trigger 2 (Deal Won → SO create)
+- **Cause:** `crm/.../mark-deal-won.handler.ts:47` publishes via `EventBus`; `sd/.../deal-won.listener.ts:17` listens via `@OnEvent('deal.won')`. Mechanism mismatch.
+- **Fix:** add EventEmitter2 → EventBus bridge OR convert the listener to `@EventsHandler(DealWonEvent)`.
+- **Effort:** S.
+
+#### `PA0-2` — Fix Trigger 7 (Advance approved → unlock PP)
+- **Cause:** `tech-three-checkpoint.listener.ts:81` emits `'fi.advance.approved'`; `pp/.../advance-approved.listener.ts:21` listens `'ADVANCE_APPROVED'`. String mismatch.
+- **Fix:** centralise event names in `ERP_EVENTS.*` constants; every emit and every listener references the constant.
+- **Effort:** S.
+
+#### `PA0-3` — Fix Trigger 14 (Delivery completed → invoice)
+- **Cause:** `'logistics.delivery.completed'` emit vs `'DELIVERY_COMPLETED'` listener. Same string-mismatch family.
+- **Fix:** ERP_EVENTS constant.
+- **Effort:** S.
+
+#### `PA0-4` — Fix Trigger 15 (Payment full → order closed)
+- **Cause:** `invoice.aggregate.ts:89` emits `'InvoiceFullyPaid'`; `payment-received.listener.ts:22` listens `'payment.full'`; ERP_EVENTS constant is `'fi.payment.full'` — three-way mismatch.
+- **Fix:** ERP_EVENTS constant + aggregate event class.
+- **Effort:** S.
+
+#### `PA0-5` — Add Trigger 20 listener (Advance bypass audit)
+- **Cause:** `sales-order.aggregate.ts:149` emits `AdvanceBypassApproved`; no listener exists anywhere.
+- **Fix:** add audit-trail listener in `director/` or `finance/` to persist bypass record.
+- **Effort:** M.
+
+#### `PA0-6` — Add outbox `domain_events` table + publisher worker
+- **Cause:** every emit is in-process fire-and-forget. Process crash between aggregate save and event emit silently loses events.
+- **Fix:** add `domain_events` table to schema; aggregates persist events transactionally; BullMQ worker publishes from outbox; mark `published_at` once dispatched.
+- **Effort:** L (2-3 days).
+
+#### `PA0-7` — Fix `hr/leave-request.aggregate.ts` Result-vs-throw regression
+- **Cause:** `leave-request.aggregate.ts:53,65,83` throws `DomainError` — direct Rule 1 violation. Already flagged in HR audit memo.
+- **Fix:** convert to `Result.Err(...)` returns.
+- **Effort:** S.
+
+#### `PA0-8` — Fix `mm/material.aggregate.ts` (anemic / not AggregateRoot)
+- **Cause:** `material.aggregate.ts:7-27` is public-field bag; not even an `AggregateRoot` subclass.
+- **Fix:** extend `AggregateRoot`; add `addStock`, `consumeStock`, `reserve` methods with invariants.
+- **Effort:** M.
+
+### P1-audit — repository discipline pass (1 sprint)
+
+#### `PA1-9` — Migrate 53 application-layer pseudo-repositories
+- **Files:** `sd/application/sd-{payments,leads,quotations,dashboard}.repository.ts`, `crm/application/crm-*.repository.ts` (10), `hr/application/hr-*.repository.ts` (5), `wms/application/*.repository.ts` (5), `director/application/*.repository.ts` (7), `finance/application/*.repository.ts` (4).
+- **Fix:** move to `infrastructure/repositories/`; define interfaces in `domain/`; Symbol-token DI bindings in module providers.
+- **Effort:** L (3-4 days).
+
+#### `PA1-10` — Strip `@shared/db` from 9 command handlers
+- **Files:** `pos-v2/application/commands/approve-count.command.ts:9-13`, `order-workflow/application/commands/{transition-status,create-order,create-payment-plan}.handler.ts`, `iot/.../register-device.handler.ts`, `wms/.../create-warehouse.handler.ts`, `core/.../delete-department.command.ts`, 2 more pos-v2.
+- **Fix:** add repo methods; route writes through interfaces.
+- **Effort:** M (1 day).
+
+#### `PA1-11` — Remove parallel write paths in 3 controllers
+- **Files:** `crm-deals.controller.ts:64-189` (DealsService + CommandBus parallel), `hr-leave.controller.ts:84,166`, `wms-rental.controller.ts:88,101`.
+- **Fix:** one path per controller (recommend bus-only for writes, query-bus for reads).
+- **Effort:** M.
+
+#### `PA1-12` — Fix `shared/money.vo.ts`
+- **Cause:** no `equals()`, no `Result` factory, `add()` throws, missing `subtract` / `multiply` / `divide` / `compareTo`.
+- **Fix:** rewrite as canonical Money VO with full operations + `Result` returns.
+- **Effort:** S.
+
+### P2-audit — strategic foundation (2 sprints)
+
+#### `PA2-13` — Write `docs/context-map.md`
+- **Fix:** enumerate 8-10 bounded contexts with Customer-Supplier / ACL / Open Host Service / Published Language labels.
+- **Effort:** M (1 day).
+
+#### `PA2-14` — ACL for `compatibility/` and `remaining/`
+- **Cause:** `compatibility/` (88 files, 36 raw SQL) and `remaining/` (37 files) are zero-translation SQL pass-throughs. `general/services/legacy.service.ts:27` still has `sql.raw(rawQuery)` (CLAUDE.md Rule B SQL-injection).
+- **Fix:** add ACL layer mapping legacy formats to new aggregates; ban raw SQL in these folders via reviewer.
+- **Effort:** L (3 days).
+
+#### `PA2-15` — Move `hr/common/db-rows.ts` to shared kernel
+- **Files:** `hr/common/db-rows.ts` + 42 import sites across 16 modules.
+- **Fix:** move to `apps/api/src/common/db/db-rows.ts`; re-export from HR for back-compat.
+- **Effort:** S.
+
+#### `PA2-16` — Publish `IOrderHeader` interface
+- **Cause:** 5 unreconciled "Order" aggregates (`sd/SalesOrder`, `pp/ProductionOrder`, `design/DesignOrder`, `mm/PurchaseOrder`, `order-workflow/OrderAggregate`); no shared interface.
+- **Fix:** define `IOrderHeader` in `modules/shared/domain/`; each aggregate implements it; document each context's reading model.
+- **Effort:** M.
+
+### P3-audit — long-tail polish (1 sprint)
+
+#### `PA3-17` — Cleanup empty + tiny modules
+- **Files:**
+  - Delete empty `auth/application/commands/` + `admin/application/commands/` (P0-7 leftovers).
+  - Merge `fi → finance`, `sales → sd`, `storage → wms`, `hr-assets → hr`, `feedback-360 + adaptation + applications → hr`.
+- **Effort:** M.
+
+### Estimated total
+
+**5 sprints to reach honest 92-95/100** (vs current honest ~67-71/100). The original 30-task plan got us tactical-clean; this addendum is what's needed to also be strategic-clean and event-flow-correct.

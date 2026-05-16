@@ -6,6 +6,7 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { IPpRepository, PP_REPO } from '../../domain/repositories/pp.repository';
+import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 
 export interface AdvanceApprovedEvent {
   orderId: number;
@@ -18,7 +19,7 @@ export class AdvanceApprovedListener {
 
   constructor(@Inject(PP_REPO) private readonly ppRepo: IPpRepository) {}
 
-  @OnEvent('ADVANCE_APPROVED')
+  @OnEvent(ERP_EVENTS.ADVANCE_APPROVED)
   async handle(event: AdvanceApprovedEvent) {
     this.logger.log(
       { orderId: event.orderId, advanceId: event.advanceId },

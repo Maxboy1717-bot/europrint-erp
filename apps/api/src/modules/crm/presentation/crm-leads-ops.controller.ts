@@ -12,7 +12,7 @@
  */
 
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { safeInt } from '../../hr/common/db-rows';
+import { safeInt } from '@common/db/db-rows';
 import { Body, Controller, Delete, Logger, Param, Patch, Post, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CommandBus } from '@nestjs/cqrs';

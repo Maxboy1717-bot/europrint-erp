@@ -46,8 +46,16 @@ import { Role} from '../../auth/enums/role.enum';
 import { AuditInterceptor} from '../../shared/interceptors/audit.interceptor';
 import { CreateDealCommand} from '../application/commands/create-deal.handler';
 import { MarkDealWonCommand} from '../application/commands/mark-deal-won.handler';
+import { UpdateDealCommand} from '../application/commands/update-deal.handler';
+import { UpdateDealStageCommand} from '../application/commands/update-deal-stage.handler';
+import { DeleteDealCommand} from '../application/commands/delete-deal.handler';
 import { CreateDealDtoSchema} from './dto/create-deal.dto';
 import { LOGGER} from '../../shared/infrastructure/logger.provider';
+// PA1-11: DealsService retained ONLY for read paths (findAll/findOne) and the
+// quick-create endpoint that does not fit the rich CreateDealCommand shape.
+// All other writes flow through CommandBus.
+// TODO PA1-11: replace `dealsService.create` in createQuickDeal with a
+// CreateQuickDealCommand once the quick-create shape is formalised.
 import { DealsService } from '../deals/deals.service';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
@@ -142,7 +150,8 @@ export class CrmDealsController {
   if (!stageId || typeof stageId !== 'string') {
     throw new BadRequestException(await this.i18n.t('errors.stageIdRequired'));
   }
-  return unwrapOrThrow(await this.dealsService.update(Number(id), { stage_id: stageId }));
+  const res = await this.commandBus.execute(new UpdateDealStageCommand(Number(id), stageId));
+  return unwrapOrThrow(res);
 }
 
  @ApiOperation({ summary: 'Patch deal' })
@@ -157,7 +166,8 @@ export class CrmDealsController {
   for (const [key, value] of Object.entries(dto)) {
     if (value !== undefined) sanitized[key] = value;
   }
-  return unwrapOrThrow(await this.dealsService.update(Number(id), sanitized));
+  const res = await this.commandBus.execute(new UpdateDealCommand(Number(id), sanitized));
+  return unwrapOrThrow(res);
 }
 
  @ApiOperation({ summary: 'Delete deal' })
@@ -167,7 +177,8 @@ export class CrmDealsController {
  @Delete(':id')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async deleteDeal(@Param('id') id: number) {
-  return unwrapOrThrow(await this.dealsService.remove(Number(id)));
+  const res = await this.commandBus.execute(new DeleteDealCommand(Number(id)));
+  return unwrapOrThrow(res);
 }
 
  @ApiOperation({ summary: 'Create quick deal' })

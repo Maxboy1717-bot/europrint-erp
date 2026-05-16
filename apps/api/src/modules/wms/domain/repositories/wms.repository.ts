@@ -6,6 +6,16 @@
 import { Stock } from '../aggregates/stock.aggregate';
 import { Result, Ok, Err } from '@common/result';
 
+export interface CreateWarehouseInput {
+  id: string;
+  name: string;
+  address: string | null;
+  is_free_storage: boolean;
+  free_storage_days: number;
+  monthly_rate: string | null;
+  created_at: Date;
+}
+
 /**
  * Optional transaction handle. Drizzle's `db.transaction(async (tx) => ...)`
  * supplies a `tx` whose select/insert/update API mirrors `db`. We accept it as
@@ -39,6 +49,11 @@ export interface IWmsRepository {
   withTransaction<T>(
     work: (tx: DrizzleExecutor) => Promise<Result<T>>,
   ): Promise<Result<T>>;
+
+  /**
+   * Inserts a warehouse row. Handler stays SQL-free (PA1-10).
+   */
+  createWarehouse(input: CreateWarehouseInput): Promise<Result<CreateWarehouseInput>>;
 }
 
 /**

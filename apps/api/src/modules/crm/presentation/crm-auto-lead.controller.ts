@@ -5,7 +5,7 @@
 
 import { assertFound, assertRequired, assertAnyRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { safeInt } from '../../hr/common/db-rows';
+import { safeInt } from '@common/db/db-rows';
 import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Post, UseGuards, Logger , UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 

@@ -56,7 +56,10 @@ export class CancelLeaveHandler implements ICommandHandler<CancelLeaveCommand> {
         leaveData['updatedAt'] as Date,
       );
 
-      leaveRequest.cancel();
+      const cancelResult = leaveRequest.cancel();
+      if (!cancelResult.ok) {
+        return Err(cancelResult.error);
+      }
 
       const updateResult = await this.repo.updateLeave(command.leaveId, {
         status: leaveRequest.status,

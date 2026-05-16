@@ -5,7 +5,7 @@
 
 import { assertFound, assertAnyRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { safeInt } from '../../hr/common/db-rows';
+import { safeInt } from '@common/db/db-rows';
 import {
   BadRequestException, Body, Controller, Get, Logger, NotFoundException,
   Param, Post, Query, UseGuards,

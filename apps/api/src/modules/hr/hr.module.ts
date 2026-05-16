@@ -42,6 +42,7 @@ import { ApproveLeaveHandler } from './application/commands/approve-leave.handle
 import { RejectLeaveHandler } from './application/commands/reject-leave.handler';
 import { CancelLeaveHandler } from './application/commands/cancel-leave.handler';
 import { CreateLeaveRequestHandler } from './application/commands/create-leave-request.handler';
+import { DeleteLeaveHandler } from './application/commands/delete-leave.handler';
 import { Record360FeedbackHandler } from './application/commands/record-360-feedback.handler';
 import { EmployeeKpiHandler } from './application/queries/employee-kpi.handler';
 import { AttendanceSummaryHandler } from './application/queries/attendance-summary.handler';
@@ -124,6 +125,7 @@ const commandHandlers = [
   RejectLeaveHandler,
   CancelLeaveHandler,
   CreateLeaveRequestHandler,
+  DeleteLeaveHandler,
   Record360FeedbackHandler,
 ];
 

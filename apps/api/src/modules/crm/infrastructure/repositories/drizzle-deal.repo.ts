@@ -117,7 +117,9 @@ export class DrizzleDealRepository implements IDealRepository {
   }
 
   private toDomain(row: DbRow): Deal {
-    const moneyResult = Money.of(Number(row['total_amount'] ?? 0), String(row['currency'] ?? 'USD'));
+    // Hydration path — DB values were validated on write, so we use the
+    // throwing factory and surface integrity errors as 5xx.
+    const moneyResult = Money.ofOrThrow(Number(row['total_amount'] ?? 0), String(row['currency'] ?? 'USD'));
     return new Deal({
       id:                  Number(row['id']),
       leadId:              Number(row['lead_id']),

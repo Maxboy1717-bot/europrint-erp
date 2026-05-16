@@ -47,7 +47,10 @@ export class RejectLeaveHandler implements ICommandHandler<RejectLeaveCommand> {
         leaveData['updatedAt'] as Date,
       );
 
-      leaveRequest.reject(command.rejectorId, command.reason);
+      const rejectResult = leaveRequest.reject(command.rejectorId, command.reason);
+      if (!rejectResult.ok) {
+        return Err(rejectResult.error);
+      }
 
       const updateResult = await this.repo.updateLeave(command.leaveId, {
         status: leaveRequest.status,

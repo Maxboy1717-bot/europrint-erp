@@ -62,6 +62,8 @@ import { GoodsIssueHandler } from './application/commands/goods-issue.handler';
 import { ReceiveFgHandler } from './application/commands/receive-fg.handler';
 import { ReserveMaterialHandler } from './application/commands/reserve-material.handler';
 import { CreateWarehouseHandler } from './application/commands/create-warehouse.handler';
+import { PatchRentalHandler } from './application/commands/patch-rental.handler';
+import { DeleteRentalHandler } from './application/commands/delete-rental.handler';
 import { FefoStockHandler } from './application/queries/fefo-stock.handler';
 import { GetWarehousesHandler } from './application/queries/get-warehouses.handler';
 import { GetStockInventoryHandler } from './application/queries/get-stock-inventory.handler';
@@ -88,6 +90,8 @@ const handlers = [
   GetWarehousesHandler,
   GetStockInventoryHandler,
   GetLowStockHandler,
+  PatchRentalHandler,
+  DeleteRentalHandler,
 ];
 
 const listeners = [QcPassedListener, RopTriggerHandler];

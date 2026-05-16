@@ -177,3 +177,43 @@ bash scripts/run-all-reviewers.sh
 6. **Backend Telegram-bot handlers** — 25 deferred Uzbek strings need i18n migration (4 hours).
 
 Total remaining effort: **~6 working days** to reach 96-98/100.
+
+---
+
+## Independent audit verdict (added 2026-05-17)
+
+A post-sprint **independent 4-agent deep audit** measured the codebase across 4 DDD dimensions. Full reports: `docs/ddd-deep-audit.md` (synthesis) + per-dimension reports `docs/ddd-deep-audit-{tactical,cqrs,events-repos,strategic}.md`.
+
+### Score reconciliation
+
+| Dimension | This doc claimed | Audit measured | Δ |
+|---|---:|---:|---:|
+| Tactical patterns | ~94/100 | **80/100** | −14 |
+| CQRS | ~92/100 | **75/100** | −17 |
+| Events + repositories | ~89/100 | **55/100** | **−34** |
+| Strategic / bounded contexts | not scored | **58/100** | n/a |
+| **Honest weighted total** | **93/100** | **~67-71/100** | **−22 to −26** |
+
+### Why the gap
+
+This document scored **tactical** layers (Domain / Application / Infrastructure / Presentation / Cross-cutting) which are real, intra-module, and well-executed. The audit added three orthogonal dimensions that the sprint did not measure:
+
+1. **Event-flow correctness end-to-end** — **5 of 20 documented Triggers are broken** in production due to string-namespace collisions (Deal-Won, Advance-Approved, Delivery-Completed, Payment-Full, Advance-Bypass). P2-18 was deferred as "82 files use EventEmitter2" — the deferral framed this as code-quality cleanup, but it is actively dropping production events.
+
+2. **Application-layer pseudo-repositories** — **53 `application/*.repository.ts` files** ship raw SQL and return DTOs (not aggregates), bypassing the interface contract. Concentrated in CRM/HR/WMS/SD/director/finance. Counted nowhere in the sprint scorecard.
+
+3. **Strategic / bounded-context concerns** — no context map exists; no ACL on `compatibility/` (88 files) or `remaining/` (37 files); `hr/common/db-rows.ts` is imported by 16 non-HR modules; 5 unreconciled "Order" aggregates exist with no shared `IOrder` interface.
+
+### Real wins (audit confirms)
+
+- ✅ P0-2 infrastructure-leak removal: **0 Drizzle/HTTP/framework imports in `**/domain/**`**.
+- ✅ 6 identity / domain VOs (CustomerId, EmployeeId, ProductId, Email, PhoneNumber) score **50/50** each.
+- ✅ 94 command handlers + 78 query handlers — real CQRS adoption.
+- ✅ 65 repository interfaces + 99 Drizzle implementations.
+- ✅ JWT global guard + Result interceptor + Audit interceptor — clean cross-cutting.
+
+### Critical findings flagged for next sprint
+
+See `docs/ddd-execution-plan.md` Phase P0-audit through P3-audit (appended 2026-05-17) for 17 new backlog items with file:line evidence.
+
+The honest framing: **"75 tactical → 88 tactical, but strategic/event-flow dimensions remain unaddressed (~55-60); overall honest score ~70/100."** The sprint moved the needle — less than half of the claimed 18-point lift, but the foundation it laid is sound.

@@ -133,7 +133,7 @@ export class LogisticsController {
  this.logger.log('Completing delivery');
 
  // Emit completion event (Trigger 14)
- this.eventEmitter.emit(ERP_EVENTS.LOGISTICS_DELIVERY_COMPLETED, {
+ this.eventEmitter.emit(ERP_EVENTS.DELIVERY_COMPLETED, {
  deliveryId: id,
  completedAt: _time.now(),
  timestamp: _time.now(),

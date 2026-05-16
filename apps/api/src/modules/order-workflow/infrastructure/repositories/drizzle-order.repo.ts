@@ -10,8 +10,21 @@ import { Result, Ok, Err, AppErr } from '@common/types/result.type';
 import { safeCall } from '@common/types/result.type';
 import { OrderAggregate } from '../../domain/aggregates/order.aggregate';
 import { OrderStatusVo } from '../../domain/value-objects/order-status.vo';
-import { IOrderRepo } from './i-order.repo';
-import { owOrders } from '@shared/db';
+import {
+  IOrderRepo,
+  PaymentPlanEntryRow,
+  PaymentEntryReadRow,
+  CreateOrderRow,
+  CreateStatusHistoryRow,
+  GuardOrderRow,
+  MaterialRequirementRow,
+} from './i-order.repo';
+import {
+  owOrders,
+  owOrderStatusHistory,
+  owPaymentPlanEntries,
+  owMaterialRequirements,
+} from '@shared/db';
 
 type DbRow = typeof owOrders.$inferSelect;
 
@@ -95,6 +108,107 @@ export class DrizzleOrderRepo implements IOrderRepo {
         items: (Array.isArray(rows) ? rows : []).map((r) => this.toAggregate(r)),
         total: Number(countRow?.cnt ?? 0),
       };
+    }, 'DB_ERROR');
+  }
+
+  async replacePaymentPlanEntries(
+    orderId: string,
+    entries: PaymentPlanEntryRow[],
+  ): Promise<Result<void>> {
+    try {
+      await db.transaction(async (tx) => {
+        await tx.delete(owPaymentPlanEntries)
+          .where(eq(owPaymentPlanEntries.orderId, orderId));
+        if (entries.length > 0) {
+          await tx.insert(owPaymentPlanEntries).values(entries);
+        }
+      });
+      return Ok();
+    } catch (e) {
+      this.logger.error({ msg: 'replacePaymentPlanEntries failed', err: String(e), orderId });
+      return Err(AppErr('DB_ERROR', "To'lov rejasi saqlanmadi"));
+    }
+  }
+
+  async insertOrderWithInitialStatus(
+    order: CreateOrderRow,
+    statusHistory: CreateStatusHistoryRow | null,
+  ): Promise<Result<void>> {
+    try {
+      await db.transaction(async (tx) => {
+        await tx.insert(owOrders).values(order);
+        if (statusHistory) {
+          await tx.insert(owOrderStatusHistory).values(statusHistory);
+        }
+      });
+      return Ok();
+    } catch (e) {
+      this.logger.error({ msg: 'insertOrderWithInitialStatus failed', err: String(e), orderId: order.id });
+      return Err(AppErr('DB_ERROR', 'Buyurtma saqlanmadi'));
+    }
+  }
+
+  async persistStatusTransition(
+    orderId: string,
+    newStatus: string,
+    stateVersion: number,
+    historyRow: CreateStatusHistoryRow,
+  ): Promise<Result<void>> {
+    try {
+      await db.transaction(async (tx) => {
+        await tx.update(owOrders)
+          .set({ status: newStatus, stateVersion, updatedAt: sql`now()` })
+          .where(eq(owOrders.id, orderId));
+        await tx.insert(owOrderStatusHistory).values(historyRow);
+      });
+      return Ok();
+    } catch (e) {
+      this.logger.error({ msg: 'persistStatusTransition failed', err: String(e), orderId });
+      return Err(AppErr('DB_ERROR', 'Status yangilanishida xato'));
+    }
+  }
+
+  async findOrderGuardFields(orderId: string): Promise<Result<GuardOrderRow | null>> {
+    return safeCall(async () => {
+      const [row] = await db.select({
+        customerApproved:     owOrders.customerApproved,
+        techCardConfirmedAt:  owOrders.techCardConfirmedAt,
+        actualDeliveryAt:     owOrders.actualDeliveryAt,
+        customerSignatureUrl: owOrders.customerSignatureUrl,
+      }).from(owOrders).where(eq(owOrders.id, orderId)).limit(1);
+      if (!row) return null;
+      return {
+        customerApproved:     row.customerApproved,
+        techCardConfirmedAt:  row.techCardConfirmedAt,
+        actualDeliveryAt:     row.actualDeliveryAt,
+        customerSignatureUrl: row.customerSignatureUrl,
+      } as GuardOrderRow;
+    }, 'DB_ERROR');
+  }
+
+  async findPaymentPlanEntries(orderId: string): Promise<Result<PaymentEntryReadRow[]>> {
+    return safeCall(async () => {
+      const rows = await db.select().from(owPaymentPlanEntries)
+        .where(eq(owPaymentPlanEntries.orderId, orderId));
+      return (Array.isArray(rows) ? rows : []).map((r) => ({
+        sequence: r.sequence,
+        dueType:  r.dueType,
+        status:   r.status,
+        amount:   r.amount,
+      })) as PaymentEntryReadRow[];
+    }, 'DB_ERROR');
+  }
+
+  async findMaterialRequirements(orderId: string): Promise<Result<MaterialRequirementRow[]>> {
+    return safeCall(async () => {
+      const rows = await db.select().from(owMaterialRequirements)
+        .where(eq(owMaterialRequirements.orderId, orderId));
+      return (Array.isArray(rows) ? rows : []).map((r) => ({
+        status:      r.status,
+        labPassed:   r.labPassed,
+        qtyReserved: r.qtyReserved,
+        qtyRequired: r.qtyRequired,
+      })) as MaterialRequirementRow[];
     }, 'DB_ERROR');
   }
 

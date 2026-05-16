@@ -3,9 +3,10 @@
  * @description Source module. See exports for details.
  */
 
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { DealWonEvent } from '../../domain/events/deal-won.event';
+import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 
 @Injectable()
 export class DealWonListener {
@@ -13,7 +14,7 @@ export class DealWonListener {
 
   constructor() {}
 
-  @OnEvent('deal.won', { async: true })
+  @OnEvent(ERP_EVENTS.DEAL_WON, { async: true })
   async handleDealWon(event: DealWonEvent) {
     this.logger.log('Deal won event received');
 

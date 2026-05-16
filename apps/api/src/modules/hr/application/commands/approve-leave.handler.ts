@@ -60,7 +60,10 @@ export class ApproveLeaveHandler
         leaveData['updatedAt'] as Date,
       );
 
-      leaveRequest.approve(command.approverId);
+      const approveResult = leaveRequest.approve(command.approverId);
+      if (!approveResult.ok) {
+        return Err(approveResult.error);
+      }
 
       const updateResult = await this.repo.updateLeave(command.leaveId, {
         status: leaveRequest.status,

@@ -15,7 +15,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { QualifyLeadCommand } from '../application/commands/qualify-lead.handler';
 import { LeadsService } from '../leads/leads.service';
-import { safeInt } from '../../hr/common/db-rows';
+import { safeInt } from '@common/db/db-rows';
 
 const LeadCreateSchema = z.object({
   firstName: z.string().max(200).optional(),

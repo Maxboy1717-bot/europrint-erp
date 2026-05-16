@@ -44,12 +44,11 @@ export class CreateDealHandler implements ICommandHandler<CreateDealCommand> {
   }
 
   private buildDealProps(command: CreateDealCommand): Result<DealCreateProps> {
-    let money: Money;
-    try {
-      money = Money.of(command.totalAmount, command.currency);
-    } catch {
-      return Err(AppErr('VALIDATION', 'Invalid deal amount'));
+    const moneyR = Money.of(command.totalAmount, command.currency);
+    if (!moneyR.ok) {
+      return Err(AppErr('VALIDATION', moneyR.error.message || 'Invalid deal amount'));
     }
+    const money: Money = moneyR.data;
     const statusResult = DealStatus.create('qualification');
     if (!statusResult.ok || !statusResult.data) {
       return Err(AppErr('VALIDATION', 'Invalid deal status'));

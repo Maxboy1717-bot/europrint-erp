@@ -7,7 +7,6 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/types/result.type';
 import { ICoreRepo, CORE_REPO } from '../../domain/repositories/i-core.repo';
-import { db } from '@shared/db';
 
 export class DeleteDepartmentCommand {
   constructor(public readonly id: string) {}
