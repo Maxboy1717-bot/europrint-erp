@@ -61,7 +61,7 @@ export function InspectorSubmitDialog({
             />
           </div>
           <Textarea
-            placeholder="Inspeksiya izohi (ixtiyoriy)"
+            placeholder={t("inspeksiyaIzohiIxtiyoriy")}
             value={comments}
             onChange={(e) => onCommentsChange(e.target.value)}
             data-testid="input-inspector-comments"
@@ -164,7 +164,7 @@ export function ApprovalDialog({
                 </div>
               </div>
               <Textarea
-                placeholder="QC izoh (ixtiyoriy)"
+                placeholder={t("qcIzohIxtiyoriy")}
                 value={comments}
                 onChange={(e) => onCommentsChange(e.target.value)}
                 data-testid="input-comments"
@@ -216,7 +216,7 @@ export function RejectDialog({
         <div className="space-y-4">
           <p>{t("buyurtma3")}<strong>{selectedOrder?.papkaNo}</strong></p>
           <Textarea
-            placeholder="Rad etish sababi - qaysi test muvaffaqiyatsiz bo'ldi? (majburiy)"
+            placeholder={t("radEtishSababiQaysiTestMuvaffaqiyatsiz")}
             value={comments}
             onChange={(e) => onCommentsChange(e.target.value)}
             required

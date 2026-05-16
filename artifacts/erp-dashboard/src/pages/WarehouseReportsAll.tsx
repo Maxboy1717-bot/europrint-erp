@@ -51,8 +51,8 @@ export default function WarehouseReportsAll() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="mb-6">
-        <div className="text-xs text-gray-500 font-semibold">OMBOR HISOBOTLAR MARKAZI</div>
-        <h1 className="text-2xl font-bold text-gray-900">22 ta turdagi hisobot</h1>
+        <div className="text-xs text-gray-500 font-semibold">{t("omborHisobotlarMarkazi")}</div>
+        <h1 className="text-2xl font-bold text-gray-900">{t("k22TaTurdagiHisobot")}</h1>
         <p className="text-sm text-gray-500 mt-1">
           {t("hisobotTuriniTanlangMalumotlarReal")}
         </p>

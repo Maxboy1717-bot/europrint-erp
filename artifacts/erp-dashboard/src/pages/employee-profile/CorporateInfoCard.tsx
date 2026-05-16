@@ -120,11 +120,11 @@ export function CorporateInfoCard({employeeId, isHr }: CorporateInfoCardProps) {
               <Input
                 value={form.corporate_email ?? ""}
                 onChange={(e) => setForm({ ...form, corporate_email: e.target.value || null })}
-                placeholder="xodim@europrint.uz"
+                placeholder={t("xodimEuroprintUz")}
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Saqlanish muddati (yil)</Label>
+              <Label className="text-xs">{t("saqlanishMuddatiYil")}</Label>
               <Input
                 type="number"
                 min={1}
@@ -172,7 +172,7 @@ export function CorporateInfoCard({employeeId, isHr }: CorporateInfoCardProps) {
                 <EPStatusPill tone="neutral">{t("mashinaOperatori")}</EPStatusPill>
               )}
               {data?.block_erp_access && (
-                <EPStatusPill tone="danger">ERP bloklangan</EPStatusPill>
+                <EPStatusPill tone="danger">{t("erpBloklangan")}</EPStatusPill>
               )}
               {!data?.is_machine_operator && !data?.block_erp_access && (
                 <span className="text-muted-foreground text-xs">{t("standartKirish")}</span>

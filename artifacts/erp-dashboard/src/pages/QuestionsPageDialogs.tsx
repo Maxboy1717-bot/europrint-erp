@@ -113,7 +113,7 @@ export function CreateQuestionDialog({
             <Input
               value={form.test_id}
               onChange={e => onFormChange({ ...form, test_id: e.target.value })}
-              placeholder="Test ID (ixtiyoriy)"
+              placeholder={t("testIdIxtiyoriy")}
               data-testid="input-question-test-id"
             />
           </div>

@@ -127,7 +127,7 @@ export function JobOfferDialog({
                 />
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Bo'linma / Departament</Label>
+                <Label className="text-xs mb-1 block">{t("boLinmaDepartament")}</Label>
                 <Input
                   value={form.department}
                   onChange={(e) => set("department")(e.target.value)}
@@ -148,16 +148,16 @@ export function JobOfferDialog({
                 />
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Sinov muddati (oy)</Label>
+                <Label className="text-xs mb-1 block">{t("sinovMuddatiOy")}</Label>
                 <Select value={form.probation_months} onValueChange={set("probation_months")}>
                   <SelectTrigger data-testid="select-offer-probation" className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1 oy</SelectItem>
-                    <SelectItem value="2">2 oy</SelectItem>
-                    <SelectItem value="3">3 oy</SelectItem>
-                    <SelectItem value="6">6 oy</SelectItem>
+                    <SelectItem value="1">{t("k1Oy")}</SelectItem>
+                    <SelectItem value="2">{t("k2Oy")}</SelectItem>
+                    <SelectItem value="3">{t("k3Oy")}</SelectItem>
+                    <SelectItem value="6">{t("k6Oy")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -165,7 +165,7 @@ export function JobOfferDialog({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs mb-1 block">Maosh (sinov muddati, UZS)</Label>
+                <Label className="text-xs mb-1 block">{t("maoshSinovMuddatiUzs")}</Label>
                 <Input
                   type="number"
                   value={form.salary_probation}
@@ -175,7 +175,7 @@ export function JobOfferDialog({
                 />
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Maosh (asosiy, UZS)</Label>
+                <Label className="text-xs mb-1 block">{t("maoshAsosiyUzs")}</Label>
                 <Input
                   type="number"
                   value={form.salary_main}
@@ -188,7 +188,7 @@ export function JobOfferDialog({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs mb-1 block">Ish tartibi (grafik)</Label>
+                <Label className="text-xs mb-1 block">{t("ishTartibiGrafik")}</Label>
                 <Select value={form.work_schedule} onValueChange={set("work_schedule")}>
                   <SelectTrigger data-testid="select-offer-schedule" className="h-9">
                     <SelectValue />
@@ -230,7 +230,7 @@ export function JobOfferDialog({
               className="border border-gray-300 rounded-lg p-6 bg-white text-gray-800 print:border-0 print:p-0"
             >
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold uppercase tracking-wide">ISH TAKLIFI</h2>
+                <h2 className="text-2xl font-bold uppercase tracking-wide">{t("ishTaklifi")}</h2>
                 <p className="text-sm text-gray-500">{printDate}</p>
               </div>
               <p className="text-sm mb-4">
@@ -274,7 +274,7 @@ export function JobOfferDialog({
                   <p className="text-xs text-gray-500 mt-1">{candidateName}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">HR menejer imzosi</p>
+                  <p className="text-xs text-gray-500">{t("hrMenejerImzosi")}</p>
                   <div className="mt-4 border-b border-gray-400 w-40" />
                   <p className="text-xs text-gray-500 mt-1">{t("europrintHr")}</p>
                 </div>

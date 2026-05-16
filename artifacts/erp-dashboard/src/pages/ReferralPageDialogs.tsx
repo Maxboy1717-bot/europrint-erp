@@ -40,7 +40,7 @@ export function AddReferralDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Do'st / tanish tavsiya qilish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("doStTanishTavsiyaQilish")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div>
@@ -111,7 +111,7 @@ export function EditReferralDialog({
     <Dialog open={!!editTarget} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Referral holati yangilash (HR)</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("referralHolatiYangilashHr")}</DialogTitle>
         </DialogHeader>
         {editTarget && (
           <div className="space-y-4 py-2">
@@ -162,7 +162,7 @@ export function EditReferralDialog({
               </>
             )}
             <div>
-              <Label>HR izohi</Label>
+              <Label>{t("hrIzohi")}</Label>
               <Textarea
                 value={editForm.hr_notes}
                 onChange={e => onEditFormChange(f => ({ ...f, hr_notes: e.target.value }))}

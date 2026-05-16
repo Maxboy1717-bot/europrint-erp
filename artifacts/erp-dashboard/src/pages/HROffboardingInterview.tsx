@@ -55,7 +55,7 @@ export function ExitInterviewForm({
               onValueChange={v => onAnswerChange(q.key, v)}
             >
               <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Baho (1-5)" />
+                <SelectValue placeholder={t("baho15")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="1">{t("k1JudaYomon1")}</SelectItem>
@@ -76,7 +76,7 @@ export function ExitInterviewForm({
                 <SelectValue placeholder={t("javobniTanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="yes">Ha, tavsiya qilaman</SelectItem>
+                <SelectItem value="yes">{t("haTavsiyaQilaman")}</SelectItem>
                 <SelectItem value="maybe">{t("balki")}</SelectItem>
                 <SelectItem value="no">{t("no")}</SelectItem>
               </SelectContent>

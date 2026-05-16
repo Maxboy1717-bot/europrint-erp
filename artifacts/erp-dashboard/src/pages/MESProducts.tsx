@@ -203,12 +203,12 @@ export default function MESProducts() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-          <Label>Nomi (UZ)</Label>
+          <Label>{t("nomiUz")}</Label>
                 <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder={t("mahsulotNomi")} />
               </div>
               <div className="space-y-1">
-          <Label>Nomi (RU)</Label>
-                <Input value={form.nameRu} onChange={e => setForm(p => ({ ...p, nameRu: e.target.value }))} placeholder="Название" />
+          <Label>{t("nomiRu")}</Label>
+                <Input value={form.nameRu} onChange={e => setForm(p => ({ ...p, nameRu: e.target.value }))} placeholder={t("untitled")} />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -237,7 +237,7 @@ export default function MESProducts() {
                 </Select>
               </div>
               <div className="space-y-1">
-          <Label>Tannarx (so'm)</Label>
+          <Label>{t("tannarxSoM")}</Label>
                 <Input type="number" value={form.standardCost} onChange={e => setForm(p => ({ ...p, standardCost: e.target.value }))} placeholder="0" />
               </div>
             </div>

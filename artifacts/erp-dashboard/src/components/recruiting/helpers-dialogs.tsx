@@ -204,7 +204,7 @@ export function AIInterviewDialog({
                 </div>
                 {entrySession.ai_summary && (
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">AI xulosasi:</p>
+                    <p className="text-xs text-muted-foreground mb-1">{t("aiXulosasi")}</p>
                     <p className="text-sm bg-muted/30 rounded-lg p-3">{entrySession.ai_summary}</p>
                   </div>
                 )}

@@ -76,7 +76,7 @@ export function SafetyTab({ loadingSafety, safetyViolations }: SafetyTabProps) {
                 <HardHat className="h-5 w-5" />
                 {t("xavfsizlikQoidalariBuzilishi")}
               </CardTitle>
-              <CardDescription>AI kamera orqali aniqlangan buzilishlar</CardDescription>
+              <CardDescription>{t("aiKameraOrqaliAniqlanganBuzilishlar")}</CardDescription>
             </CardHeader>
             <CardContent>
               {safetyViolations && safetyViolations.length > 0 ? (

@@ -107,7 +107,7 @@ export function ProbabilityTabContent({ deals, dealsLoading, aiResults, probabil
     <Card className="bg-card border-none shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" />{t("bitimYutishEhtimoli")}</CardTitle>
-        <CardDescription>AI asosida har bir bitim uchun muvaffaqiyat ehtimoli</CardDescription>
+        <CardDescription>{t("aiAsosidaHarBirBitimUchun")}</CardDescription>
       </CardHeader>
       <CardContent>
         {dealsLoading ? (

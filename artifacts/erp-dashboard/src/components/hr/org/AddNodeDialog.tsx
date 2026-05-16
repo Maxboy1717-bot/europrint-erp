@@ -77,7 +77,7 @@ export function AddNodeDialog({
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div>
-            <Label>Nomi (UZ) *</Label>
+            <Label>{t("nomiUz")}</Label>
             <Input
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -85,11 +85,11 @@ export function AddNodeDialog({
             />
           </div>
           <div>
-            <Label>Nomi (RU)</Label>
+            <Label>{t("nomiRu")}</Label>
             <Input
               value={form.nameRu}
               onChange={(e) => setForm((f) => ({ ...f, nameRu: e.target.value }))}
-              placeholder="Например: Финансовый отдел"
+              placeholder={t("untitled")}
             />
           </div>
           <div>
@@ -104,7 +104,7 @@ export function AddNodeDialog({
             </Select>
           </div>
           <div>
-            <Label>QYaM (asosiy vazifasi, maks 32 belgi)</Label>
+            <Label>{t("qyamAsosiyVazifasiMaks32Belgi")}</Label>
             <Input
               value={form.tskp}
               onChange={(e) => setForm((f) => ({ ...f, tskp: e.target.value.slice(0, 32) }))}
@@ -118,7 +118,7 @@ export function AddNodeDialog({
             <Input
               value={form.parentId}
               onChange={(e) => setForm((f) => ({ ...f, parentId: e.target.value }))}
-              placeholder="Masalan: 2 (bo'sh qoldirsa — ildiz)"
+              placeholder={t("masalan2BoShQoldirsaIldiz")}
               type="number"
             />
           </div>

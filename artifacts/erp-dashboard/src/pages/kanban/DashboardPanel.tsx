@@ -174,7 +174,7 @@ export function DashboardPanel({ t }: { t: (key: string) => string }) {
               <p className={`text-3xl font-bold ${overdueInbox && overdueInbox.count > 0 ? "text-[var(--ep-red)]" : "text-slate-400"}`}>
                 {overdueInbox?.count ?? 0}
               </p>
-              <p className="text-sm text-muted-foreground">24s qoida</p>
+              <p className="text-sm text-muted-foreground">{t("k24sQoida")}</p>
             </div>
           </div>
         </Card>

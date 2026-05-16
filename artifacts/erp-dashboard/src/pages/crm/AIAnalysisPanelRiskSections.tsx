@@ -126,7 +126,7 @@ export function ChurnRescueSection({ churnRescue, loading, onRun }: ChurnSection
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="text-2xl font-bold">{churnRescue.riskScore}%</div>
-              <span className="text-sm text-muted-foreground">xavf balli</span>
+              <span className="text-sm text-muted-foreground">{t("xavfBalli")}</span>
             </div>
             <Badge className={getRiskColor(churnRescue.riskLevel)}>
               {churnRescue.riskLevel === "yuqori" ? "Xavfli" : churnRescue.riskLevel === "o'rta" ? "Kuzatuv" : "Xavfsiz"}

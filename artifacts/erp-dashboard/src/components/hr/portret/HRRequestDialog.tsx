@@ -101,7 +101,7 @@ export function HRRequestDialog({
           </div>
 
           <div>
-            <Label className="text-xs mb-1 block">Izoh (ixtiyoriy)</Label>
+            <Label className="text-xs mb-1 block">{t("izohIxtiyoriy")}</Label>
             <Textarea
               placeholder={t("qoshimchaTushuntirishShoshilinchlikSababi")}
               rows={3}

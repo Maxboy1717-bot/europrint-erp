@@ -110,7 +110,7 @@ export default function WarehouseAuditLog() {
         <div className="flex-1">
           <div className="text-xs text-gray-500 font-semibold">{t('auditLog1')}</div>
           <h1 className="text-2xl font-bold">{t("tizimAuditJurnali")}</h1>
-          <p className="text-sm text-gray-500">7 yil saqlanadi (O'zbekiston soliq talabi)</p>
+          <p className="text-sm text-gray-500">{t("k7YilSaqlanadiOZbekistonSoliq")}</p>
         </div>
         <Button onClick={exportCsv} variant="outline" disabled={filtered.length === 0}>
           <Download className="h-4 w-4 mr-1" /> CSV eksport
@@ -217,7 +217,7 @@ export default function WarehouseAuditLog() {
                   )}
                   {selected.ip_address && (
                     <div>
-                      <div className="text-xs text-gray-500 font-semibold mb-1">IP MANZIL</div>
+                      <div className="text-xs text-gray-500 font-semibold mb-1">{t("ipManzil")}</div>
                       <div className="font-mono text-xs">{selected.ip_address}</div>
                     </div>
                   )}

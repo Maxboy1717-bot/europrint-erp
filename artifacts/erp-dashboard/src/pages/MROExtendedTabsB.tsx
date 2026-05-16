@@ -162,7 +162,7 @@ export function OfficeTab({ equipment }: OfficeTabProps) {
               ) : (Array.isArray(equipment) ? equipment : []).slice(0, 10).map((r, i) => (
                 <TableRow key={r.id} data-testid={`row-office-${i}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{r.name || "—"}</TableCell>
-                  <TableCell>1 ta</TableCell>
+                  <TableCell>{t("k1Ta")}</TableCell>
                   <TableCell>
                     <Badge variant={r.status === "active" ? "default" : r.status === "maintenance" ? "secondary" : "destructive"}>
                       {r.status === "active" ? "Yaxshi" : r.status === "maintenance" ? "Ta'mirlash" : r.status || "—"}

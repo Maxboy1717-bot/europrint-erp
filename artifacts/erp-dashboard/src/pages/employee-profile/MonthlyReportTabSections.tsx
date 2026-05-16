@@ -168,18 +168,18 @@ export function FinanceSection({ report }: { report: MonthlyReport }) {
           )}
           {finance.totalFines > 0 && (
             <TableRow>
-              <TableCell className="text-sm text-[var(--ep-red)]">- Jarima/chegirma</TableCell>
+              <TableCell className="text-sm text-[var(--ep-red)]">{t("jarimaChegirma")}</TableCell>
               <TableCell className="text-right font-medium text-[var(--ep-red)]">-{finance.totalFines.toLocaleString()} so'm</TableCell>
             </TableRow>
           )}
           {finance.pendingAdvances > 0 && (
             <TableRow>
-              <TableCell className="text-sm text-[var(--ep-primary)]">- Avans (to'lanmagan)</TableCell>
+              <TableCell className="text-sm text-[var(--ep-primary)]">{t("avansToLanmagan")}</TableCell>
               <TableCell className="text-right font-medium text-[var(--ep-primary)]">-{finance.pendingAdvances.toLocaleString()} so'm</TableCell>
             </TableRow>
           )}
           <TableRow className="border-t-2 border-border hover:bg-muted/40 transition-colors">
-            <TableCell className="font-bold">Sof maosh (taxminiy)</TableCell>
+            <TableCell className="font-bold">{t("sofMaoshTaxminiy")}</TableCell>
             <TableCell className={`text-right font-bold ${finance.netSalary >= 0 ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}`}>
               {finance.netSalary.toLocaleString()} so'm
             </TableCell>

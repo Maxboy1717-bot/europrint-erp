@@ -46,7 +46,7 @@ export function ProfileImageSection({previewUrl,
       </Avatar>
       <div className="flex-1">
         <p className="font-medium">{t("profilRasmi")}</p>
-        <p className="text-sm text-muted-foreground">JPG, PNG (maks. 5MB)</p>
+        <p className="text-sm text-muted-foreground">{t("jpgPngMaks5mb")}</p>
       </div>
       <div className="flex gap-2">
         <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>

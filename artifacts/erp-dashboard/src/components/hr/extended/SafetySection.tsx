@@ -160,7 +160,7 @@ export function SafetySection({
               <TableHeader><TableRow>
                 <TableHead>{t("bolim1")}</TableHead><TableHead className="text-center">{t("jamiHodisa")}</TableHead>
                 <TableHead className="text-center">{t("ochiq")}</TableHead><TableHead className="text-center">{t("kritik")}</TableHead>
-                <TableHead className="text-center">{t("buOy")}</TableHead><TableHead className="text-center">PPE %</TableHead>
+                <TableHead className="text-center">{t("buOy")}</TableHead><TableHead className="text-center">{t("ppe")}</TableHead>
                 <TableHead className="text-center">{t("treninglar")}</TableHead>
               </TableRow></TableHeader>
               <TableBody>

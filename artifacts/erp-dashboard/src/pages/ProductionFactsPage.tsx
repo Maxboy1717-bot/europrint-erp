@@ -211,7 +211,7 @@ export default function ProductionFactsPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label>Reja (dona)</Label>
+                <Label>{t("rejaDona")}</Label>
                 <Input
                   type="number"
                   value={form.planned_qty}
@@ -221,7 +221,7 @@ export default function ProductionFactsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Haqiqat (dona)</Label>
+                <Label>{t("haqiqatDona")}</Label>
                 <Input
                   type="number"
                   value={form.actual_qty}
@@ -231,7 +231,7 @@ export default function ProductionFactsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Brak (dona)</Label>
+                <Label>{t("brakDona")}</Label>
                 <Input
                   type="number"
                   value={form.defect_qty}

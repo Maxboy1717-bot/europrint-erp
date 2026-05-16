@@ -85,13 +85,13 @@ export function FieldDialog({
 
           {/* Label (Russian) */}
           <div className="space-y-1">
-          <Label>Maydon nomi (ruscha)</Label>
+          <Label>{t("maydonNomiRuscha")}</Label>
             <Input
               value={fieldForm.fieldLabelRu}
               onChange={(e) =>
                 onFieldFormChange({ ...fieldForm, fieldLabelRu: e.target.value })
               }
-              placeholder="Название поля"
+              placeholder={t("untitled")}
               data-testid="input-field-label-ru"
             />
           </div>
@@ -163,7 +163,7 @@ export function FieldDialog({
 
           {/* Required toggle */}
           <div className="flex items-center justify-between">
-            <Label>Required</Label>
+            <Label>{t("required")}</Label>
             <Switch
               checked={fieldForm.isRequired}
               onCheckedChange={(v) =>

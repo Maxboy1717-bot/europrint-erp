@@ -118,7 +118,7 @@ export function CustomerFilterBar({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           className="pl-9 h-9 rounded-lg"
-          placeholder="Qidirish (nom, STIR, kod...)"
+          placeholder={t("qidirishNomStirKod")}
           value={search}
           onChange={e => setSearch(e.target.value)}
           data-testid="input-search-customers"

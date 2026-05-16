@@ -142,7 +142,7 @@ export function EngagementTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>📈 Retention (Qaytish darajasi)</CardTitle>
+            <CardTitle>{t("retentionQaytishDarajasi")}</CardTitle>
             <CardDescription>{t("foydalanuvchilarningQaytishKorsatkichlari")}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -219,7 +219,7 @@ export function EngagementTab({
                   <div className="text-4xl font-bold text-primary mb-2">
                     {sessionStats.averageSessionDuration}
                   </div>
-                  <p className="text-sm text-muted-foreground">O'rtacha sessiya davomiyligi (daqiqa)</p>
+                  <p className="text-sm text-muted-foreground">{t("oRtachaSessiyaDavomiyligiDaqiqa")}</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

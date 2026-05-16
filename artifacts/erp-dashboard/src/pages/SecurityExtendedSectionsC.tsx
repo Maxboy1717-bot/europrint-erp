@@ -35,7 +35,7 @@ export function HazmatSection() {
             <TableHeader>
               <TableRow>
                 <TableHead>{t("modda")}</TableHead>
-                <TableHead>CAS №</TableHead>
+                <TableHead>{t("cas")}</TableHead>
                 <TableHead>{t("xavfDarajasi")}</TableHead>
                 <TableHead>{t("miqdori")}</TableHead>
                 <TableHead>{t("saqlashJoyi")}</TableHead>

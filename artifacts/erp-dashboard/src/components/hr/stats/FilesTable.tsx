@@ -95,7 +95,7 @@ export function FilesTable({
                   />
                 </div>
                 <div className="space-y-1">
-          <Label htmlFor="description">Tavsif (ixtiyoriy)</Label>
+          <Label htmlFor="description">{t("tavsifIxtiyoriy")}</Label>
                   <Textarea
                     id="description"
                     value={fileDescription}

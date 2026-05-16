@@ -149,7 +149,7 @@ export default function GamificationPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Sabab (ixtiyoriy)</Label>
+                  <Label className="text-muted-foreground">{t("sababIxtiyoriy")}</Label>
                   <Textarea value={badgeForm.reason}
                     onChange={e => setBadgeForm(f => ({ ...f, reason: e.target.value }))}
                     placeholder={t("badgeBerilishSababi")}

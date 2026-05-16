@@ -104,9 +104,9 @@ export default function WarehouseInventoryPassport() {
       <div className="flex items-center gap-3 mb-6">
         <FileCheck className="h-8 w-8 text-[var(--ep-blue)]" />
         <div className="flex-1">
-          <div className="text-xs text-gray-500 font-semibold">INVENTAR PASPORTLARI</div>
+          <div className="text-xs text-gray-500 font-semibold">{t("inventarPasportlari")}</div>
           <h1 className="text-2xl font-bold">{t("karantinVaQcTarixi")}</h1>
-          <p className="text-sm text-gray-500">EXTERNAL_IN harakatlari uchun inventar pasportlari va QC qarorlari</p>
+          <p className="text-sm text-gray-500">{t("externalInHarakatlariUchunInventarPasportlari")}</p>
         </div>
         <Button onClick={load} variant="outline">{t("yangilash")}</Button>
       </div>
@@ -118,7 +118,7 @@ export default function WarehouseInventoryPassport() {
         </CardContent></Card>
         <Card><CardContent className="pt-5">
           <div className="text-2xl font-bold text-[var(--ep-yellow)]">{stats.pending}</div>
-          <div className="text-xs text-gray-500">QC kutmoqda</div>
+          <div className="text-xs text-gray-500">{t("qcKutmoqda")}</div>
         </CardContent></Card>
         <Card><CardContent className="pt-5">
           <div className="text-2xl font-bold text-[var(--ep-green)]">{stats.accepted}</div>
@@ -172,7 +172,7 @@ export default function WarehouseInventoryPassport() {
                   <TableHead>{t("taminotchi")}</TableHead>
                   <TableHead>{t("shartnoma1")}</TableHead>
                   <TableHead className="text-right">{t("quantity")}</TableHead>
-                  <TableHead className="text-right">Og'irlik (kg)</TableHead>
+                  <TableHead className="text-right">{t("ogIrlikKg")}</TableHead>
                   <TableHead>{t("sertifikat")}</TableHead>
                   <TableHead>{t("qcQarori")}</TableHead>
                   <TableHead>{t("otkazilgan")}</TableHead>

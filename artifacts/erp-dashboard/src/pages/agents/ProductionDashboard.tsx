@@ -56,7 +56,7 @@ export default function ProductionDashboard() {
 
       {/* OEE breakdown */}
       <Card className="p-5">
-        <h3 className="font-bold text-sm mb-3">OEE breakdown</h3>
+        <h3 className="font-bold text-sm mb-3">{t("oeeBreakdown")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <OeeBar label="Mavjudlik (Availability)" value={oee.data?.availability ?? 0} />
           <OeeBar label="Unumdorlik (Performance)" value={oee.data?.performance  ?? 0} />
@@ -66,7 +66,7 @@ export default function ProductionDashboard() {
 
       {/* Buyurtmalar Kanban placeholder */}
       <Card className="p-5">
-        <h3 className="font-bold text-sm mb-3">Buyurtmalar — Kanban (rejada → jarayon → tekshir → tayyor)</h3>
+        <h3 className="font-bold text-sm mb-3">{t("buyurtmalarKanbanRejadaJarayonTekshirTayyor")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {['Rejada', 'Jarayonda', 'Tekshirilmoqda', 'Tayyor'].map(col => (
             <div key={col} className="border rounded-lg p-3 bg-slate-50 min-h-[200px]">
@@ -81,7 +81,7 @@ export default function ProductionDashboard() {
 
       {/* Bottleneck */}
       <Card className="p-5">
-        <h3 className="font-bold text-sm mb-2">Bottleneck (eng sekin ish markazi)</h3>
+        <h3 className="font-bold text-sm mb-2">{t("bottleneckEngSekinIshMarkazi")}</h3>
         {bottleneck.isLoading ? (
           <EPLoader />
         ) : bottleneck.data ? (

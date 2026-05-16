@@ -121,7 +121,7 @@ export default function VendorPerformance() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="vp-score">Ball (0–100)</Label>
+                  <Label htmlFor="vp-score">{t("ball0100")}</Label>
                   <Input
                     id="vp-score"
                     type="number"

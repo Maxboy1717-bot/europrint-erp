@@ -36,7 +36,7 @@ export function CareerKpiCards({ careerData, profile }: KpiCardsProps) {
         <CardContent className="pt-4 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">AI tavsiya lavozim</p>
+              <p className="text-xs text-muted-foreground">{t("aiTavsiyaLavozim")}</p>
               <p className="text-sm font-bold text-[var(--ep-purple)] leading-snug mt-1">
                 {careerData?.aiRecommendedPosition || "—"}
               </p>

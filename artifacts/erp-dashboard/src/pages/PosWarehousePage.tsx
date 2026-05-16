@@ -170,7 +170,7 @@ export default function PosWarehousePage() {
           </p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
-          <p className="text-xs text-muted-foreground">Jami qiymat (UZS)</p>
+          <p className="text-xs text-muted-foreground">{t("jamiQiymatUzs")}</p>
           <p className="text-xl font-bold">{(kpis.totalValue / 1_000_000).toFixed(1)}M</p>
         </CardContent></Card>
         <Card className="border-orange-500/50"><CardContent className="p-4">

@@ -36,7 +36,7 @@ export function NormsTab() {
                 <TableHead>{t("normativTezlik")}</TableHead>
                 <TableHead>{t("tayyorlovVaqti")}</TableHead>
                 <TableHead>{t("minBrak")}</TableHead>
-                <TableHead>OEE maqsad</TableHead>
+                <TableHead>{t("oeeMaqsad")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

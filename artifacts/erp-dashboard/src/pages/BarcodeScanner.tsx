@@ -144,7 +144,7 @@ export default function BarcodeScanner() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs">Barcode / QR kod</Label>
+                <Label className="text-xs">{t("barcodeQrKod")}</Label>
                 <div className="flex gap-2">
                   <Input
                     ref={inputRef}

@@ -206,7 +206,7 @@ export function SegmentsHotLeadsSection({ segments, hotLeads }: SegmentLeadProps
       <div className="bg-card rounded-xl p-6" data-testid="card-hot-leads">
         <div className="flex items-center gap-2 mb-4">
           <Flame className="h-5 w-5 text-[var(--ep-red)]" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Issiq Lidlar (AI Bashorat)</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("issiqLidlarAiBashorat")}</h3>
         </div>
         <div className="space-y-2">
           {hotLeads.length === 0 ? (

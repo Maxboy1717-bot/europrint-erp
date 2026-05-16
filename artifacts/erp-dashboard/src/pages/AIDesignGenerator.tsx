@@ -180,7 +180,7 @@ export default function AIDesignGenerator() {
                     </Select>
                   </div>
                   <div>
-                    <Label>Maxsus Prompt (ixtiyoriy)</Label>
+                    <Label>{t("maxsusPromptIxtiyoriy")}</Label>
                     <Textarea placeholder={t("ranglarStilMaxsusTalablar")} value={customPrompt} onChange={(e) => setCustomPrompt(e.target.value)} rows={4} data-testid="textarea-prompt" />
                   </div>
                   <Button onClick={handleGenerate} disabled={!selectedOrderId || generateMutation.isPending} className="w-full" data-testid="button-generate">

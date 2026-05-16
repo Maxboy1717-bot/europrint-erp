@@ -54,7 +54,7 @@ export function PresetsDialog({open, onOpenChange, onUsePreset }: PresetsDialogP
             data-testid="preset-reception"
           >
             <div className="font-semibold">{t("qabulxona")}</div>
-            <div className="text-xs text-muted-foreground">5 ta savol</div>
+            <div className="text-xs text-muted-foreground">{t("k5TaSavol")}</div>
           </Button>
           <Button
             variant="outline"
@@ -63,7 +63,7 @@ export function PresetsDialog({open, onOpenChange, onUsePreset }: PresetsDialogP
             data-testid="preset-marketing"
           >
             <div className="font-semibold">{t('marketing')}</div>
-            <div className="text-xs text-muted-foreground">5 ta savol</div>
+            <div className="text-xs text-muted-foreground">{t("k5TaSavol2")}</div>
           </Button>
           <Button
             variant="outline"
@@ -72,7 +72,7 @@ export function PresetsDialog({open, onOpenChange, onUsePreset }: PresetsDialogP
             data-testid="preset-developer"
           >
             <div className="font-semibold">{t("dasturchi")}</div>
-            <div className="text-xs text-muted-foreground">5 ta savol</div>
+            <div className="text-xs text-muted-foreground">{t("k5TaSavol3")}</div>
           </Button>
           <Button
             variant="outline"
@@ -81,7 +81,7 @@ export function PresetsDialog({open, onOpenChange, onUsePreset }: PresetsDialogP
             data-testid="preset-sales"
           >
             <div className="font-semibold">{t("sotuvchi")}</div>
-            <div className="text-xs text-muted-foreground">5 ta savol</div>
+            <div className="text-xs text-muted-foreground">{t("k5TaSavol4")}</div>
           </Button>
         </div>
       </DialogContent>
@@ -144,16 +144,16 @@ export function TemplateDialog({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="description">Tavsif (UZ)</Label>
+              <Label htmlFor="description">{t("tavsifUz")}</Label>
               <Textarea id="description" {...form.register("description")} rows={3} data-testid="input-description" />
             </div>
             <div>
-              <Label htmlFor="descriptionRu">Tavsif (RU)</Label>
+              <Label htmlFor="descriptionRu">{t("tavsifRu")}</Label>
               <Textarea id="descriptionRu" {...form.register("descriptionRu")} rows={3} data-testid="input-description-ru" />
             </div>
           </div>
           <div>
-            <Label htmlFor="positionId">Lavozim (agar ma'lum lavozim uchun bo'lsa)</Label>
+            <Label htmlFor="positionId">{t("lavozimAgarMaLumLavozimUchun")}</Label>
             <Select
               value={form.watch("positionId")}
               onValueChange={(value) => form.setValue("positionId", value)}

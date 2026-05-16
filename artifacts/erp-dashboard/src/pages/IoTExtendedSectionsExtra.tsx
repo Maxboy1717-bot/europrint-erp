@@ -60,7 +60,7 @@ export function PredictiveTabContent({
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">AI prognozlar</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("aiPrognozlar")}</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {(Array.isArray(predictions) ? predictions : []).map((p: PredictionData, i: number) => (
             <div key={`k-${i}`} className="p-4 rounded-md bg-muted/50 space-y-2" data-testid={`row-prediction-${i}`}>
@@ -111,7 +111,7 @@ export function DigitalTwinTabContent({
             <div className="text-center text-muted-foreground">
               <Layers className="h-12 w-12 mx-auto mb-3 opacity-40" />
               <div className="text-sm font-medium">{t("k3dDigitalTwinVizualizatsiya")}</div>
-              <div className="text-xs mt-1">Three.js / BIM integratsiya tayyorlanmoqda</div>
+              <div className="text-xs mt-1">{t("threeJsBimIntegratsiyaTayyorlanmoqda")}</div>
               <div className="text-xs mt-0.5 text-muted-foreground/70">{t("realVaqtdaSensorMalumotlariBilan")}</div>
             </div>
           </div>

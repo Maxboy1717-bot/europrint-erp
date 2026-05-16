@@ -38,7 +38,7 @@ export function PPEMonitoring() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">PPE (Shaxsiy Himoya Vositalari) Nazorati</h2>
+        <h2 className="text-lg font-semibold">{t("ppeShaxsiyHimoyaVositalariNazorati")}</h2>
         <Button variant="outline" size="sm" onClick={() => refetch()} data-testid="button-refresh-ppe">
           <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> {t("refresh")}
         </Button>

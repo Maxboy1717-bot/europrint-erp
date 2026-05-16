@@ -95,7 +95,7 @@ function InviteDialog({
             </div>
           )}
           <div>
-            <Label>Shaxsiy xabar (ixtiyoriy)</Label>
+            <Label>{t("shaxsiyXabarIxtiyoriy")}</Label>
             <Input
               value={message}
               onChange={e => setMessage(e.target.value)}

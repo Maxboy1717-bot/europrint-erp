@@ -213,7 +213,7 @@ export function FolderTab({nodeId }: FolderTabProps) {
                     <span className="flex items-center gap-2"><Video className="h-3.5 w-3.5" />{t('video')}</span>
                   </SelectItem>
                   <SelectItem value="test">
-                    <span className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5" />Test / LMS kurs</span>
+                    <span className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5" />{t("testLmsKurs")}</span>
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -228,7 +228,7 @@ export function FolderTab({nodeId }: FolderTabProps) {
               />
             </div>
             <div>
-              <Label>URL / Havola</Label>
+              <Label>{t("urlHavola")}</Label>
               <Input
                 value={folderForm.url}
                 onChange={(e) => setFolderForm((f) => ({ ...f, url: e.target.value }))}

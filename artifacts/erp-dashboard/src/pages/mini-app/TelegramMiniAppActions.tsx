@@ -261,7 +261,7 @@ export function RequestScreen({
             ))}
             <textarea
               style={{ ...inputStyle, minHeight: 70, resize: "none", marginTop: 8 } as React.CSSProperties}
-              placeholder="Izoh (ixtiyoriy)..."
+              placeholder={t("izohIxtiyoriy")}
               value={requestNotes}
               onChange={(e) => onNotesChange(e.target.value)}
             />

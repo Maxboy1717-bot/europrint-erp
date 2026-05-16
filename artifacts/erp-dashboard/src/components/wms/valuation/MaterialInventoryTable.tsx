@@ -58,7 +58,7 @@ export function MaterialInventoryTable({
             <TableHead>{t("tur")}</TableHead>
             <TableHead>{t("status28")}</TableHead>
             <TableHead className="text-right">{t("jamiElementlar")}</TableHead>
-            <TableHead className="text-right">Jami qiymat (kitob)</TableHead>
+            <TableHead className="text-right">{t("jamiQiymatKitob")}</TableHead>
             <TableHead className="text-right">{t("farqQiymati")}</TableHead>
             <TableHead className="text-right w-[100px]">{t("Amallar")}</TableHead>
           </TableRow>

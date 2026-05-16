@@ -81,7 +81,7 @@ export function VendorDialog({open,
               />
             </div>
             <div className="space-y-1">
-          <Label className="text-muted-foreground">To'lov muddati (kun)</Label>
+          <Label className="text-muted-foreground">{t("toLovMuddatiKun")}</Label>
               <Input
                 type="number"
                 {...form.register("paymentTerms")}

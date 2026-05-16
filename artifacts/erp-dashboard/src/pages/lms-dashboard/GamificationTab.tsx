@@ -37,7 +37,7 @@ export function GamificationTab({ leaderboard, isLoading }: GamificationTabProps
       <div className="lg:col-span-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Award className="w-5 h-5 text-[var(--ep-yellow)]" />O'quv Reytingi (Leaderboard)</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Award className="w-5 h-5 text-[var(--ep-yellow)]" />{t("oQuvReytingiLeaderboard")}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>

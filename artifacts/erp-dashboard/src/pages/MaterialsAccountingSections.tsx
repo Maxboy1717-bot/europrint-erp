@@ -96,7 +96,7 @@ export function StatCards({
 
       <Card data-testid="card-consumed">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Sarflangan (bu oy)</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("sarflanganBuOy")}</CardTitle>
           <ArrowUpCircle className="h-4 w-4 text-[var(--ep-primary)]" />
         </CardHeader>
         <CardContent>
@@ -115,7 +115,7 @@ export function StatCards({
 
       <Card data-testid="card-received">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Qabul qilingan (bu oy)</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("qabulQilinganBuOy")}</CardTitle>
           <ArrowDownCircle className="h-4 w-4 text-[var(--ep-green)]" />
         </CardHeader>
         <CardContent>

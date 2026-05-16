@@ -18,7 +18,7 @@ export function Step2Motivation({ motivation, onChange }: Step2Props) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
         <h3 className="font-semibold text-sm text-primary">{t("bolim2Motivatsiya")}</h3>
-        <Badge variant="outline" className="text-[9px]">4 savol + oqim + daraja</Badge>
+        <Badge variant="outline" className="text-[9px]">{t("k4SavolOqimDaraja")}</Badge>
       </div>
 
       <div>

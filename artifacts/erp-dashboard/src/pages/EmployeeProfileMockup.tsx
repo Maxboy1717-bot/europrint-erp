@@ -87,7 +87,7 @@ export default function EmployeeProfileMockup() {
         <div className="flex items-center justify-between p-3 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
           <span className="flex items-center gap-2 text-sm">
             <Info className="h-4 w-4 text-[var(--ep-primary)]" />
-            {t("sizning")}<strong>"24-aprel 2026"</strong> {t("tatilArizangizTasdiqlandi")}
+            {t("sizning")}<strong>{t("k24Aprel2026")}</strong> {t("tatilArizangizTasdiqlandi")}
           </span>
           <button
             onClick={() => setAlertVisible(false)}
@@ -216,7 +216,7 @@ export default function EmployeeProfileMockup() {
         >
           <div className="ep-card-body text-center">
             <div className="text-xs text-[var(--ep-muted)]">{t("davomat")}</div>
-            <div className="font-semibold mb-3 text-sm">08:35 AM, 1 may 2026</div>
+            <div className="font-semibold mb-3 text-sm">{t("k0835Am1May2026")}</div>
             <div
               className="relative mx-auto mb-3"
               style={{ width: 140, height: 140, borderRadius: '50%', background: 'conic-gradient(var(--ep-primary) 0% 65%, hsl(var(--muted)) 65% 100%)' }}

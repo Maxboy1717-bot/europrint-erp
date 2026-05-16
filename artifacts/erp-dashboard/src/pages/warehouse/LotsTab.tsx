@@ -159,11 +159,11 @@ export function LotsTab({lang, t: tRaw }: LotsTabProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("lot2")}</TableHead>
-                  <TableHead>Материал</TableHead>
-                  <TableHead>Miqdor / Mavjud</TableHead>
+                  <TableHead>{t("untitled")}</TableHead>
+                  <TableHead>{t("miqdorMavjud")}</TableHead>
                   <TableHead>{t('status21')}</TableHead>
                   <TableHead>{t("location")}</TableHead>
-                  <TableHead>Yoshi (kun)</TableHead>
+                  <TableHead>{t("yoshiKun")}</TableHead>
                   <TableHead>{t("muddatgacha")}</TableHead>
                   <TableHead className="text-right">{t("Amallar")}</TableHead>
                 </TableRow>

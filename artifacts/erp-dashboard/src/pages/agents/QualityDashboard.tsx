@@ -38,11 +38,11 @@ export default function QualityDashboard() {
       {/* Brak trend */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4 border-2 border-blue-200 bg-blue-50/40">
-          <div className="text-xs uppercase tracking-wider font-semibold text-[var(--ep-blue)]">7 kunlik brak %</div>
+          <div className="text-xs uppercase tracking-wider font-semibold text-[var(--ep-blue)]">{t("k7KunlikBrak")}</div>
           <div className="text-3xl font-bold text-blue-800 mt-1">{(trend.data?.pct7d ?? 0).toFixed(1)}%</div>
         </Card>
         <Card className="p-4 border-2 border-slate-200 bg-slate-50/60">
-          <div className="text-xs uppercase tracking-wider font-semibold text-slate-700">30 kunlik brak %</div>
+          <div className="text-xs uppercase tracking-wider font-semibold text-slate-700">{t("k30KunlikBrak")}</div>
           <div className="text-3xl font-bold text-slate-800 mt-1">{(trend.data?.pct30d ?? 0).toFixed(1)}%</div>
         </Card>
         <Card className="p-4 border-2 border-amber-200 bg-amber-50/40">
@@ -73,7 +73,7 @@ export default function QualityDashboard() {
               <div key={b.batchId} className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <div>
                   <div className="font-mono text-sm">#{b.batchId.slice(-12)}</div>
-                  <div className="text-xs text-muted-foreground">QC qaroriga muhtoj</div>
+                  <div className="text-xs text-muted-foreground">{t("qcQarorigaMuhtoj")}</div>
                 </div>
                 <div className="text-lg font-bold text-[var(--ep-yellow)] tabular-nums">{b.daysInQuarantine} kun</div>
               </div>
@@ -83,7 +83,7 @@ export default function QualityDashboard() {
       </Card>
 
       <Card className="p-5">
-        <h3 className="font-bold text-sm mb-2">AI Vision (defekt aniqlash)</h3>
+        <h3 className="font-bold text-sm mb-2">{t("aiVisionDefektAniqlash")}</h3>
         <p className="text-xs text-muted-foreground">
           Kelajakda kameradan rasm yuborib, real-time AI defekt tahlilini olish mumkin bo'ladi.
           Hozir backend `analyzeDefect()` endpointi tayyor.

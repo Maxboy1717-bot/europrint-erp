@@ -62,7 +62,7 @@ export function FraudTab() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label>Miqdor (UZS)</Label>
+            <Label>{t("miqdorUzs")}</Label>
             <Input type="number" value={fields.amount} onChange={e => setFields(p => ({ ...p, amount: e.target.value }))} placeholder="0" />
           </div>
           <div className="space-y-1.5">
@@ -70,7 +70,7 @@ export function FraudTab() {
             <Input value={fields.paymentMethod} onChange={e => setFields(p => ({ ...p, paymentMethod: e.target.value }))} placeholder={t("naqdBankKarta")} />
           </div>
           <div className="col-span-2 space-y-1.5">
-            <Label>Yetkazuvchi / Kontragent</Label>
+            <Label>{t("yetkazuvchiKontragent")}</Label>
             <Input value={fields.vendor} onChange={e => setFields(p => ({ ...p, vendor: e.target.value }))} placeholder={t("kompaniyaYokiShaxsNomi")} />
           </div>
           <div className="col-span-2 space-y-1.5">

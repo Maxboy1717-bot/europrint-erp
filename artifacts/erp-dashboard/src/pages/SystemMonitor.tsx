@@ -124,7 +124,7 @@ export default function SystemMonitor() {
             {loadingDb ? <Skeleton className="h-40 rounded-lg" /> : (
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">DB hajmi</span>
+                  <span className="text-muted-foreground">{t("dbHajmi")}</span>
                   <span className="font-medium">{dbStats?.dbSize || "—"}</span>
                 </div>
                 <div className="flex justify-between text-sm">

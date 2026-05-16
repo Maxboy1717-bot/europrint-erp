@@ -67,8 +67,8 @@ export function CreateItemDialog({ open, onOpenChange, form, onSubmit, isPending
           </div>
 
           <div className="space-y-1">
-            <Label>Nomi (RU)</Label>
-            <Input {...register("nameRu")} placeholder="Название на русском" />
+            <Label>{t("nomiRu")}</Label>
+            <Input {...register("nameRu")} placeholder={t("untitled")} />
           </div>
 
           <div className="space-y-1">
@@ -82,7 +82,7 @@ export function CreateItemDialog({ open, onOpenChange, form, onSubmit, isPending
                 <SelectItem value="maintenance">{t("tamirlash")}</SelectItem>
                 <SelectItem value="office">{t("ofis")}</SelectItem>
                 <SelectItem value="safety">{t("xavfsizlik")}</SelectItem>
-                <SelectItem value="ppe">PPE / Forma</SelectItem>
+                <SelectItem value="ppe">{t("ppeForma")}</SelectItem>
                 <SelectItem value="electrical">{t("elektr")}</SelectItem>
                 <SelectItem value="plumbing">{t("sanitariya")}</SelectItem>
                 <SelectItem value="other">{t("boshqa")}</SelectItem>

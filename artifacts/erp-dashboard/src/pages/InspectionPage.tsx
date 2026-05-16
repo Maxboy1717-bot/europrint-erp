@@ -66,7 +66,7 @@ export default function InspectionPage() {
             <Building2 className="w-6 h-6 text-[var(--ep-blue)]" />
             {t("xonaInspeksiyasi")}
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">AI tahlil va real-time monitoring</p>
+          <p className="text-sm text-gray-500 mt-0.5">{t("aiTahlilVaRealTimeMonitoring")}</p>
         </div>
         <div className="flex items-center gap-3">
           {anomalyCount > 0 && (

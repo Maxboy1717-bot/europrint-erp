@@ -45,18 +45,18 @@ export function AuditFilters({ action, tableName, userId, search, from, to, tabl
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">{t("foydalanuvchiId")}</label>
-            <Input placeholder="foydalanuvchi-id..." value={userId} onChange={e => onChange("userId", e.target.value)} className="h-9 text-sm" />
+            <Input placeholder={t("foydalanuvchiId")} value={userId} onChange={e => onChange("userId", e.target.value)} className="h-9 text-sm" />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">{t("search")}</label>
-            <Input placeholder="jadval, yozuv..." value={search} onChange={e => onChange("search", e.target.value)} className="h-9 text-sm" />
+            <Input placeholder={t("jadvalYozuv")} value={search} onChange={e => onChange("search", e.target.value)} className="h-9 text-sm" />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">Dan (sana)</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("danSana")}</label>
             <Input type="date" value={from} onChange={e => onChange("from", e.target.value)} className="h-9 text-sm" />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">Gacha (sana)</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("gachaSana")}</label>
             <Input type="date" value={to} onChange={e => onChange("to", e.target.value)} className="h-9 text-sm" />
           </div>
         </div>
@@ -87,7 +87,7 @@ export function AuditTable({ rows, isLoading, page, pages, total, onPageChange, 
         <CardTitle className="text-base flex items-center gap-2">
           <History className="h-4 w-4" />
           Audit yozuvlar
-          {isLoading && <span className="text-xs text-muted-foreground font-normal ml-2">yuklanmoqda...</span>}
+          {isLoading && <span className="text-xs text-muted-foreground font-normal ml-2">{t("yuklanmoqda")}</span>}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -95,12 +95,12 @@ export function AuditTable({ rows, isLoading, page, pages, total, onPageChange, 
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground w-32">Sana/Vaqt</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground w-32">{t("sanaVaqt")}</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground w-24">{t("action2")}</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground w-32">{t("jadval")}</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground w-28">{t("yozuvId")}</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("foydalanuvchi")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground w-32">IP manzil</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground w-32">{t("ipManzil")}</th>
                 <th className="text-right px-4 py-3 font-medium text-muted-foreground w-16"></th>
               </tr>
             </thead>
@@ -187,7 +187,7 @@ export function AuditDetailModal({ selected, onClose }: DetailModalProps) {
               <div>{selected.user_display_name ?? selected.user_full_name ?? selected.user_id ?? "—"}</div>
               {selected.user_role && <div className="text-xs text-muted-foreground">{selected.user_role}</div>}
             </div>
-            <div><span className="text-muted-foreground text-xs">IP manzil</span><div className="font-mono">{selected.ip_address ?? "—"}</div></div>
+            <div><span className="text-muted-foreground text-xs">{t("ipManzil2")}</span><div className="font-mono">{selected.ip_address ?? "—"}</div></div>
             {selected.reason && (
               <div className="col-span-2">
                 <span className="text-muted-foreground text-xs">{t("sabab")}</span>

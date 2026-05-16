@@ -103,7 +103,7 @@ export default function NotificationCenter() {
       <div className="flex items-center gap-3 mb-6">
         <Bell className="h-8 w-8 text-[var(--ep-yellow)]" />
         <div className="flex-1">
-          <div className="text-xs text-gray-500 font-semibold">XABARNOMALAR MARKAZI</div>
+          <div className="text-xs text-gray-500 font-semibold">{t("xabarnomalarMarkazi")}</div>
           <h1 className="text-2xl font-bold">{t("notifications")}</h1>
           <p className="text-sm text-gray-500">
             {stats.total} ta jami · <b className="text-[var(--ep-yellow)]">{stats.unread} ta o'qilmagan</b>

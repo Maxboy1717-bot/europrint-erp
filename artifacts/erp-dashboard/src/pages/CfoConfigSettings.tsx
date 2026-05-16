@@ -137,11 +137,11 @@ export default function CfoConfigSettings() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">{t("arEclStavkalari")}</CardTitle>
-              <CardDescription>Debitorlik qarzlari uchun kutilayotgan kredit yo'qotish stavkalari (0.0 — 1.0)</CardDescription>
+              <CardDescription>{t("debitorlikQarzlariUchunKutilayotganKreditYo")}</CardDescription>
             </CardHeader>
             <CardContent>
               {eclKeys.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">ECL stavkalari topilmadi</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t("eclStavkalariTopilmadi")}</p>
               ) : (
                 eclKeys.map(renderRow)
               )}

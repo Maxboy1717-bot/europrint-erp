@@ -48,10 +48,10 @@ export function RentalPanel({ rentalData, rentalLoading }: RentalPanelProps) {
             <TableHeader>
               <TableRow className="border-border hover:bg-transparent">
                 <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("mijoz1")}</TableHead>
-                <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Maydon (m²)</TableHead>
+                <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("maydonM")}</TableHead>
                 <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("boshlanish")}</TableHead>
                 <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("tugash")}</TableHead>
-                <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Oylik (so'm)</TableHead>
+                <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("oylikSoM")}</TableHead>
                 <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("tolov1")}</TableHead>
               </TableRow>
             </TableHeader>
@@ -143,7 +143,7 @@ export function AdvancePanel({ advanceOrders }: AdvancePanelProps) {
               <AlertCircle className="w-6 h-6 text-[var(--ep-red)]" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Kritik (muddati o'tgan)</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("kritikMuddatiOTgan")}</p>
               <p className="text-3xl font-bold tracking-tight text-[var(--ep-red)]">0</p>
             </div>
           </CardContent>

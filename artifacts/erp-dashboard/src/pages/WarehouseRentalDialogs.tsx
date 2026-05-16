@@ -140,7 +140,7 @@ export function AddRecordDialog({ open, onClose, settings }: AddRecordDialogProp
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label>Maydon (m²) *</Label>
+              <Label>{t("maydonM")}</Label>
               <Input
                 data-testid="input-area-m2"
                 type="number"
@@ -170,7 +170,7 @@ export function AddRecordDialog({ open, onClose, settings }: AddRecordDialogProp
               />
             </div>
             <div>
-              <Label>Kunlik tarif (m² uchun)</Label>
+              <Label>{t("kunlikTarifMUchun")}</Label>
               <Input
                 data-testid="input-daily-rate"
                 type="number"

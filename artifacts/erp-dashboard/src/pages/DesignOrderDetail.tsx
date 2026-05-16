@@ -294,7 +294,7 @@ export default function DesignOrderDetail() {
           <div className="lg:col-span-2">
             <Card className="h-[calc(100vh-12rem)] flex flex-col">
               <CardHeader>
-                <CardTitle>Chat (Savdo ⇄ Dizayn)</CardTitle>
+                <CardTitle>{t("chatSavdoDizayn")}</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
                 <div className="flex-1 overflow-y-auto p-4 space-y-4" data-testid="chat-messages">

@@ -239,7 +239,7 @@ function MesRecentStoppages({ mesSummary }: { mesSummary: MesSummary }) {
         <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Sana/Vaqt</TableHead>
+              <TableHead>{t("sanaVaqt")}</TableHead>
               <TableHead>{t("sabab")}</TableHead>
               <TableHead>{t("progress.description")}</TableHead>
               <TableHead className="text-right">{t("davomiylik")}</TableHead>

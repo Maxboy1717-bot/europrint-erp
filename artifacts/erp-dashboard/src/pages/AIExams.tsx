@@ -287,7 +287,7 @@ export default function AIExams() {
                 {attemptDetail.attempt.gptAnalysis && (
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Batafsil tahlil (GPT)</CardTitle>
+                      <CardTitle className="text-base">{t("batafsilTahlilGpt")}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="prose prose-sm dark:prose-invert max-w-none">

@@ -71,7 +71,7 @@ export function CategoryDialog({
               data-testid="input-category-code"
               value={categoryCode}
               onChange={(e) => onCodeChange(e.target.value)}
-              placeholder="kategoriya_kodi"
+              placeholder={t("kategoriyaKodi")}
             />
           </div>
           <div className="flex justify-end gap-2">

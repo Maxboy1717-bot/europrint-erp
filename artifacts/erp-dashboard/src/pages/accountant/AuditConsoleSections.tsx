@@ -247,7 +247,7 @@ export function DocumentTraceTab({ docSearchQuery, onQueryChange, onSearch }: Do
           <input
             type="text"
             className="flex-1 p-2 border rounded-md bg-background"
-            placeholder="Hujjat raqami (masalan: SO-0001, INV-0001)"
+            placeholder={t("hujjatRaqamiMasalanSo0001Inv")}
             value={docSearchQuery}
             onChange={(e) => onQueryChange(e.target.value)}
           />

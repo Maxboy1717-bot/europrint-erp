@@ -204,7 +204,7 @@ export function TechAccessTab({ employeeId, employeeRole, employeeHireDate, empl
               <Award className="h-5 w-5" />
               {t("sertifikatdanAvtomatikUskunaRuxsatlari")}
             </CardTitle>
-            <CardDescription>LMS sertifikatlariga asoslanib aniqlangan uskuna ruxsatlari</CardDescription>
+            <CardDescription>{t("lmsSertifikatlarigaAsoslanibAniqlanganUskunaRuxsat")}</CardDescription>
           </CardHeader>
           <CardContent>
             {certBasedAccess.length > 0 ? (

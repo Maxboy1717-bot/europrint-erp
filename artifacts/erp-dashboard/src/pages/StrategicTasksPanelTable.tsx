@@ -114,7 +114,7 @@ export function TasksTable({tasks, isLoading, expandedTaskId, onToggleExpand }: 
                   <div className="p-4 space-y-3">
                     {task.titleRu && (
                       <div>
-                        <span className="text-xs text-muted-foreground">Название (RU):</span>
+                        <span className="text-xs text-muted-foreground">{t("ru")}</span>
                         <p className="text-sm">{task.titleRu}</p>
                       </div>
                     )}

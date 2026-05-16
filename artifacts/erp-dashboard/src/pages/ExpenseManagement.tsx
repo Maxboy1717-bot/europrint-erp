@@ -184,7 +184,7 @@ export default function ExpenseManagement() {
                 <Input {...form.register("purpose")} placeholder={t("xarajatMaqsadiniKiriting")} data-testid="input-purpose" />
               </div>
               <div>
-                <Label>Summa (UZS)</Label>
+                <Label>{t("summaUzs")}</Label>
                 <Input {...form.register("amount")} type="number" placeholder="0" data-testid="input-amount" />
               </div>
               <div>
@@ -322,7 +322,7 @@ export default function ExpenseManagement() {
                     <TableRow>
                       <TableHead>{t("raqam")}</TableHead>
                       <TableHead>{t("type")}</TableHead>
-                      <TableHead>Taminotchi/Xodim</TableHead>
+                      <TableHead>{t("taminotchiXodim")}</TableHead>
                       <TableHead>{t("summa")}</TableHead>
                       <TableHead>{t("status28")}</TableHead>
                     </TableRow>

@@ -51,7 +51,7 @@ export function KPICards({
             <div>
               <p className="text-xs text-muted-foreground">{t("shartnomalar")}</p>
               <p className="text-2xl font-bold text-[var(--ep-blue)]">{totalContracts}</p>
-              {activeContract && <p className="text-xs text-[var(--ep-blue)] mt-0.5">1 ta faol</p>}
+              {activeContract && <p className="text-xs text-[var(--ep-blue)] mt-0.5">{t("k1TaFaol")}</p>}
             </div>
             <ScrollText className="h-7 w-7 text-[var(--ep-blue)]" />
           </div>

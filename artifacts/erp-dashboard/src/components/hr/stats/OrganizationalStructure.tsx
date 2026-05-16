@@ -47,7 +47,7 @@ export function OrganizationalStructure({ employee, getInitials, onNavigate }: O
               )}
               {employee.positionCkp && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">ЦКП kodi:</span>
+                  <span className="text-sm text-muted-foreground">{t("kodi")}</span>
                   <Badge variant="secondary" data-testid="badge-position-ckp">{employee.positionCkp}</Badge>
                 </div>
               )}

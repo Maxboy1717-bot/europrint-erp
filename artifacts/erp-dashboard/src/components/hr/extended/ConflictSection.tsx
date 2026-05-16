@@ -150,7 +150,7 @@ export function ConflictSection({
                   <SelectContent>
                     <SelectItem value="low">{t("low")}</SelectItem>
                     <SelectItem value="medium">{t("medium")}</SelectItem>
-                    <SelectItem value="high">Yuqori (Kritik)</SelectItem>
+                    <SelectItem value="high">{t("yuqoriKritik")}</SelectItem>
                   </SelectContent>
                 </Select>
               )} />

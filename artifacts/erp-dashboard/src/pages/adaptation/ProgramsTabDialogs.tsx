@@ -63,7 +63,7 @@ export function TemplatesDialog({
             onClick={() => onUseTemplate("1-day")}
             data-testid="template-1-day"
           >
-            <div className="font-semibold">1 kunlik</div>
+            <div className="font-semibold">{t("k1Kunlik")}</div>
             <div className="text-xs text-muted-foreground">{t("kirishVaTanishish")}</div>
           </Button>
           <Button
@@ -72,7 +72,7 @@ export function TemplatesDialog({
             onClick={() => onUseTemplate("1-week")}
             data-testid="template-1-week"
           >
-            <div className="font-semibold">1 haftalik</div>
+            <div className="font-semibold">{t("k1Haftalik")}</div>
             <div className="text-xs text-muted-foreground">{t("asosiyJarayonlar")}</div>
           </Button>
           <Button
@@ -81,7 +81,7 @@ export function TemplatesDialog({
             onClick={() => onUseTemplate("1-month")}
             data-testid="template-1-month"
           >
-            <div className="font-semibold">1 oylik</div>
+            <div className="font-semibold">{t("k1Oylik")}</div>
             <div className="text-xs text-muted-foreground">{t("toliqAdaptatsiya")}</div>
           </Button>
           <Button
@@ -90,7 +90,7 @@ export function TemplatesDialog({
             onClick={() => onUseTemplate("3-month")}
             data-testid="template-3-month"
           >
-            <div className="font-semibold">3 oylik</div>
+            <div className="font-semibold">{t("k3Oylik")}</div>
             <div className="text-xs text-muted-foreground">{t("kengQamrovliDastur")}</div>
           </Button>
         </div>

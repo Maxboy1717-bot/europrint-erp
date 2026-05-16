@@ -65,7 +65,7 @@ export function NpsSubmitDialog() {
             <Label>{t("mijoz1")}</Label>
             <Select value={form.customerId} onValueChange={(v) => setForm({ ...form, customerId: v })}>
               <SelectTrigger data-testid="select-nps-customer" className="h-9">
-                <SelectValue placeholder="Mijozni tanlang (ixtiyoriy)" />
+                <SelectValue placeholder={t("mijozniTanlangIxtiyoriy")} />
               </SelectTrigger>
               <SelectContent>
                 {(companies as Array<{ id: number; name: string }>).map((c) => (
@@ -75,7 +75,7 @@ export function NpsSubmitDialog() {
             </Select>
           </div>
           <div>
-            <Label>Ball (1-10) *</Label>
+            <Label>{t("ball110")}</Label>
             <Select value={form.score} onValueChange={(v) => setForm({ ...form, score: v })}>
               <SelectTrigger data-testid="select-nps-score" className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>

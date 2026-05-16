@@ -119,7 +119,7 @@ export function QCAITrendTab() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-base">Brak sabablari (Top 10)</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("brakSabablariTop10")}</CardTitle></CardHeader>
           <CardContent>
             {aiTrendData.byReason.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t("brakYozuvlariYoq")}</p>

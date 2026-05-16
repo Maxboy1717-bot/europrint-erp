@@ -57,10 +57,10 @@ export function CreateWarehouseDialog({open, onOpenChange, form, onSubmit, isPen
                     <SelectItem value="finished_goods">{t("tayyorMahsulot")}</SelectItem>
                     <SelectItem value="transit">{t("tranzit")}</SelectItem>
                     <SelectItem value="semi_finished">{t("yarimTayyor")}</SelectItem>
-                    <SelectItem value="defective">Brak / Nuqsonli</SelectItem>
+                    <SelectItem value="defective">{t("brakNuqsonli")}</SelectItem>
                     <SelectItem value="quarantine">{t("karantin")}</SelectItem>
                     <SelectItem value="tools_equipment">{t("asbobUskuna")}</SelectItem>
-                    <SelectItem value="household_mro">Xo'jalik (MRO)</SelectItem>
+                    <SelectItem value="household_mro">{t("xoJalikMro")}</SelectItem>
                     <SelectItem value="mro">MRO</SelectItem>
                     <SelectItem value="production">{t("ishlabChiqarish2")}</SelectItem>
                   </SelectContent>

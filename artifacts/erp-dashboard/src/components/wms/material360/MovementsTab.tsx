@@ -32,7 +32,7 @@ export function MovementsTab({ movements, basic }: { movements: MovementsInfo; b
       </div>
       {monthlyData.length > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">12 oylik trend</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{t("k12OylikTrend")}</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={monthlyData}>

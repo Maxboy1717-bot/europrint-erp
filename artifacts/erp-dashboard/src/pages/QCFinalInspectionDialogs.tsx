@@ -122,7 +122,7 @@ export function InspectDialog({open,
           </div>
 
           <Textarea
-            placeholder="Izoh (ixtiyoriy)"
+            placeholder={t("izohIxtiyoriy")}
             value={form.comments}
             onChange={(e) => setters.setComments(e.target.value)}
             data-testid="input-final-comments"

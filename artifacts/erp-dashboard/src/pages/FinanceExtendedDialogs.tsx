@@ -42,7 +42,7 @@ export function CostCenterDialog({ open, onOpenChange, form, onSubmit, isPending
             </div>
           </div>
           <div className="space-y-1">
-          <Label>Byudjet (so'm)</Label>
+          <Label>{t("byudjetSoM")}</Label>
             <Input type="number" {...form.register("budget")} placeholder="50000000" />
           </div>
           <div className="space-y-1">

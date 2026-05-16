@@ -120,7 +120,7 @@ export default function AgentsHub() {
         {briefingQ.isLoading ? (
           <p className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</p>
         ) : briefingQ.isError ? (
-          <p className="text-sm text-[var(--ep-red)]">AI brifing yuklab bo'lmadi (backend ulanishi tekshirilsin)</p>
+          <p className="text-sm text-[var(--ep-red)]">{t("aiBrifingYuklabBoLmadiBackend")}</p>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
@@ -130,7 +130,7 @@ export default function AgentsHub() {
               <Stat label={t("buyurtmaQiymati")} value={`${(b?.kpi.ordersDelayedAmount ?? 0).toLocaleString()} so'm`} color="blue" />
             </div>
             <div className="bg-white rounded-lg border p-3 text-sm leading-relaxed">
-              <span className="text-xs font-bold text-[var(--ep-blue)] uppercase tracking-wider">AI xulosa</span>
+              <span className="text-xs font-bold text-[var(--ep-blue)] uppercase tracking-wider">{t("aiXulosa")}</span>
               <p className="mt-1">{b?.summary}</p>
             </div>
           </>
@@ -140,7 +140,7 @@ export default function AgentsHub() {
       {/* 20 modul holati */}
       <Card className="p-5">
         <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
-          <span>20 modul holati</span>
+          <span>{t("k20ModulHolati")}</span>
           <span className="text-xs text-muted-foreground font-normal">{t('realTime1')}</span>
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2">
@@ -158,7 +158,7 @@ export default function AgentsHub() {
 
       {/* 14 agent kartochka */}
       <div>
-        <h2 className="font-bold text-lg mb-3">14 ta AI agent</h2>
+        <h2 className="font-bold text-lg mb-3">{t("k14TaAiAgent")}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {AGENT_CARDS.map(a => (
             <Card key={a.code} className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
@@ -204,7 +204,7 @@ export default function AgentsHub() {
             </div>
             {answer && (
               <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
-                <div className="text-xs font-bold text-[var(--ep-blue)] uppercase mb-1">AI javob</div>
+                <div className="text-xs font-bold text-[var(--ep-blue)] uppercase mb-1">{t("aiJavob")}</div>
                 <p className="whitespace-pre-wrap">{answer}</p>
               </div>
             )}

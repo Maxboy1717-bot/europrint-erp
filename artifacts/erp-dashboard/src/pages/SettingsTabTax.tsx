@@ -49,7 +49,7 @@ export function SettingsTabTax({ loading, form, onChange, onSave, isSaving }: Pr
               </p>
             </div>
             <div className="space-y-1">
-          <Label htmlFor="min-wage">Minimal ish haqi (so'm)</Label>
+          <Label htmlFor="min-wage">{t("minimalIshHaqiSoM")}</Label>
               <Input
                 id="min-wage"
                 type="number"
@@ -64,7 +64,7 @@ export function SettingsTabTax({ loading, form, onChange, onSave, isSaving }: Pr
               </p>
             </div>
             <div className="space-y-1">
-          <Label htmlFor="qqs-rate">QQS stavkasi (%)</Label>
+          <Label htmlFor="qqs-rate">{t("qqsStavkasi")}</Label>
               <Input
                 id="qqs-rate"
                 type="number"

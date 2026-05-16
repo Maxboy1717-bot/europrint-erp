@@ -192,7 +192,7 @@ export function LogisticsDashboardVehiclesTab({
                     <TableHead>{t("mashina")}</TableHead>
                     <TableHead>{t("date")}</TableHead>
                     <TableHead>{t("litri1")}</TableHead>
-                    <TableHead>Narxi (l)</TableHead>
+                    <TableHead>{t("narxiL")}</TableHead>
                     <TableHead>{t("jamiNarx1")}</TableHead>
                     <TableHead>{t("stantsiya1")}</TableHead>
                     <TableHead>{t("probeg")}</TableHead>

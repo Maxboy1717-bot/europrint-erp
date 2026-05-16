@@ -192,7 +192,7 @@ export function EventsTable({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-surface-variant/30">
-                  <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">Sana/Vaqt</th>
+                  <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">{t("sanaVaqt")}</th>
                   <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">{t("xodim1")}</th>
                   <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">{t("bolim1")}</th>
                   <th className="text-left py-2 px-4 font-medium text-xs text-muted-foreground">{t("voqea")}</th>

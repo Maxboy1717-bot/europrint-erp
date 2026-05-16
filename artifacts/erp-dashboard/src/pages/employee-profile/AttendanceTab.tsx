@@ -110,7 +110,7 @@ export function AttendanceTab({
               <div>
                 <p className="text-xs text-muted-foreground">{t("ertaKetishlar")}</p>
                 <p className="text-2xl font-bold text-[var(--ep-primary)]">{earlyDepartures.length}</p>
-                <p className="text-xs text-muted-foreground mt-1">17:00 dan oldin ketgan kunlar</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("k1700DanOldinKetganKunlar")}</p>
               </div>
               <LogOut className="h-6 w-6 text-[var(--ep-primary)]" />
             </div>

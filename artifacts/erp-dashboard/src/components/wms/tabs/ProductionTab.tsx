@@ -45,7 +45,7 @@ export function ProductionTab({ productionUsage, basic }: ProductionTabProps) {
         </CardContent>
       </Card>
       {productionUsage.usedInProducts?.length === 0 && (
-        <Card><CardContent className="py-6 text-center text-muted-foreground text-sm">BOM (mahsulot tarkibi) bog'liqligi topilmadi</CardContent></Card>
+        <Card><CardContent className="py-6 text-center text-muted-foreground text-sm">{t("bomMahsulotTarkibiBogLiqligiTopilmadi")}</CardContent></Card>
       )}
     </div>
   );

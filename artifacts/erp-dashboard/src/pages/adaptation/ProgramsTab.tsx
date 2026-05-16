@@ -199,7 +199,7 @@ export function ProgramsTab({ programs, departments, positions }: ProgramsTabPro
         <div className="flex justify-between items-center">
           <div>
             <CardTitle>{t("adaptatsiyaDasturlari")}</CardTitle>
-            <CardDescription>1 kun, 1 hafta, 1 oy, 3 oy rejalar</CardDescription>
+            <CardDescription>{t("k1Kun1Hafta1Oy")}</CardDescription>
           </div>
           <div className="flex gap-2">
             <TemplatesDialog

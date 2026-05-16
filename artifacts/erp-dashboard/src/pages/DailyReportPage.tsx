@@ -140,7 +140,7 @@ export default function DailyReportPage() {
           })}
           {" · "}
           {deadlinePassed ? (
-            <span className="text-red-400">Muddati o'tdi (20:00)</span>
+            <span className="text-red-400">{t("muddatiOTdi2000")}</span>
           ) : (
             <span className="text-green-400">
               Soat 17:00—20:00 orasida topshiring ({20 - hour} soat qoldi)

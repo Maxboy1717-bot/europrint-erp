@@ -224,7 +224,7 @@ export default function CandidatesPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>{t('email1')}</Label>
-                <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@example.com" data-testid="input-candidate-email" />
+                <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder={t("emailExampleCom")} data-testid="input-candidate-email" />
               </div>
               <div className="space-y-1.5">
                 <Label>{t("phone")}</Label>

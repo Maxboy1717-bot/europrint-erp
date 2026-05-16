@@ -207,7 +207,7 @@ export default function DesignApproval() {
           <div className="space-y-4">
             <p>{t("buyurtma3")}<strong>{selectedOrder?.papkaNo}</strong></p>
             <Textarea
-              placeholder="Izoh (ixtiyoriy)"
+              placeholder={t("izohIxtiyoriy")}
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               data-testid="input-comments"
@@ -234,7 +234,7 @@ export default function DesignApproval() {
           <div className="space-y-4">
             <p>{t("buyurtma3")}<strong>{selectedOrder?.papkaNo}</strong></p>
             <Textarea
-              placeholder="Rad etish sababi (majburiy)"
+              placeholder={t("radEtishSababiMajburiy")}
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               required

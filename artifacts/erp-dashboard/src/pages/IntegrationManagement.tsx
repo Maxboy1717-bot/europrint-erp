@@ -145,7 +145,7 @@ export default function IntegrationManagement() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2 text-sm text-muted-foreground">
-            <p>Har bir integratsiya uchun tegishli muhit o'zgaruvchisi (env variable) kerak:</p>
+            <p>{t("harBirIntegratsiyaUchunTegishliMuhit")}</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li><code className="text-xs bg-muted px-1 py-0.5 rounded">TELEGRAM_BOT_TOKEN</code> {t("telegramBotUlanishiUchun")}</li>
               <li><code className="text-xs bg-muted px-1 py-0.5 rounded">AI_INTEGRATIONS_OPENAI_API_KEY</code> {t("openaiAiFunksiyalariUchun")}</li>

@@ -116,7 +116,7 @@ export function ActionsTabContent({ deals, dealsLoading, aiResults, actionPendin
     <Card className="bg-card border-none shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><Zap className="h-4 w-4 text-primary" />{t("keyingiEngYaxshiHarakat")}</CardTitle>
-        <CardDescription>AI har bir bitim uchun optimal keyingi qadam tavsiya qiladi</CardDescription>
+        <CardDescription>{t("aiHarBirBitimUchunOptimal")}</CardDescription>
       </CardHeader>
       <CardContent>
         {dealsLoading ? (

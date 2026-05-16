@@ -134,13 +134,13 @@ export function MaterialDialog({ open, onClose, editMaterial }: { open: boolean;
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="m-name">Nomi (O'zbek) *</Label>
+            <Label htmlFor="m-name">{t("nomiOZbek")}</Label>
             <Input id="m-name" data-testid="input-material-name" value={form.xomAshyo} onChange={set("xomAshyo")} placeholder={t("materialNomi")} />
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="m-name-ru">Nomi (Rus)</Label>
-            <Input id="m-name-ru" data-testid="input-material-name-ru" value={form.xomAshyoRu} onChange={set("xomAshyoRu")} placeholder="Название материала" />
+            <Label htmlFor="m-name-ru">{t("nomiRus")}</Label>
+            <Input id="m-name-ru" data-testid="input-material-name-ru" value={form.xomAshyoRu} onChange={set("xomAshyoRu")} placeholder={t("untitled")} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -162,34 +162,34 @@ export function MaterialDialog({ open, onClose, editMaterial }: { open: boolean;
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="m-abc">ABC segment</Label>
+              <Label htmlFor="m-abc">{t("abcSegment")}</Label>
               <Select value={form.abcSegment || "none"} onValueChange={v => setVal("abcSegment")(v === "none" ? "" : v)}>
                 <SelectTrigger data-testid="select-material-abc" className="h-9"><SelectValue placeholder={t("tanlang")} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">—</SelectItem>
-                  <SelectItem value="A">A (Yuqori prioritet)</SelectItem>
-                  <SelectItem value="B">B (O'rta prioritet)</SelectItem>
-                  <SelectItem value="C">C (Past prioritet)</SelectItem>
+                  <SelectItem value="A">{t("aYuqoriPrioritet")}</SelectItem>
+                  <SelectItem value="B">{t("bORtaPrioritet")}</SelectItem>
+                  <SelectItem value="C">{t("cPastPrioritet")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="m-shelf">Yaroqlilik (kun)</Label>
+              <Label htmlFor="m-shelf">{t("yaroqlilikKun")}</Label>
               <Input id="m-shelf" data-testid="input-material-shelf-life" type="number" min="0" value={form.shelfLifeDays} onChange={set("shelfLifeDays")} placeholder="365" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="m-fmt-a">Format A (mm)</Label>
+              <Label htmlFor="m-fmt-a">{t("formatAMm")}</Label>
               <Input id="m-fmt-a" data-testid="input-material-format-a" value={form.formatA} onChange={set("formatA")} placeholder="1000" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="m-fmt-b">Format B (mm)</Label>
+              <Label htmlFor="m-fmt-b">{t("formatBMm")}</Label>
               <Input id="m-fmt-b" data-testid="input-material-format-b" value={form.formatB} onChange={set("formatB")} placeholder="700" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="m-grm">Gramm (g/m²)</Label>
+              <Label htmlFor="m-grm">{t("grammGM")}</Label>
               <Input id="m-grm" data-testid="input-material-grammage" value={form.grammage} onChange={set("grammage")} placeholder="90" />
             </div>
           </div>

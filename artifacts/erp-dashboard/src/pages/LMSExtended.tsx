@@ -153,7 +153,7 @@ export default function LMSExtended() {
                   <div className="space-y-2"><Label className="text-foreground">{t("kursNomi")}</Label><Input {...courseForm.register("title")} placeholder={t("kursNominiKiriting")} data-testid="input-course-title" className="bg-muted/40 border-border" /></div>
                   <div className="space-y-2"><Label className="text-foreground">{t("progress.description")}</Label><Input {...courseForm.register("description")} placeholder={t("qisqaTavsif")} className="bg-muted/40 border-border" /></div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-2"><Label className="text-foreground">Davomiylik (soat)</Label><Input type="number" {...courseForm.register("duration")} placeholder="4" className="bg-muted/40 border-border" /></div>
+                    <div className="space-y-2"><Label className="text-foreground">{t("davomiylikSoat")}</Label><Input type="number" {...courseForm.register("duration")} placeholder="4" className="bg-muted/40 border-border" /></div>
                     <div className="space-y-2"><Label className="text-foreground">{t("daraja")}</Label><Controller control={courseForm.control} name="level" render={({ field }) => (<Select value={field.value} onValueChange={field.onChange}><SelectTrigger className="bg-muted/40 border-border h-9"><SelectValue /></SelectTrigger><SelectContent className="bg-card border-border"><SelectItem value="beginner">{t("boshlangich")}</SelectItem><SelectItem value="intermediate">{t("medium")}</SelectItem><SelectItem value="advanced">{t("high")}</SelectItem></SelectContent></Select>)} /></div>
                   </div>
                   <DialogFooter>
@@ -207,8 +207,8 @@ export default function LMSExtended() {
                   <div className="space-y-2"><Label className="text-foreground">{t("testNomi")}</Label><Input {...testForm.register("title")} placeholder={t("testNominiKiriting")} data-testid="input-test-title" className="bg-muted/40 border-border" /></div>
                   <div className="space-y-2"><Label className="text-foreground">{t("kurs")}</Label><Controller control={testForm.control} name="courseId" render={({ field }) => (<Select value={field.value} onValueChange={field.onChange}><SelectTrigger className="bg-muted/40 border-border h-9"><SelectValue placeholder={t("kursniTanlang")} /></SelectTrigger><SelectContent className="bg-card border-border">{(Array.isArray(courses) ? courses : []).map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.title || c.name}</SelectItem>)}</SelectContent></Select>)} /></div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-2"><Label className="text-foreground">O'tish bali (%)</Label><Input type="number" {...testForm.register("passingScore")} min="0" max="100" className="bg-muted/40 border-border" /></div>
-                    <div className="space-y-2"><Label className="text-foreground">Vaqt chegarasi (min)</Label><Input type="number" {...testForm.register("timeLimit")} min="1" className="bg-muted/40 border-border" /></div>
+                    <div className="space-y-2"><Label className="text-foreground">{t("oTishBali")}</Label><Input type="number" {...testForm.register("passingScore")} min="0" max="100" className="bg-muted/40 border-border" /></div>
+                    <div className="space-y-2"><Label className="text-foreground">{t("vaqtChegarasiMin")}</Label><Input type="number" {...testForm.register("timeLimit")} min="1" className="bg-muted/40 border-border" /></div>
                   </div>
                   <DialogFooter>
                     <Button variant="outline" type="button" onClick={() => setShowTestDialog(false)} className="bg-muted/60 text-foreground hover:bg-muted border-none rounded-lg font-medium">{t("Bekor")}</Button>
@@ -220,7 +220,7 @@ export default function LMSExtended() {
           </TabsContent>
 
           <TabsContent value="cert" className="mt-0 space-y-6 outline-none">
-            <h2 className="text-xl font-bold text-foreground">Operator Sertifikatsiya (MES uchun ruxsat)</h2>
+            <h2 className="text-xl font-bold text-foreground">{t("operatorSertifikatsiyaMesUchunRuxsat")}</h2>
             <div className="p-4 rounded-lg bg-primary/10/10 border border-primary/20 text-sm text-foreground flex items-start gap-3"><Zap className="h-4 w-4 text-primary mt-0.5" /><p>{t("mesTizimigaKirishUchunStanoq")}</p></div>
             <Card className="bg-card border-border shadow-none">
               <CardContent className="p-0"><div className="ep-table-scroll"><Table><TableHeader className="sticky top-0 z-10 bg-card"><TableRow className="border-none hover:bg-transparent">{(["Operator","Daraja","Tasdiqlangan sertifikatlar","Kutilayotgan"]).map((h,i) => <TableHead key={h} className={`bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 ${i===0?"rounded-l-lg":""} ${i===3?"rounded-r-lg":""}`}>{h}</TableHead>)}</TableRow></TableHeader><TableBody><TableRow className="border-none"><TableCell colSpan={4} className="text-center py-10 text-[13px] text-muted-foreground"><Award className="h-10 w-10 mx-auto mb-3 opacity-20" /><p className="font-medium">{t("sertifikatMalumotlariMavjudEmas")}</p><p className="text-sm mt-1 opacity-70">{t("operatorSertifikatlariMesTizimiOrqali")}</p></TableCell></TableRow></TableBody></Table></div></CardContent>

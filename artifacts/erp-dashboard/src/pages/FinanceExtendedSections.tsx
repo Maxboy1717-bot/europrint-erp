@@ -192,7 +192,7 @@ export function GLDocumentsTab({ glDocuments, glLoading, onRefetch }: GLDocument
   return (
     <TabsContent value="gldocs" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">GL Hujjatlar (Audit Log)</h2>
+        <h2 className="text-lg font-semibold">{t("glHujjatlarAuditLog")}</h2>
         <Button variant="outline" size="sm" onClick={onRefetch}>
           <RefreshCw className="h-3.5 w-3.5 mr-1.5" />{t("refresh")}
         </Button>

@@ -120,7 +120,7 @@ export default function PeerReviewPage() {
               <Card>
                 <CardContent className="pt-4 pb-3">
                   <div className="text-2xl font-bold text-[var(--ep-green)]">{reviewed.length}</div>
-                  <div className="text-xs text-muted-foreground">Baholangan (bugun)</div>
+                  <div className="text-xs text-muted-foreground">{t("baholanganBugun")}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -142,7 +142,7 @@ export default function PeerReviewPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-sm font-medium mb-2">Baho (1-5 yulduz)</p>
+                    <p className="text-sm font-medium mb-2">{t("baho15Yulduz")}</p>
                     <StarRating value={rating} onChange={setRating} />
                   </div>
                   <div>

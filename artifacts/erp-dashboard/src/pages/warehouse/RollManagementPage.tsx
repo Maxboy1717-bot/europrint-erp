@@ -68,7 +68,7 @@ export default function RollManagementPage() {
 
       {/* Roll balansi */}
       <Card className="p-5">
-        <h3 className="font-bold text-sm mb-3">Roll qoldiqlari (artikel bo'yicha)</h3>
+        <h3 className="font-bold text-sm mb-3">{t("rollQoldiqlariArtikelBoYicha")}</h3>
         {balance.isLoading ? <EPLoader /> :
          (balance.data?.length ?? 0) === 0 ? (
           <p className="text-center py-8 text-sm text-muted-foreground">
@@ -148,12 +148,12 @@ export default function RollManagementPage() {
           <Card className="w-full max-w-md p-5" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-base mb-3">{t("yangiRollQabulQilish")}</h3>
             <div className="space-y-3">
-              <Input2 label={t("rollId")} value={scanForm.rollId} onChange={(v) => setScanForm({...scanForm, rollId: v})} placeholder="masalan RL-2026-0042" />
-              <Input2 label={t("artikelKodi")} value={scanForm.articleCode} onChange={(v) => setScanForm({...scanForm, articleCode: v})} placeholder="masalan GOFRO-180-B" />
+              <Input2 label={t("rollId")} value={scanForm.rollId} onChange={(v) => setScanForm({...scanForm, rollId: v})} placeholder={t("masalanRl20260042")} />
+              <Input2 label={t("artikelKodi")} value={scanForm.articleCode} onChange={(v) => setScanForm({...scanForm, articleCode: v})} placeholder={t("masalanGofro180B")} />
               <Input2 label={t("taminotchiNomi")} value={scanForm.supplierName} onChange={(v) => setScanForm({...scanForm, supplierName: v})} />
-              <Input2 label="Boshlang'ich og'irlik (kg) *" value={scanForm.initialWeightKg} onChange={(v) => setScanForm({...scanForm, initialWeightKg: v})} type="number" placeholder="masalan 250" />
+              <Input2 label="Boshlang'ich og'irlik (kg) *" value={scanForm.initialWeightKg} onChange={(v) => setScanForm({...scanForm, initialWeightKg: v})} type="number" placeholder={t("masalan250")} />
               <Input2 label={t("omborId")} value={scanForm.warehouseId} onChange={(v) => setScanForm({...scanForm, warehouseId: v})} />
-              <Input2 label="Bin (joy)" value={scanForm.binLocation} onChange={(v) => setScanForm({...scanForm, binLocation: v})} placeholder="masalan A-3-12" />
+              <Input2 label="Bin (joy)" value={scanForm.binLocation} onChange={(v) => setScanForm({...scanForm, binLocation: v})} placeholder={t("masalanA312")} />
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <Button variant="outline" onClick={() => setShowScan(false)}>{t("cancel")}</Button>

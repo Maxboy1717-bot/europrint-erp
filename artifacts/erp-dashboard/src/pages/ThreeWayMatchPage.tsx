@@ -212,7 +212,7 @@ export default function ThreeWayMatchPage() {
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label>PO ID *</Label>
+              <Label>{t("poId")}</Label>
               <Input
                 type="number"
                 value={form.poId}
@@ -222,7 +222,7 @@ export default function ThreeWayMatchPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>GR ID *</Label>
+              <Label>{t("grId")}</Label>
               <Input
                 type="number"
                 value={form.grId}

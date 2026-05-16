@@ -40,7 +40,7 @@ export default function ProcurementDashboard() {
       <Card className="p-5">
         <div className="flex items-center gap-2 mb-3">
           <Award className="h-4 w-4 text-[var(--ep-yellow)]" />
-          <h3 className="font-bold text-sm">Yetkazib beruvchilar reytingi (180 kun ichida)</h3>
+          <h3 className="font-bold text-sm">{t("yetkazibBeruvchilarReytingi180KunIchida")}</h3>
         </div>
         {scores.isLoading ? <EPLoader /> :
          (scores.data?.length ?? 0) === 0 ? (
@@ -73,7 +73,7 @@ export default function ProcurementDashboard() {
       <Card className="p-5">
         <div className="flex items-center gap-2 mb-3">
           <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)]" />
-          <h3 className="font-bold text-sm">Yetkazib berish xavfi (5 kun ichida)</h3>
+          <h3 className="font-bold text-sm">{t("yetkazibBerishXavfi5KunIchida")}</h3>
         </div>
         {risks.isLoading ? <EPLoader /> :
          (risks.data?.length ?? 0) === 0 ? (

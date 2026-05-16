@@ -50,7 +50,7 @@ export function SiklHisobBolimi() {
           {t("tizimMiqdorniKorsatmaydiSizFaqat")}
         </p>
         <div>
-          <Label className="text-xs">Barcode (ixtiyoriy)</Label>
+          <Label className="text-xs">{t("barcodeIxtiyoriy")}</Label>
           <Input data-testid="input-cycle-barcode" placeholder={t("barcodeSkanerlang")} value={formData.barcodeId} onChange={(e) => setFormData({ ...formData, barcodeId: e.target.value })} />
         </div>
         <div>

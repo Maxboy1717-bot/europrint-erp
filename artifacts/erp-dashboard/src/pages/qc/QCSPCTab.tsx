@@ -86,19 +86,19 @@ export function QCSPCTab() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:grid-cols-4">
         <Card>
           <CardHeader className="pb-1">
-            <p className="text-sm text-muted-foreground">O'lchov soni (n)</p>
+            <p className="text-sm text-muted-foreground">{t("oLchovSoniN")}</p>
             <p className="text-2xl font-bold" data-testid="spc-n">{summary.n}</p>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-1">
-            <p className="text-sm text-muted-foreground">O'rtacha nuqson (X̄)</p>
+            <p className="text-sm text-muted-foreground">{t("oRtachaNuqsonX")}</p>
             <p className="text-2xl font-bold">{summary.mean}%</p>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-1">
-            <p className="text-sm text-muted-foreground">Standart og'ish (σ)</p>
+            <p className="text-sm text-muted-foreground">{t("standartOgIsh")}</p>
             <p className="text-2xl font-bold">{summary.sigma}%</p>
           </CardHeader>
         </Card>
@@ -121,20 +121,20 @@ export function QCSPCTab() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center p-2 rounded bg-red-50 dark:bg-red-950">
-              <span className="text-sm font-medium">UCL (Yuqori chegarа)</span>
+              <span className="text-sm font-medium">{t("uclYuqoriChegar")}</span>
               <EPStatusPill tone="danger">{controlLimits.ucl}%</EPStatusPill>
             </div>
             <div className="flex justify-between items-center p-2 rounded bg-green-50 dark:bg-green-950">
-              <span className="text-sm font-medium">CL (O'rta chiziq)</span>
+              <span className="text-sm font-medium">{t("clORtaChiziq")}</span>
               <EPStatusPill tone="success">{controlLimits.cl}%</EPStatusPill>
             </div>
             <div className="flex justify-between items-center p-2 rounded bg-blue-50 dark:bg-blue-950">
-              <span className="text-sm font-medium">LCL (Pastki chegarа)</span>
+              <span className="text-sm font-medium">{t("lclPastkiChegar")}</span>
               <EPStatusPill tone="neutral">{controlLimits.lcl}%</EPStatusPill>
             </div>
             <div className="pt-2 border-t">
               <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Sigma (σ)</span>
+                <span>{t("sigma")}</span>
                 <span>{controlLimits.sigma}%</span>
               </div>
             </div>
@@ -150,11 +150,11 @@ export function QCSPCTab() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Cp (Qobiliyat indeksi)</span>
+              <span className="text-sm font-medium">{t("cpQobiliyatIndeksi")}</span>
               <span className="font-bold">{processCapability.cp ?? "—"}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Cpk (O'chirilgan Cp)</span>
+              <span className="text-sm font-medium">{t("cpkOChirilganCp")}</span>
               <Badge variant={cpkColor}>{processCapability.cpk ?? "—"}</Badge>
             </div>
             <div className="flex justify-between items-center">
@@ -163,7 +163,7 @@ export function QCSPCTab() {
             </div>
             <div className="pt-2 border-t text-xs text-muted-foreground">
               <p>USL = 5% (TZ-07 mezon: 5% dan yuqori nuqson — qayta ishlash)</p>
-              <p>Cpk ≥ 1.33: Qodir | 1.0-1.33: Chegarada | &lt;1.0: Qodir emas</p>
+              <p>{t("cpk133Qodir10")}</p>
             </div>
           </CardContent>
         </Card>
@@ -206,7 +206,7 @@ export function QCSPCTab() {
       {weeklyStats.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Oylik taqsimot (Run Chart)</CardTitle>
+            <CardTitle className="text-base">{t("oylikTaqsimotRunChart")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">

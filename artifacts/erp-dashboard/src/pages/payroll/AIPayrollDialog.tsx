@@ -168,11 +168,11 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
                         <span className="text-[var(--ep-green)]">{formatCurrency(aiResult.grossPay)}</span>
                       </div>
                       <div className="flex justify-between text-muted-foreground">
-                        <span>INPS (12%):</span>
+                        <span>{t("inps12")}</span>
                         <span>-{formatCurrency(aiResult.taxInps)}</span>
                       </div>
                       <div className="flex justify-between text-muted-foreground">
-                        <span>JSHD (12%):</span>
+                        <span>{t("jshd12")}</span>
                         <span>-{formatCurrency(aiResult.taxJshd)}</span>
                       </div>
                       {aiResult.minWageTopUp > 0 && (

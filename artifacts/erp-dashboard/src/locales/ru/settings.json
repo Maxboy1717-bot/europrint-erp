@@ -67,5 +67,11 @@
   "gptModel": "Модель GPT",
   "ozbek": "Узбекский",
   "prompt": "Промпт",
-  "toshkentShaharYashnobodTumani": "г. Ташкент, Яшнабадский район"
+  "toshkentShaharYashnobodTumani": "г. Ташкент, Яшнабадский район",
+  "soliqMoliya": "Soliq / Moliya",
+  "k9001800": "9:00 - 18:00 (Понедельник - Пятница)",
+  "k9001800DushanbaJuma": "9:00 - 18:00 (Dushanba - Juma)",
+  "untitled": "Русский",
+  "wwwEuroprintUz": "www.europrint.uz",
+  "infoEuroprintUz": "info@europrint.uz"
 }

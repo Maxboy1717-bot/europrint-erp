@@ -53,7 +53,7 @@ export function ScanPanel({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <Label>EAN-13 / QR barcode</Label>
+            <Label>{t("ean13QrBarcode")}</Label>
             <div className="flex gap-2">
               <Input
                 value={scanInput}
@@ -194,7 +194,7 @@ export function GeneratePanel({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-1.5">
-          <Label>Prefiks (2-7 raqam)</Label>
+          <Label>{t("prefiks27Raqam")}</Label>
           <Input
             value={genPrefix}
             onChange={e => onPrefixChange(e.target.value.replace(/\D/g, "").slice(0, 7))}
@@ -260,9 +260,9 @@ export function GeneratePanel({
         <Separator />
 
         <div className="text-xs text-muted-foreground space-y-1">
-          <p className="font-medium text-foreground">EAN-13 haqida:</p>
-          <p>• 13 raqamdan iborat xalqaro barcode standarti</p>
-          <p>• Oxirgi raqam — tekshirish raqami (avtomatik hisoblanadi)</p>
+          <p className="font-medium text-foreground">{t("ean13Haqida")}</p>
+          <p>{t("k13RaqamdanIboratXalqaroBarcodeStandarti")}</p>
+          <p>{t("oxirgiRaqamTekshirishRaqamiAvtomatikHisoblanadi")}</p>
           <p>{t("k200299PrefiksiMahalliyIshlatish")}</p>
         </div>
       </CardContent>

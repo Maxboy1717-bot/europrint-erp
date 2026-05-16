@@ -144,10 +144,10 @@ export function SwapRequestDialog({
               <p className="font-medium">{swapDialog.date}</p>
             </div>
             <div>
-              <Label>Kim bilan almashtirish (ixtiyoriy)</Label>
+              <Label>{t("kimBilanAlmashtirishIxtiyoriy")}</Label>
               <Select value={swapToUserId} onValueChange={onSwapToUserChange}>
                 <SelectTrigger data-testid="select-swap-to" className="h-9">
-                  <SelectValue placeholder="Xodim tanlang (ixtiyoriy)" />
+                  <SelectValue placeholder={t("xodimTanlangIxtiyoriy")} />
                 </SelectTrigger>
                 <SelectContent>
                   {(Array.isArray(employees) ? employees : [])

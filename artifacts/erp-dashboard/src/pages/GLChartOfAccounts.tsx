@@ -185,8 +185,8 @@ export default function GLChartOfAccounts() {
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
                       <TableHead className="w-20">{t("code")}</TableHead>
-                      <TableHead>Nomi (UZ)</TableHead>
-                      <TableHead>Nomi (RU)</TableHead>
+                      <TableHead>{t("nomiUz")}</TableHead>
+                      <TableHead>{t("nomiRu")}</TableHead>
                       <TableHead>{t("tur")}</TableHead>
                     </TableRow>
                   </TableHeader>

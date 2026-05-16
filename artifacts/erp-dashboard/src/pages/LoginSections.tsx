@@ -110,7 +110,7 @@ export function LoginHeroPanel() {
           <h1 className="ep-h1 text-white">
             {t("zamonaviyIshlabChiqarish")}
             <br />
-            <span className="opacity-80">boshqaruv tizimi</span>
+            <span className="opacity-80">{t("boshqaruvTizimi")}</span>
           </h1>
           <p className="text-white/70 text-base max-w-sm">
             SAP darajadagi ERP — 15 modul, real-time monitoring, AI tahlil

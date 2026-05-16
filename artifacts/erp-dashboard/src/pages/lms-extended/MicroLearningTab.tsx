@@ -100,10 +100,10 @@ export function MicroLearningTab() {
           <div className="space-y-3 py-1">
             <div><Label>{t("progress.title")}</Label><Input data-testid="input-micro-title" value={microForm.title} onChange={e => setMicroForm(f => ({ ...f, title: e.target.value }))} placeholder={t("modulNomi")} /></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div><Label>Davomiyligi (min)</Label><Input data-testid="input-micro-duration" type="number" value={microForm.durationMinutes} onChange={e => setMicroForm(f => ({ ...f, durationMinutes: e.target.value }))} /></div>
+              <div><Label>{t("davomiyligiMin")}</Label><Input data-testid="input-micro-duration" type="number" value={microForm.durationMinutes} onChange={e => setMicroForm(f => ({ ...f, durationMinutes: e.target.value }))} /></div>
               <div><Label>{t("category")}</Label><Input data-testid="input-micro-category" value={microForm.category} onChange={e => setMicroForm(f => ({ ...f, category: e.target.value }))} placeholder={t("category")} /></div>
             </div>
-            <div><Label>Telegram xabari (ixtiyoriy)</Label><Input data-testid="input-micro-telegram" value={microForm.telegramMessage} onChange={e => setMicroForm(f => ({ ...f, telegramMessage: e.target.value }))} placeholder={t("telegramUchunQisqaXabar")} /></div>
+            <div><Label>{t("telegramXabariIxtiyoriy")}</Label><Input data-testid="input-micro-telegram" value={microForm.telegramMessage} onChange={e => setMicroForm(f => ({ ...f, telegramMessage: e.target.value }))} placeholder={t("telegramUchunQisqaXabar")} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowMicroDialog(false)}>{t("Bekor")}</Button>

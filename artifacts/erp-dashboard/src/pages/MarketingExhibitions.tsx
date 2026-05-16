@@ -167,8 +167,8 @@ export default function MarketingExhibitions() {
           <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto bg-card border-none p-6">
             <DialogHeader><DialogTitle className="text-foreground font-bold">{editId ? "Ko'rgazmani tahrirlash" : "Yangi Ko'rgazma"}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-1.5"><Label className="text-muted-foreground">Nomi (UZ) *</Label><Input className="bg-background border-border" data-testid="input-exhibition-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-muted-foreground">Nomi (RU)</Label><Input className="bg-background border-border" value={form.nameRu} onChange={(e) => setForm({ ...form, nameRu: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("nomiUz")}</Label><Input className="bg-background border-border" data-testid="input-exhibition-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-muted-foreground">{t("nomiRu")}</Label><Input className="bg-background border-border" value={form.nameRu} onChange={(e) => setForm({ ...form, nameRu: e.target.value })} /></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5"><Label className="text-muted-foreground">{t("address")}</Label><Input className="bg-background border-border" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
                 <div className="space-y-1.5"><Label className="text-muted-foreground">{t("davlat")}</Label><Input className="bg-background border-border" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} placeholder={t("ozbekiston")} /></div>

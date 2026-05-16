@@ -19,11 +19,11 @@ export function HouseholdSection({ form }: FormSectionProps) {
           name="housingType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Uy turi</FormLabel>
+              <FormLabel>{t("uyTuri")}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger data-testid="select-housing-type" className="h-9">
-                    <SelectValue placeholder="Uy turini tanlang" />
+                    <SelectValue placeholder={t("uyTuriniTanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -83,7 +83,7 @@ export function HouseholdSection({ form }: FormSectionProps) {
           name="latitude"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Kenglik (Latitude)</FormLabel>
+              <FormLabel>{t("kenglikLatitude")}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -100,7 +100,7 @@ export function HouseholdSection({ form }: FormSectionProps) {
           name="longitude"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Uzunlik (Longitude)</FormLabel>
+              <FormLabel>{t("uzunlikLongitude")}</FormLabel>
               <FormControl>
                 <Input
                   {...field}

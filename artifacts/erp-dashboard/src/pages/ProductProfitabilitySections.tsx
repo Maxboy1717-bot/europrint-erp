@@ -71,7 +71,7 @@ export function KpiSummaryCards({ isLoading, totalProducts, avgMargin, totalProf
 
       <Card data-testid="card-total-profit">
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Jami Foyda/Zarar</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("jamiFoydaZarar")}</CardTitle>
           {totalProfitLoss >= 0 ? (
             <TrendingUp className="h-4 w-4 text-[var(--ep-green)]" />
           ) : (

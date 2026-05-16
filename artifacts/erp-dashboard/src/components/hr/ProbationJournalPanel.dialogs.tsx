@@ -72,7 +72,7 @@ export function AddEntryDialog({
               />
             </div>
             <div>
-              <Label className="text-xs mb-1 block">Kayfiyat (1-5) *</Label>
+              <Label className="text-xs mb-1 block">{t("kayfiyat15")}</Label>
               <Select value={form.mood_score} onValueChange={(v) => setForm((f) => ({ ...f, mood_score: v }))}>
                 <SelectTrigger data-testid="select-probation-mood" className="h-9">
                   <SelectValue />
@@ -116,7 +116,7 @@ export function AddEntryDialog({
           <div>
             <Label className="text-xs mb-1 block">{t("nastavnikIzohi")}</Label>
             <Textarea
-              placeholder="Nastavnik / mentor izohi..."
+              placeholder={t("nastavnikMentorIzohi")}
               value={form.nastavnik_feedback}
               onChange={(e) => setForm((f) => ({ ...f, nastavnik_feedback: e.target.value }))}
               rows={2}
@@ -125,7 +125,7 @@ export function AddEntryDialog({
           </div>
 
           <div>
-            <Label className="text-xs mb-1 block">Intizom hodisalari (ixtiyoriy)</Label>
+            <Label className="text-xs mb-1 block">{t("intizomHodisalariIxtiyoriy")}</Label>
             <Textarea
               placeholder={t("kechikishSababsizYoqlikVaBoshqalar")}
               value={form.discipline_issues}

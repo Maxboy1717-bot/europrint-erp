@@ -52,7 +52,7 @@ export function AddMovementDialog({open,
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="space-y-1">
-            <Label htmlFor="mv-material">Material (kod yoki nom)</Label>
+            <Label htmlFor="mv-material">{t("materialKodYokiNom")}</Label>
             <Input
               id="mv-material"
               placeholder={t("masalanMat001")}

@@ -93,7 +93,7 @@ export function ProgramFormDialog({
           {/* Descriptions */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="description">Tavsif (UZ)</Label>
+              <Label htmlFor="description">{t("tavsifUz")}</Label>
               <Textarea
                 id="description"
                 value={form.description}
@@ -103,7 +103,7 @@ export function ProgramFormDialog({
               />
             </div>
             <div>
-              <Label htmlFor="descriptionRu">Tavsif (RU)</Label>
+              <Label htmlFor="descriptionRu">{t("tavsifRu")}</Label>
               <Textarea
                 id="descriptionRu"
                 value={form.descriptionRu}
@@ -161,7 +161,7 @@ export function ProgramFormDialog({
           {/* Department + position */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Bo'lim (ixtiyoriy)</Label>
+              <Label>{t("boLimIxtiyoriy")}</Label>
               <Select value={form.departmentId} onValueChange={v => setField("departmentId", v)}>
                 <SelectTrigger data-testid="select-department" className="h-9">
                   <SelectValue placeholder={t("barchaBolimlar")} />
@@ -175,7 +175,7 @@ export function ProgramFormDialog({
               </Select>
             </div>
             <div>
-              <Label>Lavozim (ixtiyoriy)</Label>
+              <Label>{t("lavozimIxtiyoriy")}</Label>
               <Select value={form.positionId} onValueChange={v => setField("positionId", v)}>
                 <SelectTrigger data-testid="select-position" className="h-9">
                   <SelectValue placeholder={t("barchaLavozimlar")} />

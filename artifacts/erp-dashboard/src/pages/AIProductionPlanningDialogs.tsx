@@ -44,7 +44,7 @@ export function OverrideDialog({open, onOpenChange, planNumber, reason, onReason
             Super admin override: sabab kiritish majburiy (kamida 10 belgi). Log yoziladi.
           </div>
           <div>
-            <Label>Override sababi (majburiy)</Label>
+            <Label>{t("overrideSababiMajburiy")}</Label>
             <Textarea
               className="mt-1"
               placeholder={t("nimaUchunBuRejaQolda")}
@@ -115,7 +115,7 @@ export function RescheduleDialog({ open, onOpenChange, reason, onReasonChange, r
             </Select>
           </div>
           <div>
-            <Label>Sabab (kamida 5 belgi)</Label>
+            <Label>{t("sababKamida5Belgi")}</Label>
             <Textarea
               className="mt-1"
               placeholder={t("qaytaRejalashSababi")}
@@ -178,10 +178,10 @@ export function BlockMaterialDialog({ open, onOpenChange, orderId, material, rea
           </div>
           <div>
             <Label>{t("yetishmayotganMaterialNomi")}</Label>
-            <Input className="mt-1" placeholder="masalan: gofrokarton, PP lenta..." value={material} onChange={(e) => onMaterialChange(e.target.value)} data-testid="input-block-material" />
+            <Input className="mt-1" placeholder={t("masalanGofrokartonPpLenta")} value={material} onChange={(e) => onMaterialChange(e.target.value)} data-testid="input-block-material" />
           </div>
           <div>
-            <Label>Sabab (ixtiyoriy)</Label>
+            <Label>{t("sababIxtiyoriy")}</Label>
             <Input className="mt-1" placeholder={t("korsatilmagan")} value={reason} onChange={(e) => onReasonChange(e.target.value)} data-testid="input-block-reason" />
           </div>
         </div>

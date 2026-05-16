@@ -77,7 +77,7 @@ export function AddAssetDialog({ open, onOpenChange, form, onFormChange, onSubmi
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Qiymati (UZS)</Label>
+              <Label>{t("qiymatiUzs")}</Label>
               <Input
                 type="number"
                 value={form.value}

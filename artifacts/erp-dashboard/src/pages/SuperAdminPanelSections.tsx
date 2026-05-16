@@ -114,7 +114,7 @@ export function AddTenantDialog({ open, onOpenChange, newTenant, setNewTenant, i
         <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiTenantQoshish")}</DialogTitle><DialogDescription>{t("yangiZavodYokiKompaniyaniRoyxatdan")}</DialogDescription></DialogHeader>
         <div className="space-y-4">
           <div><Label>{t("kompaniyaNomi")}</Label><Input value={newTenant.name} onChange={e => setNewTenant(p => ({ ...p, name: e.target.value }))} placeholder={t("europrintSamarkand")} data-testid="input-tenant-name" /></div>
-          <div><Label>{t("domain1")}</Label><Input value={newTenant.domain} onChange={e => setNewTenant(p => ({ ...p, domain: e.target.value }))} placeholder="samarkand.europrint.uz" data-testid="input-tenant-domain" /></div>
+          <div><Label>{t("domain1")}</Label><Input value={newTenant.domain} onChange={e => setNewTenant(p => ({ ...p, domain: e.target.value }))} placeholder={t("samarkandEuroprintUz")} data-testid="input-tenant-domain" /></div>
           <div>
             <Label>{t("reja")}</Label>
             <Select value={newTenant.plan} onValueChange={v => setNewTenant(p => ({ ...p, plan: v }))}>
@@ -122,7 +122,7 @@ export function AddTenantDialog({ open, onOpenChange, newTenant, setNewTenant, i
               <SelectContent><SelectItem value="basic">{t("basic")}</SelectItem><SelectItem value="professional">{t("professional")}</SelectItem><SelectItem value="enterprise">{t("enterprise")}</SelectItem></SelectContent>
             </Select>
           </div>
-          <div><Label>{"Kontakt email"}</Label><Input value={newTenant.contactEmail} onChange={e => setNewTenant(p => ({ ...p, contactEmail: e.target.value }))} placeholder="admin@company.uz" type="email" data-testid="input-tenant-email" /></div>
+          <div><Label>{"Kontakt email"}</Label><Input value={newTenant.contactEmail} onChange={e => setNewTenant(p => ({ ...p, contactEmail: e.target.value }))} placeholder={t("adminCompanyUz")} type="email" data-testid="input-tenant-email" /></div>
           <div><Label>{t("phone")}</Label><Input value={newTenant.contactPhone} onChange={e => setNewTenant(p => ({ ...p, contactPhone: e.target.value }))} placeholder="+998 90 000 00 00" data-testid="input-tenant-phone" /></div>
         </div>
         <DialogFooter>
@@ -197,7 +197,7 @@ export function AuditLogTab({ auditLogs, auditLoading, auditTotal, auditLimit, a
             : (
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="sticky top-0 z-10 bg-card"><TableRow className="bg-muted/30 hover:bg-muted/40 transition-colors"><TableHead className="w-36">{t("time")}</TableHead><TableHead className="w-40">{t("foydalanuvchi")}</TableHead><TableHead className="w-24">{t("amal")}</TableHead><TableHead className="w-36">Modul (jadval)</TableHead><TableHead className="w-32">{t("yozuvId")}</TableHead><TableHead>{t("ozgarganMaydonlar")}</TableHead><TableHead className="w-12 text-center">{t("view")}</TableHead></TableRow></TableHeader>
+                  <TableHeader className="sticky top-0 z-10 bg-card"><TableRow className="bg-muted/30 hover:bg-muted/40 transition-colors"><TableHead className="w-36">{t("time")}</TableHead><TableHead className="w-40">{t("foydalanuvchi")}</TableHead><TableHead className="w-24">{t("amal")}</TableHead><TableHead className="w-36">{t("modulJadval")}</TableHead><TableHead className="w-32">{t("yozuvId")}</TableHead><TableHead>{t("ozgarganMaydonlar")}</TableHead><TableHead className="w-12 text-center">{t("view")}</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {auditLogs.map(log => (
                       <TableRow key={log.id} className="hover:bg-muted/30" data-testid={`audit-row-${log.id}`}>
@@ -247,7 +247,7 @@ export function AuditDetailDialog({ log, onClose }: { log: AuditLogEntry | null;
             <div className="space-y-1"><p className="text-xs text-muted-foreground">{t("foydalanuvchi")}</p><p className="font-medium">{log.user_display_name || log.user_full_name || log.user_id || "—"}</p></div>
             <div className="space-y-1"><p className="text-xs text-muted-foreground">{t("role")}</p><p className="font-medium">{log.user_role || "—"}</p></div>
             <div className="space-y-1"><p className="text-xs text-muted-foreground">{t("amal")}</p><Badge variant={ACTION_COLORS[log.action?.toUpperCase()] ?? "outline"}>{ACTION_LABELS[log.action?.toUpperCase()] ?? log.action}</Badge></div>
-            <div className="space-y-1"><p className="text-xs text-muted-foreground">IP manzil</p><p className="font-mono text-xs">{log.ip_address || "—"}</p></div>
+            <div className="space-y-1"><p className="text-xs text-muted-foreground">{t("ipManzil")}</p><p className="font-mono text-xs">{log.ip_address || "—"}</p></div>
             {log.reason && <div className="col-span-2 space-y-1"><p className="text-xs text-muted-foreground">{t("sabab")}</p><p className="text-sm">{log.reason}</p></div>}
           </div>
           {log.changed_fields && log.changed_fields.length > 0 && (

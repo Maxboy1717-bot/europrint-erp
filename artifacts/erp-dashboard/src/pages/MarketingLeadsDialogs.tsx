@@ -143,7 +143,7 @@ export function LeadFormDialog({open,
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Ball (0-100)</Label>
+              <Label>{t("ball0100")}</Label>
               <Input
                 type="number"
                 value={form.score}

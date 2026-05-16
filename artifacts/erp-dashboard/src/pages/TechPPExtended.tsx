@@ -49,7 +49,7 @@ export default function TechPPExtended() {
           <Cpu className="h-5 w-5 text-primary" />
         </div>
         <h1 className="text-xl font-light tracking-tight text-foreground">
-          {t("texnolog")}<span className="font-bold text-primary">BOM/Routing</span> {t("vaAiRejalashtirish")}
+          {t("texnolog")}<span className="font-bold text-primary">{t("bomRouting")}</span> {t("vaAiRejalashtirish")}
         </h1>
       </div>
 
@@ -57,7 +57,7 @@ export default function TechPPExtended() {
         <div className="border-b border-border px-4 overflow-x-auto bg-muted/40">
           <div className="flex flex-col gap-0">
             <div className="flex gap-0 border-b border-border/30 overflow-x-auto no-scrollbar">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-3 py-2.5 shrink-0 flex items-center">TEXNOLOG:</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-3 py-2.5 shrink-0 flex items-center">{t("texnolog")}</span>
               {(Array.isArray(TECH_TABS) ? TECH_TABS : []).map(t => (
                 <button key={t.v} onClick={() => setActiveTab(t.v)}
                   className={cn(
@@ -69,7 +69,7 @@ export default function TechPPExtended() {
               ))}
             </div>
             <div className="flex gap-0 overflow-x-auto no-scrollbar">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-3 py-2.5 shrink-0 flex items-center">AI PP:</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-3 py-2.5 shrink-0 flex items-center">{t("aiPp")}</span>
               {(Array.isArray(PP_TABS) ? PP_TABS : []).map(t => (
                 <button key={t.v} onClick={() => setActiveTab(t.v)}
                   className={cn(

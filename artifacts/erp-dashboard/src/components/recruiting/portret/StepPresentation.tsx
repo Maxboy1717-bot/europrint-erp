@@ -50,7 +50,7 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
             />
           </div>
           <div>
-            <Label className="text-xs mb-1 block">3. Instrumentlar/Dasturlar</Label>
+            <Label className="text-xs mb-1 block">{t("k3InstrumentlarDasturlar")}</Label>
             <Input
               placeholder={t("qandayAsboblarIshlatiladi")}
               value={portret.candidate_presentation?.instrumentlar ?? ""}
@@ -159,10 +159,10 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
             >
               <SelectTrigger><SelectValue placeholder={t("tanlang1")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="unlimited">Muddatsiz (doimiy)</SelectItem>
+                <SelectItem value="unlimited">{t("muddatsizDoimiy")}</SelectItem>
                 <SelectItem value="limited">{t("muddatli")}</SelectItem>
-                <SelectItem value="gpc">Fuqarolik shartnomasi (GPC)</SelectItem>
-                <SelectItem value="ip">IP / Yakka tartibdagi tadbirkor</SelectItem>
+                <SelectItem value="gpc">{t("fuqarolikShartnomasiGpc")}</SelectItem>
+                <SelectItem value="ip">{t("ipYakkaTartibdagiTadbirkor")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -181,7 +181,7 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
           />
         </div>
         <div>
-          <Label className="text-xs mb-1 block">15. Ijtimoiy paket (sotsial paket)</Label>
+          <Label className="text-xs mb-1 block">{t("k15IjtimoiyPaketSotsialPaket")}</Label>
           <Textarea
             placeholder={t("masalanTibbiySugurtaKorporativTransport")}
             rows={2}

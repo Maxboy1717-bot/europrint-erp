@@ -74,7 +74,7 @@ export default function WarehouseQuarantine() {
         <div className="flex-1">
           <div className="text-xs text-gray-500 font-semibold">KARANTIN</div>
           <h1 className="text-2xl font-bold">{t("karantindagiMateriallar")}</h1>
-          <p className="text-sm text-gray-500">QC inspektor qarori kutmoqda — 48 soatdan oshgan harakatlar avtomatik eskalatsiya qilinadi</p>
+          <p className="text-sm text-gray-500">{t("qcInspektorQaroriKutmoqda48Soatdan")}</p>
         </div>
         <Button onClick={load} variant="outline">{t("yangilash")}</Button>
       </div>
@@ -89,13 +89,13 @@ export default function WarehouseQuarantine() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-3xl font-bold text-[var(--ep-yellow)]">{stats.pending}</div>
-            <div className="text-xs text-gray-500">QC qarori kutmoqda</div>
+            <div className="text-xs text-gray-500">{t("qcQaroriKutmoqda")}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-3xl font-bold text-[var(--ep-red)]">{stats.expired}</div>
-            <div className="text-xs text-gray-500">48+ soat kechiktirilgan</div>
+            <div className="text-xs text-gray-500">{t("k48SoatKechiktirilgan")}</div>
           </CardContent>
         </Card>
       </div>
@@ -193,9 +193,9 @@ export default function WarehouseQuarantine() {
         <CardContent className="pt-6 flex gap-3">
           <AlertTriangle className="h-4 w-4 text-[var(--ep-yellow)] flex-shrink-0" />
           <div className="text-sm">
-            <div className="font-semibold">QC qarorlari nima qiladi:</div>
+            <div className="font-semibold">{t("qcQarorlariNimaQiladi")}</div>
             <ul className="mt-1 space-y-1 text-xs">
-              <li>✅ <b>QABUL</b> → material avtomatik <b>RM-MAIN</b> {t("omborgaKochiriladiVaGlPosting")}</li>
+              <li>✅ <b>QABUL</b> → material avtomatik <b>{t("rmMain")}</b> {t("omborgaKochiriladiVaGlPosting")}</li>
               <li>🔄 <b>REWORK</b> → MES moduliga signal yuboriladi (qayta ishlash kerak)</li>
               <li>❌ <b>CHIQARISH</b> → ta'minotchiga qaytarish hujjati yaratiladi, status='rejected'</li>
             </ul>

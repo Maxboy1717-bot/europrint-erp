@@ -48,7 +48,7 @@ export function Step4Summary({ summary, avgScore, workerType, onChange, onToggle
           <thead className="bg-muted/60">
             <tr>
               <th className="text-left px-3 py-2 text-muted-foreground font-medium">{t("bolim1")}</th>
-              <th className="text-center px-3 py-2 text-muted-foreground font-medium">Ball (1-10)</th>
+              <th className="text-center px-3 py-2 text-muted-foreground font-medium">{t("ball110")}</th>
               <th className="text-left px-3 py-2 text-muted-foreground font-medium">{t("Izoh")}</th>
             </tr>
           </thead>
@@ -104,7 +104,7 @@ export function Step4Summary({ summary, avgScore, workerType, onChange, onToggle
 
       {/* TOOL TEST checkboxes */}
       <div className="border border-border/40 rounded-lg p-3 bg-muted/40">
-        <Label className="text-xs mb-2 block font-medium">TOOL TEST natijalari (A-J):</Label>
+        <Label className="text-xs mb-2 block font-medium">{t("toolTestNatijalariAJ")}</Label>
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
           {(Array.isArray(TOOL_TRAITS) ? TOOL_TRAITS : []).map(key => (
             <div key={key} className="flex items-center gap-1.5">
@@ -147,7 +147,7 @@ export function Step4Summary({ summary, avgScore, workerType, onChange, onToggle
 
       {/* Final notes */}
       <div>
-        <Label className="text-xs mb-1 block">Yakuniy izoh (ixtiyoriy):</Label>
+        <Label className="text-xs mb-1 block">{t("yakuniyIzohIxtiyoriy")}</Label>
         <Textarea
           rows={3}
           className="text-xs"

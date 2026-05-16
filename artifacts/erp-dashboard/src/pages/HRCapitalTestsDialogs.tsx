@@ -72,7 +72,7 @@ export function CreateSessionDialog({open, onOpenChange }: CreateSessionDialogPr
             <Select value={sessionForm.test_type} onValueChange={v => setSessionForm(p => ({ ...p, test_type: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="tool_test">TOOL TEST (Shaxsiyat profili)</SelectItem>
+                <SelectItem value="tool_test">{t("toolTestShaxsiyatProfili")}</SelectItem>
                 <SelectItem value="iq">{t("iqTest")}</SelectItem>
                 <SelectItem value="leadership">{t("liderlikTesti")}</SelectItem>
                 <SelectItem value="replication">{t("takrorlashTesti")}</SelectItem>
@@ -80,22 +80,22 @@ export function CreateSessionDialog({open, onOpenChange }: CreateSessionDialogPr
             </Select>
           </div>
           <div>
-            <Label className="text-xs mb-1 block">Nomzod ID (ixtiyoriy)</Label>
+            <Label className="text-xs mb-1 block">{t("nomzodIdIxtiyoriy")}</Label>
             <Input placeholder={t("nomzodIdRaqami")} value={sessionForm.candidate_id}
               onChange={e => setSessionForm(p => ({ ...p, candidate_id: e.target.value }))} type="number" />
           </div>
           <div>
-            <Label className="text-xs mb-1 block">Xodim ID (ixtiyoriy)</Label>
+            <Label className="text-xs mb-1 block">{t("xodimIdIxtiyoriy")}</Label>
             <Input placeholder={t("xodimIdRaqami")} value={sessionForm.employee_id}
               onChange={e => setSessionForm(p => ({ ...p, employee_id: e.target.value }))} type="number" />
           </div>
           <div>
-            <Label className="text-xs mb-1 block">Kanban Funnel ID (ixtiyoriy)</Label>
+            <Label className="text-xs mb-1 block">{t("kanbanFunnelIdIxtiyoriy")}</Label>
             <Input placeholder={t('funnelId')} value={sessionForm.funnel_id}
               onChange={e => setSessionForm(p => ({ ...p, funnel_id: e.target.value }))} type="number" />
           </div>
           <div>
-            <Label className="text-xs mb-1 block">Vakansiya ID (ixtiyoriy)</Label>
+            <Label className="text-xs mb-1 block">{t("vakansiyaIdIxtiyoriy")}</Label>
             <Input placeholder={t("vakansiyaId")} value={sessionForm.vacancy_id}
               onChange={e => setSessionForm(p => ({ ...p, vacancy_id: e.target.value }))} type="number" />
           </div>
@@ -185,24 +185,24 @@ export function QuestionDialog({ open, onOpenChange, editingQuestion, onClose }:
             </div>
           )}
           <div>
-            <Label className="text-xs mb-1 block">Savol matni (O'zbek) *</Label>
+            <Label className="text-xs mb-1 block">{t("savolMatniOZbek")}</Label>
             <Textarea placeholder={t("savolMatni")} value={questionForm.text_uz} rows={3}
               onChange={e => setQuestionForm(p => ({ ...p, text_uz: e.target.value }))} />
           </div>
           <div>
-            <Label className="text-xs mb-1 block">Savol matni (Rus) (ixtiyoriy)</Label>
-            <Textarea placeholder="Вопрос на русском..." value={questionForm.text_ru} rows={2}
+            <Label className="text-xs mb-1 block">{t("savolMatniRusIxtiyoriy")}</Label>
+            <Textarea placeholder={t("untitled")} value={questionForm.text_ru} rows={2}
               onChange={e => setQuestionForm(p => ({ ...p, text_ru: e.target.value }))} />
           </div>
           <div>
-            <Label className="text-xs mb-1 block">Vazn (ko'rsatkich ta'siri)</Label>
+            <Label className="text-xs mb-1 block">{t("vaznKoRsatkichTaSiri")}</Label>
             <Select value={questionForm.weight} onValueChange={v => setQuestionForm(p => ({ ...p, weight: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="2">+2 (Kuchli ijobiy)</SelectItem>
-                <SelectItem value="1">+1 (Ijobiy)</SelectItem>
-                <SelectItem value="-1">-1 (Salbiy)</SelectItem>
-                <SelectItem value="-2">-2 (Kuchli salbiy)</SelectItem>
+                <SelectItem value="2">{t("k2KuchliIjobiy")}</SelectItem>
+                <SelectItem value="1">{t("k1Ijobiy")}</SelectItem>
+                <SelectItem value="-1">{t("k1Salbiy")}</SelectItem>
+                <SelectItem value="-2">{t("k2KuchliSalbiy")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

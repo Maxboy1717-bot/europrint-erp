@@ -218,7 +218,7 @@ export default function HROnboarding() {
         {/* New employees table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Yangi Xodimlar (Onboarding Jarayonida)</CardTitle>
+            <CardTitle className="text-base">{t("yangiXodimlarOnboardingJarayonida")}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="ep-table-scroll"><Table>

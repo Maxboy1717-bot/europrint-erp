@@ -127,7 +127,7 @@ export function EmployerMarketSection({ employerMarket, setEmployerMarket }: Emp
                 />
               </div>
               <div>
-                <Label className="text-[10px] mb-0.5 block">Maosh (min)</Label>
+                <Label className="text-[10px] mb-0.5 block">{t("maoshMin")}</Label>
                 <Input
                   className="h-7 text-xs"
                   type="number"
@@ -137,7 +137,7 @@ export function EmployerMarketSection({ employerMarket, setEmployerMarket }: Emp
                 />
               </div>
               <div>
-                <Label className="text-[10px] mb-0.5 block">Maosh (max)</Label>
+                <Label className="text-[10px] mb-0.5 block">{t("maoshMax")}</Label>
                 <Input
                   className="h-7 text-xs"
                   type="number"

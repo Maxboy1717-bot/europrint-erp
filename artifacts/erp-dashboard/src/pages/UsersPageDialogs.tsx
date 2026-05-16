@@ -120,7 +120,7 @@ export function CreateUserDialog({ open, onOpenChange, form, onChange, onSave, i
             <Input
               value={form.username}
               onChange={e => set({ username: e.target.value })}
-              placeholder="username (min 3 belgi)"
+              placeholder={t("usernameMin3Belgi")}
             />
           </div>
           <div>
@@ -129,7 +129,7 @@ export function CreateUserDialog({ open, onOpenChange, form, onChange, onSave, i
               type="email"
               value={form.email}
               onChange={e => set({ email: e.target.value })}
-              placeholder="email@example.com"
+              placeholder={t("emailExampleCom")}
             />
           </div>
           <div>

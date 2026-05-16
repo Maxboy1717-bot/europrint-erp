@@ -88,7 +88,7 @@ export function AiSummaryTab({
             <Brain className="h-6 w-6 text-white" />
           </div>
           <div className="space-y-3">
-            <div className="text-sm font-bold uppercase tracking-wider text-white/80">Bugungi holat xulosasi (AI tahlili)</div>
+            <div className="text-sm font-bold uppercase tracking-wider text-white/80">{t("bugungiHolatXulosasiAiTahlili")}</div>
             {aiLoading ? (
               <div className="h-20 animate-pulse bg-card/10 rounded-lg" />
             ) : (

@@ -64,7 +64,7 @@ export function CreateAssetDialog({
                   <SelectItem value="vehicle">{t("transport")}</SelectItem>
                   <SelectItem value="building">{t("binolar")}</SelectItem>
                   <SelectItem value="furniture">{t("mebel")}</SelectItem>
-                  <SelectItem value="it_equipment">IT uskunalar</SelectItem>
+                  <SelectItem value="it_equipment">{t("itUskunalar")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -100,7 +100,7 @@ export function CreateAssetDialog({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Xarid qiymati (UZS) *</Label>
+              <Label>{t("xaridQiymatiUzs")}</Label>
               <Input
                 type="number"
                 value={form.purchaseValue}
@@ -109,7 +109,7 @@ export function CreateAssetDialog({
               />
             </div>
             <div>
-              <Label>Joriy qiymat (UZS) *</Label>
+              <Label>{t("joriyQiymatUzs")}</Label>
               <Input
                 type="number"
                 value={form.currentValue}
@@ -120,7 +120,7 @@ export function CreateAssetDialog({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Foydali xizmat muddati (yil)</Label>
+              <Label>{t("foydaliXizmatMuddatiYil")}</Label>
               <Input
                 type="number"
                 value={form.usefulLife}
@@ -129,7 +129,7 @@ export function CreateAssetDialog({
               />
             </div>
             <div>
-              <Label>Qoldiq qiymat (UZS)</Label>
+              <Label>{t("qoldiqQiymatUzs")}</Label>
               <Input
                 type="number"
                 value={form.salvageValue}
@@ -161,7 +161,7 @@ export function CreateAssetDialog({
               <Input
                 value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
-                placeholder="1-qavat, A-blok"
+                placeholder={t("k1QavatABlok")}
                 data-testid="input-asset-location"
               />
             </div>

@@ -110,8 +110,8 @@ export default function AiCrmPage() {
         </div>
         <div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">AI CRM</b></>}
-        title="AI CRM"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("aiCrm")}</b></>}
+        title={t("aiCrm2")}
         subtitle={t("suniyIntellektBilanCrmTahlili")}
       />
         </div>

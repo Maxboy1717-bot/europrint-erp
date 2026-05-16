@@ -139,7 +139,7 @@ export function AddItemDialog({ open, onOpenChange, form, onSubmit, isPending }:
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle className="text-[18px] font-semibold">Material/Ehtiyot Qism Kirim</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("materialEhtiyotQismKirim")}</DialogTitle></DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">

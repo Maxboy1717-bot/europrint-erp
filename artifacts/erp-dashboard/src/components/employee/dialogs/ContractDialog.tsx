@@ -93,7 +93,7 @@ export function ContractDialog({
             </div>
           </div>
           <div className="space-y-1">
-          <Label htmlFor="salary">Maosh (UZS)</Label>
+          <Label htmlFor="salary">{t("maoshUzs")}</Label>
             <Input
               id="salary"
               type="number"
@@ -107,7 +107,7 @@ export function ContractDialog({
               id="workSchedule"
               value={form.workSchedule}
               onChange={(e) => updateField("workSchedule", e.target.value)}
-              placeholder="Masalan: 5/2, 09:00-18:00"
+              placeholder={t("masalan52090018")}
             />
           </div>
         </div>

@@ -165,7 +165,7 @@ export function TestsTab({
         <Card>
           <CardHeader>
             <CardTitle>{t("harBirSavolgaKetganVaqt")}</CardTitle>
-            <CardDescription>O'rtacha vaqt (soniyalarda)</CardDescription>
+            <CardDescription>{t("oRtachaVaqtSoniyalarda")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="glass-chart">
@@ -225,7 +225,7 @@ export function TestsTab({
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Oson (80-100% o'tish)</span>
+                <span className="text-sm font-medium">{t("oson80100OTish")}</span>
                 <Badge variant="outline" className="bg-green-50">
                   {Math.round((testResults.length || 0) * 0.25)} test
                 </Badge>
@@ -235,7 +235,7 @@ export function TestsTab({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">O'rtacha (60-79% o'tish)</span>
+                <span className="text-sm font-medium">{t("oRtacha6079OTish")}</span>
                 <Badge variant="outline" className="bg-blue-50">
                   {Math.round((testResults.length || 0) * 0.45)} test
                 </Badge>
@@ -245,7 +245,7 @@ export function TestsTab({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Qiyin (40-59% o'tish)</span>
+                <span className="text-sm font-medium">{t("qiyin4059OTish")}</span>
                 <Badge variant="outline" className="bg-yellow-50">
                   {Math.round((testResults.length || 0) * 0.20)} test
                 </Badge>
@@ -255,7 +255,7 @@ export function TestsTab({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Juda qiyin (0-39% o'tish)</span>
+                <span className="text-sm font-medium">{t("judaQiyin039OTish")}</span>
                 <Badge variant="outline" className="bg-red-50">
                   {Math.round((testResults.length || 0) * 0.10)} test
                 </Badge>

@@ -187,7 +187,7 @@ export function QCParameterDialog({ open, onClose, category, editingParameter }:
               <FormItem>
                 <FormLabel>{tCommon('name')} (RU)</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Граммаж" data-testid="input-param-name-ru" />
+                  <Input {...field} placeholder={t("untitled")} data-testid="input-param-name-ru" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

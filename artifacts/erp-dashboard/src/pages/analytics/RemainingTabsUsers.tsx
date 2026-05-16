@@ -171,7 +171,7 @@ export function UsersTab({
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-primary">{user.completedLessons}</div>
-                  <div className="text-xs text-muted-foreground">dars tugatgan</div>
+                  <div className="text-xs text-muted-foreground">{t("darsTugatgan")}</div>
                 </div>
               </div>
             )) || (

@@ -22,7 +22,7 @@ export function ExportTab({ onExportCSV, onExportExcel, onExportPDF }: ExportTab
         <Card className="hover-elevate cursor-pointer">
           <CardContent className="p-6 text-center">
             <FileText className="h-12 w-12 mx-auto mb-4 text-[var(--ep-blue)]" />
-            <h3 className="font-bold mb-2">CSV eksport</h3>
+            <h3 className="font-bold mb-2">{t("csvEksport")}</h3>
             <p className="text-sm text-muted-foreground mb-4">
               {t("auditLoglarniCsvFormatdaYuklash")}
             </p>

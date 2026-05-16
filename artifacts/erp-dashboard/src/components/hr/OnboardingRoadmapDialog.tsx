@@ -282,7 +282,7 @@ export function OnboardingRoadmapDialog({
             </div>
 
             <div>
-              <Label className="text-xs">Reglamentlar ro'yxati (har bir qator — alohida material)</Label>
+              <Label className="text-xs">{t("reglamentlarRoYxatiHarBirQator")}</Label>
               <Textarea
                 value={form.reglamentlar}
                 onChange={e => setForm(f => ({ ...f, reglamentlar: e.target.value }))}
@@ -292,7 +292,7 @@ export function OnboardingRoadmapDialog({
             </div>
 
             <div>
-              <Label className="text-xs">Haftalik maqsadlar (4 hafta)</Label>
+              <Label className="text-xs">{t("haftalikMaqsadlar4Hafta")}</Label>
               <div className="space-y-2 mt-1">
                 {([0, 1, 2, 3] as const).map(i => (
                   <Input
@@ -311,7 +311,7 @@ export function OnboardingRoadmapDialog({
             </div>
 
             <div className="w-32">
-              <Label className="text-xs">Sinov muddati (oy)</Label>
+              <Label className="text-xs">{t("sinovMuddatiOy")}</Label>
               <Select
                 value={form.sinov_muddat_oy}
                 onValueChange={v => setForm(f => ({ ...f, sinov_muddat_oy: v }))}
@@ -387,7 +387,7 @@ export function OnboardingRoadmapDialog({
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <ClipboardList className="h-4 w-4 text-[var(--ep-yellow)]" />
-                    <h3 className="font-semibold text-sm">Gantt-style Jadval (4 hafta)</h3>
+                    <h3 className="font-semibold text-sm">{t("ganttStyleJadval4Hafta")}</h3>
                   </div>
                   <div className="space-y-3">
                     {(Array.isArray(roadmapToShow.weeks) ? roadmapToShow.weeks : []).map((week) => (

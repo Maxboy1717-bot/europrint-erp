@@ -126,7 +126,7 @@ export default function OrderApprovalWorkflow() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-page-title">{t("buyurtmaTasdiqlashJarayoni")}</h1>
-          <p className="text-muted-foreground">Процесс утверждения заказов</p>
+          <p className="text-muted-foreground">{t("untitled")}</p>
         </div>
       </div>
 
@@ -137,21 +137,21 @@ export default function OrderApprovalWorkflow() {
             <Clock className="w-4 h-4 mr-1" />Kutilmoqda / Ожидание
             {dashboardData && dashboardData.totals.pending > 0 && <EPStatusPill tone="neutral" className="ml-2">{dashboardData.totals.pending}</EPStatusPill>}
           </TabsTrigger>
-          <TabsTrigger value="history" data-testid="tab-history"><History className="w-4 h-4 mr-1" />Tarix / История</TabsTrigger>
+          <TabsTrigger value="history" data-testid="tab-history"><History className="w-4 h-4 mr-1" />{t("tarix")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-4">
           {dashboardLoading ? (
             <div className="flex items-center justify-center py-12">
               <EPLoader tone="muted" className="w-6 h-6" />
-              <span className="ml-2 text-muted-foreground">Yuklanmoqda... / Загрузка...</span>
+              <span className="ml-2 text-muted-foreground">{t("yuklanmoqda")}</span>
             </div>
           ) : (
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle data-testid="text-pipeline-title">Tasdiqlash bosqichlari / Этапы утверждения</CardTitle>
-                  <CardDescription>Dizayn → Texnolog → Sifat nazorati → Moliya / Дизайн → Технолог → Контроль качества → Финансы</CardDescription>
+                  <CardTitle data-testid="text-pipeline-title">{t("tasdiqlashBosqichlari")}</CardTitle>
+                  <CardDescription>{t("dizaynTexnologSifatNazoratiMoliya")}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {dashboardData && <WorkflowPipeline dashboardData={dashboardData} onStageClick={(id) => { setFilterStage(id); setActiveTab("pending"); }} />}

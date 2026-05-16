@@ -29,18 +29,18 @@ export function PortretSection3({ portret, onChange, onToggleSocial }: PortretSe
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <Label className="text-xs mb-1 block">Maosh (min)</Label>
+          <Label className="text-xs mb-1 block">{t("maoshMin")}</Label>
           <Input type="number" value={portret.salary_min ?? 0} onChange={e => onChange("salary_min")(Number(e.target.value))} />
         </div>
         <div>
-          <Label className="text-xs mb-1 block">Maosh (max)</Label>
+          <Label className="text-xs mb-1 block">{t("maoshMax")}</Label>
           <Input type="number" value={portret.salary_max ?? 0} onChange={e => onChange("salary_max")(Number(e.target.value))} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <Label className="text-xs mb-1 block">Sinov muddati (oy)</Label>
+          <Label className="text-xs mb-1 block">{t("sinovMuddatiOy")}</Label>
           <Input type="number" value={portret.probation_months ?? 3} onChange={e => onChange("probation_months")(Number(e.target.value))} />
         </div>
         <div>
@@ -50,7 +50,7 @@ export function PortretSection3({ portret, onChange, onToggleSocial }: PortretSe
       </div>
 
       <div>
-        <Label className="text-xs mb-2 block">Ijtimoiy paket (tanlash)</Label>
+        <Label className="text-xs mb-2 block">{t("ijtimoiyPaketTanlash")}</Label>
         <div className="flex flex-wrap gap-1.5">
           {(Array.isArray(SOCIAL_OPTIONS) ? SOCIAL_OPTIONS : []).map(opt => {
             const isSel = (Array.isArray(portret.social_package) ? portret.social_package : []).includes(opt);
@@ -69,7 +69,7 @@ export function PortretSection3({ portret, onChange, onToggleSocial }: PortretSe
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">Boshqa sharoitlar / Izoh</Label>
+        <Label className="text-xs mb-1 block">{t("boshqaSharoitlarIzoh")}</Label>
         <Textarea
           placeholder={t("qoshimchaImtiyozlarYokiShartlar")}
           rows={2}

@@ -152,7 +152,7 @@ export default function GLPostingMonitor() {
       {accountMap && (
         <Card data-testid="card-account-mapping">
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-            <CardTitle className="text-[14px] font-semibold"><BookOpen className="w-4 h-4 inline mr-2" />Hisob Xaritasi (Account Mapping)</CardTitle>
+            <CardTitle className="text-[14px] font-semibold"><BookOpen className="w-4 h-4 inline mr-2" />{t("hisobXaritasiAccountMapping")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

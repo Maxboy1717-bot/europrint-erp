@@ -56,7 +56,7 @@ export function CashAdvanceDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label htmlFor="amount">Summa (UZS)</Label>
+          <Label htmlFor="amount">{t("summaUzs")}</Label>
             <Input
               id="amount"
               type="number"

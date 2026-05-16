@@ -51,7 +51,7 @@ export function BonusDialog({ tCommon, open, onOpenChange, form, setForm, mutati
               />
             </div>
             <div className="space-y-1">
-          <Label>Summa (so'm)</Label>
+          <Label>{t("summaSoM")}</Label>
               <Input
                 type="number"
                 value={form.amount}
@@ -140,7 +140,7 @@ export function FineDialog({ tCommon, open, onOpenChange, form, setForm, mutatio
               />
             </div>
             <div className="space-y-1">
-          <Label>Summa (so'm)</Label>
+          <Label>{t("summaSoM2")}</Label>
               <Input
                 type="number"
                 value={form.amount}

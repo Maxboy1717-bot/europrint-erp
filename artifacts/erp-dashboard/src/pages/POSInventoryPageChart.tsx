@@ -30,7 +30,7 @@ export function ChartTab({ chartData, monthlyRows }: ChartTabProps) {
     <TabsContent value="chart" className="m-0 p-4 space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>14 kunlik inventar harakatlari grafigi</CardTitle>
+          <CardTitle>{t("k14KunlikInventarHarakatlariGrafigi")}</CardTitle>
         </CardHeader>
         <CardContent>
           {chartData.length === 0 ? (

@@ -279,7 +279,7 @@ export default function OrderWorkflowPage() {
 
                 {/* Phase progress */}
                 <div>
-                  <p className="text-[12px] text-muted-foreground mb-1.5">Holat progressi (6 faza)</p>
+                  <p className="text-[12px] text-muted-foreground mb-1.5">{t("holatProgressi6Faza")}</p>
                   <PhaseBar status={selected.status} />
                   <span
                     className="text-[12px] rounded px-2 py-0.5 font-bold"

@@ -179,7 +179,7 @@ export default function HRMap() {
                     <div className="space-y-1 min-w-[180px]">
                       <div className="font-bold text-base">{t("europrintZavodi")}</div>
                       <div className="text-sm text-gray-600">{t("qoqonOzbekiston")}</div>
-                      <div className="text-xs text-gray-500">40.5556°N, 70.9280°E</div>
+                      <div className="text-xs text-gray-500">{t("k405556N709280E")}</div>
                     </div>
                   </Popup>
                 </Marker>

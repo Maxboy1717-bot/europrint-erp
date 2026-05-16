@@ -101,7 +101,7 @@ export default function CandidateReport() {
       <div className="border-2 border-gray-800 rounded-lg p-6 mb-8 print:border-black">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">YAKUNIY HISOBOT — MATERIAL №55</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{t("yakuniyHisobotMaterial55")}</p>
             <h1 className="ep-h1 text-gray-900">{candidate.fullName}</h1>
             <div className="flex flex-wrap gap-3 mt-2">
               <div className="flex items-center gap-1 text-sm text-gray-600">
@@ -148,7 +148,7 @@ export default function CandidateReport() {
         <Section3InterviewResults latestInterview={latestInterview} />
       </Section>
 
-      <Section number={4} title="Xulosa — Qabul / Rad Etish">
+      <Section number={4} title={t("xulosaQabulRadEtish")}>
         <Section4Conclusion recommendation={recommendation} />
       </Section>
 

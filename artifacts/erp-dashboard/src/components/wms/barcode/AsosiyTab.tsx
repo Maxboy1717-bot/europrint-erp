@@ -154,7 +154,7 @@ export function AsosiyTab() {
               <AlertTriangle className="h-5 w-5 text-[var(--ep-yellow)]" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">QC kutilmoqda</div>
+              <div className="text-xs text-muted-foreground">{t("qcKutilmoqda")}</div>
               <div className="text-lg font-bold" data-testid="text-qchold-count">{d.barcodes.qcHold}</div>
             </div>
           </CardContent>

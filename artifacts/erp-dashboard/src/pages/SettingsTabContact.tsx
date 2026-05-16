@@ -41,7 +41,7 @@ export function SettingsTabContact({ loading, form, onChange, onSave, isSaving }
                 type="email"
                 value={form.email}
                 onChange={(e) => onChange({ email: e.target.value })}
-                placeholder="info@europrint.uz"
+                placeholder={t("infoEuroprintUz")}
                 data-testid="input-contact-email"
               />
             </div>
@@ -61,7 +61,7 @@ export function SettingsTabContact({ loading, form, onChange, onSave, isSaving }
                 id="website"
                 value={form.website}
                 onChange={(e) => onChange({ website: e.target.value })}
-                placeholder="www.europrint.uz"
+                placeholder={t("wwwEuroprintUz")}
                 data-testid="input-contact-website"
               />
             </div>
@@ -81,7 +81,7 @@ export function SettingsTabContact({ loading, form, onChange, onSave, isSaving }
                 id="addressRu"
                 value={form.addressRu}
                 onChange={(e) => onChange({ addressRu: e.target.value })}
-                placeholder="г. Ташкент, Яшнабадский район"
+                placeholder={t("untitled")}
                 data-testid="input-contact-address-ru"
               />
             </div>
@@ -91,7 +91,7 @@ export function SettingsTabContact({ loading, form, onChange, onSave, isSaving }
                 id="workingHours"
                 value={form.workingHours}
                 onChange={(e) => onChange({ workingHours: e.target.value })}
-                placeholder="9:00 - 18:00 (Dushanba - Juma)"
+                placeholder={t("k9001800DushanbaJuma")}
                 data-testid="input-contact-hours"
               />
             </div>
@@ -101,7 +101,7 @@ export function SettingsTabContact({ loading, form, onChange, onSave, isSaving }
                 id="workingHoursRu"
                 value={form.workingHoursRu}
                 onChange={(e) => onChange({ workingHoursRu: e.target.value })}
-                placeholder="9:00 - 18:00 (Понедельник - Пятница)"
+                placeholder={t("k9001800")}
                 data-testid="input-contact-hours-ru"
               />
             </div>

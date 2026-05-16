@@ -40,7 +40,7 @@ export function HrTab({ hrStats, attendanceStats, }: Pick<RemainingTabsProps, 'h
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sertifikatlar (7 kun)</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("sertifikatlar7Kun")}</CardTitle>
             <Award className="w-4 h-4 text-[var(--ep-primary)]" />
           </CardHeader>
           <CardContent>

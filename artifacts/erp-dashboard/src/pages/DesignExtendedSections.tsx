@@ -40,7 +40,7 @@ export function AiReviewTab({ pendingReview, onOpenOrder }: AiReviewTabProps) {
         </CardContent></Card>
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">AI tekshiruv navbati</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("aiTekshiruvNavbati")}</CardTitle></CardHeader>
         <CardContent>
           {pendingReview.length === 0 ? (
             <div className="text-center py-12">
@@ -52,7 +52,7 @@ export function AiReviewTab({ pendingReview, onOpenOrder }: AiReviewTabProps) {
               <TableHeader><TableRow>
                 <TableHead>{t("Buyurtma")}</TableHead>
                 <TableHead>{t("status28")}</TableHead>
-                <TableHead>AI natija</TableHead>
+                <TableHead>{t("aiNatija")}</TableHead>
                 <TableHead></TableHead>
               </TableRow></TableHeader>
               <TableBody>
@@ -85,14 +85,14 @@ export function MockupTab() {
       <CardContent>
         <div className="border-2 border-dashed rounded-lg flex flex-col items-center justify-center min-h-64 gap-4 text-muted-foreground">
           <Package className="w-16 h-16 opacity-30" />
-          <p className="text-sm">3D render uchun dizayn faylini yuklang</p>
-          <Button variant="outline">Fayl yuklash (AI/PDF/DXF)</Button>
+          <p className="text-sm">{t("k3dRenderUchunDizaynFayliniYuklang")}</p>
+          <Button variant="outline">{t("faylYuklashAiPdfDxf")}</Button>
         </div>
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div className="p-3 rounded-md border">
             <p className="font-medium mb-1">{t("standartOlchamlar")}</p>
-            <p className="text-muted-foreground">F201: 300×200×150 mm</p>
-            <p className="text-muted-foreground">F302: 150×100×100 mm</p>
+            <p className="text-muted-foreground">{t("f201300200150Mm")}</p>
+            <p className="text-muted-foreground">{t("f302150100100Mm")}</p>
           </div>
           <div className="p-3 rounded-md border">
             <p className="font-medium mb-1">{t("songgiMockuplar")}</p>

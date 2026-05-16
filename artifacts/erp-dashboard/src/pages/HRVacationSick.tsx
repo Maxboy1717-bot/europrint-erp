@@ -159,7 +159,7 @@ export default function HRVacationSick() {
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="text-[18px] font-semibold">Ta'til / Kasallik So'rovi</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("taTilKasallikSoRovi")}</DialogTitle></DialogHeader>
           <form onSubmit={form.handleSubmit((d) => createLeave.mutate(d))} className="space-y-4 py-2">
             <div className="space-y-1">
           <Label>{t("type")}</Label>

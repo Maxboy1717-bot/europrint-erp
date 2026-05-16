@@ -25,12 +25,12 @@ export function StepDemographics({ portret, onChange }: StepDemographicsProps) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
         <h3 className="font-semibold text-sm text-primary">{t("blokBDemografikTalablar")}</h3>
-        <Badge variant="outline" className="text-[9px]">5 ta savol</Badge>
+        <Badge variant="outline" className="text-[9px]">{t("k5TaSavol")}</Badge>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
-          <Label className="text-xs mb-1 block">6. Yosh (min)</Label>
+          <Label className="text-xs mb-1 block">{t("k6YoshMin")}</Label>
           <Input
             type="number" min={18} max={70}
             value={portret.age_min ?? 22}
@@ -38,7 +38,7 @@ export function StepDemographics({ portret, onChange }: StepDemographicsProps) {
           />
         </div>
         <div>
-          <Label className="text-xs mb-1 block">7. Yosh (max)</Label>
+          <Label className="text-xs mb-1 block">{t("k7YoshMax")}</Label>
           <Input
             type="number" min={18} max={70}
             value={portret.age_max ?? 45}
@@ -59,7 +59,7 @@ export function StepDemographics({ portret, onChange }: StepDemographicsProps) {
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">9. Oilaviy holat (izoh, ixtiyoriy)</Label>
+        <Label className="text-xs mb-1 block">{t("k9OilaviyHolatIzohIxtiyoriy")}</Label>
         <Input
           placeholder={t("masalanUylanganlarAfzalMuhimEmas")}
           value={portret.family_status ?? ""}
@@ -73,10 +73,10 @@ export function StepDemographics({ portret, onChange }: StepDemographicsProps) {
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="any">{t("muhimEmas")}</SelectItem>
-            <SelectItem value="secondary">O'rta (maktab)</SelectItem>
-            <SelectItem value="vocational">O'rta maxsus (kollej/texnikum)</SelectItem>
-            <SelectItem value="higher">Oliy (bakalavr)</SelectItem>
-            <SelectItem value="masters">Magistr / PhD</SelectItem>
+            <SelectItem value="secondary">{t("oRtaMaktab")}</SelectItem>
+            <SelectItem value="vocational">{t("oRtaMaxsusKollejTexnikum")}</SelectItem>
+            <SelectItem value="higher">{t("oliyBakalavr")}</SelectItem>
+            <SelectItem value="masters">{t("magistrPhd")}</SelectItem>
           </SelectContent>
         </Select>
       </div>

@@ -230,7 +230,7 @@ export function ProbationReviewDialog({
                 />
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Nastavnik / Mentor</Label>
+                <Label className="text-xs mb-1 block">{t("nastavnikMentor")}</Label>
                 <Input
                   value={mentorName}
                   onChange={e => setMentorName(e.target.value)}
@@ -253,7 +253,7 @@ export function ProbationReviewDialog({
           {/* Baholash mezonlari */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Baholash mezonlari (1–10)</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t("baholashMezonlari110")}</p>
               <span className={cn("text-sm font-bold px-2.5 py-1 rounded-full border", avgColor)}>
                 O'rtacha: {avgScore}/10
               </span>
@@ -324,7 +324,7 @@ export function ProbationReviewDialog({
 
           {/* HR menejer imzosi */}
           <div>
-            <Label className="text-xs mb-1 block">HR Menejer ismi (imzo)</Label>
+            <Label className="text-xs mb-1 block">{t("hrMenejerIsmiImzo")}</Label>
             <Input
               value={reviewerName}
               onChange={e => setReviewerName(e.target.value)}

@@ -38,11 +38,11 @@ export function InventoryTab({ inventory, basic }: InventoryTabProps) {
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Card><CardContent className="p-4 text-center">
-          <p className="text-xs text-muted-foreground mb-1">Yo'qolgan (12 oy)</p>
+          <p className="text-xs text-muted-foreground mb-1">{t("yoQolgan12Oy")}</p>
           <p className="text-2xl font-bold text-destructive">{fmtQty(inventory.discrepancyAnalysis?.totalLoss12m, basic.unitOfMeasure)}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4 text-center">
-          <p className="text-xs text-muted-foreground mb-1">Ortiqcha (12 oy)</p>
+          <p className="text-xs text-muted-foreground mb-1">{t("ortiqcha12Oy")}</p>
           <p className="text-2xl font-bold text-[var(--ep-green)]">{fmtQty(inventory.discrepancyAnalysis?.totalSurplus12m, basic.unitOfMeasure)}</p>
         </CardContent></Card>
       </div>

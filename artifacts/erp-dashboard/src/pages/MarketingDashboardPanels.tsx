@@ -127,7 +127,7 @@ export function ChurnRiskPanel({ churnData }: { churnData: ChurnData | undefined
     <div className="bg-card rounded-xl p-6 overflow-hidden" data-testid="card-churn-risk">
       <div className="flex items-center gap-2 mb-4">
         <AlertTriangle className="h-5 w-5 text-[var(--ep-red)]" />
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Churn Xavfi (Multi-factor)</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("churnXavfiMultiFactor")}</h3>
       </div>
       {churnData?.riskCounts && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
@@ -143,7 +143,7 @@ export function ChurnRiskPanel({ churnData }: { churnData: ChurnData | undefined
         <p className="text-4xl font-bold tracking-tight text-foreground" data-testid="text-churn-count">
           {churnData?.total ?? 0}
         </p>
-        <p className="text-sm text-muted-foreground">ta mijoz 30+ kun buyurtma bermagan</p>
+        <p className="text-sm text-muted-foreground">{t("taMijoz30KunBuyurtmaBermagan")}</p>
       </div>
       <AiChurnSignal />
       {churnData?.customers && churnData.customers.length > 0 && (

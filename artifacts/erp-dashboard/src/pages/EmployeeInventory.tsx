@@ -57,7 +57,7 @@ export default function EmployeeInventory() {
       <div className="flex items-center gap-3 mb-6">
         <Backpack className="h-8 w-8 text-[var(--ep-yellow)]" />
         <div className="flex-1">
-          <div className="text-xs text-gray-500 font-semibold">MENING INVENTARIM</div>
+          <div className="text-xs text-gray-500 font-semibold">{t("meningInventarim")}</div>
           <h1 className="text-2xl font-bold">{me ? me.fullName : "Foydalanuvchi"}</h1>
           {me && <p className="text-sm text-gray-500">@{me.username}</p>}
         </div>
@@ -67,7 +67,7 @@ export default function EmployeeInventory() {
         <Card><CardContent className="pt-6">
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-[var(--ep-blue)]" />
-            <div className="text-xs text-gray-500">JAMI INVENTAR</div>
+            <div className="text-xs text-gray-500">{t("jamiInventar")}</div>
           </div>
           <div className="text-3xl font-bold mt-2">{items.length}</div>
         </CardContent></Card>
@@ -76,7 +76,7 @@ export default function EmployeeInventory() {
           <div className="text-3xl font-bold mt-2 text-[var(--ep-green)]">{activeItems.length}</div>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
-          <div className="text-xs text-gray-500">JAMI QIYMAT</div>
+          <div className="text-xs text-gray-500">{t("jamiQiymat")}</div>
           <div className="text-3xl font-bold mt-2 text-[var(--ep-yellow)]">
             {totalValue.toLocaleString("uz-UZ", { maximumFractionDigits: 0 })} UZS
           </div>

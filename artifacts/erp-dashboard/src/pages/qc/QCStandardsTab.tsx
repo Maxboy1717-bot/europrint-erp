@@ -162,7 +162,7 @@ export function QCStandardsTab() {
               <BookOpen className="w-5 h-5" />
               {t("sifatNormalari")}
             </CardTitle>
-            <CardDescription>ISO, GOST va ichki standartlar</CardDescription>
+            <CardDescription>{t("isoGostVaIchkiStandartlar")}</CardDescription>
           </div>
           <div className="flex gap-2">
             <Select value={filterType} onValueChange={setFilterType}>
@@ -209,7 +209,7 @@ export function QCStandardsTab() {
                     <FormField control={standardForm.control} name="nameRu" render={({ field }) => (
                       <FormItem>
                         <FormLabel>{tCommon('name')} (RU)</FormLabel>
-                        <FormControl><Input {...field} placeholder="Название стандарта" data-testid="input-standard-name-ru" /></FormControl>
+                        <FormControl><Input {...field} placeholder={t("untitled")} data-testid="input-standard-name-ru" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />

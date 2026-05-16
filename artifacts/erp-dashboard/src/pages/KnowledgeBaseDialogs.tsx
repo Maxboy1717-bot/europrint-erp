@@ -161,7 +161,7 @@ export function KnowledgeBaseFormDialog({ open, onClose, editingItem, form, onSu
                           {...field}
                           rows={6}
                           data-testid="textarea-contentRu"
-                          placeholder="Подробная информация о компании..."
+                          placeholder={t("untitled")}
                         />
                       </FormControl>
                       <FormMessage />
@@ -204,7 +204,7 @@ export function KnowledgeBaseFormDialog({ open, onClose, editingItem, form, onSu
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="europrint, print, bosma"
+                        placeholder={t("europrintPrintBosma")}
                         data-testid="input-tags"
                       />
                     </FormControl>

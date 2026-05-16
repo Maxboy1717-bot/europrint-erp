@@ -250,7 +250,7 @@ export function Section3Scores({ report }: { report: ReportData }) {
           {report.ai_session.overall_score != null && (
             <div className="text-center mb-2">
               <span className="text-xl font-bold text-[var(--ep-blue)]">{Math.round(report.ai_session.overall_score)}%</span>
-              <span className="text-xs text-gray-400 ml-1">umumiy ball</span>
+              <span className="text-xs text-gray-400 ml-1">{t("umumiyBall")}</span>
             </div>
           )}
           {report.ai_session.ai_summary && (

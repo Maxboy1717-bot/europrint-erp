@@ -97,8 +97,8 @@ export function DocDetailTab({
                       {step.assignee_name || step.assignee_role || t("reviewer")}
                       {step.status === "unassigned" && <Badge className="bg-[var(--ep-primary)] text-white text-xs">{t("tayinlanmagan1")}</Badge>}
                       {step.escalated_at && <Badge className="bg-red-900 text-white text-xs">{t("eskalatsiyaQilindi")}</Badge>}
-                      {step.reminder_1_sent && !step.reminder_2_sent && <Badge className="bg-yellow-800 text-white text-xs">📨 1-eslatma</Badge>}
-                      {step.reminder_2_sent && !step.escalated_at && <Badge className="bg-orange-800 text-white text-xs">📨📨 2-eslatma</Badge>}
+                      {step.reminder_1_sent && !step.reminder_2_sent && <Badge className="bg-yellow-800 text-white text-xs">{t("k1Eslatma")}</Badge>}
+                      {step.reminder_2_sent && !step.escalated_at && <Badge className="bg-orange-800 text-white text-xs">{t("k2Eslatma")}</Badge>}
                     </div>
                     <div className="text-xs text-muted-foreground flex items-center gap-2">
                       <span>Muddati: {step.deadline_at ? new Date(step.deadline_at).toLocaleString() : "—"}</span>
@@ -127,7 +127,7 @@ export function DocDetailTab({
                           <Input
                             value={rejectReasons[step.id] ?? ""}
                             onChange={e => onRejectReasonChange(step.id, e.target.value)}
-                            placeholder="Rad etish sababi (majburiy) *"
+                            placeholder={t("radEtishSababiMajburiy")}
                             className="bg-input border-red-700 text-xs h-7 flex-1"
                           />
                           <Button size="sm"

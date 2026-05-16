@@ -154,14 +154,14 @@ export default function MarketingWebsiteCMS() {
                   <TabsTrigger value="ai">{t("aiYordamchi")}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="content" className="space-y-3 mt-3">
-                  <div><Label>Sarlavha (UZ) *</Label><Input data-testid="input-blog-title-uz" value={form.titleUz} onChange={(e) => setForm({ ...form, titleUz: e.target.value })} /></div>
-                  <div><Label>Sarlavha (RU)</Label><Input value={form.titleRu} onChange={(e) => setForm({ ...form, titleRu: e.target.value })} /></div>
-                  <div><Label>{t("slug")}</Label><Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="avtomatik-yaratiladi" /></div>
-                  <div><Label>Matn (UZ)</Label><Textarea data-testid="input-blog-body-uz" value={form.bodyUz} onChange={(e) => setForm({ ...form, bodyUz: e.target.value })} className="min-h-[200px]" /></div>
-                  <div><Label>Matn (RU)</Label><Textarea value={form.bodyRu} onChange={(e) => setForm({ ...form, bodyRu: e.target.value })} className="min-h-[120px]" /></div>
+                  <div><Label>{t("sarlavhaUz")}</Label><Input data-testid="input-blog-title-uz" value={form.titleUz} onChange={(e) => setForm({ ...form, titleUz: e.target.value })} /></div>
+                  <div><Label>{t("sarlavhaRu")}</Label><Input value={form.titleRu} onChange={(e) => setForm({ ...form, titleRu: e.target.value })} /></div>
+                  <div><Label>{t("slug")}</Label><Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder={t("avtomatikYaratiladi")} /></div>
+                  <div><Label>{t("matnUz")}</Label><Textarea data-testid="input-blog-body-uz" value={form.bodyUz} onChange={(e) => setForm({ ...form, bodyUz: e.target.value })} className="min-h-[200px]" /></div>
+                  <div><Label>{t("matnRu")}</Label><Textarea value={form.bodyRu} onChange={(e) => setForm({ ...form, bodyRu: e.target.value })} className="min-h-[120px]" /></div>
                   <div><Label>{t("qisqaTavsif")}</Label><Textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} /></div>
                   <div><Label>{t("coverRasmUrl")}</Label><Input value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} /></div>
-                  <div><Label>Teglar (vergul bilan)</Label><Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder={t("qadoqlashQutiGofra")} /></div>
+                  <div><Label>{t("teglarVergulBilan")}</Label><Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder={t("qadoqlashQutiGofra")} /></div>
                 </TabsContent>
                 <TabsContent value="seo" className="space-y-3 mt-3">
                   <div><Label>{t("seoSarlavha")}</Label><Input value={form.seoTitle} onChange={(e) => setForm({ ...form, seoTitle: e.target.value })} /></div>

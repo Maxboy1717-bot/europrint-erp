@@ -284,7 +284,7 @@ export default function MilestonePage() {
               <Label>{t("ishgaKirishSanasi")}</Label>
               <Input type="date" value={genForm.hire_date} onChange={e => setGenForm(f => ({ ...f, hire_date: e.target.value }))} className="mt-1" />
             </div>
-            <p className="text-xs text-muted-foreground">1 oy, 3 oy va 6 oylik milestonelar avtomatik yaratiladi</p>
+            <p className="text-xs text-muted-foreground">{t("k1Oy3OyVa6")}</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setGenerateOpen(false)}>{t("Bekor")}</Button>

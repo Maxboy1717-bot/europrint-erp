@@ -196,7 +196,7 @@ export default function BirthdayWidget() {
           <CardContent className="space-y-2 text-sm text-muted-foreground">
             <div className="flex items-start gap-2">
               <span className="shrink-0 font-medium text-foreground">7:30</span>
-              <span>Barcha hamkasblar yangi tug'ilgan kunlardan xabardor bo'ladi (Telegram)</span>
+              <span>{t("barchaHamkasblarYangiTugIlganKunlardan")}</span>
             </div>
             <div className="flex items-start gap-2">
               <span className="shrink-0 font-medium text-foreground">18:00</span>
@@ -204,7 +204,7 @@ export default function BirthdayWidget() {
             </div>
             <div className="flex items-start gap-2">
               <span className="shrink-0 font-medium text-foreground">18:00</span>
-              <span>Xodimning o'ziga shaxsiy tabrik xabari yuboriladi (Telegram)</span>
+              <span>{t("xodimningOZigaShaxsiyTabrikXabari")}</span>
             </div>
           </CardContent>
         </Card>

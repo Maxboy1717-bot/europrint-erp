@@ -50,7 +50,7 @@ export function CreateZvsDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Miqdor (so'm) *</Label>
+            <Label>{t("miqdorSoM")}</Label>
             <Input
               type="number"
               min="0"
@@ -135,7 +135,7 @@ export function ActionZvsDialog({
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>Izoh (ixtiyoriy)</Label>
+            <Label>{t("izohIxtiyoriy")}</Label>
             <Textarea
               value={comment}
               onChange={(e) => onCommentChange(e.target.value)}

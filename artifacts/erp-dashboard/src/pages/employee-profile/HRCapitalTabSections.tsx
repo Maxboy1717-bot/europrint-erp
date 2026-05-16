@@ -66,7 +66,7 @@ export function HRCapitalSummaryCards({ profile }: { profile: HRCapitalProfile |
             <div>
               <p className="text-xs text-muted-foreground">{t("toolTestNatijasi")}</p>
               <p className="text-2xl font-bold text-[var(--ep-purple)]">{profile?.toolTestScore || "—"}</p>
-              <p className="text-xs text-muted-foreground">A-J shkala</p>
+              <p className="text-xs text-muted-foreground">{t("aJShkala")}</p>
             </div>
             <BarChart3 className="h-6 w-6 text-[var(--ep-purple)]" />
           </div>

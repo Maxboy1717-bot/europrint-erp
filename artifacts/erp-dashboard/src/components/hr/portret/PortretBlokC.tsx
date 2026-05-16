@@ -20,11 +20,11 @@ export function PortretBlokC({ portret, onChange }: PortretBlokCProps) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <h4 className="font-semibold text-sm text-primary">{t("blokCVazifalarNatijalar")}</h4>
-        <Badge variant="outline" className="text-[9px]">3 ta savol</Badge>
+        <Badge variant="outline" className="text-[9px]">{t("k3TaSavol")}</Badge>
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">11. Bo'lim/jamoa vazifalari</Label>
+        <Label className="text-xs mb-1 block">{t("k11BoLimJamoaVazifalari")}</Label>
         <Textarea
           placeholder={t("ushbuBolimningAsosiyFunksiyalariNima")}
           rows={3}
@@ -34,7 +34,7 @@ export function PortretBlokC({ portret, onChange }: PortretBlokCProps) {
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">12. Xodim majburiyatlari (Funksional)</Label>
+        <Label className="text-xs mb-1 block">{t("k12XodimMajburiyatlariFunksional")}</Label>
         <Textarea
           placeholder={t("xodimHarKuniNimaIsh")}
           rows={3}
@@ -48,7 +48,7 @@ export function PortretBlokC({ portret, onChange }: PortretBlokCProps) {
           13. Natija/mahsulot — Qat'iy o'lchov <span className="text-red-400">*</span>
         </Label>
         <Textarea
-          placeholder="Xodim ishining yakuniy natijasi nima? (masalan: sotilgan mahsulot hajmi, bitgan dizaynlar soni...)"
+          placeholder={t("xodimIshiningYakuniyNatijasiNimaMasalan")}
           rows={2}
           value={portret.expected_result ?? ""}
           onChange={e => onChange("expected_result")(e.target.value)}

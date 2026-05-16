@@ -48,7 +48,7 @@ export function KPISection({kpis, isLoading }: KPISectionProps) {
                 <div>
                   <p className="text-sm text-muted-foreground">{t("jamiMateriallar")}</p>
                   <p className="text-3xl font-bold mt-1">{kpis?.totalMaterials || 0}</p>
-                  <p className="text-xs text-muted-foreground mt-1">nomenklatura pozitsiya</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("nomenklaturaPozitsiya")}</p>
                 </div>
                 <Package className="h-8 w-8 text-[var(--ep-blue)] opacity-70" />
               </div>
@@ -76,7 +76,7 @@ export function KPISection({kpis, isLoading }: KPISectionProps) {
                 <div>
                   <p className="text-sm text-muted-foreground">{t("kamQoldiq")}</p>
                   <p className="text-3xl font-bold mt-1 text-[var(--ep-red)]">{kpis?.lowStockCount || 0}</p>
-                  <p className="text-xs text-muted-foreground mt-1">minimal ostida</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("minimalOstida")}</p>
                 </div>
                 <AlertTriangle className="h-8 w-8 text-red-400 opacity-70" />
               </div>
@@ -112,7 +112,7 @@ export function KPISection({kpis, isLoading }: KPISectionProps) {
                 <div>
                   <p className="text-sm text-muted-foreground">{t("muddatiOtgan")}</p>
                   <p className="text-3xl font-bold mt-1 text-[var(--ep-primary)]">{kpis?.overdueReservations || 0}</p>
-                  <p className="text-xs text-muted-foreground mt-1">rezervatsiya</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("rezervatsiya")}</p>
                 </div>
                 <Clock className="h-8 w-8 text-orange-400 opacity-70" />
               </div>
@@ -224,13 +224,13 @@ export function AlertsCard({ alerts, isLoading, totalAlerts, onCheckAlerts, isCh
           <div className="space-y-2">
             {(alerts?.pendingQC || 0) > 0 && (
               <div className="flex items-center justify-between p-2 rounded-md border border-yellow-200 bg-yellow-50">
-                <span className="text-sm">QC nazoratida kutayotgan</span>
+                <span className="text-sm">{t("qcNazoratidaKutayotgan")}</span>
                 <EPStatusPill tone="neutral">{alerts?.pendingQC}</EPStatusPill>
               </div>
             )}
             {(alerts?.expiringBatches || 0) > 0 && (
               <div className="flex items-center justify-between p-2 rounded-md border border-orange-200 bg-orange-50">
-                <span className="text-sm">Muddati yaqin partiyalar (30 kun)</span>
+                <span className="text-sm">{t("muddatiYaqinPartiyalar30Kun")}</span>
                 <EPStatusPill tone="neutral">{alerts?.expiringBatches}</EPStatusPill>
               </div>
             )}

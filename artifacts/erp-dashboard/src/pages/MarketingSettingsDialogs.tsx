@@ -70,7 +70,7 @@ export function ApiDialog({open,
             <Input className="bg-background border-border" value={apiForm.accessToken} onChange={(e) => onApiFormChange({ ...apiForm, accessToken: e.target.value })} type="password" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-muted-foreground">Page/Bot ID</Label>
+            <Label className="text-muted-foreground">{t("pageBotId")}</Label>
             <Input className="bg-background border-border" value={apiForm.pageId} onChange={(e) => onApiFormChange({ ...apiForm, pageId: e.target.value })} />
           </div>
           <div className="space-y-1.5">
@@ -122,7 +122,7 @@ export function CreateSettingDialog({
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label className="text-muted-foreground">{t("kalit")}</Label>
-            <Input className="bg-background border-border" data-testid="input-setting-key" value={form.key} onChange={(e) => onFormChange({ ...form, key: e.target.value })} placeholder="brand_color" />
+            <Input className="bg-background border-border" data-testid="input-setting-key" value={form.key} onChange={(e) => onFormChange({ ...form, key: e.target.value })} placeholder={t("brandColor")} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-muted-foreground">{t("qiymat")}</Label>

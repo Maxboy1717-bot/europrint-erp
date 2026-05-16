@@ -28,8 +28,8 @@ export function PageHeader({ text, modelsLoaded, lang, onToggleLang }: PageHeade
     <div className="flex items-center justify-between mb-6">
       <div>
         <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">Yuz Ro&apos;yxatdan O&apos;tkazish</b></>}
-        title="Yuz Ro&apos;yxatdan O&apos;tkazish"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("yuzRoAposYxatdanOApos")}</b></>}
+        title={t("yuzRoAposYxatdanOApos2")}
         subtitle={text.subtitle}
       />
       </div>

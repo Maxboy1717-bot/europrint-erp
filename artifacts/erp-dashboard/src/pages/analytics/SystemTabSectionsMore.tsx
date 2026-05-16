@@ -137,7 +137,7 @@ export function EmployeeStatsCard({ stats, loading }: EmployeeStatsCardProps) {
         ) : (
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Yangi xodimlar (30 kun):</span>
+              <span className="text-sm text-muted-foreground">{t("yangiXodimlar30Kun")}</span>
               <EPStatusPill tone="success" data-testid="badge-new-employees">{stats?.newEmployees || 0}</EPStatusPill>
             </div>
             <div className="flex justify-between items-center">
