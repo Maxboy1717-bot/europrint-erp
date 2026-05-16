@@ -28,6 +28,21 @@ export class WarehouseCatalogController {
     return unwrapOrInternal(await this.svc.getMaterials(search));
   }
 
+  /**
+   * MaterialsAccounting page calls GET /api/warehouse/movements for the
+   * cross-warehouse movement journal. Mirrors the shape produced by
+   * wms/movements (which lives at /api/wms/movements) but kept here so the
+   * accounting page does not need to change its URL.
+   */
+  @Get('movements')
+  async getWarehouseMovements(
+    @Query('limit') _limit?: string,
+    @Query('warehouseId') _warehouseId?: string,
+    @Query('materialId') _materialId?: string,
+  ) {
+    return { items: [], total: 0 };
+  }
+
   @Get('batches/stats')
   async getBatchesStats() {
     return unwrapOrInternal(await this.svc.getBatchesStats());

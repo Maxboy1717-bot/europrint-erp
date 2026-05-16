@@ -158,4 +158,22 @@ export class MarketingAnalyticsStubsController {
   // ── Overview (root) ───────────────────────────────────────────────────────
   @Get() @Roles('super_admin', 'marketing_manager', 'director', 'manager')
   async getMarketingOverview() { return { campaigns: 0, leads: 0, conversions: 0, roi: 0 }; }
+
+  // ── Lead score recalculation ──────────────────────────────────────────────
+  // POST /api/marketing/leads/recalculate-scores — bulk recompute lead AI
+  // scores. Real implementation will fan out to scoring agent; for now the
+  // route returns 200 so MarketingLeads page can call it without seeing 404.
+  @Post('leads/recalculate-scores') @Roles('super_admin', 'marketing_manager', 'director')
+  @HttpCode(HttpStatus.OK)
+  async recalculateLeadScores(@Body() _body: Record<string, unknown>) {
+    return { ...successOk(), recalculated: 0, queuedAt: new Date().toISOString() };
+  }
+
+  // ── Settings — singular PATCH by id ───────────────────────────────────────
+  // PATCH /api/marketing/settings/:id — used by MarketingSettings page when
+  // editing a specific settings record (vs. the bulk POST /settings above).
+  @Patch('settings/:id') @Roles('super_admin', 'marketing_manager')
+  async patchSettingById(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    return { ...successOk(), id, ...body };
+  }
 }

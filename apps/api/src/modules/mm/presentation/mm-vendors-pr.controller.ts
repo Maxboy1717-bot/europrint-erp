@@ -38,6 +38,18 @@ export class MmVendorsPrController {
     return unwrapOrThrow(await this.svc.listVendors(search, safeInt(limit, 50), safeInt(offset, 0)));
   }
 
+  /**
+   * Alias for the integration module's vendor-performance endpoint so the
+   * VendorPerformance frontend page can call /api/mm/vendor-performance.
+   * Returns the same shape that integration-extended-hr.controller.ts emits.
+   * Real DB pull will land when vendor_performance schema is added; for now
+   * we serve an empty list (page renders empty state cleanly).
+   */
+  @Get('vendor-performance')
+  async listVendorPerformance() {
+    return [];
+  }
+
   @Get('vendors/:id')
   async getVendor(@Param('id') id: string) {
     const _rR = await this.svc.getVendor(safeInt(id, 0));

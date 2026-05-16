@@ -4,7 +4,7 @@
  */
 
 import { assertFound, assertRequired } from '@common/assertions';
-import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Post, Put, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from 'shared/guards/roles.guard';
@@ -153,6 +153,23 @@ export class SevenFunctionsController {
       function: funcData,
       kpis: kpiData,
       analysis: { avg_progress: Math.round(avgProgress), total_kpis: kpiData.length },
+    };
+  }
+
+  /**
+   * SevenFunctionsDashboard page calls GET /api/seven-functions/ai-analysis
+   * for a cross-function rollup. Until the dedicated rollup service exists,
+   * return empty defaults so the dashboard renders the "no data yet" state.
+   */
+  @Get('ai-analysis')
+  async getAiAnalysisRollup(@Query('period') _period?: string) {
+    return {
+      functions:    [],
+      strengths:    [],
+      weaknesses:   [],
+      recommendations: [],
+      overall_score: 0,
+      generated_at: new Date().toISOString(),
     };
   }
 }

@@ -114,13 +114,27 @@ for (const f of walk(API_DIR, '.ts')) {
     const block = content.slice(start, end);
     const ctrlHasAuth = /@UseGuards\([^)]*JwtAuthGuard/.test(block.slice(0, 500));
 
-    const methodRe = /@(Get|Post|Put|Patch|Delete)\(\s*(?:\[\s*['"]([^'"]+)['"]|['"]([^'"]*)['"])?[^)]*\)\s*(?:[^@]|@(?!Get|Post|Put|Patch|Delete))*?\s*(?:async\s+)?(\w+)\s*\(/g;
+    // The verb decorator can take either:
+    //   @Get('path')                                   — single string
+    //   @Get(['path-a', 'path-b'])                     — alias array
+    //   @Get()                                         — no arg (root)
+    // We capture the entire arg-list as $2 so we can expand arrays into one
+    // endpoint per alias (the audit needs every alias registered, not just
+    // the first one).
+    const methodRe = /@(Get|Post|Put|Patch|Delete)\(\s*([^)]*?)\s*\)\s*(?:[^@]|@(?!Get|Post|Put|Patch|Delete))*?\s*(?:async\s+)?(\w+)\s*\(/g;
     let m;
     while ((m = methodRe.exec(block))) {
       const method = m[1].toUpperCase();
-      const subPath = m[2] ?? m[3] ?? '';
-      const fnName = m[4];
-      const url = `/api/${prefix}${subPath ? '/' + subPath.replace(/^\//, '') : ''}`.replace(/\/+/g, '/');
+      const args   = m[2] ?? '';
+      const fnName = m[3];
+
+      // Collect every quoted string in the decorator args. Handles
+      // both single-string and array forms uniformly.
+      const subPaths = [];
+      const strRe = /['"]([^'"]*)['"]/g;
+      let sm;
+      while ((sm = strRe.exec(args))) subPaths.push(sm[1]);
+      if (subPaths.length === 0) subPaths.push(''); // @Get() — root
 
       const before200 = block.slice(Math.max(0, m.index - 200), m.index);
       const isPublic = /@Public\(\)/.test(before200);
@@ -130,11 +144,14 @@ for (const f of walk(API_DIR, '.ts')) {
       const fnBody = block.slice(m.index, fnBodyEnd > 0 ? fnBodyEnd : m.index + 2000);
       const hasZod = /\.parse\(|\.safeParse\(|ZodSchema|z\.object/.test(fnBody);
 
-      endpoints.push({
-        method, url, controller: path.basename(f, '.ts'), file: path.relative(ROOT, f),
-        hasAuth: ctrlHasAuth || localGuard || isPublic,
-        isPublic, hasZod,
-      });
+      for (const subPath of subPaths) {
+        const url = `/api/${prefix}${subPath ? '/' + subPath.replace(/^\//, '') : ''}`.replace(/\/+/g, '/');
+        endpoints.push({
+          method, url, controller: path.basename(f, '.ts'), file: path.relative(ROOT, f),
+          hasAuth: ctrlHasAuth || localGuard || isPublic,
+          isPublic, hasZod,
+        });
+      }
     }
   }
 }

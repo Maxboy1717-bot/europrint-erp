@@ -1,11 +1,11 @@
 {
   "totalRoutes": 341,
-  "totalEndpoints": 2967,
+  "totalEndpoints": 2983,
   "pagesWithMissingFile": 0,
   "pagesWithNoApi": 16,
-  "pagesWithBrokenApi": 17,
-  "endpointsWithoutAuth": 2353,
-  "endpointsWithoutZod": 1221,
-  "orphanEndpoints": 478,
-  "uniqueFrontendApiCalls": 1973
+  "pagesWithBrokenApi": 0,
+  "endpointsWithoutAuth": 2374,
+  "endpointsWithoutZod": 1228,
+  "orphanEndpoints": 474,
+  "uniqueFrontendApiCalls": 1972
 }

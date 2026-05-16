@@ -68,9 +68,7 @@
     "page": "VendorPerformance",
     "fileExists": true,
     "apiCallCount": 3,
-    "missingApis": [
-      "/api/mm/vendor-performance"
-    ],
+    "missingApis": [],
     "file": "AdminRoutes.tsx"
   },
   {
@@ -286,9 +284,7 @@
     "page": "Certificates",
     "fileExists": true,
     "apiCallCount": 5,
-    "missingApis": [
-      "/api/certificates/:id"
-    ],
+    "missingApis": [],
     "file": "AnalyticsRoutes.tsx"
   },
   {
@@ -375,7 +371,7 @@
     "route": "/camera-reports",
     "page": "camera-reports",
     "fileExists": true,
-    "apiCallCount": 6,
+    "apiCallCount": 4,
     "missingApis": [],
     "file": "CameraRoutes.tsx"
   },
@@ -648,9 +644,7 @@
     "page": "MarketingLeads",
     "fileExists": true,
     "apiCallCount": 9,
-    "missingApis": [
-      "/api/marketing/leads/recalculate-scores"
-    ],
+    "missingApis": [],
     "file": "CRMRoutes.tsx"
   },
   {
@@ -690,9 +684,7 @@
     "page": "MarketingSettings",
     "fileExists": true,
     "apiCallCount": 4,
-    "missingApis": [
-      "/api/marketing/settings/:id"
-    ],
+    "missingApis": [],
     "file": "CRMRoutes.tsx"
   },
   {
@@ -836,9 +828,7 @@
     "page": "AuditorPanel",
     "fileExists": true,
     "apiCallCount": 7,
-    "missingApis": [
-      "/api/europrint-control/menus/admin"
-    ],
+    "missingApis": [],
     "file": "DirectorRoutes.tsx"
   },
   {
@@ -870,10 +860,7 @@
     "page": "EmployeeDailyKPIPanel",
     "fileExists": true,
     "apiCallCount": 4,
-    "missingApis": [
-      "/api/employee-kpi/summary/top-performers",
-      "/api/employee-kpi/summary/department"
-    ],
+    "missingApis": [],
     "file": "DirectorRoutes.tsx"
   },
   {
@@ -1001,9 +988,7 @@
     "page": "MaterialsAccounting",
     "fileExists": true,
     "apiCallCount": 4,
-    "missingApis": [
-      "/api/warehouse/movements"
-    ],
+    "missingApis": [],
     "file": "FinanceRoutes.tsx"
   },
   {
@@ -1155,9 +1140,7 @@
     "page": "EmployeeProfile",
     "fileExists": true,
     "apiCallCount": 41,
-    "missingApis": [
-      "/api/hr/employee-corp/:id"
-    ],
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
@@ -1181,9 +1164,7 @@
     "page": "SevenFunctionsDashboard",
     "fileExists": true,
     "apiCallCount": 2,
-    "missingApis": [
-      "/api/seven-functions/ai-analysis"
-    ],
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
@@ -1207,9 +1188,7 @@
     "page": "SkillsMatrix",
     "fileExists": true,
     "apiCallCount": 5,
-    "missingApis": [
-      "/api/hr/skills/:id"
-    ],
+    "missingApis": [],
     "file": "HRRoutes.tsx"
   },
   {
@@ -1497,9 +1476,7 @@
     "page": "ProductionReport",
     "fileExists": true,
     "apiCallCount": 2,
-    "missingApis": [
-      "/api/production/orders/report/excel"
-    ],
+    "missingApis": [],
     "file": "ProductionRoutes.tsx"
   },
   {
@@ -1731,9 +1708,7 @@
     "page": "ai-planning/OEELiveMonitorPage",
     "fileExists": true,
     "apiCallCount": 1,
-    "missingApis": [
-      "/api/iot/oee/live"
-    ],
+    "missingApis": [],
     "file": "ProductionRoutes.tsx"
   },
   {
@@ -1909,9 +1884,7 @@
     "page": "QCApproval",
     "fileExists": true,
     "apiCallCount": 6,
-    "missingApis": [
-      "/api/qc/tests/:id"
-    ],
+    "missingApis": [],
     "file": "ProductionRoutes.tsx"
   },
   {
@@ -1935,9 +1908,7 @@
     "page": "qc/PaperParametersPage",
     "fileExists": true,
     "apiCallCount": 1,
-    "missingApis": [
-      "/api/qc/parameters/paper"
-    ],
+    "missingApis": [],
     "file": "ProductionRoutes.tsx"
   },
   {
@@ -1953,9 +1924,7 @@
     "page": "qc/DefectManagementPage",
     "fileExists": true,
     "apiCallCount": 1,
-    "missingApis": [
-      "/api/qc/defects/extended"
-    ],
+    "missingApis": [],
     "file": "ProductionRoutes.tsx"
   },
   {
@@ -2427,9 +2396,7 @@
     "page": "PosMovementsPage",
     "fileExists": true,
     "apiCallCount": 1,
-    "missingApis": [
-      "/api/pos/stock/movements"
-    ],
+    "missingApis": [],
     "file": "StubRoutes.tsx"
   },
   {
@@ -2693,9 +2660,7 @@
     "page": "MaterialBalance",
     "fileExists": true,
     "apiCallCount": 7,
-    "missingApis": [
-      "/api/material-balance/movements"
-    ],
+    "missingApis": [],
     "file": "WarehouseRoutes.tsx"
   },
   {

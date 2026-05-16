@@ -128,6 +128,14 @@ export class HrDashboardStubsController {
     return { items: [], total: 0 };
   }
 
+  // EmployeeProfile page calls GET /api/hr/employee-corp/:id for one corporate
+  // record. Returns null shape while the real persistence lands; page handles
+  // null gracefully.
+  @Get('employee-corp/:id')
+  getEmployeeCorpById(@Param('id') id: string) {
+    return { id, corporate: null };
+  }
+
   @Get('employees/operator-stats')
   getEmployeeOperatorStats() {
     return { stats: null };

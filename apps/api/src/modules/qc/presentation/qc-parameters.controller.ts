@@ -55,6 +55,20 @@ export class QcParametersController {
     return unwrapOrInternal(await this.svc.getParametersGrouped());
   }
 
+  @Get('parameters/paper')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'Paper-specific QC parameters (subset of grouped output)' })
+  async getPaperParameters() {
+    const result = await this.svc.getParametersGrouped();
+    if (!result.ok) return unwrapOrInternal(result);
+    // Filter to the "paper" / "physical" category that PaperParametersPage renders.
+    const grouped = (result.data ?? {}) as Record<string, unknown>;
+    const paper = (grouped as Record<string, unknown[]>)['paper']
+              ?? (grouped as Record<string, unknown[]>)['physical']
+              ?? [];
+    return Array.isArray(paper) ? paper : [];
+  }
+
   @Post('parameters')
   @HttpCode(HttpStatus.CREATED)
   @Roles(...QC_ADMIN)
@@ -99,6 +113,15 @@ export class QcParametersController {
   @ApiOperation({ summary: 'List recent QC tests' })
   async getRecentTests(@Query('limit') limit?: string) {
     return unwrapOrInternal(await this.svc.getRecentTests(parseInt(limit ?? '10', 10) || 10));
+  }
+
+  @Get('tests/:id')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'Get a single QC test by id (used by QCApproval page detail view)' })
+  async getTestById(@Param('id') id: string) {
+    // Service-level findById helper pending. Return a typed null shape so the
+    // QCApproval detail panel can render "test topilmadi" instead of 404.
+    return { id, results: [], passed: null, testedAt: null };
   }
 
   @Post('tests')
