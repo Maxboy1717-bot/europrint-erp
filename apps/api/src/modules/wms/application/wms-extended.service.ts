@@ -4,13 +4,13 @@
  */
 
 import { safeNum } from '@common/math';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { WmsExtendedRepository } from './wms-extended.repository';
+import { WMS_EXTENDED_REPO, type IWmsExtendedRepo } from '../domain/repositories/i-wms-extended.repo';
 
 @Injectable()
 export class WmsExtendedService {
-  constructor(private readonly repo: WmsExtendedRepository) {}
+  constructor(@Inject(WMS_EXTENDED_REPO) private readonly repo: IWmsExtendedRepo) {}
 
   async getTotalStats(): Promise<Result<object, AppError>> {
     return this.repo.getTotalStats();

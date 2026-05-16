@@ -6,9 +6,9 @@
  */
 
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
-import { WmsCrudRepository } from '../wms-crud.repository';
+import { WMS_CRUD_REPO, type IWmsCrudRepo } from '../../domain/repositories/i-wms-crud.repo';
 
 export class PatchRentalCommand {
   constructor(
@@ -22,7 +22,7 @@ export class PatchRentalCommand {
 export class PatchRentalHandler implements ICommandHandler<PatchRentalCommand> {
   private readonly logger = new Logger(PatchRentalHandler.name);
 
-  constructor(private readonly repo: WmsCrudRepository) {}
+  constructor(@Inject(WMS_CRUD_REPO) private readonly repo: IWmsCrudRepo) {}
 
   async execute(command: PatchRentalCommand): Promise<Result<Record<string, unknown>>> {
     this.logger.log({ msg: 'Patching rental record', id: command.id });

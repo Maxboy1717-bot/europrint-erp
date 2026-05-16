@@ -123,6 +123,9 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
 // PA0 event-bridge fix — CQRS EventBus → EventEmitter2 (Trigger 2, 7, 14, 15, 20)
 import { SharedEventsModule } from './modules/shared/events/shared-events.module';
 
+// PA0-6 — Outbox pattern (persisted domain events + scheduled publisher)
+import { OutboxModule } from './modules/shared/outbox/outbox.module';
+
 @Module({
   imports: [
     // ── Config ──────────────────────────────────────────────────────────────
@@ -267,6 +270,9 @@ import { SharedEventsModule } from './modules/shared/events/shared-events.module
 
     // ── PA0 event bridge (CQRS → EventEmitter2, Triggers 2/7/14/15/20) ────────
     SharedEventsModule,
+
+    // ── PA0-6 outbox pattern (persisted domain events + scheduled publisher) ─
+    OutboxModule,
   ],
 
   providers: [

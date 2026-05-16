@@ -3,13 +3,13 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { InventoryMaterialsRepository } from './inventory-materials.repository';
+import { INVENTORY_MATERIALS_REPO, type IInventoryMaterialsRepo } from '../domain/repositories/i-inventory-materials.repo';
 
 @Injectable()
 export class InventoryMaterialsService {
-  constructor(private readonly repo: InventoryMaterialsRepository) {}
+  constructor(@Inject(INVENTORY_MATERIALS_REPO) private readonly repo: IInventoryMaterialsRepo) {}
 
   async listMaterials(search?: string, category?: string, page = 1, limit = 50): Promise<Result<object, AppError>> {
     return safeCall(async () => {

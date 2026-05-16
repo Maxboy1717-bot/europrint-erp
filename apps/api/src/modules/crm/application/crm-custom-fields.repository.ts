@@ -1,75 +1,8 @@
 /**
- * @module crm-custom-fields.repository
- * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ * @module crm-custom-fields.repository (back-compat shim)
+ * @description Re-exports the concrete repo from its new infrastructure home.
+ *   New code SHOULD inject via `CRM_CUSTOM_FIELDS_REPO` symbol + `ICrmCustomFieldsRepo`
+ *   from `domain/repositories/i-crm-custom-fields.repo`.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
-import { castTo } from '@common/db-rows';
-import { db } from '@shared/db';
-import { eq, sql } from 'drizzle-orm';
-import { crm_custom_fields } from '@shared/db';
-import { safeCall, Result } from '@common/result';
-
-type Row = Record<string, unknown>;
-
-@Injectable()
-export class CrmCustomFieldsRepository {
-  private readonly logger = new Logger(CrmCustomFieldsRepository.name);
-
-  async list(entityType: string | null): Promise<Result<Row[]>> {
-    return safeCall(async () => {
-      try {
-        return db.select().from(crm_custom_fields)
-          .where(sql`${entityType ?? null}::text IS NULL OR ${crm_custom_fields.entity_type} = ${entityType ?? null}`)
-          .orderBy(crm_custom_fields.order_index, crm_custom_fields.created_at).then(r => castTo<Row[]>(r));
-      } catch (err) {
-        this.logger.warn(`list: ${(err as Error).message}`);
-        return [];
-      }
-      }, 'DB_ERROR');
-  }
-
-  async create(body: Row): Promise<Result<Row | null>> {
-    return safeCall(async () => {
-      const entityType = (body['entity_type'] as string) ?? 'lead';
-      const rows = await db.insert(crm_custom_fields).values({
-        field_name:  (body['name'] as string) ?? '',
-        field_label: (body['label'] as string) ?? '',
-        field_type:  (body['field_type'] as string) ?? 'text',
-        entity_type: entityType,
-        is_required: (body['required'] as boolean) ?? false,
-        options:     body['options'] ?? null,
-        order_index: sql`(SELECT COALESCE(MAX(order_index), 0) + 1 FROM crm_custom_fields WHERE entity_type = ${entityType})`,
-      }).returning();
-      return (rows[0] ?? null) as Row | null;
-      }, 'DB_ERROR');
-  }
-
-  async update(id: number, body: Row): Promise<Result<Row | null>> {
-    return safeCall(async () => {
-      try {
-        const rows = await db.update(crm_custom_fields).set({
-          field_label: sql`COALESCE(${body['label'] ?? null}, ${crm_custom_fields.field_label})`,
-          is_required: sql`COALESCE(${body['required'] ?? null}, ${crm_custom_fields.is_required})`,
-          options:     sql`COALESCE(${body['options'] ? JSON.stringify(body['options']) : null}::jsonb, ${crm_custom_fields.options})`,
-        }).where(eq(crm_custom_fields.id, id)).returning();
-        return (rows[0] ?? null) as Row | null;
-      } catch (err) {
-        this.logger.warn(`update: ${(err as Error).message}`);
-        throw err;
-      }
-      }, 'DB_ERROR');
-  }
-
-  async reorder(items: Array<{ id: number; order_index: number }>): Promise<void> {
-    for (const item of items) {
-      await db.update(crm_custom_fields)
-        .set({ order_index: item.order_index })
-        .where(eq(crm_custom_fields.id, item.id));
-    }
-  }
-
-  async remove(id: number): Promise<void> {
-    await db.delete(crm_custom_fields).where(eq(crm_custom_fields.id, id));
-  }
-}
+export { CrmCustomFieldsRepository } from '../infrastructure/repositories/crm-custom-fields.repository';

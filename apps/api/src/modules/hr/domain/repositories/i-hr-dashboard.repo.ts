@@ -1,0 +1,44 @@
+/**
+ * @module i-hr-dashboard.repo
+ * @description Domain repository interface for HR dashboard aggregates
+ *   (birthdays, milestones, monthly trend, ABC analysis, alerts,
+ *   discipline/PIP/eNPS, daily-reports stats, shifts, alumni).
+ *   Concrete implementation lives at
+ *   `infrastructure/repositories/hr-dashboard.repository.ts`.
+ * @layer Domain (HR)
+ */
+
+import type { Result } from '@common/result';
+
+type Row = Record<string, unknown>;
+
+export interface DailyReportsStatsRow {
+  total: number;
+  approved: number;
+  pending: number;
+  today: number;
+}
+
+export interface IHrDashboardRepo {
+  getBirthdaysToday(): Promise<Result<Row[]>>;
+  getBirthdaysUpcoming(d: number): Promise<Result<Row[]>>;
+  getMilestonesUpcoming(d: number): Promise<Result<unknown[]>>;
+  getMonthlyTrend(): Promise<Result<unknown[]>>;
+  getAbcAnalysis(): Promise<Result<unknown[]>>;
+  getAlerts(): Promise<Result<Row[]>>;
+  getDisciplineRecords(): Promise<Result<unknown[]>>;
+  getPip(): Promise<Result<unknown[]>>;
+  getEnpsSurveys(): Promise<Result<unknown[]>>;
+  getAiInterviewSessions(): Promise<Result<unknown[]>>;
+  getDailyReportsStats(): Promise<Result<DailyReportsStatsRow>>;
+  getAdaptationAtRisk(): Promise<Result<unknown[]>>;
+  getShiftsToday(today: string): Promise<Result<unknown[]>>;
+  getAlumni(): Promise<Result<Row[]>>;
+  createDailyReport(dto: {
+    user_id: number;
+    report_date: string;
+    tasks_completed?: string;
+  }): Promise<Result<Row>>;
+}
+
+export const HR_DASHBOARD_REPO = Symbol('HR_DASHBOARD_REPO');

@@ -215,3 +215,6 @@ export {
   hr_tz2_room_reference_photos,
   hr_tz2_ai_room_analysis,
 } from './schema-hr-tz2';
+
+// schema-outbox: Domain events outbox table (PA0-6)
+export { domain_events } from './schema-outbox';

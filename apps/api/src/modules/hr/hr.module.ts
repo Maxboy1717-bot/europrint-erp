@@ -64,17 +64,22 @@ import { HrCompatAController } from './presentation/hr-compat-a.controller';
 import { HrCompatSafetyController } from './presentation/hr-compat-safety.controller';
 import { HrEmployeesExtController } from './presentation/hr-employees-ext.controller';
 import { HrDashboardService } from './application/hr-dashboard.service';
-import { HrDashboardRepository } from './application/hr-dashboard.repository';
+import { HrDashboardRepository } from './infrastructure/repositories/hr-dashboard.repository';
 import { HrCompatAService } from './application/hr-compat-a.service';
-import { HrCompatARepository } from './application/hr-compat-a.repository';
+import { HrCompatARepository } from './infrastructure/repositories/hr-compat-a.repository';
 import { HrCompatSafetyService } from './application/hr-compat-safety.service';
-import { HrCompatSafetyRepository } from './application/hr-compat-safety.repository';
+import { HrCompatSafetyRepository } from './infrastructure/repositories/hr-compat-safety.repository';
 import { HrDashboardExtraService } from './application/hr-dashboard-extra.service';
-import { HrDashboardExtraRepository } from './application/hr-dashboard-extra.repository';
+import { HrDashboardExtraRepository } from './infrastructure/repositories/hr-dashboard-extra.repository';
 import { HrEmployeesExtService } from './application/hr-employees-ext.service';
-import { HrEmployeesExtRepository } from './application/hr-employees-ext.repository';
+import { HrEmployeesExtRepository } from './infrastructure/repositories/hr-employees-ext.repository';
 import { HrAttendanceService } from './application/hr-attendance.service';
 import { HR_REPO } from './domain/repositories/i-hr.repo';
+import { HR_DASHBOARD_REPO } from './domain/repositories/i-hr-dashboard.repo';
+import { HR_COMPAT_A_REPO } from './domain/repositories/i-hr-compat-a.repo';
+import { HR_COMPAT_SAFETY_REPO } from './domain/repositories/i-hr-compat-safety.repo';
+import { HR_DASHBOARD_EXTRA_REPO } from './domain/repositories/i-hr-dashboard-extra.repo';
+import { HR_EMPLOYEES_EXT_REPO } from './domain/repositories/i-hr-employees-ext.repo';
 import { OnboardingController } from './onboarding/onboarding.controller';
 import { OnboardingService } from './onboarding/onboarding.service';
 import { OnboardingJobService } from './onboarding/onboarding-job.service';
@@ -218,14 +223,19 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     RecruitmentStatsRepository,
     RecruitmentStatsService,
     HrDashboardRepository,
+    { provide: HR_DASHBOARD_REPO, useClass: HrDashboardRepository },
     HrDashboardService,
     HrCompatARepository,
+    { provide: HR_COMPAT_A_REPO, useClass: HrCompatARepository },
     HrCompatAService,
     HrCompatSafetyRepository,
+    { provide: HR_COMPAT_SAFETY_REPO, useClass: HrCompatSafetyRepository },
     HrCompatSafetyService,
     HrDashboardExtraRepository,
+    { provide: HR_DASHBOARD_EXTRA_REPO, useClass: HrDashboardExtraRepository },
     HrDashboardExtraService,
     HrEmployeesExtRepository,
+    { provide: HR_EMPLOYEES_EXT_REPO, useClass: HrEmployeesExtRepository },
     HrEmployeesExtService,
     HrAttendanceService,
     HrVacanciesService,

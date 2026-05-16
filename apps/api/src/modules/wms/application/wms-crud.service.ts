@@ -3,15 +3,15 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Result } from '@common/result';
-import { WmsCrudRepository } from './wms-crud.repository';
+import { WMS_CRUD_REPO, type IWmsCrudRepo } from '../domain/repositories/i-wms-crud.repo';
 
 type Row = Record<string, unknown>;
 
 @Injectable()
 export class WmsCrudService {
-  constructor(private readonly repo: WmsCrudRepository) {}
+  constructor(@Inject(WMS_CRUD_REPO) private readonly repo: IWmsCrudRepo) {}
 
   softDeleteTransaction(id: number, userId: number | null): Promise<Result<Row>> {
     return this.repo.softDeleteTransaction(id, userId);

@@ -58,20 +58,26 @@ import { CRM_PIPELINES_REPO } from './pipelines/i-crm-pipelines.repo';
 import { DrizzleCrmPipelinesRepository } from './pipelines/drizzle-crm-pipelines.repo';
 import { PipelinesService } from './pipelines/pipelines.service';
 import { CrmActivitiesService } from './application/crm-activities.service';
-import { CrmActivitiesRepository } from './application/crm-activities.repository';
+import { CrmActivitiesRepository } from './infrastructure/repositories/crm-activities.repository';
+import { CRM_ACTIVITIES_REPO } from './domain/repositories/i-crm-activities.repo';
 import { CrmAiService } from './application/crm-ai.service';
-import { CrmAiRepository } from './application/crm-ai.repository';
+import { CrmAiRepository } from './infrastructure/repositories/crm-ai.repository';
+import { CRM_AI_REPO } from './domain/repositories/i-crm-ai.repo';
 import { CrmAutoLeadService } from './application/crm-auto-lead.service';
-import { CrmAutoLeadRepository } from './application/crm-auto-lead.repository';
+import { CrmAutoLeadRepository } from './infrastructure/repositories/crm-auto-lead.repository';
+import { CRM_AUTO_LEAD_REPO } from './domain/repositories/i-crm-auto-lead.repo';
 import { CrmBitrixCompatService } from './application/crm-bitrix-compat.service';
 import { CrmBitrixCompatRepository } from './application/crm-bitrix-compat.repository';
 import { CrmCompaniesService } from './application/crm-companies.service';
-import { CrmCompaniesRepository } from './application/crm-companies.repository';
+import { CrmCompaniesRepository } from './infrastructure/repositories/crm-companies.repository';
+import { CRM_COMPANIES_REPO } from './domain/repositories/i-crm-companies.repo';
 import { CrmContactsService } from './application/crm-contacts.service';
-import { CrmContactsRepository } from './application/crm-contacts.repository';
+import { CrmContactsRepository } from './infrastructure/repositories/crm-contacts.repository';
+import { CRM_CONTACTS_APP_REPO } from './domain/repositories/i-crm-contacts-app.repo';
 import { CrmFollowupCompatService } from './application/crm-followup-compat.service';
 import { CrmFollowupCompatRepository } from './application/crm-followup-compat.repository';
-import { CrmLeadsOpsRepository } from './application/crm-leads-ops.repository';
+import { CrmLeadsOpsRepository } from './infrastructure/repositories/crm-leads-ops.repository';
+import { CRM_LEADS_OPS_REPO } from './domain/repositories/i-crm-leads-ops.repo';
 import { UpdateLeadHandler } from './application/commands/update-lead.handler';
 import { UpdateLeadStageHandler } from './application/commands/update-lead-stage.handler';
 import { DeleteLeadHandler } from './application/commands/delete-lead.handler';
@@ -80,7 +86,8 @@ import { CrmExtrasRepository } from './application/crm-extras.repository';
 import { CrmCommsService } from './application/crm-comms.service';
 import { CrmCommsRepository } from './application/crm-comms.repository';
 import { CrmCustomFieldsService } from './application/crm-custom-fields.service';
-import { CrmCustomFieldsRepository } from './application/crm-custom-fields.repository';
+import { CrmCustomFieldsRepository } from './infrastructure/repositories/crm-custom-fields.repository';
+import { CRM_CUSTOM_FIELDS_REPO } from './domain/repositories/i-crm-custom-fields.repo';
 import { CrmAiExtendedService } from './application/crm-ai-extended.service';
 import { LeadScorerV2Service } from './domain/services/lead-scorer-v2.service';
 import { EloRatingService } from './domain/services/elo-rating.service';
@@ -145,26 +152,26 @@ const repositories = [
     LeadsService,
     { provide: CRM_PIPELINES_REPO, useClass: DrizzleCrmPipelinesRepository },
     PipelinesService,
-    CrmActivitiesRepository,
+    { provide: CRM_ACTIVITIES_REPO, useClass: CrmActivitiesRepository },
     CrmActivitiesService,
-    CrmAiRepository,
+    { provide: CRM_AI_REPO, useClass: CrmAiRepository },
     CrmAiService,
-    CrmAutoLeadRepository,
+    { provide: CRM_AUTO_LEAD_REPO, useClass: CrmAutoLeadRepository },
     CrmAutoLeadService,
     CrmBitrixCompatRepository,
     CrmBitrixCompatService,
-    CrmCompaniesRepository,
+    { provide: CRM_COMPANIES_REPO, useClass: CrmCompaniesRepository },
     CrmCompaniesService,
-    CrmContactsRepository,
+    { provide: CRM_CONTACTS_APP_REPO, useClass: CrmContactsRepository },
     CrmContactsService,
     CrmFollowupCompatRepository,
     CrmFollowupCompatService,
-    CrmLeadsOpsRepository,
+    { provide: CRM_LEADS_OPS_REPO, useClass: CrmLeadsOpsRepository },
     CrmExtrasRepository,
     CrmExtrasService,
     CrmCommsRepository,
     CrmCommsService,
-    CrmCustomFieldsRepository,
+    { provide: CRM_CUSTOM_FIELDS_REPO, useClass: CrmCustomFieldsRepository },
     CrmCustomFieldsService,
     CrmAiExtendedService,
     LeadScorerV2Service,

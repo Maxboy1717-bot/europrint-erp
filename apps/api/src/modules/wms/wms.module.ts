@@ -45,19 +45,25 @@ import { InventoryAdvancedController } from './presentation/inventory-advanced.c
 import { InventoryAdvancedService } from './application/inventory-advanced.service';
 import { InventoryAdvancedRepository } from './infrastructure/inventory-advanced.repo';
 import { WmsCountsService } from './application/wms-counts.service';
-import { WmsCountsRepository } from './application/wms-counts.repository';
+import { WmsCountsRepository } from './infrastructure/repositories/wms-counts.repository';
 import { WmsExtendedService } from './application/wms-extended.service';
-import { WmsExtendedRepository } from './application/wms-extended.repository';
+import { WmsExtendedRepository } from './infrastructure/repositories/wms-extended.repository';
 import { WmsWarehouseGatewayService } from './application/wms-warehouse-gateway.service';
 import { WmsWarehouseGatewayRepo } from './infrastructure/wms-warehouse-gateway.repo';
 import { InventoryMaterialsService } from './application/inventory-materials.service';
-import { InventoryMaterialsRepository } from './application/inventory-materials.repository';
+import { InventoryMaterialsRepository } from './infrastructure/repositories/inventory-materials.repository';
 import { IotEnhancedService } from './application/iot-enhanced.service';
-import { IotEnhancedRepository } from './application/iot-enhanced.repository';
+import { IotEnhancedRepository } from './infrastructure/repositories/iot-enhanced.repository';
 import { WarehouseRentalService } from './application/warehouse-rental.service';
-import { WarehouseRentalRepository } from './application/warehouse-rental.repository';
+import { WarehouseRentalRepository } from './infrastructure/repositories/warehouse-rental.repository';
 import { WmsCrudService } from './application/wms-crud.service';
-import { WmsCrudRepository } from './application/wms-crud.repository';
+import { WmsCrudRepository } from './infrastructure/repositories/wms-crud.repository';
+import { WMS_COUNTS_REPO } from './domain/repositories/i-wms-counts.repo';
+import { WMS_EXTENDED_REPO } from './domain/repositories/i-wms-extended.repo';
+import { INVENTORY_MATERIALS_REPO } from './domain/repositories/i-inventory-materials.repo';
+import { IOT_ENHANCED_REPO } from './domain/repositories/i-iot-enhanced.repo';
+import { WAREHOUSE_RENTAL_REPO } from './domain/repositories/i-warehouse-rental.repo';
+import { WMS_CRUD_REPO } from './domain/repositories/i-wms-crud.repo';
 import { GoodsIssueHandler } from './application/commands/goods-issue.handler';
 import { ReceiveFgHandler } from './application/commands/receive-fg.handler';
 import { ReserveMaterialHandler } from './application/commands/reserve-material.handler';
@@ -138,20 +144,26 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     { provide: WMS_WAREHOUSES_REPO, useClass: DrizzleWmsWarehousesRepository },
     WarehousesService,
     WmsCountsRepository,
+    { provide: WMS_COUNTS_REPO, useClass: WmsCountsRepository },
     WmsCountsService,
     WmsExtendedRepository,
+    { provide: WMS_EXTENDED_REPO, useClass: WmsExtendedRepository },
     WmsExtendedService,
     WmsWarehouseGatewayRepo,
     WmsWarehouseGatewayService,
     InventoryMaterialsRepository,
+    { provide: INVENTORY_MATERIALS_REPO, useClass: InventoryMaterialsRepository },
     InventoryMaterialsService,
     IotEnhancedRepository,
+    { provide: IOT_ENHANCED_REPO, useClass: IotEnhancedRepository },
     IotEnhancedService,
     WarehouseRentalRepository,
+    { provide: WAREHOUSE_RENTAL_REPO, useClass: WarehouseRentalRepository },
     WarehouseRentalService,
     InventoryAdvancedService,
     InventoryAdvancedRepository,
     WmsCrudRepository,
+    { provide: WMS_CRUD_REPO, useClass: WmsCrudRepository },
     WmsCrudService,
     WmsCatalogAbcAgingExpiryService,
     WmsCatalogStockTurnoverService,

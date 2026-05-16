@@ -3,13 +3,13 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { WmsCountsRepository } from './wms-counts.repository';
+import { WMS_COUNTS_REPO, type IWmsCountsRepo } from '../domain/repositories/i-wms-counts.repo';
 
 @Injectable()
 export class WmsCountsService {
-  constructor(private readonly repo: WmsCountsRepository) {}
+  constructor(@Inject(WMS_COUNTS_REPO) private readonly repo: IWmsCountsRepo) {}
 
   async listInventoryCounts(warehouseId?: string, status?: string, lim = 20): Promise<Result<object, AppError>> {
     return this.repo.listInventoryCounts(warehouseId, status, lim);

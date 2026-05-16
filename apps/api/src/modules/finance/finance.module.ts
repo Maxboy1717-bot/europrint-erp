@@ -8,7 +8,12 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CfoConfigService } from './domain/services/cfo-config.service';
 import { FpCycleCronService } from './application/fp-cycle-cron.service';
-import { FpCycleCronRepository } from './application/fp-cycle-cron.repository';
+import { FpCycleCronRepository } from './infrastructure/repositories/fp-cycle-cron.repository';
+import { FP_CYCLE_CRON_REPO } from './domain/repositories/i-fp-cycle-cron.repo';
+import { FINANCE_ACTIONS_REPO } from './domain/repositories/i-finance-actions.repo';
+import { FINANCE_AP_REPO } from './domain/repositories/i-finance-ap.repo';
+import { FINANCE_AR_REPO } from './domain/repositories/i-finance-ar.repo';
+import { FINANCE_PAYROLL_APP_REPO } from './domain/repositories/i-finance-payroll.repo';
 import { FinanceRepository } from './infrastructure/repositories/drizzle-finance.repo';
 import { FinanceInvoiceRepo } from './infrastructure/repositories/drizzle-finance-invoice.repo';
 import { FinanceReportRepo } from './infrastructure/repositories/drizzle-finance-report.repo';
@@ -45,13 +50,13 @@ import { FinanceCfoConfigController } from './presentation/finance-cfo-config.co
 import { FinanceAccountingService } from './application/finance-accounting.service';
 import { DrizzleFinanceAccountingRepo } from './infrastructure/repositories/drizzle-finance-accounting.repo';
 import { FinanceApService } from './application/finance-ap.service';
-import { FinanceApRepository } from './application/finance-ap.repository';
-import { FinanceActionsRepository } from './application/finance-actions.repository';
+import { FinanceApRepository } from './infrastructure/repositories/finance-ap.repository';
+import { FinanceActionsRepository } from './infrastructure/repositories/finance-actions.repository';
 import { FinanceActionsService } from './application/finance-actions.service';
 import { FinanceArService } from './application/finance-ar.service';
-import { FinanceArRepository } from './application/finance-ar.repository';
+import { FinanceArRepository } from './infrastructure/repositories/finance-ar.repository';
 import { FinancePayrollService } from './application/finance-payroll.service';
-import { FinancePayrollRepository } from './application/finance-payroll.repository';
+import { FinancePayrollRepository } from './infrastructure/repositories/finance-payroll.repository';
 import { FINANCE_REPO } from './domain/repositories/i-finance.repo';
 import { FINANCE_GL_REPO } from './gl/i-finance-gl.repo';
 import { DrizzleFinanceGlRepository } from './gl/drizzle-finance-gl.repo';
@@ -108,6 +113,8 @@ import { FinanceBreakEvenController } from './presentation/finance-break-even.co
 import { FinanceRatiosController } from './presentation/finance-ratios.controller';
 import { FinanceCashflowForecastController } from './presentation/finance-cashflow-forecast.controller';
 import { PricingController } from './presentation/pricing.controller';
+// PA3-17: GeneralTaxService relocated from `modules/fi/tax/`.
+import { GeneralTaxService } from './application/general-tax.service';
 
 const commandHandlers = [
   CheckAdvanceHandler, RecordPaymentHandler, StartRentalTimerHandler,
@@ -146,6 +153,7 @@ const eventListeners = [
     GlPostingService,
     ...commandHandlers, ...queryHandlers, ...eventListeners,
     FpCycleCronRepository,
+    { provide: FP_CYCLE_CRON_REPO, useClass: FpCycleCronRepository },
     FpCycleCronService,
     { provide: FINANCE_GL_REPO, useClass: DrizzleFinanceGlRepository },
     GlService,
@@ -153,8 +161,19 @@ const eventListeners = [
     BudgetsService,
     { provide: FINANCE_PAYROLL_REPO, useClass: DrizzleFinancePayrollRepository },
     PayrollService,
-    DrizzleFinanceAccountingRepo, FinanceAccountingService, FinanceApRepository, FinanceApService, FinanceArRepository, FinanceArService, FinancePayrollRepository, FinancePayrollService,
-    FinanceActionsRepository, FinanceActionsService,
+    DrizzleFinanceAccountingRepo, FinanceAccountingService,
+    FinanceApRepository,
+    { provide: FINANCE_AP_REPO, useClass: FinanceApRepository },
+    FinanceApService,
+    FinanceArRepository,
+    { provide: FINANCE_AR_REPO, useClass: FinanceArRepository },
+    FinanceArService,
+    FinancePayrollRepository,
+    { provide: FINANCE_PAYROLL_APP_REPO, useClass: FinancePayrollRepository },
+    FinancePayrollService,
+    FinanceActionsRepository,
+    { provide: FINANCE_ACTIONS_REPO, useClass: FinanceActionsRepository },
+    FinanceActionsService,
     // New providers
     { provide: FINANCE_EXTENDED_REPO, useClass: DrizzleFinanceExtendedRepository },
     FinanceExtendedService,
@@ -174,7 +193,9 @@ const eventListeners = [
     // Sprint 1 services
     StandardCostService, VarianceAnalysisService, BreakEvenService,
     TieredPricingService, FinancialRatiosService, CashflowForecastService,
+    // PA3-17: tax calculator merged from `modules/fi/`
+    GeneralTaxService,
   ],
-  exports: [FINANCE_REPO, GlPostingService, CfoConfigService],
+  exports: [FINANCE_REPO, GlPostingService, CfoConfigService, GeneralTaxService],
 })
 export class FinanceModule {}

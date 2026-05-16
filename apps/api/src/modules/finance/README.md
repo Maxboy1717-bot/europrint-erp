@@ -38,7 +38,7 @@ finance/
 | Break-even / margin of safety| `domain/services/break-even.service.ts`                              |
 | Per-product COGS             | `order-costing/order-costing.service.ts`                             |
 | Cashflow position + forecast | `cashflow/cashflow.service.ts`                                       |
-| Tax (VAT / simplified)       | `../fi/tax/general-tax.service.ts` *(not in finance/)*               |
+| Tax (VAT / simplified)       | `application/general-tax.service.ts`                                 |
 
 ## CFO config (tuneable rates)
 

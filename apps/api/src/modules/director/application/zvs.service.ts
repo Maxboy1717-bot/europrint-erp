@@ -6,9 +6,9 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError, Err } from '@common/result';
-import { ZvsRepository } from './zvs.repository';
+import { ZVS_REPO, type IZvsRepo } from '../domain/repositories/i-zvs.repo';
 
 const LEVEL1_ROLES = ['admin', 'super_admin', 'director', 'ceo', 'cfo', 'finance_manager', 'department_head', 'manager'];
 const LEVEL2_ROLES = ['admin', 'super_admin', 'director', 'ceo', 'cfo', 'finance_manager'];
@@ -37,7 +37,7 @@ function getWeekStart(date?: string): string {
 
 @Injectable()
 export class ZvsService {
-  constructor(private readonly repo: ZvsRepository) {}
+  constructor(@Inject(ZVS_REPO) private readonly repo: IZvsRepo) {}
 
   async createZvsWithValidation(
     body: Record<string, unknown>,

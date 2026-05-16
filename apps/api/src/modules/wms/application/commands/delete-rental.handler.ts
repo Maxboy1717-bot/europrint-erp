@@ -6,9 +6,9 @@
  */
 
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
-import { WmsCrudRepository } from '../wms-crud.repository';
+import { WMS_CRUD_REPO, type IWmsCrudRepo } from '../../domain/repositories/i-wms-crud.repo';
 
 export class DeleteRentalCommand {
   constructor(
@@ -22,7 +22,7 @@ export class DeleteRentalCommand {
 export class DeleteRentalHandler implements ICommandHandler<DeleteRentalCommand> {
   private readonly logger = new Logger(DeleteRentalHandler.name);
 
-  constructor(private readonly repo: WmsCrudRepository) {}
+  constructor(@Inject(WMS_CRUD_REPO) private readonly repo: IWmsCrudRepo) {}
 
   async execute(command: DeleteRentalCommand): Promise<Result<Record<string, unknown>>> {
     this.logger.log({ msg: 'Soft-deleting rental record', id: command.id, userId: command.userId });

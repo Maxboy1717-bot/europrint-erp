@@ -7,6 +7,30 @@ export interface MigrationDef { name: string; sql: string }
 
 export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
   {
+    name: 'domain_events outbox table (PA0-6)',
+    sql: `
+      CREATE TABLE IF NOT EXISTS domain_events (
+        id              UUID PRIMARY KEY,
+        aggregate_type  TEXT NOT NULL,
+        aggregate_id    TEXT NOT NULL,
+        event_name      TEXT NOT NULL,
+        payload         JSONB NOT NULL,
+        occurred_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        published_at    TIMESTAMPTZ,
+        attempts        INTEGER NOT NULL DEFAULT 0,
+        last_error      TEXT,
+        created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `,
+  },
+  {
+    name: 'domain_events unpublished index',
+    sql: `
+      CREATE INDEX IF NOT EXISTS idx_domain_events_unpublished
+      ON domain_events (published_at, occurred_at)
+    `,
+  },
+  {
     name: 'sd_sales_orders.version column',
     sql: `ALTER TABLE IF EXISTS sd_sales_orders ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0`,
   },
