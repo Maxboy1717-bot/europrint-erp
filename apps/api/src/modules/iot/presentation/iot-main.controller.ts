@@ -248,20 +248,10 @@ export class IotMainController {
   @Patch('material-kit-items/:id/scan') @Roles(...IOT_READ)
   async patchScanMaterialKitItem(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, scanned: true }; }
 
-  // ── Production-sessions root (list + create) — needed by IoT tablet UI
-  //    (use-iot.ts:56 queries the list; useIoTTablet.ts:116 POSTs to create
-  //    a new session). Implementation deferred until iot_production_sessions
-  //    schema lands; returning safe empty payloads keeps the tablet UI
-  //    rendering the empty state instead of erroring.
-
-  @Get('production-sessions') @Roles(...IOT_READ)
-  async listProductionSessions(
-    @Query('workerId') _workerId?: string,
-    @Query('status') _status?: string,
-  ) {
-    return { data: [], total: 0 };
-  }
-
+  // ── Production-sessions root POST — list (GET) is already served by
+  //    general-legacy-b.controller.ts at @Get('iot/production-sessions')
+  //    via the empty @Controller() prefix. Fastify rejects duplicate GET
+  //    declarations, so we keep only the POST here (no caller-side conflict).
   @Post('production-sessions') @Roles(...IOT_READ)
   async createProductionSession(@Body() body: Record<string, unknown>) {
     return { id: Date.now(), status: 'pending', ...body };
