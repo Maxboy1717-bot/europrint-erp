@@ -488,17 +488,17 @@
   },
   "sabab": "Причина",
   "sabab2": "Причина",
-  "k10Yoki5": "10 yoki -5",
+  "k10Yoki5": "10 или -5",
   "PosWarehousePage": {
-    "zararAkti": "Zarar akti",
+    "zararAkti": "Акт убытка",
     "qaytarish": "Вернуть",
-    "omborKochirish": "Ombor ko'chirish",
-    "bolimgaBerish": "Bo'limga berish"
+    "omborKochirish": "Перемещение склада",
+    "bolimgaBerish": "Выдача в подразделение"
   },
   "InventarizatsiyaPanel": {
     "tsx": {
       "bekor": "Отмена",
-      "jarayonda": "Jarayonda"
+      "jarayonda": "В процессе"
     }
   },
   "LotsTab": {
@@ -507,76 +507,76 @@
     }
   },
   "warehouse-": {
-    "nomi": "Nomi",
+    "nomi": "Название",
     "untitled": "Название",
-    "omborlarZonalarBinlarVaKochirishlarni": "Omborlar, zonalar, binlar va ko'chirishlarni boshqarish"
+    "omborlarZonalarBinlarVaKochirishlarni": "Управление складами, зонами, ячейками и перемещениями"
   },
   "WarehouseDailyView": {
     "tasdiqlangan": "Подтверждено",
-    "tayyorlanmoqda": "Tayyorlanmoqda",
+    "tayyorlanmoqda": "Готовится",
     "kutilmoqda": "Ожидает"
   },
   "WarehouseIntegrations": {
-    "omborQiymatiVaBuxgalteriya": "Ombor qiymati va buxgalteriya",
-    "xaridBuyurtmalariVaQaytaBuyurtma": "Xarid buyurtmalari va qayta buyurtma",
-    "buyurtmalarUchunMateriallarBoshqaruvi": "Buyurtmalar uchun materiallar boshqaruvi",
-    "ppIshlabChiqarish": "PP - Ishlab Chiqarish",
+    "omborQiymatiVaBuxgalteriya": "Стоимость склада и бухгалтерия",
+    "xaridBuyurtmalariVaQaytaBuyurtma": "Закупочные заказы и повторный заказ",
+    "buyurtmalarUchunMateriallarBoshqaruvi": "Управление материалами для заказов",
+    "ppIshlabChiqarish": "PP - Производство",
     "untitled": "Оценка склада и бухгалтерия",
     "fi": "FI - Финансы",
     "mm": "MM - Закупки",
     "pp": "PP - Производство",
     "ppMmFi": "Связь с модулями PP, MM и FI",
-    "ppMmVaFiModullari": "PP, MM va FI modullari bilan bog'lanish"
+    "ppMmVaFiModullari": "Связь с модулями PP, MM и FI"
   },
   "WarehouseKirimWizard": {
     "tasdiqlash": "Подтвердить",
-    "materiallar": "Materiallar",
-    "mroOmboriTexnikMateriallarKirim": "MRO Ombori — Texnik Materiallar Kirim",
-    "yarimTayyorLiniyadanQabul": "Yarim Tayyor — Liniyadan Qabul",
-    "tayyorMahsulotIshlabChiqarishdanQabul": "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul",
-    "koribChiqish": "Ko'rib chiqish",
-    "asosiyMalumotlar": "Asosiy ma'lumotlar",
-    "tashqiKirimQolda": "Tashqi Kirim (Qo'lda)",
-    "xojalikOmboriMateriallarKirim": "Xo'jalik Ombori — Materiallar Kirim"
+    "materiallar": "Материалы",
+    "mroOmboriTexnikMateriallarKirim": "Склад MRO — Приёмка технических материалов",
+    "yarimTayyorLiniyadanQabul": "Полуфабрикат — Приёмка с линии",
+    "tayyorMahsulotIshlabChiqarishdanQabul": "Готовая продукция — Приёмка из производства",
+    "koribChiqish": "Просмотр",
+    "asosiyMalumotlar": "Основные данные",
+    "tashqiKirimQolda": "Внешняя приёмка (Вручную)",
+    "xojalikOmboriMateriallarKirim": "Хозяйственный склад — Приёмка материалов"
   },
   "WarehouseMaterialKits": {
-    "tayyorlanmoqda": "Tayyorlanmoqda",
+    "tayyorlanmoqda": "Готовится",
     "kutilmoqda": "Ожидает"
   },
   "WarehouseRental": {
     "yopilgan": "Закрыто",
-    "tolangan": "To'langan"
+    "tolangan": "Оплачено"
   },
   "WarehouseReports": {
     "tsx": {
-      "birlik": "Birlik",
-      "joriyMiqdor": "Joriy miqdor"
+      "birlik": "Единица",
+      "joriyMiqdor": "Текущее количество"
     }
   },
   "WarehouseReportsAll": {
-    "chopEtilganBarkodlarTarixi": "Chop etilgan barkodlar tarixi",
-    "harXodimningMaterialBalansi": "Har xodimning material balansi",
-    "xodimBalansi": "Xodim Balansi",
-    "harakatTasdiqlashAudit": "Harakat tasdiqlash audit",
-    "tasdiqlashAuditi": "Tasdiqlash Auditi",
-    "qcHisobot": "QC Hisobot",
-    "3TomonlamaTaqqoslash": "3-Tomonlama Taqqoslash",
-    "glHisobotAudit": "GL Hisobot (Audit)",
-    "zararHarakatlari": "Zarar Harakatlari",
-    "partiyalarQarilikTahlili": "Partiyalar qarilik tahlili",
-    "materiallarABCGuruhlari": "Materiallar A/B/C guruhlari (Pareto)",
-    "muddatOgohlantirish": "Muddat Ogohlantirish",
-    "minimalQoldiqdanPastMateriallar": "Minimal qoldiqdan past materiallar",
-    "taminotchilarReytingKorsatkichi": "Ta'minotchilar reyting ko'rsatkichi",
-    "taminotchiReytingi": "Ta'minotchi Reytingi",
-    "ichkiSorovlarBajarilishi": "Ichki so'rovlar bajarilishi",
-    "sorovBajarish": "So'rov Bajarish",
-    "damageTuriZararlarRoyxati": "DAMAGE turi - zararlar ro'yxati",
-    "barchaKirimChiqimKochirish": "Barcha kirim/chiqim/ko'chirish"
+    "chopEtilganBarkodlarTarixi": "История напечатанных штрих-кодов",
+    "harXodimningMaterialBalansi": "Баланс материалов по каждому сотруднику",
+    "xodimBalansi": "Баланс сотрудника",
+    "harakatTasdiqlashAudit": "Аудит подтверждения операций",
+    "tasdiqlashAuditi": "Аудит подтверждений",
+    "qcHisobot": "Отчёт QC",
+    "3TomonlamaTaqqoslash": "3-стороннее сравнение",
+    "glHisobotAudit": "Отчёт GL (Аудит)",
+    "zararHarakatlari": "Операции списания",
+    "partiyalarQarilikTahlili": "Анализ старения партий",
+    "materiallarABCGuruhlari": "Материалы по группам A/B/C (Парето)",
+    "muddatOgohlantirish": "Уведомление о сроке",
+    "minimalQoldiqdanPastMateriallar": "Материалы ниже минимального остатка",
+    "taminotchilarReytingKorsatkichi": "Рейтинг поставщиков",
+    "taminotchiReytingi": "Рейтинг поставщиков",
+    "ichkiSorovlarBajarilishi": "Исполнение внутренних запросов",
+    "sorovBajarish": "Исполнение запросов",
+    "damageTuriZararlarRoyxati": "Тип DAMAGE — список потерь",
+    "barchaKirimChiqimKochirish": "Все приходы/расходы/перемещения"
   },
   "WarehouseStatsPanel": {
     "tsx": {
-      "qarzlar": "Qarzlar"
+      "qarzlar": "Задолженности"
     }
   },
   "": {
@@ -585,24 +585,24 @@
   },
   "translations": {
     "untitled": "История Запросов Резервирования",
-    "ai": "AI Рекомендация",
+    "ai": "AI рекомендация",
     "aiFefo": "Резервирование материалов на основе AI с FEFO оптимизацией",
-    "zaxiraSorovlariTarixi": "Zaxira So'rovlari Tarixi",
-    "aiZaxiraSorovi": "AI Zaxira So'rovi",
-    "fefoOptimizatsiyasiBilanAiAsosiy": "FEFO optimizatsiyasi bilan AI-asosiy material rezervatsiyasi"
+    "zaxiraSorovlariTarixi": "История запросов резервирования",
+    "aiZaxiraSorovi": "AI запрос резервирования",
+    "fefoOptimizatsiyasiBilanAiAsosiy": "AI-резервирование материалов с FEFO оптимизацией"
   },
   "WarehouseDashboard": {
-    "ichkiSorov": "Ichki So'rov",
-    "kochirish": "Ko'chirish"
+    "ichkiSorov": "Внутренний запрос",
+    "kochirish": "Перемещение"
   },
   "WMSExtended": {
-    "ichkiSorovlar": "Ichki So'rovlar",
-    "kochirish": "Ko'chirish"
+    "ichkiSorovlar": "Внутренние запросы",
+    "kochirish": "Перемещение"
   },
   "PosWarehouseDetail": {
-    "nomalum": "Noma'lum"
+    "nomalum": "Неизвестно"
   },
   "RollManagementPage": {
-    "boshlangichOgirlikKg": "Boshlang'ich og'irlik (kg) *"
+    "boshlangichOgirlikKg": "Начальный вес (кг) *"
   }
 }

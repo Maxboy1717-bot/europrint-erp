@@ -577,11 +577,11 @@
       "mSuffix": "млн"
     }
   },
-  "kreditorlarAp": "Kreditorlar (AP)",
-  "debitorlarAr": "Debitorlar (AR)",
-  "cvpBepTahlili": "CVP · BEP tahlili",
+  "kreditorlarAp": "Кредиторы (AP)",
+  "debitorlarAr": "Дебиторы (AR)",
+  "cvpBepTahlili": "Анализ CVP · BEP",
   "mpvMqvLrvLevOv": "MPV · MQV · LRV · LEV · OV",
   "jshd12": "JSHD (12%):",
   "inps12": "INPS (12%):",
-  "birlik": "/birlik"
+  "birlik": "/единица"
 }

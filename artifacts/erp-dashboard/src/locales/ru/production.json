@@ -458,40 +458,40 @@
   "AIProductionPlanning": {
     "bajarilmoqda": "Выполняется",
     "tasdiqlangan": "Подтверждено",
-    "avtoTasdiqlangan": "Avto-tasdiqlangan"
+    "avtoTasdiqlangan": "Авто-подтверждено"
   },
   "CandidateChecklist": {
-    "tavsiyalarTekshirildiReferenceCheck": "Tavsiyalar tekshirildi (Reference check)",
-    "fonTekshiruviIjtimoiyTarmoqlarMat": "Fon tekshiruvi (ijtimoiy tarmoqlar, Mat. №54)",
-    "30KunBaholashSuhbatiOtkazildi": "30-kun baholash suhbati o'tkazildi",
-    "taklifYuborildiOgzakiTaklifBerildi": "Taklif yuborildi / og'zaki taklif berildi",
-    "material46MahsuldorlikShakliToldirildi": "Material №46 — Mahsuldorlik shakli to'ldirildi",
-    "aiSuhbatErpTizimidaOtkazildi": "AI Suhbat (ERP tizimida) o'tkazildi",
-    "hrCapitalToolTestOtkazildi": "HR Capital TOOL TEST o'tkazildi (A-J)",
-    "asosiySuhbatOtkazildiMaterial11": "Asosiy suhbat o'tkazildi (Material №11)",
-    "mahsuldorlikAnketaToldirildi": "Mahsuldorlik anketa to'ldirildi",
-    "telefonSuhbatiOtkazildiMaterial53": "Telefon suhbati o'tkazildi (Material №53)",
-    "cvSkriningOtkazildiMaterial52": "CV skrining o'tkazildi (Material №52)",
-    "cvQabulQilindiVaRoyxatga": "CV qabul qilindi va ro'yxatga kiritildi"
+    "tavsiyalarTekshirildiReferenceCheck": "Рекомендации проверены (Reference check)",
+    "fonTekshiruviIjtimoiyTarmoqlarMat": "Фон-проверка (соцсети, Мат. №54)",
+    "30KunBaholashSuhbatiOtkazildi": "Проведена 30-дневная оценочная беседа",
+    "taklifYuborildiOgzakiTaklifBerildi": "Предложение отправлено / устное предложение дано",
+    "material46MahsuldorlikShakliToldirildi": "Материал №46 — Заполнена форма продуктивности",
+    "aiSuhbatErpTizimidaOtkazildi": "Проведено AI собеседование (в системе ERP)",
+    "hrCapitalToolTestOtkazildi": "Проведён HR Capital TOOL TEST (A-J)",
+    "asosiySuhbatOtkazildiMaterial11": "Проведено основное собеседование (Материал №11)",
+    "mahsuldorlikAnketaToldirildi": "Заполнена анкета продуктивности",
+    "telefonSuhbatiOtkazildiMaterial53": "Проведено телефонное интервью (Материал №53)",
+    "cvSkriningOtkazildiMaterial52": "Проведён скрининг CV (Материал №52)",
+    "cvQabulQilindiVaRoyxatga": "CV получено и зарегистрировано"
   },
   "ProductionOrder360": {
-    "jarayonda": "Jarayonda",
-    "qcToxtatdi": "QC To'xtatdi"
+    "jarayonda": "В процессе",
+    "qcToxtatdi": "QC остановил"
   },
   "TechPPExtended": {
-    "yetkazishKalk": "Yetkazish Kalk.",
-    "parallelJarayonlar": "Parallel Jarayonlar",
-    "smenaBoshqaruvi": "Smena Boshqaruvi",
-    "parallelBuyurtmalar": "Parallel Buyurtmalar",
-    "mijozTalablari": "Mijoz Talablari",
-    "xarajatOptimizatsiya": "Xarajat Optimizatsiya",
-    "stanoqTanlash": "Stanoq Tanlash",
-    "kpiOgish": "KPI Og'ish",
-    "ozgarishlarTarixi": "O'zgarishlar Tarixi"
+    "yetkazishKalk": "Расчёт доставки",
+    "parallelJarayonlar": "Параллельные процессы",
+    "smenaBoshqaruvi": "Управление сменой",
+    "parallelBuyurtmalar": "Параллельные заказы",
+    "mijozTalablari": "Требования клиента",
+    "xarajatOptimizatsiya": "Оптимизация затрат",
+    "stanoqTanlash": "Выбор станка",
+    "kpiOgish": "Отклонение KPI",
+    "ozgarishlarTarixi": "История изменений"
   },
   "helpers": {
-    "jarayonda": "Jarayonda",
-    "rejalashtirilganTexnikKorik": "Rejalashtirilgan texnik ko'rik",
-    "qcToxtatdi": "QC To'xtatdi"
+    "jarayonda": "В процессе",
+    "rejalashtirilganTexnikKorik": "Запланированный технический осмотр",
+    "qcToxtatdi": "QC остановил"
   }
 }
