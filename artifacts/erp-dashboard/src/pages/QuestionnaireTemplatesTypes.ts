@@ -73,7 +73,7 @@ export const TEMPLATE_PRESETS: Record<string, Preset> = {
   reception: {
     name: "Qabulxona xodimi anketasi",
     nameRu: "Анкета сотрудника reception",
-    description: "Mehmonlarni qabul qilish, telefon qo'ng'iroqlari, vaziyatlarni hal qilish",
+    description: tLabel('common.QuestionnaireTemplates.mehmonlarniQabulQilishTelefonQongiroqlari', "Mehmonlarni qabul qilish, telefon qo'ng'iroqlari, vaziyatlarni hal qilish"),
     descriptionRu: "Прием гостей, телефонные звонки, решение ситуаций",
     questions: [
       { question: "Ismingiz va familiyangiz?", questionRu: "Ваше имя и фамилия?", order: 1, questionType: "text", isRequired: true },
@@ -99,7 +99,7 @@ export const TEMPLATE_PRESETS: Record<string, Preset> = {
   developer: {
     name: "Dasturchi anketasi",
     nameRu: "Анкета программиста",
-    description: "Texnik ko'nikmalar, tajriba, loyihalar",
+    description: tLabel('common.QuestionnaireTemplates.texnikKonikmalarTajribaLoyihalar', "Texnik ko'nikmalar, tajriba, loyihalar"),
     descriptionRu: "Технические навыки, опыт, проекты",
     questions: [
       { question: "Ismingiz va familiyangiz?", questionRu: "Ваше имя и фамилия?", order: 1, questionType: "text", isRequired: true },

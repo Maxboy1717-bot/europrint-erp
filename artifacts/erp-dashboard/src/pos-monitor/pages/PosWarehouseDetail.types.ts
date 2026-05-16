@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module PosWarehouseDetail.types
  * @description Types, constants and pure helpers for PosWarehouseDetail.
@@ -79,7 +81,7 @@ export const UNIT_GROUP: Record<string, { icon: string; label: string; color: st
 };
 
 export function getUnitGroup(unit: string | null | undefined) {
-  if (!unit) return { icon: "❓", label: "Noma'lum", color: "#9CA3AF" };
+  if (!unit) return { icon: "❓", label: tLabel('warehouse.PosWarehouseDetail.nomalum', "Noma'lum"), color: "#9CA3AF" };
   const up = String(unit).toUpperCase().trim().replace(/\./g, "").replace(/\s/g, "");
   return UNIT_GROUP[up] ?? { icon: "📦", label: unit, color: "#6B7280" };
 }

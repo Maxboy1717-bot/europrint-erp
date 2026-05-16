@@ -6,7 +6,7 @@ import { tLabel } from '@/lib/i18n/tLabel';
  */
 
 export const CATEGORIES = [
-  { value: "learning", label: "O'quv (ta'lim olish)" },
+  { value: "learning", label: tLabel('common.GoalsKPI.oquvTalimOlish', "O'quv (ta'lim olish)") },
   { value: "completion", label: tLabel('common.GoalsKPI.tugatishKurslarniYakunlash', "Tugatish (kurslarni yakunlash)") },
   { value: "engagement", label: "Faollik (ishtirok darajasi)" },
   { value: "performance", label: "Natija (ish samaradorligi)" },
@@ -15,14 +15,14 @@ export const CATEGORIES = [
 
 export const TARGET_TYPES = [
   { value: "global", label: "Umumiy" },
-  { value: "department", label: "Bo'lim" },
+  { value: "department", label: tLabel('common.GoalsKPI.bolim', "Bo'lim") },
   { value: "position", label: tLabel('common.GoalsKPI.lavozim', "Lavozim") },
   { value: "user", label: tLabel('common.GoalsKPI.xodim', "Xodim") },
 ];
 
 export const PRIORITIES = [
   { value: "low", label: "Past", color: "bg-blue-500" },
-  { value: "medium", label: "O'rta", color: "bg-yellow-500" },
+  { value: "medium", label: tLabel('common.GoalsKPI.orta', "O'rta"), color: "bg-yellow-500" },
   { value: "high", label: "Yuqori", color: "bg-orange-500" },
   { value: "critical", label: "Juda muhim", color: "bg-red-500" },
 ];

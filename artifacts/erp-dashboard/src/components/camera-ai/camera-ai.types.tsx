@@ -11,7 +11,7 @@ import { tLabel } from '@/lib/i18n/tLabel';
 export const cameraAiLabels: Record<string, Record<string, string>> = {
   uz: {
     title: "AI Kamera Analitikasi",
-    subtitle: "Sun'iy intellekt asosida kamera monitoringi tahlili",
+    subtitle: tLabel('common.camera-ai.types.tsx.suniyIntellektAsosidaKameraMonitoringi', "Sun'iy intellekt asosida kamera monitoringi tahlili"),
     safetyScore: "Xavfsizlik balli",
     qualityScore: "Sifat balli",
     productivityScore: "Samaradorlik balli",
@@ -48,7 +48,7 @@ export const cameraAiLabels: Record<string, Record<string, string>> = {
   },
   ru: {
     title: tLabel('common.camera-ai.types.tsx.ai', "AI Аналитика камер"),
-    subtitle: "Анализ мониторинга камер на основе искусственного интеллекта",
+    subtitle: tLabel('common.camera-ai.types.tsx.untitled', "Анализ мониторинга камер на основе искусственного интеллекта"),
     safetyScore: "Балл безопасности",
     qualityScore: "Балл качества",
     productivityScore: "Балл продуктивности",

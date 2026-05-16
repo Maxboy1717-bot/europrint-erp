@@ -9,6 +9,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NodeDetail } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function useOrgNodeData() {
   const [, params] = useRoute("/org-structure/hierarchy/node/:id");
   const [, navigate] = useLocation();
@@ -24,7 +25,7 @@ export function useOrgNodeData() {
   const deleteMutation = useMutation({
     mutationFn: () => apiRequest("DELETE", `/api/org-structure/nodes/${nodeId}`),
     onSuccess: () => {
-      toast({ title: "O'chirildi" });
+      toast({ title: tLabel('hr.useOrgNodeData.ochirildi', "O'chirildi") });
       navigate("/org-structure/hierarchy");
       queryClient.invalidateQueries({ queryKey: ["/api/org-structure/hierarchy"] });
     },

@@ -143,7 +143,7 @@ export const KIRIM_CONFIG: Record<string, KirimConfig> = {
     step2Hint: "Sertifikat maydoniga seriya/inventar raqamini kiriting.",
   },
   "MRO-MAIN": {
-    icon: "🏠", title: "Xo'jalik Ombori — Materiallar Kirim",
+    icon: "🏠", title: tLabel('common.PosMovementKirim.xojalikOmboriMateriallarKirim', "Xo'jalik Ombori — Materiallar Kirim"),
     bannerBg: "rgba(16,185,129,0.08)", bannerBorder: "rgba(16,185,129,0.4)", bannerTextColor: "#064E3B",
     bannerText: "Xo'jalik va yordamchi materiallar qabul qilish.",
     supplierLabel: "Yetkazuvchi", supplierRequired: true,
@@ -163,7 +163,7 @@ export const KIRIM_CONFIG: Record<string, KirimConfig> = {
 };
 
 export const DEFAULT_KIRIM_CONFIG: KirimConfig = {
-  icon: "📥", title: "Tashqi Kirim (Qo'lda)",
+  icon: "📥", title: tLabel('common.PosMovementKirim.tashqiKirimQolda', "Tashqi Kirim (Qo'lda)"),
   bannerBg: "#FEF3C7", bannerBorder: "#F59E0B", bannerTextColor: "#78350F",
   bannerText: "EXTERNAL_IN — barcha maydonlar qo'lda to'ldiriladi.",
   supplierLabel: "Ta'minotchi nomi", supplierRequired: true,

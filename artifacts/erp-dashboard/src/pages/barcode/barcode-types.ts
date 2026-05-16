@@ -82,7 +82,7 @@ export interface PrintData {
 export const translations = {
   uz: {
     title: "Shtrix-kod Tizimi",
-    subtitle: "Partiyalar, shtrix-kod yaratish va skaner",
+    subtitle: tLabel('common.barcode-.partiyalarShtrixKodYaratishVa', "Partiyalar, shtrix-kod yaratish va skaner"),
     batches: "Partiyalar",
     generate: "Shtrix-kod yaratish",
     scanner: "Skaner",
@@ -176,7 +176,7 @@ export const translations = {
   },
   ru: {
     title: tLabel('common.barcode-.untitled', "Система Штрих-кодов"),
-    subtitle: "Партии, генерация штрих-кодов и сканер",
+    subtitle: tLabel('common.barcode-.untitled', "Партии, генерация штрих-кодов и сканер"),
     batches: "Партии",
     generate: "Генерация штрих-кода",
     scanner: "Сканер",

@@ -445,13 +445,31 @@
     "emailYuborish": "Email yuborish",
     "vazifaYaratish": "Vazifa yaratish",
     "xabarYuborish": "Xabar yuborish",
-    "yaratilganda": "Yaratilganda"
+    "yaratilganda": "Yaratilganda",
+    "tolandi": "Оплачено",
+    "qismanTolandi": "Частично оплачено",
+    "korildi": "Просмотрено",
+    "tolovKutilmoqda": "Ожидание оплаты",
+    "yoqotildi": "Проиграно",
+    "maydonniOzgartirish": "Maydonni o'zgartirish",
+    "bosqichniOzgartirish": "Bosqichni o'zgartirish",
+    "vaqtOtganda": "Vaqt o'tganda",
+    "maydonOzgarganda": "Maydon o'zgarganda",
+    "bosqichOzgarganda": "Bosqich o'zgarganda"
   },
   "RobotsView": {
     "telegramYuborish": "Telegram yuborish",
     "emailYuborish": "Email yuborish",
     "vazifaYaratish": "Vazifa yaratish",
     "xabarnomaYuborish": "Xabarnoma yuborish",
-    "yaratilganda": "Yaratilganda"
+    "yaratilganda": "Yaratilganda",
+    "bosqichniOzgartirish": "Bosqichni o'zgartirish",
+    "vaqtOtganda": "Vaqt o'tganda",
+    "maydonOzgarganda": "Maydon o'zgarganda",
+    "bosqichOzgarganda": "Bosqich o'zgarganda"
+  },
+  "EntityCard": {
+    "orta": "→ O'rta",
+    "qongiroq": "Qo'ng'iroq"
   }
 }

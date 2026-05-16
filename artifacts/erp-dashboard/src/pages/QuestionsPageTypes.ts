@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module QuestionsPageTypes
  * @description Interfaces, types, and constants for the QuestionsPage. No JSX.
@@ -42,7 +44,7 @@ export const TYPE_LABELS: Record<string, string> = {
 
 export const DIFFICULTY_MAP: Record<string, { label: string; cls: string }> = {
   easy: { label: "Oson", cls: "text-[var(--ep-green)]" },
-  medium: { label: "O'rtacha", cls: "text-[var(--ep-yellow)]" },
+  medium: { label: tLabel('common.QuestionsPage.ortacha', "O'rtacha"), cls: "text-[var(--ep-yellow)]" },
   hard: { label: "Qiyin", cls: "text-[var(--ep-red)]" },
 };
 

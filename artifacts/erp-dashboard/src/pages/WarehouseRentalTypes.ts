@@ -66,7 +66,7 @@ export const STATUS_FILTER_OPTIONS = [
   { value: "", label: "Barchasi" },
   { value: "active", label: "Aktiv" },
   { value: "closed", label: tLabel('warehouse.WarehouseRental.yopilgan', "Yopilgan") },
-  { value: "paid", label: "To'langan" },
+  { value: "paid", label: tLabel('warehouse.WarehouseRental.tolangan', "To'langan") },
 ] as const;
 
 // ─── Pure Helpers ─────────────────────────────────────────────────────────────

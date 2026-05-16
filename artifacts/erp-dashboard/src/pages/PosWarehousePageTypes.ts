@@ -85,8 +85,8 @@ export const STOCK_STATUS_COLORS: Record<
 export const MOVEMENT_TYPES = [
   { value: "EXTERNAL_IN",       label: "Tashqi kirim",       requiresFrom: false, requiresTo: true  },
   { value: "EXTERNAL_OUT",      label: "Tashqi chiqim",      requiresFrom: true,  requiresTo: false },
-  { value: "INTERNAL_ISSUE",    label: "Bo'limga berish",    requiresFrom: true,  requiresTo: true  },
+  { value: "INTERNAL_ISSUE",    label: tLabel('warehouse.PosWarehousePage.bolimgaBerish', "Bo'limga berish"),    requiresFrom: true,  requiresTo: true  },
   { value: "INTERNAL_RETURN",   label: tLabel('warehouse.PosWarehousePage.qaytarish', "Qaytarish"),          requiresFrom: false, requiresTo: true  },
-  { value: "INTERNAL_TRANSFER", label: "Ombor ko'chirish",   requiresFrom: true,  requiresTo: true  },
+  { value: "INTERNAL_TRANSFER", label: tLabel('warehouse.PosWarehousePage.omborKochirish', "Ombor ko'chirish"),   requiresFrom: true,  requiresTo: true  },
   { value: "DAMAGE",            label: tLabel('warehouse.PosWarehousePage.zararAkti', "Zarar akti"),          requiresFrom: true,  requiresTo: false },
 ];

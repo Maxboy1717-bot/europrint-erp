@@ -142,7 +142,7 @@ export function useCRMWorkspace() {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/followup-activities"] });
       setShowActivityDialog(false);
       setActivityForm({ type: "call", subject: "", note: "", dueDate: "", entityType: "lead", entityId: "" });
-      toast({ title: "Faoliyat qo'shildi" });
+      toast({ title: tLabel('common.useCRMWorkspace.faoliyatQoshildi', "Faoliyat qo'shildi") });
     },
   });
 
@@ -176,7 +176,7 @@ export function useCRMWorkspace() {
       if (data?.autoOrder) {
         toast({ title: tLabel('common.useCRMWorkspace.lidYutildiSdBuyurtmaYaratildi', "Lid yutildi — SD buyurtma yaratildi"), description: `Buyurtma raqami: ${data.autoOrder.documentNumber}.`, duration: 6000 });
       } else {
-        toast({ title: "Ko'chirildi" });
+        toast({ title: tLabel('common.useCRMWorkspace.kochirildi', "Ko'chirildi") });
       }
     },
   });
@@ -193,12 +193,12 @@ export function useCRMWorkspace() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [entityApiBase(activeEntity)] });
       setSelectedItems(new Set());
-      toast({ title: "O'chirildi" });
+      toast({ title: tLabel('common.useCRMWorkspace.ochirildi', "O'chirildi") });
     },
     onError: (err: Error) => {
       queryClient.invalidateQueries({ queryKey: [entityApiBase(activeEntity)] });
       setSelectedItems(new Set());
-      toast({ title: "Qisman o'chirildi", description: err.message, variant: "destructive" });
+      toast({ title: tLabel('common.useCRMWorkspace.qismanOchirildi', "Qisman o'chirildi"), description: err.message, variant: "destructive" });
     },
   });
 

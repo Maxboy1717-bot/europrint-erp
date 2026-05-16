@@ -12,6 +12,7 @@ import type {
   T,
 } from "./kanban-types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ── Priority badge colours (light theme) ─────────────────────────────────────
 export const PRIORITY_DARK: Record<
   string,
@@ -19,7 +20,7 @@ export const PRIORITY_DARK: Record<
 > = {
   urgent: { color: "#C05050", bg: "rgba(240,128,128,0.14)", border: "rgba(240,128,128,0.30)", label: "Kritik"   },
   high:   { color: "#A07020", bg: "rgba(245,158,11,0.14)",  border: "rgba(245,158,11,0.30)",  label: "Yuqori"   },
-  normal: { color: "#2563EB", bg: "rgba(59,130,246,0.10)",  border: "rgba(59,130,246,0.25)",  label: "O'rtacha" },
+  normal: { color: "#2563EB", bg: "rgba(59,130,246,0.10)",  border: "rgba(59,130,246,0.25)",  label: tLabel('kanban.TaskDetailSheet.ortacha', "O'rtacha") },
   low:    { color: "#2D8060", bg: "rgba(109,197,160,0.14)", border: "rgba(109,197,160,0.30)", label: "Past"     },
 };
 

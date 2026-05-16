@@ -21,7 +21,7 @@ export const VID_ZAKAZA = [
   { value: "lоток", label: tLabel('common.order-constants.l', "Lоток"), labelRu: "Лоток" },
   { value: "display", label: "Display", labelRu: "Дисплей" },
   { value: "gladkiy_karton", label: "Silliq karton", labelRu: "Гладкий картон" },
-  { value: "bumaga", label: "Qog'oz", labelRu: "Бумага" },
+  { value: "bumaga", label: tLabel('common.order-constants.qogoz', "Qog'oz"), labelRu: "Бумага" },
   { value: "other", label: "Boshqa", labelRu: "Другое" },
 ];
 

@@ -131,7 +131,7 @@ export type Translations = typeof UZ_TRANSLATIONS;
 
 export const UZ_TRANSLATIONS = {
   title:             "Issiqlik Xaritasi",
-  subtitle:          "Ishlab chiqarish maydonida faollik vizualizatsiyasi",
+  subtitle:          tLabel('common.camera-heatmap-.ishlabChiqarishMaydonidaFaollikVizualizatsiyasi', "Ishlab chiqarish maydonida faollik vizualizatsiyasi"),
   back:              "Orqaga",
   today:             "Bugun",
   week:              "Hafta",
@@ -177,7 +177,7 @@ export const UZ_TRANSLATIONS = {
 
 export const RU_TRANSLATIONS: Translations = {
   title:             tLabel('common.camera-heatmap-.untitled', "Тепловая карта"),
-  subtitle:          "Визуализация активности на производстве",
+  subtitle:          tLabel('common.camera-heatmap-.untitled', "Визуализация активности на производстве"),
   back:              "Назад",
   today:             "Сегодня",
   week:              "Неделя",

@@ -40,7 +40,7 @@ export const STATUS_CONFIG: Record<string, { label: string; icon: LucideIcon; cl
 
 export const FILE_CATEGORIES: Record<string, { label: string; icon: LucideIcon; color: string }> = {
   personal:  { label: tLabel('common.DocumentsTab.shaxsiyHujjatlar', "Shaxsiy hujjatlar"), icon: User,          color: "text-[var(--ep-blue)]" },
-  education: { label: "Ta'lim hujjatlari", icon: BookOpen,      color: "text-[var(--ep-purple)]" },
+  education: { label: tLabel('common.DocumentsTab.talimHujjatlari', "Ta'lim hujjatlari"), icon: BookOpen,      color: "text-[var(--ep-purple)]" },
   medical:   { label: tLabel('common.DocumentsTab.tibbiyHujjatlar', "Tibbiy hujjatlar"),  icon: HeartPulse,    color: "text-[var(--ep-red)]" },
   labor:     { label: "Mehnat hujjatlari", icon: Briefcase,     color: "text-[var(--ep-yellow)]" },
   contract:  { label: tLabel('common.DocumentsTab.shartnomalar', "Shartnomalar"),      icon: FileSignature, color: "text-[var(--ep-green)]" },
@@ -53,7 +53,7 @@ export const EMP_DOC_CATEGORIES: Record<string, { label: string; icon: LucideIco
   order:    { label: tLabel('common.DocumentsTab.buyruqlar', "Buyruqlar"),                  icon: FileText,       color: "text-[var(--ep-yellow)]" },
   payroll:  { label: "Oylik hisob-kitob",          icon: ShoppingBag,    color: "text-[var(--ep-green)]" },
   medical:  { label: tLabel('common.DocumentsTab.tibbiyHujjatlar', "Tibbiy hujjatlar"),           icon: Stethoscope,    color: "text-[var(--ep-red)]" },
-  training: { label: "O'qitish va sertifikatlar",  icon: GraduationCap,  color: "text-[var(--ep-purple)]" },
+  training: { label: tLabel('common.DocumentsTab.oqitishVaSertifikatlar', "O'qitish va sertifikatlar"),  icon: GraduationCap,  color: "text-[var(--ep-purple)]" },
   other:    { label: "Boshqa",                     icon: MoreHorizontal, color: "text-gray-500" },
 };
 

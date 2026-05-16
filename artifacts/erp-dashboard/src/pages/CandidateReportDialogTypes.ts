@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module CandidateReportDialogTypes
  * @description Interfaces, types, and constants for CandidateReportDialog.
@@ -70,7 +72,7 @@ export const TOOL_TRAIT_LABELS: Record<string, string> = {
 
 export const MOTIVATION_LABELS: Record<number, { label: string; icon: string; color: string }> = {
   4: { label: "Burch", icon: "🏛", color: "text-[var(--ep-blue)]" },
-  3: { label: "E'tiqod", icon: "💎", color: "text-[var(--ep-blue)]" },
+  3: { label: tLabel('common.CandidateReportDialog.etiqod', "E'tiqod"), icon: "💎", color: "text-[var(--ep-blue)]" },
   2: { label: "Manfaat", icon: "📈", color: "text-[var(--ep-yellow)]" },
   1: { label: "Pul", icon: "💰", color: "text-[var(--ep-primary)]" },
 };

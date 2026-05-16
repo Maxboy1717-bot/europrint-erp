@@ -8,7 +8,7 @@ import { tLabel } from '@/lib/i18n/tLabel';
 export const ALL_ROLES = [
   { value: "super_admin",     label: "Super Admin" },
   { value: "director",        label: "Direktor" },
-  { value: "department_head", label: "Bo'lim boshlig'i" },
+  { value: "department_head", label: tLabel('common.UsersPage.bolimBoshligi', "Bo'lim boshlig'i") },
   { value: "accountant",      label: "Buxgalter" },
   { value: "employee",        label: tLabel('common.UsersPage.xodim', "Xodim") },
 ] as const;

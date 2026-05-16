@@ -93,7 +93,7 @@ export const MODULE_LINKS: ModuleLink[] = [
   { title: "Gamifikatsiya",      desc: "Xodimlar reytingi, badge va ballar tizimi",               href: "/hr/gamification", color: "bg-yellow-500", icon: "🏆" },
   { title: tLabel('hr.HRDashboard.kunlikHisobot', "Kunlik Hisobot"),     desc: "Har kuni xodim hisoboti va HR nazorati",                  href: "/hr/daily-reports",color: "bg-green-500",  icon: "📋" },
   { title: tLabel('hr.HRDashboard.pipRejalar', "PIP Rejalar"),        desc: "Rivojlanish rejasi va progress kuzatuv",                  href: "/hr/pip",          color: "bg-orange-500", icon: "📈" },
-  { title: "eNPS So'rov",        desc: "Xodimlar sodiqlik indeksi va tahlil",                     href: "/hr/enps",         color: "bg-purple-500", icon: "📊" },
+  { title: tLabel('hr.HRDashboard.enpsSorov', "eNPS So'rov"),        desc: "Xodimlar sodiqlik indeksi va tahlil",                     href: "/hr/enps",         color: "bg-purple-500", icon: "📊" },
   { title: "Reception",          desc: "Mehmonlar kirish-chiqish nazorati",                       href: "/hr/reception",    color: "bg-teal-500",   icon: "🏢" },
   { title: tLabel('hr.HRDashboard.malakalarMatritsasi', "Malakalar Matritsasi"), desc: "Xodim va lavozim malaka xaritasi",                      href: "/skills-matrix",   color: "bg-indigo-500", icon: "🎯" },
   { title: "AI Intervyu",        desc: "Token orqali kandidat intervyusi",                        href: "/ai-hr/interviews",color: "bg-pink-500",   icon: "🤖" },

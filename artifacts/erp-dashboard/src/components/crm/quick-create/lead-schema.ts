@@ -5,10 +5,11 @@
 
 import { z } from "zod";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export const LEAD_SOURCES = [
   { value: "WEBFORM",  label: "🌐 Web forma" },
   { value: "TELEGRAM", label: "✈️ Telegram" },
-  { value: "CALL",     label: "📞 Qo'ng'iroq" },
+  { value: "CALL",     label: tLabel('common.lead-schema.qongiroq', "📞 Qo'ng'iroq") },
   { value: "EMAIL",    label: "📧 Email" },
   { value: "WEB",      label: "💻 Sayt" },
   { value: "INBOUND",  label: "📥 Kiruvchi" },
@@ -19,7 +20,7 @@ export const LEAD_SOURCES = [
 
 export const LEAD_PRIORITIES = [
   { value: "low",    label: "🟢 Past" },
-  { value: "normal", label: "🔵 O'rta" },
+  { value: "normal", label: tLabel('common.lead-schema.orta', "🔵 O'rta") },
   { value: "high",   label: "🟠 Yuqori" },
   { value: "urgent", label: "🔴 Shoshilinch" },
 ];

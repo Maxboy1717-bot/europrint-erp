@@ -28,7 +28,7 @@ export const STATUS_CFG: Record<
   draft: { label: "Qoralama", headerBg: "#8B7355", headerText: "#FFF", tab: "new" },
   karantin: { label: "Karantin", headerBg: "#F59E0B", headerText: "#FFF", tab: "new" },
   qc_pending: { label: "QC Navbat", headerBg: "#7C3AED", headerText: "#FFF", tab: "process" },
-  qc_approved: { label: "QC O'tdi", headerBg: "#2563EB", headerText: "#FFF", tab: "process" },
+  qc_approved: { label: tLabel('common.PosMovements.qcOtdi', "QC O'tdi"), headerBg: "#2563EB", headerText: "#FFF", tab: "process" },
   qc_rework: { label: "QC Qayta", headerBg: "#DC2626", headerText: "#FFF", tab: "process" },
   qc_rejected: { label: "QC Rad", headerBg: "#6B7280", headerText: "#FFF", tab: "done" },
   pending: { label: "Tasdiq Kutish", headerBg: "#D97706", headerText: "#FFF", tab: "process" },
@@ -78,7 +78,7 @@ export function getMovementAction(status: string): { label: string; newStatus: s
     case "karantin":
       return { label: tLabel('common.PosMovements.qcYuborish', "QC Yuborish"), newStatus: "qc_pending", bg: "#7C3AED" };
     case "qc_pending":
-      return { label: "QC O'tkazish", newStatus: "qc_approved", bg: "#2563EB" };
+      return { label: tLabel('common.PosMovements.qcOtkazish', "QC O'tkazish"), newStatus: "qc_approved", bg: "#2563EB" };
     case "qc_approved":
       return { label: tLabel('common.PosMovements.tasdiqlash', "Tasdiqlash"), newStatus: "pending", bg: "#D97706" };
     case "pending":

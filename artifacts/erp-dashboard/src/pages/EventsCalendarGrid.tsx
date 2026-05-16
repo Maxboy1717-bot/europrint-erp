@@ -53,7 +53,7 @@ function StatsCards({
       icon: <MapPin className="h-4 w-4 text-muted-foreground" />,
     },
     {
-      label: "Yig'ilishlar",
+      label: tLabel('common.EventsCalendarGrid.tsx.yigilishlar', "Yig'ilishlar"),
       value: events.filter((e) => e.eventType === "meeting").length,
       icon: <MapPin className="h-4 w-4 text-muted-foreground" />,
     },

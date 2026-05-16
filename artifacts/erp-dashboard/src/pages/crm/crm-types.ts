@@ -210,17 +210,17 @@ export interface Robot {
 
 // Robot trigger and action types with labels
 export const TRIGGER_TYPES = [
-  { value: "STAGE_CHANGED", label: "Bosqich o'zgarganda", icon: RefreshCw },
+  { value: "STAGE_CHANGED", label: tLabel('crm.crm-.bosqichOzgarganda', "Bosqich o'zgarganda"), icon: RefreshCw },
   { value: "CREATED", label: tLabel('crm.crm-.yaratilganda', "Yaratilganda"), icon: Plus },
-  { value: "FIELD_CHANGED", label: "Maydon o'zgarganda", icon: Edit },
-  { value: "TIME_ELAPSED", label: "Vaqt o'tganda", icon: Clock },
+  { value: "FIELD_CHANGED", label: tLabel('crm.crm-.maydonOzgarganda', "Maydon o'zgarganda"), icon: Edit },
+  { value: "TIME_ELAPSED", label: tLabel('crm.crm-.vaqtOtganda', "Vaqt o'tganda"), icon: Clock },
 ];
 
 export const ACTION_TYPES = [
   { value: "SEND_NOTIFICATION", label: tLabel('crm.crm-.xabarYuborish', "Xabar yuborish"), icon: Bell },
   { value: "CREATE_TASK", label: tLabel('crm.crm-.vazifaYaratish', "Vazifa yaratish"), icon: ListChecks },
-  { value: "CHANGE_STAGE", label: "Bosqichni o'zgartirish", icon: RefreshCw },
-  { value: "CHANGE_FIELD", label: "Maydonni o'zgartirish", icon: Edit },
+  { value: "CHANGE_STAGE", label: tLabel('crm.crm-.bosqichniOzgartirish', "Bosqichni o'zgartirish"), icon: RefreshCw },
+  { value: "CHANGE_FIELD", label: tLabel('crm.crm-.maydonniOzgartirish', "Maydonni o'zgartirish"), icon: Edit },
   { value: "SEND_EMAIL", label: tLabel('crm.crm-.emailYuborish', "Email yuborish"), icon: Mail },
   { value: "SEND_TELEGRAM", label: "Telegram xabar", icon: Send },
   { value: "AI_ANALYZE", label: "AI tahlil qilish", icon: Sparkles },
@@ -249,13 +249,13 @@ export const LEAD_STAGES: Stage[] = [
   { id: 4, stageId: "FINAL",       name: "Yakunlash",         sort: 400, color: "#9C27B0" },
   { id: 5, stageId: "CONVERTED",   name: "Konvertatsiya",     sort: 500, color: "#22C55E" },
   { id: 6, stageId: "WON",         name: "Yutildi",           sort: 600, color: "#16A34A" },
-  { id: 7, stageId: "LOST",        name: "Yo'qotildi",        sort: 700, color: "#EF4444" },
+  { id: 7, stageId: "LOST",        name: tLabel('crm.crm-.yoqotildi', "Yo'qotildi"),        sort: 700, color: "#EF4444" },
 ];
 
 export const DEAL_STAGES: Stage[] = [
   { id: 1, stageId: "C0:NEW", name: tLabel('crm.crm-.yangi', "Yangi"), sort: 100, color: "#4CAF50" },
   { id: 2, stageId: "C0:IN_PROGRESS", name: "Ishda", sort: 200, color: "#2196F3" },
-  { id: 3, stageId: "C0:PAYMENT_PENDING", name: "To'lov kutilmoqda", sort: 300, color: "#FF9800" },
+  { id: 3, stageId: "C0:PAYMENT_PENDING", name: tLabel('crm.crm-.tolovKutilmoqda', "To'lov kutilmoqda"), sort: 300, color: "#FF9800" },
   { id: 4, stageId: "C0:ORDER", name: tLabel('crm.crm-.buyurtma', "Buyurtma"), sort: 400, color: "#9C27B0" },
   { id: 5, stageId: "C0:DELIVERY_PENDING", name: tLabel('crm.crm-.yetkazishKutilmoqda', "Yetkazish kutilmoqda"), sort: 500, color: "#00BCD4" },
   { id: 6, stageId: "C0:DELIVERY", name: tLabel('crm.crm-.yetkazish', "Yetkazish"), sort: 600, color: "#8BC34A" },
@@ -264,7 +264,7 @@ export const DEAL_STAGES: Stage[] = [
 export const PROPOSAL_STAGES: Stage[] = [
   { id: 1, stageId: "NEW", name: tLabel('crm.crm-.yangi', "Yangi"), sort: 100, color: "#6B7280" },
   { id: 2, stageId: "SENT", name: "Yuborildi", sort: 200, color: "#3B82F6" },
-  { id: 3, stageId: "VIEWED", name: "Ko'rildi", sort: 300, color: "#8B5CF6" },
+  { id: 3, stageId: "VIEWED", name: tLabel('crm.crm-.korildi', "Ko'rildi"), sort: 300, color: "#8B5CF6" },
   { id: 4, stageId: "APPROVED", name: "Qabul qilindi", sort: 400, color: "#22C55E" },
   { id: 5, stageId: "DECLINED", name: "Rad etildi", sort: 500, color: "#EF4444" },
 ];
@@ -272,8 +272,8 @@ export const PROPOSAL_STAGES: Stage[] = [
 export const INVOICE_STAGES: Stage[] = [
   { id: 1, stageId: "NEW", name: tLabel('crm.crm-.yangi', "Yangi"), sort: 100, color: "#6B7280" },
   { id: 2, stageId: "SENT", name: "Yuborildi", sort: 200, color: "#3B82F6" },
-  { id: 3, stageId: "PARTIAL", name: "Qisman to'landi", sort: 300, color: "#F59E0B" },
-  { id: 4, stageId: "PAID", name: "To'landi", sort: 400, color: "#22C55E" },
+  { id: 3, stageId: "PARTIAL", name: tLabel('crm.crm-.qismanTolandi', "Qisman to'landi"), sort: 300, color: "#F59E0B" },
+  { id: 4, stageId: "PAID", name: tLabel('crm.crm-.tolandi', "To'landi"), sort: 400, color: "#22C55E" },
   { id: 5, stageId: "CANCELLED", name: tLabel('crm.crm-.bekorQilindi', "Bekor qilindi"), sort: 500, color: "#6B7280" },
 ];
 

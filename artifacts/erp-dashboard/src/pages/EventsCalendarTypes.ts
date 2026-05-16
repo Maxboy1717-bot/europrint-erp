@@ -74,7 +74,7 @@ export type EventFormValues = z.infer<typeof eventFormSchema>;
 export function getEventTypeBadge(type: string): { label: string; variant: BadgeVariant } {
   const types: Record<string, { label: string; variant: BadgeVariant }> = {
     training:   { label: tLabel('common.EventsCalendar.trening', "Trening"),       variant: "default"   },
-    meeting:    { label: "Yig'ilish",     variant: "secondary" },
+    meeting:    { label: tLabel('common.EventsCalendar.yigilish', "Yig'ilish"),     variant: "secondary" },
     webinar:    { label: "Vebinar",       variant: "outline"   },
     conference: { label: "Konferensiya",  variant: "default"   },
     other:      { label: "Boshqa",        variant: "secondary" },

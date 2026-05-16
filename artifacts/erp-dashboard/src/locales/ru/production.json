@@ -462,10 +462,21 @@
   },
   "CandidateChecklist": {
     "tavsiyalarTekshirildiReferenceCheck": "Tavsiyalar tekshirildi (Reference check)",
-    "fonTekshiruviIjtimoiyTarmoqlarMat": "Fon tekshiruvi (ijtimoiy tarmoqlar, Mat. №54)"
+    "fonTekshiruviIjtimoiyTarmoqlarMat": "Fon tekshiruvi (ijtimoiy tarmoqlar, Mat. №54)",
+    "30KunBaholashSuhbatiOtkazildi": "30-kun baholash suhbati o'tkazildi",
+    "taklifYuborildiOgzakiTaklifBerildi": "Taklif yuborildi / og'zaki taklif berildi",
+    "material46MahsuldorlikShakliToldirildi": "Material №46 — Mahsuldorlik shakli to'ldirildi",
+    "aiSuhbatErpTizimidaOtkazildi": "AI Suhbat (ERP tizimida) o'tkazildi",
+    "hrCapitalToolTestOtkazildi": "HR Capital TOOL TEST o'tkazildi (A-J)",
+    "asosiySuhbatOtkazildiMaterial11": "Asosiy suhbat o'tkazildi (Material №11)",
+    "mahsuldorlikAnketaToldirildi": "Mahsuldorlik anketa to'ldirildi",
+    "telefonSuhbatiOtkazildiMaterial53": "Telefon suhbati o'tkazildi (Material №53)",
+    "cvSkriningOtkazildiMaterial52": "CV skrining o'tkazildi (Material №52)",
+    "cvQabulQilindiVaRoyxatga": "CV qabul qilindi va ro'yxatga kiritildi"
   },
   "ProductionOrder360": {
-    "jarayonda": "Jarayonda"
+    "jarayonda": "Jarayonda",
+    "qcToxtatdi": "QC To'xtatdi"
   },
   "TechPPExtended": {
     "yetkazishKalk": "Yetkazish Kalk.",
@@ -474,9 +485,13 @@
     "parallelBuyurtmalar": "Parallel Buyurtmalar",
     "mijozTalablari": "Mijoz Talablari",
     "xarajatOptimizatsiya": "Xarajat Optimizatsiya",
-    "stanoqTanlash": "Stanoq Tanlash"
+    "stanoqTanlash": "Stanoq Tanlash",
+    "kpiOgish": "KPI Og'ish",
+    "ozgarishlarTarixi": "O'zgarishlar Tarixi"
   },
   "helpers": {
-    "jarayonda": "Jarayonda"
+    "jarayonda": "Jarayonda",
+    "rejalashtirilganTexnikKorik": "Rejalashtirilgan texnik ko'rik",
+    "qcToxtatdi": "QC To'xtatdi"
   }
 }

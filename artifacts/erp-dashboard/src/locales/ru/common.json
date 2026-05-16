@@ -8531,7 +8531,9 @@
   },
   "CoordinationPageHelpers": {
     "tsx": {
-      "bajarilmoqda": "Выполняется"
+      "bajarilmoqda": "Выполняется",
+      "muddatiOtdi": "Muddati o'tdi",
+      "oqildi": "O'qildi"
     }
   },
   "CRMSettings": {
@@ -8542,7 +8544,8 @@
     "kontaktlar": "Контакты",
     "bitimlar": "Сделки",
     "lidlar": "Лиды",
-    "sana": "Sana"
+    "sana": "Sana",
+    "kopTanlov": "Ko'p tanlov"
   },
   "DesignExtended": {
     "dizaynAssetVaFayllarKutubxonasi": "Dizayn asset va fayllar kutubxonasi",
@@ -8551,16 +8554,23 @@
     "asboblar": "Asboblar",
     "qoliplar": "Qoliplar",
     "taqqoslash": "Taqqoslash",
-    "korporativBrendQoidalariVaRanglar": "Korporativ brend qoidalari va ranglar"
+    "korporativBrendQoidalariVaRanglar": "Korporativ brend qoidalari va ranglar",
+    "qoshimcha": "Qo'shimcha",
+    "tayyorQoliplarVaStandartOlchamlar": "Tayyor qoliplar va standart o'lchamlar"
   },
   "AttendanceTab": {
     "bekorQilingan": "Отменено",
     "tasdiqlangan": "Подтверждено",
-    "kutilmoqda": "Ожидает"
+    "kutilmoqda": "Ожидает",
+    "tatil": "Ta'til"
   },
   "CorporateInventoryTab": {
     "yangi": "Новый",
-    "jihozlar": "Jihozlar"
+    "jihozlar": "Jihozlar",
+    "tsx": {
+      "inventarQoshildi": "Inventar qo'shildi"
+    },
+    "ortacha": "O'rtacha"
   },
   "DocumentsTab": {
     "tibbiyHujjatlar": "Tibbiy hujjatlar",
@@ -8568,19 +8578,25 @@
     "shaxsiyHujjatlar": "Shaxsiy hujjatlar",
     "shartnomalar": "Договоры",
     "bekorQilindi": "Отменено",
-    "kutilmoqda": "Ожидает"
+    "kutilmoqda": "Ожидает",
+    "oqitishVaSertifikatlar": "O'qitish va sertifikatlar",
+    "talimHujjatlari": "Ta'lim hujjatlari"
   },
   "FinanceTab": {
     "tasdiqlangan": "Подтверждено",
-    "kutilmoqda": "Ожидает"
+    "kutilmoqda": "Ожидает",
+    "tolangan": "To'langan"
   },
   "OffboardingTab": {
     "kutilmoqda": "Ожидает",
     "bekorQilindi": "Отменено",
-    "faol": "Активный"
+    "faol": "Активный",
+    "talabYoq": "Talab yo'q",
+    "yoqolgan": "Yo'qolgan"
   },
   "RemainingTabs": {
-    "ochiq": "Открыто"
+    "ochiq": "Открыто",
+    "orta": "O'rta"
   },
   "EmployeeDailyKPIPanel": {
     "vazifalar": "Vazifalar"
@@ -8593,21 +8609,27 @@
     "tsx": {
       "treninglar": "Treninglar",
       "kelgusiTadbirlar": "Kelgusi tadbirlar",
-      "jamiTadbirlar": "Jami tadbirlar"
+      "jamiTadbirlar": "Jami tadbirlar",
+      "yigilishlar": "Yig'ilishlar"
     }
   },
   "EventsCalendar": {
-    "trening": "Trening"
+    "trening": "Trening",
+    "yigilish": "Yig'ilish"
   },
   "FinanceExtended": {
-    "xarajatMarkazlari": "Xarajat Markazlari"
+    "xarajatMarkazlari": "Xarajat Markazlari",
+    "tolovlar": "To'lovlar"
   },
   "GoalsKPI": {
     "bekorQilindi": "Отменено",
     "faol": "Активный",
     "xodim": "Xodim",
     "lavozim": "Lavozim",
-    "tugatishKurslarniYakunlash": "Tugatish (kurslarni yakunlash)"
+    "tugatishKurslarniYakunlash": "Tugatish (kurslarni yakunlash)",
+    "orta": "O'rta",
+    "bolim": "Bo'lim",
+    "oquvTalimOlish": "O'quv (ta'lim olish)"
   },
   "InspectionPage": {
     "sanitarXonalar": "Sanitar xonalar"
@@ -8616,7 +8638,8 @@
     "ogohlantirishlar": "Ogohlantirishlar"
   },
   "KaizenPage": {
-    "amalgaOshirilmoqda": "Amalga oshirilmoqda"
+    "amalgaOshirilmoqda": "Amalga oshirilmoqda",
+    "koribChiqilmoqda": "Ko'rib chiqilmoqda"
   },
   "KnowledgeBase": {
     "tartibQoidalar": "Tartib-qoidalar",
@@ -8639,26 +8662,52 @@
     "dIshonch": "D — Ishonch (Уверенность)",
     "cNazorat": "C — Nazorat (Контроль)",
     "bStrategiya": "B — Strategiya (Стратегия)",
-    "aDiqqat": "A — Diqqat (Внимание)"
+    "aDiqqat": "A — Diqqat (Внимание)",
+    "oquvByudjet": "O'quv Byudjet",
+    "orta": "O'rta",
+    "boshlangich": "Boshlang'ich",
+    "uchrashuvimizHaqidaEslatibOtmoqchiman": "Uchrashuvimiz haqida eslatib o'tmoqchiman...",
+    "sizgaMaxsusTaklifimizBor": "Sizga maxsus taklifimiz bor...",
+    "oldingiSuhbatimizBoyichaXabarBerishni": "Oldingi suhbatimiz bo'yicha xabar berishni istedim...",
+    "qongiroq": "Qo'ng'iroq",
+    "yoqotildi": "Проиграно",
+    "kommunikatsiyaAloqaOrnatish": "Kommunikatsiya, aloqa o'rnatish",
+    "fQatiylik": "F — Qat'iylik (Решительность)",
+    "ozigaVaQarorlarigaIshonch": "O'ziga va qarorlariga ishonch",
+    "emotsiyalarniBoshqarishSakinBolish": "Emotsiyalarni boshqarish, sakin bo'lish",
+    "uzoqniKorishRejalashtirish": "Uzoqni ko'rish, rejalashtirish",
+    "tafsilotlargaEtiborZiyraklik": "Tafsilotlarga e'tibor, ziyraklik",
+    "galayonliOlomon": "G'alayonli olomon",
+    "suyuqlikTokilishi": "Suyuqlik to'kilishi",
+    "materialNotogriJoyda": "Material noto'g'ri joyda",
+    "yonginTutunAniqlash": "Yong'in / Tutun aniqlash",
+    "ppeYoqligiShlemKozoynakQolqop": "PPE yo'qligi (shlem, ko'zoynak, qo'lqop)"
   },
   "MarketingExtended": {
     "raqobatchilar": "Raqobatchilar"
   },
   "MESExtended": {
-    "ishlabChiqarishVazifalari": "Ishlab Chiqarish Vazifalari"
+    "ishlabChiqarishVazifalari": "Ishlab Chiqarish Vazifalari",
+    "smenaOtkazish": "Smena O'tkazish",
+    "toxtashSabablar": "To'xtash Sabablar"
   },
   "MESHomeDashboard": {
     "kutilmoqda": "Ожидает",
-    "ishlamoqda": "Ishlamoqda"
+    "ishlamoqda": "Ishlamoqda",
+    "toxtadi": "To'xtadi",
+    "toxtatildi": "To'xtatildi"
   },
   "MESWorkCenters": {
     "kutilmoqda": "Ожидает",
-    "ishlamoqda": "Ishlamoqda"
+    "ishlamoqda": "Ishlamoqda",
+    "toxtadi": "To'xtadi",
+    "toxtatildi": "To'xtatildi"
   },
   "MMExtended": {
     "haydovchilar": "Haydovchilar",
     "marshrutRejasi": "Marshrut Rejasi",
-    "kreditorQarzlar": "Kreditor Qarzlar"
+    "kreditorQarzlar": "Kreditor Qarzlar",
+    "yoqilgiNazorat": "Yoqilg'i Nazorat"
   },
   "MROExtended": {
     "xarajatNazorati": "Xarajat Nazorati",
@@ -8685,16 +8734,24 @@
     "mashinOperatori": "Mashinа operatori"
   },
   "ProductivityInterviewDialog": {
-    "yakuniyXulosa": "Yakuniy xulosa"
+    "yakuniyXulosa": "Yakuniy xulosa",
+    "asosanModdiyManfaatUchunIshlaydi": "Asosan moddiy manfaat uchun ishlaydi. Ish haqining muhimligi birinchi o'rinda.",
+    "natijaVaMukofotUchunIshlaydi": "Natija va mukofot uchun ishlaydi. O'sish imkoniyatlari, karyera va professional rivojlanish.",
+    "ishigaIshonadiMissiyagaMosHarakat": "Ishiga ishonadi, missiyaga mos harakat qiladi. Ichki qadriyatlar va g'oyaviy motivatsiya.",
+    "etiqod": "E'tiqod",
+    "masuliyatVaMajburiyatAsosidaIshlaydi": "Mas'uliyat va majburiyat asosida ishlaydi. Jamiyat va kompaniya oldidagi burch tuyg'usi."
   },
   "QCDashboardHelpers": {
     "tsx": {
-      "faol": "Активный"
+      "faol": "Активный",
+      "etiborKerak": "E'tibor kerak"
     }
   },
   "QCDashboard": {
     "kutilmoqda": "Ожидает",
-    "muvaffaqiyatsiz": "Muvaffaqiyatsiz"
+    "muvaffaqiyatsiz": "Muvaffaqiyatsiz",
+    "shartliOtdi": "Shartli o'tdi",
+    "otdi": "O'tdi"
   },
   "QCFinalInspection": {
     "bekorQilingan": "Отменено",
@@ -8707,11 +8764,14 @@
   "QCModule": {
     "reklamatsiyalar": "Reklamatsiyalar",
     "normalar": "Normalar",
-    "fizikXususiyatlar": "Fizik xususiyatlar"
+    "fizikXususiyatlar": "Fizik xususiyatlar",
+    "kimyoviyKorsatkichlar": "Kimyoviy ko'rsatkichlar"
   },
   "QuestionnaireTemplates": {
     "mijozlarBilanIshlashMahsulotBilimi": "Mijozlar bilan ishlash, mahsulot bilimi, sotish tajribasi",
-    "smmContentYaratishKampaniyaBoshqarish": "SMM, content yaratish, kampaniya boshqarish"
+    "smmContentYaratishKampaniyaBoshqarish": "SMM, content yaratish, kampaniya boshqarish",
+    "texnikKonikmalarTajribaLoyihalar": "Texnik ko'nikmalar, tajriba, loyihalar",
+    "mehmonlarniQabulQilishTelefonQongiroqlari": "Mehmonlarni qabul qilish, telefon qo'ng'iroqlari, vaziyatlarni hal qilish"
   },
   "RaciCrisisPage": {
     "bekor": "Отмена",
@@ -8726,6 +8786,7 @@
     "kutilmoqda": "Ожидает"
   },
   "ReportsHub": {
+    "155": "Управление 155+ автоматизированными отчётами",
     "nomi": "Nomi",
     "hisobotlarMarkazi": "Hisobotlar markazi",
     "untitled": "Название"
@@ -8733,18 +8794,27 @@
   "SaaSExtended": {
     "xatolarJurnali": "Xatolar Jurnali",
     "xavfsizlik": "Xavfsizlik",
-    "crmSavdo": "CRM + Savdo"
+    "crmSavdo": "CRM + Savdo",
+    "tsx": {
+      "yangiTenantMuvaffaqiyatliQoshildi": "Yangi tenant muvaffaqiyatli qo'shildi"
+    },
+    "mroXojalik": "MRO Xo'jalik",
+    "lmsTalim": "LMS Ta'lim",
+    "taminotMm": "Ta'minot (MM)"
   },
   "SDCustomers": {
     "nofaol": "Неактивный",
-    "yangi": "Новый"
+    "yangi": "Новый",
+    "qoraRoyxat": "Qora ro'yxat"
   },
   "SDExtended": {
     "avansNazorat": "Avans Nazorat",
     "menejerPaneli": "Menejer Paneli"
   },
   "SDSalesQuotes": {
-    "bossiz": "Bossiz"
+    "bossiz": "Bossiz",
+    "4RangToliqCmyk": "4 rang (To'liq CMYK)",
+    "cFlute4mmOrta": "C-flute 4mm (O'rta)"
   },
   "SecurityDashboardCards": {
     "tsx": {
@@ -8761,10 +8831,12 @@
   "StrategicTasksPanel": {
     "bekorQilingan": "Отменено",
     "kutilmoqda": "Ожидает",
-    "jarayonda": "Jarayonda"
+    "jarayonda": "Jarayonda",
+    "orta": "O'rta"
   },
   "UsersPage": {
-    "xodim": "Xodim"
+    "xodim": "Xodim",
+    "bolimBoshligi": "Bo'lim boshlig'i"
   },
   "WasteTrackingDialogs": {
     "tsx": {
@@ -8785,16 +8857,22 @@
     }
   },
   "useCRMWorkspace": {
-    "lidYutildiSdBuyurtmaYaratildi": "Lid yutildi — SD buyurtma yaratildi"
+    "lidYutildiSdBuyurtmaYaratildi": "Lid yutildi — SD buyurtma yaratildi",
+    "qismanOchirildi": "Qisman o'chirildi",
+    "ochirildi": "O'chirildi",
+    "kochirildi": "Ko'chirildi",
+    "faoliyatQoshildi": "Faoliyat qo'shildi"
   },
   "DataTable": {
-    "ishdanKetgan": "Ishdan ketgan"
+    "ishdanKetgan": "Ishdan ketgan",
+    "tatilda": "Ta'tilda"
   },
   "order-constants": {
     "00Rangsiz": "0+0 (Rangsiz)",
     "yangi": "Новый",
     "l": "Lоток",
-    "quti": "Quti (Коробка)"
+    "quti": "Quti (Коробка)",
+    "qogoz": "Qog'oz"
   },
   "translations": {
     "yangiBuyurtmaYaratish": "Yangi Buyurtma Yaratish",
@@ -8804,7 +8882,9 @@
     "tsx": {
       "tavsiyalarTekshiruvi": "Tavsiyalar Tekshiruvi",
       "yangiAriza": "Yangi ariza",
-      "untitled": "Ждёт"
+      "untitled": "Ждёт",
+      "elonBerildi": "E'lon berildi",
+      "suhbatOtdi": "Suhbat O'tdi"
     }
   },
   "GLPostingStatus": {
@@ -8814,26 +8894,37 @@
   },
   "PosMovementChiqim": {
     "zarar": "Zarar",
-    "ichkiQaytarish": "Ichki qaytarish"
+    "ichkiQaytarish": "Ichki qaytarish",
+    "ichkiKochirish": "Ichki ko'chirish"
   },
   "PosMovementKirim": {
     "mroOmboriTexnikMateriallarKirim": "MRO Ombori — Texnik Materiallar Kirim",
     "yarimTayyorLiniyadanQabul": "Yarim Tayyor — Liniyadan Qabul",
-    "tayyorMahsulotIshlabChiqarishdanQabul": "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul"
+    "tayyorMahsulotIshlabChiqarishdanQabul": "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul",
+    "tashqiKirimQolda": "Tashqi Kirim (Qo'lda)",
+    "xojalikOmboriMateriallarKirim": "Xo'jalik Ombori — Materiallar Kirim"
   },
   "PosMovementNew": {
     "tsx": {
       "inventarizatsiyaAsosidaMiqdorTuzatmasi": "Inventarizatsiya asosida miqdor tuzatmasi.",
       "zararNosoz": "Zarar / Nosoz",
       "ichkiQaytarish": "Ichki Qaytarish",
-      "ombordanTashqarigaChiqarilganMateriallarBarcode": "Ombordan tashqariga chiqarilgan materiallar. Barcode skaner orqali amalga oshiriladi."
+      "ombordanTashqarigaChiqarilganMateriallarBarcode": "Ombordan tashqariga chiqarilgan materiallar. Barcode skaner orqali amalga oshiriladi.",
+      "zararKorganYokiNosozMateriallar": "Zarar ko'rgan yoki nosoz materiallar ro'yxatdan o'tkazish.",
+      "omborlarOrasidaMaterialKochirish": "Omborlar orasida material ko'chirish.",
+      "ichkiKochirish": "Ichki Ko'chirish",
+      "bolimYokiXodimdanMaterialQaytarish": "Bo'lim yoki xodimdan material qaytarish.",
+      "bolimgaYokiXodimgaMaterialBerish": "Bo'limga yoki xodimga material berish. Barcode skaner orqali.",
+      "taminotchidanYetibKelganMateriallarBarcha": "Ta'minotchidan yetib kelgan materiallar. Barcha maydonlar qo'lda to'ldiriladi — barcode skaneri kerak emas."
     }
   },
   "PosMovements": {
     "tasdiqlash": "Подтвердить",
     "qcYuborish": "QC Yuborish",
     "yuborish": "Отправить",
-    "bekor": "Отмена"
+    "bekor": "Отмена",
+    "qcOtkazish": "QC O'tkazish",
+    "qcOtdi": "QC O'tdi"
   },
   "PosReports": {
     "tsx": {
@@ -8845,21 +8936,28 @@
     "europrintAi": "EuroPrint AI Интервью"
   },
   "barcode-": {
-    "untitled": "Система Штрих-кодов"
+    "untitled": "Система Штрих-кодов",
+    "partiyalarShtrixKodYaratishVa": "Partiyalar, shtrix-kod yaratish va skaner"
   },
   "camera-heatmap-": {
-    "untitled": "Тепловая карта"
+    "untitled": "Тепловая карта",
+    "ishlabChiqarishMaydonidaFaollikVizualizatsiyasi": "Ishlab chiqarish maydonida faollik vizualizatsiyasi"
   },
   "FaceRecognitionMonitoring": {
     "untitled": "Мониторинг распознавания лиц"
   },
   "FaceRegistration": {
-    "untitled": "Регистрация Лица"
+    "untitled": "Регистрация Лица",
+    "ai": "Добавление лиц сотрудников в базу AI",
+    "xodimlarYuziniAiBazasigaQoshish": "Xodimlar yuzini AI bazasiga qo'shish",
+    "yuzRoyxatdanOtkazish": "Yuz Ro'yxatdan O'tkazish"
   },
   "camera-ai": {
     "types": {
       "tsx": {
-        "ai": "AI Аналитика камер"
+        "ai": "AI Аналитика камер",
+        "untitled": "Анализ мониторинга камер на основе искусственного интеллекта",
+        "suniyIntellektAsosidaKameraMonitoringi": "Sun'iy intellekt asosida kamera monitoringi tahlili"
       }
     }
   },
@@ -8875,7 +8973,60 @@
   },
   "LanguageSwitcher": {
     "tsx": {
-      "untitled": "Русский"
+      "untitled": "Русский",
+      "ozbekcha": "O'zbekcha"
+    }
+  },
+  "CandidateReportDialog": {
+    "etiqod": "E'tiqod"
+  },
+  "MMVendors": {
+    "oldindanTolov": "Oldindan to'lov"
+  },
+  "POSDashboard": {
+    "otkazma": "O'tkazma"
+  },
+  "QuestionnaireTemplatesHooks": {
+    "savolOchirildi": "Savol o'chirildi",
+    "savolQoshildi": "Savol qo'shildi",
+    "shablonYaratildiVaSavollarQoshildi": "Shablon yaratildi va savollar qo'shildi!",
+    "shablonOchirildi": "Shablon o'chirildi"
+  },
+  "QuestionsPage": {
+    "ortacha": "O'rtacha"
+  },
+  "SDQuotationsHooks": {
+    "taklifOchirildi": "Taklif o'chirildi"
+  },
+  "usePosCart": {
+    "mahsulotOmbordaYoq": "Mahsulot omborda yo'q",
+    "ombordaYetarliMahsulotYoq": "Omborda yetarli mahsulot yo'q"
+  },
+  "deal-schema": {
+    "uzsSom": "UZS (so'm)"
+  },
+  "lead-schema": {
+    "orta": "🔵 O'rta",
+    "qongiroq": "📞 Qo'ng'iroq"
+  },
+  "helpers": {
+    "tsx": {
+      "osish": "O'SISH"
+    }
+  },
+  "BoardDialogs": {
+    "tsx": {
+      "orta": "🟢 O'rta"
+    }
+  },
+  "RequisitionForm": {
+    "tsx": {
+      "orta": "O'rta"
+    }
+  },
+  "PosLogin": {
+    "tsx": {
+      "kirishXatosiQaytadanUrinibKoring": "Kirish xatosi. Qaytadan urinib ko'ring."
     }
   }
 }

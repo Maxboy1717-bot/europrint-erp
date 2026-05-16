@@ -92,7 +92,7 @@ export type Lang = "uz" | "ru";
 export const translations = {
   uz: {
     title: "Ombor Katalogi",
-    subtitle: "Omborlar, zonalar, binlar va ko'chirishlarni boshqarish",
+    subtitle: tLabel('warehouse.warehouse-.omborlarZonalarBinlarVaKochirishlarni', "Omborlar, zonalar, binlar va ko'chirishlarni boshqarish"),
     warehouses: "Omborlar",
     zones: "Zonalar",
     bins: "Binlar",
@@ -194,7 +194,7 @@ export const translations = {
   },
   ru: {
     title: tLabel('warehouse.warehouse-.untitled', "Каталог Складов"),
-    subtitle: "Управление складами, зонами, ячейками и перемещениями",
+    subtitle: tLabel('warehouse.warehouse-.untitled', "Управление складами, зонами, ячейками и перемещениями"),
     warehouses: "Склады",
     zones: "Зоны",
     bins: "Ячейки",

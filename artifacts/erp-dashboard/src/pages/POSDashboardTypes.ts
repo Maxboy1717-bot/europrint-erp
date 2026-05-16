@@ -6,6 +6,7 @@
 
 import { Banknote, CreditCard, Smartphone } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Domain interfaces
 // ---------------------------------------------------------------------------
@@ -97,7 +98,7 @@ export interface LastSale {
 export const PAYMENT_METHODS = [
   { key: "cash",     label: "Naqd",     icon: Banknote    },
   { key: "card",     label: "Karta",    icon: CreditCard  },
-  { key: "transfer", label: "O'tkazma", icon: Smartphone  },
+  { key: "transfer", label: tLabel('common.POSDashboard.otkazma', "O'tkazma"), icon: Smartphone  },
 ] as const;
 
 // ---------------------------------------------------------------------------

@@ -20,6 +20,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type T, type Employee, type TaskFlowWithUsers } from "./kanban-types";
 import { EPStatusPill } from "@/components/ep";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function FlowsDialog({
   open,
   onOpenChange,
@@ -53,10 +54,10 @@ export function FlowsDialog({
       refetch();
       setFlowName("");
       setSelectedUserIds([]);
-      toast({ title: "Oqim yaratildi", description: "Yangi oqim muvaffaqiyatli qo'shildi" });
+      toast({ title: "Oqim yaratildi", description: tLabel('kanban.FlowsDialog.tsx.yangiOqimMuvaffaqiyatliQoshildi', "Yangi oqim muvaffaqiyatli qo'shildi") });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Oqimni yaratib bo'lmadi", variant: "destructive" });
+      toast({ title: "Xatolik", description: tLabel('kanban.FlowsDialog.tsx.oqimniYaratibBolmadi', "Oqimni yaratib bo'lmadi"), variant: "destructive" });
     },
   });
 
@@ -67,10 +68,10 @@ export function FlowsDialog({
     },
     onSuccess: () => {
       refetch();
-      toast({ title: "O'chirildi", description: "Oqim muvaffaqiyatli o'chirildi" });
+      toast({ title: tLabel('kanban.FlowsDialog.tsx.ochirildi', "O'chirildi"), description: tLabel('kanban.FlowsDialog.tsx.oqimMuvaffaqiyatliOchirildi', "Oqim muvaffaqiyatli o'chirildi") });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Oqimni o'chirib bo'lmadi", variant: "destructive" });
+      toast({ title: "Xatolik", description: tLabel('kanban.FlowsDialog.tsx.oqimniOchiribBolmadi', "Oqimni o'chirib bo'lmadi"), variant: "destructive" });
     },
   });
 

@@ -9,7 +9,7 @@ import { tLabel } from '@/lib/i18n/tLabel';
 export const translations: Record<"uz" | "ru", Translations> = {
   uz: {
     title: "AI Material Zaxira",
-    subtitle: "FEFO optimizatsiyasi bilan AI-asosiy material rezervatsiyasi",
+    subtitle: tLabel('warehouse.translations.fefoOptimizatsiyasiBilanAiAsosiy', "FEFO optimizatsiyasi bilan AI-asosiy material rezervatsiyasi"),
     tabs: { aiReservation: "AI Zaxira", batches: "Partiyalar", history: "Tarix" },
     dashboard: {
       totalStock: "Jami Zaxira",
@@ -18,7 +18,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
       aiConfidence: "AI Ishonch",
     },
     aiPanel: {
-      title: "AI Zaxira So'rovi",
+      title: tLabel('warehouse.translations.aiZaxiraSorovi', "AI Zaxira So'rovi"),
       materialType: "Material turi",
       quantity: "Miqdor",
       unit: "Birlik",
@@ -62,7 +62,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
       noBatches: "Partiyalar topilmadi",
     },
     history: {
-      title: "Zaxira So'rovlari Tarixi",
+      title: tLabel('warehouse.translations.zaxiraSorovlariTarixi', "Zaxira So'rovlari Tarixi"),
       id: "ID",
       type: "Turi",
       qty: "Miqdor",
@@ -96,7 +96,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
   },
   ru: {
     title: tLabel('warehouse.translations.ai', "AI Резерв Материалов"),
-    subtitle: "Резервирование материалов на основе AI с FEFO оптимизацией",
+    subtitle: tLabel('warehouse.translations.aiFefo', "Резервирование материалов на основе AI с FEFO оптимизацией"),
     tabs: { aiReservation: "AI Резерв", batches: "Партии", history: "История" },
     dashboard: {
       totalStock: "Общий Запас",

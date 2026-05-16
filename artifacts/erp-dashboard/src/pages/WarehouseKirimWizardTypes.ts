@@ -126,7 +126,7 @@ export const KIRIM_CONFIG: Record<string, KirimConfig> = {
     submitLabel: "🔧 Inventarga kirim", successNext: "hub",
   },
   "MRO-MAIN": {
-    icon: "🏠", title: "Xo'jalik Ombori — Materiallar Kirim",
+    icon: "🏠", title: tLabel('warehouse.WarehouseKirimWizard.xojalikOmboriMateriallarKirim', "Xo'jalik Ombori — Materiallar Kirim"),
     badgeColor: "bg-teal-600",
     bannerClass: "bg-teal-50 border border-teal-200 text-teal-900",
     bannerText: "Xo'jalik va yordamchi materiallar qabul qilish.",
@@ -152,7 +152,7 @@ export const KIRIM_CONFIG: Record<string, KirimConfig> = {
 };
 
 export const DEFAULT_CFG: KirimConfig = {
-  icon: "📥", title: "Tashqi Kirim (Qo'lda)",
+  icon: "📥", title: tLabel('warehouse.WarehouseKirimWizard.tashqiKirimQolda', "Tashqi Kirim (Qo'lda)"),
   badgeColor: "bg-gray-600",
   bannerClass: "bg-amber-50 border border-amber-200 text-amber-900",
   bannerText: "EXTERNAL_IN — barcha maydonlar qo'lda to'ldiriladi.",
@@ -165,10 +165,10 @@ export const DEFAULT_CFG: KirimConfig = {
 };
 
 export const STEPS = [
-  { n: 1, label: "Asosiy ma'lumotlar" },
+  { n: 1, label: tLabel('warehouse.WarehouseKirimWizard.asosiyMalumotlar', "Asosiy ma'lumotlar") },
   { n: 2, label: tLabel('warehouse.WarehouseKirimWizard.materiallar', "Materiallar") },
   { n: 3, label: "Inventar pasporti" },
-  { n: 4, label: "Ko'rib chiqish" },
+  { n: 4, label: tLabel('warehouse.WarehouseKirimWizard.koribChiqish', "Ko'rib chiqish") },
   { n: 5, label: tLabel('warehouse.WarehouseKirimWizard.tasdiqlash', "Tasdiqlash") },
 ];
 

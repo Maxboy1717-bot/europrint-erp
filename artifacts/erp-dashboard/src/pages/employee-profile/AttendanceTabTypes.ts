@@ -25,7 +25,7 @@ export const DAY_COLORS: Record<DayStatus, { bg: string; text: string; label: st
   late: { bg: "bg-yellow-500/20 border-yellow-500/40", text: "text-[var(--ep-yellow)] dark:text-yellow-300", label: "Kechikdi" },
   absent: { bg: "bg-red-500/20 border-red-500/40", text: "text-[var(--ep-red)] dark:text-red-300", label: "Kelmadi" },
   sick: { bg: "bg-blue-500/20 border-blue-500/40", text: "text-[var(--ep-blue)] dark:text-blue-300", label: "Kasal" },
-  leave: { bg: "bg-purple-500/20 border-purple-500/40", text: "text-[var(--ep-purple)] dark:text-purple-300", label: "Ta'til" },
+  leave: { bg: "bg-purple-500/20 border-purple-500/40", text: "text-[var(--ep-purple)] dark:text-purple-300", label: tLabel('common.AttendanceTab.tatil', "Ta'til") },
   weekend: { bg: "bg-muted/30 border-border/20", text: "text-muted-foreground", label: "Dam olish" },
   none: { bg: "bg-muted/10 border-border/10", text: "text-muted-foreground/40", label: "" },
 };

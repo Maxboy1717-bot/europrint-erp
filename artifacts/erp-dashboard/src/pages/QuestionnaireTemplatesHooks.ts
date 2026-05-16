@@ -18,6 +18,7 @@ import type {
 import { TEMPLATE_PRESETS } from "./QuestionnaireTemplatesTypes";
 import type { QuestionnaireQuestion } from "@shared/schema";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Constants (re-exported so orchestrator doesn't need its own copy)
 // ---------------------------------------------------------------------------
@@ -76,7 +77,7 @@ export function useTemplateMutations({
       apiRequest("DELETE", `${TEMPLATES_QUERY_KEY}/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TEMPLATES_QUERY_KEY] });
-      toast({ title: "Shablon o'chirildi" });
+      toast({ title: tLabel('common.QuestionnaireTemplatesHooks.shablonOchirildi', "Shablon o'chirildi") });
     },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
@@ -146,7 +147,7 @@ export function useTemplateMutations({
       }
       queryClient.invalidateQueries({ queryKey: [TEMPLATES_QUERY_KEY] });
       setIsPresetsDialogOpen(false);
-      toast({ title: "Shablon yaratildi va savollar qo'shildi!" });
+      toast({ title: tLabel('common.QuestionnaireTemplatesHooks.shablonYaratildiVaSavollarQoshildi', "Shablon yaratildi va savollar qo'shildi!") });
     } catch {
       toast({ title: "Xatolik", variant: "destructive" });
     }
@@ -191,7 +192,7 @@ export function useQuestionMutations({
       queryClient.invalidateQueries({ queryKey: questionsQueryKey });
       setQuestionDialogOpen(false);
       setEditingQuestion(null);
-      toast({ title: "Savol qo'shildi" });
+      toast({ title: tLabel('common.QuestionnaireTemplatesHooks.savolQoshildi', "Savol qo'shildi") });
     },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
@@ -212,7 +213,7 @@ export function useQuestionMutations({
     mutationFn: (id: string) => apiRequest("DELETE", `${QUESTIONS_API}/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: questionsQueryKey });
-      toast({ title: "Savol o'chirildi" });
+      toast({ title: tLabel('common.QuestionnaireTemplatesHooks.savolOchirildi', "Savol o'chirildi") });
     },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });

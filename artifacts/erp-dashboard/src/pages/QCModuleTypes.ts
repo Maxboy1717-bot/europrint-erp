@@ -89,7 +89,7 @@ export const CATEGORY_TABS = [
   { value: "physical",         label: tLabel('common.QCModule.fizikXususiyatlar', "Fizik xususiyatlar"),    labelRu: "Физические свойства",     icon: Thermometer },
   { value: "mechanical",       label: "Mexanik mustahkamlik",  labelRu: "Механическая прочность",  icon: Activity },
   { value: "printability",     label: "Chop etish sifati",     labelRu: "Качество печати",         icon: FileCheck },
-  { value: "chemical",         label: "Kimyoviy ko'rsatkichlar", labelRu: "Химические показатели", icon: Beaker },
+  { value: "chemical",         label: tLabel('common.QCModule.kimyoviyKorsatkichlar', "Kimyoviy ko'rsatkichlar"), labelRu: "Химические показатели", icon: Beaker },
   { value: "environmental",    label: "Muhit chidamliligi",    labelRu: "Устойчивость к среде",    icon: Thermometer },
   { value: "logistics",        label: "Logistika testlari",    labelRu: "Логистические тесты",     icon: Package },
   { value: "visual",           label: "Vizual sifat",          labelRu: "Визуальное качество",     icon: Eye },

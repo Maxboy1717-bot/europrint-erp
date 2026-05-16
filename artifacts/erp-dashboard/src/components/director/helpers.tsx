@@ -6,6 +6,7 @@
 import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function formatMoney(n: number) {
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -76,11 +77,11 @@ export function MachineCell({ session }: { session: { id: number; equipmentId: s
 
 export function stateConfig(key: string) {
   const map: Record<string, { label: string; ru: string; color: string; border: string }> = {
-    GROWTH:   { label: "O'SISH",  ru: "РОСТ",       color: "bg-emerald-500", border: "border-emerald-200" },
+    GROWTH:   { label: tLabel('common.helpers.tsx.osish', "O'SISH"),  ru: "РОСТ",       color: "bg-emerald-500", border: "border-emerald-200" },
     NORMAL:   { label: "NORMAL",  ru: "НОРМА",      color: "bg-blue-500",    border: "border-blue-200"    },
     RISK:     { label: "XAVF",    ru: "РИСК",       color: "bg-amber-500",   border: "border-amber-200"   },
     CRITICAL: { label: "INQIROZ", ru: "КРИЗИС",     color: "bg-red-500",     border: "border-red-200"     },
-    osish:    { label: "O'SISH",  ru: "РОСТ",       color: "bg-emerald-500", border: "border-emerald-200" },
+    osish:    { label: tLabel('common.helpers.tsx.osish', "O'SISH"),  ru: "РОСТ",       color: "bg-emerald-500", border: "border-emerald-200" },
     normal:   { label: "NORMAL",  ru: "НОРМА",      color: "bg-blue-500",    border: "border-blue-200"    },
     ehtiyot:  { label: "EHTIYOT", ru: "ОСТОРОЖНО",  color: "bg-yellow-500",  border: "border-yellow-200"  },
     xavf:     { label: "XAVF",    ru: "РИСК",       color: "bg-amber-500",   border: "border-amber-200"   },

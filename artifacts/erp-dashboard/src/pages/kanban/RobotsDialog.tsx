@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { KanbanColumn, AutomationRobot } from "@shared/schema";
 import { type T, type Employee } from "./kanban-types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function RobotsDialog({
   open,
   onOpenChange,
@@ -55,10 +56,10 @@ export function RobotsDialog({
       refetch();
       setShowAddRobot(false);
       setNewRobot({ name: "", triggerType: "on_create", actionType: "move_to_column", triggerColumnId: "", actionConfig: {} });
-      toast({ title: "Robot yaratildi", description: "Yangi avtomatizatsiya muvaffaqiyatli qo'shildi" });
+      toast({ title: "Robot yaratildi", description: tLabel('kanban.RobotsDialog.tsx.yangiAvtomatizatsiyaMuvaffaqiyatliQoshildi', "Yangi avtomatizatsiya muvaffaqiyatli qo'shildi") });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Robotni yaratib bo'lmadi", variant: "destructive" });
+      toast({ title: "Xatolik", description: tLabel('kanban.RobotsDialog.tsx.robotniYaratibBolmadi', "Robotni yaratib bo'lmadi"), variant: "destructive" });
     },
   });
 
@@ -68,10 +69,10 @@ export function RobotsDialog({
     },
     onSuccess: () => {
       refetch();
-      toast({ title: "O'chirildi", description: "Robot muvaffaqiyatli o'chirildi" });
+      toast({ title: tLabel('kanban.RobotsDialog.tsx.ochirildi', "O'chirildi"), description: tLabel('kanban.RobotsDialog.tsx.robotMuvaffaqiyatliOchirildi', "Robot muvaffaqiyatli o'chirildi") });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Robotni o'chirib bo'lmadi", variant: "destructive" });
+      toast({ title: "Xatolik", description: tLabel('kanban.RobotsDialog.tsx.robotniOchiribBolmadi', "Robotni o'chirib bo'lmadi"), variant: "destructive" });
     },
   });
 

@@ -84,7 +84,7 @@ export const getDisciplineTypeBadge = (type: string) => {
     case "reprimand":
       return { variant: "destructive" as const, label: "Tanbeh" };
     case "commendation":
-      return { variant: "default" as const, label: "Rag'batlantirish" };
+      return { variant: "default" as const, label: tLabel('hr.utils.ragbatlantirish', "Rag'batlantirish") };
     default:
       return { variant: "secondary" as const, label: type };
   }

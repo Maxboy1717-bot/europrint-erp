@@ -62,7 +62,7 @@ export const MOVEMENT_TYPES: { code: MovementTypeCode; label: string; color: str
   { code: "EXTERNAL_OUT",      label: "Tashqi chiqim",   color: "#EF4444" },
   { code: "INTERNAL_ISSUE",    label: "Ichki berish",     color: "#F59E0B" },
   { code: "INTERNAL_RETURN",   label: tLabel('common.PosMovementChiqim.ichkiQaytarish', "Ichki qaytarish"),  color: "#06B6D4" },
-  { code: "INTERNAL_TRANSFER", label: "Ichki ko'chirish", color: "#8B5CF6" },
+  { code: "INTERNAL_TRANSFER", label: tLabel('common.PosMovementChiqim.ichkiKochirish', "Ichki ko'chirish"), color: "#8B5CF6" },
   { code: "DAMAGE",            label: tLabel('common.PosMovementChiqim.zarar', "Zarar"),            color: "#DC2626" },
 ];
 

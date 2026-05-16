@@ -27,7 +27,7 @@ export const COMPLAINT_TYPE_LABELS: Record<string, string> = {
 
 export const SEVERITY_LABELS: Record<string, { label: string; className: string }> = {
   low:    { label: "Past",   className: "border-yellow-300 text-[var(--ep-yellow)]" },
-  medium: { label: "O'rta",  className: "border-orange-300 text-[var(--ep-primary)]" },
+  medium: { label: tLabel('common.RemainingTabs.orta', "O'rta"),  className: "border-orange-300 text-[var(--ep-primary)]" },
   high:   { label: "Yuqori", className: "border-red-300 text-[var(--ep-red)]" },
 };
 

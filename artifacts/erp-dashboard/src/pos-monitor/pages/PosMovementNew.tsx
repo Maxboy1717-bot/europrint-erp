@@ -32,7 +32,7 @@ const MOVEMENT_TYPES: MovementTypeConfig[] = [
     variant:    "kirim",
     badge:      "QO'LDA",
     badgeClass: "pos-badge-green",
-    description: "Ta'minotchidan yetib kelgan materiallar. Barcha maydonlar qo'lda to'ldiriladi — barcode skaneri kerak emas.",
+    description: tLabel('common.PosMovementNew.tsx.taminotchidanYetibKelganMateriallarBarcha', "Ta'minotchidan yetib kelgan materiallar. Barcha maydonlar qo'lda to'ldiriladi — barcode skaneri kerak emas."),
   },
   {
     value:      "EXTERNAL_OUT",
@@ -52,7 +52,7 @@ const MOVEMENT_TYPES: MovementTypeConfig[] = [
     variant:    "chiqim",
     badge:      "BARCODE",
     badgeClass: "pos-badge-blue",
-    description: "Bo'limga yoki xodimga material berish. Barcode skaner orqali.",
+    description: tLabel('common.PosMovementNew.tsx.bolimgaYokiXodimgaMaterialBerish', "Bo'limga yoki xodimga material berish. Barcode skaner orqali."),
   },
   {
     value:      "INTERNAL_RETURN",
@@ -62,17 +62,17 @@ const MOVEMENT_TYPES: MovementTypeConfig[] = [
     variant:    "chiqim",
     badge:      "BARCODE",
     badgeClass: "pos-badge-blue",
-    description: "Bo'lim yoki xodimdan material qaytarish.",
+    description: tLabel('common.PosMovementNew.tsx.bolimYokiXodimdanMaterialQaytarish', "Bo'lim yoki xodimdan material qaytarish."),
   },
   {
     value:      "INTERNAL_TRANSFER",
     icon:       "🏭",
-    label:      "Ichki Ko'chirish",
+    label:      tLabel('common.PosMovementNew.tsx.ichkiKochirish', "Ichki Ko'chirish"),
     sublabel:   "(Barcode skaner)",
     variant:    "chiqim",
     badge:      "BARCODE",
     badgeClass: "pos-badge-blue",
-    description: "Omborlar orasida material ko'chirish.",
+    description: tLabel('common.PosMovementNew.tsx.omborlarOrasidaMaterialKochirish', "Omborlar orasida material ko'chirish."),
   },
   {
     value:      "DAMAGE",
@@ -82,7 +82,7 @@ const MOVEMENT_TYPES: MovementTypeConfig[] = [
     variant:    "chiqim",
     badge:      "BARCODE",
     badgeClass: "pos-badge-red",
-    description: "Zarar ko'rgan yoki nosoz materiallar ro'yxatdan o'tkazish.",
+    description: tLabel('common.PosMovementNew.tsx.zararKorganYokiNosozMateriallar', "Zarar ko'rgan yoki nosoz materiallar ro'yxatdan o'tkazish."),
   },
   {
     value:      "INVENTORY_ADJ",

@@ -54,7 +54,7 @@ export function getStatusBadge(status: string) {
     pending:     { label: tLabel('hr.HRCapitalTestsHelpers.tsx.kutilmoqda', "Kutilmoqda"),      className: "bg-gray-100 text-gray-700" },
     in_progress: { label: tLabel('hr.HRCapitalTestsHelpers.tsx.jarayonda', "Jarayonda"),       className: "bg-blue-100 text-[var(--ep-blue)]" },
     completed:   { label: "Tugallandi",      className: "bg-green-100 text-[var(--ep-green)]" },
-    expired:     { label: "Muddati o'tdi",   className: "bg-red-100 text-[var(--ep-red)]" },
+    expired:     { label: tLabel('hr.HRCapitalTestsHelpers.tsx.muddatiOtdi', "Muddati o'tdi"),   className: "bg-red-100 text-[var(--ep-red)]" },
   };
   const info = map[status] ?? { label: status, className: "" };
   return <Badge className={`${info.className} border-0 text-xs`}>{info.label}</Badge>;

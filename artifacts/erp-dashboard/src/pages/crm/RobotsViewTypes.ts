@@ -56,15 +56,15 @@ export type RobotFormValues = z.infer<typeof robotFormSchema>;
 
 export const TRIGGER_TYPES = [
   { value: "CREATED", label: tLabel('crm.RobotsView.yaratilganda', "Yaratilganda"), icon: Zap },
-  { value: "STAGE_CHANGED", label: "Bosqich o'zgarganda", icon: GitBranch },
-  { value: "FIELD_CHANGED", label: "Maydon o'zgarganda", icon: Settings },
-  { value: "TIME_ELAPSED", label: "Vaqt o'tganda", icon: Timer },
+  { value: "STAGE_CHANGED", label: tLabel('crm.RobotsView.bosqichOzgarganda', "Bosqich o'zgarganda"), icon: GitBranch },
+  { value: "FIELD_CHANGED", label: tLabel('crm.RobotsView.maydonOzgarganda', "Maydon o'zgarganda"), icon: Settings },
+  { value: "TIME_ELAPSED", label: tLabel('crm.RobotsView.vaqtOtganda', "Vaqt o'tganda"), icon: Timer },
 ];
 
 export const ACTION_TYPES = [
   { value: "SEND_NOTIFICATION", label: tLabel('crm.RobotsView.xabarnomaYuborish', "Xabarnoma yuborish"), icon: Bell },
   { value: "CREATE_TASK", label: tLabel('crm.RobotsView.vazifaYaratish', "Vazifa yaratish"), icon: CheckSquare },
-  { value: "CHANGE_STAGE", label: "Bosqichni o'zgartirish", icon: GitBranch },
+  { value: "CHANGE_STAGE", label: tLabel('crm.RobotsView.bosqichniOzgartirish', "Bosqichni o'zgartirish"), icon: GitBranch },
   { value: "SEND_EMAIL", label: tLabel('crm.RobotsView.emailYuborish', "Email yuborish"), icon: Mail },
   { value: "SEND_TELEGRAM", label: tLabel('crm.RobotsView.telegramYuborish', "Telegram yuborish"), icon: Send },
 ];

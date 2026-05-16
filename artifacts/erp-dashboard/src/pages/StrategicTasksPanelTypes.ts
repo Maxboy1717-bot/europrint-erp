@@ -17,7 +17,7 @@ export const STATUS_OPTIONS = [
 
 export const PRIORITY_OPTIONS = [
   { value: "low", label: "Past", labelRu: "Низкий", color: "bg-blue-500/20 text-[var(--ep-blue)] dark:text-blue-400" },
-  { value: "medium", label: "O'rta", labelRu: "Средний", color: "bg-yellow-500/20 text-[var(--ep-yellow)] dark:text-yellow-400" },
+  { value: "medium", label: tLabel('common.StrategicTasksPanel.orta', "O'rta"), labelRu: "Средний", color: "bg-yellow-500/20 text-[var(--ep-yellow)] dark:text-yellow-400" },
   { value: "high", label: "Yuqori", labelRu: "Высокий", color: "bg-orange-500/20 text-[var(--ep-primary)] dark:text-orange-400" },
   { value: "critical", label: "Kritik", labelRu: "Критический", color: "bg-red-500/20 text-[var(--ep-red)] dark:text-red-400" },
 ];

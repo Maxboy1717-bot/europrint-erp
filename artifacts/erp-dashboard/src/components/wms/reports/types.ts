@@ -317,7 +317,7 @@ export const translations: Record<Lang, TranslationType> = {
   },
   ru: {
     title: tLabel('warehouse..untitled', "Складские Отчёты"),
-    subtitle: "Отчёты по остаткам, оборачиваемости и анализу",
+    subtitle: tLabel('warehouse..untitled', "Отчёты по остаткам, оборачиваемости и анализу"),
     tabs: {
       stockBalance: "Остатки",
       turnover: "Оборот",
