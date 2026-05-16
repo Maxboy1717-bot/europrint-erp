@@ -36,6 +36,33 @@ import { ClaudeService } from './application/llm/claude.service';
 import { GeminiFallbackService } from './application/llm/gemini-fallback.service';
 import { BudgetTrackerService } from './application/llm/budget-tracker.service';
 import { ToolRegistry } from './application/tools/tool.registry';
+import { AishaToolBootstrap } from './application/tools/tool-bootstrap.service';
+// 25 tools — each is @Injectable() and registered in providers below
+import { AnalyzeCameraFeedTool }       from './application/tools/analyze-camera-feed.tool';
+import { AssignTaskTool }               from './application/tools/assign-task.tool';
+import { ComparePeriodsTool }           from './application/tools/compare-periods.tool';
+import { CreateReminderTool }           from './application/tools/create-reminder.tool';
+import { DetectSafetyViolationsTool }   from './application/tools/detect-safety-violations.tool';
+import { DetectWorkersInAreaTool }      from './application/tools/detect-workers-in-area.tool';
+import { ForecastDemandTool }           from './application/tools/forecast-demand.tool';
+import { GenerateKpiReportTool }        from './application/tools/generate-kpi-report.tool';
+import { GetActiveAlertsTool }          from './application/tools/get-active-alerts.tool';
+import { GetCameraSnapshotTool }        from './application/tools/get-camera-snapshot.tool';
+import { GetCustomerInfoTool }          from './application/tools/get-customer-info.tool';
+import { GetEmployeeInfoTool }          from './application/tools/get-employee-info.tool';
+import { GetFinancialSummaryTool }      from './application/tools/get-financial-summary.tool';
+import { GetInventoryLevelsTool }       from './application/tools/get-inventory-levels.tool';
+import { GetMachineStateViaVisionTool } from './application/tools/get-machine-state-via-vision.tool';
+import { GetMachineStatusTool }         from './application/tools/get-machine-status.tool';
+import { GetOrderStatusTool }           from './application/tools/get-order-status.tool';
+import { GetProductionStatusTool }      from './application/tools/get-production-status.tool';
+import { GetQualityMetricsTool }        from './application/tools/get-quality-metrics.tool';
+import { GetTodayBriefingTool }         from './application/tools/get-today-briefing.tool';
+import { ListAvailableCamerasTool }     from './application/tools/list-available-cameras.tool';
+import { ScheduleMeetingTool }          from './application/tools/schedule-meeting.tool';
+import { SendEmailTool }                from './application/tools/send-email.tool';
+import { SendTelegramToTeamTool }       from './application/tools/send-telegram-to-team.tool';
+import { WhatIfSimulationTool }         from './application/tools/what-if-simulation.tool';
 
 @Module({
   imports: [
@@ -55,6 +82,19 @@ import { ToolRegistry } from './application/tools/tool.registry';
     GeminiFallbackService,
     BudgetTrackerService,
     ToolRegistry,
+    // 25 AIsha tools — each @Injectable, registered with ToolRegistry on
+    // module init by AishaToolBootstrap. Order alphabetical, matches the
+    // bootstrap service's constructor.
+    AnalyzeCameraFeedTool, AssignTaskTool, ComparePeriodsTool,
+    CreateReminderTool, DetectSafetyViolationsTool, DetectWorkersInAreaTool,
+    ForecastDemandTool, GenerateKpiReportTool, GetActiveAlertsTool,
+    GetCameraSnapshotTool, GetCustomerInfoTool, GetEmployeeInfoTool,
+    GetFinancialSummaryTool, GetInventoryLevelsTool,
+    GetMachineStateViaVisionTool, GetMachineStatusTool, GetOrderStatusTool,
+    GetProductionStatusTool, GetQualityMetricsTool, GetTodayBriefingTool,
+    ListAvailableCamerasTool, ScheduleMeetingTool, SendEmailTool,
+    SendTelegramToTeamTool, WhatIfSimulationTool,
+    AishaToolBootstrap,
   ],
   controllers: [
     WakeConfigController,
