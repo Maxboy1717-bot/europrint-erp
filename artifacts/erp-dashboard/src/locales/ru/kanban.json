@@ -104,13 +104,15 @@
   "personalProgram": "Персональная программа",
   "dailyTaskList": "Список дневных задач",
   "kanban-": {
+    "3": "Система 3-х корзин",
     "xabarYozingBilanEslatish": "Xabar yozing... @ bilan eslatish",
     "shablonNomi": "Shablon nomi",
     "shablonlar": "Shablonlar",
     "bildirishnomalar": "Bildirishnomalar",
     "tavsif": "Tavsif",
     "nomi": "Nomi",
-    "potoklar": "Potoklar"
+    "potoklar": "Potoklar",
+    "untitled": "Напишите сообщение... @ для упоминания"
   },
   "TaskDetailSheet": {
     "tsx": {

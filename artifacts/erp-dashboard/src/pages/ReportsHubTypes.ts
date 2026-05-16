@@ -100,7 +100,7 @@ export const t = {
     schedule: "Jadval",
   },
   ru: {
-    title: "Центр отчётов",
+    title: tLabel('common.ReportsHub.untitled', "Центр отчётов"),
     subtitle: "Управление 155+ автоматизированными отчётами",
     totalReports: "Всего отчётов",
     runsToday: "Запусков сегодня",
@@ -116,7 +116,7 @@ export const t = {
     generating: "Запускается...",
     subscribe: "Подписаться",
     unsubscribe: "Отписаться",
-    name: "Название",
+    name: tLabel('common.ReportsHub.untitled', "Название"),
     module: "Модуль",
     frequency: "Частота",
     lastRun: "Последний запуск",

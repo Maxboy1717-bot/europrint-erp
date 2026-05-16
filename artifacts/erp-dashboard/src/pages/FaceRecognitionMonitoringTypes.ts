@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module FaceRecognitionMonitoringTypes
  * @description Types and label constants for FaceRecognitionMonitoring.
@@ -72,7 +74,7 @@ export const labels = {
     flagError: "Belgilashda xato",
   },
   ru: {
-    title: "Мониторинг распознавания лиц",
+    title: tLabel('common.FaceRecognitionMonitoring.untitled', "Мониторинг распознавания лиц"),
     totalRecognitions: "Всего распознаваний",
     successful: "Успешные",
     failed: "Неуспешные",

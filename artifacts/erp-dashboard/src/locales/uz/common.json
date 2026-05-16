@@ -8586,7 +8586,8 @@
     "vazifalar": "Vazifalar"
   },
   "EmployeeTrackingReport": {
-    "xodimlarKuzatuviHisoboti": "Xodimlar Kuzatuvi Hisoboti"
+    "xodimlarKuzatuviHisoboti": "Xodimlar Kuzatuvi Hisoboti",
+    "untitled": "Отчёт по Отслеживанию Сотрудников"
   },
   "EventsCalendarGrid": {
     "tsx": {
@@ -8629,7 +8630,16 @@
     "mesIshlabChiqarishAlerti": "MES ishlab chiqarish alerti",
     "qcSifatAlertiYaratish": "QC sifat alerti yaratish",
     "xavfsizlikAlerrtiYaratish": "Xavfsizlik alerrti yaratish",
-    "ruxsatsizKirish": "Ruxsatsiz kirish"
+    "ruxsatsizKirish": "Ruxsatsiz kirish",
+    "jMuloqot": "J — Muloqot (Общение)",
+    "iEmpatiya": "I — Empatiya (Эмпатия)",
+    "hTaktika": "H — Taktika (Тактика)",
+    "gBardosh": "G — Bardosh (Оборона)",
+    "eEnergiya": "E — Energiya (Энергия)",
+    "dIshonch": "D — Ishonch (Уверенность)",
+    "cNazorat": "C — Nazorat (Контроль)",
+    "bStrategiya": "B — Strategiya (Стратегия)",
+    "aDiqqat": "A — Diqqat (Внимание)"
   },
   "MarketingExtended": {
     "raqobatchilar": "Raqobatchilar"
@@ -8659,7 +8669,8 @@
     "bekorQilindi": "Bekor qilindi",
     "ishlabChiqarish": "Ishlab chiqarish",
     "rejalashtirish": "Rejalashtirish",
-    "yangi": "Yangi"
+    "yangi": "Yangi",
+    "untitled": "Заказы Папок"
   },
   "POSInventoryPage": {
     "qaytarish": "Qaytarish",
@@ -8670,7 +8681,8 @@
     "sotuvMenejeri": "Sotuv menejeri",
     "ishlabChiqarishNuqsonlarIshVaqti": "Ishlab chiqarish, nuqsonlar, ish vaqti, xavfsizlik",
     "davomatSifatVazifalarLmsJamoa": "Davomat, sifat, vazifalar, LMS, jamoa ishlashi",
-    "standartXodim": "Standart xodim"
+    "standartXodim": "Standart xodim",
+    "mashinOperatori": "Mashinа operatori"
   },
   "ProductivityInterviewDialog": {
     "yakuniyXulosa": "Yakuniy xulosa"
@@ -8715,7 +8727,8 @@
   },
   "ReportsHub": {
     "nomi": "Nomi",
-    "hisobotlarMarkazi": "Hisobotlar markazi"
+    "hisobotlarMarkazi": "Hisobotlar markazi",
+    "untitled": "Nomi"
   },
   "SaaSExtended": {
     "xatolarJurnali": "Xatolar Jurnali",
@@ -8779,15 +8792,19 @@
   },
   "order-constants": {
     "00Rangsiz": "0+0 (Rangsiz)",
-    "yangi": "Yangi"
+    "yangi": "Yangi",
+    "l": "Lоток",
+    "quti": "Quti (Коробка)"
   },
   "translations": {
-    "yangiBuyurtmaYaratish": "Yangi Buyurtma Yaratish"
+    "yangiBuyurtmaYaratish": "Yangi Buyurtma Yaratish",
+    "untitled": "Создать новый заказ"
   },
   "helpers-constants": {
     "tsx": {
       "tavsiyalarTekshiruvi": "Tavsiyalar Tekshiruvi",
-      "yangiAriza": "Yangi ariza"
+      "yangiAriza": "Yangi ariza",
+      "untitled": "Ждёт"
     }
   },
   "GLPostingStatus": {
@@ -8822,6 +8839,43 @@
     "tsx": {
       "jamiBalans": "Jami balans",
       "jamiQatorlar": "Jami qatorlar"
+    }
+  },
+  "AIInterviewPublicPage": {
+    "europrintAi": "EuroPrint AI Интервью"
+  },
+  "barcode-": {
+    "untitled": "Система Штрих-кодов"
+  },
+  "camera-heatmap-": {
+    "untitled": "Тепловая карта"
+  },
+  "FaceRecognitionMonitoring": {
+    "untitled": "Мониторинг распознавания лиц"
+  },
+  "FaceRegistration": {
+    "untitled": "Регистрация Лица"
+  },
+  "camera-ai": {
+    "types": {
+      "tsx": {
+        "ai": "AI Аналитика камер"
+      }
+    }
+  },
+  "CallTimelineItem": {
+    "tsx": {
+      "untitled": "Голосовая почта"
+    }
+  },
+  "MeetingCard": {
+    "tsx": {
+      "untitled": "Ожидает подтверждения"
+    }
+  },
+  "LanguageSwitcher": {
+    "tsx": {
+      "untitled": "Русский"
     }
   }
 }

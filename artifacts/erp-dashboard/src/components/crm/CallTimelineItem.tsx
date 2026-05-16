@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface Call {
   id: number;
   direction: "incoming" | "outgoing";
@@ -40,10 +41,10 @@ const STATUS_CONFIG: Record<
   Call["status"],
   { label: string; variant: "success" | "error" | "warning" | "secondary" }
 > = {
-  answered: { label: "Отвечен", variant: "success" },
-  missed: { label: "Пропущен", variant: "error" },
-  busy: { label: "Занято", variant: "warning" },
-  voicemail: { label: "Голосовая почта", variant: "secondary" },
+  answered: { label: tLabel('common.CallTimelineItem.tsx.untitled', "Отвечен"), variant: "success" },
+  missed: { label: tLabel('common.CallTimelineItem.tsx.untitled', "Пропущен"), variant: "error" },
+  busy: { label: tLabel('common.CallTimelineItem.tsx.untitled', "Занято"), variant: "warning" },
+  voicemail: { label: tLabel('common.CallTimelineItem.tsx.untitled', "Голосовая почта"), variant: "secondary" },
 };
 
 function formatDuration(seconds: number): string {

@@ -65,7 +65,7 @@ export const TRANSLATIONS = {
     completedOrders: "Bajarilgan",
   },
   ru: {
-    title: "Заказы Папок",
+    title: tLabel('common.PapkaOrders.untitled', "Заказы Папок"),
     addOrder: "Новый Заказ",
     search: "Поиск...",
     status: "Статус",

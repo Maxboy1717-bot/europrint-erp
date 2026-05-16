@@ -91,7 +91,7 @@ export const translations = {
     productivity: "Samaradorlik",
   },
   ru: {
-    title: "Отчёт по Отслеживанию Сотрудников",
+    title: tLabel('common.EmployeeTrackingReport.untitled', "Отчёт по Отслеживанию Сотрудников"),
     subtitle: "Статистика зон и времени",
     dailyAttendance: "Ежедневная Посещаемость",
     weeklyStats: "Недельная Статистика",

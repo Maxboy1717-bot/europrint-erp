@@ -7,6 +7,7 @@ import { useState, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { reportsApi, stockApi, glApi, syncApi, inventoryApi, movementsApi } from "../api/pos-monitor.api";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 function exportCsv(data: unknown, filename: string) {
   const rows = Array.isArray(data) ? (data as Record<string, unknown>[]) : [];
   if (!rows.length) return;
@@ -100,7 +101,7 @@ export default function PosReports() {
       setData(result);
       if (selected === "stock_balance" && Array.isArray(result)) {
         const total = (result as { balance: number }[]).reduce((s, r) => s + (r.balance ?? 0), 0);
-        setKpiRows([{ label: "Jami qatorlar", value: result.length, color: "var(--pos-accent)" }, { label: "Jami balans", value: total.toFixed(2), color: "var(--pos-success)" }]);
+        setKpiRows([{ label: tLabel('common.PosReports.tsx.jamiQatorlar', "Jami qatorlar"), value: result.length, color: "var(--pos-accent)" }, { label: tLabel('common.PosReports.tsx.jamiBalans', "Jami balans"), value: total.toFixed(2), color: "var(--pos-success)" }]);
       }
     } catch { /* noop */ } finally { setLoading(false); }
   }, [selected, dateFrom, dateTo, warehouseId]);

@@ -4,6 +4,7 @@
  */
 import { z } from "zod";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── API types ────────────────────────────────────────────────────────────────
 export interface WarehouseOption {
   id:       string;
@@ -106,7 +107,7 @@ export const KIRIM_CONFIG: Record<string, KirimConfig> = {
     step2Hint: "Partiya raqami = rulon lot number. Og'irlik kg ni ham to'ldiring.",
   },
   "FG-MAIN": {
-    icon: "✅", title: "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul",
+    icon: "✅", title: tLabel('common.PosMovementKirim.tayyorMahsulotIshlabChiqarishdanQabul', "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul"),
     bannerBg: "rgba(16,185,129,0.08)", bannerBorder: "rgba(16,185,129,0.4)", bannerTextColor: "#064E3B",
     bannerText: "Ishlab chiqarish bo'limidan tayyor mahsulot qabul. Shartnoma va yuk xati shart emas.",
     supplierLabel: "Ishlab chiqarish bo'limi / Smena", supplierRequired: true,
@@ -115,7 +116,7 @@ export const KIRIM_CONFIG: Record<string, KirimConfig> = {
     step2Hint: "Tayyor mahsulot: dona yoki kg bilan qayd qiling.",
   },
   "WIP-MAIN": {
-    icon: "⚙️", title: "Yarim Tayyor — Liniyadan Qabul",
+    icon: "⚙️", title: tLabel('common.PosMovementKirim.yarimTayyorLiniyadanQabul', "Yarim Tayyor — Liniyadan Qabul"),
     bannerBg: "rgba(139,92,246,0.08)", bannerBorder: "rgba(139,92,246,0.4)", bannerTextColor: "#4C1D95",
     bannerText: "Ishlab chiqarish liniyasidan yarim tayyor mahsulot ko'chirish.",
     supplierLabel: "Liniya / Bo'lim nomi", supplierRequired: true,
@@ -151,7 +152,7 @@ export const KIRIM_CONFIG: Record<string, KirimConfig> = {
     step2Hint: "Xo'jalik materiallari: dona yoki litr bilan qayd qiling.",
   },
   "MRO-STORE": {
-    icon: "🛠️", title: "MRO Ombori — Texnik Materiallar Kirim",
+    icon: "🛠️", title: tLabel('common.PosMovementKirim.mroOmboriTexnikMateriallarKirim', "MRO Ombori — Texnik Materiallar Kirim"),
     bannerBg: "rgba(14,165,233,0.08)", bannerBorder: "rgba(14,165,233,0.4)", bannerTextColor: "#0C4A6E",
     bannerText: "Texnik xizmat va ta'mirlash (MRO) uchun materiallar qabul qilish.",
     supplierLabel: "MRO yetkazuvchi / Ta'mirotchi", supplierRequired: true,

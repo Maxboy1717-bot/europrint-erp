@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module camera-heatmap-types
  * @description Interfaces, types, and constants for the Camera Heatmap page.
@@ -174,7 +176,7 @@ export const UZ_TRANSLATIONS = {
 };
 
 export const RU_TRANSLATIONS: Translations = {
-  title:             "Тепловая карта",
+  title:             tLabel('common.camera-heatmap-.untitled', "Тепловая карта"),
   subtitle:          "Визуализация активности на производстве",
   back:              "Назад",
   today:             "Сегодня",

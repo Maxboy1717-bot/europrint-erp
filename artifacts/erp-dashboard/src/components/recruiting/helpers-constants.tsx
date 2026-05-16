@@ -76,7 +76,7 @@ export const CHANNEL_LABELS: Record<string, string> = {
 
 export const CHANNEL_STATUS_LABELS: Record<string, { label: string; color: string }> = {
   posted: { label: "E'lon berildi", color: "bg-green-500/15 text-green-400 border-green-500/40" },
-  pending: { label: "Ждёт", color: "bg-amber-500/15 text-amber-400 border-amber-500/40" },
+  pending: { label: tLabel('common.helpers-constants.tsx.untitled', "Ждёт"), color: "bg-amber-500/15 text-amber-400 border-amber-500/40" },
   not_posted: { label: "Berilmadi", color: "bg-muted/50 text-muted-foreground border-border/40" },
 };
 

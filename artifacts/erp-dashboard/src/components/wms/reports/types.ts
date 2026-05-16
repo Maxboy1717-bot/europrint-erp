@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module types
  * @description React UI component.
@@ -314,7 +316,7 @@ export const translations: Record<Lang, TranslationType> = {
     },
   },
   ru: {
-    title: "Складские Отчёты",
+    title: tLabel('warehouse..untitled', "Складские Отчёты"),
     subtitle: "Отчёты по остаткам, оборачиваемости и анализу",
     tabs: {
       stockBalance: "Остатки",
@@ -324,7 +326,7 @@ export const translations: Record<Lang, TranslationType> = {
       expiry: "Сроки",
     },
     stockBalance: {
-      title: "Отчёт по остаткам",
+      title: tLabel('warehouse..untitled', "Отчёт по остаткам"),
       material: "Материал",
       code: "Код",
       warehouse: "Склад",
@@ -343,7 +345,7 @@ export const translations: Record<Lang, TranslationType> = {
       top10ByValue: "Топ 10 по стоимости",
     },
     turnover: {
-      title: "Отчёт по оборачиваемости",
+      title: tLabel('warehouse..untitled', "Отчёт по оборачиваемости"),
       material: "Материал",
       opening: "Начало",
       inflow: "Приход",
@@ -358,7 +360,7 @@ export const translations: Record<Lang, TranslationType> = {
       to: "До",
     },
     abc: {
-      title: "ABC/XYZ анализ",
+      title: tLabel('warehouse..abcXyz', "ABC/XYZ анализ"),
       material: "Материал",
       totalValue: "Общая стоимость",
       percentage: "Процент",
@@ -372,7 +374,7 @@ export const translations: Record<Lang, TranslationType> = {
       distribution: "Распределение ABC",
     },
     aging: {
-      title: "Отчёт по старению",
+      title: tLabel('warehouse..untitled', "Отчёт по старению"),
       material: "Материал",
       lastMovement: "Последнее движение",
       days: "Дни",
@@ -388,7 +390,7 @@ export const translations: Record<Lang, TranslationType> = {
       obsoletePercent: "Устаревшие %",
     },
     expiry: {
-      title: "Контроль сроков",
+      title: tLabel('warehouse..untitled', "Контроль сроков"),
       material: "Материал",
       batch: "Партия",
       expiryDate: "Срок годности",

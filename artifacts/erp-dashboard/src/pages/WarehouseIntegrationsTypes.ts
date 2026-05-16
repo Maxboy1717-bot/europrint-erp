@@ -101,13 +101,13 @@ export const translations = {
     },
   },
   ru: {
-    title: "Интеграции Склада",
+    title: tLabel('warehouse.WarehouseIntegrations.untitled', "Интеграции Склада"),
     subtitle: "Связь с модулями PP, MM и FI",
     languageToggle: "Переключить язык",
     refresh: "Обновить",
     pp: {
-      title: "PP - Производство",
-      description: "Управление материалами для заказов",
+      title: tLabel('warehouse.WarehouseIntegrations.pp', "PP - Производство"),
+      description: tLabel('warehouse.WarehouseIntegrations.untitled', "Управление материалами для заказов"),
       ordersNeedingMaterials: "Заказы, требующие материалы",
       reserveMaterials: "Резервировать материалы",
       issueMaterials: "Выдать в производство",
@@ -116,8 +116,8 @@ export const translations = {
       viewDetails: "Подробнее",
     },
     mm: {
-      title: "MM - Закупки",
-      description: "Заказы на закупку и повторные заказы",
+      title: tLabel('warehouse.WarehouseIntegrations.mm', "MM - Закупки"),
+      description: tLabel('warehouse.WarehouseIntegrations.untitled', "Заказы на закупку и повторные заказы"),
       pendingDeliveries: "Ожидающие поставки",
       reorderSuggestions: "Рекомендации по заказу",
       lowStockAlerts: "Предупреждения о низком запасе",
@@ -130,8 +130,8 @@ export const translations = {
       medium: "Средний",
     },
     fi: {
-      title: "FI - Финансы",
-      description: "Оценка склада и бухгалтерия",
+      title: tLabel('warehouse.WarehouseIntegrations.fi', "FI - Финансы"),
+      description: tLabel('warehouse.WarehouseIntegrations.untitled', "Оценка склада и бухгалтерия"),
       stockValuation: "Оценка запасов",
       totalValue: "Общая стоимость",
       postMovements: "Провести в ГК",

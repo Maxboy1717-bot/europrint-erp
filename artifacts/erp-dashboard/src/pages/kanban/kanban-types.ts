@@ -49,25 +49,25 @@ export const T = {
   },
   ru: {
     views: { kanban: "Канбан", list: "Список", deadlines: "Сроки", myPlan: "Мой план", calendar: "Календарь", gantt: "Гант", dashboard: "Дашборд", allocation: "Ресурсы" },
-    flows: { title: "Потоки", addFlow: "Добавить поток", name: "Название", type: "Тип", users: "Пользователи", roundRobin: "По очереди", leastBusy: "Наименее занятому", random: "Случайно", noFlows: "Нет потоков", selectUsers: "Выберите пользователей", assign: "Назначить" },
-    allocation: { title: "Распределение ресурсов", employee: "Сотрудник", today: "Сегодня", thisWeek: "Эта неделя", thisMonth: "Этот месяц", total: "Всего", noData: "Нет данных" },
+    flows: { title: tLabel('kanban.kanban-.untitled', "Потоки"), addFlow: "Добавить поток", name: tLabel('kanban.kanban-.untitled', "Название"), type: "Тип", users: "Пользователи", roundRobin: "По очереди", leastBusy: "Наименее занятому", random: "Случайно", noFlows: "Нет потоков", selectUsers: "Выберите пользователей", assign: "Назначить" },
+    allocation: { title: tLabel('kanban.kanban-.untitled', "Распределение ресурсов"), employee: "Сотрудник", today: "Сегодня", thisWeek: "Эта неделя", thisMonth: "Этот месяц", total: "Всего", noData: "Нет данных" },
     create: { task: "Задача", project: "Проект", template: "Шаблон", createNew: "Создать" },
     roles: { all: "Все роли", executor: "Я исполнитель", creator: "Я постановщик" },
     filters: { overdue: "Просроченные", newComments: "Новые комментарии", filter: "Фильтр", clear: "Очистить" },
     columns: { overdue: "Просрочено", today: "Сегодня", thisWeek: "На этой неделе", nextWeek: "На следующей неделе", noDeadline: "Без срока" },
     priority: { urgent: "Критичный", high: "Высокий", normal: "Средний", low: "Низкий" },
     tabs: { main: "Основное", checklist: "Чек-лист", results: "Результаты", files: "Файлы", activity: "Активность" },
-    fields: { title: "Заголовок", description: "Описание", deadline: "Срок", assignee: "Исполнитель", priority: "Приоритет", tags: "Теги", project: "Проект", observers: "Наблюдатели", coExecutors: "Соисполнители" },
+    fields: { title: tLabel('kanban.kanban-.untitled', "Заголовок"), description: tLabel('kanban.kanban-.untitled', "Описание"), deadline: "Срок", assignee: "Исполнитель", priority: "Приоритет", tags: "Теги", project: "Проект", observers: "Наблюдатели", coExecutors: "Соисполнители" },
     table: { taskName: "Название задачи", activity: "Активность", deadline: "Срок", creator: "Постановщик", assignee: "Исполнитель", project: "Проект", status: "Статус" },
     actions: { save: "Сохранить", cancel: "Отмена", delete: "Удалить", add: "Добавить", send: "Отправить", upload: "Загрузить", start: "Начать", stop: "Остановить" },
-    notifications: { title: "Уведомления", markAllRead: "Прочитано", empty: "Нет уведомлений", categories: "Категории", allCategory: "Все", taskCategory: "Задачи", reminderCategory: "Напоминания", automationCategory: "Автоматика", items: "шт" },
-    robots: { title: "Роботы автоматизации", addRobot: "Добавить робота", trigger: "Триггер", action: "Действие", onCreate: "При создании", onMove: "При перемещении", onComplete: "При завершении", onDeadline: "При наступлении срока", moveToColumn: "Переместить в колонку", sendNotification: "Отправить уведомление", assignUser: "Назначить пользователя", addTag: "Добавить тег" },
-    templates: { title: "Шаблоны", name: "Название шаблона", taskTitle: "Заголовок задачи", search: "Поиск", empty: "Нет шаблонов", createNew: "Новый шаблон", edit: "Редактировать", apply: "Применить" },
+    notifications: { title: tLabel('kanban.kanban-.untitled', "Уведомления"), markAllRead: "Прочитано", empty: "Нет уведомлений", categories: "Категории", allCategory: "Все", taskCategory: "Задачи", reminderCategory: "Напоминания", automationCategory: "Автоматика", items: "шт" },
+    robots: { title: tLabel('kanban.kanban-.untitled', "Роботы автоматизации"), addRobot: "Добавить робота", trigger: "Триггер", action: "Действие", onCreate: "При создании", onMove: "При перемещении", onComplete: "При завершении", onDeadline: "При наступлении срока", moveToColumn: "Переместить в колонку", sendNotification: "Отправить уведомление", assignUser: "Назначить пользователя", addTag: "Добавить тег" },
+    templates: { title: tLabel('kanban.kanban-.untitled', "Шаблоны"), name: tLabel('kanban.kanban-.untitled', "Название шаблона"), taskTitle: "Заголовок задачи", search: "Поиск", empty: "Нет шаблонов", createNew: "Новый шаблон", edit: "Редактировать", apply: "Применить" },
     empty: { selectBoard: "Выберите доску", createBoard: "Создать новую доску", noTasks: "Задачи не найдены" },
     time: { tracking: "Учёт времени", target: "Цель", total: "Всего" },
-    chat: { placeholder: "Напишите сообщение... @ для упоминания", systemLog: "Системный лог", mentionHint: "Используйте @ для упоминания пользователей" },
+    chat: { placeholder: tLabel('kanban.kanban-.untitled', "Напишите сообщение... @ для упоминания"), systemLog: "Системный лог", mentionHint: "Используйте @ для упоминания пользователей" },
     board: { newBoard: "Новая доска", newColumn: "Новая колонка", newCard: "Новая задача", addCard: "Добавить карточку" },
-    baskets: { title: "Система 3-х корзин", incoming: "Входящая корзина", pending: "Корзина ожидания", outgoing: "Исходящая корзина", moveToPending: "В обработку", moveToOutgoing: "В исходящую", moveToIncoming: "← Входящая", archive: "В архив", rule24h: "Входящие не должны оставаться более 24 часов", overdueLabel: "Просрочено", empty: "Пусто" }
+    baskets: { title: tLabel('kanban.kanban-.3', "Система 3-х корзин"), incoming: "Входящая корзина", pending: "Корзина ожидания", outgoing: "Исходящая корзина", moveToPending: "В обработку", moveToOutgoing: "В исходящую", moveToIncoming: "← Входящая", archive: "В архив", rule24h: "Входящие не должны оставаться более 24 часов", overdueLabel: "Просрочено", empty: "Пусто" }
   }
 };
 

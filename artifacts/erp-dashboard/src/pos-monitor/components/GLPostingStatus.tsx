@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { glApi } from "../api/pos-monitor.api";
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface GlEntry {
   id: number;
@@ -90,8 +91,8 @@ function FullCard({
   }
 
   const STATUS_MAP: Record<string, { badge: string; label: string }> = {
-    AWAITING_REVIEW: { badge: "pos-badge-yellow", label: "Kutmoqda" },
-    PENDING:         { badge: "pos-badge-yellow", label: "Kutmoqda" },
+    AWAITING_REVIEW: { badge: "pos-badge-yellow", label: tLabel('common.GLPostingStatus.tsx.kutmoqda', "Kutmoqda") },
+    PENDING:         { badge: "pos-badge-yellow", label: tLabel('common.GLPostingStatus.tsx.kutmoqda', "Kutmoqda") },
     APPROVED:        { badge: "pos-badge-green",  label: t("glPosting.approved") },
     REJECTED:        { badge: "pos-badge-red",    label: t("glPosting.rejected") },
   };

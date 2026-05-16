@@ -14,7 +14,12 @@ const LEAK_REPORT = 'docs/i18n-leakage-baseline.json';
 const UZ_DIR = 'artifacts/erp-dashboard/src/locales/uz';
 const RU_DIR = 'artifacts/erp-dashboard/src/locales/ru';
 
-const FIELDS = ['label', 'name', 'title', 'description', 'placeholder', 'tooltip'];
+const FIELDS = [
+  'label', 'name', 'title', 'description', 'placeholder', 'tooltip',
+  'text', 'caption', 'subtitle', 'header', 'message',
+  'displayName', 'displayLabel', 'fullName',
+  // Russian field names too — some files use Cyrillic-named keys
+];
 
 function nsFor(filePath) {
   const norm = filePath.replace(/\\/g, '/');
@@ -87,12 +92,42 @@ const RU_HINTS = new Map(Object.entries({
 function ruHint(uz) {
   const low = uz.toLowerCase().trim();
   if (RU_HINTS.has(low)) return RU_HINTS.get(low);
-  // Word-by-word translation for compound phrases
   const words = low.split(/\s+/);
   const translated = words.map(w => RU_HINTS.get(w) ?? null);
   if (translated.every(Boolean)) return translated.join(' ');
   return uz;
 }
+
+// Inverse hints — Russian source → Uzbek target
+const UZ_HINTS = new Map(Object.entries({
+  'потоки': 'Oqimlar', 'поток': 'Oqim',
+  'название': 'Nomi', 'описание': 'Tavsif', 'заголовок': 'Sarlavha',
+  'распределение ресурсов': 'Resurslarni taqsimlash',
+  'уведомления': 'Bildirishnomalar', 'уведомление': 'Bildirishnoma',
+  'роботы автоматизации': 'Avtomatlashtirish robotlari',
+  'шаблоны': 'Shablonlar', 'шаблон': 'Shablon',
+  'название шаблона': 'Shablon nomi',
+  'напишите сообщение... @ для упоминания': "Xabar yozing... @ tilga olish uchun",
+  'система 3-х корзин': '3 ta savat tizimi',
+  // common Russian-only labels
+  'категория': 'Toifa', 'статус': 'Holat', 'тип': 'Turi', 'дата': 'Sana',
+  'сумма': 'Summa', 'количество': 'Miqdor', 'цена': 'Narx',
+  'создать': 'Yaratish', 'удалить': 'Oʼchirish',
+  'сохранить': 'Saqlash', 'редактировать': 'Tahrirlash',
+  'отмена': 'Bekor', 'отменить': 'Bekor qilish',
+}));
+
+function uzHint(ru) {
+  const low = ru.toLowerCase().trim();
+  if (UZ_HINTS.has(low)) return UZ_HINTS.get(low);
+  const words = low.split(/\s+/);
+  const translated = words.map(w => UZ_HINTS.get(w) ?? null);
+  if (translated.every(Boolean)) return translated.join(' ');
+  return ru;
+}
+
+/** Detect whether text is primarily Russian (Cyrillic). */
+function isRussianText(s) { return /[А-Яа-яЁё]/.test(s); }
 
 function loadJson(p) {
   try { return JSON.parse(readFileSync(p, 'utf-8')); } catch { return {}; }
@@ -124,7 +159,9 @@ const baseline = JSON.parse(readFileSync(LEAK_REPORT, 'utf-8'));
 const byFile = {};
 for (const l of baseline.leaks) {
   if (l.kind !== 'OBJECT_LABEL') continue;
-  if (l.locale !== 'uz') continue;
+  // Handle BOTH uz-leak (will surface in RU rendering) AND ru-leak (will
+  // surface in UZ rendering). The replacement is identical — tLabel keys
+  // resolve at runtime to the current locale.
   byFile[l.file] = byFile[l.file] || [];
   byFile[l.file].push(l);
 }
@@ -162,13 +199,22 @@ for (const [filePath, leaks] of Object.entries(byFile)) {
     if (before.includes('tLabel(')) continue;
     const keySlug = slug(text);
     const fullKey = `${ns}.${fileBase}.${keySlug}`;
-    const ruValue = ruHint(text);
+    // If source text is Russian → UZ value needs Uzbek hint; RU value is the original.
+    // If source text is Uzbek → UZ value is the original; RU value needs Russian hint.
+    let uzValue, ruValue;
+    if (isRussianText(text)) {
+      ruValue = text;
+      uzValue = uzHint(text);
+    } else {
+      uzValue = text;
+      ruValue = ruHint(text);
+    }
     edits.push({
       start: m.index,
       end: m.index + m[0].length,
       replacement: `${field}${between}tLabel('${fullKey}', ${quote}${text}${quote})`,
       key: fullKey,
-      uz: text,
+      uz: uzValue,
       ru: ruValue,
     });
   }
