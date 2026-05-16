@@ -13,6 +13,7 @@ import type { RemainingTabsProps } from "./RemainingTabsTypes";
 import type { TopUser } from "./analytics-types";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function UsersTab({
   stats,
   learningOutcomes,
@@ -101,7 +102,7 @@ export function UsersTab({
                     stroke="hsl(var(--primary))"
                     fillOpacity={1}
                     fill="url(#colorActivity)"
-                    name="Aktiv xodimlar"
+                    name={tLabel('analytics.RemainingTabsUsers.aktivXodimlar', "Aktiv xodimlar")}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -200,7 +201,7 @@ export function UsersTab({
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="count" fill="hsl(var(--primary))" name="Xodimlar soni" />
+              <Bar dataKey="count" fill="hsl(var(--primary))" name={tLabel('analytics.RemainingTabsUsers.xodimlarSoni', "Xodimlar soni")} />
             </BarChart>
           </ResponsiveContainer>
           </div>

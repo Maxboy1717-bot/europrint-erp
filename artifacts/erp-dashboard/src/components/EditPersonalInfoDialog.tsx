@@ -17,6 +17,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface EmployeePersonalInfo {
   age?: number | string;
   gender?: string;
@@ -183,7 +184,7 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-          <Label htmlFor="housingType">Uy turi</Label>
+          <Label htmlFor="housingType">{tLabel('common.EditPersonalInfoDialog.uyTuri', "Uy turi")}</Label>
                 <Select value={formData.housingType} onValueChange={(value) => setFormData({ ...formData, housingType: value })}>
                   <SelectTrigger data-testid="select-housing-type" className="h-9">
                     <SelectValue placeholder={t("tanlang")} />

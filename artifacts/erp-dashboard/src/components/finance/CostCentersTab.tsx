@@ -33,6 +33,7 @@ import type { CostCenter, Department, User } from "@shared/schema";
 import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 const costCenterFormSchema = z.object({
   code: z.string().min(1, "Kod talab qilinadi"),
   name: z.string().min(2, "Nom kamida 2 ta belgidan iborat bo'lishi kerak"),
@@ -171,7 +172,7 @@ export function CostCentersTab() {
                 )} />
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground">Nomi (UZ)</FormLabel>
+                    <FormLabel className="text-muted-foreground">{tLabel('common.CostCentersTab.nomiUz', "Nomi (UZ)")}</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder={t("ishlabChiqarish2")} data-testid="input-cost-center-name" className="bg-background border-border text-foreground" />
                     </FormControl>
@@ -180,9 +181,9 @@ export function CostCentersTab() {
                 )} />
                 <FormField control={form.control} name="nameRu" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground">Nomi (RU)</FormLabel>
+                    <FormLabel className="text-muted-foreground">{tLabel('common.CostCentersTab.nomiRu', "Nomi (RU)")}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Производство" data-testid="input-cost-center-name-ru" className="bg-background border-border text-foreground" />
+                      <Input {...field} placeholder={tLabel('common.CostCentersTab.untitled', "Производство")} data-testid="input-cost-center-name-ru" className="bg-background border-border text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

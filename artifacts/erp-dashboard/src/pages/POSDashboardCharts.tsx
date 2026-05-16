@@ -21,6 +21,7 @@ import {
   type PaymentMethodRow,
 } from "./POSDashboardTypes";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Helpers — transform raw API rows into recharts data
 // ---------------------------------------------------------------------------
@@ -64,7 +65,7 @@ export function MonthlyChartCard({ rows }: MonthlyChartCardProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">30 kunlik sotuv grafigi</CardTitle>
+        <CardTitle className="text-base">{tLabel('common.POSDashboardCharts.30KunlikSotuvGrafigi', "30 kunlik sotuv grafigi")}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={200}>

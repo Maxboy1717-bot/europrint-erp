@@ -25,6 +25,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { DowntimeLog, InsertDowntimeLog, WorkCenter } from "@shared/schema";
 import { insertDowntimeLogSchema } from "@shared/schema";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 type DowntimeLogWithJoins = DowntimeLog & { workCenterName?: string };
 
 export function ERPDowntimeTab() {
@@ -171,9 +172,9 @@ export function ERPDowntimeTab() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="1-smena">1-smena</SelectItem>
-                          <SelectItem value="2-smena">2-smena</SelectItem>
-                          <SelectItem value="3-smena">3-smena</SelectItem>
+                          <SelectItem value="1-smena">{tLabel('erp.ERPDowntimeTab.1Smena', "1-smena")}</SelectItem>
+                          <SelectItem value="2-smena">{tLabel('erp.ERPDowntimeTab.2Smena', "2-smena")}</SelectItem>
+                          <SelectItem value="3-smena">{tLabel('erp.ERPDowntimeTab.3Smena', "3-smena")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

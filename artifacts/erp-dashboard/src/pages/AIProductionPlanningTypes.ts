@@ -162,12 +162,12 @@ export function printPlan(plan: AiPlan): void {
       <span>Mashina soat: <strong>${escHtml(plan.totalMachineHours)}</strong></span>
     </div>
   </div>
-  <h2>Ishlab chiqarish jadvali</h2>
+  <h2>{tLabel('common.AIProductionPlanningTypes.ishlabChiqarishJadvali', "Ishlab chiqarish jadvali")}</h2>
   <table>
-    <thead><tr><th>#</th><th>Papka raqami</th><th>Mashina</th><th>Smena</th><th>Vaqt</th><th>Davomiylik</th></tr></thead>
+    <thead><tr><th>#</th><th>Papka raqami</th><th>Mashina</th><th>{tLabel('common.AIProductionPlanningTypes.smena', "Smena")}</th><th>Vaqt</th><th>Davomiylik</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
-  <h2>Optimallashtirish ko'rsatkichlari</h2>
+  <h2>{tLabel('common.AIProductionPlanningTypes.optimallashtirishKorsatkichlari', "Optimallashtirish ko'rsatkichlari")}</h2>
   <ul>${metrics}</ul>
   <div class="footer">
     <span>Europrint ERP — PP Reja eksporti</span>

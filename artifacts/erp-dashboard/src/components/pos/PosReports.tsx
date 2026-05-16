@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TrendingUp, DollarSign, Package, AlertTriangle } from "lucide-react";
 import { DashboardData } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface PosReportsProps {
   dashboard: DashboardData;
 }
@@ -126,7 +127,7 @@ export function PosReports({ dashboard }: PosReportsProps) {
         <CardContent className="p-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-xs text-muted-foreground">Umumiy savdo (barcha vaqt)</p>
+              <p className="text-xs text-muted-foreground">{tLabel('common.PosReports.umumiySavdoBarchaVaqt', "Umumiy savdo (barcha vaqt)")}</p>
               <p className="text-lg font-bold">{formatCurrency(dashboard.totalSalesAll)}</p>
             </div>
             <div>

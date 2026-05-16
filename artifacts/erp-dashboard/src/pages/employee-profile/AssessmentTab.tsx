@@ -22,6 +22,7 @@ import {
 } from "recharts";
 import { EPStatusPill } from "@/components/ep";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface Assessment {
   id: string;
   employeeId: string;
@@ -373,7 +374,7 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
                   <YAxis domain={[0, 5]} />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="avg" name="O'rtacha baho" stroke="#f59e0b" strokeWidth={2} />
+                  <Line type="monotone" dataKey="avg" name={tLabel('employee-profile.AssessmentTab.ortachaBaho', "O'rtacha baho")} stroke="#f59e0b" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

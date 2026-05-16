@@ -32,6 +32,7 @@ import { LEAD_SOURCES, LEAD_PRIORITIES, leadFormSchema, type LeadFormValues } fr
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface LeadFormProps {
   users: Array<{ id: string; fullName: string }>;
   usersLoading: boolean;
@@ -372,7 +373,7 @@ export function LeadForm({ users, usersLoading, onClose, onCreated }: LeadFormPr
               name="sourceDescription"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Manba tavsifi / Qiziqish mahsuloti</FormLabel>
+                  <FormLabel>{tLabel('common.LeadForm.manbaTavsifiQiziqishMahsuloti', "Manba tavsifi / Qiziqish mahsuloti")}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t("masalanOffsetBosmaA3Format")}

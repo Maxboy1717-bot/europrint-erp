@@ -10,6 +10,7 @@ import { formatPercent } from "./helpers";
 import { ProductionEfficiency } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface ProductionStatsProps {
   data: ProductionEfficiency | undefined;
   isLoading: boolean;
@@ -67,7 +68,7 @@ export function ProductionStats({ data, isLoading }: ProductionStatsProps) {
           ) : (
             <div>
               <div className="text-2xl font-bold text-[var(--ep-blue)]">{formatPercent(data?.orderStats?.onTimeDeliveryRate)}</div>
-              <p className="text-xs text-muted-foreground mt-1">O'z vaqtida yetkazish (OTD)</p>
+              <p className="text-xs text-muted-foreground mt-1">{tLabel('common.ProductionStats.ozVaqtidaYetkazishOtd', "O'z vaqtida yetkazish (OTD)")}</p>
             </div>
           )}
         </CardContent>

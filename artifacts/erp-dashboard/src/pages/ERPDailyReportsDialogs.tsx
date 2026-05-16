@@ -16,6 +16,7 @@ import type { DailyReportFormValues } from "./ERPDailyReportsTypes";
 import { defaultDailyReportValues } from "./ERPDailyReportsTypes";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface ReportFormDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -85,9 +86,9 @@ export function ReportFormDialog({
                       <SelectValue placeholder={t("smenaTanlang")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1-smena">1-smena</SelectItem>
-                      <SelectItem value="2-smena">2-smena</SelectItem>
-                      <SelectItem value="3-smena">3-smena</SelectItem>
+                      <SelectItem value="1-smena">{tLabel('common.ERPDailyReportsDialogs.1Smena', "1-smena")}</SelectItem>
+                      <SelectItem value="2-smena">{tLabel('common.ERPDailyReportsDialogs.2Smena', "2-smena")}</SelectItem>
+                      <SelectItem value="3-smena">{tLabel('common.ERPDailyReportsDialogs.3Smena', "3-smena")}</SelectItem>
                     </SelectContent>
                   </Select>
                 )}

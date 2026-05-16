@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 export function PinPromptModal({ documentId, action, open, onOpenChange, }: {
   documentId: string;
   action: 'approve' | 'reject' | 'cancel';
@@ -68,7 +69,7 @@ export function PinPromptModal({ documentId, action, open, onOpenChange, }: {
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-[18px] font-semibold">{titleText}</DialogTitle>
-          <DialogDescription>Imzo uchun PIN kodingizni kiriting (4-8 raqam).</DialogDescription>
+          <DialogDescription>{tLabel('common.PinPromptModal.imzoUchunPinKodingizniKiriting', "Imzo uchun PIN kodingizni kiriting (4-8 raqam).")}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3 py-2">

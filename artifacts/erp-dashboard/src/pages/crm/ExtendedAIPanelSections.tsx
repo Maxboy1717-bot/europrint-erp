@@ -14,6 +14,7 @@ import { getSentimentColor, getPriorityColor } from "./ExtendedAIPanelTypes";
 
 import { useTranslation } from '@/lib/i18n';
 import { EPStatusPill, EPLoader } from "@/components/ep";
+import { tLabel } from '@/lib/i18n/tLabel';
 // ── Voice ──────────────────────────────────────────────────────────────────
 
 interface VoicePanelProps { callTranscript: string; onTranscriptChange: (v: string) => void; onAnalyze: () => void; loading: boolean; callAnalysis: CallAnalysis | null; }
@@ -208,9 +209,9 @@ export function SupervisorPanel({ onLoad, loading, supervisorData }: SupervisorP
               <div key={label} className={`text-center p-2 rounded ${bg}`}><div className={`text-lg font-bold ${tc}`}>{val}</div><div className="text-xs text-muted-foreground">{label}</div></div>
             ))}
           </div>
-          <SupervisorList items={supervisorData.slaViolations} color="text-[var(--ep-red)]" icon={<Clock className="h-3 w-3" />} label="SLA buzilishlar"
+          <SupervisorList items={supervisorData.slaViolations} color="text-[var(--ep-red)]" icon={<Clock className="h-3 w-3" />} label={tLabel('crm.ExtendedAIPanelSections.slaBuzilishlar', "SLA buzilishlar")}
             renderBadge={(i) => <EPStatusPill tone="danger" className="text-[10px] shrink-0 ml-2">{i.hoursOverdue} soat</EPStatusPill>} />
-          <SupervisorList items={supervisorData.inactiveDeals} color="text-[var(--ep-yellow)]" icon={<Pause className="h-3 w-3" />} label="Faoliyatsiz bitimlar (3+ kun)"
+          <SupervisorList items={supervisorData.inactiveDeals} color="text-[var(--ep-yellow)]" icon={<Pause className="h-3 w-3" />} label={tLabel('crm.ExtendedAIPanelSections.faoliyatsizBitimlar3Kun', "Faoliyatsiz bitimlar (3+ kun)")}
             renderBadge={(i) => <EPStatusPill tone="neutral" className="text-[10px] shrink-0 ml-2">{i.daysSinceActivity} kun</EPStatusPill>} />
           <SupervisorList items={supervisorData.hygieneIssues} color="text-[var(--ep-primary)]" icon={<Bell className="h-3 w-3" />} label="CRM gigiyena muammolari"
             renderBadge={(i) => <Badge variant="outline" className="text-[10px] text-[var(--ep-primary)] shrink-0 ml-2">{i.missingFields?.length} maydon</Badge>} />

@@ -25,6 +25,7 @@ import { getScoreColor } from "./EmployeeDailyKPIPanelTypes";
 import type { KpiRecord } from "./EmployeeDailyKPIPanelTypes";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface RadarDataPoint {
   dimension: string;
   "Kompaniya o'rtacha": number;
@@ -61,14 +62,14 @@ export function RadarChartSection({ radarData, isLoading, hasRecords }: RadarCha
                 <PolarAngleAxis dataKey="dimension" className="text-xs" />
                 <PolarRadiusAxis angle={30} domain={[0, 100]} />
                 <Radar
-                  name="Kompaniya o'rtacha"
+                  name={tLabel('common.EmployeeDailyKPIPanelSections.kompaniyaOrtacha', "Kompaniya o'rtacha")}
                   dataKey="Kompaniya o'rtacha"
                   stroke="hsl(160, 60%, 45%)"
                   fill="hsl(160, 60%, 45%)"
                   fillOpacity={0.3}
                 />
                 <Radar
-                  name="Bo'lim o'rtacha"
+                  name={tLabel('common.EmployeeDailyKPIPanelSections.bolimOrtacha', "Bo'lim o'rtacha")}
                   dataKey="Bo'lim o'rtacha"
                   stroke="hsl(220, 60%, 55%)"
                   fill="hsl(220, 60%, 55%)"

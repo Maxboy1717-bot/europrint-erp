@@ -9,6 +9,7 @@ import { KpiCard } from "./KpiCard";
 import { fmtMoney, type FinanceInfo, type BasicInfo } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function FinanceTab({ finance, basic }: { finance: FinanceInfo; basic: BasicInfo }) {
   const { t } = useTranslation("common");
   return (
@@ -17,7 +18,7 @@ export function FinanceTab({ finance, basic }: { finance: FinanceInfo; basic: Ba
         <KpiCard icon={DollarSign} label={t("joriyOrtNarx")} value={fmtMoney(finance.currentAvgPrice, finance.currency)} sub={`/${basic.unitOfMeasure}`} />
         <KpiCard icon={ShoppingCart} label={t("oxirgiXaridNarxi")} value={fmtMoney(finance.lastPurchasePrice, finance.currency)} sub={`/${basic.unitOfMeasure}`} />
         <KpiCard icon={Package} label={t("omborQiymati")} value={fmtMoney(finance.currentStockValue, finance.currency)} color="text-primary" />
-        <KpiCard icon={BarChart2} label="Oylik xarajat (o'rt)" value={fmtMoney(finance.monthlySpendAvg, finance.currency)} />
+        <KpiCard icon={BarChart2} label={tLabel('common.FinanceTab.oylikXarajatOrt', "Oylik xarajat (o'rt)")} value={fmtMoney(finance.monthlySpendAvg, finance.currency)} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>

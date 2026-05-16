@@ -10,6 +10,7 @@ import { apiRequest } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface Customer360 {
   customer: Record<string, any> | null;
   deals:    Array<Record<string, any>>;
@@ -91,7 +92,7 @@ export function CustomerCard({ customerId }: { customerId: number }) {
           <TabsTrigger value="orders"><ShoppingBag className="h-3.5 w-3.5 mr-1.5" />{t("buyurtmalar")}</TabsTrigger>
           <TabsTrigger value="finance"><Wallet className="h-3.5 w-3.5 mr-1.5" />{t("moliya")}</TabsTrigger>
           <TabsTrigger value="messages"><MessageSquare className="h-3.5 w-3.5 mr-1.5" />{t("muloqot")}</TabsTrigger>
-          <TabsTrigger value="ai"><Sparkles className="h-3.5 w-3.5 mr-1.5" />AI tavsiyalar</TabsTrigger>
+          <TabsTrigger value="ai"><Sparkles className="h-3.5 w-3.5 mr-1.5" />{tLabel('common.CustomerCard.aiTavsiyalar', "AI tavsiyalar")}</TabsTrigger>
         </TabsList>
 
         {/* Umumiy */}

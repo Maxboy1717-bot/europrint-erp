@@ -25,6 +25,7 @@ import {
   type LastSale,
 } from "./POSDashboardTypes";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // PaymentDialog
 // ---------------------------------------------------------------------------
@@ -258,7 +259,7 @@ export function ReceiptDialog({
             <Separator />
 
             <div className="flex justify-between font-bold text-base">
-              <span>JAMI:</span>
+              <span>{tLabel('common.POSDashboardDialogs.jami', "JAMI:")}</span>
               <span>{formatUZS(lastSale.total)}</span>
             </div>
 

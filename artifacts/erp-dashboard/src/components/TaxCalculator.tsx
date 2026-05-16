@@ -1,4 +1,5 @@
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module TaxCalculator
  * @description React UI component.
@@ -38,7 +39,7 @@ export function TaxCalculator({ grossSalary, className }: TaxCalculatorProps) {
         <span className="text-muted-foreground">{t("yalpiMaosh")}</span>
         <span className="font-medium text-right">{fmt(grossSalary)}</span>
 
-        <span className="text-muted-foreground">Daromad solig'i (12%):</span>
+        <span className="text-muted-foreground">{tLabel('common.TaxCalculator.daromadSoligi12', "Daromad solig'i (12%):")}</span>
         <span className="text-[var(--ep-red)] text-right">−{fmt(incomeTax)}</span>
 
         <span className="text-muted-foreground">Pensiya fondi (0.1%):</span>

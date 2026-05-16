@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { History, Search, Calendar, User, FileText, Download } from "lucide-react";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface AuditLog {
   id: number;
   user_id: number;
@@ -198,11 +199,11 @@ export default function WarehouseAuditLog() {
               ) : (
                 <div className="space-y-3 text-sm">
                   <div>
-                    <div className="text-xs text-gray-500 font-semibold mb-1">SANA</div>
+                    <div className="text-xs text-gray-500 font-semibold mb-1">{tLabel('common.WarehouseAuditLog.sana', "SANA")}</div>
                     <div>{fmtDate(selected.created_at)}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 font-semibold mb-1">FOYDALANUVCHI</div>
+                    <div className="text-xs text-gray-500 font-semibold mb-1">{tLabel('common.WarehouseAuditLog.foydalanuvchi', "FOYDALANUVCHI")}</div>
                     <div>{selected.user_name ?? `#${selected.user_id}`}</div>
                   </div>
                   <div>
@@ -223,7 +224,7 @@ export default function WarehouseAuditLog() {
                   )}
                   {selected.old_value && (
                     <div>
-                      <div className="text-xs text-gray-500 font-semibold mb-1">OLDINGI</div>
+                      <div className="text-xs text-gray-500 font-semibold mb-1">{tLabel('common.WarehouseAuditLog.oldingi', "OLDINGI")}</div>
                       <pre className="text-xs bg-white p-2 rounded border overflow-x-auto max-h-32">
                         {JSON.stringify(selected.old_value, null, 2)}
                       </pre>
@@ -231,7 +232,7 @@ export default function WarehouseAuditLog() {
                   )}
                   {selected.new_value && (
                     <div>
-                      <div className="text-xs text-gray-500 font-semibold mb-1">YANGI</div>
+                      <div className="text-xs text-gray-500 font-semibold mb-1">{tLabel('common.WarehouseAuditLog.yangi', "YANGI")}</div>
                       <pre className="text-xs bg-white p-2 rounded border overflow-x-auto max-h-32">
                         {JSON.stringify(selected.new_value, null, 2)}
                       </pre>

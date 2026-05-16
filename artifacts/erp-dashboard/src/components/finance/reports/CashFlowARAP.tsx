@@ -12,6 +12,7 @@ import { formatShortCurrency } from "./helpers";
 import { WeeklySummary } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface CashFlowARAPProps {
   data: WeeklySummary | undefined;
   isLoading: boolean;
@@ -72,7 +73,7 @@ export function CashFlowARAP({ data, isLoading }: CashFlowARAPProps) {
             <Activity className="h-5 w-5" />
             Debitorlik / Kreditorlik harakati
           </CardTitle>
-          <CardDescription>AR/AP haftalik o'zgarishlari</CardDescription>
+          <CardDescription>{tLabel('common.CashFlowARAP.arApHaftalikOzgarishlari', "AR/AP haftalik o'zgarishlari")}</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (

@@ -14,6 +14,7 @@ import { queryClient } from "@/lib/queryClient";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface LeaderboardTabProps {
   topEmployees: LeaderboardEmployee[];
   topEmpLoading: boolean;
@@ -271,8 +272,8 @@ export function LeaderboardTab({
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="completionRate" fill="hsl(var(--primary))" name="Tugatish %" />
-                  <Bar dataKey="averageScore" fill="hsl(var(--secondary))" name="O'rtacha ball" />
+                  <Bar dataKey="completionRate" fill="hsl(var(--primary))" name={tLabel('analytics.LeaderboardTab.tugatish', "Tugatish %")} />
+                  <Bar dataKey="averageScore" fill="hsl(var(--secondary))" name={tLabel('analytics.LeaderboardTab.ortachaBall', "O'rtacha ball")} />
                 </BarChart>
               </ResponsiveContainer>
               </div>

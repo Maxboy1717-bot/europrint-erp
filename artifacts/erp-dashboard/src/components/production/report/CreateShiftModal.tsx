@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DEPARTMENTS } from "./helpers";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface CreateShiftModalProps {
   open: boolean;
   onClose: () => void;
@@ -82,9 +83,9 @@ export function CreateShiftModal({ open, onClose, onCreated }: CreateShiftModalP
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1-smena</SelectItem>
-                  <SelectItem value="2">2-smena</SelectItem>
-                  <SelectItem value="3">3-smena</SelectItem>
+                  <SelectItem value="1">{tLabel('common.CreateShiftModal.1Smena', "1-smena")}</SelectItem>
+                  <SelectItem value="2">{tLabel('common.CreateShiftModal.2Smena', "2-smena")}</SelectItem>
+                  <SelectItem value="3">{tLabel('common.CreateShiftModal.3Smena', "3-smena")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

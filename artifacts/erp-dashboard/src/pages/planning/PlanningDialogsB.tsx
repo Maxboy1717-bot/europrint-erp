@@ -16,6 +16,7 @@ import type { InsertProductionFact } from "@shared/schema";
 import type { WorkCenter, Product, MRPRun, MRPResult, PlanningTranslations } from "./planning-types";
 
 import { EPStatusPill } from "@/components/ep";
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Fact Form Dialog ─────────────────────────────────────────────────────────
 
 interface FactDialogProps {
@@ -54,9 +55,9 @@ export function FactFormDialog({open, onOpenChange, factForm, onSubmit, isSaving
                   <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl><SelectTrigger data-testid="select-fact-shift" className="h-9"><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="1-smena">1-smena</SelectItem>
-                      <SelectItem value="2-smena">2-smena</SelectItem>
-                      <SelectItem value="3-smena">3-smena</SelectItem>
+                      <SelectItem value="1-smena">{tLabel('planning.PlanningDialogsB.1Smena', "1-smena")}</SelectItem>
+                      <SelectItem value="2-smena">{tLabel('planning.PlanningDialogsB.2Smena', "2-smena")}</SelectItem>
+                      <SelectItem value="3-smena">{tLabel('planning.PlanningDialogsB.3Smena', "3-smena")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

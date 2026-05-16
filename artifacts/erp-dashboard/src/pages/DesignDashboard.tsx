@@ -14,6 +14,7 @@ import { useTranslation } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface DesignStats {
   totalOrders: number;
   activeOrders: number;
@@ -177,7 +178,7 @@ export default function DesignDashboard() {
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip />
-                  <Bar dataKey="value" name="Buyurtmalar" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="value" name={tLabel('common.DesignDashboard.buyurtmalar', "Buyurtmalar")} radius={[4, 4, 0, 0]}>
                     {(Array.isArray(statusData) ? statusData : []).map((entry, index) => (
                       <Cell key={`cell-bar-${index}`} fill={entry.color} />
                     ))}

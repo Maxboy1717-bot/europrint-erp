@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Hash } from "lucide-react";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function SiklHisobBolimi() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -68,7 +69,7 @@ export function SiklHisobBolimi() {
         </Button>
         <div className="text-xs text-muted-foreground space-y-1">
           <div>Farq &lt;2% = Avtomatik tuzatish</div>
-          <div>Farq 2-5% = Supervisor tasdig'i kerak</div>
+          <div>{tLabel('common.SiklHisobBolimi.farq25SupervisorTasdigi', "Farq 2-5% = Supervisor tasdig'i kerak")}</div>
           <div>Farq &gt;5% = Qayta sanash kerak!</div>
         </div>
       </CardContent>

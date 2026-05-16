@@ -21,6 +21,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface CreditTabProps {
   companyId: number;
   creditData: CreditLimit | null;
@@ -171,7 +172,7 @@ export function CreditTab({companyId, creditData }: CreditTabProps) {
               </div>
             )}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Yangi kredit limiti (UZS) *</label>
+              <label className="text-sm font-medium">{tLabel('common.CreditTab.yangiKreditLimitiUzs', "Yangi kredit limiti (UZS) *")}</label>
               <Input
                 type="number"
                 value={newCreditLimit}

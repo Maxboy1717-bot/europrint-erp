@@ -10,6 +10,7 @@ import { CheckCircle2, Plus, Trash2 } from "lucide-react";
 import type { KirimConfig, LineItem, Warehouse, Material } from "./WarehouseKirimWizardTypes";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Step 1: Asosiy ma'lumotlar ───────────────────────────────────────────────
 interface Step1Props {
   header: {
@@ -55,7 +56,7 @@ export function Step1({header, setHeader, warehouses, cfg }: Step1Props) {
         </div>
         {cfg.showTin && (
           <div>
-            <Label>Ta'minotchi STIR/INN</Label>
+            <Label>{tLabel('common.WarehouseKirimWizardSteps.taminotchiStirInn', "Ta'minotchi STIR/INN")}</Label>
             <Input value={header.supplierTin}
                    onChange={e => setHeader({...header, supplierTin: e.target.value})}
                    placeholder="123456789" />
@@ -195,7 +196,7 @@ export function Step3({ lines, cfg, onUpdateLine }: Step3Props) {
             <div className="text-sm font-semibold mb-3">Qator #{i + 1} — {l.materialName}</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label>Og'irlik (kg)</Label>
+                <Label>{tLabel('common.WarehouseKirimWizardSteps.ogirlikKg', "Og'irlik (kg)")}</Label>
                 <Input type="number" min="0" step="any"
                        value={l.weightKg || ""}
                        onChange={e => onUpdateLine(l._key, "weightKg", parseFloat(e.target.value) || 0)} />
@@ -261,7 +262,7 @@ export function Step4({ lines, header, activeWarehouse, cfg, totalQty, totalValu
           </tbody>
           <tfoot>
             <tr className="border-t bg-gray-50 font-bold">
-              <td className="p-2">JAMI</td>
+              <td className="p-2">{tLabel('common.WarehouseKirimWizardSteps.jami', "JAMI")}</td>
               <td className="p-2 text-right">{totalQty.toLocaleString("uz-UZ")}</td>
               <td />
               <td className="p-2 text-right">{totalValue.toLocaleString("uz-UZ")} {header.currency}</td>

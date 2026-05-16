@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { warehouseFeaturesApi } from "../api/pos-monitor.api";
 import { useTranslation } from "@/lib/i18n";
+import { tLabel } from '@/lib/i18n/tLabel';
 interface WarehouseKpi {
   warehouseId: number; warehouseCode: string; warehouseName: string; warehouseType: string;
   totalMaterials: number; totalQuantity: number; totalValue: number;
@@ -95,7 +96,7 @@ export default function PosKpiDashboard() {
             <KpiCard icon="💰" label={t("jamiQiymat1")} value={fmtMoney(sysKpi.totalStockValue) + " so'm"} color="#059669" />
             <KpiCard icon="⚠️" label={t("pastStok")} value={String(sysKpi.lowStockAlerts)} color={sysKpi.lowStockAlerts > 0 ? "#DC2626" : "#059669"} />
             <KpiCard icon="⏳" label={t("tasdiqlashKutmoqda")} value={String(sysKpi.pendingMovements)} color={sysKpi.pendingMovements > 0 ? "#D97706" : "#059669"} />
-            <KpiCard icon="🔬" label="QC kutmoqda" value={String(sysKpi.qcPending)} color={sysKpi.qcPending > 0 ? "#D97706" : "#059669"} />
+            <KpiCard icon="🔬" label={tLabel('common.PosKpiDashboard.qcKutmoqda', "QC kutmoqda")} value={String(sysKpi.qcPending)} color={sysKpi.qcPending > 0 ? "#D97706" : "#059669"} />
             <KpiCard icon="📅" label={t("bugungiHarakatlar")} value={String(sysKpi.todayMovements)} />
             <KpiCard icon="📊" label={t("weekly")} value={String(sysKpi.weeklyMovements)} />
             <KpiCard icon="📈" label={t("monthly")} value={String(sysKpi.monthlyMovements)} />

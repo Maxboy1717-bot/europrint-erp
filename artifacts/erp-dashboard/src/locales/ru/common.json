@@ -8585,7 +8585,8 @@
   "FinanceTab": {
     "tasdiqlangan": "Подтверждено",
     "kutilmoqda": "Ожидает",
-    "tolangan": "To'langan"
+    "tolangan": "To'langan",
+    "oylikXarajatOrt": "Oylik xarajat (o'rt)"
   },
   "OffboardingTab": {
     "kutilmoqda": "Ожидает",
@@ -8930,7 +8931,8 @@
     "tsx": {
       "jamiBalans": "Jami balans",
       "jamiQatorlar": "Jami qatorlar"
-    }
+    },
+    "umumiySavdoBarchaVaqt": "Umumiy savdo (barcha vaqt)"
   },
   "AIInterviewPublicPage": {
     "europrintAi": "EuroPrint AI Интервью"
@@ -9028,5 +9030,233 @@
     "tsx": {
       "kirishXatosiQaytadanUrinibKoring": "Kirish xatosi. Qaytadan urinib ko'ring."
     }
+  },
+  "AIDesignGenerator": {
+    "dizaynTasdiqlangandaPapkaordersStatusPending": "Dizayn tasdiqlanganda papkaOrders.status = \"pending_tech\" ga o'zgaradi — texnolog moduli avtomatik signal oladi"
+  },
+  "AIProductionPlanningTypes": {
+    "optimallashtirishKorsatkichlari": "Показатели оптимизации",
+    "smena": "Смена",
+    "ishlabChiqarishJadvali": "График производства"
+  },
+  "CandidateReportSections": {
+    "manbaKanal": "Manba (kanal)"
+  },
+  "DesignDashboard": {
+    "buyurtmalar": "Buyurtmalar"
+  },
+  "EmployeeDailyKPIPanelSections": {
+    "bolimOrtacha": "Bo'lim o'rtacha",
+    "kompaniyaOrtacha": "Kompaniya o'rtacha"
+  },
+  "EmployeeInventory": {
+    "faol": "Активный"
+  },
+  "ERPDailyReportsDialogs": {
+    "3Smena": "3-смена",
+    "2Smena": "2-смена",
+    "1Smena": "1-смена"
+  },
+  "ERPDailyReportsSections": {
+    "3Smena": "3-смена",
+    "2Smena": "2-смена",
+    "1Smena": "1-смена"
+  },
+  "TurnoverTab": {
+    "ketganlar": "Ketganlar",
+    "yangiQabul": "Yangi qabul"
+  },
+  "HRDashboardMockup": {
+    "yangi30Kun": "Yangi (30 kun)"
+  },
+  "KnowledgeBaseSections": {
+    "untitled": "Русский:"
+  },
+  "POSDashboardCharts": {
+    "30KunlikSotuvGrafigi": "30 kunlik sotuv grafigi"
+  },
+  "POSDashboardDialogs": {
+    "jami": "JAMI:"
+  },
+  "POSInventoryPageChart": {
+    "sotuv": "Sotuv"
+  },
+  "PositionsSections": {
+    "sht": "Shtат"
+  },
+  "ProductionFactsPage": {
+    "1Smena": "1-смена"
+  },
+  "QuestionnaireTemplatesDialogs": {
+    "haYoq": "Ha/Yo'q"
+  },
+  "RaciCrisisPageSections": {
+    "raciVazifalarTopilmadi": "RACI vazifalar topilmadi"
+  },
+  "TechApprovalSections": {
+    "materialNomiMasalanGofrokarton": "Material nomi (masalan: gofrokarton)"
+  },
+  "TechCardsTypes": {
+    "birlik": "Birlik",
+    "miqdor1000": "Miqdor/1000",
+    "materialNomi": "Material nomi",
+    "materiallarBom": "Materiallar (BOM)",
+    "operatsiyaNomi": "Operatsiya nomi",
+    "operatsiyalarRouting": "Operatsiyalar (Routing)",
+    "jamiDavomiylik": "Jami davomiylik:",
+    "mahsulotTuri": "Тип продукта:",
+    "umumiyMalumotlar": "Общие сведения",
+    "materiallarMavjudEmas": "Materiallar mavjud emas",
+    "operatsiyalarMavjudEmas": "Operatsiyalar mavjud emas"
+  },
+  "WarehouseAuditLog": {
+    "yangi": "Новый",
+    "oldingi": "OLDINGI",
+    "foydalanuvchi": "FOYDALANUVCHI",
+    "sana": "SANA"
+  },
+  "WarehouseKirimWizardSteps": {
+    "jami": "JAMI",
+    "ogirlikKg": "Og'irlik (kg)",
+    "taminotchiStirInn": "Ta'minotchi STIR/INN"
+  },
+  "WarehouseKpiHub": {
+    "qcKutmoqda": "QC kutmoqda"
+  },
+  "AdvancedFilters": {
+    "tavsifIxtiyoriy": "Tavsif (ixtiyoriy)"
+  },
+  "EmployeeDetailDialog": {
+    "buzilishlar": "Buzilishlar",
+    "jamiHodisalar": "Jami hodisalar",
+    "kunlikFaollikSonggi7Kun": "Kunlik Faollik (So'nggi 7 kun)"
+  },
+  "PinPromptModal": {
+    "imzoUchunPinKodingizniKiriting": "Imzo uchun PIN kodingizni kiriting (4-8 raqam)."
+  },
+  "MessageInput": {
+    "xabarYozingEnterYuborishShift": "Xabar yozing... (Enter = yuborish, Shift+Enter = yangi qator)"
+  },
+  "ContactsTab": {
+    "rolLavozim": "Rol / Lavozim"
+  },
+  "CreditTab": {
+    "yangiKreditLimitiUzs": "Yangi kredit limiti (UZS) *"
+  },
+  "CustomerCard": {
+    "aiTavsiyalar": "AI tavsiyalar"
+  },
+  "LeadForm": {
+    "manbaTavsifiQiziqishMahsuloti": "Manba tavsifi / Qiziqish mahsuloti"
+  },
+  "WatcherSelector": {
+    "untitled": "Поиск сотрудников..."
+  },
+  "CompanyStateWidget": {
+    "daromadMaqsad": "Daromad / Maqsad",
+    "foydaMaqsad": "Foyda / Maqsad"
+  },
+  "Login": {
+    "boshqaruvTizimi": "boshqaruv tizimi"
+  },
+  "NotificationBell": {
+    "menyuniOchishYopish": "Menyuni ochish/yopish"
+  },
+  "EditPersonalInfoDialog": {
+    "uyTuri": "Uy turi"
+  },
+  "CostCentersTab": {
+    "untitled": "Производство",
+    "nomiRu": "Nomi (RU)",
+    "nomiUz": "Nomi (UZ)"
+  },
+  "CategoryDialog": {
+    "untitled": "Название категории"
+  },
+  "ProfitCentersTab": {
+    "untitled": "Основные продажи",
+    "nomiRu": "Nomi (RU)",
+    "nomiUz": "Nomi (UZ)"
+  },
+  "CashFlowARAP": {
+    "arApHaftalikOzgarishlari": "AR/AP haftalik o'zgarishlari"
+  },
+  "IncomeStatement": {
+    "operatsionFoydaEbit": "Operatsion foyda (EBIT)"
+  },
+  "ProductionStats": {
+    "ozVaqtidaYetkazishOtd": "O'z vaqtida yetkazish (OTD)"
+  },
+  "ExtraTabs": {
+    "jamiBolimlarFarzand": "Jami bo'limlar (farzand)"
+  },
+  "StatsCharts": {
+    "otishBalli": "O'tish balli"
+  },
+  "CourseContentForm": {
+    "untitled": "Подробное описание курса...",
+    "tavsifRus": "Tavsif (Rus) *",
+    "tavsifOzbek": "Tavsif (O'zbek) *"
+  },
+  "MentorForm": {
+    "kimQisqachaMalumot": "Kim (qisqacha ma'lumot)"
+  },
+  "AddProductDialog": {
+    "minZaxiraOgohlantirish": "Min zaxira (ogohlantirish)"
+  },
+  "CreateShiftModal": {
+    "3Smena": "3-смена",
+    "2Smena": "2-смена",
+    "1Smena": "1-смена"
+  },
+  "helpers-channel-status": {
+    "untitled": "Ждёт"
+  },
+  "LeadsTab": {
+    "taxminiyQiymatSom": "Taxminiy qiymat (so'm)"
+  },
+  "PaymentsTab": {
+    "summaSom": "Summa (so'm)"
+  },
+  "QuotationsTab": {
+    "miqdorDona": "Miqdor (dona)"
+  },
+  "CameraAIPrompts": {
+    "buKameraUchunAiKorsatmasi": "Bu kamera uchun AI ko'rsatmasi (prompt) kiriting..."
+  },
+  "TaxCalculator": {
+    "daromadSoligi12": "Daromad solig'i (12%):"
+  },
+  "SiklHisobBolimi": {
+    "farq25SupervisorTasdigi": "Farq 2-5% = Supervisor tasdig'i kerak"
+  },
+  "ExitControlPanel": {
+    "ogohlantirish": "OGOHLANTIRISH",
+    "ruxsat": "RUXSAT"
+  },
+  "ProductionTab": {
+    "kunlikSarflanishOrt": "Kunlik sarflanish (o'rt)"
+  },
+  "WmsFinanceTab": {
+    "oylikXarajatOrt": "Oylik xarajat (o'rt)"
+  },
+  "PosAdminSections": {
+    "ipManzil": "IP manzil"
+  },
+  "PosKpiDashboard": {
+    "qcKutmoqda": "QC kutmoqda"
+  },
+  "PosMaterialBalance": {
+    "jamiMiqdor": "JAMI MIQDOR",
+    "jamiQiymat": "JAMI QIYMAT"
+  },
+  "PosMaterialNew": {
+    "300": "Бумага 300г/м²",
+    "materialNomiRuscha": "Material nomi (ruscha)",
+    "qogoz300gM": "Qog'oz 300g/m²",
+    "materialNomiOzbekcha": "Material nomi (o'zbekcha) *"
+  },
+  "PosMaterials": {
+    "material360ProfiliHarOmborda": "Material 360° profili (har omborda stok, harakatlar, narxlar)"
   }
 }

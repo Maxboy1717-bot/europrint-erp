@@ -20,6 +20,7 @@ import {
   fmt, LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, SOURCE_LABELS 
 } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 const LEAD_STAGES = ["new", "working", "quoted", "negotiating", "won", "lost", "frozen"];
 
 export function LeadsTab() {
@@ -99,7 +100,7 @@ export function LeadsTab() {
               <div><Label>{t("qiziqishMahsuloti")}</Label>
                 <Input data-testid="input-lead-product" value={form.productInterest}
                   onChange={e => setForm({ ...form, productInterest: e.target.value })} /></div>
-              <div><Label>Taxminiy qiymat (so'm)</Label>
+              <div><Label>{tLabel('common.LeadsTab.taxminiyQiymatSom', "Taxminiy qiymat (so'm)")}</Label>
                 <Input data-testid="input-lead-value" type="number" value={form.estimatedValue}
                   onChange={e => setForm({ ...form, estimatedValue: e.target.value })} /></div>
               <Button data-testid="button-save-lead" className="w-full"

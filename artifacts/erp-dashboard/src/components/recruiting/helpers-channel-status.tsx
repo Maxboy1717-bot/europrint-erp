@@ -22,6 +22,7 @@ import {
 } from "./helpers-constants";
 import type { Vacancy } from "@/components/recruiting/types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function ChannelStatusPanel({
   vacancy,
   onUpdate,
@@ -132,7 +133,7 @@ export function ChannelStatusPanel({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="posted">{t("elonBerildi")}</SelectItem>
-                    <SelectItem value="pending">Ждёт</SelectItem>
+                    <SelectItem value="pending">{tLabel('common.helpers-channel-status.untitled', "Ждёт")}</SelectItem>
                     <SelectItem value="not_posted">{t("berilmadi")}</SelectItem>
                   </SelectContent>
                 </Select>

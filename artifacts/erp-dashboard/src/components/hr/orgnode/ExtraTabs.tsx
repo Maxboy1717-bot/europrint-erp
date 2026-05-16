@@ -9,6 +9,7 @@ import { StatCard } from "./StatCard";
 import { NodeDetail, NODE_TYPE_LABELS } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface StatsTabProps {
   node: NodeDetail;
 }
@@ -28,7 +29,7 @@ export function StatsTab({ node }: StatsTabProps) {
         />
         <StatCard
           icon={<Building2 className="h-4 w-4" />}
-          label="Jami bo'limlar (farzand)"
+          label={tLabel('common.ExtraTabs.jamiBolimlarFarzand', "Jami bo'limlar (farzand)")}
           value={node.childCount}
           color="#1d4ed8"
         />

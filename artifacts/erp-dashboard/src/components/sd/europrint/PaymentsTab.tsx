@@ -21,6 +21,7 @@ import {
   fmt, PAYMENT_STATUS_COLORS 
 } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function PaymentsTab() {
   const { t } = useTranslation("common");
   const [tab, setTab] = useState<"all" | "overdue" | "debitors">("all");
@@ -95,7 +96,7 @@ export function PaymentsTab() {
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Summa (so'm)</Label>
+              <div><Label>{tLabel('common.PaymentsTab.summaSom', "Summa (so'm)")}</Label>
                 <Input data-testid="input-payment-amount" type="number" value={form.amount}
                   onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
               <div><Label>{t("tur")}</Label>

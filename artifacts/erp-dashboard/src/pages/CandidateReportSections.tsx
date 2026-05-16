@@ -12,6 +12,7 @@ import type {
 import { CATEGORY_LABELS, TOOL_TEST_TRAIT_LABELS } from "./CandidateReportTypes";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function Section({
   title, children, number,
 }: {
@@ -57,7 +58,7 @@ export function Section1MainResults({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <InfoRow label="Manba (kanal)" value={candidate.source} />
+        <InfoRow label={tLabel('common.CandidateReportSections.manbaKanal', "Manba (kanal)")} value={candidate.source} />
         <InfoRow label={t("status28")} value={candidate.status} />
         <InfoRow label={t("Izoh")} value={candidate.notes} />
       </div>

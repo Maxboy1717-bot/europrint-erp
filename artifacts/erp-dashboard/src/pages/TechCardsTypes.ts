@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module TechCardsTypes
  * @description Shared TypeScript interfaces, constants, and pure utility functions
@@ -115,7 +117,7 @@ export function buildPdfHtml(card: TechCard): string {
         </tr>`
           )
           .join("")
-      : `<tr><td colspan="5" style="text-align:center;color:#888">Operatsiyalar mavjud emas</td></tr>`;
+      : `<tr><td colspan="5" style="text-align:center;color:#888">{tLabel('common.TechCardsTypes.operatsiyalarMavjudEmas', "Operatsiyalar mavjud emas")}</td></tr>`;
 
   const matRows =
     card.materials && card.materials.length > 0
@@ -131,7 +133,7 @@ export function buildPdfHtml(card: TechCard): string {
         </tr>`
           )
           .join("")
-      : `<tr><td colspan="5" style="text-align:center;color:#888">Materiallar mavjud emas</td></tr>`;
+      : `<tr><td colspan="5" style="text-align:center;color:#888">{tLabel('common.TechCardsTypes.materiallarMavjudEmas', "Materiallar mavjud emas")}</td></tr>`;
 
   return `<!DOCTYPE html>
 <html lang="uz">
@@ -162,24 +164,24 @@ export function buildPdfHtml(card: TechCard): string {
     <h1>Texnologik Karta</h1>
     <div>${escHtml(card.name)} <span class="badge">${card.isActive ? "Faol" : "Nofaol"}</span></div>
   </div>
-  <h3>Umumiy ma'lumotlar</h3>
+  <h3>{tLabel('common.TechCardsTypes.umumiyMalumotlar', "Umumiy ma'lumotlar")}</h3>
   <div class="meta">
-    <div class="meta-item"><span class="meta-label">Mahsulot turi:</span> ${escHtml(card.productType)}</div>
+    <div class="meta-item"><span class="meta-label">{tLabel('common.TechCardsTypes.mahsulotTuri', "Mahsulot turi:")}</span> ${escHtml(card.productType)}</div>
     <div class="meta-item"><span class="meta-label">Format:</span> ${escHtml(card.formatA)} × ${escHtml(card.formatB)} mm</div>
-    <div class="meta-item"><span class="meta-label">Jami davomiylik:</span> ${escHtml(card.totalDurationMinutes || 0)} daqiqa</div>
+    <div class="meta-item"><span class="meta-label">{tLabel('common.TechCardsTypes.jamiDavomiylik', "Jami davomiylik:")}</span> ${escHtml(card.totalDurationMinutes || 0)} daqiqa</div>
     <div class="meta-item"><span class="meta-label">Setup vaqti:</span> ${escHtml(card.setupDurationMinutes || 0)} daqiqa</div>
     <div class="meta-item"><span class="meta-label">AI generatsiya:</span> ${card.calculatedByAI ? "Ha" : "Yo'q"}</div>
     <div class="meta-item"><span class="meta-label">Yaratilgan:</span> ${escHtml(new Date(card.createdAt).toLocaleDateString("uz-UZ"))}</div>
     ${card.notes ? `<div class="meta-item" style="grid-column:span 2"><span class="meta-label">Izoh:</span> ${escHtml(card.notes)}</div>` : ""}
   </div>
-  <h3>Operatsiyalar (Routing)</h3>
+  <h3>{tLabel('common.TechCardsTypes.operatsiyalarRouting', "Operatsiyalar (Routing)")}</h3>
   <table>
-    <thead><tr><th>#</th><th>Operatsiya nomi</th><th>Mashina kodi</th><th>Setup (min)</th><th>Mashina (min)</th></tr></thead>
+    <thead><tr><th>#</th><th>{tLabel('common.TechCardsTypes.operatsiyaNomi', "Operatsiya nomi")}</th><th>Mashina kodi</th><th>Setup (min)</th><th>Mashina (min)</th></tr></thead>
     <tbody>${opsRows}</tbody>
   </table>
-  <h3>Materiallar (BOM)</h3>
+  <h3>{tLabel('common.TechCardsTypes.materiallarBom', "Materiallar (BOM)")}</h3>
   <table>
-    <thead><tr><th>#</th><th>Material nomi</th><th>Miqdor/1000</th><th>Birlik</th><th>Chiqindi</th></tr></thead>
+    <thead><tr><th>#</th><th>{tLabel('common.TechCardsTypes.materialNomi', "Material nomi")}</th><th>{tLabel('common.TechCardsTypes.miqdor1000', "Miqdor/1000")}</th><th>{tLabel('common.TechCardsTypes.birlik', "Birlik")}</th><th>Chiqindi</th></tr></thead>
     <tbody>${matRows}</tbody>
   </table>
   <div class="footer">

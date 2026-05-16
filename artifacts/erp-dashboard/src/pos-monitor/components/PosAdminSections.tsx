@@ -7,6 +7,7 @@ import { glApi } from "../api/pos-monitor.api";
 import { apiRequest } from "@/lib/queryClient";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * Universal safe array helper — backend turli format yuborsa ham
  * ([] | {items:[]} | {data:[]} | undefined | null) → har doim T[].
@@ -178,7 +179,7 @@ export function PrintersSection({ data, loading, error, onRefresh }: { data: Pri
       <LoadingOrError loading={loading} error={error} />
       {!loading && !error && (
         <table className="pos-table">
-          <thead><tr><th>{t("name")}</th><th>IP manzil</th><th>{t("port")}</th><th>{t("standart")}</th><th>{t("status28")}</th></tr></thead>
+          <thead><tr><th>{t("name")}</th><th>{tLabel('common.PosAdminSections.ipManzil', "IP manzil")}</th><th>{t("port")}</th><th>{t("standart")}</th><th>{t("status28")}</th></tr></thead>
           <tbody>
             {safeArr<Printer>(data).map(p => (
               <tr key={p.id}>
