@@ -3,15 +3,15 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError, Err } from '@common/result';
-import { CoordinationRepository } from './coordination.repository';
+import { COORDINATION_REPO, type ICoordinationRepo } from '../domain/repositories/i-coordination.repo';
 
 const PRIVILEGED_ROLES = new Set(['admin', 'super_admin', 'director', 'ceo']);
 
 @Injectable()
 export class CoordinationService {
-  constructor(private readonly repo: CoordinationRepository) {}
+  constructor(@Inject(COORDINATION_REPO) private readonly repo: ICoordinationRepo) {}
 
   async createDoklaWithValidation(
     userId: number,

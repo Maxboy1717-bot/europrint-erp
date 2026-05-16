@@ -5,14 +5,14 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { FinanceApRepository, ApBucket } from './finance-ap.repository';
+import { FINANCE_AP_REPO, type IFinanceApRepo, type ApBucket } from '../domain/repositories/i-finance-ap.repo';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
 @Injectable()
 export class FinanceApService {
-  constructor(private readonly repo: FinanceApRepository) {}
+  constructor(@Inject(FINANCE_AP_REPO) private readonly repo: IFinanceApRepo) {}
 
   async getAgingBuckets(): Promise<Result<object, AppError>> {
     return safeCall(async () => {

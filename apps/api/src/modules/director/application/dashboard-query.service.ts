@@ -5,15 +5,15 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/types/result.type';
-import { DashboardQueryRepository } from './dashboard-query.repository';
+import { DASHBOARD_QUERY_REPO, type IDashboardQueryRepo } from '../domain/repositories/i-dashboard-query.repo';
 
 @Injectable()
 export class DashboardQueryService {
   private readonly logger = new Logger(DashboardQueryService.name);
 
-  constructor(private readonly repo: DashboardQueryRepository) {}
+  constructor(@Inject(DASHBOARD_QUERY_REPO) private readonly repo: IDashboardQueryRepo) {}
 
   async getActivePoCount(): Promise<Result<number>> {
     try {

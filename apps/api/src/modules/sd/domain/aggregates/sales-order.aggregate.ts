@@ -10,38 +10,30 @@ import { SoStatus } from '../value-objects/so-status.vo';
 import { Money } from '@common/money/money.vo';
 import { CustomerId } from '@shared/domain/value-objects/customer-id.vo';
 import { Result, Ok, Err } from '@common/types/result.type';
-import type { OrderKind } from '@shared/domain/contracts/i-order-header';
+import type { IOrderHeader, OrderKind } from '@shared/domain/contracts/i-order-header';
 
-// TODO PA2-16: Cannot add `implements IOrderHeader` here yet. SalesOrder's
-// status field is a `SoStatus` value object (private), and its `id`,
-// `orderNumber`, `createdAt`, `updatedAt`, `createdBy` are all private
-// fields populated via `Object.assign`. Widening the interface to a union
-// of every per-context status VO would defeat its purpose, and renaming
-// the backing fields would break the constructor contract. Revisit when
-// SalesOrder exposes a public string status getter and renames backing
-// fields to `_id` / `_orderNumber` etc. so public getters can be added.
-export class SalesOrder extends AggregateRoot {
-  private id: number;
-  private orderNumber: string;
-  private status: SoStatus;
-  private companyId: number;
-  private customerId?: CustomerId;
-  private totalAmount: Money;
-  private advanceRequired: number = 70;
-  private advancePaid: number = 0;
-  private advanceStatus: 'pending' | 'partial' | 'approved' | 'bypassed' = 'pending';
-  private advanceBypassBy?: number;
-  private advanceBypassReason?: string;
-  private designFlag: boolean = false;
-  private sampleFlag: boolean = false;
-  private techBomApproved: boolean = false;
-  private techRoutingApproved: boolean = false;
-  private techCardApproved: boolean = false;
-  private createdBy: number;
-  private createdAt: Date;
-  private updatedAt: Date;
-  private readonly paymentIds: Set<string> = new Set();
-  private version: number = 0;
+export class SalesOrder extends AggregateRoot implements IOrderHeader {
+  private _id: number;
+  private _orderNumber: string;
+  private _status: SoStatus;
+  private _companyId: number;
+  private _customerId?: CustomerId;
+  private _totalAmount: Money;
+  private _advanceRequired: number = 70;
+  private _advancePaid: number = 0;
+  private _advanceStatus: 'pending' | 'partial' | 'approved' | 'bypassed' = 'pending';
+  private _advanceBypassBy?: number;
+  private _advanceBypassReason?: string;
+  private _designFlag: boolean = false;
+  private _sampleFlag: boolean = false;
+  private _techBomApproved: boolean = false;
+  private _techRoutingApproved: boolean = false;
+  private _techCardApproved: boolean = false;
+  private _createdBy: number;
+  private _createdAt: Date;
+  private _updatedAt: Date;
+  private readonly _paymentIds: Set<string> = new Set();
+  private _version: number = 0;
 
   constructor(props: {
     id: number;
@@ -66,8 +58,26 @@ export class SalesOrder extends AggregateRoot {
     version?: number;
   }) {
     super();
-    Object.assign(this, props);
-    if (props.version !== undefined) this.version = props.version;
+    this._id = props.id;
+    this._orderNumber = props.orderNumber;
+    this._status = props.status;
+    this._companyId = props.companyId;
+    this._customerId = props.customerId;
+    this._totalAmount = props.totalAmount;
+    if (props.advanceRequired !== undefined) this._advanceRequired = props.advanceRequired;
+    if (props.advancePaid !== undefined) this._advancePaid = props.advancePaid;
+    if (props.advanceStatus !== undefined) this._advanceStatus = props.advanceStatus;
+    this._advanceBypassBy = props.advanceBypassBy;
+    this._advanceBypassReason = props.advanceBypassReason;
+    if (props.designFlag !== undefined) this._designFlag = props.designFlag;
+    if (props.sampleFlag !== undefined) this._sampleFlag = props.sampleFlag;
+    if (props.techBomApproved !== undefined) this._techBomApproved = props.techBomApproved;
+    if (props.techRoutingApproved !== undefined) this._techRoutingApproved = props.techRoutingApproved;
+    if (props.techCardApproved !== undefined) this._techCardApproved = props.techCardApproved;
+    this._createdBy = props.createdBy;
+    this._createdAt = props.createdAt;
+    this._updatedAt = props.updatedAt;
+    if (props.version !== undefined) this._version = props.version;
   }
 
   /**
@@ -134,34 +144,34 @@ export class SalesOrder extends AggregateRoot {
   }
 
   checkAdvanceAndBlock(): { blocked: boolean; reason?: string } {
-    const required = this.totalAmount.getAmount() * (this.advanceRequired / 100);
-    if (this.advancePaid < required && this.advanceStatus !== 'bypassed') {
+    const required = this._totalAmount.getAmount() * (this._advanceRequired / 100);
+    if (this._advancePaid < required && this._advanceStatus !== 'bypassed') {
       return {
         blocked: true,
-        reason: `Avans ${this.advanceRequired}% to'lanmagan. Talob: ${required}, To'landi: ${this.advancePaid}`,
+        reason: `Avans ${this._advanceRequired}% to'lanmagan. Talob: ${required}, To'landi: ${this._advancePaid}`,
       };
     }
     return { blocked: false };
   }
 
   isThreeCheckpointPassed(): boolean {
-    return this.techBomApproved && this.techRoutingApproved && this.techCardApproved;
+    return this._techBomApproved && this._techRoutingApproved && this._techCardApproved;
   }
 
   bypassAdvance(bypassBy: number, reason: string): Result<void> {
     if (!reason || reason.trim().length === 0) {
       return Err('Bypass reason is required');
     }
-    this.advanceStatus = 'bypassed';
-    this.advanceBypassBy = bypassBy;
-    this.advanceBypassReason = reason;
+    this._advanceStatus = 'bypassed';
+    this._advanceBypassBy = bypassBy;
+    this._advanceBypassReason = reason;
     this.addDomainEvent({
-      aggregateId: this.id,
+      aggregateId: this._id,
       aggregateName: 'SalesOrder',
       eventName: 'AdvanceBypassApproved',
       timestamp: _time.now(),
       data: {
-        orderId: this.id,
+        orderId: this._id,
         bypassBy,
         reason,
       },
@@ -174,60 +184,60 @@ export class SalesOrder extends AggregateRoot {
       return Err('To\'lov summasi musbat bo\'lishi kerak');
     }
     if (idempotencyKey) {
-      if (this.paymentIds.has(idempotencyKey)) {
+      if (this._paymentIds.has(idempotencyKey)) {
         return Err(`Duplicate to'lov: idempotency_key '${idempotencyKey}' allaqachon ishlatilgan`);
       }
-      this.paymentIds.add(idempotencyKey);
+      this._paymentIds.add(idempotencyKey);
     }
-    const total         = this.totalAmount.getAmount();
-    const newAdvancePaid = this.advancePaid + amount;
+    const total         = this._totalAmount.getAmount();
+    const newAdvancePaid = this._advancePaid + amount;
     if (newAdvancePaid > total) {
       return Err(`Avans to'lov (${newAdvancePaid}) buyurtma summasidan (${total}) oshib ketdi`);
     }
-    const required = total * (this.advanceRequired / 100);
+    const required = total * (this._advanceRequired / 100);
     const applied  = amount;
-    this.advancePaid += applied;
-    this.version += 1;
-    if (this.advancePaid >= required) {
-      this.advanceStatus = 'approved';
-    } else if (this.advancePaid > 0) {
-      this.advanceStatus = 'partial';
+    this._advancePaid += applied;
+    this._version += 1;
+    if (this._advancePaid >= required) {
+      this._advanceStatus = 'approved';
+    } else if (this._advancePaid > 0) {
+      this._advanceStatus = 'partial';
     }
     this.addDomainEvent({
-      aggregateId: this.id,
+      aggregateId: this._id,
       aggregateName: 'SalesOrder',
       eventName: 'AdvancePaymentConfirmed',
       timestamp: _time.now(),
       data: {
-        orderId: this.id,
+        orderId: this._id,
         amountPaid: applied,
-        totalPaid: this.advancePaid,
-        advanceStatus: this.advanceStatus,
-        version: this.version,
+        totalPaid: this._advancePaid,
+        advanceStatus: this._advanceStatus,
+        version: this._version,
         idempotencyKey: idempotencyKey ?? null,
       },
     });
     return Ok();
   }
 
-  getVersion(): number { return this.version; }
+  getVersion(): number { return this._version; }
 
   approveTechCheckpoint(type: 'bom' | 'routing' | 'card'): Result<void> {
     if (type === 'bom') {
-      this.techBomApproved = true;
+      this._techBomApproved = true;
     } else if (type === 'routing') {
-      this.techRoutingApproved = true;
+      this._techRoutingApproved = true;
     } else if (type === 'card') {
-      this.techCardApproved = true;
+      this._techCardApproved = true;
     }
 
     if (this.isThreeCheckpointPassed()) {
       this.addDomainEvent({
-        aggregateId: this.id,
+        aggregateId: this._id,
         aggregateName: 'SalesOrder',
         eventName: 'DesignAndLabCompleted',
         timestamp: _time.now(),
-        data: { orderId: this.id },
+        data: { orderId: this._id },
       });
     }
 
@@ -259,7 +269,7 @@ export class SalesOrder extends AggregateRoot {
 
     const statusResult = SoStatus.create(newStatus);
     if (statusResult.ok) {
-      this.status = statusResult.data;
+      this._status = statusResult.data;
     }
     return Ok();
   }
@@ -271,7 +281,7 @@ export class SalesOrder extends AggregateRoot {
    * full context.
    */
   transitionStatus(newStatus: string): Result<{ previousStatus: string }> {
-    const currentStatus = this.status.getValue();
+    const currentStatus = this._status.getValue();
     const allowed = SalesOrder.VALID_TRANSITIONS[currentStatus] ?? [];
     if (!allowed.includes(newStatus)) {
       return Err(`Cannot transition from ${currentStatus} to ${newStatus}`);
@@ -306,45 +316,51 @@ export class SalesOrder extends AggregateRoot {
   };
 
   getAdvanceRequired(): number {
-    return this.advanceRequired;
+    return this._advanceRequired;
   }
 
   getId(): number {
-    return this.id;
+    return this._id;
   }
 
   getStatus(): string {
-    return this.status.getValue();
+    return this._status.getValue();
   }
 
   getTotalAmount(): number {
-    return this.totalAmount.getAmount();
+    return this._totalAmount.getAmount();
   }
 
   getCompanyId(): number {
-    return this.companyId;
+    return this._companyId;
   }
 
   getCustomerId(): number | undefined {
-    return this.customerId?.value;
+    return this._customerId?.value;
   }
 
   getCustomerIdVO(): CustomerId | undefined {
-    return this.customerId;
+    return this._customerId;
   }
 
   getOrderNumber(): string {
-    return this.orderNumber;
+    return this._orderNumber;
   }
 
   getAdvanceStatus(): string {
-    return this.advanceStatus;
+    return this._advanceStatus;
   }
 
   getAdvancePaid(): number {
-    return this.advancePaid;
+    return this._advancePaid;
   }
 
   // --- IOrderHeader marker (cross-context "an order" shape) ---
+  get id(): number { return this._id; }
+  get orderNumber(): string { return this._orderNumber; }
+  get status(): string { return this._status.getValue(); }
+  get createdAt(): Date { return this._createdAt; }
+  get updatedAt(): Date { return this._updatedAt; }
+  get createdBy(): number { return this._createdBy; }
   get kind(): OrderKind { return 'sales'; }
 }

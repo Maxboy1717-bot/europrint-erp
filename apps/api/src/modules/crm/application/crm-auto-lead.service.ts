@@ -3,14 +3,14 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { CrmAutoLeadRepository } from './crm-auto-lead.repository';
+import { CRM_AUTO_LEAD_REPO, type ICrmAutoLeadRepo } from '../domain/repositories/i-crm-auto-lead.repo';
 import { MS_PER_DAY } from '@common/constants/app.constants';
 
 @Injectable()
 export class CrmAutoLeadService {
-  constructor(private readonly repo: CrmAutoLeadRepository) {}
+  constructor(@Inject(CRM_AUTO_LEAD_REPO) private readonly repo: ICrmAutoLeadRepo) {}
 
   async quickScore(entityType: string, eid: number): Promise<Result<object | null, AppError>> {
     return safeCall(async () => {

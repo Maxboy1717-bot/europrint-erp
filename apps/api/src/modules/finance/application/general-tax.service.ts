@@ -32,6 +32,11 @@
  *   exclusive ("999,000 UZS + 12% VAT"). The same invoice template needs both
  *   modes depending on counterparty, so the math is centralised here rather
  *   than per-caller.
+ *
+ * @note PA3-17: Moved from `modules/fi/tax/general-tax.service.ts` as part of
+ *   the tiny-module consolidation pass. The `fi/` micro-module has been
+ *   deleted; this service now lives alongside the rest of the FI / finance
+ *   application services.
  */
 
 import { Injectable, Logger } from '@nestjs/common';

@@ -3,16 +3,16 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { safeInt } from '../common/db-rows';
 import { safeCall, Result, AppError } from '@common/result';
-import { HrCompatSafetyRepository } from './hr-compat-safety.repository';
+import { HR_COMPAT_SAFETY_REPO, type IHrCompatSafetyRepo } from '../domain/repositories/i-hr-compat-safety.repo';
 
 @Injectable()
 export class HrCompatSafetyService {
   private readonly logger = new Logger(HrCompatSafetyService.name);
 
-  constructor(private readonly repo: HrCompatSafetyRepository) {}
+  constructor(@Inject(HR_COMPAT_SAFETY_REPO) private readonly repo: IHrCompatSafetyRepo) {}
 
   async getBrandSettings(): Promise<Result<object | null, AppError>> {
     return this.repo.getBrandSettings();

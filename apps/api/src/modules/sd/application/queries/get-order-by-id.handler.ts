@@ -41,9 +41,9 @@ export class GetOrderByIdHandler implements IQueryHandler<GetOrderByIdQuery> {
       totalAmount: order.getTotalAmount(),
       advanceStatus: order.getAdvanceStatus(),
       checkpoints: {
-        bom: order['techBomApproved'],
-        routing: order['techRoutingApproved'],
-        card: order['techCardApproved'],
+        bom: order['_techBomApproved'],
+        routing: order['_techRoutingApproved'],
+        card: order['_techCardApproved'],
       },
       threeCheckpointPassed: order.isThreeCheckpointPassed(),
       advanceBlock: order.checkAdvanceAndBlock(),

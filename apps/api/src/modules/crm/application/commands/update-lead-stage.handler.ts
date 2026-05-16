@@ -6,9 +6,9 @@
  */
 
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
+import { Logger, Inject } from '@nestjs/common';
 import { AppErr, Err, Ok, Result, isErr } from '@common/result';
-import { CrmLeadsOpsRepository } from '../crm-leads-ops.repository';
+import { CRM_LEADS_OPS_REPO, type ICrmLeadsOpsRepo } from '../../domain/repositories/i-crm-leads-ops.repo';
 
 export class UpdateLeadStageCommand {
   constructor(
@@ -22,7 +22,7 @@ export class UpdateLeadStageCommand {
 export class UpdateLeadStageHandler implements ICommandHandler<UpdateLeadStageCommand> {
   private readonly logger = new Logger(UpdateLeadStageHandler.name);
 
-  constructor(private readonly repo: CrmLeadsOpsRepository) {}
+  constructor(@Inject(CRM_LEADS_OPS_REPO) private readonly repo: ICrmLeadsOpsRepo) {}
 
   async execute(command: UpdateLeadStageCommand): Promise<Result<Record<string, unknown>>> {
     const stageR = await this.repo.findStage(command.stageId);
