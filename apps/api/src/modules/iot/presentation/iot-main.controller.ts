@@ -36,51 +36,35 @@ export class IotMainController {
     private readonly sensorsSvc: IotSensorsExtendedService,
   ) {}
 
-  @Get('dashboard')
-  @Roles(...IOT_READ)
-  async getDashboard() {
-    return unwrapOrThrow(await this.svc.getDashboard());
-  }
+  @Get('dashboard') @Roles(...IOT_READ)
+  async getDashboard() { return unwrapOrThrow(await this.svc.getDashboard()); }
 
-  @Get('alerts')
-  @Roles(...IOT_READ)
+  @Get('alerts') @Roles(...IOT_READ)
   async getAlerts(@Query() raw: Record<string, unknown>) {
     const q = CameraAlertsQuerySchema.parse(raw);
     return unwrapOrThrow(await this.svc.getAlerts(q.status, q.severity, q.limit));
   }
 
-  @Post('alerts/:id/acknowledge')
-  @Roles(...IOT_WRITE)
-  @UseInterceptors(AuditInterceptor)
-  async acknowledgeAlert(@Param('id') id: string) {
-    return unwrapOrThrow(await this.svc.acknowledgeAlert(id));
-  }
+  @Post('alerts/:id/acknowledge') @Roles(...IOT_WRITE) @UseInterceptors(AuditInterceptor)
+  async acknowledgeAlert(@Param('id') id: string) { return unwrapOrThrow(await this.svc.acknowledgeAlert(id)); }
 
-  @Get('attendance/live')
-  @Roles(...IOT_READ)
-  async getAttendanceLive() {
-    return unwrapOrThrow(await this.svc.getAttendanceLive());
-  }
+  @Get('attendance/live') @Roles(...IOT_READ)
+  async getAttendanceLive() { return unwrapOrThrow(await this.svc.getAttendanceLive()); }
 
-  @Get('room-inspections')
-  @Roles(...IOT_READ)
+  @Get('room-inspections') @Roles(...IOT_READ)
   async getRoomInspections(@Query() raw: Record<string, unknown>) {
     const q = StatusLimitQuerySchema.parse(raw);
     return unwrapOrThrow(await this.svc.getRoomInspections(q.status, q.limit));
   }
 
-  @Get('employee-health')
-  @Roles(...IOT_READ)
+  @Get('employee-health') @Roles(...IOT_READ)
   async getEmployeeHealth(@Query() raw: Record<string, unknown>) {
     const q = EmployeeHealthQuerySchema.parse(raw);
     return unwrapOrThrow(await this.svc.getEmployeeHealth(q.employee_id, q.limit));
   }
 
-  @Get('machine-status')
-  @Roles(...IOT_READ)
-  async getMachineStatus() {
-    return unwrapOrThrow(await this.svc.getMachineStatusCurrent());
-  }
+  @Get('machine-status') @Roles(...IOT_READ)
+  async getMachineStatus() { return unwrapOrThrow(await this.svc.getMachineStatusCurrent()); }
 
   @Get('machine-status-logs')
   @Roles(...IOT_READ)
@@ -228,34 +212,24 @@ export class IotMainController {
 
   @Get('downtime-reason-codes') @Roles(...IOT_READ)
   async getDowntimeReasonCodes() { return []; }
-
   @Get('tablet/orders') @Roles(...IOT_READ)
   async getTabletOrders() { return { data: [] }; }
-
   @Get('tablet/worker-schedule') @Roles(...IOT_READ)
   async getTabletWorkerSchedule() { return { data: [] }; }
-
   @Get('tablet/equipment') @Roles(...IOT_READ)
   async getTabletEquipment() { return { data: [] }; }
-
   @Get('tablet/shift') @Roles(...IOT_READ)
   async getTabletShift() { return { shift: null }; }
-
   @Get('tablet/sessions') @Roles(...IOT_READ)
   async getTabletSessions() { return { data: [] }; }
-
   @Post('tablet/sessions') @Roles(...IOT_READ)
   async createTabletSession(@Body() body: Record<string, unknown>) { return { id: 0, ...body }; }
-
   @Post('tablet/login') @Roles(...IOT_READ)
   async tabletLogin(@Body() body: Record<string, unknown>) { return { token: null, worker: null }; }
-
   @Post('tablet/sos-alert') @Roles(...IOT_READ)
   async tabletSosAlert(@Body() _body: Record<string, unknown>) { return { success: true }; }
-
   @Post('tablet/handover') @Roles(...IOT_READ)
   async tabletHandover(@Body() _body: Record<string, unknown>) { return { success: true }; }
-
   @Post('material-kit-items/:id/scan') @Roles(...IOT_READ)
   async scanMaterialKitItem(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, scanned: true }; }
 
@@ -295,39 +269,23 @@ export class IotMainController {
 
   @Get('production-sessions/:id/crew') @Roles(...IOT_READ)
   async getProductionSessionCrew(@Param('id') id: string) { return { data: [], sessionId: id }; }
-
   @Post('production-sessions/:id/start') @Roles(...IOT_READ)
   async startProductionSession(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, status: 'started' }; }
-
   @Post('production-sessions/:id/stop') @Roles(...IOT_READ)
   async stopProductionSession(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, status: 'stopped' }; }
-
   @Post('production-sessions/:id/defect') @Roles(...IOT_READ)
   async reportProductionDefect(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, recorded: true }; }
-
   @Post('production-sessions/:id/evaluation') @Roles(...IOT_READ)
   async submitProductionEvaluation(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, evaluated: true }; }
-
   @Post('production-sessions/:id/material-return') @Roles(...IOT_READ)
   async submitMaterialReturn(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, returned: true }; }
-
   @Post('production-sessions/:id/inline-qc') @Roles(...IOT_READ)
   async submitInlineQc(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, qcPassed: true }; }
 
-  // ── OEE live snapshot ───────────────────────────────────────────────────
-  // GET /api/iot/oee/live — used by ai-planning/OEELiveMonitorPage. Real
-  // values come from sensor_readings + production_sessions aggregation; for
-  // now we serve a typed empty snapshot so the page renders without 404.
+  // OEE live snapshot — real values come from sensor_readings + production_sessions
+  // aggregation; for now we serve a typed empty snapshot so the page renders.
   @Get('oee/live') @Roles(...IOT_READ)
   async getOeeLive(@Query('device_id') _deviceId?: string) {
-    return {
-      availability:  0,
-      performance:   0,
-      quality:       0,
-      oee:           0,
-      sample_size:   0,
-      generated_at:  new Date().toISOString(),
-      by_machine:    [],
-    };
+    return { availability: 0, performance: 0, quality: 0, oee: 0, sample_size: 0, generated_at: new Date().toISOString(), by_machine: [] };
   }
 }
