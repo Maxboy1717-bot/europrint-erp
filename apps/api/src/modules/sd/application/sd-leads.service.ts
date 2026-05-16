@@ -3,15 +3,15 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
-import { SdLeadsRepository } from './sd-leads.repository';
+import { ISdLeadsRepo, SD_LEADS_REPO } from '../domain/repositories/i-sd-leads.repo';
 
 @Injectable()
 export class SdLeadsService {
   constructor(
-    private readonly repo: SdLeadsRepository,
+    @Inject(SD_LEADS_REPO) private readonly repo: ISdLeadsRepo,
     private readonly i18n: I18nService,
   ) {}
 

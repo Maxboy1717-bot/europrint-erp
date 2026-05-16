@@ -10,7 +10,16 @@ import { SoStatus } from '../value-objects/so-status.vo';
 import { Money } from '@common/money/money.vo';
 import { CustomerId } from '@shared/domain/value-objects/customer-id.vo';
 import { Result, Ok, Err } from '@common/types/result.type';
+import type { OrderKind } from '@shared/domain/contracts/i-order-header';
 
+// TODO PA2-16: Cannot add `implements IOrderHeader` here yet. SalesOrder's
+// status field is a `SoStatus` value object (private), and its `id`,
+// `orderNumber`, `createdAt`, `updatedAt`, `createdBy` are all private
+// fields populated via `Object.assign`. Widening the interface to a union
+// of every per-context status VO would defeat its purpose, and renaming
+// the backing fields would break the constructor contract. Revisit when
+// SalesOrder exposes a public string status getter and renames backing
+// fields to `_id` / `_orderNumber` etc. so public getters can be added.
 export class SalesOrder extends AggregateRoot {
   private id: number;
   private orderNumber: string;
@@ -335,4 +344,7 @@ export class SalesOrder extends AggregateRoot {
   getAdvancePaid(): number {
     return this.advancePaid;
   }
+
+  // --- IOrderHeader marker (cross-context "an order" shape) ---
+  get kind(): OrderKind { return 'sales'; }
 }

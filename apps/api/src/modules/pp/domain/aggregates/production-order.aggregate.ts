@@ -6,6 +6,7 @@
 import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { Err } from '@common/result';
 import { Result } from '@common/result';
+import type { IOrderHeader, OrderKind } from '@shared/domain/contracts/i-order-header';
 
 export enum PoStatus {
   PLANNED = 'planned',
@@ -22,6 +23,12 @@ export class MaterialRequirement {
     public issued: number = 0) {}
 }
 
+// TODO PA2-16: ProductionOrder does not currently carry `orderNumber`,
+// `createdAt`, `updatedAt`, or `createdBy` fields, so it cannot structurally
+// satisfy `IOrderHeader` without changing its constructor and persistence
+// model. The `kind` getter below is provided so downstream code can still
+// discriminate; full `implements IOrderHeader` should be added once the
+// PP context grows the missing header fields.
 export class ProductionOrder extends AggregateRoot {
   private id: number;
   private soId: number;
@@ -105,4 +112,11 @@ export class ProductionOrder extends AggregateRoot {
     this.addDomainEvent({ type: 'PP_COMPLETED', data: { poId: this.id } });
     return { ok: true, data: undefined };
   }
+
+  /**
+   * Bounded-context discriminator for cross-context order code. Returned
+   * eagerly so reporting/audit helpers can switch on `kind` even though
+   * full `IOrderHeader` conformance is gated on TODO PA2-16.
+   */
+  get kind(): OrderKind { return 'production'; }
 }

@@ -8,8 +8,9 @@ const _time = new TashkentTimeService();
 import { v4 as uuid } from 'uuid';
 import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { DesignStatus } from '../enums/design-status.enum';
+import type { IOrderHeader, OrderKind } from '@shared/domain/contracts/i-order-header';
 
-export class DesignOrder extends AggregateRoot {
+export class DesignOrder extends AggregateRoot implements IOrderHeader {
   id: string;
   salesOrderId: number;
   productId: number;
@@ -90,4 +91,17 @@ export class DesignOrder extends AggregateRoot {
   ): DesignOrder {
     return new DesignOrder(salesOrderId, productId, description, customerId);
   }
+
+  // --- IOrderHeader marker (cross-context "an order" shape) ---
+  /**
+   * Derived order-number for the DesignOrder. The design context never
+   * minted its own human-readable number, so we synthesise one from the
+   * sales-order link and the design uuid so cross-context audit code can
+   * still display "DES-<salesOrderId>-<short-uuid>".
+   */
+  get orderNumber(): string {
+    return `DES-${this.salesOrderId}-${this.id.slice(0, 8)}`;
+  }
+
+  get kind(): OrderKind { return 'design'; }
 }

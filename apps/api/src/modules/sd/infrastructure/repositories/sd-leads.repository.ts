@@ -1,6 +1,7 @@
 /**
  * @module sd-leads.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ * @layer Infrastructure (SD)
  */
 
 import { Ok, Err, Result } from '@common/result';
@@ -9,13 +10,14 @@ import { MAX_EXPORT_LIMIT } from '@common/constants/app.constants';
 import { db , runQuery } from '@shared/db';
 import { execSdLeadDelete, execSdLeadConvert } from '@common/database/queries-sd';
 import { sql } from 'drizzle-orm';
+import { ISdLeadsRepo } from '../../domain/repositories/i-sd-leads.repo';
 
 type Row = Record<string, unknown>;
 
 @Injectable()
-export class SdLeadsRepository {
+export class SdLeadsRepository implements ISdLeadsRepo {
   async list(status: string | undefined, uid: number | null, pat: string | null, lim: number, off: number): Promise<Result<Row[]>>  {
-  try {  
+  try {
       const rows = await runQuery<Row>(sql`
         SELECT l.*, e.full_name AS assigned_to_name, c.name AS customer_name
         FROM sd_leads l
@@ -33,7 +35,7 @@ export class SdLeadsRepository {
   }
 
   async getStats(): Promise<Result<Row>>  {
-  try {  
+  try {
       const rows = await runQuery<Row>(sql`
         SELECT COUNT(*)::int AS total,
                COUNT(*) FILTER (WHERE status = 'new')::int AS new_leads,
@@ -49,7 +51,7 @@ export class SdLeadsRepository {
   }
 
   async exportLeads(from?: string, to?: string, status?: string): Promise<Result<Row[]>>  {
-  try {  
+  try {
       const rows = await runQuery<Row>(sql`
         SELECT l.*, e.full_name AS assigned_to_name, c.name AS customer_name
         FROM sd_leads l
@@ -82,7 +84,7 @@ export class SdLeadsRepository {
   }
 
   async create(body: Row): Promise<Result<Row>>  {
-  try {  
+  try {
       const rows = await runQuery<Row>(sql`
         INSERT INTO sd_leads (title, customer_id, assigned_to, expected_amount, notes, source, status)
         VALUES (${body.title}, ${body.customer_id ?? null}, ${body.assigned_to ?? null}, ${body.expected_amount ?? 0}, ${body.notes ?? null}, ${body.source ?? 'manual'}, 'new')
@@ -95,7 +97,7 @@ export class SdLeadsRepository {
   }
 
   async update(lid: number, body: Row): Promise<Result<Row[]>>  {
-  try {  
+  try {
       const rows = await runQuery<Row>(sql`
         UPDATE sd_leads
         SET title = COALESCE(${body.title ?? null}, title),
@@ -113,7 +115,7 @@ export class SdLeadsRepository {
   }
 
   async updateStatus(lid: number, status: string): Promise<Result<Row[]>>  {
-  try {  
+  try {
       const rows = await runQuery<Row>(sql`UPDATE sd_leads SET status = ${status}, updated_at = NOW() WHERE id = ${lid} RETURNING *`);
       return Ok(rows.rows as Row[]);  } catch (_e) {
     return Err(String(_e));
@@ -122,7 +124,7 @@ export class SdLeadsRepository {
   }
 
   async delete(lid: number): Promise<Result<void>>  {
-  try {  
+  try {
       await execSdLeadDelete(lid);  return Ok();  } catch (_e) {
     return Err(String(_e));
   }
@@ -190,7 +192,7 @@ export class SdLeadsRepository {
   }
 
   async addActivity(lid: number, type: unknown, subject: unknown, notes: unknown, employee_id: unknown): Promise<Result<Row>>  {
-  try {  
+  try {
       const rows = await runQuery<Row>(sql`
         INSERT INTO sd_lead_activities (lead_id, type, subject, notes, employee_id)
         VALUES (${lid}, ${type}, ${subject}, ${notes ?? null}, ${employee_id ?? null})
@@ -203,7 +205,7 @@ export class SdLeadsRepository {
   }
 
   async getActivities(lid: number): Promise<Result<Row[]>>  {
-  try {  
+  try {
       const rows = await runQuery<Row>(sql`
         SELECT a.*, e.full_name AS employee_name
         FROM sd_lead_activities a
