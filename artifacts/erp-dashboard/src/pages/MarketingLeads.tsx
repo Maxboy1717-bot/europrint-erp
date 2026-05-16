@@ -72,7 +72,7 @@ export default function MarketingLeads() {
   const { data: contacts = [] } = useQuery<ContactLog[]>({
     queryKey: ["/api/marketing/leads", contactLeadId, "contacts"],
     queryFn: () =>
-      apiRequest("GET", `/api/marketing/leads/${contactLeadId}/contacts`).then(r => r.json()),
+      apiRequest<ContactLog[]>("GET", `/api/marketing/leads/${contactLeadId}/contacts`),
     enabled: !!contactLeadId,
   });
 
@@ -125,8 +125,8 @@ export default function MarketingLeads() {
   });
 
   const recalcScoreMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/marketing/leads/recalculate-scores", {}),
-    onSuccess: (d: { updated: number }) => {
+    mutationFn: () => apiRequest<{ updated: number }>("POST", "/api/marketing/leads/recalculate-scores", {}),
+    onSuccess: (d) => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/leads"] });
       toast({ title: `${d.updated} ta lid bali yangilandi` });
     },

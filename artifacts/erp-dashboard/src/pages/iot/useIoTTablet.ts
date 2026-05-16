@@ -83,21 +83,36 @@ export function useIoTTablet() {
 
   // ── Helper: generate material kit after session creation ─────────────────
 
+  type KitMaterial = { name: string; quantity: number; unit: string };
+  type KitGenerateResponse = {
+    kit?: { id: string; barcode?: string };
+    materials?: KitMaterial[];
+  };
+  type KitDetailsResponse = {
+    barcode?: string;
+    items?: Array<{
+      id: string;
+      materialName: string;
+      requiredQuantity: number;
+      unit: string;
+      itemBarcode: string;
+      isScanned: boolean;
+    }>;
+  };
   async function applyKitChecklist(session: ProductionSession) {
     const fallbackBarcode = `KIT-${session.sessionNumber || Date.now()}`;
     try {
-      const kitData = await apiRequest("POST", "/api/iot/material-kits/generate", {
+      const kitData = await apiRequest<KitGenerateResponse>("POST", "/api/iot/material-kits/generate", {
         orderId: core.selectedOrder?.id,
         scheduledDate: new Date().toISOString().split("T")[0],
         scheduledTime: new Date().toTimeString().slice(0, 5),
         equipmentId: core.selectedEquipment?.id,
       });
       if (kitData.kit) {
-        const kitDetailsRes = (await apiRequest('GET', `/api/iot/material-kits/${kitData.kit.id}`)) as unknown as Response;
-        const kitDetails = await kitDetailsRes.json();
+        const kitDetails = await apiRequest<KitDetailsResponse>('GET', `/api/iot/material-kits/${kitData.kit.id}`);
         core.setChecklistKitBarcode(kitDetails.barcode || kitData.kit.barcode || "");
         core.setChecklistMaterials(kitDetails.items || kitData.materials?.map(
-          (m: { name: string; quantity: number; unit: string }, idx: number) => ({
+          (m, idx) => ({
             id: `temp-${idx}`, materialName: m.name, requiredQuantity: m.quantity,
             unit: m.unit, itemBarcode: `ITEM-${Date.now()}-${idx}`, isScanned: false,
           })) || []);

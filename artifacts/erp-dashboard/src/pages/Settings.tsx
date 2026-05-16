@@ -132,14 +132,15 @@ export default function Settings() {
     onError: () => toastError(),
   });
 
-  const testGptMutation = useMutation({
+  type GptTestResponse = { score?: number };
+  const testGptMutation = useMutation<GptTestResponse, Error, void>({
     mutationFn: async () => {
-      return await apiRequest("POST", "/api/gpt/test", {
+      return await apiRequest<GptTestResponse>("POST", "/api/gpt/test", {
         model: settingsForm.gptModel,
         promptTemplate: settingsForm.promptTemplate,
       });
     },
-    onSuccess: (data) => toastSuccess(`GPT: ${data.score}/100`),
+    onSuccess: (data) => toastSuccess(`GPT: ${data.score ?? 0}/100`),
     onError: (error: Error) => toastError(error.message),
   });
 

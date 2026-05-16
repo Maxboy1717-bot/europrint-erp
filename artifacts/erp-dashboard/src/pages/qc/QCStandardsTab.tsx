@@ -73,7 +73,7 @@ export function QCStandardsTab() {
   const [filterType, setFilterType] = useState<string>("");
   const [standardDialogOpen, setStandardDialogOpen] = useState(false);
   const [editingStandard, setEditingStandard] = useState<QcStandard | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const { data: standardsData, isLoading: standardsLoading } = useQuery<QcStandard[]>({
     queryKey: ["/api/qc/standards", filterType],

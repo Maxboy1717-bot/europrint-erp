@@ -36,7 +36,7 @@ export default function RaciCrisisPage() {
   const {
     data: tasksRaw,
     isLoading: loadingTasks,
-    isError, error: errorTasks,
+    isError: isTasksError, error: errorTasks,
     refetch: refetchTasks,
   } = useQuery<RaciTask[] | { data?: RaciTask[] }>({
     queryKey: [...TASK_QUERY_KEY, statusFilter],
@@ -51,7 +51,7 @@ export default function RaciCrisisPage() {
   const {
     data: crisesRaw,
     isLoading: loadingCrises,
-    isError, error: errorCrises,
+    isError: isCrisesError, error: errorCrises,
     refetch: refetchCrises,
   } = useQuery<Crisis[] | { data?: Crisis[] }>({
     queryKey: CRISIS_QUERY_KEY,
@@ -84,7 +84,8 @@ export default function RaciCrisisPage() {
   });
 
   const isLoading = tab === "tasks" ? loadingTasks : loadingCrises;
-  const isError   = tab === "tasks" ? errorTasks   : errorCrises;
+  const isError   = tab === "tasks" ? isTasksError : isCrisesError;
+  void errorTasks; void errorCrises;
   const refetch   = tab === "tasks" ? refetchTasks : refetchCrises;
 
   if (isError) return <EPErrorState onRetry={refetch} />;

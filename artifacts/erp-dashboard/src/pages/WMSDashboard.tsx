@@ -54,14 +54,14 @@ export default function WMSDashboard() {
   });
   const { data: weekMovement } = useQuery<MovementSummary>({
     queryKey: ["/api/warehouse/dashboard/movement-summary", "week"],
-    queryFn: () => apiRequest("GET", "/api/warehouse/dashboard/movement-summary?period=week").then(r => r.json()),
+    queryFn: () => apiRequest<MovementSummary>("GET", "/api/warehouse/dashboard/movement-summary?period=week"),
   });
   const { data: alerts, isLoading: alertsLoading } = useQuery<AlertData>({
     queryKey: ["/api/warehouse/dashboard/alerts"],
   });
   const { data: topMaterials, isLoading: topLoading } = useQuery<TopMaterial[]>({
     queryKey: ["/api/warehouse/dashboard/top-materials"],
-    queryFn: () => apiRequest("GET", "/api/warehouse/dashboard/top-materials?by=value&limit=8").then(r => r.json()),
+    queryFn: () => apiRequest<TopMaterial[]>("GET", "/api/warehouse/dashboard/top-materials?by=value&limit=8"),
   });
 
   const checkAlertsMutation = useMutation({

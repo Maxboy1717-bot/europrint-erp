@@ -111,7 +111,7 @@ export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   smena:        { title: tLabel('common.MESExtended.smenaOtkazish', "Smena O'tkazish"),               icon: Clock },
 };
 
-export const MES_PILLS = [
+export const MES_PILLS: Array<{ key: string; label: string }> = [
   { key: "oee",          label: "OEE Monitor" },
   { key: "reasons",      label: tLabel('common.MESExtended.toxtashSabablar', "To'xtash Sabablar") },
   { key: "zones",        label: "Vazifalari" },
@@ -119,7 +119,7 @@ export const MES_PILLS = [
   { key: "gamification", label: "Gamifikatsiya" },
   { key: "norms",        label: "Normalari" },
   { key: "smena",        label: tLabel('common.MESExtended.smenaOtkazish', "Smena O'tkazish") },
-] as const;
+];
 
 /** Static norms data shown on the Norms tab (no API yet). */
 export const MACHINE_NORMS = [

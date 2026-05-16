@@ -82,9 +82,10 @@ export default function InvoiceVerification() {
     queryKey: ["/api/integration/invoice/three-way-match/results"],
   });
 
-  const runMatchMutation = useMutation({
+  type RunMatchResponse = { summary?: { status?: string } };
+  const runMatchMutation = useMutation<RunMatchResponse, Error, string>({
     mutationFn: async (invoiceId: string) => {
-      const res = await apiRequest("POST", `/api/integration/invoice/three-way-match/${invoiceId}`, { tolerancePercent: 5 });
+      const res = await apiRequest<RunMatchResponse>("POST", `/api/integration/invoice/three-way-match/${invoiceId}`, { tolerancePercent: 5 });
       return res;
     },
     onSuccess: (data) => {

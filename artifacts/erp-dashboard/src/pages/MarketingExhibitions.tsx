@@ -74,7 +74,7 @@ export default function MarketingExhibitions() {
   const { data: leads = [] } = useQuery<ExhibitionLead[]>({
     queryKey: ["/api/marketing/exhibitions", selectedExh, "leads"],
     enabled: !!selectedExh,
-    queryFn: () => apiRequest('GET', `/api/marketing/exhibitions/${selectedExh}/leads`).then(r => r.json()),
+    queryFn: () => apiRequest<ExhibitionLead[]>('GET', `/api/marketing/exhibitions/${selectedExh}/leads`),
     select: selectArray<ExhibitionLead>,
   });
 

@@ -191,17 +191,18 @@ export default function EmployeeProfile() {
     enabled: !!id 
   });
   const { data: zoneLogs, isLoading: loadingZoneLogs } = useQuery<ZoneTrackingLog[]>({ queryKey: ['/api/attendance/zone-logs', id], enabled: !!id });
-  const { data: skillGapData, isLoading: loadingSkillGap } = useQuery<SkillGapData>({
+  const { data: skillGapData, isLoading: loadingSkillGap } = useQuery<SkillGapData | null>({
     queryKey: ['/api/integration/skill-gap', id],
     queryFn: async () => {
-      const res = (await apiRequest('GET', `/api/integration/skill-gap/${id}`)) as unknown as Response;
-      if (!res.ok) return null;
-      const json = await res.json();
-      // Unwrap { ok: true, data: {...} } or { data: {...} } envelopes
-      const inner = (json?.ok === true && json?.data) ? json.data : (json?.data ?? json);
-      // Ensure gaps array is always defined
-      if (inner && !Array.isArray(inner.gaps)) inner.gaps = [];
-      return inner as SkillGapData;
+      try {
+        const json = await apiRequest<Record<string, unknown> | null>('GET', `/api/integration/skill-gap/${id}`);
+        if (!json || typeof json !== 'object') return null;
+        const inner = (json as Record<string, unknown>);
+        if (!Array.isArray((inner as { gaps?: unknown[] }).gaps)) (inner as { gaps: unknown[] }).gaps = [];
+        return inner as unknown as SkillGapData;
+      } catch {
+        return null;
+      }
     },
     enabled: !!id
   });
@@ -214,30 +215,40 @@ export default function EmployeeProfile() {
     }, 
     enabled: !!id 
   });
-  const { data: mesSummary, isLoading: loadingMes } = useQuery<MesSummary>({
+  const { data: mesSummary, isLoading: loadingMes } = useQuery<MesSummary | null>({
     queryKey: ['/api/integration/employee-mes-summary', id],
     queryFn: async () => {
-      const res = (await apiRequest('GET', `/api/integration/employee-mes-summary/${id}?months=3`)) as unknown as Response;
-      if (!res.ok) return null;
-      const json = await res.json();
-      const inner = (json?.ok === true && json?.data != null) ? json.data : (json?.data ?? json);
-      if (!inner || typeof inner !== 'object') return null;
-      if (!inner.summary) inner.summary = { totalSessions: 0, completedSessions: 0, totalActual: 0, totalTarget: 0, totalDefects: 0, defectPercent: 0, avgOee: 0, goalAchievement: 0, totalRunningMinutes: 0, totalStoppedMinutes: 0, workTimeRatio: 0, totalStoppages: 0 };
-      return inner as MesSummary;
+      try {
+        const json = await apiRequest<Record<string, unknown> | null>('GET', `/api/integration/employee-mes-summary/${id}?months=3`);
+        if (!json || typeof json !== 'object') return null;
+        const inner = json as Record<string, unknown>;
+        if (!(inner as { summary?: unknown }).summary) {
+          (inner as { summary: unknown }).summary = { totalSessions: 0, completedSessions: 0, totalActual: 0, totalTarget: 0, totalDefects: 0, defectPercent: 0, avgOee: 0, goalAchievement: 0, totalRunningMinutes: 0, totalStoppedMinutes: 0, workTimeRatio: 0, totalStoppages: 0 };
+        }
+        return inner as unknown as MesSummary;
+      } catch {
+        return null;
+      }
     },
     enabled: !!id
   });
-  const { data: wmsSummary, isLoading: loadingWms } = useQuery<WmsSummary>({
+  const { data: wmsSummary, isLoading: loadingWms } = useQuery<WmsSummary | null>({
     queryKey: ['/api/integration/employee-wms-summary', id],
     queryFn: async () => {
-      const res = (await apiRequest('GET', `/api/integration/employee-wms-summary/${id}`)) as unknown as Response;
-      if (!res.ok) return null;
-      const json = await res.json();
-      const inner = (json?.ok === true && json?.data != null) ? json.data : (json?.data ?? json);
-      if (!inner || typeof inner !== 'object') return null;
-      if (!inner.summary) inner.summary = { totalMovements: 0, totalIssued: 0, totalReturned: 0, totalWasted: 0, overallReturnRate: 0 };
-      if (!Array.isArray(inner.materials)) inner.materials = [];
-      return inner as WmsSummary;
+      try {
+        const json = await apiRequest<Record<string, unknown> | null>('GET', `/api/integration/employee-wms-summary/${id}`);
+        if (!json || typeof json !== 'object') return null;
+        const inner = json as Record<string, unknown>;
+        if (!(inner as { summary?: unknown }).summary) {
+          (inner as { summary: unknown }).summary = { totalMovements: 0, totalIssued: 0, totalReturned: 0, totalWasted: 0, overallReturnRate: 0 };
+        }
+        if (!Array.isArray((inner as { materials?: unknown[] }).materials)) {
+          (inner as { materials: unknown[] }).materials = [];
+        }
+        return inner as unknown as WmsSummary;
+      } catch {
+        return null;
+      }
     },
     enabled: !!id
   });

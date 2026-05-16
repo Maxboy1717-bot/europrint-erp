@@ -67,7 +67,7 @@ export function DeadlineColumn({
         <SortableContext items={(Array.isArray(cards) ? cards : []).map(c => c.id ?? "")} strategy={verticalListSortingStrategy}>
           <div className="space-y-2 min-h-[100px]">
             {(Array.isArray(cards) ? cards : []).map((card) => (
-              <SortableTaskCard key={card.id} card={card} onClick={() => onCardClick(card)} t={t} />
+              <SortableTaskCard key={card.id} card={card} onClick={() => onCardClick(card)} />
             ))}
           </div>
         </SortableContext>

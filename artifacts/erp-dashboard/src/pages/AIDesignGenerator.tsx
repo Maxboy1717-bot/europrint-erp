@@ -44,8 +44,9 @@ export default function AIDesignGenerator() {
     enabled: !!revisionsOrderId,
   });
 
-  const generateMutation = useMutation({
-    mutationFn: async (data: Record<string, unknown>) => apiRequest("POST", "/api/design/generate", data),
+  type GenerateResponse = { designs?: GeneratedDesign[]; generationTime?: number };
+  const generateMutation = useMutation<GenerateResponse, Error, Record<string, unknown>>({
+    mutationFn: async (data) => apiRequest<GenerateResponse>("POST", "/api/design/generate", data),
     onSuccess: (data) => {
       setGeneratedDesigns(data.designs || []);
       queryClient.invalidateQueries({ queryKey: ["/api/design/orders"] });
@@ -72,7 +73,11 @@ export default function AIDesignGenerator() {
   const handleVerify = async (designId: string) => {
     setVerifyingDesignId(designId);
     try {
-      const result = await apiRequest("POST", `/api/design/${designId}/verify`, {
+      type VerifyResponse = {
+        checks?: Record<string, { passed?: boolean; score?: number; issues?: string[] } & Record<string, unknown>>;
+        overallScore?: number;
+      };
+      const result = await apiRequest<VerifyResponse>("POST", `/api/design/${designId}/verify`, {
         checkTypes: ["spelling_uz", "spelling_ru", "spelling_en", "bleed", "cmyk", "logo_quality", "overall"],
       });
       const checks: AiCheckResult[] = Object.entries(result.checks || {}).map(([ct, val]) => ({
@@ -95,7 +100,8 @@ export default function AIDesignGenerator() {
 
   const handleMockup = async (design: GeneratedDesign) => {
     try {
-      const result = await apiRequest("POST", `/api/design/${design.id}/mockup`, { productType: selectedOrder?.order?.productType || "quti" });
+      type MockupResponse = { mockupUrl: string };
+      const result = await apiRequest<MockupResponse>("POST", `/api/design/${design.id}/mockup`, { productType: selectedOrder?.order?.productType || "quti" });
       setMockupMap((prev) => ({ ...prev, [design.id]: result.mockupUrl }));
       toast({ title: "3D Mockup yaratildi!" });
     } catch { toast({ title: "Mockup xatoligi", variant: "destructive" }); }

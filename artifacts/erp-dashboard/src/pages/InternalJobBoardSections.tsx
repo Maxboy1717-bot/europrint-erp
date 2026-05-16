@@ -101,20 +101,20 @@ export function VacancyCard({ vacancy, onApply }: VacancyCardProps) {
           </div>
         )}
 
-        {vacancy.portret?.salary_min && expanded && (
+        {Boolean(vacancy.portret?.salary_min) && expanded && (
           <div className="bg-muted/30 rounded-lg p-2 mt-2 text-xs space-y-1">
-            {vacancy.portret.main_purpose && (
+            {vacancy.portret?.main_purpose ? (
               <div>
                 <span className="text-muted-foreground">{t("maqsad1")}</span>
                 {String(vacancy.portret.main_purpose).slice(0, 150)}
               </div>
-            )}
-            {vacancy.portret.work_schedule && (
+            ) : null}
+            {vacancy.portret?.work_schedule ? (
               <div>
                 <span className="text-muted-foreground">{t("grafik1")}</span>
                 {String(vacancy.portret.work_schedule)}
               </div>
-            )}
+            ) : null}
           </div>
         )}
 

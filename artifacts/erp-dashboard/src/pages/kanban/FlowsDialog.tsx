@@ -38,7 +38,7 @@ export function FlowsDialog({
   const [flowName, setFlowName] = useState("");
   const [flowType, setFlowType] = useState<"round_robin" | "least_busy" | "random">("round_robin");
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const { data: flows = [], refetch } = useQuery<TaskFlowWithUsers[]>({
     queryKey: ['/api/kanban/flows', boardId],

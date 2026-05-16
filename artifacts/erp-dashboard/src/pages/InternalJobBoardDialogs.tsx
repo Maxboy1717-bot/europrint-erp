@@ -30,10 +30,10 @@ export function ApplyDialog({ vacancy, open, onClose }: ApplyDialogProps) {
 
   const applyMutation = useMutation({
     mutationFn: () =>
-      apiRequest("POST", `/api/hr/recruitment/internal-apply/${vacancy?.id}`, {
+      apiRequest<Record<string, unknown>>("POST", `/api/hr/recruitment/internal-apply/${vacancy?.id}`, {
         cover_note: coverNote,
       }),
-    onSuccess: (data: Record<string, unknown>) => {
+    onSuccess: (data) => {
       if (data?.error) {
         toast({ title: "Xatolik", description: String(data.error), variant: "destructive" });
         return;

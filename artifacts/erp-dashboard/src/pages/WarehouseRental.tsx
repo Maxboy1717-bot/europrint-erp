@@ -90,8 +90,8 @@ export default function WarehouseRental() {
   });
 
   const recalcMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/warehouse-rental/recalculate", {}),
-    onSuccess: (data: Record<string, unknown>) => {
+    mutationFn: () => apiRequest<Record<string, unknown>>("POST", "/api/warehouse-rental/recalculate", {}),
+    onSuccess: (data) => {
       toast({ title: `Yangilandi: ${data?.updated ?? 0} ta yozuv` });
       invalidateRecords();
     },

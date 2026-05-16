@@ -62,7 +62,7 @@ export default function PeerReviewPage() {
   });
 
   const submitMut = useMutation({
-    mutationFn: (body: Record<string, unknown>) => apiRequest("POST", "/api/hr/360/review", body),
+    mutationFn: (body: Record<string, unknown>) => apiRequest<Record<string, unknown>>("POST", "/api/hr/360/review", body),
     onSuccess: (data: Record<string, unknown>) => {
       if (data?.error) {
         toast({ title: "Xato", description: String(data.error), variant: "destructive" });

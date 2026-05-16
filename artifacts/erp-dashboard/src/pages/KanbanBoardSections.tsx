@@ -25,13 +25,14 @@ import { DEADLINE_COLUMNS } from "@/components/kanban/types";
 
 import type { KanbanT } from "./KanbanBoardTypes";
 import type { useKanbanBoard } from "@/hooks/useKanbanBoard";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 type BoardHook = ReturnType<typeof useKanbanBoard>;
 
 // ─── Empty-state / no-board-selected panel ───────────────────────────────────
 
 interface EmptyBoardStateProps {
-  t: KanbanT;
+  t: KanbanT & ((key: string) => string);
   isQuickStartPending: boolean;
   onQuickStart: () => void;
   onCreateBoard: () => void;
@@ -69,7 +70,7 @@ export function EmptyBoardState({
         {t.empty.selectBoard}
       </h3>
       <p style={{ fontSize: 13, color: "#A0AEC0", marginBottom: 28, maxWidth: 360 }}>
-        {t("birinchiDoskangizniYaratingYokiEuroprint")}
+        {tLabel("kanban.birinchiDoskangizniYaratingYokiEuroprint", "Birinchi doskangizni yarating yoki EuroPrint shabloni ishlatib boshlang.")}
       </p>
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
@@ -142,7 +143,7 @@ export function EmptyBoardState({
       </div>
 
       <p style={{ fontSize: 11, color: "#B0BEC5", marginTop: 16 }}>
-        {t("tezkorBoshlashKiruvchiRejadaJarayonda")}
+        {tLabel("kanban.tezkorBoshlashKiruvchiRejadaJarayonda", "Tezkor boshlash: Kiruvchi, Rejada, Jarayonda, Yakunlangan ustunlari avtomatik yaratiladi.")}
       </p>
     </div>
   );
@@ -171,7 +172,7 @@ interface BoardContentProps
     | "deleteColumnMutation"
     | "updateCardMutation"
   > {
-  t: KanbanT;
+  t: KanbanT & ((key: string) => string);
   quickTaskType: string;
   setQuickTaskType: (v: string) => void;
 }
@@ -311,7 +312,7 @@ export function BoardContent({
 
   return (
     <div className="flex items-center justify-center h-full text-muted-foreground">
-      <p>{t("buKorinishHaliTayyorEmas")}</p>
+      <p>{tLabel("kanban.buKorinishHaliTayyorEmas", "Bu ko'rinish hali tayyor emas")}</p>
     </div>
   );
 }

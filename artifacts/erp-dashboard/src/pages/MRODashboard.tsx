@@ -49,7 +49,7 @@ export default function MRODashboard() {
   const { data: buildingRooms = [], isLoading: facilitiesLoading } = useQuery<MroFacility[]>({ queryKey: ["/api/integration/mro/facilities"], enabled: !!isAuthenticated });
   const { data: ppeItems = [] } = useQuery<MroItem[]>({
     queryKey: ["/api/integration/mro/items", { category: "ppe" }],
-    queryFn: () => apiRequest('GET', "/api/integration/mro/items?category=ppe").then(r => r.json()),
+    queryFn: () => apiRequest<MroItem[]>('GET', "/api/integration/mro/items?category=ppe"),
     enabled: !!isAuthenticated,
   });
 

@@ -104,5 +104,5 @@ export interface TaskDetailSheetActionsProps {
   completionReport:      string;
   onCompletionReportChange: (v: string) => void;
   onConfirmComplete:     () => void;
-  t: (key: string) => string;
+  t: ((key: string) => string) & { actions: { delete: string } };
 }

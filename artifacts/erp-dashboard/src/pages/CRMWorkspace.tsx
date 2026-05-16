@@ -129,8 +129,8 @@ export default function CRMWorkspace() {
                 itemsByStage={itemsByStage}
                 activeEntity={activeEntity}
                 stageValues={stageValues}
-                onItemClick={setSelectedId}
-                onAddTask={setSelectedId}
+                onItemClick={(id) => setSelectedId(typeof id === "number" ? id : Number(id))}
+                onAddTask={(id) => setSelectedId(typeof id === "number" ? id : Number(id))}
                 onQuickAdd={() => setShowQuickCreate(true)}
                 sensors={sensors}
                 handleDragStart={handleDragStart}
@@ -220,7 +220,7 @@ export default function CRMWorkspace() {
 
 type CalItem   = { id: number; title: string; color: string };
 type CalStage  = { stageId: string; color: string | null };
-type CalEntity = { id: number; [key: string]: unknown };
+type CalEntity = { id: number | string; [key: string]: unknown };
 
 function CrmCalendarView({
   items,

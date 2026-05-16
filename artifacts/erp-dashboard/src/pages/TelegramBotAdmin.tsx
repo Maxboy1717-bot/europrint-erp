@@ -42,8 +42,8 @@ export default function TelegramBotAdmin() {
   });
 
   const broadcastMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/telegram/admin/broadcast", { message: broadcastMsg }),
-    onSuccess: (data: Record<string, unknown>) => {
+    mutationFn: () => apiRequest<Record<string, unknown>>("POST", "/api/telegram/admin/broadcast", { message: broadcastMsg }),
+    onSuccess: (data) => {
       toast({ title: "Xabar yuborildi", description: `${data.sent} ta xodimga yetkazildi, ${data.failed} ta muvaffaqiyatsiz` });
       setBroadcastMsg("");
     },

@@ -34,7 +34,7 @@ export default function KanbanBoard() {
     const direct = tMap?.[key];
     return typeof direct === 'string' ? direct : key;
   }) as ((key: string, params?: Record<string, string | number>) => string);
-  const t = Object.assign(tFn, tMap) as typeof T.uz & ((key: string, params?: Record<string, string | number>) => string);
+  const t = Object.assign(tFn, tMap) as unknown as typeof T.uz & ((key: string, params?: Record<string, string | number>) => string);
 
   const {
     selectedBoardId, setSelectedBoardId,

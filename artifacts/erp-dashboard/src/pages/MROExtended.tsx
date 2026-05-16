@@ -80,7 +80,7 @@ export default function MROExtended() {
 
   const { data: ppeItems = [] } = useQuery<MROItem[]>({
     queryKey: ["/api/integration/mro/items", { category: "ppe" }],
-    queryFn: () => apiRequest('GET', "/api/integration/mro/items?category=ppe").then((r) => r.json()),
+    queryFn: () => apiRequest<MROItem[]>('GET', "/api/integration/mro/items?category=ppe"),
   });
 
   // --- Mutations ---

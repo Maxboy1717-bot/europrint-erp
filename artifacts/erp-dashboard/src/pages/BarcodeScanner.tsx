@@ -53,13 +53,13 @@ export default function BarcodeScanner() {
 
   const scanMutation = useMutation({
     mutationFn: (scanCode: string) =>
-      apiRequest("POST", "/api/wms/barcode/scan", {
+      apiRequest<ScanResult>("POST", "/api/wms/barcode/scan", {
         code: scanCode,
         action,
         warehouseId: warehouseId || undefined,
         quantity: action !== "LOOKUP" ? Number(quantity) : undefined,
       }),
-    onSuccess: (data: ScanResult) => {
+    onSuccess: (data) => {
       setLastResult(data);
       setHistory((prev) => [
         {

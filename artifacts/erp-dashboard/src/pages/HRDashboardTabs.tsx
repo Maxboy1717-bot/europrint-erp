@@ -85,7 +85,7 @@ export function AlertsTab({ alerts, alertStats, isLoadingAlerts }: AlertsTabProp
         ) : (
           <div className="space-y-3">
             {(Array.isArray(alerts) ? alerts : []).map((alert) => {
-              const cfg = SEVERITY_CONFIG[alert.severity];
+              const cfg = SEVERITY_CONFIG[alert.severity as keyof typeof SEVERITY_CONFIG] ?? SEVERITY_CONFIG.info;
               return (
                 <div key={alert.id} className={`flex items-start justify-between gap-4 p-4 rounded-lg border ${cfg.bg} ${cfg.border}`} data-testid={`alert-row-${alert.id}`}>
                   <div className="flex items-start gap-3 min-w-0">

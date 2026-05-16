@@ -43,6 +43,7 @@ import { PlanningTabPanels } from "./planning/PlanningTabPanels";
 import { usePlanningBoardActions } from "./usePlanningBoardActions";
 import { apiRequest } from '@/lib/queryClient';
 import { EPErrorState } from "@/components/ep";
+import type { ScheduleEntry } from "./planning/planning-types";
 
 export default function PlanningBoard() {
   const { isAuthenticated } = useAuth();
@@ -74,9 +75,9 @@ export default function PlanningBoard() {
   // buildTranslations returns a flat label object. A few descendant components
   // additionally invoke `t(...)` as a function for keys not present on the map.
   // Wrap the map in a callable carrier so both `t.foo` and `t("foo")` work.
-  const tMap = buildTranslations(lang) as unknown as Record<string, string>;
+  const tMap = buildTranslations(lang);
   const tFn = ((key: string, _params?: Record<string, string | number>): string => {
-    const direct = tMap?.[key];
+    const direct = (tMap as Record<string, unknown>)?.[key];
     return typeof direct === 'string' ? direct : key;
   });
   const t = Object.assign(tFn, tMap) as typeof tMap & typeof tFn;
@@ -108,12 +109,13 @@ export default function PlanningBoard() {
   // Queries
   // -------------------------------------------------------------------------
 
+  type OperationsResponse = { operations?: PlanningOperation[]; items?: PlanningOperation[] };
   const {
     data: operationsData,
     isLoading: isLoadingOps,
-    isError, error: isOpsError,
+    isError: isOpsError,
     refetch: refetchOps,
-  } = useQuery({
+  } = useQuery<OperationsResponse>({
     queryKey: ["/api/planning/operations", filters],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -121,16 +123,16 @@ export default function PlanningBoard() {
       if (filters.status !== "all") params.append("status", filters.status);
       if (filters.startDate) params.append("startDate", filters.startDate);
       if (filters.endDate) params.append("endDate", filters.endDate);
-      return await apiRequest('GET', `/api/planning/operations?${params.toString()}`);
+      return await apiRequest<OperationsResponse>('GET', `/api/planning/operations?${params.toString()}`);
     },
     enabled: !!isAuthenticated,
   });
 
-  const { data: scheduleData, isLoading: isLoadingSchedule } = useQuery({
+  const { data: scheduleData, isLoading: isLoadingSchedule } = useQuery<ScheduleEntry[]>({
     queryKey: ["/api/planning/schedule", filters.startDate, filters.endDate],
     queryFn: async () => {
       const params = new URLSearchParams({ startDate: filters.startDate, endDate: filters.endDate });
-      return await apiRequest('GET', `/api/planning/schedule?${params.toString()}`);
+      return await apiRequest<ScheduleEntry[]>('GET', `/api/planning/schedule?${params.toString()}`);
     },
     enabled: !!isAuthenticated && activeTab === "schedule",
   });

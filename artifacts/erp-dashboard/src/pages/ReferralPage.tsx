@@ -65,7 +65,7 @@ export default function ReferralPage() {
   // -------------------------------------------------------------------------
 
   const createMut = useMutation({
-    mutationFn: (body: Record<string, unknown>) => apiRequest("POST", "/api/hr/referrals", body),
+    mutationFn: (body: Record<string, unknown>) => apiRequest<Record<string, unknown>>("POST", "/api/hr/referrals", body),
     onSuccess: (data: Record<string, unknown>) => {
       if (data?.error) { toast({ title: "Xato", description: String(data.error), variant: "destructive" }); return; }
       toast({ title: "✅ Tavsiya yuborildi!" });
@@ -78,8 +78,8 @@ export default function ReferralPage() {
 
   const updateMut = useMutation({
     mutationFn: ({ id, body }: { id: number; body: Record<string, unknown> }) =>
-      apiRequest("PATCH", `/api/hr/referrals/${id}`, body),
-    onSuccess: (data: Record<string, unknown>) => {
+      apiRequest<Record<string, unknown>>("PATCH", `/api/hr/referrals/${id}`, body),
+    onSuccess: (data) => {
       if (data?.error) { toast({ title: "Xato", description: String(data.error), variant: "destructive" }); return; }
       toast({ title: "✅ Yangilandi!" });
       qc.invalidateQueries({ queryKey: ["/api/hr/referrals"] });

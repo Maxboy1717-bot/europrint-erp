@@ -13,6 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Progress } from "@/components/ui/progress";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 interface EmployeeProductivity {
   id?: string | number;
@@ -42,9 +43,9 @@ const getScoreColor = (score: number) => {
 
 const getTrendBadge = (trend?: string) => {
   if (!trend) return null;
-  if (trend === "up")   return <EPStatusPill tone="success"      className="text-xs">{t("osmoqda")}</EPStatusPill>;
-  if (trend === "down") return <EPStatusPill tone="danger"  className="text-xs">{t("pasaymoqda1")}</EPStatusPill>;
-  return <Badge variant="outline" className="text-xs">{t("barqaror1")}</Badge>;
+  if (trend === "up")   return <EPStatusPill tone="success"      className="text-xs">{tLabel("osmoqda", "O'smoqda")}</EPStatusPill>;
+  if (trend === "down") return <EPStatusPill tone="danger"  className="text-xs">{tLabel("pasaymoqda1", "Pasaymoqda")}</EPStatusPill>;
+  return <Badge variant="outline" className="text-xs">{tLabel("barqaror1", "Barqaror")}</Badge>;
 };
 
 export default function EmployeeProductivityPage() {

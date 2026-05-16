@@ -79,7 +79,7 @@ export default function DailyReportPage() {
 
   const submit = useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      apiRequest("POST", "/api/hr-v2/daily-reports", data),
+      apiRequest<Record<string, unknown>>("POST", "/api/hr-v2/daily-reports", data),
     onSuccess: (data: Record<string, unknown>) => {
       if (data?.error) {
         toast({ title: "Xato", description: String(data.error), variant: "destructive" });

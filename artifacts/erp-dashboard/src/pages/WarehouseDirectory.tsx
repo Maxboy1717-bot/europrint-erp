@@ -22,7 +22,12 @@ import { EPErrorState } from "@/components/ep";
 export default function WarehouseDirectory() {
   const [lang, setLang] = useState<Lang>("uz");
   const [activeTab, setActiveTab] = useState("warehouses");
-  const t = translations[lang];
+  const tMap = translations[lang];
+  const tFn = (key: string): string => {
+    const v = (tMap as Record<string, unknown>)?.[key];
+    return typeof v === "string" ? v : key;
+  };
+  const t = Object.assign(tFn, tMap) as typeof tMap & ((key: string) => string);
 
   const { data: warehouses = [], isError, error, refetch } = useQuery<WarehouseData[]>({
     queryKey: ["/api/warehouse/warehouses"],

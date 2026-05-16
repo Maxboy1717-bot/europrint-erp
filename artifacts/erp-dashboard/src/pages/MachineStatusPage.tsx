@@ -65,7 +65,7 @@ export default function MachineStatusPage() {
   const {
     data: statusRaw,
     isLoading: loadingStatus,
-    isError, error: errorStatus,
+    isError: isStatusError, error: errorStatus,
     refetch: refetchStatus,
   } = useQuery<MachineStatus[] | { data?: MachineStatus[] }>({
     queryKey: ["/api/iot/machine-status"],
@@ -79,7 +79,7 @@ export default function MachineStatusPage() {
   const {
     data: logsRaw,
     isLoading: loadingLogs,
-    isError, error: errorLogs,
+    isError: isLogsError, error: errorLogs,
     refetch: refetchLogs,
   } = useQuery<MachineLog[] | { data?: MachineLog[] }>({
     queryKey: ["/api/iot/machine-status-logs"],
@@ -98,7 +98,9 @@ export default function MachineStatusPage() {
     : (logsRaw as { data?: MachineLog[] })?.data ?? [];
 
   const isLoading = tab === "current" ? loadingStatus : loadingLogs;
-  const isError   = tab === "current" ? errorStatus   : errorLogs;
+  const isError   = tab === "current" ? isStatusError : isLogsError;
+  // `error` available for diagnostics: errorStatus / errorLogs
+  void errorStatus; void errorLogs;
   const refetch   = tab === "current" ? refetchStatus : refetchLogs;
 
   if (isError) return <EPErrorState onRetry={refetch} />;

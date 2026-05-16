@@ -137,7 +137,7 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
   const { data, isLoading } = useQuery({
     queryKey: ["/api/hr/adaptation", employeeId],
     queryFn: () =>
-      apiRequest("GET", `/api/hr/adaptation/${employeeId}`),
+      apiRequest<AdaptationData & { error?: string }>("GET", `/api/hr/adaptation/${employeeId}`),
     enabled: !!employeeId,
   });
 

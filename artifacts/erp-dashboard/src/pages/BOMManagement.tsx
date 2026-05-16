@@ -77,7 +77,7 @@ export default function BOMManagement() {
   });
   const explosionMutation = useMutation({
     mutationFn: async (bomId: string) => {
-      return await apiRequest('GET', `/api/erp/bom-headers/${bomId}/explosion?quantity=1`);
+      return await apiRequest<ExplosionData>('GET', `/api/erp/bom-headers/${bomId}/explosion?quantity=1`);
     },
     onSuccess: (data) => { setExplosionData(data); setShowExplosion(true); toast({ title: tCommon("success") }); },
     onError: () => { toast({ variant: "destructive", title: tCommon("error"), description: tCommon("operationFailed") }); },

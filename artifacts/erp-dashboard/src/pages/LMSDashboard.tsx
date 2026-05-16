@@ -44,9 +44,9 @@ export default function LMSDashboard() {
     queryKey: ["/api/lms/exams"],
     select: (data: unknown) => Array.isArray(data) ? data : [],
   });
-  const { data: myProgress } = useQuery<LmsProgress>({
+  const { data: myProgress } = useQuery<unknown, Error, LmsProgress | undefined>({
     queryKey: ["/api/lms/progress/my"],
-    select: (data: unknown) => (data && typeof data === 'object') ? data as LmsProgress : undefined,
+    select: (data) => (data && typeof data === 'object') ? data as LmsProgress : undefined,
   });
 
   const submitExamMutation = useMutation({

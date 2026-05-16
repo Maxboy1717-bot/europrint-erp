@@ -48,7 +48,7 @@ export function StatsRow({ totalCount, activeCount, completedCount, lang }: Stat
     const v = tMap?.[key];
     return typeof v === 'string' ? v : key;
   }) as ((key: string) => string);
-  const t = Object.assign(tFn, tMap) as typeof TRANSLATIONS[Lang] & ((key: string) => string);
+  const t = Object.assign(tFn, tMap) as unknown as typeof TRANSLATIONS[Lang] & ((key: string) => string);
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <div className="bg-card rounded-lg p-5">
@@ -108,7 +108,7 @@ export function OrdersList({
     const v = tMap?.[key];
     return typeof v === 'string' ? v : key;
   }) as ((key: string) => string);
-  const t = Object.assign(tFn, tMap) as typeof TRANSLATIONS[Lang] & ((key: string) => string);
+  const t = Object.assign(tFn, tMap) as unknown as typeof TRANSLATIONS[Lang] & ((key: string) => string);
   return (
     <div className="bg-card rounded-xl p-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-4">

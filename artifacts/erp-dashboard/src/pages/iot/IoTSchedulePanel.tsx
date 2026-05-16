@@ -88,8 +88,8 @@ export function IoTSchedulePanel({
         <div className="flex items-center gap-3 mb-2">
           <div className="h-8 w-1.5 bg-primary rounded-full" />
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("ishlabChiqarishRejangiz")}</b></>}
-        title={t("ishlabChiqarishRejangiz")}
+        breadcrumb={<>{t("Boshqaruv paneli", "Панель управления")}<b className="text-foreground">{t("Ishlab chiqarish rejangiz", "Ваш производственный план")}</b></>}
+        title={t("Ishlab chiqarish rejangiz", "Ваш производственный план")}
       />
         </div>
 

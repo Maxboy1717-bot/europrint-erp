@@ -31,6 +31,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { tLabel } from "@/lib/i18n/tLabel";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
 interface HRCapitalCourse {
   id: string;
@@ -50,12 +51,12 @@ interface HRCapitalStats {
 const getDifficultyBadge = (difficulty: string) => {
   switch (difficulty) {
     case "beginner":
-      return <Badge variant="outline">{t("boshlangich")}</Badge>;
+      return <Badge variant="outline">{tLabel("boshlangich", "Boshlang'ich")}</Badge>;
     case "intermediate":
-      return <EPStatusPill tone="neutral">{t("medium")}</EPStatusPill>;
+      return <EPStatusPill tone="neutral">{tLabel("medium", "O'rta")}</EPStatusPill>;
     case "advanced":
       return (
-        <Badge className="bg-purple-500 hover:bg-[var(--ep-purple)]/90">{t("ilgor")}</Badge>
+        <Badge className="bg-purple-500 hover:bg-[var(--ep-purple)]/90">{tLabel("ilgor", "Ilg'or")}</Badge>
       );
     default:
       return <Badge>{difficulty}</Badge>;

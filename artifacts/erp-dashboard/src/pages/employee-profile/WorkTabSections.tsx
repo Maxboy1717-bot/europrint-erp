@@ -25,12 +25,24 @@ interface OperatorProductionBlockProps {
   employeeId: string | number;
 }
 
+interface OperatorStats {
+  error?: string;
+  today_oee?: number;
+  today_produced?: number;
+  today_target?: number;
+  today_defects?: number;
+  machine_name?: string;
+  machine_id?: string | number;
+  shift_type?: string;
+  last_report_date?: string;
+}
+
 export function OperatorProductionBlock({ employeeId, }: OperatorProductionBlockProps) {
   const { t } = useTranslation("common");
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading } = useQuery<OperatorStats>({
     queryKey: ["/api/hr/employees/operator-stats", employeeId],
     queryFn: () =>
-      apiRequest("GET", `/api/hr/employees/${employeeId}/operator-stats`),
+      apiRequest<OperatorStats>("GET", `/api/hr/employees/${employeeId}/operator-stats`),
     enabled: !!employeeId,
     refetchInterval: 60_000,
   });
