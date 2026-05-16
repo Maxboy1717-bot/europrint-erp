@@ -30,9 +30,9 @@ import { DirectorExtendedController } from './presentation/director-extended.con
 import { DashboardQueryService } from './application/dashboard-query.service';
 import { DashboardQueryRepository } from './infrastructure/repositories/dashboard-query.repository';
 import { DirectorDataService } from './application/director-data.service';
-import { DirectorDataRepository } from './application/director-data.repository';
+import { DirectorDataRepository } from './infrastructure/repositories/director-data.repository';
 import { DirectorStateService } from './application/director-state.service';
-import { DirectorStateRepository } from './application/director-state.repository';
+import { DirectorStateRepository } from './infrastructure/repositories/director-state.repository';
 import { OkrController } from './presentation/okr.controller';
 import { KaizenController } from './presentation/kaizen.controller';
 import { StrategicController } from './presentation/strategic.controller';
@@ -45,7 +45,7 @@ import { KaizenService } from './application/kaizen.service';
 import { OkrService } from './application/okr.service';
 import { OkrRepository } from './infrastructure/repositories/okr.repository';
 import { StrategicService } from './application/strategic.service';
-import { StrategicRepository } from './application/strategic.repository';
+import { StrategicRepository } from './infrastructure/repositories/strategic.repository';
 import { ZnoService } from './application/zno.service';
 import { ZnoRepository } from './infrastructure/repositories/zno.repository';
 import { ZvsService } from './application/zvs.service';
@@ -54,8 +54,11 @@ import { KaizenRepository } from './infrastructure/repositories/kaizen.repositor
 import { AdvanceBypassApprovedListener } from './infrastructure/event-handlers/advance-bypass-approved.listener';
 import { COORDINATION_REPO } from './domain/repositories/i-coordination.repo';
 import { DASHBOARD_QUERY_REPO } from './domain/repositories/i-dashboard-query.repo';
+import { DIRECTOR_DATA_REPO } from './domain/repositories/i-director-data.repo';
+import { DIRECTOR_STATE_REPO } from './domain/repositories/i-director-state.repo';
 import { KAIZEN_REPO } from './domain/repositories/i-kaizen.repo';
 import { OKR_REPO } from './domain/repositories/i-okr.repo';
+import { STRATEGIC_REPO } from './domain/repositories/i-strategic.repo';
 import { ZNO_REPO } from './domain/repositories/i-zno.repo';
 import { ZVS_REPO } from './domain/repositories/i-zvs.repo';
 
@@ -98,7 +101,10 @@ const Repositories = [
     ...CommandHandlers, ...QueryHandlers, ...Repositories,
     DashboardQueryRepository,
     { provide: DASHBOARD_QUERY_REPO, useClass: DashboardQueryRepository },
-    DashboardQueryService, DashboardService, DirectorDataService, DirectorDataRepository, DirectorStateService, DirectorStateRepository,
+    DashboardQueryService, DashboardService, DirectorDataService, DirectorDataRepository,
+    { provide: DIRECTOR_DATA_REPO, useClass: DirectorDataRepository },
+    DirectorStateService, DirectorStateRepository,
+    { provide: DIRECTOR_STATE_REPO, useClass: DirectorStateRepository },
     CoordinationRepository,
     { provide: COORDINATION_REPO, useClass: CoordinationRepository },
     CoordinationService,
@@ -108,7 +114,9 @@ const Repositories = [
     OkrRepository,
     { provide: OKR_REPO, useClass: OkrRepository },
     OkrService,
-    StrategicRepository, StrategicService,
+    StrategicRepository,
+    { provide: STRATEGIC_REPO, useClass: StrategicRepository },
+    StrategicService,
     ZnoRepository,
     { provide: ZNO_REPO, useClass: ZnoRepository },
     ZnoService,

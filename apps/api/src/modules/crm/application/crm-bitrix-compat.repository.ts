@@ -1,6 +1,11 @@
 /**
  * @module crm-bitrix-compat.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ *
+ * TODO PA1-9: Migrate to infrastructure layer with ICrmBitrixCompatRepo interface +
+ *   CRM_BITRIX_COMPAT_REPO Symbol token. Skipped in this wave (149 lines) — its
+ *   `crm_proposals` / `crm_robots` / `invoices` joins straddle multiple aggregates;
+ *   extraction needs its own audit pass.
  */
 
 import { Injectable, Logger } from '@nestjs/common';

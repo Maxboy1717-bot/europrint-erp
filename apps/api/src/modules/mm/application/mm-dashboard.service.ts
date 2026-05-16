@@ -5,13 +5,13 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { MmDashboardRepository } from './mm-dashboard.repository';
+import { MM_DASHBOARD_REPO, type IMmDashboardRepo } from '../domain/repositories/i-mm-dashboard.repo';
 
 @Injectable()
 export class MmDashboardService {
-  constructor(private readonly repo: MmDashboardRepository) {}
+  constructor(@Inject(MM_DASHBOARD_REPO) private readonly repo: IMmDashboardRepo) {}
 
   async getDashboard(): Promise<Result<object, AppError>> {
     return this.repo.getDashboardStats();

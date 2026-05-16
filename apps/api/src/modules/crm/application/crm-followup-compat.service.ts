@@ -3,13 +3,13 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { CrmFollowupCompatRepository } from './crm-followup-compat.repository';
+import { CRM_FOLLOWUP_COMPAT_REPO, type ICrmFollowupCompatRepo } from '../domain/repositories/i-crm-followup-compat.repo';
 
 @Injectable()
 export class CrmFollowupCompatService {
-  constructor(private readonly repo: CrmFollowupCompatRepository) {}
+  constructor(@Inject(CRM_FOLLOWUP_COMPAT_REPO) private readonly repo: ICrmFollowupCompatRepo) {}
 
   async list(lid: number | null, lim: number, off: number): Promise<Result<object, AppError>> {
     return safeCall(async () => {

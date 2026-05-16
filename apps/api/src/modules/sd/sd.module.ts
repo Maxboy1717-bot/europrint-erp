@@ -56,6 +56,10 @@ import { SdLeadsRepository } from './infrastructure/repositories/sd-leads.reposi
 import { SD_LEADS_REPO } from './domain/repositories/i-sd-leads.repo';
 import { QUOTATION_REPO } from './domain/repositories/i-quotation.repo';
 import { DrizzleQuotationRepo } from './infrastructure/repositories/drizzle-quotation.repo';
+// PA3-17 Wave 3: merged from former modules/sales/
+import { SalesController } from './sales/sales.controller';
+import { SalesService } from './sales/sales.service';
+import { SalesRepository } from './sales/sales.repository';
 
 const commandHandlers = [
   CreateOrderHandler,
@@ -89,6 +93,7 @@ const repositories = [
     SdOrdersController, SdInvoicesController, SdDeliveriesController,
     SdDashboardController, SdCustomersController, SdLeadsController,
     SdPaymentsController, SdQuotationsController, SdContractsController,
+    SalesController,
   ],
   providers: [
     loggerProvider,
@@ -113,7 +118,10 @@ const repositories = [
     { provide: SD_QUOTATIONS_REPO, useClass: SdQuotationsRepository },
     SdQuotationsService,
     { provide: QUOTATION_REPO, useClass: DrizzleQuotationRepo },
+    // PA3-17 Wave 3: merged from former modules/sales/
+    SalesRepository,
+    SalesService,
   ],
-  exports: [SALES_ORDER_REPO],
+  exports: [SALES_ORDER_REPO, SalesService],
 })
 export class SdModule {}

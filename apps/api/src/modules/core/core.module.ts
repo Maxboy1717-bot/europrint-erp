@@ -27,7 +27,8 @@ import { PositionsController } from './presentation/positions.controller';
 import { PanelsController } from './presentation/panels.controller';
 import { SevenFunctionsController } from './presentation/seven-functions.controller';
 import { SevenFunctionsService } from './application/seven-functions.service';
-import { SevenFunctionsRepository } from './application/seven-functions.repository';
+import { SevenFunctionsRepository } from './infrastructure/repositories/seven-functions.repository';
+import { SEVEN_FUNCTIONS_REPO } from './domain/repositories/i-seven-functions.repo';
 
 const commandHandlers = [
   CreateDepartmentHandler,
@@ -57,6 +58,7 @@ const queryHandlers = [
       useClass: DrizzleCoreRepo,
     },
     SevenFunctionsRepository,
+    { provide: SEVEN_FUNCTIONS_REPO, useClass: SevenFunctionsRepository },
     SevenFunctionsService,
   ],
   exports: [CORE_REPO],

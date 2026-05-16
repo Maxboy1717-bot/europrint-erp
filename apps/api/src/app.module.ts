@@ -95,7 +95,7 @@ import { RemainingModule } from './modules/remaining/remaining.module';
 import { IntegrationModule } from './modules/integration/integration.module';
 
 // New modules (CRM/SD extensions)
-import { SalesModule } from './modules/sales/sales.module';
+// PA3-17 Wave 3: SalesModule merged into SdModule
 import { ApplicationsModule } from './modules/applications/applications.module';
 import { SapModule } from './modules/sap/sap.module';
 
@@ -109,13 +109,13 @@ import { ExportModule } from './modules/export/export.module';
 
 // Design / Technology / HR Assets (Task #262)
 import { TechnologyModule } from './modules/technology/technology.module';
-import { HrAssetsModule } from './modules/hr-assets/hr-assets.module';
+// PA3-17 Wave 3: HrAssetsModule merged into HrModule
 
 // Faza 7 — New endpoint modules
-import { AdaptationModule } from './modules/adaptation/adaptation.module';
+// PA3-17 Wave 3: AdaptationModule merged into HrModule
 // CameraModule removed — its routes were dead code (no frontend usage). All
 // active camera functionality now lives under IotModule.
-import { Feedback360Module } from './modules/feedback-360/feedback-360.module';
+// PA3-17 Wave 3: Feedback360Module merged into HrModule
 
 // Sprint 4 — Order-to-Cash Workflow
 import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.module';
@@ -245,7 +245,7 @@ import { OutboxModule } from './modules/shared/outbox/outbox.module';
     IntegrationModule,
 
     // ── CRM/SD Extensions ────────────────────────────────────────────────────
-    SalesModule,
+    // PA3-17 Wave 3: SalesModule merged into SdModule (controllers/services moved to sd/sales/)
     ApplicationsModule,
     SapModule,
 
@@ -259,11 +259,11 @@ import { OutboxModule } from './modules/shared/outbox/outbox.module';
 
     // ── Design / Technology / HR Assets (Task #262) ───────────────────────────
     TechnologyModule,
-    HrAssetsModule,
+    // PA3-17 Wave 3: HrAssetsModule merged into HrModule (hr/hr-assets/)
 
     // ── Faza 7 — New endpoint modules ─────────────────────────────────────────
-    AdaptationModule,
-    Feedback360Module,
+    // PA3-17 Wave 3: AdaptationModule + Feedback360Module merged into HrModule
+    //   (hr/adaptation/ and hr/feedback-360/)
 
     // ── Sprint 4 — Order-to-Cash Workflow ─────────────────────────────────────
     OrderWorkflowModule,

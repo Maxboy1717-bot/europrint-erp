@@ -34,7 +34,8 @@ import { DefectsService } from './defects/defects.service';
 import { DrizzleDefectsRepository } from './defects/drizzle-defects.repo';
 import { DEFECTS_REPO } from './defects/i-defects.repo';
 import { QcDefectsExtendedService } from './application/qc-defects-extended.service';
-import { QcDefectsExtendedRepository } from './application/qc-defects-extended.repository';
+import { QcDefectsExtendedRepository } from './infrastructure/repositories/qc-defects-extended.repository';
+import { QC_DEFECTS_EXTENDED_REPO } from './domain/repositories/i-qc-defects-extended.repo';
 import { QcExtendedService } from './application/qc-extended.service';
 import { QcExtendedRepository } from './application/qc-extended.repository';
 import { QcNewService } from './application/qc-new.service';
@@ -105,6 +106,7 @@ const repositories = [
     },
     DefectsService,
     QcDefectsExtendedRepository,
+    { provide: QC_DEFECTS_EXTENDED_REPO, useClass: QcDefectsExtendedRepository },
     QcDefectsExtendedService,
     QcExtendedRepository,
     QcExtendedService,

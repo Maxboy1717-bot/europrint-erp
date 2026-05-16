@@ -5,14 +5,19 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Ok, Result } from '@common/result';
-import { DirectorStateRepository } from './director-state.repository';
-import type { WmsRentalData, CompanyStateHistoryData, IdealVsActualData } from './director-state.repository';
+import {
+  DIRECTOR_STATE_REPO,
+  type IDirectorStateRepo,
+  type WmsRentalData,
+  type CompanyStateHistoryData,
+  type IdealVsActualData,
+} from '../domain/repositories/i-director-state.repo';
 
 @Injectable()
 export class DirectorStateService {
-  constructor(private readonly repo: DirectorStateRepository) {}
+  constructor(@Inject(DIRECTOR_STATE_REPO) private readonly repo: IDirectorStateRepo) {}
 
   async getWmsRental(): Promise<Result<WmsRentalData>> {
     const r = await this.repo.queryWmsRental();

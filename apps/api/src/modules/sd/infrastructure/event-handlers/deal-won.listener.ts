@@ -1,22 +1,23 @@
 /**
  * @module deal-won.listener
- * @description Source module. See exports for details.
+ * @description PA2-18: canonical CQRS @EventsHandler form. When CRM publishes
+ *   DealWonEvent (Trigger 2), the SD module dispatches CreateOrderCommand to
+ *   auto-create a sales order. Published via `eventBus.publish` in
+ *   `mark-deal-won.handler.ts`.
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
-import { CommandBus } from '@nestjs/cqrs';
+import { EventsHandler, IEventHandler, CommandBus } from '@nestjs/cqrs';
 import { DealWonEvent } from '@modules/crm/domain/events/deal-won.event';
 import { CreateOrderCommand } from '../../application/commands/create-order.handler';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 
 @Injectable()
-export class DealWonListener {
+@EventsHandler(DealWonEvent)
+export class DealWonListener implements IEventHandler<DealWonEvent> {
   private readonly logger = new Logger(DealWonListener.name);
   constructor(private readonly commandBus: CommandBus) {}
 
-  @OnEvent(ERP_EVENTS.DEAL_WON, { async: true })
-  async handleDealWon(event: DealWonEvent) {
+  async handle(event: DealWonEvent): Promise<void> {
     this.logger.log({
       msg: 'Deal won event received in SD module - Trigger 2',
       dealId: event.dealId,

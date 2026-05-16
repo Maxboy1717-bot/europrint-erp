@@ -16,6 +16,7 @@ import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositori
 import { OrderCreatedEvent } from '../../domain/events/order-created.event';
 import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 import { OutboxRepository } from '../../../shared/outbox/outbox.repository';
+import { db } from '@shared/db';
 
 export class CreateOrderCommand {
   constructor(public readonly companyId: number,
@@ -83,84 +84,90 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
       createdBy: command.createdBy,
     });
 
-    const saveResult = await this.orderRepo.save(order);
-    if (!saveResult.ok) {
-      this.logger.error({ msg: 'Failed to save order', error: saveResult.error });
+    // PA0-6: aggregate save + outbox insert share ONE transaction. If either
+    // write fails, both roll back — guaranteeing the "save without outbox"
+    // gap is impossible. The outbox publisher (every 10s) will re-emit the
+    // persisted events via EventEmitter2 after commit.
+    type TxResult = { kind: 'ok'; saved: SalesOrder } | { kind: 'err'; message: string };
+    let txOutcome: TxResult;
+    try {
+      txOutcome = await db.transaction(async (tx): Promise<TxResult> => {
+        const saveResult = await this.orderRepo.save(order, tx);
+        if (!saveResult.ok) {
+          // Throw to roll back the transaction. The outer try/catch converts
+          // this into a domain Result<Err>; no half-state can leak.
+          throw new Error(saveResult.error?.message ?? 'Failed to save order');
+        }
+        const savedOrder = saveResult.data as SalesOrder;
+
+        const aggregateEvents = savedOrder.getDomainEvents();
+        const outboxRows = aggregateEvents.map((e) => {
+          const raw = e as unknown as { eventName?: string; data?: Record<string, unknown> };
+          return {
+            aggregate_type: 'SalesOrder',
+            aggregate_id: String(savedOrder.getId()),
+            event_name: raw.eventName ?? 'UnknownEvent',
+            payload: (raw.data ?? {}) as Record<string, unknown>,
+          };
+        });
+
+        // Synthesise OrderCreated outbox entry so listeners that wait on
+        // ERP_EVENTS.ORDER_CREATED can pick it up after publisher tick.
+        outboxRows.push({
+          aggregate_type: 'SalesOrder',
+          aggregate_id: String(savedOrder.getId()),
+          event_name: ERP_EVENTS.ORDER_CREATED,
+          payload: {
+            orderId: savedOrder.getId(),
+            companyId: command.companyId,
+            orderNumber,
+            totalAmount: command.totalAmount,
+          },
+        });
+
+        if (command.designFlag) {
+          outboxRows.push({
+            aggregate_type: 'SalesOrder',
+            aggregate_id: String(savedOrder.getId()),
+            event_name: ERP_EVENTS.SO_DESIGN_REQUESTED,
+            payload: { orderId: savedOrder.getId(), at: _time.now().toISOString() },
+          });
+        }
+        if (command.sampleFlag) {
+          outboxRows.push({
+            aggregate_type: 'SalesOrder',
+            aggregate_id: String(savedOrder.getId()),
+            event_name: ERP_EVENTS.SO_SAMPLE_REQUESTED,
+            payload: { orderId: savedOrder.getId(), at: _time.now().toISOString() },
+          });
+        }
+
+        const outboxInsert = await this.outboxRepo.insertBatch(outboxRows, tx);
+        if (!outboxInsert.ok) {
+          // Roll back the order insert — the events must never go missing.
+          throw new Error(
+            `Outbox insert failed: ${outboxInsert.error.message}`,
+          );
+        }
+        savedOrder.clearDomainEvents();
+        return { kind: 'ok', saved: savedOrder };
+      });
+    } catch (err) {
+      const message = (err as Error)?.message ?? 'Transaction failed';
+      this.logger.error({ msg: 'Order save transaction rolled back', error: message });
       return Err('Failed to save order');
     }
 
-    const savedOrder = (saveResult).data as SalesOrder;
-
-    // PA0-6 outbox smoke wire — persist domain events so they survive a crash
-    // between save and emit. The publisher (every 10s) will re-emit via
-    // EventEmitter2 using the stored event_name namespace.
-    //
-    // TODO PA0-6: this is not yet wrapped in `db.transaction(...)` alongside
-    // `orderRepo.save(...)`. The existing repo's `save` uses a stored raw-SQL
-    // helper (`execSdSalesOrderInsert`) that does not accept a `tx`. The fully
-    // atomic version requires plumbing a `tx?: typeof db` argument through
-    // `ISalesOrderRepository.save` (and its raw-SQL helper) so both writes
-    // share one transaction. Until then the window between save success and
-    // outbox insert is still small but non-zero.
-    const aggregateEvents = savedOrder.getDomainEvents();
-    const outboxRows = aggregateEvents.map((e) => {
-      const raw = e as unknown as { eventName?: string; data?: Record<string, unknown> };
-      return {
-        aggregate_type: 'SalesOrder',
-        aggregate_id: String(savedOrder.getId()),
-        event_name: raw.eventName ?? 'UnknownEvent',
-        payload: (raw.data ?? {}) as Record<string, unknown>,
-      };
-    });
-
-    // Synthesise OrderCreated outbox entry as well so listeners that wait on
-    // ERP_EVENTS.ORDER_CREATED can pick it up after publisher tick.
-    outboxRows.push({
-      aggregate_type: 'SalesOrder',
-      aggregate_id: String(savedOrder.getId()),
-      event_name: ERP_EVENTS.ORDER_CREATED,
-      payload: {
-        orderId: savedOrder.getId(),
-        companyId: command.companyId,
-        orderNumber,
-        totalAmount: command.totalAmount,
-      },
-    });
-
-    if (command.designFlag) {
-      outboxRows.push({
-        aggregate_type: 'SalesOrder',
-        aggregate_id: String(savedOrder.getId()),
-        event_name: ERP_EVENTS.SO_DESIGN_REQUESTED,
-        payload: { orderId: savedOrder.getId(), at: _time.now().toISOString() },
-      });
+    if (txOutcome.kind === 'err') {
+      this.logger.error({ msg: 'Failed to save order', error: txOutcome.message });
+      return Err('Failed to save order');
     }
-    if (command.sampleFlag) {
-      outboxRows.push({
-        aggregate_type: 'SalesOrder',
-        aggregate_id: String(savedOrder.getId()),
-        event_name: ERP_EVENTS.SO_SAMPLE_REQUESTED,
-        payload: { orderId: savedOrder.getId(), at: _time.now().toISOString() },
-      });
-    }
+    const savedOrder = txOutcome.saved;
 
-    const outboxInsert = await this.outboxRepo.insertBatch(outboxRows);
-    if (!outboxInsert.ok) {
-      // Outbox failure must NOT fail the user request after a successful save,
-      // but must be loud — listeners that depend on this event will not fire.
-      this.logger.error({
-        msg: 'Outbox insert failed after order save — events will not be replayed',
-        orderId: savedOrder.getId(),
-        error: outboxInsert.error.message,
-      });
-    } else {
-      savedOrder.clearDomainEvents();
-    }
-
-    // TODO PA0-6: keep belt-and-suspenders in-process emission alongside the
-    // outbox publisher until all listeners are confirmed to consume from the
-    // outbox path. Listeners using @OnEvent may fire twice for a brief window
-    // (once from this direct publish, once from the outbox publisher tick).
+    // PA0-6 belt-and-suspenders: keep in-process CQRS emission alongside the
+    // outbox publisher tick. Listeners using @OnEvent may fire twice for a
+    // brief window (once from this direct publish via EventBridge, once from
+    // the outbox publisher tick). Handlers are expected to be idempotent.
     if (command.designFlag) {
       this.eventBus.publish({
         aggregateId: savedOrder.getId(),

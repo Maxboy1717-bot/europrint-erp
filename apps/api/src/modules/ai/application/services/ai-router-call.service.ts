@@ -14,7 +14,8 @@ import {
   COST_PER_1K,
   Result,
 } from '../../domain/types/ai.types';
-import { AiRouterRepository } from '../ai-router.repository';
+import { Inject } from '@nestjs/common';
+import { AI_ROUTER_REPO, type IAiRouterRepo } from '../../domain/repositories/i-ai-router.repo';
 
 import { MAX_NAME_LENGTH, AI_DEFAULT_MAX_TOKENS, AI_TOKENS_PER_UNIT } from '@common/constants/app.constants';
 @Injectable()
@@ -23,7 +24,7 @@ export class AiRouterCallService {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly aiRouterRepo: AiRouterRepository,
+    @Inject(AI_ROUTER_REPO) private readonly aiRouterRepo: IAiRouterRepo,
   ) {}
 
   async callOpenAi(req: AiRequest): Promise<Result<AiResponse>> {

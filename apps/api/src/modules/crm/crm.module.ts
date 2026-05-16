@@ -75,7 +75,8 @@ import { CrmContactsService } from './application/crm-contacts.service';
 import { CrmContactsRepository } from './infrastructure/repositories/crm-contacts.repository';
 import { CRM_CONTACTS_APP_REPO } from './domain/repositories/i-crm-contacts-app.repo';
 import { CrmFollowupCompatService } from './application/crm-followup-compat.service';
-import { CrmFollowupCompatRepository } from './application/crm-followup-compat.repository';
+import { CrmFollowupCompatRepository } from './infrastructure/repositories/crm-followup-compat.repository';
+import { CRM_FOLLOWUP_COMPAT_REPO } from './domain/repositories/i-crm-followup-compat.repo';
 import { CrmLeadsOpsRepository } from './infrastructure/repositories/crm-leads-ops.repository';
 import { CRM_LEADS_OPS_REPO } from './domain/repositories/i-crm-leads-ops.repo';
 import { UpdateLeadHandler } from './application/commands/update-lead.handler';
@@ -84,7 +85,8 @@ import { DeleteLeadHandler } from './application/commands/delete-lead.handler';
 import { CrmExtrasService } from './application/crm-extras.service';
 import { CrmExtrasRepository } from './application/crm-extras.repository';
 import { CrmCommsService } from './application/crm-comms.service';
-import { CrmCommsRepository } from './application/crm-comms.repository';
+import { CrmCommsRepository } from './infrastructure/repositories/crm-comms.repository';
+import { CRM_COMMS_REPO } from './domain/repositories/i-crm-comms.repo';
 import { CrmCustomFieldsService } from './application/crm-custom-fields.service';
 import { CrmCustomFieldsRepository } from './infrastructure/repositories/crm-custom-fields.repository';
 import { CRM_CUSTOM_FIELDS_REPO } from './domain/repositories/i-crm-custom-fields.repo';
@@ -165,11 +167,13 @@ const repositories = [
     { provide: CRM_CONTACTS_APP_REPO, useClass: CrmContactsRepository },
     CrmContactsService,
     CrmFollowupCompatRepository,
+    { provide: CRM_FOLLOWUP_COMPAT_REPO, useClass: CrmFollowupCompatRepository },
     CrmFollowupCompatService,
     { provide: CRM_LEADS_OPS_REPO, useClass: CrmLeadsOpsRepository },
     CrmExtrasRepository,
     CrmExtrasService,
     CrmCommsRepository,
+    { provide: CRM_COMMS_REPO, useClass: CrmCommsRepository },
     CrmCommsService,
     { provide: CRM_CUSTOM_FIELDS_REPO, useClass: CrmCustomFieldsRepository },
     CrmCustomFieldsService,

@@ -47,8 +47,16 @@ export async function execSdLeadConvert(lid: number): Promise<void> {
 export async function execSdSalesOrderInsert(
   orderNumber: string, status: string, companyId: unknown,
   totalAmount: unknown, createdBy: unknown,
+  /**
+   * Optional Drizzle transaction executor. When provided, the insert runs on
+   * the transaction so it shares atomicity with sibling writes (PA0-6 outbox).
+   * Typed as `unknown` to keep this shared helper agnostic of Drizzle internals;
+   * the runtime type is the same `tx` returned by `db.transaction(async tx => ...)`.
+   */
+  tx?: unknown,
 ): Promise<void> {
-  await db.insert(sd_sales_orders).values({
+  const conn = (tx as typeof db | undefined) ?? db;
+  await conn.insert(sd_sales_orders).values({
     order_number: orderNumber,
     status,
     company_id: companyId as number,

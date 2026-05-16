@@ -1,6 +1,11 @@
 /**
  * @module crm-extras.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ *
+ * TODO PA1-9: Migrate to infrastructure layer with ICrmExtrasRepo interface +
+ *   CRM_EXTRAS_REPO Symbol token. Skipped in this wave because file is 258 lines
+ *   with many methods and types coupled to multiple aggregates (deals/orders/
+ *   ratings/segments) — interface extraction warrants a dedicated change.
  */
 
 import { Injectable, Logger } from '@nestjs/common';
