@@ -25,7 +25,8 @@ import {
 } from '../../domain/types/ai.types';
 import { aiUsageLogsTable } from '../../infrastructure/db/ai-usage-logs.table';
 import { DrizzleService } from '@common/services/drizzle.service';
-import { AiRouterRepository } from '../ai-router.repository';
+import { Inject } from '@nestjs/common';
+import { AI_ROUTER_REPO, type IAiRouterRepo } from '../../domain/repositories/i-ai-router.repo';
 
 import { MAX_NAME_LENGTH, AI_DEFAULT_MAX_TOKENS, AI_TOKENS_PER_UNIT } from '@common/constants/app.constants';
 export type { UsageStats };
@@ -37,7 +38,7 @@ export class AiRouterService {
   constructor(private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
     private readonly drizzle: DrizzleService,
-    private readonly aiRouterRepo: AiRouterRepository) {}
+    @Inject(AI_ROUTER_REPO) private readonly aiRouterRepo: IAiRouterRepo) {}
 
   async call(req: AiRequest): Promise<Result<AiResponse>> {
     const startTime = Date.now();

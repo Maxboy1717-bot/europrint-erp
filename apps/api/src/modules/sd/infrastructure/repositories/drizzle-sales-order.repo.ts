@@ -24,7 +24,7 @@ import { execSdSalesOrderInsert, execSdSalesOrderUpdate, execSdSalesOrderDelete 
 import { Err } from '@common/result';
 import { SalesOrder } from '../../domain/aggregates/sales-order.aggregate';
 import { CustomerId } from '@shared/domain/value-objects/customer-id.vo';
-import { ISalesOrderRepository } from '../../domain/repositories/i-sales-order.repo';
+import { ISalesOrderRepository, DrizzleTxExecutor } from '../../domain/repositories/i-sales-order.repo';
 import { SoStatus } from '../../domain/value-objects/so-status.vo';
 import { Money } from '@common/money/money.vo';
 
@@ -32,11 +32,14 @@ type Row = Record<string, unknown>;
 
 @Injectable()
 export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
-  async save(order: SalesOrder): Promise<Result<SalesOrder>> {
+  async save(order: SalesOrder, tx?: DrizzleTxExecutor): Promise<Result<SalesOrder>> {
     try {
+      // PA0-6: pass the optional Drizzle `tx` executor through to the helper
+      // so the INSERT participates in the same transaction as the outbox write.
       await execSdSalesOrderInsert(
         order.getOrderNumber(), order.getStatus(), order.getCompanyId(),
         order.getTotalAmount(), (castTo<Row>(order))['createdBy'],
+        tx,
       );
       return { ok: true as const, data: order };
     } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }

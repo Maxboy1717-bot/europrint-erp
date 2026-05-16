@@ -12,7 +12,8 @@ import { GetIncidentsHandler } from './application/queries/get-incidents.handler
 import { SecurityController } from './presentation/security.controller';
 import { RaciController } from './presentation/raci.controller';
 import { RaciService } from './application/raci.service';
-import { RaciRepository } from './application/raci.repository';
+import { RaciRepository } from './infrastructure/repositories/raci.repository';
+import { RACI_REPO } from './domain/repositories/i-raci.repo';
 import { INCIDENT_REPO } from './domain/repositories/i-incident.repo';
 import { DrizzleIncidentRepository } from './infrastructure/repositories/drizzle-incident.repo';
 import { IpBlockerGuard } from './infrastructure/guards/ip-blocker.guard';
@@ -35,7 +36,9 @@ const repositories = [
   controllers: [SecurityController, RaciController],
   providers: [
     ...commandHandlers, ...queryHandlers, ...repositories,
-    IpBlockerGuard, RaciRepository, RaciService,
+    IpBlockerGuard, RaciRepository,
+    { provide: RACI_REPO, useClass: RaciRepository },
+    RaciService,
     AttendanceRepository, AttendanceService,
     AccessRepository, AccessService,
   ],

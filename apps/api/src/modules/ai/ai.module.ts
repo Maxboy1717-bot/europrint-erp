@@ -10,7 +10,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '../auth/auth.module';
 import { AiRouterService }          from './application/services/ai-router.service';
 import { AiRouterCallService }       from './application/services/ai-router-call.service';
-import { AiRouterRepository }       from './application/ai-router.repository';
+import { AiRouterRepository }       from './infrastructure/repositories/ai-router.repository';
+import { AI_ROUTER_REPO }            from './domain/repositories/i-ai-router.repo';
 import { AiExamService }             from './application/services/ai-exam.service';
 import { AiHrNewService }            from './application/services/ai-hr-new.service';
 import { AiPlanningService }         from './application/services/ai-planning.service';
@@ -71,6 +72,7 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
   ],
   providers: [
     AiRouterRepository,
+    { provide: AI_ROUTER_REPO, useClass: AiRouterRepository },
     AiRouterService,
     AiRouterCallService,
     DrizzleService,

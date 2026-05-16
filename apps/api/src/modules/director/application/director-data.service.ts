@@ -3,14 +3,23 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Ok, Result } from '@common/result';
-import { DirectorDataRepository } from './director-data.repository';
-import type { DashboardData, SummaryData, ProductionData, HrData, FinanceData, AlertsData, AiSummaryData } from './director-data.repository';
+import {
+  DIRECTOR_DATA_REPO,
+  type IDirectorDataRepo,
+  type DashboardData,
+  type SummaryData,
+  type ProductionData,
+  type HrData,
+  type FinanceData,
+  type AlertsData,
+  type AiSummaryData,
+} from '../domain/repositories/i-director-data.repo';
 
 @Injectable()
 export class DirectorDataService {
-  constructor(private readonly repo: DirectorDataRepository) {}
+  constructor(@Inject(DIRECTOR_DATA_REPO) private readonly repo: IDirectorDataRepo) {}
 
   async getDashboard(): Promise<Result<DashboardData>> {
     return this.repo.queryDashboard();

@@ -3,9 +3,9 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Ok, Result, AppError } from '@common/result';
-import { SevenFunctionsRepository } from './seven-functions.repository';
+import { SEVEN_FUNCTIONS_REPO, type ISevenFunctionsRepo } from '../domain/repositories/i-seven-functions.repo';
 
 const FALLBACK_FUNCTIONS = [
   { id: 1, name: 'HR', icon: 'users', route: '/hr', status: 'active', order_index: 1 },
@@ -19,7 +19,7 @@ const FALLBACK_FUNCTIONS = [
 
 @Injectable()
 export class SevenFunctionsService {
-  constructor(private readonly repo: SevenFunctionsRepository) {}
+  constructor(@Inject(SEVEN_FUNCTIONS_REPO) private readonly repo: ISevenFunctionsRepo) {}
 
   async listFunctions(): Promise<Result<object, AppError>> {
     const r = await this.repo.listFunctions();

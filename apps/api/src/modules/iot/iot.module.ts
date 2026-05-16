@@ -44,9 +44,11 @@ import {
 import { IotMainController } from './presentation/iot-main.controller';
 import { IotSensorsMainController } from './presentation/iot-sensors-main.controller';
 import { IotCameraService } from './application/iot-camera.service';
-import { IotCameraRepository } from './application/iot-camera.repository';
+import { IotCameraRepository } from './infrastructure/repositories/iot-camera.repository';
+import { IOT_CAMERA_REPO } from './domain/repositories/i-iot-camera.repo';
 import { IotCameraEventsService } from './application/iot-camera-events.service';
-import { IotCameraEventsRepository } from './application/iot-camera-events.repository';
+import { IotCameraEventsRepository } from './infrastructure/repositories/iot-camera-events.repository';
+import { IOT_CAMERA_EVENTS_REPO } from './domain/repositories/i-iot-camera-events.repo';
 import { CameraAiService } from './application/camera-ai.service';
 import { CameraExtendedService } from './application/camera-extended.service';
 import { CameraDashboardService } from './application/camera-dashboard.service';
@@ -101,8 +103,10 @@ const newRepositories = [
     { provide: SENSOR_REPO, useClass: DrizzleSensorRepo },
     ...newRepositories,
     IotCameraRepository,
+    { provide: IOT_CAMERA_REPO, useClass: IotCameraRepository },
     IotCameraService,
     IotCameraEventsRepository,
+    { provide: IOT_CAMERA_EVENTS_REPO, useClass: IotCameraEventsRepository },
     IotCameraEventsService,
     CameraAiService,
     CameraExtendedService,

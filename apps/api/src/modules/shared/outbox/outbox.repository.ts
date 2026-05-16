@@ -35,9 +35,14 @@ export class OutboxRepository {
   /**
    * Insert a batch of unpublished events. Pass `tx` to participate in an
    * existing transaction (aggregate save + outbox insert must be atomic).
+   *
+   * `tx` is typed as `unknown` to accept Drizzle's `PgTransaction` handle from
+   * a sibling `db.transaction(async (tx) => ...)` call without leaking that
+   * specific generic into the public API. Internally it's cast back to the
+   * Drizzle executor shape the repository uses.
    */
-  async insertBatch(events: OutboxInsert[], tx?: typeof db): Promise<Result<void>> {
-    const conn = tx ?? db;
+  async insertBatch(events: OutboxInsert[], tx?: unknown): Promise<Result<void>> {
+    const conn = (tx as typeof db | undefined) ?? db;
     try {
       if (events.length === 0) return Ok(undefined);
       await conn.insert(domain_events).values(

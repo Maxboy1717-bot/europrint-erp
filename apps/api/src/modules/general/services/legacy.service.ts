@@ -24,6 +24,15 @@
 /**
  * @module legacy.service
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ *
+ * CLAUDE.md Rule B (SQL-injection) audit note (PA2-14, 2026-05-17):
+ *   The historic `sql.raw(rawQuery)` pass-through at this line has already been
+ *   refactored away — this file is now a thin facade re-exporting concern-scoped
+ *   helpers (legacy-attendance.helpers.ts, legacy-warehouse.helpers.ts) that
+ *   each use parameterised `sql\`...\${value}\`` templates. NO public method
+ *   here accepts a raw SQL string from the caller. Future contributors: do
+ *   NOT re-introduce a `runRawQuery(s: string)` method — translate via an
+ *   IAclTranslator + repository pair instead (see context-map.md ACL section).
  */
 
 import { Injectable, Logger } from '@nestjs/common';

@@ -13,9 +13,11 @@ import { PpWorkCentersController } from './presentation/pp-work-centers.controll
 import { PpPlanningController } from './presentation/pp-planning.controller';
 import { PpEquipmentController } from './presentation/pp-equipment.controller';
 import { PpPlanningService } from './application/pp-planning.service';
-import { PpPlanningRepository } from './application/pp-planning.repository';
+import { PpPlanningRepository } from './infrastructure/repositories/pp-planning.repository';
+import { PP_PLANNING_REPO } from './domain/repositories/i-pp-planning.repo';
 import { PpEquipmentService } from './application/pp-equipment.service';
-import { PpEquipmentRepository } from './application/pp-equipment.repository';
+import { PpEquipmentRepository } from './infrastructure/repositories/pp-equipment.repository';
+import { PP_EQUIPMENT_REPO } from './domain/repositories/i-pp-equipment.repo';
 import { CreateProductionOrderHandler } from './application/commands/create-production-order.handler';
 import { ReleaseProductionOrderHandler } from './application/commands/release-production-order.handler';
 import { ApproveBomHandler } from './application/commands/approve-bom.handler';
@@ -106,8 +108,10 @@ const listeners = [
     { provide: PP_WORK_CENTERS_REPO, useClass: DrizzlePpWorkCentersRepository },
     WorkCentersService,
     PpPlanningRepository,
+    { provide: PP_PLANNING_REPO, useClass: PpPlanningRepository },
     PpPlanningService,
     PpEquipmentRepository,
+    { provide: PP_EQUIPMENT_REPO, useClass: PpEquipmentRepository },
     PpEquipmentService,
     SchedulingJohnsonService,
     SchedulingNetworkService,

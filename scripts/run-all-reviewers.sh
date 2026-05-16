@@ -39,6 +39,7 @@ RULES=(
   "20|Forms Use Zod|reviewer-form-validation.sh"
   "21|apiRequest Only|reviewer-api-request.sh"
   "22|Unit Tests Required|reviewer-unit-tests.sh"
+  "PA2-14|Legacy ACL (no raw SQL in legacy controllers)|reviewer-legacy-acl.sh"
 )
 
 RESULTS=()  # array of "num|title|status|count"

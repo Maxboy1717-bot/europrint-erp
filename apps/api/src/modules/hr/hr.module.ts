@@ -122,6 +122,21 @@ import { HrGsdService } from './presentation/hr-gsd.service';
 import { HrGsdRepository } from './presentation/hr-gsd.repository';
 import { EmployeesForFaceController } from './presentation/employees-for-face.controller';
 import { HrEmployeeGoalsController } from './presentation/hr-employee-goals.controller';
+// PA3-17 Wave 3: merged from former modules/adaptation/
+import { AdaptationController } from './adaptation/adaptation.controller';
+import { AdaptationService } from './adaptation/adaptation.service';
+import { AdaptationRepository } from './adaptation/adaptation.repo';
+import { ValidateController } from '../common/presentation/validate.controller';
+// PA3-17 Wave 3: merged from former modules/feedback-360/
+import { Feedback360Controller } from './feedback-360/feedback-360.controller';
+import { Feedback360Service } from './feedback-360/feedback-360.service';
+import { Feedback360Repository } from './feedback-360/feedback-360.repo';
+// PA3-17 Wave 3: merged from former modules/hr-assets/
+import { HrAssetsController } from './hr-assets/hr-assets.controller';
+import { HrAssetsService } from './hr-assets/hr-assets.service';
+import { HrAssetsRepository } from './hr-assets/hr-assets.repository';
+import { HrAssetsSchemaService } from './hr-assets/hr-assets-schema.service';
+import { HrAssetsSchemaRepository } from './hr-assets/hr-assets-schema.repository';
 
 const commandHandlers = [
   RecordAttendanceHandler,
@@ -192,6 +207,11 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     EmployeesForFaceController,
     AttendanceFaceController,
     HrEmployeeGoalsController,
+    // PA3-17 Wave 3: merged from modules/adaptation, feedback-360, hr-assets
+    AdaptationController,
+    ValidateController,
+    Feedback360Controller,
+    HrAssetsController,
   ],
   providers: [
     HrRepository,
@@ -254,7 +274,18 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     DisciplineRecordRepository,
     RoomSnapshotCron,
     TerritoryGateway,
+    // PA3-17 Wave 3: merged from modules/adaptation/
+    AdaptationService,
+    AdaptationRepository,
+    // PA3-17 Wave 3: merged from modules/feedback-360/
+    Feedback360Service,
+    Feedback360Repository,
+    // PA3-17 Wave 3: merged from modules/hr-assets/
+    HrAssetsService,
+    HrAssetsRepository,
+    HrAssetsSchemaService,
+    HrAssetsSchemaRepository,
   ],
-  exports: [HR_REPO, Record360FeedbackHandler, LeaveRepository, TaxCalculatorService, AttritionService, UtilizationService, OvertimeCalculatorService],
+  exports: [HR_REPO, Record360FeedbackHandler, LeaveRepository, TaxCalculatorService, AttritionService, UtilizationService, OvertimeCalculatorService, AdaptationService, Feedback360Service],
 })
 export class HrModule {}

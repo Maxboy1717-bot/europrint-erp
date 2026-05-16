@@ -6,8 +6,17 @@
 import { Result } from '@common/types/result.type';
 import { SalesOrder } from '../aggregates/sales-order.aggregate';
 
+/**
+ * Optional Drizzle transaction executor. Typed as `unknown` here to avoid a
+ * domain → infrastructure dependency on Drizzle internals; the concrete
+ * repository casts it back to the real executor type. Callers (handlers) pass
+ * the `tx` value returned by `db.transaction(async (tx) => ...)` so the save
+ * participates in the same transaction as outbox writes (PA0-6).
+ */
+export type DrizzleTxExecutor = unknown;
+
 export interface ISalesOrderRepository {
-  save(order: SalesOrder): Promise<Result<SalesOrder>>;
+  save(order: SalesOrder, tx?: DrizzleTxExecutor): Promise<Result<SalesOrder>>;
   findById(id: number): Promise<Result<SalesOrder | null>>;
   findByOrderNumber(orderNumber: string): Promise<Result<SalesOrder | null>>;
   findByCompanyId(companyId: number, limit: number, offset: number): Promise<Result<SalesOrder[]>>;

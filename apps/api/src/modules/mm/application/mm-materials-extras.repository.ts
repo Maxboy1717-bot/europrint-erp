@@ -1,60 +1,7 @@
 /**
- * @module mm-materials-extras.repository
- * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ * @module mm-materials-extras.repository (back-compat shim)
+ * @deprecated Import from `../infrastructure/repositories/mm-materials-extras.repository`
+ *   or via the `MM_MATERIALS_EXTRAS_REPO` Symbol token.
  */
 
-import { Ok, Err, Result, safeCall } from '@common/result';
-import { Injectable } from '@nestjs/common';
-import { db , runQuery } from '@shared/db';
-import { SQL, SQLWrapper, sql } from 'drizzle-orm';
-type Row = Record<string, unknown>;
-const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
-
-@Injectable()
-export class MmMaterialsExtrasRepository {
-  async listRawMaterials(limit: number, offset: number, search?: string): Promise<Result<Row[]>>  {
-  try {  
-      const pat = search ? `%${search}%` : null;
-      return pat
-        ? exec(sql`SELECT rm.*, w.name AS warehouse_name FROM raw_materials rm LEFT JOIN warehouses w ON w.id = rm.warehouse_id WHERE rm.name ILIKE ${pat} AND rm.is_active = true ORDER BY rm.name LIMIT ${limit} OFFSET ${offset}`)
-        : exec(sql`SELECT rm.*, w.name AS warehouse_name FROM raw_materials rm LEFT JOIN warehouses w ON w.id = rm.warehouse_id WHERE rm.is_active = true ORDER BY rm.name LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
-    return Err(String(_e));
-  }
-
-  }
-
-  async listRawMaterialsFallback(limit: number, offset: number, search?: string): Promise<Result<Row[]>>  {
-  try {  
-      const pat = search ? `%${search}%` : null;
-      return pat
-        ? exec(sql`SELECT mc.id, mc.xom_ashyo, mc.unit_of_measure AS unit, mc.min_stock, mc.category AS category_id, 'raw_material' AS type FROM material_cards mc WHERE mc.is_active = true AND mc.xom_ashyo ILIKE ${pat} ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`)
-        : exec(sql`SELECT mc.id, mc.xom_ashyo, mc.unit_of_measure AS unit, mc.min_stock, mc.category AS category_id, 'raw_material' AS type FROM material_cards mc WHERE mc.is_active = true ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
-    return Err(String(_e));
-  }
-
-  }
-
-  async listMaterialCards(limit: number, offset: number, search?: string, category?: string): Promise<Result<Row[]>>  {
-  try {  
-      const pat = search ? `%${search}%` : null;
-      return pat && category
-        ? exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_card_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_card_id) ws ON ws.material_card_id = mc.id WHERE mc.is_active = true AND mc.xom_ashyo ILIKE ${pat} AND mc.category = ${category} ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`)
-        : pat
-        ? exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_card_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_card_id) ws ON ws.material_card_id = mc.id WHERE mc.is_active = true AND mc.xom_ashyo ILIKE ${pat} ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`)
-        : category
-        ? exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_card_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_card_id) ws ON ws.material_card_id = mc.id WHERE mc.is_active = true AND mc.category = ${category} ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`)
-        : exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_card_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_card_id) ws ON ws.material_card_id = mc.id WHERE mc.is_active = true ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
-    return Err(String(_e));
-  }
-
-  }
-
-  async getMaterialCard(id: number): Promise<Result<Row | null>>  {
-  try {  
-      const r = await exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_card_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_card_id) ws ON ws.material_card_id = mc.id WHERE mc.id = ${id} AND mc.is_active = true`);
-      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
-    return Err(String(_e));
-  }
-
-  }
-}
+export { MmMaterialsExtrasRepository } from '../infrastructure/repositories/mm-materials-extras.repository';

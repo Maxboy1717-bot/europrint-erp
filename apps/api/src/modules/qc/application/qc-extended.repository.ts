@@ -1,6 +1,10 @@
 /**
  * @module qc-extended.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ *
+ * TODO PA1-9: Migrate to infrastructure layer with IQcExtendedRepo interface +
+ *   QC_EXTENDED_REPO Symbol token. Skipped in this wave (216 lines, many CRUD
+ *   methods spanning standards / specs / calibrations / certifications).
  */
 
 import { Ok, Err, Result } from '@common/result';
