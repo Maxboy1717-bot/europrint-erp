@@ -5,6 +5,7 @@
 
 import type React from "react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface ZvsRequest {
   id: string | number;
   purpose: string;
@@ -39,8 +40,8 @@ export const STATUS_MAP: Record<
   string,
   { label: string; variant: "default" | "secondary" | "outline" | "destructive"; icon: React.ReactNode }
 > = {
-  pending:  { label: "Kutilmoqda",   variant: "secondary",   icon: null },
-  approved: { label: "Tasdiqlangan", variant: "default",     icon: null },
+  pending:  { label: tLabel('hr.HRZvsPage.kutilmoqda', "Kutilmoqda"),   variant: "secondary",   icon: null },
+  approved: { label: tLabel('hr.HRZvsPage.tasdiqlangan', "Tasdiqlangan"), variant: "default",     icon: null },
   rejected: { label: "Rad etildi",   variant: "destructive", icon: null },
 };
 

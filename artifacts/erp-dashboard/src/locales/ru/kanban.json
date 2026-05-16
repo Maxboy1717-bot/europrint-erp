@@ -102,5 +102,19 @@
   "moveToOutgoing": "Переместить в исходящие",
   "archiveDocument": "Сдать в архив",
   "personalProgram": "Персональная программа",
-  "dailyTaskList": "Список дневных задач"
+  "dailyTaskList": "Список дневных задач",
+  "kanban-": {
+    "xabarYozingBilanEslatish": "Xabar yozing... @ bilan eslatish",
+    "shablonNomi": "Shablon nomi",
+    "shablonlar": "Shablonlar",
+    "bildirishnomalar": "Bildirishnomalar",
+    "tavsif": "Tavsif",
+    "nomi": "Nomi",
+    "potoklar": "Potoklar"
+  },
+  "TaskDetailSheet": {
+    "tsx": {
+      "izohlar": "Izohlar"
+    }
+  }
 }

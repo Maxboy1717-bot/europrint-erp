@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export const URL_TAB_MAP: Record<string, string> = {
   "/tech/material-alternatives": "tech-materials",
   "/tech/machine-selection": "tech-machines",
@@ -32,19 +33,19 @@ export const URL_TAB_MAP: Record<string, string> = {
 
 export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   "tech-materials": { title: "Material Muqobili",     icon: Package },
-  "tech-machines":  { title: "Stanoq Tanlash",        icon: Cpu },
+  "tech-machines":  { title: tLabel('production.TechPPExtended.stanoqTanlash', "Stanoq Tanlash"),        icon: Cpu },
   "tech-time":      { title: "Vaqt va Tannarx",       icon: Clock },
-  "tech-cost":      { title: "Xarajat Optimizatsiya", icon: DollarSign },
-  "tech-clients":   { title: "Mijoz Talablari",       icon: Users },
+  "tech-cost":      { title: tLabel('production.TechPPExtended.xarajatOptimizatsiya', "Xarajat Optimizatsiya"), icon: DollarSign },
+  "tech-clients":   { title: tLabel('production.TechPPExtended.mijozTalablari', "Mijoz Talablari"),       icon: Users },
   "tech-history":   { title: "O'zgarishlar Tarixi",   icon: History },
-  "tech-parallel":  { title: "Parallel Buyurtmalar",  icon: Copy },
-  "pp-shifts":      { title: "Smena Boshqaruvi",      icon: Calendar },
-  "pp-parallel":    { title: "Parallel Jarayonlar",   icon: GitBranch },
+  "tech-parallel":  { title: tLabel('production.TechPPExtended.parallelBuyurtmalar', "Parallel Buyurtmalar"),  icon: Copy },
+  "pp-shifts":      { title: tLabel('production.TechPPExtended.smenaBoshqaruvi', "Smena Boshqaruvi"),      icon: Calendar },
+  "pp-parallel":    { title: tLabel('production.TechPPExtended.parallelJarayonlar', "Parallel Jarayonlar"),   icon: GitBranch },
   "pp-rush":        { title: "Rush Order",            icon: Zap },
   "pp-bottleneck":  { title: "Bottleneck",            icon: AlertTriangle },
   "pp-demand":      { title: "Demand Forecast",       icon: TrendingUp },
   "pp-whatif":      { title: "What-if Tahlil",        icon: Brain },
-  "pp-delivery":    { title: "Yetkazish Kalk.",       icon: Calculator },
+  "pp-delivery":    { title: tLabel('production.TechPPExtended.yetkazishKalk', "Yetkazish Kalk."),       icon: Calculator },
   "pp-energy":      { title: "Energiya Optim.",       icon: Zap },
   "pp-oee":         { title: "OEE Monitor",           icon: Activity },
   "pp-kpi":         { title: "KPI Og'ish",            icon: Target },
@@ -53,22 +54,22 @@ export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
 
 export const TECH_TABS = [
   { v: "tech-materials", label: "Material Muqobili",     icon: Package },
-  { v: "tech-machines",  label: "Stanoq Tanlash",        icon: Cpu },
+  { v: "tech-machines",  label: tLabel('production.TechPPExtended.stanoqTanlash', "Stanoq Tanlash"),        icon: Cpu },
   { v: "tech-time",      label: "Vaqt va Tannarx",       icon: Clock },
-  { v: "tech-cost",      label: "Xarajat Optimizatsiya", icon: DollarSign },
-  { v: "tech-clients",   label: "Mijoz Talablari",       icon: Users },
+  { v: "tech-cost",      label: tLabel('production.TechPPExtended.xarajatOptimizatsiya', "Xarajat Optimizatsiya"), icon: DollarSign },
+  { v: "tech-clients",   label: tLabel('production.TechPPExtended.mijozTalablari', "Mijoz Talablari"),       icon: Users },
   { v: "tech-history",   label: "O'zgarishlar Tarixi",   icon: History },
-  { v: "tech-parallel",  label: "Parallel Buyurtmalar",  icon: Copy },
+  { v: "tech-parallel",  label: tLabel('production.TechPPExtended.parallelBuyurtmalar', "Parallel Buyurtmalar"),  icon: Copy },
 ];
 
 export const PP_TABS = [
-  { v: "pp-shifts",     label: "Smena Boshqaruvi",      icon: Calendar },
-  { v: "pp-parallel",   label: "Parallel Jarayonlar",   icon: GitBranch },
+  { v: "pp-shifts",     label: tLabel('production.TechPPExtended.smenaBoshqaruvi', "Smena Boshqaruvi"),      icon: Calendar },
+  { v: "pp-parallel",   label: tLabel('production.TechPPExtended.parallelJarayonlar', "Parallel Jarayonlar"),   icon: GitBranch },
   { v: "pp-rush",       label: "Rush Order",            icon: Zap },
   { v: "pp-bottleneck", label: "Bottleneck",            icon: AlertTriangle },
   { v: "pp-demand",     label: "Demand Forecast",       icon: TrendingUp },
   { v: "pp-whatif",     label: "What-if Tahlil",        icon: Brain },
-  { v: "pp-delivery",   label: "Yetkazish Kalk.",       icon: Calculator },
+  { v: "pp-delivery",   label: tLabel('production.TechPPExtended.yetkazishKalk', "Yetkazish Kalk."),       icon: Calculator },
   { v: "pp-energy",     label: "Energiya Optim.",       icon: Zap },
   { v: "pp-oee",        label: "OEE Monitor",           icon: Activity },
   { v: "pp-kpi",        label: "KPI Og'ish",            icon: Target },

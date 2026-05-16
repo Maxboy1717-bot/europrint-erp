@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { AccessZone, FireSensor, DailySummary, Visitor } from "./SecurityDashboardTypes";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // KPI strip
 // ---------------------------------------------------------------------------
@@ -48,13 +49,13 @@ export function SecurityKpiStrip({
       color: "text-foreground",
     },
     {
-      label: "Tashrifchilar",
+      label: tLabel('common.SecurityDashboardCards.tsx.tashrifchilar', "Tashrifchilar"),
       value: activeVisitors.length,
       icon: Eye,
       color: "text-primary",
     },
     {
-      label: "Ochiq hodisalar",
+      label: tLabel('common.SecurityDashboardCards.tsx.ochiqHodisalar', "Ochiq hodisalar"),
       value: openIncidents,
       icon: AlertTriangle,
       color: openIncidents > 0 ? "text-[var(--ep-red)]" : "text-foreground",
@@ -66,7 +67,7 @@ export function SecurityKpiStrip({
       color: failedPPECount > 0 ? "text-[var(--ep-yellow)]" : "text-foreground",
     },
     {
-      label: "Ogohlantirish",
+      label: tLabel('common.SecurityDashboardCards.tsx.ogohlantirish', "Ogohlantirish"),
       value: warningAlerts,
       icon: Bell,
       color: warningAlerts > 0 ? "text-[var(--ep-yellow)]" : "text-foreground",

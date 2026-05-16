@@ -5,18 +5,19 @@
 
 import { ProbationReview } from "@/components/hr/ProbationReviewDialog";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Cheklist bandlari (backend bilan mos kelishi kerak) ─────────────────────
 export const CHECKLIST_ITEMS = [
   { key: "cv_received",               step: 4, stepLabel: "TEZ ISHLASH",     label: "CV qabul qilindi va ro'yxatga kiritildi",          mandatory: true,  sla_hours: 4   },
   { key: "cv_screened",               step: 4, stepLabel: "TEZ ISHLASH",     label: "CV skrining o'tkazildi (Material №52)",            mandatory: true,  sla_hours: 24  },
   { key: "phone_interview",           step: 4, stepLabel: "TEZ ISHLASH",     label: "Telefon suhbati o'tkazildi (Material №53)",        mandatory: true,  sla_hours: 48  },
   { key: "productivity_questionnaire",step: 4, stepLabel: "TEZ ISHLASH",     label: "Mahsuldorlik anketa to'ldirildi",                  mandatory: false, sla_hours: 72  },
-  { key: "background_check",          step: 5, stepLabel: "BAHOLASH",        label: "Fon tekshiruvi (ijtimoiy tarmoqlar, Mat. №54)",    mandatory: false, sla_hours: 48  },
+  { key: "background_check",          step: 5, stepLabel: "BAHOLASH",        label: tLabel('production.CandidateChecklist.fonTekshiruviIjtimoiyTarmoqlarMat', "Fon tekshiruvi (ijtimoiy tarmoqlar, Mat. №54)"),    mandatory: false, sla_hours: 48  },
   { key: "main_interview",            step: 5, stepLabel: "BAHOLASH",        label: "Asosiy suhbat o'tkazildi (Material №11)",          mandatory: true,  sla_hours: 120 },
   { key: "tool_test",                 step: 5, stepLabel: "BAHOLASH",        label: "HR Capital TOOL TEST o'tkazildi (A-J)",            mandatory: true,  sla_hours: 120 },
   { key: "ai_interview",              step: 5, stepLabel: "BAHOLASH",        label: "AI Suhbat (ERP tizimida) o'tkazildi",              mandatory: false, sla_hours: 120 },
   { key: "productivity_form",         step: 5, stepLabel: "BAHOLASH",        label: "Material №46 — Mahsuldorlik shakli to'ldirildi",   mandatory: true,  sla_hours: 168 },
-  { key: "reference_check",           step: 5, stepLabel: "BAHOLASH",        label: "Tavsiyalar tekshirildi (Reference check)",         mandatory: false, sla_hours: 168 },
+  { key: "reference_check",           step: 5, stepLabel: "BAHOLASH",        label: tLabel('production.CandidateChecklist.tavsiyalarTekshirildiReferenceCheck', "Tavsiyalar tekshirildi (Reference check)"),         mandatory: false, sla_hours: 168 },
   { key: "final_decision",            step: 6, stepLabel: "KIRISH",          label: "Yakuniy qaror qabul qilindi",                      mandatory: true,  sla_hours: 24  },
   { key: "offer_sent",                step: 6, stepLabel: "KIRISH",          label: "Taklif yuborildi / og'zaki taklif berildi",        mandatory: true,  sla_hours: 48  },
   { key: "offer_accepted",            step: 6, stepLabel: "KIRISH",          label: "Taklif qabul qilindi",                             mandatory: true,  sla_hours: 72  },

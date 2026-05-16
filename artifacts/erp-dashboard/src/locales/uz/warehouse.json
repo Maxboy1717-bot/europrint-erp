@@ -491,5 +491,74 @@
   "Ta'mirlash Work Order": "Ta'mirlash work order",
   "Kritik zaxira ogohlantirish": "Kritik zaxira ogohlantirish",
   "Yetkazib beruvchi kataloglari": "Yetkazib beruvchi kataloglari",
-  "k10Yoki5": "10 yoki -5"
+  "k10Yoki5": "10 yoki -5",
+  "PosWarehousePage": {
+    "zararAkti": "Zarar akti",
+    "qaytarish": "Qaytarish"
+  },
+  "InventarizatsiyaPanel": {
+    "tsx": {
+      "bekor": "Bekor",
+      "jarayonda": "Jarayonda"
+    }
+  },
+  "LotsTab": {
+    "tsx": {
+      "tasdiqlangan": "Tasdiqlangan"
+    }
+  },
+  "warehouse-": {
+    "nomi": "Nomi"
+  },
+  "WarehouseDailyView": {
+    "tasdiqlangan": "Tasdiqlangan",
+    "tayyorlanmoqda": "Tayyorlanmoqda",
+    "kutilmoqda": "Kutilmoqda"
+  },
+  "WarehouseIntegrations": {
+    "omborQiymatiVaBuxgalteriya": "Ombor qiymati va buxgalteriya",
+    "xaridBuyurtmalariVaQaytaBuyurtma": "Xarid buyurtmalari va qayta buyurtma",
+    "buyurtmalarUchunMateriallarBoshqaruvi": "Buyurtmalar uchun materiallar boshqaruvi",
+    "ppIshlabChiqarish": "PP - Ishlab Chiqarish"
+  },
+  "WarehouseKirimWizard": {
+    "tasdiqlash": "Tasdiqlash",
+    "materiallar": "Materiallar",
+    "mroOmboriTexnikMateriallarKirim": "MRO Ombori — Texnik Materiallar Kirim",
+    "yarimTayyorLiniyadanQabul": "Yarim Tayyor — Liniyadan Qabul",
+    "tayyorMahsulotIshlabChiqarishdanQabul": "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul"
+  },
+  "WarehouseMaterialKits": {
+    "tayyorlanmoqda": "Tayyorlanmoqda",
+    "kutilmoqda": "Kutilmoqda"
+  },
+  "WarehouseRental": {
+    "yopilgan": "Yopilgan"
+  },
+  "WarehouseReports": {
+    "tsx": {
+      "birlik": "Birlik",
+      "joriyMiqdor": "Joriy miqdor"
+    }
+  },
+  "WarehouseReportsAll": {
+    "chopEtilganBarkodlarTarixi": "Chop etilgan barkodlar tarixi",
+    "harXodimningMaterialBalansi": "Har xodimning material balansi",
+    "xodimBalansi": "Xodim Balansi",
+    "harakatTasdiqlashAudit": "Harakat tasdiqlash audit",
+    "tasdiqlashAuditi": "Tasdiqlash Auditi",
+    "qcHisobot": "QC Hisobot",
+    "3TomonlamaTaqqoslash": "3-Tomonlama Taqqoslash",
+    "glHisobotAudit": "GL Hisobot (Audit)",
+    "zararHarakatlari": "Zarar Harakatlari",
+    "partiyalarQarilikTahlili": "Partiyalar qarilik tahlili",
+    "materiallarABCGuruhlari": "Materiallar A/B/C guruhlari (Pareto)",
+    "muddatOgohlantirish": "Muddat Ogohlantirish",
+    "minimalQoldiqdanPastMateriallar": "Minimal qoldiqdan past materiallar"
+  },
+  "WarehouseStatsPanel": {
+    "tsx": {
+      "qarzlar": "Qarzlar"
+    }
+  }
 }

@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { safeStorage } from '@/lib/safeStorage';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export type EntityType = "leads" | "deals" | "contacts" | "companies" | "proposals" | "invoices" | "robots";
 export type ViewMode = "kanban" | "list" | "tasks" | "calendar" | "robots";
 export type QuickFilter = "all" | "today" | "my" | "incoming";
@@ -210,17 +211,17 @@ export interface Robot {
 // Robot trigger and action types with labels
 export const TRIGGER_TYPES = [
   { value: "STAGE_CHANGED", label: "Bosqich o'zgarganda", icon: RefreshCw },
-  { value: "CREATED", label: "Yaratilganda", icon: Plus },
+  { value: "CREATED", label: tLabel('crm.crm-.yaratilganda', "Yaratilganda"), icon: Plus },
   { value: "FIELD_CHANGED", label: "Maydon o'zgarganda", icon: Edit },
   { value: "TIME_ELAPSED", label: "Vaqt o'tganda", icon: Clock },
 ];
 
 export const ACTION_TYPES = [
-  { value: "SEND_NOTIFICATION", label: "Xabar yuborish", icon: Bell },
-  { value: "CREATE_TASK", label: "Vazifa yaratish", icon: ListChecks },
+  { value: "SEND_NOTIFICATION", label: tLabel('crm.crm-.xabarYuborish', "Xabar yuborish"), icon: Bell },
+  { value: "CREATE_TASK", label: tLabel('crm.crm-.vazifaYaratish', "Vazifa yaratish"), icon: ListChecks },
   { value: "CHANGE_STAGE", label: "Bosqichni o'zgartirish", icon: RefreshCw },
   { value: "CHANGE_FIELD", label: "Maydonni o'zgartirish", icon: Edit },
-  { value: "SEND_EMAIL", label: "Email yuborish", icon: Mail },
+  { value: "SEND_EMAIL", label: tLabel('crm.crm-.emailYuborish', "Email yuborish"), icon: Mail },
   { value: "SEND_TELEGRAM", label: "Telegram xabar", icon: Send },
   { value: "AI_ANALYZE", label: "AI tahlil qilish", icon: Sparkles },
 ];
@@ -252,16 +253,16 @@ export const LEAD_STAGES: Stage[] = [
 ];
 
 export const DEAL_STAGES: Stage[] = [
-  { id: 1, stageId: "C0:NEW", name: "Yangi", sort: 100, color: "#4CAF50" },
+  { id: 1, stageId: "C0:NEW", name: tLabel('crm.crm-.yangi', "Yangi"), sort: 100, color: "#4CAF50" },
   { id: 2, stageId: "C0:IN_PROGRESS", name: "Ishda", sort: 200, color: "#2196F3" },
   { id: 3, stageId: "C0:PAYMENT_PENDING", name: "To'lov kutilmoqda", sort: 300, color: "#FF9800" },
-  { id: 4, stageId: "C0:ORDER", name: "Buyurtma", sort: 400, color: "#9C27B0" },
-  { id: 5, stageId: "C0:DELIVERY_PENDING", name: "Yetkazish kutilmoqda", sort: 500, color: "#00BCD4" },
-  { id: 6, stageId: "C0:DELIVERY", name: "Yetkazish", sort: 600, color: "#8BC34A" },
+  { id: 4, stageId: "C0:ORDER", name: tLabel('crm.crm-.buyurtma', "Buyurtma"), sort: 400, color: "#9C27B0" },
+  { id: 5, stageId: "C0:DELIVERY_PENDING", name: tLabel('crm.crm-.yetkazishKutilmoqda', "Yetkazish kutilmoqda"), sort: 500, color: "#00BCD4" },
+  { id: 6, stageId: "C0:DELIVERY", name: tLabel('crm.crm-.yetkazish', "Yetkazish"), sort: 600, color: "#8BC34A" },
 ];
 
 export const PROPOSAL_STAGES: Stage[] = [
-  { id: 1, stageId: "NEW", name: "Yangi", sort: 100, color: "#6B7280" },
+  { id: 1, stageId: "NEW", name: tLabel('crm.crm-.yangi', "Yangi"), sort: 100, color: "#6B7280" },
   { id: 2, stageId: "SENT", name: "Yuborildi", sort: 200, color: "#3B82F6" },
   { id: 3, stageId: "VIEWED", name: "Ko'rildi", sort: 300, color: "#8B5CF6" },
   { id: 4, stageId: "APPROVED", name: "Qabul qilindi", sort: 400, color: "#22C55E" },
@@ -269,11 +270,11 @@ export const PROPOSAL_STAGES: Stage[] = [
 ];
 
 export const INVOICE_STAGES: Stage[] = [
-  { id: 1, stageId: "NEW", name: "Yangi", sort: 100, color: "#6B7280" },
+  { id: 1, stageId: "NEW", name: tLabel('crm.crm-.yangi', "Yangi"), sort: 100, color: "#6B7280" },
   { id: 2, stageId: "SENT", name: "Yuborildi", sort: 200, color: "#3B82F6" },
   { id: 3, stageId: "PARTIAL", name: "Qisman to'landi", sort: 300, color: "#F59E0B" },
   { id: 4, stageId: "PAID", name: "To'landi", sort: 400, color: "#22C55E" },
-  { id: 5, stageId: "CANCELLED", name: "Bekor qilindi", sort: 500, color: "#6B7280" },
+  { id: 5, stageId: "CANCELLED", name: tLabel('crm.crm-.bekorQilindi', "Bekor qilindi"), sort: 500, color: "#6B7280" },
 ];
 
 export const PROPOSAL_STATUS_MAP: Record<string, string> = {
@@ -294,13 +295,13 @@ export const INVOICE_STATUS_MAP: Record<string, string> = {
 };
 
 export const ENTITY_CONFIG = {
-  leads: { label: "Lidlar", icon: PhoneIncoming, color: "#4CAF50" },
-  deals: { label: "Bitimlar", icon: DollarSign, color: "#2196F3" },
-  contacts: { label: "Kontaktlar", icon: User, color: "#9C27B0" },
-  companies: { label: "Kompaniyalar", icon: Building2, color: "#FF9800" },
-  proposals: { label: "Takliflar", icon: FileText, color: "#8B5CF6" },
-  invoices: { label: "Fakturalar", icon: Receipt, color: "#F59E0B" },
-  robots: { label: "Robotlar", icon: Bot, color: "#06B6D4" },
+  leads: { label: tLabel('crm.crm-.lidlar', "Lidlar"), icon: PhoneIncoming, color: "#4CAF50" },
+  deals: { label: tLabel('crm.crm-.bitimlar', "Bitimlar"), icon: DollarSign, color: "#2196F3" },
+  contacts: { label: tLabel('crm.crm-.kontaktlar', "Kontaktlar"), icon: User, color: "#9C27B0" },
+  companies: { label: tLabel('crm.crm-.kompaniyalar', "Kompaniyalar"), icon: Building2, color: "#FF9800" },
+  proposals: { label: tLabel('crm.crm-.takliflar', "Takliflar"), icon: FileText, color: "#8B5CF6" },
+  invoices: { label: tLabel('crm.crm-.fakturalar', "Fakturalar"), icon: Receipt, color: "#F59E0B" },
+  robots: { label: tLabel('crm.crm-.robotlar', "Robotlar"), icon: Bot, color: "#06B6D4" },
 };
 
 export interface QuickScore {

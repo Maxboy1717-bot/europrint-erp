@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { createElement } from "react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ── Domain types ──────────────────────────────────────────────────────────────
 
 export interface OffboardingCase {
@@ -78,9 +79,9 @@ export const STATUS_BADGE: Record<
   string,
   { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
 > = {
-  active:    { label: "Faol",          variant: "secondary" },
+  active:    { label: tLabel('hr.HROffboarding.faol', "Faol"),          variant: "secondary" },
   completed: { label: "Yakunlandi",    variant: "default" },
-  cancelled: { label: "Bekor qilindi", variant: "destructive" },
+  cancelled: { label: tLabel('hr.HROffboarding.bekorQilindi', "Bekor qilindi"), variant: "destructive" },
 };
 
 /**
@@ -111,7 +112,7 @@ export interface ExitQuestion {
 
 /** Mirrors the backend EXIT_INTERVIEW_QUESTIONS constant. */
 export const EXIT_QUESTIONS: readonly ExitQuestion[] = [
-  { key: "reason_for_leaving", label: "Ketish sababingiz nima?",         type: "text",   required: true },
+  { key: "reason_for_leaving", label: tLabel('hr.HROffboarding.ketishSababingizNima', "Ketish sababingiz nima?"),         type: "text",   required: true },
   { key: "management_rating",  label: "Rahbariyatga baho bering (1-5):", type: "rating", required: true },
   { key: "environment_rating", label: "Ish muhitiga baho bering (1-5):", type: "rating", required: true },
   { key: "would_recommend",    label: "Kompaniyani tavsiya qilasizmi?",  type: "choice", required: true },

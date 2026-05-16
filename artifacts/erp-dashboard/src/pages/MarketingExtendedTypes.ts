@@ -5,6 +5,7 @@
 
 import { type LucideIcon, TrendingUp, Globe, GitBranch, Scale, HeartPulse } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface ChurnCustomer {
   id: number;
   name: string;
@@ -96,6 +97,6 @@ export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   "roi": { title: "ROI / ROAS", icon: TrendingUp },
   "seo": { title: "SEO Tahlil", icon: Globe },
   "ab": { title: "A/B Test", icon: GitBranch },
-  "comp": { title: "Raqobatchilar", icon: Scale },
+  "comp": { title: tLabel('common.MarketingExtended.raqobatchilar', "Raqobatchilar"), icon: Scale },
   "nps": { title: "NPS / Churn", icon: HeartPulse },
 };

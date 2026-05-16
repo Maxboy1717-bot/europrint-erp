@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module RaciCrisisPageTypes
  * @description Shared TypeScript interfaces, types, and constants for RaciCrisisPage.
@@ -29,10 +31,10 @@ export interface Crisis {
 }
 
 export const TASK_STATUS: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
-  open:        { label: "Ochiq",      variant: "secondary"   },
-  in_progress: { label: "Jarayonda",  variant: "default"     },
+  open:        { label: tLabel('common.RaciCrisisPage.ochiq', "Ochiq"),      variant: "secondary"   },
+  in_progress: { label: tLabel('common.RaciCrisisPage.jarayonda', "Jarayonda"),  variant: "default"     },
   completed:   { label: "Tugallandi", variant: "outline"     },
-  cancelled:   { label: "Bekor",      variant: "destructive" },
+  cancelled:   { label: tLabel('common.RaciCrisisPage.bekor', "Bekor"),      variant: "destructive" },
 };
 
 export const RISK_COLORS: Record<string, string> = {

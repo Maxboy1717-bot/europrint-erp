@@ -6,6 +6,7 @@
 import type { ElementType } from "react";
 import { Clock, CheckCircle, XCircle, Cog, BarChart3, Layers } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface KaizenSuggestion {
   id: number;
   employeeId: string;
@@ -26,7 +27,7 @@ export const STATUS_CONFIG: Record<string, { label: string; color: string; icon:
   review:       { label: "Ko'rib chiqilmoqda",    color: "bg-yellow-100 text-yellow-800", icon: Layers },
   approved:     { label: "Tasdiqlandi",           color: "bg-green-100 text-green-800",   icon: CheckCircle },
   rejected:     { label: "Rad etildi",            color: "bg-red-100 text-red-800",       icon: XCircle },
-  implementing: { label: "Amalga oshirilmoqda",  color: "bg-purple-100 text-purple-800", icon: Cog },
+  implementing: { label: tLabel('common.KaizenPage.amalgaOshirilmoqda', "Amalga oshirilmoqda"),  color: "bg-purple-100 text-purple-800", icon: Cog },
   completed:    { label: "Yakunlandi",            color: "bg-teal-100 text-teal-800",     icon: BarChart3 },
 };
 

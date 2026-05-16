@@ -10,6 +10,7 @@ import {
   Bot, DollarSign, Building2, Truck, Map, MapPin, Gauge, Users, Calendar,
 } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
 export interface MMVendor {
@@ -137,13 +138,13 @@ export const URL_TAB_MAP: Record<string, string> = {
 
 export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   "checkbot":  { title: "Chek Bot",           icon: Bot },
-  "creditor":  { title: "Kreditor Qarzlar",   icon: DollarSign },
+  "creditor":  { title: tLabel('common.MMExtended.kreditorQarzlar', "Kreditor Qarzlar"),   icon: DollarSign },
   "portal":    { title: "Supplier Portal",    icon: Building2 },
   "transport": { title: "Transport Parki",    icon: Truck },
-  "routes":    { title: "Marshrut Rejasi",    icon: Map },
+  "routes":    { title: tLabel('common.MMExtended.marshrutRejasi', "Marshrut Rejasi"),    icon: Map },
   "gps":       { title: "GPS Monitoring",     icon: MapPin },
   "fuel":      { title: "Yoqilg'i Nazorat",  icon: Gauge },
-  "drivers":   { title: "Haydovchilar",       icon: Users },
+  "drivers":   { title: tLabel('common.MMExtended.haydovchilar', "Haydovchilar"),       icon: Users },
   "schedule":  { title: "Transport Jadvali", icon: Calendar },
 };
 

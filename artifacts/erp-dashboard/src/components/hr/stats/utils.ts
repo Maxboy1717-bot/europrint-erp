@@ -5,6 +5,7 @@
 
 import { Employee, Assignment, Attempt, Certificate, Progress, AttendanceRecord, DisciplineRecord } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function useEmployeeData(id: string | undefined, assignments: Assignment[], attempts: Attempt[], certificates: Certificate[], progress: Progress[], allAttendance: AttendanceRecord[], allDisciplineRecords: DisciplineRecord[]) {
   const employeeAssignments = (Array.isArray(assignments) ? assignments : []).filter((a) => a.userId === id);
   const employeeAttempts = (Array.isArray(attempts) ? attempts : []).filter((a) => a.userId === id);
@@ -53,11 +54,11 @@ export const getInitials = (name: string) => {
 export const getStatusBadge = (status: string) => {
   switch (status) {
     case "active":
-      return { variant: "default" as const, label: "Ishlamoqda" };
+      return { variant: "default" as const, label: tLabel('hr.utils.ishlamoqda', "Ishlamoqda") };
     case "resigned":
-      return { variant: "secondary" as const, label: "Ishdan ketgan" };
+      return { variant: "secondary" as const, label: tLabel('hr.utils.ishdanKetgan', "Ishdan ketgan") };
     case "inactive":
-      return { variant: "secondary" as const, label: "Nofaol" };
+      return { variant: "secondary" as const, label: tLabel('hr.utils.nofaol', "Nofaol") };
     default:
       return { variant: "secondary" as const, label: status };
   }
@@ -79,7 +80,7 @@ export const getAttendanceStatusBadge = (status: string) => {
 export const getDisciplineTypeBadge = (type: string) => {
   switch (type) {
     case "warning":
-      return { variant: "secondary" as const, label: "Ogohlantirish" };
+      return { variant: "secondary" as const, label: tLabel('hr.utils.ogohlantirish', "Ogohlantirish") };
     case "reprimand":
       return { variant: "destructive" as const, label: "Tanbeh" };
     case "commendation":

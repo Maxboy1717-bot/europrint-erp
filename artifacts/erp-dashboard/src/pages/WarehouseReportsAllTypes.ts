@@ -4,6 +4,7 @@
  */
 import { apiRequest } from "@/lib/queryClient";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface ReportType {
   key: string;
   icon: string;
@@ -26,19 +27,19 @@ export const REPORTS: ReportType[] = [
     loader: () => fetchPos("/stock") },
 
   { key: "low_stock", icon: "⚠️", title: "Past Stok", category: "stock",
-    description: "Minimal qoldiqdan past materiallar",
+    description: tLabel('warehouse.WarehouseReportsAll.minimalQoldiqdanPastMateriallar', "Minimal qoldiqdan past materiallar"),
     loader: () => fetchPos("/stock/low-alerts") },
 
-  { key: "expiry_alerts", icon: "🗓️", title: "Muddat Ogohlantirish", category: "stock",
+  { key: "expiry_alerts", icon: "🗓️", title: tLabel('warehouse.WarehouseReportsAll.muddatOgohlantirish', "Muddat Ogohlantirish"), category: "stock",
     description: "30 kun ichida muddati tugaydi",
     loader: () => fetchPos("/stock/expiry-alerts?days=30") },
 
   { key: "abc_analysis", icon: "📊", title: "ABC Tahlil", category: "stock",
-    description: "Materiallar A/B/C guruhlari (Pareto)",
+    description: tLabel('warehouse.WarehouseReportsAll.materiallarABCGuruhlari', "Materiallar A/B/C guruhlari (Pareto)"),
     loader: () => fetchPos("/reports/abc-analysis") },
 
   { key: "fifo_aging", icon: "⏳", title: "FIFO Qarilik", category: "stock",
-    description: "Partiyalar qarilik tahlili",
+    description: tLabel('warehouse.WarehouseReportsAll.partiyalarQarilikTahlili', "Partiyalar qarilik tahlili"),
     loader: () => fetchPos("/reports/top-materials") },
 
   // ── MOVEMENTS ──
@@ -46,7 +47,7 @@ export const REPORTS: ReportType[] = [
     description: "Barcha kirim/chiqim/ko'chirish",
     loader: () => fetchPos("/wh/movements?limit=200") },
 
-  { key: "damage_movements", icon: "⚡", title: "Zarar Harakatlari", category: "movement",
+  { key: "damage_movements", icon: "⚡", title: tLabel('warehouse.WarehouseReportsAll.zararHarakatlari', "Zarar Harakatlari"), category: "movement",
     description: "DAMAGE turi - zararlar ro'yxati",
     loader: () => fetchPos("/movements?type=DAMAGE&limit=100") },
 
@@ -59,11 +60,11 @@ export const REPORTS: ReportType[] = [
     description: "GL kontotipi yozuvlari (Dt/Ct)",
     loader: () => fetchPos("/wh-features/gl/journal?limit=200") },
 
-  { key: "gl_audit", icon: "📋", title: "GL Hisobot (Audit)", category: "audit",
+  { key: "gl_audit", icon: "📋", title: tLabel('warehouse.WarehouseReportsAll.glHisobotAudit', "GL Hisobot (Audit)"), category: "audit",
     description: "GL audit izi - kim, qachon, nima",
     loader: () => fetchPos("/reports/audit") },
 
-  { key: "three_way_match", icon: "🔀", title: "3-Tomonlama Taqqoslash", category: "audit",
+  { key: "three_way_match", icon: "🔀", title: tLabel('warehouse.WarehouseReportsAll.3TomonlamaTaqqoslash', "3-Tomonlama Taqqoslash"), category: "audit",
     description: "PO ↔ Qabul ↔ Hisob-faktura",
     loader: () => fetchPos("/reports/three-way-match") },
 
@@ -72,12 +73,12 @@ export const REPORTS: ReportType[] = [
     loader: () => fetchPos("/reports/kpi") },
 
   // ── QUALITY ──
-  { key: "qc_report", icon: "🔬", title: "QC Hisobot", category: "quality",
+  { key: "qc_report", icon: "🔬", title: tLabel('warehouse.WarehouseReportsAll.qcHisobot', "QC Hisobot"), category: "quality",
     description: "QC tekshiruv natijalari",
     loader: () => fetchPos("/movements?status=qc_pending&limit=100") },
 
-  { key: "confirmation_audit", icon: "✅", title: "Tasdiqlash Auditi", category: "audit",
-    description: "Harakat tasdiqlash audit",
+  { key: "confirmation_audit", icon: "✅", title: tLabel('warehouse.WarehouseReportsAll.tasdiqlashAuditi', "Tasdiqlash Auditi"), category: "audit",
+    description: tLabel('warehouse.WarehouseReportsAll.harakatTasdiqlashAudit', "Harakat tasdiqlash audit"),
     loader: () => fetchPos("/movements?limit=100") },
 
   // ── INVENTORY OPERATIONS ──
@@ -94,8 +95,8 @@ export const REPORTS: ReportType[] = [
     loader: () => fetchPos("/reports/liabilities") },
 
   // ── HR / EMPLOYEE ──
-  { key: "employee_balance", icon: "👤", title: "Xodim Balansi", category: "audit",
-    description: "Har xodimning material balansi",
+  { key: "employee_balance", icon: "👤", title: tLabel('warehouse.WarehouseReportsAll.xodimBalansi', "Xodim Balansi"), category: "audit",
+    description: tLabel('warehouse.WarehouseReportsAll.harXodimningMaterialBalansi', "Har xodimning material balansi"),
     loader: () => fetchPos("/reports/liabilities") },
 
   // ── SUPPLIER ──
@@ -105,7 +106,7 @@ export const REPORTS: ReportType[] = [
 
   // ── OPERATIONS ──
   { key: "label_history", icon: "🏷️", title: "Label Tarixi", category: "movement",
-    description: "Chop etilgan barkodlar tarixi",
+    description: tLabel('warehouse.WarehouseReportsAll.chopEtilganBarkodlarTarixi', "Chop etilgan barkodlar tarixi"),
     loader: () => fetchPos("/reports/top-materials") },
 
   { key: "sync_status", icon: "🔗", title: "Sinxronizatsiya Holati", category: "audit",

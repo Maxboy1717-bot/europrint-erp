@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module QCDashboardTypes
  * @description TypeScript interfaces, types, and constants for the QC Dashboard.
@@ -64,6 +66,6 @@ export const RESULT_LABELS: Record<string, { label: string; cls: string }> = {
   passed:           { label: "O'tdi",               cls: "bg-green-50 text-[var(--ep-green)]" },
   conditional_pass: { label: "Shartli o'tdi",        cls: "bg-teal-50 text-[var(--ep-cyan)]" },
   rework_required:  { label: "Qayta ishlash",        cls: "bg-amber-50 text-[var(--ep-yellow)]" },
-  failed:           { label: "Muvaffaqiyatsiz",      cls: "bg-red-50 text-[var(--ep-red)]" },
-  pending:          { label: "Kutilmoqda",           cls: "bg-muted text-muted-foreground" },
+  failed:           { label: tLabel('common.QCDashboard.muvaffaqiyatsiz', "Muvaffaqiyatsiz"),      cls: "bg-red-50 text-[var(--ep-red)]" },
+  pending:          { label: tLabel('common.QCDashboard.kutilmoqda', "Kutilmoqda"),           cls: "bg-muted text-muted-foreground" },
 };

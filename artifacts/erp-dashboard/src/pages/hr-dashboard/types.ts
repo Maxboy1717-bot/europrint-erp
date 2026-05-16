@@ -5,6 +5,7 @@
 
 import type { User, AbcAnalysis } from "@shared/schema";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export type UserWithAnalysis = User & {
   abcAnalysis?: AbcAnalysis;
 };
@@ -53,17 +54,17 @@ export type EmployeeWithGrade = {
 export const HR_TABS = [
   { key: "overview", label: "Umumiy" },
   { key: "performers", label: "Samaradorlik" },
-  { key: "alerts", label: "Alertlar" },
+  { key: "alerts", label: tLabel('hr..alertlar', "Alertlar") },
   { key: "risk", label: "AI Xavf" },
-  { key: "turnover", label: "Kadrlar" },
+  { key: "turnover", label: tLabel('hr..kadrlar', "Kadrlar") },
   { key: "discipline", label: "Intizom" },
-  { key: "safety", label: "Xavfsizlik" },
+  { key: "safety", label: tLabel('hr..xavfsizlik', "Xavfsizlik") },
   { key: "v2", label: "HR V2 Tizim" },
 ];
 
 export const SEVERITY_CONFIG = {
   critical: { color: "text-[var(--ep-red)]", bg: "bg-red-50", border: "border-red-200", label: "Kritik" },
-  warning: { color: "text-[var(--ep-yellow)]", bg: "bg-amber-50", border: "border-amber-200", label: "Ogohlantirish" },
+  warning: { color: "text-[var(--ep-yellow)]", bg: "bg-amber-50", border: "border-amber-200", label: tLabel('hr..ogohlantirish', "Ogohlantirish") },
   info: { color: "text-[var(--ep-blue)]", bg: "bg-blue-50", border: "border-blue-200", label: "Ma'lumot" },
 };
 

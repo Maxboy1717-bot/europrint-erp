@@ -2,6 +2,7 @@
 
 import type { AdaptationProgram } from "@shared/schema";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface TaskItem {
   title: string;
   description: string;
@@ -74,13 +75,13 @@ export const PROGRAM_TEMPLATES = {
     description: "Birinchi ish kunidagi asosiy tanishtirish va yo'l-yo'riq",
     descriptionRu: "Основное знакомство и ориентация в первый рабочий день",
     tasks: [
-      { title: "Kompaniya bilan tanishish", description: "Kompaniya tarixi, missiya, qadriyatlar", day: 1 },
-      { title: "Ish joyi bilan tanishish", description: "Texnika, kirish kartalari, dasturlar", day: 1 },
-      { title: "Jamoa bilan tanishish", description: "Bo'lim a'zolari bilan suhbat", day: 1 },
-      { title: "Mentor bilan uchrashish", description: "Birinchi yo'l-yo'riqlar olish", day: 1 },
+      { title: tLabel('adaptation.ProgramsTab.kompaniyaBilanTanishish', "Kompaniya bilan tanishish"), description: tLabel('adaptation.ProgramsTab.kompaniyaTarixiMissiyaQadriyatlar', "Kompaniya tarixi, missiya, qadriyatlar"), day: 1 },
+      { title: tLabel('adaptation.ProgramsTab.ishJoyiBilanTanishish', "Ish joyi bilan tanishish"), description: tLabel('adaptation.ProgramsTab.texnikaKirishKartalariDasturlar', "Texnika, kirish kartalari, dasturlar"), day: 1 },
+      { title: tLabel('adaptation.ProgramsTab.jamoaBilanTanishish', "Jamoa bilan tanishish"), description: "Bo'lim a'zolari bilan suhbat", day: 1 },
+      { title: tLabel('adaptation.ProgramsTab.mentorBilanUchrashish', "Mentor bilan uchrashish"), description: "Birinchi yo'l-yo'riqlar olish", day: 1 },
     ],
     checkpoints: [
-      { day: 1, title: "Kirish kuni yakunlash", description: "Asosiy tushunchalar va resurslar olindi" },
+      { day: 1, title: "Kirish kuni yakunlash", description: tLabel('adaptation.ProgramsTab.asosiyTushunchalarVaResurslarOlindi', "Asosiy tushunchalar va resurslar olindi") },
     ],
   },
   "1-week": {
@@ -88,12 +89,12 @@ export const PROGRAM_TEMPLATES = {
     titleRu: "Программа адаптации на 1 неделю",
     duration: 1,
     durationType: "week" as const,
-    description: "Asosiy jarayonlar va vazifalar bilan tanishish",
+    description: tLabel('adaptation.ProgramsTab.asosiyJarayonlarVaVazifalarBilan', "Asosiy jarayonlar va vazifalar bilan tanishish"),
     descriptionRu: "Знакомство с основными процессами и задачами",
     tasks: [
-      { title: "Kompaniya bilan tanishish", description: "Tarixi, missiya, qadriyatlar", day: 1 },
-      { title: "Bo'lim bilan tanishish", description: "Jamoalar, jarayonlar, maqsadlar", day: 2 },
-      { title: "Vazifalar bilan tanishish", description: "Asosiy mas'uliyatlar", day: 3 },
+      { title: tLabel('adaptation.ProgramsTab.kompaniyaBilanTanishish', "Kompaniya bilan tanishish"), description: tLabel('adaptation.ProgramsTab.tarixiMissiyaQadriyatlar', "Tarixi, missiya, qadriyatlar"), day: 1 },
+      { title: "Bo'lim bilan tanishish", description: tLabel('adaptation.ProgramsTab.jamoalarJarayonlarMaqsadlar', "Jamoalar, jarayonlar, maqsadlar"), day: 2 },
+      { title: tLabel('adaptation.ProgramsTab.vazifalarBilanTanishish', "Vazifalar bilan tanishish"), description: "Asosiy mas'uliyatlar", day: 3 },
       { title: "Trening va o'quv materiallar", description: "Kerakli ko'nikmalar o'rganish", day: 4 },
       { title: "Birinchi vazifalarni bajarish", description: "Mentor nazorati ostida", day: 5 },
     ],
@@ -109,13 +110,13 @@ export const PROGRAM_TEMPLATES = {
     description: "To'liq jarayonlarga kirishish va mustaqil ishlash",
     descriptionRu: "Полное погружение в процессы и самостоятельная работа",
     tasks: [
-      { title: "1-hafta: Kirish va tanishish", description: "Kompaniya, jamoa, jarayonlar", day: 1 },
+      { title: "1-hafta: Kirish va tanishish", description: tLabel('adaptation.ProgramsTab.kompaniyaJamoaJarayonlar', "Kompaniya, jamoa, jarayonlar"), day: 1 },
       { title: "2-hafta: O'quv va trening", description: "Kerakli ko'nikmalarni o'zlashtirish", day: 8 },
-      { title: "3-hafta: Amaliy vazifalar", description: "Mentor yordami bilan", day: 15 },
+      { title: tLabel('adaptation.ProgramsTab.3HaftaAmaliyVazifalar', "3-hafta: Amaliy vazifalar"), description: tLabel('adaptation.ProgramsTab.mentorYordamiBilan', "Mentor yordami bilan"), day: 15 },
       { title: "4-hafta: Mustaqil ishlash", description: "O'z mas'uliyatlari bo'yicha", day: 22 },
     ],
     checkpoints: [
-      { day: 7, title: "1-hafta", description: "Asosiy tushunchalar" },
+      { day: 7, title: "1-hafta", description: tLabel('adaptation.ProgramsTab.asosiyTushunchalar', "Asosiy tushunchalar") },
       { day: 14, title: "2-hafta", description: "O'quv natijalar" },
       { day: 21, title: "3-hafta", description: "Amaliy ko'nikmalar" },
       { day: 30, title: "1-oy", description: "To'liq baholash va feedback" },
@@ -130,8 +131,8 @@ export const PROGRAM_TEMPLATES = {
     descriptionRu: "Комплексная адаптация и профессиональное развитие",
     tasks: [
       { title: "1-oy: Asosiy adaptatsiya", description: "Jarayonlar, ko'nikmalar, madaniyat", day: 1 },
-      { title: "2-oy: Chuqur o'zlashtirish", description: "Murakkab vazifalar, loyihalar", day: 31 },
-      { title: "3-oy: To'liq integratsiya", description: "Mustaqil ishlash, jamoa bilan hamkorlik", day: 61 },
+      { title: "2-oy: Chuqur o'zlashtirish", description: tLabel('adaptation.ProgramsTab.murakkabVazifalarLoyihalar', "Murakkab vazifalar, loyihalar"), day: 31 },
+      { title: "3-oy: To'liq integratsiya", description: tLabel('adaptation.ProgramsTab.mustaqilIshlashJamoaBilanHamkorlik', "Mustaqil ishlash, jamoa bilan hamkorlik"), day: 61 },
     ],
     checkpoints: [
       { day: 7, title: "1-hafta", description: "Kirish" },

@@ -19,6 +19,7 @@ import { Plus, Target } from "lucide-react";
 import { useWasteTranslations, wasteRecordFormSchema, wasteTargetFormSchema, WASTE_TYPES, MATERIAL_TYPES, WasteTarget } from "./WasteTrackingTypes";
 import { EPStatusPill } from "@/components/ep";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function AddWasteRecordDialog() {
   const tr = useWasteTranslations();
   const { toast } = useToast();
@@ -52,7 +53,7 @@ export function AddWasteRecordDialog() {
       queryClient.invalidateQueries({ queryKey: ["/api/waste/records"] });
       queryClient.invalidateQueries({ queryKey: ["/api/waste/dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["/api/waste/trends"] });
-      toast({ title: "Muvaffaqiyatli saqlandi" });
+      toast({ title: tLabel('common.WasteTrackingDialogs.tsx.muvaffaqiyatliSaqlandi', "Muvaffaqiyatli saqlandi") });
       setOpen(false);
       form.reset();
     },
@@ -243,7 +244,7 @@ export function TargetsTab() {
       apiRequest("POST", "/api/waste/targets", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/waste/targets"] });
-      toast({ title: "Muvaffaqiyatli saqlandi" });
+      toast({ title: tLabel('common.WasteTrackingDialogs.tsx.muvaffaqiyatliSaqlandi', "Muvaffaqiyatli saqlandi") });
       setOpen(false);
       form.reset();
     },

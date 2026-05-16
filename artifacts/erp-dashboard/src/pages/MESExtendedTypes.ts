@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { type LucideIcon, Activity, AlertTriangle, Wrench, Trophy, Settings, Clock, ClipboardList } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Domain interfaces ───────────────────────────────────────────────────────
 
 export interface MESMachine {
@@ -103,7 +104,7 @@ export const URL_TAB_MAP: Record<string, string> = {
 export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   oee:          { title: "OEE Monitoring",                icon: Activity },
   reasons:      { title: "To'xtash Sabablar",             icon: AlertTriangle },
-  zones:        { title: "Ishlab Chiqarish Vazifalari",   icon: ClipboardList },
+  zones:        { title: tLabel('common.MESExtended.ishlabChiqarishVazifalari', "Ishlab Chiqarish Vazifalari"),   icon: ClipboardList },
   maintenance:  { title: "Texnik Xizmat",                 icon: Wrench },
   gamification: { title: "Gamifikatsiya",                 icon: Trophy },
   norms:        { title: "Uskuna Normalari",              icon: Settings },

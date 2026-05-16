@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 ﻿/**
  * @module WarehouseDailyViewTypes
  * @description Types and constants for WarehouseDailyView page.
@@ -52,10 +54,10 @@ export interface Equipment {
 }
 
 export const STATUS_COLORS: Record<string, { bg: string; text: string; label: string; labelRu: string }> = {
-  pending: { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-800 dark:text-yellow-200", label: "Kutilmoqda", labelRu: "Ожидает" },
-  preparing: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-800 dark:text-blue-200", label: "Tayyorlanmoqda", labelRu: "Готовится" },
+  pending: { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-800 dark:text-yellow-200", label: tLabel('warehouse.WarehouseDailyView.kutilmoqda', "Kutilmoqda"), labelRu: "Ожидает" },
+  preparing: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-800 dark:text-blue-200", label: tLabel('warehouse.WarehouseDailyView.tayyorlanmoqda', "Tayyorlanmoqda"), labelRu: "Готовится" },
   ready: { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-800 dark:text-green-200", label: "Tayyor", labelRu: "Готов" },
   delivered: { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-800 dark:text-purple-200", label: "Yetkazildi", labelRu: "Доставлен" },
-  confirmed: { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-800 dark:text-emerald-200", label: "Tasdiqlangan", labelRu: "Подтверждён" },
+  confirmed: { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-800 dark:text-emerald-200", label: tLabel('warehouse.WarehouseDailyView.tasdiqlangan', "Tasdiqlangan"), labelRu: "Подтверждён" },
   consumed: { bg: "bg-muted/40 dark:bg-gray-900/30", text: "text-foreground dark:text-gray-200", label: "Ishlatildi", labelRu: "Использован" },
 };

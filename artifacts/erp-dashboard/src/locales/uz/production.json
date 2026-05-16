@@ -454,5 +454,29 @@
   "ushbuSifatParametriniOchirishniTasdiqlaysizmi": "Ushbu sifat parametrini ochirishni tasdiqlaysizmi",
   "ushbuXodimTayinlashiniOchirishniTasdiqlaysizmi": "Ushbu xodim tayinlashini ochirishni tasdiqlaysizmi",
   "yangiBuyurtma": "Yangi buyurtma",
-  "untitled": "Картонная коробка"
+  "untitled": "Картонная коробка",
+  "AIProductionPlanning": {
+    "bajarilmoqda": "Bajarilmoqda",
+    "tasdiqlangan": "Tasdiqlangan",
+    "avtoTasdiqlangan": "Avto-tasdiqlangan"
+  },
+  "CandidateChecklist": {
+    "tavsiyalarTekshirildiReferenceCheck": "Tavsiyalar tekshirildi (Reference check)",
+    "fonTekshiruviIjtimoiyTarmoqlarMat": "Fon tekshiruvi (ijtimoiy tarmoqlar, Mat. №54)"
+  },
+  "ProductionOrder360": {
+    "jarayonda": "Jarayonda"
+  },
+  "TechPPExtended": {
+    "yetkazishKalk": "Yetkazish Kalk.",
+    "parallelJarayonlar": "Parallel Jarayonlar",
+    "smenaBoshqaruvi": "Smena Boshqaruvi",
+    "parallelBuyurtmalar": "Parallel Buyurtmalar",
+    "mijozTalablari": "Mijoz Talablari",
+    "xarajatOptimizatsiya": "Xarajat Optimizatsiya",
+    "stanoqTanlash": "Stanoq Tanlash"
+  },
+  "helpers": {
+    "jarayonda": "Jarayonda"
+  }
 }

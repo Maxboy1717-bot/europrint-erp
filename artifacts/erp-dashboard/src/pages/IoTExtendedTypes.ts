@@ -7,6 +7,7 @@ import type { LucideIcon } from "lucide-react";
 import { Activity, Brain, Gauge, Layers, AlertTriangle, BarChart3 } from "lucide-react";
 import { z } from "zod";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface IoTSensor {
   id: number | string;
   sensorId?: number | string;
@@ -70,7 +71,7 @@ export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   predictive: { title: "Nosozlik Bashorati", icon: Brain },
   oee:        { title: "OEE Live",           icon: BarChart3 },
   twin:       { title: "Digital Twin",       icon: Layers },
-  alerts:     { title: "Ogohlantirishlar",   icon: AlertTriangle },
+  alerts:     { title: tLabel('common.IoTExtended.ogohlantirishlar', "Ogohlantirishlar"),   icon: AlertTriangle },
 };
 
 export const SensorSchema = z.object({

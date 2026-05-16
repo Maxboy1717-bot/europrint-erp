@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Lang, WarehouseData } from "./warehouse-types";
 import { apiRequest } from '@/lib/queryClient';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface InventarizatsiyaPanelProps {
   lang: Lang;
 }
@@ -49,9 +50,9 @@ interface InvStats {
 
 const STATUS_CONF: Record<string, { label: string; cls: string; icon: React.ComponentType<{ className?: string }> }> = {
   draft:       { label: "Qoralama",    cls: "bg-gray-100 text-gray-700",   icon: ClipboardList },
-  in_progress: { label: "Jarayonda",   cls: "bg-blue-100 text-[var(--ep-blue)]",   icon: Clock },
+  in_progress: { label: tLabel('warehouse.InventarizatsiyaPanel.tsx.jarayonda', "Jarayonda"),   cls: "bg-blue-100 text-[var(--ep-blue)]",   icon: Clock },
   completed:   { label: "Tugallangan", cls: "bg-emerald-100 text-[var(--ep-green)]", icon: CheckCircle2 },
-  cancelled:   { label: "Bekor",       cls: "bg-red-100 text-[var(--ep-red)]",     icon: AlertCircle },
+  cancelled:   { label: tLabel('warehouse.InventarizatsiyaPanel.tsx.bekor', "Bekor"),       cls: "bg-red-100 text-[var(--ep-red)]",     icon: AlertCircle },
 };
 
 const TYPE_LABELS: Record<string, string> = {

@@ -428,5 +428,30 @@
     "email": "Электронная почта"
   },
   "yoQotildiLost": "Yo'qotildi (Lost)",
-  "yutildiWon": "Yutildi (Won)"
+  "yutildiWon": "Yutildi (Won)",
+  "crm-": {
+    "robotlar": "Robotlar",
+    "fakturalar": "Fakturalar",
+    "takliflar": "Takliflar",
+    "kompaniyalar": "Kompaniyalar",
+    "kontaktlar": "Kontaktlar",
+    "bitimlar": "Bitimlar",
+    "lidlar": "Lidlar",
+    "bekorQilindi": "Bekor qilindi",
+    "yangi": "Yangi",
+    "yetkazish": "Yetkazish",
+    "yetkazishKutilmoqda": "Yetkazish kutilmoqda",
+    "buyurtma": "Buyurtma",
+    "emailYuborish": "Email yuborish",
+    "vazifaYaratish": "Vazifa yaratish",
+    "xabarYuborish": "Xabar yuborish",
+    "yaratilganda": "Yaratilganda"
+  },
+  "RobotsView": {
+    "telegramYuborish": "Telegram yuborish",
+    "emailYuborish": "Email yuborish",
+    "vazifaYaratish": "Vazifa yaratish",
+    "xabarnomaYuborish": "Xabarnoma yuborish",
+    "yaratilganda": "Yaratilganda"
+  }
 }

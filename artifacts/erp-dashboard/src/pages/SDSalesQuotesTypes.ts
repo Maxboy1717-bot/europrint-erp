@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module SDSalesQuotesTypes
  * @description TypeScript interfaces, types, and constants for SDSalesQuotes.
@@ -74,7 +76,7 @@ export const PAPER_TYPES = [
 ];
 
 export const PRINT_COLORS = [
-  { value: 0, label: "Bossiz" },
+  { value: 0, label: tLabel('common.SDSalesQuotes.bossiz', "Bossiz") },
   { value: 1, label: "1 rang" },
   { value: 2, label: "2 rang" },
   { value: 4, label: "4 rang (To'liq CMYK)" },

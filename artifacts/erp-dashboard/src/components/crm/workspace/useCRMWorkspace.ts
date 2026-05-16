@@ -42,6 +42,7 @@ import {
 } from "@/pages/crm/crm-types";
 import { CrmActivity, CrmEntityLike, FilterableEntity } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 const BITRIX_ENTITY_TYPES = new Set<EntityType>(["proposals", "invoices", "robots"]);
 const entityApiBase = (entity: EntityType) =>
   BITRIX_ENTITY_TYPES.has(entity) ? `/api/crm-bitrix/${entity}` : `/api/crm/${entity}`;
@@ -173,7 +174,7 @@ export function useCRMWorkspace() {
       queryClient.invalidateQueries({ queryKey: [entityApiBase(activeEntity)] });
       queryClient.invalidateQueries({ queryKey: ["/api/sd/orders"] });
       if (data?.autoOrder) {
-        toast({ title: "Lid yutildi — SD buyurtma yaratildi", description: `Buyurtma raqami: ${data.autoOrder.documentNumber}.`, duration: 6000 });
+        toast({ title: tLabel('common.useCRMWorkspace.lidYutildiSdBuyurtmaYaratildi', "Lid yutildi — SD buyurtma yaratildi"), description: `Buyurtma raqami: ${data.autoOrder.documentNumber}.`, duration: 6000 });
       } else {
         toast({ title: "Ko'chirildi" });
       }

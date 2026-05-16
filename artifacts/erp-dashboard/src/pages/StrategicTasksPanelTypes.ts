@@ -5,13 +5,14 @@
 
 import type { StrategicTask, StrategicCategory } from "@shared/schema";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export const STATUS_OPTIONS = [
   { value: "planned", label: "Rejalashtirilgan", labelRu: "Запланировано", color: "bg-slate-500/20 text-muted-foreground dark:text-muted-foreground" },
-  { value: "in_progress", label: "Jarayonda", labelRu: "В процессе", color: "bg-blue-500/20 text-[var(--ep-blue)] dark:text-blue-400" },
+  { value: "in_progress", label: tLabel('common.StrategicTasksPanel.jarayonda', "Jarayonda"), labelRu: "В процессе", color: "bg-blue-500/20 text-[var(--ep-blue)] dark:text-blue-400" },
   { value: "testing", label: "Sinovda", labelRu: "Тестирование", color: "bg-purple-500/20 text-[var(--ep-purple)] dark:text-purple-400" },
   { value: "completed", label: "Bajarildi", labelRu: "Завершено", color: "bg-green-500/20 text-[var(--ep-green)] dark:text-green-400" },
-  { value: "on_hold", label: "Kutilmoqda", labelRu: "На паузе", color: "bg-yellow-500/20 text-[var(--ep-yellow)] dark:text-yellow-400" },
-  { value: "cancelled", label: "Bekor qilingan", labelRu: "Отменено", color: "bg-red-500/20 text-[var(--ep-red)] dark:text-red-400" },
+  { value: "on_hold", label: tLabel('common.StrategicTasksPanel.kutilmoqda', "Kutilmoqda"), labelRu: "На паузе", color: "bg-yellow-500/20 text-[var(--ep-yellow)] dark:text-yellow-400" },
+  { value: "cancelled", label: tLabel('common.StrategicTasksPanel.bekorQilingan', "Bekor qilingan"), labelRu: "Отменено", color: "bg-red-500/20 text-[var(--ep-red)] dark:text-red-400" },
 ];
 
 export const PRIORITY_OPTIONS = [

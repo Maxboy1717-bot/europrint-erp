@@ -7,6 +7,7 @@ import {
   TrendingDown, BarChart3,
 } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Domain interfaces ────────────────────────────────────────────────────────
 
 export interface QcParameter {
@@ -85,16 +86,16 @@ export type CreateTestPayload = TestFormValues & {
 // ─── Tab configuration ───────────────────────────────────────────────────────
 
 export const CATEGORY_TABS = [
-  { value: "physical",         label: "Fizik xususiyatlar",    labelRu: "Физические свойства",     icon: Thermometer },
+  { value: "physical",         label: tLabel('common.QCModule.fizikXususiyatlar', "Fizik xususiyatlar"),    labelRu: "Физические свойства",     icon: Thermometer },
   { value: "mechanical",       label: "Mexanik mustahkamlik",  labelRu: "Механическая прочность",  icon: Activity },
   { value: "printability",     label: "Chop etish sifati",     labelRu: "Качество печати",         icon: FileCheck },
   { value: "chemical",         label: "Kimyoviy ko'rsatkichlar", labelRu: "Химические показатели", icon: Beaker },
   { value: "environmental",    label: "Muhit chidamliligi",    labelRu: "Устойчивость к среде",    icon: Thermometer },
   { value: "logistics",        label: "Logistika testlari",    labelRu: "Логистические тесты",     icon: Package },
   { value: "visual",           label: "Vizual sifat",          labelRu: "Визуальное качество",     icon: Eye },
-  { value: "standards",        label: "Normalar",              labelRu: "Стандарты",               icon: BookOpen },
+  { value: "standards",        label: tLabel('common.QCModule.normalar', "Normalar"),              labelRu: "Стандарты",               icon: BookOpen },
   { value: "ai_analysis",      label: "AI Tahlili",            labelRu: "AI Анализ",               icon: Brain },
-  { value: "reclamations",     label: "Reklamatsiyalar",       labelRu: "Рекламации",              icon: MessageSquareWarning },
+  { value: "reclamations",     label: tLabel('common.QCModule.reklamatsiyalar', "Reklamatsiyalar"),       labelRu: "Рекламации",              icon: MessageSquareWarning },
   { value: "braks",            label: "Brak",                  labelRu: "Брак",                    icon: TriangleAlert },
   { value: "supplier_quality", label: "Supplier Sifati",       labelRu: "Качество поставщика",     icon: Star },
   { value: "certificate",      label: "Sertifikat",            labelRu: "Сертификат",              icon: FileCheck },

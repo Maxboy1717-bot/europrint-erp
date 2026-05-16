@@ -18,6 +18,7 @@ import {
   Mail,
 } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Domain interfaces
 // ---------------------------------------------------------------------------
@@ -80,7 +81,7 @@ export const crmFieldFormSchema = z.object({
 export const FIELD_TYPES = [
   { value: "text", label: "Matn", icon: Type },
   { value: "number", label: "Raqam", icon: Hash },
-  { value: "date", label: "Sana", icon: Calendar },
+  { value: "date", label: tLabel('common.CRMSettings.sana', "Sana"), icon: Calendar },
   { value: "select", label: "Tanlov", icon: List },
   { value: "multiselect", label: "Ko'p tanlov", icon: Layers },
   { value: "checkbox", label: "Checkbox", icon: CheckSquare },
@@ -89,18 +90,18 @@ export const FIELD_TYPES = [
 ] as const;
 
 export const ENTITY_TYPES = [
-  { value: "lead", label: "Lidlar", icon: FileText },
-  { value: "deal", label: "Bitimlar", icon: Package },
-  { value: "contact", label: "Kontaktlar", icon: Users },
-  { value: "company", label: "Kompaniyalar", icon: Building2 },
+  { value: "lead", label: tLabel('common.CRMSettings.lidlar', "Lidlar"), icon: FileText },
+  { value: "deal", label: tLabel('common.CRMSettings.bitimlar', "Bitimlar"), icon: Package },
+  { value: "contact", label: tLabel('common.CRMSettings.kontaktlar', "Kontaktlar"), icon: Users },
+  { value: "company", label: tLabel('common.CRMSettings.kompaniyalar', "Kompaniyalar"), icon: Building2 },
 ] as const;
 
 export const MENU_ITEMS = [
   { id: "requisites", label: "Mening rekvizitlarim", icon: FileText },
   { id: "access", label: "Kirish huquqlari", icon: Key },
-  { id: "products", label: "Tovarlar va omborlar", icon: Package },
-  { id: "integrations", label: "Integratsiyalar", icon: Layers },
-  { id: "custom-fields", label: "Maxsus maydonlar", icon: Settings },
+  { id: "products", label: tLabel('common.CRMSettings.tovarlarVaOmborlar', "Tovarlar va omborlar"), icon: Package },
+  { id: "integrations", label: tLabel('common.CRMSettings.integratsiyalar', "Integratsiyalar"), icon: Layers },
+  { id: "custom-fields", label: tLabel('common.CRMSettings.maxsusMaydonlar', "Maxsus maydonlar"), icon: Settings },
 ] as const;
 
 // ---------------------------------------------------------------------------

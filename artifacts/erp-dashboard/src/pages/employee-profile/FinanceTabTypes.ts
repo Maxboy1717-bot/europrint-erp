@@ -3,6 +3,7 @@
 import type { BonusRecord, FineRecord, OvertimeRecord, CashAdvanceRecord, SalaryHistoryRecord, TranslationFn } from "./profile-types";
 import type { UseMutationResult } from "@tanstack/react-query";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface SalaryBenchmark {
   employeeSalary: number;
   departmentAvg: number | null;
@@ -94,8 +95,8 @@ export const FINE_TYPE_LABELS: Record<string, string> = {
 };
 
 export const CASH_ADVANCE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  pending: { label: "Kutilmoqda", color: "bg-yellow-500" },
-  approved: { label: "Tasdiqlangan", color: "bg-green-500" },
+  pending: { label: tLabel('common.FinanceTab.kutilmoqda', "Kutilmoqda"), color: "bg-yellow-500" },
+  approved: { label: tLabel('common.FinanceTab.tasdiqlangan', "Tasdiqlangan"), color: "bg-green-500" },
   rejected: { label: "Rad etilgan", color: "bg-red-500" },
   paid: { label: "To'langan", color: "bg-blue-500" },
 };

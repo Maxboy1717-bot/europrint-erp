@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * WarehouseKirimWizardTypes.ts
  * Interfaces, types and constants for WarehouseKirimWizard.
@@ -76,7 +78,7 @@ export const KIRIM_CONFIG: Record<string, KirimConfig> = {
     submitLabel: "🧻 Rulonga kirim", successNext: "hub",
   },
   "FG-MAIN": {
-    icon: "✅", title: "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul",
+    icon: "✅", title: tLabel('warehouse.WarehouseKirimWizard.tayyorMahsulotIshlabChiqarishdanQabul', "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul"),
     badgeColor: "bg-emerald-600",
     bannerClass: "bg-emerald-50 border border-emerald-200 text-emerald-900",
     bannerText: "Ishlab chiqarish bo'limidan tayyor mahsulot qabul. Shartnoma va yuk xati shart emas.",
@@ -88,7 +90,7 @@ export const KIRIM_CONFIG: Record<string, KirimConfig> = {
     submitLabel: "✅ Tayyor Mahsulot kirim", successNext: "fg",
   },
   "WIP-MAIN": {
-    icon: "⚙️", title: "Yarim Tayyor — Liniyadan Qabul",
+    icon: "⚙️", title: tLabel('warehouse.WarehouseKirimWizard.yarimTayyorLiniyadanQabul', "Yarim Tayyor — Liniyadan Qabul"),
     badgeColor: "bg-violet-600",
     bannerClass: "bg-violet-50 border border-violet-200 text-violet-900",
     bannerText: "Ishlab chiqarish liniyasidan yarim tayyor mahsulot ko'chirish. Qayta ishlash bosqichi qayd qilinadi.",
@@ -136,7 +138,7 @@ export const KIRIM_CONFIG: Record<string, KirimConfig> = {
     submitLabel: "🏠 Xo'jalik Omborga kirim", successNext: "hub",
   },
   "MRO-STORE": {
-    icon: "🛠️", title: "MRO Ombori — Texnik Materiallar Kirim",
+    icon: "🛠️", title: tLabel('warehouse.WarehouseKirimWizard.mroOmboriTexnikMateriallarKirim', "MRO Ombori — Texnik Materiallar Kirim"),
     badgeColor: "bg-sky-600",
     bannerClass: "bg-sky-50 border border-sky-200 text-sky-900",
     bannerText: "Texnik xizmat va ta'mirlash (MRO) uchun materiallar qabul qilish.",
@@ -164,10 +166,10 @@ export const DEFAULT_CFG: KirimConfig = {
 
 export const STEPS = [
   { n: 1, label: "Asosiy ma'lumotlar" },
-  { n: 2, label: "Materiallar" },
+  { n: 2, label: tLabel('warehouse.WarehouseKirimWizard.materiallar', "Materiallar") },
   { n: 3, label: "Inventar pasporti" },
   { n: 4, label: "Ko'rib chiqish" },
-  { n: 5, label: "Tasdiqlash" },
+  { n: 5, label: tLabel('warehouse.WarehouseKirimWizard.tasdiqlash', "Tasdiqlash") },
 ];
 
 let lineCounter = 0;

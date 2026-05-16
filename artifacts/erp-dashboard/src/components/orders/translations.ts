@@ -5,9 +5,10 @@
 
 import { Language, Translation } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export const translations: Record<Language, Translation> = {
   uz: {
-    title: "Yangi Buyurtma Yaratish",
+    title: tLabel('common.translations.yangiBuyurtmaYaratish', "Yangi Buyurtma Yaratish"),
     step1: "Buyurtma Ma'lumotlari",
     step2: "BOM Tanlash",
     step3: "Material Hisoblash",

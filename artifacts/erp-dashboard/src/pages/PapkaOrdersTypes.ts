@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export const formSchema = z.object({
   papkaNo: z.string().min(1, "Papka raqami kiritilishi kerak"),
   mijozNomi: z.string().min(1, "Mijoz nomi kiritilishi kerak"),
@@ -25,11 +26,11 @@ export type FormData = z.infer<typeof formSchema>;
 export type Lang = "uz" | "ru";
 
 export const STATUS_CONFIG: Record<string, { label: string; labelRu: string; className: string }> = {
-  new: { label: "Yangi", labelRu: "Новый", className: "bg-primary/10 text-primary" },
-  planning: { label: "Rejalashtirish", labelRu: "Планирование", className: "bg-amber-100 text-amber-800" },
-  production: { label: "Ishlab chiqarish", labelRu: "Производство", className: "bg-blue-100 text-blue-800" },
+  new: { label: tLabel('common.PapkaOrders.yangi', "Yangi"), labelRu: "Новый", className: "bg-primary/10 text-primary" },
+  planning: { label: tLabel('common.PapkaOrders.rejalashtirish', "Rejalashtirish"), labelRu: "Планирование", className: "bg-amber-100 text-amber-800" },
+  production: { label: tLabel('common.PapkaOrders.ishlabChiqarish', "Ishlab chiqarish"), labelRu: "Производство", className: "bg-blue-100 text-blue-800" },
   completed: { label: "Bajarildi", labelRu: "Завершен", className: "bg-green-100 text-green-800" },
-  cancelled: { label: "Bekor qilindi", labelRu: "Отменен", className: "bg-red-100 text-red-800" },
+  cancelled: { label: tLabel('common.PapkaOrders.bekorQilindi', "Bekor qilindi"), labelRu: "Отменен", className: "bg-red-100 text-red-800" },
 };
 
 export const TRANSLATIONS = {

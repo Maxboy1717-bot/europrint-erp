@@ -18,6 +18,7 @@ import { AbcAnalysisTab } from "@/components/wms/reports/AbcAnalysisTab";
 import { AgingTab } from "@/components/wms/reports/AgingTab";
 import { ExpiryTab } from "@/components/wms/reports/ExpiryTab";
 import { EPErrorState } from "@/components/ep";
+import { tLabel } from '@/lib/i18n/tLabel';
 export default function WarehouseReports() {
 
   const [lang, setLang] = useState<Lang>("uz");
@@ -56,8 +57,8 @@ export default function WarehouseReports() {
       exportToCSV(stockBalanceData?.data || [], "ombor_qoldiq", [
         { key: "materialName", label: "Material" },
         { key: "category", label: "Kategoriya" },
-        { key: "currentQuantity", label: "Joriy miqdor" },
-        { key: "unitOfMeasure", label: "Birlik" },
+        { key: "currentQuantity", label: tLabel('warehouse.WarehouseReports.tsx.joriyMiqdor', "Joriy miqdor") },
+        { key: "unitOfMeasure", label: tLabel('warehouse.WarehouseReports.tsx.birlik', "Birlik") },
         { key: "unitCost", label: "Narxi" },
         { key: "totalValue", label: "Umumiy qiymat" },
       ]);

@@ -6,16 +6,17 @@
 
 import type { FunnelStage } from "@/components/recruiting/types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export type { FunnelStage };
 
 export const STAGES: { key: FunnelStage; label: string; accent: string }[] = [
-  { key: "NEW", label: "Yangi ariza", accent: "bg-blue-500" },
+  { key: "NEW", label: tLabel('common.helpers-constants.tsx.yangiAriza', "Yangi ariza"), accent: "bg-blue-500" },
   { key: "QUESTIONNAIRE_SENT", label: "Anketa Yuborildi", accent: "bg-cyan-500" },
   { key: "PHONE_SCREENING", label: "Telefon Suhbat", accent: "bg-violet-500" },
   { key: "INTERVIEW_SCHEDULED", label: "Suhbat Rejalandi", accent: "bg-indigo-500" },
   { key: "INTERVIEWED", label: "Suhbat O'tdi", accent: "bg-teal-500" },
   { key: "TEST_SENT", label: "Test Yuborildi", accent: "bg-amber-500" },
-  { key: "REFERENCES", label: "Tavsiyalar Tekshiruvi", accent: "bg-sky-500" },
+  { key: "REFERENCES", label: tLabel('common.helpers-constants.tsx.tavsiyalarTekshiruvi', "Tavsiyalar Tekshiruvi"), accent: "bg-sky-500" },
   { key: "OFFER_SENT", label: "Taklif Yuborildi", accent: "bg-orange-500" },
   { key: "HIRED", label: "Qabul qilindi", accent: "bg-green-500" },
   { key: "PROBATION", label: "Sinov Davri", accent: "bg-emerald-500" },

@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module WarehouseRentalTypes
  * @description Shared TypeScript interfaces, constants, and pure helper
@@ -63,7 +65,7 @@ export const DEFAULT_DAILY_RATE_PER_M2 = 500;
 export const STATUS_FILTER_OPTIONS = [
   { value: "", label: "Barchasi" },
   { value: "active", label: "Aktiv" },
-  { value: "closed", label: "Yopilgan" },
+  { value: "closed", label: tLabel('warehouse.WarehouseRental.yopilgan', "Yopilgan") },
   { value: "paid", label: "To'langan" },
 ] as const;
 

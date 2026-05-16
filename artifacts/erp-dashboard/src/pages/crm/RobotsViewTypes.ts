@@ -6,6 +6,7 @@
 import { z } from "zod";
 import { Mail, Bell, CheckSquare, GitBranch, Send, Timer, Zap, Settings } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface Robot {
@@ -54,18 +55,18 @@ export type RobotFormValues = z.infer<typeof robotFormSchema>;
 // ── Constants ────────────────────────────────────────────────────────────────
 
 export const TRIGGER_TYPES = [
-  { value: "CREATED", label: "Yaratilganda", icon: Zap },
+  { value: "CREATED", label: tLabel('crm.RobotsView.yaratilganda', "Yaratilganda"), icon: Zap },
   { value: "STAGE_CHANGED", label: "Bosqich o'zgarganda", icon: GitBranch },
   { value: "FIELD_CHANGED", label: "Maydon o'zgarganda", icon: Settings },
   { value: "TIME_ELAPSED", label: "Vaqt o'tganda", icon: Timer },
 ];
 
 export const ACTION_TYPES = [
-  { value: "SEND_NOTIFICATION", label: "Xabarnoma yuborish", icon: Bell },
-  { value: "CREATE_TASK", label: "Vazifa yaratish", icon: CheckSquare },
+  { value: "SEND_NOTIFICATION", label: tLabel('crm.RobotsView.xabarnomaYuborish', "Xabarnoma yuborish"), icon: Bell },
+  { value: "CREATE_TASK", label: tLabel('crm.RobotsView.vazifaYaratish', "Vazifa yaratish"), icon: CheckSquare },
   { value: "CHANGE_STAGE", label: "Bosqichni o'zgartirish", icon: GitBranch },
-  { value: "SEND_EMAIL", label: "Email yuborish", icon: Mail },
-  { value: "SEND_TELEGRAM", label: "Telegram yuborish", icon: Send },
+  { value: "SEND_EMAIL", label: tLabel('crm.RobotsView.emailYuborish', "Email yuborish"), icon: Mail },
+  { value: "SEND_TELEGRAM", label: tLabel('crm.RobotsView.telegramYuborish', "Telegram yuborish"), icon: Send },
 ];
 
 export const ENTITY_COLORS: Record<string, string> = {

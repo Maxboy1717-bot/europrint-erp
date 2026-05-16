@@ -5,6 +5,7 @@
 
 import { Boxes, ShieldCheck, PackagePlus, AlertTriangle } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface WarehouseStatsProps {
   availableCount: number;
   qcHoldCount: number;
@@ -22,7 +23,7 @@ export function WarehouseStatsPanel({
     { label: "Mavjud", value: availableCount, icon: Boxes, color: "text-[var(--ep-green)]", bg: "bg-green-50", testId: "text-available-count" },
     { label: "QC kutish", value: qcHoldCount, icon: ShieldCheck, color: "text-[var(--ep-yellow)]", bg: "bg-amber-50", testId: "text-qchold-count" },
     { label: "Picking", value: pendingPickingCount, icon: PackagePlus, color: "text-[var(--ep-blue)]", bg: "bg-indigo-50", testId: "text-picking-count" },
-    { label: "Qarzlar", value: debtCount, icon: AlertTriangle, color: "text-[var(--ep-red)]", bg: "bg-red-50", testId: "text-debt-count" },
+    { label: tLabel('warehouse.WarehouseStatsPanel.tsx.qarzlar', "Qarzlar"), value: debtCount, icon: AlertTriangle, color: "text-[var(--ep-red)]", bg: "bg-red-50", testId: "text-debt-count" },
   ];
 
   return (

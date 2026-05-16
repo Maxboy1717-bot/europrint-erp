@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module HRCapitalTabTypes
  * @description Shared types, constants and helpers for HRCapitalTab.
@@ -60,7 +62,7 @@ export const VISOTSKIY_COLORS: Record<string, string> = {
 export const ONBOARDING_LABELS: Record<string, { label: string; color: string }> = {
   not_started: { label: "Boshlanmagan",   color: "bg-muted text-muted-foreground" },
   in_progress: { label: "Davom etmoqda",  color: "bg-yellow-500/10 text-[var(--ep-yellow)]" },
-  completed:   { label: "Yakunlangan",    color: "bg-green-500/10 text-[var(--ep-green)]" },
+  completed:   { label: tLabel('hr.HRCapitalTab.yakunlangan', "Yakunlangan"),    color: "bg-green-500/10 text-[var(--ep-green)]" },
 };
 
 export const TOOL_TEST_SCORES = ["A","B","C","D","E","F","G","H","I","J"] as const;

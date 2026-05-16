@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface WarehouseData {
   id: string;
   code: string;
@@ -103,7 +104,7 @@ export const translations = {
     save: "Saqlash",
     cancel: "Bekor qilish",
     code: "Kod",
-    name: "Nomi",
+    name: tLabel('warehouse.warehouse-.nomi', "Nomi"),
     nameRu: "Nomi (RU)",
     type: "Turi",
     location: "Manzil",

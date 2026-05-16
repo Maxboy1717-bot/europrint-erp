@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module EmployeeTrackingReportTypes
  * @description Types, interfaces, translations, and constants for EmployeeTrackingReport.
@@ -48,7 +50,7 @@ export interface Employee {
 
 export const translations = {
   uz: {
-    title: "Xodimlar Kuzatuvi Hisoboti",
+    title: tLabel('common.EmployeeTrackingReport.xodimlarKuzatuviHisoboti', "Xodimlar Kuzatuvi Hisoboti"),
     subtitle: "Zona va vaqt statistikasi",
     dailyAttendance: "Kunlik Davomad",
     weeklyStats: "Haftalik Statistika",

@@ -8,6 +8,7 @@
 import { z } from "zod";
 import type { KnowledgeBase } from "@shared/schema";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Zod schema & derived types
 // ---------------------------------------------------------------------------
@@ -39,10 +40,10 @@ export type CategoryOption = { value: string; label: string };
 export function buildCategories(tCommon: (k: string) => string): CategoryOption[] {
   return [
     { value: "about_company", label: tCommon("company") },
-    { value: "products",      label: "Mahsulotlar" },
-    { value: "services",      label: "Xizmatlar" },
-    { value: "policies",      label: "Siyosatlar" },
-    { value: "procedures",    label: "Tartib-qoidalar" },
+    { value: "products",      label: tLabel('common.KnowledgeBase.mahsulotlar', "Mahsulotlar") },
+    { value: "services",      label: tLabel('common.KnowledgeBase.xizmatlar', "Xizmatlar") },
+    { value: "policies",      label: tLabel('common.KnowledgeBase.siyosatlar', "Siyosatlar") },
+    { value: "procedures",    label: tLabel('common.KnowledgeBase.tartibQoidalar', "Tartib-qoidalar") },
     { value: "faq",           label: "FAQ" },
     { value: "history",       label: "Tarix" },
     { value: "team",          label: "Jamoa" },

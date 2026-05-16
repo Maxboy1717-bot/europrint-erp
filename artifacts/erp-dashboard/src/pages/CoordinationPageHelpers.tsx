@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import type { DoklaStatus, RaspoStatus } from "./CoordinationPageTypes";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── DoklaStatusBadge ─────────────────────────────────────────────────────
 export function DoklaStatusBadge({ status }: { status: DoklaStatus }) {
   const cfg: Record<DoklaStatus, { label: string; cls: string }> = {
@@ -22,7 +23,7 @@ export function DoklaStatusBadge({ status }: { status: DoklaStatus }) {
 export function RaspoStatusBadge({ status }: { status: RaspoStatus }) {
   const cfg: Record<RaspoStatus, { label: string; cls: string }> = {
     assigned:    { label: "Topshirildi",   cls: "bg-blue-100 text-[var(--ep-blue)]"        },
-    in_progress: { label: "Bajarilmoqda",  cls: "bg-amber-100 text-[var(--ep-yellow)]"      },
+    in_progress: { label: tLabel('common.CoordinationPageHelpers.tsx.bajarilmoqda', "Bajarilmoqda"),  cls: "bg-amber-100 text-[var(--ep-yellow)]"      },
     done:        { label: "Bajarildi",     cls: "bg-emerald-100 text-[var(--ep-green)]"  },
     overdue:     { label: "Muddati o'tdi", cls: "bg-red-100 text-[var(--ep-red)]"          },
   };

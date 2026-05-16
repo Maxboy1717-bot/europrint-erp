@@ -14,10 +14,10 @@ export interface CalendarDay {
 }
 
 export const SHIFT_STATUS_MAP: Record<string, { label: string; color: string }> = {
-  pending: { label: "Kutilmoqda", color: "bg-yellow-500" },
-  approved: { label: "Tasdiqlangan", color: "bg-green-500" },
+  pending: { label: tLabel('common.AttendanceTab.kutilmoqda', "Kutilmoqda"), color: "bg-yellow-500" },
+  approved: { label: tLabel('common.AttendanceTab.tasdiqlangan', "Tasdiqlangan"), color: "bg-green-500" },
   rejected: { label: "Rad etilgan", color: "bg-red-500" },
-  cancelled: { label: "Bekor qilingan", color: "bg-muted-foreground" },
+  cancelled: { label: tLabel('common.AttendanceTab.bekorQilingan', "Bekor qilingan"), color: "bg-muted-foreground" },
 };
 
 export const DAY_COLORS: Record<DayStatus, { bg: string; text: string; label: string }> = {
@@ -39,6 +39,7 @@ export const DAY_LABELS = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
 
 import type { AttendanceRecord } from "./profile-types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function getEarlyDepartures(attendanceData: AttendanceRecord[] | undefined): AttendanceRecord[] {
   if (!attendanceData) return [];
   return (Array.isArray(attendanceData) ? attendanceData : []).filter(r => {

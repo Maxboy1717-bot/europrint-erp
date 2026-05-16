@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module ReferralPageTypes
  * @description TypeScript interfaces, types, and constants for ReferralPage.
@@ -43,7 +45,7 @@ export interface EditForm {
 }
 
 export const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  pending:   { label: "Kutilmoqda",     color: "bg-blue-100 text-[var(--ep-blue)]"  },
+  pending:   { label: tLabel('common.ReferralPage.kutilmoqda', "Kutilmoqda"),     color: "bg-blue-100 text-[var(--ep-blue)]"  },
   interview: { label: "Intervyuda",     color: "bg-amber-100 text-[var(--ep-yellow)]" },
   hired:     { label: "Qabul qilindi",  color: "bg-green-100 text-[var(--ep-green)]" },
   rejected:  { label: "Rad etildi",     color: "bg-red-100 text-[var(--ep-red)]"    },

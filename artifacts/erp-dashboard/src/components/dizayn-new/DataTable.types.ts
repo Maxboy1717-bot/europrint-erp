@@ -6,6 +6,7 @@
 
 import type * as React from "react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export type SortDir = "asc" | "desc" | null;
 
 export interface TableColumn<T> {
@@ -54,7 +55,7 @@ export const STATUS_CONFIG: Record<string, { label: string; color: string; dot: 
     dot: "bg-[hsl(var(--warning))]",
   },
   dismissed: {
-    label: "Ishdan ketgan",
+    label: tLabel('common.DataTable.ishdanKetgan', "Ishdan ketgan"),
     color: "bg-[hsl(var(--error))]/10 text-[hsl(var(--error))] border-[hsl(var(--error))]/20",
     dot: "bg-[hsl(var(--error))]",
   },

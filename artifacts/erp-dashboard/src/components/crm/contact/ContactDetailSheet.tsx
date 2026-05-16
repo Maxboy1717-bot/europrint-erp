@@ -17,6 +17,7 @@ import { ContactHeader } from "./ContactHeader";
 import { ContactEditForm } from "./ContactEditForm";
 import { ContactView } from "./ContactView";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface ContactDetailSheetProps {
   contactId: number;
   open: boolean;
@@ -51,7 +52,7 @@ export function ContactDetailSheet({
       setIsEditing(false);
       toast({
         title: "Saqlandi",
-        description: "Kontakt muvaffaqiyatli yangilandi",
+        description: tLabel('common.ContactDetailSheet.tsx.kontaktMuvaffaqiyatliYangilandi', "Kontakt muvaffaqiyatli yangilandi"),
       });
     },
     onError: () => {

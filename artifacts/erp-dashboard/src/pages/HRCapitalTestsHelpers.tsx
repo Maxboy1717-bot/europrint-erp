@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Brain, FlaskConical, Target, ClipboardList } from "lucide-react";
 import { IQ_LEVELS } from "./HRCapitalTestsTypes";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── ScoreBar ─────────────────────────────────────────────────────────────────
 
 export function ScoreBar({ value, max = 100, color = "bg-primary" }: { value: number; max?: number; color?: string }) {
@@ -50,8 +51,8 @@ export function getTestTypeIcon(type: string) {
 
 export function getStatusBadge(status: string) {
   const map: Record<string, { label: string; className: string }> = {
-    pending:     { label: "Kutilmoqda",      className: "bg-gray-100 text-gray-700" },
-    in_progress: { label: "Jarayonda",       className: "bg-blue-100 text-[var(--ep-blue)]" },
+    pending:     { label: tLabel('hr.HRCapitalTestsHelpers.tsx.kutilmoqda', "Kutilmoqda"),      className: "bg-gray-100 text-gray-700" },
+    in_progress: { label: tLabel('hr.HRCapitalTestsHelpers.tsx.jarayonda', "Jarayonda"),       className: "bg-blue-100 text-[var(--ep-blue)]" },
     completed:   { label: "Tugallandi",      className: "bg-green-100 text-[var(--ep-green)]" },
     expired:     { label: "Muddati o'tdi",   className: "bg-red-100 text-[var(--ep-red)]" },
   };
