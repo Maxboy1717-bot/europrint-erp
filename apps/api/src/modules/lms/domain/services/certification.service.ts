@@ -5,9 +5,10 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
-import { LmsRepository } from '../../infrastructure/repositories/drizzle-lms.repo';
+import type { ILmsRepo } from '../repositories/i-lms.repo';
+import { LMS_REPO } from '../repositories/i-lms.repo';
 
 export interface CertCheckResult {
   valid: boolean;
@@ -16,11 +17,28 @@ export interface CertCheckResult {
   courseName?: string;
 }
 
+// Local row contract for the cert lookups used here. The concrete repo's
+// LMS_REPO provider (LmsRepository) exposes findByOperatorAndCourse /
+// findByOperatorId via delegation to LmsCertRepo. Keep the shape flexible —
+// only the four fields below are touched by this service.
+interface CertLookupRow {
+  status?: string;
+  expiresAt?: Date | null;
+  courseName?: string | null;
+}
+
+interface IOperatorCertRepo {
+  findByOperatorAndCourse(operatorId: number, courseId: number): Promise<CertLookupRow | null>;
+  findByOperatorId(operatorId: number): Promise<Record<string, unknown>[]>;
+}
+
 @Injectable()
 export class CertificationService {
   private readonly logger = new Logger(CertificationService.name);
 
-  constructor(private lmsRepo: LmsRepository) {}
+  constructor(
+    @Inject(LMS_REPO) private readonly lmsRepo: ILmsRepo & IOperatorCertRepo,
+  ) {}
 
   async checkOperatorCertification(
     operatorId: number,

@@ -8,9 +8,37 @@ const _time = new TashkentTimeService();
 import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { LeadStatus } from '../value-objects/lead-status.vo';
 import { AIScore } from '../value-objects/ai-score.vo';
-import { Result, Ok, Err } from '@common/types/result.type';
+import { Email } from '@shared/domain/value-objects/email.vo';
+import { PhoneNumber } from '@shared/domain/value-objects/phone-number.vo';
+import { CustomerId } from '@shared/domain/value-objects/customer-id.vo';
+import { Result, Ok, Err, AppErr } from '@common/types/result.type';
 
+/**
+ * VO-typed creation props. Preferred for new call sites — the handler is
+ * responsible for running `Email.create(...)`, `PhoneNumber.create(...)` and
+ * (optionally) `CustomerId.create(...)` and combining failures.
+ */
 export interface LeadCreateProps {
+  companyId: number;
+  firstName: string;
+  lastName: string;
+  email: Email;
+  phone: PhoneNumber;
+  status: LeadStatus;
+  aiScore: AIScore;
+  createdBy: number;
+  assignedTo?: number;
+  customerId?: CustomerId;
+  source: string;
+  notes?: string;
+}
+
+/**
+ * Back-compat shape that accepts raw primitives. Used by `Lead.fromRaw` so
+ * legacy hydration paths (e.g. repository → aggregate) keep compiling while
+ * call sites migrate.
+ */
+export interface LeadCreateRawProps {
   companyId: number;
   firstName: string;
   lastName: string;
@@ -20,6 +48,7 @@ export interface LeadCreateProps {
   aiScore: AIScore;
   createdBy: number;
   assignedTo?: number;
+  customerId?: number;
   source: string;
   notes?: string;
 }
@@ -29,12 +58,13 @@ export class Lead extends AggregateRoot {
   private companyId: number;
   private firstName: string;
   private lastName: string;
-  private email: string;
-  private phone: string;
+  private email: Email;
+  private phone: PhoneNumber;
   private status: LeadStatus;
   private aiScore: AIScore;
   private createdBy: number;
   private assignedTo?: number;
+  private customerId?: CustomerId;
   private source: string;
   private notes?: string;
   private createdAt: Date;
@@ -45,12 +75,13 @@ export class Lead extends AggregateRoot {
     companyId: number;
     firstName: string;
     lastName: string;
-    email: string;
-    phone: string;
+    email: Email;
+    phone: PhoneNumber;
     status: LeadStatus;
     aiScore: AIScore;
     createdBy: number;
     assignedTo?: number;
+    customerId?: CustomerId;
     source: string;
     notes?: string;
     createdAt: Date;
@@ -60,6 +91,11 @@ export class Lead extends AggregateRoot {
     Object.assign(this, props);
   }
 
+  /**
+   * VO-first factory. The handler must build `Email` / `PhoneNumber` /
+   * `CustomerId` VOs upstream and combine their `Result`s; this method
+   * therefore cannot fail and returns `Lead` directly.
+   */
   static create(props: LeadCreateProps): Lead {
     const lead = new Lead({
       ...props,
@@ -68,6 +104,43 @@ export class Lead extends AggregateRoot {
       updatedAt: _time.now(),
     });
     return lead;
+  }
+
+  /**
+   * Back-compat factory that takes raw primitives, validates them via the
+   * VO factories, and returns `Result<Lead>`. Use this from boundary code
+   * (controllers, handlers reading DTOs) when the VOs are not already
+   * constructed upstream.
+   */
+  static fromRaw(props: LeadCreateRawProps): Result<Lead> {
+    const emailR = Email.create(props.email);
+    if (!emailR.ok) return Err(emailR.error);
+    const phoneR = PhoneNumber.create(props.phone);
+    if (!phoneR.ok) return Err(phoneR.error);
+
+    let customerId: CustomerId | undefined;
+    if (props.customerId !== undefined) {
+      const cidR = CustomerId.create(props.customerId);
+      if (!cidR.ok) return Err(cidR.error);
+      customerId = cidR.data;
+    }
+
+    return Ok(
+      Lead.create({
+        companyId: props.companyId,
+        firstName: props.firstName,
+        lastName: props.lastName,
+        email: emailR.data,
+        phone: phoneR.data,
+        status: props.status,
+        aiScore: props.aiScore,
+        createdBy: props.createdBy,
+        assignedTo: props.assignedTo,
+        customerId,
+        source: props.source,
+        notes: props.notes,
+      }),
+    );
   }
 
   qualify(): Result<void> {
@@ -144,11 +217,27 @@ export class Lead extends AggregateRoot {
   }
 
   getEmail(): string {
+    return this.email.value;
+  }
+
+  getEmailVO(): Email {
     return this.email;
   }
 
   getPhone(): string {
+    return this.phone.value;
+  }
+
+  getPhoneVO(): PhoneNumber {
     return this.phone;
+  }
+
+  getCustomerId(): number | undefined {
+    return this.customerId?.value;
+  }
+
+  getCustomerIdVO(): CustomerId | undefined {
+    return this.customerId;
   }
 
   getSource(): string {

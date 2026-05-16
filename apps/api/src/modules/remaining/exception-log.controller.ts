@@ -5,16 +5,23 @@
 
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { Roles } from '@common/decorators/roles.decorator';
 import { ExceptionLogService } from './exception-log.service';
 import { ExceptionLogCreateDto, ExceptionReasonDto, StatusChangeDto } from '../compatibility/dto/exception.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import { z } from 'zod';
+
+const ExceptionLogUpdateSchema = z.object({
+  status: z.string().max(50).optional(),
+  reason: z.string().max(2000).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
 
 @Roles('admin', 'director', 'manager')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
 @Controller('exceptions')
@@ -105,10 +112,11 @@ export class ExceptionLogController {
   @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
     @CurrentUser() _user: { id: number; role: string },
   ) {
-    return unwrapOrInternal(await this.svc.update(id, body));
+    const dto = ExceptionLogUpdateSchema.parse(body);
+    return unwrapOrInternal(await this.svc.update(id, dto as Record<string, unknown>));
   }
 
   @Delete(':id')

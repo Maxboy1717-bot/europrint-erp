@@ -12,6 +12,7 @@ import {
   decimal,
   integer,
   index,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
 import {
@@ -173,10 +174,11 @@ export const positions = pgTable('positions', {
 });
 
 export const user_panels = pgTable('user_panels', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
+  id: text('id').primaryKey().$defaultFn(() => createId()),
   userId: text('user_id').unique().notNull(),
   name: text('name').notNull().default('My Dashboard'),
-  layout: text('layout').notNull().default('[]'),
+  // Layout stored as JSONB so the API can write/read structured PanelLayout[] directly.
+  layout: jsonb('layout').notNull().default([]),
   isDefault: boolean('is_default').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),

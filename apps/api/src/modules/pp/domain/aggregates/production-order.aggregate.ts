@@ -3,7 +3,7 @@
  * @description Source module. See exports for details.
  */
 
-import { AggregateRoot } from '@nestjs/cqrs';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { Err } from '@common/result';
 import { Result } from '@common/result';
 
@@ -84,7 +84,7 @@ export class ProductionOrder extends AggregateRoot {
       return Err(`Invalid status for release: ${this.status}`);
     }
     this.status = PoStatus.RELEASED_TO_PRODUCTION;
-    this.apply({ type: 'PP_RELEASED_TO_PRODUCTION', data: { poId: this.id } });
+    this.addDomainEvent({ type: 'PP_RELEASED_TO_PRODUCTION', data: { poId: this.id } });
     return { ok: true, data: undefined };
   }
 
@@ -93,7 +93,7 @@ export class ProductionOrder extends AggregateRoot {
       return Err('PP chiqarilmagan');
     }
     this.status = PoStatus.IN_PROGRESS;
-    this.apply({ type: 'PP_STARTED', data: { poId: this.id } });
+    this.addDomainEvent({ type: 'PP_STARTED', data: { poId: this.id } });
     return { ok: true, data: undefined };
   }
 
@@ -102,7 +102,7 @@ export class ProductionOrder extends AggregateRoot {
       return Err('PP ish jarayonida emas');
     }
     this.status = PoStatus.COMPLETED;
-    this.apply({ type: 'PP_COMPLETED', data: { poId: this.id } });
+    this.addDomainEvent({ type: 'PP_COMPLETED', data: { poId: this.id } });
     return { ok: true, data: undefined };
   }
 }

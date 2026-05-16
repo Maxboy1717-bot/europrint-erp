@@ -10,7 +10,7 @@ import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
 import { Stock } from '../../domain/aggregates/stock.aggregate';
-import { IWmsRepository } from '../../domain/repositories/wms.repository';
+import { IWmsRepository, WMS_REPO } from '../../domain/repositories/wms.repository';
 
 export class ReceiveFgCommand {
   constructor(public materialId: number,
@@ -24,7 +24,7 @@ export class ReceiveFgCommand {
 export class ReceiveFgHandler implements ICommandHandler<ReceiveFgCommand> {
   private readonly logger = new Logger(ReceiveFgHandler.name);
   constructor(
-    @Inject('IWmsRepository') private wmsRepo: IWmsRepository,
+    @Inject(WMS_REPO) private wmsRepo: IWmsRepository,
     private eventBus: EventBus
   ) {}
 

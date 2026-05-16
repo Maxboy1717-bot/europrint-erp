@@ -8,7 +8,7 @@ import { Injectable, Logger, Inject } from '@nestjs/common';
 import { AppErr, Err, Ok, Result } from '@common/result';
 import { SubmitInspectionCommand } from './submit-inspection.command';
 import { QcPassedEvent, QcFailedEvent, SupplierQualityFailEvent } from '../../domain/events';
-import { IQcRepository } from '../repositories/qc.repository';
+import { IQcRepository, QC_REPOSITORY_PROVIDER } from '../repositories/qc.repository';
 
 @Injectable()
 @CommandHandler(SubmitInspectionCommand)
@@ -16,23 +16,42 @@ export class SubmitInspectionHandler implements ICommandHandler<SubmitInspection
   private readonly logger = new Logger(SubmitInspectionHandler.name);
 
   constructor(
-    @Inject('IQcRepository') private readonly qcRepository: IQcRepository,
+    @Inject(QC_REPOSITORY_PROVIDER) private readonly qcRepository: IQcRepository,
     private readonly eventBus: EventBus,
   ) {}
 
   async execute(command: SubmitInspectionCommand): Promise<Result<string>> {
-    const inspection = await this.qcRepository.findById(command.inspectionId);
-    if (!inspection) {
-      return Err(AppErr('NOT_FOUND', 'Inspection not found'));
+    // Inspection read + state transition + save atomically — partial failures roll back.
+    const outcome = await this.qcRepository.withTransaction(async (tx) => {
+      const inspection = await this.qcRepository.findById(command.inspectionId, tx);
+      if (!inspection) {
+        return Err(AppErr('NOT_FOUND', 'Inspection not found'));
+      }
+
+      if (command.passed) {
+        inspection.pass();
+      } else {
+        inspection.fail(command.reason);
+      }
+
+      await this.qcRepository.save(inspection, tx);
+      return Ok(inspection.id);
+    });
+
+    if (!outcome.ok) {
+      return Err(outcome.error);
+    }
+    const inspectionId = outcome.data;
+    if (!inspectionId) {
+      return Err(AppErr('INTERNAL', 'Inspection transaction returned no id'));
     }
 
+    // Publish events only after the tx committed.
     if (command.passed) {
-      inspection.pass();
-      this.eventBus.publish(new QcPassedEvent(inspection.id, command.orderId));
+      this.eventBus.publish(new QcPassedEvent(inspectionId, command.orderId));
       this.logger.log('QC passed - Trigger 11');
     } else {
-      inspection.fail(command.reason);
-      this.eventBus.publish(new QcFailedEvent(inspection.id, command.orderId, command.reason));
+      this.eventBus.publish(new QcFailedEvent(inspectionId, command.orderId, command.reason));
 
       if (command.supplierId) {
         this.eventBus.publish(
@@ -45,7 +64,6 @@ export class SubmitInspectionHandler implements ICommandHandler<SubmitInspection
       }
     }
 
-    await this.qcRepository.save(inspection);
-    return Ok(inspection.id);
+    return Ok(inspectionId);
   }
 }

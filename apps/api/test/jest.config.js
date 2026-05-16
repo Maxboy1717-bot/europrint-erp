@@ -2,6 +2,18 @@ module.exports = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '..',
   testRegex: 'test/.*\\.spec\\.ts$',
+  // Stryker .stryker-tmp sandbox-* dir-larini test'dan ajratish (B bo'lim, Task 6).
+  // Stryker alohida `pnpm test:mutation` script orqali ishlaydi.
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    '/.stryker-tmp/',
+  ],
+  // ESM-only paket'lar (uuid@14, nanoid, jose) Jest tomonidan transform qilinsin.
+  // Default'cha node_modules transform qilinmaydi (Task 1).
+  transformIgnorePatterns: [
+    'node_modules/(?!(uuid|nanoid|jose|@anthropic-ai|@noble|@scure)/)',
+  ],
   transform: {
     '^.+\\.(t|j)s$': ['ts-jest', {
       tsconfig: '<rootDir>/tsconfig.json',
@@ -9,8 +21,28 @@ module.exports = {
       isolatedModules: true,
     }],
   },
-  collectCoverageFrom: ['src/**/*.(t|j)s'],
+  collectCoverageFrom: [
+    'src/**/*.(t|j)s',
+    '!src/**/*.spec.ts',
+    '!src/**/*.dto.ts',
+    '!src/**/dto/**',
+    '!src/**/types/**',
+    '!src/**/*.d.ts',
+    '!src/main.ts',
+    '!src/**/index.ts',
+  ],
   coverageDirectory: '../coverage',
+  coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
+  // Threshold step-up plan: 25% (current) → 50% (S3) → 70% (S5) → 80% (S6 final).
+  // Lower bound enforced so coverage cannot regress. See TESTING_PROMPT.md §2.
+  coverageThreshold: {
+    global: {
+      lines: 25,
+      functions: 25,
+      branches: 20,
+      statements: 25,
+    },
+  },
   testEnvironment: 'node',
   setupFiles: ['reflect-metadata'],
   moduleNameMapper: {
@@ -19,7 +51,6 @@ module.exports = {
     '^shared/interceptors/(.*)$': '<rootDir>/src/modules/shared/interceptors/$1',
     '^shared/infrastructure/(.*)$': '<rootDir>/src/modules/shared/infrastructure/$1',
     '^shared/domain/(.*)$': '<rootDir>/src/modules/shared/domain/$1',
-    '^shared/result$': '<rootDir>/src/modules/shared/domain/result',
     '^@shared/domain/(.*)$': '<rootDir>/src/modules/shared/domain/$1',
     '^@shared/guards/(.*)$': '<rootDir>/src/modules/shared/guards/$1',
     '^@shared/decorators/(.*)$': '<rootDir>/src/modules/shared/decorators/$1',
@@ -32,5 +63,12 @@ module.exports = {
     '^@workspace/db/(.*)$': '<rootDir>/../../lib/db/dist/cjs/$1',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@core/(.*)$': '<rootDir>/src/common/$1',
+    '^@auth/types$': '<rootDir>/src/modules/auth/types',
+    '^@auth/types/(.*)$': '<rootDir>/src/modules/auth/types/$1',
+    '^@auth/decorators/(.*)$': '<rootDir>/src/modules/auth/infrastructure/decorators/$1',
+    '^@auth/guards/(.*)$': '<rootDir>/src/modules/auth/infrastructure/guards/$1',
+    '^@auth/(.*)$': '<rootDir>/src/modules/auth/$1',
+    // ESM uuid v14 fix — Jest can't import ESM by default (Task 3).
+    '^uuid$': require.resolve('uuid'),
   },
 };

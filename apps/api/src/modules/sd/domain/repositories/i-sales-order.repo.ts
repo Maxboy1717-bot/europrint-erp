@@ -31,3 +31,9 @@ export interface ISalesOrderRepository {
   delete(id: number): Promise<Result<void>>;
   count(): Promise<Result<number>>;
 }
+
+/**
+ * DI token for ISalesOrderRepository — Symbol-based to avoid string-literal collisions.
+ * (P2-20: replaces the legacy `'ISalesOrderRepository'` string token.)
+ */
+export const SALES_ORDER_REPO = Symbol('SALES_ORDER_REPO');

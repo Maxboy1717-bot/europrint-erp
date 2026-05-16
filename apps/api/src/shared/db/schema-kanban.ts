@@ -3,8 +3,47 @@
  * @description Source module. See exports for details.
  */
 
-import { pgTable, uuid, text, boolean, integer, jsonb, timestamp, index, serial } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, varchar, boolean, integer, jsonb, timestamp, index, serial } from 'drizzle-orm/pg-core';
 import { stub } from './schema-compat-helpers';
+
+// ── Kanban Boards / Columns / Cards (canonical) ───────────────────────────────
+// Moved here from apps/api/src/modules/kanban/infrastructure/kanban-tables.ts
+// per P3-27. Domain/infra files must import these — never re-declare them.
+export const kanbanBoards = pgTable('kanban_boards', {
+  id:          serial('id').primaryKey(),
+  name:        text('name').notNull(),
+  type:        varchar('type', { length: 20 }).notNull().default('custom'),
+  description: text('description'),
+  created_at:  timestamp('created_at').notNull().defaultNow(),
+  updated_at:  timestamp('updated_at'),
+  deleted_at:  timestamp('deleted_at'),
+});
+
+export const kanbanColumns = pgTable('kanban_columns', {
+  id:         serial('id').primaryKey(),
+  board_id:   integer('board_id').notNull(),
+  name:       text('name').notNull(),
+  sort_order: integer('sort_order').notNull().default(0),
+  color:      varchar('color', { length: 20 }),
+  created_at: timestamp('created_at').notNull().defaultNow(),
+  updated_at: timestamp('updated_at'),
+  deleted_at: timestamp('deleted_at'),
+});
+
+export const kanbanCards = pgTable('kanban_cards', {
+  id:           serial('id').primaryKey(),
+  board_id:     integer('board_id').notNull(),
+  column_id:    integer('column_id').notNull(),
+  title:        text('title').notNull(),
+  description:  text('description'),
+  priority:     varchar('priority', { length: 20 }).notNull().default('normal'),
+  related_type: varchar('related_type', { length: 20 }),
+  related_id:   varchar('related_id', { length: 100 }),
+  sort_order:   integer('sort_order').notNull().default(0),
+  created_at:   timestamp('created_at').notNull().defaultNow(),
+  updated_at:   timestamp('updated_at').notNull().defaultNow(),
+  deleted_at:   timestamp('deleted_at'),
+});
 
 export const kanbanFlows = stub(pgTable('kanban_flows', {
   id:          uuid('id').primaryKey().defaultRandom(),

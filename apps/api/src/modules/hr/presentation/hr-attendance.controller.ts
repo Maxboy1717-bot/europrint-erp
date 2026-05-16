@@ -9,9 +9,10 @@ import {
   Body, Controller, Get, Inject, InternalServerErrorException, Param, Post, Query,
   UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -20,7 +21,8 @@ import { HrAttendanceService } from '../application/hr-attendance.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { HrCheckInSchema, HrCheckInDto, HrCheckOutSchema, HrCheckOutDto } from './dto/hr.dto';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Hr Attendance')
 @Controller('hr/attendance')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -32,6 +34,8 @@ export class HrAttendanceController {
     private readonly attendanceSvc: HrAttendanceService,
   ) {}
 
+  @ApiOperation({ summary: 'Get today attendance' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('today')
   @Roles('HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async getTodayAttendance() {
@@ -39,6 +43,8 @@ export class HrAttendanceController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Get attendance' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles('HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   getAttendance(@Query() query: { employeeId?: string; period?: string }) {
@@ -51,6 +57,8 @@ export class HrAttendanceController {
       : this.attendanceSvc.getTodayAll().then(d => ({ data: d }));
   }
 
+  @ApiOperation({ summary: 'Get attendance summary' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get(':employeeId/summary/:period')
   @Roles('HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async getAttendanceSummary(
@@ -69,6 +77,9 @@ export class HrAttendanceController {
     }};
   }
 
+  @ApiOperation({ summary: 'Check in' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('check-in')
   @Roles('HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrCheckInSchema))
@@ -86,6 +97,9 @@ export class HrAttendanceController {
     return { message: 'Kirish qayd etildi', ...result.data };
   }
 
+  @ApiOperation({ summary: 'Check out' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('check-out')
   @Roles('HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrCheckOutSchema))

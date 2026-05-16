@@ -14,6 +14,8 @@ import { Lead } from '../../domain/aggregates/lead.aggregate';
 import { ILeadRepository } from '../../domain/repositories/i-lead.repo';
 import { LeadStatus } from '../../domain/value-objects/lead-status.vo';
 import { AIScore } from '../../domain/value-objects/ai-score.vo';
+import { Email } from '@shared/domain/value-objects/email.vo';
+import { PhoneNumber } from '@shared/domain/value-objects/phone-number.vo';
 
 type DbRow = Record<string, unknown>;
 
@@ -126,8 +128,8 @@ export class DrizzleLeadRepository implements ILeadRepository {
       companyId:  Number(row['customer_id']),
       firstName:  String(row['first_name'] ?? ''),
       lastName:   String(row['last_name'] ?? ''),
-      email:      String(row['email'] ?? ''),
-      phone:      String(row['phone'] ?? ''),
+      email:      Email.fromRaw(String(row['email'] ?? '')),
+      phone:      PhoneNumber.fromRaw(String(row['phone'] ?? '')),
       status:     this.parseLeadStatus(String(row['status'] ?? 'new')),
       aiScore:    this.parseAiScore(Number(row['ai_score'] ?? 0)),
       createdBy:  Number(row['created_by']),

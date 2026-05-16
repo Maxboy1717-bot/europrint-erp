@@ -67,6 +67,7 @@ import { GetWarehousesHandler } from './application/queries/get-warehouses.handl
 import { GetStockInventoryHandler } from './application/queries/get-stock-inventory.handler';
 import { GetLowStockHandler } from './application/queries/get-low-stock.handler';
 import { DrizzleWmsRepository } from './infrastructure/repositories/drizzle-wms.repo';
+import { WMS_REPO } from './domain/repositories/wms.repository';
 import { QcPassedListener } from './infrastructure/event-handlers/qc-passed.listener';
 import { WMS_INVENTORY_REPO } from './inventory/i-wms-inventory.repo';
 import { DrizzleWmsInventoryRepository } from './inventory/drizzle-wms-inventory.repo';
@@ -125,7 +126,7 @@ const listeners = [QcPassedListener, RopTriggerHandler];
   providers: [
     ...handlers,
     ...listeners,
-    { provide: 'IWmsRepository', useClass: DrizzleWmsRepository },
+    { provide: WMS_REPO, useClass: DrizzleWmsRepository },
     { provide: WMS_INVENTORY_REPO, useClass: DrizzleWmsInventoryRepository },
     InventoryService,
     { provide: WMS_MOVEMENTS_REPO, useClass: DrizzleWmsMovementsRepository },
@@ -157,6 +158,6 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     WmsEoqService,
     WmsAnalyticsService,
   ],
-  exports: ['IWmsRepository'],
+  exports: [WMS_REPO],
 })
 export class WmsModule {}

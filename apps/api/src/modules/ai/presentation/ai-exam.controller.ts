@@ -9,7 +9,7 @@ import {
   UseGuards, UseInterceptors, Logger,
   Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard }   from '../../auth/guards/roles.guard';
 import { Roles }        from '../../auth/decorators/roles.decorator';
@@ -20,7 +20,7 @@ import { AssignAiExamDto, SubmitAiExamDto } from './dto/ai-exam.dto';
 
 @ApiTags('§15 AI Exam')
 @ApiBearerAuth()
-@Throttle({ ai: { limit: 20, ttl: 60_000 } })
+@AiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('ai-exam')
 @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.HR_MANAGER)

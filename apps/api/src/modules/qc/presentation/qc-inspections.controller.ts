@@ -19,9 +19,10 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrNotFoundDefined } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { GetInspectionsQuery } from '../application/queries/get-inspections.query';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -32,7 +33,9 @@ import { QcNewService } from '../application/qc-new.service';
 
 const QC_INSPECTION_ROLES = ['qc_specialist', 'super_admin', 'director', 'qc_manager', 'qc_inspector'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Qc Inspections')
+@ApiBearerAuth()
 @Controller('qc/inspections')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -46,6 +49,8 @@ export class QcInspectionsController {
     private readonly qcNewService: QcNewService,
   ) {}
 
+  @ApiOperation({ summary: 'List inspections' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async listInspections(
     @Query('status') status?: string,
@@ -55,6 +60,9 @@ export class QcInspectionsController {
     return await this.queryBus.execute(new GetInspectionsQuery(status, undefined, undefined, Number(page), Number(limit)));
   }
 
+  @ApiOperation({ summary: 'Get inspection' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   async getInspection(@Param('id') inspectionId: string) {
     this.logger.log(`Get inspection ${inspectionId}`);
@@ -62,6 +70,9 @@ export class QcInspectionsController {
     return { statusCode: HttpStatus.OK, data: unwrapOrNotFoundDefined(result, `Inspection ${inspectionId} not found`) };
   }
 
+  @ApiOperation({ summary: 'Create inspection' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   async createInspection(@Body() dto: { orderId: number; batchId: string; inspectorId: number; sampleSize: number }) {
     const cmd = new CreateInspectionCommand(dto.orderId, dto.batchId, dto.inspectorId, dto.sampleSize);
@@ -70,6 +81,9 @@ export class QcInspectionsController {
     return { statusCode: HttpStatus.CREATED, data: result };
   }
 
+  @ApiOperation({ summary: 'Submit inspection' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':id/submit')
   async submitInspection(
     @Param('id') inspectionId: string,
@@ -81,6 +95,9 @@ export class QcInspectionsController {
     return { statusCode: HttpStatus.OK, data: result };
   }
 
+  @ApiOperation({ summary: 'Update inspection' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id')
   async updateInspection(
     @Param('id') inspectionId: string,
@@ -94,6 +111,10 @@ export class QcInspectionsController {
     return { statusCode: HttpStatus.OK, data: { id: inspectionId, ...dto, updated: true } };
   }
 
+  @ApiOperation({ summary: 'Delete inspection' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async deleteInspection(@Param('id') inspectionId: string) {

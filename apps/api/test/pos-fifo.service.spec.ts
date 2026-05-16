@@ -11,7 +11,7 @@ jest.mock('../src/shared/db', () => ({
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { PosFifoService, BatchCandidate } from '../src/modules/pos/services/pos-fifo.service';
+import { PosFifoService, BatchCandidate } from '../src/modules/pos/application/services/pos-fifo.service';
 import { runQuery } from '../src/shared/db';
 
 // Typed reference so TypeScript is happy in assertions

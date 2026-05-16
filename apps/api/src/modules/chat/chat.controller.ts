@@ -13,8 +13,8 @@ import {
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/user.types';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -39,7 +39,7 @@ export { ChatUploadsController } from './chat-uploads.controller';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin', 'manager', 'supervisor', 'operator', 'employee', 'viewer', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('chat')
 export class ChatController {
@@ -49,6 +49,8 @@ export class ChatController {
     private readonly gateway: ChatGateway,
   ) {}
 
+  @ApiOperation({ summary: 'Get chat info' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async getChatInfo(@CurrentUser() user: AuthenticatedUser) {
     const rooms = await this.chatService.getRoomsForUser(user.id);
@@ -56,12 +58,17 @@ export class ChatController {
     return { total_rooms: roomList.length, user_id: user.id };
   }
 
+  @ApiOperation({ summary: 'Get rooms' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms')
   async getRooms(@CurrentUser() user: AuthenticatedUser) {
     await this.chatService.getOrCreateDepartmentRooms(user.id);
     return unwrapOrInternal(await this.chatService.getRoomsForUser(user.id));
   }
 
+  @ApiOperation({ summary: 'Start direct' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('rooms/direct')
   @HttpCode(HttpStatus.CREATED)
   async startDirect(
@@ -71,6 +78,9 @@ export class ChatController {
     return unwrapOrInternal(await this.chatService.getOrCreateDirectRoom(user.id, body.targetUserId));
   }
 
+  @ApiOperation({ summary: 'Create group' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('rooms/group')
   @HttpCode(HttpStatus.CREATED)
   async createGroup(
@@ -80,6 +90,8 @@ export class ChatController {
     return unwrapOrInternal(await this.chatService.createGroupRoom(body.name, body.memberIds, user.id, body.type ?? 'GROUP'));
   }
 
+  @ApiOperation({ summary: 'Get messages' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms/:roomId/messages')
   async getMessages(
     @CurrentUser() user: AuthenticatedUser,
@@ -90,6 +102,9 @@ export class ChatController {
     return unwrapOrInternal(await this.chatService.getMessages(roomId, user.id, Number(limit) || 50, before));
   }
 
+  @ApiOperation({ summary: 'Send message' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('rooms/:roomId/messages')
   @HttpCode(HttpStatus.CREATED)
   async sendMessage(
@@ -105,6 +120,9 @@ export class ChatController {
     }));
   }
 
+  @ApiOperation({ summary: 'Mark read' })
+  @ApiResponse({ status: 204, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('rooms/:roomId/read')
   @HttpCode(HttpStatus.NO_CONTENT)
   async markRead(
@@ -114,6 +132,8 @@ export class ChatController {
     await this.chatService.markRoomAsRead(roomId, user.id);
   }
 
+  @ApiOperation({ summary: 'Get members' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms/:roomId/members')
   async getMembers(
     @CurrentUser() user: AuthenticatedUser,
@@ -123,22 +143,30 @@ export class ChatController {
     return unwrapOrInternal(await this.chatService.getRoomMembers(roomId));
   }
 
+  @ApiOperation({ summary: 'Get employees' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('employees')
   async getEmployees(@Query('search') search?: string) {
     return unwrapOrInternal(await this.chatService.getAllEmployees(search));
   }
 
+  @ApiOperation({ summary: 'Get today birthdays' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('birthdays/today')
   async getTodayBirthdays() {
     return unwrapOrInternal(await this.chatService.getTodayBirthdays());
   }
 
+  @ApiOperation({ summary: 'Get unread count' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('unread')
   async getUnreadCount(@CurrentUser() user: AuthenticatedUser) {
     const count = await this.chatService.getTotalUnreadCount(user.id);
     return { count };
   }
 
+  @ApiOperation({ summary: 'Get room by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms/:roomId')
   async getRoomById(
     @CurrentUser() user: AuthenticatedUser,
@@ -149,6 +177,8 @@ export class ChatController {
     return (Array.isArray(roomsArr) ? roomsArr : []).find((r) => String(r.id) === roomId) ?? null;
   }
 
+  @ApiOperation({ summary: 'Get pinned messages' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms/:roomId/pinned-messages')
   async getPinnedMessages(
     @CurrentUser() user: AuthenticatedUser,
@@ -159,6 +189,8 @@ export class ChatController {
     return pinned ? [pinned] : [];
   }
 
+  @ApiOperation({ summary: 'Get mute status' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms/:roomId/mute')
   async getMuteStatus(
     @CurrentUser() user: AuthenticatedUser,
@@ -170,6 +202,9 @@ export class ChatController {
     return { muted: me?.isMuted ?? false };
   }
 
+  @ApiOperation({ summary: 'Mute room' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('rooms/:roomId/mute')
   @HttpCode(HttpStatus.OK)
   async muteRoom(
@@ -184,6 +219,9 @@ export class ChatController {
   }
 
   // ─── Xabarni tahrirlash ───────────────────────────────────────────────────
+  @ApiOperation({ summary: 'Edit message' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('rooms/:roomId/messages/:msgId')
   @HttpCode(HttpStatus.OK)
   async editMessage(
@@ -195,6 +233,9 @@ export class ChatController {
   }
 
   // ─── Xabarni o'chirish ────────────────────────────────────────────────────
+  @ApiOperation({ summary: 'Delete message' })
+  @ApiResponse({ status: 204, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Delete('rooms/:roomId/messages/:msgId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteMessage(
@@ -205,6 +246,9 @@ export class ChatController {
   }
 
   // ─── Reaksiya qo'shish / o'chirish (toggle) ───────────────────────────────
+  @ApiOperation({ summary: 'Toggle reaction' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('rooms/:roomId/messages/:msgId/reactions')
   @HttpCode(HttpStatus.OK)
   async toggleReaction(
@@ -219,6 +263,9 @@ export class ChatController {
     return reaction;
   }
 
+  @ApiOperation({ summary: 'Remove reaction' })
+  @ApiResponse({ status: 204, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Delete('rooms/:roomId/messages/:msgId/reactions/:emoji')
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeReaction(
@@ -232,6 +279,9 @@ export class ChatController {
   }
 
   // ─── So'rovnoma (Poll) yaratish ───────────────────────────────────────────
+  @ApiOperation({ summary: 'Create poll' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('rooms/:roomId/polls')
   @HttpCode(HttpStatus.CREATED)
   async createPoll(
@@ -247,6 +297,9 @@ export class ChatController {
   }
 
   // ─── So'rovnomaga ovoz berish ─────────────────────────────────────────────
+  @ApiOperation({ summary: 'Vote poll' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('polls/:pollId/vote')
   @HttpCode(HttpStatus.OK)
   async votePoll(

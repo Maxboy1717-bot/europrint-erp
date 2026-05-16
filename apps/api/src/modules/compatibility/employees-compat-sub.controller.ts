@@ -10,7 +10,7 @@
  */
 
 import { Controller, Get, Post, Patch, Delete, Param, Query, Body, HttpCode, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -27,7 +27,7 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 type Row = Record<string, unknown>;
 const toList = (r: Result<Row[], AppError>) => { const rows = r.ok && Array.isArray(r.data) ? r.data : []; return { items: rows, total: rows.length }; };
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('employees')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)

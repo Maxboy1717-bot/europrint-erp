@@ -29,6 +29,8 @@ import { GetLeadByIdHandler } from './application/queries/get-lead-by-id.handler
 import { CrmPipelineHandler } from './application/queries/crm-pipeline.handler';
 import { DrizzleLeadRepository } from './infrastructure/repositories/drizzle-lead.repo';
 import { DrizzleDealRepository } from './infrastructure/repositories/drizzle-deal.repo';
+import { LEAD_REPO } from './domain/repositories/i-lead.repo';
+import { DEAL_REPO } from './domain/repositories/i-deal.repo';
 import { DealWonListener } from './infrastructure/event-handlers/deal-won.listener';
 import { WebsiteOrderLeadListener } from './listeners/website-order-lead.listener';
 import { WebsiteContactLeadListener } from './listeners/website-contact-lead.listener';
@@ -101,8 +103,8 @@ const eventListeners = [
 ];
 
 const repositories = [
-  { provide: 'ILeadRepository', useClass: DrizzleLeadRepository },
-  { provide: 'IDealRepository', useClass: DrizzleDealRepository },
+  { provide: LEAD_REPO, useClass: DrizzleLeadRepository },
+  { provide: DEAL_REPO, useClass: DrizzleDealRepository },
 ];
 
 @Module({
@@ -174,6 +176,6 @@ const repositories = [
     WebsiteLeadRepository,
     WebsiteLeadService,
   ],
-  exports: ['ILeadRepository', 'IDealRepository', LeadScorerService, LeadScorerV2Service, EloRatingService, RfmService, ClvService, ChurnService, FunnelService, CohortService, KMeansService, ChurnRetrainService],
+  exports: [LEAD_REPO, DEAL_REPO, LeadScorerService, LeadScorerV2Service, EloRatingService, RfmService, ClvService, ChurnService, FunnelService, CohortService, KMeansService, ChurnRetrainService],
 })
 export class CrmModule {}

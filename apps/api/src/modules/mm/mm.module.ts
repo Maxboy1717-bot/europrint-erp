@@ -28,6 +28,7 @@ import { GetVendorsHandler } from './application/queries/get-vendors.handler';
 import { GetMaterialsHandler } from './application/queries/get-materials.handler';
 import { DrizzleMmRepository } from './infrastructure/repositories/drizzle-mm.repo';
 import { DrizzleMaterialRepository } from './infrastructure/repositories/drizzle-material.repo';
+import { MM_REPO, MM_MATERIAL_REPO } from './domain/repositories/mm.repository';
 import { PpReleasedListener } from './infrastructure/event-handlers/pp-released.listener';
 import { SupplierQualityFailListener } from './infrastructure/event-handlers/supplier-quality-fail.listener';
 import { PurchaseService } from './purchase/purchase.service';
@@ -54,8 +55,8 @@ const queryHandlers = [GetPurchaseOrdersHandler, GetVendorsHandler, GetMaterials
 const listeners = [PpReleasedListener, SupplierQualityFailListener];
 
 const repositories = [
-  { provide: 'IMmRepository', useClass: DrizzleMmRepository },
-  { provide: 'IMmMaterialRepository', useClass: DrizzleMaterialRepository },
+  { provide: MM_REPO, useClass: DrizzleMmRepository },
+  { provide: MM_MATERIAL_REPO, useClass: DrizzleMaterialRepository },
   { provide: PURCHASE_SVC_REPO, useClass: DrizzlePurchaseSvcRepository },
   { provide: MATERIALS_SVC_REPO, useClass: DrizzleMaterialsSvcRepository },
 ];
@@ -64,6 +65,6 @@ const repositories = [
   imports: [AuthModule, CqrsModule, EventEmitterModule.forRoot()],
   controllers: [MmMaterialsController, MmPurchaseOrdersController, MmVendorsPrController, MmGoodsController, MmRawMaterialsController, MmMaterialCardsController, MmDashboardController],
   providers: [...commandHandlers, ...queryHandlers, ...listeners, ...repositories, PurchaseService, MaterialsService, DrizzleMmGoodsRepository, MmGoodsService, MmVendorsPrRepository, MmVendorsPrService, MmMaterialsExtrasRepository, MmMaterialsExtrasService, MmDashboardRepository, MmDashboardService],
-  exports: ['IMmRepository', 'IMmMaterialRepository', PURCHASE_SVC_REPO, MATERIALS_SVC_REPO, PurchaseService, MaterialsService],
+  exports: [MM_REPO, MM_MATERIAL_REPO, PURCHASE_SVC_REPO, MATERIALS_SVC_REPO, PurchaseService, MaterialsService],
 })
 export class MmModule {}

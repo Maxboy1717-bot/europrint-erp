@@ -5,7 +5,7 @@
 
 import { Controller, Post, Param, Body, UseGuards, UseInterceptors, InternalServerErrorException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { PermissionGuard } from '@common/guards/permission.guard';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
@@ -52,7 +52,7 @@ function weekPeriod(i: number): Date {
 
 @ApiTags('Forecast Extended')
 @ApiBearerAuth()
-@Throttle({ ai: { limit: 20, ttl: 60_000 } })
+@AiThrottle()
 @Controller('forecast')
 @UseGuards(JwtAuthGuard, PermissionGuard)
 @UseInterceptors(AuditInterceptor)

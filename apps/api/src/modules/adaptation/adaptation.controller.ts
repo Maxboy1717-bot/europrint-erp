@@ -4,7 +4,7 @@
  */
 
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -12,9 +12,40 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Role } from '@common/constants/roles.constants';
 import { AdaptationService } from './adaptation.service';
 
+const NewEmployeeSchema = z.object({
+  employeeId: z.union([z.string(), z.number()]).optional(),
+  programId: z.union([z.string(), z.number()]).optional(),
+  startDate: z.string().optional(),
+  mentorId: z.union([z.string(), z.number()]).optional(),
+  status: z.string().max(50).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
+const ProgramPatchSchema = z.object({
+  name: z.string().max(200).optional(),
+  description: z.string().max(2000).optional(),
+  durationDays: z.number().int().positive().optional(),
+  active: z.boolean().optional(),
+}).passthrough();
+
+const FeedbackSchema = z.object({
+  employeeId: z.union([z.string(), z.number()]).optional(),
+  rating: z.number().int().min(1).max(5).optional(),
+  comments: z.string().max(2000).optional(),
+  date: z.string().optional(),
+}).passthrough();
+
+const WelcomeEventSchema = z.object({
+  title: z.string().max(200).optional(),
+  date: z.string().optional(),
+  description: z.string().max(2000).optional(),
+  participants: z.array(z.union([z.string(), z.number()])).optional(),
+}).passthrough();
+
 import { parsePagination } from '@common/pipes/parse-pagination.pipe';
 import { unwrapOrInternal } from '@common/http-result';
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+@ApiThrottle()
 @Controller('adaptation')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.HR_MANAGER, Role.HR_SPECIALIST)
@@ -72,18 +103,21 @@ export class AdaptationController {
 
   @Post('new-employees')
   @HttpCode(HttpStatus.CREATED)
-  async createNewEmployee(@Body() body: Record<string, unknown>) {
-    return this.svc.createNewEmployee(body);
+  async createNewEmployee(@Body() body: unknown) {
+    const dto = NewEmployeeSchema.parse(body);
+    return this.svc.createNewEmployee(dto as Record<string, unknown>);
   }
 
   @Patch('new-employees/:id')
-  async patchNewEmployee(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return this.svc.updateNewEmployee(id, body);
+  async patchNewEmployee(@Param('id') id: string, @Body() body: unknown) {
+    const dto = NewEmployeeSchema.partial().parse(body);
+    return this.svc.updateNewEmployee(id, dto as Record<string, unknown>);
   }
 
   @Patch('programs/:id')
-  async patchProgram(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return { id, ...body, updated: true };
+  async patchProgram(@Param('id') id: string, @Body() body: unknown) {
+    const dto = ProgramPatchSchema.parse(body);
+    return { id, ...dto, updated: true };
   }
 
   @Get('feedback')
@@ -97,18 +131,21 @@ export class AdaptationController {
 
   @Post('feedback')
   @HttpCode(HttpStatus.CREATED)
-  async createFeedback(@Body() body: Record<string, unknown>) {
-    return this.svc.createFeedback(body);
+  async createFeedback(@Body() body: unknown) {
+    const dto = FeedbackSchema.parse(body);
+    return this.svc.createFeedback(dto as Record<string, unknown>);
   }
 
   @Patch('feedback/:id')
-  async patchFeedback(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return this.svc.updateFeedback(id, body);
+  async patchFeedback(@Param('id') id: string, @Body() body: unknown) {
+    const dto = FeedbackSchema.partial().parse(body);
+    return this.svc.updateFeedback(id, dto as Record<string, unknown>);
   }
 
   @Put('feedback/:id')
-  async putFeedback(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return this.svc.updateFeedback(id, body);
+  async putFeedback(@Param('id') id: string, @Body() body: unknown) {
+    const dto = FeedbackSchema.parse(body);
+    return this.svc.updateFeedback(id, dto as Record<string, unknown>);
   }
 
   @Get('welcome-events')
@@ -122,12 +159,14 @@ export class AdaptationController {
 
   @Post('welcome-events')
   @HttpCode(HttpStatus.CREATED)
-  async createWelcomeEvent(@Body() body: Record<string, unknown>) {
-    return this.svc.createWelcomeEvent(body);
+  async createWelcomeEvent(@Body() body: unknown) {
+    const dto = WelcomeEventSchema.parse(body);
+    return this.svc.createWelcomeEvent(dto as Record<string, unknown>);
   }
 
   @Patch('welcome-events/:id')
-  async patchWelcomeEvent(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return this.svc.updateWelcomeEvent(id, body);
+  async patchWelcomeEvent(@Param('id') id: string, @Body() body: unknown) {
+    const dto = WelcomeEventSchema.partial().parse(body);
+    return this.svc.updateWelcomeEvent(id, dto as Record<string, unknown>);
   }
 }

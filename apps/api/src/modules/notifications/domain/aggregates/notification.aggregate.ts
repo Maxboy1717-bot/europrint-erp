@@ -6,8 +6,10 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { v4 as uuid } from 'uuid';
-import { AggregateRoot } from '@nestjs/cqrs';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
+import { Ok, Err, AppErr, Result } from '@common/result';
 import { NotificationType, NotificationStatus } from '../enums/notification-type.enum';
+import { NotificationReadEvent, NotificationExpiredEvent } from '../events';
 
 export class Notification extends AggregateRoot {
   id: string;
@@ -21,6 +23,7 @@ export class Notification extends AggregateRoot {
   createdAt: Date;
   readAt: Date | null;
   updatedAt: Date;
+  expiredAt: Date | null = null;
 
   // New fields for extended notification functionality
   isRead: boolean;
@@ -87,11 +90,38 @@ export class Notification extends AggregateRoot {
     this.readAt = null;
   }
 
-  markAsRead(): void {
+  markAsRead(by?: number): Result<void> | void {
+    // Backwards-compatible: legacy callers invoke markAsRead() with no args.
+    // New behavior: markAsRead(by) enforces invariants and raises a domain event.
+    if (typeof by === 'number') {
+      if (!Number.isInteger(by) || by <= 0) {
+        return Err(AppErr('VALIDATION', 'by must be a positive integer'));
+      }
+      if (this.isRead) {
+        return Err(AppErr('BUSINESS_RULE_VIOLATION', 'Notification is already read'));
+      }
+      this.status = NotificationStatus.READ;
+      this.readAt = _time.now();
+      this.isRead = true;
+      this.updatedAt = _time.now();
+      this.addDomainEvent(new NotificationReadEvent(this.id, this.userId, by, this.readAt));
+      return Ok<void>();
+    }
     this.status = NotificationStatus.READ;
     this.readAt = _time.now();
     this.isRead = true;
     this.updatedAt = _time.now();
+  }
+
+  expire(): Result<void> {
+    if (this.expiredAt !== null) {
+      return Err(AppErr('BUSINESS_RULE_VIOLATION', 'Notification is already expired'));
+    }
+    const now = _time.now();
+    this.expiredAt = now;
+    this.updatedAt = now;
+    this.addDomainEvent(new NotificationExpiredEvent(this.id, this.userId, now));
+    return Ok<void>();
   }
 
   static create(

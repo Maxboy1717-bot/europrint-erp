@@ -1,10 +1,10 @@
 /**
  * test/auth/change-password.handler.spec.ts
  *
- * Unit tests for ChangePasswordHandler.
+ * Unit tests for ChangePasswordService.
  */
 
-import { ChangePasswordHandler } from '../../src/modules/auth/application/commands/change-password.handler';
+import { ChangePasswordService } from '../../src/modules/auth/application/services/change-password.service';
 
 function makeI18n() {
   return {
@@ -26,7 +26,7 @@ function makeRepo(user: ReturnType<typeof makeUser> | null) {
   };
 }
 
-describe('ChangePasswordHandler', () => {
+describe('ChangePasswordService', () => {
   const cmd = {
     userId: 42,
     oldPassword: 'oldPass123!',
@@ -35,7 +35,7 @@ describe('ChangePasswordHandler', () => {
 
   it('returns NOT_FOUND when user is missing', async () => {
     const repo = makeRepo(null);
-    const handler = new ChangePasswordHandler(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makeI18n());
 
     const r = await handler.execute(cmd);
 
@@ -49,7 +49,7 @@ describe('ChangePasswordHandler', () => {
   it('returns VALIDATION on weak new password', async () => {
     const user = makeUser(true);
     const repo = makeRepo(user);
-    const handler = new ChangePasswordHandler(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makeI18n());
 
     const r = await handler.execute({ ...cmd, newPassword: '123' }); // too short
 
@@ -60,7 +60,7 @@ describe('ChangePasswordHandler', () => {
   it('returns VALIDATION when old password is wrong', async () => {
     const user = makeUser(false); // changePassword returns false
     const repo = makeRepo(user);
-    const handler = new ChangePasswordHandler(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makeI18n());
 
     const r = await handler.execute(cmd);
 
@@ -74,7 +74,7 @@ describe('ChangePasswordHandler', () => {
   it('succeeds and persists user on valid input', async () => {
     const user = makeUser(true);
     const repo = makeRepo(user);
-    const handler = new ChangePasswordHandler(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makeI18n());
 
     const r = await handler.execute(cmd);
 

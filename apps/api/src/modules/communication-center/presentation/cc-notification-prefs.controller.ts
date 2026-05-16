@@ -2,6 +2,7 @@
  * /api/cc/notification-prefs — har xodim o'z bildirishnoma sozlamalarini boshqaradi.
  */
 import { Body, Controller, Get, HttpException, HttpStatus, Post, Put, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -22,22 +23,32 @@ const UpdateSchema = z.object({
 });
 
 @Throttle({ default: { limit: 60, ttl: 60_000 } })
+@ApiTags('Cc Notification Prefs')
+@ApiBearerAuth()
 @Controller('cc/notification-prefs')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin', 'manager', 'supervisor', 'director', 'ceo', 'employee', 'accountant')
 export class CcNotificationPrefsController {
   constructor(private readonly repo: CcNotificationPrefsRepository) {}
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   create() {
     return { success: true };
   }
 
+  @ApiOperation({ summary: 'Get' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   get(@CurrentUser() user: { id: number }) {
     return this.repo.getOrDefault(user.id);
   }
 
+  @ApiOperation({ summary: 'Update' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Put()
   update(
     @Body(new ZodValidationPipe(UpdateSchema)) body: CcNotificationPrefsUpdate,

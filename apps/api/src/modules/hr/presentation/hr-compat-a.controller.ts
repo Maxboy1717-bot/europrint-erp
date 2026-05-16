@@ -10,6 +10,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -18,13 +20,22 @@ import {
   UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
+
+// P3-26: HRC test/employee-skill mutation endpoints aren't yet wired.
+const notImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
 import { throwFromError, unwrapOrThrow, assertOk, unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { HrCompatAService } from '../application/hr-compat-a.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
+import { z } from 'zod';
 import {
   Hr360ReviewSchema, Hr360ReviewDto,
   HrConflictReportSchema, HrConflictReportDto,
@@ -33,9 +44,29 @@ import {
   HrDisciplineRecordSchema, HrDisciplineRecordDto,
 } from './dto/hr.dto';
 
+const TestQuestionUpdateSchema = z.object({
+  question: z.string().max(2000).optional(),
+  category: z.string().max(100).optional(),
+  weight: z.number().optional(),
+  answers: z.array(z.record(z.unknown())).optional(),
+}).passthrough();
+
+const HrcSessionSchema = z.object({
+  employeeId: z.union([z.string(), z.number()]).optional(),
+  testType: z.string().max(100).optional(),
+  startedAt: z.string().optional(),
+}).passthrough();
+
+const HrcQuestionSchema = z.object({
+  question: z.string().max(2000).optional(),
+  category: z.string().max(100).optional(),
+  weight: z.number().optional(),
+  answers: z.array(z.record(z.unknown())).optional(),
+}).passthrough();
+
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('hr')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -171,24 +202,35 @@ export class HrCompatAController {
   }
 
   @Patch('hrc-tests/tool-test/questions/:id')
-  async updateTestQuestion(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, ...body }; }
+  async updateTestQuestion(@Param('id') _id: string, @Body() body: unknown) {
+    TestQuestionUpdateSchema.parse(body);
+    return notImplemented('PATCH /hr/hrc-tests/tool-test/questions/:id');
+  }
 
   @Delete('hrc-tests/tool-test/questions/:id')
-  async deleteTestQuestion(@Param('id') id: string) { return { deleted: true, id }; }
+  async deleteTestQuestion(@Param('id') _id: string) {
+    return notImplemented('DELETE /hr/hrc-tests/tool-test/questions/:id');
+  }
 
   @Get('hrc-tests/employee/:employeeId/results')
-  async getEmployeeTestResults(@Param('employeeId') employeeId: string) { return { data: [], employeeId }; }
+  async getEmployeeTestResults(@Param('employeeId') _employeeId: string) {
+    return notImplemented('GET /hr/hrc-tests/employee/:employeeId/results');
+  }
 
   @Delete('employee-skills/:id')
-  async deleteEmployeeSkill(@Param('id') id: string) { return { deleted: true, id }; }
+  async deleteEmployeeSkill(@Param('id') _id: string) {
+    return notImplemented('DELETE /hr/employee-skills/:id');
+  }
 
   @Post('hrc-tests/sessions')
-  async createHrcTestSession(@Body() body: Record<string, unknown>) {
-    return { data: { id: Date.now(), ...body, created: true } };
+  async createHrcTestSession(@Body() body: unknown) {
+    HrcSessionSchema.parse(body);
+    return notImplemented('POST /hr/hrc-tests/sessions');
   }
 
   @Post('hrc-tests/tool-test/questions')
-  async createHrcTestQuestion(@Body() body: Record<string, unknown>) {
-    return { data: { id: Date.now(), ...body, created: true } };
+  async createHrcTestQuestion(@Body() body: unknown) {
+    HrcQuestionSchema.parse(body);
+    return notImplemented('POST /hr/hrc-tests/tool-test/questions');
   }
 }

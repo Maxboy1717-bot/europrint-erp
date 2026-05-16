@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { AggregateRoot } from '@nestjs/cqrs';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { Err } from '@common/result';
 import { Result } from '@common/result';
 
@@ -101,7 +101,7 @@ export class PurchaseOrder extends AggregateRoot {
     this.status = PoStatus.APPROVED;
     this.approvedBy = approvedBy;
     this.approvedAt = _time.now();
-    this.apply({
+    this.addDomainEvent({
       type: 'PURCHASE_ORDER_APPROVED',
       data: { poId: this.id, approvedBy, totalAmount: this.getTotalAmount() },
     });
@@ -116,7 +116,7 @@ export class PurchaseOrder extends AggregateRoot {
     if (this.receivedQuantity >= this.items.reduce((sum, i) => sum + i.quantity, 0)) {
       this.status = PoStatus.RECEIVED;
     }
-    this.apply({
+    this.addDomainEvent({
       type: 'GOODS_RECEIPT_RECORDED',
       data: { poId: this.id, quantity },
     });

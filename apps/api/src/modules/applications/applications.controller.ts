@@ -9,7 +9,8 @@ import { safeInt } from '../hr/common/db-rows';
 import {
   Body, Controller, Delete, Get, Logger, NotFoundException,
   Param, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { ApplicationsService } from './applications.service';
@@ -22,16 +23,19 @@ import {
 
 const HR_ROLES = ['hr_manager', 'hr_specialist', 'director', 'super_admin'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(RolesGuard)
 @Roles(...HR_ROLES)
+@ApiTags('Applications')
 @Controller('applications')
 export class ApplicationsController {
   private readonly logger = new Logger(ApplicationsController.name);
 
   constructor(private readonly svc: ApplicationsService) {}
 
+  @ApiOperation({ summary: 'List' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async list(
     @Query('status') status?: string, @Query('positionId') positionId?: string,
@@ -46,6 +50,9 @@ export class ApplicationsController {
     return r.data;
   }
 
+  @ApiOperation({ summary: 'Get by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   async getById(@Param('id') id: string) {
     const r = await this.svc.getById(safeInt(id, 0));
@@ -55,12 +62,19 @@ export class ApplicationsController {
     return data;
   }
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @UsePipes(new ZodValidationPipe(ApplicationCreateSchema))
   async create(@Body() body: ApplicationCreateDto) {
     return unwrapOrThrow(await this.svc.create(body));
   }
 
+  @ApiOperation({ summary: 'Update' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Put(':id')
   @UsePipes(new ZodValidationPipe(ApplicationUpdateSchema))
   async update(@Param('id') id: string, @Body() body: ApplicationUpdateDto) {
@@ -71,6 +85,10 @@ export class ApplicationsController {
     return data;
   }
 
+  @ApiOperation({ summary: 'Delete' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete(':id')
   @Roles('super_admin', 'director')
   async delete(@Param('id') id: string) {

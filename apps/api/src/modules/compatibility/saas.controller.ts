@@ -4,10 +4,18 @@
  */
 
 import {
-  Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put,
+  Body, Controller, Delete, Get, HttpCode, HttpException, Param, Patch, Post, Put,
   UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
+
+// P3-26: tenant-modules / orders-registry stubs not yet wired.
+const notImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -26,10 +34,19 @@ const CreateTenantSchema = z.object({
 
 const UpdateTenantStatusSchema = z.object({ status: z.enum(['active', 'suspended', 'trial', 'inactive']) });
 
+const UpdateTenantModulesSchema = z.object({
+  modules: z.array(z.string()).optional(),
+}).passthrough();
+
+const OnboardTenantSchema = z.object({
+  adminEmail: z.string().email().optional(),
+  modules: z.array(z.string()).optional(),
+}).passthrough();
+
 @ApiTags('SAAS')
 @ApiBearerAuth()
 @Roles('super_admin', 'admin')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('saas')
@@ -92,27 +109,37 @@ export class SaasController {
   }
 
   @Get('tenants/:id/modules')
-  async getTenantModules(@Param('id') id: string) { return { data: [], tenantId: id }; }
+  async getTenantModules(@Param('id') _id: string) {
+    return notImplemented('GET /saas/tenants/:id/modules');
+  }
 
   @Patch('tenants/:id/modules')
-  async updateTenantModules(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return { tenantId: id, ...body, updated: true };
+  async updateTenantModules(@Param('id') _id: string, @Body() body: unknown) {
+    UpdateTenantModulesSchema.parse(body);
+    return notImplemented('PATCH /saas/tenants/:id/modules');
   }
 
   @Post('tenants/:id/onboard')
-  async onboardTenant(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, onboarded: true }; }
+  async onboardTenant(@Param('id') _id: string, @Body() body: unknown) {
+    OnboardTenantSchema.parse(body ?? {});
+    return notImplemented('POST /saas/tenants/:id/onboard');
+  }
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('orders-registry')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class OrdersRegistryCompatController {
   @Get()
   @Roles('admin', 'super_admin', 'manager', 'director', 'accountant', 'sales')
-  async listOrders() { return { data: [], total: 0, page: 1, limit: DEFAULT_PAGE_SIZE }; }
+  async listOrders() {
+    return notImplemented('GET /orders-registry');
+  }
 
   @Post()
   @Roles('admin', 'super_admin', 'manager', 'director', 'accountant', 'sales')
-  async createOrder(@Body() _body: unknown) { return { message: 'Order created', data: null }; }
+  async createOrder(@Body() _body: unknown) {
+    return notImplemented('POST /orders-registry');
+  }
 }

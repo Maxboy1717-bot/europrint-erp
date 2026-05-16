@@ -11,7 +11,20 @@ import {
   timestamp,
   decimal,
   integer,
+  serial,
+  varchar,
+  numeric,
 } from 'drizzle-orm/pg-core';
+
+// CFO configuration table — moved here from finance/domain/services/cfo-config.service.ts
+// per P0-1 DDD audit (domain MUST NOT know about Drizzle).
+export const cfoConfigTable = pgTable('cfo_config', {
+  id:          serial('id').primaryKey(),
+  configKey:   varchar('config_key', { length: 100 }).notNull().unique(),
+  configValue: numeric('config_value', { precision: 20, scale: 6 }).notNull(),
+  description: text('description'),
+  updatedAt:   timestamp('updated_at').notNull().defaultNow(),
+});
 
 export const entries = pgTable('entries', {
   id: integer('id').primaryKey(),

@@ -6,9 +6,12 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { HttpModule } from '@nestjs/axios';
-import { TelegramService } from './domain/services/telegram.service';
-import { EmailNotificationService } from './domain/services/email-notification.service';
-import { SmsService } from './domain/services/sms.service';
+import { EskizSmsAdapter } from './infrastructure/external/eskiz-sms.adapter';
+import { SmtpEmailAdapter } from './infrastructure/external/smtp-email.adapter';
+import { TelegramBotAdapter } from './infrastructure/external/telegram-bot.adapter';
+import { SMS_SENDER } from './domain/ports/i-sms-sender.port';
+import { EMAIL_SENDER } from './domain/ports/i-email-sender.port';
+import { TELEGRAM_SENDER } from './domain/ports/i-telegram-sender.port';
 import { MarkNotificationReadHandler } from './application/commands/mark-notification-read.handler';
 import { CreateNotificationHandler } from './application/commands/create-notification.handler';
 import { GetNotificationsHandler } from './application/queries/get-notifications.handler';
@@ -27,7 +30,19 @@ import { NotificationSchemaRepository } from './infrastructure/notification-sche
 const commandHandlers = [MarkNotificationReadHandler, CreateNotificationHandler];
 const eventHandlers = [ErpEventsListener];
 const queryHandlers = [GetNotificationsHandler];
-const services = [TelegramService, EmailNotificationService, SmsService];
+
+// Port → adapter wiring. Consumers depend on the port tokens
+// (SMS_SENDER / EMAIL_SENDER / TELEGRAM_SENDER) and the DI container
+// resolves them to the adapter singletons via useExisting.
+const senders = [
+  EskizSmsAdapter,
+  SmtpEmailAdapter,
+  TelegramBotAdapter,
+  { provide: SMS_SENDER,      useExisting: EskizSmsAdapter },
+  { provide: EMAIL_SENDER,    useExisting: SmtpEmailAdapter },
+  { provide: TELEGRAM_SENDER, useExisting: TelegramBotAdapter },
+];
+
 const repositories = [
   {
     provide: NOTIFICATION_REPO,
@@ -39,7 +54,18 @@ const repositories = [
 @Module({
   imports: [CqrsModule, HttpModule],
   controllers: [NotificationsController],
-  providers: [...commandHandlers, ...eventHandlers, ...queryHandlers, ...services, ...repositories, TelegramSvc, NotificationPreferencesRepository, NotificationPreferencesService, NotificationSchemaRepository, NotificationSchemaService],
-  exports: [TelegramService, EmailNotificationService, SmsService, NOTIFICATION_REPO, TELEGRAM_SVC_REPO, TelegramSvc, NotificationPreferencesService],
+  providers: [...commandHandlers, ...eventHandlers, ...queryHandlers, ...senders, ...repositories, TelegramSvc, NotificationPreferencesRepository, NotificationPreferencesService, NotificationSchemaRepository, NotificationSchemaService],
+  exports: [
+    EskizSmsAdapter,
+    SmtpEmailAdapter,
+    TelegramBotAdapter,
+    SMS_SENDER,
+    EMAIL_SENDER,
+    TELEGRAM_SENDER,
+    NOTIFICATION_REPO,
+    TELEGRAM_SVC_REPO,
+    TelegramSvc,
+    NotificationPreferencesService,
+  ],
 })
 export class NotificationsModule {}

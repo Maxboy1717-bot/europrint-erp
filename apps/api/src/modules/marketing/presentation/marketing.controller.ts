@@ -19,9 +19,10 @@ import {
   Query,
   UseGuards,
   UseInterceptors, BadRequestException, InternalServerErrorException} from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard} from '@common/guards/roles.guard';
 import { Roles} from '@common/decorators/roles.decorator';
@@ -41,7 +42,9 @@ enum Role {
  SALES_MANAGER = 'sales_manager',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Marketing')
+@ApiBearerAuth()
 @Controller('marketing/campaigns')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -53,6 +56,8 @@ export class MarketingController {
  private readonly queryBus: QueryBus,
  private readonly campaignsSvc: CampaignsService) {}
 
+ @ApiOperation({ summary: 'Get all' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
  async getAll(
@@ -74,6 +79,9 @@ export class MarketingController {
  return data;
 }
 
+ @ApiOperation({ summary: 'Get by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
  async getById(@Param('id') id: string) {
@@ -83,6 +91,9 @@ export class MarketingController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Create' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
  async create(
@@ -106,6 +117,9 @@ export class MarketingController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Update' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
  async update(
@@ -131,6 +145,10 @@ export class MarketingController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Remove' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Delete(':id')
  @HttpCode(HttpStatus.OK)
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
@@ -139,6 +157,9 @@ export class MarketingController {
    return unwrapOrThrow(await this.campaignsSvc.remove(parseInt(id, 10)));
  }
 
+ @ApiOperation({ summary: 'Launch' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post(':id/launch')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
  async launch(

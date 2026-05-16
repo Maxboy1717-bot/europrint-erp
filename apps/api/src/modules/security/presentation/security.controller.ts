@@ -2,6 +2,7 @@
  * @module security.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */import { BadRequestException, Controller, Get, HttpCode, HttpException, HttpStatus, Inject, InternalServerErrorException, Logger, NotFoundException, Param, Patch, Post, Query } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 
 import { TashkentTimeService } from '@common/time';
@@ -10,7 +11,7 @@ import {
   Body, UseGuards, UseInterceptors } from '@nestjs/common';
 import { throwFromError, assertOk, unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard} from '@common/guards/roles.guard';
 import { Roles} from '@common/decorators/roles.decorator';
@@ -31,7 +32,9 @@ enum Role {
  SECURITY = 'security',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Security')
+@ApiBearerAuth()
 @Controller('security')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -46,6 +49,8 @@ export class SecurityController {
  private readonly accessSvc: AccessService,
  ) {}
 
+ @ApiOperation({ summary: 'Get all' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
  async getAll(
@@ -66,6 +71,9 @@ export class SecurityController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Get by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
  async getById(@Param('id') id: string) {
@@ -74,6 +82,9 @@ export class SecurityController {
    return { statusCode: HttpStatus.OK, data: result.data };
 }
 
+ @ApiOperation({ summary: 'Report incident' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post('/report')
  @HttpCode(HttpStatus.CREATED)
  async reportIncident(
@@ -88,6 +99,9 @@ export class SecurityController {
    };
 }
 
+ @ApiOperation({ summary: 'Update incident' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
  async updateIncident(
@@ -102,6 +116,9 @@ export class SecurityController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Resolve incident' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/resolve')
  @Roles(Role.SUPER_ADMIN)
  async resolveIncident(
@@ -116,6 +133,10 @@ export class SecurityController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Record visitor exit' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Post('visitors/:id/exit')
  @HttpCode(HttpStatus.OK)
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
@@ -123,10 +144,14 @@ export class SecurityController {
    return { visitorId: id, exitedAt: _time.now().toISOString(), status: 'exited' };
  }
 
+ @ApiOperation({ summary: 'Get visitors' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('visitors')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
  getVisitors() { return []; }
 
+ @ApiOperation({ summary: 'Get incidents' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('incidents')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
  async getIncidents(
@@ -138,38 +163,82 @@ export class SecurityController {
    return unwrapOrThrow(await this.queryBus.execute(new GetIncidentsQuery({ severity, status, page: Number(page ?? 1), limit: Number(limit ?? 20) })));
  }
 
+ @ApiOperation({ summary: 'Get access zones' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('access-zones')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
  async getAccessZones(@Query() query: Record<string, unknown>) {
    return unwrapOrThrow(await this.accessSvc.findAll(query));
  }
 
+ @ApiOperation({ summary: 'Get attendance records' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('attendance-records')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
  async getAttendanceRecords(@Query() query: Record<string, unknown>) {
    return unwrapOrThrow(await this.attendanceSvc.findAll(query));
  }
 
+ // P3-26: security dashboard helpers not yet wired to a service.
+ @ApiOperation({ summary: 'Get daily summary' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('daily-summary')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getDailySummary() { return {}; }
+ getDailySummary() {
+   throw new HttpException(
+     { message: 'Endpoint not yet implemented: GET /security/daily-summary', code: 'NOT_IMPLEMENTED' },
+     HttpStatus.NOT_IMPLEMENTED,
+   );
+ }
 
+ @ApiOperation({ summary: 'Get fire sensors' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('fire-sensors')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getFireSensors() { return []; }
+ getFireSensors() {
+   throw new HttpException(
+     { message: 'Endpoint not yet implemented: GET /security/fire-sensors', code: 'NOT_IMPLEMENTED' },
+     HttpStatus.NOT_IMPLEMENTED,
+   );
+ }
 
+ @ApiOperation({ summary: 'Get ppe checks' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('ppe-checks')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getPpeChecks() { return []; }
+ getPpeChecks() {
+   throw new HttpException(
+     { message: 'Endpoint not yet implemented: GET /security/ppe-checks', code: 'NOT_IMPLEMENTED' },
+     HttpStatus.NOT_IMPLEMENTED,
+   );
+ }
 
+ @ApiOperation({ summary: 'Get ppe stats' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('ppe-stats')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getPpeStats() { return []; }
+ getPpeStats() {
+   throw new HttpException(
+     { message: 'Endpoint not yet implemented: GET /security/ppe-stats', code: 'NOT_IMPLEMENTED' },
+     HttpStatus.NOT_IMPLEMENTED,
+   );
+ }
 
+ @ApiOperation({ summary: 'Get ppe violations' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('ppe-violations')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getPpeViolations() { return []; }
+ getPpeViolations() {
+   throw new HttpException(
+     { message: 'Endpoint not yet implemented: GET /security/ppe-violations', code: 'NOT_IMPLEMENTED' },
+     HttpStatus.NOT_IMPLEMENTED,
+   );
+ }
 
+ @ApiOperation({ summary: 'Patch visitor exit' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Patch('visitors/:id/exit')
  @HttpCode(HttpStatus.OK)
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)

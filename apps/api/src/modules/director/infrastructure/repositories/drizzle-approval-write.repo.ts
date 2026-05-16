@@ -6,36 +6,20 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { db } from '@shared/db';
+import { db, approval_requests as approvalRequestsTable } from '@shared/db';
 import { sql, eq, and, gte, count } from 'drizzle-orm';
-import { pgTable, text, decimal, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
 import { Result, Err, Ok } from '@common/types/result.type';
 import { ApprovalRequest } from '../../domain/aggregates/approval-request.aggregate';
 import { HitlDocumentType, ApprovalStatus } from '../../domain/enums/hitl-document-type.enum';
 
 import { SECONDS_PER_HOUR } from '@common/constants/app.constants';
-export const approvalRequestsTable = pgTable('approval_requests', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  documentType: text('document_type').notNull(),
-  documentId: text('document_id').notNull(),
-  documentNumber: text('document_number'),
-  amount: decimal('amount', { precision: 18, scale: 2 }).notNull().default('0'),
-  currency: text('currency').notNull().default('UZS'),
-  status: text('status').notNull().default('pending'),
-  requestedBy: text('requested_by').notNull(),
-  approvedBy: text('approved_by'),
-  approvedAt: timestamp('approved_at', { withTimezone: true }),
-  rejectedBy: text('rejected_by'),
-  rejectedAt: timestamp('rejected_at', { withTimezone: true }),
-  rejectionReason: text('rejection_reason'),
-  notes: text('notes'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+
+// Re-export the shared schema table so existing downstream imports keep working.
+export { approvalRequestsTable };
 
 export function mapApprovalRow(row: typeof approvalRequestsTable.$inferSelect): ApprovalRequest {
-  return new ApprovalRequest(row.id, row.documentType as HitlDocumentType, row.documentId, row.documentNumber ?? null, Number(row.amount), row.currency, row.status as ApprovalStatus, row.requestedBy, row.approvedBy ?? null, row.approvedAt ?? null, row.rejectedBy ?? null, row.rejectedAt ?? null, row.rejectionReason ?? null, row.notes ?? null, row.createdAt, row.updatedAt);
+  return new ApprovalRequest(row.id, row.documentType as HitlDocumentType, row.documentId, row.documentNumber ?? null, Number(row.amount), row.currency, row.status as ApprovalStatus, row.requestedBy, row.approvedBy ?? null, row.approvedAt ?? null, row.rejectedBy ?? null, row.rejectedAt ?? null, row.rejectionReason ?? null, row.notes ?? null, row.createdAt ?? new Date(), row.updatedAt ?? new Date());
 }
 
 @Injectable()

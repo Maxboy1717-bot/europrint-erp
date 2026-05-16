@@ -5,14 +5,14 @@
 
 import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { SystemService } from './system.service';
 import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(RolesGuard)
 @Controller('system')
@@ -20,9 +20,14 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 export class SystemController {
   constructor(private readonly svc: SystemService) {}
 
+  // P3-26: there is no real create-system endpoint yet — the SystemService
+  // exposes only read-only health/stats. Return 501 instead of fake success.
   @Post()
   async create() {
-    return { success: true };
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: POST /system', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
   @Get('health')
@@ -53,7 +58,7 @@ export class SystemController {
   }
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(RolesGuard)
 @Controller('supply-chain')
@@ -67,7 +72,7 @@ export class SupplyChainController {
   }
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(RolesGuard)
 @Controller('system/settings')

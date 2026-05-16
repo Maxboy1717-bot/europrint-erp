@@ -7,7 +7,9 @@ import {
   Body, Controller, Get, Logger, Param, Patch, Post, Query,
   UseGuards, BadRequestException,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -17,6 +19,28 @@ import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
 
+const CreateInventoryCountSchema = z.object({
+  count_date: z.string().optional(),
+  warehouse_id: z.union([z.string(), z.number()]).optional(),
+  count_type: z.string().max(50).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
+const UpdateInventoryCountLineSchema = z.object({
+  counted_qty: z.union([z.string(), z.number()]).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
+const UpdateInventoryCountSchema = z.object({
+  status: z.string().max(50).optional(),
+  notes: z.string().max(2000).optional(),
+  counted_items: z.union([z.string(), z.number()]).optional(),
+}).passthrough();
+
+const InventoryCountStatusSchema = z.object({
+  status: z.string().max(50).optional(),
+}).passthrough();
+
 const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
 const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
 
@@ -25,14 +49,18 @@ const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER']
  * Routes: /warehouse/inventory-counts*, /warehouse/inventory-counts-stats
  * Inventory count sessions: create, update, status, line management, generate.
  */
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Wms Gateway Inventory')
+@ApiBearerAuth()
 @Controller('warehouse')
 export class WmsGatewayInventoryController {
   private readonly logger = new Logger(WmsGatewayInventoryController.name);
 
   constructor(private readonly svc: WmsWarehouseGatewayService) {}
 
+  @ApiOperation({ summary: 'Get inventory counts stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('inventory-counts-stats')
   @Roles(...WH_READ)
   async getInventoryCountsStats() {
@@ -55,6 +83,8 @@ export class WmsGatewayInventoryController {
     } catch { return { total: 0, completed: 0, inProgress: 0, draft: 0 }; }
   }
 
+  @ApiOperation({ summary: 'Get inventory counts' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('inventory-counts')
   @Roles(...WH_READ)
   async getInventoryCounts(
@@ -85,12 +115,16 @@ export class WmsGatewayInventoryController {
     } catch (e) { this.logger.warn(`getInventoryCounts failed: ${(e as Error).message}`); return { data: [], total: 0 }; }
   }
 
+  @ApiOperation({ summary: 'Create inventory count' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('inventory-counts')
   @Roles(...WH_WRITE)
   async createInventoryCount(
-    @Body() body: Record<string, unknown>,
+    @Body() rawBody: unknown,
     @CurrentUser() user: AuthenticatedUser,
   ) {
+    const body = CreateInventoryCountSchema.parse(rawBody);
     try {
       const countNum = `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-5)}`;
       const r = await rawSql(sql`
@@ -109,21 +143,31 @@ export class WmsGatewayInventoryController {
     } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
+  @ApiOperation({ summary: 'Get inventory count line' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('inventory-counts/lines/:lineId')
   @Roles(...WH_READ)
   async getInventoryCountLine(@Param('lineId') lineId: string) {
     return { lineId, qty: 0 };
   }
 
+  @ApiOperation({ summary: 'Update inventory count line' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('inventory-counts/lines/:lineId')
   @Roles(...WH_WRITE)
   async updateInventoryCountLine(
     @Param('lineId') lineId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
   ) {
-    return { lineId, ...body };
+    const dto = UpdateInventoryCountLineSchema.parse(body);
+    return { lineId, ...dto };
   }
 
+  @ApiOperation({ summary: 'Get inventory count by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('inventory-counts/:id')
   @Roles(...WH_READ)
   async getInventoryCountById(@Param('id') id: string) {
@@ -138,12 +182,16 @@ export class WmsGatewayInventoryController {
     } catch { return { id, status: 'draft' }; }
   }
 
+  @ApiOperation({ summary: 'Update inventory count' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('inventory-counts/:id')
   @Roles(...WH_WRITE)
   async updateInventoryCount(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() rawBody: unknown,
   ) {
+    const body = UpdateInventoryCountSchema.parse(rawBody);
     try {
       const r = await rawSql(sql`
         UPDATE inventory_counts SET
@@ -157,12 +205,16 @@ export class WmsGatewayInventoryController {
     } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
+  @ApiOperation({ summary: 'Update inventory count status' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('inventory-counts/:id/status')
   @Roles(...WH_WRITE)
   async updateInventoryCountStatus(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() rawBody: unknown,
   ) {
+    const body = InventoryCountStatusSchema.parse(rawBody);
     try {
       const newStatus = String(body.status ?? 'in_progress');
       const r = await rawSql(sql`
@@ -176,6 +228,10 @@ export class WmsGatewayInventoryController {
     } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
+  @ApiOperation({ summary: 'Generate inventory count lines' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('inventory-counts/:id/generate-lines')
   @Roles(...WH_WRITE)
   async generateInventoryCountLines(@Param('id') id: string) {

@@ -24,9 +24,12 @@ import { QcDefectsExtendedController } from './presentation/qc-defects-extended.
 import { QcNewController } from './presentation/qc-new.controller';
 import { QcParametersController } from './presentation/qc-parameters.controller';
 import { QC_REPOSITORY_PROVIDER } from './application/repositories/qc.repository';
+import { QC_COMPUTE_REPO } from './domain/repositories/i-qc.repo';
+import { QC_DEFECT_REPO } from './infrastructure/repositories/drizzle-defect.repo';
 import { DrizzleDefectRepository } from './infrastructure/repositories/drizzle-defect.repo';
 import { DrizzleQcReclamationRepo } from './infrastructure/repositories/drizzle-qc-reclamation.repo';
 import { DrizzleQcInspectionRepository } from './infrastructure/repositories/drizzle-inspection.repo';
+import { DrizzleQcComputeRepository } from './infrastructure/repositories/drizzle-qc.repo';
 import { DefectsService } from './defects/defects.service';
 import { DrizzleDefectsRepository } from './defects/drizzle-defects.repo';
 import { DEFECTS_REPO } from './defects/i-defects.repo';
@@ -69,10 +72,11 @@ const queryHandlers = [
 const repositories = [
   DrizzleQcReclamationRepo,
   {
-    provide: 'IQcDefectRepository',
+    provide: QC_DEFECT_REPO,
     useClass: DrizzleDefectRepository,
   },
   { provide: DEFECTS_REPO, useClass: DrizzleDefectsRepository },
+  { provide: QC_COMPUTE_REPO, useClass: DrizzleQcComputeRepository },
   QcNewRepository,
   QcParametersRepository,
 ];
@@ -117,7 +121,7 @@ const repositories = [
     DpmoService,
   ],
   exports: [
-    'IQcDefectRepository', QC_REPOSITORY_PROVIDER, DEFECTS_REPO, DefectsService,
+    QC_DEFECT_REPO, QC_REPOSITORY_PROVIDER, DEFECTS_REPO, DefectsService,
     DefectDetectorService, SpcService, FmeaService,
     InkConsumptionService, ImpositionService, SpoilageService, DeltaEService,
     DpmoService,

@@ -4,7 +4,8 @@
  */
 
 import { Controller, Get, Post, Param, Query, Body, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { PermissionGuard } from '@common/guards/permission.guard';
@@ -29,13 +30,18 @@ const TierUpsertSchema = z.object({
   validTo:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Pricing')
+@ApiBearerAuth()
 @Controller('pricing')
 @UseGuards(JwtAuthGuard, PermissionGuard)
 @UseInterceptors(AuditInterceptor)
 export class PricingController {
   constructor(private readonly svc: TieredPricingService) {}
 
+  @ApiOperation({ summary: 'Calculate price' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('calculate')
   @RequirePermission('pricing.tiers:READ')
   async calculatePrice(@Body() body: unknown) {
@@ -43,12 +49,18 @@ export class PricingController {
     return unwrapOrInternal(await this.svc.calculatePrice(dto.productName, dto.quantity, dto.date));
   }
 
+  @ApiOperation({ summary: 'List tiers' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('tiers/:productName')
   @RequirePermission('pricing.tiers:READ')
   async listTiers(@Param('productName') productName: string) {
     return unwrapOrInternal(await this.svc.listTiers(productName));
   }
 
+  @ApiOperation({ summary: 'Upsert tier' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('tiers')
   @RequirePermission('pricing.tiers:WRITE')
   async upsertTier(@Body() body: unknown) {

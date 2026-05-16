@@ -5,9 +5,9 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Controller, Get, HttpCode, Param, Post, Query, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpException, Param, Post, Query, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -18,7 +18,7 @@ import { unwrapOrInternal } from '@common/http-result';
 @ApiTags('EuroPrint Control Center (Director)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('europrint-control')
@@ -89,11 +89,15 @@ export class EuroprintControlDirectorController {
   /**
    * AuditorPanel page calls GET /api/europrint-control/menus/admin to fetch
    * the admin-only menu structure. Real implementation: query rbac_menus
-   * filtered by admin role. Until that's wired, return an empty menu tree
-   * so the page renders without 404.
+   * filtered by admin role.
+   *
+   * P3-26: returns 501 until the rbac_menus query is wired.
    */
   @Get('menus/admin')
   async getAdminMenus() {
-    return { items: [], generatedAt: _time.now().toISOString() };
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: GET /europrint-control/menus/admin', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 }

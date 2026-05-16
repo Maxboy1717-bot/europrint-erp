@@ -14,8 +14,8 @@ import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
 import { PushService } from './push.service';
 import { UploadService } from './upload.service';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/user.types';
 import { VideoTokenService } from './video-token.service';
@@ -61,7 +61,7 @@ type CompleteUploadDto = z.infer<typeof CompleteUploadSchema>;
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin', 'manager', 'supervisor', 'operator', 'employee', 'viewer', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('chat')
 export class ChatUploadsController {
@@ -74,6 +74,9 @@ export class ChatUploadsController {
     private readonly videoToken: VideoTokenService,
   ) {}
 
+  @ApiOperation({ summary: 'Register push' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('push/subscribe')
   @HttpCode(HttpStatus.OK)
   async registerPush(
@@ -93,6 +96,9 @@ export class ChatUploadsController {
     return { ok: true };
   }
 
+  @ApiOperation({ summary: 'Unregister push' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Delete('push/unsubscribe')
   @HttpCode(HttpStatus.OK)
   async unregisterPush(@CurrentUser() user: AuthenticatedUser): Promise<{ ok: true }> {
@@ -101,6 +107,9 @@ export class ChatUploadsController {
     return { ok: true };
   }
 
+  @ApiOperation({ summary: 'Request upload url' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('upload/request-url')
   @HttpCode(HttpStatus.OK)
   async requestUploadUrl(
@@ -126,6 +135,9 @@ export class ChatUploadsController {
     };
   }
 
+  @ApiOperation({ summary: 'Complete upload' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('upload/complete')
   @HttpCode(HttpStatus.OK)
   async completeUpload(
@@ -150,6 +162,9 @@ export class ChatUploadsController {
     return { ok: true };
   }
 
+  @ApiOperation({ summary: 'Get video token' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('video/token')
   @HttpCode(HttpStatus.OK)
   async getVideoToken(

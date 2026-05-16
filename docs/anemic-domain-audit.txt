@@ -1,0 +1,180 @@
+Scanned 40 aggregate files
+
+━━ ANEMIC DOMAIN AUDIT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Aggregates scanned:                40
+With public mutable fields:        26
+With constructor(public …):        18
+Anemic (no methods, no getters):   5
+
+── Files with anemic-domain smells ──
+
+  apps/api/src/modules/admin/domain/aggregates/user.aggregate.ts  [UserAggregate]
+    ⚠ public mutable fields: username, id
+    methods=14, getters=0
+
+  apps/api/src/modules/aisha/domain/aggregates/conversation.aggregate.ts  [Conversation]
+    ⚠ public mutable fields: status
+    methods=3, getters=5
+
+  apps/api/src/modules/auth/domain/aggregates/auth-user.aggregate.ts  [AuthUserAggregate]
+    ⚠ public mutable fields: id
+    methods=16, getters=0
+
+  apps/api/src/modules/core/domain/aggregates/department.aggregate.ts  [Department]
+    ⚠ constructor(public ...): updatedAt
+    methods=0, getters=0
+
+  apps/api/src/modules/core/domain/aggregates/panel.aggregate.ts  [Panel]
+    ⚠ public mutable fields: widgetId, widgetType, config
+    ⚠ constructor(public ...): updatedAt
+    methods=0, getters=0
+
+  apps/api/src/modules/core/domain/aggregates/position.aggregate.ts  [Position]
+    ⚠ constructor(public ...): updatedAt
+    methods=0, getters=0
+
+  apps/api/src/modules/crm/domain/aggregates/deal.aggregate.ts  [(unknown)]
+    ⚠ public mutable fields: id, leadId, companyId, dealNumber, status, totalAmount, currency, assignedTo, createdBy, expectedClosureDate, createdAt, updatedAt
+    methods=10, getters=0
+
+  apps/api/src/modules/crm/domain/aggregates/lead.aggregate.ts  [(unknown)]
+    ⚠ public mutable fields: id, companyId, firstName, lastName, email, phone, status, aiScore, createdBy, source, createdAt, updatedAt, aggregateId
+    methods=16, getters=0
+
+  apps/api/src/modules/design/domain/aggregates/design-order.aggregate.ts  [(unknown)]
+    ⚠ public mutable fields: id, salesOrderId, productId, status, description, aiGeneratedDesign, designerNotes, customerFeedback, designerId, customerId, createdAt, updatedAt, approvedAt
+    methods=6, getters=0
+
+  apps/api/src/modules/director/domain/aggregates/approval-request.aggregate.ts  [ApprovalRequest]
+    ⚠ public mutable fields: default
+    ⚠ constructor(public ...): status, approvedBy, approvedAt, rejectedBy, rejectedAt, rejectionReason, updatedAt
+    methods=6, getters=0
+
+  apps/api/src/modules/finance/domain/aggregates/budget.aggregate.ts  [Budget]
+    ⚠ constructor(public ...): status, totalActual, approvedBy, approvedAt, updatedAt
+    methods=6, getters=3
+
+  apps/api/src/modules/finance/domain/aggregates/invoice.aggregate.ts  [Invoice]
+    ⚠ public mutable fields: invoiceId
+    methods=1, getters=6
+
+  apps/api/src/modules/hr/domain/aggregates/attendance.aggregate.ts  [Attendance]
+    ⚠ public mutable fields: attendanceId
+    methods=3, getters=4
+
+  apps/api/src/modules/hr/domain/aggregates/employee.aggregate.ts  [Employee]
+    ⚠ public mutable fields: employeeId
+    methods=1, getters=6
+
+  apps/api/src/modules/hr/domain/aggregates/leave-request.aggregate.ts  [LeaveRequest]
+    ⚠ constructor(public ...): status, approvedBy, approvedAt, rejectedBy, rejectionReason, updatedAt
+    methods=7, getters=1
+
+  apps/api/src/modules/iot/domain/aggregates/sensor-device.aggregate.ts  [(unknown)]
+    ⚠ public mutable fields: id, machineId, name, type, status, readings, oee, lastReading, createdAt, updatedAt
+    methods=4, getters=0
+
+  apps/api/src/modules/iot/domain/aggregates/sensor-reading.aggregate.ts  [SensorReading]
+    ⚠ public mutable fields: id, deviceId, value, unit, timestamp, isAnomaly
+    methods=1, getters=0
+
+  apps/api/src/modules/kanban/domain/aggregates/kanban-task.aggregate.ts  [(unknown)]
+    ⚠ public mutable fields: id, title, description, status, priority, assigneeId, boardId, createdBy, dueDate, tags, createdAt, updatedAt
+    methods=4, getters=0
+
+  apps/api/src/modules/lms/domain/aggregates/certificate.aggregate.ts  [Certificate]
+    ⚠ public mutable fields: certificateId
+    methods=2, getters=5
+
+  apps/api/src/modules/logistics/domain/aggregates/delivery.aggregate.ts  [(unknown)]
+    ⚠ public mutable fields: id, orderId, driverId, vehicleId, status, departure, arrival, currentLat, currentLng, createdAt, updatedAt, salesOrderId, deliveryNumber, customerName, deliveryAddress, vehicleNumber, completedAt
+    methods=4, getters=0
+
+  apps/api/src/modules/marketing/domain/aggregates/campaign.aggregate.ts  [(unknown)]
+    ⚠ public mutable fields: id, name, type, status, description, targetAudience, budget, startDate, endDate, createdBy, createdAt, updatedAt
+    methods=3, getters=0
+
+  apps/api/src/modules/mes/domain/aggregates/downtime-event.aggregate.ts  [DowntimeEvent]
+    ⚠ constructor(public ...): endedAt
+    methods=0, getters=1
+
+  apps/api/src/modules/mes/domain/aggregates/production-session.aggregate.ts  [Downtime]
+    ⚠ constructor(public ...): reason, duration, timestamp
+    methods=17, getters=0
+
+  apps/api/src/modules/mm/domain/aggregates/material.aggregate.ts  [Material]
+    ⚠ constructor(public ...): currentStock, isActive, updatedAt
+    methods=0, getters=2
+
+  apps/api/src/modules/mm/domain/aggregates/purchase-order.aggregate.ts  [PurchaseOrderItem]
+    ⚠ constructor(public ...): materialId, quantity, unitPrice
+    methods=21, getters=0
+
+  apps/api/src/modules/mro/domain/aggregates/maintenance-order.aggregate.ts  [(unknown)]
+    ⚠ public mutable fields: id, machineId, type, status, description, scheduledDate, completionDate, technicianId, createdAt, updatedAt, equipmentId, equipmentName, issueDescription, priority, assignedTo, productionOrderAffected, completedAt
+    methods=2, getters=0
+
+  apps/api/src/modules/notifications/domain/aggregates/notification.aggregate.ts  [(unknown)]
+    ⚠ public mutable fields: id, userId, type, title, message, body, status, metadata, createdAt, readAt, updatedAt, isRead, referenceId, referenceType
+    methods=0, getters=0
+
+  apps/api/src/modules/order-workflow/domain/aggregates/order.aggregate.ts  [OrderAggregate]
+    ⚠ public mutable fields: id
+    methods=16, getters=0
+
+  apps/api/src/modules/pos-v2/domain/aggregates/inventory-count.aggregate.ts  [InventoryCount]
+    ⚠ constructor(public ...): status, approvedBy, approvedAt, updatedAt
+    methods=2, getters=2
+
+  apps/api/src/modules/pos-v2/domain/aggregates/transfer-request.aggregate.ts  [TransferRequest]
+    ⚠ constructor(public ...): status, approvedBy, approvedAt, updatedAt
+    methods=6, getters=0
+
+  apps/api/src/modules/pp/domain/aggregates/bom.aggregate.ts  [BomItem]
+    ⚠ public mutable fields: quantity
+    ⚠ constructor(public ...): materialId, quantity, scrapPercentage
+    methods=13, getters=0
+
+  apps/api/src/modules/pp/domain/aggregates/production-order.aggregate.ts  [MaterialRequirement]
+    ⚠ public mutable fields: quantity, issued
+    ⚠ constructor(public ...): materialId, quantity, reserved, issued
+    methods=18, getters=0
+
+  apps/api/src/modules/pp/domain/aggregates/routing.aggregate.ts  [Operation]
+    ⚠ public mutable fields: workCenterId, rework
+    ⚠ constructor(public ...): sequence, workCenterId, standardTime, setupTime, rework
+    methods=13, getters=0
+
+  apps/api/src/modules/pp/domain/aggregates/work-center.aggregate.ts  [WorkCenter]
+    ⚠ constructor(public ...): updatedAt
+    methods=0, getters=0
+
+  apps/api/src/modules/qc/domain/aggregates/defect.aggregate.ts  [Defect]
+    ⚠ constructor(public ...): status, resolvedBy, resolvedAt, resolution, updatedAt
+    methods=3, getters=0
+
+  apps/api/src/modules/qc/domain/aggregates/inspection.aggregate.ts  [(unknown)]
+    ⚠ public mutable fields: id, orderId, batchId, status, defects, inspectorId, sampleSize, defectsFoundCount, createdAt, updatedAt
+    methods=5, getters=0
+
+  apps/api/src/modules/qc/domain/aggregates/reclamation.aggregate.ts  [Reclamation]
+    ⚠ constructor(public ...): status, resolution, resolvedAt, updatedAt
+    methods=1, getters=0
+
+  apps/api/src/modules/sd/domain/aggregates/sales-order.aggregate.ts  [(unknown)]
+    ⚠ public mutable fields: id, orderNumber, status, companyId, totalAmount, createdBy, createdAt, updatedAt, blocked, orderId
+    methods=21, getters=0
+
+  apps/api/src/modules/security/domain/aggregates/security-incident.aggregate.ts  [(unknown)]
+    ⚠ public mutable fields: id, type, severity, title, description, detectedAt, resolvedAt, reportedBy, affectedUsers, createdAt, updatedAt, status, reporterId, assignedTo, resolutionNotes
+    methods=4, getters=0
+
+── Completely-anemic aggregates (no methods, no getters) ──
+  apps/api/src/modules/core/domain/aggregates/department.aggregate.ts  [Department]
+  apps/api/src/modules/core/domain/aggregates/panel.aggregate.ts  [Panel]
+  apps/api/src/modules/core/domain/aggregates/position.aggregate.ts  [Position]
+  apps/api/src/modules/notifications/domain/aggregates/notification.aggregate.ts  [(unknown)]
+  apps/api/src/modules/pp/domain/aggregates/work-center.aggregate.ts  [WorkCenter]
+
+━━ summary ━━
+Aggregates with at least one issue: 39 / 40

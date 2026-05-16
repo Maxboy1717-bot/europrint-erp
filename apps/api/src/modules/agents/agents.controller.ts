@@ -2,7 +2,8 @@
  * /api/agents/* — barcha 14 agent endpointlari
  */
 import { BadRequestException, Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 
 // ─── Zod schemas (Rule 3) ───────────────────────────────────────────────────
@@ -44,7 +45,7 @@ import { FacilitiesAgentService } from './facilities-agent.service';
 import { StrategicAgentService } from './strategic-agent.service';
 import { AgentAlertService } from './shared/agent-alert.service';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('agents')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin', 'director', 'ceo', 'manager', 'cfo', 'hr_head', 'employee')
@@ -65,6 +66,7 @@ export class AgentsController {
     private readonly facilities:  FacilitiesAgentService,
     private readonly strategic:   StrategicAgentService,
     private readonly alerts:      AgentAlertService,
+    private readonly i18n:        I18nService,
   ) {}
 
   // ── DIRECTOR ──────────────────────────────────────────────────────
@@ -126,18 +128,18 @@ export class AgentsController {
   @Get('hr/churn')                                hrChurnDefault(@Query('id') id?: string)         { return this.hr.predictChurn(Number(id ?? 1)); }
   @Get('hr/churn/:id')                            hrChurn(@Param('id') id: string)                 { return this.hr.predictChurn(Number(id)); }
   @Get('hr/bonus')
-  bonusDefault(@Query('id') id?: string, @Query('base') b?: string) {
+  async bonusDefault(@Query('id') id?: string, @Query('base') b?: string) {
     const base = Number(b);
     if (!b || isNaN(base) || base < 0) {
-      throw new BadRequestException("Base maosh to'g'ri kiritilmagan");
+      throw new BadRequestException(await this.i18n.t('errors.baseSalaryInvalid'));
     }
     return this.hr.calculateBonus(Number(id ?? 1), base);
   }
   @Get('hr/bonus/:id')
-  bonus(@Param('id') id: string, @Query('base') b: string) {
+  async bonus(@Param('id') id: string, @Query('base') b: string) {
     const base = Number(b);
     if (!b || isNaN(base) || base < 0) {
-      throw new BadRequestException("Base maosh to'g'ri kiritilmagan");
+      throw new BadRequestException(await this.i18n.t('errors.baseSalaryInvalid'));
     }
     return this.hr.calculateBonus(Number(id), base);
   }

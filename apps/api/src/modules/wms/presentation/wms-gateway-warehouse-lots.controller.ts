@@ -8,7 +8,9 @@ import {
   Body, Controller, Get, Logger, Param, Patch, Post, Query,
   UseGuards, BadRequestException,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -17,15 +19,44 @@ import { AuthenticatedUser } from '@common/types/user.types';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 
+const CreateLotSchema = z.object({
+  batch_number: z.string().max(200).optional(),
+  lot_number: z.string().max(200).optional(),
+  material_id: z.union([z.string(), z.number()]).optional(),
+  quantity: z.union([z.string(), z.number()]).optional(),
+  unit: z.string().max(50).optional(),
+  quality_status: z.string().max(50).optional(),
+  supplier_batch_number: z.string().max(200).optional(),
+  cost_per_unit: z.union([z.string(), z.number()]).optional(),
+  defect_reason: z.string().max(2000).optional(),
+  quarantine_reason: z.string().max(2000).optional(),
+  serial_number: z.string().max(200).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
+const UpdateLotSchema = z.object({
+  quality_status: z.string().max(50).optional(),
+  defect_reason: z.string().max(2000).optional(),
+  quarantine_reason: z.string().max(2000).optional(),
+  bin_location_id: z.union([z.string(), z.number()]).optional(),
+  notes: z.string().max(2000).optional(),
+  is_active: z.boolean().optional(),
+}).passthrough();
+
 const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
 const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Wms Gateway Warehouse Lots')
+@ApiBearerAuth()
 @Controller('warehouse')
 export class WmsGatewayWarehouseLotsController {
   private readonly logger = new Logger(WmsGatewayWarehouseLotsController.name);
 
+  @ApiOperation({ summary: 'Get warehouse zones' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('warehouses/:id/zones')
   @Roles(...WH_READ)
   async getWarehouseZones(@Param('id') id: string) {
@@ -46,6 +77,8 @@ export class WmsGatewayWarehouseLotsController {
     } catch (e) { this.logger.warn(`getWarehouseZones failed: ${(e as Error).message}`); throw e; }
   }
 
+  @ApiOperation({ summary: 'Get warehouse bins' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('warehouses/:id/bins')
   @Roles(...WH_READ)
   async getWarehouseBins(
@@ -70,6 +103,8 @@ export class WmsGatewayWarehouseLotsController {
     } catch (e) { this.logger.warn(`getWarehouseBins failed: ${(e as Error).message}`); throw e; }
   }
 
+  @ApiOperation({ summary: 'Get warehouse lots' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('warehouses/:id/lots')
   @Roles(...WH_READ)
   async getWarehouseLots(
@@ -108,13 +143,17 @@ export class WmsGatewayWarehouseLotsController {
     }
   }
 
+  @ApiOperation({ summary: 'Create lot' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('warehouses/:id/lots')
   @Roles(...WH_WRITE)
   async createLot(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() rawBody: unknown,
     @CurrentUser() _user: AuthenticatedUser,
   ) {
+    const body = CreateLotSchema.parse(rawBody);
     try {
       const batchNum = body.batch_number ?? body.lot_number ?? `LOT-${Date.now()}`;
       const r = await rawSql(sql`
@@ -135,13 +174,17 @@ export class WmsGatewayWarehouseLotsController {
     } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
+  @ApiOperation({ summary: 'Update lot status' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('warehouses/:id/lots/:lotId')
   @Roles(...WH_WRITE)
   async updateLotStatus(
     @Param('id') id: string,
     @Param('lotId') lotId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() rawBody: unknown,
   ) {
+    const body = UpdateLotSchema.parse(rawBody);
     try {
       const r = await rawSql(sql`
         UPDATE batch_lots SET

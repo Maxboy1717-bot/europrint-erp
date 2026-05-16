@@ -7,7 +7,8 @@ import {
   Controller, Get, Patch, Param, Query,
   UseGuards, UseInterceptors,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -18,13 +19,17 @@ import { eq, ilike, and, desc } from 'drizzle-orm';
 
 const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'FINANCE_MANAGER', 'ACCOUNTANT'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Sd Contracts')
+@ApiBearerAuth()
 @Controller('sd/contracts')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Roles(...SD_ROLES)
 export class SdContractsController {
 
+  @ApiOperation({ summary: 'List' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async list(
     @Query('search') search?: string,
@@ -59,6 +64,10 @@ export class SdContractsController {
     }
   }
 
+  @ApiOperation({ summary: 'Sign' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/sign')
   @Roles('sales_manager', 'director', 'super_admin')
   async sign(@Param('id') id: string) {

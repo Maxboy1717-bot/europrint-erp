@@ -23,6 +23,7 @@ import { sql } from 'drizzle-orm';
 import { execSdSalesOrderInsert, execSdSalesOrderUpdate, execSdSalesOrderDelete } from '@common/database/queries-sd';
 import { Err } from '@common/result';
 import { SalesOrder } from '../../domain/aggregates/sales-order.aggregate';
+import { CustomerId } from '@shared/domain/value-objects/customer-id.vo';
 import { ISalesOrderRepository } from '../../domain/repositories/i-sales-order.repo';
 import { SoStatus } from '../../domain/value-objects/so-status.vo';
 import { Money } from '@common/money/money.vo';
@@ -189,9 +190,19 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
   private toDomain(row: Row): SalesOrder {
     const statusResult = SoStatus.create(String(row.status ?? 'draft'));
     const moneyResult = Money.of(Number(row.total_amount ?? 0), String(row.currency ?? 'UZS'));
+    // Hydrate the (optional) CustomerId via the VO's trusted-source escape
+    // hatch — DB FK is already validated by the schema, so we skip re-running
+    // the create() guard.
+    const rawCustomerId = row.customer_id !== undefined && row.customer_id !== null
+      ? Number(row.customer_id)
+      : undefined;
+    const customerId = rawCustomerId && rawCustomerId > 0
+      ? CustomerId.fromRaw(rawCustomerId)
+      : undefined;
     return new SalesOrder({
       id: Number(row.id ?? 0), orderNumber: String(row.order_number ?? ''),
       status: statusResult.data as SoStatus, companyId: Number(row.company_id ?? 0),
+      customerId,
       totalAmount: moneyResult,
       advanceRequired: Number(row.advance_required ?? 0), advancePaid: Number(row.advance_paid ?? 0),
       advanceStatus: String(row.advance_status ?? 'pending') as 'pending' | 'approved' | 'partial' | 'bypassed',

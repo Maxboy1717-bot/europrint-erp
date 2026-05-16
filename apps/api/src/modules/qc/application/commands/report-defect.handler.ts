@@ -10,7 +10,7 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Result, Ok } from '@common/result';
 import { ReportDefectCommand } from './report-defect.command';
 import { Defect, DefectStatus } from '../../domain/aggregates/defect.aggregate';
-import { IQcDefectRepository } from '../../infrastructure/repositories/drizzle-defect.repo';
+import { IQcDefectRepository, QC_DEFECT_REPO } from '../../infrastructure/repositories/drizzle-defect.repo';
 import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class ReportDefectHandler implements ICommandHandler<ReportDefectCommand>
   private readonly logger = new Logger(ReportDefectHandler.name);
 
   constructor(
-    @Inject('IQcDefectRepository') private readonly qcRepository: IQcDefectRepository,
+    @Inject(QC_DEFECT_REPO) private readonly qcRepository: IQcDefectRepository,
     private readonly eventBus: EventBus,
       ) {}
 

@@ -9,7 +9,7 @@ import { AppErr, Err, Ok, Result, isErr } from '@common/result';
 import { Deal, DealCreateProps } from '../../domain/aggregates/deal.aggregate';
 import { DealStatus } from '../../domain/value-objects/deal-status.vo';
 import { Money } from 'shared/domain/value-objects/money.vo';
-import { IDealRepository } from '../../domain/repositories/i-deal.repo';
+import { IDealRepository, DEAL_REPO } from '../../domain/repositories/i-deal.repo';
 
 export class CreateDealCommand {
   constructor(public readonly companyId: number,
@@ -27,7 +27,7 @@ export class CreateDealHandler implements ICommandHandler<CreateDealCommand> {
   private readonly logger = new Logger(CreateDealHandler.name);
 
   constructor(
-    @Inject('IDealRepository') private readonly dealRepo: IDealRepository,
+    @Inject(DEAL_REPO) private readonly dealRepo: IDealRepository,
   ) {}
 
   async execute(command: CreateDealCommand): Promise<Result<Deal>> {

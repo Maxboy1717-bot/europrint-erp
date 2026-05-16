@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { InternalServerErrorException } from '@nestjs/common';
+import { DomainError } from '../../../../shared/domain/errors/domain-error';
 export enum BudgetStatus {
   DRAFT = 'draft',
   PENDING_APPROVAL = 'pending_approval',
@@ -59,8 +59,9 @@ export class Budget {
 
   approve(approverId: string): void {
     if (this.status !== BudgetStatus.PENDING_APPROVAL) {
+      // INVALID_STATE: lifecycle transition not allowed from current status.
       // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingApprovable'.
-      throw new InternalServerErrorException('Faqat kutayotgan byudjet tasdiqlanadi');
+      throw new DomainError('INVALID_STATE', 'Faqat kutayotgan byudjet tasdiqlanadi');
     }
     this.status = BudgetStatus.APPROVED;
     this.approvedBy = approverId;
@@ -70,8 +71,9 @@ export class Budget {
 
   submitForApproval(): void {
     if (this.status !== BudgetStatus.DRAFT) {
+      // INVALID_STATE: only DRAFT can be submitted for approval.
       // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyDraftSubmittable'.
-      throw new InternalServerErrorException('Faqat draft byudjet taqdim etiladi');
+      throw new DomainError('INVALID_STATE', 'Faqat draft byudjet taqdim etiladi');
     }
     this.status = BudgetStatus.PENDING_APPROVAL;
     this.updatedAt = _time.now();
@@ -79,8 +81,9 @@ export class Budget {
 
   reject(): void {
     if (this.status !== BudgetStatus.PENDING_APPROVAL) {
+      // INVALID_STATE: only PENDING_APPROVAL can be rejected.
       // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingRejectable'.
-      throw new InternalServerErrorException('Faqat kutayotgan byudjet rad etiladi');
+      throw new DomainError('INVALID_STATE', 'Faqat kutayotgan byudjet rad etiladi');
     }
     this.status = BudgetStatus.REJECTED;
     this.updatedAt = _time.now();
@@ -88,8 +91,9 @@ export class Budget {
 
   close(): void {
     if (this.status !== BudgetStatus.APPROVED) {
+      // INVALID_STATE: only APPROVED can be closed.
       // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyApprovedClosable'.
-      throw new InternalServerErrorException('Faqat tasdiqlangan byudjetni yopish mumkin');
+      throw new DomainError('INVALID_STATE', 'Faqat tasdiqlangan byudjetni yopish mumkin');
     }
     this.status = BudgetStatus.CLOSED;
     this.updatedAt = _time.now();

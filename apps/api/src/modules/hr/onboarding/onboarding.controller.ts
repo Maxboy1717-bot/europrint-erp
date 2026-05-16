@@ -23,7 +23,7 @@ import {
   ApiQuery,
   ApiParam,
 } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { OnboardingService } from './onboarding.service';
 import {
   CreateOnboardingPlanDto,
@@ -44,7 +44,7 @@ import { unwrapOrInternal } from '@common/http-result';
 @ApiTags('HR Onboarding')
 @ApiBearerAuth()
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('hr/onboarding')
 export class OnboardingController {

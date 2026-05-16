@@ -1,15 +1,17 @@
 /**
  * @module tiered-pricing.service
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ *
+ * Domain-layer service — MUST NOT import Drizzle / @shared/db. Persistence
+ * is delegated to IFinanceRepo (see P0-2 DDD audit).
  */
 
-import { Injectable, Logger } from '@nestjs/common';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Ok, Err, AppErr, Result, AppError } from '@common/result';
-import { safeNum, roundTo } from '@common/math/math-utils';
+import { roundTo } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { TashkentTimeService } from '@common/time';
+import { FINANCE_REPO, IFinanceRepo, PriceTierRow } from '../repositories/i-finance.repo';
 
 export interface PriceTier {
   id: string;
@@ -34,12 +36,12 @@ export interface PriceCalculationResult {
   savingsVsListPct: number | null;
 }
 
-type Row = Record<string, unknown>;
-
 @Injectable()
 export class TieredPricingService {
   private readonly logger = new Logger(TieredPricingService.name);
   private readonly time = new TashkentTimeService();
+
+  constructor(@Inject(FINANCE_REPO) private readonly repo: IFinanceRepo) {}
 
   @Calculation('tiered-pricing-calculate')
   async calculatePrice(
@@ -49,34 +51,18 @@ export class TieredPricingService {
   ): Promise<Result<PriceCalculationResult, AppError>> {
     try {
       const effectiveDate = date ?? this.time.formatDate(this.time.today());
-      const rows = await runQuery<Row>(sql`
-        SELECT pt.id::text AS id, pt.product_name, pt.product_id,
-               pt.tier_name, pt.min_qty, pt.max_qty, pt.price_uzs,
-               pt.valid_from, pt.valid_to
-        FROM price_tier pt
-        LEFT JOIN products p ON p.id = pt.product_id
-        WHERE (pt.product_name = ${productName} OR p.name = ${productName})
-          AND pt.min_qty <= ${qty}
-          AND (pt.max_qty IS NULL OR pt.max_qty >= ${qty})
-          AND pt.valid_from <= ${effectiveDate}::date
-          AND (pt.valid_to IS NULL OR pt.valid_to >= ${effectiveDate}::date)
-        ORDER BY pt.min_qty DESC
-        LIMIT 1
-      `);
-      const row = rows[0];
+      const row = await this.repo.findPriceTierForQty(productName, qty, effectiveDate);
       if (!row) {
         return Err(AppErr('NOT_FOUND', `Ushbu miqdor uchun aktiv narx qatlami topilmadi: ${productName} qty=${qty}`));
       }
-      const priceUzs = safeNum(row['price_uzs'], 0);
-      const productId = row['product_id'] ? Number(row['product_id']) : null;
       return Ok({
         productName,
-        productId,
+        productId: row.productId,
         quantity: qty,
         date: effectiveDate,
-        priceUzs:         roundTo(priceUzs, 2),
-        tierName:         String(row['tier_name'] ?? ''),
-        totalUzs:         roundTo(priceUzs * qty, 2),
+        priceUzs:         roundTo(row.priceUzs, 2),
+        tierName:         row.tierName,
+        totalUzs:         roundTo(row.priceUzs * qty, 2),
         savingsVsListPct: null,
       });
     } catch (err) {
@@ -88,15 +74,7 @@ export class TieredPricingService {
   @Calculation('tiered-pricing-list')
   async listTiers(productName: string): Promise<Result<PriceTier[], AppError>> {
     try {
-      const rows = await runQuery<Row>(sql`
-        SELECT pt.id::text AS id, pt.product_name, pt.product_id,
-               pt.tier_name, pt.min_qty, pt.max_qty,
-               pt.price_uzs, pt.valid_from::text AS valid_from, pt.valid_to::text AS valid_to
-        FROM price_tier pt
-        LEFT JOIN products p ON p.id = pt.product_id
-        WHERE pt.product_name = ${productName} OR p.name = ${productName}
-        ORDER BY pt.min_qty ASC
-      `);
+      const rows = await this.repo.listPriceTiers(productName);
       return Ok(rows.map(r => this.toTier(r)));
     } catch (err) {
       this.logger.error(`TieredPricingService.listTiers xato: ${String(err)}`);
@@ -115,31 +93,15 @@ export class TieredPricingService {
     validTo?: string;
   }): Promise<Result<PriceTier, AppError>> {
     try {
-      const productRows = await runQuery<Row>(sql`
-        SELECT id FROM products WHERE name = ${dto.productName} AND is_active = true LIMIT 1
-      `);
-      const productId = productRows[0] ? Number(productRows[0]['id']) : null;
-
-      const maxQtyVal  = dto.maxQty ?? null;
-      const validToVal = dto.validTo ?? null;
-
-      const rows = productId !== null
-        ? await runQuery<Row>(sql`
-            INSERT INTO price_tier (product_name, product_id, tier_name, min_qty, max_qty, price_uzs, valid_from, valid_to)
-            VALUES (${dto.productName}, ${productId}, ${dto.tierName}, ${dto.minQty}, ${maxQtyVal},
-                    ${dto.priceUzs}, ${dto.validFrom}::date, ${validToVal}::date)
-            RETURNING id::text AS id, product_name, product_id, tier_name, min_qty, max_qty,
-                      price_uzs, valid_from::text AS valid_from, valid_to::text AS valid_to
-          `)
-        : await runQuery<Row>(sql`
-            INSERT INTO price_tier (product_name, tier_name, min_qty, max_qty, price_uzs, valid_from, valid_to)
-            VALUES (${dto.productName}, ${dto.tierName}, ${dto.minQty}, ${maxQtyVal},
-                    ${dto.priceUzs}, ${dto.validFrom}::date, ${validToVal}::date)
-            RETURNING id::text AS id, product_name, product_id, tier_name, min_qty, max_qty,
-                      price_uzs, valid_from::text AS valid_from, valid_to::text AS valid_to
-          `);
-
-      const row = rows[0];
+      const row = await this.repo.upsertPriceTier({
+        productName: dto.productName,
+        tierName:    dto.tierName,
+        minQty:      dto.minQty,
+        maxQty:      dto.maxQty ?? null,
+        priceUzs:    dto.priceUzs,
+        validFrom:   dto.validFrom,
+        validTo:     dto.validTo ?? null,
+      });
       if (!row) return Err(AppErr('INTERNAL', 'Narx qatlami saqlanmadi'));
       return Ok(this.toTier(row));
     } catch (err) {
@@ -148,17 +110,17 @@ export class TieredPricingService {
     }
   }
 
-  private toTier(row: Row): PriceTier {
+  private toTier(row: PriceTierRow): PriceTier {
     return {
-      id:          String(row['id'] ?? ''),
-      productName: String(row['product_name'] ?? ''),
-      productId:   row['product_id'] ? Number(row['product_id']) : null,
-      tierName:    String(row['tier_name'] ?? ''),
-      minQty:      safeNum(row['min_qty'], 0),
-      maxQty:      row['max_qty'] != null ? safeNum(row['max_qty'], undefined) ?? null : null,
-      priceUzs:    roundTo(safeNum(row['price_uzs'], 0), 2),
-      validFrom:   String(row['valid_from'] ?? ''),
-      validTo:     row['valid_to'] ? String(row['valid_to']) : null,
+      id:          row.id,
+      productName: row.productName,
+      productId:   row.productId,
+      tierName:    row.tierName,
+      minQty:      row.minQty,
+      maxQty:      row.maxQty,
+      priceUzs:    roundTo(row.priceUzs, 2),
+      validFrom:   row.validFrom,
+      validTo:     row.validTo,
     };
   }
 }

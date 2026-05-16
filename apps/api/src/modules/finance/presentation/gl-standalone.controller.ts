@@ -4,7 +4,9 @@
  */
 
 import { Controller, Get, Post, Body, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -13,7 +15,17 @@ import { GlService } from '../gl/gl.service';
 import { SeedGlAccountsSchema } from './dto/finance-dtos';
 import { unwrapOrInternal } from '@common/http-result';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+const CreateAccountSchema = z.object({
+  accountNumber: z.string().min(1).max(50),
+  accountName: z.string().min(1).max(200),
+  accountType: z.string().max(50).optional(),
+  parentId: z.union([z.string(), z.number()]).optional(),
+  active: z.boolean().optional(),
+}).passthrough();
+
+@ApiThrottle()
+@ApiTags('Gl Standalone')
+@ApiBearerAuth()
 @Controller('gl')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -21,20 +33,29 @@ import { unwrapOrInternal } from '@common/http-result';
 export class GlStandaloneController {
   constructor(private readonly glSvc: GlService) {}
 
+  @ApiOperation({ summary: 'Get accounts' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('accounts')
   async getAccounts() {
     return unwrapOrInternal(await this.glSvc.findAllAccounts());
   }
 
+  @ApiOperation({ summary: 'Seed accounts' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('seed-accounts')
-  async seedAccounts(@Body() body: Record<string, unknown>) {
+  async seedAccounts(@Body() body: unknown) {
     const dto = SeedGlAccountsSchema.parse(body);
     const rows = (dto.accounts ?? []) as Record<string, unknown>[];
     return unwrapOrInternal(await this.glSvc.seedAccounts(rows));
   }
 
+  @ApiOperation({ summary: 'Create account' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('accounts')
-  async createAccount(@Body() body: Record<string, unknown>) {
-    return { id: Date.now(), ...body, created: true };
+  async createAccount(@Body() body: unknown) {
+    const dto = CreateAccountSchema.parse(body);
+    return { id: Date.now(), ...dto, created: true };
   }
 }

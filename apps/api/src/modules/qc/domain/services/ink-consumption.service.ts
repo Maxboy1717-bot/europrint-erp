@@ -42,12 +42,11 @@
  *   round helper sits at top-of-module so any extension uses the same scale.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeNum } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { IQcComputeRepository, QC_COMPUTE_REPO } from '../repositories/i-qc.repo';
 
 export interface CmykCoverage { c: number; m: number; y: number; k: number; }
 
@@ -114,6 +113,9 @@ const round = (v: number) => Math.round(v * ROUND) / ROUND;
 
 @Injectable()
 export class InkConsumptionService {
+  constructor(
+    @Inject(QC_COMPUTE_REPO) private readonly qcRepo: IQcComputeRepository,
+  ) {}
 
   /** Derive sheet area in m² from width/height in mm */
   sheetAreaFromDimsMm(widthMm: number, heightMm: number): number {
@@ -121,35 +123,16 @@ export class InkConsumptionService {
   }
 
   /**
-   * Query warehouse_materials table for current ink stock by CMYK channel.
-   * Matches rows where material_code ILIKE 'INK_{channel}%' or name ILIKE '%cyan%' etc.
-   * Returns map of channel → available quantity in grams (null if not found).
+   * Resolve current CMYK ink stock (grams) keyed by channel.
+   * Data fetch happens in the repository — this method only shapes the result
+   * into the `Record<CmykChannel, number | null>` form needed by the calc.
    */
   async queryInventory(): Promise<Record<CmykChannel, number | null>> {
-    type MaterialRow = { channel: string; quantity_grams: number };
-    const rows = await runQuery<MaterialRow>(sql`
-      SELECT
-        CASE
-          WHEN LOWER(material_code) LIKE 'ink_c%' OR LOWER(name) LIKE '%cyan%'    THEN 'c'
-          WHEN LOWER(material_code) LIKE 'ink_m%' OR LOWER(name) LIKE '%magenta%' THEN 'm'
-          WHEN LOWER(material_code) LIKE 'ink_y%' OR LOWER(name) LIKE '%yellow%'  THEN 'y'
-          WHEN LOWER(material_code) LIKE 'ink_k%' OR LOWER(name) LIKE '%black%'   THEN 'k'
-        END AS channel,
-        COALESCE(SUM(wm.quantity * 1000), 0)::numeric AS quantity_grams
-      FROM warehouse_materials wm
-      WHERE wm.unit IN ('kg','litre','l')
-        AND (
-          LOWER(wm.material_code) LIKE 'ink_%'
-          OR LOWER(wm.name) LIKE '%ink%'
-          OR LOWER(wm.name) LIKE '%siyoh%'
-        )
-      GROUP BY 1
-    `).catch(() => [] as MaterialRow[]);
-
+    const rows = await this.qcRepo.findInkInventory();
     const inv: Record<CmykChannel, number | null> = { c: null, m: null, y: null, k: null };
     for (const r of rows) {
       const ch = r.channel as CmykChannel;
-      if (ch && ch in inv) inv[ch] = safeNum(r.quantity_grams);
+      if (ch && ch in inv) inv[ch] = safeNum(r.quantityGrams);
     }
     return inv;
   }

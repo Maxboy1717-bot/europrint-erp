@@ -7,10 +7,8 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
-import { pgTable, text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
 import { eq, sql } from 'drizzle-orm';
-import { db } from '@shared/db';
-import { departments, positions } from '@shared/db';
+import { db, user_panels as userPanels, departments, positions } from '@shared/db';
 import { Result, Err, Ok } from '@common/types/result.type';
 import { ICoreRepo } from '../../domain/repositories/i-core.repo';
 import { Department } from '../../domain/aggregates/department.aggregate';
@@ -18,15 +16,8 @@ import { Position } from '../../domain/aggregates/position.aggregate';
 import { Panel, PanelLayout } from '../../domain/aggregates/panel.aggregate';
 import { createId } from '@paralleldrive/cuid2';
 
-export const userPanels = pgTable('user_panels', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  userId: text('user_id').unique().notNull(),
-  name: text('name').notNull().default('My Dashboard'),
-  layout: jsonb('layout').notNull().default([]),
-  isDefault: boolean('is_default').default(false),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
+// Re-export so callers that previously imported `userPanels` from this file keep working.
+export { userPanels };
 
 type DbRow = Record<string, unknown>;
 type UserPanelRow = typeof userPanels.$inferSelect;

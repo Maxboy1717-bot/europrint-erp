@@ -3,8 +3,8 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards , UseInterceptors} from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Patch, Post, Query, UseGuards , UseInterceptors} from '@nestjs/common';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -13,7 +13,7 @@ import { MaterialBalanceBodyDto } from '../compatibility/dto/operations.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Roles('admin', 'manager', 'hr_manager', 'director', 'SUPER_ADMIN')
 @UseInterceptors(AuditInterceptor)
 @Controller('material-balance')
@@ -92,11 +92,17 @@ export class MaterialBalanceController {
   /**
    * MaterialBalance page calls GET /api/material-balance/movements as a
    * cross-material movement feed. Real implementation will join material
-   * movements across all materials; until then return an empty journal.
+   * movements across all materials.
+   *
+   * P3-26: returns 501 until the aggregator is wired; clients can fall back to
+   * /api/material-balance/:materialId/history per-material.
    */
   @Get('movements')
   async getMovements(@Query() _q: Record<string, string>) {
-    return { items: [], total: 0 };
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: GET /material-balance/movements', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
   @Get(':materialId/reconciliation')

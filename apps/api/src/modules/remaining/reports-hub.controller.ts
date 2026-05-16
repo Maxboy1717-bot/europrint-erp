@@ -4,7 +4,7 @@
  */
 
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -15,7 +15,7 @@ import { unwrapOrInternal } from '@common/http-result';
 
 const REPORT_ROLES = ['manager', 'finance', 'admin', 'super_admin', 'director', 'MANAGER', 'ADMIN', 'SUPER_ADMIN', 'DIRECTOR'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('reports-hub')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)

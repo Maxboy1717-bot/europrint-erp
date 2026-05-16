@@ -3,13 +3,12 @@
  * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
  */
 
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { db } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/types/result.type';
 import { IOrderRepo, ORDER_WF_REPO } from '../../infrastructure/repositories/i-order.repo';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderStatusChangedEvent } from '../../domain/events/order-status-changed.event';
 import {
   owOrderStatusHistory,
@@ -42,7 +41,7 @@ export class TransitionStatusHandler implements ICommandHandler<TransitionStatus
 
   constructor(
     @Inject(ORDER_WF_REPO) private readonly repo: IOrderRepo,
-    private readonly events: EventEmitter2,
+    private readonly eventBus: EventBus,
   ) {}
 
   async execute(command: TransitionStatusCommand): Promise<Result<{ status: string }>> {
@@ -88,7 +87,7 @@ export class TransitionStatusHandler implements ICommandHandler<TransitionStatus
       msg: "Status o'zgardi", id: command.orderId,
       from: prevStatus, to: command.toStatus, actor: command.changedBy,
     });
-    this.events.emit('order.status_changed', new OrderStatusChangedEvent(
+    await this.eventBus.publish(new OrderStatusChangedEvent(
       command.orderId, order.getOrderNumber(), prevStatus,
       command.toStatus, command.changedBy, new Date(),
     ));

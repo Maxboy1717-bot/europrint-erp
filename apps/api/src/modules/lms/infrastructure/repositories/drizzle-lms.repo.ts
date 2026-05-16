@@ -5,7 +5,8 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
-import { SQL, SQLWrapper, sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql, eq, count } from 'drizzle-orm';
+import { courses_table } from '@shared/db';
 import { Result, Err, Ok } from '@common/types/result.type';
 import { ILmsRepo, Course, Enrollment } from '../../domain/repositories/i-lms.repo';
 import { LmsCertRepo } from './drizzle-lms-cert.repo';
@@ -71,9 +72,9 @@ export class LmsRepository implements ILmsRepo {
           : filters?.category
           ? exec(sql`SELECT * FROM courses WHERE is_active = true AND category = ${filters.category} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`)
           : exec(sql`SELECT * FROM courses WHERE is_active = true ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`),
-        runQuery<{ cnt: number }>(sql`SELECT COUNT(*) AS cnt FROM courses WHERE is_active = true`),
+        db.select({ cnt: count() }).from(courses_table).where(eq(courses_table.is_active, true)),
       ]);
-      return Ok({ items: (Array.isArray(rows) ? rows : []).map(mapCourse), total: Number(countRows.rows[0]?.cnt ?? 0) });
+      return Ok({ items: (Array.isArray(rows) ? rows : []).map(mapCourse), total: Number(countRows[0]?.cnt ?? 0) });
     } catch (error: unknown) {
       this.logger.error(`findAllCourses: ${(error as Error).message}`);
       return Err((error as Error).message);

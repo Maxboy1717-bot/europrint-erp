@@ -5,7 +5,7 @@
 
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { IMmRepository } from '../../domain/repositories/mm.repository';
+import { IMmRepository, MM_REPO } from '../../domain/repositories/mm.repository';
 
 export interface PpReleasedEvent {
   poId: number;
@@ -16,7 +16,7 @@ export interface PpReleasedEvent {
 export class PpReleasedListener {
   private readonly logger = new Logger(PpReleasedListener.name);
 
-  constructor(@Inject('IMmRepository') private readonly mmRepo: IMmRepository) {}
+  constructor(@Inject(MM_REPO) private readonly mmRepo: IMmRepository) {}
 
   @OnEvent('PP_RELEASED_TO_PRODUCTION')
   async handle(event: PpReleasedEvent) {

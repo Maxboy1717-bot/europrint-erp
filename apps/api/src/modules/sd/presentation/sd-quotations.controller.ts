@@ -3,35 +3,21 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
+import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { safeInt } from '../../hr/common/db-rows';
 import {
-  AuditInterceptor } from '@common/interceptors/audit.interceptor';import { safeInt } from '../../hr/common/db-rows';import {
-Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Logger,
-  NotFoundException,
-  Param,
-  Patch,
-  Post,
-  Put,
-  Query,
-  UseGuards,
-  UseInterceptors,
-  UsePipes,
+  Body, Controller, Delete, Get, HttpCode, HttpStatus,
+  Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {
   SdCreateQuotationSchema, SdCreateQuotationDto,
   SdCreateContractSchema, SdCreateContractDto,
   SdCalculatePriceSchema, SdCalculatePriceDto,
 } from './dto/sd-quotations.dto';
-import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { unwrapOrThrow, assertOk } from '@common/http-result';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -39,260 +25,189 @@ import { SdQuotationsService } from '../application/sd-quotations.service';
 
 const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+type Body_ = Record<string, unknown>;
+
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(...SD_ROLES)
+@ApiTags('Sd Quotations')
+@ApiBearerAuth()
 @Controller('sd')
 export class SdQuotationsController {
-  private readonly logger = new Logger(SdQuotationsController.name);
-
   constructor(private readonly svc: SdQuotationsService) {}
 
+  @ApiOperation({ summary: 'List quotations' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('quotations')
   async listQuotations(
     @Query('customerId') customerId?: string, @Query('status') status?: string,
     @Query('limit') limit?: string, @Query('offset') offset?: string,
   ) {
-    const _rListQuotations = await this.svc.listQuotations(
-      customerId ? safeInt(customerId, 0) : null,
-      status ?? null,
+    const r = await this.svc.listQuotations(
+      customerId ? safeInt(customerId, 0) : null, status ?? null,
       safeInt(limit, 50), safeInt(offset, 0),
     );
-    assertOk(_rListQuotations);
-    return _rListQuotations.data;
+    assertOk(r);
+    return r.data;
   }
 
-  @Post('quotations')
-  @UsePipes(new ZodValidationPipe(SdCreateQuotationSchema))
-  async createQuotation(@Body() body: SdCreateQuotationDto) {
-    return unwrapOrThrow(await this.svc.createQuotation(body));
-  }
+  @ApiOperation({ summary: 'Create quotation' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('quotations') @UsePipes(new ZodValidationPipe(SdCreateQuotationSchema))
+  async createQuotation(@Body() body: SdCreateQuotationDto) { return unwrapOrThrow(await this.svc.createQuotation(body)); }
 
   // NOTE: GET /sd/contracts olib tashlandi — SdContractsController ushlab turadi.
 
-  @Post('contracts')
-  @UsePipes(new ZodValidationPipe(SdCreateContractSchema))
-  async createContract(@Body() body: SdCreateContractDto) {
-    return unwrapOrThrow(await this.svc.createContract(body));
-  }
+  @ApiOperation({ summary: 'Create contract' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('contracts') @UsePipes(new ZodValidationPipe(SdCreateContractSchema))
+  async createContract(@Body() body: SdCreateContractDto) { return unwrapOrThrow(await this.svc.createContract(body)); }
 
+  @ApiOperation({ summary: 'List price formulas' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('price-formulas')
   async listPriceFormulas(@Query('limit') limit?: string, @Query('offset') offset?: string) {
     return unwrapOrThrow(await this.svc.listPriceFormulas(safeInt(limit, 50), safeInt(offset, 0)));
   }
 
-  @Post('calculate-price')
-  @UsePipes(new ZodValidationPipe(SdCalculatePriceSchema))
+  @ApiOperation({ summary: 'Calculate price' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('calculate-price') @UsePipes(new ZodValidationPipe(SdCalculatePriceSchema))
   async calculatePrice(@Body() body: SdCalculatePriceDto) {
-    const _rCalculatePrice = await this.svc.calculatePrice(
-      safeInt(body.product_id, 0),
-      safeInt(body.quantity, 1),
+    const r = await this.svc.calculatePrice(
+      safeInt(body.product_id, 0), safeInt(body.quantity, 1),
       body.formula_id ? safeInt(body.formula_id, 0) : null,
     );
-    assertOk(_rCalculatePrice);
-    return _rCalculatePrice.data;
+    assertOk(r);
+    return r.data;
   }
 
+  @ApiOperation({ summary: 'Get kpi team' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('kpi/team')
-  async getKpiTeam(@Query('period') period?: string) {
-    return unwrapOrThrow(await this.svc.getKpiTeam(period ?? null));
-  }
+  async getKpiTeam(@Query('period') period?: string) { return unwrapOrThrow(await this.svc.getKpiTeam(period ?? null)); }
 
+  @ApiOperation({ summary: 'Get kpi targets' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('kpi-targets')
   async getKpiTargets(@Query('managerId') managerId?: string) {
     return unwrapOrThrow(await this.svc.getKpiTargets(managerId ? safeInt(managerId, 0) : null));
   }
 
+  @ApiOperation({ summary: 'Get funnel report' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('reports/funnel')
-  async getFunnelReport(@Query('period') period?: string) {
-    return unwrapOrThrow(await this.svc.getFunnelReport(period ?? null));
-  }
+  async getFunnelReport(@Query('period') period?: string) { return unwrapOrThrow(await this.svc.getFunnelReport(period ?? null)); }
 
-  @Post('quotations/:id/convert-to-order')
-  @HttpCode(HttpStatus.OK)
-  @UseInterceptors(AuditInterceptor)
-  async convertToOrder(@Param('id') id: string) {
-    return unwrapOrThrow(await this.svc.convertToOrder(id));
-  }
+  @ApiOperation({ summary: 'Convert to order' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post('quotations/:id/convert-to-order') @HttpCode(HttpStatus.OK) @UseInterceptors(AuditInterceptor)
+  async convertToOrder(@Param('id') id: string) { return unwrapOrThrow(await this.svc.convertToOrder(id)); }
 
-  @Post('quotations/:id/convert')
-  @HttpCode(HttpStatus.OK)
-  @UseInterceptors(AuditInterceptor)
-  async convertQuotation(@Param('id') id: string) {
-    return unwrapOrThrow(await this.svc.convertToOrder(id));
-  }
+  @ApiOperation({ summary: 'Convert quotation' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post('quotations/:id/convert') @HttpCode(HttpStatus.OK) @UseInterceptors(AuditInterceptor)
+  async convertQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.convertToOrder(id)); }
 
+  // ── Status-transition routes (delegated to SdQuotationsService) ──────────────
+
+  @ApiOperation({ summary: 'Send quotation' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('quotations/:id/send')
-  async sendQuotation(@Param('id') id: string) {
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE sd_quotations SET status = 'sent', updated_at = NOW()
-      WHERE id = ${id} AND deleted_at IS NULL
-      RETURNING id, status, updated_at
-    `);
-    if (!r.rows[0]) throw new NotFoundException(`Quotation ${id} topilmadi`);
-    this.logger.log(`Quotation ${id} sent — email delivery should be queued separately`);
-    return { id, sent: true, status: 'sent', updated_at: r.rows[0]['updated_at'] };
-  }
+  async sendQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.sendQuotation(id)); }
 
+  @ApiOperation({ summary: 'Put send quotation' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Put('quotations/:id/send')
+  async putSendQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.sendQuotation(id)); }
+
+  @ApiOperation({ summary: 'Approve quotation' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('quotations/:id/approve')
-  async approveQuotation(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE sd_quotations SET status = 'approved', updated_at = NOW()
-      WHERE id = ${id} AND deleted_at IS NULL
-      RETURNING id, status, updated_at
-    `);
-    if (!r.rows[0]) throw new NotFoundException(`Quotation ${id} topilmadi`);
-    return { id, approved: true, status: 'approved', updated_at: r.rows[0]['updated_at'] };
-  }
+  async approveQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.approveQuotation(id)); }
 
+  @ApiOperation({ summary: 'Put approve quotation' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Put('quotations/:id/approve')
+  async putApproveQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.approveQuotation(id)); }
+
+  @ApiOperation({ summary: 'Update quotation' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('quotations/:id')
-  async updateQuotation(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    const allowed: Record<string, unknown> = {};
-    for (const key of ['title', 'total_amount', 'currency', 'valid_until', 'notes', 'status', 'items']) {
-      if (key in body) allowed[key] = body[key];
-    }
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE sd_quotations
-      SET
-        title        = COALESCE(${allowed['title'] ?? null}, title),
-        total_amount = COALESCE(${allowed['total_amount'] ?? null}, total_amount),
-        currency     = COALESCE(${allowed['currency'] ?? null}, currency),
-        valid_until  = COALESCE(${allowed['valid_until'] ?? null}, valid_until),
-        notes        = COALESCE(${allowed['notes'] ?? null}, notes),
-        status       = COALESCE(${allowed['status'] ?? null}, status),
-        items        = COALESCE(${allowed['items'] ? JSON.stringify(allowed['items']) : null}, items),
-        updated_at   = NOW()
-      WHERE id = ${id} AND deleted_at IS NULL
-      RETURNING *
-    `);
-    if (!r.rows[0]) throw new NotFoundException(`Quotation ${id} topilmadi`);
-    return { data: r.rows[0] };
-  }
+  async updateQuotation(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.updateQuotation(id, body)); }
+
+  @ApiOperation({ summary: 'Delete quotation' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Delete('quotations/:id')
+  async deleteQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.deleteQuotation(id)); }
 
   // NOTE: PATCH /sd/contracts/:id/sign olib tashlandi — SdContractsController.sign() ushlab turadi.
 
+  @ApiOperation({ summary: 'Update kpi target' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('kpi-targets/:id')
-  async updateKpiTarget(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE sd_kpi_targets
-      SET
-        target_value = COALESCE(${body['target_value'] ?? null}, target_value),
-        period       = COALESCE(${body['period'] ?? null}, period),
-        updated_at   = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `);
-    if (!r.rows[0]) throw new NotFoundException(`KPI target ${id} topilmadi`);
-    return { data: r.rows[0] };
-  }
+  async updateKpiTarget(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.updateKpiTarget(id, body)); }
 
+  @ApiOperation({ summary: 'Cancel order' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('orders/:id/cancel')
-  async cancelOrder(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE sales_orders
-      SET status = 'cancelled', cancel_reason = ${body['reason'] ?? null}, updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING id, status, updated_at
-    `);
-    if (!r.rows[0]) throw new NotFoundException(`Order ${id} topilmadi`);
-    return { id, cancelled: true, status: 'cancelled', updated_at: r.rows[0]['updated_at'] };
-  }
+  async cancelOrder(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.cancelOrder(id, body)); }
 
+  @ApiOperation({ summary: 'Post cancel order' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('orders/:id/cancel')
-  async postCancelOrder(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE sales_orders
-      SET status = 'cancelled', cancel_reason = ${body['reason'] ?? null}, updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING id, status, updated_at
-    `);
-    if (!r.rows[0]) throw new NotFoundException(`Order ${id} topilmadi`);
-    return { id, cancelled: true, status: 'cancelled', updated_at: r.rows[0]['updated_at'] };
-  }
+  async postCancelOrder(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.cancelOrder(id, body)); }
 
+  @ApiOperation({ summary: 'Mark payment paid' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('payments/:id/mark-paid')
-  async markPaymentPaid(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE fi_payments
-      SET status = 'paid', payment_date = COALESCE(${body['payment_date'] ?? null}, payment_date), updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING id, status, updated_at
-    `);
-    if (!r.rows[0]) throw new NotFoundException(`Payment ${id} topilmadi`);
-    return { id, paid: true, status: 'paid', updated_at: r.rows[0]['updated_at'] };
-  }
+  async markPaymentPaid(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.markPaymentPaid(id, body)); }
 
+  @ApiOperation({ summary: 'Put mark payment paid' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Put('payments/:id/mark-paid')
-  async putMarkPaymentPaid(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE fi_payments
-      SET status = 'paid', payment_date = COALESCE(${body['payment_date'] ?? null}, payment_date), updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING id, status, updated_at
-    `);
-    if (!r.rows[0]) throw new NotFoundException(`Payment ${id} topilmadi`);
-    return { id, paid: true, status: 'paid', updated_at: r.rows[0]['updated_at'] };
-  }
+  async putMarkPaymentPaid(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.markPaymentPaid(id, body)); }
 
+  @ApiOperation({ summary: 'Put sign contract' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Put('contracts/:id/sign')
-  async putSignContract(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE sd_contracts
-      SET status = 'signed', signature_data = ${body['signature_data'] ? JSON.stringify(body['signature_data']) : null}, updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING id, status, updated_at
-    `);
-    if (!r.rows[0]) throw new NotFoundException(`Contract ${id} topilmadi`);
-    return { id, signed: true, status: 'signed', updated_at: r.rows[0]['updated_at'] };
-  }
+  async putSignContract(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.signContract(id, body)); }
 
+  @ApiOperation({ summary: 'Put price formulas' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Put('price-formulas')
-  async putPriceFormulas(@Body() body: Record<string, unknown>) {
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE sd_price_formulas
-      SET
-        name        = COALESCE(${body['name'] ?? null}, name),
-        formula     = COALESCE(${body['formula'] ?? null}, formula),
-        description = COALESCE(${body['description'] ?? null}, description),
-        updated_at  = NOW()
-      WHERE id = ${body['id'] ?? null}
-      RETURNING *
-    `);
-    return { updated: true, data: r.rows[0] ?? null };
-  }
-
-  @Delete('quotations/:id')
-  async deleteQuotation(@Param('id') id: string) {
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE sd_quotations SET deleted_at = NOW()
-      WHERE id = ${id} AND deleted_at IS NULL
-      RETURNING id, deleted_at
-    `);
-    if (!r.rows[0]) throw new NotFoundException(`Quotation ${id} topilmadi yoki allaqachon o'chirilgan`);
-    return { deleted: true, id, deleted_at: r.rows[0]['deleted_at'] };
-  }
-
-  @Put('quotations/:id/approve')
-  async putApproveQuotation(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE sd_quotations SET status = 'approved', updated_at = NOW()
-      WHERE id = ${id} AND deleted_at IS NULL
-      RETURNING id, status, updated_at
-    `);
-    if (!r.rows[0]) throw new NotFoundException(`Quotation ${id} topilmadi`);
-    return { id, approved: true, status: 'approved', updated_at: r.rows[0]['updated_at'] };
-  }
-
-  @Put('quotations/:id/send')
-  async putSendQuotation(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    const r = await runQuery<Record<string, unknown>>(sql`
-      UPDATE sd_quotations SET status = 'sent', updated_at = NOW()
-      WHERE id = ${id} AND deleted_at IS NULL
-      RETURNING id, status, updated_at
-    `);
-    if (!r.rows[0]) throw new NotFoundException(`Quotation ${id} topilmadi`);
-    this.logger.log(`Quotation ${id} sent — email delivery should be queued separately`);
-    return { id, sent: true, status: 'sent', updated_at: r.rows[0]['updated_at'] };
-  }
+  async putPriceFormulas(@Body() body: Body_) { return unwrapOrThrow(await this.svc.upsertPriceFormula(body)); }
 }

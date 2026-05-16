@@ -18,9 +18,10 @@
 import {
   Body, Controller, Get, Param, Post, UseGuards, UseInterceptors, Res, Header,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import type { FastifyReply } from 'fastify';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -64,7 +65,9 @@ const ComplaintSchema = z.object({ reason: z.string().min(5).max(4000) });
 const PrintSchema     = z.object({ reason: z.string().min(3).max(2000) });
 const SetPinSchema    = z.object({ pin: z.string().regex(/^\d{4,8}$/) });
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Cc Documents')
+@ApiBearerAuth()
 @Controller('cc')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -79,6 +82,9 @@ export class CcDocumentsController {
   ) {}
 
   // ── PDF download ─────────────────────────────────────────────────
+  @ApiOperation({ summary: 'Download pdf' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('documents/:id/pdf')
   @Header('Content-Type', 'application/pdf')
   async downloadPdf(@Param('id') id: string, @Res({ passthrough: true }) res: FastifyReply): Promise<Buffer> {
@@ -89,6 +95,8 @@ export class CcDocumentsController {
   }
 
   // ── Templates ──────────────────────────────────────────────────────
+  @ApiOperation({ summary: 'List templates' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('templates')
   async listTemplates() {
     const { runQuery } = await import('@shared/db');
@@ -107,6 +115,9 @@ export class CcDocumentsController {
     return r.rows;
   }
 
+  @ApiOperation({ summary: 'List rejection reasons' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('documents/:id/rejection-reasons')
   async listRejectionReasons(@Param('id') docId: string) {
     const { runQuery } = await import('@shared/db');
@@ -123,6 +134,9 @@ export class CcDocumentsController {
   }
 
   // ── PIN ────────────────────────────────────────────────────────────
+  @ApiOperation({ summary: 'Set pin' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('pin')
   async setPin(
     @Body(new ZodValidationPipe(SetPinSchema)) body: { pin: string },
@@ -132,12 +146,17 @@ export class CcDocumentsController {
     return { ok: true };
   }
 
+  @ApiOperation({ summary: 'Pin status' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('pin/status')
   async pinStatus(@CurrentUser() user: { id: number }) {
     return { hasPin: await this.pin.hasPin(user.id) };
   }
 
   // ── Documents ──────────────────────────────────────────────────────
+  @ApiOperation({ summary: 'Draft' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('documents/draft')
   draft(
     @Body(new ZodValidationPipe(CreateDraftSchema)) body: z.infer<typeof CreateDraftSchema>,
@@ -146,11 +165,17 @@ export class CcDocumentsController {
     return this.wf.createDraft(user.id, body);
   }
 
+  @ApiOperation({ summary: 'Get one' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('documents/:id')
   getOne(@Param('id') id: string) {
     return this.baskets.getOne(id);
   }
 
+  @ApiOperation({ summary: 'Send' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('documents/:id/send')
   send(
     @Param('id') id: string,
@@ -160,6 +185,9 @@ export class CcDocumentsController {
     return this.wf.sendDocument(id, user.id, body);
   }
 
+  @ApiOperation({ summary: 'Approve' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('documents/:id/approve')
   approve(
     @Param('id') id: string,
@@ -169,6 +197,9 @@ export class CcDocumentsController {
     return this.wf.approve(id, user.id, body);
   }
 
+  @ApiOperation({ summary: 'Reject' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('documents/:id/reject')
   reject(
     @Param('id') id: string,
@@ -178,6 +209,9 @@ export class CcDocumentsController {
     return this.wf.reject(id, user.id, body);
   }
 
+  @ApiOperation({ summary: 'Resubmit' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('documents/:id/resubmit')
   resubmit(
     @Param('id') id: string,
@@ -187,6 +221,9 @@ export class CcDocumentsController {
     return this.wf.resubmit(id, user.id, body);
   }
 
+  @ApiOperation({ summary: 'Cancel' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('documents/:id/cancel')
   cancel(
     @Param('id') id: string,
@@ -196,6 +233,9 @@ export class CcDocumentsController {
     return this.wf.cancel(id, user.id, body);
   }
 
+  @ApiOperation({ summary: 'Complaint' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('documents/:id/complaint')
   complaint(
     @Param('id') id: string,
@@ -205,6 +245,9 @@ export class CcDocumentsController {
     return this.wf.createComplaint(id, user.id, body.reason);
   }
 
+  @ApiOperation({ summary: 'Print' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('documents/:id/print')
   print(
     @Param('id') id: string,

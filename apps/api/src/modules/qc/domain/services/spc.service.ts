@@ -52,12 +52,11 @@
  *   precision; the final value is rounded once at the boundary.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeDiv, safeNum, safeAvg } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
-import { db, qc_spc_data } from '@shared/db';
-import { eq, desc } from 'drizzle-orm';
+import { IQcComputeRepository, QC_COMPUTE_REPO } from '../repositories/i-qc.repo';
 import Decimal from 'decimal.js';
 
 export interface ControlChartData {
@@ -114,6 +113,10 @@ export interface CapabilityResult {
  */
 @Injectable()
 export class SpcService {
+  constructor(
+    @Inject(QC_COMPUTE_REPO) private readonly qcRepo: IQcComputeRepository,
+  ) {}
+
   @Calculation('spc.xbarR')
   async computeXbarR(
     subgroups: readonly Subgroup[],
@@ -183,20 +186,13 @@ export class SpcService {
     lastN = 30,
   ): Promise<Result<ControlChartData, AppError>> {
     try {
-      const readings = await db
-        .select({ value: qc_spc_data.value, measuredAt: qc_spc_data.measuredAt })
-        .from(qc_spc_data)
-        .where(eq(qc_spc_data.parameterId, parameterId))
-        .orderBy(desc(qc_spc_data.measuredAt))
-        .limit(lastN);
+      const readings = await this.qcRepo.findSpcReadings(parameterId, lastN);
 
       if (!readings.length) {
         return Err({ code: 'NOT_FOUND', message: 'O\'lchamlar topilmadi' });
       }
 
-      const values = (readings as { value: string | number }[])
-        .reverse()
-        .map(r => safeNum(r.value));
+      const values = readings.reverse().map(r => safeNum(r.value));
       const n = values.length;
 
       const sum = values.reduce(

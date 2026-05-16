@@ -6,6 +6,8 @@
  */
 
 import { Controller, Get, Patch, Body, UseGuards, ForbiddenException, Req } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 import type { FastifyRequest } from 'fastify';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -19,15 +21,22 @@ interface AuthedReq extends FastifyRequest {
   user?: { id?: number; userId?: number; role?: string };
 }
 
+@ApiTags('Wake Config')
+@ApiBearerAuth()
 @Controller('aisha/wake')
 @UseGuards(JwtAuthGuard)
 export class WakeConfigController {
   private currentSensitivity: number;
 
-  constructor(private readonly cfg: AishaConfig) {
+  constructor(
+    private readonly cfg: AishaConfig,
+    private readonly i18n: I18nService,
+  ) {
     this.currentSensitivity = cfg.wakeSensitivity;
   }
 
+  @ApiOperation({ summary: 'Config' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('config')
   config(): { accessKey: string; ppnUrl: string; sensitivity: number; voiceId: string } {
     return {
@@ -38,11 +47,14 @@ export class WakeConfigController {
     };
   }
 
+  @ApiOperation({ summary: 'Set sensitivity' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('sensitivity')
-  setSensitivity(@Body() body: unknown, @Req() req: AuthedReq): { sensitivity: number } {
+  async setSensitivity(@Body() body: unknown, @Req() req: AuthedReq): Promise<{ sensitivity: number }> {
     const userId = req.user?.userId ?? req.user?.id;
     if (userId !== this.cfg.directorUserId) {
-      throw new ForbiddenException('Faqat direktor sensitivity\'ni o\'zgartira oladi');
+      throw new ForbiddenException(await this.i18n.t('errors.onlyDirectorCanChangeSensitivity'));
     }
     const dto = SensitivitySchema.parse(body);
     this.currentSensitivity = dto.sensitivity;

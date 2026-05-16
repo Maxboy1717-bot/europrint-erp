@@ -8,34 +8,10 @@ const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
 import { Injectable, Logger } from '@nestjs/common';
 import { db } from '@shared/db';
-import { pgTable, serial, integer, varchar, boolean, timestamp, index } from 'drizzle-orm/pg-core';
+import { ppWorkCenters as workCenters } from '@shared/db/schema-pp';
 import { eq, and, desc, isNull } from 'drizzle-orm';
 import { Result, Err , Ok } from '@common/result';
 import { WorkCenter, WorkCenterType } from '../../domain/aggregates/work-center.aggregate';
-
-const workCenters = pgTable(
-  'work_centers',
-  {
-    id:                        serial('id').primaryKey(),
-    code:                      varchar('code', { length: 100 }).unique().notNull(),
-    name:                      varchar('name', { length: 255 }).notNull(),
-    type:                      varchar('type', { length: 50 }).notNull().default('machine'),
-    capacity:                  integer('capacity').notNull().default(8),
-    certificationLmsCourseId:  integer('certification_lms_course_id'),
-    departmentId:              integer('department_id'),
-    isActive:                  boolean('is_active').default(true),
-    nameRu:                    varchar('name_ru', { length: 255 }),
-    nameUz:                    varchar('name_uz', { length: 255 }),
-    requiredSkillName:         varchar('required_skill_name', { length: 255 }),
-    createdAt:                 timestamp('created_at').defaultNow(),
-    deletedAt:                 timestamp('deleted_at'),
-  },
-  (table) => [
-    index('work_centers_code_idx').on(table.code),
-    index('work_centers_type_idx').on(table.type),
-    index('work_centers_is_active_idx').on(table.isActive),
-  ],
-);
 
 export interface WorkCenterFilters {
   type?: WorkCenterType;

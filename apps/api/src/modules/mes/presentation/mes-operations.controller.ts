@@ -6,10 +6,11 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Controller, Get, Post, Patch, Body, Param, UseGuards, UseInterceptors, Query, Logger } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { GetOeeQuery } from '../application/queries/get-oee.query';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -29,6 +30,15 @@ import {
   GetDowntimeDtoSchema,
   GetDowntimeSummaryDtoSchema,
 } from './dto/mes-operations.dto';
+import { z } from 'zod';
+
+const SessionDowntimeSchema = z.object({
+  eventType: z.string().max(50).optional(),
+  reasonCode: z.string().max(100).optional(),
+  reason: z.string().max(100).optional(),
+  workCenterId: z.union([z.string(), z.number()]).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
 
 enum Role {
   SUPER_ADMIN = 'super_admin',
@@ -36,7 +46,8 @@ enum Role {
   OPERATOR = 'operator',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Mes Operations')
 @Controller('mes/operations')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -48,12 +59,16 @@ export class MesOperationsController {
     private queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'List sessions' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER, Role.OPERATOR)
   async listSessions(@Query('status') status?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
     return unwrapOrThrow(await this.queryBus.execute(new GetSessionsQuery({ status, page: Number(page), limit: Number(limit) })));
   }
 
+  @ApiOperation({ summary: 'Get downtime' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('downtime')
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER, Role.OPERATOR)
   async getDowntime(@Query() query?: GetDowntimeDto) {
@@ -62,6 +77,9 @@ export class MesOperationsController {
     return unwrapOrThrow(await this.queryBus.execute(new GetDowntimeQuery(validatedQuery)));
   }
 
+  @ApiOperation({ summary: 'Record downtime' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('downtime')
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER, Role.OPERATOR)
   async recordDowntime(@Body() dto: CreateDowntimeDto) {
@@ -78,6 +96,10 @@ export class MesOperationsController {
     return unwrapOrThrow(await this.commandBus.execute(command));
   }
 
+  @ApiOperation({ summary: 'End downtime' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('downtime/:id/end')
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER, Role.OPERATOR)
   async endDowntime(@Param('id') id: string, @Body() dto: EndDowntimeDto) {
@@ -87,6 +109,8 @@ export class MesOperationsController {
     return unwrapOrThrow(await this.commandBus.execute(command));
   }
 
+  @ApiOperation({ summary: 'Get downtime summary' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('downtime/summary')
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
   async getDowntimeSummary(@Query() query?: Record<string, unknown>) {
@@ -97,6 +121,8 @@ export class MesOperationsController {
     return unwrapOrThrow(await this.queryBus.execute(new GetDowntimeSummaryQuery(validatedQuery.from, validatedQuery.to)));
   }
 
+  @ApiOperation({ summary: 'Get reason codes' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('reason-codes')
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER, Role.OPERATOR)
   async getReasonCodes() {
@@ -104,6 +130,8 @@ export class MesOperationsController {
     return DOWNTIME_REASON_CODES;
   }
 
+  @ApiOperation({ summary: 'Get oee' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('oee')
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
   async getOee(@Query() query?: Record<string, unknown>) {
@@ -114,20 +142,24 @@ export class MesOperationsController {
     return unwrapOrThrow(await oeeHandler.execute(new GetOeeQuery({ from, to })));
   }
 
+  @ApiOperation({ summary: 'Record session downtime' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':sessionId/downtime')
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER, Role.OPERATOR)
   async recordSessionDowntime(
     @Param('sessionId') sessionId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
   ) {
+    const dto = SessionDowntimeSchema.parse(body);
     this.logger.log(`Recording downtime for session ${sessionId}`);
     const command = new RecordDowntimeCommand(
       sessionId,
-      String(body.eventType ?? 'unplanned'),
-      String(body.reasonCode ?? body.reason ?? 'OTHER'),
+      String(dto.eventType ?? 'unplanned'),
+      String(dto.reasonCode ?? dto.reason ?? 'OTHER'),
       'operator',
-      body.workCenterId ? String(body.workCenterId) : undefined,
-      body.notes ? String(body.notes) : undefined,
+      dto.workCenterId ? String(dto.workCenterId) : undefined,
+      dto.notes ? String(dto.notes) : undefined,
     );
     return unwrapOrThrow(await this.commandBus.execute(command));
   }

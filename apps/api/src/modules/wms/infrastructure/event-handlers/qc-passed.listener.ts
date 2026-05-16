@@ -6,7 +6,7 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { QcPassedEvent } from '../../../qc/domain/events';
-import { IWmsRepository } from '../../domain/repositories/wms.repository';
+import { IWmsRepository, WMS_REPO } from '../../domain/repositories/wms.repository';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 
@@ -21,7 +21,7 @@ interface FgLookupRow {
 export class QcPassedListener implements IEventHandler<QcPassedEvent> {
   private readonly logger = new Logger(QcPassedListener.name);
 
-  constructor(@Inject('IWmsRepository') private readonly wmsRepo: IWmsRepository) {}
+  constructor(@Inject(WMS_REPO) private readonly wmsRepo: IWmsRepository) {}
 
   async handle(event: QcPassedEvent) {
     this.logger.log(

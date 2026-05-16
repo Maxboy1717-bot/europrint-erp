@@ -7,10 +7,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Err, Ok } from '@common/result';
 import { Database } from '@/infrastructure/database/database';
 import { Result } from '@common/result';
+import { runQuery } from '@shared/db';
+import { sql } from 'drizzle-orm';
+import { safeNum } from '@common/math/math-utils';
 import { ProductionOrder } from '../../domain/aggregates/production-order.aggregate';
 import { Bom } from '../../domain/aggregates/bom.aggregate';
 import { Routing } from '../../domain/aggregates/routing.aggregate';
-import { IPpRepository } from '../../domain/repositories/pp.repository';
+import { IPpRepository, BomComponentRow } from '../../domain/repositories/pp.repository';
 import {
   execSavePo, queryPo, queryPoByStatus,
   execSaveBom, queryBom, queryBomByProduct,
@@ -146,6 +149,27 @@ export class DrizzlePpRepository implements IPpRepository {
     } catch {
       this.logger.error('Failed to get machine load');
       return Err('Oqish xatoligi');
+    }
+  }
+
+  async findActiveBomComponents(): Promise<Result<BomComponentRow[]>> {
+    try {
+      const result = await runQuery<DbRow>(sql`
+        SELECT parent_id AS "parentId", child_id AS "childId",
+               qty_per_unit AS "qtyPerUnit"
+        FROM bom_components
+        WHERE is_active = true
+      `);
+      const rawRows = result?.rows ?? [];
+      const rows: BomComponentRow[] = (Array.isArray(rawRows) ? rawRows : []).map((r) => ({
+        parentId: String(r['parentId'] ?? ''),
+        childId: String(r['childId'] ?? ''),
+        qtyPerUnit: safeNum(r['qtyPerUnit'], 1),
+      }));
+      return Ok(rows);
+    } catch (e) {
+      this.logger.error(`Failed to load active BOM components: ${String(e)}`);
+      return Err('BOM komponentlarini o\'qishda xatolik');
     }
   }
 }

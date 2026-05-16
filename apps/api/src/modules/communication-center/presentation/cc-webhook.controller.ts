@@ -24,10 +24,22 @@ import { Body, Controller, Headers, HttpCode, Param, Post, BadRequestException, 
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { I18nService } from 'nestjs-i18n';
 import * as crypto from 'crypto';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
+import { z } from 'zod';
 import type { CcSpawnPayload } from '../events/cc-event.listener';
+
+const CcWebhookSchema = z.object({
+  templateCode: z.string().min(1),
+  senderUserId: z.number().int(),
+  subject: z.string().min(1).max(500),
+  body: z.string().min(1).max(50000),
+  priority: z.enum(['low', 'normal', 'high', 'urgent']).optional(),
+  language: z.enum(['uz', 'ru']).optional(),
+  metadata: z.record(z.unknown()).optional(),
+}).passthrough();
 
 const seenKeys = new Map<string, number>();   // idempotency cache (in-memory; TTL 1h)
 const IDEMPOTENCY_TTL_MS = 60 * 60 * 1000;
@@ -38,6 +50,7 @@ export class CcWebhookController {
   constructor(
     private readonly events: EventEmitter2,
     private readonly cfg:    ConfigService,
+    private readonly i18n:   I18nService,
   ) {}
 
   @Post(':source')
@@ -46,10 +59,11 @@ export class CcWebhookController {
     @Param('source') source: string,
     @Headers('x-cc-signature') signature: string | undefined,
     @Headers('x-cc-idempotency-key') idempKey: string | undefined,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
   ) {
-    if (!signature) throw new UnauthorizedException('X-CC-Signature header majburiy');
-    if (!idempKey)  throw new BadRequestException('X-CC-Idempotency-Key header majburiy');
+    const parsedBody = CcWebhookSchema.parse(body);
+    if (!signature) throw new UnauthorizedException(await this.i18n.t('errors.signatureHeaderRequired'));
+    if (!idempKey)  throw new BadRequestException(await this.i18n.t('errors.idempotencyKeyRequired'));
 
     // ── 1. Idempotency tekshiruv ────────────────────────────────────
     this.gcIdempotency();
@@ -63,7 +77,7 @@ export class CcWebhookController {
     // ── 2. HMAC verification ─────────────────────────────────────────
     const secret = this.cfg.get<string>(`CC_WEBHOOK_SECRET_${source.toUpperCase()}`)
                  ?? this.cfg.get<string>('CC_WEBHOOK_SECRET');
-    if (!secret) throw new UnauthorizedException(`Webhook secret ${source} uchun sozlanmagan`);
+    if (!secret) throw new UnauthorizedException(await this.i18n.t('errors.webhookSecretNotConfigured', { args: { source } }));
 
     // NOTE: body is re-serialized JSON — key ordering may differ from sender's original bytes.
     // For strict HMAC verification, enable NestJS rawBody (rawBody: true in NestFactory.create)
@@ -71,22 +85,10 @@ export class CcWebhookController {
     const raw      = JSON.stringify(body);
     const expected = crypto.createHmac('sha256', secret).update(raw, 'utf8').digest('hex');
     const ok       = this.timingSafeEqual(signature, expected);
-    if (!ok) throw new UnauthorizedException('HMAC imzosi noto\'g\'ri');
+    if (!ok) throw new UnauthorizedException(await this.i18n.t('errors.hmacInvalid'));
 
-    // ── 3. Payload validatsiya (engil) ───────────────────────────────
-    const payload = body as Partial<CcSpawnPayload>;
-    if (typeof payload.templateCode !== 'string' || !payload.templateCode) {
-      throw new BadRequestException('templateCode majburiy');
-    }
-    if (typeof payload.senderUserId !== 'number') {
-      throw new BadRequestException('senderUserId majburiy');
-    }
-    if (typeof payload.subject !== 'string' || !payload.subject) {
-      throw new BadRequestException('subject majburiy');
-    }
-    if (typeof payload.body !== 'string' || !payload.body) {
-      throw new BadRequestException('body majburiy');
-    }
+    // ── 3. Payload validatsiya (Zod schema validated above) ──────────
+    const payload = parsedBody as Partial<CcSpawnPayload>;
 
     // ── 4. Audit yozuvi (cc_audit_trail emas — tashqi voqea uchun alohida)
     await runQuery(sql`

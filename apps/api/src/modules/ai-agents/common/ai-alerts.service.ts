@@ -3,10 +3,10 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { TelegramService } from '@modules/notifications/domain/services/telegram.service';
-import { EmailNotificationService } from '@modules/notifications/domain/services/email-notification.service';
+import { ITelegramSender, TELEGRAM_SENDER } from '@modules/notifications/domain/ports/i-telegram-sender.port';
+import { IEmailSender, EMAIL_SENDER } from '@modules/notifications/domain/ports/i-email-sender.port';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 
@@ -48,8 +48,8 @@ export class AiAlertsService {
   private readonly logger = new Logger(AiAlertsService.name);
 
   constructor(
-    private readonly telegram: TelegramService,
-    private readonly email: EmailNotificationService,
+    @Inject(TELEGRAM_SENDER) private readonly telegram: ITelegramSender,
+    @Inject(EMAIL_SENDER) private readonly email: IEmailSender,
   ) {}
 
   @OnEvent('mes.machine.emergency_stop')

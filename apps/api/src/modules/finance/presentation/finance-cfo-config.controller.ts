@@ -4,7 +4,8 @@
  */
 
 import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { PermissionGuard } from '@common/guards/permission.guard';
@@ -17,7 +18,9 @@ const UpdateCfoConfigDto = z.object({
   value: z.number({ required_error: 'value maydoni talab qilinadi', invalid_type_error: 'value raqam bo\'lishi kerak' }).finite(),
 });
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Finance Cfo Config')
+@ApiBearerAuth()
 @Controller('finance/cfo-config')
 @UseGuards(JwtAuthGuard, PermissionGuard)
 @UseInterceptors(AuditInterceptor)
@@ -25,6 +28,9 @@ export class FinanceCfoConfigController {
   constructor(private readonly cfoConfig: CfoConfigService) {}
 
   /** POST /api/finance/cfo-config — not yet implemented */
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @RequirePermission('finance.cfo-config:FULL')
   async create() {
@@ -32,6 +38,8 @@ export class FinanceCfoConfigController {
   }
 
   /** GET /api/finance/cfo-config — returns all CFO config entries */
+  @ApiOperation({ summary: 'Find all' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @RequirePermission('finance.cfo-config:READ')
   async findAll() {
@@ -39,6 +47,9 @@ export class FinanceCfoConfigController {
   }
 
   /** PUT /api/finance/cfo-config/:key — update a single config value */
+  @ApiOperation({ summary: 'Update' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Put(':key')
   @RequirePermission('finance.cfo-config:FULL')
   async update(

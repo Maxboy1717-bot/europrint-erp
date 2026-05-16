@@ -7,8 +7,9 @@ import { z } from 'zod';
 import { assertFound } from '@common/assertions';
 import { parseOrThrow } from '@common/utils/parse-or-throw.util';
 import { Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -63,7 +64,9 @@ const UpdateMilestoneSchema = z.object({
   due_date: z.string().optional().nullable(),
 });
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Strategic')
+@ApiBearerAuth()
 @Controller('strategic')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -73,23 +76,34 @@ export class StrategicController {
 
   constructor(private readonly svc: StrategicService) {}
 
+  @ApiOperation({ summary: 'List categories' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('categories')
   async listCategories() {
     return unwrapOrInternal(await this.svc.listCategories());
   }
 
+  @ApiOperation({ summary: 'Create category' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('categories')
-  async createCategory(@Body() body: Record<string, unknown>) {
+  async createCategory(@Body() body: unknown) {
     const dto = CreateCategorySchema.parse(body);
     return unwrapOrInternal(await this.svc.createCategory(dto.name, dto.description ?? null, dto.color ?? '#3B82F6'));
   }
 
+  @ApiOperation({ summary: 'Update category' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('categories/:id')
-  async updateCategory(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async updateCategory(@Param('id') id: string, @Body() body: unknown) {
     const dto = UpdateCategorySchema.parse(body);
     return unwrapOrInternal(await this.svc.updateCategory(parseInt(id, 10), dto.name ?? null, dto.description ?? null, dto.color ?? null));
   }
 
+  @ApiOperation({ summary: 'List tasks' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('tasks')
   async listTasks(
     @Query('status') status?: string,
@@ -108,6 +122,9 @@ export class StrategicController {
     ));
   }
 
+  @ApiOperation({ summary: 'Get task' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('tasks/:id')
   async getTask(@Param('id') id: string) {
     const _rData = await this.svc.getTask(parseInt(id, 10));
@@ -117,9 +134,12 @@ export class StrategicController {
     return data[0];
   }
 
+  @ApiOperation({ summary: 'Create task' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('tasks')
   async createTask(
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
     @CurrentUser() user: { id: number },
   ) {
     const dto = parseOrThrow(CreateTaskSchema, body);
@@ -134,8 +154,12 @@ export class StrategicController {
     ));
   }
 
+  @ApiOperation({ summary: 'Update task' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('tasks/:id')
-  async updateTask(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async updateTask(@Param('id') id: string, @Body() body: unknown) {
     const dto = UpdateTaskSchema.parse(body);
     return unwrapOrInternal(await this.svc.updateTask(
       parseInt(id, 10),
@@ -149,24 +173,39 @@ export class StrategicController {
     ));
   }
 
+  @ApiOperation({ summary: 'Delete task' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('tasks/:id')
   async deleteTask(@Param('id') id: string) {
     await this.svc.deleteTask(parseInt(id, 10));
     return { message: "O'chirildi" };
   }
 
+  @ApiOperation({ summary: 'Create milestone' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('tasks/:taskId/milestones')
-  async createMilestone(@Param('taskId') taskId: string, @Body() body: Record<string, unknown>) {
+  async createMilestone(@Param('taskId') taskId: string, @Body() body: unknown) {
     const dto = CreateMilestoneSchema.parse(body);
     return unwrapOrInternal(await this.svc.createMilestone(parseInt(taskId, 10), dto.title, dto.due_date ?? null, dto.description ?? null));
   }
 
+  @ApiOperation({ summary: 'Update milestone' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('milestones/:id')
-  async updateMilestone(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async updateMilestone(@Param('id') id: string, @Body() body: unknown) {
     const dto = UpdateMilestoneSchema.parse(body);
     return unwrapOrInternal(await this.svc.updateMilestone(parseInt(id, 10), dto.title ?? null, dto.status ?? null, dto.due_date ?? null));
   }
 
+  @ApiOperation({ summary: 'Seed strategic data' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('seed')
   @Roles(...DIRECTOR_ROLES)
   async seedStrategicData() {
@@ -177,6 +216,8 @@ export class StrategicController {
     return { message: "Seed ma'lumotlar yuklandi", created, failed, total: cats.length };
   }
 
+  @ApiOperation({ summary: 'Get dashboard' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard')
   async getDashboard() {
     return unwrapOrInternal(await this.svc.getDashboard());

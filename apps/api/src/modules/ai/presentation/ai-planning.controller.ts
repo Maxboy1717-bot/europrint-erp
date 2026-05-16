@@ -7,8 +7,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
   Controller, Get, Patch, Post, Put, Param, Body,
   UseGuards, UseInterceptors, Logger, HttpCode, HttpStatus, UsePipes } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard }  from '../../auth/guards/roles.guard';
 import { Roles }       from '../../auth/decorators/roles.decorator';
@@ -28,7 +28,7 @@ import {
 
 @ApiTags('§15 AI Planning')
 @ApiBearerAuth()
-@Throttle({ ai: { limit: 20, ttl: 60_000 } })
+@AiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('ai-planning')
 @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
@@ -75,6 +75,9 @@ export class AiPlanningController {
   @Patch('config')
   @UseInterceptors(AuditInterceptor)
   @UsePipes(new ZodValidationPipe(UpdatePlanningConfigDtoSchema))
+  @ApiOperation({ summary: 'AI planlash konfiguratsiyasini patch qilish' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   async patchConfig(@Body() dto: UpdatePlanningConfigDto) {
     return unwrapOrBadRequest(await this.service.updateConfig(dto));
   }

@@ -7,6 +7,7 @@ import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/result';
 import { DrizzleWorkCenterRepository, WorkCenterStats } from '../../infrastructure/repositories/drizzle-work-center.repo';
+import { WORK_CENTER_REPO } from '../../domain/repositories/pp.repository';
 import { GetWorkCentersStatsQuery } from './get-work-centers-stats.query';
 
 @Injectable()
@@ -15,7 +16,7 @@ export class GetWorkCentersStatsHandler implements IQueryHandler<GetWorkCentersS
   private readonly logger = new Logger(GetWorkCentersStatsHandler.name);
 
   constructor(
-    @Inject('IWorkCenterRepository')
+    @Inject(WORK_CENTER_REPO)
     private readonly workCenterRepo: DrizzleWorkCenterRepository,
   ) {}
 

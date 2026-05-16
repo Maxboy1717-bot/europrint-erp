@@ -14,10 +14,11 @@ Body,
   UseGuards,
   UseInterceptors, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -33,7 +34,9 @@ import {
   LmsCheckCertForMesSchema, LmsCheckCertForMesDto,
 } from '../dto/lms.dto';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Lms Certificates')
+@ApiBearerAuth()
 @Controller('lms/certificates')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -46,6 +49,9 @@ export class LmsCertificatesController {
     private readonly lmsRepo: LmsRepository,
   ) {}
 
+  @ApiOperation({ summary: 'Issue certificate' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('issue')
   @UsePipes(new ZodValidationPipe(LmsIssueCertificateSchema))
   @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN')
@@ -67,18 +73,28 @@ export class LmsCertificatesController {
     return { message: 'Sertifikat berildi', data: result.data };
   }
 
+  @ApiOperation({ summary: 'Get operator certificates' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('operator/:operatorId')
   @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
   async getOperatorCertificates(@Param('operatorId') operatorId: string) {
     return unwrapOrThrow(await this.queryBus.execute(new OperatorCertificationsQuery(parseInt(operatorId, 10))));
   }
 
+  @ApiOperation({ summary: 'Get employee certificates' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':employeeId')
   @Roles('EMPLOYEE', 'TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async getEmployeeCertificates(@Param('employeeId') employeeId: string) {
     return unwrapOrThrow(await this.lmsRepo.findCertificatesByEmployee(parseInt(employeeId, 10)));
   }
 
+  @ApiOperation({ summary: 'Revoke certificate' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post(':certificateId/revoke')
   @UsePipes(new ZodValidationPipe(LmsRevokeCertificateSchema))
   @Roles('HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
@@ -88,6 +104,9 @@ export class LmsCertificatesController {
     return { message: 'Sertifikat bekor qilindi', certificateId };
   }
 
+  @ApiOperation({ summary: 'Check cert for mes' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('check-mes')
   @UsePipes(new ZodValidationPipe(LmsCheckCertForMesSchema))
   @Roles('EMPLOYEE', 'OPERATOR', 'HR_SPECIALIST', 'SUPER_ADMIN')

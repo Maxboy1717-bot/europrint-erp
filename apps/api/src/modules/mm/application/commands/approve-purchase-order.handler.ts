@@ -7,7 +7,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Err , Ok } from '@common/result';
 import { Inject, BadRequestException, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
-import { IMmRepository } from '../../domain/repositories/mm.repository';
+import { IMmRepository, MM_REPO } from '../../domain/repositories/mm.repository';
 
 export class ApprovePurchaseOrderCommand {
   constructor(public poId: number, public approvedBy: number) {}
@@ -19,7 +19,7 @@ export class ApprovePurchaseOrderHandler
 {
   private readonly logger = new Logger(ApprovePurchaseOrderHandler.name);
   constructor(
-    @Inject('IMmRepository') private mmRepo: IMmRepository
+    @Inject(MM_REPO) private mmRepo: IMmRepository
   ) {}
 
   async execute(command: ApprovePurchaseOrderCommand): Promise<Result<void>> {

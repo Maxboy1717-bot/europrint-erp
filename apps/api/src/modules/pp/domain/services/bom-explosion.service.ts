@@ -47,12 +47,12 @@
  *   This is what the tests in `bom-explosion.spec.ts` verify.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum } from '@common/math/math-utils';
 import { Ok, Err, Result, AppError } from '@common/result';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import type { IPpRepository } from '../repositories/pp.repository';
+import { PP_REPO } from '../repositories/pp.repository';
 
 export interface BomEdge {
   parentId: string;
@@ -71,6 +71,10 @@ function makeBomErr(code: AppError['code'], message: string): AppError {
 
 @Injectable()
 export class BomExplosionService {
+  constructor(
+    @Inject(PP_REPO) private readonly repo: IPpRepository,
+  ) {}
+
   /**
    * TZ-D09: BOM Explosion — Kahn topologik tartib + Memoization
    * Murakkablik: O(V+E) — bitta traversal
@@ -207,28 +211,22 @@ export class BomExplosionService {
 
   /**
    * DB-dan BOM yuklab, keyin explodeInMemory() chaqiradi.
+   * Repository orqali so'rov yuboradi — domain SQL bilmaydi.
    */
   @Calculation('pp.bom.explodeFromDb')
   async explodeFromDb(
     productId: string,
     qty: number,
   ): Promise<Result<BomExplosionResult, AppError>> {
-    try {
-      const result = await runQuery<Record<string, unknown>>(sql`
-        SELECT parent_id AS "parentId", child_id AS "childId",
-               qty_per_unit AS "qtyPerUnit"
-        FROM bom_components
-        WHERE is_active = true
-      `);
-      const rawRows = result?.rows ?? [];
-      const components: BomEdge[] = (Array.isArray(rawRows) ? rawRows : []).map((r) => ({
-        parentId: String(r['parentId'] ?? ''),
-        childId: String(r['childId'] ?? ''),
-        qtyPerUnit: safeNum(r['qtyPerUnit'], 1),
-      }));
-      return this.explodeInMemory(productId, qty, components);
-    } catch (_e) {
-      return Err(makeBomErr('DB_ERROR', String(_e)));
+    const componentsResult = await this.repo.findActiveBomComponents();
+    if (!componentsResult.ok) {
+      return Err(makeBomErr('DB_ERROR', componentsResult.error.message));
     }
+    const components: BomEdge[] = (Array.isArray(componentsResult.data) ? componentsResult.data : []).map((r) => ({
+      parentId: r.parentId,
+      childId: r.childId,
+      qtyPerUnit: safeNum(r.qtyPerUnit, 1),
+    }));
+    return this.explodeInMemory(productId, qty, components);
   }
 }

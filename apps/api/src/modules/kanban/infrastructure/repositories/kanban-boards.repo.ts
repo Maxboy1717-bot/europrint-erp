@@ -5,7 +5,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
-import { sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, isNull, max, or, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 import { execKanbanColumnSoftDelete, execKanbanCardSoftDelete } from '@common/database/queries-kanban';
 import { Result, Ok, Err } from '@common/result';
@@ -18,10 +18,12 @@ import {
   CreateBoardInput,
   CreateCardInput,
   CreateColumnInput,
+  CreateKanbanForOrderInput,
   MoveCardInput,
   UpdateCardInput,
   UpdateColumnInput,
 } from '../../domain/repositories/i-kanban-boards.repo';
+import { kanbanBoards, kanbanColumns, kanbanCards } from '../kanban-tables';
 
 @Injectable()
 export class KanbanBoardsRepository implements IKanbanBoardsRepo {
@@ -29,11 +31,19 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
 
   async getBoards(): Promise<Result<KanbanBoard[]>> {
     try {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT id, name, type, description, created_at, updated_at
-        FROM kanban_boards WHERE deleted_at IS NULL ORDER BY created_at DESC
-      `);
-      return Ok(castTo<KanbanBoard[]>(rows.rows));
+      const rows = await db
+        .select({
+          id:          kanbanBoards.id,
+          name:        kanbanBoards.name,
+          type:        kanbanBoards.type,
+          description: kanbanBoards.description,
+          created_at:  kanbanBoards.created_at,
+          updated_at:  kanbanBoards.updated_at,
+        })
+        .from(kanbanBoards)
+        .where(isNull(kanbanBoards.deleted_at))
+        .orderBy(desc(kanbanBoards.created_at));
+      return Ok(castTo<KanbanBoard[]>(rows));
     } catch (error) {
       this.logger.error('getBoards: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
@@ -75,10 +85,15 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
 
   async createBoard(input: CreateBoardInput): Promise<Result<KanbanBoard>> {
     try {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        INSERT INTO kanban_boards (name, type, description) VALUES (${input.name}, ${input.type}, ${input.description}) RETURNING *
-      `);
-      const row = rows.rows[0];
+      const rows = await db
+        .insert(kanbanBoards)
+        .values({
+          name:        input.name,
+          type:        input.type,
+          description: input.description,
+        })
+        .returning();
+      const row = rows[0];
       if (!row) return Err({ message: 'Board yaratilmadi', code: 'DB_ERROR' });
       return Ok(castTo<KanbanBoard>(row));
     } catch (error) {
@@ -89,9 +104,10 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
 
   async deleteBoard(boardId: string): Promise<Result<void>> {
     try {
-      await runQuery(sql`
-        UPDATE kanban_boards SET deleted_at = NOW() WHERE id = ${boardId} AND deleted_at IS NULL
-      `);
+      await db
+        .update(kanbanBoards)
+        .set({ deleted_at: sql`NOW()` })
+        .where(and(eq(kanbanBoards.id, Number(boardId)), isNull(kanbanBoards.deleted_at)));
       return Ok(undefined);
     } catch (error) {
       this.logger.error('deleteBoard: ' + (error as Error).message);
@@ -101,10 +117,11 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
 
   async getMaxColumnOrder(boardId: string): Promise<Result<number>> {
     try {
-      const rows = await runQuery<{ max: string }>(sql`
-        SELECT COALESCE(MAX(sort_order), 0) AS max FROM kanban_columns WHERE board_id = ${boardId} AND deleted_at IS NULL
-      `);
-      return Ok(Number(rows.rows[0]?.max ?? 0));
+      const rows = await db
+        .select({ max: max(kanbanColumns.sort_order) })
+        .from(kanbanColumns)
+        .where(and(eq(kanbanColumns.board_id, Number(boardId)), isNull(kanbanColumns.deleted_at)));
+      return Ok(Number(rows[0]?.max ?? 0));
     } catch (error) {
       this.logger.error('getMaxColumnOrder: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
@@ -113,10 +130,16 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
 
   async addColumn(input: CreateColumnInput): Promise<Result<KanbanColumn>> {
     try {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        INSERT INTO kanban_columns (board_id, name, sort_order, color) VALUES (${input.board_id}, ${input.name}, ${input.sort_order}, ${input.color}) RETURNING *
-      `);
-      const row = rows.rows[0];
+      const rows = await db
+        .insert(kanbanColumns)
+        .values({
+          board_id:   Number(input.board_id),
+          name:       input.name,
+          sort_order: input.sort_order,
+          color:      input.color,
+        })
+        .returning();
+      const row = rows[0];
       if (!row) return Err({ message: 'Column yaratilmadi', code: 'DB_ERROR' });
       return Ok(castTo<KanbanColumn>(row));
     } catch (error) {
@@ -240,6 +263,178 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
       return Ok(undefined);
     } catch (error) {
       this.logger.error('deleteCard: ' + (error as Error).message);
+      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  /**
+   * Atomically locates a sales board (`type='sales'` or fuzzy name match on
+   * 'buyurtma' / 'order' / 'sotuv'), then its first (inbox) column, then
+   * inserts a kanban card describing the freshly created sales order.
+   *
+   * If no board or column exists, the method returns Ok(void) — kanban is a
+   * side-effect of order creation and must not block it.
+   */
+  async createKanbanForOrder(input: CreateKanbanForOrderInput): Promise<Result<void>> {
+    try {
+      const cardTitle = `\u{1F4E6} ${input.orderNumber}`;
+      const description =
+        `Buyurtma summasi: ${input.totalAmount.toLocaleString('uz-UZ')} so'm\n` +
+        `Kompaniya ID: ${input.companyId}`;
+
+      const outcome = await db.transaction(async (tx) => {
+        const boardRows = await tx
+          .select({ id: kanbanBoards.id })
+          .from(kanbanBoards)
+          .where(
+            and(
+              isNull(kanbanBoards.deleted_at),
+              or(
+                eq(kanbanBoards.type, 'sales'),
+                ilike(kanbanBoards.name, '%buyurtma%'),
+                ilike(kanbanBoards.name, '%order%'),
+                ilike(kanbanBoards.name, '%sotuv%'),
+              ),
+            ),
+          )
+          .orderBy(asc(kanbanBoards.created_at))
+          .limit(1);
+
+        const boardId = boardRows[0]?.id;
+        if (!boardId) return { ok: false as const, reason: 'no-board' };
+
+        const colRows = await tx
+          .select({ id: kanbanColumns.id })
+          .from(kanbanColumns)
+          .where(and(eq(kanbanColumns.board_id, boardId), isNull(kanbanColumns.deleted_at)))
+          .orderBy(asc(kanbanColumns.sort_order))
+          .limit(1);
+
+        const columnId = colRows[0]?.id;
+        if (!columnId) return { ok: false as const, reason: 'no-column', boardId };
+
+        await tx.insert(kanbanCards).values({
+          board_id:     boardId,
+          column_id:    columnId,
+          title:        cardTitle,
+          description,
+          priority:     'normal',
+          related_type: 'sales_order',
+          related_id:   String(input.orderId),
+          sort_order:   0,
+        });
+
+        return { ok: true as const, boardId, columnId };
+      });
+
+      if (!outcome.ok) {
+        if (outcome.reason === 'no-board') {
+          this.logger.warn(
+            `createKanbanForOrder: Savdo board'i topilmadi. ` +
+            `Yangi board yaratish uchun type='sales' qilib board oching. ` +
+            `orderId=${input.orderId}`,
+          );
+        } else {
+          this.logger.warn(
+            `createKanbanForOrder: Board ${outcome.boardId} da ustun topilmadi. orderId=${input.orderId}`,
+          );
+        }
+        return Ok(undefined);
+      }
+
+      this.logger.log(
+        `createKanbanForOrder: Karta yaratildi — ` +
+        `orderId=${input.orderId}, boardId=${outcome.boardId}, columnId=${outcome.columnId}`,
+      );
+      return Ok(undefined);
+    } catch (error) {
+      this.logger.error('createKanbanForOrder: ' + (error as Error).message);
+      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  /**
+   * Atomically moves every kanban card tied to `orderId` into its board's
+   * "bekor"/"cancel" column (if present), appending a cancellation note to the
+   * description. If no such column exists for a card's board the card is
+   * soft-deleted instead.
+   */
+  async moveOrderCardToCancelled(orderId: number, orderNumber: string): Promise<Result<void>> {
+    try {
+      const cancelNote = `\n[Bekor qilindi: ${orderNumber}]`;
+      const orderIdText = String(orderId);
+
+      const moved = await db.transaction(async (tx) => {
+        // Find all cards linked to this order (across any board).
+        const linkedCards = await tx
+          .select({ id: kanbanCards.id, board_id: kanbanCards.board_id })
+          .from(kanbanCards)
+          .where(
+            and(
+              eq(kanbanCards.related_type, 'sales_order'),
+              eq(kanbanCards.related_id, orderIdText),
+              isNull(kanbanCards.deleted_at),
+            ),
+          );
+
+        if (linkedCards.length === 0) return { moved: 0, softDeleted: 0 };
+
+        // Look up the "bekor"/"cancel" column for each unique board.
+        const uniqueBoardIds = Array.from(new Set(linkedCards.map((c) => c.board_id)));
+        const cancelColByBoard = new Map<number, number>();
+
+        for (const boardId of uniqueBoardIds) {
+          const cancelCols = await tx
+            .select({ id: kanbanColumns.id })
+            .from(kanbanColumns)
+            .where(
+              and(
+                eq(kanbanColumns.board_id, boardId),
+                isNull(kanbanColumns.deleted_at),
+                or(ilike(kanbanColumns.name, '%bekor%'), ilike(kanbanColumns.name, '%cancel%')),
+              ),
+            )
+            .orderBy(asc(kanbanColumns.created_at))
+            .limit(1);
+
+          const cancelColId = cancelCols[0]?.id;
+          if (cancelColId) cancelColByBoard.set(boardId, cancelColId);
+        }
+
+        let moved = 0;
+        let softDeleted = 0;
+
+        for (const card of linkedCards) {
+          const cancelColId = cancelColByBoard.get(card.board_id);
+          if (cancelColId) {
+            await tx
+              .update(kanbanCards)
+              .set({
+                column_id:   cancelColId,
+                description: sql`COALESCE(${kanbanCards.description}, '') || ${cancelNote}`,
+                updated_at:  sql`NOW()`,
+              })
+              .where(eq(kanbanCards.id, card.id));
+            moved += 1;
+          } else {
+            await tx
+              .update(kanbanCards)
+              .set({ deleted_at: sql`NOW()`, updated_at: sql`NOW()` })
+              .where(eq(kanbanCards.id, card.id));
+            softDeleted += 1;
+          }
+        }
+
+        return { moved, softDeleted };
+      });
+
+      this.logger.log(
+        `moveOrderCardToCancelled: orderId=${orderId} ` +
+        `moved=${moved.moved}, soft-deleted=${moved.softDeleted}`,
+      );
+      return Ok(undefined);
+    } catch (error) {
+      this.logger.error('moveOrderCardToCancelled: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
     }
   }

@@ -8,14 +8,14 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { CommandBus } from '@nestjs/cqrs';
 import { safeCall, isErr } from '@common/result';
-import { ISalesOrderRepository } from '../../domain/repositories/i-sales-order.repo';
+import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 import { UpdateOrderStatusCommand } from '../../application/commands/update-order-status.handler';
 
 @Injectable()
 export class PaymentReceivedListener {
   private readonly logger = new Logger(PaymentReceivedListener.name);
   constructor(
-    @Inject('ISalesOrderRepository') private readonly orderRepo: ISalesOrderRepository,
+    @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
     private readonly commandBus: CommandBus,
   ) {}
 

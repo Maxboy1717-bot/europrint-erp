@@ -7,12 +7,13 @@ import {
 Controller, Patch, Post, Body, Param, ParseIntPipe,
   UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { HrOffboardingService } from './hr-offboarding.service';
 import {
   HrOffboardingUpdateChecklistSchema, HrOffboardingUpdateChecklistDto,
@@ -22,14 +23,19 @@ import {
 
 const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'admin'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Roles(...HR_ROLES)
+@ApiTags('Hr Offboarding')
+@ApiBearerAuth()
 @Controller('hr/offboarding')
 export class HrOffboardingController {
   constructor(private readonly svc: HrOffboardingService) {}
 
+  @ApiOperation({ summary: 'Update checklist item' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('cases/:id/checklist/:itemId')
   @UsePipes(new ZodValidationPipe(HrOffboardingUpdateChecklistSchema))
   async updateChecklistItem(
@@ -43,6 +49,9 @@ export class HrOffboardingController {
     return { data: row };
   }
 
+  @ApiOperation({ summary: 'Record exit interview' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('cases/:id/exit-interview')
   @UsePipes(new ZodValidationPipe(HrOffboardingExitInterviewSchema))
   async recordExitInterview(
@@ -55,6 +64,9 @@ export class HrOffboardingController {
     return { data: row };
   }
 
+  @ApiOperation({ summary: 'Finalize case' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('cases/:id/finalize')
   @UsePipes(new ZodValidationPipe(HrOffboardingFinalizeSchema))
   async finalizeCase(

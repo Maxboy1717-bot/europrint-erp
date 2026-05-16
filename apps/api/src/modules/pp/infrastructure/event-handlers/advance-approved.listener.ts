@@ -5,7 +5,7 @@
 
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { IPpRepository } from '../../domain/repositories/pp.repository';
+import { IPpRepository, PP_REPO } from '../../domain/repositories/pp.repository';
 
 export interface AdvanceApprovedEvent {
   orderId: number;
@@ -16,7 +16,7 @@ export interface AdvanceApprovedEvent {
 export class AdvanceApprovedListener {
   private readonly logger = new Logger(AdvanceApprovedListener.name);
 
-  constructor(@Inject('IPpRepository') private readonly ppRepo: IPpRepository) {}
+  constructor(@Inject(PP_REPO) private readonly ppRepo: IPpRepository) {}
 
   @OnEvent('ADVANCE_APPROVED')
   async handle(event: AdvanceApprovedEvent) {

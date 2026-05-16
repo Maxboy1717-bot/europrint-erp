@@ -5,7 +5,6 @@
 
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import { OrderWorkflowController } from './presentation/order-workflow.controller';
 
@@ -33,7 +32,6 @@ const queryHandlers = [
 @Module({
   imports: [
     CqrsModule,
-    EventEmitterModule.forRoot(),
   ],
   controllers: [OrderWorkflowController],
   providers: [

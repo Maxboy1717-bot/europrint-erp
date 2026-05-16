@@ -18,10 +18,10 @@ import { AdminExtraController } from './presentation/controllers/admin-extra.con
 import { AdminExtraService } from './application/services/admin-extra.service';
 import { AdminExtraRepository } from './infrastructure/repositories/admin-extra.repo';
 
-import { CreateUserHandler } from './application/commands/create-user.handler';
-import { UpdateUserRoleHandler } from './application/commands/update-user-role.handler';
-import { UpdateSettingsHandler } from './application/commands/update-settings.handler';
-import { ListUsersHandler } from './application/queries/list-users.handler';
+import { CreateUserService } from './application/services/create-user.service';
+import { UpdateUserRoleService } from './application/services/update-user-role.service';
+import { UpdateSettingsService } from './application/services/update-settings.service';
+import { ListUsersService } from './application/services/list-users.service';
 
 import { DrizzleUserRepo } from './infrastructure/repositories/drizzle-user.repo';
 import { DrizzleSettingsRepo } from './infrastructure/repositories/drizzle-settings.repo';
@@ -49,10 +49,10 @@ import { AdminQueueService } from './application/services/admin-queue.service';
   ],
   controllers: [AdminUsersController, AdminSettingsController, AdminCronStatusController, AdminQueueController, AdminExtraController],
   providers: [
-    CreateUserHandler,
-    UpdateUserRoleHandler,
-    UpdateSettingsHandler,
-    ListUsersHandler,
+    CreateUserService,
+    UpdateUserRoleService,
+    UpdateSettingsService,
+    ListUsersService,
     {
       provide: USER_REPO,
       useClass: DrizzleUserRepo,

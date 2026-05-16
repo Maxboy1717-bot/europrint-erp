@@ -1,13 +1,13 @@
 /**
  * test/auth/login.handler.spec.ts
  *
- * Unit tests for LoginHandler. The IAuthRepo and JwtService are mocked.
+ * Unit tests for LoginService. The IAuthRepo and JwtService are mocked.
  * runQuery (audit log) is also mocked to keep the test DB-free.
  */
 
 jest.mock('@shared/db', () => ({ runQuery: jest.fn().mockResolvedValue({ rows: [] }) }));
 
-import { LoginHandler } from '../../src/modules/auth/application/commands/login.handler';
+import { LoginService } from '../../src/modules/auth/application/services/login.service';
 import { JwtService } from '@nestjs/jwt';
 
 interface FakeUser {
@@ -77,7 +77,7 @@ function makeI18n() {
   } as unknown as import('nestjs-i18n').I18nService;
 }
 
-describe('LoginHandler', () => {
+describe('LoginService', () => {
   const cmdBase = {
     username: 'alice',
     password: 'correct',
@@ -91,7 +91,7 @@ describe('LoginHandler', () => {
 
   it('returns UNAUTHORIZED / USER_NOT_FOUND when user does not exist', async () => {
     const repo = makeRepo(null);
-    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -107,7 +107,7 @@ describe('LoginHandler', () => {
   it('returns UNAUTHORIZED / ACCOUNT_LOCKED for locked accounts', async () => {
     const user = makeFakeUser({ locked: true });
     const repo = makeRepo(user);
-    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -118,7 +118,7 @@ describe('LoginHandler', () => {
   it('returns UNAUTHORIZED / ACCOUNT_INACTIVE for inactive accounts', async () => {
     const user = makeFakeUser({ active: false });
     const repo = makeRepo(user);
-    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -129,7 +129,7 @@ describe('LoginHandler', () => {
   it('returns UNAUTHORIZED / INVALID_CREDENTIALS on bad password', async () => {
     const user = makeFakeUser({ passwordOk: false });
     const repo = makeRepo(user);
-    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -143,7 +143,7 @@ describe('LoginHandler', () => {
     const user = makeFakeUser();
     const repo = makeRepo(user);
     const jwt = makeJwt();
-    const handler = new LoginHandler(repo as never, jwt, makeI18n());
+    const handler = new LoginService(repo as never, jwt, makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -166,7 +166,7 @@ describe('LoginHandler', () => {
   it('resets failed-attempt counter and updates last-login on success', async () => {
     const user = makeFakeUser({ failedAttempts: 3 });
     const repo = makeRepo(user);
-    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
 
     await handler.execute(cmdBase);
 
@@ -180,7 +180,7 @@ describe('LoginHandler', () => {
     (runQuery as jest.Mock).mockRejectedValueOnce(new Error('db gone'));
     const user = makeFakeUser({ passwordOk: false });
     const repo = makeRepo(user);
-    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 

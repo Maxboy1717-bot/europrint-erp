@@ -1,13 +1,13 @@
 /**
  * test/auth/verify-otp.handler.spec.ts
  *
- * Unit tests for VerifyOtpHandler. OtpSessionRepository is mocked; the
- * handler validates the code against the session and consumes it.
+ * Unit tests for VerifyOtpService. OtpSessionRepository is mocked; the
+ * service validates the code against the session and consumes it.
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { I18nService } from 'nestjs-i18n';
-import { VerifyOtpHandler } from '../../src/modules/auth/application/commands/verify-otp.handler';
+import { VerifyOtpService } from '../../src/modules/auth/application/services/verify-otp.service';
 import { OtpSessionRepository, OtpSessionRow } from '../../src/modules/auth/infrastructure/repositories/otp-session.repository';
 import { Ok, Err } from '../../src/common/result';
 
@@ -37,20 +37,20 @@ function makeSession(over: Partial<OtpSessionRow> = {}): OtpSessionRow {
   };
 }
 
-describe('VerifyOtpHandler', () => {
-  let handler: VerifyOtpHandler;
+describe('VerifyOtpService', () => {
+  let handler: VerifyOtpService;
   let repo: RepoMock;
 
   beforeEach(async () => {
     repo = makeRepo();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        VerifyOtpHandler,
+        VerifyOtpService,
         { provide: OtpSessionRepository, useValue: repo },
         { provide: I18nService, useValue: mockI18n },
       ],
     }).compile();
-    handler = module.get(VerifyOtpHandler);
+    handler = module.get(VerifyOtpService);
   });
 
   it('returns Err when findBySessionId fails', async () => {

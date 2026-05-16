@@ -4,11 +4,13 @@
  */
 
 import { Controller, HttpCode, HttpStatus, Patch, Post, Get, Body, Param, Query, UseGuards, UseInterceptors, Logger, InternalServerErrorException, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { z } from 'zod';
 import { assertOk, assertOkLog, throwFromError, unwrapOrThrow } from '@common/http-result';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -28,7 +30,18 @@ enum Role {
   DIRECTOR = 'DIRECTOR',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+const CreatePaymentRootSchema = z.object({
+  invoiceId: z.union([z.string(), z.number()]).optional(),
+  customerId: z.union([z.string(), z.number()]).optional(),
+  amount: z.number().optional(),
+  paymentDate: z.string().optional(),
+  method: z.string().max(50).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
+@ApiThrottle()
+@ApiTags('Finance Payments')
+@ApiBearerAuth()
 @Controller('finance/payments')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -42,6 +55,8 @@ export class FinancePaymentsController {
     private readonly actionsSvc: FinanceActionsService,
   ) {}
 
+  @ApiOperation({ summary: 'List payments' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.FINANCE_OFFICER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async listPayments(@Query('page') page?: string, @Query('limit') limit?: string) {
@@ -49,14 +64,21 @@ export class FinancePaymentsController {
     return unwrapOrThrow(result);
   }
 
+  @ApiOperation({ summary: 'Create payment root' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(Role.FINANCE_OFFICER, Role.SUPER_ADMIN)
-  async createPaymentRoot(@Body() body: Record<string, unknown>) {
+  async createPaymentRoot(@Body() body: unknown) {
+    const dto = CreatePaymentRootSchema.parse(body);
     this.logger.log(`Creating payment (root POST)`);
-    return { paymentId: Date.now(), ...body, created: true };
+    return { paymentId: Date.now(), ...dto, created: true };
   }
 
+  @ApiOperation({ summary: 'Patch approve payment' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id/approve')
   @Roles(Role.DIRECTOR, Role.SUPER_ADMIN)
   async patchApprovePayment(
@@ -68,6 +90,9 @@ export class FinancePaymentsController {
     return { data: r.data };
   }
 
+  @ApiOperation({ summary: 'Record payment' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('record')
   @Roles(Role.FINANCE_OFFICER, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinanceRecordPaymentSchema))
@@ -84,6 +109,10 @@ export class FinancePaymentsController {
     
   }
 
+  @ApiOperation({ summary: 'Verify payment' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post(':paymentId/verify')
   @Roles(Role.DIRECTOR, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinanceVerifyPaymentSchema))
@@ -93,6 +122,9 @@ export class FinancePaymentsController {
     
   }
 
+  @ApiOperation({ summary: 'Get outstanding payment' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':invoiceId/outstanding')
   @Roles(Role.FINANCE_OFFICER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async getOutstandingPayment(@Param('invoiceId') invoiceId: number) {
@@ -101,6 +133,9 @@ export class FinancePaymentsController {
     
   }
 
+  @ApiOperation({ summary: 'Approve payment' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':id/approve')
   @Roles(Role.DIRECTOR, Role.SUPER_ADMIN)
   async approvePayment(

@@ -1,14 +1,14 @@
 /**
  * test/auth/logout.handler.spec.ts
  *
- * Unit tests for LogoutHandler. IAuthRepo + JwtService are mocked; the
- * handler decodes the token to find expiry and blacklists it.
+ * Unit tests for LogoutService. IAuthRepo + JwtService are mocked; the
+ * service decodes the token to find expiry and blacklists it.
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { I18nService } from 'nestjs-i18n';
-import { LogoutHandler } from '../../src/modules/auth/application/commands/logout.handler';
+import { LogoutService } from '../../src/modules/auth/application/services/logout.service';
 import { AUTH_REPO } from '../../src/modules/auth/auth.tokens';
 
 const mockI18n = {
@@ -41,8 +41,8 @@ function makeJwt(): JwtMock {
   return { decode: jest.fn(), sign: jest.fn(), verify: jest.fn() };
 }
 
-describe('LogoutHandler', () => {
-  let handler: LogoutHandler;
+describe('LogoutService', () => {
+  let handler: LogoutService;
   let repo: RepoMock;
   let jwt: JwtMock;
 
@@ -51,13 +51,13 @@ describe('LogoutHandler', () => {
     jwt = makeJwt();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        LogoutHandler,
+        LogoutService,
         { provide: AUTH_REPO, useValue: repo },
         { provide: JwtService, useValue: jwt },
         { provide: I18nService, useValue: mockI18n },
       ],
     }).compile();
-    handler = module.get(LogoutHandler);
+    handler = module.get(LogoutService);
   });
 
   it('returns VALIDATION when token decode yields a string (invalid format)', async () => {

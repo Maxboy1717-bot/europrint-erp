@@ -6,7 +6,7 @@
 import { AppErr, Err, Ok, Result, isErr } from '@common/result';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
-import { ILeadRepository } from '../../domain/repositories/i-lead.repo';
+import { ILeadRepository, LEAD_REPO } from '../../domain/repositories/i-lead.repo';
 import { Lead } from '../../domain/aggregates/lead.aggregate';
 
 interface PaginatedLeads {
@@ -28,7 +28,7 @@ export class ListLeadsHandler implements IQueryHandler<ListLeadsQuery> {
   private readonly logger = new Logger(ListLeadsHandler.name);
 
   constructor(
-    @Inject('ILeadRepository') private readonly leadRepo: ILeadRepository,
+    @Inject(LEAD_REPO) private readonly leadRepo: ILeadRepository,
   ) {}
 
   async execute(query: ListLeadsQuery): Promise<Result<PaginatedLeads>> {

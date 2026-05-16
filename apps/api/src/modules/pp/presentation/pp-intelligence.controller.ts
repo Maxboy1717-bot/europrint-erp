@@ -7,7 +7,8 @@ import {
   Controller, Get, Post, Body, Param,
   Query, HttpCode, UseGuards, UseInterceptors,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { PermissionGuard } from '@common/guards/permission.guard';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
@@ -29,9 +30,11 @@ const MrpRunSchema = z.object({
   })).optional(),
 });
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, PermissionGuard)
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Pp Intelligence')
+@ApiBearerAuth()
 @Controller('pp')
 export class PpIntelligenceController {
   constructor(
@@ -40,6 +43,9 @@ export class PpIntelligenceController {
     private readonly crpSvc: PpCrpService,
   ) {}
 
+  @ApiOperation({ summary: 'Run mrp' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('mrp/run')
   @HttpCode(200)
   @RequirePermission('pp:WRITE')
@@ -49,12 +55,16 @@ export class PpIntelligenceController {
     return this.formatMrpResponse(result, input.lotSizingMethod ?? 'L4L', input.horizonPeriods ?? 12);
   }
 
+  @ApiOperation({ summary: 'Get mps' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('mps')
   @RequirePermission('pp:READ')
   async getMps(@Query('productId') productId?: string) {
     return unwrapOrThrow(await this.mpsSvc.getMps(productId));
   }
 
+  @ApiOperation({ summary: 'Get crp' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('crp')
   @RequirePermission('pp:READ')
   async getCrp() {
@@ -66,6 +76,9 @@ export class PpIntelligenceController {
     return { workCenters, bottleneckCount, avgUtilization };
   }
 
+  @ApiOperation({ summary: 'Get learning curve' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('learning-curve/:productId')
   @RequirePermission('pp:READ')
   async getLearningCurve(@Param('productId') productId: string) {

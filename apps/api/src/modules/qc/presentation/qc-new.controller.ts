@@ -3,9 +3,9 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Get, Post, Query, Param, Body, UseGuards, UseInterceptors, NotFoundException } from '@nestjs/common';
+import { Controller, Get, HttpException, HttpStatus, Post, Query, Param, Body, UseGuards, UseInterceptors, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -38,7 +38,7 @@ const QC_ROLES = [Role.SUPER_ADMIN, Role.DIRECTOR, Role.QC_SPECIALIST, Role.PROD
 
 @ApiTags('QC')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('qc')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -107,11 +107,17 @@ export class QcNewController {
     return unwrapOrInternal(await this.svc.getSpcControlChart(pid));
   }
 
+  // P3-26: SPC control-charts list endpoint is not yet wired. Real charts
+  // require an `SpcService.listControlCharts()` aggregation that doesn't exist
+  // yet. Return 501 instead of a fake empty list.
   @Get('control-charts')
   @Roles(...QC_ROLES)
   @ApiOperation({ summary: 'SPC control charts list' })
   async getControlCharts() {
-    return { data: [], total: 0 };
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: GET /qc/control-charts', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
   @Get('control-charts/:processId')

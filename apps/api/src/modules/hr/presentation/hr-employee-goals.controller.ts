@@ -16,7 +16,8 @@ import {
   Body, Controller, Get, InternalServerErrorException,
   Param, ParseIntPipe, Patch, Post, UseGuards, UseInterceptors,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -58,7 +59,8 @@ const CreateOneOnOneSchema = z.object({
 
 // ── Controller ────────────────────────────────────────────────────────────────
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Hr Employee Goals')
 @Controller('hr/employees')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -67,6 +69,9 @@ export class HrEmployeeGoalsController {
 
   // ── Goals ─────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'List goals' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/goals')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'MANAGER', 'EMPLOYEE')
   async listGoals(@Param('id', ParseIntPipe) id: number) {
@@ -82,6 +87,9 @@ export class HrEmployeeGoalsController {
     }
   }
 
+  @ApiOperation({ summary: 'Create goal' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':id/goals')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'MANAGER')
   async createGoal(
@@ -111,6 +119,9 @@ export class HrEmployeeGoalsController {
     }
   }
 
+  @ApiOperation({ summary: 'Update goal' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id/goals/:goalId')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'MANAGER')
   async updateGoal(
@@ -147,6 +158,9 @@ export class HrEmployeeGoalsController {
 
   // ── 1-on-1 Meetings ───────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'List one on ones' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/one-on-ones')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'MANAGER', 'EMPLOYEE')
   async listOneOnOnes(@Param('id', ParseIntPipe) id: number) {
@@ -165,6 +179,9 @@ export class HrEmployeeGoalsController {
     }
   }
 
+  @ApiOperation({ summary: 'Create one on one' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':id/one-on-ones')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'MANAGER')
   async createOneOnOne(

@@ -6,13 +6,14 @@
 import { parseSafe } from '@common/assertions';
 import { unwrapOrThrow } from '@common/http-result';
 import { UseInterceptors , BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {Controller,
   Get,
   Query,
   UseGuards, Logger} from '@nestjs/common';
 import { QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '@shared/guards/roles.guard';
 import { Roles} from '@shared/decorators/roles.decorator';
 import { CurrentUser} from '@shared/decorators/current-user.decorator';
@@ -28,14 +29,17 @@ import {
  LowStockReportDtoSchema,
 } from './dto/pos-v2.dto';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Reports')
 @Controller('pos-v2/reports')
 @UseGuards(RolesGuard)
 export class ReportsController {
   private readonly logger = new Logger(ReportsController.name);
  constructor(private readonly queryBus: QueryBus) {}
 
+ @ApiOperation({ summary: 'Get movement report' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('movements')
  @Roles('WAREHOUSE_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
  async getMovementReport(
@@ -53,6 +57,8 @@ export class ReportsController {
  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Get employee activity' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('employee-activity')
  @Roles('HR_MANAGER', 'SUPER_ADMIN')
  async getEmployeeActivity(
@@ -70,6 +76,8 @@ export class ReportsController {
  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Get low stock report' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('low-stock')
  @Roles('WAREHOUSE_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
  async getLowStockReport(

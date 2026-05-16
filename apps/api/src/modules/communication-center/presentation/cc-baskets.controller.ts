@@ -13,7 +13,8 @@
 import {
   Body, Controller, ForbiddenException, Get, NotFoundException, Param, Post, UseGuards, UseInterceptors,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -33,7 +34,9 @@ const MoveBasketSchema = z.object({
 });
 type MoveBasketDto = z.infer<typeof MoveBasketSchema>;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Cc Baskets')
+@ApiBearerAuth()
 @Controller('cc/baskets')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -46,31 +49,44 @@ export class CcBasketsController {
   ) {}
 
   /** KPI/statistika — javob vaqti, 24h overdue %, kechikkan %, bo'limlar, xodim yuklamasi */
+  @ApiOperation({ summary: 'Kpi' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('stats/kpi')
   kpi(@CurrentUser() user: { id: number; role: string }) {
     return this.stats.getKpi(user.id, user.role ?? 'employee');
   }
 
+  @ApiOperation({ summary: 'Inbox' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('inbox')
   inbox(@CurrentUser() user: { id: number }) {
     return this.svc.listBasket(user.id, 'inbox');
   }
 
+  @ApiOperation({ summary: 'Pending' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('pending')
   pending(@CurrentUser() user: { id: number }) {
     return this.svc.listBasket(user.id, 'pending');
   }
 
+  @ApiOperation({ summary: 'Outbox' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('outbox')
   outbox(@CurrentUser() user: { id: number }) {
     return this.svc.listBasket(user.id, 'outbox');
   }
 
+  @ApiOperation({ summary: 'Summary' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('summary')
   summary(@CurrentUser() user: { id: number }) {
     return this.svc.summary(user.id);
   }
 
+  @ApiOperation({ summary: 'Get one' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   async getOne(@Param('id') id: string, @CurrentUser() user: { id: number; role: string }) {
     const basket = await this.svc.getOne(id);
@@ -84,6 +100,9 @@ export class CcBasketsController {
     return basket;
   }
 
+  @ApiOperation({ summary: 'Move' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':id/move')
   async move(
     @Param('id') id: string,

@@ -10,7 +10,7 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Result, Ok } from '@common/result';
 import { CreateReclamationCommand } from './create-reclamation.command';
 import { Reclamation, ReclamationStatus } from '../../domain/aggregates/reclamation.aggregate';
-import { IQcDefectRepository } from '../../infrastructure/repositories/drizzle-defect.repo';
+import { IQcDefectRepository, QC_DEFECT_REPO } from '../../infrastructure/repositories/drizzle-defect.repo';
 
 @Injectable()
 @CommandHandler(CreateReclamationCommand)
@@ -18,7 +18,7 @@ export class CreateReclamationHandler implements ICommandHandler<CreateReclamati
   private readonly logger = new Logger(CreateReclamationHandler.name);
 
   constructor(
-    @Inject('IQcDefectRepository') private readonly qcRepository: IQcDefectRepository,
+    @Inject(QC_DEFECT_REPO) private readonly qcRepository: IQcDefectRepository,
       ) {}
 
   async execute(command: CreateReclamationCommand): Promise<Result<Reclamation>> {

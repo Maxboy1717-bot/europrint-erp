@@ -15,8 +15,9 @@ import {
   Query,
   UseGuards,
   UseInterceptors, BadRequestException, NotFoundException} from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -38,7 +39,9 @@ const Role = {
   SALES_MANAGER: 'sales_manager',
 } as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Sd Invoices')
+@ApiBearerAuth()
 @Controller('sd/invoices')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -50,6 +53,8 @@ export class SdInvoicesController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Get invoices' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
   async getInvoices(@Query() queryParams: Record<string, unknown>) {
@@ -71,6 +76,9 @@ export class SdInvoicesController {
     
   }
 
+  @ApiOperation({ summary: 'Get invoice' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
   async getInvoice(@Param('id') id: string) {
@@ -83,9 +91,12 @@ export class SdInvoicesController {
     
   }
 
+  @ApiOperation({ summary: 'Create invoice' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.SALES_MANAGER)
-  async createInvoice(@Body() body: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+  async createInvoice(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
 
       const parsed = CreateInvoiceDtoSchema.parse(body);
       const cmd = new CreateInvoiceCommand(

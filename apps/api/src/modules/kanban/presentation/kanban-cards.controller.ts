@@ -9,10 +9,18 @@
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
   Controller, Get, Post, Put, Delete, Patch, Param, Body, Query,
-  UseGuards, UseInterceptors, Logger, HttpCode, HttpStatus,
+  UseGuards, UseInterceptors, Logger, HttpCode, HttpException, HttpStatus,
 } from '@nestjs/common';
+
+// P3-26: chat-message file attachment endpoints are not yet wired.
+const notImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -20,13 +28,48 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { unwrapOrBadRequest } from '@common/http-result';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { KanbanExtService } from '../application/kanban-ext.service';
+
+const KanbanCardCreateSchema = z.object({
+  boardId: z.string().optional(),
+  columnId: z.string().optional(),
+  title: z.string().max(500).optional(),
+  description: z.string().max(5000).optional(),
+  priority: z.string().max(50).optional(),
+  assignedTo: z.union([z.string(), z.number()]).optional(),
+  dueDate: z.string().optional(),
+}).passthrough();
+
+const AssignCardSchema = z.object({
+  assignedTo: z.union([z.string(), z.number()]).optional(),
+}).passthrough();
+
+const CompleteCardSchema = z.object({
+  completionReport: z.string().max(5000).optional(),
+}).passthrough();
+
+const PostChatSchema = z.object({
+  message: z.string().max(5000).optional(),
+  content: z.string().max(5000).optional(),
+}).passthrough();
+
+const AddTagSchema = z.object({
+  name: z.string().max(100).optional(),
+  tag: z.string().max(100).optional(),
+  color: z.string().max(20).optional(),
+  boardId: z.union([z.string(), z.number()]).optional(),
+}).passthrough();
+
+const AddObserverSchema = z.object({
+  userId: z.union([z.string(), z.number()]),
+}).passthrough();
 
 export { KanbanCardFilesController } from './kanban-card-files.controller';
 
 @ApiTags('§16 Kanban Extended')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('kanban')
 @Roles('super_admin', 'director', 'manager', 'employee')
@@ -75,18 +118,20 @@ export class KanbanCardsController {
   @UseInterceptors(AuditInterceptor)
   @ApiOperation({ summary: 'Yangi karta yaratish (xabardan vazifa)' })
   async createCardFlat(
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
     @CurrentUser() user: { id: number },
   ) {
-    return unwrapOrBadRequest(await this.svc.createCardFlat(body, user?.id ?? 0));
+    const dto = KanbanCardCreateSchema.parse(body);
+    return unwrapOrBadRequest(await this.svc.createCardFlat(dto as Record<string, unknown>, user?.id ?? 0));
   }
 
   @Patch(':id/assign')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(AuditInterceptor)
   @ApiOperation({ summary: 'Karta tayinlash' })
-  assignCard(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return { id, assignedTo: body.assignedTo, updated: true };
+  assignCard(@Param('id') id: string, @Body() body: unknown) {
+    const dto = AssignCardSchema.parse(body);
+    return { id, assignedTo: dto.assignedTo, updated: true };
   }
 
   @Put('cards/:id/accept')
@@ -106,11 +151,12 @@ export class KanbanCardsController {
   @ApiOperation({ summary: 'Kartani yakunlash' })
   async completeCard(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
     @CurrentUser() user: { id: number },
   ) {
+    const dto = CompleteCardSchema.parse(body ?? {});
     return unwrapOrBadRequest(
-      await this.svc.completeCard(id, user?.id ?? 0, body.completionReport as string | undefined),
+      await this.svc.completeCard(id, user?.id ?? 0, dto.completionReport),
     );
   }
 
@@ -127,25 +173,26 @@ export class KanbanCardsController {
   @ApiOperation({ summary: 'Karta chatiga xabar yuborish' })
   async postCardChat(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
     @CurrentUser() user: { id: number },
   ) {
+    const dto = PostChatSchema.parse(body);
     return unwrapOrBadRequest(
-      await this.svc.addComment(id, user?.id ?? 0, String(body.message ?? body.content ?? '')),
+      await this.svc.addComment(id, user?.id ?? 0, String(dto.message ?? dto.content ?? '')),
     );
   }
 
   @Get('chat-messages/:id/files')
   @ApiOperation({ summary: 'Chat xabari fayllari' })
-  async getChatMessageFiles(@Param('id') id: string) {
-    return { data: [], messageId: id };
+  async getChatMessageFiles(@Param('id') _id: string) {
+    return notImplemented('GET /kanban/chat-messages/:id/files');
   }
 
   @Post('chat-messages/:id/files')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Chat xabariga fayl biriktirish (stub)' })
-  async attachChatMessageFile(@Param('id') id: string) {
-    return { ok: true, messageId: id };
+  async attachChatMessageFile(@Param('id') _id: string) {
+    return notImplemented('POST /kanban/chat-messages/:id/files');
   }
 
   // ─── Tags ─────────────────────────────────────────────────────────────────
@@ -159,11 +206,12 @@ export class KanbanCardsController {
   @Post('cards/:id/tags')
   @UseInterceptors(AuditInterceptor)
   @ApiOperation({ summary: 'Kartaga teg qo\'shish' })
-  async addCardTag(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async addCardTag(@Param('id') id: string, @Body() body: unknown) {
+    const dto = AddTagSchema.parse(body);
     return unwrapOrBadRequest(await this.svc.addTagToCard(id, {
-      name: String(body.name ?? body.tag ?? ''),
-      color: body.color ? String(body.color) : undefined,
-      boardId: body.boardId ? String(body.boardId) : undefined,
+      name: String(dto.name ?? dto.tag ?? ''),
+      color: dto.color ? String(dto.color) : undefined,
+      boardId: dto.boardId ? String(dto.boardId) : undefined,
     }));
   }
 
@@ -186,8 +234,9 @@ export class KanbanCardsController {
   @Post('cards/:id/observers')
   @UseInterceptors(AuditInterceptor)
   @ApiOperation({ summary: 'Kartaga kuzatuvchi qo\'shish' })
-  async addCardObserver(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return unwrapOrBadRequest(await this.svc.addObserver(id, Number(body.userId ?? 0)));
+  async addCardObserver(@Param('id') id: string, @Body() body: unknown) {
+    const dto = AddObserverSchema.parse(body);
+    return unwrapOrBadRequest(await this.svc.addObserver(id, Number(dto.userId ?? 0)));
   }
 
   @Delete('cards/:id/observers/:observerId')
@@ -209,8 +258,9 @@ export class KanbanCardsController {
   @Post('cards/:id/co-executors')
   @UseInterceptors(AuditInterceptor)
   @ApiOperation({ summary: 'Kartaga hamijrochi qo\'shish' })
-  async addCardCoExecutor(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return unwrapOrBadRequest(await this.svc.addCoExecutor(id, Number(body.userId ?? 0)));
+  async addCardCoExecutor(@Param('id') id: string, @Body() body: unknown) {
+    const dto = AddObserverSchema.parse(body);
+    return unwrapOrBadRequest(await this.svc.addCoExecutor(id, Number(dto.userId ?? 0)));
   }
 
   @Delete('cards/:id/co-executors/:coExecutorId')

@@ -23,3 +23,32 @@ export class TaskAssignedEvent {
     readonly assigneeId: number,
   ) {}
 }
+
+export class KanbanTaskMovedEvent {
+  readonly eventName = 'KanbanTaskMoved';
+  constructor(
+    readonly taskId: string,
+    readonly targetColumnId: number,
+    readonly by: number,
+    readonly occurredAt: Date = new Date(),
+  ) {}
+}
+
+export class KanbanTaskAssignedEvent {
+  readonly eventName = 'KanbanTaskAssigned';
+  constructor(
+    readonly taskId: string,
+    readonly userId: number,
+    readonly by: number,
+    readonly occurredAt: Date = new Date(),
+  ) {}
+}
+
+export class KanbanTaskCompletedEvent {
+  readonly eventName = 'KanbanTaskCompleted';
+  constructor(
+    readonly taskId: string,
+    readonly by: number,
+    readonly occurredAt: Date = new Date(),
+  ) {}
+}

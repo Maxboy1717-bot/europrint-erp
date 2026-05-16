@@ -13,17 +13,26 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagg
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import * as path from 'path';
 import * as fs from 'fs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { unwrapOrBadRequest } from '@common/http-result';
+import { z } from 'zod';
 import { KanbanExtService } from '../application/kanban-ext.service';
+
+const AddResultSchema = z.object({
+  description: z.string().max(5000).optional(),
+}).passthrough();
+
+const StartTimeSchema = z.object({
+  description: z.string().max(2000).optional(),
+}).passthrough();
 
 @ApiTags('§16 Kanban Extended')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('kanban')
 @Roles('super_admin', 'director', 'manager', 'employee')
@@ -45,11 +54,12 @@ export class KanbanCardFilesController {
   @ApiOperation({ summary: 'Kartaga natija qo\'shish' })
   async addCardResult(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
     @CurrentUser() user: { id: number },
   ) {
+    const dto = AddResultSchema.parse(body);
     return unwrapOrBadRequest(
-      await this.svc.createResult(id, user?.id ?? 0, body.description as string | undefined),
+      await this.svc.createResult(id, user?.id ?? 0, dto.description),
     );
   }
 
@@ -183,11 +193,12 @@ export class KanbanCardFilesController {
   @ApiOperation({ summary: 'Vaqt kuzatuvini boshlash' })
   async startTimeEntry(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
     @CurrentUser() user: { id: number },
   ) {
+    const dto = StartTimeSchema.parse(body ?? {});
     return unwrapOrBadRequest(
-      await this.svc.startTimeTracking(id, user?.id ?? 0, body.description as string | undefined),
+      await this.svc.startTimeTracking(id, user?.id ?? 0, dto.description),
     );
   }
 

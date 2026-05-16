@@ -6,7 +6,7 @@
 import { Controller, UseGuards, Get, Query, Param , UseInterceptors} from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { EuroprintControlCompatService } from './europrint-control.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -15,7 +15,7 @@ import { unwrapOrInternal } from '@common/http-result';
 @ApiTags('EuroPrint Control Center (Compat)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
 @Controller('europrint-control')

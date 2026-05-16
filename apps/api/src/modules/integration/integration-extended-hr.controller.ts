@@ -7,7 +7,8 @@ import {
   Controller, Get, Param, Query,
   UseGuards, UseInterceptors,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -19,7 +20,9 @@ const HR_ROLES      = ['admin', 'super_admin', 'hr_manager', 'manager', 'directo
 const VENDOR_ROLES  = ['admin', 'super_admin', 'manager', 'director', 'accountant', 'finance'] as const;
 const SKILLS_ROLES  = ['admin', 'super_admin', 'hr_manager', 'manager', 'director', 'employee'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Integration Extended Hr')
+@ApiBearerAuth()
 @Controller('integration')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -29,6 +32,8 @@ export class IntegrationExtendedHrController {
     private readonly mroRepo: IntegrationExtendedMroRepository,
   ) {}
 
+  @ApiOperation({ summary: 'Get position skills' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('hr-lms/position-skills')
   @Roles(...SKILLS_ROLES)
   async getPositionSkills() {
@@ -36,6 +41,8 @@ export class IntegrationExtendedHrController {
     return r.ok ? r.data : [];
   }
 
+  @ApiOperation({ summary: 'Get employee skills' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('hr-lms/employee-skills')
   @Roles(...SKILLS_ROLES)
   async getEmployeeSkills() {
@@ -43,6 +50,8 @@ export class IntegrationExtendedHrController {
     return r.ok ? r.data : [];
   }
 
+  @ApiOperation({ summary: 'Get expiring certifications' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('hr-lms/expiring-certifications')
   @Roles(...HR_ROLES)
   async getExpiringCertifications() {
@@ -50,6 +59,8 @@ export class IntegrationExtendedHrController {
     return r.ok ? r.data : [];
   }
 
+  @ApiOperation({ summary: 'Get hr lms stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('hr-lms/stats')
   @Roles(...HR_ROLES)
   async getHrLmsStats() {
@@ -57,6 +68,8 @@ export class IntegrationExtendedHrController {
     return r.ok ? r.data : {};
   }
 
+  @ApiOperation({ summary: 'Get employee ratings by period' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('employee-rating/ratings/:year/:month')
   @Roles(...HR_ROLES)
   async getEmployeeRatingsByPeriod(
@@ -67,6 +80,8 @@ export class IntegrationExtendedHrController {
     return r.ok ? r.data : [];
   }
 
+  @ApiOperation({ summary: 'Get employee ratings' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('employee-rating/ratings')
   @Roles(...HR_ROLES)
   async getEmployeeRatings(
@@ -80,6 +95,8 @@ export class IntegrationExtendedHrController {
     return r.ok ? r.data : [];
   }
 
+  @ApiOperation({ summary: 'Get employee rating goals' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('employee-rating/goals')
   @Roles(...HR_ROLES)
   async getEmployeeRatingGoals() {
@@ -87,6 +104,8 @@ export class IntegrationExtendedHrController {
     return r.ok ? r.data : [];
   }
 
+  @ApiOperation({ summary: 'Get employee rating stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('employee-rating/stats')
   @Roles(...HR_ROLES)
   async getEmployeeRatingStats() {
@@ -94,6 +113,8 @@ export class IntegrationExtendedHrController {
     return r.ok ? r.data : {};
   }
 
+  @ApiOperation({ summary: 'Get vendor performance' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('vendor-performance')
   @Roles(...VENDOR_ROLES)
   async getVendorPerformance() {
@@ -101,6 +122,8 @@ export class IntegrationExtendedHrController {
     return r.ok ? r.data : [];
   }
 
+  @ApiOperation({ summary: 'Get vendor spend analysis' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('vendor-performance/spend-analysis')
   @Roles(...VENDOR_ROLES)
   async getVendorSpendAnalysis() {
@@ -108,6 +131,8 @@ export class IntegrationExtendedHrController {
     return r.ok ? r.data : [];
   }
 
+  @ApiOperation({ summary: 'Get pm upcoming alias' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('pm-upcoming')
   @Roles('admin', 'super_admin', 'manager', 'director', 'warehouse', 'warehouse_manager')
   async getPmUpcomingAlias() {
@@ -116,13 +141,15 @@ export class IntegrationExtendedHrController {
   }
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('integration/mro')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class IntegrationMroPmController {
   constructor(private readonly repo: IntegrationExtendedMroRepository) {}
 
+  @ApiOperation({ summary: 'Get pm upcoming' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('pm-upcoming')
   @Roles('admin', 'super_admin', 'manager', 'director', 'warehouse', 'warehouse_manager')
   async getPmUpcoming() {

@@ -14,14 +14,14 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
-import { ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Public } from '@common/decorators/public.decorator';
 import { LegacyService } from '../services/legacy.service';
 import { LegacyRefreshTokenSchema, LegacyRefreshTokenDto } from '../dto/legacy.dto';
 
 @ApiTags('Admin Auth (Legacy)')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller()
 export class AdminAuthController {
@@ -34,6 +34,9 @@ export class AdminAuthController {
   ) {}
 
   @Public()
+  @ApiOperation({ summary: 'Refresh token' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('auth/refresh')
   @UsePipes(new ZodValidationPipe(LegacyRefreshTokenSchema))
   async refreshToken(@Body() body: LegacyRefreshTokenDto) {

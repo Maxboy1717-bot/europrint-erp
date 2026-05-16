@@ -1,13 +1,13 @@
 /**
  * test/auth/resend-otp.handler.spec.ts
  *
- * Unit tests for ResendOtpHandler. OtpSessionRepository is mocked; the
- * handler invalidates older pending OTPs and inserts a fresh code.
+ * Unit tests for ResendOtpService. OtpSessionRepository is mocked; the
+ * service invalidates older pending OTPs and inserts a fresh code.
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { I18nService } from 'nestjs-i18n';
-import { ResendOtpHandler } from '../../src/modules/auth/application/commands/resend-otp.handler';
+import { ResendOtpService } from '../../src/modules/auth/application/services/resend-otp.service';
 import { OtpSessionRepository } from '../../src/modules/auth/infrastructure/repositories/otp-session.repository';
 import { Ok, Err } from '../../src/common/result';
 
@@ -30,20 +30,20 @@ function makeRepo(): RepoMock {
   };
 }
 
-describe('ResendOtpHandler', () => {
-  let handler: ResendOtpHandler;
+describe('ResendOtpService', () => {
+  let handler: ResendOtpService;
   let repo: RepoMock;
 
   beforeEach(async () => {
     repo = makeRepo();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ResendOtpHandler,
+        ResendOtpService,
         { provide: OtpSessionRepository, useValue: repo },
         { provide: I18nService, useValue: mockI18n },
       ],
     }).compile();
-    handler = module.get(ResendOtpHandler);
+    handler = module.get(ResendOtpService);
   });
 
   it('returns Err when invalidatePending fails', async () => {

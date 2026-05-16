@@ -3,10 +3,10 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, UseGuards, Get, Post, Patch, Body, Query, Param, HttpCode, HttpStatus , UseInterceptors} from '@nestjs/common';
+import { Controller, UseGuards, Get, Post, Patch, Body, Query, Param, HttpCode, HttpException, HttpStatus , UseInterceptors} from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { WarehouseCatalogService } from './warehouse-catalog.service';
 import { CompatBodyDto } from './dto/compat-body.dto';
@@ -16,7 +16,7 @@ import { unwrapOrInternal } from '@common/http-result';
 @ApiTags('Warehouse Catalog (ERP)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
 @Controller('warehouse')
@@ -33,6 +33,9 @@ export class WarehouseCatalogController {
    * cross-warehouse movement journal. Mirrors the shape produced by
    * wms/movements (which lives at /api/wms/movements) but kept here so the
    * accounting page does not need to change its URL.
+   *
+   * P3-26: aggregator service not yet wired — clients should use
+   * /api/wms/movements directly until this gateway is implemented.
    */
   @Get('movements')
   async getWarehouseMovements(
@@ -40,7 +43,10 @@ export class WarehouseCatalogController {
     @Query('warehouseId') _warehouseId?: string,
     @Query('materialId') _materialId?: string,
   ) {
-    return { items: [], total: 0 };
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: GET /warehouse/movements (use /wms/movements instead)', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
   @Get('batches/stats')

@@ -21,7 +21,7 @@ export class AiRouterRepository {
     return safeCall(async () => {
       const result = await this.drizzle.db
         .select({
-          total: sql<string>`COALESCE(SUM(CAST(${aiUsageLogsTable.estimatedCostUsd} AS FLOAT)), 0)`,
+          total: sql<string>`COALESCE(SUM(CAST(${aiUsageLogsTable.estimatedCost} AS FLOAT)), 0)`,
         })
         .from(aiUsageLogsTable)
         .where(
@@ -36,13 +36,13 @@ export class AiRouterRepository {
       return this.drizzle.db
         .select({
           taskType: aiUsageLogsTable.taskType,
-          spent: sql<string>`COALESCE(SUM(CAST(${aiUsageLogsTable.estimatedCostUsd} AS FLOAT)), 0)`,
+          spent: sql<string>`COALESCE(SUM(CAST(${aiUsageLogsTable.estimatedCost} AS FLOAT)), 0)`,
           count: sql<number>`COUNT(*)`,
         })
         .from(aiUsageLogsTable)
         .where(gte(aiUsageLogsTable.createdAt, today))
         .groupBy(aiUsageLogsTable.taskType)
-        .orderBy(sql`SUM(CAST(${aiUsageLogsTable.estimatedCostUsd} AS FLOAT)) DESC`)
+        .orderBy(sql`SUM(CAST(${aiUsageLogsTable.estimatedCost} AS FLOAT)) DESC`)
         .limit(limit);
       }, 'DB_ERROR');
   }

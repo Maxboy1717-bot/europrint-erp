@@ -7,7 +7,7 @@
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { AppErr, Err, Ok, Result, isErr } from '@common/result';
-import { IDealRepository } from '../../domain/repositories/i-deal.repo';
+import { IDealRepository, DEAL_REPO } from '../../domain/repositories/i-deal.repo';
 import { DealLostEvent } from '../../domain/events/deal-lost.event';
 
 export class MarkDealLostCommand {
@@ -22,7 +22,7 @@ export class MarkDealLostHandler implements ICommandHandler<MarkDealLostCommand>
   private readonly logger = new Logger(MarkDealLostHandler.name);
 
   constructor(
-    @Inject('IDealRepository') private readonly dealRepo: IDealRepository,
+    @Inject(DEAL_REPO) private readonly dealRepo: IDealRepository,
     private readonly eventBus: EventBus,
   ) {}
 

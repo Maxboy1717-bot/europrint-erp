@@ -22,7 +22,7 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RecruitmentService } from './recruitment.service';
 import { CreateReferencesCheckDto, UpdateReferencesCheckDto } from './dto/references-check.dto';
 import { CreateJobOfferDto, UpdateJobOfferStatusDto } from './dto/job-offer.dto';
@@ -34,7 +34,7 @@ import { unwrapOrInternal } from '@common/http-result';
 
 @ApiTags('HR Rekruter')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('hr/recruitment')
 export class RecruitmentOffersController {

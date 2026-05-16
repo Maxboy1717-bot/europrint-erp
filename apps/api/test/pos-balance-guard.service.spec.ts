@@ -10,7 +10,7 @@ jest.mock('../src/shared/db', () => ({
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { PosBalanceGuardService } from '../src/modules/pos/services/pos-balance-guard.service';
+import { PosBalanceGuardService } from '../src/modules/pos/application/services/pos-balance-guard.service';
 import { runQuery } from '../src/shared/db';
 
 const mockRunQuery = runQuery as jest.MockedFunction<typeof runQuery>;

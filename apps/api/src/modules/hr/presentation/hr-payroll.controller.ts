@@ -10,9 +10,10 @@ import {
   Body, Controller, Get, Inject, InternalServerErrorException, Param, Post, Query,
   UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -31,7 +32,8 @@ interface AuthenticatedUser { id: number; sub?: number; }
 const INPS_EMPLOYEE_RATE = 0.08;
 const JSHD_EMPLOYER_RATE = 0.12;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Hr Payroll')
 @Controller('hr/payroll')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -42,6 +44,8 @@ export class HrPayrollController {
     @Inject(HR_REPO) private readonly hrRepo: IHrRepo,
   ) {}
 
+  @ApiOperation({ summary: 'Get payrolls' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles('PAYROLL_OFFICER', 'HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
   async getPayrolls(@Query() query: { employeeId?: string; period?: string; status?: string }) {
@@ -54,12 +58,18 @@ export class HrPayrollController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get payroll summary' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('summary/:period')
   @Roles('PAYROLL_OFFICER', 'DIRECTOR', 'SUPER_ADMIN')
   async getPayrollSummary(@Param('period') period: string) {
     return unwrapOrThrow(await this.hrRepo.getPayrollSummary(period));
   }
 
+  @ApiOperation({ summary: 'Calculate payroll' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('calculate')
   @Roles('PAYROLL_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrCalculatePayrollSchema))
@@ -104,6 +114,10 @@ export class HrPayrollController {
     return { ...result.data, grossSalary, netSalary, inpsEmployee, jshdEmployer, period };
   }
 
+  @ApiOperation({ summary: 'Approve payroll' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post(':payrollId/approve')
   @Roles('DIRECTOR', 'SUPER_ADMIN')
   async approvePayroll(@Param('payrollId') payrollId: string, @CurrentUser() user: AuthenticatedUser) {
@@ -115,6 +129,10 @@ export class HrPayrollController {
     return { message: 'Oylik maosh tasdiqlandi', ...result.data };
   }
 
+  @ApiOperation({ summary: 'Post to g l' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post(':payrollId/post-to-gl')
   @Roles('DIRECTOR', 'SUPER_ADMIN')
   async postToGL(@Param('payrollId') payrollId: string, @CurrentUser() user: AuthenticatedUser) {

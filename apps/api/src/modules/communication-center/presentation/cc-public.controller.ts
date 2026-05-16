@@ -10,6 +10,7 @@ import { Throttle } from '@nestjs/throttler';
 import { I18nService } from 'nestjs-i18n';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
+import { Public } from '@common/decorators/public.decorator';
 
 interface PublicSignature {
   stepOrder:     number;
@@ -42,6 +43,7 @@ interface PublicApprovalRow {
 }
 
 @Throttle({ default: { limit: 10, ttl: 60_000 } })   // 10 req/min — siqiq limit (enumeration hujumidan himoya)
+@Public()
 @Controller('cc/verify')
 export class CcPublicController {
   constructor(private readonly i18n: I18nService) {}

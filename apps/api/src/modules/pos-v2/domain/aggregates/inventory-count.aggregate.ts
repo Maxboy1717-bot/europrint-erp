@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { InternalServerErrorException } from '@nestjs/common';
+import { DomainError } from '../../../../shared/domain/errors/domain-error';
 export enum CountStatus {
   DRAFT = 'draft',
   IN_PROGRESS = 'in_progress',
@@ -50,7 +50,8 @@ export class InventoryCount {
 
   complete(): void {
     if (this.status !== CountStatus.IN_PROGRESS) {
-      throw new InternalServerErrorException('Count must be in_progress to complete');
+      // INVALID_STATE: complete() only valid from IN_PROGRESS.
+      throw new DomainError('INVALID_STATE', 'Count must be in_progress to complete');
     }
     this.status = CountStatus.COMPLETED;
     this.updatedAt = _time.now();
@@ -58,7 +59,8 @@ export class InventoryCount {
 
   approve(approverId: string): void {
     if (this.status !== CountStatus.COMPLETED) {
-      throw new InternalServerErrorException('Count must be completed to approve');
+      // INVALID_STATE: approve() only valid from COMPLETED.
+      throw new DomainError('INVALID_STATE', 'Count must be completed to approve');
     }
     this.status = CountStatus.APPROVED;
     this.approvedBy = approverId;

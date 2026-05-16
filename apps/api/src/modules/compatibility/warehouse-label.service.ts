@@ -11,7 +11,7 @@ import { db,
   rawSql} from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
-import { LabelService, LabelFormat } from '../pos/services/label.service';
+import { LabelService, LabelFormat } from '../pos/application/services/label.service';
 import { PrintLabelDto } from './dto/compat-body.dto';
 
 export interface LabelPrintResult {
