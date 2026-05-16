@@ -70,7 +70,7 @@ export default function TelegramBotAdmin() {
                 ? <Badge className="bg-green-500/10 text-[var(--ep-green)] dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />{t("active")}</Badge>
                 : <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />{t("ochiq1")}</Badge>
               }
-              {!botActive && <p className="text-xs text-muted-foreground mt-2">TELEGRAM_BOT_TOKEN sozlanmagan</p>}
+              {!botActive && <p className="text-xs text-muted-foreground mt-2">{t("telegramBotTokenSozlanmagan")}</p>}
             </CardContent>
           </Card>
           <Card data-testid="card-total-employees">
@@ -105,7 +105,7 @@ export default function TelegramBotAdmin() {
               </div>
             )}
             <div className="space-y-1">
-          <Label htmlFor="broadcast-msg">Xabar matni (HTML teglari qo'llab-quvvatlanadi)</Label>
+          <Label htmlFor="broadcast-msg">{t("xabarMatniHtmlTeglariQoLlab")}</Label>
               <Textarea
                 id="broadcast-msg"
                 data-testid="input-broadcast-message"

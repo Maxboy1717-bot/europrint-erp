@@ -38,7 +38,7 @@ export function ForecastTab({ forecast, basic }: ForecastTabProps) {
           <p className="text-xs text-muted-foreground">kun</p>
         </CardContent></Card>
         <Card><CardContent className="p-4 text-center">
-          <p className="text-xs text-muted-foreground mb-1">Zaxira tugash sanasi (taxmin)</p>
+          <p className="text-xs text-muted-foreground mb-1">{t("zaxiraTugashSanasiTaxmin")}</p>
           <p className="text-xl font-bold">{fmtDate(forecast.stockoutDate)}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4 text-center">

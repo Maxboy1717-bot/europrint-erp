@@ -604,5 +604,7 @@
   "reasonUz": "Причина (узбек)",
   "reasonRu": "Причина (русский)",
   "reasonRuPlaceholder": "Причина и подробности...",
-  "selectHrAdmin": "Выберите HR/Admin"
+  "selectHrAdmin": "Выберите HR/Admin",
+  "jshd12": "JSHD (12%):",
+  "inps12": "INPS (12%):"
 }

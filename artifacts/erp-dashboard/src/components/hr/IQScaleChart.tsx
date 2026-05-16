@@ -80,7 +80,7 @@ export function IQScaleChart({ iq, compact = false }: IQScaleChartProps) {
   const { t } = useTranslation("common");
   if (iq === null || iq === undefined) {
     return (
-      <span className="text-xs text-muted-foreground italic">IQ ball kiritilmagan</span>
+      <span className="text-xs text-muted-foreground italic">{t("iqBallKiritilmagan")}</span>
     );
   }
 

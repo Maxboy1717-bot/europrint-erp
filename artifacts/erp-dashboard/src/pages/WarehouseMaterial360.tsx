@@ -140,7 +140,7 @@ export default function WarehouseMaterial360() {
           {t("orqaga")}
         </button>
         <div className="flex-1">
-          <div className="text-xs text-gray-500 font-semibold">MATERIAL 360°</div>
+          <div className="text-xs text-gray-500 font-semibold">{t("material360")}</div>
           <h1 className="text-2xl font-bold text-gray-900">{material.name}</h1>
           <div className="text-sm text-gray-500 font-mono mt-1">
             {material.code} {material.nameRu ? `· ${material.nameRu}` : ""}

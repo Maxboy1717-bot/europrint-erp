@@ -84,7 +84,7 @@ export default function PIPPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{t("pipSamaradorlikniYaxshilashRejasi")}</h1>
-          <p className="text-muted-foreground text-sm mt-1">Performance Improvement Plans — 30/60/90 kunlik rejalar</p>
+          <p className="text-muted-foreground text-sm mt-1">{t("performanceImprovementPlans306090")}</p>
         </div>
         <Button onClick={() => setShowCreate(!showCreate)} className="bg-primary hover:bg-primary/90 text-white">
           {t("yangiPip")}
@@ -108,7 +108,7 @@ export default function PIPPage() {
                   placeholder={t('supervisorId')} className="bg-input border-border mt-1" />
               </div>
               <div>
-                <Label className="text-muted-foreground">Davomiyligi (kun) *</Label>
+                <Label className="text-muted-foreground">{t("davomiyligiKun")}</Label>
                 <Select value={form.duration_days} onValueChange={v => setForm(f => ({ ...f, duration_days: v }))}>
                   <SelectTrigger className="bg-input border-border mt-1 h-9">
                     <SelectValue />
@@ -127,7 +127,7 @@ export default function PIPPage() {
             <div>
               <Label className="text-muted-foreground">{t("maqsadlar1")}</Label>
               <Textarea value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))}
-                placeholder="PIP maqsadlari va kutilgan natijalar..." className="bg-input border-border mt-1 min-h-24" />
+                placeholder={t("pipMaqsadlariVaKutilganNatijalar")} className="bg-input border-border mt-1 min-h-24" />
             </div>
             <div>
               <Label className="text-muted-foreground">{t("muvaffaqiyatMezonlari")}</Label>
@@ -249,7 +249,7 @@ export default function PIPPage() {
                 <CardContent className="space-y-3">
                   <div className="flex gap-2 items-end">
                     <div className="flex-1">
-                      <Label className="text-muted-foreground text-sm">Progress (%)</Label>
+                      <Label className="text-muted-foreground text-sm">{t("progress")}</Label>
                       <Input type="number" min="0" max="100" value={progressForm.progress_percent}
                         onChange={e => setProgressForm(f => ({ ...f, progress_percent: e.target.value }))}
                         className="bg-input border-border mt-1" />

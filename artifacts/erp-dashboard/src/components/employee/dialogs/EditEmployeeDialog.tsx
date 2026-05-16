@@ -135,10 +135,10 @@ export function EditEmployeeDialog({
                 <Select value={form.shift} onValueChange={(v) => updateField("shift", v)}>
                   <SelectTrigger className="mt-1 h-9"><SelectValue placeholder={t("tanlang")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="A smena">A smena (07:00–15:00)</SelectItem>
-                    <SelectItem value="B smena">B smena (15:00–23:00)</SelectItem>
-                    <SelectItem value="C smena">C smena (23:00–07:00)</SelectItem>
-                    <SelectItem value="D smena">D smena (Kunduzgi)</SelectItem>
+                    <SelectItem value="A smena">{t("aSmena07001500")}</SelectItem>
+                    <SelectItem value="B smena">{t("bSmena15002300")}</SelectItem>
+                    <SelectItem value="C smena">{t("cSmena23000700")}</SelectItem>
+                    <SelectItem value="D smena">{t("dSmenaKunduzgi")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -168,7 +168,7 @@ export function EditEmployeeDialog({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="edit-workshopZone">Sex / Zona</Label>
+                <Label htmlFor="edit-workshopZone">{t("sexZona")}</Label>
                 <Input id="edit-workshopZone" value={form.workshopZone} onChange={(e) => updateField("workshopZone", e.target.value)} className="mt-1" />
               </div>
             </div>
@@ -206,11 +206,11 @@ export function EditEmployeeDialog({
                 <Input id="edit-address" value={form.address} onChange={(e) => updateField("address", e.target.value)} className="mt-1" />
               </div>
               <div>
-                <Label htmlFor="edit-latitude">Kenglik (Latitude)</Label>
+                <Label htmlFor="edit-latitude">{t("kenglikLatitude")}</Label>
                 <Input id="edit-latitude" value={form.latitude} onChange={(e) => updateField("latitude", e.target.value)} className="mt-1" />
               </div>
               <div>
-                <Label htmlFor="edit-longitude">Uzunlik (Longitude)</Label>
+                <Label htmlFor="edit-longitude">{t("uzunlikLongitude")}</Label>
                 <Input id="edit-longitude" value={form.longitude} onChange={(e) => updateField("longitude", e.target.value)} className="mt-1" />
               </div>
             </div>
@@ -228,7 +228,7 @@ export function EditEmployeeDialog({
                     <SelectItem value="turmush qurmagan">{t("turmushQurmagan")}</SelectItem>
                     <SelectItem value="turmush qurgan">{t("turmushQurgan")}</SelectItem>
                     <SelectItem value="ajrashgan">{t("ajrashgan")}</SelectItem>
-                    <SelectItem value="beva/beva ayol">Beva/Beva ayol</SelectItem>
+                    <SelectItem value="beva/beva ayol">{t("bevaBevaAyol")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -254,10 +254,10 @@ export function EditEmployeeDialog({
 
           {/* Housing */}
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-2 border-b pb-1">Uy-joy sharoiti</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-2 border-b pb-1">{t("uyJoySharoiti")}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label>Uy turi</Label>
+                <Label>{t("uyTuri")}</Label>
                 <Select value={form.housingType} onValueChange={(v) => updateField("housingType", v)}>
                   <SelectTrigger className="mt-1 h-9"><SelectValue placeholder={t("tanlang")} /></SelectTrigger>
                   <SelectContent>

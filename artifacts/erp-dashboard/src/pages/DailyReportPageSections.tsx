@@ -119,7 +119,7 @@ export function SubmitForm({
       <CardContent className="space-y-4">
         <div>
           <Label className="text-muted-foreground">
-            {t("k1BajarilganIshlar")}<span className="text-muted-foreground">(kamida 30 belgi)</span>
+            {t("k1BajarilganIshlar")}<span className="text-muted-foreground">{t("kamida30Belgi")}</span>
           </Label>
           <Textarea
             value={form.tasks_completed}
@@ -134,7 +134,7 @@ export function SubmitForm({
         </div>
         <div>
           <Label className="text-muted-foreground">
-            2. Ko'rsatkichlar / Miqdorlar <span className="text-muted-foreground">(ixtiyoriy)</span>
+            2. Ko'rsatkichlar / Miqdorlar <span className="text-muted-foreground">{t("ixtiyoriy")}</span>
           </Label>
           <Textarea
             value={form.metrics}
@@ -145,7 +145,7 @@ export function SubmitForm({
         </div>
         <div>
           <Label className="text-muted-foreground">
-            {t("k3ErtangiReja")}<span className="text-muted-foreground">(ixtiyoriy)</span>
+            {t("k3ErtangiReja")}<span className="text-muted-foreground">{t("ixtiyoriy2")}</span>
           </Label>
           <Textarea
             value={form.tomorrow_plan}

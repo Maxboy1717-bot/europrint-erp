@@ -40,7 +40,7 @@ export function AddTenantDialog({open, onOpenChange, form, onSubmit, isPending }
           </div>
           <div className="space-y-1">
           <Label>{t("domen")}</Label>
-            <Input {...form.register("domain", { required: true })} placeholder="zavod.uz" data-testid="input-tenant-domain" />
+            <Input {...form.register("domain", { required: true })} placeholder={t("zavodUz")} data-testid="input-tenant-domain" />
           </div>
           <div className="space-y-1">
           <Label>{t("tarif")}</Label>
@@ -54,7 +54,7 @@ export function AddTenantDialog({open, onOpenChange, form, onSubmit, isPending }
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
           <Label>{t('email1')}</Label>
-              <Input {...form.register("contactEmail")} type="email" placeholder="admin@zavod.uz" />
+              <Input {...form.register("contactEmail")} type="email" placeholder={t("adminZavodUz")} />
             </div>
             <div className="space-y-1">
           <Label>{t("phone")}</Label>

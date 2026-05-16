@@ -343,7 +343,7 @@ export default function AIReservation() {
                       <TableHead className="text-right">{t("ajratildi")}</TableHead>
                       <TableHead>{t("kerakSana")}</TableHead>
                       <TableHead className="text-right">{t("aiIshonch")}</TableHead>
-                      <TableHead>AI tavsiya</TableHead>
+                      <TableHead>{t("aiTavsiya")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

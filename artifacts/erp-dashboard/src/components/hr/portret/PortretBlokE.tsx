@@ -22,13 +22,13 @@ export function PortretBlokE({ portret, onChange }: PortretBlokEProps) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <h4 className="font-semibold text-sm text-primary">{t("blokETajribaBilim")}</h4>
-        <Badge variant="outline" className="text-[9px]">5 ta savol</Badge>
+        <Badge variant="outline" className="text-[9px]">{t("k5TaSavol")}</Badge>
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">14. Xavfli nomzod tavsifi (Xavf guruhlari)</Label>
+        <Label className="text-xs mb-1 block">{t("k14XavfliNomzodTavsifiXavfGuruhlari")}</Label>
         <Textarea
-          placeholder="Kandidatda qaysi belgilar bo'lsa uni ishga olmaslik kerak? (masalan: tez-tez ish joyini o'zgartirgan...)"
+          placeholder={t("kandidatdaQaysiBelgilarBoLsaUni")}
           rows={2}
           value={portret.danger_candidate ?? ""}
           onChange={e => onChange("danger_candidate")(e.target.value)}
@@ -76,9 +76,9 @@ export function PortretBlokE({ portret, onChange }: PortretBlokEProps) {
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">18. Professional ko'nikmalar (Hard skills)</Label>
+        <Label className="text-xs mb-1 block">{t("k18ProfessionalKoNikmalarHardSkills")}</Label>
         <Textarea
-          placeholder="Qaysi dasturlarni bilishi shart? (Excel, 1C, Photoshop, Python...)"
+          placeholder={t("qaysiDasturlarniBilishiShartExcel1c")}
           rows={2}
           value={portret.professional_skills ?? ""}
           onChange={e => onChange("professional_skills")(e.target.value)}

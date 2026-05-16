@@ -158,7 +158,7 @@ export function CashflowTab() {
         <CardContent>
           <div className="space-y-2">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs font-medium text-muted-foreground pb-1">
-              <span>Oy</span><span>Kirim (UZS)</span><span>Chiqim (UZS)</span>
+              <span>Oy</span><span>{t("kirimUzs")}</span><span>{t("chiqimUzs")}</span>
             </div>
             {rows.map((row, i) => (
               <div key={row.month} className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">

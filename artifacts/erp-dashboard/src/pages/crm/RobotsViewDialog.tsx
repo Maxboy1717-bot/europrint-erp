@@ -105,7 +105,7 @@ export function RobotFormDialog({open,
 
           {form.watch("triggerType") === "TIME_ELAPSED" && (
             <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
-              <Label>Vaqt (soatda)</Label>
+              <Label>{t("vaqtSoatda")}</Label>
               <Input
                 type="number"
                 value={(form.watch("triggerConditions")?.hours as number) || 24}

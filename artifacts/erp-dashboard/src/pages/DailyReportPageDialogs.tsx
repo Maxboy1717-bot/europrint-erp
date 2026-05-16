@@ -137,7 +137,7 @@ export function DeptReportColumns({
                   <Input
                     value={overrideReason}
                     onChange={e => onSetOverrideReason(e.target.value)}
-                    placeholder="Sabab (majburiy)..."
+                    placeholder={t("sababMajburiy")}
                     className="bg-input border-border text-xs h-7"
                   />
                   <div className="flex gap-2">

@@ -24,13 +24,13 @@ export function PortretBlokA({ portret, onChange }: PortretBlokAProps) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <h4 className="font-semibold text-sm text-primary">{t("blokALavozimTahlili")}</h4>
-        <Badge variant="outline" className="text-[9px]">5 ta savol</Badge>
+        <Badge variant="outline" className="text-[9px]">{t("k5TaSavol")}</Badge>
       </div>
 
       <div>
         <Label className="text-xs mb-1 block">{t("k1LavozimNomiVariantlari")}</Label>
         <Input
-          placeholder="Bu lavozimning qanday nomlari bo'lishi mumkin? (masalan: Sotuvchi, Sales manager...)"
+          placeholder={t("buLavozimningQandayNomlariBoLishi")}
           value={portret.position_name_variants ?? ""}
           onChange={e => onChange("position_name_variants")(e.target.value)}
         />
@@ -53,10 +53,10 @@ export function PortretBlokA({ portret, onChange }: PortretBlokAProps) {
         <Select value={portret.vacancy_reason ?? "new"} onValueChange={v => onChange("vacancy_reason")(v)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="new">Yangi lavozim (kengayish)</SelectItem>
-            <SelectItem value="left">Xodim ketdi / ishdan bo'shatildi</SelectItem>
+            <SelectItem value="new">{t("yangiLavozimKengayish")}</SelectItem>
+            <SelectItem value="left">{t("xodimKetdiIshdanBoShatildi")}</SelectItem>
             <SelectItem value="expand">{t("hajmOsdiIshKopaydi")}</SelectItem>
-            <SelectItem value="maternity">Dekret / turmush ta'tili</SelectItem>
+            <SelectItem value="maternity">{t("dekretTurmushTaTili")}</SelectItem>
             <SelectItem value="other">{t("boshqaSabab")}</SelectItem>
           </SelectContent>
         </Select>
@@ -75,9 +75,9 @@ export function PortretBlokA({ portret, onChange }: PortretBlokAProps) {
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">5. Kimga hisobot beradi? (Tuzilmaviy joylashuv)</Label>
+        <Label className="text-xs mb-1 block">{t("k5KimgaHisobotBeradiTuzilmaviyJoylashuv")}</Label>
         <Input
-          placeholder="Lavozimi / ismi (masalan: Marketing direktori — Aziz Karimov)"
+          placeholder={t("lavozimiIsmiMasalanMarketingDirektoriAziz")}
           value={portret.reports_to ?? ""}
           onChange={e => onChange("reports_to")(e.target.value)}
         />

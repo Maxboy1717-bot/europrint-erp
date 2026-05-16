@@ -33,7 +33,7 @@ export function GamificationTab() {
       <div>
         <div className="flex items-center gap-2 mb-3">
           <Medal className="h-4 w-4 text-primary" />
-          <h3 className="text-base font-semibold text-foreground">Yutuqlar (Achievements)</h3>
+          <h3 className="text-base font-semibold text-foreground">{t("yutuqlarAchievements")}</h3>
           <Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs border-none ml-auto">{achievements.length} ta</Badge>
         </div>
         {achievementsLoading ? (

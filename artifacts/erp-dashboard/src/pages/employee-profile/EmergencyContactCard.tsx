@@ -56,7 +56,7 @@ export function EmergencyContactCard({ t, tCommon, emergencyContacts, loadingEme
                   <Input
                     value={emergencyForm.relationship}
                     onChange={(e) => setEmergencyForm({ ...emergencyForm, relationship: e.target.value })}
-                    placeholder="Ota / Ona / Turmush o'rtog'i"
+                    placeholder={t("otaOnaTurmushORtogI")}
                     data-testid="input-emergency-relationship"
                   />
                 </div>

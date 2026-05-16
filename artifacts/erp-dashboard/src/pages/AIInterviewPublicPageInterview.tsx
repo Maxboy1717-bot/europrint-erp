@@ -211,7 +211,7 @@ export function InterviewingSection({
                 ))}
                 {aiThinking && (
                   <div className="text-xs rounded-lg p-2.5 bg-[#0d1117] text-slate-500 border-l-2 border-primary animate-pulse">
-                    <span className="text-[10px] opacity-60 block mb-0.5">🤖 AI</span>
+                    <span className="text-[10px] opacity-60 block mb-0.5">{t("ai")}</span>
                     ···
                   </div>
                 )}

@@ -128,22 +128,22 @@ export function AddQuestionForm({ qForm, setQForm, onSubmit, isPending, onCancel
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-3">
           <div className="space-y-1">
-          <Label>Savol (O'zbek)</Label>
-            <Textarea value={qForm.question} onChange={(e) => setQForm({ ...qForm, question: e.target.value })} placeholder="Savol matnini kiriting (O'zbek tilida)" required data-testid="input-question-uz" />
+          <Label>{t("savolOZbek")}</Label>
+            <Textarea value={qForm.question} onChange={(e) => setQForm({ ...qForm, question: e.target.value })} placeholder={t("savolMatniniKiritingOZbekTilida")} required data-testid="input-question-uz" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
-          <Label>Savol (Rus) — ixtiyoriy</Label>
-              <Textarea value={qForm.question_ru} onChange={(e) => setQForm({ ...qForm, question_ru: e.target.value })} placeholder="Вопрос на русском языке" data-testid="input-question-ru" />
+          <Label>{t("savolRusIxtiyoriy")}</Label>
+              <Textarea value={qForm.question_ru} onChange={(e) => setQForm({ ...qForm, question_ru: e.target.value })} placeholder={t("untitled")} data-testid="input-question-ru" />
             </div>
             <div className="space-y-1">
-          <Label>Savol (Ingliz) — ixtiyoriy</Label>
+          <Label>{t("savolInglizIxtiyoriy")}</Label>
               <Textarea value={qForm.question_en} onChange={(e) => setQForm({ ...qForm, question_en: e.target.value })} placeholder={"Inglizcha savol"} data-testid="input-question-en" />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div className="space-y-1">
-          <Label>Lavozim (ixtiyoriy)</Label>
+          <Label>{t("lavozimIxtiyoriy")}</Label>
               <Input value={qForm.job_title} onChange={(e) => setQForm({ ...qForm, job_title: e.target.value })} placeholder={t("hammagaMos")} />
             </div>
             <div className="space-y-1">

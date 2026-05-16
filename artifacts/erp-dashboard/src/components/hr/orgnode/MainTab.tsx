@@ -64,7 +64,7 @@ export function MainTab({ node }: MainTabProps) {
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <UserX className="h-4 w-4 text-[var(--ep-red)]" />
-                <span>Rahbar tayinlanmagan (vakant)</span>
+                <span>{t("rahbarTayinlanmaganVakant")}</span>
               </div>
               <Badge variant="destructive" className="w-fit">{t("vakantLavozim")}</Badge>
             </div>
@@ -75,7 +75,7 @@ export function MainTab({ node }: MainTabProps) {
       {(node.tskp || node.tskpRu) && (
         <Card className="md:col-span-2">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">QYaM / ЦКП</CardTitle>
+            <CardTitle className="text-sm">{t("qyam")}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm space-y-2">
             {node.tskp && <p className="text-muted-foreground">{node.tskp}</p>}

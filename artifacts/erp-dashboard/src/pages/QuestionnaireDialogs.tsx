@@ -65,7 +65,7 @@ export function AddQuestionDialog({
             />
           </div>
           <div>
-            <Label htmlFor="question">Savol (O'zbek)</Label>
+            <Label htmlFor="question">{t("savolOZbek")}</Label>
             <Input
               id="question"
               value={newQuestion.question}
@@ -77,14 +77,14 @@ export function AddQuestionDialog({
             />
           </div>
           <div>
-            <Label htmlFor="questionRu">Savol (Rus)</Label>
+            <Label htmlFor="questionRu">{t("savolRus")}</Label>
             <Input
               id="questionRu"
               value={newQuestion.questionRu}
               onChange={(e) =>
                 onNewQuestionChange({ ...newQuestion, questionRu: e.target.value })
               }
-              placeholder="Например: Полное имя"
+              placeholder={t("untitled")}
               data-testid="input-question-ru"
             />
           </div>

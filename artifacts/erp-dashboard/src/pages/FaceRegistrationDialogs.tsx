@@ -45,7 +45,7 @@ export function DeleteFaceDialog({ faceId, isPending, onConfirm }: DeleteFaceDia
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Yuz ma&apos;lumotini o&apos;chirishni tasdiqlang</AlertDialogTitle>
+          <AlertDialogTitle>{t("yuzMaAposLumotiniOApos")}</AlertDialogTitle>
           <AlertDialogDescription>
             Ushbu xodimning yuz ro&apos;yxatdan o&apos;tishi o&apos;chiriladi.
             Kirish nazorati uchun qayta ro&apos;yxatdan o&apos;tish talab qilinadi.

@@ -108,7 +108,7 @@ export function StockTab({isLoading,
                 <TableHead>{t('Material')}</TableHead>
                 <TableHead>{t("ombor")}</TableHead>
                 <TableHead className="text-right">{t("quantity")}</TableHead>
-                <TableHead className="text-right">Min/Max</TableHead>
+                <TableHead className="text-right">{t("minMax")}</TableHead>
                 <TableHead className="text-right">{t("price")}</TableHead>
                 <TableHead>{t("status28")}</TableHead>
                 <TableHead className="text-right">{t("amal")}</TableHead>

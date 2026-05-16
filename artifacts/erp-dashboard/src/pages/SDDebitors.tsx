@@ -108,7 +108,7 @@ export default function SDDebitors() {
             <p className="text-3xl font-bold tracking-tight text-foreground mt-1">{fmt(totalDebts)} so'm</p>
           </div>
           <div className="bg-red-50 rounded-lg p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--ep-red)]">Kritik (90+ kun)</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--ep-red)]">{t("kritik90Kun")}</p>
             <p className="text-3xl font-bold tracking-tight text-[var(--ep-red)] mt-1">{criticalCount} ta</p>
           </div>
         </div>
@@ -150,10 +150,10 @@ export default function SDDebitors() {
               <TableRow className="hover:bg-transparent border-none">
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{t("mijoz1")}</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("total")}</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">0-30 kun</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">31-60 kun</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">61-90 kun</TableHead>
-                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-[var(--ep-red)] py-3 px-4 text-right">90+ kun</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("k030Kun")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("k3160Kun")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("k6190Kun")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-[var(--ep-red)] py-3 px-4 text-right">{t("k90Kun")}</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-center">{t("status28")}</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-center">{t("Amallar")}</TableHead>
               </TableRow>
@@ -244,7 +244,7 @@ export default function SDDebitors() {
                 </CardContent>
               </Card>
               <div className="space-y-1">
-          <Label>Izoh (ixtiyoriy)</Label>
+          <Label>{t("izohIxtiyoriy")}</Label>
                 <Input
                   value={reminderNote}
                   onChange={e => setReminderNote(e.target.value)}

@@ -161,7 +161,7 @@ export default function FinancialReports() {
                 <SelectContent>
                   <SelectItem value="current-week">{t("joriyHafta")}</SelectItem>
                   <SelectItem value="last-week">{t("otganHafta")}</SelectItem>
-                  <SelectItem value="two-weeks-ago">2 hafta oldin</SelectItem>
+                  <SelectItem value="two-weeks-ago">{t("k2HaftaOldin")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

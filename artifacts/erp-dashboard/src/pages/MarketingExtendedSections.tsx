@@ -154,10 +154,10 @@ export function AbSection({ abTests }: { abTests: AbTest[] }) {
       <div className="bg-card rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <GitBranch className="w-4 h-4 text-primary" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">A/B Test natijalari</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("aBTestNatijalari")}</h3>
         </div>
         {abTests.length === 0
-          ? <p className="text-center text-muted-foreground py-8">A/B testlar mavjud emas</p>
+          ? <p className="text-center text-muted-foreground py-8">{t("aBTestlarMavjudEmas")}</p>
           : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>

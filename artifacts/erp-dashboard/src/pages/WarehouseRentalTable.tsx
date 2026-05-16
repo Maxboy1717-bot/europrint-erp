@@ -109,8 +109,8 @@ export function RecordsTable({
               <TableRow>
                 <TableHead>{t("raqam")}</TableHead>
                 <TableHead>{t("Mahsulot")}</TableHead>
-                <TableHead>Mijoz / Menejer</TableHead>
-                <TableHead>Maydon (m²)</TableHead>
+                <TableHead>{t("mijozMenejer")}</TableHead>
+                <TableHead>{t("maydonM")}</TableHead>
                 <TableHead>{t("qabulSanasi2")}</TableHead>
                 <TableHead>{t("jamiKun")}</TableHead>
                 <TableHead>{t("pullikKun")}</TableHead>

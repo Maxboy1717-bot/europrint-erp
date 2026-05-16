@@ -227,7 +227,7 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
       {/* Dual Mentor Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <MentorCard
-          title="Moslashuv Mentori (30 kun)"
+          title={t("moslashuvMentori30Kun")}
           name={ad.mentorName}
           email={ad.mentorEmail}
           phone={ad.mentorPhone}
@@ -239,7 +239,7 @@ export function AdaptationTab({ employeeId, isHr }: Props) {
           onSaved={invalidate}
         />
         <MentorCard
-          title="Professional Usta (90 kun)"
+          title={t("professionalUsta90Kun")}
           name={ad.professionalMasterName}
           email={ad.professionalMasterEmail}
           phone={ad.professionalMasterPhone}

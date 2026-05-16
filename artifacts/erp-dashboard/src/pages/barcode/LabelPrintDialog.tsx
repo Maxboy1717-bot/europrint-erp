@@ -175,7 +175,7 @@ export function LabelPrintDialog({
                   <SelectItem value="PDF">
                     <div className="flex flex-col">
                       <span>PDF</span>
-                      <span className="text-xs text-muted-foreground">Preview / PDF printer</span>
+                      <span className="text-xs text-muted-foreground">{t("previewPdfPrinter")}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>

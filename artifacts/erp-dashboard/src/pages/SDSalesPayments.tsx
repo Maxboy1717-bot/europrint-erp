@@ -165,7 +165,7 @@ export default function SDSalesPayments() {
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Summa (so'm) *</Label>
+              <div><Label>{t("summaSoM")}</Label>
                 <Input data-testid="input-payment-amount" type="number" value={form.amount}
                   onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
               <div><Label>{t("tolovMuddati")}</Label>
@@ -191,7 +191,7 @@ export default function SDSalesPayments() {
               <CardContent className="p-4 flex items-center justify-between flex-wrap gap-3">
                 <div className="text-sm font-medium">Mijoz ID: {d.customerId}</div>
                 <div className="flex gap-4 text-sm flex-wrap">
-                  <div><span className="text-muted-foreground">0-30 kun:</span> <strong>{fmt(d["0-30"])} so'm</strong></div>
+                  <div><span className="text-muted-foreground">{t("k030Kun")}</span> <strong>{fmt(d["0-30"])} so'm</strong></div>
                   <div><span className="text-muted-foreground">31-60:</span> <strong>{fmt(d["31-60"])} so'm</strong></div>
                   <div><span className="text-muted-foreground">61-90:</span> <strong>{fmt(d["61-90"])} so'm</strong></div>
                   <div><span className="text-muted-foreground">90+:</span> <strong>{fmt(d["90+"])} so'm</strong></div>

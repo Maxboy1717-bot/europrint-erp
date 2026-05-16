@@ -38,7 +38,7 @@ export function AddCustomerDialog({open, onOpenChange, form, onSubmit, isPending
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <FormField control={form.control} name="title" render={({ field }) => (
-              <FormItem><FormLabel>Kompaniya / Ism *</FormLabel>
+              <FormItem><FormLabel>{t("kompaniyaIsm")}</FormLabel>
                 <FormControl><Input {...field} data-testid="input-customer-title" placeholder={t("kompaniyaNomi1")} /></FormControl>
                 <FormMessage /></FormItem>
             )} />
@@ -54,7 +54,7 @@ export function AddCustomerDialog({open, onOpenChange, form, onSubmit, isPending
                   </Select></FormItem>
               )} />
               <FormField control={form.control} name="stir" render={({ field }) => (
-                <FormItem><FormLabel>STIR (INN)</FormLabel>
+                <FormItem><FormLabel>{t("stirInn")}</FormLabel>
                   <FormControl><Input {...field} data-testid="input-stir" /></FormControl></FormItem>
               )} />
             </div>

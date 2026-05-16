@@ -27,10 +27,10 @@ export function ContractSection({ form }: FormSectionProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="A">A smena</SelectItem>
-                  <SelectItem value="B">B smena</SelectItem>
-                  <SelectItem value="C">C smena</SelectItem>
-                  <SelectItem value="D">D smena</SelectItem>
+                  <SelectItem value="A">{t("aSmena")}</SelectItem>
+                  <SelectItem value="B">{t("bSmena")}</SelectItem>
+                  <SelectItem value="C">{t("cSmena")}</SelectItem>
+                  <SelectItem value="D">{t("dSmena")}</SelectItem>
                   <SelectItem value="kunlik">{t("daily")}</SelectItem>
                   <SelectItem value="ofis">{t("ofis")}</SelectItem>
                 </SelectContent>
@@ -52,7 +52,7 @@ export function ContractSection({ form }: FormSectionProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="fiks">Fiks (Oylik)</SelectItem>
+                  <SelectItem value="fiks">{t("fiksOylik")}</SelectItem>
                   <SelectItem value="baytulmal">{t("ishbay")}</SelectItem>
                   <SelectItem value="smenbay">{t("smenbay")}</SelectItem>
                   <SelectItem value="soatbay">{t("soatbay")}</SelectItem>
@@ -69,7 +69,7 @@ export function ContractSection({ form }: FormSectionProps) {
           name="workshopZone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Sex/Hudud</FormLabel>
+              <FormLabel>{t("sexHudud")}</FormLabel>
               <FormControl>
                 <Input placeholder={t("masalan1Sex")} {...field} data-testid="input-workshopZone" />
               </FormControl>

@@ -174,7 +174,7 @@ export default function Settings() {
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList>
           <TabsTrigger value="general">{t('generalSettings')}</TabsTrigger>
-          <TabsTrigger value="tax">Soliq / Moliya</TabsTrigger>
+          <TabsTrigger value="tax">{t("soliqMoliya")}</TabsTrigger>
           <TabsTrigger value="exam">{t('securitySettings')}</TabsTrigger>
           <TabsTrigger value="guidelines">{t('roles')}</TabsTrigger>
           <TabsTrigger value="gpt">GPT</TabsTrigger>

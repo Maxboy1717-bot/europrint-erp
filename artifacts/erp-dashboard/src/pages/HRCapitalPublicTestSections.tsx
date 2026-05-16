@@ -113,7 +113,7 @@ export function IntroScreen({ session, questions, testConfig, onStart }: IntroSc
               <p className="font-medium mb-2">{t("buTestHaqida")}</p>
               <ul className="space-y-1 list-disc list-inside">
                 <li>{questions.length} ta savol</li>
-                <li>Har bir savolga 5 xil javob bor (1 dan 5 gacha)</li>
+                <li>{t("harBirSavolga5XilJavob")}</li>
                 <li>{t("halolJavobBeringTogriYoki")}</li>
                 <li>{t("natijalarFaqatHrKoradi")}</li>
               </ul>
@@ -144,7 +144,7 @@ export function IntroScreen({ session, questions, testConfig, onStart }: IntroSc
               <ul className="space-y-1 list-disc list-inside">
                 <li>{t("sizgaKorsatmaBeriladi")}</li>
                 <li>{t("korsatmaniOzSozlaringizBilanQayta")}</li>
-                <li>Aniqlik va to'liqlik o'lchanadi (maqsad: 90%+)</li>
+                <li>{t("aniqlikVaToLiqlikOLchanadi")}</li>
               </ul>
             </div>
           )}

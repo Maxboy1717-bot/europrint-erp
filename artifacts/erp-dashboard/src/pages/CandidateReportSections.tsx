@@ -66,7 +66,7 @@ export function Section1MainResults({
         <div className={`text-2xl font-bold ${recInfo.color}`}>{recInfo.label}</div>
         {latestToolTest && (
           <div className="mt-2">
-            <p className="text-xs text-gray-500">TOOL TEST umumiy ball:</p>
+            <p className="text-xs text-gray-500">{t("toolTestUmumiyBall")}</p>
             <p className="text-lg font-bold">{latestToolTest.totalScore > 0 ? "+" : ""}{latestToolTest.totalScore}</p>
           </div>
         )}

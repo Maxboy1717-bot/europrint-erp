@@ -121,7 +121,7 @@ export default function ProductionReportPage() {
                       <TableHead>{t("type")}</TableHead>
                       <TableHead className="text-right">{t("reja")}</TableHead>
                       <TableHead className="text-right">{t("ishlabChiq")}</TableHead>
-                      <TableHead className="text-right">Tannarx (reja)</TableHead>
+                      <TableHead className="text-right">{t("tannarxReja")}</TableHead>
                       <TableHead>{t("masul")}</TableHead>
                       <TableHead>{t("date")}</TableHead>
                       <TableHead />

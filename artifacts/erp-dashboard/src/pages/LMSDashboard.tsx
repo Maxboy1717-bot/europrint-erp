@@ -212,7 +212,7 @@ export default function LMSDashboard() {
             </Card>
             <Card className="bg-card border-border shadow-none">
               <CardContent className="pt-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">O'tgan / Qoqilgan</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("oTganQoqilgan")}</p>
                 <p className="text-3xl font-bold text-foreground"><span className="text-[var(--ep-green)]">{myProgress?.examsPassed ?? 0}</span> / <span className="text-[var(--ep-red)]">{myProgress?.examsFailed ?? 0}</span></p>
               </CardContent>
             </Card>

@@ -269,7 +269,7 @@ export function MethodologyTab() {
           <CardTitle className="text-base flex items-center gap-2">
             <Brain className="w-5 h-5 text-[var(--ep-purple)]" /> TOOL TEST
           </CardTitle>
-          <CardDescription>10 ko'rsatkich (A-J), -100 dan +100 gacha</CardDescription>
+          <CardDescription>{t("k10KoRsatkichAJ100")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           {INDICATORS.map(ind => (
@@ -323,7 +323,7 @@ export function MethodologyTab() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
-          <div><span className="font-medium">TOOL TEST</span> {t("shaxsiyatProfiliAJKorsatkichlari")}</div>
+          <div><span className="font-medium">{t("toolTest")}</span> {t("shaxsiyatProfiliAJKorsatkichlari")}</div>
           <div><span className="font-medium">{t("iqTest")}</span> {t("intellektualDarajaMantiqiyFikrlashQobiliyati")}</div>
           <div><span className="font-medium">{t("liderlikTesti")}</span> {t("muammoKelibChiqishManbainiTopish")}</div>
           <div><span className="font-medium">{t("takrorlashTesti")}</span> — Ko'rsatmani aniq bajarish qobiliyati (90-100% maqsad)</div>

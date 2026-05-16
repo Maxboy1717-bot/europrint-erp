@@ -122,7 +122,7 @@ export function TaskForm({selectedTask, formData, onFormChange }: TaskFormProps)
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Tajriba (yil)</label>
+            <label className="text-sm font-medium">{t("tajribaYil")}</label>
             <Input
               data-testid="input-experience"
               type="number"

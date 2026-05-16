@@ -32,10 +32,10 @@ export function RecruiterTableSection({ kpi }: RecruiterTableSectionProps) {
               <tr className="text-xs text-muted-foreground border-b border-border">
                 <th className="text-left pb-2 font-medium">{t("recruiter")}</th>
                 <th className="text-right pb-2 font-medium">{t("qabul1")}</th>
-                <th className="text-right pb-2 font-medium">O'rtacha (kun)</th>
+                <th className="text-right pb-2 font-medium">{t("oRtachaKun")}</th>
                 <th className="text-right pb-2 font-medium">{t("taklif1")}</th>
                 <th className="text-right pb-2 font-medium">{t("aiOtish")}</th>
-                <th className="text-right pb-2 font-medium">Yopilgan (oy)</th>
+                <th className="text-right pb-2 font-medium">{t("yopilganOy")}</th>
                 <th className="text-right pb-2 font-medium">{t("sifat")}</th>
                 <th className="text-right pb-2 font-medium">{t("percentage")}</th>
               </tr>
@@ -107,7 +107,7 @@ export function VacancyTypeSection({ kpi }: VacancyTypeSectionProps) {
                 <th className="text-right pb-2 font-medium">{t("arizalar")}</th>
                 <th className="text-right pb-2 font-medium">{t("qabul1")}</th>
                 <th className="text-right pb-2 font-medium">{t("konversiya")}</th>
-                <th className="text-left pb-2 font-medium pl-4">Progress (60% maqsad)</th>
+                <th className="text-left pb-2 font-medium pl-4">{t("progress60Maqsad")}</th>
               </tr>
             </thead>
             <tbody>

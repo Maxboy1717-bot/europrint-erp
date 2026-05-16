@@ -305,7 +305,7 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          placeholder="email@example.com"
+                          placeholder={t("emailExampleCom")}
                           className="h-9"
                           data-testid="input-quick-email"
                         />

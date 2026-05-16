@@ -21,7 +21,7 @@ export function CheckBotTab() {
   const { t } = useTranslation('common');
   return (
     <TabsContent value="checkbot" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Telegram Chek Bot (OCR)</h2>
+      <h2 className="text-lg font-semibold">{t("telegramChekBotOcr")}</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
           { l: "Bugun skanerlangan", v: "—", c: "text-[var(--ep-blue)]" },
@@ -40,7 +40,7 @@ export function CheckBotTab() {
         <CardContent className="p-0">
           <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Sana/Vaqt</TableHead><TableHead>{t("yetkazuvchi")}</TableHead>
+              <TableHead>{t("sanaVaqt")}</TableHead><TableHead>{t("yetkazuvchi")}</TableHead>
               <TableHead>{t("summa")}</TableHead><TableHead>{t("toifasi")}</TableHead><TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
@@ -67,7 +67,7 @@ export function CheckBotTab() {
             <MessageSquare className="h-10 w-10 text-[#229ED9]" />
             <div>
               <div className="font-semibold">{t("telegramBotUlangan")}</div>
-              <div className="text-sm text-muted-foreground">@europrint_check_bot</div>
+              <div className="text-sm text-muted-foreground">{t("europrintCheckBot")}</div>
               <div className="text-xs text-[var(--ep-green)] mt-1">{t("faolXabarYuboringYokiChek")}</div>
             </div>
           </div>
@@ -120,7 +120,7 @@ export function SupplierPortalTab({ vendorsCount, purchaseOrdersCount, requisiti
           <CardContent className="space-y-3">
             <div className="p-4 rounded-md bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
               <ModuleSectionHeaderComponent moduleName="MM" moduleColor="text-[var(--ep-cyan)]" sectionTitle={metaTitle} icon={MetaIcon} />
-              <div className="font-semibold">suppliers.europrint.uz</div>
+              <div className="font-semibold">{t("suppliersEuroprintUz")}</div>
               <div className="text-sm text-muted-foreground mt-1">{t("yetkazuvchilarTashqiPortalManzili")}</div>
             </div>
             <Button className="w-full gap-2" data-testid="button-invite-supplier">
@@ -145,7 +145,7 @@ export function GoodsReceiptsTab({ goodsReceipts, grLoading }: GoodsReceiptsTabP
   const safe = Array.isArray(goodsReceipts) ? goodsReceipts : [];
   return (
     <TabsContent value="receipts" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">Qabul Aktlari (Goods Receipts)</h2>
+      <h2 className="text-lg font-semibold">{t("qabulAktlariGoodsReceipts")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {([
           { l: "Bugun qabul", v: safe.filter(r => { const d = new Date(r.receiptDate || r.createdAt || ""); return d.toDateString() === new Date().toDateString(); }).length, c: "text-[var(--ep-green)]" },
@@ -223,7 +223,7 @@ export function CreditorTab({ purchaseOrders, totalPOValue, overduePOCount, pend
       <Card><CardContent className="p-0">
         <div className="ep-table-scroll"><Table>
           <TableHeader><TableRow>
-            <TableHead>{t("yetkazuvchi")}</TableHead><TableHead>Qarz (PO summa)</TableHead>
+            <TableHead>{t("yetkazuvchi")}</TableHead><TableHead>{t("qarzPoSumma")}</TableHead>
             <TableHead>{t("yetkazishMuddati")}</TableHead><TableHead>{t("holati")}</TableHead>
           </TableRow></TableHeader>
           <TableBody>

@@ -85,7 +85,7 @@ export function ReviewsTab({ brand, onAdd, onUpdate, onRemove }: ReviewsTabProps
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Reyting (1–5)</Label>
+                    <Label className="text-xs">{t("reyting15")}</Label>
                     <div className="flex items-center gap-2">
                       {([1, 2, 3, 4, 5]).map((star) => (
                         <button
@@ -145,7 +145,7 @@ export function StatsTab({ brand, setBrand }: StatsTabProps) {
               />
             </div>
             <div className="space-y-1">
-          <Label>O'rtacha ish staji (yil)</Label>
+          <Label>{t("oRtachaIshStajiYil")}</Label>
               <Input
                 placeholder={t("masalan35")}
                 value={brand.stats.avg_tenure}
@@ -155,7 +155,7 @@ export function StatsTab({ brand, setBrand }: StatsTabProps) {
               />
             </div>
             <div className="space-y-1">
-          <Label>O'sish foizi (%)</Label>
+          <Label>{t("oSishFoizi")}</Label>
               <Input
                 placeholder={t("masalan15")}
                 value={brand.stats.growth_percent}
@@ -240,7 +240,7 @@ export function VacancyTab({
           <Label>{t("lavozimPortretiniTanlang")}</Label>
             <Select value={selectedNodeId} onValueChange={setSelectedNodeId}>
               <SelectTrigger>
-                <SelectValue placeholder="Bo'lim/lavozimni tanlang..." />
+                <SelectValue placeholder={t("boLimLavozimniTanlang")} />
               </SelectTrigger>
               <SelectContent>
                 {(Array.isArray(orgNodes) ? orgNodes : []).map((node) => (

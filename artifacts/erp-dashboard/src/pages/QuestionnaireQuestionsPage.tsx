@@ -169,7 +169,7 @@ export default function QuestionnaireQuestionsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start gap-2">
                         <p className="font-medium text-sm flex-1">{qText}</p>
-                        {reqd && <span className="text-destructive text-xs shrink-0">*majburiy</span>}
+                        {reqd && <span className="text-destructive text-xs shrink-0">{t("majburiy")}</span>}
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs text-muted-foreground">
                         <span>{Q_TYPE_LABELS[qType] ?? qType}</span>

@@ -33,7 +33,7 @@ export function StepConditions({ portret, onChange, onToggleSocial, socialPackag
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label className="text-xs mb-1 block">Ish haqi (min)</Label>
+          <Label className="text-xs mb-1 block">{t("ishHaqiMin")}</Label>
           <Input
             type="number"
             value={portret.salary_min ?? ""}
@@ -42,7 +42,7 @@ export function StepConditions({ portret, onChange, onToggleSocial, socialPackag
           />
         </div>
         <div>
-          <Label className="text-xs mb-1 block">Ish haqi (max)</Label>
+          <Label className="text-xs mb-1 block">{t("ishHaqiMax")}</Label>
           <Input
             type="number"
             value={portret.salary_max ?? ""}
@@ -54,7 +54,7 @@ export function StepConditions({ portret, onChange, onToggleSocial, socialPackag
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label className="text-xs mb-1 block">Sinov muddati (oy)</Label>
+          <Label className="text-xs mb-1 block">{t("sinovMuddatiOy")}</Label>
           <Input
             type="number"
             value={portret.probation_months ?? 3}
@@ -66,9 +66,9 @@ export function StepConditions({ portret, onChange, onToggleSocial, socialPackag
           <Select value={portret.work_schedule ?? "5/2"} onValueChange={v => p("work_schedule")(v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="5/2">5/2 (Dush-Juma)</SelectItem>
-              <SelectItem value="6/1">6/1 (Dush-Shan)</SelectItem>
-              <SelectItem value="2/2">2/2 (Smena)</SelectItem>
+              <SelectItem value="5/2">{t("k52DushJuma")}</SelectItem>
+              <SelectItem value="6/1">{t("k61DushShan")}</SelectItem>
+              <SelectItem value="2/2">{t("k22Smena")}</SelectItem>
               <SelectItem value="free">{t("erkinGrafik")}</SelectItem>
             </SelectContent>
           </Select>

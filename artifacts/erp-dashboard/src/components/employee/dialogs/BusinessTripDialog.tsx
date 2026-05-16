@@ -46,7 +46,7 @@ export function BusinessTripDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">Xizmat safari (K командировка)</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("xizmatSafariK")}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1">

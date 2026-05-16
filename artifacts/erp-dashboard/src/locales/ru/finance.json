@@ -519,7 +519,7 @@
   "qaytim1": "Сдача",
   "qoshimchaIzoh": "Дополнительный комментарий",
   "quantity": "Количество",
-  "quickRatio": "Quick Ratio",
+  "quickRatio": "Коэффициент быстрой ликвидности",
   "rang": "Цвет",
   "refresh": "Обновить",
   "rulon": "Рулон",
@@ -576,5 +576,12 @@
     "cashflow": {
       "mSuffix": "млн"
     }
-  }
+  },
+  "kreditorlarAp": "Kreditorlar (AP)",
+  "debitorlarAr": "Debitorlar (AR)",
+  "cvpBepTahlili": "CVP · BEP tahlili",
+  "mpvMqvLrvLevOv": "MPV · MQV · LRV · LEV · OV",
+  "jshd12": "JSHD (12%):",
+  "inps12": "INPS (12%):",
+  "birlik": "/birlik"
 }

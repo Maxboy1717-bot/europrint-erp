@@ -250,11 +250,11 @@ export default function FinanceDashboard() {
                       <span className="font-medium">{formatCurrency(calculateTaxMutation.data.grossSalary)}</span>
                     </div>
                     <div className="flex justify-between text-[var(--ep-red)]">
-                      <span>INPS (12%):</span>
+                      <span>{t("inps12")}</span>
                       <span>-{formatCurrency(calculateTaxMutation.data.inpsAmount)}</span>
                     </div>
                     <div className="flex justify-between text-[var(--ep-red)]">
-                      <span>JSHD (12%):</span>
+                      <span>{t("jshd12")}</span>
                       <span>-{formatCurrency(calculateTaxMutation.data.jshdAmount)}</span>
                     </div>
                     <hr />

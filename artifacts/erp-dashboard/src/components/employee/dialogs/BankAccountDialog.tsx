@@ -58,7 +58,7 @@ export function BankAccountDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label htmlFor="accountNumber">Hisob raqami (20 raqam)</Label>
+          <Label htmlFor="accountNumber">{t("hisobRaqami20Raqam")}</Label>
             <Input
               id="accountNumber"
               value={form.accountNumber}
@@ -91,7 +91,7 @@ export function BankAccountDialog({
               />
             </div>
             <div className="space-y-1">
-          <Label htmlFor="inn">STIR (INN)</Label>
+          <Label htmlFor="inn">{t("stirInn")}</Label>
               <Input
                 id="inn"
                 value={form.inn}

@@ -79,7 +79,7 @@ export function AdminRoutingTab({ routeForm, routeConfigs, createIsPending, t, t
               </div>
 
               <div>
-                <Label className="text-muted-foreground text-xs">Daraja (yuqoriga)</Label>
+                <Label className="text-muted-foreground text-xs">{t("darajaYuqoriga")}</Label>
                 <Input type="number" min={1} max={5}
                   value={routeForm.levels_up}
                   onChange={e => onRouteFormChange({ levels_up: parseInt(e.target.value) || 1 })}
@@ -105,7 +105,7 @@ export function AdminRoutingTab({ routeForm, routeConfigs, createIsPending, t, t
               </div>
 
               <div>
-                <Label className="text-muted-foreground text-xs">Muddat (soat)</Label>
+                <Label className="text-muted-foreground text-xs">{t("muddatSoat")}</Label>
                 <Input type="number" min={1}
                   value={routeForm.deadline_hours}
                   onChange={e => onRouteFormChange({ deadline_hours: parseInt(e.target.value) || 24 })}
@@ -113,7 +113,7 @@ export function AdminRoutingTab({ routeForm, routeConfigs, createIsPending, t, t
               </div>
 
               <div>
-                <Label className="text-muted-foreground text-xs">1-eslatma (soat qolgunicha)</Label>
+                <Label className="text-muted-foreground text-xs">{t("k1EslatmaSoatQolgunicha")}</Label>
                 <Input type="number" min={1}
                   value={routeForm.reminder_hours_1}
                   onChange={e => onRouteFormChange({ reminder_hours_1: parseInt(e.target.value) || 4 })}
@@ -121,7 +121,7 @@ export function AdminRoutingTab({ routeForm, routeConfigs, createIsPending, t, t
               </div>
 
               <div>
-                <Label className="text-muted-foreground text-xs">2-eslatma (soat qolgunicha)</Label>
+                <Label className="text-muted-foreground text-xs">{t("k2EslatmaSoatQolgunicha")}</Label>
                 <Input type="number" min={1}
                   value={routeForm.reminder_hours_2}
                   onChange={e => onRouteFormChange({ reminder_hours_2: parseInt(e.target.value) || 2 })}

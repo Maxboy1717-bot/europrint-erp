@@ -148,19 +148,19 @@ export function ProductParamsPanel({ calcForm, onCalcFormChange, isCalcPending, 
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         <div>
-          <Label className="text-xs">Uzunlik (mm)</Label>
+          <Label className="text-xs">{t("uzunlikMm")}</Label>
           <Input type="number" value={calcForm.lengthMm}
             onChange={e => onCalcFormChange(p => ({ ...p, lengthMm: +e.target.value }))}
             data-testid="input-length" min={10} />
         </div>
         <div>
-          <Label className="text-xs">Kenglik (mm)</Label>
+          <Label className="text-xs">{t("kenglikMm")}</Label>
           <Input type="number" value={calcForm.widthMm}
             onChange={e => onCalcFormChange(p => ({ ...p, widthMm: +e.target.value }))}
             data-testid="input-width" min={10} />
         </div>
         <div>
-          <Label className="text-xs">Balandlik (mm)</Label>
+          <Label className="text-xs">{t("balandlikMm")}</Label>
           <Input type="number" value={calcForm.heightMm}
             onChange={e => onCalcFormChange(p => ({ ...p, heightMm: +e.target.value }))}
             data-testid="input-height" min={10} />
@@ -192,7 +192,7 @@ export function ProductParamsPanel({ calcForm, onCalcFormChange, isCalcPending, 
       </div>
 
       <div>
-        <Label className="text-xs">Miqdor (dona)</Label>
+        <Label className="text-xs">{t("miqdorDona")}</Label>
         <Input type="number" value={calcForm.quantity}
           onChange={e => onCalcFormChange(p => ({ ...p, quantity: +e.target.value }))}
           data-testid="input-quantity" min={1} />

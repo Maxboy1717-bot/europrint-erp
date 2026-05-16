@@ -46,7 +46,7 @@ export function PositionFormDialog({
         <div className="space-y-3 py-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label>Nomi (UZ) *</Label>
+              <Label>{t("nomiUz")}</Label>
               <Input
                 value={form.name_uz}
                 onChange={(e) => setForm((f) => ({ ...f, name_uz: e.target.value, name: e.target.value }))}
@@ -54,11 +54,11 @@ export function PositionFormDialog({
               />
             </div>
             <div className="space-y-1">
-              <Label>Nomi (RU)</Label>
+              <Label>{t("nomiRu")}</Label>
               <Input
                 value={form.name_ru}
                 onChange={(e) => setForm((f) => ({ ...f, name_ru: e.target.value }))}
-                placeholder="Название должности"
+                placeholder={t("untitled")}
               />
             </div>
           </div>
@@ -101,7 +101,7 @@ export function PositionFormDialog({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label>Min oylik (so'm)</Label>
+              <Label>{t("minOylikSoM")}</Label>
               <Input
                 type="number"
                 value={form.min_salary}
@@ -110,7 +110,7 @@ export function PositionFormDialog({
               />
             </div>
             <div className="space-y-1">
-              <Label>Max oylik (so'm)</Label>
+              <Label>{t("maxOylikSoM")}</Label>
               <Input
                 type="number"
                 value={form.max_salary}

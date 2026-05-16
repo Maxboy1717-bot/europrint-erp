@@ -174,7 +174,7 @@ export default function ENPSPage() {
                     </div>
                     {results.overall != null && results.overall.enps_score !== null && (
                       <div className="text-center p-6 bg-muted rounded-xl">
-                        <div className="text-xs text-muted-foreground mb-1">eNPS BALLI</div>
+                        <div className="text-xs text-muted-foreground mb-1">{t("enpsBalli")}</div>
                         <div className={`text-6xl font-bold ${eNPSLabel(results.overall.enps_score).color}`}>
                           {results.overall.enps_score > 0 ? "+" : ""}{results.overall.enps_score}
                         </div>
@@ -214,7 +214,7 @@ export default function ENPSPage() {
                 {/* Feedback comments */}
                 {results.feedback_comments?.length > 0 && (
                   <Card className="bg-card border-border">
-                    <CardHeader><CardTitle className="text-foreground text-base">💬 Fikrlar (anonim)</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="text-foreground text-base">{t("fikrlarAnonim")}</CardTitle></CardHeader>
                     <CardContent>
                       <div className="space-y-2">
                         {(Array.isArray(results.feedback_comments) ? results.feedback_comments : []).map((c, i) => (
@@ -235,10 +235,10 @@ export default function ENPSPage() {
             {/* Respond form */}
             {selectedSurvey.status === 'active' && (
               <Card className="bg-card border-border">
-                <CardHeader><CardTitle className="text-foreground text-base">📝 Javob berish (Anonim)</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="text-foreground text-base">{t("javobBerishAnonim")}</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label className="text-muted-foreground text-sm">EuroPrint'da ishlashni tavsiya qilasizmi? (0-10)</Label>
+                    <Label className="text-muted-foreground text-sm">{t("europrintDaIshlashniTavsiyaQilasizmi0")}</Label>
                     <div className="flex gap-1 mt-2 flex-wrap">
                       {Array.from({ length: 11 }, (_, i) => (
                         <button key={`k-${i}`} onClick={() => setResponseForm(f => ({ ...f, nps_score: i }))}
@@ -255,7 +255,7 @@ export default function ENPSPage() {
                     </div>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground text-sm">Qoniqish darajasi (1-5)</Label>
+                    <Label className="text-muted-foreground text-sm">{t("qoniqishDarajasi15")}</Label>
                     <div className="flex gap-2 mt-2">
                       {([1, 2, 3, 4, 5]).map(n => (
                         <button key={n} onClick={() => setResponseForm(f => ({ ...f, satisfaction_score: n }))}
@@ -266,7 +266,7 @@ export default function ENPSPage() {
                     </div>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground text-sm">Nima yaxshilanishi kerak? (ixtiyoriy)</Label>
+                    <Label className="text-muted-foreground text-sm">{t("nimaYaxshilanishiKerakIxtiyoriy")}</Label>
                     <Textarea value={responseForm.feedback} onChange={e => setResponseForm(f => ({ ...f, feedback: e.target.value }))}
                       placeholder={t("fikringizniBahamKoring")} className="bg-input border-border mt-1" />
                   </div>

@@ -59,11 +59,11 @@ export function EditDialog({
         </DialogHeader>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
           <div>
-            <Label>Nomi (UZ)</Label>
+            <Label>{t("nomiUz")}</Label>
             <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
           </div>
           <div>
-            <Label>Nomi (RU)</Label>
+            <Label>{t("nomiRu")}</Label>
             <Input value={form.nameRu} onChange={(e) => setForm((f) => ({ ...f, nameRu: e.target.value }))} />
           </div>
           <div>
@@ -87,16 +87,16 @@ export function EditDialog({
             </div>
           </div>
           <div className="col-span-2">
-            <Label>QYaM (UZ)</Label>
+            <Label>{t("qyamUz")}</Label>
             <Input value={form.tskp}
               onChange={(e) => setForm((f) => ({ ...f, tskp: e.target.value }))}
-              placeholder="Asosiy vazifasi (QYaM)..." />
+              placeholder={t("asosiyVazifasiQyam")} />
           </div>
           <div className="col-span-2">
-            <Label>QYaM (RU)</Label>
+            <Label>{t("qyamRu")}</Label>
             <Input value={form.tskpRu}
               onChange={(e) => setForm((f) => ({ ...f, tskpRu: e.target.value }))}
-              placeholder="ЦКП (RU)..." />
+              placeholder={t("ru")} />
           </div>
           <div className="col-span-2">
             <Label>{t("progress.description")}</Label>

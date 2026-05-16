@@ -92,7 +92,7 @@ export default function PosMovementsPage() {
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-      <h1 className="text-2xl font-bold">POS harakatlar tarixi</h1>
+      <h1 className="text-2xl font-bold">{t("posHarakatlarTarixi")}</h1>
 
       <Card>
         <CardContent className="pt-4 pb-3">

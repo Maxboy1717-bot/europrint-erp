@@ -94,7 +94,7 @@ export function ReceiveMaterialPanel({ form, materials, onChange, onReceive, isP
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="space-y-1">
-            <Label className="text-xs">Lot / Partiya</Label>
+            <Label className="text-xs">{t("lotPartiya")}</Label>
             <Input
               placeholder="LOT-123"
               value={form.lotNumber}
@@ -103,7 +103,7 @@ export function ReceiveMaterialPanel({ form, materials, onChange, onReceive, isP
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Narx (birlik)</Label>
+            <Label className="text-xs">{t("narxBirlik")}</Label>
             <Input
               type="number"
               placeholder="0"

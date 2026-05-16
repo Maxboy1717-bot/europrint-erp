@@ -224,7 +224,7 @@ export default function FinanceApproval() {
             </div>
 
             <Textarea
-              placeholder="Moliyaviy izoh (ixtiyoriy)"
+              placeholder={t("moliyaviyIzohIxtiyoriy")}
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               data-testid="input-comments"
@@ -261,7 +261,7 @@ export default function FinanceApproval() {
             </div>
 
             <Textarea
-              placeholder="Rad etish sababi (majburiy)"
+              placeholder={t("radEtishSababiMajburiy")}
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               required

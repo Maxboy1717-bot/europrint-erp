@@ -56,21 +56,21 @@ export function PortretBlokD({ toolReqs, onTraitChange, onOtherChange }: Portret
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t">
         <div>
-          <Label className="text-[10px] mb-1 block">IQ (min)</Label>
+          <Label className="text-[10px] mb-1 block">{t("iqMin")}</Label>
           <Slider min={1} max={10} step={1}
             value={[toolReqs.iq_min ?? 4]}
             onValueChange={([v]) => onOtherChange("iq_min", v)} />
           <div className="text-center text-[10px] font-bold mt-1">{toolReqs.iq_min ?? 4}</div>
         </div>
         <div>
-          <Label className="text-[10px] mb-1 block">Liderlik (min %)</Label>
+          <Label className="text-[10px] mb-1 block">{t("liderlikMin")}</Label>
           <Slider min={0} max={100} step={5}
             value={[toolReqs.leadership_min ?? 70]}
             onValueChange={([v]) => onOtherChange("leadership_min", v)} />
           <div className="text-center text-[10px] font-bold mt-1">{toolReqs.leadership_min ?? 70}%</div>
         </div>
         <div>
-          <Label className="text-[10px] mb-1 block">Takrorlash (min %)</Label>
+          <Label className="text-[10px] mb-1 block">{t("takrorlashMin")}</Label>
           <Slider min={0} max={100} step={5}
             value={[toolReqs.replication_min ?? 70]}
             onValueChange={([v]) => onOtherChange("replication_min", v)} />

@@ -131,7 +131,7 @@ export default function ReferralPage() {
         <Tabs defaultValue="my">
           <TabsList>
             <TabsTrigger value="my">{t("meningTavsiyalarim")}</TabsTrigger>
-            <TabsTrigger value="all">Barcha tavsiyalar (HR)</TabsTrigger>
+            <TabsTrigger value="all">{t("barchaTavsiyalarHr")}</TabsTrigger>
             <TabsTrigger value="boomerang">{t("boomerangHire")}</TabsTrigger>
           </TabsList>
 

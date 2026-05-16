@@ -95,7 +95,7 @@ export function SettingsPanel({ settings, onSaved }: SettingsPanelProps) {
               />
             </div>
             <div>
-              <Label>Standart kunlik tarif (m²/kun, so'm)</Label>
+              <Label>{t("standartKunlikTarifMKunSo")}</Label>
               <Input
                 data-testid="input-settings-daily-rate"
                 type="number"
@@ -115,7 +115,7 @@ export function SettingsPanel({ settings, onSaved }: SettingsPanelProps) {
               checked={form.excludeWeekends}
               onCheckedChange={(v) => setForm((p) => ({ ...p, excludeWeekends: v }))}
             />
-            <Label>Dam olish kunlarini (shanba/yakshanba) hisoblamaslik</Label>
+            <Label>{t("damOlishKunlariniShanbaYakshanbaHisoblamaslik")}</Label>
           </div>
         </CardContent>
       </Card>
@@ -159,7 +159,7 @@ export function SettingsPanel({ settings, onSaved }: SettingsPanelProps) {
             <Input
               data-testid="input-new-rate-daily"
               type="number"
-              placeholder="Tarif (so'm)"
+              placeholder={t("tarifSoM")}
               value={newRate.dailyRate}
               onChange={(e) => setNewRate((p) => ({ ...p, dailyRate: e.target.value }))}
             />

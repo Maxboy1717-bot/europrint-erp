@@ -211,7 +211,7 @@ export function CVScreeningGuide({
 
           {/* Bad signs */}
           <CollapsibleSection
-            title="Xavfli belgilar (qizil bayroqlar)"
+            title={t("xavfliBelgilarQizilBayroqlar")}
             defaultOpen={true}
             icon={<XCircle className="w-4 h-4 text-[var(--ep-red)]" />}
             headerClass="bg-red-50 text-red-800"
@@ -298,7 +298,7 @@ export function CVScreeningGuide({
                   <span className="text-base">{p.icon}</span>
                   <div>
                     <p className="text-[10px] font-medium text-slate-700">{p.label}</p>
-                    <p className="text-[9px] text-slate-500">0–25 ball</p>
+                    <p className="text-[9px] text-slate-500">{t("k025Ball")}</p>
                   </div>
                 </div>
               ))}

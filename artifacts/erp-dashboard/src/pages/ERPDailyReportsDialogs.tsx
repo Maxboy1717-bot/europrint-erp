@@ -176,7 +176,7 @@ export function ReportFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="planQty">Reja (dona)</Label>
+              <Label htmlFor="planQty">{t("rejaDona")}</Label>
               <Input
                 id="planQty"
                 type="number"
@@ -188,7 +188,7 @@ export function ReportFormDialog({
               )}
             </div>
             <div>
-              <Label htmlFor="factQty">Fakt (dona)</Label>
+              <Label htmlFor="factQty">{t("faktDona")}</Label>
               <Input
                 id="factQty"
                 type="number"
@@ -203,7 +203,7 @@ export function ReportFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="scrapQty">Brak (dona)</Label>
+              <Label htmlFor="scrapQty">{t("brakDona")}</Label>
               <Input
                 id="scrapQty"
                 type="number"
@@ -215,7 +215,7 @@ export function ReportFormDialog({
               )}
             </div>
             <div>
-              <Label htmlFor="downtimeMinutes">To'xtash (daqiqa)</Label>
+              <Label htmlFor="downtimeMinutes">{t("toXtashDaqiqa")}</Label>
               <Input
                 id="downtimeMinutes"
                 type="number"

@@ -122,7 +122,7 @@ export function RoomReferenceUpload({open, roomCode, roomName, onClose, onSaved 
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
 
           <div className="space-y-1">
-            <Label htmlFor="ref-desc">Izoh (ixtiyoriy)</Label>
+            <Label htmlFor="ref-desc">{t("izohIxtiyoriy")}</Label>
             <Textarea
               id="ref-desc"
               {...register('description')}

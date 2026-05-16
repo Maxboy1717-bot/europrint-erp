@@ -48,7 +48,7 @@ export function RACITaskList({ tasks, expandedTasks, onToggleTask }: RACITaskLis
     return (
       <div className="text-center py-12" data-testid="empty-tasks">
         <Grid3X3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <p className="text-muted-foreground">RACI vazifalari mavjud emas</p>
+        <p className="text-muted-foreground">{t("raciVazifalariMavjudEmas")}</p>
       </div>
     );
   }

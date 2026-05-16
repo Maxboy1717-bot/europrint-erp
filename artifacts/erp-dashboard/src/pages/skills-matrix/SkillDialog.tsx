@@ -61,15 +61,15 @@ export function SkillDialog({ open, onOpenChange, form, editingSkill, onSubmit, 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom (O'zbekcha)</FormLabel>
+                  <FormLabel>{t("nomOZbekcha")}</FormLabel>
                   <FormControl><Input {...field} placeholder={t("pythonDasturlash")} data-testid="input-skill-name-uz" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="nameRu" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom (Русский)</FormLabel>
-                  <FormControl><Input {...field} placeholder="Программирование Python" data-testid="input-skill-name-ru" /></FormControl>
+                  <FormLabel>{t("nom")}</FormLabel>
+                  <FormControl><Input {...field} placeholder={t("python")} data-testid="input-skill-name-ru" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -77,15 +77,15 @@ export function SkillDialog({ open, onOpenChange, form, editingSkill, onSubmit, 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="description" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tavsif (O'zbekcha)</FormLabel>
+                  <FormLabel>{t("tavsifOZbekcha")}</FormLabel>
                   <FormControl><Textarea {...field} placeholder={t("pythonDasturlashTillari")} data-testid="input-skill-desc-uz" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="descriptionRu" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tavsif (Русский)</FormLabel>
-                  <FormControl><Textarea {...field} placeholder="Языки программирования Python..." data-testid="input-skill-desc-ru" /></FormControl>
+                  <FormLabel>{t("tavsif")}</FormLabel>
+                  <FormControl><Textarea {...field} placeholder={t("python2")} data-testid="input-skill-desc-ru" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />

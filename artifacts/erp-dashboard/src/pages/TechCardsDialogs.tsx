@@ -261,7 +261,7 @@ export function OptimizeResultPanel({ result }: OptimizeResultPanelProps) {
             >
               {(result.estimatedSaving / 1000).toFixed(0)}K
             </p>
-            <p className="text-sm text-muted-foreground">Tejamkorlik (UZS)</p>
+            <p className="text-sm text-muted-foreground">{t("tejamkorlikUzs")}</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold" data-testid="text-opt-materials">

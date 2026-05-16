@@ -84,7 +84,7 @@ export function OvertimeDialog({
             </div>
           </div>
           <div className="space-y-1">
-          <Label htmlFor="hourlyRate">Soatbay stavka (UZS)</Label>
+          <Label htmlFor="hourlyRate">{t("soatbayStavkaUzs")}</Label>
             <Input
               id="hourlyRate"
               type="number"

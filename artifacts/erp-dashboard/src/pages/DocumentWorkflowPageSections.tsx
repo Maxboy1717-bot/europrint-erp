@@ -84,7 +84,7 @@ export function PendingApprovalsTab({ pending, rejectReasons, approveIsPending, 
                   <Input
                     value={rejectReasons[step.id]}
                     onChange={e => onRejectReasonChange(step.id, e.target.value)}
-                    placeholder="Rad etish sababi (majburiy) *"
+                    placeholder={t("radEtishSababiMajburiy")}
                     className="bg-input border-red-600 text-xs h-8 flex-1"
                     autoFocus
                   />

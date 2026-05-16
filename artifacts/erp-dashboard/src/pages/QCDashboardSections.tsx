@@ -138,7 +138,7 @@ export function QcFlowSection({ flow, loading }: QcFlowSectionProps) {
                 <span className="font-semibold">{flow?.streams?.incoming?.total || 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Past sifat (&lt;70)</span>
+                <span className="text-muted-foreground">{t("pastSifatLt70")}</span>
                 <span className={cn(
                   "font-semibold",
                   (flow?.streams?.incoming?.lowQuality || 0) > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"
@@ -146,7 +146,7 @@ export function QcFlowSection({ flow, loading }: QcFlowSectionProps) {
                   {flow?.streams?.incoming?.lowQuality || 0}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground pt-1">MM reytingi avtomatik pasaytiriladi</p>
+              <p className="text-xs text-muted-foreground pt-1">{t("mmReytingiAvtomatikPasaytiriladi")}</p>
             </div>
           </StreamCard>
 
@@ -217,7 +217,7 @@ export function QcFlowSection({ flow, loading }: QcFlowSectionProps) {
                   {flow?.streams?.reclamation?.investigating || 0}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground pt-1">RCA avtomatik ochiladi</p>
+              <p className="text-xs text-muted-foreground pt-1">{t("rcaAvtomatikOchiladi")}</p>
             </div>
           </StreamCard>
 

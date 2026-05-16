@@ -97,9 +97,9 @@ export default function WarehouseQCReview() {
       <div className="flex items-center gap-3 mb-6">
         <ShieldCheck className="h-8 w-8 text-[var(--ep-blue)]" />
         <div className="flex-1">
-          <div className="text-xs text-gray-500 font-semibold">QC INSPEKTOR</div>
+          <div className="text-xs text-gray-500 font-semibold">{t("qcInspektor")}</div>
           <h1 className="text-2xl font-bold">{t("sifatNazoratiKoribChiqish")}</h1>
-          <p className="text-sm text-gray-500">QC qarori kutayotgan materiallar — QABUL / REWORK / CHIQARISH</p>
+          <p className="text-sm text-gray-500">{t("qcQaroriKutayotganMateriallarQabulRework")}</p>
         </div>
         <Button onClick={load} variant="outline">🔄</Button>
       </div>
@@ -237,7 +237,7 @@ export default function WarehouseQCReview() {
               {/* Decision */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">🎯 QC qarori</CardTitle>
+                  <CardTitle className="text-sm">{t("qcQarori")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -265,7 +265,7 @@ export default function WarehouseQCReview() {
                   </div>
 
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">QC izoh (ixtiyoriy)</label>
+                    <label className="text-xs text-gray-500 mb-1 block">{t("qcIzohIxtiyoriy")}</label>
                     <textarea
                       value={qcNote}
                       onChange={e => setQcNote(e.target.value)}
@@ -285,12 +285,12 @@ export default function WarehouseQCReview() {
                             <>
                               <li>{t("materialRmMainOmborgaAvtomatik")}</li>
                               <li>{t("statusApprovedCompleted")}</li>
-                              <li>GL posting avtomatik yaratiladi</li>
+                              <li>{t("glPostingAvtomatikYaratiladi")}</li>
                             </>
                           )}
                           {decision === "REWORK" && (
                             <>
-                              <li>MES moduliga signal yuboriladi</li>
+                              <li>{t("mesModuligaSignalYuboriladi")}</li>
                               <li>{t("ishlabChiqarishQaytaIshlashUchun")}</li>
                             </>
                           )}

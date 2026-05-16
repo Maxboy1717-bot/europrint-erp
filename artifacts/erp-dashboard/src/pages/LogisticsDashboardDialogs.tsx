@@ -84,11 +84,11 @@ export function LogisticsDashboardDialogs({
           <div className="space-y-3">
             <div>
               <label className="text-sm font-medium">{t("davlatRaqami")}</label>
-              <Input value={vehicleForm.plateNumber} onChange={e => setVehicleForm(p => ({ ...p, plateNumber: e.target.value }))} placeholder="01 A 123 AA" data-testid="input-vehicle-plate" />
+              <Input value={vehicleForm.plateNumber} onChange={e => setVehicleForm(p => ({ ...p, plateNumber: e.target.value }))} placeholder={t("k01A123Aa")} data-testid="input-vehicle-plate" />
             </div>
             <div>
               <label className="text-sm font-medium">{t("model")}</label>
-              <Input value={vehicleForm.model} onChange={e => setVehicleForm(p => ({ ...p, model: e.target.value }))} placeholder="MAN TGS 18.400" data-testid="input-vehicle-model" />
+              <Input value={vehicleForm.model} onChange={e => setVehicleForm(p => ({ ...p, model: e.target.value }))} placeholder={t("manTgs18400")} data-testid="input-vehicle-model" />
             </div>
             <div>
               <label className="text-sm font-medium">{t("type")}</label>
@@ -111,7 +111,7 @@ export function LogisticsDashboardDialogs({
                 <Input type="date" value={vehicleForm.insuranceExpiry} onChange={e => setVehicleForm(p => ({ ...p, insuranceExpiry: e.target.value }))} data-testid="input-vehicle-insurance" />
               </div>
               <div>
-                <label className="text-sm font-medium">Yuk ko'tarish (kg)</label>
+                <label className="text-sm font-medium">{t("yukKoTarishKg")}</label>
                 <Input type="number" value={vehicleForm.loadCapacity} onChange={e => setVehicleForm(p => ({ ...p, loadCapacity: e.target.value }))} placeholder="5000" data-testid="input-vehicle-capacity" />
               </div>
             </div>
@@ -152,7 +152,7 @@ export function LogisticsDashboardDialogs({
                 <Input type="number" value={fuelForm.liters} onChange={e => setFuelForm(p => ({ ...p, liters: e.target.value }))} placeholder="120" data-testid="input-fuel-liters" />
               </div>
               <div>
-                <label className="text-sm font-medium">Narxi (so'm/l)</label>
+                <label className="text-sm font-medium">{t("narxiSoML")}</label>
                 <Input type="number" value={fuelForm.costPerLiter} onChange={e => setFuelForm(p => ({ ...p, costPerLiter: e.target.value }))} data-testid="input-fuel-price" />
               </div>
             </div>
@@ -161,7 +161,7 @@ export function LogisticsDashboardDialogs({
               <Input value={fuelForm.station} onChange={e => setFuelForm(p => ({ ...p, station: e.target.value }))} placeholder={t("lukoilYunusobod")} data-testid="input-fuel-station" />
             </div>
             <div>
-              <label className="text-sm font-medium">Probeg (km)</label>
+              <label className="text-sm font-medium">{t("probegKm")}</label>
               <Input type="number" value={fuelForm.mileage} onChange={e => setFuelForm(p => ({ ...p, mileage: e.target.value }))} placeholder="125400" data-testid="input-fuel-mileage" />
             </div>
           </div>
@@ -216,7 +216,7 @@ export function LogisticsDashboardDialogs({
                 <Input type="datetime-local" value={deliveryForm.estimatedArrival} onChange={e => setDeliveryForm(p => ({ ...p, estimatedArrival: e.target.value }))} data-testid="input-delivery-eta" />
               </div>
               <div>
-                <label className="text-sm font-medium">Og'irlik (kg)</label>
+                <label className="text-sm font-medium">{t("ogIrlikKg")}</label>
                 <Input type="number" value={deliveryForm.weight} onChange={e => setDeliveryForm(p => ({ ...p, weight: e.target.value }))} placeholder="2400" data-testid="input-delivery-weight" />
               </div>
             </div>

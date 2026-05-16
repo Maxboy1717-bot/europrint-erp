@@ -185,7 +185,7 @@ export function UtilitiesTab({ stats, utilityReadings, utilityReadingsLoading }:
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Kommunal xarajatlar (oylik)</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("kommunalXarajatlarOylik")}</CardTitle></CardHeader>
         <CardContent>
           {utilityReadingsLoading ? (
             <div className="space-y-3">

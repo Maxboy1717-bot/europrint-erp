@@ -190,7 +190,7 @@ export default function CustomerPortalConfig() {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1"><Shield className="w-4 h-4" />{t("webhookXavfsizlik")}</div>
-            <EPStatusPill tone="danger" className="mt-1">CRM_WEBHOOK_SECRET kerak</EPStatusPill>
+            <EPStatusPill tone="danger" className="mt-1">{t("crmWebhookSecretKerak")}</EPStatusPill>
             <p className="text-xs text-muted-foreground mt-1.5">{t("replitSecretsOrqaliSozlang")}</p>
           </CardContent>
         </Card>
@@ -256,7 +256,7 @@ export default function CustomerPortalConfig() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label>So'rov tanasi (JSON)</Label>
+                <Label>{t("soRovTanasiJson")}</Label>
                 <div className="relative">
                   <pre className="text-xs bg-muted rounded-md p-3 overflow-x-auto font-mono leading-relaxed">
                     {selectedEndpoint.body}
@@ -301,7 +301,7 @@ export default function CustomerPortalConfig() {
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="space-y-1">
-          <Label>HMAC SHA-256 imzo kaliti</Label>
+          <Label>{t("hmacSha256ImzoKaliti")}</Label>
                 <div className="flex gap-2">
                   <Input
                     type="password"

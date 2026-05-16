@@ -146,7 +146,7 @@ export function UploadDialog({ open, onOpenChange, employeeId }: UploadDialogPro
 
           {/* Description */}
           <div className="space-y-1">
-          <Label>Izoh (ixtiyoriy)</Label>
+          <Label>{t("izohIxtiyoriy")}</Label>
             <Input
               placeholder={t("hujjatHaqidaQisqachaMalumot")}
               value={uploadDescription}
@@ -255,17 +255,17 @@ export function AddDocDialog({ open, onOpenChange, employeeId }: AddDocDialogPro
           </div>
 
           <div className="space-y-1">
-          <Label>Fayl nomi (ixtiyoriy)</Label>
+          <Label>{t("faylNomiIxtiyoriy")}</Label>
             <Input {...addDocForm.register("fileName")} placeholder={t("masalanPassportPdf")} data-testid="input-doc-filename" />
           </div>
 
           <div className="space-y-1">
-          <Label>Fayl URL (ixtiyoriy)</Label>
-            <Input {...addDocForm.register("fileUrl")} placeholder="Masalan: /uploads/emp/123/passport.pdf" data-testid="input-doc-fileurl" />
+          <Label>{t("faylUrlIxtiyoriy")}</Label>
+            <Input {...addDocForm.register("fileUrl")} placeholder={t("masalanUploadsEmp123PassportPdf")} data-testid="input-doc-fileurl" />
           </div>
 
           <div className="space-y-1">
-          <Label>Izoh (ixtiyoriy)</Label>
+          <Label>{t("izohIxtiyoriy2")}</Label>
             <Textarea {...addDocForm.register("notes")} placeholder={t("hujjatHaqidaQoshimchaMalumot")} rows={3} data-testid="input-doc-notes" />
           </div>
 

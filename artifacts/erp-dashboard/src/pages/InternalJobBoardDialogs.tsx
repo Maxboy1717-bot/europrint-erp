@@ -77,7 +77,7 @@ export function ApplyDialog({ vacancy, open, onClose }: ApplyDialogProps) {
             </div>
 
             <div>
-              <Label className="text-sm mb-1 block">Motivatsion xat (ixtiyoriy)</Label>
+              <Label className="text-sm mb-1 block">{t("motivatsionXatIxtiyoriy")}</Label>
               <Textarea
                 value={coverNote}
                 onChange={e => setCoverNote(e.target.value)}

@@ -73,7 +73,7 @@ export function SensorsTabContent({
                 <TableHead>{t("tur")}</TableHead>
                 <TableHead>{t("mashina")}</TableHead>
                 <TableHead>{t("unit")}</TableHead>
-                <TableHead>Min/Max</TableHead>
+                <TableHead>{t("minMax")}</TableHead>
                 <TableHead>{t("holati")}</TableHead>
               </TableRow></TableHeader>
               <TableBody>
@@ -209,7 +209,7 @@ export function OEETabContent({
       </div>
 
       {oeeLoading ? (
-        <div className="text-center py-8 text-[13px] text-muted-foreground">OEE yuklanmoqda...</div>
+        <div className="text-center py-8 text-[13px] text-muted-foreground">{t("oeeYuklanmoqda")}</div>
       ) : oeeData.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">

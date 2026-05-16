@@ -40,8 +40,8 @@ export function KeyPositionsTab({ positions, isLoading }: KeyPositionsTabProps) 
                 <TableHead>{t("lavozim1")}</TableHead>
                 <TableHead>{t("bolim1")}</TableHead>
                 <TableHead>{t("rejalari")}</TableHead>
-                <TableHead>1 yilda</TableHead>
-                <TableHead>2 yilda</TableHead>
+                <TableHead>{t("k1Yilda")}</TableHead>
+                <TableHead>{t("k2Yilda")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

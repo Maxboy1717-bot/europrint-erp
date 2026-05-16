@@ -64,7 +64,7 @@ export function OvertimeDialog({ tCommon, open, onOpenChange, form, setForm, mut
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>Soatlik stavka (so'm)</Label>
+          <Label>{t("soatlikStavkaSoM")}</Label>
               <Input
                 type="number"
                 value={form.hourlyRate}
@@ -151,7 +151,7 @@ export function CashAdvanceDialog({ tCommon, open, onOpenChange, form, setForm, 
               />
             </div>
             <div className="space-y-1">
-          <Label>Summa (so'm)</Label>
+          <Label>{t("summaSoM")}</Label>
               <Input
                 type="number"
                 value={form.amount}

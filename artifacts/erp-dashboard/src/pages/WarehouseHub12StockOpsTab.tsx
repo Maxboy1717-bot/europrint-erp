@@ -129,7 +129,7 @@ export function WarehouseHub12StockOpsTab({activeWarehouse,
               <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>GRN raqami</TableHead>
+                    <TableHead>{t("grnRaqami")}</TableHead>
                     <TableHead>{t("yetkazuvchi")}</TableHead>
                     <TableHead>{t('Material')}</TableHead>
                     <TableHead className="text-right">{t("quantity")}</TableHead>
@@ -249,10 +249,10 @@ export function WarehouseHub12StockOpsTab({activeWarehouse,
                     QC jarayoni
                   </h4>
                   <ol className="text-sm text-[var(--ep-yellow)] dark:text-amber-400 space-y-1 list-decimal list-inside">
-                    <li>Material karantinga kiritiladi (GRN yoki ichki transfer)</li>
+                    <li>{t("materialKarantingaKiritiladiGrnYokiIchki")}</li>
                     <li>{t("qcXodimiNamunalarniOladiVa")}</li>
-                    <li>Natija kiritiladi: APPROVED (tasdiqlangan) yoki REJECTED (rad)</li>
-                    <li>APPROVED — tegishli omborga chiqariladi</li>
+                    <li>{t("natijaKiritiladiApprovedTasdiqlanganYokiRejected")}</li>
+                    <li>{t("approvedTegishliOmborgaChiqariladi")}</li>
                     <li>{t("rejectedScrapMainOmborigaOtkaziladi")}</li>
                   </ol>
                 </div>

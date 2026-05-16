@@ -217,7 +217,7 @@ export default function EmployeeFilesPage() {
               <Input
                 value={form.file_name}
                 onChange={e => setForm(f => ({ ...f, file_name: e.target.value }))}
-                placeholder="passport.pdf"
+                placeholder={t("passportPdf")}
                 data-testid="input-file-name"
               />
             </div>

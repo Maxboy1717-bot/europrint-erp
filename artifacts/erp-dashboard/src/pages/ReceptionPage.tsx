@@ -202,7 +202,7 @@ export default function ReceptionPage() {
             <CardContent className="space-y-4">
               <div className="flex gap-2">
                 <Input value={validateCode} onChange={e => setValidateCode(e.target.value.toUpperCase())}
-                  placeholder="Badge kodi (masalan: A1B2C3D4)" maxLength={8}
+                  placeholder={t("badgeKodiMasalanA1b2c3d4")} maxLength={8}
                   className="bg-input border-border font-mono text-lg text-center" />
                 <Button onClick={validateBadge} className="bg-primary hover:bg-primary/90 text-white">
                   {t("check")}

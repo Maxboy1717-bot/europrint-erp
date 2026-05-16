@@ -157,7 +157,7 @@ export default function PricingTiers() {
                     </div>
                     <div className="text-right">
                       <div className="font-semibold text-sm">{formatCurrency(tier.priceUzs)}</div>
-                      <div className="text-xs text-muted-foreground">/birlik</div>
+                      <div className="text-xs text-muted-foreground">{t("birlik")}</div>
                     </div>
                   </div>
                 ))}

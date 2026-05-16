@@ -63,14 +63,14 @@ export function RecruitingHeaderActions({
               <Select value={newVacancyForm.vacancy_type} onValueChange={v => setNewVacancyForm(p => ({ ...p, vacancy_type: v }))}>
                 <SelectTrigger data-testid="select-vacancy-type" className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="STANDARD">Standart (15 ish kun)</SelectItem>
-                  <SelectItem value="INTERNAL">Ichki (5 ish kun)</SelectItem>
-                  <SelectItem value="COMPLEX">Murakkab (25 ish kun)</SelectItem>
-                  <SelectItem value="TOP_MANAGEMENT">Top Menejment (40 ish kun)</SelectItem>
+                  <SelectItem value="STANDARD">{t("standart15IshKun")}</SelectItem>
+                  <SelectItem value="INTERNAL">{t("ichki5IshKun")}</SelectItem>
+                  <SelectItem value="COMPLEX">{t("murakkab25IshKun")}</SelectItem>
+                  <SelectItem value="TOP_MANAGEMENT">{t("topMenejment40IshKun")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div><Label className="text-xs mb-1 block">SLA muddat (ish kunlari)</Label><Input type="number" min={1} max={90} value={newVacancyForm.deadline_working_days} onChange={e => setNewVacancyForm(p => ({ ...p, deadline_working_days: Number(e.target.value) }))} /></div>
+            <div><Label className="text-xs mb-1 block">{t("slaMuddatIshKunlari")}</Label><Input type="number" min={1} max={90} value={newVacancyForm.deadline_working_days} onChange={e => setNewVacancyForm(p => ({ ...p, deadline_working_days: Number(e.target.value) }))} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateVacancyOpen(false)}>{t("Bekor")}</Button>
@@ -89,9 +89,9 @@ export function RecruitingHeaderActions({
           <div className="flex flex-col gap-3 py-2">
             <Input data-testid="input-candidate-name" placeholder={t("toliqIsm1")} value={newForm.fullName} onChange={e => setNewForm(p => ({ ...p, fullName: e.target.value }))} />
             <Input data-testid="input-candidate-phone" placeholder={t("telefonRaqami1")} value={newForm.phone} onChange={e => setNewForm(p => ({ ...p, phone: e.target.value }))} />
-            <Input data-testid="input-candidate-email" placeholder="Email (ixtiyoriy)" value={newForm.email} onChange={e => setNewForm(p => ({ ...p, email: e.target.value }))} />
+            <Input data-testid="input-candidate-email" placeholder={t("emailIxtiyoriy")} value={newForm.email} onChange={e => setNewForm(p => ({ ...p, email: e.target.value }))} />
             <div>
-              <Label className="text-xs mb-1 block">Vakansiya (ixtiyoriy)</Label>
+              <Label className="text-xs mb-1 block">{t("vakansiyaIxtiyoriy")}</Label>
               <Select value={newForm.vacancyId} onValueChange={v => setNewForm(p => ({ ...p, vacancyId: v }))}>
                 <SelectTrigger data-testid="select-candidate-vacancy" className="h-9"><SelectValue placeholder={t("vakansiyaniTanlang")} /></SelectTrigger>
                 <SelectContent>
@@ -110,7 +110,7 @@ export function RecruitingHeaderActions({
                 <SelectItem value="WEBSITE">{t("sayt")}</SelectItem>
               </SelectContent>
             </Select>
-            <Input data-testid="input-candidate-notes" placeholder="Izoh (ixtiyoriy)" value={newForm.notes} onChange={e => setNewForm(p => ({ ...p, notes: e.target.value }))} />
+            <Input data-testid="input-candidate-notes" placeholder={t("izohIxtiyoriy")} value={newForm.notes} onChange={e => setNewForm(p => ({ ...p, notes: e.target.value }))} />
             <Button data-testid="button-submit-candidate" onClick={() => createMutation.mutate(newForm)} disabled={!newForm.fullName || !newForm.phone || createMutation.isPending}>
               {createMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
             </Button>

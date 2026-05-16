@@ -43,14 +43,14 @@ export function QuotaPlanFactCard({ quota: q, isOnTrack }: QuotaPlanFactCardProp
         {/* Asosiy raqamlar */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-4 bg-muted/40 rounded-xl">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">REJA (maqsad)</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("rejaMaqsad")}</p>
             <p className="text-3xl font-bold text-foreground" data-testid="text-quota-target">
               {fmt(q.target)}
             </p>
             <p className="text-sm text-muted-foreground mt-0.5">{t("som")}</p>
           </div>
           <div className={cn("text-center p-4 rounded-xl", isOnTrack ? "bg-green-50" : "bg-red-50")}>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">FAKT (bajarilgan)</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("faktBajarilgan")}</p>
             <p className={cn("text-3xl font-bold", isOnTrack ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]")} data-testid="text-quota-achieved">
               {fmt(q.achieved)}
             </p>
@@ -112,7 +112,7 @@ export function QuotaPlanFactCard({ quota: q, isOnTrack }: QuotaPlanFactCardProp
               <Zap className={cn("w-4 h-4", q.pace >= 100 ? "text-[var(--ep-green)]" : "text-[var(--ep-yellow)]")} />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Temp (Pace)</p>
+              <p className="text-xs text-muted-foreground">{t("tempPace")}</p>
               <p className={cn("text-lg font-bold", q.pace >= 100 ? "text-[var(--ep-green)]" : "text-[var(--ep-yellow)]")}>
                 {q.pace}%
               </p>

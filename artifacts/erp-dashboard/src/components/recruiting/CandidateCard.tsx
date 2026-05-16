@@ -168,7 +168,7 @@ export function CandidateCard({entry, stage, aiSessions, vacancyMap,
             return (
               <div className="border border-sky-500/30 rounded-lg bg-sky-500/5 overflow-hidden">
                 <button type="button" onClick={() => { const next = new Set(cpPanelOpen); if (next.has(entry.id)) next.delete(entry.id); else next.add(entry.id); setCpPanelOpen(next); }} className="w-full flex items-center justify-between px-2.5 py-1.5 text-left hover:bg-[var(--ep-blue)]/90/10 transition-colors">
-                  <span className="text-[10px] font-semibold text-sky-400 flex items-center gap-1">💬 Kandidatga aytiladi (IV bo'lim)</span>
+                  <span className="text-[10px] font-semibold text-sky-400 flex items-center gap-1">{t("kandidatgaAytiladiIvBoLim")}</span>
                   <span className="text-[10px] text-sky-400">{isOpen ? "▲" : "▼"}</span>
                 </button>
                 {isOpen && (
@@ -200,7 +200,7 @@ export function CandidateCard({entry, stage, aiSessions, vacancyMap,
 
           {vac.tool_test_requirements?.traits && (
             <div>
-              <span className="text-[10px] text-muted-foreground">TOOL TEST talabi vs natija (A-J):</span>
+              <span className="text-[10px] text-muted-foreground">{t("toolTestTalabiVsNatijaA")}</span>
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-x-2 gap-y-1.5 mt-1">
                 {(["A","B","C","D","E","F","G","H","I","J"]).map(k => {
                   const req = vac.tool_test_requirements?.traits?.[k] ?? 0;

@@ -200,11 +200,11 @@ export default function MarketingContent() {
                     </Select>
                   </div>
                 </div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Hashtag'lar (vergul bilan)</Label><Input className="bg-background border-border" value={form.hashtags} onChange={(e) => setForm({ ...form, hashtags: e.target.value })} placeholder="#europrint, #quti" /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("hashtagLarVergulBilan")}</Label><Input className="bg-background border-border" value={form.hashtags} onChange={(e) => setForm({ ...form, hashtags: e.target.value })} placeholder={t("europrintQuti")} /></div>
                 <div className="space-y-1.5"><Label className="text-muted-foreground">{t("rejaliVaqt")}</Label><Input className="bg-background border-border" type="datetime-local" value={form.scheduledAt} onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })} /></div>
               </TabsContent>
               <TabsContent value="ai" className="space-y-4 mt-4">
-                <div className="space-y-1.5"><Label className="text-muted-foreground">AI prompt</Label><Textarea className="bg-background border-border min-h-[100px]" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder={t("qadoqlashSifatiHaqidaPostYozing")} /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("aiPrompt")}</Label><Textarea className="bg-background border-border min-h-[100px]" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder={t("qadoqlashSifatiHaqidaPostYozing")} /></div>
                 <Button onClick={() => aiMutation.mutate({ prompt: aiPrompt, platform: form.platform })} disabled={!aiPrompt || aiMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-ai-generate">
                   <Sparkles className="h-4 w-4 mr-2" />{aiMutation.isPending ? "Yaratilmoqda..." : "AI bilan yaratish"}
                 </Button>

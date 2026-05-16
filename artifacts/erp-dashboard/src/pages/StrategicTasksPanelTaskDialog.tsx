@@ -108,7 +108,7 @@ export function TaskDialog({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Sarlavha (UZ)</FormLabel>
+                  <FormLabel>{t("sarlavhaUz")}</FormLabel>
                   <FormControl>
                     <Input {...field} data-testid="input-task-title" placeholder={t("vazifaSarlavhasi")} />
                   </FormControl>
@@ -121,9 +121,9 @@ export function TaskDialog({
               name="titleRu"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Sarlavha (RU)</FormLabel>
+                  <FormLabel>{t("sarlavhaRu")}</FormLabel>
                   <FormControl>
-                    <Input {...field} value={field.value || ""} data-testid="input-task-title-ru" placeholder="Название задачи" />
+                    <Input {...field} value={field.value || ""} data-testid="input-task-title-ru" placeholder={t("untitled")} />
                   </FormControl>
                 </FormItem>
               )}

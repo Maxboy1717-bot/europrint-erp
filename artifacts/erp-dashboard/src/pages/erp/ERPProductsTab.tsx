@@ -128,7 +128,7 @@ export function ERPProductsTab() {
                     <FormField control={form.control} name="nameRu" render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t('nameRu')}</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} placeholder="Картонная коробка" data-testid="input-product-name-ru" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} placeholder={t("untitled")} data-testid="input-product-name-ru" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />

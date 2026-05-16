@@ -163,8 +163,8 @@ export default function CameraAIModernHub() {
                 </>
               ) : (
                 <>
-                  Визуальная <span className="text-cyan-300">безопасность</span> и AI{" "}
-                  <span className="text-violet-300">производства</span>
+                  Визуальная <span className="text-cyan-300">{t("untitled")}</span> и AI{" "}
+                  <span className="text-violet-300">{t("untitled2")}</span>
                 </>
               )}
             </h1>

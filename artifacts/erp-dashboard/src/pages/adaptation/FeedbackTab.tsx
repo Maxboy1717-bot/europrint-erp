@@ -170,7 +170,7 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
         <div className="flex justify-between items-center">
           <div>
             <CardTitle>{t("feedbacklar")}</CardTitle>
-            <CardDescription>1 hafta, 1 oy, 3 oy suhbatlari</CardDescription>
+            <CardDescription>{t("k1Hafta1Oy3Oy")}</CardDescription>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) { setEditingFeedback(null); form.reset(); } }}>
             <DialogTrigger asChild>
@@ -207,9 +207,9 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger data-testid="select-feedback-type" className="h-9"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="week1">1 hafta</SelectItem>
-                          <SelectItem value="month1">1 oy</SelectItem>
-                          <SelectItem value="month3">3 oy</SelectItem>
+                          <SelectItem value="week1">{t("k1Hafta")}</SelectItem>
+                          <SelectItem value="month1">{t("k1Oy")}</SelectItem>
+                          <SelectItem value="month3">{t("k3Oy")}</SelectItem>
                           <SelectItem value="final">{t("yakuniy")}</SelectItem>
                         </SelectContent>
                       </Select>
@@ -244,7 +244,7 @@ export function FeedbackTab({ feedbacks, employees }: FeedbackTabProps) {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="rating">Ball (1-5)</Label>
+                    <Label htmlFor="rating">{t("ball15")}</Label>
                     <Input id="rating" type="number" min="1" max="5" {...form.register("rating", { valueAsNumber: true })} data-testid="input-rating" />
                   </div>
                   <div>

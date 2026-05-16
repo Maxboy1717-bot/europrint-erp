@@ -86,7 +86,7 @@ export function HiddenFieldsSection({ card, allCards, projects, deals, showHidde
           </div>
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <Label className="min-w-[100px]">CRM bitim</Label>
+            <Label className="min-w-[100px]">{t("crmBitim")}</Label>
             <Select defaultValue={card.relatedType === 'deal' ? card.relatedId || "none" : "none"} onValueChange={(v) => {
               if (v && v !== "none") { onUpdate({ relatedType: 'deal', relatedId: v }); }
               else { onUpdate({ relatedType: null, relatedId: null }); }
@@ -100,7 +100,7 @@ export function HiddenFieldsSection({ card, allCards, projects, deals, showHidde
           </div>
           <div className="flex items-center gap-2">
             <Timer className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <Label className="min-w-[100px]">Rejalashtirilgan vaqt (soat)</Label>
+            <Label className="min-w-[100px]">{t("rejalashtirilganVaqtSoat")}</Label>
             <Input type="number" className="flex-1" placeholder="0" defaultValue={card.estimatedTime || ""} onChange={(e) => {
               const val = e.target.value.trim();
               onUpdate({ estimatedTime: val ? parseInt(val) : null });

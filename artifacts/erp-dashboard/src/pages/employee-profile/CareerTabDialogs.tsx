@@ -77,7 +77,7 @@ export function CareerEditForm({ form, onChange }: CareerEditFormProps) {
         <Input
           value={form.notes}
           onChange={(e) => set({ notes: e.target.value })}
-          placeholder="HR izohlar..."
+          placeholder={t("hrIzohlar")}
           data-testid="input-career-notes"
         />
       </div>

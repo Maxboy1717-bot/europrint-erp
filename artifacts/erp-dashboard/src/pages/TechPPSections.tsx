@@ -172,7 +172,7 @@ export function PpOeeSection({ oeeData, loading }: PpOeeProps) {
   const { t } = useTranslation("common");
   return (
     <TabsContent value="pp-oee" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">OEE Monitor (Real-time)</h2>
+      <h2 className="text-lg font-semibold">{t("oeeMonitorRealTime")}</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label={t("ortachaOee")} value={loading ? "..." : `${oeeData?.overall?.oee ?? "—"}%`} color="text-[var(--ep-blue)]" />
         <StatCard label={t("Mavjudlik")} value={loading ? "..." : `${oeeData?.overall?.availability ?? "—"}%`} color="text-[var(--ep-green)]" />

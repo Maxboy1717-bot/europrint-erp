@@ -31,9 +31,9 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
       <div className="grid grid-cols-1 gap-4">
         {/* 1–3: Kompaniya, Tartib, Instrumentlar */}
         <div>
-          <Label className="text-xs mb-1 block">1. Kompaniya taqdimoti (qisqa)</Label>
+          <Label className="text-xs mb-1 block">{t("k1KompaniyaTaqdimotiQisqa")}</Label>
           <Textarea
-            placeholder="HR manager suhbat boshida kompaniyani qanday tanishtirishi kerak?"
+            placeholder={t("hrManagerSuhbatBoshidaKompaniyaniQanday")}
             rows={2}
             value={portret.candidate_presentation?.kompaniya_taqdimoti ?? ""}
             onChange={e => onChange("kompaniya_taqdimoti")(e.target.value)}
@@ -50,7 +50,7 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
             />
           </div>
           <div>
-            <Label className="text-xs mb-1 block">3. Asboblar/Dasturlar</Label>
+            <Label className="text-xs mb-1 block">{t("k3AsboblarDasturlar")}</Label>
             <Input
               placeholder={t("noutbukCrmMaxsusKiyim")}
               value={portret.candidate_presentation?.instrumentlar ?? ""}
@@ -62,9 +62,9 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
         {/* 4–6: Guruh, Safar, Sinov davri */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <Label className="text-xs mb-1 block">4. Guruh (soni)</Label>
+            <Label className="text-xs mb-1 block">{t("k4GuruhSoni")}</Label>
             <Input
-              placeholder="5 kishi"
+              placeholder={t("k5Kishi")}
               value={portret.candidate_presentation?.guruh_javob ?? ""}
               onChange={e => onChange("guruh_javob")(e.target.value)}
             />
@@ -85,7 +85,7 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
           <div>
             <Label className="text-xs mb-1 block">{t("k6SinovMuddati")}</Label>
             <Input
-              placeholder="3 oy"
+              placeholder={t("k3Oy")}
               value={portret.candidate_presentation?.sinov_muddat ?? ""}
               onChange={e => onChange("sinov_muddat")(e.target.value)}
             />
@@ -95,14 +95,14 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
         {/* 7–9: Maoshlar */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <Label className="text-xs mb-1 block">7. Sinov maosh (min)</Label>
+            <Label className="text-xs mb-1 block">{t("k7SinovMaoshMin")}</Label>
             <Input
               value={portret.candidate_presentation?.sinov_maosh_min ?? ""}
               onChange={e => onChange("sinov_maosh_min")(e.target.value)}
             />
           </div>
           <div>
-            <Label className="text-xs mb-1 block">8. Sinov maosh (max)</Label>
+            <Label className="text-xs mb-1 block">{t("k8SinovMaoshMax")}</Label>
             <Input
               value={portret.candidate_presentation?.sinov_maosh_max ?? ""}
               onChange={e => onChange("sinov_maosh_max")(e.target.value)}
@@ -127,7 +127,7 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
             />
           </div>
           <div>
-            <Label className="text-xs mb-1 block">11. Yillik ta'til (kun)</Label>
+            <Label className="text-xs mb-1 block">{t("k11YillikTaTilKun")}</Label>
             <Input
               value={portret.candidate_presentation?.tatil_kun ?? ""}
               onChange={e => onChange("tatil_kun")(e.target.value)}
@@ -136,7 +136,7 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <Label className="text-xs mb-1 block">12. Ish rejimi (soat)</Label>
+            <Label className="text-xs mb-1 block">{t("k12IshRejimiSoat")}</Label>
             <Input
               value={portret.candidate_presentation?.ish_rejimi ?? ""}
               onChange={e => onChange("ish_rejimi")(e.target.value)}
@@ -150,9 +150,9 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="unlimited">Muddatsiz (Trudovoy)</SelectItem>
-                <SelectItem value="limited">Muddati (1 yil)</SelectItem>
-                <SelectItem value="gpc">GPC (Shartnoma)</SelectItem>
+                <SelectItem value="unlimited">{t("muddatsizTrudovoy")}</SelectItem>
+                <SelectItem value="limited">{t("muddati1Yil")}</SelectItem>
+                <SelectItem value="gpc">{t("gpcShartnoma")}</SelectItem>
                 <SelectItem value="ip">{t("oziniOziBandQilish")}</SelectItem>
               </SelectContent>
             </Select>
@@ -172,7 +172,7 @@ export function PortretSection4({ portret, onChange }: PortretSection4Props) {
           />
         </div>
         <div>
-          <Label className="text-xs mb-1 block">15. Ijtimoiy paket (sotsial paket)</Label>
+          <Label className="text-xs mb-1 block">{t("k15IjtimoiyPaketSotsialPaket")}</Label>
           <Textarea
             placeholder={t("masalanTibbiySugurtaKorporativTransport")}
             rows={2}

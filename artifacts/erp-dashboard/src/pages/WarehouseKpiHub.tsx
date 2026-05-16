@@ -69,7 +69,7 @@ export default function WarehouseKpiHub() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <div className="text-xs text-gray-500 font-semibold">OMBOR KPI HUB</div>
+          <div className="text-xs text-gray-500 font-semibold">{t("omborKpiHub")}</div>
           <h1 className="text-2xl font-bold text-gray-900">{t("realTimeOmborKorsatgichlari")}</h1>
         </div>
         <button
@@ -116,7 +116,7 @@ export default function WarehouseKpiHub() {
             </div>
 
             <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <div className="font-semibold mb-3">🔄 Harakatlar (30 kun)</div>
+              <div className="font-semibold mb-3">{t("harakatlar30Kun")}</div>
               {(Array.isArray(sysKpi.movementsByType) ? sysKpi.movementsByType : []).map(m => (
                 <div key={m.type} className="flex items-center gap-2 mb-2 text-sm">
                   <div className="flex-1">{m.label}</div>
@@ -163,7 +163,7 @@ export default function WarehouseKpiHub() {
                 </div>
 
                 <div className="border-t pt-2 mb-2">
-                  <div className="text-xs text-gray-500">JAMI QIYMAT</div>
+                  <div className="text-xs text-gray-500">{t("jamiQiymat")}</div>
                   <div className="text-lg font-bold text-[var(--ep-green)]">{fmtMoney(w.totalValue)} UZS</div>
                 </div>
 

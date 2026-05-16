@@ -201,7 +201,7 @@ export default function OrgStructureHierarchy() {
         <div className="flex items-center gap-2 mt-3 flex-wrap">
           <div className="relative flex-1 min-w-[160px] max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input className="pl-8 h-9 text-sm" placeholder="Qidirish (ism, rahbar...)" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input className="pl-8 h-9 text-sm" placeholder={t("qidirishIsmRahbar")} value={search} onChange={(e) => setSearch(e.target.value)} />
             {search && <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setSearch("")}><X className="h-3.5 w-3.5 text-muted-foreground" /></button>}
           </div>
 

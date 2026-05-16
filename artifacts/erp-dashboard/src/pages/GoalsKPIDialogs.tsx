@@ -176,7 +176,7 @@ export function GoalDialog({isOpen,
               name="targetValue"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Maqsad qiymati (%)</FormLabel>
+                  <FormLabel>{t("maqsadQiymati")}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}

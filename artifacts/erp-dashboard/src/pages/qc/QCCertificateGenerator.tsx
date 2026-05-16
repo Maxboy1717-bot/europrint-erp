@@ -76,7 +76,7 @@ export function QCCertificateGenerator() {
 <body>
   <div class="header">
     <div class="logo">EUROPRINT</div>
-    <h2>SIFAT SERTIFIKATI / СЕРТИФИКАТ КАЧЕСТВА</h2>
+    <h2>{t("sifatSertifikati")}</h2>
     <p style="margin:4px 0; font-size:13px; color:#555;">{t("sertifikatRaqami")}<strong>CERT-${escHtml(certForm.batchNumber) || "XXXX"}-${new Date().getFullYear()}</strong> &nbsp;|&nbsp; Sana: <strong>${escHtml(dateStr)}</strong></p>
     <div class="badge">${passText}</div>
   </div>
@@ -91,11 +91,11 @@ export function QCCertificateGenerator() {
   <div class="section">{t("fizikMexanikKorsatkichlar")}</div>
   <table>
     <tr><th>{t("korsatkich")}</th><th>{t("olchov1")}</th><th>{t("olchovBirligi")}</th><th>{t("baholash")}</th></tr>
-    <tr><td>Grammatura (gram vazni)</td><td>${escHtml(certForm.gramWeight) || "—"}</td><td>g/m²</td><td>${certForm.gramWeight ? "✓ Normada" : "—"}</td></tr>
+    <tr><td>{t("grammaturaGramVazni")}</td><td>${escHtml(certForm.gramWeight) || "—"}</td><td>g/m²</td><td>${certForm.gramWeight ? "✓ Normada" : "—"}</td></tr>
     <tr><td>{t("qalinlik")}</td><td>${escHtml(certForm.thickness) || "—"}</td><td>mm</td><td>${certForm.thickness ? "✓ Normada" : "—"}</td></tr>
     <tr><td>{t("namlik")}</td><td>${escHtml(certForm.moisture) || "—"}</td><td>%</td><td>${certForm.moisture ? "✓ Normada" : "—"}</td></tr>
-    <tr><td>Yorilish mustahkamligi (BCT)</td><td>${escHtml(certForm.burstingStrength) || "—"}</td><td>kPa</td><td>${certForm.burstingStrength ? "✓ Normada" : "—"}</td></tr>
-    <tr><td>Qirradan ezilish testi (ECT)</td><td>${escHtml(certForm.edgeCrushTest) || "—"}</td><td>kN/m</td><td>${certForm.edgeCrushTest ? "✓ Normada" : "—"}</td></tr>
+    <tr><td>{t("yorilishMustahkamligiBct")}</td><td>${escHtml(certForm.burstingStrength) || "—"}</td><td>kPa</td><td>${certForm.burstingStrength ? "✓ Normada" : "—"}</td></tr>
+    <tr><td>{t("qirradanEzilishTestiEct")}</td><td>${escHtml(certForm.edgeCrushTest) || "—"}</td><td>kN/m</td><td>${certForm.edgeCrushTest ? "✓ Normada" : "—"}</td></tr>
   </table>
 
   ${certForm.notes ? `<div class="section">{t("notes")}</div><p style="font-size:13px; border:1px solid #ccc; padding:10px; border-radius:4px;">${escHtml(certForm.notes)}</p>` : ""}
@@ -129,7 +129,7 @@ export function QCCertificateGenerator() {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium">Partiya (Batch) raqami</label>
+            <label className="text-sm font-medium">{t("partiyaBatchRaqami")}</label>
             <Input value={certForm.batchNumber} onChange={e => setCertForm(p => ({ ...p, batchNumber: e.target.value }))} placeholder="BATCH-2026-001" data-testid="cert-batch" />
           </div>
           <div className="space-y-1">
@@ -149,7 +149,7 @@ export function QCCertificateGenerator() {
             <Input type="date" value={certForm.productionDate} onChange={e => setCertForm(p => ({ ...p, productionDate: e.target.value }))} data-testid="cert-date" />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">QC inspektor (F.I.Sh.)</label>
+            <label className="text-sm font-medium">{t("qcInspektorFISh")}</label>
             <Input value={certForm.inspector} onChange={e => setCertForm(p => ({ ...p, inspector: e.target.value }))} placeholder={t("toshmatovBS")} data-testid="cert-inspector" />
           </div>
         </div>

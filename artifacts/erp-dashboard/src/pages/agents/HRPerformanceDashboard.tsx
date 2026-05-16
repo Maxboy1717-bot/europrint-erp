@@ -63,12 +63,12 @@ export default function HRPerformanceDashboard() {
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <label className="text-xs font-medium text-muted-foreground">{t("xodimId")}</label>
-            <input type="number" className="w-full mt-1 px-3 py-2 border rounded-md text-sm" placeholder="masalan 1"
+            <input type="number" className="w-full mt-1 px-3 py-2 border rounded-md text-sm" placeholder={t("masalan1")}
                    value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}
                    onKeyDown={(e) => e.key === 'Enter' && search()} />
           </div>
           <div className="w-48">
-            <label className="text-xs font-medium text-muted-foreground">Bazaviy oylik (so'm)</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("bazaviyOylikSoM")}</label>
             <input type="number" className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                    value={baseSalary} onChange={(e) => setBaseSalary(e.target.value)} />
           </div>
@@ -91,7 +91,7 @@ export default function HRPerformanceDashboard() {
                 <div className={`text-4xl font-bold tabular-nums ${performance.data.score >= 80 ? 'text-[var(--ep-green)]' : performance.data.score >= 50 ? 'text-[var(--ep-yellow)]' : 'text-[var(--ep-red)]'}`}>
                   {performance.data.score}
                 </div>
-                <div className="text-xs text-muted-foreground mb-3">/100 ball</div>
+                <div className="text-xs text-muted-foreground mb-3">{t("k100Ball")}</div>
                 <ul className="text-xs space-y-1">
                   {performance.data.reasons.map((r, i) => <li key={i} className="text-slate-700">• {r}</li>)}
                 </ul>
@@ -117,7 +117,7 @@ export default function HRPerformanceDashboard() {
 
           {/* Bonus */}
           <Card className="p-5">
-            <h3 className="font-bold text-sm mb-3">Oylik bonus (taxminiy)</h3>
+            <h3 className="font-bold text-sm mb-3">{t("oylikBonusTaxminiy")}</h3>
             {bonus.isLoading ? <EPLoader /> : bonus.data && (
               <>
                 <div className="text-2xl font-bold text-[var(--ep-green)] tabular-nums">

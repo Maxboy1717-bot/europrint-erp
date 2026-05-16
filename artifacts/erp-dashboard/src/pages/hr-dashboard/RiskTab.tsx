@@ -74,7 +74,7 @@ export function RiskTab({riskEmployees, riskSummary, isLoading }: RiskTabProps) 
 
         <div className="lg:col-span-2 bg-card rounded-xl p-6">
           <CardHeader className="p-0 mb-4">
-            <CardTitle className="flex items-center gap-2 text-sm"><ShieldAlert className="h-4 w-4 text-[var(--ep-red)]" />Xavf ostidagi xodimlar (yuqori + kritik)</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-sm"><ShieldAlert className="h-4 w-4 text-[var(--ep-red)]" />{t("xavfOstidagiXodimlarYuqoriKritik")}</CardTitle>
           </CardHeader>
           {isLoading ? (
             <div className="space-y-2">{([1,2,3,4,5]).map(i => <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />)}</div>

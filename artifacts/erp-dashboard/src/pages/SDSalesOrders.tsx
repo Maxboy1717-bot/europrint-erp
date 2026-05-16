@@ -205,7 +205,7 @@ export default function SDSalesOrders() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
                   <div><div className="text-xs text-muted-foreground uppercase">{t("total")}</div>
                     <div className="font-bold text-lg">{fmt(detail?.totalValue || selected.totalValue)} so'm</div></div>
-                  <div><div className="text-xs text-muted-foreground uppercase">To'landi (Avans)</div>
+                  <div><div className="text-xs text-muted-foreground uppercase">{t("toLandiAvans")}</div>
                     <div className="font-bold text-lg text-[var(--ep-green)]">{fmt(detail?.advancePaidAmount || 0)} so'm</div></div>
                   <div><div className="text-xs text-muted-foreground uppercase">{t("qoldiq")}</div>
                     <div className="font-bold text-lg text-[var(--ep-red)]">{fmt(detail?.balanceDueAmount || 0)} so'm</div></div>

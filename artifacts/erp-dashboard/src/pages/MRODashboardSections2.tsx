@@ -115,8 +115,8 @@ export function BuildingTab({ buildingRooms, facilitiesLoading }: BuildingTabPro
     <div className="ep-table-scroll"><Table>
       <TableHeader>
         <TableRow className="border-none hover:bg-transparent">
-          <TH rounded="left">Xona/Zona</TH>
-          <TH>Maydon (m²)</TH>
+          <TH rounded="left">{t("xonaZona")}</TH>
+          <TH>{t("maydonM")}</TH>
           <TH>{t("sigim")}</TH>
           <TH>{t("oxirgiTekshiruv")}</TH>
           <TH>{t("status28")}</TH>

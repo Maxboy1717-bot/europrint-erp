@@ -174,7 +174,7 @@ function PriceResultPanel({ priceResult, calcForm, form, onFormChange, customers
         <Separator className="my-2" />
         <div className="space-y-1">
           <div className="flex justify-between font-semibold text-primary">
-            <span>Birlik narxi (QQS bilan):</span>
+            <span>{t("birlikNarxiQqsBilan")}</span>
             <span>{fmt(priceResult.unitPriceWithVat ?? 0)} so'm</span>
           </div>
           <div className="flex justify-between font-bold text-lg">

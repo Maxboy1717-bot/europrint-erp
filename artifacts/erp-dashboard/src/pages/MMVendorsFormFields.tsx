@@ -97,9 +97,9 @@ export function VendorFormFields({form,
         name="nameRu"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Nomi (Ruscha)</FormLabel>
+            <FormLabel>{t("nomiRuscha")}</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Название поставщика" data-testid={`${idPrefix}-vendor-name-ru`} />
+              <Input {...field} placeholder={t("untitled")} data-testid={`${idPrefix}-vendor-name-ru`} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -143,7 +143,7 @@ export function VendorFormFields({form,
             <FormItem>
               <FormLabel>{t('email1')}</FormLabel>
               <FormControl>
-                <Input {...field} type="email" placeholder="email@example.com" data-testid={`${idPrefix}-vendor-email`} />
+                <Input {...field} type="email" placeholder={t("emailExampleCom")} data-testid={`${idPrefix}-vendor-email`} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -158,7 +158,7 @@ export function VendorFormFields({form,
           name="taxId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Soliq ID (INN)</FormLabel>
+              <FormLabel>{t("soliqIdInn")}</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="123456789" data-testid={`${idPrefix}-vendor-tax-id`} />
               </FormControl>

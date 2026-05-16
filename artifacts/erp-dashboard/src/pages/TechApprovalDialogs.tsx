@@ -70,7 +70,7 @@ function CheckpointForm({
           <span>{t("barcha3TaCheckboxBelgilanmasa")}</span>
         </div>
       )}
-      <Textarea placeholder="Texnik izoh (ixtiyoriy)" value={comments} onChange={(e) => onCommentsChange(e.target.value)} data-testid="input-comments" rows={2} />
+      <Textarea placeholder={t("texnikIzohIxtiyoriy")} value={comments} onChange={(e) => onCommentsChange(e.target.value)} data-testid="input-comments" rows={2} />
     </div>
   );
 }
@@ -214,11 +214,11 @@ export function RejectDialog({
             {t("buyurtma3")}<strong>{selectedOrder?.papkaNo}</strong> — {selectedOrder?.mijozNomi}
           </p>
           <div className="p-3 bg-amber-50 rounded-md text-xs text-[var(--ep-yellow)]">
-            {t("radEtgandanSongBuyurtma")}<strong>returned_for_fix</strong> holati bilan
+            {t("radEtgandanSongBuyurtma")}<strong>{t("returnedForFix")}</strong> holati bilan
             menejerga qaytariladi va Telegram signal yuboriladi.
           </div>
           <div>
-            <Label>Rad etish sababi (majburiy, kamida 5 belgi)</Label>
+            <Label>{t("radEtishSababiMajburiyKamida5")}</Label>
             <Textarea
               placeholder={t("nimaXatoNimaTuzatishKerak")}
               value={rejectReason}

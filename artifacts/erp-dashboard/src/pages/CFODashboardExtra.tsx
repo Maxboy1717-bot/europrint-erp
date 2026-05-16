@@ -72,14 +72,14 @@ export function QuickLinksSection() {
           <Button variant="outline" className="w-full h-auto py-4 flex flex-col items-center gap-2 hover-elevate" data-testid="link-variance">
             <TrendingDown className="h-6 w-6 text-[var(--ep-red)]" />
             <span>{t("varianceTahlili")}</span>
-            <span className="text-xs text-muted-foreground">MPV · MQV · LRV · LEV · OV</span>
+            <span className="text-xs text-muted-foreground">{t("mpvMqvLrvLevOv")}</span>
           </Button>
         </Link>
         <Link href="/finance/break-even">
           <Button variant="outline" className="w-full h-auto py-4 flex flex-col items-center gap-2 hover-elevate" data-testid="link-break-even">
             <BarChart3 className="h-6 w-6 text-[var(--ep-cyan)]" />
             <span>{t('breakEven')}</span>
-            <span className="text-xs text-muted-foreground">CVP · BEP tahlili</span>
+            <span className="text-xs text-muted-foreground">{t("cvpBepTahlili")}</span>
           </Button>
         </Link>
         <Link href="/finance/pricing-tiers">
@@ -223,13 +223,13 @@ export function FinancialSummarySection({ dashboard, netProfit, netProfitTrend }
       <div className="grid gap-4 md:grid-cols-4">
         <div className="flex justify-between items-center pb-3 border-b border-border md:border-b-0 md:border-r md:pr-4">
           <div>
-            <span className="text-sm text-muted-foreground">Debitorlar (AR)</span>
+            <span className="text-sm text-muted-foreground">{t("debitorlarAr")}</span>
             <p className="font-bold text-[var(--ep-green)] text-lg">{formatCurrency(dashboard?.accountsReceivable || 0)}</p>
           </div>
         </div>
         <div className="flex justify-between items-center pb-3 border-b border-border md:border-b-0 md:border-r md:px-4">
           <div>
-            <span className="text-sm text-muted-foreground">Kreditorlar (AP)</span>
+            <span className="text-sm text-muted-foreground">{t("kreditorlarAp")}</span>
             <p className="font-bold text-[var(--ep-red)] text-lg">{formatCurrency(dashboard?.accountsPayable || 0)}</p>
           </div>
         </div>

@@ -21,7 +21,7 @@ export function StepToolTest({ toolReqs, onTraitChange, onOtherChange }: StepToo
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
         <h3 className="font-semibold text-sm text-primary">{t("blokDToolTestTalablari1")}</h3>
-        <Badge variant="outline" className="text-[9px]">A-J traitlar</Badge>
+        <Badge variant="outline" className="text-[9px]">{t("aJTraitlar")}</Badge>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 bg-card p-3 rounded-lg border border-border/40">
@@ -48,7 +48,7 @@ export function StepToolTest({ toolReqs, onTraitChange, onOtherChange }: StepToo
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
         <div className="flex flex-col gap-1">
-          <Label className="text-[11px]">IQ (min)</Label>
+          <Label className="text-[11px]">{t("iqMin")}</Label>
           <Slider
             min={1} max={10} step={1}
             value={[toolReqs.iq_min ?? 4]}
@@ -57,7 +57,7 @@ export function StepToolTest({ toolReqs, onTraitChange, onOtherChange }: StepToo
           <span className="text-center text-xs font-bold">{toolReqs.iq_min ?? 4}/10</span>
         </div>
         <div className="flex flex-col gap-1">
-          <Label className="text-[11px]">Liderlik (min)</Label>
+          <Label className="text-[11px]">{t("liderlikMin")}</Label>
           <Slider
             min={0} max={100} step={5}
             value={[toolReqs.leadership_min ?? 70]}

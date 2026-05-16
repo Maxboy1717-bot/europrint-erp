@@ -330,8 +330,8 @@ export default function CrmFunnelAnalytics() {
                     <SelectValue placeholder={t("natijaniTanlang")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="won">Yutildi (Won)</SelectItem>
-                    <SelectItem value="lost">Yo'qotildi (Lost)</SelectItem>
+                    <SelectItem value="won">{t("yutildiWon")}</SelectItem>
+                    <SelectItem value="lost">{t("yoQotildiLost")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

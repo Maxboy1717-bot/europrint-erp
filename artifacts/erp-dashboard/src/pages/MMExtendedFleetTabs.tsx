@@ -46,7 +46,7 @@ export function GPSTab({ vehicles, vehiclesLoading }: GPSTabProps) {
                 </div>
                 <div className="text-right">
                   <div className="text-xs font-medium text-[var(--ep-green)]">{v.plateNumber}</div>
-                  <div className="text-xs text-muted-foreground">GPS tracking</div>
+                  <div className="text-xs text-muted-foreground">{t("gpsTracking")}</div>
                 </div>
               </div>
             ))}
@@ -99,7 +99,7 @@ export function FuelTab({ fuelLogs, vehicles, fuelLoading }: FuelTabProps) {
         <div className="ep-table-scroll"><Table>
           <TableHeader><TableRow>
             <TableHead>{t("mashina")}</TableHead><TableHead>{t("date")}</TableHead>
-            <TableHead>Miqdor (L)</TableHead><TableHead>Narx/L</TableHead><TableHead>{t("jamiXarajat")}</TableHead>
+            <TableHead>{t("miqdorL")}</TableHead><TableHead>Narx/L</TableHead><TableHead>{t("jamiXarajat")}</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {fuelLoading ? (
@@ -243,7 +243,7 @@ export function RoutesTab() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">AI tavsiya</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("aiTavsiya")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {([
               { label: "Masofa",          value: "312 km" },

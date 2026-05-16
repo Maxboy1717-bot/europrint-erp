@@ -426,5 +426,7 @@
   },
   "activityType": {
     "email": "Электронная почта"
-  }
+  },
+  "yoQotildiLost": "Yo'qotildi (Lost)",
+  "yutildiWon": "Yutildi (Won)"
 }

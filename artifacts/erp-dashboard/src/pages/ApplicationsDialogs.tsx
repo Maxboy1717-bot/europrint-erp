@@ -88,19 +88,19 @@ export function ReviewDialog({
             </div>
 
             <div className="space-y-1">
-          <Label htmlFor="reviewNotes">Izohlar (ixtiyoriy, faqat HR ko'radi)</Label>
+          <Label htmlFor="reviewNotes">{t("izohlarIxtiyoriyFaqatHrKoRadi")}</Label>
               <Textarea
                 id="reviewNotes"
                 value={reviewNotes}
                 onChange={(e) => onReviewNotesChange(e.target.value)}
-                placeholder="HR uchun eslatmalar..."
+                placeholder={t("hrUchunEslatmalar")}
                 rows={3}
                 data-testid="textarea-review-notes"
               />
             </div>
 
             <div className="space-y-1">
-          <Label htmlFor="reviewResponse">Xodimga javob (ixtiyoriy)</Label>
+          <Label htmlFor="reviewResponse">{t("xodimgaJavobIxtiyoriy")}</Label>
               <Textarea
                 id="reviewResponse"
                 value={reviewResponse}
@@ -112,7 +112,7 @@ export function ReviewDialog({
             </div>
 
             <div className="space-y-1">
-          <Label htmlFor="assignedTo">Mas'ul xodim (ixtiyoriy)</Label>
+          <Label htmlFor="assignedTo">{t("masUlXodimIxtiyoriy")}</Label>
               <Select
                 value={assignedTo}
                 onValueChange={(value) => {

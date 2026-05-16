@@ -179,7 +179,7 @@ export function ManualInspectionForm({ open, roomCode, roomName, onClose, onSave
 
           {/* Evidence photo upload */}
           <div className="space-y-2 border-t pt-3">
-            <Label>Dalil fotosi (ixtiyoriy)</Label>
+            <Label>{t("dalilFotosiIxtiyoriy")}</Label>
             {evidencePreview ? (
               <div className="relative rounded-lg overflow-hidden border bg-gray-50">
                 <img src={evidencePreview} alt={t("dalil")} className="w-full h-36 object-cover" />
@@ -218,7 +218,7 @@ export function ManualInspectionForm({ open, roomCode, roomName, onClose, onSave
 
           {pdfUrl && (
             <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
-              <Badge variant="secondary" className="text-xs">PDF tayyorlandi</Badge>
+              <Badge variant="secondary" className="text-xs">{t("pdfTayyorlandi")}</Badge>
               <a href={pdfUrl} target="_blank" rel="noopener noreferrer"
                  className="text-xs text-[var(--ep-blue)] hover:underline">
                 {t("yuklabOlish")}

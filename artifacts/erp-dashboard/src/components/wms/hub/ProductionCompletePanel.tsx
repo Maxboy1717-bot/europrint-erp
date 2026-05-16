@@ -46,7 +46,7 @@ export function ProductionCompletePanel({ form, onChange, onComplete, isPending 
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Ishlatildi (kg)</Label>
+            <Label className="text-xs">{t("ishlatildiKg")}</Label>
             <Input
               type="number"
               placeholder="0"
@@ -58,7 +58,7 @@ export function ProductionCompletePanel({ form, onChange, onComplete, isPending 
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="space-y-1">
-            <Label className="text-xs">Chiqindi (kg)</Label>
+            <Label className="text-xs">{t("chiqindiKg")}</Label>
             <Input
               type="number"
               placeholder="0"
@@ -68,7 +68,7 @@ export function ProductionCompletePanel({ form, onChange, onComplete, isPending 
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Qaytarish (kg)</Label>
+            <Label className="text-xs">{t("qaytarishKg")}</Label>
             <Input
               type="number"
               placeholder="0"

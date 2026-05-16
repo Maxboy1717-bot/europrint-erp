@@ -42,7 +42,7 @@ export function QualityTab({ quality, basic }: QualityTabProps) {
         <KpiCard icon={AlertTriangle} label={t("karantinda")} value={String(quarantineBatches)} color={quarantineBatches > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
       </div>
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Sifat ko'rsatkichlari (Radar)</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">{t("sifatKoRsatkichlariRadar")}</CardTitle></CardHeader>
         <CardContent>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">

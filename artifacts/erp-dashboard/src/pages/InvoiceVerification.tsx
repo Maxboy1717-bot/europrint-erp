@@ -188,7 +188,7 @@ export default function InvoiceVerification() {
                   <TableHead>{t("fakturaRaqami")}</TableHead>
                   <TableHead>{t("taminotchi1")}</TableHead>
                   <TableHead>{t("summa")}</TableHead>
-                  <TableHead>PO farqi</TableHead>
+                  <TableHead>{t("poFarqi")}</TableHead>
                   <TableHead>{t("matchHolati")}</TableHead>
                   <TableHead>{t("Amallar")}</TableHead>
                 </TableRow>
@@ -222,8 +222,8 @@ export default function InvoiceVerification() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("faktura")}</TableHead>
-                  <TableHead>PO summa</TableHead>
-                  <TableHead>GR summa</TableHead>
+                  <TableHead>{t("poSumma")}</TableHead>
+                  <TableHead>{t("grSumma")}</TableHead>
                   <TableHead>{t("fakturaSumma")}</TableHead>
                   <TableHead>{t("narxFarqi")}</TableHead>
                   <TableHead>{t("natija")}</TableHead>

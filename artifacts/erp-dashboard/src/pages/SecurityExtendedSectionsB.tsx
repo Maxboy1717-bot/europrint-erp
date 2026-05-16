@@ -111,7 +111,7 @@ export function AttendanceSection({ attendanceRecords, attendanceLoading, dailyS
   const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-foreground">Xodimlar Davomati (Bugun)</h2>
+      <h2 className="text-xl font-bold text-foreground">{t("xodimlarDavomatiBugun")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {([
           { l: "Hozir ishda", v: dailySummary?.present ?? (Array.isArray(attendanceRecords) ? attendanceRecords.filter((r: AttendanceRecord) => r.checkIn && !r.checkOut).length : 0), c: "text-[var(--ep-green)]" },

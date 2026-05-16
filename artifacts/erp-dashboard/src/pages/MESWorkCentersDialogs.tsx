@@ -61,7 +61,7 @@ export function CreateWCDialog({
             </Select>
           </div>
           <div className="space-y-1">
-          <Label>Quvvat (soat/smena)</Label>
+          <Label>{t("quvvatSoatSmena")}</Label>
             <Input
               type="number"
               value={form.capacity}

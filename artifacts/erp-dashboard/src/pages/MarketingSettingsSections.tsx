@@ -78,7 +78,7 @@ export function WebhookUrlsSection({ webhookUrl }: WebhookUrlsSectionProps) {
         </CardHeader>
         <CardContent className="p-6 space-y-6">
           <div className="space-y-1">
-          <Label className="text-sm text-muted-foreground font-bold">Meta (Instagram/Facebook)</Label>
+          <Label className="text-sm text-muted-foreground font-bold">{t("metaInstagramFacebook")}</Label>
             <div className="flex gap-3">
               <Input readOnly value={`${webhookUrl}/meta`} className="bg-background border-border font-mono text-xs h-11" data-testid="input-webhook-meta" />
               <Button variant="outline" className="border-border text-foreground font-semibold h-11" onClick={() => { navigator.clipboard.writeText(`${webhookUrl}/meta`); toast({ title: "Nusxalandi" }); }}>{t("nusxa")}</Button>

@@ -129,7 +129,7 @@ export default function MESDashboard() {
 
       {/* ── SECTION 1: Hozirgi holat ─────────────────────────── */}
       <section>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Hozirgi holat (Real-time)</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("hozirgiHolatRealTime")}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <KpiCard title="OEE" value={`${stats?.oee?.overall || 0}%`}
             sub="Overall Equipment" icon={Gauge} color={oeeColor(oeeGlobal)} loading={sLoad} />

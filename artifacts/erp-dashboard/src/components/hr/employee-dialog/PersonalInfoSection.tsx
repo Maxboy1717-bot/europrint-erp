@@ -79,7 +79,7 @@ export function PersonalInfoSection({ form }: FormSectionProps) {
                   <SelectItem value="turmush qurmagan">{t("turmushQurmagan")}</SelectItem>
                   <SelectItem value="turmush qurgan">{t("turmushQurgan")}</SelectItem>
                   <SelectItem value="ajrashgan">{t("ajrashgan")}</SelectItem>
-                  <SelectItem value="beva/beva ayol">Beva/Beva ayol</SelectItem>
+                  <SelectItem value="beva/beva ayol">{t("bevaBevaAyol")}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

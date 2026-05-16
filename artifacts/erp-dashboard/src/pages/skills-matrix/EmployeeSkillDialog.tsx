@@ -75,7 +75,7 @@ export function EmployeeSkillDialog({ open, onOpenChange, form, employees, skill
             )} />
             <FormField control={form.control} name="level" render={({ field }) => (
               <FormItem>
-                <FormLabel>Daraja (1-5)</FormLabel>
+                <FormLabel>{t("daraja15")}</FormLabel>
                 <Select onValueChange={(v) => field.onChange(parseInt(v))} value={field.value.toString()}>
                   <FormControl>
                     <SelectTrigger data-testid="select-level" className="h-9"><SelectValue placeholder={t("darajaniTanlang")} /></SelectTrigger>
@@ -93,7 +93,7 @@ export function EmployeeSkillDialog({ open, onOpenChange, form, employees, skill
             )} />
             <FormField control={form.control} name="notes" render={({ field }) => (
               <FormItem>
-                <FormLabel>Izoh (ixtiyoriy)</FormLabel>
+                <FormLabel>{t("izohIxtiyoriy")}</FormLabel>
                 <FormControl><Textarea {...field} placeholder={t("qoshimchaMalumot1")} data-testid="input-notes" /></FormControl>
                 <FormMessage />
               </FormItem>

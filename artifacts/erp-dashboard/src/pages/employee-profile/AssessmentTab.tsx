@@ -258,7 +258,7 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
                 </div>
               )}
               <div className="space-y-1">
-          <Label>Baho (1-5)</Label>
+          <Label>{t("baho15")}</Label>
                 <div className="flex items-center gap-2">
                   {([1, 2, 3, 4, 5]).map((s) => (
                     <button

@@ -152,7 +152,7 @@ export function SickLeaveDialog({
               <Input value={form.documentNumber} onChange={(e) => setForm({ ...form, documentNumber: e.target.value })} placeholder={t("varaqRaqami")} data-testid="input-sick-document" />
             </div>
             <div className="space-y-1">
-          <Label>To'lov foizi (%)</Label>
+          <Label>{t("toLovFoizi")}</Label>
               <Input type="number" value={form.paymentPercent} onChange={(e) => setForm({ ...form, paymentPercent: e.target.value })} placeholder="100" data-testid="input-sick-payment" />
             </div>
           </div>
@@ -221,15 +221,15 @@ export function BusinessTripDialog({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1">
-          <Label>Kunlik xarajat (so'm)</Label>
+          <Label>{t("kunlikXarajatSoM")}</Label>
               <Input type="number" value={form.dailyAllowance} onChange={(e) => setForm({ ...form, dailyAllowance: e.target.value })} placeholder="150000" data-testid="input-trip-daily" />
             </div>
             <div className="space-y-1">
-          <Label>Transport (so'm)</Label>
+          <Label>{t("transportSoM")}</Label>
               <Input type="number" value={form.transportCost} onChange={(e) => setForm({ ...form, transportCost: e.target.value })} placeholder="500000" data-testid="input-trip-transport" />
             </div>
             <div className="space-y-1">
-          <Label>Yashash (so'm)</Label>
+          <Label>{t("yashashSoM")}</Label>
               <Input type="number" value={form.accommodationCost} onChange={(e) => setForm({ ...form, accommodationCost: e.target.value })} placeholder="300000" data-testid="input-trip-accommodation" />
             </div>
           </div>

@@ -117,7 +117,7 @@ export default function MRODashboard() {
           <TabsTrigger value="requests"  data-testid="tab-requests"  className="data-[state=active]:bg-card">{t("sorovlar")}</TabsTrigger>
           <TabsTrigger value="equipment" data-testid="tab-equipment" className="data-[state=active]:bg-card">{t("uskunalar")}</TabsTrigger>
           <TabsTrigger value="utilities" data-testid="tab-utilities" className="data-[state=active]:bg-card">{t("kommunal")}</TabsTrigger>
-          <TabsTrigger value="building"  data-testid="tab-building"  className="data-[state=active]:bg-card">Bino/Xonalar</TabsTrigger>
+          <TabsTrigger value="building"  data-testid="tab-building"  className="data-[state=active]:bg-card">{t("binoXonalar")}</TabsTrigger>
           <TabsTrigger value="cleaning"  data-testid="tab-cleaning"  className="data-[state=active]:bg-card">{t("tozalash")}</TabsTrigger>
           <TabsTrigger value="uniforms"  data-testid="tab-uniforms"  className="data-[state=active]:bg-card">{t("forma")}</TabsTrigger>
         </TabsList>

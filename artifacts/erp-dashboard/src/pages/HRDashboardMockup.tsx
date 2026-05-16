@@ -224,7 +224,7 @@ export default function HRDashboardMockup() {
         </div>
         <div className="card-yellow">
           <div className="text-3xl font-bold">{stats.newHires30d ?? 0}</div>
-          <div className="text-xs opacity-80 mt-1">Yangi qo'shildi (30 kun)</div>
+          <div className="text-xs opacity-80 mt-1">{t("yangiQoShildi30Kun")}</div>
           <div className="text-xs mt-3">{t("onboardingDavomEtmoqda")}</div>
         </div>
         <div className="card-teal">

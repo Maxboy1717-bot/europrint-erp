@@ -240,7 +240,7 @@ export default function SDOverviewDashboard() {
               </h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-foreground">Yutilgan leadlar (Conversion Rate)</span>
+                  <span className="text-sm text-foreground">{t("yutilganLeadlarConversionRate")}</span>
                   <span className="text-lg font-bold text-foreground">
                     {overview?.monthlyOrders && Object.values(funnel).reduce((a: number, b: number) => a + b, 0) > 0
                       ? Math.round((Number(funnel.won || 0) / Object.values(funnel).reduce((a: number, b: number) => a + b, 0)) * 100)

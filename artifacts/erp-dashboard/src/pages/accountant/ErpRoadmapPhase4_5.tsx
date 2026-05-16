@@ -50,7 +50,7 @@ export function ErpRoadmapPhase4({ t }: Props) {
               <FileText className="h-5 w-5 text-[var(--ep-purple)]" />
               <span className="font-medium">{t("accrualBuxgalteriya")}</span>
             </div>
-            <p className="text-sm text-muted-foreground">Hisoblash usuli (minimal darajada)</p>
+            <p className="text-sm text-muted-foreground">{t("hisoblashUsuliMinimalDarajada")}</p>
           </CardContent>
         </Card>
 

@@ -80,7 +80,7 @@ export function ExitInterviewForm({ caseId, onDone }: ExitInterviewFormProps) {
               onValueChange={v => setAnswers(a => ({ ...a, [q.key]: v }))}
             >
               <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Baho tanlang (1-5)" />
+                <SelectValue placeholder={t("bahoTanlang15")} />
               </SelectTrigger>
               <SelectContent>
                 {(["1", "2", "3", "4", "5"]).map(v => (
@@ -101,7 +101,7 @@ export function ExitInterviewForm({ caseId, onDone }: ExitInterviewFormProps) {
                 <SelectValue placeholder={t("javobniTanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="yes">Ha, tavsiya qilaman</SelectItem>
+                <SelectItem value="yes">{t("haTavsiyaQilaman")}</SelectItem>
                 <SelectItem value="maybe">{t("balki")}</SelectItem>
                 <SelectItem value="no">{t("yoqTavsiyaQilmayman")}</SelectItem>
               </SelectContent>

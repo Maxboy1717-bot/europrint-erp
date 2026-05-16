@@ -43,7 +43,7 @@ export function QuotationFormFields({ form, companies }: QuotationFormFieldsProp
           name="customerId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Mijoz (kompaniya)</FormLabel>
+              <FormLabel>{t("mijozKompaniya")}</FormLabel>
               <Select
                 value={field.value}
                 onValueChange={(value) => {
@@ -149,9 +149,9 @@ export function QuotationFormFields({ form, companies }: QuotationFormFieldsProp
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="prepaid">{t("oldindanTolov")}</SelectItem>
-                  <SelectItem value="net14">14 kun ichida</SelectItem>
-                  <SelectItem value="net30">30 kun ichida</SelectItem>
-                  <SelectItem value="net60">60 kun ichida</SelectItem>
+                  <SelectItem value="net14">{t("k14KunIchida")}</SelectItem>
+                  <SelectItem value="net30">{t("k30KunIchida")}</SelectItem>
+                  <SelectItem value="net60">{t("k60KunIchida")}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

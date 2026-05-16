@@ -72,7 +72,7 @@ export function BudgetVarianceTab() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Rejalashtirilgan (UZS)</Label>
+            <Label>{t("rejalashtirilganUzs")}</Label>
             <Input
               type="number"
               value={form.budgeted}
@@ -81,7 +81,7 @@ export function BudgetVarianceTab() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Haqiqiy (UZS)</Label>
+            <Label>{t("haqiqiyUzs")}</Label>
             <Input
               type="number"
               value={form.actual}
@@ -100,7 +100,7 @@ export function BudgetVarianceTab() {
             </div>
           )}
           <div className="col-span-2 space-y-1.5">
-            <Label>Qo'shimcha kontekst (ixtiyoriy)</Label>
+            <Label>{t("qoShimchaKontekstIxtiyoriy")}</Label>
             <Input
               value={form.context}
               onChange={e => setForm(p => ({ ...p, context: e.target.value }))}
@@ -202,7 +202,7 @@ export function InvoiceTab() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <Label>Yetkazuvchi (vendor)</Label>
+          <Label>{t("yetkazuvchiVendor")}</Label>
           <Input
             value={form.vendor}
             onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))}
@@ -218,7 +218,7 @@ export function InvoiceTab() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Miqdor (UZS)</Label>
+          <Label>{t("miqdorUzs")}</Label>
           <Input
             type="number"
             value={form.amount}

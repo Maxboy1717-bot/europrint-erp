@@ -42,7 +42,7 @@ export default function StrategicDashboard() {
         <Target className="h-7 w-7 text-[var(--ep-primary)]" />
         <div>
           <h1 className="text-2xl font-bold">{t("strategikAi")}</h1>
-          <p className="text-sm text-muted-foreground">6 oylik bashorat + scenario simulator + investitsiya tavsiyalari</p>
+          <p className="text-sm text-muted-foreground">{t("k6OylikBashoratScenarioSimulatorInvestitsiya")}</p>
         </div>
       </header>
 
@@ -75,7 +75,7 @@ export default function StrategicDashboard() {
       <Card className="p-5">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="h-4 w-4 text-[var(--ep-blue)]" />
-          <h3 className="font-bold text-sm">Scenario simulator (AI tahlil)</h3>
+          <h3 className="font-bold text-sm">{t("scenarioSimulatorAiTahlil")}</h3>
         </div>
         <textarea
           className="w-full border rounded-md p-3 text-sm min-h-[80px]"
@@ -89,7 +89,7 @@ export default function StrategicDashboard() {
         </Button>
         {scenarioResult && (
           <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm whitespace-pre-wrap">
-            <div className="text-xs font-bold text-[var(--ep-blue)] uppercase mb-1">AI tahlil natijasi</div>
+            <div className="text-xs font-bold text-[var(--ep-blue)] uppercase mb-1">{t("aiTahlilNatijasi")}</div>
             <p>{scenarioResult}</p>
           </div>
         )}
@@ -99,7 +99,7 @@ export default function StrategicDashboard() {
       <Card className="p-5">
         <div className="flex items-center gap-2 mb-3">
           <Lightbulb className="h-4 w-4 text-[var(--ep-yellow)]" />
-          <h3 className="font-bold text-sm">Investitsiya tavsiyalari (prioritet bo'yicha)</h3>
+          <h3 className="font-bold text-sm">{t("investitsiyaTavsiyalariPrioritetBoYicha")}</h3>
         </div>
         {investment.isLoading ? <EPLoader /> : (
           <div className="space-y-2">

@@ -129,7 +129,7 @@ function SalaryTypeLabel({ salaryType }: { salaryType: string }) {
   if (salaryType === "piecework" || salaryType === "ishbay") {
     return (
       <div>
-        <p className="font-medium">Akkord (Ishbay)</p>
+        <p className="font-medium">{t("akkordIshbay")}</p>
         <p className="text-xs text-muted-foreground">{t("miqdorTarifFormulasi")}</p>
       </div>
     );
@@ -175,7 +175,7 @@ export function WorkConditionsCard({ employee, t, tCommon }: SectionProps) {
             <p className="font-medium">{employee.shift || tCommon("notSpecified")}</p>
           </div>
           <div className="col-span-2">
-            <p className="text-sm text-muted-foreground">Sex / Zona</p>
+            <p className="text-sm text-muted-foreground">{t("sexZona")}</p>
             <div className="flex items-center gap-2 mt-1">
               <Building2 className="h-4 w-4 text-muted-foreground" />
               <p className="font-medium">{zoneLabel}</p>

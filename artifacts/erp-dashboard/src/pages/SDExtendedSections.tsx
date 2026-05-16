@@ -159,7 +159,7 @@ export function QuotaPanel({ managerStats }: QuotaPanelProps) {
             <TableHeader>
               <TableRow className="border-border hover:bg-transparent">
                 <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("manager")}</TableHead>
-                <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">Kvota (so'm)</TableHead>
+                <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("kvotaSoM")}</TableHead>
                 <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("Haqiqiy")}</TableHead>
                 <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">{t("farq")}</TableHead>
                 <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase tracking-wider h-12">%</TableHead>

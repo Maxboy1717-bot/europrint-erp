@@ -107,7 +107,7 @@ export default function PosStockPage() {
                   type="number"
                   value={adjustForm.adjustment}
                   onChange={(e) => setAdjustForm((f) => ({ ...f, adjustment: e.target.value }))}
-                  placeholder="10 yoki -5"
+                  placeholder={t("k10Yoki5")}
                 />
               </div>
               <div className="space-y-1">

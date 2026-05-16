@@ -25,7 +25,7 @@ export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: 
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <Label className="text-xs mb-1 block">Mavjud kandidatlar soni (taxminiy)</Label>
+          <Label className="text-xs mb-1 block">{t("mavjudKandidatlarSoniTaxminiy")}</Label>
           <Input
             type="number"
             min={0}
@@ -40,7 +40,7 @@ export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: 
         </div>
 
         <div>
-          <Label className="text-xs mb-1 block">Javob berish muddati (kun)</Label>
+          <Label className="text-xs mb-1 block">{t("javobBerishMuddatiKun")}</Label>
           <Input
             type="number"
             min={0}
@@ -55,7 +55,7 @@ export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: 
         </div>
 
         <div>
-          <Label className="text-xs mb-1 block">Maosh kutilmasi (min, so'm)</Label>
+          <Label className="text-xs mb-1 block">{t("maoshKutilmasiMinSoM")}</Label>
           <Input
             type="number"
             min={0}
@@ -70,7 +70,7 @@ export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: 
         </div>
 
         <div>
-          <Label className="text-xs mb-1 block">Maosh kutilmasi (max, so'm)</Label>
+          <Label className="text-xs mb-1 block">{t("maoshKutilmasiMaxSoM")}</Label>
           <Input
             type="number"
             min={0}
@@ -85,7 +85,7 @@ export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: 
         </div>
 
         <div className="col-span-2">
-          <Label className="text-xs mb-1 block">Ko'nikmalar darajasi (o'rtacha)</Label>
+          <Label className="text-xs mb-1 block">{t("koNikmalarDarajasiORtacha")}</Label>
           <div className="flex gap-2">
             {(["junior", "middle", "senior"] as const).map(level => (
               <button

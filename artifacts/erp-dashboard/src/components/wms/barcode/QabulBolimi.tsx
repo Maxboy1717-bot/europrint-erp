@@ -118,7 +118,7 @@ export function QabulBolimi() {
             <Input data-testid="input-quantity" type="number" step="0.1" placeholder="0.0" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} />
           </div>
           <div>
-            <Label className="text-xs">Tarozi (haqiqiy og'irlik)</Label>
+            <Label className="text-xs">{t("taroziHaqiqiyOgIrlik")}</Label>
             <Input data-testid="input-actual-weight" type="number" step="0.1" placeholder={t("tarozi")} value={formData.actualWeight} onChange={(e) => setFormData({ ...formData, actualWeight: e.target.value })} />
           </div>
         </div>
@@ -149,7 +149,7 @@ export function QabulBolimi() {
             <Input data-testid="input-po" placeholder="PO-..." value={formData.poNumber} onChange={(e) => setFormData({ ...formData, poNumber: e.target.value })} />
           </div>
           <div>
-            <Label className="text-xs">Narx (birlik)</Label>
+            <Label className="text-xs">{t("narxBirlik")}</Label>
             <Input data-testid="input-cost" type="number" step="0.01" placeholder="0.00" value={formData.unitCost} onChange={(e) => setFormData({ ...formData, unitCost: e.target.value })} />
           </div>
         </div>

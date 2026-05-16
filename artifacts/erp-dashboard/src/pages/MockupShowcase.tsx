@@ -23,7 +23,7 @@ export default function MockupShowcase() {
   return (
     <div className="ep-content space-y-6">
       <div>
-        <div className="text-xs text-[var(--ep-muted)] mb-1">Demo / Style Guide</div>
+        <div className="text-xs text-[var(--ep-muted)] mb-1">{t("demoStyleGuide")}</div>
         <h1 className="text-xl font-semibold m-0">{t("mockupKomponentlarShowcase")}</h1>
         <p className="text-sm text-[var(--ep-muted)] mt-1">
           {t("smarthrMockupUslubidagiBarchaQayta")}
@@ -38,7 +38,7 @@ export default function MockupShowcase() {
 
       {/* KPI Cards */}
       <section>
-        <h2 className="text-sm font-semibold uppercase text-[var(--ep-muted)] mb-2">2. KPI Cards (8 rang)</h2>
+        <h2 className="text-sm font-semibold uppercase text-[var(--ep-muted)] mb-2">{t("k2KpiCards8Rang")}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <KpiCardMockup icon={<Users className="h-5 w-5" />} iconColor="orange" label={t("xodimlar")} value={154} link="Ko'rish" />
           <KpiCardMockup icon={<UserCheck className="h-5 w-5" />} iconColor="green" label={t("active")} value={142} link="Ro'yxat" />
@@ -152,7 +152,7 @@ export default function MockupShowcase() {
           </div>
           <div className="card-yellow">
             <div className="text-3xl font-bold">8</div>
-            <div className="text-xs opacity-80 mt-1">Yangi (30 kun)</div>
+            <div className="text-xs opacity-80 mt-1">{t("yangi30Kun")}</div>
             <div className="text-xs mt-3">{t("onboardingDavomEtmoqda")}</div>
           </div>
           <div className="card-teal">

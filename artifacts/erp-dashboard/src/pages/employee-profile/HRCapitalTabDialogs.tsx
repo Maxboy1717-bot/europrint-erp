@@ -29,15 +29,15 @@ export function HRCapitalEditForm({ form, onChange }: HRCapitalEditFormProps) {
             <SelectValue placeholder={t("tanlang1")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Flagman">Flagman (Yetakchi)</SelectItem>
-            <SelectItem value="Performer">Performer (Bajaruvchi)</SelectItem>
-            <SelectItem value="Troublemaker">Troublemaker (Muammoli)</SelectItem>
+            <SelectItem value="Flagman">{t("flagmanYetakchi")}</SelectItem>
+            <SelectItem value="Performer">{t("performerBajaruvchi")}</SelectItem>
+            <SelectItem value="Troublemaker">{t("troublemakerMuammoli")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-1">
-          <Label>Tool Test natijasi (A-J)</Label>
+          <Label>{t("toolTestNatijasiAJ")}</Label>
         <Select
           value={form.toolTestScore}
           onValueChange={(v) => onChange({ ...form, toolTestScore: v })}
@@ -105,7 +105,7 @@ export function HRCapitalEditForm({ form, onChange }: HRCapitalEditFormProps) {
         <Input
           value={form.notes}
           onChange={(e) => onChange({ ...form, notes: e.target.value })}
-          placeholder="HR izohlar..."
+          placeholder={t("hrIzohlar")}
           data-testid="input-hr-capital-notes"
         />
       </div>

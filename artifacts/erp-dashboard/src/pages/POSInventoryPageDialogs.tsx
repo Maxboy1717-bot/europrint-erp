@@ -63,9 +63,9 @@ export function AdjustDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="in">Kirim (qo'shish)</SelectItem>
-                  <SelectItem value="out">Chiqim (ayirish)</SelectItem>
-                  <SelectItem value="adjustment">Tuzatish (aniq qiymat)</SelectItem>
+                  <SelectItem value="in">{t("kirimQoShish")}</SelectItem>
+                  <SelectItem value="out">{t("chiqimAyirish")}</SelectItem>
+                  <SelectItem value="adjustment">{t("tuzatishAniqQiymat")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -84,7 +84,7 @@ export function AdjustDialog({
             </div>
 
             <div className="space-y-1">
-          <Label>Sabab (ixtiyoriy)</Label>
+          <Label>{t("sababIxtiyoriy")}</Label>
               <Textarea
                 value={adjustReason}
                 onChange={e => onReasonChange(e.target.value)}

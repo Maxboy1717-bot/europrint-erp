@@ -106,7 +106,7 @@ export function OperatorProductionBlock({ employeeId, }: OperatorProductionBlock
             </p>
           </div>
           <div className="flex flex-col gap-1">
-            <p className="text-xs text-muted-foreground">Me&apos;yor / Holat</p>
+            <p className="text-xs text-muted-foreground">{t("meAposYorHolat")}</p>
             <p className="font-semibold flex items-center gap-1">
               <Gauge className="h-4 w-4 text-muted-foreground" />
               {target.toLocaleString()} dona/kun

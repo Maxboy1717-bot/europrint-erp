@@ -155,23 +155,23 @@ export function WelcomeEventsTab({ events, users: _users }: WelcomeEventsTabProp
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="title">Nomi (UZ)</Label>
+                    <Label htmlFor="title">{t("nomiUz")}</Label>
                     <Input id="title" {...form.register("title")} data-testid="input-title" />
                     {form.formState.errors.title && <p className="text-sm text-destructive mt-1">{form.formState.errors.title.message}</p>}
                   </div>
                   <div>
-                    <Label htmlFor="titleRu">Nomi (RU)</Label>
+                    <Label htmlFor="titleRu">{t("nomiRu")}</Label>
                     <Input id="titleRu" {...form.register("titleRu")} data-testid="input-title-ru" />
                     {form.formState.errors.titleRu && <p className="text-sm text-destructive mt-1">{form.formState.errors.titleRu.message}</p>}
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="description">Tavsif (UZ)</Label>
+                    <Label htmlFor="description">{t("tavsifUz")}</Label>
                     <Textarea id="description" {...form.register("description")} rows={3} data-testid="input-description" />
                   </div>
                   <div>
-                    <Label htmlFor="descriptionRu">Tavsif (RU)</Label>
+                    <Label htmlFor="descriptionRu">{t("tavsifRu")}</Label>
                     <Textarea id="descriptionRu" {...form.register("descriptionRu")} rows={3} data-testid="input-description-ru" />
                   </div>
                 </div>

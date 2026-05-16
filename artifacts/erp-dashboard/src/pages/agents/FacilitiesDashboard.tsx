@@ -41,7 +41,7 @@ export default function FacilitiesDashboard() {
 
       {/* Kommunal */}
       <div>
-        <h3 className="text-xs font-bold uppercase text-muted-foreground mb-2">Kommunal to'lovlar (joriy oy)</h3>
+        <h3 className="text-xs font-bold uppercase text-muted-foreground mb-2">{t("kommunalToLovlarJoriyOy")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <UtilityCard label={t("elektr")} amount={utility.data?.electricity ?? 0} icon={<Zap className="h-5 w-5 text-[var(--ep-yellow)]" />} loading={utility.isLoading} />
           <UtilityCard label={t("gaz")}    amount={utility.data?.gas ?? 0}         icon={<Flame className="h-5 w-5 text-[var(--ep-primary)]" />} loading={utility.isLoading} />

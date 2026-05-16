@@ -59,7 +59,7 @@ export function VisitorDialog({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-          <Label className="text-foreground">Mezbon (xodim)</Label>
+          <Label className="text-foreground">{t("mezbonXodim")}</Label>
               <Input
                 {...form.register("host")}
                 placeholder={t("kimBilanUchrashuv")}

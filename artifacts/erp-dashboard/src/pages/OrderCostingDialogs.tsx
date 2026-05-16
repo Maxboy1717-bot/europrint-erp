@@ -75,7 +75,7 @@ export function CreateCostingDialog({
                 name="materialCost"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Material Xarajati (UZS)</FormLabel>
+                    <FormLabel>{t("materialXarajatiUzs")}</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} data-testid="input-material-cost" />
                     </FormControl>
@@ -88,7 +88,7 @@ export function CreateCostingDialog({
                 name="laborCost"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mehnat Xarajati (UZS)</FormLabel>
+                    <FormLabel>{t("mehnatXarajatiUzs")}</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} data-testid="input-labor-cost" />
                     </FormControl>
@@ -101,7 +101,7 @@ export function CreateCostingDialog({
                 name="overheadCost"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ustama Xarajat (UZS)</FormLabel>
+                    <FormLabel>{t("ustamaXarajatUzs")}</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} data-testid="input-overhead-cost" />
                     </FormControl>
@@ -114,7 +114,7 @@ export function CreateCostingDialog({
                 name="energyCost"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Energiya Xarajati (UZS)</FormLabel>
+                    <FormLabel>{t("energiyaXarajatiUzs")}</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} data-testid="input-energy-cost" />
                     </FormControl>
@@ -127,7 +127,7 @@ export function CreateCostingDialog({
                 name="wasteCost"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Isrof Xarajati (UZS)</FormLabel>
+                    <FormLabel>{t("isrofXarajatiUzs")}</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} data-testid="input-waste-cost" />
                     </FormControl>
@@ -140,7 +140,7 @@ export function CreateCostingDialog({
                 name="sellingPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sotish Narxi (UZS)</FormLabel>
+                    <FormLabel>{t("sotishNarxiUzs")}</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} data-testid="input-selling-price" />
                     </FormControl>

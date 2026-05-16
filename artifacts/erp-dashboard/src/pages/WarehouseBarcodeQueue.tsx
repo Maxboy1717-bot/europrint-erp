@@ -100,9 +100,9 @@ export default function WarehouseBarcodeQueue() {
       <div className="flex items-center gap-3 mb-6">
         <Barcode className="h-8 w-8 text-[var(--ep-blue)]" />
         <div className="flex-1">
-          <div className="text-xs text-gray-500 font-semibold">BARKOD CHOP ETISH NAVBATI</div>
+          <div className="text-xs text-gray-500 font-semibold">{t("barkodChopEtishNavbati")}</div>
           <h1 className="text-2xl font-bold">{t("autoYaratilganBarkodlar")}</h1>
-          <p className="text-sm text-gray-500">EXTERNAL_IN harakatlari uchun avtomatik yaratilgan CODE128 barkodlari</p>
+          <p className="text-sm text-gray-500">{t("externalInHarakatlariUchunAvtomatikYaratilgan")}</p>
         </div>
         <Button onClick={load} variant="outline">{t("yangilash")}</Button>
       </div>

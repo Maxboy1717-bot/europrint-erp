@@ -97,7 +97,7 @@ export default function MarketingPR() {
               <div className="space-y-1.5"><Label className="text-muted-foreground">{t('mediaOav')}</Label><Input className="bg-background border-border" value={form.media} onChange={(e) => setForm({ ...form, media: e.target.value })} placeholder={t("gazetaTvOnline")} /></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5"><Label className="text-muted-foreground">{t("date")}</Label><Input className="bg-background border-border" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-muted-foreground">Havola (URL)</Label><Input className="bg-background border-border" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://..." /></div>
+                <div className="space-y-1.5"><Label className="text-muted-foreground">{t("havolaUrl")}</Label><Input className="bg-background border-border" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://..." /></div>
               </div>
               <Button onClick={handleSubmit} disabled={!form.title || !form.type || createMutation.isPending || updateMutation.isPending} className="w-full bg-primary text-white font-bold h-11" data-testid="button-submit-pr">{editId ? "Saqlash" : "Yaratish"}</Button>
             </div>

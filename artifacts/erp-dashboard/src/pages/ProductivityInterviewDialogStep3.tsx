@@ -17,7 +17,7 @@ export function Step3Competency({ competency, onChange }: Step3Props) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
         <h3 className="font-semibold text-sm text-primary">{t("bolim3Kompetensiya")}</h3>
-        <Badge variant="outline" className="text-[9px]">3 savol + amaliy topshiriq</Badge>
+        <Badge variant="outline" className="text-[9px]">{t("k3SavolAmaliyTopshiriq")}</Badge>
       </div>
 
       <div>
@@ -66,7 +66,7 @@ export function Step3Competency({ competency, onChange }: Step3Props) {
         <Textarea
           rows={3}
           className="text-xs"
-          placeholder="Nomzodga berilgan amaliy topshiriq va uning bajarish jarayoni / natijasi..."
+          placeholder={t("nomzodgaBerilganAmaliyTopshiriqVaUning")}
           value={competency.practical_task}
           onChange={e => onChange("practical_task", e.target.value)}
         />

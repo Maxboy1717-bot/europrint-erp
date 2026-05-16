@@ -26,7 +26,7 @@ export function StepExperience({ portret, onChange }: StepExperienceProps) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-1">
         <h3 className="font-semibold text-sm text-primary">{t("blokETajribaVaBilim")}</h3>
-        <Badge variant="outline" className="text-[9px]">5 ta savol</Badge>
+        <Badge variant="outline" className="text-[9px]">{t("k5TaSavol")}</Badge>
       </div>
 
       <div>
@@ -88,9 +88,9 @@ export function StepExperience({ portret, onChange }: StepExperienceProps) {
       </div>
 
       <div>
-        <Label className="text-xs mb-1 block">18. Kasb ko'nikmalari (dasturlar, tillar)</Label>
+        <Label className="text-xs mb-1 block">{t("k18KasbKoNikmalariDasturlarTillar")}</Label>
         <Textarea
-          placeholder="Masalan: Excel (VLOOKUP), 1C, Ingliz tili (B2), Photoshop..."
+          placeholder={t("masalanExcelVlookup1cInglizTili")}
           rows={2}
           value={portret.professional_skills ?? ""}
           onChange={e => p("professional_skills")(e.target.value)}
@@ -98,7 +98,7 @@ export function StepExperience({ portret, onChange }: StepExperienceProps) {
       </div>
 
       <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-        <Label className="text-xs mb-2 block text-primary font-semibold">Xodim turi (Maqsadli)</Label>
+        <Label className="text-xs mb-2 block text-primary font-semibold">{t("xodimTuriMaqsadli")}</Label>
         <div className="flex gap-2">
           <button
             onClick={() => p("target_worker_type")("FLAGMAN")}

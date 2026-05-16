@@ -75,7 +75,7 @@ export function AuditLogDetailDialog({ selectedLog, onClose }: AuditLogDetailDia
 
           {selectedLog.diffJson && (
             <div>
-              <h4 className="font-medium mb-2">O'zgarishlar (Diff):</h4>
+              <h4 className="font-medium mb-2">{t("oZgarishlarDiff")}</h4>
               <div className="space-y-1">{formatDiff(selectedLog.diffJson)}</div>
             </div>
           )}

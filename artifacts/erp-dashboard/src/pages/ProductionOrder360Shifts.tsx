@@ -126,15 +126,15 @@ export default function ProductionOrder360Shifts({
               {(sess.availability != null || sess.performance != null || sess.quality != null) && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2 text-xs border-t pt-2">
                   <div>
-                    <p className="text-muted-foreground">A (mavjudlik)</p>
+                    <p className="text-muted-foreground">{t("aMavjudlik")}</p>
                     <p className="font-medium">{fmt(Number(sess.availability) * 100, 1)}%</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">P (unumdorlik)</p>
+                    <p className="text-muted-foreground">{t("pUnumdorlik")}</p>
                     <p className="font-medium">{fmt(Number(sess.performance) * 100, 1)}%</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Q (sifat)</p>
+                    <p className="text-muted-foreground">{t("qSifat")}</p>
                     <p className="font-medium">{fmt(Number(sess.quality) * 100, 1)}%</p>
                   </div>
                 </div>
