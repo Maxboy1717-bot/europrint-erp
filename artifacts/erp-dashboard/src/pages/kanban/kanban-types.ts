@@ -18,6 +18,7 @@ import type {
   TaskTimeTrack,
 } from "@shared/schema";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface ResultWithFiles extends TaskResult {
   creator?: { id: string; fullName: string };
   files: TaskResultFile[];
@@ -26,7 +27,7 @@ export interface ResultWithFiles extends TaskResult {
 export const T = {
   uz: {
     views: { kanban: "Kanban", list: "Ro'yxat", deadlines: "Muddatlar", myPlan: "Mening rejam", calendar: "Kalendar", gantt: "Gant", dashboard: "Dashboard", allocation: "Resurslar" },
-    flows: { title: "Potoklar", addFlow: "Poток qo'shish", name: "Nomi", type: "Turi", users: "Foydalanuvchilar", roundRobin: "Navbat bilan", leastBusy: "Eng kam bandga", random: "Tasodifiy", noFlows: "Potoklar yo'q", selectUsers: "Foydalanuvchilarni tanlang", assign: "Tayinlash" },
+    flows: { title: tLabel('kanban.kanban-.potoklar', "Potoklar"), addFlow: "Poток qo'shish", name: tLabel('kanban.kanban-.nomi', "Nomi"), type: "Turi", users: "Foydalanuvchilar", roundRobin: "Navbat bilan", leastBusy: "Eng kam bandga", random: "Tasodifiy", noFlows: "Potoklar yo'q", selectUsers: "Foydalanuvchilarni tanlang", assign: "Tayinlash" },
     allocation: { title: "Resurs taqsimoti", employee: "Xodim", today: "Bugun", thisWeek: "Bu hafta", thisMonth: "Bu oy", total: "Jami", noData: "Ma'lumotlar yo'q" },
     create: { task: "Vazifa", project: "Loyiha", template: "Shablon", createNew: "Yaratish" },
     roles: { all: "Barcha rollar", executor: "Men ijrochi", creator: "Men qo'yuvchi sifatida" },
@@ -34,15 +35,15 @@ export const T = {
     columns: { overdue: "Kechikkan", today: "Bugun", thisWeek: "Bu hafta", nextWeek: "Keyingi hafta", noDeadline: "Muddatsiz" },
     priority: { urgent: "Kritik", high: "Yuqori", normal: "O'rtacha", low: "Past" },
     tabs: { main: "Asosiy", checklist: "Chek-list", results: "Natijalar", files: "Fayllar", activity: "Faoliyat" },
-    fields: { title: "Sarlavha", description: "Tavsif", deadline: "Muddat", assignee: "Ijrochi", priority: "Ustuvorlik", tags: "Teglar", project: "Loyiha", observers: "Kuzatuvchilar", coExecutors: "Hamijrochilar" },
+    fields: { title: "Sarlavha", description: tLabel('kanban.kanban-.tavsif', "Tavsif"), deadline: "Muddat", assignee: "Ijrochi", priority: "Ustuvorlik", tags: "Teglar", project: "Loyiha", observers: "Kuzatuvchilar", coExecutors: "Hamijrochilar" },
     table: { taskName: "Vazifa nomi", activity: "Faoliyat", deadline: "Muddat", creator: "Qo'yuvchi", assignee: "Ijrochi", project: "Loyiha", status: "Status" },
     actions: { save: "Saqlash", cancel: "Bekor qilish", delete: "O'chirish", add: "Qo'shish", send: "Yuborish", upload: "Yuklash", start: "Boshlash", stop: "To'xtatish" },
-    notifications: { title: "Bildirishnomalar", markAllRead: "Barchasini o'qilgan", empty: "Bildirishnomalar yo'q", categories: "Kategoriyalar", allCategory: "Hammasi", taskCategory: "Vazifalar", reminderCategory: "Eslatmalar", automationCategory: "Avtomatik", items: "ta" },
+    notifications: { title: tLabel('kanban.kanban-.bildirishnomalar', "Bildirishnomalar"), markAllRead: "Barchasini o'qilgan", empty: "Bildirishnomalar yo'q", categories: "Kategoriyalar", allCategory: "Hammasi", taskCategory: "Vazifalar", reminderCategory: "Eslatmalar", automationCategory: "Avtomatik", items: "ta" },
     robots: { title: "Avtomatlashtirish robotlari", addRobot: "Robot qo'shish", trigger: "Trigger", action: "Harakat", onCreate: "Yaratilganda", onMove: "Ko'chirilganda", onComplete: "Tugallanganda", onDeadline: "Muddat kelganda", moveToColumn: "Ustun ko'chirish", sendNotification: "Bildirishnoma yuborish", assignUser: "Foydalanuvchi tayinlash", addTag: "Teg qo'shish" },
-    templates: { title: "Shablonlar", name: "Shablon nomi", taskTitle: "Vazifa sarlavhasi", search: "Qidirish", empty: "Shablonlar yo'q", createNew: "Yangi shablon", edit: "Tahrirlash", apply: "Qo'llash" },
+    templates: { title: tLabel('kanban.kanban-.shablonlar', "Shablonlar"), name: tLabel('kanban.kanban-.shablonNomi', "Shablon nomi"), taskTitle: "Vazifa sarlavhasi", search: "Qidirish", empty: "Shablonlar yo'q", createNew: "Yangi shablon", edit: "Tahrirlash", apply: "Qo'llash" },
     empty: { selectBoard: "Doska tanlang", createBoard: "Yangi doska yaratish", noTasks: "Vazifalar topilmadi" },
     time: { tracking: "Vaqt kuzatuvi", target: "Maqsad", total: "Jami" },
-    chat: { placeholder: "Xabar yozing... @ bilan eslatish", systemLog: "Tizim logi", mentionHint: "@ belgisi bilan foydalanuvchini eslatish" },
+    chat: { placeholder: tLabel('kanban.kanban-.xabarYozingBilanEslatish', "Xabar yozing... @ bilan eslatish"), systemLog: "Tizim logi", mentionHint: "@ belgisi bilan foydalanuvchini eslatish" },
     board: { newBoard: "Yangi doska", newColumn: "Yangi ustun", newCard: "Yangi vazifa", addCard: "Karta qo'shish" },
     baskets: { title: "3 Savat Tizimi", incoming: "Kiruvchi savat", pending: "Kutish savati", outgoing: "Chiquvchi savat", moveToPending: "Ishlovga o'tkazish", moveToOutgoing: "Chiqishga o'tkazish", moveToIncoming: "← Kiruvchiga", archive: "Arxivlash", rule24h: "Kiruvchi 24 soatdan ko'p turmasligi kerak", overdueLabel: "Muddati o'tgan", empty: "Bo'sh" }
   },

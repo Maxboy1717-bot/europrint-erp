@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Label maps ───────────────────────────────────────────────────────────────
 
 export const DOC_TYPE_LABELS: Record<string, string> = {
@@ -31,27 +32,27 @@ export const DOC_TYPE_LABELS: Record<string, string> = {
 
 export const STATUS_CONFIG: Record<string, { label: string; icon: LucideIcon; className: string }> = {
   draft:     { label: "Qoralama",      icon: AlertCircle,  className: "text-gray-600 border-gray-300" },
-  pending:   { label: "Kutilmoqda",    icon: Clock,        className: "text-[var(--ep-yellow)] border-amber-300" },
+  pending:   { label: tLabel('common.DocumentsTab.kutilmoqda', "Kutilmoqda"),    icon: Clock,        className: "text-[var(--ep-yellow)] border-amber-300" },
   approved:  { label: "Tasdiqlandi",   icon: CheckCircle2, className: "text-[var(--ep-green)] border-green-300" },
   rejected:  { label: "Rad etildi",    icon: XCircle,      className: "text-[var(--ep-red)] border-red-300" },
-  cancelled: { label: "Bekor qilindi", icon: XCircle,      className: "text-gray-500 border-gray-300" },
+  cancelled: { label: tLabel('common.DocumentsTab.bekorQilindi', "Bekor qilindi"), icon: XCircle,      className: "text-gray-500 border-gray-300" },
 };
 
 export const FILE_CATEGORIES: Record<string, { label: string; icon: LucideIcon; color: string }> = {
-  personal:  { label: "Shaxsiy hujjatlar", icon: User,          color: "text-[var(--ep-blue)]" },
+  personal:  { label: tLabel('common.DocumentsTab.shaxsiyHujjatlar', "Shaxsiy hujjatlar"), icon: User,          color: "text-[var(--ep-blue)]" },
   education: { label: "Ta'lim hujjatlari", icon: BookOpen,      color: "text-[var(--ep-purple)]" },
-  medical:   { label: "Tibbiy hujjatlar",  icon: HeartPulse,    color: "text-[var(--ep-red)]" },
+  medical:   { label: tLabel('common.DocumentsTab.tibbiyHujjatlar', "Tibbiy hujjatlar"),  icon: HeartPulse,    color: "text-[var(--ep-red)]" },
   labor:     { label: "Mehnat hujjatlari", icon: Briefcase,     color: "text-[var(--ep-yellow)]" },
-  contract:  { label: "Shartnomalar",      icon: FileSignature, color: "text-[var(--ep-green)]" },
+  contract:  { label: tLabel('common.DocumentsTab.shartnomalar', "Shartnomalar"),      icon: FileSignature, color: "text-[var(--ep-green)]" },
   other:     { label: "Boshqa",            icon: FolderOpen,    color: "text-gray-500" },
 };
 
 export const EMP_DOC_CATEGORIES: Record<string, { label: string; icon: LucideIcon; color: string }> = {
   contract: { label: "Mehnat shartnomalari",       icon: ScrollText,     color: "text-[var(--ep-blue)]" },
-  personal: { label: "Shaxsiy hujjatlar",          icon: User,           color: "text-[var(--ep-blue)]" },
-  order:    { label: "Buyruqlar",                  icon: FileText,       color: "text-[var(--ep-yellow)]" },
+  personal: { label: tLabel('common.DocumentsTab.shaxsiyHujjatlar', "Shaxsiy hujjatlar"),          icon: User,           color: "text-[var(--ep-blue)]" },
+  order:    { label: tLabel('common.DocumentsTab.buyruqlar', "Buyruqlar"),                  icon: FileText,       color: "text-[var(--ep-yellow)]" },
   payroll:  { label: "Oylik hisob-kitob",          icon: ShoppingBag,    color: "text-[var(--ep-green)]" },
-  medical:  { label: "Tibbiy hujjatlar",           icon: Stethoscope,    color: "text-[var(--ep-red)]" },
+  medical:  { label: tLabel('common.DocumentsTab.tibbiyHujjatlar', "Tibbiy hujjatlar"),           icon: Stethoscope,    color: "text-[var(--ep-red)]" },
   training: { label: "O'qitish va sertifikatlar",  icon: GraduationCap,  color: "text-[var(--ep-purple)]" },
   other:    { label: "Boshqa",                     icon: MoreHorizontal, color: "text-gray-500" },
 };

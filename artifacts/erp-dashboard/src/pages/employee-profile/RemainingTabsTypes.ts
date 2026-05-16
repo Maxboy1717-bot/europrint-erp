@@ -11,6 +11,7 @@ import type {
   CustomerComplaint, AssessmentSkipRecord, TranslationFn,
 } from "./profile-types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Display-label lookup tables
 // ---------------------------------------------------------------------------
@@ -34,7 +35,7 @@ export const STATUS_LABELS: Record<
   string,
   { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
 > = {
-  open:     { label: "Ochiq",       variant: "destructive" },
+  open:     { label: tLabel('common.RemainingTabs.ochiq', "Ochiq"),       variant: "destructive" },
   resolved: { label: "Hal qilindi", variant: "secondary" },
   rejected: { label: "Rad etildi",  variant: "outline" },
 };

@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module ProductionOrder360Types
  * @description TypeScript interfaces, types, and constants for ProductionOrder360.
@@ -7,7 +9,7 @@
 export const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   created:     { label: "Yaratildi",    variant: "secondary" },
   released:    { label: "Chiqarildi",   variant: "default" },
-  in_progress: { label: "Jarayonda",   variant: "default" },
+  in_progress: { label: tLabel('production.ProductionOrder360.jarayonda', "Jarayonda"),   variant: "default" },
   completed:   { label: "Bajarildi",   variant: "default" },
   closed:      { label: "Yopildi",     variant: "secondary" },
   qc_hold:     { label: "QC To'xtatdi", variant: "destructive" },

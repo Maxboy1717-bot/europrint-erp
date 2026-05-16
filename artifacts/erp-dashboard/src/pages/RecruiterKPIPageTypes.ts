@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /** @module RecruiterKPIPageTypes @description Interfaces, types, constants and pure helper utilities for the Recruiter KPI page. No JSX. */
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -93,8 +95,8 @@ export const CHANNEL_META: Record<string, { label: string; color: string }> = {
   INSTAGRAM: { label: "Instagram",                  color: "bg-pink-500"    },
   LINKEDIN:  { label: "LinkedIn",                   color: "bg-indigo-500"  },
   FACEBOOK:  { label: "Facebook",                   color: "bg-blue-700"    },
-  REFERRAL:  { label: "Referral (xodim tavsiyasi)", color: "bg-purple-500"  },
-  GAZETA:    { label: "Gazetalar / Matbuot",         color: "bg-amber-600"  },
+  REFERRAL:  { label: tLabel('common.RecruiterKPIPage.referralXodimTavsiyasi', "Referral (xodim tavsiyasi)"), color: "bg-purple-500"  },
+  GAZETA:    { label: tLabel('common.RecruiterKPIPage.gazetalarMatbuot', "Gazetalar / Matbuot"),         color: "bg-amber-600"  },
 };
 
 export const STAGE_LABELS: Record<string, string> = {

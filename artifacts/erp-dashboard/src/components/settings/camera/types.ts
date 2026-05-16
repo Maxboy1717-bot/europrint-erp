@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module types
  * @description React UI component.
@@ -52,7 +54,7 @@ export const CAMERA_TYPES = [
 export const DETECTION_TYPES = [
   { value: "ppe_violation", label: "PPE yo'qligi (shlem, ko'zoynak, qo'lqop)", module: "safety" },
   { value: "quality_defect", label: "Sifat nuqsoni aniqlash", module: "qc" },
-  { value: "unauthorized_access", label: "Ruxsatsiz kirish", module: "safety" },
+  { value: "unauthorized_access", label: tLabel('common..ruxsatsizKirish', "Ruxsatsiz kirish"), module: "safety" },
   { value: "face_not_recognized", label: "Yuz tanilmadi", module: "hr" },
   { value: "fire_smoke", label: "Yong'in / Tutun aniqlash", module: "safety" },
   { value: "operator_idle", label: "Operator ishlamayapti", module: "mes" },
@@ -63,10 +65,10 @@ export const DETECTION_TYPES = [
 ];
 
 export const ACTION_OPTIONS = [
-  { value: "safety_alert", label: "Xavfsizlik alerrti yaratish" },
-  { value: "qc_alert", label: "QC sifat alerti yaratish" },
+  { value: "safety_alert", label: tLabel('common..xavfsizlikAlerrtiYaratish', "Xavfsizlik alerrti yaratish") },
+  { value: "qc_alert", label: tLabel('common..qcSifatAlertiYaratish', "QC sifat alerti yaratish") },
   { value: "hr_log", label: "HR tizimiga yozish" },
-  { value: "mes_alert", label: "MES ishlab chiqarish alerti" },
+  { value: "mes_alert", label: tLabel('common..mesIshlabChiqarishAlerti', "MES ishlab chiqarish alerti") },
   { value: "wms_alert", label: "WMS ombor alerti" },
   { value: "access_denied_log", label: "Kirish bloklash yozuvi" },
   { value: "supervisor_notify", label: "Supervisor xabardor qilish" },

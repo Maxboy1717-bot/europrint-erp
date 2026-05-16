@@ -11,6 +11,7 @@ import { Calendar, Clock, MapPin } from "lucide-react";
 import { CalendarEvent } from "./EventsCalendarTypes";
 import { UpcomingEventsCard, AllEventsTableCard } from "./EventsCalendarCards";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -37,17 +38,17 @@ function StatsCards({
 }) {
   const stats = [
     {
-      label: "Jami tadbirlar",
+      label: tLabel('common.EventsCalendarGrid.tsx.jamiTadbirlar', "Jami tadbirlar"),
       value: events.length,
       icon: <Calendar className="h-4 w-4 text-muted-foreground" />,
     },
     {
-      label: "Kelgusi tadbirlar",
+      label: tLabel('common.EventsCalendarGrid.tsx.kelgusiTadbirlar', "Kelgusi tadbirlar"),
       value: upcomingEvents.length,
       icon: <Clock className="h-4 w-4 text-muted-foreground" />,
     },
     {
-      label: "Treninglar",
+      label: tLabel('common.EventsCalendarGrid.tsx.treninglar', "Treninglar"),
       value: events.filter((e) => e.eventType === "training").length,
       icon: <MapPin className="h-4 w-4 text-muted-foreground" />,
     },

@@ -8,6 +8,7 @@
 import { z } from "zod";
 import type { QuestionnaireTemplate } from "@shared/schema";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Domain interfaces
 // ---------------------------------------------------------------------------
@@ -85,7 +86,7 @@ export const TEMPLATE_PRESETS: Record<string, Preset> = {
   marketing: {
     name: "Marketing xodimi anketasi",
     nameRu: "Анкета сотрудника маркетинга",
-    description: "SMM, content yaratish, kampaniya boshqarish",
+    description: tLabel('common.QuestionnaireTemplates.smmContentYaratishKampaniyaBoshqarish', "SMM, content yaratish, kampaniya boshqarish"),
     descriptionRu: "SMM, создание контента, управление кампаниями",
     questions: [
       { question: "Ismingiz va familiyangiz?", questionRu: "Ваше имя и фамилия?", order: 1, questionType: "text", isRequired: true },
@@ -111,7 +112,7 @@ export const TEMPLATE_PRESETS: Record<string, Preset> = {
   sales: {
     name: "Sotuvchi anketasi",
     nameRu: "Анкета продавца",
-    description: "Mijozlar bilan ishlash, mahsulot bilimi, sotish tajribasi",
+    description: tLabel('common.QuestionnaireTemplates.mijozlarBilanIshlashMahsulotBilimi', "Mijozlar bilan ishlash, mahsulot bilimi, sotish tajribasi"),
     descriptionRu: "Работа с клиентами, знание продукта, опыт продаж",
     questions: [
       { question: "Ismingiz va familiyangiz?", questionRu: "Ваше имя и фамилия?", order: 1, questionType: "text", isRequired: true },

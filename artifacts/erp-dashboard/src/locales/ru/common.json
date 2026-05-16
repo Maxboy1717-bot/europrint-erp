@@ -8522,5 +8522,306 @@
   "aSmena07001500": "A smena (07:00–15:00)",
   "soatbayStavkaUzs": "Soatbay stavka (UZS)",
   "jpegPng": "JPEG / PNG",
-  "untitled2": "производства"
+  "untitled2": "производства",
+  "ApprovalWorkflowPage": {
+    "kutilmoqda": "Ожидает"
+  },
+  "CandidateReport": {
+    "samarasiz": "Samarasiz"
+  },
+  "CoordinationPageHelpers": {
+    "tsx": {
+      "bajarilmoqda": "Выполняется"
+    }
+  },
+  "CRMSettings": {
+    "maxsusMaydonlar": "Maxsus maydonlar",
+    "integratsiyalar": "Integratsiyalar",
+    "tovarlarVaOmborlar": "Tovarlar va omborlar",
+    "kompaniyalar": "Компании",
+    "kontaktlar": "Контакты",
+    "bitimlar": "Сделки",
+    "lidlar": "Лиды",
+    "sana": "Sana"
+  },
+  "DesignExtended": {
+    "dizaynAssetVaFayllarKutubxonasi": "Dizayn asset va fayllar kutubxonasi",
+    "dizaynXarajatKalkulyatori": "Dizayn xarajat kalkulyatori",
+    "bosmaAsboblarVaPlastinalarInventari": "Bosma asboblar va plastinalar inventari",
+    "asboblar": "Asboblar",
+    "qoliplar": "Qoliplar",
+    "taqqoslash": "Taqqoslash",
+    "korporativBrendQoidalariVaRanglar": "Korporativ brend qoidalari va ranglar"
+  },
+  "AttendanceTab": {
+    "bekorQilingan": "Отменено",
+    "tasdiqlangan": "Подтверждено",
+    "kutilmoqda": "Ожидает"
+  },
+  "CorporateInventoryTab": {
+    "yangi": "Новый",
+    "jihozlar": "Jihozlar"
+  },
+  "DocumentsTab": {
+    "tibbiyHujjatlar": "Tibbiy hujjatlar",
+    "buyruqlar": "Buyruqlar",
+    "shaxsiyHujjatlar": "Shaxsiy hujjatlar",
+    "shartnomalar": "Договоры",
+    "bekorQilindi": "Отменено",
+    "kutilmoqda": "Ожидает"
+  },
+  "FinanceTab": {
+    "tasdiqlangan": "Подтверждено",
+    "kutilmoqda": "Ожидает"
+  },
+  "OffboardingTab": {
+    "kutilmoqda": "Ожидает",
+    "bekorQilindi": "Отменено",
+    "faol": "Активный"
+  },
+  "RemainingTabs": {
+    "ochiq": "Открыто"
+  },
+  "EmployeeDailyKPIPanel": {
+    "vazifalar": "Vazifalar"
+  },
+  "EmployeeTrackingReport": {
+    "xodimlarKuzatuviHisoboti": "Xodimlar Kuzatuvi Hisoboti"
+  },
+  "EventsCalendarGrid": {
+    "tsx": {
+      "treninglar": "Treninglar",
+      "kelgusiTadbirlar": "Kelgusi tadbirlar",
+      "jamiTadbirlar": "Jami tadbirlar"
+    }
+  },
+  "EventsCalendar": {
+    "trening": "Trening"
+  },
+  "FinanceExtended": {
+    "xarajatMarkazlari": "Xarajat Markazlari"
+  },
+  "GoalsKPI": {
+    "bekorQilindi": "Отменено",
+    "faol": "Активный",
+    "xodim": "Xodim",
+    "lavozim": "Lavozim",
+    "tugatishKurslarniYakunlash": "Tugatish (kurslarni yakunlash)"
+  },
+  "InspectionPage": {
+    "sanitarXonalar": "Sanitar xonalar"
+  },
+  "IoTExtended": {
+    "ogohlantirishlar": "Ogohlantirishlar"
+  },
+  "KaizenPage": {
+    "amalgaOshirilmoqda": "Amalga oshirilmoqda"
+  },
+  "KnowledgeBase": {
+    "tartibQoidalar": "Tartib-qoidalar",
+    "siyosatlar": "Siyosatlar",
+    "xizmatlar": "Xizmatlar",
+    "mahsulotlar": "Продукты"
+  },
+  "": {
+    "microLearning": "Micro-learning",
+    "testlar": "Testlar",
+    "mesIshlabChiqarishAlerti": "MES ishlab chiqarish alerti",
+    "qcSifatAlertiYaratish": "QC sifat alerti yaratish",
+    "xavfsizlikAlerrtiYaratish": "Xavfsizlik alerrti yaratish",
+    "ruxsatsizKirish": "Ruxsatsiz kirish"
+  },
+  "MarketingExtended": {
+    "raqobatchilar": "Raqobatchilar"
+  },
+  "MESExtended": {
+    "ishlabChiqarishVazifalari": "Ishlab Chiqarish Vazifalari"
+  },
+  "MESHomeDashboard": {
+    "kutilmoqda": "Ожидает",
+    "ishlamoqda": "Ishlamoqda"
+  },
+  "MESWorkCenters": {
+    "kutilmoqda": "Ожидает",
+    "ishlamoqda": "Ishlamoqda"
+  },
+  "MMExtended": {
+    "haydovchilar": "Haydovchilar",
+    "marshrutRejasi": "Marshrut Rejasi",
+    "kreditorQarzlar": "Kreditor Qarzlar"
+  },
+  "MROExtended": {
+    "xarajatNazorati": "Xarajat Nazorati",
+    "kommunalXizmatlar": "Kommunal Xizmatlar",
+    "ehtiyotQismlar": "Ehtiyot Qismlar"
+  },
+  "PapkaOrders": {
+    "bekorQilindi": "Отменено",
+    "ishlabChiqarish": "Ishlab chiqarish",
+    "rejalashtirish": "Rejalashtirish",
+    "yangi": "Новый"
+  },
+  "POSInventoryPage": {
+    "qaytarish": "Вернуть",
+    "sotuv": "Sotuv"
+  },
+  "Positions": {
+    "daromadBitimlarLeadKonversiyasiNps": "Daromad, bitimlar, lead konversiyasi, NPS",
+    "sotuvMenejeri": "Sotuv menejeri",
+    "ishlabChiqarishNuqsonlarIshVaqti": "Ishlab chiqarish, nuqsonlar, ish vaqti, xavfsizlik",
+    "davomatSifatVazifalarLmsJamoa": "Davomat, sifat, vazifalar, LMS, jamoa ishlashi",
+    "standartXodim": "Standart xodim"
+  },
+  "ProductivityInterviewDialog": {
+    "yakuniyXulosa": "Yakuniy xulosa"
+  },
+  "QCDashboardHelpers": {
+    "tsx": {
+      "faol": "Активный"
+    }
+  },
+  "QCDashboard": {
+    "kutilmoqda": "Ожидает",
+    "muvaffaqiyatsiz": "Muvaffaqiyatsiz"
+  },
+  "QCFinalInspection": {
+    "bekorQilingan": "Отменено",
+    "rejalashtirishUchunTayyor": "Rejalashtirish uchun tayyor",
+    "tasdiqlangan": "Подтверждено",
+    "qcKutilmoqda": "QC kutilmoqda",
+    "texnikKutilmoqda": "Texnik kutilmoqda",
+    "dizaynKutilmoqda": "Dizayn kutilmoqda"
+  },
+  "QCModule": {
+    "reklamatsiyalar": "Reklamatsiyalar",
+    "normalar": "Normalar",
+    "fizikXususiyatlar": "Fizik xususiyatlar"
+  },
+  "QuestionnaireTemplates": {
+    "mijozlarBilanIshlashMahsulotBilimi": "Mijozlar bilan ishlash, mahsulot bilimi, sotish tajribasi",
+    "smmContentYaratishKampaniyaBoshqarish": "SMM, content yaratish, kampaniya boshqarish"
+  },
+  "RaciCrisisPage": {
+    "bekor": "Отмена",
+    "jarayonda": "Jarayonda",
+    "ochiq": "Открыто"
+  },
+  "RecruiterKPIPage": {
+    "gazetalarMatbuot": "Gazetalar / Matbuot",
+    "referralXodimTavsiyasi": "Referral (xodim tavsiyasi)"
+  },
+  "ReferralPage": {
+    "kutilmoqda": "Ожидает"
+  },
+  "ReportsHub": {
+    "nomi": "Nomi",
+    "hisobotlarMarkazi": "Hisobotlar markazi"
+  },
+  "SaaSExtended": {
+    "xatolarJurnali": "Xatolar Jurnali",
+    "xavfsizlik": "Xavfsizlik",
+    "crmSavdo": "CRM + Savdo"
+  },
+  "SDCustomers": {
+    "nofaol": "Неактивный",
+    "yangi": "Новый"
+  },
+  "SDExtended": {
+    "avansNazorat": "Avans Nazorat",
+    "menejerPaneli": "Menejer Paneli"
+  },
+  "SDSalesQuotes": {
+    "bossiz": "Bossiz"
+  },
+  "SecurityDashboardCards": {
+    "tsx": {
+      "ogohlantirish": "Ogohlantirish",
+      "ochiqHodisalar": "Ochiq hodisalar",
+      "tashrifchilar": "Tashrifchilar"
+    }
+  },
+  "SecurityExtended": {
+    "xavfsizlikReytingi": "Xavfsizlik Reytingi",
+    "xavfliModdalar": "Xavfli Moddalar",
+    "mehmonlar": "Mehmonlar"
+  },
+  "StrategicTasksPanel": {
+    "bekorQilingan": "Отменено",
+    "kutilmoqda": "Ожидает",
+    "jarayonda": "Jarayonda"
+  },
+  "UsersPage": {
+    "xodim": "Xodim"
+  },
+  "WasteTrackingDialogs": {
+    "tsx": {
+      "muvaffaqiyatliSaqlandi": "Muvaffaqiyatli saqlandi"
+    }
+  },
+  "ContactDetailSheet": {
+    "tsx": {
+      "kontaktMuvaffaqiyatliYangilandi": "Kontakt muvaffaqiyatli yangilandi"
+    }
+  },
+  "CRMKpiCards": {
+    "tsx": {
+      "yakunlangan": "Завершено",
+      "jarayondagilar": "Jarayondagilar",
+      "jamiVazifalar": "Jami vazifalar",
+      "jami": "Jami"
+    }
+  },
+  "useCRMWorkspace": {
+    "lidYutildiSdBuyurtmaYaratildi": "Lid yutildi — SD buyurtma yaratildi"
+  },
+  "DataTable": {
+    "ishdanKetgan": "Ishdan ketgan"
+  },
+  "order-constants": {
+    "00Rangsiz": "0+0 (Rangsiz)",
+    "yangi": "Новый"
+  },
+  "translations": {
+    "yangiBuyurtmaYaratish": "Yangi Buyurtma Yaratish"
+  },
+  "helpers-constants": {
+    "tsx": {
+      "tavsiyalarTekshiruvi": "Tavsiyalar Tekshiruvi",
+      "yangiAriza": "Yangi ariza"
+    }
+  },
+  "GLPostingStatus": {
+    "tsx": {
+      "kutmoqda": "Kutmoqda"
+    }
+  },
+  "PosMovementChiqim": {
+    "zarar": "Zarar",
+    "ichkiQaytarish": "Ichki qaytarish"
+  },
+  "PosMovementKirim": {
+    "mroOmboriTexnikMateriallarKirim": "MRO Ombori — Texnik Materiallar Kirim",
+    "yarimTayyorLiniyadanQabul": "Yarim Tayyor — Liniyadan Qabul",
+    "tayyorMahsulotIshlabChiqarishdanQabul": "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul"
+  },
+  "PosMovementNew": {
+    "tsx": {
+      "inventarizatsiyaAsosidaMiqdorTuzatmasi": "Inventarizatsiya asosida miqdor tuzatmasi.",
+      "zararNosoz": "Zarar / Nosoz",
+      "ichkiQaytarish": "Ichki Qaytarish",
+      "ombordanTashqarigaChiqarilganMateriallarBarcode": "Ombordan tashqariga chiqarilgan materiallar. Barcode skaner orqali amalga oshiriladi."
+    }
+  },
+  "PosMovements": {
+    "tasdiqlash": "Подтвердить",
+    "qcYuborish": "QC Yuborish",
+    "yuborish": "Отправить",
+    "bekor": "Отмена"
+  },
+  "PosReports": {
+    "tsx": {
+      "jamiBalans": "Jami balans",
+      "jamiQatorlar": "Jami qatorlar"
+    }
+  }
 }

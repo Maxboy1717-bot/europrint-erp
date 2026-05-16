@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module OffboardingTabTypes
  * @description Types, interfaces and constants for OffboardingTab.
@@ -59,13 +61,13 @@ export const DISMISSAL_MAP: Record<string, string> = {
 };
 
 export const STATUS_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  active:    { label: "Faol",          variant: "secondary" },
+  active:    { label: tLabel('common.OffboardingTab.faol', "Faol"),          variant: "secondary" },
   completed: { label: "Yakunlandi",    variant: "default" },
-  cancelled: { label: "Bekor qilindi", variant: "destructive" },
+  cancelled: { label: tLabel('common.OffboardingTab.bekorQilindi', "Bekor qilindi"), variant: "destructive" },
 };
 
 export const RETURN_STATUS_MAP: Record<string, { label: string; color: string }> = {
-  pending:  { label: "Kutilmoqda",    color: "text-[var(--ep-primary)]" },
+  pending:  { label: tLabel('common.OffboardingTab.kutilmoqda', "Kutilmoqda"),    color: "text-[var(--ep-primary)]" },
   returned: { label: "Qaytarildi",    color: "text-[var(--ep-green)]" },
   damaged:  { label: "Shikastlangan", color: "text-[var(--ep-yellow)]" },
   missing:  { label: "Yo'qolgan",     color: "text-[var(--ep-red)]" },

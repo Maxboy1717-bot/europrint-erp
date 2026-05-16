@@ -10,6 +10,7 @@ import {
   type LucideIcon
 } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Domain Interfaces ─────────────────────────────────────────────────────
 
 export interface SecurityVisitor {
@@ -75,12 +76,12 @@ export const URL_TAB_MAP: Record<string, string> = {
 
 export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   zones:      { title: "Kirish Nazorati",   icon: MapPin },
-  visitors:   { title: "Mehmonlar",         icon: Users },
+  visitors:   { title: tLabel('common.SecurityExtended.mehmonlar', "Mehmonlar"),         icon: Users },
   attendance: { title: "Davomat",           icon: UserCheck },
   ppe:        { title: "PPE Nazorati",      icon: HardHat },
-  hazmat:     { title: "Xavfli Moddalar",   icon: AlertTriangle },
+  hazmat:     { title: tLabel('common.SecurityExtended.xavfliModdalar', "Xavfli Moddalar"),   icon: AlertTriangle },
   evacuation: { title: "Evakuatsiya",       icon: Siren },
-  rating:     { title: "Xavfsizlik Reytingi", icon: Star },
+  rating:     { title: tLabel('common.SecurityExtended.xavfsizlikReytingi', "Xavfsizlik Reytingi"), icon: Star },
 };
 
 export const PPE_ZONES = [

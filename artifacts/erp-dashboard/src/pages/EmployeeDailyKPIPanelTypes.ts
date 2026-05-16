@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /** @module EmployeeDailyKPIPanelTypes @description TypeScript interfaces, types, and pure helper utilities for EmployeeDailyKPIPanel. No JSX. */
 
 export interface KpiRecord {
@@ -62,7 +64,7 @@ export interface DeptSummaryApiResponse {
 
 export const RADAR_DIMENSIONS = [
   { key: "attendance", label: "Davomad" },
-  { key: "tasks", label: "Vazifalar" },
+  { key: "tasks", label: tLabel('common.EmployeeDailyKPIPanel.vazifalar', "Vazifalar") },
   { key: "quality", label: "Sifat" },
   { key: "productivity", label: "Samaradorlik" },
   { key: "teamwork", label: "Jamoa ishi" },

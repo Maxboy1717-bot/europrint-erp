@@ -454,5 +454,29 @@
   "ushbuSifatParametriniOchirishniTasdiqlaysizmi": "Подтверждаете удаление этого параметра качества?",
   "ushbuXodimTayinlashiniOchirishniTasdiqlaysizmi": "Подтверждаете удаление назначения этого сотрудника?",
   "yangiBuyurtma": "Новый заказ",
-  "untitled": "Картонная коробка"
+  "untitled": "Картонная коробка",
+  "AIProductionPlanning": {
+    "bajarilmoqda": "Выполняется",
+    "tasdiqlangan": "Подтверждено",
+    "avtoTasdiqlangan": "Avto-tasdiqlangan"
+  },
+  "CandidateChecklist": {
+    "tavsiyalarTekshirildiReferenceCheck": "Tavsiyalar tekshirildi (Reference check)",
+    "fonTekshiruviIjtimoiyTarmoqlarMat": "Fon tekshiruvi (ijtimoiy tarmoqlar, Mat. №54)"
+  },
+  "ProductionOrder360": {
+    "jarayonda": "Jarayonda"
+  },
+  "TechPPExtended": {
+    "yetkazishKalk": "Yetkazish Kalk.",
+    "parallelJarayonlar": "Parallel Jarayonlar",
+    "smenaBoshqaruvi": "Smena Boshqaruvi",
+    "parallelBuyurtmalar": "Parallel Buyurtmalar",
+    "mijozTalablari": "Mijoz Talablari",
+    "xarajatOptimizatsiya": "Xarajat Optimizatsiya",
+    "stanoqTanlash": "Stanoq Tanlash"
+  },
+  "helpers": {
+    "jarayonda": "Jarayonda"
+  }
 }

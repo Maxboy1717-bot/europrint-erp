@@ -5,6 +5,7 @@
 
 import { apiRequest } from '@/lib/queryClient';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface RoomRow {
   room_code:          string;
   room_name:          string;
@@ -43,7 +44,7 @@ export const ROOMS = [
   { code: 'WAREHOUSE', name: 'Ombor' },
   { code: 'OFFICE',    name: 'Ofis' },
   { code: 'OSHXONA',   name: 'Oshxona' },
-  { code: 'SANITAR',   name: 'Sanitar xonalar' },
+  { code: 'SANITAR',   name: tLabel('common.InspectionPage.sanitarXonalar', 'Sanitar xonalar') },
 ] as const;
 
 export const REFERENCE_PHOTO_ROLES = new Set(['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_DIRECTOR']);

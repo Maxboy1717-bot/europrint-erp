@@ -17,6 +17,7 @@ import {
 import { formatCurrency } from "@/lib/format";
 import type { EntityType } from "@/pages/crm/crm-types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface KpiItem  { id: number; [key: string]: unknown }
 interface Stage    { stageId: string; name: string; color: string | null; sort: number }
 
@@ -95,7 +96,7 @@ export function CRMKpiCards({
     if (hasValue) {
       return [
         {
-          label: "Jami",
+          label: tLabel('common.CRMKpiCards.tsx.jami', "Jami"),
           value: String(total),
           rawPct: 100,
           sub: newCount > 0 ? `${newCount} yangi qo'shildi` : `${stages.length} bosqich`,
@@ -131,7 +132,7 @@ export function CRMKpiCards({
 
     return [
       {
-        label: "Jami vazifalar",
+        label: tLabel('common.CRMKpiCards.tsx.jamiVazifalar', "Jami vazifalar"),
         value: String(total),
         rawPct: 100,
         sub: newCount > 0 ? `${newCount} yangi qo'shildi` : "Barcha yozuvlar",
@@ -139,7 +140,7 @@ export function CRMKpiCards({
         accent: "#5B9BD5",
       },
       {
-        label: "Jarayondagilar",
+        label: tLabel('common.CRMKpiCards.tsx.jarayondagilar', "Jarayondagilar"),
         value: String(activeCount),
         rawPct: activePct,
         sub: "Faol jarayonda",
@@ -147,7 +148,7 @@ export function CRMKpiCards({
         accent: "#F5C96A",
       },
       {
-        label: "Yakunlangan",
+        label: tLabel('common.CRMKpiCards.tsx.yakunlangan', "Yakunlangan"),
         value: String(wonCount),
         rawPct: total > 0 ? Math.round((wonCount / total) * 100) : 0,
         sub: wonLabel,

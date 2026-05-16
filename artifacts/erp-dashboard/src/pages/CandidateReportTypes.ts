@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module CandidateReportTypes
  * @description Types and constants for CandidateReport.
@@ -65,7 +67,7 @@ export const STAGE_LABELS: Record<string, string> = {
 export const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
   FLAGMAN:    { label: "Flagman",        color: "text-green-400" },
   PROCESSNIK: { label: "Processnik",     color: "text-blue-400" },
-  UNPRODUCTIVE: { label: "Samarasiz",    color: "text-red-400" },
+  UNPRODUCTIVE: { label: tLabel('common.CandidateReport.samarasiz', "Samarasiz"),    color: "text-red-400" },
   UNKNOWN:    { label: "Aniqlanmagan",   color: "text-muted-foreground" },
 };
 

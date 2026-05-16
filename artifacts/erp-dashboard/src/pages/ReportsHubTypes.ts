@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import type { AiReportCategory } from "@shared/schema";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Icon map
 // ---------------------------------------------------------------------------
@@ -48,7 +49,7 @@ export const iconMap: Record<string, typeof FileText> = {
 
 export const t = {
   uz: {
-    title: "Hisobotlar markazi",
+    title: tLabel('common.ReportsHub.hisobotlarMarkazi', "Hisobotlar markazi"),
     subtitle: "155+ avtomatlashtirilgan hisobotlarni boshqarish",
     totalReports: "Jami hisobotlar",
     runsToday: "Bugungi ishga tushirishlar",
@@ -64,7 +65,7 @@ export const t = {
     generating: "Ishga tushirilmoqda...",
     subscribe: "Obuna bo'lish",
     unsubscribe: "Obunadan chiqish",
-    name: "Nomi",
+    name: tLabel('common.ReportsHub.nomi', "Nomi"),
     module: "Modul",
     frequency: "Chastota",
     lastRun: "Oxirgi ishga tushirish",

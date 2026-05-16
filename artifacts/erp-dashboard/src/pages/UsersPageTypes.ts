@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module UsersPageTypes
  * @description Types and constants for UsersPage.
@@ -8,7 +10,7 @@ export const ALL_ROLES = [
   { value: "director",        label: "Direktor" },
   { value: "department_head", label: "Bo'lim boshlig'i" },
   { value: "accountant",      label: "Buxgalter" },
-  { value: "employee",        label: "Xodim" },
+  { value: "employee",        label: tLabel('common.UsersPage.xodim', "Xodim") },
 ] as const;
 
 export const ROLE_COLORS: Record<string, string> = {

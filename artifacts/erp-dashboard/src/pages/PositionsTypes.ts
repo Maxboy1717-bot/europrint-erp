@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module PositionsTypes
  * @description TypeScript interfaces, types, and constants for the Positions page.
@@ -34,10 +36,10 @@ export interface KpiTemplate {
 }
 
 export const KPI_TEMPLATES: KpiTemplate[] = [
-  { key: "standard_employee", label: "Standart xodim", description: "Davomat, sifat, vazifalar, LMS, jamoa ishlashi" },
-  { key: "machine_operator",  label: "Mashinа operatori", description: "Ishlab chiqarish, nuqsonlar, ish vaqti, xavfsizlik" },
+  { key: "standard_employee", label: tLabel('common.Positions.standartXodim', "Standart xodim"), description: tLabel('common.Positions.davomatSifatVazifalarLmsJamoa', "Davomat, sifat, vazifalar, LMS, jamoa ishlashi") },
+  { key: "machine_operator",  label: "Mashinа operatori", description: tLabel('common.Positions.ishlabChiqarishNuqsonlarIshVaqti', "Ishlab chiqarish, nuqsonlar, ish vaqti, xavfsizlik") },
   { key: "manager",           label: "Menejer",          description: "Jamoa samaradorligi, maqsad bajarish, qoniqish" },
-  { key: "sales",             label: "Sotuv menejeri",   description: "Daromad, bitimlar, lead konversiyasi, NPS" },
+  { key: "sales",             label: tLabel('common.Positions.sotuvMenejeri', "Sotuv menejeri"),   description: tLabel('common.Positions.daromadBitimlarLeadKonversiyasiNps', "Daromad, bitimlar, lead konversiyasi, NPS") },
   { key: "hr_specialist",     label: "HR mutaxassis",    description: "Yollash tezligi, ushlab qolish, suhbat samarasi" },
 ];
 

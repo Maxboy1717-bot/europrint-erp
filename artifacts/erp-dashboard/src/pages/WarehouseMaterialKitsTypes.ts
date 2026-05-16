@@ -5,6 +5,7 @@
 
 import { Package, Palette, Droplets, Layers, Scissors, Sparkles, Box } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface PapkaOrder {
   id: number;
   papkaNo: string;
@@ -65,8 +66,8 @@ export const MATERIAL_COLORS: Record<string, string> = {
 };
 
 export const STATUS_BADGES: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string; labelRu: string }> = {
-  pending: { variant: "secondary", label: "Kutilmoqda", labelRu: "Ожидает" },
-  preparing: { variant: "default", label: "Tayyorlanmoqda", labelRu: "Готовится" },
+  pending: { variant: "secondary", label: tLabel('warehouse.WarehouseMaterialKits.kutilmoqda', "Kutilmoqda"), labelRu: "Ожидает" },
+  preparing: { variant: "default", label: tLabel('warehouse.WarehouseMaterialKits.tayyorlanmoqda', "Tayyorlanmoqda"), labelRu: "Готовится" },
   ready: { variant: "outline", label: "Tayyor", labelRu: "Готов" },
   delivered: { variant: "default", label: "Yetkazildi", labelRu: "Доставлен" },
   consumed: { variant: "secondary", label: "Ishlatildi", labelRu: "Использован" },

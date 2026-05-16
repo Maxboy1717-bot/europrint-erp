@@ -36,6 +36,7 @@ import { TaskDetailSheetHeader }   from "./TaskDetailSheetHeader";
 import { TaskDetailSheetActions }  from "./TaskDetailSheetActions";
 import { useTaskDetailMutations }  from "./useTaskDetailMutations";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─────────────────────────────────────────────────────────────────────────────
 export function TaskDetailSheet({
   card,
@@ -148,7 +149,7 @@ export function TaskDetailSheet({
                 { value: "checklist", label: t.tabs.checklist },
                 { value: "results",   label: t.tabs.results },
                 { value: "files",     label: t.tabs.files },
-                { value: "chat",      label: "Izohlar" },
+                { value: "chat",      label: tLabel('kanban.TaskDetailSheet.tsx.izohlar', "Izohlar") },
               ] as const).map(tab => (
                 <TabsTrigger key={tab.value} value={tab.value} className="text-xs px-3 py-1" data-testid={`tab-${tab.value}`}>
                   {tab.label}

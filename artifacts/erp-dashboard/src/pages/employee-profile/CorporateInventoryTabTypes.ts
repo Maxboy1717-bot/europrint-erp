@@ -5,17 +5,18 @@
 
 import { Laptop, Smartphone, Shirt, Package, Monitor } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export const DEVICE_TYPES = [
   { value: "phone",     label: "Telefon",      icon: Smartphone },
   { value: "laptop",    label: "Noutbuk",      icon: Laptop },
   { value: "tablet",    label: "Planshet",     icon: Monitor },
   { value: "uniform",   label: "Forma kiyim",  icon: Shirt },
-  { value: "equipment", label: "Jihozlar",     icon: Package },
+  { value: "equipment", label: tLabel('common.CorporateInventoryTab.jihozlar', "Jihozlar"),     icon: Package },
   { value: "other",     label: "Boshqa",       icon: Package },
 ] as const;
 
 export const CONDITIONS = [
-  { value: "new",     label: "Yangi" },
+  { value: "new",     label: tLabel('common.CorporateInventoryTab.yangi', "Yangi") },
   { value: "good",    label: "Yaxshi" },
   { value: "fair",    label: "O'rtacha" },
   { value: "damaged", label: "Shikastlangan" },

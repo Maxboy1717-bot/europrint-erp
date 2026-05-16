@@ -1,43 +1,23 @@
 {
   "summary": {
-    "totalLeaks": 502,
-    "filesWithLeaks": 185,
+    "totalLeaks": 211,
+    "filesWithLeaks": 109,
     "byKind": {
-      "OBJECT_LABEL": 380,
+      "OBJECT_LABEL": 89,
       "JSX_TEXT": 81,
       "PROP": 41
     },
     "byLocale": {
-      "uz": 428,
+      "uz": 137,
       "ru": 74
     },
     "topFiles": [
       {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-        "count": 20
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-        "count": 18
-      },
-      {
         "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-        "count": 18
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-        "count": 14
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-        "count": 14
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\TechCardsTypes.ts",
         "count": 11
       },
       {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
+        "file": "artifacts\\erp-dashboard\\src\\pages\\TechCardsTypes.ts",
         "count": 11
       },
       {
@@ -45,59 +25,15 @@
         "count": 9
       },
       {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\CRMSettingsTypes.ts",
-        "count": 8
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\DesignExtendedTypes.ts",
-        "count": 8
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\DocumentsTabTypes.ts",
-        "count": 8
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\AIProductionPlanningTypes.ts",
-        "count": 6
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\PositionsTypes.ts",
-        "count": 6
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\QCFinalInspectionTypes.ts",
-        "count": 6
+        "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
+        "count": 7
       },
       {
         "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reports\\types.ts",
         "count": 6
       },
       {
-        "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementNew.tsx",
-        "count": 6
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\RobotsViewTypes.ts",
-        "count": 5
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\GoalsKPITypes.ts",
-        "count": 5
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\PapkaOrdersTypes.ts",
-        "count": 5
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseKirimWizardTypes.ts",
-        "count": 5
-      },
-      {
         "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reservation\\translations.ts",
-        "count": 5
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovements.types.ts",
         "count": 5
       },
       {
@@ -105,173 +41,111 @@
         "count": 4
       },
       {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\hr-dashboard\\types.ts",
-        "count": 4
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsTypes.ts",
-        "count": 4
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\HRDashboardTypes.ts",
-        "count": 4
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\HRSuccessionPlanningTypes.ts",
-        "count": 4
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\KnowledgeBaseTypes.ts",
-        "count": 4
-      },
-      {
         "file": "artifacts\\erp-dashboard\\src\\pages\\planning\\PlanningDialogsB.tsx",
         "count": 4
       },
       {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogTypes.ts",
+        "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseAuditLog.tsx",
         "count": 4
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\crm\\CallTimelineItem.tsx",
+        "count": 4
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\crm\\MeetingCard.tsx",
+        "count": 4
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\AIProductionPlanningTypes.ts",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\erp\\ERPDowntimeTab.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\ERPDailyReportsDialogs.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\ERPDailyReportsSections.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsTypes.ts",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\planning\\PlanningDialogsA.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogTypes.ts",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseKirimWizardSteps.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\camera\\EmployeeDetailDialog.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\finance\\CostCentersTab.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\finance\\ProfitCentersTab.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\lms\\CourseContentForm.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\production\\report\\CreateShiftModal.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMaterialNew.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\RemainingTabsUsers.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\ExtendedAIPanelSections.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\hr-dashboard\\TurnoverTab.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\FlowsDialog.tsx",
+        "count": 2
       }
     ]
   },
   "leaks": [
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 77,
-      "text": "Kompaniya bilan tanishish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 77,
-      "text": "Kompaniya tarixi, missiya, qadriyatlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 78,
-      "text": "Ish joyi bilan tanishish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 78,
-      "text": "Texnika, kirish kartalari, dasturlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 79,
-      "text": "Jamoa bilan tanishish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 80,
-      "text": "Mentor bilan uchrashish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 83,
-      "text": "Asosiy tushunchalar va resurslar olindi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 91,
-      "text": "Asosiy jarayonlar va vazifalar bilan tanishish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 94,
-      "text": "Kompaniya bilan tanishish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 94,
-      "text": "Tarixi, missiya, qadriyatlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 95,
-      "text": "Jamoalar, jarayonlar, maqsadlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 96,
-      "text": "Vazifalar bilan tanishish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 97,
+      "line": 98,
       "text": "Trening va o",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 112,
-      "text": "Kompaniya, jamoa, jarayonlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 114,
-      "text": "3-hafta: Amaliy vazifalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 114,
-      "text": "Mentor yordami bilan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 118,
-      "text": "Asosiy tushunchalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 132,
-      "text": "Jarayonlar, ko",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
       "line": 133,
-      "text": "Murakkab vazifalar, loyihalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 134,
-      "text": "Mustaqil ishlash, jamoa bilan hamkorlik",
+      "text": "Jarayonlar, ko",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
@@ -291,44 +165,23 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\AIProductionPlanningTypes.ts",
-      "line": 163,
+      "line": 165,
       "text": "Ishlab chiqarish jadvali",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\AIProductionPlanningTypes.ts",
-      "line": 165,
+      "line": 167,
       "text": "Smena",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\AIProductionPlanningTypes.ts",
-      "line": 168,
+      "line": 170,
       "text": "Optimallashtirish ko'rsatkichlari",
       "kind": "JSX_TEXT",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\AIProductionPlanningTypes.ts",
-      "line": 109,
-      "text": "Avto-tasdiqlangan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\AIProductionPlanningTypes.ts",
-      "line": 110,
-      "text": "Tasdiqlangan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\AIProductionPlanningTypes.ts",
-      "line": 112,
-      "text": "Bajarilmoqda",
-      "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
@@ -402,13 +255,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\ApprovalWorkflowPageTypes.ts",
-      "line": 27,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\barcode\\barcode-types.ts",
       "line": 177,
       "text": "Система Штрих-кодов",
@@ -424,22 +270,8 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\CandidateChecklistTypes.ts",
-      "line": 11,
+      "line": 12,
       "text": "CV skrining o",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CandidateChecklistTypes.ts",
-      "line": 14,
-      "text": "Fon tekshiruvi (ijtimoiy tarmoqlar, Mat. №54)",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CandidateChecklistTypes.ts",
-      "line": 19,
-      "text": "Tavsiyalar tekshirildi (Reference check)",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
@@ -448,146 +280,6 @@
       "line": 60,
       "text": "Manba (kanal)",
       "kind": "PROP",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CandidateReportTypes.ts",
-      "line": 68,
-      "text": "Samarasiz",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CoordinationPageHelpers.tsx",
-      "line": 25,
-      "text": "Bajarilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 213,
-      "text": "Yaratilganda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 219,
-      "text": "Xabar yuborish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 220,
-      "text": "Vazifa yaratish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 223,
-      "text": "Email yuborish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 255,
-      "text": "Yangi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 258,
-      "text": "Buyurtma",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 259,
-      "text": "Yetkazish kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 260,
-      "text": "Yetkazish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 264,
-      "text": "Yangi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 272,
-      "text": "Yangi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 276,
-      "text": "Bekor qilindi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 297,
-      "text": "Lidlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 298,
-      "text": "Bitimlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 299,
-      "text": "Kontaktlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 300,
-      "text": "Kompaniyalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 301,
-      "text": "Takliflar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 302,
-      "text": "Fakturalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\crm-types.ts",
-      "line": 303,
-      "text": "Robotlar",
-      "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
@@ -605,97 +297,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\RobotsViewTypes.ts",
-      "line": 57,
-      "text": "Yaratilganda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\RobotsViewTypes.ts",
-      "line": 64,
-      "text": "Xabarnoma yuborish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\RobotsViewTypes.ts",
-      "line": 65,
-      "text": "Vazifa yaratish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\RobotsViewTypes.ts",
-      "line": 67,
-      "text": "Email yuborish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\RobotsViewTypes.ts",
-      "line": 68,
-      "text": "Telegram yuborish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CRMSettingsTypes.ts",
-      "line": 83,
-      "text": "Sana",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CRMSettingsTypes.ts",
-      "line": 92,
-      "text": "Lidlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CRMSettingsTypes.ts",
-      "line": 93,
-      "text": "Bitimlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CRMSettingsTypes.ts",
-      "line": 94,
-      "text": "Kontaktlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CRMSettingsTypes.ts",
-      "line": 95,
-      "text": "Kompaniyalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CRMSettingsTypes.ts",
-      "line": 101,
-      "text": "Tovarlar va omborlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CRMSettingsTypes.ts",
-      "line": 102,
-      "text": "Integratsiyalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CRMSettingsTypes.ts",
-      "line": 103,
-      "text": "Maxsus maydonlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\DesignDashboard.tsx",
       "line": 180,
       "text": "Buyurtmalar",
@@ -704,204 +305,8 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\DesignExtendedTypes.ts",
-      "line": 71,
-      "text": "Korporativ brend qoidalari va ranglar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\DesignExtendedTypes.ts",
-      "line": 72,
-      "text": "Taqqoslash",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\DesignExtendedTypes.ts",
-      "line": 73,
-      "text": "Qoliplar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\DesignExtendedTypes.ts",
-      "line": 73,
+      "line": 74,
       "text": "Tayyor qoliplar va standart o",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\DesignExtendedTypes.ts",
-      "line": 74,
-      "text": "Asboblar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\DesignExtendedTypes.ts",
-      "line": 74,
-      "text": "Bosma asboblar va plastinalar inventari",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\DesignExtendedTypes.ts",
-      "line": 75,
-      "text": "Dizayn xarajat kalkulyatori",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\DesignExtendedTypes.ts",
-      "line": 76,
-      "text": "Dizayn asset va fayllar kutubxonasi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\AttendanceTabTypes.ts",
-      "line": 17,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\AttendanceTabTypes.ts",
-      "line": 18,
-      "text": "Tasdiqlangan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\AttendanceTabTypes.ts",
-      "line": 20,
-      "text": "Bekor qilingan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\CorporateInventoryTabTypes.ts",
-      "line": 13,
-      "text": "Jihozlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\CorporateInventoryTabTypes.ts",
-      "line": 18,
-      "text": "Yangi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\DocumentsTabTypes.ts",
-      "line": 34,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\DocumentsTabTypes.ts",
-      "line": 37,
-      "text": "Bekor qilindi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\DocumentsTabTypes.ts",
-      "line": 41,
-      "text": "Shaxsiy hujjatlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\DocumentsTabTypes.ts",
-      "line": 43,
-      "text": "Tibbiy hujjatlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\DocumentsTabTypes.ts",
-      "line": 45,
-      "text": "Shartnomalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\DocumentsTabTypes.ts",
-      "line": 51,
-      "text": "Shaxsiy hujjatlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\DocumentsTabTypes.ts",
-      "line": 52,
-      "text": "Buyruqlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\DocumentsTabTypes.ts",
-      "line": 54,
-      "text": "Tibbiy hujjatlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\FinanceTabTypes.ts",
-      "line": 97,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\FinanceTabTypes.ts",
-      "line": 98,
-      "text": "Tasdiqlangan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\HRCapitalTabTypes.ts",
-      "line": 63,
-      "text": "Yakunlangan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\OffboardingTabTypes.ts",
-      "line": 62,
-      "text": "Faol",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\OffboardingTabTypes.ts",
-      "line": 64,
-      "text": "Bekor qilindi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\OffboardingTabTypes.ts",
-      "line": 68,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\RemainingTabsTypes.ts",
-      "line": 37,
-      "text": "Ochiq",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\EmployeeDailyKPIPanelTypes.ts",
-      "line": 65,
-      "text": "Vazifalar",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
@@ -914,14 +319,7 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\EmployeeTrackingReportTypes.ts",
-      "line": 51,
-      "text": "Xodimlar Kuzatuvi Hisoboti",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\EmployeeTrackingReportTypes.ts",
-      "line": 92,
+      "line": 94,
       "text": "Отчёт по Отслеживанию Сотрудников",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
@@ -990,34 +388,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\EventsCalendarGrid.tsx",
-      "line": 40,
-      "text": "Jami tadbirlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\EventsCalendarGrid.tsx",
-      "line": 45,
-      "text": "Kelgusi tadbirlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\EventsCalendarGrid.tsx",
-      "line": 50,
-      "text": "Treninglar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\EventsCalendarTypes.ts",
-      "line": 75,
-      "text": "Trening",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\FaceRecognitionMonitoringTypes.ts",
       "line": 75,
       "text": "Мониторинг распознавания лиц",
@@ -1030,48 +400,6 @@
       "text": "Регистрация Лица",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\FinanceExtendedTypes.ts",
-      "line": 70,
-      "text": "Xarajat Markazlari",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\GoalsKPITypes.ts",
-      "line": 8,
-      "text": "Tugatish (kurslarni yakunlash)",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\GoalsKPITypes.ts",
-      "line": 17,
-      "text": "Lavozim",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\GoalsKPITypes.ts",
-      "line": 18,
-      "text": "Xodim",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\GoalsKPITypes.ts",
-      "line": 29,
-      "text": "Faol",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\GoalsKPITypes.ts",
-      "line": 32,
-      "text": "Bekor qilindi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\hr-dashboard\\TurnoverTab.tsx",
@@ -1088,71 +416,22 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\hr-dashboard\\types.ts",
-      "line": 56,
-      "text": "Alertlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\hr-dashboard\\types.ts",
-      "line": 58,
-      "text": "Kadrlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\hr-dashboard\\types.ts",
-      "line": 60,
-      "text": "Xavfsizlik",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\hr-dashboard\\types.ts",
-      "line": 66,
-      "text": "Ogohlantirish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsHelpers.tsx",
-      "line": 53,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsHelpers.tsx",
-      "line": 54,
-      "text": "Jarayonda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsTypes.ts",
-      "line": 24,
+      "line": 26,
       "text": "Boshqalarni boshqarish uchun ta",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsTypes.ts",
-      "line": 27,
+      "line": 29,
       "text": "Ishlarni kechiktiradi, qaror qabul qilishdan qo",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsTypes.ts",
-      "line": 29,
-      "text": "Boshqalarning fikrini hisobga olmaydi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsTypes.ts",
-      "line": 32,
+      "line": 34,
       "text": "Jamoa bilan ishlashni afzal ko",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
@@ -1162,118 +441,6 @@
       "line": 85,
       "text": "Yangi (30 kun)",
       "kind": "PROP",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRDashboardTypes.ts",
-      "line": 89,
-      "text": "Hujjat Oqimi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRDashboardTypes.ts",
-      "line": 92,
-      "text": "Kunlik Hisobot",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRDashboardTypes.ts",
-      "line": 93,
-      "text": "PIP Rejalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRDashboardTypes.ts",
-      "line": 96,
-      "text": "Malakalar Matritsasi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HROffboardingTypes.ts",
-      "line": 81,
-      "text": "Faol",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HROffboardingTypes.ts",
-      "line": 83,
-      "text": "Bekor qilindi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HROffboardingTypes.ts",
-      "line": 114,
-      "text": "Ketish sababingiz nima?",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRSuccessionPlanningTypes.ts",
-      "line": 29,
-      "text": "Yulduzlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRSuccessionPlanningTypes.ts",
-      "line": 31,
-      "text": "Ishchi otliqlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRSuccessionPlanningTypes.ts",
-      "line": 32,
-      "text": "Yashirin yulduzlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRSuccessionPlanningTypes.ts",
-      "line": 33,
-      "text": "Asosiy ishchilar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRZvsPageTypes.ts",
-      "line": 42,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRZvsPageTypes.ts",
-      "line": 43,
-      "text": "Tasdiqlangan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\InspectionPageTypes.ts",
-      "line": 46,
-      "text": "Sanitar xonalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\IoTExtendedTypes.ts",
-      "line": 73,
-      "text": "Ogohlantirishlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\KaizenPageTypes.ts",
-      "line": 29,
-      "text": "Amalga oshirilmoqda",
-      "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
@@ -1292,126 +459,77 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 29,
-      "text": "Potoklar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 29,
-      "text": "Nomi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 37,
-      "text": "Tavsif",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 40,
-      "text": "Bildirishnomalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 42,
-      "text": "Shablonlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 42,
-      "text": "Shablon nomi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 45,
-      "text": "Xabar yozing... @ bilan eslatish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 51,
+      "line": 52,
       "text": "Потоки",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 51,
+      "line": 52,
       "text": "Название",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 52,
+      "line": 53,
       "text": "Распределение ресурсов",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 59,
+      "line": 60,
       "text": "Заголовок",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 59,
+      "line": 60,
       "text": "Описание",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 62,
+      "line": 63,
       "text": "Уведомления",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 63,
+      "line": 64,
       "text": "Роботы автоматизации",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 64,
+      "line": 65,
       "text": "Шаблоны",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 64,
+      "line": 65,
       "text": "Название шаблона",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 67,
+      "line": 68,
       "text": "Напишите сообщение... @ для упоминания",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 69,
+      "line": 70,
       "text": "Система 3-х корзин",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
@@ -1445,13 +563,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\TaskDetailSheet.tsx",
-      "line": 151,
-      "text": "Izohlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\KnowledgeBaseSections.tsx",
       "line": 209,
       "text": "Русский:",
@@ -1459,121 +570,16 @@
       "locale": "ru"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\KnowledgeBaseTypes.ts",
-      "line": 42,
-      "text": "Mahsulotlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\KnowledgeBaseTypes.ts",
-      "line": 43,
-      "text": "Xizmatlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\KnowledgeBaseTypes.ts",
-      "line": 44,
-      "text": "Siyosatlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\KnowledgeBaseTypes.ts",
-      "line": 45,
-      "text": "Tartib-qoidalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\lms-extended\\types.ts",
-      "line": 43,
-      "text": "Testlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\lms-extended\\types.ts",
-      "line": 46,
-      "text": "Micro-learning",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingExtendedTypes.ts",
-      "line": 99,
-      "text": "Raqobatchilar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\MESExtendedTypes.ts",
-      "line": 106,
-      "text": "Ishlab Chiqarish Vazifalari",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MESExtendedTypes.ts",
-      "line": 110,
+      "line": 111,
       "text": "Smena O",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\MESExtendedTypes.ts",
-      "line": 120,
+      "line": 121,
       "text": "Smena O",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MESHomeDashboardTypes.ts",
-      "line": 68,
-      "text": "Ishlamoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MESHomeDashboardTypes.ts",
-      "line": 72,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MESWorkCentersTypes.ts",
-      "line": 56,
-      "text": "Ishlamoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MESWorkCentersTypes.ts",
-      "line": 60,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MMExtendedTypes.ts",
-      "line": 140,
-      "text": "Kreditor Qarzlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MMExtendedTypes.ts",
-      "line": 143,
-      "text": "Marshrut Rejasi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MMExtendedTypes.ts",
-      "line": 146,
-      "text": "Haydovchilar",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
@@ -1585,57 +591,8 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MROExtendedTypes.ts",
-      "line": 126,
-      "text": "Ehtiyot Qismlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MROExtendedTypes.ts",
-      "line": 127,
-      "text": "Kommunal Xizmatlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MROExtendedTypes.ts",
-      "line": 128,
-      "text": "Xarajat Nazorati",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\PapkaOrdersTypes.ts",
-      "line": 28,
-      "text": "Yangi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PapkaOrdersTypes.ts",
-      "line": 29,
-      "text": "Rejalashtirish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PapkaOrdersTypes.ts",
-      "line": 30,
-      "text": "Ishlab chiqarish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PapkaOrdersTypes.ts",
-      "line": 32,
-      "text": "Bekor qilindi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PapkaOrdersTypes.ts",
-      "line": 67,
+      "line": 68,
       "text": "Заказы Папок",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
@@ -1711,20 +668,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\POSInventoryPageTypes.ts",
-      "line": 56,
-      "text": "Sotuv",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\POSInventoryPageTypes.ts",
-      "line": 57,
-      "text": "Qaytarish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\PositionsSections.tsx",
       "line": 90,
       "text": "Shtат",
@@ -1733,59 +676,10 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\PositionsTypes.ts",
-      "line": 37,
-      "text": "Standart xodim",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PositionsTypes.ts",
-      "line": 37,
-      "text": "Davomat, sifat, vazifalar, LMS, jamoa ishlashi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PositionsTypes.ts",
-      "line": 38,
+      "line": 40,
       "text": "Mashinа operatori",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PositionsTypes.ts",
-      "line": 38,
-      "text": "Ishlab chiqarish, nuqsonlar, ish vaqti, xavfsizlik",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PositionsTypes.ts",
-      "line": 40,
-      "text": "Sotuv menejeri",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PositionsTypes.ts",
-      "line": 40,
-      "text": "Daromad, bitimlar, lead konversiyasi, NPS",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PosWarehousePageTypes.ts",
-      "line": 87,
-      "text": "Qaytarish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PosWarehousePageTypes.ts",
-      "line": 89,
-      "text": "Zarar akti",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ProductionFactsPage.tsx",
@@ -1795,121 +689,23 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\ProductionOrder360Types.ts",
-      "line": 10,
-      "text": "Jarayonda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogTypes.ts",
-      "line": 17,
+      "line": 18,
       "text": "Ishiga ishonadi, missiyaga mos harakat qiladi. Ichki qadriyatlar va g",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogTypes.ts",
-      "line": 24,
+      "line": 25,
       "text": "Natija va mukofot uchun ishlaydi. O",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogTypes.ts",
-      "line": 31,
+      "line": 32,
       "text": "Asosan moddiy manfaat uchun ishlaydi. Ish haqining muhimligi birinchi o",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogTypes.ts",
-      "line": 44,
-      "text": "Yakuniy xulosa",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QCDashboardHelpers.tsx",
-      "line": 62,
-      "text": "Faol",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QCDashboardTypes.ts",
-      "line": 67,
-      "text": "Muvaffaqiyatsiz",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QCDashboardTypes.ts",
-      "line": 68,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QCFinalInspectionTypes.ts",
-      "line": 33,
-      "text": "Dizayn kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QCFinalInspectionTypes.ts",
-      "line": 34,
-      "text": "Texnik kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QCFinalInspectionTypes.ts",
-      "line": 35,
-      "text": "QC kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QCFinalInspectionTypes.ts",
-      "line": 36,
-      "text": "Tasdiqlangan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QCFinalInspectionTypes.ts",
-      "line": 37,
-      "text": "Rejalashtirish uchun tayyor",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QCFinalInspectionTypes.ts",
-      "line": 42,
-      "text": "Bekor qilingan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QCModuleTypes.ts",
-      "line": 88,
-      "text": "Fizik xususiyatlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QCModuleTypes.ts",
-      "line": 95,
-      "text": "Normalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QCModuleTypes.ts",
-      "line": 97,
-      "text": "Reklamatsiyalar",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
@@ -1928,20 +724,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QuestionnaireTemplatesTypes.ts",
-      "line": 88,
-      "text": "SMM, content yaratish, kampaniya boshqarish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QuestionnaireTemplatesTypes.ts",
-      "line": 114,
-      "text": "Mijozlar bilan ishlash, mahsulot bilimi, sotish tajribasi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RaciCrisisPageSections.tsx",
       "line": 112,
       "text": "RACI vazifalar topilmadi",
@@ -1949,71 +731,15 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\RaciCrisisPageTypes.ts",
-      "line": 32,
-      "text": "Ochiq",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\RaciCrisisPageTypes.ts",
-      "line": 33,
-      "text": "Jarayonda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\RaciCrisisPageTypes.ts",
-      "line": 35,
-      "text": "Bekor",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\RecruiterKPIPageTypes.ts",
-      "line": 96,
-      "text": "Referral (xodim tavsiyasi)",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\RecruiterKPIPageTypes.ts",
-      "line": 97,
-      "text": "Gazetalar / Matbuot",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\ReferralPageTypes.ts",
-      "line": 46,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ReportsHubTypes.ts",
-      "line": 51,
-      "text": "Hisobotlar markazi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\ReportsHubTypes.ts",
-      "line": 67,
-      "text": "Nomi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\ReportsHubTypes.ts",
-      "line": 102,
+      "line": 103,
       "text": "Центр отчётов",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ReportsHubTypes.ts",
-      "line": 118,
+      "line": 119,
       "text": "Название",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
@@ -2022,125 +748,6 @@
       "file": "artifacts\\erp-dashboard\\src\\pages\\SaaSExtended.tsx",
       "line": 76,
       "text": "Yangi tenant muvaffaqiyatli qo",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SaaSExtendedTypes.ts",
-      "line": 74,
-      "text": "CRM + Savdo",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SaaSExtendedTypes.ts",
-      "line": 85,
-      "text": "Xavfsizlik",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SaaSExtendedTypes.ts",
-      "line": 98,
-      "text": "Xatolar Jurnali",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SDCustomersTypes.ts",
-      "line": 46,
-      "text": "Yangi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SDCustomersTypes.ts",
-      "line": 51,
-      "text": "Nofaol",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SDExtendedTypes.ts",
-      "line": 79,
-      "text": "Menejer Paneli",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SDExtendedTypes.ts",
-      "line": 82,
-      "text": "Avans Nazorat",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SDSalesQuotesTypes.ts",
-      "line": 77,
-      "text": "Bossiz",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SecurityDashboardCards.tsx",
-      "line": 51,
-      "text": "Tashrifchilar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SecurityDashboardCards.tsx",
-      "line": 57,
-      "text": "Ochiq hodisalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SecurityDashboardCards.tsx",
-      "line": 69,
-      "text": "Ogohlantirish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SecurityExtendedTypes.ts",
-      "line": 78,
-      "text": "Mehmonlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SecurityExtendedTypes.ts",
-      "line": 81,
-      "text": "Xavfli Moddalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SecurityExtendedTypes.ts",
-      "line": 83,
-      "text": "Xavfsizlik Reytingi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\StrategicTasksPanelTypes.ts",
-      "line": 10,
-      "text": "Jarayonda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\StrategicTasksPanelTypes.ts",
-      "line": 13,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\StrategicTasksPanelTypes.ts",
-      "line": 14,
-      "text": "Bekor qilingan",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
@@ -2229,148 +836,15 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 35,
-      "text": "Stanoq Tanlash",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 37,
-      "text": "Xarajat Optimizatsiya",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 38,
-      "text": "Mijoz Talablari",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 40,
-      "text": "Parallel Buyurtmalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 41,
-      "text": "Smena Boshqaruvi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 42,
-      "text": "Parallel Jarayonlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 47,
-      "text": "Yetkazish Kalk.",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 56,
-      "text": "Stanoq Tanlash",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 58,
-      "text": "Xarajat Optimizatsiya",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 59,
-      "text": "Mijoz Talablari",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 61,
-      "text": "Parallel Buyurtmalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 65,
-      "text": "Smena Boshqaruvi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 66,
-      "text": "Parallel Jarayonlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedTypes.ts",
-      "line": 71,
-      "text": "Yetkazish Kalk.",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\UsersPageTypes.ts",
-      "line": 11,
-      "text": "Xodim",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\warehouse\\InventarizatsiyaPanel.tsx",
-      "line": 52,
-      "text": "Jarayonda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\warehouse\\InventarizatsiyaPanel.tsx",
-      "line": 54,
-      "text": "Bekor",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\warehouse\\LotsTab.tsx",
-      "line": 53,
-      "text": "Tasdiqlangan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\warehouse\\warehouse-types.ts",
-      "line": 106,
-      "text": "Nomi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\warehouse\\warehouse-types.ts",
-      "line": 195,
+      "line": 196,
       "text": "Каталог Складов",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\warehouse\\warehouse-types.ts",
-      "line": 208,
+      "line": 209,
       "text": "Название",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
@@ -2404,99 +878,50 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseDailyViewTypes.ts",
-      "line": 55,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseDailyViewTypes.ts",
-      "line": 56,
-      "text": "Tayyorlanmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseDailyViewTypes.ts",
-      "line": 59,
-      "text": "Tasdiqlangan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 56,
-      "text": "PP - Ishlab Chiqarish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 57,
-      "text": "Buyurtmalar uchun materiallar boshqaruvi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 67,
-      "text": "Xarid buyurtmalari va qayta buyurtma",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 81,
-      "text": "Ombor qiymati va buxgalteriya",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 102,
+      "line": 104,
       "text": "Интеграции Склада",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 107,
+      "line": 109,
       "text": "PP - Производство",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 108,
+      "line": 110,
       "text": "Управление материалами для заказов",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 117,
+      "line": 119,
       "text": "MM - Закупки",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 118,
+      "line": 120,
       "text": "Заказы на закупку и повторные заказы",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 131,
+      "line": 133,
       "text": "FI - Финансы",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 132,
+      "line": 134,
       "text": "Оценка склада и бухгалтерия",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
@@ -2523,41 +948,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseKirimWizardTypes.ts",
-      "line": 79,
-      "text": "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseKirimWizardTypes.ts",
-      "line": 91,
-      "text": "Yarim Tayyor — Liniyadan Qabul",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseKirimWizardTypes.ts",
-      "line": 139,
-      "text": "MRO Ombori — Texnik Materiallar Kirim",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseKirimWizardTypes.ts",
-      "line": 167,
-      "text": "Materiallar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseKirimWizardTypes.ts",
-      "line": 170,
-      "text": "Tasdiqlash",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseKpiHub.tsx",
       "line": 94,
       "text": "QC kutmoqda",
@@ -2565,149 +955,9 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseMaterialKitsTypes.ts",
-      "line": 68,
-      "text": "Kutilmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseMaterialKitsTypes.ts",
-      "line": 69,
-      "text": "Tayyorlanmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseRentalTypes.ts",
-      "line": 66,
-      "text": "Yopilgan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReports.tsx",
-      "line": 59,
-      "text": "Joriy miqdor",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReports.tsx",
-      "line": 60,
-      "text": "Birlik",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 29,
-      "text": "Minimal qoldiqdan past materiallar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 32,
-      "text": "Muddat Ogohlantirish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 37,
-      "text": "Materiallar A/B/C guruhlari (Pareto)",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 41,
-      "text": "Partiyalar qarilik tahlili",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 49,
-      "text": "Zarar Harakatlari",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 50,
+      "line": 51,
       "text": "DAMAGE turi - zararlar ro",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 62,
-      "text": "GL Hisobot (Audit)",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 66,
-      "text": "3-Tomonlama Taqqoslash",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 75,
-      "text": "QC Hisobot",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 79,
-      "text": "Tasdiqlash Auditi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 80,
-      "text": "Harakat tasdiqlash audit",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 97,
-      "text": "Xodim Balansi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 98,
-      "text": "Har xodimning material balansi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 108,
-      "text": "Chop etilgan barkodlar tarixi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WasteTrackingDialogs.tsx",
-      "line": 55,
-      "text": "Muvaffaqiyatli saqlandi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WasteTrackingDialogs.tsx",
-      "line": 246,
-      "text": "Muvaffaqiyatli saqlandi",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
@@ -2803,13 +1053,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\contact\\ContactDetailSheet.tsx",
-      "line": 54,
-      "text": "Kontakt muvaffaqiyatli yangilandi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\components\\crm\\CustomerCard.tsx",
       "line": 94,
       "text": "AI tavsiyalar",
@@ -2866,41 +1109,6 @@
       "locale": "ru"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\workspace\\CRMKpiCards.tsx",
-      "line": 98,
-      "text": "Jami",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\workspace\\CRMKpiCards.tsx",
-      "line": 134,
-      "text": "Jami vazifalar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\workspace\\CRMKpiCards.tsx",
-      "line": 142,
-      "text": "Jarayondagilar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\workspace\\CRMKpiCards.tsx",
-      "line": 150,
-      "text": "Yakunlangan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\workspace\\useCRMWorkspace.ts",
-      "line": 176,
-      "text": "Lid yutildi — SD buyurtma yaratildi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\components\\director\\CompanyStateWidget.tsx",
       "line": 109,
       "text": "Foyda / Maqsad",
@@ -2912,13 +1120,6 @@
       "line": 118,
       "text": "Daromad / Maqsad",
       "kind": "JSX_TEXT",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\dizayn-new\\DataTable.types.ts",
-      "line": 57,
-      "text": "Ishdan ketgan",
-      "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
@@ -3027,34 +1228,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\components\\hr\\stats\\utils.ts",
-      "line": 56,
-      "text": "Ishlamoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\hr\\stats\\utils.ts",
-      "line": 58,
-      "text": "Ishdan ketgan",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\hr\\stats\\utils.ts",
-      "line": 60,
-      "text": "Nofaol",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\hr\\stats\\utils.ts",
-      "line": 82,
-      "text": "Ogohlantirish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\components\\LanguageSwitcher.tsx",
       "line": 19,
       "text": "Русский",
@@ -3091,42 +1264,21 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\orders\\order-constants.ts",
-      "line": 16,
+      "line": 18,
       "text": "Quti (Коробка)",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\orders\\order-constants.ts",
-      "line": 19,
+      "line": 21,
       "text": "Lоток",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\components\\orders\\order-constants.ts",
-      "line": 27,
-      "text": "Yangi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\orders\\order-constants.ts",
-      "line": 41,
-      "text": "0+0 (Rangsiz)",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\components\\orders\\translations.ts",
-      "line": 10,
-      "text": "Yangi Buyurtma Yaratish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\orders\\translations.ts",
-      "line": 88,
+      "line": 89,
       "text": "Создать новый заказ",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
@@ -3167,20 +1319,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\components\\production\\report\\helpers.ts",
-      "line": 9,
-      "text": "Jarayonda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\production\\report\\helpers.ts",
-      "line": 16,
-      "text": "Jarayonda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\helpers-channel-status.tsx",
       "line": 135,
       "text": "Ждёт",
@@ -3189,21 +1327,7 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\helpers-constants.tsx",
-      "line": 12,
-      "text": "Yangi ariza",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\helpers-constants.tsx",
-      "line": 18,
-      "text": "Tavsiyalar Tekshiruvi",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\helpers-constants.tsx",
-      "line": 78,
+      "line": 79,
       "text": "Ждёт",
       "kind": "OBJECT_LABEL",
       "locale": "ru"
@@ -3300,34 +1424,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\components\\settings\\camera\\types.ts",
-      "line": 55,
-      "text": "Ruxsatsiz kirish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\settings\\camera\\types.ts",
-      "line": 66,
-      "text": "Xavfsizlik alerrti yaratish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\settings\\camera\\types.ts",
-      "line": 67,
-      "text": "QC sifat alerti yaratish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\settings\\camera\\types.ts",
-      "line": 69,
-      "text": "MES ishlab chiqarish alerti",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\components\\TaxCalculator.tsx",
       "line": 41,
       "text": "Daromad solig'i (12%):",
@@ -3353,13 +1449,6 @@
       "line": 30,
       "text": "OGOHLANTIRISH",
       "kind": "JSX_TEXT",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\hub\\WarehouseStatsPanel.tsx",
-      "line": 25,
-      "text": "Qarzlar",
-      "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
@@ -3454,20 +1543,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\components\\GLPostingStatus.tsx",
-      "line": 93,
-      "text": "Kutmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\components\\GLPostingStatus.tsx",
-      "line": 94,
-      "text": "Kutmoqda",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\components\\PosAdminSections.tsx",
       "line": 181,
       "text": "IP manzil",
@@ -3524,128 +1599,16 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementChiqimTypes.ts",
-      "line": 62,
-      "text": "Ichki qaytarish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementChiqimTypes.ts",
-      "line": 64,
-      "text": "Zarar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementKirimTypes.ts",
-      "line": 109,
-      "text": "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementKirimTypes.ts",
-      "line": 118,
-      "text": "Yarim Tayyor — Liniyadan Qabul",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementKirimTypes.ts",
-      "line": 154,
-      "text": "MRO Ombori — Texnik Materiallar Kirim",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementNew.tsx",
-      "line": 44,
-      "text": "Ombordan tashqariga chiqarilgan materiallar. Barcode skaner orqali amalga oshiriladi.",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementNew.tsx",
-      "line": 59,
-      "text": "Ichki Qaytarish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementNew.tsx",
-      "line": 74,
+      "line": 75,
       "text": "Omborlar orasida material ko",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementNew.tsx",
-      "line": 79,
-      "text": "Zarar / Nosoz",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementNew.tsx",
-      "line": 84,
+      "line": 85,
       "text": "Zarar ko",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementNew.tsx",
-      "line": 94,
-      "text": "Inventarizatsiya asosida miqdor tuzatmasi.",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovements.types.ts",
-      "line": 36,
-      "text": "Bekor",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovements.types.ts",
-      "line": 75,
-      "text": "Yuborish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovements.types.ts",
-      "line": 77,
-      "text": "QC Yuborish",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovements.types.ts",
-      "line": 81,
-      "text": "Tasdiqlash",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovements.types.ts",
-      "line": 83,
-      "text": "Tasdiqlash",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosReports.tsx",
-      "line": 103,
-      "text": "Jami qatorlar",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosReports.tsx",
-      "line": 103,
-      "text": "Jami balans",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     }

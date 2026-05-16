@@ -6,6 +6,7 @@
 import { z } from "zod";
 import { type LucideIcon, Building2, ArrowLeftRight, CreditCard, Shield, FileText, Calendar, Brain } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface CostCenter {
   id: number | string;
   name?: string;
@@ -67,7 +68,7 @@ export const URL_TAB_MAP: Record<string, string> = {
 };
 
 export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
-  "costcenters":   { title: "Xarajat Markazlari", icon: Building2 },
+  "costcenters":   { title: tLabel('common.FinanceExtended.xarajatMarkazlari', "Xarajat Markazlari"), icon: Building2 },
   "profitcenters": { title: "Transfer Narxlash",  icon: ArrowLeftRight },
   "payments":      { title: "To'lovlar",           icon: CreditCard },
   "gldocs":        { title: "Audit Jurnali",       icon: Shield },

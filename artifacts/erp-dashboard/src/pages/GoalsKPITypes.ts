@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module GoalsKPITypes
  * @description Interfaces, types, and constants for GoalsKPI.
@@ -5,7 +7,7 @@
 
 export const CATEGORIES = [
   { value: "learning", label: "O'quv (ta'lim olish)" },
-  { value: "completion", label: "Tugatish (kurslarni yakunlash)" },
+  { value: "completion", label: tLabel('common.GoalsKPI.tugatishKurslarniYakunlash', "Tugatish (kurslarni yakunlash)") },
   { value: "engagement", label: "Faollik (ishtirok darajasi)" },
   { value: "performance", label: "Natija (ish samaradorligi)" },
   { value: "retention", label: "Saqlab qolish (xodimlarni ushlab turish)" },
@@ -14,8 +16,8 @@ export const CATEGORIES = [
 export const TARGET_TYPES = [
   { value: "global", label: "Umumiy" },
   { value: "department", label: "Bo'lim" },
-  { value: "position", label: "Lavozim" },
-  { value: "user", label: "Xodim" },
+  { value: "position", label: tLabel('common.GoalsKPI.lavozim', "Lavozim") },
+  { value: "user", label: tLabel('common.GoalsKPI.xodim', "Xodim") },
 ];
 
 export const PRIORITIES = [
@@ -26,10 +28,10 @@ export const PRIORITIES = [
 ];
 
 export const STATUS_OPTIONS = [
-  { value: "active", label: "Faol", color: "bg-green-500" },
+  { value: "active", label: tLabel('common.GoalsKPI.faol', "Faol"), color: "bg-green-500" },
   { value: "completed", label: "Bajarildi", color: "bg-blue-500" },
   { value: "failed", label: "Bajarilmadi", color: "bg-red-500" },
-  { value: "cancelled", label: "Bekor qilindi", color: "bg-gray-500" },
+  { value: "cancelled", label: tLabel('common.GoalsKPI.bekorQilindi', "Bekor qilindi"), color: "bg-gray-500" },
 ];
 
 export function getProgressPercentage(current: number, target: number): number {

@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module ApprovalWorkflowPageTypes
  * @description Types, constants, and helpers for ApprovalWorkflowPage.
@@ -24,7 +26,7 @@ export interface Workflow {
 }
 
 export const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
-  pending:   { label: "Kutilmoqda",   variant: "secondary" },
+  pending:   { label: tLabel('common.ApprovalWorkflowPage.kutilmoqda', "Kutilmoqda"),   variant: "secondary" },
   approved:  { label: "Tasdiqlandi",  variant: "default" },
   rejected:  { label: "Rad etildi",   variant: "destructive" },
   completed: { label: "Tugallandi",   variant: "outline" },

@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module WarehouseIntegrationsTypes
  * @description Interfaces, types, and constants for WarehouseIntegrations.
@@ -53,8 +55,8 @@ export const translations = {
     languageToggle: "Tilni almashtirish",
     refresh: "Yangilash",
     pp: {
-      title: "PP - Ishlab Chiqarish",
-      description: "Buyurtmalar uchun materiallar boshqaruvi",
+      title: tLabel('warehouse.WarehouseIntegrations.ppIshlabChiqarish', "PP - Ishlab Chiqarish"),
+      description: tLabel('warehouse.WarehouseIntegrations.buyurtmalarUchunMateriallarBoshqaruvi', "Buyurtmalar uchun materiallar boshqaruvi"),
       ordersNeedingMaterials: "Material talab qiluvchi buyurtmalar",
       reserveMaterials: "Materiallarni zaxiralash",
       issueMaterials: "Ishlab chiqarishga berish",
@@ -64,7 +66,7 @@ export const translations = {
     },
     mm: {
       title: "MM - Taminot",
-      description: "Xarid buyurtmalari va qayta buyurtma",
+      description: tLabel('warehouse.WarehouseIntegrations.xaridBuyurtmalariVaQaytaBuyurtma', "Xarid buyurtmalari va qayta buyurtma"),
       pendingDeliveries: "Kutilayotgan yetkazib berishlar",
       reorderSuggestions: "Qayta buyurtma tavsiyalari",
       lowStockAlerts: "Kam qoldiq ogohlantirishlari",
@@ -78,7 +80,7 @@ export const translations = {
     },
     fi: {
       title: "FI - Moliya",
-      description: "Ombor qiymati va buxgalteriya",
+      description: tLabel('warehouse.WarehouseIntegrations.omborQiymatiVaBuxgalteriya', "Ombor qiymati va buxgalteriya"),
       stockValuation: "Zaxira baholash",
       totalValue: "Jami qiymat",
       postMovements: "GL ga kiritish",

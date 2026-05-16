@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { Zap, Wrench, Package, DollarSign, Coffee, Shirt, Monitor, Sparkles, Leaf, Building2, type LucideIcon } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface MROEquipment {
   id: number | string;
   name?: string;
@@ -123,9 +124,9 @@ export const URL_TAB_MAP: Record<string, string> = {
 
 export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   preventive:  { title: "Profilaktika",        icon: Wrench   },
-  spareparts:  { title: "Ehtiyot Qismlar",     icon: Package  },
-  utilities:   { title: "Kommunal Xizmatlar",  icon: Zap      },
-  expenses:    { title: "Xarajat Nazorati",    icon: DollarSign },
+  spareparts:  { title: tLabel('common.MROExtended.ehtiyotQismlar', "Ehtiyot Qismlar"),     icon: Package  },
+  utilities:   { title: tLabel('common.MROExtended.kommunalXizmatlar', "Kommunal Xizmatlar"),  icon: Zap      },
+  expenses:    { title: tLabel('common.MROExtended.xarajatNazorati', "Xarajat Nazorati"),    icon: DollarSign },
   kitchen:     { title: "Oshxona",             icon: Coffee   },
   uniforms:    { title: "Forma va Kiyim",      icon: Shirt    },
   office:      { title: "Ofis Inventari",      icon: Monitor  },

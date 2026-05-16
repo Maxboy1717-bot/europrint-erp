@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * PosWarehousePageTypes — shared interfaces, types and constants
  * for the POS ↔ Warehouse integration page.
@@ -84,7 +86,7 @@ export const MOVEMENT_TYPES = [
   { value: "EXTERNAL_IN",       label: "Tashqi kirim",       requiresFrom: false, requiresTo: true  },
   { value: "EXTERNAL_OUT",      label: "Tashqi chiqim",      requiresFrom: true,  requiresTo: false },
   { value: "INTERNAL_ISSUE",    label: "Bo'limga berish",    requiresFrom: true,  requiresTo: true  },
-  { value: "INTERNAL_RETURN",   label: "Qaytarish",          requiresFrom: false, requiresTo: true  },
+  { value: "INTERNAL_RETURN",   label: tLabel('warehouse.PosWarehousePage.qaytarish', "Qaytarish"),          requiresFrom: false, requiresTo: true  },
   { value: "INTERNAL_TRANSFER", label: "Ombor ko'chirish",   requiresFrom: true,  requiresTo: true  },
-  { value: "DAMAGE",            label: "Zarar akti",          requiresFrom: true,  requiresTo: false },
+  { value: "DAMAGE",            label: tLabel('warehouse.PosWarehousePage.zararAkti', "Zarar akti"),          requiresFrom: true,  requiresTo: false },
 ];

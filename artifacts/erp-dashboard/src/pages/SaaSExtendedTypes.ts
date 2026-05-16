@@ -6,6 +6,7 @@
 import { z } from "zod";
 import { Building2, Users, Shield, Layers, Activity, AlertTriangle, type LucideIcon } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface SaaSTenant {
   id: number | string;
   name?: string;
@@ -71,7 +72,7 @@ export const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destruct
 };
 
 export const ALL_MODULES = [
-  { name: "CRM + Savdo", key: "crm", tiers: ["basic", "starter", "professional", "enterprise"] },
+  { name: tLabel('common.SaaSExtended.crmSavdo', "CRM + Savdo"), key: "crm", tiers: ["basic", "starter", "professional", "enterprise"] },
   { name: "Marketing", key: "marketing", tiers: ["starter", "professional", "enterprise"] },
   { name: "Dizayn + Texnolog", key: "design", tiers: ["starter", "professional", "enterprise"] },
   { name: "Sifat Nazorati (QC)", key: "qc", tiers: ["basic", "starter", "professional", "enterprise"] },
@@ -82,7 +83,7 @@ export const ALL_MODULES = [
   { name: "Moliya (FI)", key: "fi", tiers: ["starter", "professional", "enterprise"] },
   { name: "HR", key: "hr", tiers: ["basic", "starter", "professional", "enterprise"] },
   { name: "LMS Ta'lim", key: "lms", tiers: ["starter", "professional", "enterprise"] },
-  { name: "Xavfsizlik", key: "security", tiers: ["professional", "enterprise"] },
+  { name: tLabel('common.SaaSExtended.xavfsizlik', "Xavfsizlik"), key: "security", tiers: ["professional", "enterprise"] },
   { name: "MRO Xo'jalik", key: "mro", tiers: ["professional", "enterprise"] },
   { name: "IoT + Kamera", key: "iot", tiers: ["enterprise"] },
   { name: "Direktor Panel", key: "director", tiers: ["professional", "enterprise"] },
@@ -95,7 +96,7 @@ export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   "licensing":  { title: "Litsenziya",          icon: Shield },
   "modules":    { title: "Modul Nazorati",      icon: Layers },
   "monitoring": { title: "Monitoring",          icon: Activity },
-  "errors":     { title: "Xatolar Jurnali",    icon: AlertTriangle },
+  "errors":     { title: tLabel('common.SaaSExtended.xatolarJurnali', "Xatolar Jurnali"),    icon: AlertTriangle },
 };
 
 export const AddTenantSchema = z.object({

@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /** @module AIProductionPlanningTypes @description TypeScript interfaces, types, constants, and pure utility functions for the AI Production Planning feature. No JSX. */
 
 // ─── Data Interfaces ──────────────────────────────────────────────────────────
@@ -106,10 +108,10 @@ export const getConfidenceColor = (score: number): string =>
 export const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   draft:             { label: "Qoralama",          cls: "bg-muted/60 text-foreground" },
   pending_review:    { label: "Tekshiruvda",        cls: "bg-amber-100 text-amber-800" },
-  auto_approved:     { label: "Avto-tasdiqlangan",  cls: "bg-green-100 text-green-800" },
-  manually_approved: { label: "Tasdiqlangan",       cls: "bg-green-100 text-green-800" },
+  auto_approved:     { label: tLabel('production.AIProductionPlanning.avtoTasdiqlangan', "Avto-tasdiqlangan"),  cls: "bg-green-100 text-green-800" },
+  manually_approved: { label: tLabel('production.AIProductionPlanning.tasdiqlangan', "Tasdiqlangan"),       cls: "bg-green-100 text-green-800" },
   rejected:          { label: "Rad etilgan",        cls: "bg-red-100 text-red-800" },
-  executing:         { label: "Bajarilmoqda",       cls: "bg-blue-100 text-blue-800" },
+  executing:         { label: tLabel('production.AIProductionPlanning.bajarilmoqda', "Bajarilmoqda"),       cls: "bg-blue-100 text-blue-800" },
   executed:          { label: "Bajarilgan",         cls: "bg-green-100 text-green-800" },
 };
 

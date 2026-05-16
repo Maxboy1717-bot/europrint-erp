@@ -2,6 +2,7 @@
 
 import { Briefcase, Target, Star, CheckSquare } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Motivatsiya darajalari (Material №46 Bo'lim 2) ──────────────────────────
 export const MOTIVATION_LEVELS = [
   {
@@ -41,7 +42,7 @@ export const STEPS = [
   { id: "section1", icon: Briefcase, title: "1. Ish tajribasi" },
   { id: "section2", icon: Target,    title: "2. Motivatsiya" },
   { id: "section3", icon: Star,      title: "3. Kompetensiya" },
-  { id: "summary",  icon: CheckSquare, title: "Yakuniy xulosa" },
+  { id: "summary",  icon: CheckSquare, title: tLabel('common.ProductivityInterviewDialog.yakuniyXulosa', "Yakuniy xulosa") },
 ];
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────

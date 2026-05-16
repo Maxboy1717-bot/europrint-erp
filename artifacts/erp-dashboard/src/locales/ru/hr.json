@@ -606,5 +606,50 @@
   "reasonRuPlaceholder": "Причина и подробности...",
   "selectHrAdmin": "Выберите HR/Admin",
   "jshd12": "JSHD (12%):",
-  "inps12": "INPS (12%):"
+  "inps12": "INPS (12%):",
+  "HRCapitalTab": {
+    "yakunlangan": "Завершено"
+  },
+  "": {
+    "ogohlantirish": "Ogohlantirish",
+    "xavfsizlik": "Xavfsizlik",
+    "kadrlar": "Kadrlar",
+    "alertlar": "Alertlar"
+  },
+  "HRCapitalTestsHelpers": {
+    "tsx": {
+      "jarayonda": "Jarayonda",
+      "kutilmoqda": "Ожидает"
+    }
+  },
+  "HRCapitalTests": {
+    "boshqalarningFikriniHisobgaOlmaydi": "Boshqalarning fikrini hisobga olmaydi"
+  },
+  "HRDashboard": {
+    "malakalarMatritsasi": "Malakalar Matritsasi",
+    "pipRejalar": "PIP Rejalar",
+    "kunlikHisobot": "Kunlik Hisobot",
+    "hujjatOqimi": "Hujjat Oqimi"
+  },
+  "HROffboarding": {
+    "ketishSababingizNima": "Ketish sababingiz nima?",
+    "bekorQilindi": "Отменено",
+    "faol": "Активный"
+  },
+  "HRSuccessionPlanning": {
+    "asosiyIshchilar": "Asosiy ishchilar",
+    "yashirinYulduzlar": "Yashirin yulduzlar",
+    "ishchiOtliqlar": "Ishchi otliqlar",
+    "yulduzlar": "Yulduzlar"
+  },
+  "HRZvsPage": {
+    "tasdiqlangan": "Подтверждено",
+    "kutilmoqda": "Ожидает"
+  },
+  "utils": {
+    "ogohlantirish": "Ogohlantirish",
+    "nofaol": "Неактивный",
+    "ishdanKetgan": "Ishdan ketgan",
+    "ishlamoqda": "Ishlamoqda"
+  }
 }

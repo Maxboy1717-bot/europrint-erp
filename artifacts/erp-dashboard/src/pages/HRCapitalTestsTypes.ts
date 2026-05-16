@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * HRCapitalTestsTypes — Constants and TypeScript types for the HRCapitalTests
  * wizard.  No React/JSX imports needed here.
@@ -26,7 +28,7 @@ export const SYNDROME_DESCRIPTIONS: Record<string, { label: string; description:
   "Konservator":          { label: "Konservator",          description: "Yangilikka qarshi, eski usullarga yopishib olgan",                   color: "bg-yellow-100 text-yellow-800 border-yellow-300" },
   "Prokrastinator":       { label: "Prokrastinator",       description: "Ishlarni kechiktiradi, qaror qabul qilishdan qo'rqadi",              color: "bg-blue-100 text-blue-800 border-blue-300" },
   "Emotsional Beqaror":   { label: "Emotsional Beqaror",   description: "Stressga nisbatan kuchli ta'sirlanuvchan",                           color: "bg-purple-100 text-purple-800 border-purple-300" },
-  "Avtoritar":            { label: "Avtoritar",            description: "Boshqalarning fikrini hisobga olmaydi",                              color: "bg-rose-100 text-rose-800 border-rose-300" },
+  "Avtoritar":            { label: "Avtoritar",            description: tLabel('hr.HRCapitalTests.boshqalarningFikriniHisobgaOlmaydi', "Boshqalarning fikrini hisobga olmaydi"),                              color: "bg-rose-100 text-rose-800 border-rose-300" },
   "O'sishdan Qochuvchi":  { label: "O'sishdan Qochuvchi",  description: "Tanqid va o'sish imkoniyatlaridan qo'rqadi",                         color: "bg-slate-100 text-slate-800 border-slate-300" },
   "Jamoa Qo'g'irchoq'i":  { label: "Jamoa Qo'g'irchoq'i",  description: "Mustaqil qaror qabul qila olmaydi",                                 color: "bg-cyan-100 text-cyan-800 border-cyan-300" },
   "Introviert Jamoa":     { label: "Introviert Jamoa",     description: "Jamoa bilan ishlashni afzal ko'radi lekin komunikatsiyasi zaif",     color: "bg-teal-100 text-teal-800 border-teal-300" },

@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module MESHomeDashboardTypes
  * @description Shared types and pure helpers for MESHomeDashboard.
@@ -65,11 +67,11 @@ export function oeeBar(v: number) {
 
 export function statusInfo(s: string) {
   const map: Record<string, { label: string; color: string; dot: string }> = {
-    running:   { label: "Ishlamoqda",   color: "text-[var(--ep-green)]",        dot: "bg-emerald-500" },
+    running:   { label: tLabel('common.MESHomeDashboard.ishlamoqda', "Ishlamoqda"),   color: "text-[var(--ep-green)]",        dot: "bg-emerald-500" },
     active:    { label: "Aktiv",        color: "text-[var(--ep-green)]",        dot: "bg-emerald-500" },
     paused:    { label: "To'xtatildi",  color: "text-[var(--ep-yellow)]",          dot: "bg-amber-500" },
     stopped:   { label: "To'xtadi",     color: "text-[var(--ep-red)]",            dot: "bg-red-500" },
-    pending:   { label: "Kutilmoqda",   color: "text-muted-foreground",   dot: "bg-muted-foreground" },
+    pending:   { label: tLabel('common.MESHomeDashboard.kutilmoqda', "Kutilmoqda"),   color: "text-muted-foreground",   dot: "bg-muted-foreground" },
     completed: { label: "Tugadi",       color: "text-[var(--ep-blue)]",           dot: "bg-blue-500" },
   };
   return map[s] ?? { label: s, color: "text-muted-foreground", dot: "bg-muted-foreground" };

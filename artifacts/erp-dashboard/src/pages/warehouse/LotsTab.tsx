@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { WarehouseData, Lang } from "./warehouse-types";
 import { apiRequest } from '@/lib/queryClient';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface LotRow {
   id: number;
   lot_number: string;
@@ -50,7 +51,7 @@ interface LotsResponse {
 }
 
 const STATUS_CONF: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; cls: string }> = {
-  approved:     { label: "Tasdiqlangan", icon: CheckCircle2, cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200" },
+  approved:     { label: tLabel('warehouse.LotsTab.tsx.tasdiqlangan', "Tasdiqlangan"), icon: CheckCircle2, cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200" },
   pending:      { label: "Tekshiruvda",  icon: AlertCircle,  cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200" },
   quarantine:   { label: "Karantin",     icon: AlertTriangle, cls: "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200" },
   rejected:     { label: "Rad etilgan",  icon: XCircle,      cls: "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200" },

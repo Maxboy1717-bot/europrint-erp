@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * MESWorkCentersTypes.ts
  * Interfaces and helper functions for MESWorkCenters
@@ -53,11 +55,11 @@ export function oeeColor(v: number): string {
 
 export function statusBadge(s: string): { label: string; variant: "default" | "secondary" | "destructive" | "outline" } {
   const map: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-    running:   { label: "Ishlamoqda",   variant: "default" },
+    running:   { label: tLabel('common.MESWorkCenters.ishlamoqda', "Ishlamoqda"),   variant: "default" },
     active:    { label: "Aktiv",        variant: "default" },
     paused:    { label: "To'xtatildi",  variant: "secondary" },
     stopped:   { label: "To'xtadi",     variant: "destructive" },
-    pending:   { label: "Kutilmoqda",   variant: "outline" },
+    pending:   { label: tLabel('common.MESWorkCenters.kutilmoqda', "Kutilmoqda"),   variant: "outline" },
     completed: { label: "Tugadi",       variant: "secondary" },
   };
   return map[s] ?? { label: s, variant: "outline" as const };

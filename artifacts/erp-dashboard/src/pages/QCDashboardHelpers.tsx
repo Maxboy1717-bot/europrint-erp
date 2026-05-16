@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── KpiCard ──────────────────────────────────────────────────────────────────
 
 export interface KpiCardProps {
@@ -59,7 +60,7 @@ export function StreamCard({ label, status, children, icon: Icon }: StreamCardPr
   const statusBadge = {
     ok:              { label: "Normal",        cls: "bg-green-50 text-[var(--ep-green)]" },
     warning:         { label: "Diqqat",         cls: "bg-amber-50 text-[var(--ep-yellow)]" },
-    active:          { label: "Faol",           cls: "bg-blue-50 text-[var(--ep-blue)]" },
+    active:          { label: tLabel('common.QCDashboardHelpers.tsx.faol', "Faol"),           cls: "bg-blue-50 text-[var(--ep-blue)]" },
     needs_attention: { label: "E'tibor kerak", cls: "bg-orange-50 text-[var(--ep-primary)]" },
   }[status];
 

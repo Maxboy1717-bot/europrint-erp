@@ -9,6 +9,7 @@ import {
   LayoutDashboard, Target, Package, Banknote,
 } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ── Domain Interfaces ────────────────────────────────────────────────────────
 
 export interface CrmDeal {
@@ -76,10 +77,10 @@ export const routeTabMap: Record<string, string> = {
 };
 
 export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
-  "manager": { title: "Menejer Paneli", icon: LayoutDashboard },
+  "manager": { title: tLabel('common.SDExtended.menejerPaneli', "Menejer Paneli"), icon: LayoutDashboard },
   "quota": { title: "Kvota Dashboard", icon: Target },
   "rental": { title: "Ombor Ijara", icon: Package },
-  "advance": { title: "Avans Nazorat", icon: Banknote },
+  "advance": { title: tLabel('common.SDExtended.avansNazorat', "Avans Nazorat"), icon: Banknote },
 };
 
 // ── Business Constants ───────────────────────────────────────────────────────

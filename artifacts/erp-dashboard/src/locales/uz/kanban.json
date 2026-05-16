@@ -102,5 +102,19 @@
   "moveToOutgoing": "Chiquvchiga o'tkazish",
   "archiveDocument": "Arxivga topshirish",
   "personalProgram": "Shaxsiy dastur (Персональная программа)",
-  "dailyTaskList": "Kunlik vazifalar ro'yxati"
+  "dailyTaskList": "Kunlik vazifalar ro'yxati",
+  "kanban-": {
+    "xabarYozingBilanEslatish": "Xabar yozing... @ bilan eslatish",
+    "shablonNomi": "Shablon nomi",
+    "shablonlar": "Shablonlar",
+    "bildirishnomalar": "Bildirishnomalar",
+    "tavsif": "Tavsif",
+    "nomi": "Nomi",
+    "potoklar": "Potoklar"
+  },
+  "TaskDetailSheet": {
+    "tsx": {
+      "izohlar": "Izohlar"
+    }
+  }
 }
