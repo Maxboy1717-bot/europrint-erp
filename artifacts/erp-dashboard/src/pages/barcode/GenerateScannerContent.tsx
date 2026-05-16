@@ -197,7 +197,7 @@ export function GenerateScannerContent({
                 <Input
                   value={scanInput}
                   onChange={(e) => onScanInputChange(e.target.value)}
-                  placeholder="BAT-XXXXXXXX-XXXX"
+                  placeholder={t("batXxxxxxxxXxxx")}
                   className="font-mono"
                   onKeyDown={(e) => e.key === "Enter" && onScan()}
                   data-testid="input-scan-barcode"

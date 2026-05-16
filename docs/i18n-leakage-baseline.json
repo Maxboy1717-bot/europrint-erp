@@ -1,14 +1,14 @@
 {
   "summary": {
-    "totalLeaks": 147,
+    "totalLeaks": 146,
     "filesWithLeaks": 87,
     "byKind": {
       "OBJECT_LABEL": 25,
-      "JSX_TEXT": 81,
+      "JSX_TEXT": 80,
       "PROP": 41
     },
     "byLocale": {
-      "uz": 137,
+      "uz": 136,
       "ru": 10
     },
     "topFiles": [
@@ -18,10 +18,6 @@
       },
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\OutcomesTab.tsx",
-        "count": 4
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\planning\\PlanningDialogsB.tsx",
         "count": 4
       },
       {
@@ -50,6 +46,10 @@
       },
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\planning\\PlanningDialogsA.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\planning\\PlanningDialogsB.tsx",
         "count": 3
       },
       {
@@ -510,13 +510,6 @@
       "file": "artifacts\\erp-dashboard\\src\\pages\\planning\\PlanningDialogsB.tsx",
       "line": 59,
       "text": "3-smena",
-      "kind": "JSX_TEXT",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\planning\\PlanningDialogsB.tsx",
-      "line": 173,
-      "text": "Planning Horizon (days)",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },

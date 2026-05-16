@@ -24,6 +24,7 @@ import { normalizeCategories } from "../taskCatalog";
 import { EPLoader } from "@/components/ep";
 import "../camera-ai-visual.css";
 
+import { useTranslation } from '@/lib/i18n';
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -43,6 +44,7 @@ interface CameraAnalysisWorkbenchProps {
 }
 
 export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkbenchProps) {
+  const { t } = useTranslation('common');
   const qc = useQueryClient();
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -165,7 +167,7 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
               <span className="text-sm font-medium text-foreground">
                 {lang === "uz" ? "Rasmni tanlash yoki bu yerga torting" : "Выберите изображение"}
               </span>
-              <span className="text-xs text-muted-foreground">JPEG / PNG</span>
+              <span className="text-xs text-muted-foreground">{t("jpegPng")}</span>
             </button>
           </div>
         </div>
