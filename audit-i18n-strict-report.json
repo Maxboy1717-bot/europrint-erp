@@ -1,0 +1,2888 @@
+{
+  "uz": {
+    "admin": [
+      [
+        "dashboard",
+        "Admin paneli"
+      ],
+      [
+        "validate.cardLabel",
+        "Card Yorliq"
+      ]
+    ],
+    "ai": [
+      [
+        "askQuestion",
+        "Savol bering..."
+      ],
+      [
+        "forecastDesc",
+        "Croston/TSB sporadic demand · Ensemble (EMA+HW+Croston)"
+      ],
+      [
+        "seasonLength",
+        "Mavsum uzunligi (s)"
+      ],
+      [
+        "ci95Upper",
+        "95% CI yuqori"
+      ],
+      [
+        "ci95Lower",
+        "95% CI quyi"
+      ],
+      [
+        "ci80Upper",
+        "80% CI yuqori"
+      ],
+      [
+        "ci80Lower",
+        "80% CI quyi"
+      ],
+      [
+        "agentVisionQc",
+        "Vision QC"
+      ],
+      [
+        "qcheck.preflightFail",
+        "Preflight: Muammo aniqlandi"
+      ],
+      [
+        "demandForecast.next1m",
+        "Next 1m"
+      ],
+      [
+        "demandForecast.next3m",
+        "Next 3m"
+      ],
+      [
+        "demandForecast.avgConfidence",
+        "avg Confidence"
+      ]
+    ],
+    "aisha": [
+      [
+        "listen",
+        "Gapiring"
+      ],
+      [
+        "approval.voiceYes",
+        "\"Ha\" deb tasdiqlang"
+      ]
+    ],
+    "auth": [
+      [
+        "sessionExpired",
+        "Sessiya tugadi, qayta kiring"
+      ],
+      [
+        "enterEmail",
+        "Email kiriting"
+      ],
+      [
+        "token.expired",
+        "Sessiya muddati tugadi. Qayta kiring."
+      ],
+      [
+        "loggingIn",
+        "logging In"
+      ]
+    ],
+    "barcode": [
+      [
+        "notifyAdmin",
+        "notify Admin"
+      ]
+    ],
+    "common": [
+      [
+        "exportToExcel",
+        "Excel ga eksport"
+      ],
+      [
+        "tip4",
+        "Ovozli javob bering"
+      ],
+      [
+        "k1Step",
+        "1 && step"
+      ],
+      [
+        "currentRatio",
+        "Current Ratio"
+      ],
+      [
+        "more1",
+        "More"
+      ],
+      [
+        "sidebar",
+        "Yon panel"
+      ],
+      [
+        "usersProducts",
+        "users, products..."
+      ],
+      [
+        "k100AuditQamrovi",
+        "100% audit qamrovi"
+      ],
+      [
+        "k404DeadButton",
+        "404, dead button"
+      ],
+      [
+        "customer001",
+        "customer-001"
+      ],
+      [
+        "invoiceContract",
+        "invoice, contract..."
+      ],
+      [
+        "newInProgressC0",
+        "NEW, IN_PROGRESS, C0:NEW..."
+      ],
+      [
+        "statusTitleBudget",
+        "status, title, budget..."
+      ],
+      [
+        "marketingFunnel",
+        "Marketing voronkasi"
+      ],
+      [
+        "mediaOav",
+        "Media / OAV"
+      ],
+      [
+        "prMedia",
+        "PR & Media"
+      ],
+      [
+        "vendorKodi",
+        "Vendor kodi *"
+      ],
+      [
+        "k10SubNavigation",
+        "10. Pastki navigatsiya"
+      ],
+      [
+        "k6CardWithHeader",
+        "6. Sarlavhali karta"
+      ],
+      [
+        "mrpRun202401",
+        "MRP Run - 2024-01"
+      ],
+      [
+        "k1BilimDarajasi",
+        "1. Bilim darajasi"
+      ],
+      [
+        "moliyaviyYordam",
+        "🎁 Moliyaviy yordam"
+      ],
+      [
+        "savolTuri",
+        "Savol turi *"
+      ],
+      [
+        "texnikaXavfsizligiTesti",
+        "Texnika xavfsizligi testi"
+      ],
+      [
+        "tugashSanasi",
+        "⏰ Tugash sanasi"
+      ],
+      [
+        "xabarYozing",
+        "Xabar yozing..."
+      ],
+      [
+        "masalanMarketingJamoasi",
+        "Masalan: Marketing jamoasi"
+      ],
+      [
+        "xonaQidiring",
+        "Xona qidiring..."
+      ],
+      [
+        "savolKiriting",
+        "Savol kiriting..."
+      ],
+      [
+        "izohYozing",
+        "Izoh yozing..."
+      ],
+      [
+        "masalanDirektorBuxgalter",
+        "masalan: Direktor, Buxgalter"
+      ],
+      [
+        "masalanOffsetBosmaA3Format",
+        "Masalan: offset bosma, A3 format, 1000 dona"
+      ],
+      [
+        "strategikSavolYozing",
+        "Strategik savol yozing..."
+      ],
+      [
+        "kompaniyaHolatiYuklanmadi",
+        "Kompaniya holati yuklanmadi"
+      ],
+      [
+        "idealVsHaqiqat",
+        "Ideal vs Haqiqat"
+      ],
+      [
+        "reyting",
+        "Reyting bali"
+      ],
+      [
+        "boshDaftarHujjatlari",
+        "Bosh Daftar Hujjatlari"
+      ],
+      [
+        "quickRatio",
+        "Quick Ratio"
+      ],
+      [
+        "debtToEquity",
+        "Debt to Equity"
+      ],
+      [
+        "debtToAssets",
+        "Debt to Assets"
+      ],
+      [
+        "faolOffboardingJarayonlari",
+        "Faol Offboarding Jarayonlari"
+      ],
+      [
+        "jpegPngWebp",
+        "JPEG, PNG, WebP"
+      ],
+      [
+        "masalanMarketingMenejer",
+        "Masalan: Marketing menejer"
+      ],
+      [
+        "tizimTavsiyaBersin",
+        "Tizim tavsiya bersin"
+      ],
+      [
+        "masalanMarketingMenejeri",
+        "masalan: Marketing menejeri"
+      ],
+      [
+        "blokALavozimTahlili",
+        "Blok A: Lavozim tahlili"
+      ],
+      [
+        "blokDToolTestTalablari",
+        "Blok D: TOOL TEST Talablari"
+      ],
+      [
+        "blokETajribaBilim",
+        "Blok E: Tajriba & Bilim"
+      ],
+      [
+        "k5XizmatSafari",
+        "5. Xizmat safari"
+      ],
+      [
+        "k6SinovMuddati",
+        "6. Sinov muddati"
+      ],
+      [
+        "k9AsosiyMaosh",
+        "9. Asosiy maosh"
+      ],
+      [
+        "noutbukCrmMaxsusKiyim",
+        "Noutbuk, CRM, maxsus kiyim..."
+      ],
+      [
+        "sinovDavriKuzatuvi",
+        "Sinov Davri Kuzatuvi"
+      ],
+      [
+        "k2Yomon",
+        "2 — 😐 Yomon"
+      ],
+      [
+        "testNatijalariTendensiyasi",
+        "Test natijalari tendensiyasi"
+      ],
+      [
+        "kursKodi",
+        "Kurs kodi *"
+      ],
+      [
+        "yutuqlariMukofotlariSertifikatlari",
+        "Yutuqlari, mukofotlari, sertifikatlari..."
+      ],
+      [
+        "scanBarcodeToAddProducts",
+        "Scan barcode to add products"
+      ],
+      [
+        "topDefektTurlari",
+        "Top Defekt Turlari"
+      ],
+      [
+        "cvMezonlari52",
+        "CV Mezonlari №52"
+      ],
+      [
+        "rekruterIzohiYozing",
+        "Rekruter izohi yozing..."
+      ],
+      [
+        "blokDToolTestTalablari1",
+        "Blok D: TOOL TEST talablari"
+      ],
+      [
+        "segment",
+        "Segment turi"
+      ],
+      [
+        "leedFunnelTahlili",
+        "Leed funnel tahlili"
+      ],
+      [
+        "kreditLimitiHolati",
+        "Kredit limiti holati"
+      ],
+      [
+        "displaysTheMobileSidebar",
+        "Displays the mobile sidebar."
+      ],
+      [
+        "toggleSidebar3",
+        "Toggle Sidebar"
+      ],
+      [
+        "barcodeLabel",
+        "🏷️ Barcode Label"
+      ],
+      [
+        "hozirgiZaxiraDavri",
+        "Hozirgi zaxira davri"
+      ],
+      [
+        "aktivKodi",
+        "Aktiv kodi *"
+      ],
+      [
+        "aktivTuri",
+        "Aktiv turi *"
+      ],
+      [
+        "hisoblashTuri",
+        "Hisoblash turi *"
+      ],
+      [
+        "auditConsole100Qamrovli",
+        "AUDIT CONSOLE — 100% Qamrovli"
+      ],
+      [
+        "auditYozuvTafsilotlari",
+        "Audit Yozuv Tafsilotlari"
+      ],
+      [
+        "action1",
+        "Action:"
+      ],
+      [
+        "entity",
+        "Entity:"
+      ],
+      [
+        "actionTuri",
+        "Action turi"
+      ],
+      [
+        "entityTuri",
+        "Entity turi"
+      ],
+      [
+        "orderInvoicePayment",
+        "Order → Invoice → Payment → ..."
+      ],
+      [
+        "k11TizimPasporti",
+        "1.1 Tizim pasporti"
+      ],
+      [
+        "k12FrontendBackendMosligi",
+        "1.2 Frontend ↔ Backend mosligi"
+      ],
+      [
+        "muammoTavsifi",
+        "• Muammo tavsifi"
+      ],
+      [
+        "k33PeriodClose",
+        "3.3 Period close"
+      ],
+      [
+        "kengQamrovliDastur",
+        "Keng qamrovli dastur"
+      ],
+      [
+        "welcomeDayTadbirlari",
+        "Welcome Day tadbirlari"
+      ],
+      [
+        "masalanKonferensiyaZali3Qavat",
+        "Masalan: Konferensiya zali, 3-qavat"
+      ],
+      [
+        "direktorBrifing",
+        "Direktor brifing"
+      ],
+      [
+        "hrPerformanceAi",
+        "HR Performance AI"
+      ],
+      [
+        "brakTrendKarantinAiDefekt",
+        "Brak trend + karantin + AI defekt aniqlash"
+      ],
+      [
+        "leadSkoring",
+        "Lead Skoring"
+      ],
+      [
+        "aiLeadSkoring",
+        "AI Lead Skoring"
+      ],
+      [
+        "revisionTarixi",
+        "Revision tarixi"
+      ],
+      [
+        "revisionTarixi1",
+        "Revision Tarixi"
+      ],
+      [
+        "fraudBaholashNatijasi",
+        "Fraud Baholash Natijasi"
+      ],
+      [
+        "naqdBankKarta",
+        "Naqd, bank, karta..."
+      ],
+      [
+        "byudjetFarqiTahlili",
+        "Byudjet Farqi Tahlili"
+      ],
+      [
+        "nomzodIdKiriting",
+        "Nomzod ID kiriting"
+      ],
+      [
+        "qaytaRejalashSababi",
+        "Qayta rejalash sababi..."
+      ],
+      [
+        "oddiyTestImtihonlari",
+        "Oddiy Test Imtihonlari"
+      ],
+      [
+        "discriminatsiyaIndeksi",
+        "🎯 Discriminatsiya Indeksi"
+      ],
+      [
+        "sessionStatistikasi",
+        "⏱️ Session Statistikasi"
+      ],
+      [
+        "engYuqoriBall",
+        "Eng Yuqori Ball"
+      ],
+      [
+        "ballTaqsimoti",
+        "📊 Ball Taqsimoti"
+      ],
+      [
+        "testNatijalari",
+        "📊 Test Natijalari"
+      ],
+      [
+        "savolTuriTaqsimoti",
+        "❓ Savol Turi Taqsimoti"
+      ],
+      [
+        "performanceMatrix",
+        "🎯 Performance Matrix"
+      ],
+      [
+        "kalendarTadbirlariStatistikasi",
+        "Kalendar tadbirlari statistikasi"
+      ],
+      [
+        "statistikaAnalitika",
+        "Statistika & Analitika"
+      ],
+      [
+        "leaderboard",
+        "Reyting jadvali"
+      ],
+      [
+        "action2",
+        "Action"
+      ],
+      [
+        "auditYozuvTafsiloti",
+        "Audit yozuv tafsiloti"
+      ],
+      [
+        "zplZebraZplIi",
+        "ZPL — Zebra ZPL II"
+      ],
+      [
+        "eplEltronEpl2",
+        "EPL — Eltron EPL2"
+      ],
+      [
+        "kameraAiMonitoring",
+        "Kamera AI Monitoring"
+      ],
+      [
+        "jonliKameraMonitoring",
+        "Jonli Kamera Monitoring"
+      ],
+      [
+        "izohYozing1",
+        "Izoh yozing…"
+      ],
+      [
+        "suhbatBallXulosasi",
+        "Suhbat Ball Xulosasi"
+      ],
+      [
+        "toolTestAJNatijalari",
+        "TOOL TEST A-J Natijalari"
+      ],
+      [
+        "ismFamilya1",
+        "Ism familya *"
+      ],
+      [
+        "arEclStavkalari",
+        "AR ECL Stavkalari"
+      ],
+      [
+        "forFetchFailures",
+        "for fetch failures,"
+      ],
+      [
+        "varianceTahlili",
+        "Variance Tahlili"
+      ],
+      [
+        "tieredPricing",
+        "Tiered Pricing"
+      ],
+      [
+        "moliyaviyRiskTahlili",
+        "Moliyaviy Risk Tahlili"
+      ],
+      [
+        "scoring20",
+        "Scoring 2.0"
+      ],
+      [
+        "leadScoring20",
+        "Lead Scoring 2.0"
+      ],
+      [
+        "obyektTuri",
+        "Obyekt turi *"
+      ],
+      [
+        "triggerTuri",
+        "Trigger turi *"
+      ],
+      [
+        "harakatTuri",
+        "Harakat turi *"
+      ],
+      [
+        "k3dQutiVizualizatsiya",
+        "3D Quti Vizualizatsiya"
+      ],
+      [
+        "dizaynXarajatKalkulyatori",
+        "Dizayn xarajat kalkulyatori"
+      ],
+      [
+        "dizaynAssetKutubxonasi",
+        "Dizayn asset kutubxonasi"
+      ],
+      [
+        "europrintErpDirektorPanelV3",
+        "Europrint ERP — Direktor Panel v3.0"
+      ],
+      [
+        "eskalatsiyaQilindi",
+        "🚨 Eskalatsiya qilindi"
+      ],
+      [
+        "versiyaTarixi",
+        "📜 Versiya tarixi"
+      ],
+      [
+        "masalanHrMenejerDirektorBosh",
+        "Masalan: HR Menejer, Direktor, Bosh buxgalter"
+      ],
+      [
+        "masalanTexnikMutaxassis",
+        "Masalan: Texnik mutaxassis"
+      ],
+      [
+        "macbookPro14Inch",
+        "MacBook Pro 14 inch"
+      ],
+      [
+        "pdfWordExcelRasmMax",
+        "PDF, Word, Excel, rasm — max 15 MB"
+      ],
+      [
+        "masalanPasportNusxasi",
+        "Masalan: Pasport nusxasi"
+      ],
+      [
+        "onboardingHolati",
+        "Onboarding holati"
+      ],
+      [
+        "recruitingKanali",
+        "Recruiting kanali"
+      ],
+      [
+        "offboardingHolati",
+        "Offboarding holati"
+      ],
+      [
+        "masalanDiscDTuri",
+        "Masalan: DISC — D turi"
+      ],
+      [
+        "toolTestNatijasi",
+        "Tool Test natijasi"
+      ],
+      [
+        "hrCapitalTestTarixi",
+        "HR Capital Test Tarixi"
+      ],
+      [
+        "dastgohOperatoriProfili",
+        "Dastgoh Operatori Profili"
+      ],
+      [
+        "rolAsosidagiTizimRuxsatlari",
+        "Rol asosidagi tizim ruxsatlari"
+      ],
+      [
+        "punchIn1000Am",
+        "Punch In: 10:00 AM"
+      ],
+      [
+        "samarali8s36d",
+        "Samarali: 8s 36d"
+      ],
+      [
+        "asloTavsiyaEtmayman",
+        "Aslo tavsiya etmayman"
+      ],
+      [
+        "albattaTavsiyaQilaman",
+        "Albatta tavsiya qilaman"
+      ],
+      [
+        "masalanPrinterFrezer",
+        "Masalan: Printer, Frezer"
+      ],
+      [
+        "masalanSexh1ZalB",
+        "Masalan: Sexh 1, Zal B"
+      ],
+      [
+        "soliqMuddatlariKalendari",
+        "Soliq Muddatlari Kalendari"
+      ],
+      [
+        "aiMoliyaviyRiskTahlili",
+        "AI Moliyaviy Risk Tahlili"
+      ],
+      [
+        "reyting1",
+        "🏆 Reyting"
+      ],
+      [
+        "badgeKatalog",
+        "🎖️ Badge Katalog"
+      ],
+      [
+        "avtomatikBuxgalteriyaYozuvlariMonitoring",
+        "Avtomatik buxgalteriya yozuvlari monitoring"
+      ],
+      [
+        "xabarQoldiring",
+        "Xabar qoldiring..."
+      ],
+      [
+        "muammoTuri1",
+        "Muammo turi *"
+      ],
+      [
+        "macbookPro14",
+        "MacBook Pro 14"
+      ],
+      [
+        "testTuri",
+        "Test turi *"
+      ],
+      [
+        "iqTestDarajalari",
+        "IQ Test darajalari"
+      ],
+      [
+        "testTurlariMaqsadi",
+        "Test turlari maqsadi"
+      ],
+      [
+        "intellektualDarajaMantiqiyFikrlashQobiliyati",
+        "— Intellektual daraja, mantiqiy fikrlash qobiliyati"
+      ],
+      [
+        "hrLmsIntegratsiya",
+        "HR ↔ LMS Integratsiya"
+      ],
+      [
+        "hrOffboarding",
+        "HR — Offboarding"
+      ],
+      [
+        "k2Yomon1",
+        "2 — Yomon"
+      ],
+      [
+        "hrOnboarding",
+        "HR — Onboarding"
+      ],
+      [
+        "lavozimPapkasiOnboardingMateriallari",
+        "Lavozim Papkasi — Onboarding Materiallari"
+      ],
+      [
+        "yuqoriPotentsialPastPotentsial",
+        "↑ Yuqori potentsial | Past potentsial ↓"
+      ],
+      [
+        "znoNaqdPulArizalari",
+        "ZNO — Naqd Pul Arizalari"
+      ],
+      [
+        "naqdPulMaqsadi",
+        "Naqd pul maqsadi..."
+      ],
+      [
+        "referansRasmYuklash",
+        "Referans rasm yuklash"
+      ],
+      [
+        "iotSensorMonitoring",
+        "IoT + Sensor Monitoring"
+      ],
+      [
+        "digitalTwinVirtualZavod",
+        "Digital Twin — Virtual Zavod"
+      ],
+      [
+        "k3dDigitalTwinVizualizatsiya",
+        "3D Digital Twin Vizualizatsiya"
+      ],
+      [
+        "otaVazifaTanlang",
+        "Ota vazifa tanlang"
+      ],
+      [
+        "bajarildiDebBelgilash",
+        "Bajarildi deb belgilash"
+      ],
+      [
+        "skillsGapTahlili",
+        "Skills Gap Tahlili"
+      ],
+      [
+        "yaqinTaMuddati",
+        "Yaqin TA muddati!"
+      ],
+      [
+        "gpsMonitoring",
+        "GPS Monitoring"
+      ],
+      [
+        "vendorFakturalari3WayMatch",
+        "Vendor Fakturalari — 3-Way Match"
+      ],
+      [
+        "texnikXizmatTarixi",
+        "Texnik Xizmat Tarixi"
+      ],
+      [
+        "marketingByudjeti",
+        "Marketing Byudjeti"
+      ],
+      [
+        "marketingTaqvim",
+        "Marketing Taqvim"
+      ],
+      [
+        "marketingKontent",
+        "Marketing Kontent"
+      ],
+      [
+        "engYuqoriXavf",
+        "Eng yuqori xavf:"
+      ],
+      [
+        "leadManbaKanallari",
+        "Lead Manba Kanallari"
+      ],
+      [
+        "gazetaTvOnline",
+        "Gazeta, TV, Online..."
+      ],
+      [
+        "telegramWebhookSozlamasi",
+        "Telegram Webhook Sozlamasi"
+      ],
+      [
+        "webSaytCms",
+        "Web sayt CMS"
+      ],
+      [
+        "qadoqlashQutiGofra",
+        "qadoqlash, quti, gofra"
+      ],
+      [
+        "hozirgiZaxiraQiymati",
+        "Hozirgi zaxira qiymati"
+      ],
+      [
+        "minBrak",
+        "Min. brak %"
+      ],
+      [
+        "barcodeKiriting",
+        "Barcode kiriting..."
+      ],
+      [
+        "gpsRealTimeMonitoring",
+        "GPS Real-time Monitoring"
+      ],
+      [
+        "k4JobTags",
+        "4. Job Tags"
+      ],
+      [
+        "k7SpecialGradientCards",
+        "7. Special Gradient Cards"
+      ],
+      [
+        "k8PerformanceHighlight",
+        "8. Performance Highlight"
+      ],
+      [
+        "k9PillButtons",
+        "9. Pill Buttons"
+      ],
+      [
+        "k11BrandColorPalette",
+        "11. Brand Color Palette"
+      ],
+      [
+        "profilaktikTexnikXizmat",
+        "Profilaktik Texnik Xizmat"
+      ],
+      [
+        "ofisInventarNazorati",
+        "Ofis Inventar Nazorati"
+      ],
+      [
+        "tozalashXizmatiJadvali",
+        "Tozalash Xizmati Jadvali"
+      ],
+      [
+        "element",
+        "Element turi"
+      ],
+      [
+        "suring",
+        "Suring turi"
+      ],
+      [
+        "posWarehouse",
+        "POS — Warehouse"
+      ],
+      [
+        "movementTuri",
+        "Movement turi"
+      ],
+      [
+        "muhitAtmosferaRahbarUslubi",
+        "Muhit, atmosfera, rahbar uslubi..."
+      ],
+      [
+        "jamoadagiQiyinVaziyatMisoli",
+        "Jamoadagi qiyin vaziyat misoli?"
+      ],
+      [
+        "gofrokartonBFlT",
+        "Gofrokarton B flüt"
+      ],
+      [
+        "previousPassrateUpLatestPassrate",
+        "previous.passRate ? \"up\" : latest.passRate"
+      ],
+      [
+        "testIdKiriting",
+        "Test ID kiriting"
+      ],
+      [
+        "badgeHaqiqiy",
+        "✅ Badge Haqiqiy"
+      ],
+      [
+        "k60KonversiyaQoidasiArizaTelefon",
+        "60% Konversiya Qoidasi: Ariza → Telefon suhbat → Asosiy suhbat"
+      ],
+      [
+        "boomerangHire",
+        "🔄 Boomerang Hire"
+      ],
+      [
+        "routingKonfiguratsiyasi",
+        "Routing Konfiguratsiyasi"
+      ],
+      [
+        "tenantTarifHolati",
+        "Tenant Tarif Holati"
+      ],
+      [
+        "tizimXatolariLogi",
+        "Tizim Xatolari Logi"
+      ],
+      [
+        "imzolandiDebBelgilash",
+        "Imzolandi deb belgilash"
+      ],
+      [
+        "leadFunnelTahlili",
+        "Lead funnel tahlili"
+      ],
+      [
+        "eurEvro",
+        "EUR - Evro"
+      ],
+      [
+        "hodisaTuri1",
+        "Hodisa turi *"
+      ],
+      [
+        "hodisaQaydEt",
+        "Hodisa Qayd Et"
+      ],
+      [
+        "k7TaAsosiyFunksiyaVysotskiy",
+        "7 ta Asosiy Funksiya - Vysotskiy Modeli"
+      ],
+      [
+        "k2Oddiy",
+        "2 - Oddiy"
+      ],
+      [
+        "k4Yuqori",
+        "4 - Yuqori"
+      ],
+      [
+        "k5Mutaxassis",
+        "5 - Mutaxassis"
+      ],
+      [
+        "pythonDasturlashTillari",
+        "Python dasturlash tillari..."
+      ],
+      [
+        "masalanQ1Q2",
+        "Masalan: Q1, Q2"
+      ],
+      [
+        "superAdminPanel",
+        "Super Admin Panel"
+      ],
+      [
+        "tizimMonitoring",
+        "Tizim monitoring"
+      ],
+      [
+        "texnologikKartaTayyorlandi",
+        "Texnologik karta tayyorlandi"
+      ],
+      [
+        "stanoqTanlashWizard",
+        "Stanoq Tanlash Wizard"
+      ],
+      [
+        "aiDemandForecasting",
+        "AI Demand Forecasting"
+      ],
+      [
+        "artikelKodi",
+        "Artikel kodi *"
+      ],
+      [
+        "tizimAuditJurnali",
+        "Tizim audit jurnali"
+      ],
+      [
+        "brakSabablariKlassifikatsiyasi",
+        "Brak sabablari klassifikatsiyasi"
+      ],
+      [
+        "manzilOmbori",
+        "Manzil ombori *"
+      ],
+      [
+        "eurYevro",
+        "EUR — Yevro"
+      ],
+      [
+        "movementTanlang",
+        "Movement tanlang"
+      ],
+      [
+        "statusApprovedCompleted",
+        "Status: APPROVED → COMPLETED"
+      ],
+      [
+        "exportJson",
+        "📥 Export JSON"
+      ],
+      [
+        "barcodeYozing",
+        "Barcode yozing..."
+      ],
+      [
+        "manbaOmbori",
+        "Manba ombori *"
+      ],
+      [
+        "zararTavsifi",
+        "Zarar tavsifi *"
+      ],
+      [
+        "serverVersiyasi",
+        "🌐 Server versiyasi"
+      ],
+      [
+        "grnGoodsReceiptNotes",
+        "GRN — Goods Receipt Notes"
+      ],
+      [
+        "posMonitorV20Europrint",
+        "POS Monitor v2.0 · EuroPrint ERP"
+      ],
+      [
+        "k360Profil",
+        "🔭 360° Profil"
+      ],
+      [
+        "glPosting",
+        "📊 GL Posting"
+      ],
+      [
+        "bosqich3InventarPasporti",
+        "Bosqich 3: Inventar pasporti"
+      ],
+      [
+        "kirim1",
+        "📥 + Kirim"
+      ],
+      [
+        "Brak qayd etildi",
+        "Brak qayd etildi"
+      ],
+      [
+        "Internet aloqasi yo",
+        "Internet aloqasi yo"
+      ],
+      [
+        "Internet tiklandi — sinxronlash...",
+        "Internet tiklandi — sinxronlash..."
+      ],
+      [
+        "Raqamli imzo (majburiy)",
+        "Raqamli imzo (majburiy)"
+      ],
+      [
+        "Raqamli imzo majburiy",
+        "Raqamli imzo majburiy"
+      ],
+      [
+        "SOS xabari yuborildi!",
+        "Sos xabari yuborildi!"
+      ],
+      [
+        "Sessiya muddati tugadi. Iltimos qayta kiring.",
+        "Sessiya muddati tugadi. iltimos qayta kiring."
+      ],
+      [
+        "Xabar kiriting",
+        "Xabar kiriting"
+      ],
+      [
+        "accountNumber",
+        "Account number"
+      ],
+      [
+        "activeAlertsDesc",
+        "Active alerts desc"
+      ],
+      [
+        "activitySubject",
+        "Activity subject"
+      ],
+      [
+        "addCapacity",
+        "Add capacity"
+      ],
+      [
+        "addOperation",
+        "Add operation"
+      ],
+      [
+        "admin1",
+        "Admin 1"
+      ],
+      [
+        "adminOnly",
+        "Admin only"
+      ],
+      [
+        "allGood",
+        "All good"
+      ],
+      [
+        "all_above_rop",
+        "All above rop"
+      ],
+      [
+        "analyzingSensors",
+        "Analyzing sensors"
+      ],
+      [
+        "anonymousHROnly",
+        "Anonymous hronly"
+      ],
+      [
+        "attendanceLoading",
+        "Attendance loading"
+      ],
+      [
+        "attestationDate",
+        "Attestation date"
+      ],
+      [
+        "autoRateLabel",
+        "Auto rate label"
+      ],
+      [
+        "availableHours",
+        "Available hours"
+      ],
+      [
+        "avgConfLabel",
+        "Avg conf label"
+      ],
+      [
+        "avgConfidenceStat",
+        "Avg confidence stat"
+      ],
+      [
+        "avgLatencyLabel",
+        "Avg latency label"
+      ],
+      [
+        "bankDetails",
+        "Bank details"
+      ],
+      [
+        "bankName",
+        "Bank name"
+      ],
+      [
+        "birthDate",
+        "Birth date"
+      ],
+      [
+        "blockedForHuman",
+        "Blocked for human"
+      ],
+      [
+        "bottlenecksHighLoad",
+        "Bottlenecks high load"
+      ],
+      [
+        "canteen.costPerMeal",
+        "Cost per meal"
+      ],
+      [
+        "canteen.costToday",
+        "Cost today"
+      ],
+      [
+        "canteen.mealsToday",
+        "Meals today"
+      ],
+      [
+        "canteen.noConsumption",
+        "No consumption"
+      ],
+      [
+        "capacityLoadComparison",
+        "Capacity load comparison"
+      ],
+      [
+        "cardHolder",
+        "Card holder"
+      ],
+      [
+        "cardNumber",
+        "Card number"
+      ],
+      [
+        "ckpAndAttestation",
+        "Ckp and attestation"
+      ],
+      [
+        "col_avg_balance",
+        "Col avg balance"
+      ],
+      [
+        "col_current_stock",
+        "Col current stock"
+      ],
+      [
+        "col_days_idle",
+        "Col days idle"
+      ],
+      [
+        "col_last_movement",
+        "Col last movement"
+      ],
+      [
+        "col_status",
+        "Col status"
+      ],
+      [
+        "commentOptional",
+        "Comment optional"
+      ],
+      [
+        "completedActivities",
+        "Completed activities"
+      ],
+      [
+        "completedLabel",
+        "Completed label"
+      ],
+      [
+        "contactName",
+        "Contact name"
+      ],
+      [
+        "contractNumber",
+        "Contract number"
+      ],
+      [
+        "countItems",
+        "Count items"
+      ],
+      [
+        "createActivity",
+        "Create activity"
+      ],
+      [
+        "createDocument",
+        "Create document"
+      ],
+      [
+        "createFirstDoc",
+        "Create first doc"
+      ],
+      [
+        "createNewRouting",
+        "Create new routing"
+      ],
+      [
+        "creatingDoc",
+        "Creating doc"
+      ],
+      [
+        "criticalWorkCenters",
+        "Critical work centers"
+      ],
+      [
+        "customerName",
+        "Customer name"
+      ],
+      [
+        "dead_stock_count",
+        "Dead stock count"
+      ],
+      [
+        "dead_stock_title",
+        "Dead stock title"
+      ],
+      [
+        "defineCapacity",
+        "Define capacity"
+      ],
+      [
+        "deleteRouting",
+        "Delete routing"
+      ],
+      [
+        "deliveryStatus",
+        "Delivery status"
+      ],
+      [
+        "docContentPlaceholder",
+        "Doc content placeholder"
+      ],
+      [
+        "docTitleLabel",
+        "Doc title label"
+      ],
+      [
+        "documentContent",
+        "Document content"
+      ],
+      [
+        "documentNumber",
+        "Document number"
+      ],
+      [
+        "documentTitle",
+        "Document title"
+      ],
+      [
+        "documentType",
+        "Document type"
+      ],
+      [
+        "dueDate",
+        "Due date"
+      ],
+      [
+        "effectiveDate",
+        "Effective date"
+      ],
+      [
+        "employeeDetails",
+        "Employee details"
+      ],
+      [
+        "employmentContracts",
+        "Employment contracts"
+      ],
+      [
+        "endTime",
+        "End time"
+      ],
+      [
+        "expiryDate",
+        "Expiry date"
+      ],
+      [
+        "facility.totalArea",
+        "Total area"
+      ],
+      [
+        "facility.totalItems",
+        "Total items"
+      ],
+      [
+        "fullName",
+        "Full name"
+      ],
+      [
+        "healthMonitoring",
+        "Health monitoring"
+      ],
+      [
+        "healthNoAccess",
+        "Health no access"
+      ],
+      [
+        "hireDate",
+        "Hire date"
+      ],
+      [
+        "housingType",
+        "Housing type"
+      ],
+      [
+        "hrPanel",
+        "Hr panel"
+      ],
+      [
+        "humanOverrideLabel",
+        "Human override label"
+      ],
+      [
+        "immutableDoc",
+        "Immutable doc"
+      ],
+      [
+        "issuedDate",
+        "Issued date"
+      ],
+      [
+        "laborTimeLabel",
+        "Labor time label"
+      ],
+      [
+        "loadAnalysisDesc",
+        "Load analysis desc"
+      ],
+      [
+        "maritalStatus",
+        "Marital status"
+      ],
+      [
+        "netCashFlow",
+        "Net cash flow"
+      ],
+      [
+        "newContract",
+        "New contract"
+      ],
+      [
+        "newOperationDesc",
+        "New operation desc"
+      ],
+      [
+        "newPosition",
+        "New position"
+      ],
+      [
+        "newSalary",
+        "New salary"
+      ],
+      [
+        "noActiveAlerts",
+        "No active alerts"
+      ],
+      [
+        "noActiveSensors",
+        "No active sensors"
+      ],
+      [
+        "noAttendanceEvents",
+        "No attendance events"
+      ],
+      [
+        "noBlockedDecisions",
+        "No blocked decisions"
+      ],
+      [
+        "noBottlenecksFound",
+        "No bottlenecks found"
+      ],
+      [
+        "noCapacityData",
+        "No capacity data"
+      ],
+      [
+        "noCapacityDataDesc",
+        "No capacity data desc"
+      ],
+      [
+        "noCapacityEntries",
+        "No capacity entries"
+      ],
+      [
+        "noCapacityEntriesDesc",
+        "No capacity entries desc"
+      ],
+      [
+        "noCompletedActivities",
+        "No completed activities"
+      ],
+      [
+        "noDecisionsForAgent",
+        "No decisions for agent"
+      ],
+      [
+        "noIncorrectDecisions",
+        "No incorrect decisions"
+      ],
+      [
+        "noPendingDocs",
+        "No pending docs"
+      ],
+      [
+        "noRoomInspections",
+        "No room inspections"
+      ],
+      [
+        "noSensorData",
+        "No sensor data"
+      ],
+      [
+        "no_dead_stock",
+        "No dead stock"
+      ],
+      [
+        "onlyIncorrectLabel",
+        "Only incorrect label"
+      ],
+      [
+        "operationName",
+        "Operation name"
+      ],
+      [
+        "operationNumber",
+        "Operation number"
+      ],
+      [
+        "operationSequence",
+        "Operation sequence"
+      ],
+      [
+        "overriddenCount",
+        "Overridden count"
+      ],
+      [
+        "partTime",
+        "Part time"
+      ],
+      [
+        "passportNumber",
+        "Passport number"
+      ],
+      [
+        "passportSeries",
+        "Passport series"
+      ],
+      [
+        "pendingLabel",
+        "Pending label"
+      ],
+      [
+        "predictiveMaintenance",
+        "Predictive maintenance"
+      ],
+      [
+        "previousPosition",
+        "Previous position"
+      ],
+      [
+        "previousSalary",
+        "Previous salary"
+      ],
+      [
+        "probationEnd",
+        "Probation end"
+      ],
+      [
+        "readingValue",
+        "Reading value"
+      ],
+      [
+        "realTimeAttendance",
+        "Real time attendance"
+      ],
+      [
+        "rejectionReason",
+        "Rejection reason"
+      ],
+      [
+        "roomInspectionLoading",
+        "Room inspection loading"
+      ],
+      [
+        "roomStatusInspection",
+        "Room status inspection"
+      ],
+      [
+        "rop_alerts_count",
+        "Rop alerts count"
+      ],
+      [
+        "rop_alerts_title",
+        "Rop alerts title"
+      ],
+      [
+        "routingForProduct",
+        "Routing for product"
+      ],
+      [
+        "routingNumberLabel",
+        "Routing number label"
+      ],
+      [
+        "selectSensor",
+        "Select sensor"
+      ],
+      [
+        "selectSensorPrompt",
+        "Select sensor prompt"
+      ],
+      [
+        "sequenceLabel",
+        "Sequence label"
+      ],
+      [
+        "setupTimeLabel",
+        "Setup time label"
+      ],
+      [
+        "spareParts.totalValue",
+        "Total value"
+      ],
+      [
+        "staffCount",
+        "Staff count"
+      ],
+      [
+        "startTime",
+        "Start time"
+      ],
+      [
+        "statusAbsent",
+        "Status absent"
+      ],
+      [
+        "statusAtWorkplace",
+        "Status at workplace"
+      ],
+      [
+        "statusIn",
+        "Status in"
+      ],
+      [
+        "statusOnPremises",
+        "Status on premises"
+      ],
+      [
+        "statusOut",
+        "Status out"
+      ],
+      [
+        "status_ordered",
+        "Status ordered"
+      ],
+      [
+        "status_requisition_creating",
+        "Status requisition creating"
+      ],
+      [
+        "totalCostLabel",
+        "Total cost label"
+      ],
+      [
+        "totalDays",
+        "Total days"
+      ],
+      [
+        "totalDecisions",
+        "Total decisions"
+      ],
+      [
+        "totalDecisionsLabel",
+        "Total decisions label"
+      ],
+      [
+        "totalWorkCenters",
+        "Total work centers"
+      ],
+      [
+        "urgentPriority",
+        "Urgent priority"
+      ],
+      [
+        "utility.totalCost",
+        "Total cost"
+      ],
+      [
+        "utilizationTarget",
+        "Utilization target"
+      ],
+      [
+        "viewPhoto",
+        "View photo"
+      ],
+      [
+        "fillForm",
+        "Fill form"
+      ],
+      [
+        "roleManagement",
+        "Role management"
+      ],
+      [
+        "historySeries",
+        "History series"
+      ],
+      [
+        "imposition",
+        "Imposition rejasi"
+      ],
+      [
+        "frequencyAxis",
+        "Frequency axis"
+      ],
+      [
+        "totalArea",
+        "Total area"
+      ],
+      [
+        "rfmScatterTitle",
+        "Rfm scatter title"
+      ],
+      [
+        "cohortNoData",
+        "Cohort no data"
+      ],
+      [
+        "certs.expiringSoon",
+        "Expiring soon"
+      ],
+      [
+        "revenueBasedBadge",
+        "Revenue based badge"
+      ],
+      [
+        "avgCycleDays",
+        "Avg cycle days"
+      ],
+      [
+        "inkCoverageDesc",
+        "Ink coverage desc"
+      ],
+      [
+        "countRetention",
+        "Count retention"
+      ],
+      [
+        "revenueRetention",
+        "Revenue retention"
+      ],
+      [
+        "stagesByCount",
+        "Stages by count"
+      ],
+      [
+        "rfmSampleReady",
+        "Rfm sample ready"
+      ],
+      [
+        "statusLabel",
+        "Status label"
+      ],
+      [
+        "cohortCount",
+        "Cohort count"
+      ],
+      [
+        "avgDemandSize",
+        "Avg demand size"
+      ],
+      [
+        "clickToCalculate",
+        "Click to calculate"
+      ],
+      [
+        "createBom",
+        "Create bom"
+      ],
+      [
+        "paperTypeLabel",
+        "Paper type label"
+      ],
+      [
+        "winRateGauge",
+        "Win rate gauge"
+      ],
+      [
+        "tacTotal",
+        "Tac total"
+      ],
+      [
+        "recencyAxis",
+        "Recency axis"
+      ],
+      [
+        "bomExplosion",
+        "Bom explosion"
+      ],
+      [
+        "totalInk",
+        "Total ink"
+      ],
+      [
+        "productName",
+        "Product name"
+      ],
+      [
+        "retentionMatrix",
+        "Retention matrix"
+      ],
+      [
+        "addProduct",
+        "Add product"
+      ],
+      [
+        "orderNumber",
+        "Order number"
+      ],
+      [
+        "cmykInput",
+        "Cmyk input"
+      ],
+      [
+        "impositionDesc",
+        "Imposition desc"
+      ],
+      [
+        "utilizationLabel",
+        "Utilization label"
+      ],
+      [
+        "demandProbability",
+        "Demand probability"
+      ],
+      [
+        "retentionMode",
+        "Retention mode"
+      ],
+      [
+        "avgM1Retention",
+        "Avg m 1retention"
+      ],
+      [
+        "tacExceedMessage",
+        "Tac exceed message"
+      ],
+      [
+        "utilizationGood",
+        "Utilization good"
+      ],
+      [
+        "velocityPerDay",
+        "Velocity per day"
+      ],
+      [
+        "avgDealSize",
+        "Avg deal size"
+      ],
+      [
+        "revenuePercent",
+        "Revenue percent"
+      ],
+      [
+        "utilizationNeedsWork",
+        "Utilization needs work"
+      ],
+      [
+        "winRate1",
+        "Win rate 1"
+      ],
+      [
+        "techCardApproved",
+        "Texnologik karta tasdiqlandi"
+      ],
+      [
+        "creditLimitOk",
+        "Kredit limiti OK"
+      ],
+      [
+        "debtStatusOk",
+        "Qarz holati OK"
+      ],
+      [
+        "questionDifficultyPValue",
+        "Savol qiyinligi (p-value)"
+      ],
+      [
+        "questionDiscriminationAbility",
+        "Savol farqlash qobiliyati (top 27% vs bottom 27%)"
+      ],
+      [
+        "frontendBackendDbRatio",
+        "Frontend / Backend / DB nisbatlari"
+      ],
+      [
+        "recruiterConclusionFreeText",
+        "Rekruter xulosasi (erkin matn)"
+      ],
+      [
+        "riskFactorsToolTest",
+        "Xavf omillari (TOOL TEST tahlili)"
+      ],
+      [
+        "motivationOnlyMoney",
+        "Motivatsiya: faqat moddiy manfaat (Pul)"
+      ],
+      [
+        "endDateOptional",
+        "Tugash sanasi (ixtiyoriy)"
+      ],
+      [
+        "endTimeOptional",
+        "Tugash vaqti (ixtiyoriy)"
+      ]
+    ],
+    "crm": [
+      [
+        "leadToConversion",
+        "Lead → Bitim konversiyasi"
+      ],
+      [
+        "newLabel",
+        "New label"
+      ],
+      [
+        "activeLabel",
+        "Active label"
+      ],
+      [
+        "inProgressLabel",
+        "In progress label"
+      ],
+      [
+        "dealCount",
+        "Deal count"
+      ],
+      [
+        "dealsCount",
+        "Deals count"
+      ],
+      [
+        "maxPeriod",
+        "Maksimal kuzatuv davri"
+      ],
+      [
+        "rfmDesc",
+        "TZ-41: K-Means++ (k=6) · Recency · Frequency · Monetary"
+      ],
+      [
+        "retentionMatrix",
+        "Retention Matrisa"
+      ],
+      [
+        "rfmScatterTitle",
+        "RFM Scatter Plot (R vs F, hajm = M)"
+      ]
+    ],
+    "dashboard": [
+      [
+        "todayAmount",
+        "today Amount"
+      ],
+      [
+        "awaitingApproval",
+        "awaiting Approval"
+      ],
+      [
+        "lowStockAlerts",
+        "low Stock Alerts"
+      ],
+      [
+        "recentFeed",
+        "recent Feed"
+      ]
+    ],
+    "director": [
+      [
+        "dashboard",
+        "Bosh panel"
+      ],
+      [
+        "worstCase",
+        "Eng yomon stsenariy"
+      ],
+      [
+        "idealVsActual",
+        "Ideal vs Haqiqat"
+      ]
+    ],
+    "errors": [
+      [
+        "tokenExpired",
+        "Token muddati tugadi"
+      ]
+    ],
+    "finance": [
+      [
+        "cfoStrategicPanel",
+        "Moliya direktori strategik paneli"
+      ],
+      [
+        "gl.title",
+        "Bosh kitob (GL)"
+      ],
+      [
+        "gl.accounts.cash",
+        "1000 — Kassa"
+      ],
+      [
+        "gl.accounts.bank",
+        "1040 — Bank"
+      ],
+      [
+        "gl.accounts.revenue",
+        "4000 — Daromad"
+      ],
+      [
+        "gl.accounts.expense",
+        "5100 — Xarajat"
+      ],
+      [
+        "contributionMarginPerUnit",
+        "Contribution Margin/dona"
+      ],
+      [
+        "operatingLeverage",
+        "Operating Leverage"
+      ],
+      [
+        "variance.title",
+        "Variance tahlili"
+      ],
+      [
+        "variance.subtitle",
+        "5 komponentli xarajat variansasi: MPV · MQV · LRV · LEV · OV"
+      ],
+      [
+        "variance.composition",
+        "Variance tarkibi"
+      ],
+      [
+        "variance.chart",
+        "Variance diagrammasi"
+      ],
+      [
+        "variance.labeling",
+        "Labelling xulosasi"
+      ],
+      [
+        "variance.emptyNote",
+        "MPV · MQV · LRV · LEV · OV (CIMA standartlari)"
+      ],
+      [
+        "variance.lrv",
+        "LRV (mehnat stavka)"
+      ],
+      [
+        "variance.lev",
+        "LEV (mehnat sarf)"
+      ],
+      [
+        "cfo.cashflow.baseline",
+        "Bazaviy stsenariy · Kumulyativ"
+      ],
+      [
+        "productPlaceholder",
+        "Masalan: Offset A4"
+      ],
+      [
+        "budgetManagement",
+        "Byudjet Management"
+      ],
+      [
+        "periodClosing",
+        "period Closing"
+      ],
+      [
+        "currentRatio",
+        "Current Ratio"
+      ],
+      [
+        "cfoPanel",
+        "CFO Panel"
+      ],
+      [
+        "aiRuleBased",
+        "Ai rule based"
+      ],
+      [
+        "close2",
+        "Close 2"
+      ],
+      [
+        "customerName",
+        "Customer name"
+      ],
+      [
+        "endDate",
+        "End date"
+      ],
+      [
+        "forFetchFailures",
+        "For fetch failures"
+      ],
+      [
+        "moliyaviyRiskTahlili",
+        "Moliyaviy risk tahlili"
+      ],
+      [
+        "offsetA4",
+        "Offset a 4"
+      ],
+      [
+        "quickRatio",
+        "Quick ratio"
+      ],
+      [
+        "scanBarcodeToAddProducts",
+        "Scan barcode to add products"
+      ],
+      [
+        "startDate",
+        "Start date"
+      ],
+      [
+        "tieredPricing",
+        "Tiered pricing"
+      ],
+      [
+        "variance",
+        "Variance"
+      ],
+      [
+        "varianceTahlili",
+        "Variance tahlili"
+      ]
+    ],
+    "hr": [
+      [
+        "skills.createError",
+        "Create error"
+      ],
+      [
+        "skills.createSkill",
+        "Create skill"
+      ],
+      [
+        "skills.deleteEmpSkillDesc",
+        "Delete emp skill desc"
+      ],
+      [
+        "skills.deleteEmpSkillTitle",
+        "Delete emp skill title"
+      ],
+      [
+        "skills.deleteError",
+        "Delete error"
+      ],
+      [
+        "skills.deleteSkillDesc",
+        "Delete skill desc"
+      ],
+      [
+        "skills.deleteSkillTitle",
+        "Delete skill title"
+      ],
+      [
+        "skills.empAddError",
+        "Emp add error"
+      ],
+      [
+        "skills.empAddedOk",
+        "Emp added ok"
+      ],
+      [
+        "skills.empDeleteError",
+        "Emp delete error"
+      ],
+      [
+        "skills.empDeletedOk",
+        "Emp deleted ok"
+      ],
+      [
+        "skills.empSkillsDesc",
+        "Emp skills desc"
+      ],
+      [
+        "skills.empSkillsTitle",
+        "Emp skills title"
+      ],
+      [
+        "skills.emptyEmpSkillsDesc",
+        "Empty emp skills desc"
+      ],
+      [
+        "skills.emptyEmpSkillsTitle",
+        "Empty emp skills title"
+      ],
+      [
+        "skills.emptySkillsDesc",
+        "Empty skills desc"
+      ],
+      [
+        "skills.emptySkillsTitle",
+        "Empty skills title"
+      ],
+      [
+        "skills.skillsListDesc",
+        "Skills list desc"
+      ],
+      [
+        "skills.skillsListTitle",
+        "Skills list title"
+      ],
+      [
+        "skills.totalAssigned",
+        "Total assigned"
+      ],
+      [
+        "skills.totalSkills",
+        "Total skills"
+      ],
+      [
+        "skills.updateError",
+        "Update error"
+      ],
+      [
+        "attendance.checkIn.action",
+        "Keldi deb belgilash"
+      ],
+      [
+        "attendance.checkOut.action",
+        "Ketdi deb belgilash"
+      ],
+      [
+        "hrPanel",
+        "HR Panel"
+      ],
+      [
+        "hrV2.ratingLeader",
+        "Reyting lideri"
+      ],
+      [
+        "operator.todayReports",
+        "Bugun operator hisobotlari"
+      ],
+      [
+        "safety.ppeCompliance",
+        "PPE Compliance"
+      ],
+      [
+        "excelImport",
+        "Excel import"
+      ],
+      [
+        "close2",
+        "Close 2"
+      ],
+      [
+        "hrAiAvtomatizatsiya",
+        "Hr ai avtomatizatsiya"
+      ],
+      [
+        "hrCapitalOquvKurslari",
+        "Hr capital oquv kurslari"
+      ],
+      [
+        "k7TaAsosiyFunksiyaVysotskiy",
+        "K 7ta asosiy funksiya vysotskiy"
+      ],
+      [
+        "kpiLarRoyxati",
+        "Kpi lar royxati"
+      ],
+      [
+        "selectHrAdmin",
+        "HR/Admin tanlang"
+      ]
+    ],
+    "inventory": [
+      [
+        "activeCount",
+        "active Count"
+      ]
+    ],
+    "iot": [
+      [
+        "title",
+        "IoT monitoring"
+      ],
+      [
+        "maintenanceSchedule",
+        "Texnik xizmat jadvali"
+      ],
+      [
+        "anonymousHROnly",
+        "Anonim • Faqat HR"
+      ],
+      [
+        "staffCount",
+        "Staff count"
+      ],
+      [
+        "abbreviationCrit",
+        "Abbreviation crit"
+      ],
+      [
+        "abbreviationHigh",
+        "Abbreviation high"
+      ],
+      [
+        "abbreviationMed",
+        "Abbreviation med"
+      ],
+      [
+        "tabMaintenance",
+        "Tab maintenance"
+      ]
+    ],
+    "ledger": [
+      [
+        "expiringSoon",
+        "expiring Soon"
+      ]
+    ],
+    "lms": [
+      [
+        "enrollment.progress",
+        "Taraqqiyot: {percent}%"
+      ],
+      [
+        "endDateOptional",
+        "Tugash sanasi (ixtiyoriy)"
+      ],
+      [
+        "courseCreatedSuccessfully",
+        "Kurs muvaffaqiyatli yaratildi"
+      ],
+      [
+        "answerOptionsRu",
+        "Javob variantlari (Rus)"
+      ],
+      [
+        "moduleCreatedSuccessfully",
+        "Modul muvaffaqiyatli yaratildi"
+      ]
+    ],
+    "logistics": [
+      [
+        "vehicleType",
+        "Transport vositasi turi"
+      ],
+      [
+        "importDuty",
+        "Import boji"
+      ],
+      [
+        "crossDocking",
+        "Kroos-doking"
+      ]
+    ],
+    "marketing": [
+      [
+        "dashboard",
+        "Marketing paneli"
+      ],
+      [
+        "emailMarketing",
+        "Email marketing"
+      ]
+    ],
+    "mro": [
+      [
+        "maintenancePlan",
+        "Texnik xizmat rejasi"
+      ],
+      [
+        "maintenanceSchedule",
+        "Texnik xizmat jadvali"
+      ],
+      [
+        "maintenanceInterval",
+        "Texnik xizmat intervali"
+      ],
+      [
+        "usefulLife",
+        "Foydali xizmat muddati"
+      ],
+      [
+        "unitCount",
+        "Unit count"
+      ],
+      [
+        "labelAssetCode",
+        "Aktiv kodi *"
+      ],
+      [
+        "locationPlaceholder",
+        "Masalan: 2-qavat, omborxona"
+      ],
+      [
+        "yearUnit",
+        "Year unit"
+      ],
+      [
+        "fromLocationPlaceholder",
+        "Masalan: 2-qavat, xona 201"
+      ],
+      [
+        "toLocationPlaceholder",
+        "Masalan: 3-qavat, xona 305"
+      ],
+      [
+        "labelPremiumAmount",
+        "Mukofot miqdori (UZS)"
+      ],
+      [
+        "labelEndDate",
+        "Tugash sanasi *"
+      ],
+      [
+        "labelCoverageAmount",
+        "Qamrov miqdori (UZS)"
+      ],
+      [
+        "canteen.costToday",
+        "cost Today"
+      ],
+      [
+        "canteen.costPerMeal",
+        "cost Per Meal"
+      ]
+    ],
+    "navigation": [
+      [
+        "marketingDashboard",
+        "Marketing paneli"
+      ],
+      [
+        "marketingAnalytics",
+        "Marketing analitikasi"
+      ],
+      [
+        "70% Avans Nazorat",
+        "70% avans nazorati"
+      ],
+      [
+        "Marketing",
+        "Marketing"
+      ],
+      [
+        "SEO Monitoring",
+        "SEO monitoring"
+      ],
+      [
+        "SUPER ADMIN OVERRIDE",
+        "SUPER ADMIN OVERRIDE"
+      ],
+      [
+        "DASHBOARD",
+        "PANEL"
+      ],
+      [
+        "OEE Monitoring",
+        "OEE monitoring"
+      ],
+      [
+        "GPS Monitoring",
+        "GPS monitoring"
+      ],
+      [
+        "DEBITOR / KREDITOR",
+        "DEBITOR / KREDITOR"
+      ],
+      [
+        "Rekruting Voronka",
+        "Rekruting voronkasi"
+      ],
+      [
+        "Offboarding",
+        "Offboarding"
+      ],
+      [
+        "7 Funksiya (Adizes)",
+        "7 funksiya (Adizes)"
+      ],
+      [
+        "Leaderboard",
+        "Reyting jadvali"
+      ],
+      [
+        "Jonli Monitoring",
+        "Jonli monitoring"
+      ],
+      [
+        "REYTING",
+        "REYTING"
+      ],
+      [
+        "Admin Panel",
+        "Admin paneli"
+      ],
+      [
+        "Super Admin Panel",
+        "Super admin paneli"
+      ],
+      [
+        "Monitoring",
+        "Monitoring"
+      ],
+      [
+        "Telegram Admin",
+        "Telegram admin"
+      ],
+      [
+        "Super Admin",
+        "Super admin"
+      ],
+      [
+        "Imposition Hisob",
+        "Imposition hisobi"
+      ],
+      [
+        "HR — 3 ta",
+        "HR — 3 ta"
+      ],
+      [
+        "AI — 2 ta",
+        "AI — 2 ta"
+      ],
+      [
+        "QC — 2 ta",
+        "QC — 2 ta"
+      ],
+      [
+        "POS — 2 ta",
+        "POS — 2 ta"
+      ],
+      [
+        "WMS — 2 ta",
+        "WMS — 2 ta"
+      ],
+      [
+        "SAVDO — 1 ta",
+        "SAVDO — 1 ta"
+      ],
+      [
+        "ATTENDANCE-MONITOR — 1 ta",
+        "DAVOMAT MONITORI — 1 ta"
+      ],
+      [
+        "MOLIYA — 1 ta",
+        "MOLIYA — 1 ta"
+      ],
+      [
+        "TECH-APPROVAL — 1 ta",
+        "TEXNIK TASDIQ — 1 ta"
+      ],
+      [
+        "GL — 1 ta",
+        "BOSH KITOB — 1 ta"
+      ],
+      [
+        "G L Documents",
+        "Bosh kitob hujjatlari"
+      ]
+    ],
+    "pos": [
+      [
+        "cashCount",
+        "Naqd pul hisobi"
+      ]
+    ],
+    "print": [
+      [
+        "sheetHeight",
+        "Varaq balandligi (mm)"
+      ]
+    ],
+    "production": [
+      [
+        "totalLabel",
+        "Total label"
+      ],
+      [
+        "waitingLabel",
+        "Waiting label"
+      ],
+      [
+        "maintenanceCategory",
+        "Texnik xizmat (Maintenance)"
+      ],
+      [
+        "workCenterLoadChart",
+        "Work Center Yuklama Grafigi"
+      ],
+      [
+        "criticalWorkCenters",
+        "Critical Work Centers"
+      ],
+      [
+        "availableHours",
+        "Available Hours"
+      ],
+      [
+        "sequenceLabel",
+        "Sequence"
+      ],
+      [
+        "setupTimeLabel",
+        "Sozlash vaqti (soat)"
+      ],
+      [
+        "machineTimeLabel",
+        "Dastgoh vaqti (soat)"
+      ],
+      [
+        "laborTimeLabel",
+        "Mehnat vaqti (soat)"
+      ],
+      [
+        "mro.schedule",
+        "Texnik xizmat jadvali"
+      ],
+      [
+        "crp_title",
+        "CRP — Quvvat Talablari Rejasi"
+      ],
+      [
+        "crp_loadError",
+        "CRP yuklay olmadim"
+      ],
+      [
+        "mrp_lotSizingMethod",
+        "Lot-Sizing usuli"
+      ],
+      [
+        "routingKonfiguratsiyasi",
+        "Routing konfiguratsiyasi"
+      ],
+      [
+        "statusNormal",
+        "Status normal"
+      ]
+    ],
+    "qc": [
+      [
+        "defectRecorded",
+        "Brak qayd etildi"
+      ]
+    ],
+    "quarantine": [
+      [
+        "hoursInQuarantine",
+        "Hours In Karantin"
+      ],
+      [
+        "qcDecision",
+        "qc Decision"
+      ]
+    ],
+    "requests": [
+      [
+        "newRequest",
+        "new Request"
+      ]
+    ],
+    "settings": [
+      [
+        "backupSettings",
+        "Zaxira nusxa sozlamalari"
+      ],
+      [
+        "backup.schedule",
+        "Avtomatik zaxira jadvali"
+      ]
+    ],
+    "warehouse": [
+      [
+        "stockValueTrend",
+        "Zaxira Qiymati Dinamikasi"
+      ],
+      [
+        "posSync.syncAll",
+        "sync All"
+      ],
+      [
+        "product001",
+        "product-001"
+      ],
+      [
+        "hub.newReceipt",
+        "New receipt"
+      ],
+      [
+        "hub.openWithLayers",
+        "Open with layers"
+      ],
+      [
+        "mm.confirmDeleteDesc",
+        "Confirm delete desc"
+      ],
+      [
+        "mm.confirmDeleteTitle",
+        "Confirm delete title"
+      ],
+      [
+        "mm.deliveryDate",
+        "Delivery date"
+      ],
+      [
+        "mm.emptyDescription",
+        "Empty description"
+      ],
+      [
+        "mm.errorLoadMessage",
+        "Error load message"
+      ],
+      [
+        "mm.errorLoadTitle",
+        "Error load title"
+      ],
+      [
+        "mm.orderDate",
+        "Order date"
+      ],
+      [
+        "mm.orderItems",
+        "Order items"
+      ],
+      [
+        "mm.poListTitle",
+        "Po list title"
+      ],
+      [
+        "mm.poNumber",
+        "Po number"
+      ],
+      [
+        "mm.statusCancelled",
+        "Status cancelled"
+      ],
+      [
+        "mm.statusConfirmed",
+        "Status confirmed"
+      ],
+      [
+        "mm.statusDraft",
+        "Status draft"
+      ],
+      [
+        "mm.statusReceived",
+        "Status received"
+      ],
+      [
+        "mm.statusSent",
+        "Status sent"
+      ],
+      [
+        "mm.totalAmount",
+        "Total amount"
+      ],
+      [
+        "mm.viewTitle",
+        "View title"
+      ],
+      [
+        "Karantin / QC",
+        "Karantin / qc"
+      ],
+      [
+        "MRO Ehtiyot Qism",
+        "Mro ehtiyot qism"
+      ],
+      [
+        "Ehtiyot qism turlari",
+        "Ehtiyot qism turlari"
+      ],
+      [
+        "Min/Max zaxira darajasi",
+        "Min/max zaxira darajasi"
+      ],
+      [
+        "Lead time monitoring",
+        "Lead time monitoring"
+      ],
+      [
+        "Rulon barcode tracking",
+        "Rulon barcode tracking"
+      ],
+      [
+        "Batch tracking",
+        "Batch tracking"
+      ],
+      [
+        "Brak sabablari tahlili",
+        "Brak sabablari tahlili"
+      ]
+    ],
+    "wms": [
+      [
+        "turnover_title",
+        "Inventar Aylanmasi (DIO tahlili)"
+      ]
+    ]
+  },
+  "ru": {
+    "common": [
+      [
+        "newInProgressC0",
+        "NEW, IN_PROGRESS, C0:NEW..."
+      ],
+      [
+        "jpegPngWebp",
+        "JPEG, PNG, WebP"
+      ],
+      [
+        "hrPerformanceAi",
+        "HR Performance AI"
+      ],
+      [
+        "zplZebraZplIi",
+        "ZPL — Zebra ZPL II"
+      ],
+      [
+        "eplEltronEpl2",
+        "EPL — Eltron EPL2"
+      ],
+      [
+        "macbookPro14",
+        "MacBook Pro 14"
+      ],
+      [
+        "hrOffboarding",
+        "HR — Offboarding"
+      ],
+      [
+        "previousPassrateUpLatestPassrate",
+        "previous.passRate ? \"up\" : latest.passRate"
+      ]
+    ],
+    "finance": [
+      [
+        "quickRatio",
+        "Quick Ratio"
+      ]
+    ]
+  }
+}
