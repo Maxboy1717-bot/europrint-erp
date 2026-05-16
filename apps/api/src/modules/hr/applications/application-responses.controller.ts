@@ -25,7 +25,7 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { safeInt } from '../hr/common/db-rows';
+import { safeInt } from '../common/db-rows';
 import { ApplicationsService } from './applications.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { z } from 'zod';

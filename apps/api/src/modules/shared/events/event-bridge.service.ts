@@ -25,6 +25,10 @@ const EVENT_NAME_MAP: Record<string, string> = {
   InvoiceFullyPaidEvent: ERP_EVENTS.INVOICE_FULLY_PAID,
   InvoicePartiallyPaidEvent: ERP_EVENTS.PAYMENT_FULL,
   AdvanceBypassApprovedEvent: ERP_EVENTS.ADVANCE_BYPASS_APPROVED,
+  // PA2-18 Wave 5 additions
+  DeliveryCompletedEvent: ERP_EVENTS.DELIVERY_COMPLETED,
+  MroMaintenanceStopEvent: ERP_EVENTS.MRO_MAINTENANCE_STOP,
+  WmsGoodsIssuedEvent: ERP_EVENTS.WMS_GOODS_ISSUED,
 };
 
 @Injectable()

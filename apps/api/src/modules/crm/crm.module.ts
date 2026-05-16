@@ -67,7 +67,8 @@ import { CrmAutoLeadService } from './application/crm-auto-lead.service';
 import { CrmAutoLeadRepository } from './infrastructure/repositories/crm-auto-lead.repository';
 import { CRM_AUTO_LEAD_REPO } from './domain/repositories/i-crm-auto-lead.repo';
 import { CrmBitrixCompatService } from './application/crm-bitrix-compat.service';
-import { CrmBitrixCompatRepository } from './application/crm-bitrix-compat.repository';
+import { CrmBitrixCompatRepository } from './infrastructure/repositories/crm-bitrix-compat.repository';
+import { CRM_BITRIX_COMPAT_REPO } from './domain/repositories/i-crm-bitrix-compat.repo';
 import { CrmCompaniesService } from './application/crm-companies.service';
 import { CrmCompaniesRepository } from './infrastructure/repositories/crm-companies.repository';
 import { CRM_COMPANIES_REPO } from './domain/repositories/i-crm-companies.repo';
@@ -83,7 +84,8 @@ import { UpdateLeadHandler } from './application/commands/update-lead.handler';
 import { UpdateLeadStageHandler } from './application/commands/update-lead-stage.handler';
 import { DeleteLeadHandler } from './application/commands/delete-lead.handler';
 import { CrmExtrasService } from './application/crm-extras.service';
-import { CrmExtrasRepository } from './application/crm-extras.repository';
+import { CrmExtrasRepository } from './infrastructure/repositories/crm-extras.repository';
+import { CRM_EXTRAS_REPO } from './domain/repositories/i-crm-extras.repo';
 import { CrmCommsService } from './application/crm-comms.service';
 import { CrmCommsRepository } from './infrastructure/repositories/crm-comms.repository';
 import { CRM_COMMS_REPO } from './domain/repositories/i-crm-comms.repo';
@@ -161,6 +163,7 @@ const repositories = [
     { provide: CRM_AUTO_LEAD_REPO, useClass: CrmAutoLeadRepository },
     CrmAutoLeadService,
     CrmBitrixCompatRepository,
+    { provide: CRM_BITRIX_COMPAT_REPO, useClass: CrmBitrixCompatRepository },
     CrmBitrixCompatService,
     { provide: CRM_COMPANIES_REPO, useClass: CrmCompaniesRepository },
     CrmCompaniesService,
@@ -171,6 +174,7 @@ const repositories = [
     CrmFollowupCompatService,
     { provide: CRM_LEADS_OPS_REPO, useClass: CrmLeadsOpsRepository },
     CrmExtrasRepository,
+    { provide: CRM_EXTRAS_REPO, useClass: CrmExtrasRepository },
     CrmExtrasService,
     CrmCommsRepository,
     { provide: CRM_COMMS_REPO, useClass: CrmCommsRepository },

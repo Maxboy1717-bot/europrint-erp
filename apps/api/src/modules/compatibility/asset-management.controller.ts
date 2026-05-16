@@ -15,6 +15,11 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrBadRequest, unwrapOrNotFound, unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
 import { AssetManagementService } from './asset-management.service';
+import {
+  AssetAclTranslator,
+  type LegacyAssetRow,
+  type AssetDto,
+} from './acl/asset-acl';
 
 const AssetSchema = z.object({
   name:          z.string().min(1),
@@ -67,11 +72,31 @@ const TransferSchema = z.object({
 @UseInterceptors(AuditInterceptor)
 @Controller('asset-management')
 export class AssetManagementController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly assetAcl = new AssetAclTranslator();
+
   constructor(private readonly svc: AssetManagementService) {}
 
   @Get('assets')
   async getAssets(@Query('status') status?: string, @Query('category') category?: string) {
     return unwrapOrInternal(await this.svc.getAssets(status, category));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant. New BC-7 (Finance) consumers should target
+   * this endpoint; the legacy `/assets` route stays for backwards-compat.
+   */
+  @Get('assets/v2')
+  async getAssetsV2(
+    @Query('status') status?: string,
+    @Query('category') category?: string,
+  ): Promise<AssetDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getAssets(status, category)) as unknown as LegacyAssetRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.assetAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: AssetDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post('assets')

@@ -7,10 +7,9 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AppErr, Err, Ok, Result } from '@common/result';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
+import { AdvanceBypassApprovedEvent } from '../../domain/events/advance-bypass-approved.event';
 
 export class ApproveAdvanceBypassCommand {
   private readonly logger = new Logger(ApproveAdvanceBypassCommand.name);
@@ -26,7 +25,6 @@ export class ApproveAdvanceBypassHandler implements ICommandHandler<ApproveAdvan
   constructor(
     @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
     private readonly eventBus: EventBus,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: ApproveAdvanceBypassCommand): Promise<Result<void>> {
@@ -53,18 +51,12 @@ export class ApproveAdvanceBypassHandler implements ICommandHandler<ApproveAdvan
       return Err(AppErr('INTERNAL', 'Failed to update order'));
     }
 
-    const bypassEvent = {
-      aggregateId: order.getId(),
-      eventName: 'AdvanceBypassApproved',
-      timestamp: _time.now(),
-      data: {
-        orderId: order.getId(),
-        bypassBy: command.bypassBy,
-        reason: command.reason,
-      },
-    };
-    this.eventBus.publish(bypassEvent);
-    this.eventEmitter.emit(ERP_EVENTS.ADVANCE_BYPASS_APPROVED, bypassEvent);
+    // PA2-18: publish typed domain event via CQRS bus. EventBridgeService
+    // re-emits to EventEmitter2 under ERP_EVENTS.ADVANCE_BYPASS_APPROVED so
+    // any remaining string-based listeners still fire.
+    this.eventBus.publish(
+      new AdvanceBypassApprovedEvent(order.getId(), command.bypassBy, command.reason),
+    );
 
     // §20: Audit log
     this.logger.log({

@@ -137,6 +137,11 @@ import { HrAssetsService } from './hr-assets/hr-assets.service';
 import { HrAssetsRepository } from './hr-assets/hr-assets.repository';
 import { HrAssetsSchemaService } from './hr-assets/hr-assets-schema.service';
 import { HrAssetsSchemaRepository } from './hr-assets/hr-assets-schema.repository';
+// PA3-17 Wave 5: merged from former modules/applications/ (route prefix '/applications' preserved)
+import { ApplicationsController } from './applications/applications.controller';
+import { ApplicationResponsesController } from './applications/application-responses.controller';
+import { ApplicationsService } from './applications/applications.service';
+import { ApplicationsRepository } from './applications/applications.repository';
 
 const commandHandlers = [
   RecordAttendanceHandler,
@@ -212,6 +217,9 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     ValidateController,
     Feedback360Controller,
     HrAssetsController,
+    // PA3-17 Wave 5: merged from modules/applications/
+    ApplicationsController,
+    ApplicationResponsesController,
   ],
   providers: [
     HrRepository,
@@ -285,7 +293,10 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     HrAssetsRepository,
     HrAssetsSchemaService,
     HrAssetsSchemaRepository,
+    // PA3-17 Wave 5: merged from modules/applications/
+    ApplicationsRepository,
+    ApplicationsService,
   ],
-  exports: [HR_REPO, Record360FeedbackHandler, LeaveRepository, TaxCalculatorService, AttritionService, UtilizationService, OvertimeCalculatorService, AdaptationService, Feedback360Service],
+  exports: [HR_REPO, Record360FeedbackHandler, LeaveRepository, TaxCalculatorService, AttritionService, UtilizationService, OvertimeCalculatorService, AdaptationService, Feedback360Service, ApplicationsService],
 })
 export class HrModule {}
