@@ -471,5 +471,9 @@
   "EntityCard": {
     "orta": "→ O'rta",
     "qongiroq": "Qo'ng'iroq"
+  },
+  "ExtendedAIPanelSections": {
+    "faoliyatsizBitimlar3Kun": "Faoliyatsiz bitimlar (3+ kun)",
+    "slaBuzilishlar": "SLA buzilishlar"
   }
 }

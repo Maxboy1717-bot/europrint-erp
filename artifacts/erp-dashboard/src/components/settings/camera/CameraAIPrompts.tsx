@@ -19,6 +19,7 @@ import { CameraWithPrompt, CAMERA_TYPES } from "./types";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 export function CameraAIPrompts() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -144,7 +145,7 @@ export function CameraAIPrompts() {
                     onChange={e => setLocalPrompts(p => ({ ...p, [cam.id]: { ...loc, prompt: e.target.value } }))}
                     disabled={!isEditing}
                     rows={3}
-                    placeholder="Bu kamera uchun AI ko'rsatmasi (prompt) kiriting..."
+                    placeholder={tLabel('common.CameraAIPrompts.buKameraUchunAiKorsatmasi', "Bu kamera uchun AI ko'rsatmasi (prompt) kiriting...")}
                     className="text-sm resize-none"
                     data-testid={`textarea-prompt-${cam.id}`}
                   />

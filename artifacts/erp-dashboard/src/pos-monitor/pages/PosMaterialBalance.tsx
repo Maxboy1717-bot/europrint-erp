@@ -8,6 +8,7 @@ import { useLocation } from "wouter";
 import { materialsApi } from "../api/pos-monitor.api";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface Material {
   id: number;
   code: string | null;
@@ -96,8 +97,8 @@ export default function PosMaterialBalance() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 16 }}>
         <Kpi label={t('jamiMaterial1')} value={String(enriched.length)} color="#1F2937" />
-        <Kpi label="JAMI QIYMAT" value={fmtMoney(totalValue) + " UZS"} color="#10B981" />
-        <Kpi label="JAMI MIQDOR" value={fmt(totalQty, 0)} color="#3B82F6" />
+        <Kpi label={tLabel('common.PosMaterialBalance.jamiQiymat', "JAMI QIYMAT")} value={fmtMoney(totalValue) + " UZS"} color="#10B981" />
+        <Kpi label={tLabel('common.PosMaterialBalance.jamiMiqdor', "JAMI MIQDOR")} value={fmt(totalQty, 0)} color="#3B82F6" />
         <Kpi label="A-GURUH (80%)" value={String(abcItems.filter(i => i.abc === "A").length)} color="#EF4444" />
         <Kpi label="B-GURUH (15%)" value={String(abcItems.filter(i => i.abc === "B").length)} color="#F59E0B" />
         <Kpi label="C-GURUH (5%)" value={String(abcItems.filter(i => i.abc === "C").length)} color="#10B981" />

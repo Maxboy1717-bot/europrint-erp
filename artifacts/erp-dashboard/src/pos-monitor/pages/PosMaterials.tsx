@@ -10,6 +10,7 @@ import { materialsApi, barcodeApi } from "../api/pos-monitor.api";
 import PosBarcodeScanner from "../components/PosBarcodeScanner";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface MaterialRow {
   id: string | number;
   code: string | null;
@@ -158,7 +159,7 @@ function MaterialCard({ mat, onClick, on360 }: { mat: MaterialRow; onClick: () =
             background: "#EFF6FF", border: "1px solid #BFDBFE", color: "#1E40AF",
             fontSize: 10, fontWeight: 700, cursor: "pointer", textAlign: "center",
           }}
-          title="Material 360° profili (har omborda stok, harakatlar, narxlar)"
+          title={tLabel('common.PosMaterials.material360ProfiliHarOmborda', "Material 360° profili (har omborda stok, harakatlar, narxlar)")}
         >
           {t("k360Profil")}
         </button>

@@ -12,6 +12,7 @@ import { Shield, AlertTriangle } from "lucide-react";
 import { RaciTask, Crisis, TASK_STATUS, RISK_COLORS, TabType } from "./RaciCrisisPageTypes";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // LoadingSkeleton
 // ---------------------------------------------------------------------------
@@ -109,7 +110,7 @@ export function TaskList({ tasks }: TaskListProps) {
       <Card>
         <CardContent className="py-12 text-center">
           <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">RACI vazifalar topilmadi</p>
+          <p className="text-muted-foreground">{tLabel('common.RaciCrisisPageSections.raciVazifalarTopilmadi', "RACI vazifalar topilmadi")}</p>
         </CardContent>
       </Card>
     );

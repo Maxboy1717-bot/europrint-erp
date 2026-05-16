@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface ProductionFact {
   id: string | number;
   product_name?: string;
@@ -247,7 +248,7 @@ export default function ProductionFactsPage() {
                 <Input
                   value={form.shift}
                   onChange={e => setForm(f => ({ ...f, shift: e.target.value }))}
-                  placeholder="1-smena"
+                  placeholder={tLabel('common.ProductionFactsPage.1Smena', "1-smena")}
                   data-testid="input-fact-shift"
                 />
               </div>

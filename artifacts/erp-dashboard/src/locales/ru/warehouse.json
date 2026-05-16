@@ -601,5 +601,8 @@
   },
   "PosWarehouseDetail": {
     "nomalum": "Noma'lum"
+  },
+  "RollManagementPage": {
+    "boshlangichOgirlikKg": "Boshlang'ich og'irlik (kg) *"
   }
 }

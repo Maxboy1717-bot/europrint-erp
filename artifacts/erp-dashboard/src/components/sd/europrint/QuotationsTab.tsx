@@ -21,6 +21,7 @@ import {
   fmt 
 } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 const QUOT_STATUS_LABELS: Record<string, string> = {
   draft: "Qoralama", sent: "Yuborildi", viewed: "Ko'rildi",
   approved: "Tasdiqlandi", rejected: "Rad etildi", expired: "Muddati o'tdi",
@@ -130,7 +131,7 @@ export function QuotationsTab() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div><Label>Miqdor (dona)</Label>
+                <div><Label>{tLabel('common.QuotationsTab.miqdorDona', "Miqdor (dona)")}</Label>
                   <Input data-testid="input-quantity" type="number" value={calcForm.quantity}
                     onChange={e => setCalcForm({ ...calcForm, quantity: +e.target.value })} /></div>
                 <div className="flex items-center gap-2">

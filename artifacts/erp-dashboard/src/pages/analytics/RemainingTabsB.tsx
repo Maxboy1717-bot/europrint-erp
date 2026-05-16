@@ -14,6 +14,7 @@ import {
 import type { RemainingTabsProps } from "./RemainingTabsTypes";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export { HrTab } from "./RemainingTabsHr";
 
 // ---------------------------------------------------------------------------
@@ -89,7 +90,7 @@ export function TestsTab({
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="averageScore" fill="hsl(var(--primary))" name="O'rtacha ball %" />
+                  <Bar dataKey="averageScore" fill="hsl(var(--primary))" name={tLabel('analytics.RemainingTabsB.ortachaBall', "O'rtacha ball %")} />
                 </BarChart>
               </ResponsiveContainer>
               </div>
@@ -181,7 +182,7 @@ export function TestsTab({
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="avgTime" fill="hsl(var(--chart-2))" name="O'rtacha vaqt (s)" />
+                <Bar dataKey="avgTime" fill="hsl(var(--chart-2))" name={tLabel('analytics.RemainingTabsB.ortachaVaqtS', "O'rtacha vaqt (s)")} />
               </BarChart>
             </ResponsiveContainer>
             </div>
@@ -208,8 +209,8 @@ export function TestsTab({
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="count" fill="hsl(var(--chart-1))" name="Xodimlar soni" />
-              <Line type="monotone" dataKey="passRate" stroke="#22c55e" strokeWidth={2} name="O'tish foizi %" />
+              <Bar dataKey="count" fill="hsl(var(--chart-1))" name={tLabel('analytics.RemainingTabsB.xodimlarSoni', "Xodimlar soni")} />
+              <Line type="monotone" dataKey="passRate" stroke="#22c55e" strokeWidth={2} name={tLabel('analytics.RemainingTabsB.otishFoizi', "O'tish foizi %")} />
             </ComposedChart>
           </ResponsiveContainer>
           </div>

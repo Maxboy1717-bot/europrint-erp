@@ -11,6 +11,7 @@ import { ChatMessage } from "@/store/chatStore";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface Props {
   roomId: string;
   replyTo?: ChatMessage | null;
@@ -199,7 +200,7 @@ export function MessageInput({
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          placeholder="Xabar yozing... (Enter = yuborish, Shift+Enter = yangi qator)"
+          placeholder={tLabel('common.MessageInput.xabarYozingEnterYuborishShift', "Xabar yozing... (Enter = yuborish, Shift+Enter = yangi qator)")}
           rows={1}
           className={cn(
             "flex-1 resize-none rounded-xl border border-border/60 bg-muted/30",

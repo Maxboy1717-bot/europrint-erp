@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface EngagementTabProps {
   activeUsers: ActiveUsersData | undefined;
   activeUsersLoading: boolean;
@@ -125,7 +126,7 @@ export function EngagementTab({
                   dataKey="activeUsers" 
                   stroke="hsl(var(--primary))" 
                   strokeWidth={2}
-                  name="Faol foydalanuvchilar"
+                  name={tLabel('analytics.EngagementTab.faolFoydalanuvchilar', "Faol foydalanuvchilar")}
                   dot={{ r: 3 }}
                 />
               </LineChart>

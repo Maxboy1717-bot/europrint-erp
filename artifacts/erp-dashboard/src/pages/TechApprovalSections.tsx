@@ -18,6 +18,7 @@ import type { AiCheckResult, ApprovalLog, MaterialAlt } from "./TechApprovalType
 import { apiRequest } from '@/lib/queryClient';
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── AI Check Panel ───────────────────────────────────────────────────────────
 
 export function AiCheckPanel({ orderId }: { orderId: string }) {
@@ -198,7 +199,7 @@ export function MaterialAlternatives() {
           className="flex-1 text-sm px-3 py-1.5 rounded-md border bg-background"
           value={material}
           onChange={(e) => setMaterial(e.target.value)}
-          placeholder="Material nomi (masalan: gofrokarton)"
+          placeholder={tLabel('common.TechApprovalSections.materialNomiMasalanGofrokarton', "Material nomi (masalan: gofrokarton)")}
           data-testid="input-material-name"
         />
         <Button

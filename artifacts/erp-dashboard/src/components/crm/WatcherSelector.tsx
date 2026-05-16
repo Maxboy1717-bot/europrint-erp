@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, Eye, Plus, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface User {
   id: string;
   firstName: string;
@@ -67,7 +68,7 @@ export function WatcherSelector({
     >
       <div className="flex items-center gap-2">
         <Eye className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">Наблюдатели</span>
+        <span className="text-sm font-medium">{tLabel('common.WatcherSelector.untitled', "Наблюдатели")}</span>
         <span className="text-xs text-muted-foreground">({watchers.length})</span>
       </div>
 
@@ -112,7 +113,7 @@ export function WatcherSelector({
             <div className="flex items-center gap-2 px-2 pb-2 border-b">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Поиск сотрудников..."
+                placeholder={tLabel('common.WatcherSelector.untitled', "Поиск сотрудников...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-8 border-0 p-0 focus-visible:ring-0"

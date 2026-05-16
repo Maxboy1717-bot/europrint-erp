@@ -32,6 +32,7 @@ import { useTranslation } from "@/lib/i18n";
 import { UseFormReturn } from "react-hook-form";
 import { FinanceCategory, CategoryFormData } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface CategoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -151,7 +152,7 @@ export function CategoryDialog({
                   <FormLabel>{tCommon("name")} (RU)</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Название категории"
+                      placeholder={tLabel('common.CategoryDialog.untitled', "Название категории")}
                       {...field}
                       data-testid="input-category-name-ru"
                     />

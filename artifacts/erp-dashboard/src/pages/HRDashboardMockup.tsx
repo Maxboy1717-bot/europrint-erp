@@ -15,6 +15,7 @@ import { StatusPill } from "@/components/mockup/StatusPill";
 import { toArray } from "@/lib/safe-array";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface DashboardStats {
   totalEmployees: number;
   activeEmployees: number;
@@ -82,7 +83,7 @@ export default function HRDashboardMockup() {
         <KpiCardMockup
           icon={<UserPlus className="h-5 w-5" />}
           iconColor="blue"
-          label="Yangi (30 kun)"
+          label={tLabel('common.HRDashboardMockup.yangi30Kun', "Yangi (30 kun)")}
           value={stats.newHires30d ?? 0}
           link="Onboarding"
         />

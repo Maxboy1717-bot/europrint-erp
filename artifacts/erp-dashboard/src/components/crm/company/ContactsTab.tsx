@@ -22,6 +22,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface ContactsTabProps {
   companyId: number;
   contacts: Contact[];
@@ -139,7 +140,7 @@ export function ContactsTab({ companyId, contacts = [] }: ContactsTabProps) {
               </p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Rol / Lavozim</label>
+              <label className="text-sm font-medium">{tLabel('common.ContactsTab.rolLavozim', "Rol / Lavozim")}</label>
               <Input
                 value={linkContactRole}
                 onChange={(e) => setLinkContactRole(e.target.value)}

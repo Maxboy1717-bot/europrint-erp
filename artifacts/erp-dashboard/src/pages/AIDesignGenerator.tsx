@@ -22,6 +22,7 @@ import {
 import { EPErrorState, EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export default function AIDesignGenerator() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -215,7 +216,7 @@ export default function AIDesignGenerator() {
                   </div>
                   <div className="mt-4 p-3 bg-green-50 dark:bg-green-950/20 rounded-md border border-green-200 dark:border-green-800">
                     <div className="text-xs text-[var(--ep-green)] dark:text-green-400 font-medium">{t("approvedPendingTechTrigger")}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">Dizayn tasdiqlanganda papkaOrders.status = "pending_tech" ga o'zgaradi — texnolog moduli avtomatik signal oladi</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{tLabel('common.AIDesignGenerator.dizaynTasdiqlangandaPapkaordersStatusPending', "Dizayn tasdiqlanganda papkaOrders.status = \"pending_tech\" ga o'zgaradi — texnolog moduli avtomatik signal oladi")}</div>
                   </div>
                 </CardContent>
               </Card>

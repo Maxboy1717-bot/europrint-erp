@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface TurnoverTabProps {
   resignationReasons: { reason: string; count: number; color: string }[];
   monthlyTrend: { month: string; newHires: number; resignations: number }[];
@@ -83,8 +84,8 @@ export function TurnoverTab({ resignationReasons, monthlyTrend, totalResignation
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="newHires" name="Yangi qabul" fill="#3b82f6" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="resignations" name="Ketganlar" fill="#ef4444" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="newHires" name={tLabel('common.TurnoverTab.yangiQabul', "Yangi qabul")} fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="resignations" name={tLabel('common.TurnoverTab.ketganlar', "Ketganlar")} fill="#ef4444" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

@@ -8,6 +8,7 @@ import { useLocation } from "wouter";
 import { apiRequest } from '@/lib/queryClient';
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 const CATEGORY_OPTIONS = [
   { value: "PAPER",      label: "📄 Qog'oz" },
   { value: "CARDBOARD",  label: "📦 Karton" },
@@ -134,20 +135,20 @@ export default function PosMaterialNew() {
             </select>
           </Field>
 
-          <Field label="Material nomi (o'zbekcha) *" required>
+          <Field label={tLabel('common.PosMaterialNew.materialNomiOzbekcha', "Material nomi (o'zbekcha) *")} required>
             <input
               value={form.xom_ashyo}
               onChange={e => setForm({...form, xom_ashyo: e.target.value})}
-              placeholder="Qog'oz 300g/m²"
+              placeholder={tLabel('common.PosMaterialNew.qogoz300gM', "Qog'oz 300g/m²")}
               style={inputStyle}
             />
           </Field>
 
-          <Field label="Material nomi (ruscha)">
+          <Field label={tLabel('common.PosMaterialNew.materialNomiRuscha', "Material nomi (ruscha)")}>
             <input
               value={form.xom_ashyo_ru}
               onChange={e => setForm({...form, xom_ashyo_ru: e.target.value})}
-              placeholder="Бумага 300г/м²"
+              placeholder={tLabel('common.PosMaterialNew.300', "Бумага 300г/м²")}
               style={inputStyle}
             />
           </Field>

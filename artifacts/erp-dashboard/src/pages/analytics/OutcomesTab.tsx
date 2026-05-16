@@ -15,6 +15,7 @@ import { queryClient } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface OutcomesTabProps {
   learningOutcomes: LearningOutcomes | undefined;
   outcomesLoading: boolean;
@@ -258,7 +259,7 @@ export function OutcomesTab({
                     stroke="hsl(var(--primary))" 
                     fillOpacity={1} 
                     fill="url(#colorProgress)"
-                    name="Faol o'quvchilar"
+                    name={tLabel('analytics.OutcomesTab.faolOquvchilar', "Faol o'quvchilar")}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -288,8 +289,8 @@ export function OutcomesTab({
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="completionRate" fill="hsl(var(--primary))" name="Tugatish %" />
-                  <Line type="monotone" dataKey="averageScore" stroke="#22c55e" strokeWidth={2} name="O'rtacha ball" />
+                  <Bar dataKey="completionRate" fill="hsl(var(--primary))" name={tLabel('analytics.OutcomesTab.tugatish', "Tugatish %")} />
+                  <Line type="monotone" dataKey="averageScore" stroke="#22c55e" strokeWidth={2} name={tLabel('analytics.OutcomesTab.ortachaBall', "O'rtacha ball")} />
                 </ComposedChart>
               </ResponsiveContainer>
               </div>
@@ -316,8 +317,8 @@ export function OutcomesTab({
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="completionRate" fill="hsl(var(--accent))" name="Tugatish %" />
-                  <Line type="monotone" dataKey="averageScore" stroke="#3b82f6" strokeWidth={2} name="O'rtacha ball" />
+                  <Bar dataKey="completionRate" fill="hsl(var(--accent))" name={tLabel('analytics.OutcomesTab.tugatish', "Tugatish %")} />
+                  <Line type="monotone" dataKey="averageScore" stroke="#3b82f6" strokeWidth={2} name={tLabel('analytics.OutcomesTab.ortachaBall', "O'rtacha ball")} />
                 </ComposedChart>
               </ResponsiveContainer>
               </div>
@@ -348,14 +349,14 @@ export function OutcomesTab({
                 <PolarAngleAxis dataKey="subject" />
                 <PolarRadiusAxis angle={90} domain={[0, 100]} />
                 <Radar 
-                  name="O'rtacha daraja" 
+                  name={tLabel('analytics.OutcomesTab.ortachaDaraja', "O'rtacha daraja")} 
                   dataKey="A" 
                   stroke="#22c55e" 
                   fill="#22c55e" 
                   fillOpacity={0.6} 
                 />
                 <Radar 
-                  name="Tasdiqlangan (%)" 
+                  name={tLabel('analytics.OutcomesTab.tasdiqlangan', "Tasdiqlangan (%)")} 
                   dataKey="B" 
                   stroke="#3b82f6" 
                   fill="#3b82f6" 

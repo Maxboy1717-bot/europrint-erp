@@ -14,6 +14,7 @@ import { apiRequest, HttpError } from "@/lib/queryClient";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface LoginRedesignProps {
@@ -210,7 +211,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
             <h1 className="text-4xl font-bold text-white leading-tight">
               {t("zamonaviyIshlabChiqarish")}
               <br />
-              <span className="opacity-80">boshqaruv tizimi</span>
+              <span className="opacity-80">{tLabel('common.Login.boshqaruvTizimi', "boshqaruv tizimi")}</span>
             </h1>
             <p className="text-white/70 text-base max-w-sm">
               SAP darajadagi ERP — 15 modul, real-time monitoring, AI tahlil

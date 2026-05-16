@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, X, CheckCheck, ArrowRight, AlertCircle, Package, GraduationCap, Info } from "lucide-react";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type NotifType = "error" | "warning" | "success" | "info";
@@ -406,7 +407,7 @@ export function AppHeader({
           <button
             type="button"
             onClick={onMenuToggle}
-            aria-label="Menyuni ochish/yopish"
+            aria-label={tLabel('common.NotificationBell.menyuniOchishYopish', "Menyuni ochish/yopish")}
             className="w-9 h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors md:hidden"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

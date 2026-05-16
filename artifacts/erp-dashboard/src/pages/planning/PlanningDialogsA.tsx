@@ -13,6 +13,7 @@ import type { UseFormReturn } from "react-hook-form";
 import type { InsertPlanningOperation, InsertProductionPlanHeader } from "@shared/schema";
 import type { PapkaOrder, Equipment, WorkCenter, PlanningTranslations } from "./planning-types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Operation Form Dialog ────────────────────────────────────────────────────
 
 interface OperationDialogProps {
@@ -228,9 +229,9 @@ export function PlanFormDialog({
                   <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl><SelectTrigger data-testid="select-plan-shift" className="h-9"><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="1-smena">1-smena</SelectItem>
-                      <SelectItem value="2-smena">2-smena</SelectItem>
-                      <SelectItem value="3-smena">3-smena</SelectItem>
+                      <SelectItem value="1-smena">{tLabel('planning.PlanningDialogsA.1Smena', "1-smena")}</SelectItem>
+                      <SelectItem value="2-smena">{tLabel('planning.PlanningDialogsA.2Smena', "2-smena")}</SelectItem>
+                      <SelectItem value="3-smena">{tLabel('planning.PlanningDialogsA.3Smena', "3-smena")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

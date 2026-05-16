@@ -16,6 +16,7 @@ import { Search, Pencil, Trash2, Target } from "lucide-react";
 import { type Position, type Department, KPI_TEMPLATES } from "./PositionsTypes";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Filters bar
 // ---------------------------------------------------------------------------
@@ -87,7 +88,7 @@ export function PositionsTable({
               <TableHead>{t("lavozimNomi1")}</TableHead>
               <TableHead>{t("bolim1")}</TableHead>
               <TableHead className="w-[90px]">{t("daraja")}</TableHead>
-              <TableHead className="w-[90px]">Shtат</TableHead>
+              <TableHead className="w-[90px]">{tLabel('common.PositionsSections.sht', "Shtат")}</TableHead>
               <TableHead className="w-[90px]">{t("status28")}</TableHead>
               <TableHead className="w-[100px]">KPI</TableHead>
               <TableHead className="w-[100px] text-right">{t("Amallar")}</TableHead>

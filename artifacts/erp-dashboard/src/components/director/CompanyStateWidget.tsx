@@ -15,6 +15,7 @@ import { stateConfig } from "./helpers";
 import type { CompanyStateCurrent, CompanyStateHistory } from "./types";
 import { apiRequest } from '@/lib/queryClient';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function CompanyStateWidget() {
   const { t } = useTranslation("common");
   const { t: td } = useTranslation("director");
@@ -106,7 +107,7 @@ export function CompanyStateWidget() {
                 <span className="text-xs text-muted-foreground">{profitFormatted} so'm</span>
               </div>
               <p className="text-2xl font-bold text-foreground">{profitPct}%</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Foyda / Maqsad</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{tLabel('common.CompanyStateWidget.foydaMaqsad', "Foyda / Maqsad")}</p>
               <p className="text-[10px] text-muted-foreground">{td("weeklyProfitTarget")}</p>
             </div>
             <div className="rounded-xl bg-muted/40 p-4 text-center" data-testid="state-revenue">
@@ -115,7 +116,7 @@ export function CompanyStateWidget() {
                 <span className="text-xs text-muted-foreground">{revenueFormatted} so'm</span>
               </div>
               <p className="text-2xl font-bold text-foreground">{revenuePct}%</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Daromad / Maqsad</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{tLabel('common.CompanyStateWidget.daromadMaqsad', "Daromad / Maqsad")}</p>
               <p className="text-[10px] text-muted-foreground">{td("weeklyRevenueTarget")}</p>
             </div>
             <div className="rounded-xl bg-muted/40 p-4 text-center" data-testid="state-retention">

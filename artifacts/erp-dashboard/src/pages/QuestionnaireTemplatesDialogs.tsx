@@ -19,6 +19,7 @@ import type { TemplateFormData, QuestionFormData, TemplateWithPosition, Position
 import type { QuestionnaireQuestion } from "@shared/schema";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // PresetsDialog
 // ---------------------------------------------------------------------------
@@ -243,7 +244,7 @@ export function QuestionDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="text">{t("matn")}</SelectItem>
-                  <SelectItem value="yes_no">Ha/Yo'q</SelectItem>
+                  <SelectItem value="yes_no">{tLabel('common.QuestionnaireTemplatesDialogs.haYoq', "Ha/Yo'q")}</SelectItem>
                   <SelectItem value="multiple_choice">{t("kopVariantli")}</SelectItem>
                 </SelectContent>
               </Select>

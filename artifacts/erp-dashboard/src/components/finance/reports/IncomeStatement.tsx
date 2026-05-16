@@ -11,6 +11,7 @@ import { formatPercent } from "./helpers";
 import { MonthlySummary } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface IncomeStatementProps {
   data: MonthlySummary | undefined;
   isLoading: boolean;
@@ -56,7 +57,7 @@ export function IncomeStatement({ data, isLoading }: IncomeStatementProps) {
               <span className="font-medium text-[var(--ep-red)]">-{formatCurrency(data?.profitLoss?.operatingExpenses || 0)}</span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-              <span className="font-bold">Operatsion foyda (EBIT)</span>
+              <span className="font-bold">{tLabel('common.IncomeStatement.operatsionFoydaEbit', "Operatsion foyda (EBIT)")}</span>
               <div className="text-right">
                 <div className="font-bold text-[var(--ep-blue)]">{formatCurrency(data?.profitLoss?.operatingIncome || 0)}</div>
                 <div className="text-xs text-muted-foreground">Marja: {formatPercent(data?.profitLoss?.operatingMargin)}</div>

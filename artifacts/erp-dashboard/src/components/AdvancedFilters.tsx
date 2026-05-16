@@ -35,6 +35,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { SavedFilter } from "@shared/schema";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface OrgDepartment {
   id: string;
   name: string;
@@ -411,7 +412,7 @@ export function AdvancedFilters({ onFilterChange }: AdvancedFiltersProps) {
               />
             </div>
             <div>
-              <Label>Tavsif (ixtiyoriy)</Label>
+              <Label>{tLabel('common.AdvancedFilters.tavsifIxtiyoriy', "Tavsif (ixtiyoriy)")}</Label>
               <Input
                 value={filterDescription}
                 onChange={(e) => setFilterDescription(e.target.value)}

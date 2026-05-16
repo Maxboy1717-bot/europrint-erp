@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, RefreshCw } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface AddProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -143,7 +144,7 @@ export function AddProductDialog({
               name="minStock"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Min zaxira (ogohlantirish)</FormLabel>
+                  <FormLabel>{tLabel('common.AddProductDialog.minZaxiraOgohlantirish', "Min zaxira (ogohlantirish)")}</FormLabel>
                   <FormControl><Input type="number" {...field} data-testid="input-product-min-stock" /></FormControl>
                   <FormMessage />
                 </FormItem>

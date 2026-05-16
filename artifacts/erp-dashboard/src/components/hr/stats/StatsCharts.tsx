@@ -9,6 +9,7 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { Attempt } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface StatsChartsProps {
   employeeAttempts: Attempt[];
   attendanceChartData: Array<{ name: string; value: number }>;
@@ -43,7 +44,7 @@ export function StatsCharts({ employeeAttempts, attendanceChartData, COLORS }: S
                   <Tooltip />
                   <Legend />
                   <Line type="monotone" dataKey="ball" stroke="#2563eb" name="Ball" strokeWidth={2} />
-                  <Line type="monotone" dataKey="minimal" stroke="#dc2626" strokeDasharray="5 5" name="O'tish balli" />
+                  <Line type="monotone" dataKey="minimal" stroke="#dc2626" strokeDasharray="5 5" name={tLabel('common.StatsCharts.otishBalli', "O'tish balli")} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

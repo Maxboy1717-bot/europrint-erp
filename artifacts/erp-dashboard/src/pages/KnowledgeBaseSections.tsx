@@ -15,6 +15,7 @@ import type { CategoryOption, KnowledgeBase } from "./KnowledgeBaseTypes";
 import { getCategoryLabel } from "./KnowledgeBaseTypes";
 import { EPStatusPill } from "@/components/ep";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Loading skeleton
 // ---------------------------------------------------------------------------
@@ -206,7 +207,7 @@ export function KnowledgeBaseItemCard({
             </p>
           </div>
           <div>
-            <p className="text-sm font-medium mb-1">Русский:</p>
+            <p className="text-sm font-medium mb-1">{tLabel('common.KnowledgeBaseSections.untitled', "Русский:")}</p>
             <p className="text-sm text-muted-foreground line-clamp-3">
               {item.contentRu}
             </p>

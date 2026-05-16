@@ -10,6 +10,7 @@ import { ExitLog } from "./types";
 import { alertBadgeVariant, alertLabel } from "./helpers";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface ExitControlProps {
   logs: ExitLog[];
 }
@@ -26,8 +27,8 @@ export function ExitControlPanel({ logs }: ExitControlProps) {
       </CardHeader>
       <CardContent>
         <div className="flex gap-2 mb-3 flex-wrap">
-          <Badge variant="default">RUXSAT</Badge>
-          <Badge variant="secondary">OGOHLANTIRISH</Badge>
+          <Badge variant="default">{tLabel('common.ExitControlPanel.ruxsat', "RUXSAT")}</Badge>
+          <Badge variant="secondary">{tLabel('common.ExitControlPanel.ogohlantirish', "OGOHLANTIRISH")}</Badge>
           <Badge variant="destructive">BLOKLASH</Badge>
           <Badge variant="destructive" className="bg-black text-white dark:bg-card dark:text-foreground">XAVFLI</Badge>
         </div>

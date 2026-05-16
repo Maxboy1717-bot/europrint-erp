@@ -31,6 +31,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface EmployeeDetailDialogProps {
   userId: string | null;
   open: boolean;
@@ -259,7 +260,7 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
               {/* Daily Activity Chart */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Kunlik Faollik (So'nggi 7 kun)</CardTitle>
+                  <CardTitle>{tLabel('common.EmployeeDetailDialog.kunlikFaollikSonggi7Kun', "Kunlik Faollik (So'nggi 7 kun)")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {dailyActivity && dailyActivity.length > 0 ? (
@@ -269,8 +270,8 @@ export default function EmployeeDetailDialog({userId, open, onOpenChange }: Empl
                         <XAxis dataKey="date" />
                         <YAxis />
                         <Tooltip />
-                        <Line type="monotone" dataKey="events" stroke="#8884d8" name="Jami hodisalar" />
-                        <Line type="monotone" dataKey="violations" stroke="#ef4444" name="Buzilishlar" />
+                        <Line type="monotone" dataKey="events" stroke="#8884d8" name={tLabel('common.EmployeeDetailDialog.jamiHodisalar', "Jami hodisalar")} />
+                        <Line type="monotone" dataKey="violations" stroke="#ef4444" name={tLabel('common.EmployeeDetailDialog.buzilishlar', "Buzilishlar")} />
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (

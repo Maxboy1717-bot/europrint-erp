@@ -10,6 +10,7 @@ import { KpiCard } from "@/components/wms/tabs/KpiCard";
 import type { ProductionUsageData, MaterialBasic } from "@/components/wms/wms-types";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface ProductionTabProps {
   productionUsage: ProductionUsageData | null | undefined;
   basic: MaterialBasic;
@@ -22,7 +23,7 @@ export function ProductionTab({ productionUsage, basic }: ProductionTabProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-        <KpiCard icon={TrendingDown} label="Kunlik sarflanish (o'rt)" value={fmtQty(productionUsage.avgDailyConsumption, basic.unitOfMeasure)} sub="so'nggi 30 kun" />
+        <KpiCard icon={TrendingDown} label={tLabel('common.ProductionTab.kunlikSarflanishOrt', "Kunlik sarflanish (o'rt)")} value={fmtQty(productionUsage.avgDailyConsumption, basic.unitOfMeasure)} sub="so'nggi 30 kun" />
         <KpiCard icon={TrendingDown} label={t("oylikSarflanish")} value={fmtQty(productionUsage.avgMonthlyConsumption, basic.unitOfMeasure)} />
         <KpiCard icon={Clock} label={t("hozirgiZaxiraDavri")}
           value={productionUsage.daysRemaining != null ? `${productionUsage.daysRemaining} kun` : "Noma'lum"}

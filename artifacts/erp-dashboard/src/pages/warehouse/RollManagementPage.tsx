@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface RollBalance { articleCode: string; count: number; totalKg: number }
 interface FifoRoll { rollId: string; receivedDate: string; remainingWeightKg: number; supplierName: string | null }
 
@@ -151,7 +152,7 @@ export default function RollManagementPage() {
               <Input2 label={t("rollId")} value={scanForm.rollId} onChange={(v) => setScanForm({...scanForm, rollId: v})} placeholder={t("masalanRl20260042")} />
               <Input2 label={t("artikelKodi")} value={scanForm.articleCode} onChange={(v) => setScanForm({...scanForm, articleCode: v})} placeholder={t("masalanGofro180B")} />
               <Input2 label={t("taminotchiNomi")} value={scanForm.supplierName} onChange={(v) => setScanForm({...scanForm, supplierName: v})} />
-              <Input2 label="Boshlang'ich og'irlik (kg) *" value={scanForm.initialWeightKg} onChange={(v) => setScanForm({...scanForm, initialWeightKg: v})} type="number" placeholder={t("masalan250")} />
+              <Input2 label={tLabel('warehouse.RollManagementPage.boshlangichOgirlikKg', "Boshlang'ich og'irlik (kg) *")} value={scanForm.initialWeightKg} onChange={(v) => setScanForm({...scanForm, initialWeightKg: v})} type="number" placeholder={t("masalan250")} />
               <Input2 label={t("omborId")} value={scanForm.warehouseId} onChange={(v) => setScanForm({...scanForm, warehouseId: v})} />
               <Input2 label="Bin (joy)" value={scanForm.binLocation} onChange={(v) => setScanForm({...scanForm, binLocation: v})} placeholder={t("masalanA312")} />
             </div>

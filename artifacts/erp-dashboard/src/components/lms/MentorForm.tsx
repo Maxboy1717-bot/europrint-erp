@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface MentorData {
   name: string;
   bio: string;
@@ -117,7 +118,7 @@ export function MentorForm({
           </div>
 
           <div className="space-y-1">
-          <Label htmlFor="mentorBio">Kim (qisqacha ma'lumot)</Label>
+          <Label htmlFor="mentorBio">{tLabel('common.MentorForm.kimQisqachaMalumot', "Kim (qisqacha ma'lumot)")}</Label>
             <Textarea
               id="mentorBio"
               placeholder={t("mentorHaqidaQisqachaMalumotKasbi")}

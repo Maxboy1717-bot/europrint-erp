@@ -9,6 +9,7 @@ import { useLocation } from "wouter";
 import { warehouseFeaturesApi } from "@/lib/api/warehouse-features";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface WarehouseKpi {
   warehouseId: number; warehouseCode: string; warehouseName: string; warehouseType: string;
   totalMaterials: number; totalQuantity: number; totalValue: number;
@@ -91,7 +92,7 @@ export default function WarehouseKpiHub() {
             <KpiBox icon="💰" label={t("jamiQiymat1")} value={fmtMoney(sysKpi.totalStockValue) + " UZS"} color="text-[var(--ep-green)]" />
             <KpiBox icon="⚠️" label={t("pastStok")} value={String(sysKpi.lowStockAlerts ?? 0)} color={(sysKpi.lowStockAlerts ?? 0) > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"} />
             <KpiBox icon="⏳" label={t("kutmoqda1")} value={String(sysKpi.pendingMovements ?? 0)} color={(sysKpi.pendingMovements ?? 0) > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
-            <KpiBox icon="🔬" label="QC kutmoqda" value={String(sysKpi.qcPending ?? 0)} color={(sysKpi.qcPending ?? 0) > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
+            <KpiBox icon="🔬" label={tLabel('common.WarehouseKpiHub.qcKutmoqda', "QC kutmoqda")} value={String(sysKpi.qcPending ?? 0)} color={(sysKpi.qcPending ?? 0) > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
             <KpiBox icon="📅" label={t("today")} value={String(sysKpi.todayMovements ?? 0)} />
             <KpiBox icon="📊" label={t("hafta")} value={String(sysKpi.weeklyMovements ?? 0)} />
             <KpiBox icon="📈" label="Oy" value={String(sysKpi.monthlyMovements ?? 0)} />

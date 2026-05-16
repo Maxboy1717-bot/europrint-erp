@@ -1,0 +1,29 @@
+{
+  "EngagementTab": {
+    "faolFoydalanuvchilar": "Активные пользователи"
+  },
+  "LeaderboardTab": {
+    "ortachaBall": "O'rtacha ball",
+    "tugatish": "Завершено %"
+  },
+  "OutcomesTab": {
+    "tasdiqlangan": "Подтверждено (%)",
+    "ortachaDaraja": "O'rtacha daraja",
+    "ortachaBall": "O'rtacha ball",
+    "tugatish": "Завершено %",
+    "faolOquvchilar": "Faol o'quvchilar"
+  },
+  "RemainingTabsA": {
+    "yangiTayinlanganlar": "Новые назначения"
+  },
+  "RemainingTabsB": {
+    "otishFoizi": "O'tish foizi %",
+    "xodimlarSoni": "Кол-во сотрудников",
+    "ortachaVaqtS": "O'rtacha vaqt (s)",
+    "ortachaBall": "O'rtacha ball %"
+  },
+  "RemainingTabsUsers": {
+    "xodimlarSoni": "Кол-во сотрудников",
+    "aktivXodimlar": "Активные сотрудники"
+  }
+}

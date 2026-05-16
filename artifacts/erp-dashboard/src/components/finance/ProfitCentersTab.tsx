@@ -33,6 +33,7 @@ import { Plus, Pencil } from "lucide-react";
 import type { ProfitCenter, User } from "@shared/schema";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 const profitCenterFormSchema = z.object({
   code: z.string().min(1, "Kod talab qilinadi"),
   name: z.string().min(2, "Nom kamida 2 ta belgidan iborat bo'lishi kerak"),
@@ -160,7 +161,7 @@ export function ProfitCentersTab() {
                 )} />
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground">Nomi (UZ)</FormLabel>
+                    <FormLabel className="text-muted-foreground">{tLabel('common.ProfitCentersTab.nomiUz', "Nomi (UZ)")}</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder={t("asosiySotish")} data-testid="input-profit-center-name" className="bg-background border-border text-foreground" />
                     </FormControl>
@@ -169,9 +170,9 @@ export function ProfitCentersTab() {
                 )} />
                 <FormField control={form.control} name="nameRu" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground">Nomi (RU)</FormLabel>
+                    <FormLabel className="text-muted-foreground">{tLabel('common.ProfitCentersTab.nomiRu', "Nomi (RU)")}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Основные продажи" data-testid="input-profit-center-name-ru" className="bg-background border-border text-foreground" />
+                      <Input {...field} placeholder={tLabel('common.ProfitCentersTab.untitled', "Основные продажи")} data-testid="input-profit-center-name-ru" className="bg-background border-border text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

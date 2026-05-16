@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export { UsersTab } from "./RemainingTabsUsers";
 
 // ---------------------------------------------------------------------------
@@ -219,7 +220,7 @@ export function CoursesTab({
                   stroke="#3b82f6"
                   fillOpacity={1}
                   fill="url(#colorEnrollment)"
-                  name="Yangi tayinlanganlar"
+                  name={tLabel('analytics.RemainingTabsA.yangiTayinlanganlar', "Yangi tayinlanganlar")}
                 />
               </AreaChart>
             </ResponsiveContainer>

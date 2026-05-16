@@ -16,6 +16,7 @@ import type { DailyReport } from "./ERPDailyReportsTypes";
 import { getPerformanceColor } from "./ERPDailyReportsTypes";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface FilterState {
   startDate: string;
   endDate: string;
@@ -70,9 +71,9 @@ export function FiltersCard({ filters, onFiltersChange }: FiltersCardProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("barchaSmenalar")}</SelectItem>
-                <SelectItem value="1-smena">1-smena</SelectItem>
-                <SelectItem value="2-smena">2-smena</SelectItem>
-                <SelectItem value="3-smena">3-smena</SelectItem>
+                <SelectItem value="1-smena">{tLabel('common.ERPDailyReportsSections.1Smena', "1-smena")}</SelectItem>
+                <SelectItem value="2-smena">{tLabel('common.ERPDailyReportsSections.2Smena', "2-smena")}</SelectItem>
+                <SelectItem value="3-smena">{tLabel('common.ERPDailyReportsSections.3Smena', "3-smena")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

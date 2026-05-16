@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { User, Backpack } from "lucide-react";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface InventoryItem {
   id: number;
   materialCardId: number;
@@ -72,7 +73,7 @@ export default function EmployeeInventory() {
           <div className="text-3xl font-bold mt-2">{items.length}</div>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
-          <div className="text-xs text-gray-500">FAOL</div>
+          <div className="text-xs text-gray-500">{tLabel('common.EmployeeInventory.faol', "FAOL")}</div>
           <div className="text-3xl font-bold mt-2 text-[var(--ep-green)]">{activeItems.length}</div>
         </CardContent></Card>
         <Card><CardContent className="pt-6">

@@ -12,6 +12,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { ChartDataPoint, MonthlyRow } from "./POSInventoryPageTypes";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface ChartTabProps {
   chartData: ChartDataPoint[];
   monthlyRows: MonthlyRow[];
@@ -45,7 +46,7 @@ export function ChartTab({ chartData, monthlyRows }: ChartTabProps) {
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip />
                 <Bar dataKey="in" name="Kirim" fill="#10b981" radius={[4, 4, 0, 0]} stackId="a" />
-                <Bar dataKey="sale" name="Sotuv" fill="#8b5cf6" radius={[0, 0, 0, 0]} stackId="b" />
+                <Bar dataKey="sale" name={tLabel('common.POSInventoryPageChart.sotuv', "Sotuv")} fill="#8b5cf6" radius={[0, 0, 0, 0]} stackId="b" />
                 <Bar dataKey="out" name="Chiqim" fill="#ef4444" radius={[0, 0, 0, 0]} stackId="b" />
                 <Bar dataKey="adjustment" name="Tuzatish" fill="#3b82f6" radius={[4, 4, 0, 0]} stackId="c" />
               </BarChart>
