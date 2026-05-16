@@ -1666,7 +1666,16 @@
   },
   {
     "method": "POST",
-    "url": "/api/api/aisha/voice/transcribe",
+    "url": "/api/aisha/chat",
+    "controller": "chat.controller",
+    "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\chat.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/aisha/voice/transcribe",
     "controller": "voice.controller",
     "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\voice.controller.ts",
     "hasAuth": true,
@@ -1675,7 +1684,7 @@
   },
   {
     "method": "POST",
-    "url": "/api/api/aisha/voice/synthesize",
+    "url": "/api/aisha/voice/synthesize",
     "controller": "voice.controller",
     "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\voice.controller.ts",
     "hasAuth": true,
@@ -1684,7 +1693,7 @@
   },
   {
     "method": "GET",
-    "url": "/api/api/aisha/wake/config",
+    "url": "/api/aisha/wake/config",
     "controller": "wake-config.controller",
     "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\wake-config.controller.ts",
     "hasAuth": true,
@@ -1693,7 +1702,7 @@
   },
   {
     "method": "PATCH",
-    "url": "/api/api/aisha/wake/sensitivity",
+    "url": "/api/aisha/wake/sensitivity",
     "controller": "wake-config.controller",
     "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\wake-config.controller.ts",
     "hasAuth": true,
@@ -2129,87 +2138,6 @@
     "controller": "bot-gateway.controller",
     "file": "apps\\api\\src\\modules\\bot-gateway\\bot-gateway.controller.ts",
     "hasAuth": false,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/ai-camera/dashboard",
-    "controller": "ai-camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\ai-camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/ai-camera/events",
-    "controller": "ai-camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\ai-camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/ai-camera/alerts",
-    "controller": "ai-camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\ai-camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/ai-camera/analyze-by-missions",
-    "controller": "ai-camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\ai-camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/camera/status",
-    "controller": "camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/camera/list",
-    "controller": "camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/camera/events",
-    "controller": "camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/camera/zones",
-    "controller": "camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "POST",
-    "url": "/api/camera/violations/:id/auto-discipline",
-    "controller": "camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
-    "hasAuth": true,
     "isPublic": false,
     "hasZod": false
   },
@@ -3871,6 +3799,15 @@
   },
   {
     "method": "POST",
+    "url": "/api/crm/ai/extended/chat/respond",
+    "controller": "crm-extended.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\crm-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
     "url": "/api/crm/auto-tasks",
     "controller": "crm-extended.controller",
     "file": "apps\\api\\src\\modules\\compatibility\\crm-extended.controller.ts",
@@ -3889,7 +3826,25 @@
   },
   {
     "method": "POST",
+    "url": "/api/crm/ai/extended/churn/analyze",
+    "controller": "crm-extended.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\crm-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
     "url": "/api/crm/ai/voice",
+    "controller": "crm-extended.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\crm-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/crm/ai/extended/voice/analyze-call",
     "controller": "crm-extended.controller",
     "file": "apps\\api\\src\\modules\\compatibility\\crm-extended.controller.ts",
     "hasAuth": false,
@@ -4078,7 +4033,25 @@
   },
   {
     "method": "GET",
+    "url": "/api/employee-kpi/summary/top-performers",
+    "controller": "employee-kpi-compat.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\employee-kpi-compat.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
     "url": "/api/employee-kpi/department-summary",
+    "controller": "employee-kpi-compat.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\employee-kpi-compat.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/employee-kpi/summary/department",
     "controller": "employee-kpi-compat.controller",
     "file": "apps\\api\\src\\modules\\compatibility\\employee-kpi-compat.controller.ts",
     "hasAuth": false,
@@ -4844,6 +4817,15 @@
   {
     "method": "POST",
     "url": "/api/europrint-control/deleted-records/:id/restore",
+    "controller": "europrint-control-director.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\europrint-control-director.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/europrint-control/menus/admin",
     "controller": "europrint-control-director.controller",
     "file": "apps\\api\\src\\modules\\compatibility\\europrint-control-director.controller.ts",
     "hasAuth": false,
@@ -5851,6 +5833,15 @@
   },
   {
     "method": "GET",
+    "url": "/api/warehouse/movements",
+    "controller": "warehouse-catalog.controller",
+    "file": "apps\\api\\src\\modules\\compatibility\\warehouse-catalog.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
     "url": "/api/warehouse/batches/stats",
     "controller": "warehouse-catalog.controller",
     "file": "apps\\api\\src\\modules\\compatibility\\warehouse-catalog.controller.ts",
@@ -6140,6 +6131,15 @@
   {
     "method": "POST",
     "url": "/api/seven-functions/analyze",
+    "controller": "seven-functions.controller",
+    "file": "apps\\api\\src\\modules\\core\\presentation\\seven-functions.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/seven-functions/ai-analysis",
     "controller": "seven-functions.controller",
     "file": "apps\\api\\src\\modules\\core\\presentation\\seven-functions.controller.ts",
     "hasAuth": false,
@@ -10990,6 +10990,15 @@
   },
   {
     "method": "GET",
+    "url": "/api/production/orders/report/excel",
+    "controller": "general-legacy-b.controller",
+    "file": "apps\\api\\src\\modules\\general\\controllers\\general-legacy-b.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
     "url": "/api/pp/production-orders",
     "controller": "general-legacy-b.controller",
     "file": "apps\\api\\src\\modules\\general\\controllers\\general-legacy-b.controller.ts",
@@ -12754,6 +12763,15 @@
   },
   {
     "method": "GET",
+    "url": "/api/hr/employee-corp/:id",
+    "controller": "hr-dashboard-stubs.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
     "url": "/api/hr/employees/operator-stats",
     "controller": "hr-dashboard-stubs.controller",
     "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-dashboard-stubs.controller.ts",
@@ -13322,6 +13340,15 @@
   {
     "method": "GET",
     "url": "/api/hr/skills",
+    "controller": "hr-gsd.controller",
+    "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-gsd.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/hr/skills/:id",
     "controller": "hr-gsd.controller",
     "file": "apps\\api\\src\\modules\\hr\\presentation\\hr-gsd.controller.ts",
     "hasAuth": false,
@@ -15219,6 +15246,15 @@
     "hasZod": false
   },
   {
+    "method": "PATCH",
+    "url": "/api/cameras/:id",
+    "controller": "camera-alerts.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\camera-alerts.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
     "method": "GET",
     "url": "/api/camera-employee-ratings",
     "controller": "camera-alerts.controller",
@@ -16021,6 +16057,24 @@
   },
   {
     "method": "GET",
+    "url": "/api/iot/production-sessions",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/iot/production-sessions",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
     "url": "/api/iot/production-sessions/:id/crew",
     "controller": "iot-main.controller",
     "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
@@ -16076,6 +16130,15 @@
   {
     "method": "POST",
     "url": "/api/iot/production-sessions/:id/inline-qc",
+    "controller": "iot-main.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/iot/oee/live",
     "controller": "iot-main.controller",
     "file": "apps\\api\\src\\modules\\iot\\presentation\\iot-main.controller.ts",
     "hasAuth": false,
@@ -17299,6 +17362,15 @@
   },
   {
     "method": "GET",
+    "url": "/api/certificates/:id",
+    "controller": "lms-certificates-standalone.controller",
+    "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-certificates-standalone.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
     "url": "/api/certificates/:id/download",
     "controller": "lms-certificates-standalone.controller",
     "file": "apps\\api\\src\\modules\\lms\\presentation\\lms-certificates-standalone.controller.ts",
@@ -18081,6 +18153,15 @@
     "hasZod": false
   },
   {
+    "method": "POST",
+    "url": "/api/marketing/churn-risk/ai-signal",
+    "controller": "marketing-analytics-stubs.controller",
+    "file": "apps\\api\\src\\modules\\marketing\\presentation\\marketing-analytics-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
     "method": "GET",
     "url": "/api/marketing/ai/hot-leads",
     "controller": "marketing-analytics-stubs.controller",
@@ -18514,7 +18595,16 @@
   },
   {
     "method": "POST",
-    "url": "/api/marketing/churn-risk/ai-signal",
+    "url": "/api/marketing/leads/recalculate-scores",
+    "controller": "marketing-analytics-stubs.controller",
+    "file": "apps\\api\\src\\modules\\marketing\\presentation\\marketing-analytics-stubs.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "PATCH",
+    "url": "/api/marketing/settings/:id",
     "controller": "marketing-analytics-stubs.controller",
     "file": "apps\\api\\src\\modules\\marketing\\presentation\\marketing-analytics-stubs.controller.ts",
     "hasAuth": false,
@@ -19838,6 +19928,15 @@
   {
     "method": "GET",
     "url": "/api/mm/vendors",
+    "controller": "mm-vendors-pr.controller",
+    "file": "apps\\api\\src\\modules\\mm\\presentation\\mm-vendors-pr.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/mm/vendor-performance",
     "controller": "mm-vendors-pr.controller",
     "file": "apps\\api\\src\\modules\\mm\\presentation\\mm-vendors-pr.controller.ts",
     "hasAuth": false,
@@ -21340,6 +21439,15 @@
   },
   {
     "method": "GET",
+    "url": "/api/pos/stock/movements",
+    "controller": "stock.controller",
+    "file": "apps\\api\\src\\modules\\pos\\controllers\\stock.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
     "url": "/api/pos/stock/:warehouseId/:materialId",
     "controller": "stock.controller",
     "file": "apps\\api\\src\\modules\\pos\\controllers\\stock.controller.ts",
@@ -22321,6 +22429,15 @@
   },
   {
     "method": "GET",
+    "url": "/api/qc/defects/extended",
+    "controller": "qc-defects-extended.controller",
+    "file": "apps\\api\\src\\modules\\qc\\presentation\\qc-defects-extended.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
     "url": "/api/qc/braks/stats",
     "controller": "qc-defects-extended.controller",
     "file": "apps\\api\\src\\modules\\qc\\presentation\\qc-defects-extended.controller.ts",
@@ -22851,6 +22968,15 @@
     "hasZod": false
   },
   {
+    "method": "GET",
+    "url": "/api/qc/parameters/paper",
+    "controller": "qc-parameters.controller",
+    "file": "apps\\api\\src\\modules\\qc\\presentation\\qc-parameters.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
     "method": "POST",
     "url": "/api/qc/parameters",
     "controller": "qc-parameters.controller",
@@ -22898,6 +23024,15 @@
   {
     "method": "GET",
     "url": "/api/qc/tests/recent",
+    "controller": "qc-parameters.controller",
+    "file": "apps\\api\\src\\modules\\qc\\presentation\\qc-parameters.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/qc/tests/:id",
     "controller": "qc-parameters.controller",
     "file": "apps\\api\\src\\modules\\qc\\presentation\\qc-parameters.controller.ts",
     "hasAuth": true,
@@ -23402,6 +23537,15 @@
   {
     "method": "GET",
     "url": "/api/material-balance/:materialId/history",
+    "controller": "material-balance.controller",
+    "file": "apps\\api\\src\\modules\\remaining\\material-balance.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/material-balance/movements",
     "controller": "material-balance.controller",
     "file": "apps\\api\\src\\modules\\remaining\\material-balance.controller.ts",
     "hasAuth": false,

@@ -66,6 +66,16 @@ export class LmsCertificatesStandaloneController {
     return { message: 'Sertifikat yaratildi', data };
   }
 
+  @Get(':id')
+  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async getCertificateById(@Param('id') id: string) {
+    // The Certificates page expects GET /api/certificates/:id for the detail
+    // view. Service-level retrieval lands once the repo has a findById helper;
+    // for now return a typed placeholder so the page can render the empty
+    // detail card instead of 404.
+    return { id, status: 'unknown', issuedAt: null, expiresAt: null };
+  }
+
   @Get(':id/download')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async downloadCertificate(@Param('id') id: string, @Res() res: FastifyReply) {

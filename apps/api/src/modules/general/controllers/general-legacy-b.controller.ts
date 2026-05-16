@@ -142,6 +142,19 @@ export class GeneralLegacyBController {
     return unwrapOrInternal(await this.iotSvc.getProductionOrdersReport());
   }
 
+  // ProductionReport page expects an Excel download endpoint. Until the real
+  // XLSX generator is in place we serve a JSON descriptor that the page can
+  // surface as "report not yet ready" without 404'ing.
+  @Get('production/orders/report/excel')
+  async getProductionOrdersReportExcel(@Query() _query: Record<string, string | undefined>) {
+    return {
+      ready:        false,
+      url:          null,
+      generated_at: null,
+      reason:       'Excel eksport hali tayyor emas — JSON hisoboti /production/orders/report orqali mavjud',
+    };
+  }
+
   // ─── PP (Production Planning) Routes ─────────────────────────────────────
   @Get('pp/production-orders')
   async getPpProductionOrders(@Query() _query: Record<string, string | undefined>) {

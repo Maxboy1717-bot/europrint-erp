@@ -313,4 +313,21 @@ export class IotMainController {
 
   @Post('production-sessions/:id/inline-qc') @Roles(...IOT_READ)
   async submitInlineQc(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, qcPassed: true }; }
+
+  // ── OEE live snapshot ───────────────────────────────────────────────────
+  // GET /api/iot/oee/live — used by ai-planning/OEELiveMonitorPage. Real
+  // values come from sensor_readings + production_sessions aggregation; for
+  // now we serve a typed empty snapshot so the page renders without 404.
+  @Get('oee/live') @Roles(...IOT_READ)
+  async getOeeLive(@Query('device_id') _deviceId?: string) {
+    return {
+      availability:  0,
+      performance:   0,
+      quality:       0,
+      oee:           0,
+      sample_size:   0,
+      generated_at:  new Date().toISOString(),
+      by_machine:    [],
+    };
+  }
 }

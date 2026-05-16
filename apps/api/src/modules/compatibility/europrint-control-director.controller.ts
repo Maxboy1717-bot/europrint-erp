@@ -85,4 +85,15 @@ export class EuroprintControlDirectorController {
   async restoreDeletedRecord(@Param('id') id: string) {
     return unwrapOrInternal(await this.svc.restoreDeletedRecord(id));
   }
+
+  /**
+   * AuditorPanel page calls GET /api/europrint-control/menus/admin to fetch
+   * the admin-only menu structure. Real implementation: query rbac_menus
+   * filtered by admin role. Until that's wired, return an empty menu tree
+   * so the page renders without 404.
+   */
+  @Get('menus/admin')
+  async getAdminMenus() {
+    return { items: [], generatedAt: _time.now().toISOString() };
+  }
 }

@@ -89,6 +89,16 @@ export class MaterialBalanceController {
     return unwrapOrInternal(await this.svc.getHistory(materialId, q));
   }
 
+  /**
+   * MaterialBalance page calls GET /api/material-balance/movements as a
+   * cross-material movement feed. Real implementation will join material
+   * movements across all materials; until then return an empty journal.
+   */
+  @Get('movements')
+  async getMovements(@Query() _q: Record<string, string>) {
+    return { items: [], total: 0 };
+  }
+
   @Get(':materialId/reconciliation')
   async getReconciliation(@Param('materialId') materialId: string) {
     return unwrapOrInternal(await this.svc.getReconciliation(materialId));

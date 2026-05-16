@@ -59,6 +59,16 @@ export class HrGsdController {
     return { items, total: items.length };
   }
 
+  /**
+   * SkillsMatrix page calls GET /api/hr/skills/:id for a single skill record.
+   * Returns a null payload until the service has a findById helper; the page
+   * handles missing data by rendering "skill topilmadi".
+   */
+  @Get('skills/:id')
+  async getSkillById(@Param('id', ParseIntPipe) id: number) {
+    return { id, name: null, category: null, levels: [] };
+  }
+
   @Get('milestones/:id/complete')
   async getMilestoneComplete(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.getMilestone(id);

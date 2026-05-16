@@ -370,7 +370,7 @@
   },
   {
     "method": "POST",
-    "url": "/api/api/aisha/voice/transcribe",
+    "url": "/api/aisha/voice/transcribe",
     "controller": "voice.controller",
     "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\voice.controller.ts",
     "hasAuth": true,
@@ -379,7 +379,7 @@
   },
   {
     "method": "POST",
-    "url": "/api/api/aisha/voice/synthesize",
+    "url": "/api/aisha/voice/synthesize",
     "controller": "voice.controller",
     "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\voice.controller.ts",
     "hasAuth": true,
@@ -387,17 +387,8 @@
     "hasZod": false
   },
   {
-    "method": "GET",
-    "url": "/api/api/aisha/wake/config",
-    "controller": "wake-config.controller",
-    "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\wake-config.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
     "method": "PATCH",
-    "url": "/api/api/aisha/wake/sensitivity",
+    "url": "/api/aisha/wake/sensitivity",
     "controller": "wake-config.controller",
     "file": "apps\\api\\src\\modules\\aisha\\presentation\\controllers\\wake-config.controller.ts",
     "hasAuth": true,
@@ -419,78 +410,6 @@
     "controller": "bot-gateway.controller",
     "file": "apps\\api\\src\\modules\\bot-gateway\\bot-gateway.controller.ts",
     "hasAuth": false,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/ai-camera/dashboard",
-    "controller": "ai-camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\ai-camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/ai-camera/events",
-    "controller": "ai-camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\ai-camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/ai-camera/alerts",
-    "controller": "ai-camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\ai-camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/camera/status",
-    "controller": "camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/camera/list",
-    "controller": "camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/camera/events",
-    "controller": "camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "GET",
-    "url": "/api/camera/zones",
-    "controller": "camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
-    "hasAuth": true,
-    "isPublic": false,
-    "hasZod": false
-  },
-  {
-    "method": "POST",
-    "url": "/api/camera/violations/:id/auto-discipline",
-    "controller": "camera.controller",
-    "file": "apps\\api\\src\\modules\\camera\\camera.controller.ts",
-    "hasAuth": true,
     "isPublic": false,
     "hasZod": false
   },
@@ -2448,6 +2367,42 @@
     "hasZod": false
   },
   {
+    "method": "POST",
+    "url": "/api/camera-reports/generate-pdf",
+    "controller": "camera-heatmap-reports.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\camera-heatmap-reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "POST",
+    "url": "/api/camera-reports/generate-excel",
+    "controller": "camera-heatmap-reports.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\camera-heatmap-reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/camera-reports/generate-pdf",
+    "controller": "camera-heatmap-reports.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\camera-heatmap-reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/camera-reports/generate-excel",
+    "controller": "camera-heatmap-reports.controller",
+    "file": "apps\\api\\src\\modules\\iot\\presentation\\camera-heatmap-reports.controller.ts",
+    "hasAuth": false,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
     "method": "GET",
     "url": "/api/camera/cameras/:cameraId/zones",
     "controller": "iot-camera.controller",
@@ -3865,6 +3820,15 @@
     "url": "/api/qc/dpmo",
     "controller": "qc-dpmo.controller",
     "file": "apps\\api\\src\\modules\\qc\\presentation\\qc-dpmo.controller.ts",
+    "hasAuth": true,
+    "isPublic": false,
+    "hasZod": false
+  },
+  {
+    "method": "GET",
+    "url": "/api/qc/tests/:id",
+    "controller": "qc-parameters.controller",
+    "file": "apps\\api\\src\\modules\\qc\\presentation\\qc-parameters.controller.ts",
     "hasAuth": true,
     "isPublic": false,
     "hasZod": false

@@ -82,6 +82,22 @@ export class StockController {
     return unwrapOrInternal(await this.stockLedgerService.getExpiryAlerts(daysAhead));
   }
 
+  /**
+   * PosMovementsPage calls GET /api/pos/stock/movements for the
+   * stock-ledger journal. Real implementation: paginate pos_stock_movements
+   * filtered by date / warehouse. Until then we return an empty page.
+   */
+  @Get('movements')
+  @RequirePermission('pos.reports.read')
+  @ApiOperation({ summary: 'Stock movements journal (placeholder)' })
+  async getStockMovements(
+    @Query('limit') _limit?: string,
+    @Query('offset') _offset?: string,
+    @Query('warehouseId') _warehouseId?: string,
+  ) {
+    return { items: [], total: 0 };
+  }
+
   @Get(':warehouseId/:materialId')
   @RequirePermission('pos.reports.read')
   @ApiOperation({ summary: 'Real-time material balansi (ombor va material bo\'yicha)' })
