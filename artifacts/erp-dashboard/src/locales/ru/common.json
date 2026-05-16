@@ -7864,1086 +7864,1086 @@
   "typingOne": "{{name}} печатает...",
   "typingTwo": "{{name1}} и {{name2}} печатают...",
   "typingMany": "{{count}} человек печатают...",
-  "oZgarishlarDiff": "O'zgarishlar (Diff):",
-  "csvEksport": "CSV eksport",
-  "hujjatRaqamiMasalanSo0001Inv": "Hujjat raqami (masalan: SO-0001, INV-0001)",
-  "hisoblashUsuliMinimalDarajada": "Hisoblash usuli (minimal darajada)",
-  "ball15": "Ball (1-5)",
-  "k3Oy": "3 oy",
-  "k1Oy": "1 oy",
-  "k1Hafta": "1 hafta",
-  "k1Hafta1Oy3Oy": "1 hafta, 1 oy, 3 oy suhbatlari",
-  "k1Kun1Hafta1Oy": "1 kun, 1 hafta, 1 oy, 3 oy rejalar",
-  "k3Oylik": "3 oylik",
-  "k1Oylik": "1 oylik",
-  "k1Haftalik": "1 haftalik",
-  "k1Kunlik": "1 kunlik",
-  "lavozimIxtiyoriy": "Lavozim (ixtiyoriy)",
-  "boLimIxtiyoriy": "Bo'lim (ixtiyoriy)",
-  "tavsifRu": "Tavsif (RU)",
-  "tavsifUz": "Tavsif (UZ)",
-  "nomiRu": "Nomi (RU)",
-  "nomiUz": "Nomi (UZ)",
-  "aiJavob": "AI javob",
-  "k14TaAiAgent": "14 ta AI agent",
-  "k20ModulHolati": "20 modul holati",
-  "aiBrifingYuklabBoLmadiBackend": "AI brifing yuklab bo'lmadi (backend ulanishi tekshirilsin)",
-  "kommunalToLovlarJoriyOy": "Kommunal to'lovlar (joriy oy)",
-  "oylikBonusTaxminiy": "Oylik bonus (taxminiy)",
-  "k100Ball": "/100 ball",
-  "bazaviyOylikSoM": "Bazaviy oylik (so'm)",
-  "masalan1": "masalan 1",
-  "yetkazibBerishXavfi5KunIchida": "Yetkazib berish xavfi (5 kun ichida)",
-  "yetkazibBeruvchilarReytingi180KunIchida": "Yetkazib beruvchilar reytingi (180 kun ichida)",
-  "bottleneckEngSekinIshMarkazi": "Bottleneck (eng sekin ish markazi)",
-  "buyurtmalarKanbanRejadaJarayonTekshirTayyor": "Buyurtmalar — Kanban (rejada → jarayon → tekshir → tayyor)",
+  "oZgarishlarDiff": "Изменения (Diff):",
+  "csvEksport": "Экспорт CSV",
+  "hujjatRaqamiMasalanSo0001Inv": "Номер документа (например: SO-0001, INV-0001)",
+  "hisoblashUsuliMinimalDarajada": "Метод расчёта (на минимальном уровне)",
+  "ball15": "Балл (1-5)",
+  "k3Oy": "3 месяца",
+  "k1Oy": "1 месяц",
+  "k1Hafta": "1 неделя",
+  "k1Hafta1Oy3Oy": "Собеседования через 1 неделю, 1 месяц, 3 месяца",
+  "k1Kun1Hafta1Oy": "Планы на 1 день, 1 неделю, 1 месяц, 3 месяца",
+  "k3Oylik": "3-месячный",
+  "k1Oylik": "1-месячный",
+  "k1Haftalik": "1-недельный",
+  "k1Kunlik": "1-дневный",
+  "lavozimIxtiyoriy": "Должность (необязательно)",
+  "boLimIxtiyoriy": "Отдел (необязательно)",
+  "tavsifRu": "Описание (RU)",
+  "tavsifUz": "Описание (UZ)",
+  "nomiRu": "Название (RU)",
+  "nomiUz": "Название (UZ)",
+  "aiJavob": "AI ответ",
+  "k14TaAiAgent": "14 AI-агентов",
+  "k20ModulHolati": "Состояние 20 модулей",
+  "aiBrifingYuklabBoLmadiBackend": "Не удалось загрузить AI брифинг (проверьте соединение с backend)",
+  "kommunalToLovlarJoriyOy": "Коммунальные платежи (текущий месяц)",
+  "oylikBonusTaxminiy": "Месячный бонус (примерно)",
+  "k100Ball": "/100 баллов",
+  "bazaviyOylikSoM": "Базовый оклад (сум)",
+  "masalan1": "например 1",
+  "yetkazibBerishXavfi5KunIchida": "Риск доставки (в течение 5 дней)",
+  "yetkazibBeruvchilarReytingi180KunIchida": "Рейтинг поставщиков (за 180 дней)",
+  "bottleneckEngSekinIshMarkazi": "Bottleneck (самый медленный участок)",
+  "buyurtmalarKanbanRejadaJarayonTekshirTayyor": "Заказы — Kanban (план → процесс → проверка → готово)",
   "oeeBreakdown": "OEE breakdown",
-  "aiVisionDefektAniqlash": "AI Vision (defekt aniqlash)",
-  "qcQarorigaMuhtoj": "QC qaroriga muhtoj",
-  "k30KunlikBrak": "30 kunlik brak %",
-  "k7KunlikBrak": "7 kunlik brak %",
-  "investitsiyaTavsiyalariPrioritetBoYicha": "Investitsiya tavsiyalari (prioritet bo'yicha)",
-  "scenarioSimulatorAiTahlil": "Scenario simulator (AI tahlil)",
-  "k6OylikBashoratScenarioSimulatorInvestitsiya": "6 oylik bashorat + scenario simulator + investitsiya tavsiyalari",
+  "aiVisionDefektAniqlash": "AI Vision (обнаружение дефектов)",
+  "qcQarorigaMuhtoj": "Требует решения QC",
+  "k30KunlikBrak": "Брак за 30 дней %",
+  "k7KunlikBrak": "Брак за 7 дней %",
+  "investitsiyaTavsiyalariPrioritetBoYicha": "Инвестиционные рекомендации (по приоритету)",
+  "scenarioSimulatorAiTahlil": "Симулятор сценариев (AI анализ)",
+  "k6OylikBashoratScenarioSimulatorInvestitsiya": "6-месячный прогноз + симулятор сценариев + инвестиционные рекомендации",
   "aiCrm2": "AI CRM",
   "aiCrm": "AI CRM",
-  "aiAsosidaHarBirBitimUchun": "AI asosida har bir bitim uchun muvaffaqiyat ehtimoli",
-  "aiHarBirBitimUchunOptimal": "AI har bir bitim uchun optimal keyingi qadam tavsiya qiladi",
-  "maxsusPromptIxtiyoriy": "Maxsus Prompt (ixtiyoriy)",
-  "haliAsbobQolipRoYxatiBo": "Hali asbob/qolip ro'yxati bo'sh",
-  "batafsilTahlilGpt": "Batafsil tahlil (GPT)",
-  "yetkazuvchiKontragent": "Yetkazuvchi / Kontragent",
-  "miqdorUzs": "Miqdor (UZS)",
-  "chiqimUzs": "Chiqim (UZS)",
-  "kirimUzs": "Kirim (UZS)",
-  "yetkazuvchiVendor": "Yetkazuvchi (vendor)",
-  "qoShimchaKontekstIxtiyoriy": "Qo'shimcha kontekst (ixtiyoriy)",
-  "haqiqiyUzs": "Haqiqiy (UZS)",
-  "rejalashtirilganUzs": "Rejalashtirilgan (UZS)",
-  "savolInglizIxtiyoriy": "Savol (Ingliz) — ixtiyoriy",
+  "aiAsosidaHarBirBitimUchun": "Вероятность успеха для каждой сделки на основе AI",
+  "aiHarBirBitimUchunOptimal": "AI рекомендует оптимальный следующий шаг для каждой сделки",
+  "maxsusPromptIxtiyoriy": "Кастомный промпт (необязательно)",
+  "haliAsbobQolipRoYxatiBo": "Список инструментов/форм пока пуст",
+  "batafsilTahlilGpt": "Подробный анализ (GPT)",
+  "yetkazuvchiKontragent": "Поставщик / Контрагент",
+  "miqdorUzs": "Сумма (UZS)",
+  "chiqimUzs": "Расход (UZS)",
+  "kirimUzs": "Приход (UZS)",
+  "yetkazuvchiVendor": "Поставщик (vendor)",
+  "qoShimchaKontekstIxtiyoriy": "Дополнительный контекст (необязательно)",
+  "haqiqiyUzs": "Фактический (UZS)",
+  "rejalashtirilganUzs": "Запланировано (UZS)",
+  "savolInglizIxtiyoriy": "Вопрос (Англ) — необязательно",
   "untitled": "безопасность",
-  "savolRusIxtiyoriy": "Savol (Rus) — ixtiyoriy",
-  "savolMatniniKiritingOZbekTilida": "Savol matnini kiriting (O'zbek tilida)",
-  "savolOZbek": "Savol (O'zbek)",
+  "savolRusIxtiyoriy": "Вопрос (Рус) — необязательно",
+  "savolMatniniKiritingOZbekTilida": "Введите текст вопроса (на узбекском)",
+  "savolOZbek": "Вопрос (Узб)",
   "ai": "🤖 AI",
-  "sababIxtiyoriy": "Sabab (ixtiyoriy)",
-  "masalanGofrokartonPpLenta": "masalan: gofrokarton, PP lenta...",
-  "sababKamida5Belgi": "Sabab (kamida 5 belgi)",
-  "overrideSababiMajburiy": "Override sababi (majburiy)",
-  "aiTavsiya": "AI tavsiya",
-  "oRtachaSessiyaDavomiyligiDaqiqa": "O'rtacha sessiya davomiyligi (daqiqa)",
-  "retentionQaytishDarajasi": "📈 Retention (Qaytish darajasi)",
-  "judaQiyin039OTish": "Juda qiyin (0-39% o'tish)",
-  "qiyin4059OTish": "Qiyin (40-59% o'tish)",
-  "oRtacha6079OTish": "O'rtacha (60-79% o'tish)",
-  "oson80100OTish": "Oson (80-100% o'tish)",
-  "oRtachaVaqtSoniyalarda": "O'rtacha vaqt (soniyalarda)",
-  "sertifikatlar7Kun": "Sertifikatlar (7 kun)",
-  "darsTugatgan": "dars tugatgan",
-  "yangiXodimlar30Kun": "Yangi xodimlar (30 kun):",
-  "masUlXodimIxtiyoriy": "Mas'ul xodim (ixtiyoriy)",
-  "xodimgaJavobIxtiyoriy": "Xodimga javob (ixtiyoriy)",
-  "hrUchunEslatmalar": "HR uchun eslatmalar...",
-  "izohlarIxtiyoriyFaqatHrKoRadi": "Izohlar (ixtiyoriy, faqat HR ko'radi)",
-  "sanaVaqt": "Sana/Vaqt",
-  "ipManzil2": "IP manzil",
-  "ipManzil": "IP MANZIL",
-  "gachaSana": "Gacha (sana)",
-  "danSana": "Dan (sana)",
-  "jadvalYozuv": "jadval, yozuv...",
+  "sababIxtiyoriy": "Причина (необязательно)",
+  "masalanGofrokartonPpLenta": "например: гофрокартон, PP лента...",
+  "sababKamida5Belgi": "Причина (минимум 5 символов)",
+  "overrideSababiMajburiy": "Причина переопределения (обязательно)",
+  "aiTavsiya": "AI рекомендация",
+  "oRtachaSessiyaDavomiyligiDaqiqa": "Средняя продолжительность сессии (мин)",
+  "retentionQaytishDarajasi": "📈 Retention (Уровень возврата)",
+  "judaQiyin039OTish": "Очень сложно (прохождение 0-39%)",
+  "qiyin4059OTish": "Сложно (прохождение 40-59%)",
+  "oRtacha6079OTish": "Средне (прохождение 60-79%)",
+  "oson80100OTish": "Легко (прохождение 80-100%)",
+  "oRtachaVaqtSoniyalarda": "Среднее время (в секундах)",
+  "sertifikatlar7Kun": "Сертификаты (7 дней)",
+  "darsTugatgan": "уроков завершено",
+  "yangiXodimlar30Kun": "Новые сотрудники (30 дней):",
+  "masUlXodimIxtiyoriy": "Ответственный сотрудник (необязательно)",
+  "xodimgaJavobIxtiyoriy": "Ответ сотруднику (необязательно)",
+  "hrUchunEslatmalar": "Заметки для HR...",
+  "izohlarIxtiyoriyFaqatHrKoRadi": "Комментарии (необязательно, видит только HR)",
+  "sanaVaqt": "Дата/Время",
+  "ipManzil2": "IP-адрес",
+  "ipManzil": "IP-АДРЕС",
+  "gachaSana": "До (дата)",
+  "danSana": "С (дата)",
+  "jadvalYozuv": "таблица, запись...",
   "batXxxxxxxxXxxx": "BAT-XXXXXXXX-XXXX",
-  "previewPdfPrinter": "Preview / PDF printer",
-  "barcodeQrKod": "Barcode / QR kod",
-  "xodimningOZigaShaxsiyTabrikXabari": "Xodimning o'ziga shaxsiy tabrik xabari yuboriladi (Telegram)",
-  "barchaHamkasblarYangiTugIlganKunlardan": "Barcha hamkasblar yangi tug'ilgan kunlardan xabardor bo'ladi (Telegram)",
-  "xulosaQabulRadEtish": "Xulosa — Qabul / Rad Etish",
-  "yakuniyHisobotMaterial55": "YAKUNIY HISOBOT — MATERIAL №55",
-  "toolTestUmumiyBall": "TOOL TEST umumiy ball:",
+  "previewPdfPrinter": "Preview / PDF принтер",
+  "barcodeQrKod": "Штрих-код / QR код",
+  "xodimningOZigaShaxsiyTabrikXabari": "Сотруднику отправляется личное поздравление (Telegram)",
+  "barchaHamkasblarYangiTugIlganKunlardan": "Все коллеги уведомляются о днях рождения (Telegram)",
+  "xulosaQabulRadEtish": "Заключение — Принять / Отклонить",
+  "yakuniyHisobotMaterial55": "ИТОГОВЫЙ ОТЧЁТ — МАТЕРИАЛ №55",
+  "toolTestUmumiyBall": "Общий балл TOOL TEST:",
   "emailExampleCom": "email@example.com",
-  "eclStavkalariTopilmadi": "ECL stavkalari topilmadi",
-  "debitorlikQarzlariUchunKutilayotganKreditYo": "Debitorlik qarzlari uchun kutilayotgan kredit yo'qotish stavkalari (0.0 — 1.0)",
-  "xavfBalli": "xavf balli",
-  "vaqtSoatda": "Vaqt (soatda)",
-  "maydonNomiRuscha": "Maydon nomi (ruscha)",
-  "hmacSha256ImzoKaliti": "HMAC SHA-256 imzo kaliti",
-  "soRovTanasiJson": "So'rov tanasi (JSON)",
-  "crmWebhookSecretKerak": "CRM_WEBHOOK_SECRET kerak",
-  "k025Ball": "0–25 ball",
-  "xavfliBelgilarQizilBayroqlar": "Xavfli belgilar (qizil bayroqlar)",
-  "muddatiOTdi2000": "Muddati o'tdi (20:00)",
-  "sababMajburiy": "Sabab (majburiy)...",
-  "ixtiyoriy2": "(ixtiyoriy)",
-  "kamida30Belgi": "(kamida 30 belgi)",
-  "radEtishSababiMajburiy": "Rad etish sababi (majburiy)",
-  "izohIxtiyoriy": "Izoh (ixtiyoriy)",
-  "f302150100100Mm": "F302: 150×100×100 mm",
-  "f201300200150Mm": "F201: 300×200×150 mm",
-  "faylYuklashAiPdfDxf": "Fayl yuklash (AI/PDF/DXF)",
-  "k3dRenderUchunDizaynFayliniYuklang": "3D render uchun dizayn faylini yuklang",
-  "aiNatija": "AI natija",
-  "aiTekshiruvNavbati": "AI tekshiruv navbati",
-  "chatSavdoDizayn": "Chat (Savdo ⇄ Dizayn)",
-  "bugungiHolatXulosasiAiTahlili": "Bugungi holat xulosasi (AI tahlili)",
-  "k2Eslatma": "📨📨 2-eslatma",
-  "k1Eslatma": "📨 1-eslatma",
-  "k2EslatmaSoatQolgunicha": "2-eslatma (soat qolgunicha)",
-  "k1EslatmaSoatQolgunicha": "1-eslatma (soat qolgunicha)",
-  "muddatSoat": "Muddat (soat)",
-  "darajaYuqoriga": "Daraja (yuqoriga)",
-  "professionalUsta90Kun": "Professional Usta (90 kun)",
-  "moslashuvMentori30Kun": "Moslashuv Mentori (30 kun)",
-  "baho15": "Baho (1-5)",
-  "k1700DanOldinKetganKunlar": "17:00 dan oldin ketgan kunlar",
-  "hrIzohlar": "HR izohlar...",
-  "aiTavsiyaLavozim": "AI tavsiya lavozim",
-  "erpBloklangan": "ERP bloklangan",
-  "saqlanishMuddatiYil": "Saqlanish muddati (yil)",
+  "eclStavkalariTopilmadi": "Ставки ECL не найдены",
+  "debitorlikQarzlariUchunKutilayotganKreditYo": "Ожидаемые ставки кредитных потерь по дебиторской задолженности (0.0 — 1.0)",
+  "xavfBalli": "балл риска",
+  "vaqtSoatda": "Время (в часах)",
+  "maydonNomiRuscha": "Название поля (на русском)",
+  "hmacSha256ImzoKaliti": "Ключ подписи HMAC SHA-256",
+  "soRovTanasiJson": "Тело запроса (JSON)",
+  "crmWebhookSecretKerak": "Требуется CRM_WEBHOOK_SECRET",
+  "k025Ball": "0–25 баллов",
+  "xavfliBelgilarQizilBayroqlar": "Признаки риска (красные флаги)",
+  "muddatiOTdi2000": "Просрочено (20:00)",
+  "sababMajburiy": "Причина (обязательно)...",
+  "ixtiyoriy2": "(необязательно)",
+  "kamida30Belgi": "(минимум 30 символов)",
+  "radEtishSababiMajburiy": "Причина отклонения (обязательно)",
+  "izohIxtiyoriy": "Комментарий (необязательно)",
+  "f302150100100Mm": "F302: 150×100×100 мм",
+  "f201300200150Mm": "F201: 300×200×150 мм",
+  "faylYuklashAiPdfDxf": "Загрузить файл (AI/PDF/DXF)",
+  "k3dRenderUchunDizaynFayliniYuklang": "Загрузите файл дизайна для 3D-рендера",
+  "aiNatija": "AI результат",
+  "aiTekshiruvNavbati": "Очередь AI проверки",
+  "chatSavdoDizayn": "Чат (Продажи ⇄ Дизайн)",
+  "bugungiHolatXulosasiAiTahlili": "Сводка сегодняшнего состояния (AI анализ)",
+  "k2Eslatma": "📨📨 2-е напоминание",
+  "k1Eslatma": "📨 1-е напоминание",
+  "k2EslatmaSoatQolgunicha": "2-е напоминание (за сколько часов)",
+  "k1EslatmaSoatQolgunicha": "1-е напоминание (за сколько часов)",
+  "muddatSoat": "Срок (час)",
+  "darajaYuqoriga": "Уровень (выше)",
+  "professionalUsta90Kun": "Профессиональный мастер (90 дней)",
+  "moslashuvMentori30Kun": "Адаптационный ментор (30 дней)",
+  "baho15": "Оценка (1-5)",
+  "k1700DanOldinKetganKunlar": "Дни ухода до 17:00",
+  "hrIzohlar": "HR комментарии...",
+  "aiTavsiyaLavozim": "AI рекомендация должности",
+  "erpBloklangan": "ERP заблокирован",
+  "saqlanishMuddatiYil": "Срок хранения (лет)",
   "xodimEuroprintUz": "xodim@europrint.uz",
-  "izohIxtiyoriy2": "Izoh (ixtiyoriy)",
-  "masalanUploadsEmp123PassportPdf": "Masalan: /uploads/emp/123/passport.pdf",
-  "faylUrlIxtiyoriy": "Fayl URL (ixtiyoriy)",
-  "faylNomiIxtiyoriy": "Fayl nomi (ixtiyoriy)",
-  "k1TaFaol": "1 ta faol",
-  "otaOnaTurmushORtogI": "Ota / Ona / Turmush o'rtog'i",
-  "summaSoM2": "Summa (so'm)",
-  "summaSoM": "Summa (so'm) *",
-  "soatlikStavkaSoM": "Soatlik stavka (so'm)",
-  "toolTestNatijasiAJ": "Tool Test natijasi (A-J)",
-  "troublemakerMuammoli": "Troublemaker (Muammoli)",
-  "performerBajaruvchi": "Performer (Bajaruvchi)",
-  "flagmanYetakchi": "Flagman (Yetakchi)",
-  "aJShkala": "A-J shkala",
-  "yashashSoM": "Yashash (so'm)",
-  "transportSoM": "Transport (so'm)",
-  "kunlikXarajatSoM": "Kunlik xarajat (so'm)",
-  "toLovFoizi": "To'lov foizi (%)",
-  "sofMaoshTaxminiy": "Sof maosh (taxminiy)",
-  "avansToLanmagan": "- Avans (to'lanmagan)",
-  "jarimaChegirma": "- Jarima/chegirma",
-  "haTavsiyaQilaman": "Ha, tavsiya qilaman",
-  "bahoTanlang15": "Baho tanlang (1-5)",
-  "sexZona": "Sex / Zona",
-  "akkordIshbay": "Akkord (Ishbay)",
-  "aiKameraOrqaliAniqlanganBuzilishlar": "AI kamera orqali aniqlangan buzilishlar",
-  "lmsSertifikatlarigaAsoslanibAniqlanganUskunaRuxsat": "LMS sertifikatlariga asoslanib aniqlangan uskuna ruxsatlari",
-  "meAposYorHolat": "Me&apos;yor / Holat",
+  "izohIxtiyoriy2": "Комментарий (необязательно)",
+  "masalanUploadsEmp123PassportPdf": "Например: /uploads/emp/123/passport.pdf",
+  "faylUrlIxtiyoriy": "URL файла (необязательно)",
+  "faylNomiIxtiyoriy": "Имя файла (необязательно)",
+  "k1TaFaol": "1 активный",
+  "otaOnaTurmushORtogI": "Отец / Мать / Супруг(а)",
+  "summaSoM2": "Сумма (сум)",
+  "summaSoM": "Сумма (сум) *",
+  "soatlikStavkaSoM": "Часовая ставка (сум)",
+  "toolTestNatijasiAJ": "Результат Tool Test (A-J)",
+  "troublemakerMuammoli": "Troublemaker (Проблемный)",
+  "performerBajaruvchi": "Performer (Исполнитель)",
+  "flagmanYetakchi": "Flagman (Ведущий)",
+  "aJShkala": "Шкала A-J",
+  "yashashSoM": "Проживание (сум)",
+  "transportSoM": "Транспорт (сум)",
+  "kunlikXarajatSoM": "Дневной расход (сум)",
+  "toLovFoizi": "Процент оплаты (%)",
+  "sofMaoshTaxminiy": "Чистая зарплата (примерно)",
+  "avansToLanmagan": "- Аванс (неоплаченный)",
+  "jarimaChegirma": "- Штраф/скидка",
+  "haTavsiyaQilaman": "Да, рекомендую",
+  "bahoTanlang15": "Выберите оценку (1-5)",
+  "sexZona": "Цех / Зона",
+  "akkordIshbay": "Аккорд (Сдельная)",
+  "aiKameraOrqaliAniqlanganBuzilishlar": "Нарушения, обнаруженные AI-камерой",
+  "lmsSertifikatlarigaAsoslanibAniqlanganUskunaRuxsat": "Допуски к оборудованию на основании сертификатов LMS",
+  "meAposYorHolat": "Норма / Состояние",
   "passportPdf": "passport.pdf",
-  "jamiInventar": "JAMI INVENTAR",
-  "meningInventarim": "MENING INVENTARIM",
-  "k0835Am1May2026": "08:35 AM, 1 may 2026",
-  "k24Aprel2026": "\"24-aprel 2026\"",
-  "nimaYaxshilanishiKerakIxtiyoriy": "Nima yaxshilanishi kerak? (ixtiyoriy)",
-  "qoniqishDarajasi15": "Qoniqish darajasi (1-5)",
-  "europrintDaIshlashniTavsiyaQilasizmi0": "EuroPrint'da ishlashni tavsiya qilasizmi? (0-10)",
-  "javobBerishAnonim": "📝 Javob berish (Anonim)",
-  "fikrlarAnonim": "💬 Fikrlar (anonim)",
-  "enpsBalli": "eNPS BALLI",
-  "toXtashDaqiqa": "To'xtash (daqiqa)",
-  "brakDona": "Brak (dona)",
-  "faktDona": "Fakt (dona)",
-  "rejaDona": "Reja (dona)",
-  "taminotchiXodim": "Taminotchi/Xodim",
-  "summaUzs": "Summa (UZS)",
-  "yuzMaAposLumotiniOApos": "Yuz ma&apos;lumotini o&apos;chirishni tasdiqlang",
-  "yuzRoAposYxatdanOApos2": "Yuz Ro&apos;yxatdan O&apos;tkazish",
-  "yuzRoAposYxatdanOApos": "Yuz Ro&apos;yxatdan O&apos;tkazish",
-  "moliyaviyIzohIxtiyoriy": "Moliyaviy izoh (ixtiyoriy)",
-  "byudjetSoM": "Byudjet (so'm)",
-  "glHujjatlarAuditLog": "GL Hujjatlar (Audit Log)",
-  "k2HaftaOldin": "2 hafta oldin",
-  "hisobXaritasiAccountMapping": "Hisob Xaritasi (Account Mapping)",
-  "xavfOstidagiXodimlarYuqoriKritik": "Xavf ostidagi xodimlar (yuqori + kritik)",
-  "tajribaYil": "Tajriba (yil)",
-  "shaxsiyXabarIxtiyoriy": "Shaxsiy xabar (ixtiyoriy)",
-  "qiymatiUzs": "Qiymati (UZS)",
-  "boLimLavozimniTanlang": "Bo'lim/lavozimni tanlang...",
-  "oSishFoizi": "O'sish foizi (%)",
-  "oRtachaIshStajiYil": "O'rtacha ish staji (yil)",
-  "reyting15": "Reyting (1–5)",
-  "aniqlikVaToLiqlikOLchanadi": "Aniqlik va to'liqlik o'lchanadi (maqsad: 90%+)",
-  "harBirSavolga5XilJavob": "Har bir savolga 5 xil javob bor (1 dan 5 gacha)",
-  "k2KuchliSalbiy": "-2 (Kuchli salbiy)",
-  "k1Salbiy": "-1 (Salbiy)",
-  "k1Ijobiy": "+1 (Ijobiy)",
-  "k2KuchliIjobiy": "+2 (Kuchli ijobiy)",
-  "vaznKoRsatkichTaSiri": "Vazn (ko'rsatkich ta'siri)",
-  "savolMatniRusIxtiyoriy": "Savol matni (Rus) (ixtiyoriy)",
-  "savolMatniOZbek": "Savol matni (O'zbek) *",
-  "vakansiyaIdIxtiyoriy": "Vakansiya ID (ixtiyoriy)",
-  "kanbanFunnelIdIxtiyoriy": "Kanban Funnel ID (ixtiyoriy)",
-  "xodimIdIxtiyoriy": "Xodim ID (ixtiyoriy)",
-  "nomzodIdIxtiyoriy": "Nomzod ID (ixtiyoriy)",
-  "toolTestShaxsiyatProfili": "TOOL TEST (Shaxsiyat profili)",
+  "jamiInventar": "ВСЕГО ИНВЕНТАРЯ",
+  "meningInventarim": "МОЙ ИНВЕНТАРЬ",
+  "k0835Am1May2026": "08:35, 1 мая 2026",
+  "k24Aprel2026": "\"24 апреля 2026\"",
+  "nimaYaxshilanishiKerakIxtiyoriy": "Что необходимо улучшить? (необязательно)",
+  "qoniqishDarajasi15": "Уровень удовлетворённости (1-5)",
+  "europrintDaIshlashniTavsiyaQilasizmi0": "Порекомендуете ли работу в EuroPrint? (0-10)",
+  "javobBerishAnonim": "📝 Ответить (Анонимно)",
+  "fikrlarAnonim": "💬 Отзывы (анонимные)",
+  "enpsBalli": "БАЛЛ eNPS",
+  "toXtashDaqiqa": "Простой (мин)",
+  "brakDona": "Брак (шт)",
+  "faktDona": "Факт (шт)",
+  "rejaDona": "План (шт)",
+  "taminotchiXodim": "Поставщик/Сотрудник",
+  "summaUzs": "Сумма (UZS)",
+  "yuzMaAposLumotiniOApos": "Подтвердите удаление данных лица",
+  "yuzRoAposYxatdanOApos2": "Регистрация лица",
+  "yuzRoAposYxatdanOApos": "Регистрация лица",
+  "moliyaviyIzohIxtiyoriy": "Финансовый комментарий (необязательно)",
+  "byudjetSoM": "Бюджет (сум)",
+  "glHujjatlarAuditLog": "GL документы (Audit Log)",
+  "k2HaftaOldin": "2 недели назад",
+  "hisobXaritasiAccountMapping": "Карта счетов (Account Mapping)",
+  "xavfOstidagiXodimlarYuqoriKritik": "Сотрудники в зоне риска (высокий + критический)",
+  "tajribaYil": "Опыт (лет)",
+  "shaxsiyXabarIxtiyoriy": "Личное сообщение (необязательно)",
+  "qiymatiUzs": "Стоимость (UZS)",
+  "boLimLavozimniTanlang": "Выберите отдел/должность...",
+  "oSishFoizi": "Процент роста (%)",
+  "oRtachaIshStajiYil": "Средний стаж работы (лет)",
+  "reyting15": "Рейтинг (1–5)",
+  "aniqlikVaToLiqlikOLchanadi": "Измеряется точность и полнота (цель: 90%+)",
+  "harBirSavolga5XilJavob": "На каждый вопрос есть 5 вариантов ответа (от 1 до 5)",
+  "k2KuchliSalbiy": "-2 (Сильно негативный)",
+  "k1Salbiy": "-1 (Негативный)",
+  "k1Ijobiy": "+1 (Позитивный)",
+  "k2KuchliIjobiy": "+2 (Сильно позитивный)",
+  "vaznKoRsatkichTaSiri": "Вес (влияние показателя)",
+  "savolMatniRusIxtiyoriy": "Текст вопроса (Рус) (необязательно)",
+  "savolMatniOZbek": "Текст вопроса (Узб) *",
+  "vakansiyaIdIxtiyoriy": "ID вакансии (необязательно)",
+  "kanbanFunnelIdIxtiyoriy": "Kanban Funnel ID (необязательно)",
+  "xodimIdIxtiyoriy": "ID сотрудника (необязательно)",
+  "nomzodIdIxtiyoriy": "ID кандидата (необязательно)",
+  "toolTestShaxsiyatProfili": "TOOL TEST (Профиль личности)",
   "toolTest": "TOOL TEST",
-  "k10KoRsatkichAJ100": "10 ko'rsatkich (A-J), -100 dan +100 gacha",
-  "yangiQoShildi30Kun": "Yangi qo'shildi (30 kun)",
+  "k10KoRsatkichAJ100": "10 показателей (A-J), от -100 до +100",
+  "yangiQoShildi30Kun": "Добавлено (30 дней)",
   "k405556N709280E": "40.5556°N, 70.9280°E",
-  "yangiXodimlarOnboardingJarayonida": "Yangi Xodimlar (Onboarding Jarayonida)",
-  "k2Yilda": "2 yilda",
-  "k1Yilda": "1 yilda",
-  "taTilKasallikSoRovi": "Ta'til / Kasallik So'rovi",
-  "miqdorSoM": "Miqdor (so'm) *",
-  "aiTahlilVaRealTimeMonitoring": "AI tahlil va real-time monitoring",
-  "harBirIntegratsiyaUchunTegishliMuhit": "Har bir integratsiya uchun tegishli muhit o'zgaruvchisi (env variable) kerak:",
-  "motivatsionXatIxtiyoriy": "Motivatsion xat (ixtiyoriy)",
-  "grSumma": "GR summa",
-  "poSumma": "PO summa",
-  "poFarqi": "PO farqi",
-  "oeeYuklanmoqda": "OEE yuklanmoqda...",
-  "minMax": "Min/Max",
-  "threeJsBimIntegratsiyaTayyorlanmoqda": "Three.js / BIM integratsiya tayyorlanmoqda",
-  "aiPrognozlar": "AI prognozlar",
-  "k24sQoida": "24s qoida",
-  "rejalashtirilganVaqtSoat": "Rejalashtirilgan vaqt (soat)",
-  "crmBitim": "CRM bitim",
+  "yangiXodimlarOnboardingJarayonida": "Новые сотрудники (в процессе онбординга)",
+  "k2Yilda": "за 2 года",
+  "k1Yilda": "за 1 год",
+  "taTilKasallikSoRovi": "Запрос отпуска / больничного",
+  "miqdorSoM": "Сумма (сум) *",
+  "aiTahlilVaRealTimeMonitoring": "AI анализ и real-time мониторинг",
+  "harBirIntegratsiyaUchunTegishliMuhit": "Для каждой интеграции требуется соответствующая переменная окружения (env variable):",
+  "motivatsionXatIxtiyoriy": "Мотивационное письмо (необязательно)",
+  "grSumma": "Сумма GR",
+  "poSumma": "Сумма PO",
+  "poFarqi": "Разница PO",
+  "oeeYuklanmoqda": "Загрузка OEE...",
+  "minMax": "Мин/Макс",
+  "threeJsBimIntegratsiyaTayyorlanmoqda": "Three.js / BIM интеграция готовится",
+  "aiPrognozlar": "AI прогнозы",
+  "k24sQoida": "Правило 24ч",
+  "rejalashtirilganVaqtSoat": "Запланированное время (час)",
+  "crmBitim": "Сделка CRM",
   "europrintPrintBosma": "europrint, print, bosma",
-  "oAposZbekcha": "O&apos;zbekcha:",
-  "oQuvReytingiLeaderboard": "O'quv Reytingi (Leaderboard)",
-  "yutuqlarAchievements": "Yutuqlar (Achievements)",
-  "telegramXabariIxtiyoriy": "Telegram xabari (ixtiyoriy)",
-  "davomiyligiMin": "Davomiyligi (min)",
-  "operatorSertifikatsiyaMesUchunRuxsat": "Operator Sertifikatsiya (MES uchun ruxsat)",
-  "vaqtChegarasiMin": "Vaqt chegarasi (min)",
-  "oTishBali": "O'tish bali (%)",
-  "davomiylikSoat": "Davomiylik (soat)",
-  "boshqaruvTizimi": "boshqaruv tizimi",
-  "ogIrlikKg": "Og'irlik (kg)",
-  "probegKm": "Probeg (km)",
-  "narxiSoML": "Narxi (so'm/l)",
-  "yukKoTarishKg": "Yuk ko'tarish (kg)",
+  "oAposZbekcha": "Узбекский:",
+  "oQuvReytingiLeaderboard": "Рейтинг обучения (Leaderboard)",
+  "yutuqlarAchievements": "Достижения (Achievements)",
+  "telegramXabariIxtiyoriy": "Сообщение в Telegram (необязательно)",
+  "davomiyligiMin": "Длительность (мин)",
+  "operatorSertifikatsiyaMesUchunRuxsat": "Сертификация оператора (допуск для MES)",
+  "vaqtChegarasiMin": "Лимит времени (мин)",
+  "oTishBali": "Проходной балл (%)",
+  "davomiylikSoat": "Длительность (часов)",
+  "boshqaruvTizimi": "Система управления",
+  "ogIrlikKg": "Вес (кг)",
+  "probegKm": "Пробег (км)",
+  "narxiSoML": "Цена (сум/л)",
+  "yukKoTarishKg": "Грузоподъёмность (кг)",
   "manTgs18400": "MAN TGS 18.400",
   "k01A123Aa": "01 A 123 AA",
-  "narxiL": "Narxi (l)",
-  "aiPrompt": "AI prompt",
+  "narxiL": "Цена (л)",
+  "aiPrompt": "AI промпт",
   "europrintQuti": "#europrint, #quti",
-  "hashtagLarVergulBilan": "Hashtag'lar (vergul bilan)",
-  "ball110": "Ball (1-10)",
-  "mijozniTanlangIxtiyoriy": "Mijozni tanlang (ixtiyoriy)",
-  "taMijoz30KunBuyurtmaBermagan": "ta mijoz 30+ kun buyurtma bermagan",
-  "churnXavfiMultiFactor": "Churn Xavfi (Multi-factor)",
-  "issiqLidlarAiBashorat": "Issiq Lidlar (AI Bashorat)",
-  "aBTestlarMavjudEmas": "A/B testlar mavjud emas",
-  "aBTestNatijalari": "A/B Test natijalari",
-  "ball0100": "Ball (0–100)",
-  "havolaUrl": "Havola (URL)",
+  "hashtagLarVergulBilan": "Хэштеги (через запятую)",
+  "ball110": "Балл (1-10)",
+  "mijozniTanlangIxtiyoriy": "Выберите клиента (необязательно)",
+  "taMijoz30KunBuyurtmaBermagan": "клиентов не заказывали 30+ дней",
+  "churnXavfiMultiFactor": "Риск оттока (Multi-factor)",
+  "issiqLidlarAiBashorat": "Горячие лиды (AI прогноз)",
+  "aBTestlarMavjudEmas": "A/B тестов нет",
+  "aBTestNatijalari": "Результаты A/B тестов",
+  "ball0100": "Балл (0–100)",
+  "havolaUrl": "Ссылка (URL)",
   "brandColor": "brand_color",
   "pageBotId": "Page/Bot ID",
   "metaInstagramFacebook": "Meta (Instagram/Facebook)",
-  "teglarVergulBilan": "Teglar (vergul bilan)",
-  "matnRu": "Matn (RU)",
-  "matnUz": "Matn (UZ)",
-  "avtomatikYaratiladi": "avtomatik-yaratiladi",
-  "sarlavhaRu": "Sarlavha (RU)",
-  "sarlavhaUz": "Sarlavha (UZ)",
-  "materialKodYokiNom": "Material (kod yoki nom)",
-  "qabulQilinganBuOy": "Qabul qilingan (bu oy)",
-  "sarflanganBuOy": "Sarflangan (bu oy)",
-  "hozirgiHolatRealTime": "Hozirgi holat (Real-time)",
-  "oeeMaqsad": "OEE maqsad",
-  "tannarxSoM": "Tannarx (so'm)",
-  "quvvatSoatSmena": "Quvvat (soat/smena)",
-  "k1Oy3OyVa6": "1 oy, 3 oy va 6 oylik milestonelar avtomatik yaratiladi",
-  "toLovMuddatiKun": "To'lov muddati (kun)",
-  "miqdorL": "Miqdor (L)",
+  "teglarVergulBilan": "Теги (через запятую)",
+  "matnRu": "Текст (RU)",
+  "matnUz": "Текст (UZ)",
+  "avtomatikYaratiladi": "создаётся автоматически",
+  "sarlavhaRu": "Заголовок (RU)",
+  "sarlavhaUz": "Заголовок (UZ)",
+  "materialKodYokiNom": "Материал (код или название)",
+  "qabulQilinganBuOy": "Принято (в этом месяце)",
+  "sarflanganBuOy": "Израсходовано (в этом месяце)",
+  "hozirgiHolatRealTime": "Текущее состояние (Real-time)",
+  "oeeMaqsad": "Цель OEE",
+  "tannarxSoM": "Себестоимость (сум)",
+  "quvvatSoatSmena": "Мощность (час/смена)",
+  "k1Oy3OyVa6": "Milestones на 1, 3 и 6 месяцев создаются автоматически",
+  "toLovMuddatiKun": "Срок оплаты (дней)",
+  "miqdorL": "Объём (л)",
   "gpsTracking": "GPS tracking",
-  "qarzPoSumma": "Qarz (PO summa)",
-  "qabulAktlariGoodsReceipts": "Qabul Aktlari (Goods Receipts)",
+  "qarzPoSumma": "Долг (сумма PO)",
+  "qabulAktlariGoodsReceipts": "Акты приёмки (Goods Receipts)",
   "suppliersEuroprintUz": "suppliers.europrint.uz",
   "europrintCheckBot": "@europrint_check_bot",
-  "telegramChekBotOcr": "Telegram Chek Bot (OCR)",
-  "soliqIdInn": "Soliq ID (INN)",
-  "nomiRuscha": "Nomi (Ruscha)",
-  "yangi30Kun": "Yangi (30 kun)",
-  "k2KpiCards8Rang": "2. KPI Cards (8 rang)",
-  "demoStyleGuide": "Demo / Style Guide",
-  "binoXonalar": "Bino/Xonalar",
-  "ppeForma": "PPE / Forma",
-  "maydonM": "Maydon (m²)",
-  "xonaZona": "Xona/Zona",
-  "materialEhtiyotQismKirim": "Material/Ehtiyot Qism Kirim",
-  "kommunalXarajatlarOylik": "Kommunal xarajatlar (oylik)",
-  "k1Ta": "1 ta",
-  "xabarnomalarMarkazi": "XABARNOMALAR MARKAZI",
-  "dizaynTexnologSifatNazoratiMoliya": "Dizayn → Texnolog → Sifat nazorati → Moliya / Дизайн → Технолог → Контроль качества → Финансы",
-  "sotishNarxiUzs": "Sotish Narxi (UZS)",
-  "isrofXarajatiUzs": "Isrof Xarajati (UZS)",
-  "energiyaXarajatiUzs": "Energiya Xarajati (UZS)",
-  "ustamaXarajatUzs": "Ustama Xarajat (UZS)",
-  "mehnatXarajatiUzs": "Mehnat Xarajati (UZS)",
-  "materialXarajatiUzs": "Material Xarajati (UZS)",
-  "holatProgressi6Faza": "Holat progressi (6 faza)",
-  "qidirishIsmRahbar": "Qidirish (ism, rahbar...)",
-  "baho15Yulduz": "Baho (1-5 yulduz)",
-  "baholanganBugun": "Baholangan (bugun)",
-  "pipMaqsadlariVaKutilganNatijalar": "PIP maqsadlari va kutilgan natijalar...",
-  "davomiyligiKun": "Davomiyligi (kun) *",
-  "performanceImprovementPlans306090": "Performance Improvement Plans — 30/60/90 kunlik rejalar",
-  "planningHorizonDays": "Planning Horizon (days)",
-  "oxirgiRaqamTekshirishRaqamiAvtomatikHisoblanadi": "• Oxirgi raqam — tekshirish raqami (avtomatik hisoblanadi)",
-  "k13RaqamdanIboratXalqaroBarcodeStandarti": "• 13 raqamdan iborat xalqaro barcode standarti",
-  "ean13Haqida": "EAN-13 haqida:",
-  "prefiks27Raqam": "Prefiks (2-7 raqam)",
-  "ean13QrBarcode": "EAN-13 / QR barcode",
-  "k30KunlikSotuvGrafigi": "30 kunlik sotuv grafigi",
-  "mahsulotQidirishNomi": "Mahsulot qidirish (nomi)...",
-  "k14KunlikInventarHarakatlariGrafigi": "14 kunlik inventar harakatlari grafigi",
-  "tuzatishAniqQiymat": "Tuzatish (aniq qiymat)",
-  "chiqimAyirish": "Chiqim (ayirish)",
-  "kirimQoShish": "Kirim (qo'shish)",
-  "maxOylikSoM": "Max oylik (so'm)",
-  "minOylikSoM": "Min oylik (so'm)",
-  "posHarakatlarTarixi": "POS harakatlar tarixi",
-  "jamiQiymatUzs": "Jami qiymat (UZS)",
-  "haqiqatDona": "Haqiqat (dona)",
-  "qSifat": "Q (sifat)",
-  "pUnumdorlik": "P (unumdorlik)",
-  "aMavjudlik": "A (mavjudlik)",
-  "tannarxReja": "Tannarx (reja)",
-  "k4SavolOqimDaraja": "4 savol + oqim + daraja",
-  "nomzodgaBerilganAmaliyTopshiriqVaUning": "Nomzodga berilgan amaliy topshiriq va uning bajarish jarayoni / natijasi...",
-  "k3SavolAmaliyTopshiriq": "3 savol + amaliy topshiriq",
-  "yakuniyIzohIxtiyoriy": "Yakuniy izoh (ixtiyoriy):",
-  "toolTestNatijalariAJ": "TOOL TEST natijalari (A-J):",
-  "jamiFoydaZarar": "Jami Foyda/Zarar",
-  "brakSabablariTop10": "Brak sabablari (Top 10)",
-  "qcInspektorFISh": "QC inspektor (F.I.Sh.)",
-  "partiyaBatchRaqami": "Partiya (Batch) raqami",
-  "qirradanEzilishTestiEct": "Qirradan ezilish testi (ECT)",
-  "yorilishMustahkamligiBct": "Yorilish mustahkamligi (BCT)",
-  "grammaturaGramVazni": "Grammatura (gram vazni)",
-  "sifatSertifikati": "SIFAT SERTIFIKATI / СЕРТИФИКАТ КАЧЕСТВА",
-  "oylikTaqsimotRunChart": "Oylik taqsimot (Run Chart)",
-  "cpk133Qodir10": "Cpk ≥ 1.33: Qodir | 1.0-1.33: Chegarada | &lt;1.0: Qodir emas",
-  "cpkOChirilganCp": "Cpk (O'chirilgan Cp)",
-  "cpQobiliyatIndeksi": "Cp (Qobiliyat indeksi)",
+  "telegramChekBotOcr": "Telegram Чек-бот (OCR)",
+  "soliqIdInn": "Налоговый ID (INN)",
+  "nomiRuscha": "Название (русское)",
+  "yangi30Kun": "Новые (30 дней)",
+  "k2KpiCards8Rang": "2. KPI Cards (8 цветов)",
+  "demoStyleGuide": "Демо / Style Guide",
+  "binoXonalar": "Здание/Помещения",
+  "ppeForma": "СИЗ / Форма",
+  "maydonM": "Площадь (м²)",
+  "xonaZona": "Помещение/Зона",
+  "materialEhtiyotQismKirim": "Приёмка материала/запчастей",
+  "kommunalXarajatlarOylik": "Коммунальные расходы (месячные)",
+  "k1Ta": "1 шт",
+  "xabarnomalarMarkazi": "ЦЕНТР УВЕДОМЛЕНИЙ",
+  "dizaynTexnologSifatNazoratiMoliya": "Дизайн → Технолог → Контроль качества → Финансы",
+  "sotishNarxiUzs": "Цена продажи (UZS)",
+  "isrofXarajatiUzs": "Затраты на отходы (UZS)",
+  "energiyaXarajatiUzs": "Затраты на энергию (UZS)",
+  "ustamaXarajatUzs": "Накладные расходы (UZS)",
+  "mehnatXarajatiUzs": "Затраты на труд (UZS)",
+  "materialXarajatiUzs": "Материальные затраты (UZS)",
+  "holatProgressi6Faza": "Прогресс статуса (6 фаз)",
+  "qidirishIsmRahbar": "Поиск (имя, руководитель...)",
+  "baho15Yulduz": "Оценка (1-5 звёзд)",
+  "baholanganBugun": "Оценено (сегодня)",
+  "pipMaqsadlariVaKutilganNatijalar": "Цели PIP и ожидаемые результаты...",
+  "davomiyligiKun": "Длительность (дни) *",
+  "performanceImprovementPlans306090": "Performance Improvement Plans — Планы на 30/60/90 дней",
+  "planningHorizonDays": "Planning Horizon (дни)",
+  "oxirgiRaqamTekshirishRaqamiAvtomatikHisoblanadi": "• Последняя цифра — контрольное число (рассчитывается автоматически)",
+  "k13RaqamdanIboratXalqaroBarcodeStandarti": "• Международный стандарт штрих-кодов из 13 цифр",
+  "ean13Haqida": "О EAN-13:",
+  "prefiks27Raqam": "Префикс (2-7 цифр)",
+  "ean13QrBarcode": "EAN-13 / QR штрих-код",
+  "k30KunlikSotuvGrafigi": "График продаж за 30 дней",
+  "mahsulotQidirishNomi": "Поиск товара (по названию)...",
+  "k14KunlikInventarHarakatlariGrafigi": "График движений запасов за 14 дней",
+  "tuzatishAniqQiymat": "Корректировка (точное значение)",
+  "chiqimAyirish": "Расход (списать)",
+  "kirimQoShish": "Приход (добавить)",
+  "maxOylikSoM": "Макс. оклад (сум)",
+  "minOylikSoM": "Мин. оклад (сум)",
+  "posHarakatlarTarixi": "История операций POS",
+  "jamiQiymatUzs": "Общая стоимость (UZS)",
+  "haqiqatDona": "Факт (шт)",
+  "qSifat": "Q (качество)",
+  "pUnumdorlik": "P (производительность)",
+  "aMavjudlik": "A (доступность)",
+  "tannarxReja": "Себестоимость (план)",
+  "k4SavolOqimDaraja": "4 вопроса + поток + уровень",
+  "nomzodgaBerilganAmaliyTopshiriqVaUning": "Практическое задание, данное кандидату, и процесс / результат его выполнения...",
+  "k3SavolAmaliyTopshiriq": "3 вопроса + практическое задание",
+  "yakuniyIzohIxtiyoriy": "Итоговый комментарий (необязательно):",
+  "toolTestNatijalariAJ": "Результаты TOOL TEST (A-J):",
+  "jamiFoydaZarar": "Общая Прибыль/Убыток",
+  "brakSabablariTop10": "Причины брака (Топ 10)",
+  "qcInspektorFISh": "Инспектор QC (Ф.И.О.)",
+  "partiyaBatchRaqami": "Номер партии (Batch)",
+  "qirradanEzilishTestiEct": "Тест на сминание края (ECT)",
+  "yorilishMustahkamligiBct": "Прочность на разрыв (BCT)",
+  "grammaturaGramVazni": "Грамматура (вес в граммах)",
+  "sifatSertifikati": "СЕРТИФИКАТ КАЧЕСТВА",
+  "oylikTaqsimotRunChart": "Месячное распределение (Run Chart)",
+  "cpk133Qodir10": "Cpk ≥ 1.33: Способен | 1.0-1.33: На границе | &lt;1.0: Не способен",
+  "cpkOChirilganCp": "Cpk (Смещённый Cp)",
+  "cpQobiliyatIndeksi": "Cp (Индекс способности)",
   "sigma": "Sigma (σ)",
-  "lclPastkiChegar": "LCL (Pastki chegarа)",
-  "clORtaChiziq": "CL (O'rta chiziq)",
-  "uclYuqoriChegar": "UCL (Yuqori chegarа)",
-  "standartOgIsh": "Standart og'ish (σ)",
-  "oRtachaNuqsonX": "O'rtacha nuqson (X̄)",
-  "oLchovSoniN": "O'lchov soni (n)",
-  "isoGostVaIchkiStandartlar": "ISO, GOST va ichki standartlar",
-  "radEtishSababiQaysiTestMuvaffaqiyatsiz": "Rad etish sababi - qaysi test muvaffaqiyatsiz bo'ldi? (majburiy)",
-  "qcIzohIxtiyoriy": "QC izoh (ixtiyoriy)",
-  "inspeksiyaIzohiIxtiyoriy": "Inspeksiya izohi (ixtiyoriy)",
-  "rcaAvtomatikOchiladi": "RCA avtomatik ochiladi",
-  "mmReytingiAvtomatikPasaytiriladi": "MM reytingi avtomatik pasaytiriladi",
-  "pastSifatLt70": "Past sifat (&lt;70)",
-  "savolRus": "Savol (Rus)",
-  "lavozimAgarMaLumLavozimUchun": "Lavozim (agar ma'lum lavozim uchun bo'lsa)",
-  "k5TaSavol4": "5 ta savol",
-  "k5TaSavol3": "5 ta savol",
-  "k5TaSavol2": "5 ta savol",
-  "k5TaSavol": "5 ta savol",
-  "testIdIxtiyoriy": "Test ID (ixtiyoriy)",
-  "raciVazifalarTopilmadi": "RACI vazifalar topilmadi",
-  "raciVazifalariMavjudEmas": "RACI vazifalari mavjud emas",
-  "badgeKodiMasalanA1b2c3d4": "Badge kodi (masalan: A1B2C3D4)",
-  "progress60Maqsad": "Progress (60% maqsad)",
-  "yopilganOy": "Yopilgan (oy)",
-  "oRtachaKun": "O'rtacha (kun)",
-  "barchaTavsiyalarHr": "Barcha tavsiyalar (HR)",
-  "referralHolatiYangilashHr": "Referral holati yangilash (HR)",
-  "doStTanishTavsiyaQilish": "Do'st / tanish tavsiya qilish",
+  "lclPastkiChegar": "LCL (Нижний предел)",
+  "clORtaChiziq": "CL (Средняя линия)",
+  "uclYuqoriChegar": "UCL (Верхний предел)",
+  "standartOgIsh": "Стандартное отклонение (σ)",
+  "oRtachaNuqsonX": "Средний дефект (X̄)",
+  "oLchovSoniN": "Количество измерений (n)",
+  "isoGostVaIchkiStandartlar": "ISO, ГОСТ и внутренние стандарты",
+  "radEtishSababiQaysiTestMuvaffaqiyatsiz": "Причина отклонения — какой тест не пройден? (обязательно)",
+  "qcIzohIxtiyoriy": "Комментарий QC (необязательно)",
+  "inspeksiyaIzohiIxtiyoriy": "Комментарий инспекции (необязательно)",
+  "rcaAvtomatikOchiladi": "RCA открывается автоматически",
+  "mmReytingiAvtomatikPasaytiriladi": "Рейтинг MM автоматически снижается",
+  "pastSifatLt70": "Низкое качество (&lt;70)",
+  "savolRus": "Вопрос (Рус)",
+  "lavozimAgarMaLumLavozimUchun": "Должность (если для конкретной должности)",
+  "k5TaSavol4": "5 вопросов",
+  "k5TaSavol3": "5 вопросов",
+  "k5TaSavol2": "5 вопросов",
+  "k5TaSavol": "5 вопросов",
+  "testIdIxtiyoriy": "Test ID (необязательно)",
+  "raciVazifalarTopilmadi": "Задачи RACI не найдены",
+  "raciVazifalariMavjudEmas": "Задач RACI нет",
+  "badgeKodiMasalanA1b2c3d4": "Код бейджа (например: A1B2C3D4)",
+  "progress60Maqsad": "Прогресс (цель 60%)",
+  "yopilganOy": "Закрыто (месяц)",
+  "oRtachaKun": "Среднее (дни)",
+  "barchaTavsiyalarHr": "Все рекомендации (HR)",
+  "referralHolatiYangilashHr": "Обновление статуса реферала (HR)",
+  "doStTanishTavsiyaQilish": "Рекомендовать друга/знакомого",
   "adminZavodUz": "admin@zavod.uz",
   "zavodUz": "zavod.uz",
-  "stirInn": "STIR (INN)",
-  "kompaniyaIsm": "Kompaniya / Ism *",
-  "qidirishNomStirKod": "Qidirish (nom, STIR, kod...)",
-  "crmSavdoDashbordi": "CRM / Savdo Dashbordi",
-  "k90Kun": "90+ kun",
-  "k6190Kun": "61-90 kun",
-  "k3160Kun": "31-60 kun",
-  "k030Kun": "0-30 kun:",
-  "kritik90Kun": "Kritik (90+ kun)",
-  "kvotaSoM": "Kvota (so'm)",
-  "kritikMuddatiOTgan": "Kritik (muddati o'tgan)",
-  "oylikSoM": "Oylik (so'm)",
-  "yutilganLeadlarConversionRate": "Yutilgan leadlar (Conversion Rate)",
-  "tempPace": "Temp (Pace)",
-  "faktBajarilgan": "FAKT (bajarilgan)",
-  "rejaMaqsad": "REJA (maqsad)",
-  "k60KunIchida": "60 kun ichida",
-  "k30KunIchida": "30 kun ichida",
-  "k14KunIchida": "14 kun ichida",
-  "mijozKompaniya": "Mijoz (kompaniya)",
-  "toLandiAvans": "To'landi (Avans)",
-  "birlikNarxiQqsBilan": "Birlik narxi (QQS bilan):",
-  "miqdorDona": "Miqdor (dona)",
-  "balandlikMm": "Balandlik (mm)",
-  "kenglikMm": "Kenglik (mm)",
-  "uzunlikMm": "Uzunlik (mm)",
-  "mezbonXodim": "Mezbon (xodim)",
-  "ppeShaxsiyHimoyaVositalariNazorati": "PPE (Shaxsiy Himoya Vositalari) Nazorati",
-  "xodimlarDavomatiBugun": "Xodimlar Davomati (Bugun)",
+  "stirInn": "STIR (ИНН)",
+  "kompaniyaIsm": "Компания / Имя *",
+  "qidirishNomStirKod": "Поиск (название, STIR, код...)",
+  "crmSavdoDashbordi": "CRM / Дэшборд продаж",
+  "k90Kun": "90+ дней",
+  "k6190Kun": "61-90 дней",
+  "k3160Kun": "31-60 дней",
+  "k030Kun": "0-30 дней:",
+  "kritik90Kun": "Критично (90+ дней)",
+  "kvotaSoM": "Квота (сум)",
+  "kritikMuddatiOTgan": "Критично (просрочено)",
+  "oylikSoM": "Оклад (сум)",
+  "yutilganLeadlarConversionRate": "Выигранные лиды (Conversion Rate)",
+  "tempPace": "Темп (Pace)",
+  "faktBajarilgan": "ФАКТ (выполнено)",
+  "rejaMaqsad": "ПЛАН (цель)",
+  "k60KunIchida": "в течение 60 дней",
+  "k30KunIchida": "в течение 30 дней",
+  "k14KunIchida": "в течение 14 дней",
+  "mijozKompaniya": "Клиент (компания)",
+  "toLandiAvans": "Оплачено (Аванс)",
+  "birlikNarxiQqsBilan": "Цена за единицу (с НДС):",
+  "miqdorDona": "Количество (шт)",
+  "balandlikMm": "Высота (мм)",
+  "kenglikMm": "Ширина (мм)",
+  "uzunlikMm": "Длина (мм)",
+  "mezbonXodim": "Принимающий (сотрудник)",
+  "ppeShaxsiyHimoyaVositalariNazorati": "Контроль СИЗ (Средств индивидуальной защиты)",
+  "xodimlarDavomatiBugun": "Посещаемость сотрудников (Сегодня)",
   "cas": "CAS №",
-  "qqsStavkasi": "QQS stavkasi (%)",
-  "minimalIshHaqiSoM": "Minimal ish haqi (so'm)",
-  "xodimTanlangIxtiyoriy": "Xodim tanlang (ixtiyoriy)",
-  "kimBilanAlmashtirishIxtiyoriy": "Kim bilan almashtirish (ixtiyoriy)",
-  "daraja15": "Daraja (1-5)",
+  "qqsStavkasi": "Ставка НДС (%)",
+  "minimalIshHaqiSoM": "Минимальная зарплата (сум)",
+  "xodimTanlangIxtiyoriy": "Выберите сотрудника (необязательно)",
+  "kimBilanAlmashtirishIxtiyoriy": "Кем заменить (необязательно)",
+  "daraja15": "Уровень (1-5)",
   "python2": "Языки программирования Python...",
-  "tavsifOZbekcha": "Tavsif (O'zbekcha)",
+  "tavsifOZbekcha": "Описание (на узбекском)",
   "python": "Программирование Python",
-  "nomOZbekcha": "Nom (O'zbekcha)",
-  "kategoriyaKodi": "kategoriya_kodi",
+  "nomOZbekcha": "Название (на узбекском)",
+  "kategoriyaKodi": "код_категории",
   "ru": "ЦКП (RU)...",
-  "modulJadval": "Modul (jadval)",
+  "modulJadval": "Модуль (таблица)",
   "adminCompanyUz": "admin@company.uz",
   "samarkandEuroprintUz": "samarkand.europrint.uz",
-  "grnKerak": "GRN kerak",
-  "dbHajmi": "DB hajmi",
-  "radEtishSababiMajburiyKamida5": "Rad etish sababi (majburiy, kamida 5 belgi)",
+  "grnKerak": "Требуется GRN",
+  "dbHajmi": "Размер БД",
+  "radEtishSababiMajburiyKamida5": "Причина отклонения (обязательно, минимум 5 символов)",
   "returnedForFix": "returned_for_fix",
-  "texnikIzohIxtiyoriy": "Texnik izoh (ixtiyoriy)",
-  "materialNomiMasalanGofrokarton": "Material nomi (masalan: gofrokarton)",
-  "tejamkorlikUzs": "Tejamkorlik (UZS)",
+  "texnikIzohIxtiyoriy": "Технический комментарий (необязательно)",
+  "materialNomiMasalanGofrokarton": "Название материала (например: гофрокартон)",
+  "tejamkorlikUzs": "Экономия (UZS)",
   "aiPp": "AI PP:",
   "bomRouting": "BOM/Routing",
   "oeeMonitorRealTime": "OEE Monitor (Real-time)",
-  "xabarMatniHtmlTeglariQoLlab": "Xabar matni (HTML teglari qo'llab-quvvatlanadi)",
-  "telegramBotTokenSozlanmagan": "TELEGRAM_BOT_TOKEN sozlanmagan",
+  "xabarMatniHtmlTeglariQoLlab": "Текст сообщения (поддерживаются HTML-теги)",
+  "telegramBotTokenSozlanmagan": "TELEGRAM_BOT_TOKEN не настроен",
   "grId": "GR ID *",
   "poId": "PO ID *",
-  "usernameMin3Belgi": "username (min 3 belgi)",
-  "yoshiKun": "Yoshi (kun)",
-  "miqdorMavjud": "Miqdor / Mavjud",
-  "masalanA312": "masalan A-3-12",
-  "masalanGofro180B": "masalan GOFRO-180-B",
-  "masalanRl20260042": "masalan RL-2026-0042",
-  "rollQoldiqlariArtikelBoYicha": "Roll qoldiqlari (artikel bo'yicha)",
-  "k7YilSaqlanadiOZbekistonSoliq": "7 yil saqlanadi (O'zbekiston soliq talabi)",
-  "externalInHarakatlariUchunAvtomatikYaratilgan": "EXTERNAL_IN harakatlari uchun avtomatik yaratilgan CODE128 barkodlari",
-  "barkodChopEtishNavbati": "BARKOD CHOP ETISH NAVBATI",
-  "hozirSinxronlashTugmasiManualSignalYuboradi": "\"Hozir sinxronlash\" tugmasi manual signal yuboradi",
+  "usernameMin3Belgi": "username (мин 3 символа)",
+  "yoshiKun": "Возраст (дней)",
+  "miqdorMavjud": "Количество / В наличии",
+  "masalanA312": "например A-3-12",
+  "masalanGofro180B": "например GOFRO-180-B",
+  "masalanRl20260042": "например RL-2026-0042",
+  "rollQoldiqlariArtikelBoYicha": "Остатки рулонов (по артикулу)",
+  "k7YilSaqlanadiOZbekistonSoliq": "Хранится 7 лет (требование налогового законодательства Узбекистана)",
+  "externalInHarakatlariUchunAvtomatikYaratilgan": "CODE128 штрих-коды, созданные автоматически для операций EXTERNAL_IN",
+  "barkodChopEtishNavbati": "ОЧЕРЕДЬ ПЕЧАТИ ШТРИХ-КОДОВ",
+  "hozirSinxronlashTugmasiManualSignalYuboradi": "Кнопка \"Синхронизировать сейчас\" отправляет ручной сигнал",
   "posSyncEvents": "pos_sync_events",
-  "posTerminallar": "POS terminallar",
-  "aBCKategoriyalarBoYicha": "A/B/C kategoriyalar bo'yicha",
-  "abcTahlili": "ABC tahlili",
-  "oZVaqtidaMuddatiOTgan": "O'z vaqtida / muddati o'tgan",
-  "ishlamoqdaTaMirdaYaroqsiz": "Ishlamoqda / ta'mirda / yaroqsiz",
-  "oylikYillikBrakSummasiUzs": "Oylik/yillik brak summasi (UZS)",
-  "approvedTegishliOmborgaChiqariladi": "APPROVED — tegishli omborga chiqariladi",
-  "natijaKiritiladiApprovedTasdiqlanganYokiRejected": "Natija kiritiladi: APPROVED (tasdiqlangan) yoki REJECTED (rad)",
-  "materialKarantingaKiritiladiGrnYokiIchki": "Material karantinga kiritiladi (GRN yoki ichki transfer)",
-  "grnRaqami": "GRN raqami",
-  "qcKutmoqda": "QC kutmoqda",
-  "externalInHarakatlariUchunInventarPasportlari": "EXTERNAL_IN harakatlari uchun inventar pasportlari va QC qarorlari",
-  "inventarPasportlari": "INVENTAR PASPORTLARI",
-  "sertifikatSeriyaRaqami": "Sertifikat / Seriya raqami",
-  "partiyaAvto": "Partiya № (avto)",
-  "usdAqshDollari": "USD — AQSh dollari",
-  "taMinotchiStirInn": "Ta'minotchi STIR/INN",
-  "harakatlar30Kun": "🔄 Harakatlar (30 kun)",
-  "omborKpiHub": "OMBOR KPI HUB",
-  "mesModuligaSignalYuboriladi": "MES moduliga signal yuboriladi",
-  "glPostingAvtomatikYaratiladi": "GL posting avtomatik yaratiladi",
-  "qcQaroriKutayotganMateriallarQabulRework": "QC qarori kutayotgan materiallar — QABUL / REWORK / CHIQARISH",
-  "qcInspektor": "QC INSPEKTOR",
+  "posTerminallar": "POS терминалы",
+  "aBCKategoriyalarBoYicha": "По категориям A/B/C",
+  "abcTahlili": "ABC анализ",
+  "oZVaqtidaMuddatiOTgan": "Вовремя / просрочено",
+  "ishlamoqdaTaMirdaYaroqsiz": "Работает / на ремонте / не годен",
+  "oylikYillikBrakSummasiUzs": "Сумма брака за месяц/год (UZS)",
+  "approvedTegishliOmborgaChiqariladi": "APPROVED — выпускается на соответствующий склад",
+  "natijaKiritiladiApprovedTasdiqlanganYokiRejected": "Вводится результат: APPROVED (подтверждено) или REJECTED (отклонено)",
+  "materialKarantingaKiritiladiGrnYokiIchki": "Материал помещается в карантин (GRN или внутренний transfer)",
+  "grnRaqami": "Номер GRN",
+  "qcKutmoqda": "Ожидает QC",
+  "externalInHarakatlariUchunInventarPasportlari": "Паспорта инвентаря и решения QC для операций EXTERNAL_IN",
+  "inventarPasportlari": "ПАСПОРТА ИНВЕНТАРЯ",
+  "sertifikatSeriyaRaqami": "Сертификат / Серийный номер",
+  "partiyaAvto": "Партия № (авто)",
+  "usdAqshDollari": "USD — Доллар США",
+  "taMinotchiStirInn": "STIR/INN поставщика",
+  "harakatlar30Kun": "🔄 Операции (30 дней)",
+  "omborKpiHub": "KPI ХАБ СКЛАДА",
+  "mesModuligaSignalYuboriladi": "Сигнал отправляется в модуль MES",
+  "glPostingAvtomatikYaratiladi": "GL posting создаётся автоматически",
+  "qcQaroriKutayotganMateriallarQabulRework": "Материалы, ожидающие решения QC — ПРИЁМ / REWORK / ВЫПУСК",
+  "qcInspektor": "ИНСПЕКТОР QC",
   "rmMain": "RM-MAIN",
-  "qcQarorlariNimaQiladi": "QC qarorlari nima qiladi:",
-  "k48SoatKechiktirilgan": "48+ soat kechiktirilgan",
-  "qcQaroriKutmoqda": "QC qarori kutmoqda",
-  "qcInspektorQaroriKutmoqda48Soatdan": "QC inspektor qarori kutmoqda — 48 soatdan oshgan harakatlar avtomatik eskalatsiya qilinadi",
-  "kunlikTarifMUchun": "Kunlik tarif (m² uchun)",
-  "tarifSoM": "Tarif (so'm)",
-  "damOlishKunlariniShanbaYakshanbaHisoblamaslik": "Dam olish kunlarini (shanba/yakshanba) hisoblamaslik",
-  "standartKunlikTarifMKunSo": "Standart kunlik tarif (m²/kun, so'm)",
-  "mijozMenejer": "Mijoz / Menejer",
-  "k22TaTurdagiHisobot": "22 ta turdagi hisobot",
-  "omborHisobotlarMarkazi": "OMBOR HISOBOTLAR MARKAZI",
-  "muddatiYaqinPartiyalar30Kun": "Muddati yaqin partiyalar (30 kun)",
-  "qcNazoratidaKutayotgan": "QC nazoratida kutayotgan",
-  "xoJalikMro": "Xo'jalik (MRO)",
-  "brakNuqsonli": "Brak / Nuqsonli",
-  "minimalOstida": "minimal ostida",
-  "nomenklaturaPozitsiya": "nomenklatura pozitsiya",
-  "sexHudud": "Sex/Hudud",
-  "fiksOylik": "Fiks (Oylik)",
-  "dSmena": "D smena",
-  "cSmena": "C smena",
-  "bSmena": "B smena",
-  "aSmena": "A smena",
-  "uzunlikLongitude": "Uzunlik (Longitude)",
-  "kenglikLatitude": "Kenglik (Latitude)",
-  "uyTuriniTanlang": "Uy turini tanlang",
-  "uyTuri": "Uy turi",
-  "bevaBevaAyol": "Beva/Beva ayol",
-  "jpgPngMaks5mb": "JPG, PNG (maks. 5MB)",
-  "yuqoriKritik": "Yuqori (Kritik)",
+  "qcQarorlariNimaQiladi": "Что делают решения QC:",
+  "k48SoatKechiktirilgan": "задержано более 48 часов",
+  "qcQaroriKutmoqda": "Ожидает решения QC",
+  "qcInspektorQaroriKutmoqda48Soatdan": "Ожидается решение инспектора QC — операции старше 48 часов эскалируются автоматически",
+  "kunlikTarifMUchun": "Дневной тариф (за м²)",
+  "tarifSoM": "Тариф (сум)",
+  "damOlishKunlariniShanbaYakshanbaHisoblamaslik": "Не учитывать выходные (суббота/воскресенье)",
+  "standartKunlikTarifMKunSo": "Стандартный дневной тариф (м²/день, сум)",
+  "mijozMenejer": "Клиент / Менеджер",
+  "k22TaTurdagiHisobot": "22 типа отчётов",
+  "omborHisobotlarMarkazi": "ЦЕНТР ОТЧЁТОВ СКЛАДА",
+  "muddatiYaqinPartiyalar30Kun": "Партии с истекающим сроком (30 дней)",
+  "qcNazoratidaKutayotgan": "Ожидают контроля QC",
+  "xoJalikMro": "Хозяйство (MRO)",
+  "brakNuqsonli": "Брак / Дефект",
+  "minimalOstida": "ниже минимума",
+  "nomenklaturaPozitsiya": "позиция номенклатуры",
+  "sexHudud": "Цех/Зона",
+  "fiksOylik": "Фикс (Оклад)",
+  "dSmena": "Смена D",
+  "cSmena": "Смена C",
+  "bSmena": "Смена B",
+  "aSmena": "Смена A",
+  "uzunlikLongitude": "Долгота (Longitude)",
+  "kenglikLatitude": "Широта (Latitude)",
+  "uyTuriniTanlang": "Выберите тип жилья",
+  "uyTuri": "Тип жилья",
+  "bevaBevaAyol": "Вдовец/Вдова",
+  "jpgPngMaks5mb": "JPG, PNG (макс. 5MB)",
+  "yuqoriKritik": "Высокий (Критический)",
   "ppe": "PPE %",
-  "pdfTayyorlandi": "PDF tayyorlandi",
-  "dalilFotosiIxtiyoriy": "Dalil fotosi (ixtiyoriy)",
-  "iqBallKiritilmagan": "IQ ball kiritilmagan",
-  "hrMenejerImzosi": "HR menejer imzosi",
-  "ishTaklifi": "ISH TAKLIFI",
-  "ishTartibiGrafik": "Ish tartibi (grafik)",
-  "maoshAsosiyUzs": "Maosh (asosiy, UZS)",
-  "maoshSinovMuddatiUzs": "Maosh (sinov muddati, UZS)",
-  "k6Oy": "6 oy",
-  "k2Oy": "2 oy",
-  "sinovMuddatiOy": "Sinov muddati (oy)",
-  "boLinmaDepartament": "Bo'linma / Departament",
-  "koNikmalarDarajasiORtacha": "Ko'nikmalar darajasi (o'rtacha)",
-  "maoshKutilmasiMaxSoM": "Maosh kutilmasi (max, so'm)",
-  "maoshKutilmasiMinSoM": "Maosh kutilmasi (min, so'm)",
-  "javobBerishMuddatiKun": "Javob berish muddati (kun)",
-  "mavjudKandidatlarSoniTaxminiy": "Mavjud kandidatlar soni (taxminiy)",
-  "maoshMax": "Maosh (max)",
-  "maoshMin": "Maosh (min)",
-  "ganttStyleJadval4Hafta": "Gantt-style Jadval (4 hafta)",
-  "haftalikMaqsadlar4Hafta": "Haftalik maqsadlar (4 hafta)",
-  "reglamentlarRoYxatiHarBirQator": "Reglamentlar ro'yxati (har bir qator — alohida material)",
-  "masalan2BoShQoldirsaIldiz": "Masalan: 2 (bo'sh qoldirsa — ildiz)",
-  "qyamAsosiyVazifasiMaks32Belgi": "QYaM (asosiy vazifasi, maks 32 belgi)",
-  "qyamRu": "QYaM (RU)",
-  "asosiyVazifasiQyam": "Asosiy vazifasi (QYaM)...",
-  "qyamUz": "QYaM (UZ)",
-  "urlHavola": "URL / Havola",
-  "testLmsKurs": "Test / LMS kurs",
-  "qyam": "QYaM / ЦКП",
-  "rahbarTayinlanmaganVakant": "Rahbar tayinlanmagan (vakant)",
-  "lavozimiIsmiMasalanMarketingDirektoriAziz": "Lavozimi / ismi (masalan: Marketing direktori — Aziz Karimov)",
-  "k5KimgaHisobotBeradiTuzilmaviyJoylashuv": "5. Kimga hisobot beradi? (Tuzilmaviy joylashuv)",
-  "dekretTurmushTaTili": "Dekret / turmush ta'tili",
-  "xodimKetdiIshdanBoShatildi": "Xodim ketdi / ishdan bo'shatildi",
-  "yangiLavozimKengayish": "Yangi lavozim (kengayish)",
-  "buLavozimningQandayNomlariBoLishi": "Bu lavozimning qanday nomlari bo'lishi mumkin? (masalan: Sotuvchi, Sales manager, Savdo bo'yicha mutaxassis)",
-  "oRtaMaxsusKollejLitsey": "O'rta maxsus (kollej/litsey)",
-  "tugallanmaganOliyTalaba": "Tugallanmagan oliy / talaba",
-  "oliyMaLumotBakalavrMagistr": "Oliy ma'lumot (bakalavr/magistr)",
-  "k9OilaviyHolatIzohIxtiyoriy": "9. Oilaviy holat (izoh, ixtiyoriy)",
-  "k7YoshMax": "7. Yosh (max)",
-  "k6YoshMin": "6. Yosh (min)",
-  "xodimIshiningYakuniyNatijasiNimaMasalan": "Xodim ishining yakuniy natijasi nima? (masalan: sotilgan mahsulot hajmi, bitgan dizaynlar soni...)",
-  "k12XodimMajburiyatlariFunksional": "12. Xodim majburiyatlari (Funksional)",
-  "k11BoLimJamoaVazifalari": "11. Bo'lim/jamoa vazifalari",
-  "k3TaSavol": "3 ta savol",
-  "takrorlashMin": "Takrorlash (min %)",
-  "liderlikMin": "Liderlik (min)",
-  "iqMin": "IQ (min)",
-  "qaysiDasturlarniBilishiShartExcel1c": "Qaysi dasturlarni bilishi shart? (Excel, 1C, Photoshop, Python...)",
-  "k18ProfessionalKoNikmalarHardSkills": "18. Professional ko'nikmalar (Hard skills)",
-  "kandidatdaQaysiBelgilarBoLsaUni": "Kandidatda qaysi belgilar bo'lsa uni ishga olmaslik kerak? (masalan: tez-tez ish joyini o'zgartirgan...)",
-  "k14XavfliNomzodTavsifiXavfGuruhlari": "14. Xavfli nomzod tavsifi (Xavf guruhlari)",
-  "boshqaSharoitlarIzoh": "Boshqa sharoitlar / Izoh",
-  "ijtimoiyPaketTanlash": "Ijtimoiy paket (tanlash)",
-  "k15IjtimoiyPaketSotsialPaket": "15. Ijtimoiy paket (sotsial paket)",
-  "gpcShartnoma": "GPC (Shartnoma)",
-  "muddati1Yil": "Muddati (1 yil)",
-  "muddatsizTrudovoy": "Muddatsiz (Trudovoy)",
-  "k12IshRejimiSoat": "12. Ish rejimi (soat)",
-  "k11YillikTaTilKun": "11. Yillik ta'til (kun)",
-  "k8SinovMaoshMax": "8. Sinov maosh (max)",
-  "k7SinovMaoshMin": "7. Sinov maosh (min)",
-  "k5Kishi": "5 kishi",
-  "k4GuruhSoni": "4. Guruh (soni)",
-  "k3AsboblarDasturlar": "3. Asboblar/Dasturlar",
-  "hrManagerSuhbatBoshidaKompaniyaniQanday": "HR manager suhbat boshida kompaniyani qanday tanishtirishi kerak?",
-  "k1KompaniyaTaqdimotiQisqa": "1. Kompaniya taqdimoti (qisqa)",
-  "intizomHodisalariIxtiyoriy": "Intizom hodisalari (ixtiyoriy)",
-  "nastavnikMentorIzohi": "Nastavnik / mentor izohi...",
-  "kayfiyat15": "Kayfiyat (1-5) *",
-  "hrMenejerIsmiImzo": "HR Menejer ismi (imzo)",
-  "baholashMezonlari110": "Baholash mezonlari (1–10)",
-  "nastavnikMentor": "Nastavnik / Mentor",
-  "tavsifIxtiyoriy": "Tavsif (ixtiyoriy)",
-  "toolTestTalabiVsNatijaA": "TOOL TEST talabi vs natija (A-J):",
-  "kandidatgaAytiladiIvBoLim": "💬 Kandidatga aytiladi (IV bo'lim)",
-  "lavozimiVaYokiIsmiMasalanMarketing": "Lavozimi va/yoki ismi (masalan: Marketing direktori — Aziz Karimov)",
-  "k22Smena": "2/2 (Smena)",
-  "k61DushShan": "6/1 (Dush-Shan)",
-  "k52DushJuma": "5/2 (Dush-Juma)",
-  "ishHaqiMax": "Ish haqi (max)",
-  "ishHaqiMin": "Ish haqi (min)",
-  "magistrPhd": "Magistr / PhD",
-  "oliyBakalavr": "Oliy (bakalavr)",
-  "oRtaMaxsusKollejTexnikum": "O'rta maxsus (kollej/texnikum)",
-  "oRtaMaktab": "O'rta (maktab)",
-  "harBirFunktsiyaniYangiQatorgaYozing": "Har bir funktsiyani yangi qatorga yozing:&#10;1. Mijozlar bilan telefon aloqasi&#10;2. Buyurtmalarni rasmiylashtirib qo'yish&#10;...",
-  "k11BoLimJamoaQandayVazifalarni": "11. Bo'lim/jamoa qanday vazifalarni bajaradi?",
-  "xodimTuriMaqsadli": "Xodim turi (Maqsadli)",
-  "masalanExcelVlookup1cInglizTili": "Masalan: Excel (VLOOKUP), 1C, Ingliz tili (B2), Photoshop...",
-  "k18KasbKoNikmalariDasturlarTillar": "18. Kasb ko'nikmalari (dasturlar, tillar)",
-  "ipYakkaTartibdagiTadbirkor": "IP / Yakka tartibdagi tadbirkor",
-  "fuqarolikShartnomasiGpc": "Fuqarolik shartnomasi (GPC)",
-  "muddatsizDoimiy": "Muddatsiz (doimiy)",
-  "k3InstrumentlarDasturlar": "3. Instrumentlar/Dasturlar",
-  "aJTraitlar": "A-J traitlar",
-  "vakansiyaIxtiyoriy": "Vakansiya (ixtiyoriy)",
-  "emailIxtiyoriy": "Email (ixtiyoriy)",
-  "slaMuddatIshKunlari": "SLA muddat (ish kunlari)",
-  "topMenejment40IshKun": "Top Menejment (40 ish kun)",
-  "murakkab25IshKun": "Murakkab (25 ish kun)",
-  "ichki5IshKun": "Ichki (5 ish kun)",
-  "standart15IshKun": "Standart (15 ish kun)",
-  "qcKutilmoqda": "QC kutilmoqda",
-  "narxBirlik": "Narx (birlik)",
-  "taroziHaqiqiyOgIrlik": "Tarozi (haqiqiy og'irlik)",
-  "barcodeIxtiyoriy": "Barcode (ixtiyoriy)",
-  "qaytarishKg": "Qaytarish (kg)",
-  "chiqindiKg": "Chiqindi (kg)",
-  "ishlatildiKg": "Ishlatildi (kg)",
-  "lotPartiya": "Lot / Partiya",
-  "tugashSanasiTaxmin": "Tugash sanasi (taxmin)",
-  "ortiqcha12Oy": "Ortiqcha (12 oy)",
-  "yoQolgan12Oy": "Yo'qolgan (12 oy)",
-  "k12OylikTrend": "12 oylik trend",
-  "grammGM": "Gramm (g/m²)",
-  "formatBMm": "Format B (mm)",
-  "formatAMm": "Format A (mm)",
-  "yaroqlilikKun": "Yaroqlilik (kun)",
-  "cPastPrioritet": "C (Past prioritet)",
-  "bORtaPrioritet": "B (O'rta prioritet)",
-  "aYuqoriPrioritet": "A (Yuqori prioritet)",
-  "abcSegment": "ABC segment",
-  "nomiRus": "Nomi (Rus)",
-  "nomiOZbek": "Nomi (O'zbek) *",
-  "zaxiraTugashSanasiTaxmin": "Zaxira tugash sanasi (taxmin)",
-  "bomMahsulotTarkibiBogLiqligiTopilmadi": "BOM (mahsulot tarkibi) bog'liqligi topilmadi",
-  "sifatKoRsatkichlariRadar": "Sifat ko'rsatkichlari (Radar)",
-  "k1QavatABlok": "1-qavat, A-blok",
-  "qoldiqQiymatUzs": "Qoldiq qiymat (UZS)",
-  "foydaliXizmatMuddatiYil": "Foydali xizmat muddati (yil)",
-  "joriyQiymatUzs": "Joriy qiymat (UZS) *",
-  "xaridQiymatiUzs": "Xarid qiymati (UZS) *",
-  "itUskunalar": "IT uskunalar",
-  "jamiQiymatKitob": "Jami qiymat (kitob)",
-  "hisobRaqami20Raqam": "Hisob raqami (20 raqam)",
-  "mukofotBonusTayinlash": "Mukofot (Bonus) tayinlash",
-  "xizmatSafariK": "Xizmat safari (K командировка)",
-  "masalan52090018": "Masalan: 5/2, 09:00-18:00",
-  "maoshUzs": "Maosh (UZS)",
-  "uyJoySharoiti": "Uy-joy sharoiti",
-  "dSmenaKunduzgi": "D smena (Kunduzgi)",
-  "cSmena23000700": "C smena (23:00–07:00)",
-  "bSmena15002300": "B smena (15:00–23:00)",
-  "aSmena07001500": "A smena (07:00–15:00)",
-  "soatbayStavkaUzs": "Soatbay stavka (UZS)",
+  "pdfTayyorlandi": "PDF готов",
+  "dalilFotosiIxtiyoriy": "Фото-доказательство (необязательно)",
+  "iqBallKiritilmagan": "Балл IQ не введён",
+  "hrMenejerImzosi": "Подпись HR менеджера",
+  "ishTaklifi": "ПРЕДЛОЖЕНИЕ О РАБОТЕ",
+  "ishTartibiGrafik": "Режим работы (график)",
+  "maoshAsosiyUzs": "Зарплата (основная, UZS)",
+  "maoshSinovMuddatiUzs": "Зарплата (испытательный срок, UZS)",
+  "k6Oy": "6 месяцев",
+  "k2Oy": "2 месяца",
+  "sinovMuddatiOy": "Испытательный срок (мес)",
+  "boLinmaDepartament": "Подразделение / Департамент",
+  "koNikmalarDarajasiORtacha": "Уровень навыков (средний)",
+  "maoshKutilmasiMaxSoM": "Ожидаемая зарплата (макс, сум)",
+  "maoshKutilmasiMinSoM": "Ожидаемая зарплата (мин, сум)",
+  "javobBerishMuddatiKun": "Срок ответа (дней)",
+  "mavjudKandidatlarSoniTaxminiy": "Количество доступных кандидатов (примерно)",
+  "maoshMax": "Зарплата (макс)",
+  "maoshMin": "Зарплата (мин)",
+  "ganttStyleJadval4Hafta": "Gantt-таблица (4 недели)",
+  "haftalikMaqsadlar4Hafta": "Еженедельные цели (4 недели)",
+  "reglamentlarRoYxatiHarBirQator": "Список регламентов (каждая строка — отдельный материал)",
+  "masalan2BoShQoldirsaIldiz": "Например: 2 (если оставить пустым — корень)",
+  "qyamAsosiyVazifasiMaks32Belgi": "ЦКП (основная задача, макс 32 символа)",
+  "qyamRu": "ЦКП (RU)",
+  "asosiyVazifasiQyam": "Основная задача (ЦКП)...",
+  "qyamUz": "ЦКП (UZ)",
+  "urlHavola": "URL / Ссылка",
+  "testLmsKurs": "Тест / LMS курс",
+  "qyam": "ЦКП",
+  "rahbarTayinlanmaganVakant": "Руководитель не назначен (вакантно)",
+  "lavozimiIsmiMasalanMarketingDirektoriAziz": "Должность / имя (например: Директор по маркетингу — Азиз Каримов)",
+  "k5KimgaHisobotBeradiTuzilmaviyJoylashuv": "5. Кому подчиняется? (Структурное положение)",
+  "dekretTurmushTaTili": "Декрет / отпуск по семейным",
+  "xodimKetdiIshdanBoShatildi": "Сотрудник ушёл / уволен",
+  "yangiLavozimKengayish": "Новая должность (расширение)",
+  "buLavozimningQandayNomlariBoLishi": "Какие альтернативные названия может иметь эта должность? (например: Продавец, Sales manager, Специалист по продажам)",
+  "oRtaMaxsusKollejLitsey": "Среднее специальное (колледж/лицей)",
+  "tugallanmaganOliyTalaba": "Незаконченное высшее / студент",
+  "oliyMaLumotBakalavrMagistr": "Высшее образование (бакалавр/магистр)",
+  "k9OilaviyHolatIzohIxtiyoriy": "9. Семейное положение (комментарий, необязательно)",
+  "k7YoshMax": "7. Возраст (макс)",
+  "k6YoshMin": "6. Возраст (мин)",
+  "xodimIshiningYakuniyNatijasiNimaMasalan": "Каков конечный результат работы сотрудника? (например: объём проданной продукции, количество выполненных дизайнов...)",
+  "k12XodimMajburiyatlariFunksional": "12. Обязанности сотрудника (Функциональные)",
+  "k11BoLimJamoaVazifalari": "11. Задачи отдела/команды",
+  "k3TaSavol": "3 вопроса",
+  "takrorlashMin": "Повторение (мин %)",
+  "liderlikMin": "Лидерство (мин)",
+  "iqMin": "IQ (мин)",
+  "qaysiDasturlarniBilishiShartExcel1c": "Какие программы должен знать? (Excel, 1C, Photoshop, Python...)",
+  "k18ProfessionalKoNikmalarHardSkills": "18. Профессиональные навыки (Hard skills)",
+  "kandidatdaQaysiBelgilarBoLsaUni": "Какие признаки кандидата являются поводом не принимать его на работу? (например: часто менял место работы...)",
+  "k14XavfliNomzodTavsifiXavfGuruhlari": "14. Описание рискованного кандидата (Группы риска)",
+  "boshqaSharoitlarIzoh": "Прочие условия / Комментарий",
+  "ijtimoiyPaketTanlash": "Соцпакет (выбор)",
+  "k15IjtimoiyPaketSotsialPaket": "15. Соцпакет (социальный пакет)",
+  "gpcShartnoma": "GPC (Договор)",
+  "muddati1Yil": "Срок (1 год)",
+  "muddatsizTrudovoy": "Бессрочный (Трудовой)",
+  "k12IshRejimiSoat": "12. Режим работы (час)",
+  "k11YillikTaTilKun": "11. Ежегодный отпуск (дней)",
+  "k8SinovMaoshMax": "8. Зарплата на испытательном (макс)",
+  "k7SinovMaoshMin": "7. Зарплата на испытательном (мин)",
+  "k5Kishi": "5 человек",
+  "k4GuruhSoni": "4. Группа (кол-во)",
+  "k3AsboblarDasturlar": "3. Инструменты/Программы",
+  "hrManagerSuhbatBoshidaKompaniyaniQanday": "Как HR-менеджер должен представить компанию в начале собеседования?",
+  "k1KompaniyaTaqdimotiQisqa": "1. Презентация компании (краткая)",
+  "intizomHodisalariIxtiyoriy": "Дисциплинарные случаи (необязательно)",
+  "nastavnikMentorIzohi": "Комментарий наставника / ментора...",
+  "kayfiyat15": "Настроение (1-5) *",
+  "hrMenejerIsmiImzo": "Имя HR менеджера (подпись)",
+  "baholashMezonlari110": "Критерии оценки (1–10)",
+  "nastavnikMentor": "Наставник / Ментор",
+  "tavsifIxtiyoriy": "Описание (необязательно)",
+  "toolTestTalabiVsNatijaA": "Требование TOOL TEST vs результат (A-J):",
+  "kandidatgaAytiladiIvBoLim": "💬 Сообщается кандидату (раздел IV)",
+  "lavozimiVaYokiIsmiMasalanMarketing": "Должность и/или имя (например: Директор по маркетингу — Азиз Каримов)",
+  "k22Smena": "2/2 (Сменный)",
+  "k61DushShan": "6/1 (Пн-Сб)",
+  "k52DushJuma": "5/2 (Пн-Пт)",
+  "ishHaqiMax": "З/п (макс)",
+  "ishHaqiMin": "З/п (мин)",
+  "magistrPhd": "Магистр / PhD",
+  "oliyBakalavr": "Высшее (бакалавр)",
+  "oRtaMaxsusKollejTexnikum": "Среднее специальное (колледж/техникум)",
+  "oRtaMaktab": "Среднее (школа)",
+  "harBirFunktsiyaniYangiQatorgaYozing": "Каждую функцию пишите на новой строке:&#10;1. Телефонные звонки клиентам&#10;2. Оформление заказов&#10;...",
+  "k11BoLimJamoaQandayVazifalarni": "11. Какие задачи выполняет отдел/команда?",
+  "xodimTuriMaqsadli": "Тип сотрудника (Целевой)",
+  "masalanExcelVlookup1cInglizTili": "Например: Excel (VLOOKUP), 1C, Английский (B2), Photoshop...",
+  "k18KasbKoNikmalariDasturlarTillar": "18. Профессиональные навыки (программы, языки)",
+  "ipYakkaTartibdagiTadbirkor": "ИП / Индивидуальный предприниматель",
+  "fuqarolikShartnomasiGpc": "Гражданский договор (GPC)",
+  "muddatsizDoimiy": "Бессрочный (постоянный)",
+  "k3InstrumentlarDasturlar": "3. Инструменты/Программы",
+  "aJTraitlar": "Черты A-J",
+  "vakansiyaIxtiyoriy": "Вакансия (необязательно)",
+  "emailIxtiyoriy": "Email (необязательно)",
+  "slaMuddatIshKunlari": "Срок SLA (рабочие дни)",
+  "topMenejment40IshKun": "Топ-менеджмент (40 рабочих дней)",
+  "murakkab25IshKun": "Сложный (25 рабочих дней)",
+  "ichki5IshKun": "Внутренний (5 рабочих дней)",
+  "standart15IshKun": "Стандартный (15 рабочих дней)",
+  "qcKutilmoqda": "Ожидает QC",
+  "narxBirlik": "Цена (единица)",
+  "taroziHaqiqiyOgIrlik": "Весы (фактический вес)",
+  "barcodeIxtiyoriy": "Штрих-код (необязательно)",
+  "qaytarishKg": "Возврат (кг)",
+  "chiqindiKg": "Отходы (кг)",
+  "ishlatildiKg": "Использовано (кг)",
+  "lotPartiya": "Лот / Партия",
+  "tugashSanasiTaxmin": "Дата окончания (примерно)",
+  "ortiqcha12Oy": "Излишек (12 мес)",
+  "yoQolgan12Oy": "Утрачено (12 мес)",
+  "k12OylikTrend": "12-месячный тренд",
+  "grammGM": "Грамм (г/м²)",
+  "formatBMm": "Формат B (мм)",
+  "formatAMm": "Формат A (мм)",
+  "yaroqlilikKun": "Срок годности (дни)",
+  "cPastPrioritet": "C (Низкий приоритет)",
+  "bORtaPrioritet": "B (Средний приоритет)",
+  "aYuqoriPrioritet": "A (Высокий приоритет)",
+  "abcSegment": "ABC сегмент",
+  "nomiRus": "Название (Рус)",
+  "nomiOZbek": "Название (Узб) *",
+  "zaxiraTugashSanasiTaxmin": "Дата исчерпания запасов (примерно)",
+  "bomMahsulotTarkibiBogLiqligiTopilmadi": "Зависимость BOM (состав продукта) не найдена",
+  "sifatKoRsatkichlariRadar": "Показатели качества (Радар)",
+  "k1QavatABlok": "1-й этаж, блок A",
+  "qoldiqQiymatUzs": "Остаточная стоимость (UZS)",
+  "foydaliXizmatMuddatiYil": "Срок полезного использования (лет)",
+  "joriyQiymatUzs": "Текущая стоимость (UZS) *",
+  "xaridQiymatiUzs": "Стоимость покупки (UZS) *",
+  "itUskunalar": "IT-оборудование",
+  "jamiQiymatKitob": "Общая стоимость (книжная)",
+  "hisobRaqami20Raqam": "Расчётный счёт (20 цифр)",
+  "mukofotBonusTayinlash": "Назначение премии (Бонус)",
+  "xizmatSafariK": "Командировка",
+  "masalan52090018": "Например: 5/2, 09:00-18:00",
+  "maoshUzs": "Зарплата (UZS)",
+  "uyJoySharoiti": "Жилищные условия",
+  "dSmenaKunduzgi": "Смена D (Дневная)",
+  "cSmena23000700": "Смена C (23:00–07:00)",
+  "bSmena15002300": "Смена B (15:00–23:00)",
+  "aSmena07001500": "Смена A (07:00–15:00)",
+  "soatbayStavkaUzs": "Часовая ставка (UZS)",
   "jpegPng": "JPEG / PNG",
   "untitled2": "производства",
   "ApprovalWorkflowPage": {
     "kutilmoqda": "Ожидает"
   },
   "CandidateReport": {
-    "samarasiz": "Samarasiz"
+    "samarasiz": "Неэффективен"
   },
   "CoordinationPageHelpers": {
     "tsx": {
       "bajarilmoqda": "Выполняется",
-      "muddatiOtdi": "Muddati o'tdi",
-      "oqildi": "O'qildi"
+      "muddatiOtdi": "Просрочено",
+      "oqildi": "Прочитано"
     }
   },
   "CRMSettings": {
-    "maxsusMaydonlar": "Maxsus maydonlar",
-    "integratsiyalar": "Integratsiyalar",
-    "tovarlarVaOmborlar": "Tovarlar va omborlar",
+    "maxsusMaydonlar": "Дополнительные поля",
+    "integratsiyalar": "Интеграции",
+    "tovarlarVaOmborlar": "Товары и склады",
     "kompaniyalar": "Компании",
     "kontaktlar": "Контакты",
     "bitimlar": "Сделки",
     "lidlar": "Лиды",
-    "sana": "Sana",
-    "kopTanlov": "Ko'p tanlov"
+    "sana": "Дата",
+    "kopTanlov": "Множественный выбор"
   },
   "DesignExtended": {
-    "dizaynAssetVaFayllarKutubxonasi": "Dizayn asset va fayllar kutubxonasi",
-    "dizaynXarajatKalkulyatori": "Dizayn xarajat kalkulyatori",
-    "bosmaAsboblarVaPlastinalarInventari": "Bosma asboblar va plastinalar inventari",
-    "asboblar": "Asboblar",
-    "qoliplar": "Qoliplar",
-    "taqqoslash": "Taqqoslash",
-    "korporativBrendQoidalariVaRanglar": "Korporativ brend qoidalari va ranglar",
-    "qoshimcha": "Qo'shimcha",
-    "tayyorQoliplarVaStandartOlchamlar": "Tayyor qoliplar va standart o'lchamlar"
+    "dizaynAssetVaFayllarKutubxonasi": "Библиотека дизайн-ассетов и файлов",
+    "dizaynXarajatKalkulyatori": "Калькулятор затрат на дизайн",
+    "bosmaAsboblarVaPlastinalarInventari": "Инвентарь печатных инструментов и пластин",
+    "asboblar": "Инструменты",
+    "qoliplar": "Формы",
+    "taqqoslash": "Сравнение",
+    "korporativBrendQoidalariVaRanglar": "Корпоративные правила бренда и цвета",
+    "qoshimcha": "Дополнительно",
+    "tayyorQoliplarVaStandartOlchamlar": "Готовые формы и стандартные размеры"
   },
   "AttendanceTab": {
     "bekorQilingan": "Отменено",
     "tasdiqlangan": "Подтверждено",
     "kutilmoqda": "Ожидает",
-    "tatil": "Ta'til"
+    "tatil": "Отпуск"
   },
   "CorporateInventoryTab": {
     "yangi": "Новый",
-    "jihozlar": "Jihozlar",
+    "jihozlar": "Оборудование",
     "tsx": {
-      "inventarQoshildi": "Inventar qo'shildi"
+      "inventarQoshildi": "Инвентарь добавлен"
     },
-    "ortacha": "O'rtacha"
+    "ortacha": "Средний"
   },
   "DocumentsTab": {
-    "tibbiyHujjatlar": "Tibbiy hujjatlar",
-    "buyruqlar": "Buyruqlar",
-    "shaxsiyHujjatlar": "Shaxsiy hujjatlar",
+    "tibbiyHujjatlar": "Медицинские документы",
+    "buyruqlar": "Приказы",
+    "shaxsiyHujjatlar": "Личные документы",
     "shartnomalar": "Договоры",
     "bekorQilindi": "Отменено",
     "kutilmoqda": "Ожидает",
-    "oqitishVaSertifikatlar": "O'qitish va sertifikatlar",
-    "talimHujjatlari": "Ta'lim hujjatlari"
+    "oqitishVaSertifikatlar": "Обучение и сертификаты",
+    "talimHujjatlari": "Документы об образовании"
   },
   "FinanceTab": {
     "tasdiqlangan": "Подтверждено",
     "kutilmoqda": "Ожидает",
-    "tolangan": "To'langan",
-    "oylikXarajatOrt": "Oylik xarajat (o'rt)"
+    "tolangan": "Оплачено",
+    "oylikXarajatOrt": "Месячный расход (средний)"
   },
   "OffboardingTab": {
     "kutilmoqda": "Ожидает",
     "bekorQilindi": "Отменено",
     "faol": "Активный",
-    "talabYoq": "Talab yo'q",
-    "yoqolgan": "Yo'qolgan"
+    "talabYoq": "Нет запроса",
+    "yoqolgan": "Утеряно"
   },
   "RemainingTabs": {
     "ochiq": "Открыто",
-    "orta": "O'rta"
+    "orta": "Средний"
   },
   "EmployeeDailyKPIPanel": {
-    "vazifalar": "Vazifalar"
+    "vazifalar": "Задачи"
   },
   "EmployeeTrackingReport": {
-    "xodimlarKuzatuviHisoboti": "Xodimlar Kuzatuvi Hisoboti",
+    "xodimlarKuzatuviHisoboti": "Отчёт о мониторинге сотрудников",
     "untitled": "Отчёт по Отслеживанию Сотрудников"
   },
   "EventsCalendarGrid": {
     "tsx": {
-      "treninglar": "Treninglar",
-      "kelgusiTadbirlar": "Kelgusi tadbirlar",
-      "jamiTadbirlar": "Jami tadbirlar",
-      "yigilishlar": "Yig'ilishlar"
+      "treninglar": "Тренинги",
+      "kelgusiTadbirlar": "Предстоящие события",
+      "jamiTadbirlar": "Всего событий",
+      "yigilishlar": "Совещания"
     }
   },
   "EventsCalendar": {
-    "trening": "Trening",
-    "yigilish": "Yig'ilish"
+    "trening": "Тренинг",
+    "yigilish": "Совещание"
   },
   "FinanceExtended": {
-    "xarajatMarkazlari": "Xarajat Markazlari",
-    "tolovlar": "To'lovlar"
+    "xarajatMarkazlari": "Центры затрат",
+    "tolovlar": "Платежи"
   },
   "GoalsKPI": {
     "bekorQilindi": "Отменено",
     "faol": "Активный",
-    "xodim": "Xodim",
-    "lavozim": "Lavozim",
-    "tugatishKurslarniYakunlash": "Tugatish (kurslarni yakunlash)",
-    "orta": "O'rta",
-    "bolim": "Bo'lim",
-    "oquvTalimOlish": "O'quv (ta'lim olish)"
+    "xodim": "Сотрудник",
+    "lavozim": "Должность",
+    "tugatishKurslarniYakunlash": "Завершить (окончание курсов)",
+    "orta": "Средний",
+    "bolim": "Отдел",
+    "oquvTalimOlish": "Учёба (получение образования)"
   },
   "InspectionPage": {
-    "sanitarXonalar": "Sanitar xonalar"
+    "sanitarXonalar": "Санитарные помещения"
   },
   "IoTExtended": {
-    "ogohlantirishlar": "Ogohlantirishlar"
+    "ogohlantirishlar": "Предупреждения"
   },
   "KaizenPage": {
-    "amalgaOshirilmoqda": "Amalga oshirilmoqda",
-    "koribChiqilmoqda": "Ko'rib chiqilmoqda"
+    "amalgaOshirilmoqda": "Реализуется",
+    "koribChiqilmoqda": "На рассмотрении"
   },
   "KnowledgeBase": {
-    "tartibQoidalar": "Tartib-qoidalar",
-    "siyosatlar": "Siyosatlar",
-    "xizmatlar": "Xizmatlar",
+    "tartibQoidalar": "Правила и нормы",
+    "siyosatlar": "Политики",
+    "xizmatlar": "Услуги",
     "mahsulotlar": "Продукты"
   },
   "": {
     "microLearning": "Micro-learning",
-    "testlar": "Testlar",
-    "mesIshlabChiqarishAlerti": "MES ishlab chiqarish alerti",
-    "qcSifatAlertiYaratish": "QC sifat alerti yaratish",
-    "xavfsizlikAlerrtiYaratish": "Xavfsizlik alerrti yaratish",
-    "ruxsatsizKirish": "Ruxsatsiz kirish",
-    "jMuloqot": "J — Muloqot (Общение)",
-    "iEmpatiya": "I — Empatiya (Эмпатия)",
-    "hTaktika": "H — Taktika (Тактика)",
-    "gBardosh": "G — Bardosh (Оборона)",
-    "eEnergiya": "E — Energiya (Энергия)",
-    "dIshonch": "D — Ishonch (Уверенность)",
-    "cNazorat": "C — Nazorat (Контроль)",
-    "bStrategiya": "B — Strategiya (Стратегия)",
-    "aDiqqat": "A — Diqqat (Внимание)",
-    "oquvByudjet": "O'quv Byudjet",
-    "orta": "O'rta",
-    "boshlangich": "Boshlang'ich",
-    "uchrashuvimizHaqidaEslatibOtmoqchiman": "Uchrashuvimiz haqida eslatib o'tmoqchiman...",
-    "sizgaMaxsusTaklifimizBor": "Sizga maxsus taklifimiz bor...",
-    "oldingiSuhbatimizBoyichaXabarBerishni": "Oldingi suhbatimiz bo'yicha xabar berishni istedim...",
-    "qongiroq": "Qo'ng'iroq",
+    "testlar": "Тесты",
+    "mesIshlabChiqarishAlerti": "Алерт производства MES",
+    "qcSifatAlertiYaratish": "Создать алерт качества QC",
+    "xavfsizlikAlerrtiYaratish": "Создать алерт безопасности",
+    "ruxsatsizKirish": "Несанкционированный доступ",
+    "jMuloqot": "J — Общение",
+    "iEmpatiya": "I — Эмпатия",
+    "hTaktika": "H — Тактика",
+    "gBardosh": "G — Оборона",
+    "eEnergiya": "E — Энергия",
+    "dIshonch": "D — Уверенность",
+    "cNazorat": "C — Контроль",
+    "bStrategiya": "B — Стратегия",
+    "aDiqqat": "A — Внимание",
+    "oquvByudjet": "Учебный бюджет",
+    "orta": "Средний",
+    "boshlangich": "Начальный",
+    "uchrashuvimizHaqidaEslatibOtmoqchiman": "Хотел бы напомнить о нашей встрече...",
+    "sizgaMaxsusTaklifimizBor": "У нас есть для вас специальное предложение...",
+    "oldingiSuhbatimizBoyichaXabarBerishni": "Хотел сообщить по поводу нашего предыдущего разговора...",
+    "qongiroq": "Звонок",
     "yoqotildi": "Проиграно",
-    "kommunikatsiyaAloqaOrnatish": "Kommunikatsiya, aloqa o'rnatish",
-    "fQatiylik": "F — Qat'iylik (Решительность)",
-    "ozigaVaQarorlarigaIshonch": "O'ziga va qarorlariga ishonch",
-    "emotsiyalarniBoshqarishSakinBolish": "Emotsiyalarni boshqarish, sakin bo'lish",
-    "uzoqniKorishRejalashtirish": "Uzoqni ko'rish, rejalashtirish",
-    "tafsilotlargaEtiborZiyraklik": "Tafsilotlarga e'tibor, ziyraklik",
-    "galayonliOlomon": "G'alayonli olomon",
-    "suyuqlikTokilishi": "Suyuqlik to'kilishi",
-    "materialNotogriJoyda": "Material noto'g'ri joyda",
-    "yonginTutunAniqlash": "Yong'in / Tutun aniqlash",
-    "ppeYoqligiShlemKozoynakQolqop": "PPE yo'qligi (shlem, ko'zoynak, qo'lqop)"
+    "kommunikatsiyaAloqaOrnatish": "Коммуникация, установление связей",
+    "fQatiylik": "F — Решительность",
+    "ozigaVaQarorlarigaIshonch": "Уверенность в себе и своих решениях",
+    "emotsiyalarniBoshqarishSakinBolish": "Управление эмоциями, сохранение спокойствия",
+    "uzoqniKorishRejalashtirish": "Дальновидность, планирование",
+    "tafsilotlargaEtiborZiyraklik": "Внимание к деталям, бдительность",
+    "galayonliOlomon": "Беспорядки в толпе",
+    "suyuqlikTokilishi": "Разлив жидкости",
+    "materialNotogriJoyda": "Материал не на своём месте",
+    "yonginTutunAniqlash": "Обнаружение пожара / дыма",
+    "ppeYoqligiShlemKozoynakQolqop": "Отсутствие СИЗ (каска, очки, перчатки)"
   },
   "MarketingExtended": {
-    "raqobatchilar": "Raqobatchilar"
+    "raqobatchilar": "Конкуренты"
   },
   "MESExtended": {
-    "ishlabChiqarishVazifalari": "Ishlab Chiqarish Vazifalari",
-    "smenaOtkazish": "Smena O'tkazish",
-    "toxtashSabablar": "To'xtash Sabablar"
+    "ishlabChiqarishVazifalari": "Производственные задачи",
+    "smenaOtkazish": "Передача смены",
+    "toxtashSabablar": "Причины остановки"
   },
   "MESHomeDashboard": {
     "kutilmoqda": "Ожидает",
-    "ishlamoqda": "Ishlamoqda",
-    "toxtadi": "To'xtadi",
-    "toxtatildi": "To'xtatildi"
+    "ishlamoqda": "Работает",
+    "toxtadi": "Остановлено",
+    "toxtatildi": "Остановлено"
   },
   "MESWorkCenters": {
     "kutilmoqda": "Ожидает",
-    "ishlamoqda": "Ishlamoqda",
-    "toxtadi": "To'xtadi",
-    "toxtatildi": "To'xtatildi"
+    "ishlamoqda": "Работает",
+    "toxtadi": "Остановлено",
+    "toxtatildi": "Остановлено"
   },
   "MMExtended": {
-    "haydovchilar": "Haydovchilar",
-    "marshrutRejasi": "Marshrut Rejasi",
-    "kreditorQarzlar": "Kreditor Qarzlar",
-    "yoqilgiNazorat": "Yoqilg'i Nazorat"
+    "haydovchilar": "Водители",
+    "marshrutRejasi": "План маршрута",
+    "kreditorQarzlar": "Кредиторская задолженность",
+    "yoqilgiNazorat": "Контроль топлива"
   },
   "MROExtended": {
-    "xarajatNazorati": "Xarajat Nazorati",
-    "kommunalXizmatlar": "Kommunal Xizmatlar",
-    "ehtiyotQismlar": "Ehtiyot Qismlar"
+    "xarajatNazorati": "Контроль расходов",
+    "kommunalXizmatlar": "Коммунальные услуги",
+    "ehtiyotQismlar": "Запчасти"
   },
   "PapkaOrders": {
     "bekorQilindi": "Отменено",
-    "ishlabChiqarish": "Ishlab chiqarish",
-    "rejalashtirish": "Rejalashtirish",
+    "ishlabChiqarish": "Производство",
+    "rejalashtirish": "Планирование",
     "yangi": "Новый",
     "untitled": "Заказы Папок"
   },
   "POSInventoryPage": {
     "qaytarish": "Вернуть",
-    "sotuv": "Sotuv"
+    "sotuv": "Продажа"
   },
   "Positions": {
-    "daromadBitimlarLeadKonversiyasiNps": "Daromad, bitimlar, lead konversiyasi, NPS",
-    "sotuvMenejeri": "Sotuv menejeri",
-    "ishlabChiqarishNuqsonlarIshVaqti": "Ishlab chiqarish, nuqsonlar, ish vaqti, xavfsizlik",
-    "davomatSifatVazifalarLmsJamoa": "Davomat, sifat, vazifalar, LMS, jamoa ishlashi",
-    "standartXodim": "Standart xodim",
-    "mashinOperatori": "Mashinа operatori"
+    "daromadBitimlarLeadKonversiyasiNps": "Доход, сделки, конверсия лидов, NPS",
+    "sotuvMenejeri": "Менеджер по продажам",
+    "ishlabChiqarishNuqsonlarIshVaqti": "Производство, брак, рабочее время, безопасность",
+    "davomatSifatVazifalarLmsJamoa": "Посещаемость, качество, задачи, LMS, командная работа",
+    "standartXodim": "Стандартный сотрудник",
+    "mashinOperatori": "Оператор машины"
   },
   "ProductivityInterviewDialog": {
-    "yakuniyXulosa": "Yakuniy xulosa",
-    "asosanModdiyManfaatUchunIshlaydi": "Asosan moddiy manfaat uchun ishlaydi. Ish haqining muhimligi birinchi o'rinda.",
-    "natijaVaMukofotUchunIshlaydi": "Natija va mukofot uchun ishlaydi. O'sish imkoniyatlari, karyera va professional rivojlanish.",
-    "ishigaIshonadiMissiyagaMosHarakat": "Ishiga ishonadi, missiyaga mos harakat qiladi. Ichki qadriyatlar va g'oyaviy motivatsiya.",
-    "etiqod": "E'tiqod",
-    "masuliyatVaMajburiyatAsosidaIshlaydi": "Mas'uliyat va majburiyat asosida ishlaydi. Jamiyat va kompaniya oldidagi burch tuyg'usi."
+    "yakuniyXulosa": "Итоговый вывод",
+    "asosanModdiyManfaatUchunIshlaydi": "Работает в основном ради материальной выгоды. Размер зарплаты на первом месте.",
+    "natijaVaMukofotUchunIshlaydi": "Работает ради результата и вознаграждения. Возможности роста, карьера и профессиональное развитие.",
+    "ishigaIshonadiMissiyagaMosHarakat": "Верит в свою работу, действует в соответствии с миссией. Внутренние ценности и идейная мотивация.",
+    "etiqod": "Убеждения",
+    "masuliyatVaMajburiyatAsosidaIshlaydi": "Работает на основе ответственности и обязательств. Чувство долга перед обществом и компанией."
   },
   "QCDashboardHelpers": {
     "tsx": {
       "faol": "Активный",
-      "etiborKerak": "E'tibor kerak"
+      "etiborKerak": "Требуется внимание"
     }
   },
   "QCDashboard": {
     "kutilmoqda": "Ожидает",
-    "muvaffaqiyatsiz": "Muvaffaqiyatsiz",
-    "shartliOtdi": "Shartli o'tdi",
-    "otdi": "O'tdi"
+    "muvaffaqiyatsiz": "Не прошёл",
+    "shartliOtdi": "Условно прошёл",
+    "otdi": "Прошёл"
   },
   "QCFinalInspection": {
     "bekorQilingan": "Отменено",
-    "rejalashtirishUchunTayyor": "Rejalashtirish uchun tayyor",
+    "rejalashtirishUchunTayyor": "Готово к планированию",
     "tasdiqlangan": "Подтверждено",
-    "qcKutilmoqda": "QC kutilmoqda",
-    "texnikKutilmoqda": "Texnik kutilmoqda",
-    "dizaynKutilmoqda": "Dizayn kutilmoqda"
+    "qcKutilmoqda": "Ожидает QC",
+    "texnikKutilmoqda": "Ожидает технолога",
+    "dizaynKutilmoqda": "Ожидает дизайнера"
   },
   "QCModule": {
-    "reklamatsiyalar": "Reklamatsiyalar",
-    "normalar": "Normalar",
-    "fizikXususiyatlar": "Fizik xususiyatlar",
-    "kimyoviyKorsatkichlar": "Kimyoviy ko'rsatkichlar"
+    "reklamatsiyalar": "Рекламации",
+    "normalar": "Нормы",
+    "fizikXususiyatlar": "Физические свойства",
+    "kimyoviyKorsatkichlar": "Химические показатели"
   },
   "QuestionnaireTemplates": {
-    "mijozlarBilanIshlashMahsulotBilimi": "Mijozlar bilan ishlash, mahsulot bilimi, sotish tajribasi",
-    "smmContentYaratishKampaniyaBoshqarish": "SMM, content yaratish, kampaniya boshqarish",
-    "texnikKonikmalarTajribaLoyihalar": "Texnik ko'nikmalar, tajriba, loyihalar",
-    "mehmonlarniQabulQilishTelefonQongiroqlari": "Mehmonlarni qabul qilish, telefon qo'ng'iroqlari, vaziyatlarni hal qilish"
+    "mijozlarBilanIshlashMahsulotBilimi": "Работа с клиентами, знание продукта, опыт продаж",
+    "smmContentYaratishKampaniyaBoshqarish": "SMM, создание контента, управление кампаниями",
+    "texnikKonikmalarTajribaLoyihalar": "Технические навыки, опыт, проекты",
+    "mehmonlarniQabulQilishTelefonQongiroqlari": "Приём гостей, телефонные звонки, разрешение ситуаций"
   },
   "RaciCrisisPage": {
     "bekor": "Отмена",
-    "jarayonda": "Jarayonda",
+    "jarayonda": "В процессе",
     "ochiq": "Открыто"
   },
   "RecruiterKPIPage": {
-    "gazetalarMatbuot": "Gazetalar / Matbuot",
-    "referralXodimTavsiyasi": "Referral (xodim tavsiyasi)"
+    "gazetalarMatbuot": "Газеты / Пресса",
+    "referralXodimTavsiyasi": "Реферал (рекомендация сотрудника)"
   },
   "ReferralPage": {
     "kutilmoqda": "Ожидает"
   },
   "ReportsHub": {
     "155": "Управление 155+ автоматизированными отчётами",
-    "nomi": "Nomi",
-    "hisobotlarMarkazi": "Hisobotlar markazi",
+    "nomi": "Название",
+    "hisobotlarMarkazi": "Центр отчётов",
     "untitled": "Название"
   },
   "SaaSExtended": {
-    "xatolarJurnali": "Xatolar Jurnali",
-    "xavfsizlik": "Xavfsizlik",
-    "crmSavdo": "CRM + Savdo",
+    "xatolarJurnali": "Журнал ошибок",
+    "xavfsizlik": "Безопасность",
+    "crmSavdo": "CRM + Продажи",
     "tsx": {
-      "yangiTenantMuvaffaqiyatliQoshildi": "Yangi tenant muvaffaqiyatli qo'shildi"
+      "yangiTenantMuvaffaqiyatliQoshildi": "Новый tenant успешно добавлен"
     },
-    "mroXojalik": "MRO Xo'jalik",
-    "lmsTalim": "LMS Ta'lim",
-    "taminotMm": "Ta'minot (MM)"
+    "mroXojalik": "MRO Хозяйство",
+    "lmsTalim": "LMS Обучение",
+    "taminotMm": "Снабжение (MM)"
   },
   "SDCustomers": {
     "nofaol": "Неактивный",
     "yangi": "Новый",
-    "qoraRoyxat": "Qora ro'yxat"
+    "qoraRoyxat": "Чёрный список"
   },
   "SDExtended": {
-    "avansNazorat": "Avans Nazorat",
-    "menejerPaneli": "Menejer Paneli"
+    "avansNazorat": "Контроль авансов",
+    "menejerPaneli": "Панель менеджера"
   },
   "SDSalesQuotes": {
-    "bossiz": "Bossiz",
-    "4RangToliqCmyk": "4 rang (To'liq CMYK)",
-    "cFlute4mmOrta": "C-flute 4mm (O'rta)"
+    "bossiz": "Без босса",
+    "4RangToliqCmyk": "4 цвета (Полный CMYK)",
+    "cFlute4mmOrta": "C-flute 4mm (Средний)"
   },
   "SecurityDashboardCards": {
     "tsx": {
-      "ogohlantirish": "Ogohlantirish",
-      "ochiqHodisalar": "Ochiq hodisalar",
-      "tashrifchilar": "Tashrifchilar"
+      "ogohlantirish": "Предупреждение",
+      "ochiqHodisalar": "Открытые инциденты",
+      "tashrifchilar": "Посетители"
     }
   },
   "SecurityExtended": {
-    "xavfsizlikReytingi": "Xavfsizlik Reytingi",
-    "xavfliModdalar": "Xavfli Moddalar",
-    "mehmonlar": "Mehmonlar"
+    "xavfsizlikReytingi": "Рейтинг безопасности",
+    "xavfliModdalar": "Опасные вещества",
+    "mehmonlar": "Гости"
   },
   "StrategicTasksPanel": {
     "bekorQilingan": "Отменено",
     "kutilmoqda": "Ожидает",
-    "jarayonda": "Jarayonda",
-    "orta": "O'rta"
+    "jarayonda": "В процессе",
+    "orta": "Средний"
   },
   "UsersPage": {
-    "xodim": "Xodim",
-    "bolimBoshligi": "Bo'lim boshlig'i"
+    "xodim": "Сотрудник",
+    "bolimBoshligi": "Начальник отдела"
   },
   "WasteTrackingDialogs": {
     "tsx": {
-      "muvaffaqiyatliSaqlandi": "Muvaffaqiyatli saqlandi"
+      "muvaffaqiyatliSaqlandi": "Успешно сохранено"
     }
   },
   "ContactDetailSheet": {
     "tsx": {
-      "kontaktMuvaffaqiyatliYangilandi": "Kontakt muvaffaqiyatli yangilandi"
+      "kontaktMuvaffaqiyatliYangilandi": "Контакт успешно обновлён"
     }
   },
   "CRMKpiCards": {
     "tsx": {
       "yakunlangan": "Завершено",
-      "jarayondagilar": "Jarayondagilar",
-      "jamiVazifalar": "Jami vazifalar",
-      "jami": "Jami"
+      "jarayondagilar": "В процессе",
+      "jamiVazifalar": "Всего задач",
+      "jami": "Всего"
     }
   },
   "useCRMWorkspace": {
-    "lidYutildiSdBuyurtmaYaratildi": "Lid yutildi — SD buyurtma yaratildi",
-    "qismanOchirildi": "Qisman o'chirildi",
-    "ochirildi": "O'chirildi",
-    "kochirildi": "Ko'chirildi",
-    "faoliyatQoshildi": "Faoliyat qo'shildi"
+    "lidYutildiSdBuyurtmaYaratildi": "Лид выигран — создан заказ SD",
+    "qismanOchirildi": "Частично удалено",
+    "ochirildi": "Удалено",
+    "kochirildi": "Перемещено",
+    "faoliyatQoshildi": "Активность добавлена"
   },
   "DataTable": {
-    "ishdanKetgan": "Ishdan ketgan",
-    "tatilda": "Ta'tilda"
+    "ishdanKetgan": "Уволен",
+    "tatilda": "В отпуске"
   },
   "order-constants": {
-    "00Rangsiz": "0+0 (Rangsiz)",
+    "00Rangsiz": "0+0 (Бесцветный)",
     "yangi": "Новый",
-    "l": "Lоток",
-    "quti": "Quti (Коробка)",
-    "qogoz": "Qog'oz"
+    "l": "Лоток",
+    "quti": "Коробка",
+    "qogoz": "Бумага"
   },
   "translations": {
-    "yangiBuyurtmaYaratish": "Yangi Buyurtma Yaratish",
+    "yangiBuyurtmaYaratish": "Создать новый заказ",
     "untitled": "Создать новый заказ"
   },
   "helpers-constants": {
     "tsx": {
-      "tavsiyalarTekshiruvi": "Tavsiyalar Tekshiruvi",
-      "yangiAriza": "Yangi ariza",
+      "tavsiyalarTekshiruvi": "Проверка рекомендаций",
+      "yangiAriza": "Новая заявка",
       "untitled": "Ждёт",
-      "elonBerildi": "E'lon berildi",
-      "suhbatOtdi": "Suhbat O'tdi"
+      "elonBerildi": "Объявлено",
+      "suhbatOtdi": "Собеседование пройдено"
     }
   },
   "GLPostingStatus": {
     "tsx": {
-      "kutmoqda": "Kutmoqda"
+      "kutmoqda": "Ожидает"
     }
   },
   "PosMovementChiqim": {
-    "zarar": "Zarar",
-    "ichkiQaytarish": "Ichki qaytarish",
-    "ichkiKochirish": "Ichki ko'chirish"
+    "zarar": "Убыток",
+    "ichkiQaytarish": "Внутренний возврат",
+    "ichkiKochirish": "Внутреннее перемещение"
   },
   "PosMovementKirim": {
-    "mroOmboriTexnikMateriallarKirim": "MRO Ombori — Texnik Materiallar Kirim",
-    "yarimTayyorLiniyadanQabul": "Yarim Tayyor — Liniyadan Qabul",
-    "tayyorMahsulotIshlabChiqarishdanQabul": "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul",
-    "tashqiKirimQolda": "Tashqi Kirim (Qo'lda)",
-    "xojalikOmboriMateriallarKirim": "Xo'jalik Ombori — Materiallar Kirim"
+    "mroOmboriTexnikMateriallarKirim": "Склад MRO — Приёмка технических материалов",
+    "yarimTayyorLiniyadanQabul": "Полуфабрикат — Приёмка с линии",
+    "tayyorMahsulotIshlabChiqarishdanQabul": "Готовая продукция — Приёмка из производства",
+    "tashqiKirimQolda": "Внешняя приёмка (Вручную)",
+    "xojalikOmboriMateriallarKirim": "Хозяйственный склад — Приёмка материалов"
   },
   "PosMovementNew": {
     "tsx": {
-      "inventarizatsiyaAsosidaMiqdorTuzatmasi": "Inventarizatsiya asosida miqdor tuzatmasi.",
-      "zararNosoz": "Zarar / Nosoz",
-      "ichkiQaytarish": "Ichki Qaytarish",
-      "ombordanTashqarigaChiqarilganMateriallarBarcode": "Ombordan tashqariga chiqarilgan materiallar. Barcode skaner orqali amalga oshiriladi.",
-      "zararKorganYokiNosozMateriallar": "Zarar ko'rgan yoki nosoz materiallar ro'yxatdan o'tkazish.",
-      "omborlarOrasidaMaterialKochirish": "Omborlar orasida material ko'chirish.",
-      "ichkiKochirish": "Ichki Ko'chirish",
-      "bolimYokiXodimdanMaterialQaytarish": "Bo'lim yoki xodimdan material qaytarish.",
-      "bolimgaYokiXodimgaMaterialBerish": "Bo'limga yoki xodimga material berish. Barcode skaner orqali.",
-      "taminotchidanYetibKelganMateriallarBarcha": "Ta'minotchidan yetib kelgan materiallar. Barcha maydonlar qo'lda to'ldiriladi — barcode skaneri kerak emas."
+      "inventarizatsiyaAsosidaMiqdorTuzatmasi": "Корректировка количества по результатам инвентаризации.",
+      "zararNosoz": "Убыток / Брак",
+      "ichkiQaytarish": "Внутренний возврат",
+      "ombordanTashqarigaChiqarilganMateriallarBarcode": "Материалы, выданные со склада. Осуществляется через сканер штрих-кодов.",
+      "zararKorganYokiNosozMateriallar": "Регистрация повреждённых или бракованных материалов.",
+      "omborlarOrasidaMaterialKochirish": "Перемещение материала между складами.",
+      "ichkiKochirish": "Внутреннее перемещение",
+      "bolimYokiXodimdanMaterialQaytarish": "Возврат материала от подразделения или сотрудника.",
+      "bolimgaYokiXodimgaMaterialBerish": "Выдача материала подразделению или сотруднику. Через сканер штрих-кодов.",
+      "taminotchidanYetibKelganMateriallarBarcha": "Материалы, полученные от поставщика. Все поля заполняются вручную — сканер штрих-кодов не требуется."
     }
   },
   "PosMovements": {
     "tasdiqlash": "Подтвердить",
-    "qcYuborish": "QC Yuborish",
+    "qcYuborish": "Отправить в QC",
     "yuborish": "Отправить",
     "bekor": "Отмена",
-    "qcOtkazish": "QC O'tkazish",
-    "qcOtdi": "QC O'tdi"
+    "qcOtkazish": "Провести QC",
+    "qcOtdi": "QC пройден"
   },
   "PosReports": {
     "tsx": {
-      "jamiBalans": "Jami balans",
-      "jamiQatorlar": "Jami qatorlar"
+      "jamiBalans": "Общий баланс",
+      "jamiQatorlar": "Всего строк"
     },
-    "umumiySavdoBarchaVaqt": "Umumiy savdo (barcha vaqt)"
+    "umumiySavdoBarchaVaqt": "Общие продажи (всё время)"
   },
   "AIInterviewPublicPage": {
     "europrintAi": "EuroPrint AI Интервью"
   },
   "barcode-": {
     "untitled": "Система Штрих-кодов",
-    "partiyalarShtrixKodYaratishVa": "Partiyalar, shtrix-kod yaratish va skaner"
+    "partiyalarShtrixKodYaratishVa": "Партии, создание штрих-кодов и сканер"
   },
   "camera-heatmap-": {
     "untitled": "Тепловая карта",
-    "ishlabChiqarishMaydonidaFaollikVizualizatsiyasi": "Ishlab chiqarish maydonida faollik vizualizatsiyasi"
+    "ishlabChiqarishMaydonidaFaollikVizualizatsiyasi": "Визуализация активности на производственной площадке"
   },
   "FaceRecognitionMonitoring": {
     "untitled": "Мониторинг распознавания лиц"
@@ -8951,15 +8951,15 @@
   "FaceRegistration": {
     "untitled": "Регистрация Лица",
     "ai": "Добавление лиц сотрудников в базу AI",
-    "xodimlarYuziniAiBazasigaQoshish": "Xodimlar yuzini AI bazasiga qo'shish",
-    "yuzRoyxatdanOtkazish": "Yuz Ro'yxatdan O'tkazish"
+    "xodimlarYuziniAiBazasigaQoshish": "Добавление лиц сотрудников в базу AI",
+    "yuzRoyxatdanOtkazish": "Регистрация лица"
   },
   "camera-ai": {
     "types": {
       "tsx": {
         "ai": "AI Аналитика камер",
         "untitled": "Анализ мониторинга камер на основе искусственного интеллекта",
-        "suniyIntellektAsosidaKameraMonitoringi": "Sun'iy intellekt asosida kamera monitoringi tahlili"
+        "suniyIntellektAsosidaKameraMonitoringi": "Анализ мониторинга камер на основе искусственного интеллекта"
       }
     }
   },
@@ -8976,63 +8976,63 @@
   "LanguageSwitcher": {
     "tsx": {
       "untitled": "Русский",
-      "ozbekcha": "O'zbekcha"
+      "ozbekcha": "Узбекский"
     }
   },
   "CandidateReportDialog": {
-    "etiqod": "E'tiqod"
+    "etiqod": "Убеждения"
   },
   "MMVendors": {
-    "oldindanTolov": "Oldindan to'lov"
+    "oldindanTolov": "Предоплата"
   },
   "POSDashboard": {
-    "otkazma": "O'tkazma"
+    "otkazma": "Перевод"
   },
   "QuestionnaireTemplatesHooks": {
-    "savolOchirildi": "Savol o'chirildi",
-    "savolQoshildi": "Savol qo'shildi",
-    "shablonYaratildiVaSavollarQoshildi": "Shablon yaratildi va savollar qo'shildi!",
-    "shablonOchirildi": "Shablon o'chirildi"
+    "savolOchirildi": "Вопрос удалён",
+    "savolQoshildi": "Вопрос добавлен",
+    "shablonYaratildiVaSavollarQoshildi": "Шаблон создан и вопросы добавлены!",
+    "shablonOchirildi": "Шаблон удалён"
   },
   "QuestionsPage": {
-    "ortacha": "O'rtacha"
+    "ortacha": "Средний"
   },
   "SDQuotationsHooks": {
-    "taklifOchirildi": "Taklif o'chirildi"
+    "taklifOchirildi": "Предложение удалено"
   },
   "usePosCart": {
-    "mahsulotOmbordaYoq": "Mahsulot omborda yo'q",
-    "ombordaYetarliMahsulotYoq": "Omborda yetarli mahsulot yo'q"
+    "mahsulotOmbordaYoq": "Товара нет на складе",
+    "ombordaYetarliMahsulotYoq": "На складе недостаточно товара"
   },
   "deal-schema": {
-    "uzsSom": "UZS (so'm)"
+    "uzsSom": "UZS (сум)"
   },
   "lead-schema": {
-    "orta": "🔵 O'rta",
-    "qongiroq": "📞 Qo'ng'iroq"
+    "orta": "🔵 Средний",
+    "qongiroq": "📞 Звонок"
   },
   "helpers": {
     "tsx": {
-      "osish": "O'SISH"
+      "osish": "РОСТ"
     }
   },
   "BoardDialogs": {
     "tsx": {
-      "orta": "🟢 O'rta"
+      "orta": "🟢 Средний"
     }
   },
   "RequisitionForm": {
     "tsx": {
-      "orta": "O'rta"
+      "orta": "Средний"
     }
   },
   "PosLogin": {
     "tsx": {
-      "kirishXatosiQaytadanUrinibKoring": "Kirish xatosi. Qaytadan urinib ko'ring."
+      "kirishXatosiQaytadanUrinibKoring": "Ошибка входа. Попробуйте снова."
     }
   },
   "AIDesignGenerator": {
-    "dizaynTasdiqlangandaPapkaordersStatusPending": "Dizayn tasdiqlanganda papkaOrders.status = \"pending_tech\" ga o'zgaradi — texnolog moduli avtomatik signal oladi"
+    "dizaynTasdiqlangandaPapkaordersStatusPending": "При утверждении дизайна papkaOrders.status = \"pending_tech\" — модуль технолога автоматически получает сигнал"
   },
   "AIProductionPlanningTypes": {
     "optimallashtirishKorsatkichlari": "Показатели оптимизации",
@@ -9040,14 +9040,14 @@
     "ishlabChiqarishJadvali": "График производства"
   },
   "CandidateReportSections": {
-    "manbaKanal": "Manba (kanal)"
+    "manbaKanal": "Источник (канал)"
   },
   "DesignDashboard": {
-    "buyurtmalar": "Buyurtmalar"
+    "buyurtmalar": "Заказы"
   },
   "EmployeeDailyKPIPanelSections": {
-    "bolimOrtacha": "Bo'lim o'rtacha",
-    "kompaniyaOrtacha": "Kompaniya o'rtacha"
+    "bolimOrtacha": "Средний по отделу",
+    "kompaniyaOrtacha": "Средний по компании"
   },
   "EmployeeInventory": {
     "faol": "Активный"
@@ -9063,146 +9063,146 @@
     "1Smena": "1-смена"
   },
   "TurnoverTab": {
-    "ketganlar": "Ketganlar",
-    "yangiQabul": "Yangi qabul"
+    "ketganlar": "Уволенные",
+    "yangiQabul": "Новый приём"
   },
   "HRDashboardMockup": {
-    "yangi30Kun": "Yangi (30 kun)"
+    "yangi30Kun": "Новые (30 дней)"
   },
   "KnowledgeBaseSections": {
     "untitled": "Русский:"
   },
   "POSDashboardCharts": {
-    "30KunlikSotuvGrafigi": "30 kunlik sotuv grafigi"
+    "30KunlikSotuvGrafigi": "График продаж за 30 дней"
   },
   "POSDashboardDialogs": {
-    "jami": "JAMI:"
+    "jami": "ВСЕГО:"
   },
   "POSInventoryPageChart": {
-    "sotuv": "Sotuv"
+    "sotuv": "Продажа"
   },
   "PositionsSections": {
-    "sht": "Shtат"
+    "sht": "Штат"
   },
   "ProductionFactsPage": {
     "1Smena": "1-смена"
   },
   "QuestionnaireTemplatesDialogs": {
-    "haYoq": "Ha/Yo'q"
+    "haYoq": "Да/Нет"
   },
   "RaciCrisisPageSections": {
-    "raciVazifalarTopilmadi": "RACI vazifalar topilmadi"
+    "raciVazifalarTopilmadi": "Задачи RACI не найдены"
   },
   "TechApprovalSections": {
-    "materialNomiMasalanGofrokarton": "Material nomi (masalan: gofrokarton)"
+    "materialNomiMasalanGofrokarton": "Название материала (например: гофрокартон)"
   },
   "TechCardsTypes": {
-    "birlik": "Birlik",
-    "miqdor1000": "Miqdor/1000",
-    "materialNomi": "Material nomi",
-    "materiallarBom": "Materiallar (BOM)",
-    "operatsiyaNomi": "Operatsiya nomi",
-    "operatsiyalarRouting": "Operatsiyalar (Routing)",
-    "jamiDavomiylik": "Jami davomiylik:",
+    "birlik": "Единица",
+    "miqdor1000": "Количество/1000",
+    "materialNomi": "Название материала",
+    "materiallarBom": "Материалы (BOM)",
+    "operatsiyaNomi": "Название операции",
+    "operatsiyalarRouting": "Операции (Routing)",
+    "jamiDavomiylik": "Общая длительность:",
     "mahsulotTuri": "Тип продукта:",
     "umumiyMalumotlar": "Общие сведения",
-    "materiallarMavjudEmas": "Materiallar mavjud emas",
-    "operatsiyalarMavjudEmas": "Operatsiyalar mavjud emas"
+    "materiallarMavjudEmas": "Материалы отсутствуют",
+    "operatsiyalarMavjudEmas": "Операции отсутствуют"
   },
   "WarehouseAuditLog": {
     "yangi": "Новый",
-    "oldingi": "OLDINGI",
-    "foydalanuvchi": "FOYDALANUVCHI",
-    "sana": "SANA"
+    "oldingi": "ПРЕДЫДУЩИЙ",
+    "foydalanuvchi": "ПОЛЬЗОВАТЕЛЬ",
+    "sana": "ДАТА"
   },
   "WarehouseKirimWizardSteps": {
-    "jami": "JAMI",
-    "ogirlikKg": "Og'irlik (kg)",
-    "taminotchiStirInn": "Ta'minotchi STIR/INN"
+    "jami": "ВСЕГО",
+    "ogirlikKg": "Вес (кг)",
+    "taminotchiStirInn": "STIR/INN поставщика"
   },
   "WarehouseKpiHub": {
-    "qcKutmoqda": "QC kutmoqda"
+    "qcKutmoqda": "Ожидает QC"
   },
   "AdvancedFilters": {
-    "tavsifIxtiyoriy": "Tavsif (ixtiyoriy)"
+    "tavsifIxtiyoriy": "Описание (необязательно)"
   },
   "EmployeeDetailDialog": {
-    "buzilishlar": "Buzilishlar",
-    "jamiHodisalar": "Jami hodisalar",
-    "kunlikFaollikSonggi7Kun": "Kunlik Faollik (So'nggi 7 kun)"
+    "buzilishlar": "Нарушения",
+    "jamiHodisalar": "Всего событий",
+    "kunlikFaollikSonggi7Kun": "Ежедневная активность (Последние 7 дней)"
   },
   "PinPromptModal": {
-    "imzoUchunPinKodingizniKiriting": "Imzo uchun PIN kodingizni kiriting (4-8 raqam)."
+    "imzoUchunPinKodingizniKiriting": "Введите ваш PIN-код для подписи (4-8 цифр)."
   },
   "MessageInput": {
-    "xabarYozingEnterYuborishShift": "Xabar yozing... (Enter = yuborish, Shift+Enter = yangi qator)"
+    "xabarYozingEnterYuborishShift": "Напишите сообщение... (Enter = отправить, Shift+Enter = новая строка)"
   },
   "ContactsTab": {
-    "rolLavozim": "Rol / Lavozim"
+    "rolLavozim": "Роль / Должность"
   },
   "CreditTab": {
-    "yangiKreditLimitiUzs": "Yangi kredit limiti (UZS) *"
+    "yangiKreditLimitiUzs": "Новый кредитный лимит (UZS) *"
   },
   "CustomerCard": {
-    "aiTavsiyalar": "AI tavsiyalar"
+    "aiTavsiyalar": "AI рекомендации"
   },
   "LeadForm": {
-    "manbaTavsifiQiziqishMahsuloti": "Manba tavsifi / Qiziqish mahsuloti"
+    "manbaTavsifiQiziqishMahsuloti": "Описание источника / Интересующий продукт"
   },
   "WatcherSelector": {
     "untitled": "Поиск сотрудников..."
   },
   "CompanyStateWidget": {
-    "daromadMaqsad": "Daromad / Maqsad",
-    "foydaMaqsad": "Foyda / Maqsad"
+    "daromadMaqsad": "Доход / Цель",
+    "foydaMaqsad": "Прибыль / Цель"
   },
   "Login": {
-    "boshqaruvTizimi": "boshqaruv tizimi"
+    "boshqaruvTizimi": "Система управления"
   },
   "NotificationBell": {
-    "menyuniOchishYopish": "Menyuni ochish/yopish"
+    "menyuniOchishYopish": "Открыть/закрыть меню"
   },
   "EditPersonalInfoDialog": {
-    "uyTuri": "Uy turi"
+    "uyTuri": "Тип жилья"
   },
   "CostCentersTab": {
     "untitled": "Производство",
-    "nomiRu": "Nomi (RU)",
-    "nomiUz": "Nomi (UZ)"
+    "nomiRu": "Название (RU)",
+    "nomiUz": "Название (UZ)"
   },
   "CategoryDialog": {
     "untitled": "Название категории"
   },
   "ProfitCentersTab": {
     "untitled": "Основные продажи",
-    "nomiRu": "Nomi (RU)",
-    "nomiUz": "Nomi (UZ)"
+    "nomiRu": "Название (RU)",
+    "nomiUz": "Название (UZ)"
   },
   "CashFlowARAP": {
-    "arApHaftalikOzgarishlari": "AR/AP haftalik o'zgarishlari"
+    "arApHaftalikOzgarishlari": "Еженедельные изменения AR/AP"
   },
   "IncomeStatement": {
-    "operatsionFoydaEbit": "Operatsion foyda (EBIT)"
+    "operatsionFoydaEbit": "Операционная прибыль (EBIT)"
   },
   "ProductionStats": {
-    "ozVaqtidaYetkazishOtd": "O'z vaqtida yetkazish (OTD)"
+    "ozVaqtidaYetkazishOtd": "Своевременная доставка (OTD)"
   },
   "ExtraTabs": {
-    "jamiBolimlarFarzand": "Jami bo'limlar (farzand)"
+    "jamiBolimlarFarzand": "Всего отделов (дочерних)"
   },
   "StatsCharts": {
-    "otishBalli": "O'tish balli"
+    "otishBalli": "Проходной балл"
   },
   "CourseContentForm": {
     "untitled": "Подробное описание курса...",
-    "tavsifRus": "Tavsif (Rus) *",
-    "tavsifOzbek": "Tavsif (O'zbek) *"
+    "tavsifRus": "Описание (Рус) *",
+    "tavsifOzbek": "Описание (Узб) *"
   },
   "MentorForm": {
-    "kimQisqachaMalumot": "Kim (qisqacha ma'lumot)"
+    "kimQisqachaMalumot": "Кто (краткая информация)"
   },
   "AddProductDialog": {
-    "minZaxiraOgohlantirish": "Min zaxira (ogohlantirish)"
+    "minZaxiraOgohlantirish": "Мин. запас (предупреждение)"
   },
   "CreateShiftModal": {
     "3Smena": "3-смена",
@@ -9213,50 +9213,50 @@
     "untitled": "Ждёт"
   },
   "LeadsTab": {
-    "taxminiyQiymatSom": "Taxminiy qiymat (so'm)"
+    "taxminiyQiymatSom": "Примерная стоимость (сум)"
   },
   "PaymentsTab": {
-    "summaSom": "Summa (so'm)"
+    "summaSom": "Сумма (сум)"
   },
   "QuotationsTab": {
-    "miqdorDona": "Miqdor (dona)"
+    "miqdorDona": "Количество (шт)"
   },
   "CameraAIPrompts": {
-    "buKameraUchunAiKorsatmasi": "Bu kamera uchun AI ko'rsatmasi (prompt) kiriting..."
+    "buKameraUchunAiKorsatmasi": "Введите AI инструкцию (промпт) для этой камеры..."
   },
   "TaxCalculator": {
-    "daromadSoligi12": "Daromad solig'i (12%):"
+    "daromadSoligi12": "Подоходный налог (12%):"
   },
   "SiklHisobBolimi": {
-    "farq25SupervisorTasdigi": "Farq 2-5% = Supervisor tasdig'i kerak"
+    "farq25SupervisorTasdigi": "Расхождение 2-5% = требуется подтверждение супервайзера"
   },
   "ExitControlPanel": {
-    "ogohlantirish": "OGOHLANTIRISH",
-    "ruxsat": "RUXSAT"
+    "ogohlantirish": "ПРЕДУПРЕЖДЕНИЕ",
+    "ruxsat": "ДОПУСК"
   },
   "ProductionTab": {
-    "kunlikSarflanishOrt": "Kunlik sarflanish (o'rt)"
+    "kunlikSarflanishOrt": "Дневной расход (средний)"
   },
   "WmsFinanceTab": {
-    "oylikXarajatOrt": "Oylik xarajat (o'rt)"
+    "oylikXarajatOrt": "Месячный расход (средний)"
   },
   "PosAdminSections": {
-    "ipManzil": "IP manzil"
+    "ipManzil": "IP-адрес"
   },
   "PosKpiDashboard": {
-    "qcKutmoqda": "QC kutmoqda"
+    "qcKutmoqda": "Ожидает QC"
   },
   "PosMaterialBalance": {
-    "jamiMiqdor": "JAMI MIQDOR",
-    "jamiQiymat": "JAMI QIYMAT"
+    "jamiMiqdor": "ВСЕГО КОЛИЧЕСТВО",
+    "jamiQiymat": "ВСЕГО СТОИМОСТЬ"
   },
   "PosMaterialNew": {
     "300": "Бумага 300г/м²",
-    "materialNomiRuscha": "Material nomi (ruscha)",
-    "qogoz300gM": "Qog'oz 300g/m²",
-    "materialNomiOzbekcha": "Material nomi (o'zbekcha) *"
+    "materialNomiRuscha": "Название материала (на русском)",
+    "qogoz300gM": "Бумага 300г/м²",
+    "materialNomiOzbekcha": "Название материала (на узбекском) *"
   },
   "PosMaterials": {
-    "material360ProfiliHarOmborda": "Material 360° profili (har omborda stok, harakatlar, narxlar)"
+    "material360ProfiliHarOmborda": "Профиль материала 360° (остатки, движения, цены на каждом складе)"
   }
 }

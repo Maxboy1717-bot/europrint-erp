@@ -3,24 +3,24 @@
     "faolFoydalanuvchilar": "Активные пользователи"
   },
   "LeaderboardTab": {
-    "ortachaBall": "O'rtacha ball",
+    "ortachaBall": "Средний балл",
     "tugatish": "Завершено %"
   },
   "OutcomesTab": {
     "tasdiqlangan": "Подтверждено (%)",
-    "ortachaDaraja": "O'rtacha daraja",
-    "ortachaBall": "O'rtacha ball",
+    "ortachaDaraja": "Средний уровень",
+    "ortachaBall": "Средний балл",
     "tugatish": "Завершено %",
-    "faolOquvchilar": "Faol o'quvchilar"
+    "faolOquvchilar": "Активные ученики"
   },
   "RemainingTabsA": {
     "yangiTayinlanganlar": "Новые назначения"
   },
   "RemainingTabsB": {
-    "otishFoizi": "O'tish foizi %",
+    "otishFoizi": "Процент прохождения %",
     "xodimlarSoni": "Кол-во сотрудников",
-    "ortachaVaqtS": "O'rtacha vaqt (s)",
-    "ortachaBall": "O'rtacha ball %"
+    "ortachaVaqtS": "Среднее время (с)",
+    "ortachaBall": "Средний балл %"
   },
   "RemainingTabsUsers": {
     "xodimlarSoni": "Кол-во сотрудников",

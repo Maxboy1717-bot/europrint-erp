@@ -611,83 +611,83 @@
     "yakunlangan": "Завершено"
   },
   "": {
-    "ogohlantirish": "Ogohlantirish",
-    "xavfsizlik": "Xavfsizlik",
-    "kadrlar": "Kadrlar",
-    "alertlar": "Alertlar",
-    "orta": "O'rta",
-    "malumot": "Ma'lumot"
+    "ogohlantirish": "Предупреждение",
+    "xavfsizlik": "Безопасность",
+    "kadrlar": "Кадры",
+    "alertlar": "Оповещения",
+    "orta": "Средний",
+    "malumot": "Информация"
   },
   "HRCapitalTestsHelpers": {
     "tsx": {
-      "jarayonda": "Jarayonda",
+      "jarayonda": "В процессе",
       "kutilmoqda": "Ожидает",
-      "muddatiOtdi": "Muddati o'tdi"
+      "muddatiOtdi": "Просрочено"
     }
   },
   "HRCapitalTests": {
-    "boshqalarningFikriniHisobgaOlmaydi": "Boshqalarning fikrini hisobga olmaydi",
-    "ortadanPast8089": "O'rtadan past (80-89)",
-    "orta9099": "O'rta (90-99)",
-    "ortadanYuqori100109": "O'rtadan yuqori (100-109)",
-    "goyalargaTolaLekinTartibsizYakunlamaydigan": "G'oyalarga to'la lekin tartibsiz, yakunlamaydigan",
-    "jamoaBilanIshlashniAfzalKoradi": "Jamoa bilan ishlashni afzal ko'radi lekin komunikatsiyasi zaif",
-    "jamoaQogirchoqi": "Jamoa Qo'g'irchoq'i",
-    "tanqidVaOsishImkoniyatlaridanQorqadi": "Tanqid va o'sish imkoniyatlaridan qo'rqadi",
-    "osishdanQochuvchi": "O'sishdan Qochuvchi",
-    "stressgaNisbatanKuchliTasirlanuvchan": "Stressga nisbatan kuchli ta'sirlanuvchan",
-    "ishlarniKechiktiradiQarorQabulQilishdan": "Ishlarni kechiktiradi, qaror qabul qilishdan qo'rqadi",
-    "pastSamaradorlikMasuliyatdanQochadi": "Past samaradorlik, mas'uliyatdan qochadi",
-    "boshqalarniBoshqarishUchunTasirVositalaridan": "Boshqalarni boshqarish uchun ta'sir vositalaridan foydalanadi",
-    "ortiqchaOptimistXatarlarniKormaydi": "Ortiqcha optimist, xatarlarni ko'rmaydi",
-    "qattiqTartibTarafdoriOzgarishlargaQarshilik": "Qattiq tartib tarafdori, o'zgarishlarga qarshilik ko'rsatadi",
-    "osishgaTayyorlik": "O'sishga tayyorlik"
+    "boshqalarningFikriniHisobgaOlmaydi": "Не учитывает мнение других",
+    "ortadanPast8089": "Ниже среднего (80-89)",
+    "orta9099": "Средний (90-99)",
+    "ortadanYuqori100109": "Выше среднего (100-109)",
+    "goyalargaTolaLekinTartibsizYakunlamaydigan": "Полон идей, но неупорядочен, не завершает",
+    "jamoaBilanIshlashniAfzalKoradi": "Предпочитает работать в команде, но коммуникация слабая",
+    "jamoaQogirchoqi": "Командная марионетка",
+    "tanqidVaOsishImkoniyatlaridanQorqadi": "Боится критики и возможностей роста",
+    "osishdanQochuvchi": "Избегающий роста",
+    "stressgaNisbatanKuchliTasirlanuvchan": "Сильно подвержен стрессу",
+    "ishlarniKechiktiradiQarorQabulQilishdan": "Откладывает дела, боится принимать решения",
+    "pastSamaradorlikMasuliyatdanQochadi": "Низкая эффективность, избегает ответственности",
+    "boshqalarniBoshqarishUchunTasirVositalaridan": "Использует средства влияния для управления другими",
+    "ortiqchaOptimistXatarlarniKormaydi": "Чрезмерно оптимистичен, не видит рисков",
+    "qattiqTartibTarafdoriOzgarishlargaQarshilik": "Сторонник жёсткого порядка, сопротивляется изменениям",
+    "osishgaTayyorlik": "Готовность к росту"
   },
   "HRDashboard": {
-    "malakalarMatritsasi": "Malakalar Matritsasi",
-    "pipRejalar": "PIP Rejalar",
-    "kunlikHisobot": "Kunlik Hisobot",
-    "hujjatOqimi": "Hujjat Oqimi",
-    "enpsSorov": "eNPS So'rov"
+    "malakalarMatritsasi": "Матрица навыков",
+    "pipRejalar": "Планы PIP",
+    "kunlikHisobot": "Ежедневный отчёт",
+    "hujjatOqimi": "Документооборот",
+    "enpsSorov": "Опрос eNPS"
   },
   "HROffboarding": {
-    "ketishSababingizNima": "Ketish sababingiz nima?",
+    "ketishSababingizNima": "Какова причина вашего ухода?",
     "bekorQilindi": "Отменено",
     "faol": "Активный"
   },
   "HRSuccessionPlanning": {
-    "asosiyIshchilar": "Asosiy ishchilar",
-    "yashirinYulduzlar": "Yashirin yulduzlar",
-    "ishchiOtliqlar": "Ishchi otliqlar",
-    "yulduzlar": "Yulduzlar"
+    "asosiyIshchilar": "Ключевые работники",
+    "yashirinYulduzlar": "Скрытые звёзды",
+    "ishchiOtliqlar": "Рабочие лошадки",
+    "yulduzlar": "Звёзды"
   },
   "HRZvsPage": {
     "tasdiqlangan": "Подтверждено",
     "kutilmoqda": "Ожидает",
-    "ortacha": "O'rtacha"
+    "ortacha": "Средний"
   },
   "utils": {
-    "ogohlantirish": "Ogohlantirish",
+    "ogohlantirish": "Предупреждение",
     "nofaol": "Неактивный",
-    "ishdanKetgan": "Ishdan ketgan",
-    "ishlamoqda": "Ishlamoqda",
-    "ragbatlantirish": "Rag'batlantirish"
+    "ishdanKetgan": "Уволен",
+    "ishlamoqda": "Работает",
+    "ragbatlantirish": "Поощрение"
   },
   "HRCapitalPublicTest": {
-    "osishgaTayyorlik": "O'sishga tayyorlik"
+    "osishgaTayyorlik": "Готовность к росту"
   },
   "MarketHeatBadge": {
     "tsx": {
-      "ortachaBozor": "O'rtacha bozor",
-      "qizginBozor": "Qizg'in bozor"
+      "ortachaBozor": "Средний рынок",
+      "qizginBozor": "Горячий рынок"
     }
   },
   "useOrgNodeData": {
-    "ochirildi": "O'chirildi"
+    "ochirildi": "Удалено"
   },
   "useEmployeeFiles": {
-    "faylniOchiribBolmadi": "Faylni o'chirib bo'lmadi",
-    "faylOchirildi": "Fayl o'chirildi",
-    "faylniYuklabBolmadi": "Faylni yuklab bo'lmadi"
+    "faylniOchiribBolmadi": "Не удалось удалить файл",
+    "faylOchirildi": "Файл удалён",
+    "faylniYuklabBolmadi": "Не удалось загрузить файл"
   }
 }

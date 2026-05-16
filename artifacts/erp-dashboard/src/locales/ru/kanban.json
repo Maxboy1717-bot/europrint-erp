@@ -105,56 +105,56 @@
   "dailyTaskList": "Список дневных задач",
   "kanban-": {
     "3": "Система 3-х корзин",
-    "xabarYozingBilanEslatish": "Xabar yozing... @ bilan eslatish",
-    "shablonNomi": "Shablon nomi",
-    "shablonlar": "Shablonlar",
-    "bildirishnomalar": "Bildirishnomalar",
-    "tavsif": "Tavsif",
-    "nomi": "Nomi",
-    "potoklar": "Potoklar",
+    "xabarYozingBilanEslatish": "Напишите сообщение... @ для упоминания",
+    "shablonNomi": "Название шаблона",
+    "shablonlar": "Шаблоны",
+    "bildirishnomalar": "Уведомления",
+    "tavsif": "Описание",
+    "nomi": "Название",
+    "potoklar": "Потоки",
     "untitled": "Напишите сообщение... @ для упоминания"
   },
   "TaskDetailSheet": {
     "tsx": {
-      "izohlar": "Izohlar"
+      "izohlar": "Комментарии"
     },
-    "ortacha": "O'rtacha"
+    "ortacha": "Средний"
   },
   "FlowsDialog": {
     "tsx": {
-      "oqimniOchiribBolmadi": "Oqimni o'chirib bo'lmadi",
-      "oqimMuvaffaqiyatliOchirildi": "Oqim muvaffaqiyatli o'chirildi",
-      "ochirildi": "O'chirildi",
-      "oqimniYaratibBolmadi": "Oqimni yaratib bo'lmadi",
-      "yangiOqimMuvaffaqiyatliQoshildi": "Yangi oqim muvaffaqiyatli qo'shildi"
+      "oqimniOchiribBolmadi": "Не удалось удалить поток",
+      "oqimMuvaffaqiyatliOchirildi": "Поток успешно удалён",
+      "ochirildi": "Удалено",
+      "oqimniYaratibBolmadi": "Не удалось создать поток",
+      "yangiOqimMuvaffaqiyatliQoshildi": "Новый поток успешно добавлен"
     }
   },
   "NotificationsPanel": {
     "tsx": {
-      "bildirishnomalarniBelgilabBolmadi": "Bildirishnomalarni belgilab bo'lmadi",
-      "barchaBildirishnomalarOqilganDebBelgilandi": "Barcha bildirishnomalar o'qilgan deb belgilandi",
-      "bildirishnomalarOqildi": "Bildirishnomalar o'qildi"
+      "bildirishnomalarniBelgilabBolmadi": "Не удалось отметить уведомления",
+      "barchaBildirishnomalarOqilganDebBelgilandi": "Все уведомления отмечены как прочитанные",
+      "bildirishnomalarOqildi": "Уведомления прочитаны"
     }
   },
   "RobotsDialog": {
     "tsx": {
-      "robotniOchiribBolmadi": "Robotni o'chirib bo'lmadi",
-      "robotMuvaffaqiyatliOchirildi": "Robot muvaffaqiyatli o'chirildi",
-      "ochirildi": "O'chirildi",
-      "robotniYaratibBolmadi": "Robotni yaratib bo'lmadi",
-      "yangiAvtomatizatsiyaMuvaffaqiyatliQoshildi": "Yangi avtomatizatsiya muvaffaqiyatli qo'shildi"
+      "robotniOchiribBolmadi": "Не удалось удалить робота",
+      "robotMuvaffaqiyatliOchirildi": "Робот успешно удалён",
+      "ochirildi": "Удалено",
+      "robotniYaratibBolmadi": "Не удалось создать робота",
+      "yangiAvtomatizatsiyaMuvaffaqiyatliQoshildi": "Новая автоматизация успешно добавлена"
     }
   },
   "TemplatesDialog": {
     "tsx": {
-      "shablonQollandi": "Shablon qo'llandi",
-      "shablonOchirildi": "Shablon o'chirildi"
+      "shablonQollandi": "Шаблон применён",
+      "shablonOchirildi": "Шаблон удалён"
     }
   },
   "useTaskDetailMutations": {
-    "faylOchirildi": "Fayl o'chirildi",
-    "toxtatishdaXatolik": "To'xtatishda xatolik",
-    "vaqtKuzatuviToxtatildi": "Vaqt kuzatuvi to'xtatildi",
-    "natijaQoshildi": "Natija qo'shildi"
+    "faylOchirildi": "Файл удалён",
+    "toxtatishdaXatolik": "Ошибка при остановке",
+    "vaqtKuzatuviToxtatildi": "Отслеживание времени остановлено",
+    "natijaQoshildi": "Результат добавлен"
   }
 }

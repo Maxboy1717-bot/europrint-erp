@@ -427,8 +427,8 @@
   "activityType": {
     "email": "Электронная почта"
   },
-  "yoQotildiLost": "Yo'qotildi (Lost)",
-  "yutildiWon": "Yutildi (Won)",
+  "yoQotildiLost": "Проиграно (Lost)",
+  "yutildiWon": "Выиграно (Won)",
   "crm-": {
     "robotlar": "Роботы",
     "fakturalar": "Счета",
@@ -441,39 +441,39 @@
     "yangi": "Новый",
     "yetkazish": "Доставка",
     "yetkazishKutilmoqda": "Ожидание доставки",
-    "buyurtma": "Buyurtma",
-    "emailYuborish": "Email yuborish",
-    "vazifaYaratish": "Vazifa yaratish",
-    "xabarYuborish": "Xabar yuborish",
-    "yaratilganda": "Yaratilganda",
+    "buyurtma": "Заказ",
+    "emailYuborish": "Отправить email",
+    "vazifaYaratish": "Создать задачу",
+    "xabarYuborish": "Отправить сообщение",
+    "yaratilganda": "При создании",
     "tolandi": "Оплачено",
     "qismanTolandi": "Частично оплачено",
     "korildi": "Просмотрено",
     "tolovKutilmoqda": "Ожидание оплаты",
     "yoqotildi": "Проиграно",
-    "maydonniOzgartirish": "Maydonni o'zgartirish",
-    "bosqichniOzgartirish": "Bosqichni o'zgartirish",
-    "vaqtOtganda": "Vaqt o'tganda",
-    "maydonOzgarganda": "Maydon o'zgarganda",
-    "bosqichOzgarganda": "Bosqich o'zgarganda"
+    "maydonniOzgartirish": "Изменить поле",
+    "bosqichniOzgartirish": "Изменить этап",
+    "vaqtOtganda": "По времени",
+    "maydonOzgarganda": "При изменении поля",
+    "bosqichOzgarganda": "При изменении этапа"
   },
   "RobotsView": {
-    "telegramYuborish": "Telegram yuborish",
-    "emailYuborish": "Email yuborish",
-    "vazifaYaratish": "Vazifa yaratish",
-    "xabarnomaYuborish": "Xabarnoma yuborish",
-    "yaratilganda": "Yaratilganda",
-    "bosqichniOzgartirish": "Bosqichni o'zgartirish",
-    "vaqtOtganda": "Vaqt o'tganda",
-    "maydonOzgarganda": "Maydon o'zgarganda",
-    "bosqichOzgarganda": "Bosqich o'zgarganda"
+    "telegramYuborish": "Отправить в Telegram",
+    "emailYuborish": "Отправить email",
+    "vazifaYaratish": "Создать задачу",
+    "xabarnomaYuborish": "Отправить уведомление",
+    "yaratilganda": "При создании",
+    "bosqichniOzgartirish": "Изменить этап",
+    "vaqtOtganda": "По времени",
+    "maydonOzgarganda": "При изменении поля",
+    "bosqichOzgarganda": "При изменении этапа"
   },
   "EntityCard": {
-    "orta": "→ O'rta",
-    "qongiroq": "Qo'ng'iroq"
+    "orta": "→ Средний",
+    "qongiroq": "Звонок"
   },
   "ExtendedAIPanelSections": {
-    "faoliyatsizBitimlar3Kun": "Faoliyatsiz bitimlar (3+ kun)",
-    "slaBuzilishlar": "SLA buzilishlar"
+    "faoliyatsizBitimlar3Kun": "Неактивные сделки (3+ дней)",
+    "slaBuzilishlar": "Нарушения SLA"
   }
 }
