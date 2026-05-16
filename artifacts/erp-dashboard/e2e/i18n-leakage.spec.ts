@@ -20,31 +20,12 @@
 import { test, expect, type Page } from '@playwright/test';
 import { isUzbekLeak, isRussianLeak, isMixedLanguage } from '../../../scripts/i18n-leak-detector.mjs';
 
-// Subset of public routes (extend as needed). The full 958-route loop should
-// be generated from src/routes/AppRouter.tsx once the test harness is stable.
-const ROUTES = [
-  '/',
-  '/sales',
-  '/sales/leads',
-  '/sales/deals',
-  '/sales/customers',
-  '/crm/funnel',
-  '/crm/rfm',
-  '/marketing/dashboard',
-  '/marketing/leads',
-  '/qc/dashboard-home',
-  '/qc/approval',
-  '/wms/dashboard',
-  '/wms/material-balance',
-  '/hr/dashboard',
-  '/hr/employees',
-  '/finance/cfo-dashboard',
-  '/pos/dashboard',
-  '/iot/dashboard',
-  '/iot/tablet',
-  '/director',
-  '/settings',
-] as const;
+// Routes are auto-extracted from src/routes/*.tsx by extract-routes.mjs
+// (run that script after adding a new page). 380 static routes today.
+// Routes containing :param are skipped — they require fixture IDs.
+import routesJson from './i18n-routes.json' assert { type: 'json' };
+const ROUTES: ReadonlyArray<string> = (routesJson.routes as string[])
+  .filter((r) => !r.includes(':'));
 
 const LOCALES = ['ru', 'uz'] as const;
 
