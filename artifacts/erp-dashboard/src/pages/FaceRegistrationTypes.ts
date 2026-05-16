@@ -80,8 +80,8 @@ export interface FaceRegTranslations {
 
 export const TRANSLATIONS: Record<'uz' | 'ru', FaceRegTranslations> = {
   uz: {
-    title: "Yuz Ro'yxatdan O'tkazish",
-    subtitle: "Xodimlar yuzini AI bazasiga qo'shish",
+    title: tLabel('common.FaceRegistration.yuzRoyxatdanOtkazish', "Yuz Ro'yxatdan O'tkazish"),
+    subtitle: tLabel('common.FaceRegistration.xodimlarYuziniAiBazasigaQoshish', "Xodimlar yuzini AI bazasiga qo'shish"),
     selectEmployee: "Xodimni Tanlang",
     searchPlaceholder: "Ism yoki ID bo'yicha qidirish...",
     registeredFaces: "Ro'yxatdan O'tgan Yuzlar",
@@ -116,7 +116,7 @@ export const TRANSLATIONS: Record<'uz' | 'ru', FaceRegTranslations> = {
   },
   ru: {
     title: tLabel('common.FaceRegistration.untitled', "Регистрация Лица"),
-    subtitle: "Добавление лиц сотрудников в базу AI",
+    subtitle: tLabel('common.FaceRegistration.ai', "Добавление лиц сотрудников в базу AI"),
     selectEmployee: "Выберите Сотрудника",
     searchPlaceholder: "Поиск по имени или ID...",
     registeredFaces: "Зарегистрированные Лица",

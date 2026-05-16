@@ -5,8 +5,9 @@
 
 import { z } from "zod";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export const CURRENCIES = [
-  { value: "UZS", label: "UZS (so'm)" },
+  { value: "UZS", label: tLabel('common.deal-schema.uzsSom', "UZS (so'm)") },
   { value: "USD", label: "USD ($)" },
 ];
 

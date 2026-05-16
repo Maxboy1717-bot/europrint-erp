@@ -98,7 +98,7 @@ export const CASH_ADVANCE_STATUS_CONFIG: Record<string, { label: string; color: 
   pending: { label: tLabel('common.FinanceTab.kutilmoqda', "Kutilmoqda"), color: "bg-yellow-500" },
   approved: { label: tLabel('common.FinanceTab.tasdiqlangan', "Tasdiqlangan"), color: "bg-green-500" },
   rejected: { label: "Rad etilgan", color: "bg-red-500" },
-  paid: { label: "To'langan", color: "bg-blue-500" },
+  paid: { label: tLabel('common.FinanceTab.tolangan', "To'langan"), color: "bg-blue-500" },
 };
 
 export const SALARY_TYPE_LABEL: Record<string, string> = {

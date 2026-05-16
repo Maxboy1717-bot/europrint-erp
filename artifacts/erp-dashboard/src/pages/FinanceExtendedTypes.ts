@@ -70,7 +70,7 @@ export const URL_TAB_MAP: Record<string, string> = {
 export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   "costcenters":   { title: tLabel('common.FinanceExtended.xarajatMarkazlari', "Xarajat Markazlari"), icon: Building2 },
   "profitcenters": { title: "Transfer Narxlash",  icon: ArrowLeftRight },
-  "payments":      { title: "To'lovlar",           icon: CreditCard },
+  "payments":      { title: tLabel('common.FinanceExtended.tolovlar', "To'lovlar"),           icon: CreditCard },
   "gldocs":        { title: "Audit Jurnali",       icon: Shield },
   "tax":           { title: "Soliq Boshqaruvi",    icon: FileText },
   "taxcal":        { title: "Soliq Kalendar",      icon: Calendar },

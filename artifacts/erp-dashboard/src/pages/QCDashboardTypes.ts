@@ -63,8 +63,8 @@ export interface QcSupplierQuality {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export const RESULT_LABELS: Record<string, { label: string; cls: string }> = {
-  passed:           { label: "O'tdi",               cls: "bg-green-50 text-[var(--ep-green)]" },
-  conditional_pass: { label: "Shartli o'tdi",        cls: "bg-teal-50 text-[var(--ep-cyan)]" },
+  passed:           { label: tLabel('common.QCDashboard.otdi', "O'tdi"),               cls: "bg-green-50 text-[var(--ep-green)]" },
+  conditional_pass: { label: tLabel('common.QCDashboard.shartliOtdi', "Shartli o'tdi"),        cls: "bg-teal-50 text-[var(--ep-cyan)]" },
   rework_required:  { label: "Qayta ishlash",        cls: "bg-amber-50 text-[var(--ep-yellow)]" },
   failed:           { label: tLabel('common.QCDashboard.muvaffaqiyatsiz', "Muvaffaqiyatsiz"),      cls: "bg-red-50 text-[var(--ep-red)]" },
   pending:          { label: tLabel('common.QCDashboard.kutilmoqda', "Kutilmoqda"),           cls: "bg-muted text-muted-foreground" },

@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module EntityCardTypes
  * @description Type definitions, constants, and helpers for EntityCard.
@@ -7,7 +9,7 @@
 export const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
   WEBFORM:  { label: "Web",        color: "#6366f1" },
   TELEGRAM: { label: "TG",         color: "#2EA6FF" },
-  CALL:     { label: "Qo'ng'iroq", color: "#10b981" },
+  CALL:     { label: tLabel('crm.EntityCard.qongiroq', "Qo'ng'iroq"), color: "#10b981" },
   EMAIL:    { label: "Email",      color: "#f59e0b" },
   WEB:      { label: "Sayt",       color: "#8b5cf6" },
   INBOUND:  { label: "Kiruvchi",   color: "#ec4899" },
@@ -17,8 +19,8 @@ export const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
 export const PRIORITY_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
   urgent: { label: "↑ Shoshilinch", bg: "rgba(240,128,128,0.14)", color: "#C05050" },
   high:   { label: "↑ Yuqori",      bg: "rgba(240,128,128,0.12)", color: "#C05050" },
-  normal: { label: "→ O'rta",       bg: "rgba(245,201,106,0.14)", color: "#A07020" },
-  medium: { label: "→ O'rta",       bg: "rgba(245,201,106,0.14)", color: "#A07020" },
+  normal: { label: tLabel('crm.EntityCard.orta', "→ O'rta"),       bg: "rgba(245,201,106,0.14)", color: "#A07020" },
+  medium: { label: tLabel('crm.EntityCard.orta', "→ O'rta"),       bg: "rgba(245,201,106,0.14)", color: "#A07020" },
   low:    { label: "↓ Oddiy",       bg: "rgba(109,197,160,0.14)", color: "#2D8060" },
 };
 

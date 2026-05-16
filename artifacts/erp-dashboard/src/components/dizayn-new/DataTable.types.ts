@@ -45,7 +45,7 @@ export const STATUS_CONFIG: Record<string, { label: string; color: string; dot: 
     dot: "bg-[hsl(var(--success))]",
   },
   vacation: {
-    label: "Ta'tilda",
+    label: tLabel('common.DataTable.tatilda', "Ta'tilda"),
     color: "bg-[hsl(var(--info))]/10 text-[hsl(var(--info))] border-[hsl(var(--info))]/20",
     dot: "bg-[hsl(var(--info))]",
   },

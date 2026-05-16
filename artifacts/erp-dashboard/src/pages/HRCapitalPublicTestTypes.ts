@@ -6,6 +6,7 @@
 import type React from "react";
 import { Brain, FlaskConical, Target, ClipboardList } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export type TestType = "tool_test" | "iq" | "leadership" | "replication";
 export type TestStatus = "pending" | "in_progress" | "completed" | "expired";
 export type TestState = "loading" | "intro" | "testing" | "submitting" | "results" | "error" | "expired" | "completed";
@@ -54,7 +55,7 @@ export const INDICATORS = [
   { key: "E", label: "Strategik fikr", color: "#8b5cf6" },
   { key: "F", label: "Em. barqarorlik", color: "#06b6d4" },
   { key: "G", label: "Kommunikatsiya", color: "#f97316" },
-  { key: "H", label: "O'sishga tayyorlik", color: "#14b8a6" },
+  { key: "H", label: tLabel('hr.HRCapitalPublicTest.osishgaTayyorlik', "O'sishga tayyorlik"), color: "#14b8a6" },
   { key: "I", label: "Optimizm", color: "#84cc16" },
   { key: "J", label: "Maqsadlilik", color: "#ec4899" },
 ];

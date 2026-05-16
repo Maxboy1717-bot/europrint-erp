@@ -12,7 +12,7 @@ export const STATUS_LABELS: Record<string, { label: string; variant: "default" |
   in_progress: { label: tLabel('production.ProductionOrder360.jarayonda', "Jarayonda"),   variant: "default" },
   completed:   { label: "Bajarildi",   variant: "default" },
   closed:      { label: "Yopildi",     variant: "secondary" },
-  qc_hold:     { label: "QC To'xtatdi", variant: "destructive" },
+  qc_hold:     { label: tLabel('production.ProductionOrder360.qcToxtatdi', "QC To'xtatdi"), variant: "destructive" },
 };
 
 export const TYPE_LABELS: Record<string, string> = {

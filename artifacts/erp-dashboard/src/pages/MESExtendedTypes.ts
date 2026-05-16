@@ -103,22 +103,22 @@ export const URL_TAB_MAP: Record<string, string> = {
 
 export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   oee:          { title: "OEE Monitoring",                icon: Activity },
-  reasons:      { title: "To'xtash Sabablar",             icon: AlertTriangle },
+  reasons:      { title: tLabel('common.MESExtended.toxtashSabablar', "To'xtash Sabablar"),             icon: AlertTriangle },
   zones:        { title: tLabel('common.MESExtended.ishlabChiqarishVazifalari', "Ishlab Chiqarish Vazifalari"),   icon: ClipboardList },
   maintenance:  { title: "Texnik Xizmat",                 icon: Wrench },
   gamification: { title: "Gamifikatsiya",                 icon: Trophy },
   norms:        { title: "Uskuna Normalari",              icon: Settings },
-  smena:        { title: "Smena O'tkazish",               icon: Clock },
+  smena:        { title: tLabel('common.MESExtended.smenaOtkazish', "Smena O'tkazish"),               icon: Clock },
 };
 
 export const MES_PILLS = [
   { key: "oee",          label: "OEE Monitor" },
-  { key: "reasons",      label: "To'xtash Sabablar" },
+  { key: "reasons",      label: tLabel('common.MESExtended.toxtashSabablar', "To'xtash Sabablar") },
   { key: "zones",        label: "Vazifalari" },
   { key: "maintenance",  label: "Texnik Xizmat" },
   { key: "gamification", label: "Gamifikatsiya" },
   { key: "norms",        label: "Normalari" },
-  { key: "smena",        label: "Smena O'tkazish" },
+  { key: "smena",        label: tLabel('common.MESExtended.smenaOtkazish', "Smena O'tkazish") },
 ] as const;
 
 /** Static norms data shown on the Norms tab (no API yet). */

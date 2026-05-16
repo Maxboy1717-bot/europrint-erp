@@ -61,7 +61,7 @@ export function StreamCard({ label, status, children, icon: Icon }: StreamCardPr
     ok:              { label: "Normal",        cls: "bg-green-50 text-[var(--ep-green)]" },
     warning:         { label: "Diqqat",         cls: "bg-amber-50 text-[var(--ep-yellow)]" },
     active:          { label: tLabel('common.QCDashboardHelpers.tsx.faol', "Faol"),           cls: "bg-blue-50 text-[var(--ep-blue)]" },
-    needs_attention: { label: "E'tibor kerak", cls: "bg-orange-50 text-[var(--ep-primary)]" },
+    needs_attention: { label: tLabel('common.QCDashboardHelpers.tsx.etiborKerak', "E'tibor kerak"), cls: "bg-orange-50 text-[var(--ep-primary)]" },
   }[status];
 
   return (

@@ -8,6 +8,7 @@ import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import "../styles/pos-theme.css";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface PosLoginResponse {
   token: string;
   userId: number;
@@ -109,7 +110,7 @@ export default function PosLogin() {
       }
       navigate("/pos-monitor");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kirish xatosi. Qaytadan urinib ko'ring.");
+      setError(err instanceof Error ? err.message : tLabel('common.PosLogin.tsx.kirishXatosiQaytadanUrinibKoring', "Kirish xatosi. Qaytadan urinib ko'ring."));
       setLoading(false);
     }
   }

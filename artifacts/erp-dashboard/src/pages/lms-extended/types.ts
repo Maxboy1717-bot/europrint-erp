@@ -45,7 +45,7 @@ export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   "cert": { title: "Sertifikatsiya", icon: Award },
   "leaderboard": { title: "Leaderboard", icon: Trophy },
   "micro": { title: tLabel('common..microLearning', "Micro-learning"), icon: Zap },
-  "budget": { title: "O'quv Byudjet", icon: DollarSign },
+  "budget": { title: tLabel('common..oquvByudjet', "O'quv Byudjet"), icon: DollarSign },
   "knowledge": { title: "Bilim Bazasi", icon: FileText },
   "gamification": { title: "Geymifikatsiya", icon: Star },
 };

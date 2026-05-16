@@ -11,7 +11,7 @@ export const STATUS_LABELS: Record<string, { label: string; variant: "default" |
   in_progress: { label: tLabel('production.helpers.jarayonda', "Jarayonda"),   variant: "default" },
   completed:   { label: "Bajarildi",   variant: "default" },
   closed:      { label: "Yopildi",     variant: "secondary" },
-  qc_hold:     { label: "QC To'xtatdi", variant: "destructive" },
+  qc_hold:     { label: tLabel('production.helpers.qcToxtatdi', "QC To'xtatdi"), variant: "destructive" },
 };
 
 export const SHIFT_STATUS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -27,7 +27,7 @@ export const DOWNTIME_REASONS = [
   { value: "machine_failure", label: "Mashina nosozligi" },
   { value: "material_shortage", label: "Material kelmadi" },
   { value: "color_setup", label: "Rang sozlash" },
-  { value: "planned_maintenance", label: "Rejalashtirilgan texnik ko'rik" },
+  { value: "planned_maintenance", label: tLabel('production.helpers.rejalashtirilganTexnikKorik', "Rejalashtirilgan texnik ko'rik") },
   { value: "operator_break", label: "Operator tanaffusi" },
   { value: "quality_issue", label: "Sifat muammosi" },
   { value: "other", label: "Boshqa" },

@@ -92,7 +92,7 @@ export const translations = {
   },
   ru: {
     title: tLabel('common.EmployeeTrackingReport.untitled', "Отчёт по Отслеживанию Сотрудников"),
-    subtitle: "Статистика зон и времени",
+    subtitle: tLabel('common.EmployeeTrackingReport.untitled', "Статистика зон и времени"),
     dailyAttendance: "Ежедневная Посещаемость",
     weeklyStats: "Недельная Статистика",
     zoneActivity: "Активность Зон",

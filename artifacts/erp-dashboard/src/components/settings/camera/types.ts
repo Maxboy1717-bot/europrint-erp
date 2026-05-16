@@ -52,16 +52,16 @@ export const CAMERA_TYPES = [
 ];
 
 export const DETECTION_TYPES = [
-  { value: "ppe_violation", label: "PPE yo'qligi (shlem, ko'zoynak, qo'lqop)", module: "safety" },
+  { value: "ppe_violation", label: tLabel('common..ppeYoqligiShlemKozoynakQolqop', "PPE yo'qligi (shlem, ko'zoynak, qo'lqop)"), module: "safety" },
   { value: "quality_defect", label: "Sifat nuqsoni aniqlash", module: "qc" },
   { value: "unauthorized_access", label: tLabel('common..ruxsatsizKirish', "Ruxsatsiz kirish"), module: "safety" },
   { value: "face_not_recognized", label: "Yuz tanilmadi", module: "hr" },
-  { value: "fire_smoke", label: "Yong'in / Tutun aniqlash", module: "safety" },
+  { value: "fire_smoke", label: tLabel('common..yonginTutunAniqlash', "Yong'in / Tutun aniqlash"), module: "safety" },
   { value: "operator_idle", label: "Operator ishlamayapti", module: "mes" },
-  { value: "material_misplaced", label: "Material noto'g'ri joyda", module: "wms" },
+  { value: "material_misplaced", label: tLabel('common..materialNotogriJoyda', "Material noto'g'ri joyda"), module: "wms" },
   { value: "machine_anomaly", label: "Stanoq anomaliyasi", module: "mes" },
-  { value: "spill_detected", label: "Suyuqlik to'kilishi", module: "safety" },
-  { value: "crowd_detected", label: "G'alayonli olomon", module: "safety" },
+  { value: "spill_detected", label: tLabel('common..suyuqlikTokilishi', "Suyuqlik to'kilishi"), module: "safety" },
+  { value: "crowd_detected", label: tLabel('common..galayonliOlomon', "G'alayonli olomon"), module: "safety" },
 ];
 
 export const ACTION_OPTIONS = [
@@ -85,7 +85,7 @@ export const MODULE_LABELS: Record<string, string> = {
 
 export const SEVERITY_LABELS: Record<string, { label: string; color: string }> = {
   low: { label: "Past", color: "text-[var(--ep-blue)]" },
-  medium: { label: "O'rta", color: "text-[var(--ep-yellow)]" },
+  medium: { label: tLabel('common..orta', "O'rta"), color: "text-[var(--ep-yellow)]" },
   high: { label: "Yuqori", color: "text-[var(--ep-primary)]" },
   critical: { label: "Kritik", color: "text-[var(--ep-red)]" },
 };

@@ -101,7 +101,7 @@ export const t = {
   },
   ru: {
     title: tLabel('common.ReportsHub.untitled', "Центр отчётов"),
-    subtitle: "Управление 155+ автоматизированными отчётами",
+    subtitle: tLabel('common.ReportsHub.155', "Управление 155+ автоматизированными отчётами"),
     totalReports: "Всего отчётов",
     runsToday: "Запусков сегодня",
     insightsGenerated: "Сгенерировано аналитик",

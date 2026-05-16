@@ -18,7 +18,7 @@ export const DEVICE_TYPES = [
 export const CONDITIONS = [
   { value: "new",     label: tLabel('common.CorporateInventoryTab.yangi', "Yangi") },
   { value: "good",    label: "Yaxshi" },
-  { value: "fair",    label: "O'rtacha" },
+  { value: "fair",    label: tLabel('common.CorporateInventoryTab.ortacha', "O'rtacha") },
   { value: "damaged", label: "Shikastlangan" },
 ] as const;
 

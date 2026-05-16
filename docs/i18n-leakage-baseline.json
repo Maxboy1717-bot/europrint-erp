@@ -1,14 +1,13 @@
 {
   "summary": {
-    "totalLeaks": 146,
-    "filesWithLeaks": 87,
+    "totalLeaks": 135,
+    "filesWithLeaks": 77,
     "byKind": {
-      "OBJECT_LABEL": 25,
       "JSX_TEXT": 80,
-      "PROP": 41
+      "PROP": 55
     },
     "byLocale": {
-      "uz": 136,
+      "uz": 125,
       "ru": 10
     },
     "topFiles": [
@@ -18,10 +17,18 @@
       },
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\OutcomesTab.tsx",
+        "count": 7
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\RemainingTabsB.tsx",
         "count": 4
       },
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseAuditLog.tsx",
+        "count": 4
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMaterialNew.tsx",
         "count": 4
       },
       {
@@ -41,19 +48,11 @@
         "count": 3
       },
       {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsTypes.ts",
-        "count": 3
-      },
-      {
         "file": "artifacts\\erp-dashboard\\src\\pages\\planning\\PlanningDialogsA.tsx",
         "count": 3
       },
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\planning\\PlanningDialogsB.tsx",
-        "count": 3
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogTypes.ts",
         "count": 3
       },
       {
@@ -81,11 +80,7 @@
         "count": 3
       },
       {
-        "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMaterialNew.tsx",
-        "count": 3
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
+        "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\LeaderboardTab.tsx",
         "count": 2
       },
       {
@@ -97,23 +92,11 @@
         "count": 2
       },
       {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\EmployeeDailyKPIPanelSections.tsx",
+        "count": 2
+      },
+      {
         "file": "artifacts\\erp-dashboard\\src\\pages\\hr-dashboard\\TurnoverTab.tsx",
-        "count": 2
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\FlowsDialog.tsx",
-        "count": 2
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\NotificationsPanel.tsx",
-        "count": 2
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\RobotsDialog.tsx",
-        "count": 2
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\MESExtendedTypes.ts",
         "count": 2
       },
       {
@@ -131,24 +114,26 @@
       {
         "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMaterialBalance.tsx",
         "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\AIDesignGenerator.tsx",
+        "count": 1
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\EngagementTab.tsx",
+        "count": 1
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\RemainingTabsA.tsx",
+        "count": 1
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\CandidateReportSections.tsx",
+        "count": 1
       }
     ]
   },
   "leaks": [
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 98,
-      "text": "Trening va o",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabTypes.ts",
-      "line": 133,
-      "text": "Jarayonlar, ko",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\AIDesignGenerator.tsx",
       "line": 218,
@@ -192,9 +177,16 @@
       "locale": "uz"
     },
     {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\LeaderboardTab.tsx",
+      "line": 275,
+      "text": "O'rtacha ball",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\OutcomesTab.tsx",
       "line": 261,
-      "text": "Faol o",
+      "text": "Faol o'quvchilar",
       "kind": "PROP",
       "locale": "uz"
     },
@@ -207,8 +199,29 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\OutcomesTab.tsx",
+      "line": 292,
+      "text": "O'rtacha ball",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\OutcomesTab.tsx",
       "line": 319,
       "text": "Tugatish %",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\OutcomesTab.tsx",
+      "line": 320,
+      "text": "O'rtacha ball",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\OutcomesTab.tsx",
+      "line": 351,
+      "text": "O'rtacha daraja",
       "kind": "PROP",
       "locale": "uz"
     },
@@ -228,8 +241,29 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\RemainingTabsB.tsx",
+      "line": 92,
+      "text": "O'rtacha ball %",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\RemainingTabsB.tsx",
+      "line": 184,
+      "text": "O'rtacha vaqt (s)",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\RemainingTabsB.tsx",
       "line": 211,
       "text": "Xodimlar soni",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\RemainingTabsB.tsx",
+      "line": 212,
+      "text": "O'tish foizi %",
       "kind": "PROP",
       "locale": "uz"
     },
@@ -245,13 +279,6 @@
       "line": 203,
       "text": "Xodimlar soni",
       "kind": "PROP",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\CandidateChecklistTypes.ts",
-      "line": 12,
-      "text": "CV skrining o",
-      "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
@@ -283,10 +310,24 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\DesignExtendedTypes.ts",
-      "line": 74,
-      "text": "Tayyor qoliplar va standart o",
-      "kind": "OBJECT_LABEL",
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\AssessmentTab.tsx",
+      "line": 376,
+      "text": "O'rtacha baho",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\EmployeeDailyKPIPanelSections.tsx",
+      "line": 64,
+      "text": "Kompaniya o'rtacha",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\EmployeeDailyKPIPanelSections.tsx",
+      "line": 71,
+      "text": "Bo'lim o'rtacha",
+      "kind": "PROP",
       "locale": "uz"
     },
     {
@@ -374,73 +415,10 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsTypes.ts",
-      "line": 26,
-      "text": "Boshqalarni boshqarish uchun ta",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsTypes.ts",
-      "line": 29,
-      "text": "Ishlarni kechiktiradi, qaror qabul qilishdan qo",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsTypes.ts",
-      "line": 34,
-      "text": "Jamoa bilan ishlashni afzal ko",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HRDashboardMockup.tsx",
       "line": 85,
       "text": "Yangi (30 kun)",
       "kind": "PROP",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\FlowsDialog.tsx",
-      "line": 56,
-      "text": "Yangi oqim muvaffaqiyatli qo",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\FlowsDialog.tsx",
-      "line": 70,
-      "text": "Oqim muvaffaqiyatli o",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\NotificationsPanel.tsx",
-      "line": 55,
-      "text": "Bildirishnomalar o",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\NotificationsPanel.tsx",
-      "line": 55,
-      "text": "Barcha bildirishnomalar o",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\RobotsDialog.tsx",
-      "line": 58,
-      "text": "Yangi avtomatizatsiya muvaffaqiyatli qo",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\RobotsDialog.tsx",
-      "line": 71,
-      "text": "Robot muvaffaqiyatli o",
-      "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
@@ -449,27 +427,6 @@
       "text": "Русский:",
       "kind": "JSX_TEXT",
       "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MESExtendedTypes.ts",
-      "line": 111,
-      "text": "Smena O",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MESExtendedTypes.ts",
-      "line": 121,
-      "text": "Smena O",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\MMVendorsTypes.ts",
-      "line": 67,
-      "text": "Oldindan to",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\planning\\PlanningDialogsA.tsx",
@@ -549,27 +506,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogTypes.ts",
-      "line": 18,
-      "text": "Ishiga ishonadi, missiyaga mos harakat qiladi. Ichki qadriyatlar va g",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogTypes.ts",
-      "line": 25,
-      "text": "Natija va mukofot uchun ishlaydi. O",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogTypes.ts",
-      "line": 32,
-      "text": "Asosan moddiy manfaat uchun ishlaydi. Ish haqining muhimligi birinchi o",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\QuestionnaireTemplatesDialogs.tsx",
       "line": 246,
       "text": "Ha/Yo'q",
@@ -577,24 +513,10 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\QuestionnaireTemplatesHooks.ts",
-      "line": 149,
-      "text": "Shablon yaratildi va savollar qo",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RaciCrisisPageSections.tsx",
       "line": 112,
       "text": "RACI vazifalar topilmadi",
       "kind": "JSX_TEXT",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\SaaSExtended.tsx",
-      "line": 76,
-      "text": "Yangi tenant muvaffaqiyatli qo",
-      "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
@@ -682,6 +604,13 @@
       "locale": "uz"
     },
     {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\warehouse\\RollManagementPage.tsx",
+      "line": 154,
+      "text": "Boshlang'ich og'irlik (kg) *",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseAuditLog.tsx",
       "line": 201,
       "text": "SANA",
@@ -735,13 +664,6 @@
       "line": 94,
       "text": "QC kutmoqda",
       "kind": "PROP",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAllTypes.ts",
-      "line": 51,
-      "text": "DAMAGE turi - zararlar ro",
-      "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
@@ -936,15 +858,15 @@
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\hr\\orgnode\\ExtraTabs.tsx",
       "line": 31,
-      "text": "Jami bo",
+      "text": "Jami bo'limlar (farzand)",
       "kind": "PROP",
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\components\\hr\\stats\\useEmployeeFiles.ts",
-      "line": 44,
-      "text": "Faylni yuklab bo",
-      "kind": "OBJECT_LABEL",
+      "file": "artifacts\\erp-dashboard\\src\\components\\hr\\stats\\StatsCharts.tsx",
+      "line": 46,
+      "text": "O'tish balli",
+      "kind": "PROP",
       "locale": "uz"
     },
     {
@@ -1041,7 +963,7 @@
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\settings\\camera\\CameraAIPrompts.tsx",
       "line": 147,
-      "text": "Bu kamera uchun AI ko",
+      "text": "Bu kamera uchun AI ko'rsatmasi (prompt) kiriting...",
       "kind": "PROP",
       "locale": "uz"
     },
@@ -1076,14 +998,21 @@
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\wms\\material360\\FinanceTab.tsx",
       "line": 20,
-      "text": "Oylik xarajat (o",
+      "text": "Oylik xarajat (o'rt)",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\tabs\\ProductionTab.tsx",
+      "line": 25,
+      "text": "Kunlik sarflanish (o'rt)",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\wms\\tabs\\WmsFinanceTab.tsx",
       "line": 28,
-      "text": "Oylik xarajat (o",
+      "text": "Oylik xarajat (o'rt)",
       "kind": "PROP",
       "locale": "uz"
     },
@@ -1118,7 +1047,14 @@
     {
       "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMaterialNew.tsx",
       "line": 137,
-      "text": "Material nomi (o",
+      "text": "Material nomi (o'zbekcha) *",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMaterialNew.tsx",
+      "line": 141,
+      "text": "Qog'oz 300g/m²",
       "kind": "PROP",
       "locale": "uz"
     },
@@ -1141,20 +1077,6 @@
       "line": 161,
       "text": "Material 360° profili (har omborda stok, harakatlar, narxlar)",
       "kind": "PROP",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementNew.tsx",
-      "line": 75,
-      "text": "Omborlar orasida material ko",
-      "kind": "OBJECT_LABEL",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMovementNew.tsx",
-      "line": 85,
-      "text": "Zarar ko",
-      "kind": "OBJECT_LABEL",
       "locale": "uz"
     }
   ]

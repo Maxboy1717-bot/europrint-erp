@@ -8,7 +8,7 @@ import { tLabel } from '@/lib/i18n/tLabel';
 export function DoklaStatusBadge({ status }: { status: DoklaStatus }) {
   const cfg: Record<DoklaStatus, { label: string; cls: string }> = {
     sent:     { label: "Yuborildi",   cls: "bg-blue-100 text-[var(--ep-blue)]"        },
-    read:     { label: "O'qildi",     cls: "bg-amber-100 text-[var(--ep-yellow)]"      },
+    read:     { label: tLabel('common.CoordinationPageHelpers.tsx.oqildi', "O'qildi"),     cls: "bg-amber-100 text-[var(--ep-yellow)]"      },
     resolved: { label: "Hal qilindi", cls: "bg-emerald-100 text-[var(--ep-green)]"  },
   };
   const { label, cls } = cfg[status] ?? { label: status, cls: "bg-muted text-muted-foreground" };
@@ -25,7 +25,7 @@ export function RaspoStatusBadge({ status }: { status: RaspoStatus }) {
     assigned:    { label: "Topshirildi",   cls: "bg-blue-100 text-[var(--ep-blue)]"        },
     in_progress: { label: tLabel('common.CoordinationPageHelpers.tsx.bajarilmoqda', "Bajarilmoqda"),  cls: "bg-amber-100 text-[var(--ep-yellow)]"      },
     done:        { label: "Bajarildi",     cls: "bg-emerald-100 text-[var(--ep-green)]"  },
-    overdue:     { label: "Muddati o'tdi", cls: "bg-red-100 text-[var(--ep-red)]"          },
+    overdue:     { label: tLabel('common.CoordinationPageHelpers.tsx.muddatiOtdi', "Muddati o'tdi"), cls: "bg-red-100 text-[var(--ep-red)]"          },
   };
   const { label, cls } = cfg[status] ?? { label: status, cls: "bg-muted text-muted-foreground" };
   return (

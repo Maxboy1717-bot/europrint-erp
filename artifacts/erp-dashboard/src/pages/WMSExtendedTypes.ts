@@ -7,6 +7,7 @@ import { z } from "zod";
 import type { LucideIcon } from "lucide-react";
 import { Package, GitBranch, Layers, BarChart3, Home, QrCode } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Domain interfaces ────────────────────────────────────────────────────────
 
 export interface StockItem {
@@ -126,9 +127,9 @@ export interface WmsTab {
 
 export const WMS_TABS: WmsTab[] = [
   { key: "balance", label: "Material Balansi", icon: Package },
-  { key: "transfer", label: "Ko'chirish", icon: GitBranch },
+  { key: "transfer", label: tLabel('warehouse.WMSExtended.kochirish', "Ko'chirish"), icon: GitBranch },
   { key: "lot", label: "Lot Traceability", icon: QrCode },
-  { key: "requests", label: "Ichki So'rovlar", icon: Layers },
+  { key: "requests", label: tLabel('warehouse.WMSExtended.ichkiSorovlar', "Ichki So'rovlar"), icon: Layers },
   { key: "kpi", label: "KPI", icon: BarChart3 },
   { key: "rental", label: "Ijara", icon: Home },
 ];

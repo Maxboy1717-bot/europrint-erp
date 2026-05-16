@@ -65,13 +65,13 @@ export const HR_TABS = [
 export const SEVERITY_CONFIG = {
   critical: { color: "text-[var(--ep-red)]", bg: "bg-red-50", border: "border-red-200", label: "Kritik" },
   warning: { color: "text-[var(--ep-yellow)]", bg: "bg-amber-50", border: "border-amber-200", label: tLabel('hr..ogohlantirish', "Ogohlantirish") },
-  info: { color: "text-[var(--ep-blue)]", bg: "bg-blue-50", border: "border-blue-200", label: "Ma'lumot" },
+  info: { color: "text-[var(--ep-blue)]", bg: "bg-blue-50", border: "border-blue-200", label: tLabel('hr..malumot', "Ma'lumot") },
 };
 
 export const RISK_CONFIG = {
   critical: { color: "text-[var(--ep-red)]", bg: "bg-red-100", label: "Kritik", barColor: "#ef4444" },
   high: { color: "text-[var(--ep-primary)]", bg: "bg-orange-100", label: "Yuqori", barColor: "#f97316" },
-  medium: { color: "text-[var(--ep-yellow)]", bg: "bg-amber-100", label: "O'rta", barColor: "#f59e0b" },
+  medium: { color: "text-[var(--ep-yellow)]", bg: "bg-amber-100", label: tLabel('hr..orta', "O'rta"), barColor: "#f59e0b" },
   low: { color: "text-[var(--ep-green)]", bg: "bg-green-100", label: "Past", barColor: "#22c55e" },
 };
 

@@ -10,6 +10,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { QuotationFormData, QuotationLineItem, Quotation } from "./SDQuotationsTypes";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // useQuotationsData — queries only
 // ---------------------------------------------------------------------------
@@ -85,7 +86,7 @@ export function useQuotationsMutations({ onSaveSuccess, onDeleteSuccess }: Quota
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sd/quotations"] });
-      toast({ description: "Taklif o'chirildi" });
+      toast({ description: tLabel('common.SDQuotationsHooks.taklifOchirildi', "Taklif o'chirildi") });
       onDeleteSuccess();
     },
     onError: (err: Error) => {

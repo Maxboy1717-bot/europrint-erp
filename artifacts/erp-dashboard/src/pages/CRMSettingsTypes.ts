@@ -83,7 +83,7 @@ export const FIELD_TYPES = [
   { value: "number", label: "Raqam", icon: Hash },
   { value: "date", label: tLabel('common.CRMSettings.sana', "Sana"), icon: Calendar },
   { value: "select", label: "Tanlov", icon: List },
-  { value: "multiselect", label: "Ko'p tanlov", icon: Layers },
+  { value: "multiselect", label: tLabel('common.CRMSettings.kopTanlov', "Ko'p tanlov"), icon: Layers },
   { value: "checkbox", label: "Checkbox", icon: CheckSquare },
   { value: "phone", label: "Telefon", icon: Phone },
   { value: "email", label: "Email", icon: Mail },

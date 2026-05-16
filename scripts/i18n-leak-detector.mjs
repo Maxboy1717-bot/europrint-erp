@@ -151,8 +151,12 @@ function* walk(dir) {
 //   4. Toast / alert call:  toast({ title: 'text' })
 //   5. Status map values: STATUS_MAP = { new: 'text', ... }
 const RX_JSX_TEXT = /(<[A-Za-z][\w.-]*(?:\s+[^<>{}\n\r]*?)?>)([^<>{}\n\r]{3,}?)(<\/[A-Za-z][\w.-]*>)/g;
-const RX_LABEL_PROP = /\b(placeholder|title|label|alt|aria-label|description|tooltip|name)=["']([^"'\n\r]{3,})["']/g;
-const RX_OBJ_LABEL = /\b(label|title|name|description|placeholder)\s*:\s*["']([^"'\n\r]{3,})["']/g;
+// Use two regexes per attribute style — exclude only the OWN quote, so
+// apostrophes inside double-quoted strings (and vice versa) survive.
+const RX_LABEL_PROP_D = /\b(placeholder|title|label|alt|aria-label|description|tooltip|name)="([^"\n\r]{3,})"/g;
+const RX_LABEL_PROP_S = /\b(placeholder|title|label|alt|aria-label|description|tooltip|name)='([^'\n\r]{3,})'/g;
+const RX_OBJ_LABEL_D = /\b(label|title|name|description|placeholder|text|caption|subtitle|header|message)\s*:\s*"([^"\n\r]{3,})"/g;
+const RX_OBJ_LABEL_S = /\b(label|title|name|description|placeholder|text|caption|subtitle|header|message)\s*:\s*'([^'\n\r]{3,})'/g;
 
 function scanFile(filePath) {
   const src = readFileSync(filePath, 'utf-8');
@@ -186,16 +190,21 @@ function scanFile(filePath) {
   }
 
   // Prop values
-  for (const re of [RX_LABEL_PROP, RX_OBJ_LABEL]) {
+  for (const re of [RX_LABEL_PROP_D, RX_LABEL_PROP_S, RX_OBJ_LABEL_D, RX_OBJ_LABEL_S]) {
     re.lastIndex = 0;
     while ((m = re.exec(src))) {
       const raw = m[2];
-      const kind = re === RX_LABEL_PROP ? 'PROP' : 'OBJECT_LABEL';
+      const isProp = re === RX_LABEL_PROP_D || re === RX_LABEL_PROP_S;
+      const kind = isProp ? 'PROP' : 'OBJECT_LABEL';
       // Skip object-label leaks when the file already uses i18n. In those
       // files (sidebar constants, TopNavigation, page-types) the hardcoded
       // values are typically i18n keys consumed by `t(...)` at render. False
       // positives swamp real findings otherwise.
       if (kind === 'OBJECT_LABEL' && (isSidebarConstants || usesI18n)) continue;
+      // Skip already-wrapped tLabel('key', 'fallback') — the inner fallback
+      // is intentional and should not be re-flagged.
+      const before = src.slice(Math.max(0, m.index - 20), m.index);
+      if (before.includes('tLabel(') || /\bt\(/.test(before)) continue;
       if (isUzbekLeak(raw)) addFinding(m.index, raw, kind, 'uz');
       else if (isRussianLeak(raw)) addFinding(m.index, raw, kind, 'ru');
     }

@@ -491,7 +491,9 @@
   "k10Yoki5": "10 yoki -5",
   "PosWarehousePage": {
     "zararAkti": "Zarar akti",
-    "qaytarish": "Вернуть"
+    "qaytarish": "Вернуть",
+    "omborKochirish": "Ombor ko'chirish",
+    "bolimgaBerish": "Bo'limga berish"
   },
   "InventarizatsiyaPanel": {
     "tsx": {
@@ -506,7 +508,8 @@
   },
   "warehouse-": {
     "nomi": "Nomi",
-    "untitled": "Название"
+    "untitled": "Название",
+    "omborlarZonalarBinlarVaKochirishlarni": "Omborlar, zonalar, binlar va ko'chirishlarni boshqarish"
   },
   "WarehouseDailyView": {
     "tasdiqlangan": "Подтверждено",
@@ -521,21 +524,28 @@
     "untitled": "Оценка склада и бухгалтерия",
     "fi": "FI - Финансы",
     "mm": "MM - Закупки",
-    "pp": "PP - Производство"
+    "pp": "PP - Производство",
+    "ppMmFi": "Связь с модулями PP, MM и FI",
+    "ppMmVaFiModullari": "PP, MM va FI modullari bilan bog'lanish"
   },
   "WarehouseKirimWizard": {
     "tasdiqlash": "Подтвердить",
     "materiallar": "Materiallar",
     "mroOmboriTexnikMateriallarKirim": "MRO Ombori — Texnik Materiallar Kirim",
     "yarimTayyorLiniyadanQabul": "Yarim Tayyor — Liniyadan Qabul",
-    "tayyorMahsulotIshlabChiqarishdanQabul": "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul"
+    "tayyorMahsulotIshlabChiqarishdanQabul": "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul",
+    "koribChiqish": "Ko'rib chiqish",
+    "asosiyMalumotlar": "Asosiy ma'lumotlar",
+    "tashqiKirimQolda": "Tashqi Kirim (Qo'lda)",
+    "xojalikOmboriMateriallarKirim": "Xo'jalik Ombori — Materiallar Kirim"
   },
   "WarehouseMaterialKits": {
     "tayyorlanmoqda": "Tayyorlanmoqda",
     "kutilmoqda": "Ожидает"
   },
   "WarehouseRental": {
-    "yopilgan": "Закрыто"
+    "yopilgan": "Закрыто",
+    "tolangan": "To'langan"
   },
   "WarehouseReports": {
     "tsx": {
@@ -556,7 +566,13 @@
     "partiyalarQarilikTahlili": "Partiyalar qarilik tahlili",
     "materiallarABCGuruhlari": "Materiallar A/B/C guruhlari (Pareto)",
     "muddatOgohlantirish": "Muddat Ogohlantirish",
-    "minimalQoldiqdanPastMateriallar": "Minimal qoldiqdan past materiallar"
+    "minimalQoldiqdanPastMateriallar": "Minimal qoldiqdan past materiallar",
+    "taminotchilarReytingKorsatkichi": "Ta'minotchilar reyting ko'rsatkichi",
+    "taminotchiReytingi": "Ta'minotchi Reytingi",
+    "ichkiSorovlarBajarilishi": "Ichki so'rovlar bajarilishi",
+    "sorovBajarish": "So'rov Bajarish",
+    "damageTuriZararlarRoyxati": "DAMAGE turi - zararlar ro'yxati",
+    "barchaKirimChiqimKochirish": "Barcha kirim/chiqim/ko'chirish"
   },
   "WarehouseStatsPanel": {
     "tsx": {
@@ -569,6 +585,21 @@
   },
   "translations": {
     "untitled": "История Запросов Резервирования",
-    "ai": "AI Рекомендация"
+    "ai": "AI Рекомендация",
+    "aiFefo": "Резервирование материалов на основе AI с FEFO оптимизацией",
+    "zaxiraSorovlariTarixi": "Zaxira So'rovlari Tarixi",
+    "aiZaxiraSorovi": "AI Zaxira So'rovi",
+    "fefoOptimizatsiyasiBilanAiAsosiy": "FEFO optimizatsiyasi bilan AI-asosiy material rezervatsiyasi"
+  },
+  "WarehouseDashboard": {
+    "ichkiSorov": "Ichki So'rov",
+    "kochirish": "Ko'chirish"
+  },
+  "WMSExtended": {
+    "ichkiSorovlar": "Ichki So'rovlar",
+    "kochirish": "Ko'chirish"
+  },
+  "PosWarehouseDetail": {
+    "nomalum": "Noma'lum"
   }
 }

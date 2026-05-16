@@ -143,7 +143,7 @@ export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   "transport": { title: "Transport Parki",    icon: Truck },
   "routes":    { title: tLabel('common.MMExtended.marshrutRejasi', "Marshrut Rejasi"),    icon: Map },
   "gps":       { title: "GPS Monitoring",     icon: MapPin },
-  "fuel":      { title: "Yoqilg'i Nazorat",  icon: Gauge },
+  "fuel":      { title: tLabel('common.MMExtended.yoqilgiNazorat', "Yoqilg'i Nazorat"),  icon: Gauge },
   "drivers":   { title: tLabel('common.MMExtended.haydovchilar', "Haydovchilar"),       icon: Users },
   "schedule":  { title: "Transport Jadvali", icon: Calendar },
 };

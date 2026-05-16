@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KanbanTranslations } from "./types";
+import { tLabel } from '@/lib/i18n/tLabel';
 // Permissive shape — accepts react-query UseMutationResult plus minimal handles.
 // Components only need `mutate(...)` and `isPending`. We use `unknown` for the
 // variables type, which forces callers to pass typed args through `as never`-style
@@ -55,7 +56,7 @@ interface BoardDialogsProps {
 const PRIORITY_OPTIONS = [
   { value: "urgent", label: "🔴 Shoshilinch" },
   { value: "high",   label: "🟠 Yuqori" },
-  { value: "normal", label: "🟢 O'rta" },
+  { value: "normal", label: tLabel('common.BoardDialogs.tsx.orta', "🟢 O'rta") },
   { value: "low",    label: "⚪ Past" },
 ];
 

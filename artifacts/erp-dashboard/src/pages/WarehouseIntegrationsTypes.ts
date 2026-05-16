@@ -51,7 +51,7 @@ export type Lang = "uz" | "ru";
 export const translations = {
   uz: {
     title: "Ombor Integratsiyalari",
-    subtitle: "PP, MM va FI modullari bilan bog'lanish",
+    subtitle: tLabel('warehouse.WarehouseIntegrations.ppMmVaFiModullari', "PP, MM va FI modullari bilan bog'lanish"),
     languageToggle: "Tilni almashtirish",
     refresh: "Yangilash",
     pp: {
@@ -102,7 +102,7 @@ export const translations = {
   },
   ru: {
     title: tLabel('warehouse.WarehouseIntegrations.untitled', "Интеграции Склада"),
-    subtitle: "Связь с модулями PP, MM и FI",
+    subtitle: tLabel('warehouse.WarehouseIntegrations.ppMmFi', "Связь с модулями PP, MM и FI"),
     languageToggle: "Переключить язык",
     refresh: "Обновить",
     pp: {

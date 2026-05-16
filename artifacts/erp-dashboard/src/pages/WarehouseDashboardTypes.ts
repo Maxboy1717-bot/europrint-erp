@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module WarehouseDashboardTypes
  * @description Interfaces, types, and constants for WarehouseDashboard.
@@ -131,8 +133,8 @@ export const TYPE_COLORS: Record<string, string> = {
 export const QUICK_LINKS = [
   { label: "Qabul Akti (GRN)", url: "/wms/grn", icon: "PackageCheck" },
   { label: "Inventarizatsiya", url: "/wms/inventory", icon: "BarChart3" },
-  { label: "Ko'chirish", url: "/wms/transfer", icon: "ArrowRightLeft" },
-  { label: "Ichki So'rov", url: "/wms/internal-requests", icon: "Zap" },
+  { label: tLabel('warehouse.WarehouseDashboard.kochirish', "Ko'chirish"), url: "/wms/transfer", icon: "ArrowRightLeft" },
+  { label: tLabel('warehouse.WarehouseDashboard.ichkiSorov', "Ichki So'rov"), url: "/wms/internal-requests", icon: "Zap" },
   { label: "Lot Traceability", url: "/wms/lot-traceability", icon: "Activity" },
   { label: "Ombor KPI", url: "/wms/kpi", icon: "TrendingUp" },
 ] as const;

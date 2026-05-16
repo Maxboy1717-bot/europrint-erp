@@ -37,7 +37,7 @@ export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   "tech-time":      { title: "Vaqt va Tannarx",       icon: Clock },
   "tech-cost":      { title: tLabel('production.TechPPExtended.xarajatOptimizatsiya', "Xarajat Optimizatsiya"), icon: DollarSign },
   "tech-clients":   { title: tLabel('production.TechPPExtended.mijozTalablari', "Mijoz Talablari"),       icon: Users },
-  "tech-history":   { title: "O'zgarishlar Tarixi",   icon: History },
+  "tech-history":   { title: tLabel('production.TechPPExtended.ozgarishlarTarixi', "O'zgarishlar Tarixi"),   icon: History },
   "tech-parallel":  { title: tLabel('production.TechPPExtended.parallelBuyurtmalar', "Parallel Buyurtmalar"),  icon: Copy },
   "pp-shifts":      { title: tLabel('production.TechPPExtended.smenaBoshqaruvi', "Smena Boshqaruvi"),      icon: Calendar },
   "pp-parallel":    { title: tLabel('production.TechPPExtended.parallelJarayonlar', "Parallel Jarayonlar"),   icon: GitBranch },
@@ -48,7 +48,7 @@ export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   "pp-delivery":    { title: tLabel('production.TechPPExtended.yetkazishKalk', "Yetkazish Kalk."),       icon: Calculator },
   "pp-energy":      { title: "Energiya Optim.",       icon: Zap },
   "pp-oee":         { title: "OEE Monitor",           icon: Activity },
-  "pp-kpi":         { title: "KPI Og'ish",            icon: Target },
+  "pp-kpi":         { title: tLabel('production.TechPPExtended.kpiOgish', "KPI Og'ish"),            icon: Target },
   "pp-realtime":    { title: "Real-time Monitor",     icon: RefreshCw },
 };
 
@@ -58,7 +58,7 @@ export const TECH_TABS = [
   { v: "tech-time",      label: "Vaqt va Tannarx",       icon: Clock },
   { v: "tech-cost",      label: tLabel('production.TechPPExtended.xarajatOptimizatsiya', "Xarajat Optimizatsiya"), icon: DollarSign },
   { v: "tech-clients",   label: tLabel('production.TechPPExtended.mijozTalablari', "Mijoz Talablari"),       icon: Users },
-  { v: "tech-history",   label: "O'zgarishlar Tarixi",   icon: History },
+  { v: "tech-history",   label: tLabel('production.TechPPExtended.ozgarishlarTarixi', "O'zgarishlar Tarixi"),   icon: History },
   { v: "tech-parallel",  label: tLabel('production.TechPPExtended.parallelBuyurtmalar', "Parallel Buyurtmalar"),  icon: Copy },
 ];
 
@@ -72,7 +72,7 @@ export const PP_TABS = [
   { v: "pp-delivery",   label: tLabel('production.TechPPExtended.yetkazishKalk', "Yetkazish Kalk."),       icon: Calculator },
   { v: "pp-energy",     label: "Energiya Optim.",       icon: Zap },
   { v: "pp-oee",        label: "OEE Monitor",           icon: Activity },
-  { v: "pp-kpi",        label: "KPI Og'ish",            icon: Target },
+  { v: "pp-kpi",        label: tLabel('production.TechPPExtended.kpiOgish', "KPI Og'ish"),            icon: Target },
   { v: "pp-realtime",   label: "Real-time",             icon: RefreshCw },
 ];
 

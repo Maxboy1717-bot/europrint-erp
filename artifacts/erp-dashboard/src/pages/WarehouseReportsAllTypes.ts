@@ -44,11 +44,11 @@ export const REPORTS: ReportType[] = [
 
   // ── MOVEMENTS ──
   { key: "movement_journal", icon: "🔄", title: "Harakat Jurnali", category: "movement",
-    description: "Barcha kirim/chiqim/ko'chirish",
+    description: tLabel('warehouse.WarehouseReportsAll.barchaKirimChiqimKochirish', "Barcha kirim/chiqim/ko'chirish"),
     loader: () => fetchPos("/wh/movements?limit=200") },
 
   { key: "damage_movements", icon: "⚡", title: tLabel('warehouse.WarehouseReportsAll.zararHarakatlari', "Zarar Harakatlari"), category: "movement",
-    description: "DAMAGE turi - zararlar ro'yxati",
+    description: tLabel('warehouse.WarehouseReportsAll.damageTuriZararlarRoyxati', "DAMAGE turi - zararlar ro'yxati"),
     loader: () => fetchPos("/movements?type=DAMAGE&limit=100") },
 
   { key: "turnover", icon: "🔁", title: "Aylanma", category: "movement",
@@ -90,8 +90,8 @@ export const REPORTS: ReportType[] = [
     description: "Yakuniy inventarizatsiya aktlari",
     loader: () => fetchPos("/inventory-counts") },
 
-  { key: "request_fulfill", icon: "📬", title: "So'rov Bajarish", category: "movement",
-    description: "Ichki so'rovlar bajarilishi",
+  { key: "request_fulfill", icon: "📬", title: tLabel('warehouse.WarehouseReportsAll.sorovBajarish', "So'rov Bajarish"), category: "movement",
+    description: tLabel('warehouse.WarehouseReportsAll.ichkiSorovlarBajarilishi', "Ichki so'rovlar bajarilishi"),
     loader: () => fetchPos("/reports/liabilities") },
 
   // ── HR / EMPLOYEE ──
@@ -100,8 +100,8 @@ export const REPORTS: ReportType[] = [
     loader: () => fetchPos("/reports/liabilities") },
 
   // ── SUPPLIER ──
-  { key: "supplier_rating", icon: "⭐", title: "Ta'minotchi Reytingi", category: "audit",
-    description: "Ta'minotchilar reyting ko'rsatkichi",
+  { key: "supplier_rating", icon: "⭐", title: tLabel('warehouse.WarehouseReportsAll.taminotchiReytingi', "Ta'minotchi Reytingi"), category: "audit",
+    description: tLabel('warehouse.WarehouseReportsAll.taminotchilarReytingKorsatkichi', "Ta'minotchilar reyting ko'rsatkichi"),
     loader: () => fetchPos("/reports/top-materials") },
 
   // ── OPERATIONS ──

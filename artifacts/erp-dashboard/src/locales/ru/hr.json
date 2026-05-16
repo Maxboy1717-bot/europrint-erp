@@ -614,22 +614,41 @@
     "ogohlantirish": "Ogohlantirish",
     "xavfsizlik": "Xavfsizlik",
     "kadrlar": "Kadrlar",
-    "alertlar": "Alertlar"
+    "alertlar": "Alertlar",
+    "orta": "O'rta",
+    "malumot": "Ma'lumot"
   },
   "HRCapitalTestsHelpers": {
     "tsx": {
       "jarayonda": "Jarayonda",
-      "kutilmoqda": "Ожидает"
+      "kutilmoqda": "Ожидает",
+      "muddatiOtdi": "Muddati o'tdi"
     }
   },
   "HRCapitalTests": {
-    "boshqalarningFikriniHisobgaOlmaydi": "Boshqalarning fikrini hisobga olmaydi"
+    "boshqalarningFikriniHisobgaOlmaydi": "Boshqalarning fikrini hisobga olmaydi",
+    "ortadanPast8089": "O'rtadan past (80-89)",
+    "orta9099": "O'rta (90-99)",
+    "ortadanYuqori100109": "O'rtadan yuqori (100-109)",
+    "goyalargaTolaLekinTartibsizYakunlamaydigan": "G'oyalarga to'la lekin tartibsiz, yakunlamaydigan",
+    "jamoaBilanIshlashniAfzalKoradi": "Jamoa bilan ishlashni afzal ko'radi lekin komunikatsiyasi zaif",
+    "jamoaQogirchoqi": "Jamoa Qo'g'irchoq'i",
+    "tanqidVaOsishImkoniyatlaridanQorqadi": "Tanqid va o'sish imkoniyatlaridan qo'rqadi",
+    "osishdanQochuvchi": "O'sishdan Qochuvchi",
+    "stressgaNisbatanKuchliTasirlanuvchan": "Stressga nisbatan kuchli ta'sirlanuvchan",
+    "ishlarniKechiktiradiQarorQabulQilishdan": "Ishlarni kechiktiradi, qaror qabul qilishdan qo'rqadi",
+    "pastSamaradorlikMasuliyatdanQochadi": "Past samaradorlik, mas'uliyatdan qochadi",
+    "boshqalarniBoshqarishUchunTasirVositalaridan": "Boshqalarni boshqarish uchun ta'sir vositalaridan foydalanadi",
+    "ortiqchaOptimistXatarlarniKormaydi": "Ortiqcha optimist, xatarlarni ko'rmaydi",
+    "qattiqTartibTarafdoriOzgarishlargaQarshilik": "Qattiq tartib tarafdori, o'zgarishlarga qarshilik ko'rsatadi",
+    "osishgaTayyorlik": "O'sishga tayyorlik"
   },
   "HRDashboard": {
     "malakalarMatritsasi": "Malakalar Matritsasi",
     "pipRejalar": "PIP Rejalar",
     "kunlikHisobot": "Kunlik Hisobot",
-    "hujjatOqimi": "Hujjat Oqimi"
+    "hujjatOqimi": "Hujjat Oqimi",
+    "enpsSorov": "eNPS So'rov"
   },
   "HROffboarding": {
     "ketishSababingizNima": "Ketish sababingiz nima?",
@@ -644,12 +663,31 @@
   },
   "HRZvsPage": {
     "tasdiqlangan": "Подтверждено",
-    "kutilmoqda": "Ожидает"
+    "kutilmoqda": "Ожидает",
+    "ortacha": "O'rtacha"
   },
   "utils": {
     "ogohlantirish": "Ogohlantirish",
     "nofaol": "Неактивный",
     "ishdanKetgan": "Ishdan ketgan",
-    "ishlamoqda": "Ishlamoqda"
+    "ishlamoqda": "Ishlamoqda",
+    "ragbatlantirish": "Rag'batlantirish"
+  },
+  "HRCapitalPublicTest": {
+    "osishgaTayyorlik": "O'sishga tayyorlik"
+  },
+  "MarketHeatBadge": {
+    "tsx": {
+      "ortachaBozor": "O'rtacha bozor",
+      "qizginBozor": "Qizg'in bozor"
+    }
+  },
+  "useOrgNodeData": {
+    "ochirildi": "O'chirildi"
+  },
+  "useEmployeeFiles": {
+    "faylniOchiribBolmadi": "Faylni o'chirib bo'lmadi",
+    "faylOchirildi": "Fayl o'chirildi",
+    "faylniYuklabBolmadi": "Faylni yuklab bo'lmadi"
   }
 }

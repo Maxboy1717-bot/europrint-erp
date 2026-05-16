@@ -13,6 +13,7 @@ import { TAG_COLORS } from "./kanban-types";
 import type { CardWithOwner, ChatMessageWithUser } from "./kanban-types";
 import type { KanbanColumn } from "@shared/schema";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface RefetchMap {
   refetchChecklists:  () => void;
   refetchChat:        () => void;
@@ -112,7 +113,7 @@ export function useTaskDetailMutations(
     mutationFn: async (description: string) => {
       await apiRequest("POST", `/api/kanban/cards/${cid}/results`, { cardId: cid, description });
     },
-    onSuccess: () => { refetch.refetchResults(); setters.setResultText(""); toast({ title: "Natija qo'shildi" }); },
+    onSuccess: () => { refetch.refetchResults(); setters.setResultText(""); toast({ title: tLabel('kanban.useTaskDetailMutations.natijaQoshildi', "Natija qo'shildi") }); },
   });
   const uploadResultFileMutation = useMutation({
     mutationFn: async ({ resultId, file }: { resultId: string; file: File }) => {
@@ -124,7 +125,7 @@ export function useTaskDetailMutations(
   });
   const deleteResultFileMutation = useMutation({
     mutationFn: async (fileId: string) => { await apiRequest("DELETE", `/api/kanban/result-files/${fileId}`); },
-    onSuccess:  () => { refetch.refetchResults(); toast({ title: "Fayl o'chirildi" }); },
+    onSuccess:  () => { refetch.refetchResults(); toast({ title: tLabel('kanban.useTaskDetailMutations.faylOchirildi', "Fayl o'chirildi") }); },
   });
 
   // ── Task lifecycle mutations ─────────────────────────────────────────────
@@ -145,8 +146,8 @@ export function useTaskDetailMutations(
   });
   const stopTimeMutation = useMutation({
     mutationFn: async () => { await apiRequest("POST", `/api/kanban/cards/${cid}/time-entries/stop`, {}); },
-    onSuccess:  () => { queryClient.invalidateQueries({ queryKey: ["/api/kanban/boards"] }); toast({ title: "Vaqt kuzatuvi to'xtatildi" }); },
-    onError:    () => { toast({ title: "To'xtatishda xatolik", variant: "destructive" }); },
+    onSuccess:  () => { queryClient.invalidateQueries({ queryKey: ["/api/kanban/boards"] }); toast({ title: tLabel('kanban.useTaskDetailMutations.vaqtKuzatuviToxtatildi', "Vaqt kuzatuvi to'xtatildi") }); },
+    onError:    () => { toast({ title: tLabel('kanban.useTaskDetailMutations.toxtatishdaXatolik', "To'xtatishda xatolik"), variant: "destructive" }); },
   });
 
   // ── File mutations ───────────────────────────────────────────────────────
@@ -160,7 +161,7 @@ export function useTaskDetailMutations(
   });
   const deleteFileMutation = useMutation({
     mutationFn: async (fileId: string) => { await apiRequest("DELETE", `/api/kanban/files/${fileId}`); },
-    onSuccess:  () => { refetch.refetchFiles(); toast({ title: "Fayl o'chirildi" }); },
+    onSuccess:  () => { refetch.refetchFiles(); toast({ title: tLabel('kanban.useTaskDetailMutations.faylOchirildi', "Fayl o'chirildi") }); },
   });
 
   // ── createTaskFromMessage helper ─────────────────────────────────────────

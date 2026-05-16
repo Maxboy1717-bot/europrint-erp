@@ -57,8 +57,8 @@ export function statusBadge(s: string): { label: string; variant: "default" | "s
   const map: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
     running:   { label: tLabel('common.MESWorkCenters.ishlamoqda', "Ishlamoqda"),   variant: "default" },
     active:    { label: "Aktiv",        variant: "default" },
-    paused:    { label: "To'xtatildi",  variant: "secondary" },
-    stopped:   { label: "To'xtadi",     variant: "destructive" },
+    paused:    { label: tLabel('common.MESWorkCenters.toxtatildi', "To'xtatildi"),  variant: "secondary" },
+    stopped:   { label: tLabel('common.MESWorkCenters.toxtadi', "To'xtadi"),     variant: "destructive" },
     pending:   { label: tLabel('common.MESWorkCenters.kutilmoqda', "Kutilmoqda"),   variant: "outline" },
     completed: { label: "Tugadi",       variant: "secondary" },
   };

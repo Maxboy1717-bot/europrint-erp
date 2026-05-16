@@ -12,6 +12,7 @@ import { INITIAL_INVENTORY_FORM } from "./CorporateInventoryTabTypes";
 import { InventoryKpiRow, ActiveInventoryTable, ReturnedInventoryTable } from "./CorporateInventoryTabSections";
 import { AddInventoryDialog } from "./CorporateInventoryTabDialogs";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function CorporateInventoryTab({ employeeId, isHr }: CorporateInventoryTabProps) {
   const { toast } = useToast();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -36,7 +37,7 @@ export function CorporateInventoryTab({ employeeId, isHr }: CorporateInventoryTa
       queryClient.invalidateQueries({ queryKey: ["/api/employees", employeeId, "corporate-inventory"] });
       setAddDialogOpen(false);
       setForm(INITIAL_INVENTORY_FORM);
-      toast({ title: "Inventar qo'shildi" });
+      toast({ title: tLabel('common.CorporateInventoryTab.tsx.inventarQoshildi', "Inventar qo'shildi") });
     },
     onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
   });

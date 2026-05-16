@@ -22,6 +22,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { format } from "date-fns";
 import type { KanbanColumn } from "@shared/schema";
 import { type T, type KanbanTemplate, PRIORITY_CONFIG } from "./kanban-types";
+import { tLabel } from '@/lib/i18n/tLabel';
 export function TemplatesDialog({
   open,
   onOpenChange,
@@ -90,7 +91,7 @@ export function TemplatesDialog({
     onSuccess: () => {
       refetch();
       queryClient.invalidateQueries({ queryKey: ["/api/kanban/templates"] });
-      toast({ title: "Shablon o'chirildi" });
+      toast({ title: tLabel('kanban.TemplatesDialog.tsx.shablonOchirildi', "Shablon o'chirildi") });
     },
   });
 
@@ -100,7 +101,7 @@ export function TemplatesDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/kanban/boards"] });
-      toast({ title: "Shablon qo'llandi" });
+      toast({ title: tLabel('kanban.TemplatesDialog.tsx.shablonQollandi', "Shablon qo'llandi") });
     },
   });
 

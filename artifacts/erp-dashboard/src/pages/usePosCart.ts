@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type PosProduct, type CartItem } from "./POSDashboardTypes";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -58,7 +59,7 @@ export function usePosCart({
       if (existing) {
         const maxQty = Number(product.stockQuantity ?? 0);
         if (existing.quantity >= maxQty) {
-          toast({ title: "Omborda yetarli mahsulot yo'q", variant: "destructive" });
+          toast({ title: tLabel('common.usePosCart.ombordaYetarliMahsulotYoq', "Omborda yetarli mahsulot yo'q"), variant: "destructive" });
           return safe;
         }
         return safe.map(i =>
@@ -68,7 +69,7 @@ export function usePosCart({
         );
       }
       if (Number(product.stockQuantity ?? 0) <= 0) {
-        toast({ title: "Mahsulot omborda yo'q", variant: "destructive" });
+        toast({ title: tLabel('common.usePosCart.mahsulotOmbordaYoq', "Mahsulot omborda yo'q"), variant: "destructive" });
         return safe;
       }
       return [...safe, {

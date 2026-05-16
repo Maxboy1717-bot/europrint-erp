@@ -17,6 +17,7 @@ import type { TaskNotification } from "@shared/schema";
 import { type T, type NotificationCategory } from "./kanban-types";
 import { EPStatusPill } from "@/components/ep";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function NotificationsPanel({
   open,
   onOpenChange,
@@ -52,10 +53,10 @@ export function NotificationsPanel({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/kanban/notifications"] });
       queryClient.invalidateQueries({ queryKey: ["/api/kanban/notifications/unread-count"] });
-      toast({ title: "Bildirishnomalar o'qildi", description: "Barcha bildirishnomalar o'qilgan deb belgilandi" });
+      toast({ title: tLabel('kanban.NotificationsPanel.tsx.bildirishnomalarOqildi', "Bildirishnomalar o'qildi"), description: tLabel('kanban.NotificationsPanel.tsx.barchaBildirishnomalarOqilganDebBelgilandi', "Barcha bildirishnomalar o'qilgan deb belgilandi") });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Bildirishnomalarni belgilab bo'lmadi", variant: "destructive" });
+      toast({ title: "Xatolik", description: tLabel('kanban.NotificationsPanel.tsx.bildirishnomalarniBelgilabBolmadi', "Bildirishnomalarni belgilab bo'lmadi"), variant: "destructive" });
     },
   });
 

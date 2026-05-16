@@ -70,6 +70,6 @@ export const RETURN_STATUS_MAP: Record<string, { label: string; color: string }>
   pending:  { label: tLabel('common.OffboardingTab.kutilmoqda', "Kutilmoqda"),    color: "text-[var(--ep-primary)]" },
   returned: { label: "Qaytarildi",    color: "text-[var(--ep-green)]" },
   damaged:  { label: "Shikastlangan", color: "text-[var(--ep-yellow)]" },
-  missing:  { label: "Yo'qolgan",     color: "text-[var(--ep-red)]" },
-  "n/a":    { label: "Talab yo'q",    color: "text-muted-foreground" },
+  missing:  { label: tLabel('common.OffboardingTab.yoqolgan', "Yo'qolgan"),     color: "text-[var(--ep-red)]" },
+  "n/a":    { label: tLabel('common.OffboardingTab.talabYoq', "Talab yo'q"),    color: "text-muted-foreground" },
 };

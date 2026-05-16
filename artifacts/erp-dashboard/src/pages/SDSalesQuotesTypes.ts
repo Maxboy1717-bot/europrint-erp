@@ -69,7 +69,7 @@ export interface QuotationForm {
 
 export const PAPER_TYPES = [
   { value: "b_flute", label: "B-flute 3mm (Standart)" },
-  { value: "c_flute", label: "C-flute 4mm (O'rta)" },
+  { value: "c_flute", label: tLabel('common.SDSalesQuotes.cFlute4mmOrta', "C-flute 4mm (O'rta)") },
   { value: "bc_flute", label: "BC-flute 7mm (Ikki qavat)" },
   { value: "e_flute", label: "E-flute 1.5mm (Ingichka)" },
   { value: "micro", label: "Micro-flute (Eng ingichka)" },
@@ -79,7 +79,7 @@ export const PRINT_COLORS = [
   { value: 0, label: tLabel('common.SDSalesQuotes.bossiz', "Bossiz") },
   { value: 1, label: "1 rang" },
   { value: 2, label: "2 rang" },
-  { value: 4, label: "4 rang (To'liq CMYK)" },
+  { value: 4, label: tLabel('common.SDSalesQuotes.4RangToliqCmyk', "4 rang (To'liq CMYK)") },
 ];
 
 export const DELIVERY_TYPES = [

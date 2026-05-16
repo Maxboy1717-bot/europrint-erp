@@ -8,6 +8,7 @@ import { usePosI18n } from "../i18n/usePosI18n";
 import { requestsApi } from "../api/pos-monitor.api";
 import { WarehouseSelector } from "./WarehouseSelector";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface RequisitionLine {
   materialCode: string;
   materialName: string;
@@ -60,7 +61,7 @@ export function RequisitionForm({ onSuccess, onCancel }: RequisitionFormProps) {
 
   const PRIORITIES: Array<{ value: "LOW" | "MEDIUM" | "HIGH" | "URGENT"; label: string; color: string }> = [
     { value: "LOW", label: "Past", color: "#95A5A6" },
-    { value: "MEDIUM", label: "O'rta", color: "#3498DB" },
+    { value: "MEDIUM", label: tLabel('common.RequisitionForm.tsx.orta', "O'rta"), color: "#3498DB" },
     { value: "HIGH", label: "Yuqori", color: "#E67E22" },
     { value: "URGENT", label: "Shoshilinch", color: "#E74C3C" },
   ];

@@ -71,7 +71,7 @@ export const tabMeta: Record<string, { title: string; icon: typeof BrainCircuit;
   "3d":      { title: "3D Mockup",      icon: Boxes,        description: "Quti va qadoqni 3D vizualizatsiya qilish" },
   brand:     { title: "Brend",          icon: BookMarked,   description: tLabel('common.DesignExtended.korporativBrendQoidalariVaRanglar', "Korporativ brend qoidalari va ranglar") },
   compare:   { title: tLabel('common.DesignExtended.taqqoslash', "Taqqoslash"),     icon: Scale,        description: "Dizayn variantlarini yonma-yon solishtirish" },
-  templates: { title: tLabel('common.DesignExtended.qoliplar', "Qoliplar"),       icon: Layers,       description: "Tayyor qoliplar va standart o'lchamlar" },
+  templates: { title: tLabel('common.DesignExtended.qoliplar', "Qoliplar"),       icon: Layers,       description: tLabel('common.DesignExtended.tayyorQoliplarVaStandartOlchamlar', "Tayyor qoliplar va standart o'lchamlar") },
   tools:     { title: tLabel('common.DesignExtended.asboblar', "Asboblar"),       icon: Hammer,       description: tLabel('common.DesignExtended.bosmaAsboblarVaPlastinalarInventari', "Bosma asboblar va plastinalar inventari") },
   costing:   { title: "Tannarx",        icon: Calculator,   description: tLabel('common.DesignExtended.dizaynXarajatKalkulyatori', "Dizayn xarajat kalkulyatori") },
   library:   { title: "Kutubxona",      icon: Library,      description: tLabel('common.DesignExtended.dizaynAssetVaFayllarKutubxonasi', "Dizayn asset va fayllar kutubxonasi") },
@@ -79,7 +79,7 @@ export const tabMeta: Record<string, { title: string; icon: typeof BrainCircuit;
 
 export const brandColors: BrandColor[] = [
   { name: "Asosiy rang", hex: "#1a4a8a", usage: "Logo, sarlavhalar, tugmalar" },
-  { name: "Qo'shimcha", hex: "#f97316", usage: "Accent, highlight elementlar" },
+  { name: tLabel('common.DesignExtended.qoshimcha', "Qo'shimcha"), hex: "#f97316", usage: "Accent, highlight elementlar" },
   { name: "Fon", hex: "#f8fafc", usage: "Sahifa foni" },
   { name: "Matn", hex: "#0f172a", usage: "Asosiy matn" },
   { name: "Ikkilamchi matn", hex: "#64748b", usage: "Qo'shimcha matn" },

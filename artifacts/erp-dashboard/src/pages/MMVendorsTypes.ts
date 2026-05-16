@@ -6,6 +6,7 @@
 
 import { z } from "zod";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ---------------------------------------------------------------------------
 // Domain model
 // ---------------------------------------------------------------------------
@@ -64,7 +65,7 @@ export const VENDOR_FORM_DEFAULTS: VendorFormData = {
 };
 
 export const PAYMENT_TERMS_OPTIONS = [
-  { value: "PREPAID", label: "Oldindan to'lov" },
+  { value: "PREPAID", label: tLabel('common.MMVendors.oldindanTolov', "Oldindan to'lov") },
   { value: "NET15",   label: "NET15" },
   { value: "NET30",   label: "NET30" },
   { value: "NET60",   label: "NET60" },

@@ -32,6 +32,7 @@ import {
   ErrorsSection,
 } from "./SaaSExtendedSections";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export default function SaaSExtended() {
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "tenants");
@@ -73,7 +74,7 @@ export default function SaaSExtended() {
       queryClient.invalidateQueries({ queryKey: ["/api/saas/tenants"] });
       setShowAddDialog(false);
       addForm.reset();
-      toast({ title: "Tenant yaratildi", description: "Yangi tenant muvaffaqiyatli qo'shildi" });
+      toast({ title: "Tenant yaratildi", description: tLabel('common.SaaSExtended.tsx.yangiTenantMuvaffaqiyatliQoshildi', "Yangi tenant muvaffaqiyatli qo'shildi") });
     },
     onError: (e: Error) => toast({ title: "Xatolik", description: e.message, variant: "destructive" }),
   });

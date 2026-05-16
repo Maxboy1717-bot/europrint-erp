@@ -47,7 +47,7 @@ export const STATUS_MAP: Record<
 
 export const PRIORITY_MAP: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   low:    { label: "Past",         color: "text-muted-foreground", icon: null },
-  normal: { label: "O'rtacha",     color: "text-[var(--ep-blue)]",         icon: null },
+  normal: { label: tLabel('hr.HRZvsPage.ortacha', "O'rtacha"),     color: "text-[var(--ep-blue)]",         icon: null },
   high:   { label: "Yuqori",       color: "text-[var(--ep-primary)]",       icon: null },
   urgent: { label: "Shoshilinch",  color: "text-destructive",      icon: null },
 };

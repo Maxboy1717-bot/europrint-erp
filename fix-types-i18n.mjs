@@ -177,26 +177,32 @@ for (const [filePath, leaks] of Object.entries(byFile)) {
   const fileBase = basename(filePath, '.ts').replace(/Types$|\.types$/i, '');
   const src = readFileSync(filePath, 'utf-8');
 
-  // Find absolute positions of ALL `<field>: "<text>"` matches in the file,
-  // matching every text we want to translate.
-  const fieldRegex = new RegExp(
-    `\\b(${FIELDS.join('|')})(\\s*:\\s*)(["'])([^"'\\n\\r]{2,})\\3`,
+  // Find absolute positions of ALL `<field>: "<text>"` matches in the file.
+  // Two regexes — one per quote type — so apostrophes inside double-quoted
+  // strings (and vice versa) are captured intact. Each character class only
+  // excludes its OWN quote and newlines.
+  const fieldRegexD = new RegExp(
+    `\\b(${FIELDS.join('|')})(\\s*:\\s*)(")([^"\\n\\r]{2,})"`,
+    'g',
+  );
+  const fieldRegexS = new RegExp(
+    `\\b(${FIELDS.join('|')})(\\s*:\\s*)(')([^'\\n\\r]{2,})'`,
     'g',
   );
   const targetTexts = new Set(leaks.map(l => l.text));
   const edits = [];
-  let m;
-  while ((m = fieldRegex.exec(src))) {
-    const field = m[1];
-    const between = m[2];
-    const quote = m[3];
-    const text = m[4];
-    if (!targetTexts.has(text)) continue;
-    if (text.includes(`${quote}`)) continue; // safety
-    // Skip if already wrapped in tLabel
-    const beforeStart = Math.max(0, m.index - 10);
-    const before = src.slice(beforeStart, m.index);
-    if (before.includes('tLabel(')) continue;
+  for (const fieldRegex of [fieldRegexD, fieldRegexS]) {
+    fieldRegex.lastIndex = 0;
+    let m;
+    while ((m = fieldRegex.exec(src))) {
+      const field = m[1];
+      const between = m[2];
+      const quote = m[3];
+      const text = m[4];
+      if (!targetTexts.has(text)) continue;
+      // Skip if the field literally is `t(...)` — already wrapped
+      const before = src.slice(Math.max(0, m.index - 12), m.index + m[0].length);
+      if (before.includes('tLabel(') || before.includes(': t(')) continue;
     const keySlug = slug(text);
     const fullKey = `${ns}.${fileBase}.${keySlug}`;
     // If source text is Russian → UZ value needs Uzbek hint; RU value is the original.
@@ -209,17 +215,23 @@ for (const [filePath, leaks] of Object.entries(byFile)) {
       uzValue = text;
       ruValue = ruHint(text);
     }
-    edits.push({
-      start: m.index,
-      end: m.index + m[0].length,
-      replacement: `${field}${between}tLabel('${fullKey}', ${quote}${text}${quote})`,
-      key: fullKey,
-      uz: uzValue,
-      ru: ruValue,
-    });
+      edits.push({
+        start: m.index,
+        end: m.index + m[0].length,
+        replacement: `${field}${between}tLabel('${fullKey}', ${quote}${text}${quote})`,
+        key: fullKey,
+        uz: uzValue,
+        ru: ruValue,
+      });
+    }
   }
 
   if (edits.length === 0) continue;
+  // De-dup edits that share a start (the two regexes could both find the same match)
+  const seen = new Set();
+  const deduped = edits.filter(e => seen.has(e.start) ? false : seen.add(e.start));
+  edits.length = 0;
+  edits.push(...deduped);
 
   // Apply edits right-to-left (so offsets stay valid)
   edits.sort((a, b) => b.start - a.start);
