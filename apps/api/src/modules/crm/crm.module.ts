@@ -24,6 +24,9 @@ import { CreateDealHandler } from './application/commands/create-deal.handler';
 import { MarkDealWonHandler } from './application/commands/mark-deal-won.handler';
 import { MarkDealLostHandler } from './application/commands/mark-deal-lost.handler';
 import { ConvertLeadToDealHandler } from './application/commands/convert-lead-to-deal.handler';
+import { UpdateDealHandler } from './application/commands/update-deal.handler';
+import { UpdateDealStageHandler } from './application/commands/update-deal-stage.handler';
+import { DeleteDealHandler } from './application/commands/delete-deal.handler';
 import { ListLeadsHandler } from './application/queries/list-leads.handler';
 import { GetLeadByIdHandler } from './application/queries/get-lead-by-id.handler';
 import { CrmPipelineHandler } from './application/queries/crm-pipeline.handler';
@@ -94,6 +97,7 @@ const commandHandlers = [
   CreateLeadHandler, QualifyLeadHandler, CreateDealHandler,
   MarkDealWonHandler, MarkDealLostHandler, ConvertLeadToDealHandler,
   UpdateLeadHandler, UpdateLeadStageHandler, DeleteLeadHandler,
+  UpdateDealHandler, UpdateDealStageHandler, DeleteDealHandler,
 ];
 const queryHandlers = [ListLeadsHandler, GetLeadByIdHandler, CrmPipelineHandler];
 const eventListeners = [

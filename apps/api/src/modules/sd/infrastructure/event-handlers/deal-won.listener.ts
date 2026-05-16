@@ -3,18 +3,19 @@
  * @description Source module. See exports for details.
  */
 
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { CommandBus } from '@nestjs/cqrs';
 import { DealWonEvent } from '@modules/crm/domain/events/deal-won.event';
 import { CreateOrderCommand } from '../../application/commands/create-order.handler';
+import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 
 @Injectable()
 export class DealWonListener {
   private readonly logger = new Logger(DealWonListener.name);
   constructor(private readonly commandBus: CommandBus) {}
 
-  @OnEvent('deal.won', { async: true })
+  @OnEvent(ERP_EVENTS.DEAL_WON, { async: true })
   async handleDealWon(event: DealWonEvent) {
     this.logger.log({
       msg: 'Deal won event received in SD module - Trigger 2',

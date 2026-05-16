@@ -5,6 +5,7 @@
 
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuthModule } from '../auth/auth.module';
 
 import { APPROVAL_REPO } from './domain/repositories/i-approval.repo';
@@ -50,6 +51,7 @@ import { ZnoRepository } from './application/zno.repository';
 import { ZvsService } from './application/zvs.service';
 import { ZvsRepository } from './application/zvs.repository';
 import { KaizenRepository } from './application/kaizen.repository';
+import { AdvanceBypassApprovedListener } from './infrastructure/event-handlers/advance-bypass-approved.listener';
 
 const CommandHandlers = [
   CreateApprovalRequestHandler,
@@ -73,7 +75,7 @@ const Repositories = [
 ];
 
 @Module({
-  imports: [CqrsModule, AuthModule],
+  imports: [CqrsModule, EventEmitterModule.forRoot(), AuthModule],
   controllers: [
     ApprovalsController,
     DashboardController,
@@ -90,6 +92,8 @@ const Repositories = [
     ...CommandHandlers, ...QueryHandlers, ...Repositories,
     DashboardQueryRepository, DashboardQueryService, DashboardService, DirectorDataService, DirectorDataRepository, DirectorStateService, DirectorStateRepository,
     CoordinationRepository, CoordinationService, KaizenRepository, KaizenService, OkrRepository, OkrService, StrategicRepository, StrategicService, ZnoRepository, ZnoService, ZvsRepository, ZvsService,
+    // PA0 Trigger 20 — advance bypass audit listener
+    AdvanceBypassApprovedListener,
   ],
   exports: [APPROVAL_REPO, DASHBOARD_SVC_REPO, DashboardService],
 })

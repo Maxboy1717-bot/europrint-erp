@@ -11,6 +11,9 @@ import { Invoice } from '../../domain/aggregates/invoice.aggregate';
 import { FinanceRepository } from '../../infrastructure/repositories/drizzle-finance.repo';
 import { GlPostingService } from '../../domain/services/gl-posting.service';
 import { AppErr, Err, Ok, Result, isErr } from '@common/result';
+import { ERP_EVENTS } from '@common/constants/erp-events.constants';
+import { InvoiceFullyPaidEvent } from '../../domain/events/invoice-fully-paid.event';
+import { InvoicePartiallyPaidEvent } from '../../domain/events/invoice-partially-paid.event';
 
 export class RecordPaymentCommand {
   constructor(public readonly paymentId: number,
@@ -94,7 +97,13 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
 
         const events = invoice.getDomainEvents();
         for (const event of events) {
-          this.eventEmitter.emit(event.eventName, event);
+          if (event instanceof InvoiceFullyPaidEvent) {
+            this.eventEmitter.emit(ERP_EVENTS.INVOICE_FULLY_PAID, event);
+          } else if (event instanceof InvoicePartiallyPaidEvent) {
+            this.eventEmitter.emit(ERP_EVENTS.PAYMENT_FULL, event);
+          } else {
+            this.eventEmitter.emit(event.eventName, event);
+          }
         }
 
         this.logger.log(
@@ -126,7 +135,13 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
 
       const events = invoice.getDomainEvents();
       for (const event of events) {
-        this.eventEmitter.emit(event.eventName, event);
+        if (event instanceof InvoiceFullyPaidEvent) {
+          this.eventEmitter.emit(ERP_EVENTS.INVOICE_FULLY_PAID, event);
+        } else if (event instanceof InvoicePartiallyPaidEvent) {
+          this.eventEmitter.emit(ERP_EVENTS.PAYMENT_FULL, event);
+        } else {
+          this.eventEmitter.emit(event.eventName, event);
+        }
       }
 
       this.logger.log(

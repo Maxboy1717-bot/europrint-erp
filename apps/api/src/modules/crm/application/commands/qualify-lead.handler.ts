@@ -55,12 +55,11 @@ export class QualifyLeadHandler implements ICommandHandler<QualifyLeadCommand> {
   }
 
   private buildDealFromLead(lead: Lead, command: QualifyLeadCommand): Result<Deal> {
-    let money: Money;
-    try {
-      money = Money.of(command.expectedDealAmount, 'USD');
-    } catch {
-      return Err(AppErr('VALIDATION', 'Invalid deal amount'));
+    const moneyR = Money.of(command.expectedDealAmount, 'USD');
+    if (!moneyR.ok) {
+      return Err(AppErr('VALIDATION', moneyR.error.message || 'Invalid deal amount'));
     }
+    const money: Money = moneyR.data;
     const statusResult = DealStatus.create('qualification');
     if (!statusResult.ok || !statusResult.data) {
       return Err(AppErr('VALIDATION', 'Invalid deal status'));

@@ -7,7 +7,9 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AppErr, Err, Ok, Result } from '@common/result';
+import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 
 export class ApproveAdvanceBypassCommand {
@@ -24,6 +26,7 @@ export class ApproveAdvanceBypassHandler implements ICommandHandler<ApproveAdvan
   constructor(
     @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
     private readonly eventBus: EventBus,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: ApproveAdvanceBypassCommand): Promise<Result<void>> {
@@ -50,7 +53,7 @@ export class ApproveAdvanceBypassHandler implements ICommandHandler<ApproveAdvan
       return Err(AppErr('INTERNAL', 'Failed to update order'));
     }
 
-    this.eventBus.publish({
+    const bypassEvent = {
       aggregateId: order.getId(),
       eventName: 'AdvanceBypassApproved',
       timestamp: _time.now(),
@@ -59,7 +62,9 @@ export class ApproveAdvanceBypassHandler implements ICommandHandler<ApproveAdvan
         bypassBy: command.bypassBy,
         reason: command.reason,
       },
-    });
+    };
+    this.eventBus.publish(bypassEvent);
+    this.eventEmitter.emit(ERP_EVENTS.ADVANCE_BYPASS_APPROVED, bypassEvent);
 
     // §20: Audit log
     this.logger.log({

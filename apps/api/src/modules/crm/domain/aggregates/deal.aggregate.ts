@@ -81,11 +81,11 @@ export class Deal extends AggregateRoot {
     this.status = statusResult.data;
     this.closedAt = _time.now();
     if (actualAmount != null) {
-      try {
-        this.totalAmount = Money.of(actualAmount, this.currency);
-      } catch {
+      const moneyR = Money.of(actualAmount, this.currency);
+      if (!moneyR.ok) {
         return Err('Invalid actual amount');
       }
+      this.totalAmount = moneyR.data;
     }
     this.addDomainEvent({ aggregateId: this.id, eventName: 'DealWon', data: { dealId: this.id, companyId: this.companyId, totalAmount: this.totalAmount.getAmount() } });
     return Ok();

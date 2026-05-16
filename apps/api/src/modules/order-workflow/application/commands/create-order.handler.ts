@@ -6,13 +6,15 @@
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
-import { db } from '@shared/db';
-import { sql, eq } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/types/result.type';
 import { OrderAggregate } from '../../domain/aggregates/order.aggregate';
-import { IOrderRepo, ORDER_WF_REPO } from '../../infrastructure/repositories/i-order.repo';
+import {
+  IOrderRepo,
+  ORDER_WF_REPO,
+  CreateOrderRow,
+  CreateStatusHistoryRow,
+} from '../../infrastructure/repositories/i-order.repo';
 import { OrderStatusChangedEvent } from '../../domain/events/order-status-changed.event';
-import { owOrders, owOrderStatusHistory } from '@shared/db';
 
 const ORDER_NUMBER_PREFIX = 'OW';
 const INITIAL_STATUS     = 'LEAD_INTAKE';
@@ -59,36 +61,32 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
       this.logger.warn({ msg: 'DRAFT→LEAD_INTAKE o\'tish mumkin emas', id, err: transResult.error });
     }
 
-    try {
-      await db.transaction(async (tx) => {
-        await tx.insert(owOrders).values({
-          id:                   order.getId(),
-          orderNumber:          order.getOrderNumber(),
-          customerId:           order.getCustomerId(),
-          customerTier:         order.getCustomerTier(),
-          status:               order.getStatus(),
-          stateVersion:         order.getStateVersion(),
-          totalAmount:          String(order.getTotalAmount()),
-          currency:             order.getCurrency(),
-          assignedSalesManager: order.getSalesManager(),
-          tenantId:             order.getTenantId() ?? undefined,
-        });
+    const orderRow: CreateOrderRow = {
+      id:                   order.getId(),
+      orderNumber:          order.getOrderNumber(),
+      customerId:           order.getCustomerId(),
+      customerTier:         order.getCustomerTier(),
+      status:               order.getStatus(),
+      stateVersion:         order.getStateVersion(),
+      totalAmount:          String(order.getTotalAmount()),
+      currency:             order.getCurrency(),
+      assignedSalesManager: order.getSalesManager(),
+      tenantId:             order.getTenantId() ?? undefined,
+    };
 
-        if (transResult.ok) {
-          await tx.insert(owOrderStatusHistory).values({
-            orderId:      id,
-            fromStatus:   'DRAFT',
-            toStatus:     INITIAL_STATUS,
-            changedBy:    command.createdBy,
-            reason:       'Avtomatik yaratish',
-            stateVersion: order.getStateVersion(),
-          });
+    const historyRow: CreateStatusHistoryRow | null = transResult.ok
+      ? {
+          orderId:      id,
+          fromStatus:   'DRAFT',
+          toStatus:     INITIAL_STATUS,
+          changedBy:    command.createdBy,
+          reason:       'Avtomatik yaratish',
+          stateVersion: order.getStateVersion(),
         }
-      });
-    } catch (e) {
-      this.logger.error({ msg: 'Buyurtma yaratish xatosi', err: String(e) });
-      return Err(AppErr('DB_ERROR', 'Buyurtma saqlanmadi'));
-    }
+      : null;
+
+    const persistResult = await this.repo.insertOrderWithInitialStatus(orderRow, historyRow);
+    if (!persistResult.ok) return Err(persistResult.error);
 
     this.logger.log({ msg: 'Buyurtma yaratildi', id, orderNumber, status: order.getStatus(), actor: command.createdBy });
     await this.eventBus.publish(new OrderStatusChangedEvent(

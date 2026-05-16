@@ -10,6 +10,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { safeCall, isErr } from '@common/result';
 import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 import { UpdateOrderStatusCommand } from '../../application/commands/update-order-status.handler';
+import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 
 @Injectable()
 export class PaymentReceivedListener {
@@ -19,7 +20,7 @@ export class PaymentReceivedListener {
     private readonly commandBus: CommandBus,
   ) {}
 
-  @OnEvent('payment.full', { async: true })
+  @OnEvent(ERP_EVENTS.INVOICE_FULLY_PAID, { async: true })
   async handlePaymentFull(event: Record<string, unknown>) {
     this.logger.log({
       msg: 'Full payment received - Trigger 15, 20',

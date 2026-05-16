@@ -9,7 +9,7 @@ import { safeNum } from '@common/math';
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { Result, Ok, Err, isErr } from '@common/result';
-import { ISensorRepo } from '../../domain/repositories/i-sensor.repo';
+import { ISensorRepo, RegisterDeviceInput } from '../../domain/repositories/i-sensor.repo';
 import { SensorDevice } from '../../domain/aggregates/sensor-device.aggregate';
 import { SensorReading } from '../../domain/aggregates/sensor-reading.aggregate';
 import { SensorStatus, SensorType } from '../../domain/enums/sensor-status.enum';
@@ -29,6 +29,38 @@ export class DrizzleSensorRepo implements ISensorRepo {
       if (!r.length) return Err('Device not found');
       return Ok(this.mapToDevice(r[0]));
     } catch { this.logger.error('Find device error'); return Err('Failed to find device'); }
+  }
+
+  async existsByCode(deviceCode: string): Promise<Result<boolean>> {
+    try {
+      const r = await exec(sql`SELECT id FROM iot_sensors WHERE sensor_code = ${deviceCode} LIMIT 1`);
+      return Ok(r.length > 0);
+    } catch { this.logger.error('existsByCode error'); return Err('Failed to check device code'); }
+  }
+
+  async registerDevice(input: RegisterDeviceInput): Promise<Result<SensorDevice>> {
+    try {
+      const minT = input.thresholds?.min ?? null;
+      const maxT = input.thresholds?.max ?? null;
+      const r = await exec(sql`INSERT INTO iot_sensors (sensor_code, name, type, location, unit, min_threshold, max_threshold, is_active) VALUES (${input.deviceCode}, ${input.name}, ${input.type ?? 'generic'}, ${input.location ?? ''}, '', ${minT}, ${maxT}, true) RETURNING id, sensor_code, name, type, location, unit, is_active, min_threshold, max_threshold, created_at, 'active' AS status`);
+      if (!r.length) return Err('Failed to register device');
+      return Ok(this.mapToDevice(r[0]));
+    } catch { this.logger.error('registerDevice error'); return Err('Failed to register device'); }
+  }
+
+  async updateThresholds(
+    deviceId: string,
+    thresholds: { min?: number | null; max?: number | null },
+  ): Promise<Result<SensorDevice>> {
+    try {
+      const existing = await exec(sql`SELECT id FROM iot_sensors WHERE id = ${deviceId} LIMIT 1`);
+      if (!existing.length) return Err('Device not found');
+      const minT = thresholds.min ?? null;
+      const maxT = thresholds.max ?? null;
+      const r = await exec(sql`UPDATE iot_sensors SET min_threshold = ${minT}, max_threshold = ${maxT} WHERE id = ${deviceId} RETURNING id, sensor_code, name, type, location, unit, is_active, min_threshold, max_threshold, created_at, CASE WHEN is_active THEN 'active' ELSE 'inactive' END AS status`);
+      if (!r.length) return Err('Failed to update thresholds');
+      return Ok(this.mapToDevice(r[0]));
+    } catch { this.logger.error('updateThresholds error'); return Err('Failed to update thresholds'); }
   }
 
   async findAllDevices(filters: { status?: string; type?: string; page?: number; limit?: number }): Promise<Result<{ items: SensorDevice[]; total: number }>> {

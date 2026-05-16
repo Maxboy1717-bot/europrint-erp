@@ -1,13 +1,17 @@
 /**
  * @module wms-rental.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ *
+ * PA1-11 — All writes go through CommandBus (receive/patch/delete). The previous
+ * `WmsCrudService` direct injection has been removed so this controller has a
+ * single write path.
  */
 
 import {
   Controller, Get, Post, Delete, Patch, Body, Param, ParseIntPipe,
   UseGuards, UseInterceptors, Logger,
-InternalServerErrorException } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+  HttpException, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -17,7 +21,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { ReceiveFgCommand } from '../application/commands/receive-fg.handler';
-import { WmsCrudService } from '../application/wms-crud.service';
+import { PatchRentalCommand } from '../application/commands/patch-rental.handler';
+import { DeleteRentalCommand } from '../application/commands/delete-rental.handler';
 import { PatchRentalDto } from './dto/wms-crud.dto';
 
 enum Role {
@@ -34,20 +39,21 @@ enum Role {
 export class WmsRentalController {
   private readonly logger = new Logger(WmsRentalController.name);
 
-  constructor(
-    private commandBus: CommandBus,
-    private readonly crudSvc: WmsCrudService,
-  ) {}
+  constructor(private readonly commandBus: CommandBus) {}
 
   @ApiOperation({ summary: 'Get rentals' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get(':warehouseId')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async getRentals(@Param('warehouseId') warehouseId: number) {
-    this.logger.log('Getting rentals');
-    const items: unknown[] = [];
-    return Array.isArray(items) ? items : [];
+    // PA1-11 / Rule 10: previously returned a stub `[]`. Wire to a real
+    // GetRentalsQuery + handler when the read model is defined.
+    // TODO PA1-11: implement GetRentalsByWarehouseQuery and switch from 501.
+    this.logger.warn({ msg: 'getRentals not implemented', warehouseId });
+    throw new HttpException(
+      "Tez orada amalga oshiriladi (rentals by warehouse)",
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
   @ApiOperation({ summary: 'Receive fg' })
@@ -85,8 +91,10 @@ export class WmsRentalController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: PatchRentalDto,
   ) {
-    const data = unwrapOrThrow(await this.crudSvc.patchRentalRecord(id, dto as Record<string, unknown>));
-    return { data };
+    const res = await this.commandBus.execute(
+      new PatchRentalCommand(id, dto as Record<string, unknown>),
+    );
+    return { data: unwrapOrThrow(res) };
   }
 
   @ApiOperation({ summary: 'Delete rental' })
@@ -98,7 +106,9 @@ export class WmsRentalController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    const data = unwrapOrThrow(await this.crudSvc.softDeleteRentalRecord(id, user?.id ?? null));
-    return data;
+    const res = await this.commandBus.execute(
+      new DeleteRentalCommand(id, user?.id ?? null),
+    );
+    return unwrapOrThrow(res);
   }
 }

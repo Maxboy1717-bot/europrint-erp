@@ -50,6 +50,10 @@ export const ERP_EVENTS = {
   LAB_TEST_PASSED:          'qc.lab.passed',
   WMS_GOODS_ISSUE:          'wms.goods.issue',
   LMS_CERT_EXPIRED_LIVE:    'lms.certificate.expired.live',
+
+  // PA0 event-bridge fix (Trigger 15, 20) — see EventBridgeService
+  INVOICE_FULLY_PAID:        'fi.invoice.fully_paid',
+  ADVANCE_BYPASS_APPROVED:   'sd.advance.bypass_approved',
 } as const
 
 export type ErpEventKey = keyof typeof ERP_EVENTS

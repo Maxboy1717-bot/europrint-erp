@@ -9,6 +9,7 @@ import { safeNum } from '@common/math';
 import { Injectable, Logger } from '@nestjs/common';
 import { and, eq, desc, sql, inArray } from 'drizzle-orm';
 import { db } from '@shared/db';
+import { stock_items } from '@shared/db';
 import { inventory_counts as inventoryCounts, inventory_count_lines as inventoryCountLines } from '@shared/db/schema-pos-ext';
 import { Result, Ok as ok, Err as err } from '@common/result';
 import { IPosV2Repo, StockItemBarcode, MovementSummary, EmployeeActivity } from '../../domain/repositories/i-pos-v2.repo';
@@ -131,6 +132,30 @@ export class DrizzlePosV2Repo implements IPosV2Repo {
       return ok(this.mapToCountLine(updatedRow as Record<string, unknown>));
     } catch (error: unknown) {
       this.logger.error(`Failed to update count line ${lineId}:`, error);
+      return err({ message: 'Database error', code: 'DB_ERROR' });
+    }
+  }
+
+  async findStockItemsByWarehouse(warehouseId: string): Promise<Result<Array<Record<string, unknown>>>> {
+    try {
+      const rows = await db.select().from(stock_items).where(sql`warehouse_id = ${warehouseId}`);
+      return ok((Array.isArray(rows) ? rows : []) as Array<Record<string, unknown>>);
+    } catch (error: unknown) {
+      this.logger.error('Failed to find stock items by warehouse:', error);
+      return err({ message: 'Database error', code: 'DB_ERROR' });
+    }
+  }
+
+  async syncStockQuantities(updates: Array<{ stockItemId: string; quantity: number }>): Promise<Result<void>> {
+    try {
+      for (const u of updates) {
+        await db.update(stock_items)
+          .set({ quantity: String(u.quantity) })
+          .where(eq(stock_items.id, u.stockItemId));
+      }
+      return ok(undefined);
+    } catch (error: unknown) {
+      this.logger.error('Failed to sync stock quantities:', error);
       return err({ message: 'Database error', code: 'DB_ERROR' });
     }
   }

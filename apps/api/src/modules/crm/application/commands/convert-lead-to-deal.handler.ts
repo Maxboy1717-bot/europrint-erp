@@ -77,12 +77,11 @@ export class ConvertLeadToDealHandler implements ICommandHandler<ConvertLeadToDe
   }
 
   private buildDeal(lead: Lead, command: ConvertLeadToDealCommand): Result<Deal> {
-    let money: Money;
-    try {
-      money = Money.of(command.expectedDealAmount, command.currency);
-    } catch {
-      return Err(AppErr('VALIDATION', 'Invalid deal amount'));
+    const moneyR = Money.of(command.expectedDealAmount, command.currency);
+    if (!moneyR.ok) {
+      return Err(AppErr('VALIDATION', moneyR.error.message || 'Invalid deal amount'));
     }
+    const money: Money = moneyR.data;
     const statusR = DealStatus.create('qualification');
     if (!statusR.ok || !statusR.data) return Err(AppErr('VALIDATION', 'Invalid deal status'));
     const deal = Deal.create({

@@ -120,6 +120,9 @@ import { Feedback360Module } from './modules/feedback-360/feedback-360.module';
 // Sprint 4 — Order-to-Cash Workflow
 import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.module';
 
+// PA0 event-bridge fix — CQRS EventBus → EventEmitter2 (Trigger 2, 7, 14, 15, 20)
+import { SharedEventsModule } from './modules/shared/events/shared-events.module';
+
 @Module({
   imports: [
     // ── Config ──────────────────────────────────────────────────────────────
@@ -261,6 +264,9 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
 
     // ── Sprint 4 — Order-to-Cash Workflow ─────────────────────────────────────
     OrderWorkflowModule,
+
+    // ── PA0 event bridge (CQRS → EventEmitter2, Triggers 2/7/14/15/20) ────────
+    SharedEventsModule,
   ],
 
   providers: [

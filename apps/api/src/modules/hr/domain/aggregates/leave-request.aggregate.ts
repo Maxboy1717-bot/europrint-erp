@@ -1,11 +1,17 @@
 /**
  * @module leave-request.aggregate
  * @description Source module. See exports for details.
+ *
+ * State-transition methods (approve / reject / cancel) return
+ * `Result<void, DomainError>` per Rule 1 (Result Pattern). Constructors and
+ * getters may still throw `DomainError` because there is no Result return
+ * channel available there.
  */
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { DomainError } from '../../../../shared/domain/errors/domain-error';
+import { Result, Ok, Err } from '@common/types/result.type';
+import { AppErr } from '@common/result';
 export enum LeaveType {
   ANNUAL = 'annual',
   SICK = 'sick',
@@ -46,42 +52,44 @@ export class LeaveRequest {
     );
   }
 
-  approve(approverId: string): void {
+  approve(approverId: string): Result<void> {
     if (this.status !== LeaveStatus.PENDING) {
-      // INVALID_STATE: only PENDING leave requests can be approved.
+      // INVALID_TRANSITION: only PENDING leave requests can be approved.
       // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingApprovable'.
-      throw new DomainError('INVALID_STATE', 'Faqat pending so\'rov tasdiqlanadi');
+      return Err(AppErr('INVALID_TRANSITION', "Faqat pending so'rov tasdiqlanadi"));
     }
     this.status = LeaveStatus.APPROVED;
     this.approvedBy = approverId;
     this.approvedAt = _time.now();
     this.updatedAt = _time.now();
+    return Ok();
   }
 
-  reject(rejectorId: string, reason: string): void {
+  reject(rejectorId: string, reason: string): Result<void> {
     if (this.status !== LeaveStatus.PENDING) {
-      // INVALID_STATE: only PENDING leave requests can be rejected.
+      // INVALID_TRANSITION: only PENDING leave requests can be rejected.
       // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingRejectable'.
-      throw new DomainError('INVALID_STATE', 'Faqat pending so\'rov rad etiladi');
+      return Err(AppErr('INVALID_TRANSITION', "Faqat pending so'rov rad etiladi"));
     }
     this.status = LeaveStatus.REJECTED;
     this.rejectedBy = rejectorId;
     this.rejectionReason = reason;
     this.updatedAt = _time.now();
+    return Ok();
   }
 
-  cancel(): void {
+  cancel(): Result<void> {
     if (
       this.status === LeaveStatus.APPROVED ||
       this.status === LeaveStatus.PENDING
     ) {
       this.status = LeaveStatus.CANCELLED;
       this.updatedAt = _time.now();
-    } else {
-      // INVALID_STATE: cannot cancel from terminal/non-cancellable status.
-      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.leaveCancelNotAllowed'.
-      throw new DomainError('INVALID_STATE', 'Bu ta\'til so\'rovini bekor qilib bo\'lmaydi');
+      return Ok();
     }
+    // INVALID_TRANSITION: cannot cancel from terminal/non-cancellable status.
+    // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.leaveCancelNotAllowed'.
+    return Err(AppErr('INVALID_TRANSITION', "Bu ta'til so'rovini bekor qilib bo'lmaydi"));
   }
 
   static calcWorkDays(start: Date, end: Date): number {
@@ -97,3 +105,4 @@ export class LeaveRequest {
     return days;
   }
 }
+

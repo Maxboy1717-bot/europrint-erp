@@ -65,6 +65,19 @@ export interface IPosV2Repo {
   saveRequest(request: TransferRequest, lines: RequestLine[]): Promise<Result<TransferRequest>>;
   updateRequestStatus(requestId: string, status: RequestStatus, approvedBy?: string): Promise<Result<TransferRequest>>;
 
+  // ===== Stock items =====
+  /**
+   * Returns all stock items in a warehouse (raw rows for count-line creation).
+   * Used by StartInventoryCountHandler (PA1-10).
+   */
+  findStockItemsByWarehouse(warehouseId: string): Promise<Result<Array<Record<string, unknown>>>>;
+
+  /**
+   * Updates each stock item's quantity to the counted quantity (post-approval sync).
+   * Used by ApproveCountHandler (PA1-10).
+   */
+  syncStockQuantities(updates: Array<{ stockItemId: string; quantity: number }>): Promise<Result<void>>;
+
   // ===== Barcode Lookup =====
   findByBarcode(barcode: string): Promise<Result<StockItemBarcode | null>>;
 

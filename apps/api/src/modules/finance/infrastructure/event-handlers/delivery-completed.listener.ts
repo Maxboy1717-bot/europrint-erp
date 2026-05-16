@@ -7,6 +7,7 @@ import { FINANCE_REPO } from '../../domain/repositories/i-finance.repo';
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { FinanceRepository } from '../repositories/drizzle-finance.repo';
+import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 
 export interface DeliveryCompletedEvent {
   deliveryId: number;
@@ -21,7 +22,7 @@ export class DeliveryCompletedListener {
 
   constructor(@Inject(FINANCE_REPO) private readonly financeRepo: FinanceRepository) {}
 
-  @OnEvent('DELIVERY_COMPLETED', { async: true })
+  @OnEvent(ERP_EVENTS.DELIVERY_COMPLETED, { async: true })
   async handle(event: DeliveryCompletedEvent): Promise<void> {
     try {
       this.logger.debug(

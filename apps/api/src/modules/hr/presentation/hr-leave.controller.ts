@@ -5,7 +5,7 @@
 
 import {
   Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Patch, Post, Query,
-  UseGuards, UseInterceptors, InternalServerErrorException, NotFoundException,
+  UseGuards, UseInterceptors, NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { assertOk, unwrapOrDefault, unwrapOrThrow } from '@common/http-result';
@@ -19,8 +19,11 @@ import { ApproveLeaveCommand } from '../application/commands/approve-leave.handl
 import { RejectLeaveCommand } from '../application/commands/reject-leave.command';
 import { CancelLeaveCommand } from '../application/commands/cancel-leave.command';
 import { CreateLeaveRequestCommand } from '../application/commands/create-leave-request.command';
+import { DeleteLeaveCommand } from '../application/commands/delete-leave.command';
 import { GetLeavesQuery } from '../application/queries/get-leaves.query';
 import { GetLeaveBalanceQuery } from '../application/queries/get-leave-balance.query';
+// PA1-11: HrRepo retained ONLY for read paths (getLeaveStats, findLeaveById on
+// the GET-by-id route). All write operations now flow through CommandBus.
 import { HR_REPO, IHrRepo } from '../domain/repositories/i-hr.repo';
 import {
   CreateLeaveRequestDtoSchema,
@@ -163,12 +166,14 @@ export class HrLeaveController {
   @HttpCode(HttpStatus.OK)
   @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async deleteLeave(@Param('id') id: string) {
-    const check = await this.hrRepo.findLeaveById(id);
-    if (!check.ok || check.data == null) {
-      throw new NotFoundException(`Ta'til so'rovi topilmadi: ${id}`);
+    const result = await this.commandBus.execute(new DeleteLeaveCommand(id));
+    if (!result.ok) {
+      throw new NotFoundException(
+        typeof result.error === 'string'
+          ? result.error
+          : (result.error as { message?: string })?.message ?? `Ta'til so'rovi topilmadi: ${id}`,
+      );
     }
-    const result = await this.hrRepo.updateLeave(id, { status: 'deleted', deleted_at: new Date().toISOString() });
-    if (!result.ok) throw new NotFoundException(`Ta'til so'rovini o'chirib bo'lmadi: ${id}`);
-    return { deleted: true, id };
+    return result.data;
   }
 }

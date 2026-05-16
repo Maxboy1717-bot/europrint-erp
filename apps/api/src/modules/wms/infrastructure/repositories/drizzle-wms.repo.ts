@@ -10,11 +10,11 @@ import { castTo } from '@common/db-rows';
 import { AppErr, Err, Ok } from '@common/result';
 import { Database } from '@/infrastructure/database/database';
 import { Result } from '@common/result';
-import { db, stocks } from '@shared/db';
+import { db, stocks, warehouses } from '@shared/db';
 import { sql, eq, isNull, and, asc } from 'drizzle-orm';
 import { wms_stock } from '@shared/db/schema-compat-5';
 import { Stock } from '../../domain/aggregates/stock.aggregate';
-import { IWmsRepository, DrizzleExecutor } from '../../domain/repositories/wms.repository';
+import { IWmsRepository, DrizzleExecutor, CreateWarehouseInput } from '../../domain/repositories/wms.repository';
 import {
   execSaveStock, queryStock, queryStockByMaterialAndWarehouse, queryFefoStock,
   execUpdateStockReserved, execUpdateStockIssued, execReceiveFg, queryAllStockByWarehouse,
@@ -206,6 +206,24 @@ export class DrizzleWmsRepository implements IWmsRepository {
     } catch {
       this.logger.error('Failed to get all stock');
       return Err('Oqish xatoligi');
+    }
+  }
+
+  async createWarehouse(input: CreateWarehouseInput): Promise<Result<CreateWarehouseInput>> {
+    try {
+      await db.insert(warehouses).values({
+        id: input.id,
+        name: input.name,
+        address: input.address,
+        is_free_storage: input.is_free_storage,
+        free_storage_days: input.free_storage_days,
+        monthly_rate: input.monthly_rate,
+        created_at: input.created_at,
+      });
+      return Ok(input);
+    } catch (e) {
+      this.logger.error({ method: 'createWarehouse', error: e }, 'Failed to insert warehouse');
+      return Err(AppErr('DB_ERROR', `Warehouse yaratishda xato: ${(e as Error)?.message ?? String(e)}`));
     }
   }
 
