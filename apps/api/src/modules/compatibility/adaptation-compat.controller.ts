@@ -21,7 +21,7 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 // NOTE: GET /adaptation/programs is served by AdaptationController (adaptation module).
 // This compat controller owns write operations (create/update/remove) and other read sub-routes
 // on the /adaptation base path. Do not add GET 'programs' here to avoid duplicate route errors.
-@Controller('adaptation')
+@Controller('legacy/adaptation')
 export class AdaptationCompatController {
   constructor(private readonly svc: AdaptationCompatService) {}
 

@@ -36,7 +36,7 @@ import { unwrapOrInternal } from '@common/http-result';
 @UseGuards(PermissionGuard)
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @UseInterceptors(AuditInterceptor)
-@Controller('pos')
+@Controller('legacy/pos')
 export class PosController {
   private readonly logger = new Logger(PosController.name);
   constructor(private readonly service: PosService,

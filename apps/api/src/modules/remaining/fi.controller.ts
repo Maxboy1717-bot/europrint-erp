@@ -17,7 +17,7 @@ import { unwrapOrInternal } from '@common/http-result';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin', 'manager', 'hr_manager', 'director', 'SUPER_ADMIN')
 @UseInterceptors(AuditInterceptor)
-@Controller('fi')
+@Controller('legacy/fi')
 export class FiController {
   constructor(private readonly svc: FiService) {}
 
