@@ -9,9 +9,10 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
 Body, Controller, Get, Inject, Post, Query, UseGuards, Logger, UseInterceptors , BadRequestException, UsePipes,
 InternalServerErrorException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '@shared/guards/roles.guard';
 import { CurrentUser} from '@shared/decorators/current-user.decorator';
 import { Result, isErr } from '@common/result';
@@ -21,14 +22,17 @@ import { BarcodeDtoSchema, BarcodeDto } from './dto/pos-v2.dto';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
 @Roles('admin', 'manager', 'warehouse', 'operator')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Barcode')
 @Controller('pos-v2/barcode')
 @UseGuards(RolesGuard)
 export class BarcodeController {
   private readonly logger = new Logger(BarcodeController.name);
  constructor(private readonly queryBus: QueryBus) {}
 
+ @ApiOperation({ summary: 'Lookup via query' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('lookup')
  async lookupViaQuery(
  @Query('barcode') barcode: string,
@@ -41,6 +45,9 @@ export class BarcodeController {
  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Lookup via body' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post('lookup')
   @UsePipes(new ZodValidationPipe(BarcodeDtoSchema))
  async lookupViaBody(

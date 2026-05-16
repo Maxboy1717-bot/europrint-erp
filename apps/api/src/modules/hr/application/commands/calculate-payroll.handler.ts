@@ -10,6 +10,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { HR_REPO, IHrRepo } from '../../domain/repositories/i-hr.repo';
+import { EmployeeId } from '@shared/domain/value-objects/employee-id.vo';
 import {
   findUserIdByEmployee,
   hasAnyOrgAssignment,
@@ -41,9 +42,17 @@ export class CalculatePayrollHandler implements ICommandHandler<CalculatePayroll
   async execute(command: CalculatePayrollCommand): Promise<Result<Record<string, unknown>>> {
       this.logger.debug(`Calculating payroll for employee ${command.employeeId}, period: ${command.period}`);
 
+      // VO validation at the handler boundary — rejects zero/negative ids
+      // (and stringly-typed ids if the DTO leaks through) before any DB hit.
+      const empIdR = EmployeeId.create(command.employeeId);
+      if (!empIdR.ok) {
+        return Err({ code: 'VALIDATION', message: empIdR.error.message });
+      }
+      const employeeIdValue = empIdR.data.value;
+
       // Biznes qoida: xodim org-structure'da biriktirilgan bo'lishi shart.
       // Aks holda — oylik bazaga kiritilmaydi (lavozim/funksiya yo'q).
-      const userId = await findUserIdByEmployee(command.employeeId);
+      const userId = await findUserIdByEmployee(employeeIdValue);
       if (userId === null) {
         return Err({
           code: 'BAD_REQUEST',

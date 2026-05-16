@@ -7,7 +7,7 @@ import { Ok, Err } from '@common/result';
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
-import { IMmRepository } from '../../domain/repositories/mm.repository';
+import { IMmRepository, MM_REPO } from '../../domain/repositories/mm.repository';
 
 export class GoodsReceiptCommand {
   constructor(public poId: number,
@@ -19,48 +19,65 @@ export class GoodsReceiptCommand {
 export class GoodsReceiptHandler implements ICommandHandler<GoodsReceiptCommand> {
   private readonly logger = new Logger(GoodsReceiptHandler.name);
   constructor(
-    @Inject('IMmRepository') private mmRepo: IMmRepository,
+    @Inject(MM_REPO) private mmRepo: IMmRepository,
     private eventBus: EventBus
   ) {}
 
   async execute(command: GoodsReceiptCommand): Promise<Result<void>> {
     this.logger.log('Recording goods receipt');
 
-    const poResult = await this.mmRepo.getPurchaseOrder(command.poId);
-    if (!poResult.ok) {
-      return Err(poResult.error);
-    }
+    // PO read + 3-way match + status save atomically — partial failures roll back.
+    const outcome = await this.mmRepo.withTransaction(async (tx) => {
+      const poResult = await this.mmRepo.getPurchaseOrder(command.poId, tx);
+      if (!poResult.ok) {
+        return Err(poResult.error);
+      }
 
-    const po = poResult.data;
+      const po = poResult.data;
 
-    // §17 3-Way Match: PO + GR + Invoice
-    const matchResult = await this.mmRepo.validateThreeWayMatch(command.poId);
-    if (!matchResult.ok) {
-      return Err(matchResult.error);
-    }
+      // §17 3-Way Match: PO + GR + Invoice
+      const matchResult = await this.mmRepo.validateThreeWayMatch(command.poId, tx);
+      if (!matchResult.ok) {
+        return Err(matchResult.error);
+      }
 
-    if (!matchResult.data.matched) {
-      this.logger.warn(
-        { poId: command.poId, difference: matchResult.data.difference },
-        'Three-way match failed - Purchase manager approval required',
-      );
+      if (!matchResult.data.matched) {
+        this.logger.warn(
+          { poId: command.poId, difference: matchResult.data.difference },
+          'Three-way match failed - Purchase manager approval required',
+        );
 
-      this.eventBus.publish('THREE_WAY_MATCH_FAILED', {
-        poId: command.poId,
-        difference: matchResult.data.difference,
-      });
+        // Buffer the event payload; emit only after rollback so consumers see consistent state.
+        return Err(
+          `THREE_WAY_MATCH_FAILED|${command.poId}|${matchResult.data.difference}`,
+        );
+      }
 
-      return Err(`Farq: ${matchResult.data.difference}. Xarid menejer tasdiqlashi kerak`);
-    }
+      const receiptResult = po.recordGoodsReceipt(command.quantity);
+      if (!receiptResult.ok) {
+        return Err(receiptResult.error);
+      }
 
-    const receiptResult = po.recordGoodsReceipt(command.quantity);
-    if (!receiptResult.ok) {
-      return Err(receiptResult.error);
-    }
+      const saveResult = await this.mmRepo.savePurchaseOrder(po, tx);
+      if (!saveResult.ok) {
+        return Err(saveResult.error);
+      }
 
-    const saveResult = await this.mmRepo.savePurchaseOrder(po);
-    if (!saveResult.ok) {
-      return Err(saveResult.error);
+      return Ok(undefined);
+    });
+
+    if (!outcome.ok) {
+      // Decode buffered 3-way-match-fail signal back into the original event + message.
+      const errMsg = outcome.error?.message ?? '';
+      if (errMsg.startsWith('THREE_WAY_MATCH_FAILED|')) {
+        const [, poId, difference] = errMsg.split('|');
+        this.eventBus.publish('THREE_WAY_MATCH_FAILED', {
+          poId: Number(poId),
+          difference: Number(difference),
+        });
+        return Err(`Farq: ${difference}. Xarid menejer tasdiqlashi kerak`);
+      }
+      return Err(outcome.error);
     }
 
     this.logger.log('Goods receipt recorded');

@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { AggregateRoot } from '@nestjs/cqrs';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { Err } from '@common/result';
 import { Result } from '@common/result';
 
@@ -76,7 +76,7 @@ export class ProductionSession extends AggregateRoot {
     }
     this.status = MesStatus.RUNNING;
     this.startedAt = _time.now();
-    this.apply({ type: 'MES_SESSION_STARTED', data: { sessionId: this.id } });
+    this.addDomainEvent({ type: 'MES_SESSION_STARTED', data: { sessionId: this.id } });
     return { ok: true, data: undefined };
   }
 
@@ -85,7 +85,7 @@ export class ProductionSession extends AggregateRoot {
       return Err('Faqat ishchi sessiyani to\'xtatish mumkin');
     }
     this.status = MesStatus.PAUSED;
-    this.apply({
+    this.addDomainEvent({
       type: 'MES_SESSION_PAUSED',
       data: { sessionId: this.id, reason },
     });
@@ -98,8 +98,8 @@ export class ProductionSession extends AggregateRoot {
     }
     this.status = MesStatus.COMPLETED;
     this.completedAt = _time.now();
-    this.apply({ type: 'MES_COMPLETED', data: { sessionId: this.id } });
-    this.apply({
+    this.addDomainEvent({ type: 'MES_COMPLETED', data: { sessionId: this.id } });
+    this.addDomainEvent({
       type: 'MES_TO_HR_360',
       data: { sessionId: this.id, operatorId: this.operatorId },
     });
@@ -116,7 +116,7 @@ export class ProductionSession extends AggregateRoot {
     const downtime = new Downtime(reason, duration);
     this.downtimes.push(downtime);
     this.totalDowntimeDuration += duration;
-    this.apply({
+    this.addDomainEvent({
       type: 'DOWNTIME_RECORDED',
       data: { sessionId: this.id, reason, duration },
     });
@@ -132,7 +132,7 @@ export class ProductionSession extends AggregateRoot {
       return Err('Faqat tugallangan sessiyani QC ga yuborish mumkin');
     }
     this.status = MesStatus.SENT_TO_QC;
-    this.apply({ type: 'MES_SENT_TO_QC', data: { sessionId: this.id } });
+    this.addDomainEvent({ type: 'MES_SENT_TO_QC', data: { sessionId: this.id } });
     return { ok: true, data: undefined };
   }
 

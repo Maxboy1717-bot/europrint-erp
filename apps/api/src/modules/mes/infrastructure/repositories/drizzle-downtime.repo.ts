@@ -4,36 +4,12 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { db } from '@shared/db';
-import { pgTable, uuid, text, timestamp, integer, index } from 'drizzle-orm/pg-core';
-import { createId } from '@paralleldrive/cuid2';
+import { db, downtime_events as downtimeEvents } from '@shared/db';
 import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
 import { Result, Err , Ok } from '@common/result';
 import { DowntimeEvent, DOWNTIME_REASON_CODES } from '../../domain/aggregates/downtime-event.aggregate';
 
 import { MS_PER_MINUTE } from '@common/constants/app.constants';
-const downtimeEvents = pgTable(
-  'downtime_events',
-  {
-    id: uuid('id').primaryKey().$defaultFn(() => createId()),
-    sessionId: uuid('session_id').notNull(),
-    workCenterId: uuid('work_center_id'),
-    eventType: text('event_type').notNull().default('unplanned'),
-    reasonCode: text('reason_code').notNull(),
-    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
-    endedAt: timestamp('ended_at', { withTimezone: true }),
-    durationMinutes: integer('duration_minutes'),
-    reportedBy: text('reported_by').notNull(),
-    notes: text('notes'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  },
-  (table) => [
-    index('downtime_events_session_idx').on(table.sessionId),
-    index('downtime_events_work_center_idx').on(table.workCenterId),
-    index('downtime_events_type_idx').on(table.eventType),
-    index('downtime_events_started_at_idx').on(table.startedAt),
-  ],
-);
 
 export interface DowntimeFilters {
   sessionId?: string;

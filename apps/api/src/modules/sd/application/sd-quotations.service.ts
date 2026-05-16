@@ -28,15 +28,27 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { QUOTATION_BASE_NUMBER } from '@common/constants/app.constants';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Result, AppError, Ok, Err, AppErr } from '@common/result';
 import { BULK_DISCOUNT_LARGE, BULK_DISCOUNT_SMALL } from '@common/constants/business.constants';
 import { SdQuotationsRepository } from './sd-quotations.repository';
+import {
+  IQuotationRepo,
+  QUOTATION_REPO,
+  QuotationUpdatePatch,
+  KpiTargetPatch,
+  PriceFormulaPatch,
+} from '../domain/repositories/i-quotation.repo';
+
+type Row = Record<string, unknown>;
 
 @Injectable()
 export class SdQuotationsService {
-  constructor(private readonly repo: SdQuotationsRepository) {}
+  constructor(
+    private readonly repo: SdQuotationsRepository,
+    @Inject(QUOTATION_REPO) private readonly quotationRepo: IQuotationRepo,
+  ) {}
 
   async listQuotations(customerId: number | null, status: string | null, lim: number, off: number): Promise<Result<object, AppError>> {
     return this.repo.listQuotations(customerId, status, lim, off);
@@ -136,5 +148,83 @@ export class SdQuotationsService {
         },
       };
     });
+  }
+
+  // ── Status-transition methods (formerly inline SQL in the controller) ────────
+
+  async sendQuotation(id: string): Promise<Result<Row>> {
+    const r = await this.quotationRepo.sendQuotation(id);
+    if (!r.ok) return r as Result<Row>;
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Quotation ${id} topilmadi`));
+    return Ok({ id, sent: true, status: 'sent', updated_at: r.data['updated_at'] });
+  }
+
+  async approveQuotation(id: string): Promise<Result<Row>> {
+    const r = await this.quotationRepo.approveQuotation(id);
+    if (!r.ok) return r as Result<Row>;
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Quotation ${id} topilmadi`));
+    return Ok({ id, approved: true, status: 'approved', updated_at: r.data['updated_at'] });
+  }
+
+  async updateQuotation(id: string, body: Record<string, unknown>): Promise<Result<{ data: Row }>> {
+    const patch: QuotationUpdatePatch = {};
+    for (const key of ['title', 'total_amount', 'currency', 'valid_until', 'notes', 'status', 'items'] as const) {
+      if (key in body) (patch as Record<string, unknown>)[key] = body[key];
+    }
+    const r = await this.quotationRepo.updateQuotation(id, patch);
+    if (!r.ok) return r as Result<{ data: Row }>;
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Quotation ${id} topilmadi`));
+    return Ok({ data: r.data });
+  }
+
+  async deleteQuotation(id: string): Promise<Result<Row>> {
+    const r = await this.quotationRepo.softDeleteQuotation(id);
+    if (!r.ok) return r as Result<Row>;
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Quotation ${id} topilmadi yoki allaqachon o'chirilgan`));
+    return Ok({ deleted: true, id, deleted_at: r.data['deleted_at'] });
+  }
+
+  async updateKpiTarget(id: string, body: Record<string, unknown>): Promise<Result<{ data: Row }>> {
+    const patch: KpiTargetPatch = {
+      target_value: body['target_value'],
+      period: body['period'],
+    };
+    const r = await this.quotationRepo.updateKpiTarget(id, patch);
+    if (!r.ok) return r as Result<{ data: Row }>;
+    if (!r.data) return Err(AppErr('NOT_FOUND', `KPI target ${id} topilmadi`));
+    return Ok({ data: r.data });
+  }
+
+  async cancelOrder(id: string, body: Record<string, unknown>): Promise<Result<Row>> {
+    const r = await this.quotationRepo.cancelSalesOrder(id, body['reason']);
+    if (!r.ok) return r as Result<Row>;
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Order ${id} topilmadi`));
+    return Ok({ id, cancelled: true, status: 'cancelled', updated_at: r.data['updated_at'] });
+  }
+
+  async markPaymentPaid(id: string, body: Record<string, unknown>): Promise<Result<Row>> {
+    const r = await this.quotationRepo.markPaymentPaid(id, body['payment_date']);
+    if (!r.ok) return r as Result<Row>;
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Payment ${id} topilmadi`));
+    return Ok({ id, paid: true, status: 'paid', updated_at: r.data['updated_at'] });
+  }
+
+  async signContract(id: string, body: Record<string, unknown>): Promise<Result<Row>> {
+    const r = await this.quotationRepo.signContract(id, body['signature_data']);
+    if (!r.ok) return r as Result<Row>;
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Contract ${id} topilmadi`));
+    return Ok({ id, signed: true, status: 'signed', updated_at: r.data['updated_at'] });
+  }
+
+  async upsertPriceFormula(body: Record<string, unknown>): Promise<Result<{ updated: boolean; data: Row | null }>> {
+    const patch: PriceFormulaPatch = {
+      id: body['id'],
+      name: body['name'],
+      formula: body['formula'],
+      description: body['description'],
+    };
+    const r = await this.quotationRepo.upsertPriceFormula(patch);
+    if (!r.ok) return r as Result<{ updated: boolean; data: Row | null }>;
+    return Ok({ updated: true, data: r.data });
   }
 }

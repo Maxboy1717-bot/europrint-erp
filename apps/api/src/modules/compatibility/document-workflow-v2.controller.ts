@@ -7,7 +7,7 @@ import {
   Controller, Get, Post, Body, Param, Query, ParseIntPipe,
   UseGuards, UseInterceptors, BadRequestException,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -17,7 +17,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
 import { DocumentWorkflowV2Service } from './document-workflow-v2.service';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(
@@ -57,9 +57,9 @@ export class DocumentWorkflowV2Controller {
     },
     @CurrentUser() user: { id: number },
   ) {
-    if (!body.employeeId) throw new BadRequestException('employeeId majburiy');
-    if (!body.documentType) throw new BadRequestException('documentType majburiy');
-    if (!body.title) throw new BadRequestException('title majburiy');
+    if (!body.employeeId) throw new BadRequestException(await this.i18n.t('errors.employeeIdRequired'));
+    if (!body.documentType) throw new BadRequestException(await this.i18n.t('errors.documentTypeRequired'));
+    if (!body.title) throw new BadRequestException(await this.i18n.t('errors.titleRequired'));
 
     return unwrapOrInternal(
       await this.svc.initiateDocument({

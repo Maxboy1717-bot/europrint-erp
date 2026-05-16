@@ -5,8 +5,8 @@
 
 import { Controller, Get, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -32,7 +32,7 @@ interface HrSummary { attendanceToday: { attended: number; total: number }; open
 
 @ApiTags('Director — Dashboard')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('director/dashboard')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)

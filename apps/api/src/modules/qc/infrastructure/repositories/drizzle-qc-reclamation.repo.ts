@@ -4,30 +4,16 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
-import { createId } from '@paralleldrive/cuid2';
 import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/types/result.type';
-import { db } from '@shared/db';
+import { db, qc_reclamations as qcReclamations } from '@shared/db';
 import { Reclamation, ReclamationStatus } from '../../domain/aggregates/reclamation.aggregate';
 import { DefectSeverity } from '../../domain/aggregates/defect.aggregate';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
-export const qcReclamations = pgTable('qc_reclamations', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  customerName: text('customer_name').notNull(),
-  customerId: uuid('customer_id'),
-  orderId: uuid('order_id'),
-  description: text('description').notNull(),
-  severity: text('severity').notNull().default('major'),
-  status: text('status').notNull().default('open'),
-  reportedDate: timestamp('reported_date', { withTimezone: true }).notNull().defaultNow(),
-  assignedTo: text('assigned_to'),
-  resolution: text('resolution'),
-  resolvedAt: timestamp('resolved_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+
+// Re-exported for downstream repos that previously imported this constant from here.
+export { qcReclamations };
 
 @Injectable()
 export class DrizzleQcReclamationRepo {

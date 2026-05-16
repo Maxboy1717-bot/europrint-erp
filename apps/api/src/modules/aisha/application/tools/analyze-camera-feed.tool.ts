@@ -16,7 +16,7 @@ import {
   CAMERA_SNAPSHOT_PROVIDER,
   type ICameraSnapshotProvider,
 } from './get-camera-snapshot.tool';
-import { ClaudeService } from '../llm/claude.service';
+import { CLAUDE_PORT, IClaudePort } from '../../domain/ports/i-claude-port';
 
 export interface VisionAnalysis {
   description: string;
@@ -40,7 +40,7 @@ export class AnalyzeCameraFeedTool implements IAishaTool {
   };
 
   constructor(
-    private readonly claude: ClaudeService,
+    @Inject(CLAUDE_PORT) private readonly claude: IClaudePort,
     @Optional() @Inject(CAMERA_SNAPSHOT_PROVIDER)
     private readonly provider: ICameraSnapshotProvider | null = null,
   ) {}

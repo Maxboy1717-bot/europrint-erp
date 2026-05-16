@@ -7,23 +7,51 @@ import {
   Controller, Get, Post, Patch, Body, Param, ParseIntPipe,
   UseGuards, UseInterceptors,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { z } from 'zod';
 import { HrGsdService } from './hr-gsd.service';
+
+const UpdateGsdEmployeeSchema = z.object({
+  positionId: z.union([z.string(), z.number()]).optional(),
+  departmentId: z.union([z.string(), z.number()]).optional(),
+  status: z.string().max(50).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
+const CreateReferralSchema = z.object({
+  referrerId: z.union([z.string(), z.number()]).optional(),
+  candidateName: z.string().max(200).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().max(50).optional(),
+  positionId: z.union([z.string(), z.number()]).optional(),
+}).passthrough();
+
+const CreateSkillSchema = z.object({
+  name: z.string().max(200),
+  category: z.string().max(100).optional(),
+  levels: z.array(z.string()).optional(),
+}).passthrough();
 
 const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'admin'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Roles(...HR_ROLES)
+@ApiTags('Hr Gsd')
+@ApiBearerAuth()
 @Controller('hr')
 export class HrGsdController {
   constructor(private readonly svc: HrGsdService) {}
 
+  @ApiOperation({ summary: 'Get gsd employee' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('gsd/employees/:id')
   async getGsdEmployee(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.getEmployee(id);
@@ -31,6 +59,9 @@ export class HrGsdController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Get gsd employee history' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('gsd/employees/:id/history')
   async getGsdEmployeeHistory(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.getEmployeeHistory(id);
@@ -38,6 +69,8 @@ export class HrGsdController {
     return { items, total: items.length };
   }
 
+  @ApiOperation({ summary: 'Get referrals' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('referrals')
   async getReferrals() {
     const r = await this.svc.getReferrals();
@@ -45,6 +78,8 @@ export class HrGsdController {
     return { items, total: items.length };
   }
 
+  @ApiOperation({ summary: 'Get boomerang referrals' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('referrals/boomerang')
   async getBoomerangReferrals() {
     const r = await this.svc.getBoomerangs();
@@ -52,6 +87,8 @@ export class HrGsdController {
     return { items, total: items.length };
   }
 
+  @ApiOperation({ summary: 'Get skills' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('skills')
   async getSkills() {
     const r = await this.svc.getSkills();
@@ -64,11 +101,17 @@ export class HrGsdController {
    * Returns a null payload until the service has a findById helper; the page
    * handles missing data by rendering "skill topilmadi".
    */
+  @ApiOperation({ summary: 'Get skill by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('skills/:id')
   async getSkillById(@Param('id', ParseIntPipe) id: number) {
     return { id, name: null, category: null, levels: [] };
   }
 
+  @ApiOperation({ summary: 'Get milestone complete' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('milestones/:id/complete')
   async getMilestoneComplete(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.getMilestone(id);
@@ -76,6 +119,10 @@ export class HrGsdController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Complete milestone' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('milestones/:id/complete')
   async completeMilestone(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.completeMilestone(id);
@@ -83,6 +130,10 @@ export class HrGsdController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Patch milestone complete' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('milestones/:id/complete')
   async patchMilestoneComplete(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.completeMilestone(id);
@@ -90,18 +141,31 @@ export class HrGsdController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Update gsd employee' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('gsd/employees/:id')
-  async updateGsdEmployee(@Param('id', ParseIntPipe) id: number, @Body() _body: Record<string, unknown>) {
+  async updateGsdEmployee(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    UpdateGsdEmployeeSchema.parse(body ?? {});
     return { data: { id, updated: true } };
   }
 
+  @ApiOperation({ summary: 'Create referral' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('referrals')
-  async createReferral(@Body() body: Record<string, unknown>) {
-    return { data: { id: Date.now(), ...body, created: true } };
+  async createReferral(@Body() body: unknown) {
+    const dto = CreateReferralSchema.parse(body);
+    return { data: { id: Date.now(), ...dto, created: true } };
   }
 
+  @ApiOperation({ summary: 'Create skill' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('skills')
-  async createSkill(@Body() body: Record<string, unknown>) {
-    return { data: { id: Date.now(), ...body, created: true } };
+  async createSkill(@Body() body: unknown) {
+    const dto = CreateSkillSchema.parse(body);
+    return { data: { id: Date.now(), ...dto, created: true } };
   }
 }

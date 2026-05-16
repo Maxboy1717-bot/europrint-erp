@@ -16,3 +16,9 @@ export interface IDealRepository {
   delete(id: number): Promise<Result<void>>;
   countByStatus(status: string): Promise<Result<number>>;
 }
+
+/**
+ * DI token for IDealRepository — Symbol-based to avoid string-literal collisions.
+ * (P2-20: replaces the legacy `'IDealRepository'` string token.)
+ */
+export const DEAL_REPO = Symbol('DEAL_REPO');

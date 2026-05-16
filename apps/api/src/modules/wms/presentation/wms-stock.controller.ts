@@ -4,9 +4,11 @@
  */
 
 import { BadRequestException, Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, NotFoundException, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -25,7 +27,9 @@ enum Role {
   DIRECTOR = 'director',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Wms Stock')
+@ApiBearerAuth()
 @Controller('wms/stock')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -36,14 +40,20 @@ export class WmsStockController {
     private commandBus: CommandBus,
     private queryBus: QueryBus,
     private readonly crudSvc: WmsCrudService,
+    private readonly i18n: I18nService,
   ) {}
 
+  @ApiOperation({ summary: 'Create stock' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async createStock() {
     return { success: true };
   }
 
+  @ApiOperation({ summary: 'List stock' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async listStock(@Query('page') page?: string, @Query('limit') limit?: string) {
@@ -53,16 +63,21 @@ export class WmsStockController {
     return { items: Array.isArray(items) ? items : [], total };
   }
 
+  @ApiOperation({ summary: 'Get stock' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async getStock(@Param('id', ParseIntPipe) id: number) {
     this.logger.log(`Getting stock id=${id}`);
     const result = await this.crudSvc.getStockById(id);
     const row = result.ok ? result.data : null;
-    if (!row) throw new NotFoundException(`Stock id=${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.stockNotFound', { args: { id } }));
     return { data: row };
   }
 
+  @ApiOperation({ summary: 'Get fefo stock' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('fefo/:materialId/:warehouseId')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async getFefoStock(
@@ -74,6 +89,9 @@ export class WmsStockController {
     return unwrapOrThrow(res);
   }
 
+  @ApiOperation({ summary: 'Reserve stock' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('reserve')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async reserveStock(@Body() dto: Record<string, unknown>) {
@@ -83,7 +101,7 @@ export class WmsStockController {
     const orderId     = Number(dto['orderId'] ?? dto['order_id'] ?? 0);
 
     if (!materialId || !warehouseId || !quantity) {
-      throw new BadRequestException('materialId, warehouseId va quantity majburiy');
+      throw new BadRequestException(await this.i18n.t('errors.materialWarehouseQtyRequired'));
     }
 
     this.logger.log(`Reserving stock: materialId=${materialId}, warehouseId=${warehouseId}, qty=${quantity}`);
@@ -92,6 +110,9 @@ export class WmsStockController {
     return unwrapOrThrow(result);
   }
 
+  @ApiOperation({ summary: 'Patch stock' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async patchStock(
@@ -102,6 +123,9 @@ export class WmsStockController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Delete stock' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Delete(':id')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async deleteStock(

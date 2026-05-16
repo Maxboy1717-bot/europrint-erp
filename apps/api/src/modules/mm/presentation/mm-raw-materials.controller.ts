@@ -12,8 +12,9 @@ import {
   Logger,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -22,8 +23,9 @@ import { safeInt } from '../../hr/common/db-rows';
 
 const MM_ROLES = ['super_admin', 'director', 'warehouse_manager', 'production_manager', 'purchaser'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Mm Raw Materials')
 @Controller('raw-materials')
 @UseGuards(RolesGuard)
 @Roles(...MM_ROLES)
@@ -32,6 +34,8 @@ export class MmRawMaterialsController {
 
   constructor(private readonly svc: MmMaterialsExtrasService) {}
 
+  @ApiOperation({ summary: 'List' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async list(
     @Query('page') page?: string,

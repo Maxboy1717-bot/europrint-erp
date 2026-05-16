@@ -9,6 +9,8 @@ import { assertFound } from '@common/assertions';
 import {
   Controller,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   Query,
   UseGuards,
@@ -17,8 +19,9 @@ import {
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -28,8 +31,9 @@ import { safeInt } from '../hr/common/db-rows';
 import { MS_PER_DAY } from '@common/constants/app.constants';
 const PROD_ROLES = ['super_admin', 'director', 'production_manager', 'operator', 'technologist'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Production Reports')
 @Controller('production')
 @UseGuards(RolesGuard)
 @Roles(...PROD_ROLES)
@@ -38,6 +42,8 @@ export class ProductionReportsController {
 
   constructor(private readonly svc: ProductionService) {}
 
+  @ApiOperation({ summary: 'Weekly report' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('reports/weekly')
   async weeklyReport(
     @Query('start') start?: string,
@@ -48,11 +54,16 @@ export class ProductionReportsController {
     return unwrapOrThrow(await this.svc.weeklyReport(s, e));
   }
 
+  @ApiOperation({ summary: 'Stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('stats')
   async stats() {
     return unwrapOrThrow(await this.svc.getProductionStats());
   }
 
+  @ApiOperation({ summary: 'Order360 card' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('orders/:id/360-card')
   async order360Card(@Param('id') id: string) {
     const r = await this.svc.getOrder360Card(safeInt(id, 0));
@@ -60,6 +71,15 @@ export class ProductionReportsController {
     return r;
   }
 
+  // P3-26: orders aggregation for production reports isn't wired yet.
+  @ApiOperation({ summary: 'Get orders' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('orders')
-  async getOrders() { return { data: [], total: 0 }; }
+  async getOrders() {
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: GET /production-reports/orders', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
+  }
 }

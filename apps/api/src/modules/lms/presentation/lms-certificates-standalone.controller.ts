@@ -18,7 +18,7 @@ import {
   UseInterceptors
 } from '@nestjs/common';
 import { unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -30,7 +30,7 @@ import { LmsCertificatesStandaloneService } from '../application/services/lms-ce
 import { CreateCertificateSchema, CreateCertificateDto } from './dto/lms-questionnaire.dto';
 import type { FastifyReply } from 'fastify';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('certificates')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)

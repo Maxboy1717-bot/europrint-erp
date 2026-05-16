@@ -1,15 +1,15 @@
 /**
  * @module gemini-fallback.service
- * @description Fallback LLM used when Claude returns 5xx or times out > 5s.
- * Implements the same one-shot interface as ClaudeService so the orchestrator
- * can swap them in place. Tool use is intentionally NOT supported here —
- * fallback is read-only summarisation; the orchestrator must degrade to
- * tool-free responses.
+ * @description LEGACY shim. The real implementation now lives in
+ *   `infrastructure/external/gemini.adapter.ts` (`GeminiAdapter`, which
+ *   implements `IGeminiPort`). This file is kept so any direct
+ *   `GeminiFallbackService` imports continue to compile while consumers
+ *   migrate to `@Inject(GEMINI_PORT) IGeminiPort`.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
-import { Result, Ok, Err, AppErr } from '@common/result';
-import { AishaConfig } from '../../config/aisha.config';
+import { Injectable } from '@nestjs/common';
+import { Result } from '@common/result';
+import { GeminiAdapter } from '../../infrastructure/external/gemini.adapter';
 
 interface GeminiLike {
   getGenerativeModel(opts: { model: string }): {
@@ -17,34 +17,19 @@ interface GeminiLike {
   };
 }
 
+/**
+ * @deprecated New code should `@Inject(GEMINI_PORT)` and depend on
+ *   `IGeminiPort`. This class delegates to `GeminiAdapter` for back-compat.
+ */
 @Injectable()
 export class GeminiFallbackService {
-  private readonly logger = new Logger(GeminiFallbackService.name);
-  private sdk: GeminiLike | null = null;
-
-  constructor(private readonly cfg: AishaConfig) {}
+  constructor(private readonly adapter: GeminiAdapter) {}
 
   setSdkForTesting(sdk: GeminiLike): void {
-    this.sdk = sdk;
+    this.adapter.setSdkForTesting(sdk);
   }
 
-  private async getSdk(): Promise<GeminiLike> {
-    if (this.sdk) return this.sdk;
-    const mod = await import('@google/generative-ai');
-    const Ctor = (mod as unknown as { GoogleGenerativeAI: new (key: string) => GeminiLike }).GoogleGenerativeAI;
-    this.sdk = new Ctor(this.cfg.googleAiKey);
-    return this.sdk;
-  }
-
-  async generate(prompt: string): Promise<Result<string>> {
-    try {
-      const sdk = await this.getSdk();
-      const model = sdk.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const r = await model.generateContent(prompt);
-      return Ok(r.response.text());
-    } catch (err) {
-      this.logger.warn(`Gemini fallback failed: ${(err as Error).message}`);
-      return Err(AppErr('EXTERNAL_SERVICE', (err as Error).message));
-    }
+  generate(prompt: string): Promise<Result<string>> {
+    return this.adapter.generate(prompt);
   }
 }

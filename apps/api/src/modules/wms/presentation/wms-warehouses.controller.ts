@@ -8,9 +8,10 @@ import {
   Controller, Get, Post, Patch, Delete, Body, Param,
   UseGuards, UseInterceptors, Query, Logger, BadRequestException, NotFoundException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { assertOk, throwFromError, unwrapOrNotFound, unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -29,7 +30,9 @@ enum Role {
   WAREHOUSE_MANAGER = 'warehouse_manager',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Wms Warehouses')
+@ApiBearerAuth()
 @Controller('wms/warehouses')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -42,6 +45,8 @@ export class WmsWarehousesController {
     private readonly crudSvc: WmsCrudService,
   ) {}
 
+  @ApiOperation({ summary: 'Get all' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
   async getAll(@Query() query?: Record<string, unknown>) {
@@ -51,6 +56,9 @@ export class WmsWarehousesController {
     return { items: Array.isArray(items) ? items : [], total: Array.isArray(items) ? items.length : 0 };
   }
 
+  @ApiOperation({ summary: 'Get by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
   async getById(@Param('id') id: string) {
@@ -63,6 +71,9 @@ export class WmsWarehousesController {
     return warehouse;
   }
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
   async create(@Body() dto: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
@@ -87,6 +98,10 @@ export class WmsWarehousesController {
     }
   }
 
+  @ApiOperation({ summary: 'Toggle active' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/toggle-active')
   @Roles(Role.SUPER_ADMIN)
   async toggleActive(@Param('id') id: string, @Body() dto: { isActive: boolean }) {
@@ -106,6 +121,9 @@ export class WmsWarehousesController {
     }
   }
 
+  @ApiOperation({ summary: 'Get inventory' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/inventory')
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
   async getInventory(@Param('id') id: string, @Query() query?: Record<string, unknown>) {
@@ -129,6 +147,9 @@ export class WmsWarehousesController {
     }
   }
 
+  @ApiOperation({ summary: 'Delete warehouse' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN)
   async deleteWarehouse(

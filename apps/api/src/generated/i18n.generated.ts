@@ -213,6 +213,15 @@ export type I18nTranslations = {
         "rejectReasonTooShort": string;
         "noApprovePermission": string;
     };
+    "messages": {
+        "orderCancelled": string;
+        "warehouseDeactivated": string;
+        "userDeleted": string;
+        "deleted": string;
+        "created": string;
+        "updated": string;
+        "saved": string;
+    };
     "validation": {
         "required": string;
         "invalidEmail": string;

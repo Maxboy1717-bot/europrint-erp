@@ -7,7 +7,7 @@ import { assertOk, unwrapOrThrow } from '@common/http-result';
 import { assertValidated } from '@common/assertions';
 import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, InternalServerErrorException, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { I18nService } from 'nestjs-i18n';
 
 import { RolesGuard } from '../../infrastructure/guards/roles.guard';
@@ -17,9 +17,9 @@ import { AuditInterceptor } from '../../infrastructure/interceptors/audit.interc
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { isErr } from '@common/result';
 
-import { CreateUserHandler } from '../../application/commands/create-user.handler';
-import { UpdateUserRoleHandler } from '../../application/commands/update-user-role.handler';
-import { ListUsersHandler } from '../../application/queries/list-users.handler';
+import { CreateUserService } from '../../application/services/create-user.service';
+import { UpdateUserRoleService } from '../../application/services/update-user-role.service';
+import { ListUsersService } from '../../application/services/list-users.service';
 
 import { CreateUserDto, CreateUserSchema } from '../dto/create-user.dto';
 import { UserRole } from '../../domain/aggregates/user.aggregate';
@@ -27,7 +27,7 @@ import { AuthenticatedUser } from '@auth/types';
 import { IUserRepo } from '../../domain/repositories/i-user.repo';
 import { USER_REPO } from '../../admin.tokens';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('admin/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -37,9 +37,9 @@ export class AdminUsersController {
   private readonly logger = new Logger(AdminUsersController.name);
 
   constructor(
-    private readonly createUserHandler: CreateUserHandler,
-    private readonly updateUserRoleHandler: UpdateUserRoleHandler,
-    private readonly listUsersHandler: ListUsersHandler,
+    private readonly createUserHandler: CreateUserService,
+    private readonly updateUserRoleHandler: UpdateUserRoleService,
+    private readonly listUsersHandler: ListUsersService,
     @Inject(USER_REPO) private readonly userRepo: IUserRepo,
     private readonly i18n: I18nService,
   ) {}

@@ -12,6 +12,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpException,
   HttpStatus,
   Logger,
   Param,
@@ -19,7 +20,7 @@ import {
   UseGuards,
   UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth} from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '../../auth/guards/roles.guard';
 import { Roles} from '../../auth/decorators/roles.decorator';
 import { CurrentUser} from '../../auth/decorators/current-user.decorator';
@@ -29,10 +30,15 @@ import { AiRouterService, UsageStats} from '../application/services/ai-router.se
 import { isOk } from '@common/result';
 import { AiCallDto} from './dto/ai.dto';
 import { AiRequest } from '../domain/types/ai.types';
+import { z } from 'zod';
+
+const RejectRushOrderSchema = z.object({
+  reason: z.string().max(2000).optional(),
+}).passthrough();
 
 @ApiTags('§15 AI Router')
 // AI endpointlar — LLM chaqiruvi qimmat, 20/daq cheklov (env: THROTTLE_AI_LIMIT)
-@Throttle({ ai: { limit: 20, ttl: 60_000 } })
+@AiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('ai')
 @ApiBearerAuth()
@@ -164,32 +170,50 @@ export class AiController {
    return { bottlenecks: [], analyzedAt: new Date().toISOString() };
  }
 
+ // P3-26: forecast & rush-order endpoints have no AI service implementation yet.
+ // Return 501 instead of fake empty payloads so the UI can show a "Coming soon"
+ // state for /ai/forecast and /ai/rush-orders.
  @Get('forecast/demand')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'AI talab bashorati' })
  getDemandForecast() {
-   return { forecasts: [], period: '30d', generatedAt: new Date().toISOString() };
+   throw new HttpException(
+     { message: 'Endpoint not yet implemented: GET /ai/forecast/demand', code: 'NOT_IMPLEMENTED' },
+     HttpStatus.NOT_IMPLEMENTED,
+   );
  }
 
  @Get('rush-orders')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'Shoshilinch buyurtmalar ro\'yxati' })
- getRushOrders() { return { items: [], total: 0 }; }
+ getRushOrders() {
+   throw new HttpException(
+     { message: 'Endpoint not yet implemented: GET /ai/rush-orders', code: 'NOT_IMPLEMENTED' },
+     HttpStatus.NOT_IMPLEMENTED,
+   );
+ }
 
  @Post('rush-orders/:id/approve')
  @HttpCode(HttpStatus.OK)
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'Shoshilinch buyurtmani tasdiqlash' })
- approveRushOrder(@Param('id') id: string) {
-   return { id, status: 'approved', approvedAt: new Date().toISOString() };
+ approveRushOrder(@Param('id') _id: string) {
+   throw new HttpException(
+     { message: 'Endpoint not yet implemented: POST /ai/rush-orders/:id/approve', code: 'NOT_IMPLEMENTED' },
+     HttpStatus.NOT_IMPLEMENTED,
+   );
  }
 
  @Post('rush-orders/:id/reject')
  @HttpCode(HttpStatus.OK)
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'Shoshilinch buyurtmani rad etish' })
- rejectRushOrder(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-   return { id, status: 'rejected', reason: body.reason, rejectedAt: new Date().toISOString() };
+ rejectRushOrder(@Param('id') _id: string, @Body() body: unknown) {
+   RejectRushOrderSchema.parse(body);
+   throw new HttpException(
+     { message: 'Endpoint not yet implemented: POST /ai/rush-orders/:id/reject', code: 'NOT_IMPLEMENTED' },
+     HttpStatus.NOT_IMPLEMENTED,
+   );
  }
 
  @Get('shift/recommendations')

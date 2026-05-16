@@ -4,8 +4,9 @@
  */
 
 import { Body, Controller, Get, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -17,7 +18,8 @@ import {
   ZvsCommentSchema, ZvsCommentDto,
 } from './dto/director.dto';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Zvs')
 @Controller('hr/zvs')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -27,6 +29,9 @@ export class ZvsController {
 
   constructor(private readonly svc: ZvsService) {}
 
+  @ApiOperation({ summary: 'Create zvs' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @UsePipes(new ZodValidationPipe(ZvsCreateSchema))
   async createZvs(
@@ -36,6 +41,8 @@ export class ZvsController {
     return unwrapOrThrow(await this.svc.createZvsWithValidation(body, user.id));
   }
 
+  @ApiOperation({ summary: 'List zvs' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async listZvs(
     @Query('status') status?: string,
@@ -45,6 +52,9 @@ export class ZvsController {
     return unwrapOrInternal(await this.svc.listZvs(status ?? null, weekDate ?? null, departmentId ? parseInt(departmentId, 10) : null));
   }
 
+  @ApiOperation({ summary: 'Approve' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id/approve')
   @UsePipes(new ZodValidationPipe(ZvsCommentSchema))
   async approve(
@@ -55,6 +65,9 @@ export class ZvsController {
     return unwrapOrThrow(await this.svc.approveZvsWithAuth(parseInt(id, 10), user.id, user.role, (body.comment as string) ?? null));
   }
 
+  @ApiOperation({ summary: 'Reject' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id/reject')
   @UsePipes(new ZodValidationPipe(ZvsCommentSchema))
   async reject(

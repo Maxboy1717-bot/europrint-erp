@@ -26,6 +26,8 @@ export type AppErrorCode =
   | 'INTERNAL'
   | 'BAD_REQUEST'
   | 'EXTERNAL_SERVICE'
+  | 'EXTERNAL_5XX'
+  | 'EXTERNAL_TIMEOUT'
   | 'DB_ERROR'
   | 'INVALID_STATUS'
   | 'APPROVE_COUNT_ERROR'

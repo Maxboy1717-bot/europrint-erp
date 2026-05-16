@@ -8,14 +8,29 @@ import {
   Body, Controller, Get, Param, Post, Patch,
   UseGuards, UseInterceptors, Logger, Query, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
+import { z } from 'zod';
+
+const TransferStatusUpdateSchema = z.object({
+  status: z.string().max(50),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
+const GoodsReceiptLineSchema = z.object({
+  materialId: z.union([z.string(), z.number()]).optional(),
+  material_id: z.union([z.string(), z.number()]).optional(),
+  quantity: z.union([z.string(), z.number()]).optional(),
+  unitCost: z.union([z.string(), z.number()]).optional(),
+  unit_cost: z.union([z.string(), z.number()]).optional(),
+}).passthrough();
 import {
   WmsCreateTransferSchema, WmsCreateTransferDto,
   WmsCreateInternalRequestSchema, WmsCreateInternalRequestDto,
   WmsCreateGoodsReceiptSchema, WmsCreateGoodsReceiptDto,
   WmsQcLineSchema, WmsQcLineDto,
 } from '../dto/wms.dto';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -37,8 +52,10 @@ const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER']
  * Warehouses  → WmsGatewayWarehousesController
  * Inv. Counts → WmsGatewayInventoryController
  */
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Wms Warehouse Gateway')
+@ApiBearerAuth()
 @Controller('warehouse')
 export class WmsWarehouseGatewayController {
   private readonly logger = new Logger(WmsWarehouseGatewayController.name);
@@ -47,6 +64,9 @@ export class WmsWarehouseGatewayController {
 
   // ── TRANSFERS ─────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Create transfer' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('transfers')
   @UsePipes(new ZodValidationPipe(WmsCreateTransferSchema))
   @Roles(...WH_WRITE)
@@ -60,23 +80,33 @@ export class WmsWarehouseGatewayController {
     return row;
   }
 
+  @ApiOperation({ summary: 'Get transfer by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('transfers/:id')
   @Roles(...WH_READ)
   async getTransferById(@Param('id') id: string) {
     return { id, status: 'pending' };
   }
 
+  @ApiOperation({ summary: 'Update transfer status' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('transfers/:id/status')
   @Roles(...WH_WRITE)
   async updateTransferStatus(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
   ) {
-    return { id, ...body };
+    const dto = TransferStatusUpdateSchema.parse(body);
+    return { id, ...dto };
   }
 
   // ── INTERNAL REQUESTS ─────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Create internal request' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('internal-requests')
   @UsePipes(new ZodValidationPipe(WmsCreateInternalRequestSchema))
   @Roles(...WH_WRITE)
@@ -92,12 +122,16 @@ export class WmsWarehouseGatewayController {
 
   // ── GOODS RECEIPTS ────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Get goods receipt stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('goods-receipts/stats')
   @Roles(...WH_READ)
   async getGoodsReceiptStats() {
     return await this.svc.getGoodsReceiptStats();
   }
 
+  @ApiOperation({ summary: 'Get goods receipts' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('goods-receipts')
   @Roles(...WH_READ)
   async getGoodsReceipts(@Query('status') status?: string) {
@@ -106,6 +140,9 @@ export class WmsWarehouseGatewayController {
     return { items, total: items.length };
   }
 
+  @ApiOperation({ summary: 'Create goods receipt' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('goods-receipts')
   @UsePipes(new ZodValidationPipe(WmsCreateGoodsReceiptSchema))
   @Roles(...WH_WRITE)
@@ -118,12 +155,18 @@ export class WmsWarehouseGatewayController {
     return row;
   }
 
+  @ApiOperation({ summary: 'Get goods receipt lines' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('goods-receipts/:id/lines')
   @Roles(...WH_READ)
   async getGoodsReceiptLines(@Param('id') id: string) {
     return await this.svc.getGoodsReceiptLines(safeInt(id, 0));
   }
 
+  @ApiOperation({ summary: 'Qc line' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('goods-receipts/lines/:id/qc')
   @UsePipes(new ZodValidationPipe(WmsQcLineSchema))
   @Roles(...WH_WRITE)
@@ -135,6 +178,9 @@ export class WmsWarehouseGatewayController {
     return await this.svc.qcLine(safeInt(id, 0), Boolean(body.passed), body.notes ? String(body.notes) : null, user?.id ?? null);
   }
 
+  @ApiOperation({ summary: 'Patch qc line' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('goods-receipts/lines/:id/qc')
   @UsePipes(new ZodValidationPipe(WmsQcLineSchema))
   @Roles(...WH_WRITE)
@@ -146,15 +192,22 @@ export class WmsWarehouseGatewayController {
     return await this.svc.qcLine(safeInt(id, 0), Boolean(body.passed), body.notes ? String(body.notes) : null, user?.id ?? null);
   }
 
+  @ApiOperation({ summary: 'Add goods receipt line' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('goods-receipts/:id/lines')
   @Roles(...WH_WRITE)
   async addGoodsReceiptLine(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
   ) {
-    return { id: Date.now(), receiptId: safeInt(id, 0), ...body, created: true };
+    const dto = GoodsReceiptLineSchema.parse(body);
+    return { id: Date.now(), receiptId: safeInt(id, 0), ...dto, created: true };
   }
 
+  @ApiOperation({ summary: 'Complete goods receipt' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('goods-receipts/:id/complete')
   @UseInterceptors(AuditInterceptor)
   @Roles(...WH_WRITE)

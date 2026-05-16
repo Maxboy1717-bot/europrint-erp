@@ -8,7 +8,7 @@
  * shu sababli `req.user` undefined bo'lardi va RolesGuard har doim 403 berardi.
  */
 import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -16,7 +16,7 @@ import { OrgChartCompatService } from './org-chart-compat.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('org-chart')
 @UseGuards(JwtAuthGuard, RolesGuard)

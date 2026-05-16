@@ -55,5 +55,23 @@ export interface IHrRepo {
   findVacancyCandidates(vacancyId?: string): Promise<Result<HrRow[]>>;
   findDisciplineRecords(employeeId?: string): Promise<Result<HrRow[]>>;
   findHealthCheckups(departmentId?: string): Promise<Result<HrRow[]>>;
+
+  /**
+   * Returns the most recent active overtime_policy row. Used by the overtime
+   * calculator domain service. The row carries multipliers + night-shift
+   * windows; nulls returned when no active policy exists.
+   */
+  findActiveOvertimePolicy(): Promise<Result<OvertimePolicyRow | null>>;
 }
+
+export interface OvertimePolicyRow {
+  regularOvertimeHours: number;
+  regularMultiplier: number;
+  extendedMultiplier: number;
+  weekendMultiplier: number;
+  nightShiftBonus: number;
+  nightShiftStartHour: number;
+  nightShiftEndHour: number;
+}
+
 export const HR_REPO = Symbol('HR_REPO');

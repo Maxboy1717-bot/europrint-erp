@@ -5,7 +5,7 @@
 
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -14,7 +14,7 @@ import { WeeklyPlanService } from './weekly-plan.service';
 import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(RolesGuard)
 @Controller('weekly-plans')

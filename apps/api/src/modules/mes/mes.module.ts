@@ -21,6 +21,7 @@ import { GetDowntimeHandler } from './application/queries/get-downtime.handler';
 import { GetDowntimeSummaryHandler } from './application/queries/get-downtime-summary.handler';
 import { DrizzleMesRepository } from './infrastructure/repositories/drizzle-mes.repo';
 import { DrizzleDowntimeRepository } from './infrastructure/repositories/drizzle-downtime.repo';
+import { MES_REPO, DOWNTIME_REPO } from './domain/repositories/mes.repository';
 import { WorkOrdersService } from './work-orders/work-orders.service';
 import { MesMaintenanceService } from './application/mes-maintenance.service';
 import { MesShiftsStatsService } from './application/mes-shifts-stats.service';
@@ -53,8 +54,8 @@ const handlers = [
   providers: [
     ...handlers,
     ...listeners,
-    { provide: 'IMesRepository', useClass: DrizzleMesRepository },
-    { provide: 'IDowntimeRepository', useClass: DrizzleDowntimeRepository },
+    { provide: MES_REPO, useClass: DrizzleMesRepository },
+    { provide: DOWNTIME_REPO, useClass: DrizzleDowntimeRepository },
     { provide: WORK_ORDERS_REPO, useClass: DrizzleWorkOrdersRepository },
     WorkOrdersService,
     MesMaintenanceService,
@@ -64,6 +65,6 @@ const handlers = [
     MesShiftsStatsRepository,
     MesProductionSessionsRepository,
   ],
-  exports: ['IMesRepository', 'IDowntimeRepository', WORK_ORDERS_REPO, WorkOrdersService],
+  exports: [MES_REPO, DOWNTIME_REPO, WORK_ORDERS_REPO, WorkOrdersService],
 })
 export class MesModule {}

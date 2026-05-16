@@ -18,15 +18,17 @@
 import {
   Body,
   Controller,
+  Inject,
   Logger,
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { AishaConfig } from '../../config/aisha.config';
-import { ClaudeService } from '../../application/llm/claude.service';
+import { CLAUDE_PORT, IClaudePort } from '../../domain/ports/i-claude-port';
 import { ToolRegistry } from '../../application/tools/tool.registry';
 
 const ChatRequestSchema = z.object({
@@ -49,6 +51,8 @@ const SYSTEM_PROMPT =
   "kerak deb hisoblasang, mos toolni chaqir. Aniq raqamlar va manba (qaysi " +
   "tool, qaysi vaqt) bilan javob ber.";
 
+@ApiTags('Chat')
+@ApiBearerAuth()
 @Controller('aisha')
 @UseGuards(JwtAuthGuard)
 export class AishaChatController {
@@ -56,7 +60,7 @@ export class AishaChatController {
 
   constructor(
     private readonly cfg: AishaConfig,
-    private readonly claude: ClaudeService,
+    @Inject(CLAUDE_PORT) private readonly claude: IClaudePort,
     private readonly tools: ToolRegistry,
   ) {}
 
@@ -114,6 +118,9 @@ export class AishaChatController {
     return null;
   }
 
+  @ApiOperation({ summary: 'Chat' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('chat')
   async chat(@Body() body: unknown): Promise<ChatResponse> {
     const dto = ChatRequestSchema.parse(body);

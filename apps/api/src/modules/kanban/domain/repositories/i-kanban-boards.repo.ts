@@ -98,6 +98,17 @@ export interface MoveCardInput {
   sort_order: number | null;
 }
 
+/**
+ * Payload used by {@link IKanbanBoardsRepo.createKanbanForOrder} to record the
+ * minimum sales-order context required to construct an inbox kanban card.
+ */
+export interface CreateKanbanForOrderInput {
+  orderId:     number;
+  orderNumber: string;
+  totalAmount: number;
+  companyId:   number;
+}
+
 export const KANBAN_BOARDS_REPO = Symbol('KANBAN_BOARDS_REPO');
 
 export interface IKanbanBoardsRepo {
@@ -113,4 +124,24 @@ export interface IKanbanBoardsRepo {
   updateCard(id: string, input: UpdateCardInput): Promise<Result<KanbanCard>>;
   moveCard(id: string, input: MoveCardInput): Promise<Result<KanbanCard>>;
   deleteCard(id: string): Promise<Result<void>>;
+
+  /**
+   * Locates the sales/order board (by `type='sales'` or a fuzzy name match) and
+   * inserts an inbox card for the freshly created order. Wrapped in a DB
+   * transaction so the board/column lookup and the card insert are atomic.
+   *
+   * If no matching board or column exists, the method returns Ok(void) without
+   * inserting — this is the same "skip silently" semantic the original raw-SQL
+   * handler used so a missing kanban board never blocks order creation.
+   */
+  createKanbanForOrder(input: CreateKanbanForOrderInput): Promise<Result<void>>;
+
+  /**
+   * Moves all kanban cards linked to `orderId` into the board's "cancelled"
+   * column (if one exists) and appends a `[Bekor qilindi: <orderNumber>]` note
+   * to each card's description. If no cancelled column exists for the card's
+   * board the cards are soft-deleted instead. Wrapped in a DB transaction so
+   * the column lookup, the update, and the fallback soft-delete are atomic.
+   */
+  moveOrderCardToCancelled(orderId: number, orderNumber: string): Promise<Result<void>>;
 }

@@ -5,9 +5,9 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Controller, Get, Post, Param, Query, Body, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, UseGuards, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -23,7 +23,7 @@ const RejectDto = z.object({ reason: z.string().min(1), returnTo: z.enum(['manag
 
 @ApiTags('Technology')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('technology')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -97,31 +97,45 @@ export class TechnologyController {
     return { orderId: id, rejectedAt: _time.now().toISOString() };
   }
 
+  // P3-26: tech-cards CRUD is not yet wired to a service. Return 501 instead of
+  // pretending to return cards / pretending to generate them.
   @Get('cards')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'List technology cards' })
   async getCards(@Query('status') _status?: string) {
-    return { items: [], total: 0 };
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: GET /technology/cards', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
   @Post('cards/generate')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'Generate technology card' })
   async generateCard(@Body() _body: unknown) {
-    return { generated: true };
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: POST /technology/cards/generate', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
   @Get('cards/:id')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'Get technology card by ID' })
   async getCardById(@Param('id') _id: string) {
-    return { card: null };
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: GET /technology/cards/:id', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
   @Post('cards/:id/optimize')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'Optimize technology card' })
   async optimizeCard(@Param('id') _id: string, @Body() _body: unknown) {
-    return { optimized: true };
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: POST /technology/cards/:id/optimize', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 }

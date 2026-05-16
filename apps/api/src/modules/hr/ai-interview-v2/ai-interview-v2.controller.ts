@@ -6,8 +6,9 @@
 import { assertValidated } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, assertOk, unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 import { AiInterviewV2Service } from './ai-interview-v2.service';
@@ -54,23 +55,31 @@ const CreateQuestionSchema = z.object({
 class CreateQuestionDto extends createZodDto(CreateQuestionSchema) {}
 
 @Roles('admin', 'manager', 'supervisor', 'hr_manager')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Ai Interview V2')
 @Controller('hr-v2/ai-interview')
 export class AiInterviewV2Controller {
   private readonly logger = new Logger(AiInterviewV2Controller.name);
   constructor(private readonly svc: AiInterviewV2Service) {}
 
+  @ApiOperation({ summary: 'List' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('sessions')
   async list(@Query('status') status: string) {
     return unwrapOrInternal(await this.svc.listSessions(status));
   }
 
+  @ApiOperation({ summary: 'Stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('stats')
   async stats() {
     return unwrapOrInternal(await this.svc.getPipelineStats());
   }
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('sessions')
   async create(@Body() body: CreateSessionDto) {
     return unwrapOrInternal(await this.svc.createSession({
@@ -83,24 +92,37 @@ export class AiInterviewV2Controller {
     }));
   }
 
+  @ApiOperation({ summary: 'Get by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('sessions/:id')
   async getById(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.getSession(id));
   }
 
   @Public()
+  @ApiOperation({ summary: 'Validate' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('session/:token/validate')
   async validate(@Param('token') token: string) {
     return unwrapOrInternal(await this.svc.validateToken(token));
   }
 
   @Public()
+  @ApiOperation({ summary: 'Report camera rejection' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('session/:token/camera-rejected')
   async reportCameraRejection(@Param('token') token: string) {
     return unwrapOrThrow(await this.svc.reportCameraRejection(token));
   }
 
   @Public()
+  @ApiOperation({ summary: 'Public submit' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('session/:token/submit')
   async publicSubmit(
     @Param('token') token: string,
@@ -117,6 +139,10 @@ export class AiInterviewV2Controller {
     return {};
   }
 
+  @ApiOperation({ summary: 'Save results' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('sessions/:id/results')
   async saveResults(@Param('id', ParseIntPipe) id: number, @Body() body: SaveResultsDto) {
     return unwrapOrInternal(await this.svc.completeSession(id, {
@@ -133,11 +159,15 @@ export class AiInterviewV2Controller {
     }));
   }
 
+  @ApiOperation({ summary: 'List questions' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('questions')
   async listQuestions(@Query('job_title') jobTitle?: string) {
     return unwrapOrInternal(await this.svc.listQuestions(jobTitle));
   }
 
+  @ApiOperation({ summary: 'Get questions for job' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('questions/for-job')
   async getQuestionsForJob(
     @Query('job_title') jobTitle?: string,
@@ -146,6 +176,9 @@ export class AiInterviewV2Controller {
     return unwrapOrInternal(await this.svc.getQuestionsForJob(jobTitle, language));
   }
 
+  @ApiOperation({ summary: 'Create question' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('questions')
   async createQuestion(@Body() body: CreateQuestionDto) {
     return unwrapOrInternal(await this.svc.createQuestion({
@@ -162,6 +195,10 @@ export class AiInterviewV2Controller {
     }));
   }
 
+  @ApiOperation({ summary: 'Delete question' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('questions/:id')
   async deleteQuestion(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.deleteQuestion(id));

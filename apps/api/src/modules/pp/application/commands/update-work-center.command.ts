@@ -10,6 +10,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/result';
 import { WorkCenter, WorkCenterType } from '../../domain/aggregates/work-center.aggregate';
 import { DrizzleWorkCenterRepository } from '../../infrastructure/repositories/drizzle-work-center.repo';
+import { WORK_CENTER_REPO } from '../../domain/repositories/pp.repository';
 
 export class UpdateWorkCenterCommand {
   constructor(public readonly id: string,
@@ -28,7 +29,7 @@ export class UpdateWorkCenterHandler implements ICommandHandler<UpdateWorkCenter
   private readonly logger = new Logger(UpdateWorkCenterHandler.name);
 
   constructor(
-    @Inject('IWorkCenterRepository')
+    @Inject(WORK_CENTER_REPO)
     private readonly workCenterRepo: DrizzleWorkCenterRepository,
   ) {}
 

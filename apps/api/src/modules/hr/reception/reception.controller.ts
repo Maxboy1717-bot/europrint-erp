@@ -5,8 +5,9 @@
 
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, UseGuards, Get, Post, Patch, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 import { ReceptionService } from './reception.service';
@@ -32,9 +33,11 @@ const CheckOutSchema = z.object({
 class CheckOutDto extends createZodDto(CheckOutSchema) {}
 
 @Roles('admin', 'manager', 'supervisor', 'employee', 'viewer')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
+@ApiTags('Reception')
+@ApiBearerAuth()
 @Controller('hr-v2/reception')
 export class ReceptionController {
   private readonly logger = new Logger(ReceptionController.name);
@@ -44,6 +47,8 @@ export class ReceptionController {
    * GET /api/hr-v2/reception — root endpoint, frontend dashboard ko'rinishi.
    * Active visitors + stats birgalikda qaytaradi.
    */
+  @ApiOperation({ summary: 'Get root' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async getRoot() {
     const [active, stats] = await Promise.all([
@@ -56,21 +61,30 @@ export class ReceptionController {
     };
   }
 
+  @ApiOperation({ summary: 'Get active' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('active')
   async getActive() {
     return unwrapOrInternal(await this.svc.getActiveVisitors());
   }
 
+  @ApiOperation({ summary: 'Get stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('stats')
   async getStats() {
     return unwrapOrInternal(await this.svc.getStats());
   }
 
+  @ApiOperation({ summary: 'Get log' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('log')
   async getLog(@Query('limit') limit: string) {
     return unwrapOrInternal(await this.svc.getVisitorLog({ limit: parseInt(limit || '50') }));
   }
 
+  @ApiOperation({ summary: 'Check in' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('check-in')
   async checkIn(@Body() body: CheckInDto) {
     return unwrapOrInternal(await this.svc.checkInVisitor({
@@ -85,11 +99,18 @@ export class ReceptionController {
     }));
   }
 
+  @ApiOperation({ summary: 'Check out' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/check-out')
   async checkOut(@Param('id', ParseIntPipe) id: number, @Body() body: CheckOutDto) {
     return unwrapOrInternal(await this.svc.checkOutVisitor(id, body.notes));
   }
 
+  @ApiOperation({ summary: 'Validate badge' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('badge/:badge_number')
   async validateBadge(@Param('badge_number') badgeNumber: string) {
     return unwrapOrInternal(await this.svc.validateBadge(badgeNumber));

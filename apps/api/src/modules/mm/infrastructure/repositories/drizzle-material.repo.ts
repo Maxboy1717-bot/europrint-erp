@@ -6,26 +6,13 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { pgTable, uuid, text, decimal, boolean, timestamp } from 'drizzle-orm/pg-core';
-import { createId } from '@paralleldrive/cuid2';
 import { eq, and, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/types/result.type';
-import { db } from '@shared/db';
+import { db, materials } from '@shared/db';
 import { Material } from '../../domain/aggregates/material.aggregate';
+import { MM_MATERIAL_REPO } from '../../domain/repositories/mm.repository';
 
-const materials = pgTable('materials', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  materialCode: text('material_code').unique().notNull(),
-  name: text('name').notNull(),
-  category: text('category').notNull().default('raw_material'),
-  unitOfMeasure: text('unit_of_measure').notNull().default('kg'),
-  minStock: decimal('min_stock', { precision: 12, scale: 3 }).notNull().default('0'),
-  maxStock: decimal('max_stock', { precision: 12, scale: 3 }).notNull().default('0'),
-  unitCost: decimal('unit_cost', { precision: 18, scale: 2 }).notNull().default('0'),
-  isActive: boolean('is_active').default(true),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+export { MM_MATERIAL_REPO };
 
 export interface IMmMaterialRepository {
   findById(id: string): Promise<Result<Material | null>>;

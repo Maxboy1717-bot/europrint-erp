@@ -14,8 +14,8 @@ import { Lead } from '../../domain/aggregates/lead.aggregate';
 import { Deal } from '../../domain/aggregates/deal.aggregate';
 import { DealStatus } from '../../domain/value-objects/deal-status.vo';
 import { Money } from 'shared/domain/value-objects/money.vo';
-import { ILeadRepository } from '../../domain/repositories/i-lead.repo';
-import { IDealRepository } from '../../domain/repositories/i-deal.repo';
+import { ILeadRepository, LEAD_REPO } from '../../domain/repositories/i-lead.repo';
+import { IDealRepository, DEAL_REPO } from '../../domain/repositories/i-deal.repo';
 import { LeadConvertedEvent } from '../../domain/events/lead-converted.event';
 
 export class ConvertLeadToDealCommand {
@@ -34,8 +34,8 @@ export class ConvertLeadToDealHandler implements ICommandHandler<ConvertLeadToDe
   private readonly logger = new Logger(ConvertLeadToDealHandler.name);
 
   constructor(
-    @Inject('ILeadRepository') private readonly leadRepo: ILeadRepository,
-    @Inject('IDealRepository') private readonly dealRepo: IDealRepository,
+    @Inject(LEAD_REPO) private readonly leadRepo: ILeadRepository,
+    @Inject(DEAL_REPO) private readonly dealRepo: IDealRepository,
     private readonly eventBus: EventBus,
   ) {}
 

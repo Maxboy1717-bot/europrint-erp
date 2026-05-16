@@ -16,9 +16,10 @@ import {
   Query,
   UseGuards,
   UseInterceptors, BadRequestException, InternalServerErrorException} from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard} from '@common/guards/roles.guard';
 import { Roles} from '@common/decorators/roles.decorator';
@@ -38,7 +39,9 @@ enum Role {
  WAREHOUSE_MANAGER = 'warehouse_manager',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Kanban')
+@ApiBearerAuth()
 @Controller('kanban')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -49,6 +52,8 @@ export class KanbanController {
  private readonly commandBus: CommandBus,
  private readonly queryBus: QueryBus) {}
 
+ @ApiOperation({ summary: 'Get all' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.WAREHOUSE_MANAGER)
  async getAll(
@@ -69,6 +74,9 @@ export class KanbanController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Get by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.WAREHOUSE_MANAGER)
  async getById(@Param('id') id: string) {
@@ -78,6 +86,9 @@ export class KanbanController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Create' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.WAREHOUSE_MANAGER)
  async create(
@@ -98,6 +109,9 @@ export class KanbanController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Update' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.WAREHOUSE_MANAGER)
  async update(
@@ -122,6 +136,9 @@ export class KanbanController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Delete' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Delete(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.WAREHOUSE_MANAGER)
  async delete(

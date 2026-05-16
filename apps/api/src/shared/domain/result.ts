@@ -3,7 +3,7 @@
  * @description Source module. See exports for details.
  */
 
-import { InternalServerErrorException } from '@nestjs/common';
+import { DomainError } from './errors/domain-error';
 export class Result<T = void> {
   public readonly isSuccess: boolean;
   public readonly isFailure: boolean;
@@ -39,7 +39,8 @@ export class Result<T = void> {
 
   getValue(): T {
     if (!this.value) {
-      throw new InternalServerErrorException('Cannot get value from a failed result');
+      // INVALID_STATE: caller invoked getValue() on a failed/empty Result — programming error.
+      throw new DomainError('INVALID_STATE', 'Cannot get value from a failed result');
     }
     return this.value;
   }

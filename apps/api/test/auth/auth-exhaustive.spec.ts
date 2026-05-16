@@ -6,8 +6,8 @@
 
 jest.mock('@shared/db', () => ({ runQuery: jest.fn().mockResolvedValue({ rows: [] }) }));
 
-import { LoginHandler } from '../../src/modules/auth/application/commands/login.handler';
-import { ChangePasswordHandler } from '../../src/modules/auth/application/commands/change-password.handler';
+import { LoginService } from '../../src/modules/auth/application/services/login.service';
+import { ChangePasswordService } from '../../src/modules/auth/application/services/change-password.service';
 import { JwtAuthGuard } from '../../src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../src/common/guards/roles.guard';
 import { JwtService } from '@nestjs/jwt';
@@ -67,7 +67,7 @@ function makeI18n() {
   } as unknown as import('nestjs-i18n').I18nService;
 }
 
-// Map AuthErrorCode → the i18n key that LoginHandler now resolves to.
+// Map AuthErrorCode → the i18n key that LoginService now resolves to.
 // Keeps the existing parametric test table small and readable.
 const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   [AuthErrorCode.USER_NOT_FOUND]: 'auth.invalidCredentials',
@@ -90,21 +90,21 @@ function makeCtx(req: { headers?: Record<string, string>; user?: unknown } = {})
 
 beforeAll(() => { process.env.JWT_REFRESH_SECRET = 'test-refresh-secret'; });
 
-// ─── LoginHandler — every scenario × every role ─────────────────────────────
+// ─── LoginService — every scenario × every role ─────────────────────────────
 
 const ROLES = ['admin', 'super_admin', 'hr', 'cfo', 'sales_manager', 'operator', 'director', 'auditor'];
 
-describe('LoginHandler — every role can log in successfully', () => {
+describe('LoginService — every role can log in successfully', () => {
   it.each(ROLES)('role=%s', async (role) => {
     const user = makeUser({ role });
-    const handler = new LoginHandler(makeRepo(user) as never, makeJwt(), makeI18n());
+    const handler = new LoginService(makeRepo(user) as never, makeJwt(), makeI18n());
     const r = await handler.execute({ username: 'u', password: 'p', ipAddress: '127.0.0.1', userAgent: 'jest' });
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.data.user.role).toBe(role);
   });
 });
 
-describe('LoginHandler — failure scenarios', () => {
+describe('LoginService — failure scenarios', () => {
   const cases: Array<[string, ReturnType<typeof makeUser> | null, string]> = [
     ['user not found', null, AuthErrorCode.USER_NOT_FOUND],
     ['account locked', makeUser({ locked: true }), AuthErrorCode.ACCOUNT_LOCKED],
@@ -113,7 +113,7 @@ describe('LoginHandler — failure scenarios', () => {
   ];
 
   it.each(cases)('%s', async (_, user, expectedMsg) => {
-    const handler = new LoginHandler(makeRepo(user) as never, makeJwt(), makeI18n());
+    const handler = new LoginService(makeRepo(user) as never, makeJwt(), makeI18n());
     const r = await handler.execute({ username: 'u', password: 'p', ipAddress: '127.0.0.1', userAgent: 'j' });
     expect(r.ok).toBe(false);
     // After i18n migration, the message is an i18n key (mock returns the key
@@ -122,7 +122,7 @@ describe('LoginHandler — failure scenarios', () => {
   });
 });
 
-describe('LoginHandler — token issuance details', () => {
+describe('LoginService — token issuance details', () => {
   it.each([
     ['short username', 'a'],
     ['long username', 'a'.repeat(200)],
@@ -134,21 +134,21 @@ describe('LoginHandler — token issuance details', () => {
     ['with hyphen', 'first-last'],
   ])('issues tokens for username "%s"', async (_, username) => {
     const user = makeUser({ username });
-    const handler = new LoginHandler(makeRepo(user) as never, makeJwt(), makeI18n());
+    const handler = new LoginService(makeRepo(user) as never, makeJwt(), makeI18n());
     const r = await handler.execute({ username, password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(r.ok).toBe(true);
   });
 
   it('access token expires in 8h', async () => {
     const jwt = makeJwt();
-    const handler = new LoginHandler(makeRepo(makeUser()) as never, jwt, makeI18n());
+    const handler = new LoginService(makeRepo(makeUser()) as never, jwt, makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect((jwt.sign as jest.Mock).mock.calls[0][1]).toEqual({ expiresIn: '8h' });
   });
 
   it('refresh token expires in 30d with separate secret', async () => {
     const jwt = makeJwt();
-    const handler = new LoginHandler(makeRepo(makeUser()) as never, jwt, makeI18n());
+    const handler = new LoginService(makeRepo(makeUser()) as never, jwt, makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     const refreshCall = (jwt.sign as jest.Mock).mock.calls[1][1];
     expect(refreshCall.expiresIn).toBe('30d');
@@ -157,14 +157,14 @@ describe('LoginHandler — token issuance details', () => {
 
   it('failed-attempt counter is incremented in repo on bad password', async () => {
     const repo = makeRepo(makeUser({ passwordOk: false }));
-    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(repo.incrementFailedAttempts).toHaveBeenCalledWith(1);
   });
 
   it('counter resets and last-login updates on success', async () => {
     const repo = makeRepo(makeUser({ failedAttempts: 4 }));
-    const handler = new LoginHandler(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(repo.resetFailedAttempts).toHaveBeenCalled();
     expect(repo.updateLastLogin).toHaveBeenCalled();
@@ -173,17 +173,17 @@ describe('LoginHandler — token issuance details', () => {
   it('audit log failure does not break login flow', async () => {
     const { runQuery } = await import('@shared/db');
     (runQuery as jest.Mock).mockRejectedValueOnce(new Error('db'));
-    const handler = new LoginHandler(makeRepo(makeUser()) as never, makeJwt(), makeI18n());
+    const handler = new LoginService(makeRepo(makeUser()) as never, makeJwt(), makeI18n());
     const r = await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(r.ok).toBe(true);
   });
 });
 
-// ─── ChangePasswordHandler ──────────────────────────────────────────────────
+// ─── ChangePasswordService ──────────────────────────────────────────────────
 
-describe('ChangePasswordHandler — every path', () => {
+describe('ChangePasswordService — every path', () => {
   it('returns NOT_FOUND when user missing', async () => {
-    const handler = new ChangePasswordHandler(makeRepo(null) as never, makeI18n());
+    const handler = new ChangePasswordService(makeRepo(null) as never, makeI18n());
     const r = await handler.execute({ userId: 1, oldPassword: 'o', newPassword: 'NewSecure!2026' });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('NOT_FOUND');
@@ -200,7 +200,7 @@ describe('ChangePasswordHandler — every path', () => {
   ])('rejects weak password (%s)', async (_, newPassword) => {
     const user = { changePassword: jest.fn().mockResolvedValue(true) };
     const repo = { findById: jest.fn().mockResolvedValue(user), save: jest.fn() };
-    const handler = new ChangePasswordHandler(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makeI18n());
     const r = await handler.execute({ userId: 1, oldPassword: 'o', newPassword });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('VALIDATION');
@@ -209,7 +209,7 @@ describe('ChangePasswordHandler — every path', () => {
   it('rejects when old password is wrong (user.changePassword returns false)', async () => {
     const user = { changePassword: jest.fn().mockResolvedValue(false) };
     const repo = { findById: jest.fn().mockResolvedValue(user), save: jest.fn() };
-    const handler = new ChangePasswordHandler(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makeI18n());
     const r = await handler.execute({ userId: 1, oldPassword: 'wrong', newPassword: 'NewSecure!2026' });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.message).toMatch(/currentPasswordIncorrect|old password/i);
@@ -218,7 +218,7 @@ describe('ChangePasswordHandler — every path', () => {
   it('persists the user on success', async () => {
     const user = { changePassword: jest.fn().mockResolvedValue(true) };
     const repo = { findById: jest.fn().mockResolvedValue(user), save: jest.fn().mockResolvedValue(undefined) };
-    const handler = new ChangePasswordHandler(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makeI18n());
     const r = await handler.execute({ userId: 1, oldPassword: 'o', newPassword: 'NewSecure!2026' });
     expect(r.ok).toBe(true);
     expect(repo.save).toHaveBeenCalledWith(user);

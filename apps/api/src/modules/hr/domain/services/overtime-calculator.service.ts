@@ -38,14 +38,12 @@
  *   night-bonus hours beyond the actual OT length.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeNum, safeDiv } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
-import { runQuery } from '@shared/db';
-import { db } from '@shared/db';
-import { overtime_policy } from '@shared/db/schema-hr-overtime';
-import { eq, desc } from 'drizzle-orm';
+import type { IHrRepo } from '../repositories/i-hr.repo';
+import { HR_REPO } from '../repositories/i-hr.repo';
 
 export interface OvertimePolicy {
   regularOvertimeHours: number;
@@ -87,6 +85,10 @@ export interface OtPayResult {
 
 @Injectable()
 export class OvertimeCalculatorService {
+  constructor(
+    @Inject(HR_REPO) private readonly repo: IHrRepo,
+  ) {}
+
   private calcNightHours(entry: OtTimeEntry, policy: OvertimePolicy): number {
     const startHour = safeNum(entry.startHour ?? 0);
     const otHours = safeNum(entry.otHours);
@@ -111,23 +113,20 @@ export class OvertimeCalculatorService {
   /**
    * DB dan faol siyosat olinadi.
    * isActive=true va eng katta effectiveFrom qiymatiga ega qator qaytariladi.
+   * Repository orqali — domain SQL bilmaydi.
    */
   @Calculation('hr.overtime.loadPolicy')
   async loadActivePolicy(): Promise<Result<OvertimePolicy, AppError>> {
-    const rows = await runQuery(
-      db
-        .select()
-        .from(overtime_policy)
-        .where(eq(overtime_policy.isActive, true))
-        .orderBy(desc(overtime_policy.effectiveFrom))
-        .limit(1),
-    );
+    const policyResult = await this.repo.findActiveOvertimePolicy();
+    if (!policyResult.ok) {
+      return Err({ code: 'DB_ERROR', message: policyResult.error.message });
+    }
 
-    if (!rows.length) {
+    const row = policyResult.data;
+    if (!row) {
       return Err({ code: 'NOT_FOUND', message: 'Faol overtime_policy siyosati topilmadi' });
     }
 
-    const row = rows[0];
     return Ok({
       regularOvertimeHours: safeNum(row.regularOvertimeHours),
       regularMultiplier:    safeNum(row.regularMultiplier),

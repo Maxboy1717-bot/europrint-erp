@@ -125,7 +125,7 @@ export class AiRouterService {
       byProviderRows = await db
         .select({
           provider: aiUsageLogsTable.provider,
-          spent: sql<string>`COALESCE(SUM(CAST(${aiUsageLogsTable.estimatedCostUsd} AS FLOAT)), 0)`,
+          spent: sql<string>`COALESCE(SUM(CAST(${aiUsageLogsTable.estimatedCost} AS FLOAT)), 0)`,
           requestCount: sql<number>`COUNT(*)`,
         })
         .from(aiUsageLogsTable)
@@ -272,8 +272,8 @@ export class AiRouterService {
       inputTokens: result.inputTokens,
       outputTokens: result.outputTokens,
       totalTokens: result.inputTokens + result.outputTokens,
-      estimatedCostUsd: result.estimatedCostUsd.toFixed(6),
-      userId: req.userId ? Number(req.userId) : undefined,
+      estimatedCost: result.estimatedCostUsd.toFixed(6),
+      userId: req.userId != null ? String(req.userId) : undefined,
       sessionId: req.sessionId != null ? String(req.sessionId) : undefined,
       requestSummary: req.prompt.substring(0, MAX_NAME_LENGTH),
       responseSummary: result.text.substring(0, MAX_NAME_LENGTH),

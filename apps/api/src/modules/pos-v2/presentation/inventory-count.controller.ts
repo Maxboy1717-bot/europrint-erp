@@ -19,9 +19,10 @@ Body,
   NotFoundException,
   UseGuards, Logger, UseInterceptors , BadRequestException, UsePipes,
 InternalServerErrorException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '@shared/guards/roles.guard';
 import { Roles} from '@shared/decorators/roles.decorator';
 import { CurrentUser} from '@shared/decorators/current-user.decorator';
@@ -39,8 +40,9 @@ import {
  GetCountsDtoSchema,
 } from './dto/pos-v2.dto';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Inventory Count')
 @Controller('pos-v2/inventory-counts')
 @UseGuards(RolesGuard)
 export class InventoryCountController {
@@ -48,6 +50,9 @@ export class InventoryCountController {
  constructor(private readonly commandBus: CommandBus,
  private readonly queryBus: QueryBus) {}
 
+ @ApiOperation({ summary: 'Create count' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
  @HttpCode(HttpStatus.CREATED)
  async createCount(
@@ -62,6 +67,8 @@ export class InventoryCountController {
  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Find counts' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  async findCounts(
  @Query() query: Record<string, unknown>,
@@ -75,6 +82,8 @@ export class InventoryCountController {
  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Find count by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get(':id')
  async findCountById(
  @Param('id') countId: string,
@@ -86,6 +95,9 @@ export class InventoryCountController {
  return count;
 }
 
+ @ApiOperation({ summary: 'Update count line' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/lines/:lineId')
   @UsePipes(new ZodValidationPipe(UpdateCountLineDtoSchema))
  async updateCountLine(
@@ -100,6 +112,9 @@ export class InventoryCountController {
  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Complete count' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/complete')
  @Roles('WAREHOUSE_MANAGER')
  async completeCount(
@@ -110,6 +125,9 @@ export class InventoryCountController {
  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Approve count' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/approve')
   @UsePipes(new ZodValidationPipe(ApproveCountDtoSchema))
  @Roles('WAREHOUSE_MANAGER', 'SUPER_ADMIN')

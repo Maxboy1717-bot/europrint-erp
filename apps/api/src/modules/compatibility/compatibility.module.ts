@@ -90,10 +90,10 @@ import { ApprovalWorkflowRepo }          from './repositories/approval-workflow.
 import { CalendarEventsRepo }            from './repositories/calendar-events.repo';
 import { AssetManagementRepo }           from './repositories/asset-management.repo';
 
-import { LabelService }               from '../pos/services/label.service';
-import { LabelExtService }            from '../pos/services/label-ext.service';
-import { LabelRepository }            from '../pos/services/label.repository';
-import { PosPrinterConfigRepository } from '../pos/services/pos-printer-config.repository';
+import { LabelService }               from '../pos/application/services/label.service';
+import { LabelExtService }            from '../pos/application/services/label-ext.service';
+import { LabelRepository }            from '../pos/infrastructure/repositories/label.repository';
+import { PosPrinterConfigRepository } from '../pos/infrastructure/repositories/pos-printer-config.repository';
 import { AuthModule }                 from '../auth/auth.module';
 
 @Module({

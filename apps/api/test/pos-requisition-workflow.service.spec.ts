@@ -9,7 +9,7 @@
 // PosMovementService → lifecycle-block.service → @shared/utils/safe-json
 // Since PosMovementService is fully mocked below, we just need the module graph
 // to resolve. Mocking the service file prevents the entire dep chain from loading.
-jest.mock('../src/modules/pos/services/pos-movement.service', () => ({
+jest.mock('../src/modules/pos/application/services/pos-movement.service', () => ({
   PosMovementService: jest.fn().mockImplementation(() => ({
     createMovement: jest.fn(),
   })),
@@ -57,9 +57,9 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 }         from '@nestjs/event-emitter';
 
-import { PosRequisitionWorkflowService } from '../src/modules/pos/services/pos-requisition-workflow.service';
-import { PosMovementService }            from '../src/modules/pos/services/pos-movement.service';
-import { PosNotificationsService }       from '../src/modules/pos/services/pos-notifications.service';
+import { PosRequisitionWorkflowService } from '../src/modules/pos/application/services/pos-requisition-workflow.service';
+import { PosMovementService }            from '../src/modules/pos/application/services/pos-movement.service';
+import { PosNotificationsService }       from '../src/modules/pos/application/services/pos-notifications.service';
 import { EmployeeLedgerService }         from '../src/modules/pos/employee-ledger.service';
 import { PosRequestExtRepository }       from '../src/modules/pos/pos-request-ext.repository';
 

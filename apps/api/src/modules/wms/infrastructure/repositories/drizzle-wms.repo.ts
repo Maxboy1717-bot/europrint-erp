@@ -7,20 +7,32 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
-import { Err, Ok } from '@common/result';
+import { AppErr, Err, Ok } from '@common/result';
 import { Database } from '@/infrastructure/database/database';
 import { Result } from '@common/result';
-import { db } from '@shared/db';
-import { sql, eq, isNull, and } from 'drizzle-orm';
+import { db, stocks } from '@shared/db';
+import { sql, eq, isNull, and, asc } from 'drizzle-orm';
 import { wms_stock } from '@shared/db/schema-compat-5';
 import { Stock } from '../../domain/aggregates/stock.aggregate';
-import { IWmsRepository } from '../../domain/repositories/wms.repository';
+import { IWmsRepository, DrizzleExecutor } from '../../domain/repositories/wms.repository';
 import {
   execSaveStock, queryStock, queryStockByMaterialAndWarehouse, queryFefoStock,
   execUpdateStockReserved, execUpdateStockIssued, execReceiveFg, queryAllStockByWarehouse,
 } from '@common/database/queries-wms';
 
 type StockRow = Record<string, unknown>;
+
+/**
+ * Narrow shape we need from a Drizzle executor (db or tx). Restricted to the
+ * surface used in this repo so we don't import `PgTransaction` types.
+ */
+type ExecLike = {
+  select: typeof db.select;
+  insert: typeof db.insert;
+  update: typeof db.update;
+};
+
+const asExec = (tx?: DrizzleExecutor): ExecLike => (tx ?? db) as unknown as ExecLike;
 
 const toStock = (r: StockRow): Stock =>
   new Stock(Number(r['id']), Number(r['warehouse_id']), Number(r['material_id']), Number(r['quantity']), r['expiry_date'] ? new Date(String(r['expiry_date'])) : null, String(r['batch_number'] ?? ''));
@@ -31,8 +43,24 @@ export class DrizzleWmsRepository implements IWmsRepository {
 
   constructor(private _db: Database) {}
 
-  async saveStock(stock: Stock): Promise<Result<number>> {
+  async saveStock(stock: Stock, tx?: DrizzleExecutor): Promise<Result<number>> {
     try {
+      if (tx) {
+        // In-transaction path: inline insert against the supplied tx executor.
+        const exec = asExec(tx);
+        await exec.insert(stocks).values({
+          warehouse_id: stock.getWarehouseId(),
+          material_id: stock.getMaterialId(),
+          quantity: String(stock.getQuantity()),
+          reserved_quantity: String(stock.getReservedQuantity()),
+          expiry_date: (stock.getExpiryDate() ? new Date(stock.getExpiryDate() as Date).toISOString() : null) as string | null,
+          batch_number:
+            ((castTo<StockRow>(stock))['batchNumber'] as string | null) ?? null,
+          received_at:
+            ((castTo<StockRow>(stock))['receivedAt'] as Date | null) ?? null,
+        }).onConflictDoNothing();
+        return Ok(1);
+      }
       await execSaveStock(
         stock.getWarehouseId(), stock.getMaterialId(), stock.getQuantity(),
         stock.getReservedQuantity(), stock.getExpiryDate(),
@@ -42,6 +70,17 @@ export class DrizzleWmsRepository implements IWmsRepository {
     } catch {
       this.logger.error('Failed to save stock');
       return Err('Stock saqlashda xatolik');
+    }
+  }
+
+  async withTransaction<T>(
+    work: (tx: DrizzleExecutor) => Promise<Result<T>>,
+  ): Promise<Result<T>> {
+    try {
+      return await db.transaction(async (tx) => work(tx as DrizzleExecutor));
+    } catch (e: unknown) {
+      this.logger.error('WMS transaction failed');
+      return Err(AppErr('DB_ERROR', (e as Error)?.message || 'Tranzaksiya xatoligi'));
     }
   }
 
@@ -66,8 +105,19 @@ export class DrizzleWmsRepository implements IWmsRepository {
     }
   }
 
-  async getFefoStock(materialId: number, warehouseId: number): Promise<Result<Stock[]>> {
+  async getFefoStock(
+    materialId: number,
+    warehouseId: number,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<Stock[]>> {
     try {
+      if (tx) {
+        const exec = asExec(tx);
+        const rows = await exec.select().from(stocks)
+          .where(and(eq(stocks.material_id, materialId), eq(stocks.warehouse_id, warehouseId)))
+          .orderBy(sql`${stocks.expiry_date} ASC NULLS LAST`, asc(stocks.received_at));
+        return Ok((Array.isArray(rows) ? rows : []).map((r) => toStock(r as StockRow)));
+      }
       const rows = await queryFefoStock(materialId, warehouseId);
       return Ok((Array.isArray(rows) ? rows : []).map(toStock));
     } catch {

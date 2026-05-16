@@ -7,7 +7,9 @@ import {
   Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query,
   UseGuards, BadRequestException,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -17,6 +19,49 @@ import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
 
+const CreateBinSchema = z.object({
+  zone_id: z.union([z.string(), z.number()]).optional(),
+  warehouse_id: z.union([z.string(), z.number()]).optional(),
+  bin_code: z.string().max(50).optional(),
+  binCode: z.string().max(50).optional(),
+  row: z.string().max(20).optional(),
+  shelf: z.string().max(20).optional(),
+  level: z.string().max(20).optional(),
+  bin_type: z.string().max(50).optional(),
+  binType: z.string().max(50).optional(),
+  max_weight: z.union([z.string(), z.number()]).optional(),
+  maxWeight: z.union([z.string(), z.number()]).optional(),
+  max_volume: z.union([z.string(), z.number()]).optional(),
+  maxVolume: z.union([z.string(), z.number()]).optional(),
+}).passthrough();
+
+const UpdateBinSchema = z.object({
+  bin_type: z.string().max(50).optional(),
+  binType: z.string().max(50).optional(),
+  max_weight: z.union([z.string(), z.number()]).optional(),
+  max_volume: z.union([z.string(), z.number()]).optional(),
+  is_active: z.boolean().optional(),
+}).passthrough();
+
+const CreateZoneSchema = z.object({
+  warehouse_id: z.union([z.string(), z.number()]).optional(),
+  code: z.string().max(50).optional(),
+  name: z.string().max(200).optional(),
+  name_ru: z.string().max(200).optional(),
+  zone_type: z.string().max(50).optional(),
+  zoneType: z.string().max(50).optional(),
+  capacity: z.union([z.string(), z.number()]).optional(),
+}).passthrough();
+
+const UpdateZoneSchema = z.object({
+  name: z.string().max(200).optional(),
+  name_ru: z.string().max(200).optional(),
+  zone_type: z.string().max(50).optional(),
+  zoneType: z.string().max(50).optional(),
+  capacity: z.union([z.string(), z.number()]).optional(),
+  is_active: z.boolean().optional(),
+}).passthrough();
+
 const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
 const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
 
@@ -25,8 +70,10 @@ const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER']
  * Routes: /warehouse/bins/*, /warehouse/zones/*
  * Storage-structure management: bins and zones CRUD.
  */
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Wms Gateway Binszone')
+@ApiBearerAuth()
 @Controller('warehouse')
 export class WmsGatewayBinZoneController {
   private readonly logger = new Logger(WmsGatewayBinZoneController.name);
@@ -35,6 +82,8 @@ export class WmsGatewayBinZoneController {
 
   // ── BINS ──────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Get bins' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('bins')
   @Roles(...WH_READ)
   async getBins(
@@ -62,12 +111,16 @@ export class WmsGatewayBinZoneController {
     } catch (e) { this.logger.warn(`getBins failed: ${(e as Error).message}`); throw e; }
   }
 
+  @ApiOperation({ summary: 'Create bin' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('bins')
   @Roles(...WH_WRITE)
   async createBin(
-    @Body() body: Record<string, unknown>,
+    @Body() rawBody: unknown,
     @CurrentUser() _user: AuthenticatedUser,
   ) {
+    const body = CreateBinSchema.parse(rawBody);
     try {
       const r = await rawSql(sql`
         INSERT INTO warehouse_bins (zone_id, warehouse_id, bin_code, row, shelf, level, bin_type, max_weight, max_volume, current_occupancy, is_active, created_at)
@@ -87,6 +140,9 @@ export class WmsGatewayBinZoneController {
     } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
+  @ApiOperation({ summary: 'Get bin360' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('bins/:id/360')
   @Roles(...WH_READ)
   async getBin360(@Param('id') id: string) {
@@ -104,6 +160,9 @@ export class WmsGatewayBinZoneController {
     } catch { return { id }; }
   }
 
+  @ApiOperation({ summary: 'Get bin by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('bins/:id')
   @Roles(...WH_READ)
   async getBinById(@Param('id') id: string) {
@@ -121,9 +180,14 @@ export class WmsGatewayBinZoneController {
     } catch { return { id }; }
   }
 
+  @ApiOperation({ summary: 'Update bin' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('bins/:id')
   @Roles(...WH_WRITE)
-  async updateBin(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async updateBin(@Param('id') id: string, @Body() rawBody: unknown) {
+    const body = UpdateBinSchema.parse(rawBody);
     try {
       const r = await rawSql(sql`
         UPDATE warehouse_bins SET
@@ -138,6 +202,10 @@ export class WmsGatewayBinZoneController {
     } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
+  @ApiOperation({ summary: 'Delete bin' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('bins/:id')
   @Roles(...WH_WRITE)
   async deleteBin(@Param('id') id: string) {
@@ -149,6 +217,8 @@ export class WmsGatewayBinZoneController {
 
   // ── ZONES ─────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Get zones' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('zones')
   @Roles(...WH_READ)
   async getZones(@Query('warehouse_id') warehouseId?: string) {
@@ -170,12 +240,16 @@ export class WmsGatewayBinZoneController {
     } catch (e) { this.logger.warn(`getZones failed: ${(e as Error).message}`); throw e; }
   }
 
+  @ApiOperation({ summary: 'Create zone' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('zones')
   @Roles(...WH_WRITE)
   async createZone(
-    @Body() body: Record<string, unknown>,
+    @Body() rawBody: unknown,
     @CurrentUser() _user: AuthenticatedUser,
   ) {
+    const body = CreateZoneSchema.parse(rawBody);
     try {
       const r = await rawSql(sql`
         INSERT INTO warehouse_zones (warehouse_id, code, name, name_ru, zone_type, capacity, is_active, created_at)
@@ -192,9 +266,14 @@ export class WmsGatewayBinZoneController {
     } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
+  @ApiOperation({ summary: 'Update zone' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('zones/:id')
   @Roles(...WH_WRITE)
-  async updateZone(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async updateZone(@Param('id') id: string, @Body() rawBody: unknown) {
+    const body = UpdateZoneSchema.parse(rawBody);
     try {
       const r = await rawSql(sql`
         UPDATE warehouse_zones SET
@@ -210,6 +289,10 @@ export class WmsGatewayBinZoneController {
     } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
+  @ApiOperation({ summary: 'Delete zone' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('zones/:id')
   @Roles(...WH_WRITE)
   async deleteZone(@Param('id') id: string) {

@@ -8,36 +8,9 @@ const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
 import { Injectable, Logger } from '@nestjs/common';
 import { and, eq, desc, sql } from 'drizzle-orm';
-import { pgTable, uuid, text, timestamp, decimal } from 'drizzle-orm/pg-core';
-import { createId } from '@paralleldrive/cuid2';
-import { db } from '@shared/db';
-import { Result, Ok as ok, Err as err, isErr } from '@common/result';
+import { db, transfer_requests as transferRequests, transfer_request_lines as transferRequestLines } from '@shared/db';
+import { Result, Ok as ok, Err as err } from '@common/result';
 import { TransferRequest, RequestStatus, RequestLine } from '../../domain/aggregates/transfer-request.aggregate';
-
-const transferRequests = pgTable('transfer_requests', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  requestNumber: text('request_number').unique().notNull(),
-  fromWarehouseId: uuid('from_warehouse_id').notNull(),
-  toWarehouseId: uuid('to_warehouse_id').notNull(),
-  status: text('status').notNull().default('pending'),
-  reason: text('reason').notNull(),
-  requestedBy: text('requested_by').notNull(),
-  approvedBy: text('approved_by'),
-  approvedAt: timestamp('approved_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
-
-const transferRequestLines = pgTable('transfer_request_lines', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  requestId: uuid('request_id').references(() => transferRequests.id),
-  stockItemId: uuid('stock_item_id').notNull(),
-  itemName: text('item_name').notNull(),
-  sku: text('sku').notNull(),
-  requestedQty: decimal('requested_qty', { precision: 12, scale: 3 }).notNull(),
-  approvedQty: decimal('approved_qty', { precision: 12, scale: 3 }),
-  unit: text('unit').notNull().default('pcs'),
-});
 
 @Injectable()
 export class DrizzlePosV2RequestRepo {

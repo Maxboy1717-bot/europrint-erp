@@ -10,18 +10,28 @@ import {
 Body, Controller, Delete, Get, HttpCode, HttpStatus, Logger, NotFoundException,
   Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { z } from 'zod';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { SapService } from './sap.service';
 import { SapUpdateSalesOrderSchema, SapUpdateSalesOrderDto } from './dto/sap.dto';
 
+const CreateSapSalesOrderSchema = z.object({
+  customerId: z.union([z.string(), z.number()]).optional(),
+  items: z.array(z.record(z.unknown())).optional(),
+  totalAmount: z.union([z.string(), z.number()]).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
 const SAP_ROLES = ['super_admin', 'director', 'sales_manager'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Sap')
 @Controller('sap')
 @UseGuards(RolesGuard)
 @Roles(...SAP_ROLES)
@@ -30,6 +40,8 @@ export class SapController {
 
   constructor(private readonly svc: SapService) {}
 
+  @ApiOperation({ summary: 'List sales orders' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('sales-orders')
   async listSalesOrders(
     @Query('status') status?: string,
@@ -43,6 +55,9 @@ export class SapController {
     return _rListSalesOrders.data;
   }
 
+  @ApiOperation({ summary: 'Get sales order' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('sales-orders/:id')
   async getSalesOrder(@Param('id') id: string) {
     const _rGetSalesOrder = await this.svc.getSalesOrder(safeInt(id, 0));
@@ -52,23 +67,39 @@ export class SapController {
     return r;
   }
 
+  @ApiOperation({ summary: 'Update sales order' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Put('sales-orders/:id')
   @UsePipes(new ZodValidationPipe(SapUpdateSalesOrderSchema))
   async updateSalesOrder(@Param('id') id: string, @Body() body: SapUpdateSalesOrderDto) {
     return unwrapOrThrow(await this.svc.updateSalesOrder(safeInt(id, 0), body));
   }
 
+  @ApiOperation({ summary: 'Create sales order' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('sales-orders')
   @HttpCode(HttpStatus.CREATED)
-  async createSalesOrder(@Body() body: Record<string, unknown>) {
-    return { id: Date.now(), ...body, created: true };
+  async createSalesOrder(@Body() body: unknown) {
+    const dto = CreateSapSalesOrderSchema.parse(body);
+    return { id: Date.now(), ...dto, created: true };
   }
 
+  @ApiOperation({ summary: 'Patch sales order' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('sales-orders/:id')
   async patchSalesOrder(@Param('id') id: string, @Body() body: SapUpdateSalesOrderDto) {
     return unwrapOrThrow(await this.svc.updateSalesOrder(safeInt(id, 0), body as SapUpdateSalesOrderDto));
   }
 
+  @ApiOperation({ summary: 'Delete sales order' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('sales-orders/:id')
   @HttpCode(HttpStatus.OK)
   async deleteSalesOrder(@Param('id') id: string) {

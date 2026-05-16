@@ -5,9 +5,10 @@
 
 import { assertRequired } from '@common/assertions';
 import { Controller, Get, Post, Put, Patch, Body, Param, UseGuards, UseInterceptors, Query, Logger, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -29,7 +30,8 @@ enum Role {
   PRODUCTION_MANAGER = 'production_manager',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Pp Work Centers')
 @Controller('pp/work-centers')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -41,6 +43,8 @@ export class PpWorkCentersController {
     private queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Get all' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
   async getAll(@Body() dto?: GetWorkCentersDto) {
@@ -49,6 +53,8 @@ export class PpWorkCentersController {
     return unwrapOrThrow(await this.queryBus.execute(new GetWorkCentersQuery(validatedDto)));
   }
 
+  @ApiOperation({ summary: 'Get stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('/stats')
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
   async getStats() {
@@ -56,6 +62,9 @@ export class PpWorkCentersController {
     return unwrapOrThrow(await this.queryBus.execute(new GetWorkCentersStatsQuery()));
   }
 
+  @ApiOperation({ summary: 'Get by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
   async getById(@Param('id') id: string) {
@@ -67,6 +76,9 @@ export class PpWorkCentersController {
     return workCenter;
   }
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
   async create(@Body() dto: CreateWorkCenterDto) {
@@ -84,6 +96,10 @@ export class PpWorkCentersController {
     return unwrapOrThrow(await this.commandBus.execute(command));
   }
 
+  @ApiOperation({ summary: 'Update' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Put(':id')
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
   async update(@Param('id') id: string, @Body() dto: UpdateWorkCenterDto) {
@@ -102,6 +118,10 @@ export class PpWorkCentersController {
     return unwrapOrThrow(await this.commandBus.execute(command));
   }
 
+  @ApiOperation({ summary: 'Toggle active' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/toggle-active')
   @Roles(Role.SUPER_ADMIN)
   async toggleActive(@Param('id') id: string, @Body() dto: { isActive: boolean }) {

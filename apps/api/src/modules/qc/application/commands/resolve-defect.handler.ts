@@ -7,7 +7,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { AppErr, Err, Ok, Result } from '@common/result';
 import { ResolveDefectCommand } from './resolve-defect.command';
-import { IQcDefectRepository } from '../../infrastructure/repositories/drizzle-defect.repo';
+import { IQcDefectRepository, QC_DEFECT_REPO } from '../../infrastructure/repositories/drizzle-defect.repo';
 
 @Injectable()
 @CommandHandler(ResolveDefectCommand)
@@ -15,7 +15,7 @@ export class ResolveDefectHandler implements ICommandHandler<ResolveDefectComman
   private readonly logger = new Logger(ResolveDefectHandler.name);
 
   constructor(
-    @Inject('IQcDefectRepository') private readonly qcRepository: IQcDefectRepository,
+    @Inject(QC_DEFECT_REPO) private readonly qcRepository: IQcDefectRepository,
       ) {}
 
   async execute(command: ResolveDefectCommand): Promise<Result<string>> {

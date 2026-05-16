@@ -8,54 +8,12 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { and, eq, gte, lte, sql, or } from 'drizzle-orm';
-import { pgTable, uuid, text, timestamp, decimal } from 'drizzle-orm/pg-core';
-import { createId } from '@paralleldrive/cuid2';
-import { db, stock_items } from '@shared/db';
-import { Result, Ok as ok, Err as err, isErr } from '@common/result';
+import { db, stock_items, transfer_requests as transferRequests } from '@shared/db';
+import { inventory_counts as inventoryCounts, inventory_count_lines as inventoryCountLines } from '@shared/db/schema-pos-ext';
+import { Result, Ok as ok, Err as err } from '@common/result';
 import { StockItemBarcode, MovementSummary, EmployeeActivity } from '../../domain/repositories/i-pos-v2.repo';
 import { InventoryCount, CountStatus, CountLine } from '../../domain/aggregates/inventory-count.aggregate';
 import { TransferRequest, RequestStatus, RequestLine } from '../../domain/aggregates/transfer-request.aggregate';
-
-const inventoryCounts = pgTable('inventory_counts', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  warehouseId: uuid('warehouse_id').notNull(),
-  countNumber: text('count_number').unique().notNull(),
-  status: text('status').notNull().default('draft'),
-  startedBy: text('started_by').notNull(),
-  approvedBy: text('approved_by'),
-  approvedAt: timestamp('approved_at', { withTimezone: true }),
-  notes: text('notes'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
-
-const inventoryCountLines = pgTable('inventory_count_lines', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  countId: uuid('count_id').references(() => inventoryCounts.id),
-  stockItemId: uuid('stock_item_id').notNull(),
-  sku: text('sku').notNull(),
-  itemName: text('item_name').notNull(),
-  systemQuantity: decimal('system_quantity', { precision: 12, scale: 3 }).notNull().default('0'),
-  countedQuantity: decimal('counted_quantity', { precision: 12, scale: 3 }).notNull().default('0'),
-  variance: decimal('variance', { precision: 12, scale: 3 }).notNull().default('0'),
-  unit: text('unit').notNull().default('pcs'),
-  location: text('location'),
-  notes: text('notes'),
-});
-
-const transferRequests = pgTable('transfer_requests', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  requestNumber: text('request_number').unique().notNull(),
-  fromWarehouseId: uuid('from_warehouse_id').notNull(),
-  toWarehouseId: uuid('to_warehouse_id').notNull(),
-  status: text('status').notNull().default('pending'),
-  reason: text('reason').notNull(),
-  requestedBy: text('requested_by').notNull(),
-  approvedBy: text('approved_by'),
-  approvedAt: timestamp('approved_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
 
 @Injectable()
 export class DrizzlePosV2ReportRepo {

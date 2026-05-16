@@ -17,3 +17,15 @@ export class AnomalyDetectedEvent {
     readonly value: number,
   ) {}
 }
+
+export class SensorAnomalyDetectedEvent {
+  readonly eventName = 'SensorAnomalyDetected';
+  constructor(
+    readonly readingId: string,
+    readonly deviceId: string,
+    readonly value: number,
+    readonly threshold: number,
+    readonly reason: string,
+    readonly occurredAt: Date = new Date(),
+  ) {}
+}

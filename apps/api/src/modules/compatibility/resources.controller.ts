@@ -5,7 +5,8 @@
 
 import { Controller, Get, Post, Patch, Delete, Body, Query, Param, HttpCode, HttpStatus, UseGuards, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -18,7 +19,7 @@ import { unwrapOrInternal } from '@common/http-result';
 @ApiTags('Warehouses (Compat)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('warehouses')
 export class WarehousesCompatController {
@@ -49,7 +50,7 @@ export class WarehousesCompatController {
 @ApiTags('Material Cards (Compat)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director', 'warehouse_manager', 'warehouse_keeper')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('material-cards')
@@ -76,7 +77,7 @@ export class MaterialCardsCompatController {
 @ApiTags('Departments (Compat)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('departments')
 export class DepartmentsCompatController {
@@ -112,7 +113,7 @@ export class DepartmentsCompatController {
 @ApiTags('Org Departments (Compat)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('org-departments')
 export class OrgDepartmentsCompatController {
@@ -138,11 +139,14 @@ export class OrgDepartmentsCompatController {
 @ApiTags('Positions (Compat)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('positions')
 export class PositionsCompatController {
-  constructor(private readonly svc: ResourcesCompatService) {}
+  constructor(
+    private readonly svc: ResourcesCompatService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get()
   async getAll(@Query('page') page?: string, @Query('limit') limit?: string, @Query('departmentId') departmentId?: string) {
@@ -167,7 +171,7 @@ export class PositionsCompatController {
 
   @Patch(':id/kpi-template')
   async assignKpiTemplate(@Param('id') id: string, @Body('templateKey') templateKey: string) {
-    if (!templateKey) throw new BadRequestException('templateKey majburiy');
+    if (!templateKey) throw new BadRequestException(await this.i18n.t('errors.templateKeyRequired'));
     return unwrapOrInternal(await this.svc.assignKpiTemplate(id, templateKey));
   }
 

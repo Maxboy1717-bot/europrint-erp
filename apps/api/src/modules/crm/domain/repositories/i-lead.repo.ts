@@ -16,3 +16,9 @@ export interface ILeadRepository {
   delete(id: number): Promise<Result<void>>;
   count(): Promise<Result<number>>;
 }
+
+/**
+ * DI token for ILeadRepository — Symbol-based to avoid string-literal collisions.
+ * (P2-20: replaces the legacy `'ILeadRepository'` string token.)
+ */
+export const LEAD_REPO = Symbol('LEAD_REPO');

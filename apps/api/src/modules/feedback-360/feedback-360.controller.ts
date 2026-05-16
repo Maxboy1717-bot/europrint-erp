@@ -4,7 +4,8 @@
  */
 
 import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -14,7 +15,9 @@ import { Feedback360Service } from './feedback-360.service';
 
 import { parsePagination } from '@common/pipes/parse-pagination.pipe';
 import { unwrapOrInternal } from '@common/http-result';
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Feedback 360')
+@ApiBearerAuth()
 @Controller('360')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.HR_MANAGER, Role.HR_SPECIALIST)
@@ -22,11 +25,15 @@ import { unwrapOrInternal } from '@common/http-result';
 export class Feedback360Controller {
   constructor(private readonly svc: Feedback360Service) {}
 
+  @ApiOperation({ summary: 'Get dashboard' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard')
   async getDashboard() {
     return unwrapOrInternal(await this.svc.getDashboard());
   }
 
+  @ApiOperation({ summary: 'Get assessments' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('feedback')
   async getAssessments(
     @Query('employeeId') employeeIdParam?: string,
@@ -40,6 +47,8 @@ export class Feedback360Controller {
     return unwrapOrInternal(await this.svc.getAssessments(employeeId, year, limit, offset));
   }
 
+  @ApiOperation({ summary: 'Get assessment list' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('assessments')
   async getAssessmentList(
     @Query('employeeId') employeeIdParam?: string,
@@ -53,6 +62,8 @@ export class Feedback360Controller {
     return unwrapOrInternal(await this.svc.getAssessments(employeeId, year, limit, offset));
   }
 
+  @ApiOperation({ summary: 'Get responses' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('responses')
   async getResponses(
     @Query('assessmentId') assessmentIdParam?: string,

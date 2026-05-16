@@ -10,8 +10,9 @@ import { Result, Ok, Err } from '@common/types/result.type';
 import { Inject, Logger } from '@nestjs/common';
 import { SalesOrder } from '../../domain/aggregates/sales-order.aggregate';
 import { SoStatus } from '../../domain/value-objects/so-status.vo';
-import { Money } from '@shared/domain/value-objects/money.vo';
-import { ISalesOrderRepository } from '../../domain/repositories/i-sales-order.repo';
+import { Money } from '@common/money/money.vo';
+import { CustomerId } from '@shared/domain/value-objects/customer-id.vo';
+import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 import { OrderCreatedEvent } from '../../domain/events/order-created.event';
 
 export class CreateOrderCommand {
@@ -21,14 +22,15 @@ export class CreateOrderCommand {
     public readonly designFlag: boolean = false,
     public readonly sampleFlag: boolean = false,
     public readonly createdBy: number = 1,
-    public readonly dealId?: number) {}
+    public readonly dealId?: number,
+    public readonly customerId?: number) {}
 }
 
 @CommandHandler(CreateOrderCommand)
 export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
   private readonly logger = new Logger(CreateOrderHandler.name);
   constructor(
-    @Inject('ISalesOrderRepository') private readonly orderRepo: ISalesOrderRepository,
+    @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -46,6 +48,16 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
       return Err('Invalid status');
     }
 
+    // VO validation at the handler boundary: a raw numeric customerId from
+    // the DTO is funnelled through `CustomerId.create` so the aggregate only
+    // ever holds a validated VO.
+    let customerId: CustomerId | undefined;
+    if (command.customerId !== undefined) {
+      const r = CustomerId.create(command.customerId);
+      if (!r.ok) return Err(r.error);
+      customerId = r.data;
+    }
+
     // DB sequence orqali noyob raqam — bir millisekundda ikki buyurtma muammosini hal qiladi
     let orderNumber: string;
     try {
@@ -61,11 +73,12 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
       orderNumber,
       status: statusResult.data,
       companyId: command.companyId,
+      customerId,
       totalAmount: money,
       designFlag: command.designFlag,
       sampleFlag: command.sampleFlag,
       createdBy: command.createdBy,
-    } as never);
+    });
 
     const saveResult = await this.orderRepo.save(order);
     if (!saveResult.ok) {

@@ -7,43 +7,15 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
 import { Injectable, Logger } from '@nestjs/common';
-import { and, eq, desc, sql } from 'drizzle-orm';
-import { pgTable, uuid, text, timestamp, decimal } from 'drizzle-orm/pg-core';
-import { createId } from '@paralleldrive/cuid2';
+import { and, eq, desc, sql, inArray } from 'drizzle-orm';
 import { db } from '@shared/db';
-import { Result, Ok as ok, Err as err, isErr } from '@common/result';
+import { inventory_counts as inventoryCounts, inventory_count_lines as inventoryCountLines } from '@shared/db/schema-pos-ext';
+import { Result, Ok as ok, Err as err } from '@common/result';
 import { IPosV2Repo, StockItemBarcode, MovementSummary, EmployeeActivity } from '../../domain/repositories/i-pos-v2.repo';
 import { InventoryCount, CountStatus, CountLine } from '../../domain/aggregates/inventory-count.aggregate';
 import { TransferRequest, RequestStatus, RequestLine } from '../../domain/aggregates/transfer-request.aggregate';
 import { DrizzlePosV2RequestRepo } from './drizzle-pos-v2-request.repo';
 import { DrizzlePosV2ReportRepo } from './drizzle-pos-v2-report.repo';
-
-const inventoryCounts = pgTable('inventory_counts', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  warehouseId: uuid('warehouse_id').notNull(),
-  countNumber: text('count_number').unique().notNull(),
-  status: text('status').notNull().default('draft'),
-  startedBy: text('started_by').notNull(),
-  approvedBy: text('approved_by'),
-  approvedAt: timestamp('approved_at', { withTimezone: true }),
-  notes: text('notes'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
-
-const inventoryCountLines = pgTable('inventory_count_lines', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  countId: uuid('count_id').references(() => inventoryCounts.id),
-  stockItemId: uuid('stock_item_id').notNull(),
-  sku: text('sku').notNull(),
-  itemName: text('item_name').notNull(),
-  systemQuantity: decimal('system_quantity', { precision: 12, scale: 3 }).notNull().default('0'),
-  countedQuantity: decimal('counted_quantity', { precision: 12, scale: 3 }).notNull().default('0'),
-  variance: decimal('variance', { precision: 12, scale: 3 }).notNull().default('0'),
-  unit: text('unit').notNull().default('pcs'),
-  location: text('location'),
-  notes: text('notes'),
-});
 
 @Injectable()
 export class DrizzlePosV2Repo implements IPosV2Repo {
@@ -84,11 +56,22 @@ export class DrizzlePosV2Repo implements IPosV2Repo {
       if (filter.status) conditions.push(eq(inventoryCounts.status, filter.status));
       const countsRows = await db.select().from(inventoryCounts).where(conditions.length > 0 ? and(...conditions) : undefined).orderBy(desc(inventoryCounts.createdAt)).limit(limit).offset(offset);
       const countResult = await db.select({ count: sql<number>`count(*)` }).from(inventoryCounts).where(conditions.length > 0 ? and(...conditions) : undefined);
-      const counts = await Promise.all(
-        (Array.isArray(countsRows) ? countsRows : []).map(async (c) => {
-          const ls = await db.select().from(inventoryCountLines).where(eq(inventoryCountLines.countId, c.id));
-          return this.mapToInventoryCount({ ...(c as Record<string, unknown>), lines: ls });
-        }),
+      // ── Fix N+1: fetch all lines for the paginated counts in a single query, then group in-memory ──
+      const safeCountsRows = Array.isArray(countsRows) ? countsRows : [];
+      const ids = safeCountsRows.map((c) => c.id as string).filter((id) => !!id);
+      const allLines = ids.length > 0
+        ? await db.select().from(inventoryCountLines).where(inArray(inventoryCountLines.countId, ids))
+        : [];
+      const linesByCountId = new Map<string, Array<Record<string, unknown>>>();
+      for (const line of (Array.isArray(allLines) ? allLines : [])) {
+        const row = line as Record<string, unknown>;
+        const cid = String(row.countId ?? '');
+        const arr = linesByCountId.get(cid) ?? [];
+        arr.push(row);
+        linesByCountId.set(cid, arr);
+      }
+      const counts = safeCountsRows.map((c) =>
+        this.mapToInventoryCount({ ...(c as Record<string, unknown>), lines: linesByCountId.get(String(c.id)) ?? [] }),
       );
       return ok({ data: counts, total: countResult[0]?.count || 0, page, limit });
     } catch (error: unknown) {

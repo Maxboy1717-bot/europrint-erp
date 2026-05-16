@@ -20,7 +20,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 
 import { RolesGuard } from '../../infrastructure/guards/roles.guard';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -29,7 +29,7 @@ import { AuditInterceptor } from '../../infrastructure/interceptors/audit.interc
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { isErr } from '@common/result';
 
-import { UpdateSettingsHandler } from '../../application/commands/update-settings.handler';
+import { UpdateSettingsService } from '../../application/services/update-settings.service';
 import { ISettingsRepo } from '../../domain/repositories/i-settings.repo';
 import { SETTINGS_REPO } from '../../admin.tokens';
 import { UpdateSettingsDto, UpdateSettingsSchema } from '../dto/update-settings.dto';
@@ -37,7 +37,7 @@ import { UserRole } from '../../domain/aggregates/user.aggregate';
 import { AuthenticatedUser } from '@auth/types';
 import { MAX_USERS_DEFAULT } from '@common/constants/app.constants';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('admin/settings')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -47,7 +47,7 @@ export class AdminSettingsController {
   private readonly logger = new Logger(AdminSettingsController.name);
 
   constructor(
-    private readonly updateSettingsHandler: UpdateSettingsHandler,
+    private readonly updateSettingsHandler: UpdateSettingsService,
     @Inject(SETTINGS_REPO) private readonly settingsRepo: ISettingsRepo,
   ) {}
 

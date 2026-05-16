@@ -4,7 +4,8 @@
  */
 
 import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -14,7 +15,9 @@ import { InventoryAdvancedService } from '../application/inventory-advanced.serv
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 import { unwrapOrInternal } from '@common/http-result';
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Inventory Advanced')
+@ApiBearerAuth()
 @Controller('inventory/advanced')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.WAREHOUSE_KEEPER)
@@ -22,11 +25,15 @@ import { unwrapOrInternal } from '@common/http-result';
 export class InventoryAdvancedController {
   constructor(private readonly svc: InventoryAdvancedService) {}
 
+  @ApiOperation({ summary: 'Get analytics' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('analytics')
   async getAnalytics() {
     return unwrapOrInternal(await this.svc.getAnalytics());
   }
 
+  @ApiOperation({ summary: 'Get counts' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('counts')
   async getCounts(
     @Query('status') status?: string,
@@ -41,6 +48,8 @@ export class InventoryAdvancedController {
     return { items, total: Array.isArray(items) ? items.length : 0 };
   }
 
+  @ApiOperation({ summary: 'Get barcode assignments' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('barcodes')
   async getBarcodeAssignments(
     @Query('limit') limitParam?: string,

@@ -7,7 +7,7 @@ import {
   Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query,
   UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -62,7 +62,7 @@ const TransferSchema = z.object({
 @ApiTags('Asset Management')
 @ApiBearerAuth()
 @Roles('super_admin', 'admin', 'director', 'manager')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('asset-management')

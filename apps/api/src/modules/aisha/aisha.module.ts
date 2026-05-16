@@ -34,6 +34,10 @@ import { WhisperService } from './application/voice/whisper.service';
 import { ElevenLabsService } from './application/voice/elevenlabs.service';
 import { ClaudeService } from './application/llm/claude.service';
 import { GeminiFallbackService } from './application/llm/gemini-fallback.service';
+import { ClaudeAdapter } from './infrastructure/external/claude.adapter';
+import { GeminiAdapter } from './infrastructure/external/gemini.adapter';
+import { CLAUDE_PORT } from './domain/ports/i-claude-port';
+import { GEMINI_PORT } from './domain/ports/i-gemini-port';
 import { BudgetTrackerService } from './application/llm/budget-tracker.service';
 import { ToolRegistry } from './application/tools/tool.registry';
 import { AishaToolBootstrap } from './application/tools/tool-bootstrap.service';
@@ -75,9 +79,17 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     AishaConfig,
     WhisperService,
     ElevenLabsService,
-    // LLM stack — basic DI wiring. The chat controller checks AishaConfig
-    // before invoking ClaudeService so callers without an API key still get
-    // a graceful stub response (see chat.controller.ts).
+    // LLM stack — hex-arch ports (P2-23). Concrete adapters live in
+    // `infrastructure/external/`; domain code depends on the port tokens
+    // via `@Inject(CLAUDE_PORT)` / `@Inject(GEMINI_PORT)`. The legacy
+    // `ClaudeService` / `GeminiFallbackService` classes remain as thin
+    // delegating shims so existing tool injectors keep compiling — they
+    // forward every call to the adapter and inherit the retry/timeout
+    // behaviour automatically.
+    ClaudeAdapter,
+    GeminiAdapter,
+    { provide: CLAUDE_PORT, useExisting: ClaudeAdapter },
+    { provide: GEMINI_PORT, useExisting: GeminiAdapter },
     ClaudeService,
     GeminiFallbackService,
     BudgetTrackerService,
@@ -102,6 +114,6 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     VoiceController,
     AishaSseGateway,
   ],
-  exports: [AishaConfig, ToolRegistry, ClaudeService],
+  exports: [AishaConfig, ToolRegistry, ClaudeService, CLAUDE_PORT, GEMINI_PORT],
 })
 export class AishaModule {}

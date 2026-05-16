@@ -13,7 +13,7 @@ import {Body, Controller,
   Post,
   Query, Logger, UseGuards, UseInterceptors} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -21,10 +21,20 @@ import { LegacyService } from '../services/legacy.service';
 import { LegacyIotService } from '../services/legacy-iot.service';
 import { LmsRepository } from '../../lms/infrastructure/repositories/drizzle-lms.repo';
 
+import { z } from 'zod';
+
+const CreateAttendanceSchema = z.object({
+  employeeId: z.union([z.string(), z.number()]).optional(),
+  date: z.string().optional(),
+  status: z.string().max(50).optional(),
+  checkIn: z.string().optional(),
+  checkOut: z.string().optional(),
+}).passthrough();
+
 const ALL_ROLES = ['admin', 'super_admin', 'manager', 'director', 'hr_manager', 'employee', 'warehouse', 'warehouse_manager', 'accountant', 'finance'] as const;
 
 @ApiTags('General Legacy Routes B')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Roles(...ALL_ROLES)
@@ -175,7 +185,8 @@ export class GeneralLegacyBController {
 
   @Post('attendance')
   @HttpCode(HttpStatus.CREATED)
-  async createAttendance(@Body() body: Record<string, unknown>) {
-    return { id: Date.now(), ...body, created: true };
+  async createAttendance(@Body() body: unknown) {
+    const dto = CreateAttendanceSchema.parse(body);
+    return { id: Date.now(), ...dto, created: true };
   }
 }

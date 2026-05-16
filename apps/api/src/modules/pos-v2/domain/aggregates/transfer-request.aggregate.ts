@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { InternalServerErrorException } from '@nestjs/common';
+import { DomainError } from '../../../../shared/domain/errors/domain-error';
 export enum RequestStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
@@ -41,7 +41,8 @@ export class TransferRequest {
 
   approve(approverId: string): void {
     if (this.status !== RequestStatus.PENDING) {
-      throw new InternalServerErrorException('Faqat pending so\'rov tasdiqlanadi');
+      // INVALID_STATE: only PENDING transfer requests can be approved.
+      throw new DomainError('INVALID_STATE', 'Faqat pending so\'rov tasdiqlanadi');
     }
     this.status = RequestStatus.APPROVED;
     this.approvedBy = approverId;
@@ -61,7 +62,8 @@ export class TransferRequest {
 
   reject(): void {
     if (this.status !== RequestStatus.PENDING && this.status !== RequestStatus.APPROVED) {
-      throw new InternalServerErrorException('Faqat pending yoki approved so\'rovlar rad etilishi mumkin');
+      // INVALID_STATE: reject() only valid from PENDING or APPROVED.
+      throw new DomainError('INVALID_STATE', 'Faqat pending yoki approved so\'rovlar rad etilishi mumkin');
     }
     this.status = RequestStatus.REJECTED;
     this.updatedAt = _time.now();

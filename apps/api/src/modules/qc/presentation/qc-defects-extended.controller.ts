@@ -9,9 +9,10 @@ import { safeInt } from '../../hr/common/db-rows';
 import {
 BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post, Query, UseGuards, Logger, UseInterceptors, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -27,15 +28,19 @@ import {
 const QC_WRITE_ROLES = ['QC_MANAGER', 'production_manager', 'super_admin', 'director'];
 const QC_FLOOR_ROLES = ['qc_inspector', 'operator', 'worker', 'QC_MANAGER', 'production_manager', 'super_admin', 'director'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Qc Defects Extended')
+@ApiBearerAuth()
 @Controller('qc')
 export class QcDefectsExtendedController {
   private readonly logger = new Logger(QcDefectsExtendedController.name);
 
   constructor(private readonly svc: QcDefectsExtendedService) {}
 
+  @ApiOperation({ summary: 'List braks' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('braks')
   async listBraks(@Query('sessionId') sessionId?: string, @Query('limit') limit?: string, @Query('offset') offset?: string) {
     return unwrapOrThrow(await this.svc.listBraks(sessionId ? safeInt(sessionId, 0) : null, safeInt(limit, 50), safeInt(offset, 0)));
@@ -43,22 +48,32 @@ export class QcDefectsExtendedController {
 
   // Alias for /defects/extended — FE DefectManagementPage queries this path. Registered
   // before /defects/:id so the literal "extended" segment isn't captured as an id param.
+  @ApiOperation({ summary: 'List defects extended' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('defects/extended')
   async listDefectsExtended(@Query('limit') limit?: string, @Query('offset') offset?: string) {
     const rows = unwrapOrThrow(await this.svc.listBraks(null, safeInt(limit, 50), safeInt(offset, 0))) as unknown[];
     return { items: Array.isArray(rows) ? rows : [] };
   }
 
+  @ApiOperation({ summary: 'Get brak stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('braks/stats')
   async getBrakStats(@Query('from') from?: string, @Query('to') to?: string) {
     return unwrapOrThrow(await this.svc.getBrakStats(from, to));
   }
 
+  @ApiOperation({ summary: 'Get brak cost impact' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('braks/cost-impact/:papkaOrderId')
   async getBrakCostImpact(@Param('papkaOrderId') papkaOrderId: string) {
     return unwrapOrThrow(await this.svc.getBrakCostImpact(safeInt(papkaOrderId, 0)));
   }
 
+  @ApiOperation({ summary: 'Create brak' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('braks')
   @UsePipes(new ZodValidationPipe(QcCreateBrakSchema))
   @Roles(...QC_FLOOR_ROLES)
@@ -76,11 +91,16 @@ export class QcDefectsExtendedController {
     return _rCreateBrak.data;
   }
 
+  @ApiOperation({ summary: 'List supplier quality' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('supplier-quality')
   async listSupplierQuality(@Query('vendorId') vendorId?: string, @Query('limit') limit?: string) {
     return unwrapOrThrow(await this.svc.listSupplierQuality(vendorId ? safeInt(vendorId, 0) : null, safeInt(limit, 50)));
   }
 
+  @ApiOperation({ summary: 'Create supplier quality' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('supplier-quality')
   @UsePipes(new ZodValidationPipe(QcCreateSupplierQualitySchema))
   @Roles(...QC_WRITE_ROLES)
@@ -99,21 +119,30 @@ export class QcDefectsExtendedController {
     return _rCreateSupplierQuality.data;
   }
 
+  @ApiOperation({ summary: 'Get dashboard stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard/stats')
   async getDashboardStats(@Query('from') from?: string, @Query('to') to?: string) {
     return unwrapOrThrow(await this.svc.getDashboardStats(from, to));
   }
 
+  @ApiOperation({ summary: 'Get dashboard flow' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard/flow')
   async getDashboardFlow() {
     return unwrapOrThrow(await this.svc.getDashboardFlow());
   }
 
+  @ApiOperation({ summary: 'List approvals' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('approvals')
   async listApprovals(@Query('status') status?: string, @Query('type') type?: string) {
     return unwrapOrThrow(await this.svc.listApprovals(type, status));
   }
 
+  @ApiOperation({ summary: 'Create approval' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('approvals')
   @UsePipes(new ZodValidationPipe(QcCreateApprovalSchema))
   @Roles(...QC_WRITE_ROLES)
@@ -126,6 +155,10 @@ export class QcDefectsExtendedController {
     ));
   }
 
+  @ApiOperation({ summary: 'Update approval' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('approvals/:id')
   @UsePipes(new ZodValidationPipe(QcUpdateApprovalSchema))
   @Roles(...QC_WRITE_ROLES)
@@ -137,6 +170,10 @@ export class QcDefectsExtendedController {
     return r[0];
   }
 
+  @ApiOperation({ summary: 'Update reclamation' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('reclamations/:id')
   @UsePipes(new ZodValidationPipe(QcUpdateReclamationSchema))
   @Roles(...QC_WRITE_ROLES)

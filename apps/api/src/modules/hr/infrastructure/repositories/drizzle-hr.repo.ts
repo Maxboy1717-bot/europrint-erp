@@ -9,14 +9,16 @@ import { HrBaseRepository } from './drizzle-hr-base.repo';
 import { castTo } from '@common/db-rows';
 import { Injectable } from '@nestjs/common';
 import { db, runQuery } from '@shared/db';
-import { eq, sql, ilike, and, isNull, or } from 'drizzle-orm';
+import { eq, sql, ilike, and, isNull, or, desc } from 'drizzle-orm';
 import { Result, Err, Ok } from '@common/types/result.type';
-import { IHrRepo, HrRow } from '../../domain/repositories/i-hr.repo';
+import { IHrRepo, HrRow, OvertimePolicyRow } from '../../domain/repositories/i-hr.repo';
 import { HrLeaveRepo } from './drizzle-hr-leave.repo';
+import { overtime_policy } from '@shared/db/schema-hr-overtime';
 import {
   hrEmployees, hrDepartments, hrPositions,
   salary_history, payroll_periods_hr,
   candidates, discipline_records, hr_health_checkups,
+  settings,
 } from '@shared/db';
 
 type Row = Record<string, unknown>;
@@ -91,11 +93,11 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
 
   async getPayrollSummary(period: string): Promise<Result<{ totalGross: number; totalNet: number; totalINPS: number; totalJSHD: number; employeeCount: number }>> {
     try {
-      const inpsRate = await runQuery<{ value: string }>(sql`SELECT value FROM settings WHERE key = 'inps_rate' LIMIT 1`)
-        .then(r => parseFloat(r.rows[0]?.value ?? '0.08'))
+      const inpsRate = await db.select({ value: settings.value }).from(settings).where(eq(settings.key, 'inps_rate')).limit(1)
+        .then(r => parseFloat(r[0]?.value ?? '0.08'))
         .catch(() => 0.08);
-      const jshdRate = await runQuery<{ value: string }>(sql`SELECT value FROM settings WHERE key = 'jshd_rate' LIMIT 1`)
-        .then(r => parseFloat(r.rows[0]?.value ?? '0.12'))
+      const jshdRate = await db.select({ value: settings.value }).from(settings).where(eq(settings.key, 'jshd_rate')).limit(1)
+        .then(r => parseFloat(r[0]?.value ?? '0.12'))
         .catch(() => 0.12);
       const rows = await db.select({
         totalGross:     sql<string>`COALESCE(SUM(${salary_history.base_salary}::numeric), 0)`,
@@ -233,6 +235,32 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
       return Ok(castTo<HrRow[]>(rows));
     } catch (error: unknown) {
       this.logger.error(`findHealthCheckups: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  async findActiveOvertimePolicy(): Promise<Result<OvertimePolicyRow | null>> {
+    try {
+      const rows = await db
+        .select()
+        .from(overtime_policy)
+        .where(eq(overtime_policy.isActive, true))
+        .orderBy(desc(overtime_policy.effectiveFrom))
+        .limit(1);
+      const list = Array.isArray(rows) ? rows : [];
+      if (!list.length) return Ok(null);
+      const row = list[0] as Record<string, unknown>;
+      return Ok({
+        regularOvertimeHours: Number(row.regularOvertimeHours ?? row.regular_overtime_hours ?? 0),
+        regularMultiplier:    Number(row.regularMultiplier    ?? row.regular_multiplier    ?? 0),
+        extendedMultiplier:   Number(row.extendedMultiplier   ?? row.extended_multiplier   ?? 0),
+        weekendMultiplier:    Number(row.weekendMultiplier    ?? row.weekend_multiplier    ?? 0),
+        nightShiftBonus:      Number(row.nightShiftBonus      ?? row.night_shift_bonus      ?? 0),
+        nightShiftStartHour:  Number(row.nightShiftStartHour  ?? row.night_shift_start_hour ?? 0),
+        nightShiftEndHour:    Number(row.nightShiftEndHour    ?? row.night_shift_end_hour   ?? 0),
+      });
+    } catch (error: unknown) {
+      this.logger.error(`findActiveOvertimePolicy: ${(error as Error).message}`);
       return Err((error as Error).message);
     }
   }

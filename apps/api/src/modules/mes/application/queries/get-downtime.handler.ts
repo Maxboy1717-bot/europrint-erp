@@ -8,6 +8,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/result';
 import { DowntimeEvent } from '../../domain/aggregates/downtime-event.aggregate';
 import { DrizzleDowntimeRepository } from '../../infrastructure/repositories/drizzle-downtime.repo';
+import { DOWNTIME_REPO } from '../../domain/repositories/mes.repository';
 import { GetDowntimeQuery } from './get-downtime.query';
 
 @Injectable()
@@ -16,7 +17,7 @@ export class GetDowntimeHandler implements IQueryHandler<GetDowntimeQuery> {
   private readonly logger = new Logger(GetDowntimeHandler.name);
 
   constructor(
-    @Inject('IDowntimeRepository')
+    @Inject(DOWNTIME_REPO)
     private readonly downtimeRepo: DrizzleDowntimeRepository,
   ) {}
 

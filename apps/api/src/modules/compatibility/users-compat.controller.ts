@@ -4,14 +4,14 @@
  */
 
 import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { UsersCompatService } from './users-compat.service';
 import { unwrapOrInternal } from '@common/http-result';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('users')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)

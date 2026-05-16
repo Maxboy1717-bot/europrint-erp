@@ -17,8 +17,8 @@ import {Controller,
 import { safeCall } from '@common/result';
 import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/user.types';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -41,7 +41,7 @@ import {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin', 'manager', 'supervisor', 'operator', 'employee', 'viewer', 'director')
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('hr-v2/chat')
 export class ChatAdvancedController {
@@ -53,6 +53,8 @@ export class ChatAdvancedController {
 
   // ── ROOMS ──────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Get pinned message' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms/:roomId/pinned')
   async getPinnedMessage(
     @CurrentUser() user: AuthenticatedUser,
@@ -70,6 +72,9 @@ export class ChatAdvancedController {
 
   // ── REACTIONS ──────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Toggle reaction' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('messages/:id/reactions')
   @UsePipes(new ZodValidationPipe(ChatEmojiSchema))
   async toggleReaction(
@@ -91,6 +96,9 @@ export class ChatAdvancedController {
 
   // ── PIN ────────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Pin message' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('messages/:id/pin')
   @UsePipes(new ZodValidationPipe(ChatPinMessageSchema))
   async pinMessage(
@@ -115,6 +123,9 @@ export class ChatAdvancedController {
 
   // ── POLLS ──────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Create poll' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('polls')
   @UsePipes(new ZodValidationPipe(ChatAdvancedCreatePollSchema))
   async createPoll(
@@ -150,6 +161,9 @@ export class ChatAdvancedController {
     return message;
   }
 
+  @ApiOperation({ summary: 'Vote poll' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('polls/:pollId/vote')
   @UsePipes(new ZodValidationPipe(ChatAdvancedVotePollSchema))
   async votePoll(
@@ -169,11 +183,17 @@ export class ChatAdvancedController {
 
   // ── THREADS ────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Get thread messages' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('messages/:id/thread')
   async getThreadMessages(@CurrentUser() user: AuthenticatedUser, @Param('id') messageId: string) {
     return unwrapOrInternal(await this.chatService.getThreadMessages(messageId, user.id));
   }
 
+  @ApiOperation({ summary: 'Send thread message' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('messages/:id/thread')
   @UsePipes(new ZodValidationPipe(ChatThreadMessageSchema))
   async sendThreadMessage(
@@ -200,6 +220,9 @@ export class ChatAdvancedController {
 
   // ── FORWARD ────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Forward message' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('messages/:id/forward')
   @UsePipes(new ZodValidationPipe(ChatForwardMessageSchema))
   async forwardMessage(
@@ -229,6 +252,9 @@ export class ChatAdvancedController {
 
   // ── FILE UPLOAD ────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Request upload url' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('upload/request-url')
   @UsePipes(new ZodValidationPipe(ChatRequestUploadUrlSchema))
   async requestUploadUrl(
@@ -256,6 +282,9 @@ export class ChatAdvancedController {
     return storageResult.data;
   }
 
+  @ApiOperation({ summary: 'Complete upload' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('upload/complete')
   @UsePipes(new ZodValidationPipe(ChatCompleteUploadSchema))
   async completeUpload(

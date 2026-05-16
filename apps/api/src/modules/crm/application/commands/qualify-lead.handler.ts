@@ -6,8 +6,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { AppErr, Err, Ok, Result, isErr } from '@common/result';
-import { ILeadRepository } from '../../domain/repositories/i-lead.repo';
-import { IDealRepository } from '../../domain/repositories/i-deal.repo';
+import { ILeadRepository, LEAD_REPO } from '../../domain/repositories/i-lead.repo';
+import { IDealRepository, DEAL_REPO } from '../../domain/repositories/i-deal.repo';
 import { Deal } from '../../domain/aggregates/deal.aggregate';
 import { Lead } from '../../domain/aggregates/lead.aggregate';
 import { DealStatus } from '../../domain/value-objects/deal-status.vo';
@@ -25,8 +25,8 @@ export class QualifyLeadHandler implements ICommandHandler<QualifyLeadCommand> {
   private readonly logger = new Logger(QualifyLeadHandler.name);
 
   constructor(
-    @Inject('ILeadRepository') private readonly leadRepo: ILeadRepository,
-    @Inject('IDealRepository') private readonly dealRepo: IDealRepository,
+    @Inject(LEAD_REPO) private readonly leadRepo: ILeadRepository,
+    @Inject(DEAL_REPO) private readonly dealRepo: IDealRepository,
   ) {}
 
   async execute(command: QualifyLeadCommand): Promise<Result<number>> {

@@ -3,8 +3,9 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Body, Controller, Get, Param, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -81,10 +82,12 @@ const VrpSchema = z.object({
   dispatchTime: z.string().datetime(),
 });
 
+@ApiTags('Ai Agents')
+@ApiBearerAuth()
 @Controller('ai-agents')
 @UseGuards(JwtAuthGuard, RolesGuard)
 // AI agents — LLM chaqiruvi; oldingi ttl: 60 (ms) BUG edi (60_000 ms = 1 daq bo'lishi kerak)
-@Throttle({ ai: { limit: 20, ttl: 60_000 } })
+@AiThrottle()
 @UseInterceptors(AuditInterceptor)
 export class AiAgentsController {
   constructor(
@@ -97,18 +100,27 @@ export class AiAgentsController {
     private readonly logSvc:    AiDecisionLogService,
   ) {}
 
+  @ApiOperation({ summary: 'Sales evaluate' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('sales/evaluate')
   @Roles('DIRECTOR', 'SUPER_ADMIN', 'SALES_MANAGER', 'SALES_HEAD')
   async salesEvaluate(@Body(new ZodValidationPipe(SalesCopilotSchema)) dto: z.infer<typeof SalesCopilotSchema>) {
     return this.sales.evaluate(dto.orderId, dto.baseCost, dto.profile);
   }
 
+  @ApiOperation({ summary: 'Generate tech card' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('prepress/tech-card')
   @Roles('DIRECTOR', 'SUPER_ADMIN', 'PREPRESS_OPERATOR', 'PREPRESS_MANAGER')
   async generateTechCard(@Body(new ZodValidationPipe(TechCardSchema)) dto: z.infer<typeof TechCardSchema>) {
     return this.prepress.generateTechCard(dto.orderId, dto.surveyFields, dto.fileMeta);
   }
 
+  @ApiOperation({ summary: 'Plan' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('planning/plan')
   @Roles('DIRECTOR', 'SUPER_ADMIN', 'PP_PLANNER', 'PRODUCTION_MANAGER')
   async plan(@Body(new ZodValidationPipe(PlannerSchema)) dto: z.infer<typeof PlannerSchema>) {
@@ -121,36 +133,52 @@ export class AiAgentsController {
     );
   }
 
+  @ApiOperation({ summary: 'Oee calc' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('mes/oee')
   @Roles('DIRECTOR', 'SUPER_ADMIN', 'MES_OPERATOR', 'SHIFT_TECHNOLOGIST')
   oeeCalc(@Body(new ZodValidationPipe(OeeSchema)) dto: z.infer<typeof OeeSchema>) {
     return this.mes.calcOee(dto);
   }
 
+  @ApiOperation({ summary: 'Detect anomaly' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('mes/anomaly')
   @Roles('DIRECTOR', 'SUPER_ADMIN', 'MES_OPERATOR', 'SHIFT_TECHNOLOGIST')
   async detectAnomaly(@Body(new ZodValidationPipe(AnomalySchema)) dto: z.infer<typeof AnomalySchema>) {
     return this.mes.detectAnomaly(dto.machineId, dto.value, dto.workOrderId);
   }
 
+  @ApiOperation({ summary: 'Vision analyze' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('qc/vision-analyze')
   @Roles('DIRECTOR', 'SUPER_ADMIN', 'QC_INSPECTOR', 'QC_MANAGER')
   async visionAnalyze(@Body(new ZodValidationPipe(VisionQcSchema)) dto: z.infer<typeof VisionQcSchema>) {
     return this.visionQc.analyze(dto.workOrderId, dto.imageUrl, dto.colorTargets);
   }
 
+  @ApiOperation({ summary: 'Vrp optimize' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('logistics/vrp')
   @Roles('DIRECTOR', 'SUPER_ADMIN', 'LOGISTICS_MANAGER', 'DRIVER')
   async vrpOptimize(@Body(new ZodValidationPipe(VrpSchema)) dto: z.infer<typeof VrpSchema>) {
     return this.vrp.optimize(dto.requestId, dto.depot, dto.customers, dto.trucks, new Date(dto.dispatchTime));
   }
 
+  @ApiOperation({ summary: 'Audit stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('audit/stats')
   @Roles('DIRECTOR', 'SUPER_ADMIN')
   async auditStats(@Query('agent') agent?: string) {
     return this.logSvc.getStats(agent);
   }
 
+  @ApiOperation({ summary: 'Recent decisions' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('audit/:agent/decisions')
   @Roles('DIRECTOR', 'SUPER_ADMIN')
   async recentDecisions(
@@ -165,6 +193,8 @@ export class AiAgentsController {
     );
   }
 
+  @ApiOperation({ summary: 'Hard block stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('audit/hard-block-stats')
   @Roles('DIRECTOR', 'SUPER_ADMIN')
   async hardBlockStats() {
@@ -172,6 +202,8 @@ export class AiAgentsController {
   }
 
   /** List all AI agents with their status and stats */
+  @ApiOperation({ summary: 'List agents' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('list')
   @Roles('DIRECTOR', 'SUPER_ADMIN', 'PRODUCTION_MANAGER', 'SALES_MANAGER')
   async listAgents() {
@@ -205,9 +237,20 @@ export class AiAgentsController {
   }
 
   /** Trigger an AI agent manually (audit entry) */
+  // P3-26: agent manual-trigger orchestrator is not yet wired. Return 501 so
+  // the AI agents control panel renders an honest "coming soon" state instead
+  // of pretending the trigger succeeded.
+  @ApiOperation({ summary: 'Trigger agent' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Post(':agentId/trigger')
   @Roles('DIRECTOR', 'SUPER_ADMIN')
-  async triggerAgent(@Param('agentId') agentId: string) {
-    return { ok: true, agentId, triggeredAt: new Date().toISOString() };
+  async triggerAgent(@Param('agentId') _agentId: string) {
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: POST /ai-agents/:agentId/trigger', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 }

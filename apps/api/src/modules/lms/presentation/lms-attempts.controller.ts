@@ -15,8 +15,9 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -26,7 +27,9 @@ import { LmsTestsService } from '../application/services/lms-tests.service';
 import { LmsExamsService } from '../application/services/lms-exams.service';
 import { AuthenticatedUser } from '@common/types/user.types';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Lms Attempts')
+@ApiBearerAuth()
 @Controller('attempts')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -36,6 +39,8 @@ export class LmsAttemptsController {
     private readonly examsService: LmsExamsService,
   ) {}
 
+  @ApiOperation({ summary: 'Get all attempts' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('all')
   @Roles('HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async getAllAttempts(
@@ -49,6 +54,8 @@ export class LmsAttemptsController {
     return unwrapOrInternal(result);
   }
 
+  @ApiOperation({ summary: 'Get retake attempts' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('retakes')
   @Roles('HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async getRetakeAttempts() {
@@ -56,6 +63,8 @@ export class LmsAttemptsController {
     return unwrapOrInternal(result);
   }
 
+  @ApiOperation({ summary: 'List attempts' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async listAttempts(
@@ -69,6 +78,9 @@ export class LmsAttemptsController {
     return unwrapOrInternal(result);
   }
 
+  @ApiOperation({ summary: 'Submit exam' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':id/submit')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'SUPER_ADMIN')
   async submitExam(
@@ -80,22 +92,18 @@ export class LmsAttemptsController {
   }
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+/**
+ * Placeholder controller at `/lms/attempts`.  The original duplicate
+ * `@Post(':id/submit')` (which mirrored {@link LmsAttemptsController.submitExam}
+ * verbatim) was removed to silence the Fastify "duplicate route" boot
+ * warning.  The canonical submit route is now exposed only by
+ * {@link LmsAttemptsController} at `/attempts/:id/submit`.
+ *
+ * This class is intentionally left empty so the module wiring keeps
+ * compiling; it can be removed entirely once `lms.module.ts` is updated.
+ */
+@ApiThrottle()
 @Controller('lms/attempts')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
-export class LmsAttemptsAliasController {
-  constructor(
-    private readonly examsService: LmsExamsService,
-  ) {}
-
-  @Post(':id/submit')
-  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'SUPER_ADMIN')
-  async submitExam(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    const result = await this.examsService.submitExam(parseInt(id, 10), user.id);
-    return unwrapOrThrow(result);
-  }
-}
+export class LmsAttemptsAliasController {}

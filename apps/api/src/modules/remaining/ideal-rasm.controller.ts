@@ -4,7 +4,7 @@
  */
 
 import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { IdealRasmService } from './ideal-rasm.service';
@@ -12,7 +12,7 @@ import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Roles('admin', 'manager', 'hr_manager', 'director', 'SUPER_ADMIN')
 @UseInterceptors(AuditInterceptor)
 @Controller('ideal-rasm')

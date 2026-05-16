@@ -6,33 +6,18 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { pgTable, uuid, text, decimal, timestamp } from 'drizzle-orm/pg-core';
-import { createId } from '@paralleldrive/cuid2';
 import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/types/result.type';
-import { db } from '@shared/db';
+import { db, qc_defects as qcDefects } from '@shared/db';
 import { Defect, DefectSeverity, DefectStatus } from '../../domain/aggregates/defect.aggregate';
 import { Reclamation, ReclamationStatus } from '../../domain/aggregates/reclamation.aggregate';
-import { DrizzleQcReclamationRepo, qcReclamations } from './drizzle-qc-reclamation.repo';
+import { DrizzleQcReclamationRepo } from './drizzle-qc-reclamation.repo';
 
-const qcDefects = pgTable('qc_defects', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  inspectionId: uuid('inspection_id'),
-  productionOrderId: uuid('production_order_id'),
-  workCenterId: uuid('work_center_id'),
-  defectCode: text('defect_code').notNull(),
-  description: text('description').notNull(),
-  severity: text('severity').notNull().default('minor'),
-  status: text('status').notNull().default('open'),
-  quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull().default('1'),
-  unit: text('unit').notNull().default('pcs'),
-  reportedBy: text('reported_by').notNull(),
-  resolvedBy: text('resolved_by'),
-  resolvedAt: timestamp('resolved_at', { withTimezone: true }),
-  resolution: text('resolution'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+/**
+ * DI token for IQcDefectRepository — Symbol-based to avoid string-literal collisions.
+ * (P2-20: replaces the legacy `'IQcDefectRepository'` string token.)
+ */
+export const QC_DEFECT_REPO = Symbol('QC_DEFECT_REPO');
 
 export interface IQcDefectRepository {
   findDefectById(id: string): Promise<Result<Defect | null>>;

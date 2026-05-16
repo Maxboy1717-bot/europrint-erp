@@ -7,7 +7,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {Controller, Post, Body, Param, ParseIntPipe, UseGuards, Logger, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../../common/types/user.types';
 import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -22,7 +22,7 @@ import { unwrapOrInternal } from '@common/http-result';
 
 @ApiTags('AI — CRM')
 @ApiBearerAuth()
-@Throttle({ ai: { limit: 20, ttl: 60_000 } })
+@AiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('ai/crm')
 export class AiCrmController {

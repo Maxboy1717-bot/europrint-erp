@@ -7,6 +7,7 @@ import {
   Body, Controller, Get, Logger, Param,
   Patch, Post, Query, UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OrderTransitionGuard } from './guards/order-transition.guard';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Throttle } from '@nestjs/throttler';
@@ -34,6 +35,7 @@ const FINANCE_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'FINANCE'];
 const DEFAULT_LIMIT  = 50;
 const DEFAULT_OFFSET = 0;
 
+@ApiTags('Order Workflow')
 @Controller('order-workflow')
 @Throttle({ default: { limit: 120, ttl: QUERY_TIMEOUT_MS } })
 export class OrderWorkflowController {
@@ -44,6 +46,9 @@ export class OrderWorkflowController {
     private readonly queryBus:   QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Create order' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('orders')
   @Roles(...WRITER_ROLES)
   async createOrder(
@@ -62,6 +67,9 @@ export class OrderWorkflowController {
     return unwrapOrThrow(result);
   }
 
+  @ApiOperation({ summary: 'Transition status' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('orders/:id/status')
   @Roles(...WRITER_ROLES)
   @UseGuards(OrderTransitionGuard)
@@ -78,6 +86,9 @@ export class OrderWorkflowController {
     return unwrapOrThrow(result);
   }
 
+  @ApiOperation({ summary: 'Create payment plan' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('orders/:id/payment-plan')
   @Roles(...FINANCE_ROLES)
   async createPaymentPlan(
@@ -91,6 +102,8 @@ export class OrderWorkflowController {
     return unwrapOrThrow(result);
   }
 
+  @ApiOperation({ summary: 'Get saga status' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('orders/:id/saga-status')
   @Roles(...READER_ROLES)
   @UseGuards(OrderTransitionGuard)
@@ -105,6 +118,8 @@ export class OrderWorkflowController {
     return unwrapOrThrow(result);
   }
 
+  @ApiOperation({ summary: 'List orders' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('orders')
   @Roles(...READER_ROLES)
   async listOrders(

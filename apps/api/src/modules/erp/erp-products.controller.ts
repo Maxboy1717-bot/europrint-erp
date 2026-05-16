@@ -21,8 +21,9 @@ import {
   InternalServerErrorException,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -34,8 +35,9 @@ import { ErpBodySchema, ErpBodyDto } from './dto/erp.dto';
 const ERP_ROLES = ['super_admin', 'director', 'production_manager', 'technologist', 'planner'];
 const ERP_WRITE = ['super_admin', 'director', 'production_manager', 'technologist'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Erp Products')
 @Controller('erp')
 @UseGuards(RolesGuard)
 @Roles(...ERP_ROLES)
@@ -44,6 +46,8 @@ export class ErpProductsController {
 
   constructor(private readonly svc: ErpService) {}
 
+  @ApiOperation({ summary: 'List products' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('products')
   async listProducts(
     @Query('page') page?: string,
@@ -52,6 +56,9 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.listProducts(safeInt(page, 1), safeInt(limit, 50)));
   }
 
+  @ApiOperation({ summary: 'Get product' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('products/:id')
   async getProduct(@Param('id') id: string) {
     const r = await this.svc.getProduct(safeInt(id, 0));
@@ -59,6 +66,9 @@ export class ErpProductsController {
     return r;
   }
 
+  @ApiOperation({ summary: 'Create product' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('products')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
@@ -66,6 +76,10 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.createProduct(body));
   }
 
+  @ApiOperation({ summary: 'Update product' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Put('products/:id')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
@@ -75,6 +89,10 @@ export class ErpProductsController {
     return r;
   }
 
+  @ApiOperation({ summary: 'Patch product' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('products/:id')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
@@ -82,12 +100,18 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.updateProduct(safeInt(id, 0), body));
   }
 
+  @ApiOperation({ summary: 'Delete product' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('products/:id')
   @Roles(...ERP_WRITE)
   async deleteProduct(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.deleteProduct(safeInt(id, 0)));
   }
 
+  @ApiOperation({ summary: 'List bom headers' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('bom-headers')
   async listBomHeaders(
     @Query('page') page?: string,
@@ -96,6 +120,9 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.listBomHeaders(safeInt(page, 1), safeInt(limit, 50)));
   }
 
+  @ApiOperation({ summary: 'Get bom header' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('bom-headers/:id')
   async getBomHeader(@Param('id') id: string) {
     const r = await this.svc.getBomHeader(safeInt(id, 0));
@@ -103,6 +130,8 @@ export class ErpProductsController {
     return r;
   }
 
+  @ApiOperation({ summary: 'Bom explosion' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('bom-headers/:bomId/explosion')
   async bomExplosion(
     @Param('bomId') bomId: string,
@@ -111,11 +140,16 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.bomExplosion(safeInt(bomId, 0), safeInt(quantity, 1)));
   }
 
+  @ApiOperation({ summary: 'List bom items' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('bom-items')
   async listBomItems(@Query('bomHeaderId') bomHeaderId?: string) {
     return unwrapOrThrow(await this.svc.listBomItems(safeInt(bomHeaderId ?? '0', 0)));
   }
 
+  @ApiOperation({ summary: 'Create bom header' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('bom-headers')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
@@ -123,12 +157,19 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.createBomHeader(body));
   }
 
+  @ApiOperation({ summary: 'Delete bom header' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('bom-headers/:id')
   @Roles(...ERP_WRITE)
   async deleteBomHeader(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.deleteBomHeader(safeInt(id, 0)));
   }
 
+  @ApiOperation({ summary: 'Create bom item' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('bom-items')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
@@ -136,6 +177,10 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.createBomItem(body));
   }
 
+  @ApiOperation({ summary: 'Update bom item' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Put('bom-items/:id')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
@@ -143,12 +188,18 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.updateBomItem(safeInt(id, 0), body));
   }
 
+  @ApiOperation({ summary: 'Delete bom item' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('bom-items/:id')
   @Roles(...ERP_WRITE)
   async deleteBomItem(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.deleteBomItem(safeInt(id, 0)));
   }
 
+  @ApiOperation({ summary: 'List routings' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('routings')
   async listRoutings(
     @Query('page') page?: string,
@@ -157,6 +208,9 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.listRoutings(safeInt(page, 1), safeInt(limit, 50)));
   }
 
+  @ApiOperation({ summary: 'Get routing' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('routings/:id')
   async getRouting(@Param('id') id: string) {
     const r = await this.svc.getRouting(safeInt(id, 0));
@@ -164,11 +218,16 @@ export class ErpProductsController {
     return r;
   }
 
+  @ApiOperation({ summary: 'List routing ops' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('routing-operations')
   async listRoutingOps(@Query('routingId') routingId?: string) {
     return unwrapOrThrow(await this.svc.listRoutingOperations(routingId ? safeInt(routingId, 0) : undefined));
   }
 
+  @ApiOperation({ summary: 'Create routing' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('routings')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
@@ -176,12 +235,19 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.createRouting(body));
   }
 
+  @ApiOperation({ summary: 'Delete routing' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('routings/:id')
   @Roles(...ERP_WRITE)
   async deleteRouting(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.deleteRouting(safeInt(id, 0)));
   }
 
+  @ApiOperation({ summary: 'Create routing op' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('routing-operations')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
@@ -189,6 +255,10 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.createRoutingOperation(body));
   }
 
+  @ApiOperation({ summary: 'Update routing op' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Put('routing-operations/:id')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
@@ -196,6 +266,10 @@ export class ErpProductsController {
     return unwrapOrThrow(await this.svc.updateRoutingOperation(safeInt(id, 0), body));
   }
 
+  @ApiOperation({ summary: 'Delete routing op' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('routing-operations/:id')
   @Roles(...ERP_WRITE)
   async deleteRoutingOp(@Param('id') id: string) {

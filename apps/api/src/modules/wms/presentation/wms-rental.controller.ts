@@ -7,9 +7,10 @@ import {
   Controller, Get, Post, Delete, Patch, Body, Param, ParseIntPipe,
   UseGuards, UseInterceptors, Logger,
 InternalServerErrorException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { CommandBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -25,7 +26,8 @@ enum Role {
   DIRECTOR = 'director',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Wms Rental')
 @Controller('wms/rental')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -37,6 +39,9 @@ export class WmsRentalController {
     private readonly crudSvc: WmsCrudService,
   ) {}
 
+  @ApiOperation({ summary: 'Get rentals' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':warehouseId')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async getRentals(@Param('warehouseId') warehouseId: number) {
@@ -45,6 +50,9 @@ export class WmsRentalController {
     return Array.isArray(items) ? items : [];
   }
 
+  @ApiOperation({ summary: 'Receive fg' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('receive')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async receiveFg(
@@ -68,6 +76,9 @@ export class WmsRentalController {
     return unwrapOrThrow(res);
   }
 
+  @ApiOperation({ summary: 'Patch rental' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async patchRental(
@@ -78,6 +89,9 @@ export class WmsRentalController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Delete rental' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Delete(':id')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async deleteRental(

@@ -8,6 +8,7 @@ import {
   ParseIntPipe, UseGuards, UseInterceptors, BadRequestException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -26,7 +27,10 @@ import { PosWarehouseIntegrationService } from './pos-warehouse-integration.serv
 )
 @Controller('pos/wh')
 export class PosWarehouseIntegrationController {
-  constructor(private readonly svc: PosWarehouseIntegrationService) {}
+  constructor(
+    private readonly svc: PosWarehouseIntegrationService,
+    private readonly i18n: I18nService,
+  ) {}
 
   /**
    * GET /api/pos/stock — POS uchun real-time stok (warehouse_stock'dan)
@@ -74,13 +78,13 @@ export class PosWarehouseIntegrationController {
     },
     @CurrentUser() user: { id: number },
   ) {
-    if (!body.movementType) throw new BadRequestException('movementType majburiy');
-    if (!body.materialCardId) throw new BadRequestException('materialCardId majburiy');
-    if (!body.quantity) throw new BadRequestException('quantity majburiy');
+    if (!body.movementType) throw new BadRequestException(await this.i18n.t('errors.movementTypeRequired'));
+    if (!body.materialCardId) throw new BadRequestException(await this.i18n.t('errors.materialCardIdRequired'));
+    if (!body.quantity) throw new BadRequestException(await this.i18n.t('errors.quantityRequired'));
 
     const validTypes = ['EXTERNAL_IN', 'EXTERNAL_OUT', 'INTERNAL_ISSUE', 'INTERNAL_RETURN', 'INTERNAL_TRANSFER', 'DAMAGE'];
     if (!validTypes.includes(body.movementType)) {
-      throw new BadRequestException(`movementType: ${validTypes.join(', ')} dan biri bo'lishi kerak`);
+      throw new BadRequestException(await this.i18n.t('errors.movementTypeInvalid', { args: { types: validTypes.join(', ') } }));
     }
 
     return unwrapOrInternal(

@@ -7,6 +7,7 @@ import {
   Controller, Put, Get, Query, Param, Req, Res, HttpCode,
   StreamableFile, Logger, NotFoundException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from '@common/decorators/public.decorator';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -26,6 +27,7 @@ interface MultipartRequest {
   file(): Promise<MultipartFile | undefined>;
 }
 
+@ApiTags('Storage')
 @Controller('storage')
 export class StorageController {
   private readonly logger = new Logger(StorageController.name);
@@ -39,6 +41,9 @@ export class StorageController {
    *      (fallback for direct binary PUT when the server has been restarted)
    */
   @Public()
+  @ApiOperation({ summary: 'Upload file' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Put('upload')
   @HttpCode(200)
   async uploadFile(
@@ -81,6 +86,8 @@ export class StorageController {
 
   /** GET /storage/chat/1/file/xxx.png */
   @Public()
+  @ApiOperation({ summary: 'Serve file' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('*')
   async serveFile(
     @Param('*') filePath: string,

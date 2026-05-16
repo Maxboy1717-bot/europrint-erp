@@ -3,7 +3,7 @@
  * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
  */
 
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@shared/db';
@@ -11,7 +11,6 @@ import { sql, eq } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/types/result.type';
 import { OrderAggregate } from '../../domain/aggregates/order.aggregate';
 import { IOrderRepo, ORDER_WF_REPO } from '../../infrastructure/repositories/i-order.repo';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderStatusChangedEvent } from '../../domain/events/order-status-changed.event';
 import { owOrders, owOrderStatusHistory } from '@shared/db';
 
@@ -35,7 +34,7 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
 
   constructor(
     @Inject(ORDER_WF_REPO) private readonly repo: IOrderRepo,
-    private readonly events: EventEmitter2,
+    private readonly eventBus: EventBus,
   ) {}
 
   async execute(command: CreateOrderCommand): Promise<Result<OrderAggregate>> {
@@ -92,7 +91,7 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
     }
 
     this.logger.log({ msg: 'Buyurtma yaratildi', id, orderNumber, status: order.getStatus(), actor: command.createdBy });
-    this.events.emit('order.status_changed', new OrderStatusChangedEvent(
+    await this.eventBus.publish(new OrderStatusChangedEvent(
       id, orderNumber, 'DRAFT', order.getStatus(), command.createdBy, new Date(),
     ));
 

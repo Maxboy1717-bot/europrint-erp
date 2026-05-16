@@ -5,7 +5,7 @@
 
 import { Controller, Get, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -15,7 +15,7 @@ import { AnalyticsExtendedService } from './analytics-extended.service';
 
 @ApiTags('Analytics — Extended')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('analytics')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)

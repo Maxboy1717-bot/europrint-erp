@@ -77,8 +77,15 @@ export {
   shiftSchedules, leaveRequestsApp,
 } from './schema-misc-app-a';
 
-// schema-kanban: Kanban tables
+// schema-admin-ext: Admin-module specific tables (audit log full schema, alerts)
+export { audit_logs_ext, system_alerts } from './schema-admin-ext';
+
+// schema-pp: PP module canonical tables (extracted from infra per P3-27)
+export { ppWorkCenters } from './schema-pp';
+
+// schema-kanban: Kanban tables (including canonical kanbanBoards / kanbanColumns / kanbanCards)
 export {
+  kanbanBoards, kanbanColumns, kanbanCards,
   kanbanFlows, kanbanRobots, kanbanChecklists, kanbanChecklistItems,
   kanbanCardComments, kanbanCardWatchers,
   kanbanNotifications, kanbanTemplates, kanbanTimeTracks,

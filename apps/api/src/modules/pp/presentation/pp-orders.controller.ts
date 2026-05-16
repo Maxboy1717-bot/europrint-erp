@@ -4,9 +4,10 @@
  */
 
 import { Controller, Get, Post, Patch, Body, Param, UseGuards, UseInterceptors, Query, Logger , InternalServerErrorException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from 'src/common/guards/roles.guard';
 import { Roles} from 'src/common/decorators/roles.decorator';
 import { AuditInterceptor} from 'src/common/interceptors/audit.interceptor';
@@ -38,7 +39,8 @@ const ReleaseProductionOrderDtoSchema = z.object({
   reason: z.string().min(5),
 });
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Pp Orders')
 @Controller('pp/orders')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -48,6 +50,8 @@ export class PpOrdersController {
  constructor(private commandBus: CommandBus,
   private queryBus: QueryBus) {}
 
+ @ApiOperation({ summary: 'Get all' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
  async getAll(
@@ -71,6 +75,9 @@ export class PpOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Get by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
  async getById(@Param('id') id: number) {
@@ -80,6 +87,9 @@ export class PpOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Create' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
  @Roles(Role.SUPER_ADMIN)
  async create(
@@ -99,6 +109,9 @@ export class PpOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Release' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/release')
  @Roles(Role.SUPER_ADMIN)
  async release(
@@ -111,6 +124,8 @@ export class PpOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Get production plan' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('/plan/:startDate/:endDate')
  @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
  async getProductionPlan(

@@ -4,15 +4,17 @@
  */
 
 import { Body, Controller, Get, Post, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { FinanceApService } from '../application/finance-ap.service';
 
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Finance Ap')
 @Controller('ap')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -22,6 +24,8 @@ export class FinanceApController {
 
   constructor(private readonly svc: FinanceApService) {}
 
+  @ApiOperation({ summary: 'Get aging buckets' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('aging')
   async getAgingBuckets() {
     const _rAging = await this.svc.getAgingBuckets();
@@ -41,11 +45,16 @@ export class FinanceApController {
     };
   }
 
+  @ApiOperation({ summary: 'Get overdue' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('overdue')
   async getOverdue() {
     return unwrapOrInternal(await this.svc.getOverdue());
   }
 
+  @ApiOperation({ summary: 'Recalculate aging' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('aging/recalculate')
   async recalculateAging() {
     const bucketsUpdated = await this.svc.recalculateAging();

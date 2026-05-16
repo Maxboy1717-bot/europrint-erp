@@ -2,6 +2,7 @@
  * @module wms-inventory.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */import { BadRequestException, Body, Delete, Get, HttpException, HttpStatus, Logger, NotFoundException, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 
 import { assertRequired } from '@common/assertions';
@@ -9,7 +10,7 @@ import { MAX_EXPORT_LIMIT } from '@common/constants/app.constants';
 import { Controller, ParseIntPipe } from '@nestjs/common';
 import { assertOk, throwFromError, unwrapOrNotFound, unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -27,7 +28,8 @@ enum Role {
   WAREHOUSE_KEEPER = 'warehouse_keeper',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Wms Inventory')
 @Controller('wms/inventory')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -40,12 +42,17 @@ export class WmsInventoryController {
     private readonly crudSvc: WmsCrudService,
   ) {}
 
+  @ApiOperation({ summary: 'Create inventory adjustment' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
   async createInventoryAdjustment() {
     return { success: true };
   }
 
+  @ApiOperation({ summary: 'Get all' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER, Role.WAREHOUSE_KEEPER)
   async getAll(@Query() query?: Record<string, unknown>) {
@@ -57,6 +64,8 @@ export class WmsInventoryController {
     return { items, total: items.length };
   }
 
+  @ApiOperation({ summary: 'Get low stock' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('low-stock')
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
   async getLowStock(@Query() query?: Record<string, unknown>) {
@@ -65,6 +74,9 @@ export class WmsInventoryController {
     return unwrapOrThrow(await this.queryBus.execute(new GetLowStockQuery(validatedQuery.threshold)));
   }
 
+  @ApiOperation({ summary: 'Get by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER, Role.WAREHOUSE_KEEPER)
   async getById(@Param('id') id: string) {
@@ -76,6 +88,9 @@ export class WmsInventoryController {
     return item;
   }
 
+  @ApiOperation({ summary: 'Patch inventory' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
   async patchInventory(
@@ -86,6 +101,9 @@ export class WmsInventoryController {
     return { data: unwrapOrNotFound(r) };
   }
 
+  @ApiOperation({ summary: 'Delete inventory' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
   async deleteInventory(

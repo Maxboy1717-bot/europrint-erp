@@ -4,8 +4,9 @@
  */
 
 import { Body, Controller, Delete, Get, Logger, Param, Patch, Post, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { Roles } from '@common/decorators/roles.decorator';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -21,7 +22,8 @@ import {
 } from './dto/director.dto';
 
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Coordination')
 @Controller('coordination')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -31,6 +33,8 @@ export class CoordinationController {
 
   constructor(private readonly svc: CoordinationService) {}
 
+  @ApiOperation({ summary: 'Get councils' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('councils')
   getCouncils() {
     return [
@@ -42,11 +46,16 @@ export class CoordinationController {
     ];
   }
 
+  @ApiOperation({ summary: 'Get baskets' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('baskets')
   async getBaskets() {
     return unwrapOrInternal(await this.svc.getBaskets());
   }
 
+  @ApiOperation({ summary: 'Create dokla' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('dokla')
   @UsePipes(new ZodValidationPipe(CoordinationCreateDoklaSchema))
   async createDokla(
@@ -56,11 +65,16 @@ export class CoordinationController {
     return unwrapOrThrow(await this.svc.createDoklaWithValidation(user.id, body));
   }
 
+  @ApiOperation({ summary: 'List dokla' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dokla')
   async listDokla() {
     return unwrapOrInternal(await this.svc.listDokla());
   }
 
+  @ApiOperation({ summary: 'Update dokla' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('dokla/:id')
   @UsePipes(new ZodValidationPipe(CoordinationUpdateDoklaSchema))
   async updateDokla(
@@ -72,6 +86,9 @@ export class CoordinationController {
     return unwrapOrThrow(await this.svc.updateDoklaWithAuth(parseInt(id, 10), user.id, user.role, status ?? null));
   }
 
+  @ApiOperation({ summary: 'Delete dokla' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Delete('dokla/:id')
   async deleteDokla(
     @Param('id') id: string,
@@ -80,6 +97,9 @@ export class CoordinationController {
     return unwrapOrThrow(await this.svc.deleteDoklaWithAuth(parseInt(id, 10), user.id, user.role));
   }
 
+  @ApiOperation({ summary: 'Create rasporyazhenie' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('rasporyazhenie')
   @UsePipes(new ZodValidationPipe(CoordinationCreateRaspSchema))
   async createRasporyazhenie(
@@ -89,11 +109,16 @@ export class CoordinationController {
     return unwrapOrThrow(await this.svc.createRaspWithValidation(user.id, body));
   }
 
+  @ApiOperation({ summary: 'List rasporyazhenie' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('rasporyazhenie')
   async listRasporyazhenie() {
     return unwrapOrInternal(await this.svc.listRasporyazhenie());
   }
 
+  @ApiOperation({ summary: 'Mark done' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('rasporyazhenie/:id/done')
   @UsePipes(new ZodValidationPipe(CoordinationMarkDoneSchema))
   async markDone(
@@ -104,6 +129,9 @@ export class CoordinationController {
     return unwrapOrThrow(await this.svc.markRaspDoneWithAuth(parseInt(id, 10), user.id, user.role, (body.note as string) ?? null));
   }
 
+  @ApiOperation({ summary: 'Mark dokla read' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('dokla/:id/read')
   async markDoklaRead(
     @Param('id') id: string,
@@ -112,6 +140,9 @@ export class CoordinationController {
     return unwrapOrThrow(await this.svc.updateDoklaWithAuth(parseInt(id, 10), user.id, user.role, 'read'));
   }
 
+  @ApiOperation({ summary: 'Mark dokla resolved' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('dokla/:id/resolved')
   async markDoklaResolved(
     @Param('id') id: string,
@@ -120,6 +151,9 @@ export class CoordinationController {
     return unwrapOrThrow(await this.svc.updateDoklaWithAuth(parseInt(id, 10), user.id, user.role, 'resolved'));
   }
 
+  @ApiOperation({ summary: 'Update rasporyazhenie' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('rasporyazhenie/:id')
   @UsePipes(new ZodValidationPipe(CoordinationUpdateRaspSchema))
   async updateRasporyazhenie(
@@ -131,6 +165,9 @@ export class CoordinationController {
     return unwrapOrThrow(await this.svc.updateRaspWithAuth(parseInt(id, 10), user.id, user.role, status ?? null));
   }
 
+  @ApiOperation({ summary: 'Delete rasporyazhenie' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Delete('rasporyazhenie/:id')
   async deleteRasporyazhenie(
     @Param('id') id: string,
@@ -139,6 +176,8 @@ export class CoordinationController {
     return unwrapOrThrow(await this.svc.deleteRaspWithAuth(parseInt(id, 10), user.id, user.role));
   }
 
+  @ApiOperation({ summary: 'Get stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('stats')
   async getStats() {
     return unwrapOrInternal(await this.svc.getStats());

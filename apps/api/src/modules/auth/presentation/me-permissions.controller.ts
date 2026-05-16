@@ -16,22 +16,22 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '../infrastructure/decorators/current-user.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrThrow } from '@common/http-result';
-import { GetMyPermissionsHandler } from '../application/queries/get-my-permissions.handler';
+import { GetMyPermissionsService } from '../application/services/get-my-permissions.service';
 import type { AuthenticatedUser } from '../types/authenticated-user';
 import type { MyPermissions } from '../domain/types/my-permissions.types';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('auth/me')
 @ApiTags('Auth')
 export class MePermissionsController {
   private readonly logger = new Logger(MePermissionsController.name);
 
-  constructor(private readonly handler: GetMyPermissionsHandler) {}
+  constructor(private readonly handler: GetMyPermissionsService) {}
 
   @Get('permissions')
   @HttpCode(HttpStatus.OK)

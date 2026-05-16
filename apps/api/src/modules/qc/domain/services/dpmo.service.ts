@@ -3,12 +3,11 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeDiv, safeNum } from '@common/math/math-utils';
 import { Ok, Err, Result, AppError } from '@common/result';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { IQcComputeRepository, QC_COMPUTE_REPO } from '../repositories/i-qc.repo';
 
 export const DPMO_SCALE = 1_000_000;
 
@@ -84,23 +83,16 @@ function qualityLabel(sigma: number): string {
 
 @Injectable()
 export class DpmoService {
+  constructor(
+    @Inject(QC_COMPUTE_REPO) private readonly qcRepo: IQcComputeRepository,
+  ) {}
+
   /**
    * Load inspection aggregates for a given process/job ID from qc_inspections.
    * Called by QcDpmoController.getDpmoByProcess — keeps controllers DB-free.
    */
   async getProcessDpmoData(processId: string): Promise<ProcessDpmoData> {
-    const rows = await runQuery<{ defects: number; items_checked: number }>(sql`
-      SELECT
-        COALESCE(SUM(i.items_failed), 0)::int AS defects,
-        COALESCE(SUM(i.items_checked), 1)::int AS items_checked
-      FROM qc_inspections i
-      WHERE i.reference_id::text = ${processId}
-        AND i.reference_type = 'production_order'
-    `);
-    return {
-      defects:      safeNum(rows[0]?.defects ?? 0),
-      itemsChecked: Math.max(safeNum(rows[0]?.items_checked ?? 1), 1),
-    };
+    return this.qcRepo.findProcessDpmoData(processId);
   }
 
   @Calculation('qc.dpmo.calculate')

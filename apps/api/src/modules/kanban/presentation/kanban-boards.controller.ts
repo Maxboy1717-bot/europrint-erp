@@ -12,7 +12,7 @@ import {
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { KanbanBoardsService } from '../application/kanban-boards.service';
@@ -28,10 +28,15 @@ import {
   KanbanUpdateTemplateSchema, KanbanUpdateTemplateDto,
   KanbanCreateRobotSchema, KanbanCreateRobotDto,
 } from '../dto/kanban.dto';
+import { z } from 'zod';
+
+const ApplyTemplateSchema = z.object({
+  boardId: z.string().min(1),
+}).passthrough();
 
 @ApiTags('Kanban Boards')
 @Roles('admin', 'manager', 'supervisor', 'operator', 'employee', 'viewer', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
 @Controller('kanban')
@@ -233,9 +238,10 @@ export class KanbanBoardsController {
   @ApiOperation({ summary: 'Shablonni boardga qo\'llash' })
   async applyTemplate(
     @Param('templateId') templateId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
   ) {
-    const boardId = String(body.boardId ?? '');
+    const dto = ApplyTemplateSchema.parse(body);
+    const boardId = String(dto.boardId ?? '');
     if (!boardId) return { applied: false, error: 'boardId majburiy' };
 
     // Shablonni templateId bo'yicha topish

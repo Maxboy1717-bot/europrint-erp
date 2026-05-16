@@ -33,6 +33,7 @@ import { GetWorkCentersHandler } from './application/queries/get-work-centers.ha
 import { GetWorkCentersStatsHandler } from './application/queries/get-work-centers-stats.handler';
 import { DrizzlePpRepository } from './infrastructure/repositories/drizzle-pp.repo';
 import { DrizzleWorkCenterRepository } from './infrastructure/repositories/drizzle-work-center.repo';
+import { PP_REPO, WORK_CENTER_REPO } from './domain/repositories/pp.repository';
 import { AdvanceApprovedListener } from './infrastructure/event-handlers/advance-approved.listener';
 import { MroStopListener } from './infrastructure/event-handlers/mro-stop.listener';
 import { DesignLabCompletedListener } from './infrastructure/event-handlers/design-lab-completed.listener';
@@ -94,8 +95,8 @@ const listeners = [
   providers: [
     ...handlers,
     ...listeners,
-    { provide: 'IPpRepository', useClass: DrizzlePpRepository },
-    { provide: 'IWorkCenterRepository', useClass: DrizzleWorkCenterRepository },
+    { provide: PP_REPO, useClass: DrizzlePpRepository },
+    { provide: WORK_CENTER_REPO, useClass: DrizzleWorkCenterRepository },
     { provide: PP_PRODUCTION_ORDERS_REPO, useClass: DrizzlePpProductionOrdersRepository },
     ProductionOrdersService,
     { provide: PP_BOM_REPO, useClass: DrizzlePpBomRepository },
@@ -121,6 +122,6 @@ const listeners = [
     PpMpsService,
     PpCrpService,
   ],
-  exports: ['IPpRepository', 'IWorkCenterRepository'],
+  exports: [PP_REPO, WORK_CENTER_REPO],
 })
 export class PpModule {}

@@ -6,10 +6,11 @@
 import {
 Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, Body, Param, UseGuards, UseInterceptors, Logger, UsePipes,
 InternalServerErrorException, HttpException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { CommandBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
@@ -27,7 +28,8 @@ enum Role {
   DIRECTOR = 'director',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Mm Purchase Orders')
 @Controller('mm/purchase-orders')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -36,6 +38,8 @@ export class MmPurchaseOrdersController {
 
   constructor(private commandBus: CommandBus) {}
 
+  @ApiOperation({ summary: 'List pos' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async listPos(){
@@ -57,6 +61,8 @@ export class MmPurchaseOrdersController {
     } catch (_e) { return []; }
   }
 
+  @ApiOperation({ summary: 'Get pending receipt' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('pending-receipt')
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async getPendingReceipt(){
@@ -81,13 +87,23 @@ export class MmPurchaseOrdersController {
     } catch (_e) { return []; }
   }
 
+  // P3-26: single-PO fetch service not yet implemented; use list endpoint.
+  @ApiOperation({ summary: 'Get po' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
-  async getPo(@Param('id') id: number){
+  async getPo(@Param('id') _id: number){
     this.logger.log('Getting purchase order');
-    return {};
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: GET /mm/purchase-orders/:id', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
+  @ApiOperation({ summary: 'Create po' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles(Role.PURCHASER, Role.SUPER_ADMIN)
   async createPo(
@@ -107,6 +123,9 @@ export class MmPurchaseOrdersController {
     return unwrapOrThrow(res);
   }
 
+  @ApiOperation({ summary: 'Approve po' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':id/approve')
   @Roles(Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async approvePo(
@@ -118,6 +137,9 @@ export class MmPurchaseOrdersController {
     return unwrapOrThrow(res);
   }
 
+  @ApiOperation({ summary: 'Record goods receipt' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':id/goods-receipt')
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async recordGoodsReceipt(
@@ -129,23 +151,41 @@ export class MmPurchaseOrdersController {
     return unwrapOrThrow(res);
   }
 
+  // P3-26: delete & update PO commands not yet wired through commandBus —
+  // return 501 instead of pretending to delete/update.
+  @ApiOperation({ summary: 'Delete po' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @Roles(Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
-  async deletePo(@Param('id') id: number) {
-    return { id, deleted: true };
+  async deletePo(@Param('id') _id: number) {
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: DELETE /mm/purchase-orders/:id', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
+  @ApiOperation({ summary: 'Update po' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id')
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async updatePo(
-    @Param('id') id: number,
-    @Body() dto: Partial<{ supplierId: number; items: Array<{ materialId: number; quantity: number; unitPrice: number }>; notes: string }>,
+    @Param('id') _id: number,
+    @Body() _dto: Partial<{ supplierId: number; items: Array<{ materialId: number; quantity: number; unitPrice: number }>; notes: string }>,
   ) {
-    this.logger.log(`Updating purchase order ${id}`);
-    return { id: Number(id), ...dto, updated: true };
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: PATCH /mm/purchase-orders/:id', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
+  @ApiOperation({ summary: 'Patch approve po' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/approve')
   @Roles(Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async patchApprovePo(@Param('id') id: number, @Body() dto: { approvedBy: number }) {

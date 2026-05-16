@@ -11,7 +11,9 @@ import {
   Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query,
   UseGuards, BadRequestException, NotFoundException,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -22,6 +24,24 @@ import { sql } from 'drizzle-orm';
 import { safeInt } from '../../hr/common/db-rows';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
 
+const CreateWarehouseSchema = z.object({
+  name: z.string().max(200).optional(),
+  code: z.string().max(50).optional(),
+  type: z.string().max(50).optional(),
+  warehouse_type: z.string().max(50).optional(),
+  name_ru: z.string().max(200).optional(),
+  location: z.string().max(500).optional(),
+  address: z.string().max(500).optional(),
+}).passthrough();
+
+const UpdateWarehouseSchema = z.object({
+  name: z.string().max(200).optional(),
+  name_ru: z.string().max(200).optional(),
+  type: z.string().max(50).optional(),
+  location: z.string().max(500).optional(),
+  is_active: z.boolean().optional(),
+}).passthrough();
+
 const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
 const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
 
@@ -29,14 +49,18 @@ const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER']
  * WmsGatewayWarehousesController
  * Routes: /warehouse/warehouses, /warehouse/warehouses/:id (CRUD), stock, stats.
  */
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Wms Gateway Warehouses')
+@ApiBearerAuth()
 @Controller('warehouse')
 export class WmsGatewayWarehousesController {
   private readonly logger = new Logger(WmsGatewayWarehousesController.name);
 
   constructor(private readonly svc: WmsWarehouseGatewayService) {}
 
+  @ApiOperation({ summary: 'Get warehouses total stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('warehouses/stats/total')
   @Roles(...WH_READ)
   async getWarehousesTotalStats() {
@@ -59,6 +83,8 @@ export class WmsGatewayWarehousesController {
     } catch { return { warehouseCount: 0, materialCount: 0, totalQuantity: 0 }; }
   }
 
+  @ApiOperation({ summary: 'Get warehouses' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('warehouses')
   @Roles(...WH_READ)
   async getWarehouses(@Query('type') type?: string) {
@@ -91,12 +117,16 @@ export class WmsGatewayWarehousesController {
     }
   }
 
+  @ApiOperation({ summary: 'Create warehouse' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('warehouses')
   @Roles(...WH_WRITE)
   async createWarehouse(
-    @Body() dto: Record<string, unknown>,
+    @Body() body: unknown,
     @CurrentUser() user: AuthenticatedUser,
   ) {
+    const dto = CreateWarehouseSchema.parse(body);
     try {
       const name = String(dto.name ?? 'Nomsiz ombor');
       const code = dto.code
@@ -116,6 +146,9 @@ export class WmsGatewayWarehousesController {
     }
   }
 
+  @ApiOperation({ summary: 'Get warehouse stock' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('warehouses/:id/stock')
   @Roles(...WH_READ, 'pos_operator', 'employee', 'manager', 'admin')
   async getWarehouseStock(@Param('id') id: string) {
@@ -160,6 +193,9 @@ export class WmsGatewayWarehousesController {
     }
   }
 
+  @ApiOperation({ summary: 'Get warehouse stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('warehouses/:id/stats')
   @Roles(...WH_READ)
   async getWarehouseStats(@Param('id') id: string) {
@@ -192,6 +228,9 @@ export class WmsGatewayWarehousesController {
     } catch { return { id, materialCount: 0, totalQuantity: 0 }; }
   }
 
+  @ApiOperation({ summary: 'Get warehouse by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('warehouses/:id')
   @Roles(...WH_READ)
   async getWarehouseById(@Param('id') id: string) {
@@ -203,20 +242,24 @@ export class WmsGatewayWarehousesController {
     } catch (e) { if (e instanceof NotFoundException) throw e; return { id }; }
   }
 
+  @ApiOperation({ summary: 'Update warehouse' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('warehouses/:id')
   @Roles(...WH_WRITE)
   async updateWarehouse(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
   ) {
+    const parsed = UpdateWarehouseSchema.parse(body);
     try {
       const r = await rawSql(sql`
         UPDATE warehouses SET
-          name      = COALESCE(${body.name     ? String(body.name)     : null}, name),
-          name_ru   = COALESCE(${body.name_ru  ? String(body.name_ru)  : null}, name_ru),
-          type      = COALESCE(${body.type     ? String(body.type)     : null}, type),
-          location  = COALESCE(${body.location ? String(body.location) : null}, location),
-          is_active = COALESCE(${body.is_active != null ? Boolean(body.is_active) : null}::boolean, is_active)
+          name      = COALESCE(${parsed.name     ? String(parsed.name)     : null}, name),
+          name_ru   = COALESCE(${parsed.name_ru  ? String(parsed.name_ru)  : null}, name_ru),
+          type      = COALESCE(${parsed.type     ? String(parsed.type)     : null}, type),
+          location  = COALESCE(${parsed.location ? String(parsed.location) : null}, location),
+          is_active = COALESCE(${parsed.is_active != null ? Boolean(parsed.is_active) : null}::boolean, is_active)
         WHERE id = ${parseInt(id, 10)}
         RETURNING id::text AS id, code, name, type, is_active AS "isActive"
       `);
@@ -224,6 +267,10 @@ export class WmsGatewayWarehousesController {
     } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
+  @ApiOperation({ summary: 'Delete warehouse' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('warehouses/:id')
   @Roles(...WH_WRITE)
   async deleteWarehouse(@Param('id') id: string) {

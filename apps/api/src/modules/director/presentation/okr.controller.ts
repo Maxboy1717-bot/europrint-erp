@@ -7,8 +7,9 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { assertFound, assertRequired } from '@common/assertions';
 import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -25,7 +26,8 @@ import {
 const MANAGER_ROLES = ['manager', 'director', 'super_admin'];
 const DIRECTOR_ROLES = ['director', 'super_admin'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Okr')
 @Controller('okr')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -35,6 +37,8 @@ export class OkrController {
 
   constructor(private readonly svc: OkrService) {}
 
+  @ApiOperation({ summary: 'List objectives' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('objectives')
   async listObjectives(
     @Query('type') type?: string,
@@ -45,6 +49,9 @@ export class OkrController {
     return unwrapOrInternal(await this.svc.listObjectives(type ?? null, year ? parseInt(year, 10) : null, quarter ?? null, status ?? null));
   }
 
+  @ApiOperation({ summary: 'Get objective' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('objectives/:id')
   async getObjective(@Param('id') id: string) {
     const _rData = await this.svc.getObjective(parseInt(id, 10));
@@ -54,6 +61,9 @@ export class OkrController {
     return data[0];
   }
 
+  @ApiOperation({ summary: 'Create objective' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('objectives')
   @UsePipes(new ZodValidationPipe(OkrCreateObjectiveSchema))
   async createObjective(
@@ -69,6 +79,10 @@ export class OkrController {
     ));
   }
 
+  @ApiOperation({ summary: 'Update objective' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('objectives/:id')
   @UsePipes(new ZodValidationPipe(OkrUpdateObjectiveSchema))
   async updateObjective(@Param('id') id: string, @Body() body: OkrUpdateObjectiveDto) {
@@ -76,6 +90,10 @@ export class OkrController {
     return unwrapOrInternal(await this.svc.updateObjective(parseInt(id, 10), title ?? null, status ?? null, description ?? null));
   }
 
+  @ApiOperation({ summary: 'Delete objective' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('objectives/:id')
   @Roles(...DIRECTOR_ROLES)
   async deleteObjective(@Param('id') id: string) {
@@ -83,11 +101,16 @@ export class OkrController {
     return { message: "O'chirildi" };
   }
 
+  @ApiOperation({ summary: 'List key results' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('key-results')
   async listKeyResults(@Query('objective_id') objectiveId?: string) {
     return unwrapOrInternal(await this.svc.listKeyResults(objectiveId ? parseInt(objectiveId, 10) : null));
   }
 
+  @ApiOperation({ summary: 'Create key result' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('key-results')
   @UsePipes(new ZodValidationPipe(OkrCreateKeyResultSchema))
   async createKeyResult(
@@ -105,6 +128,10 @@ export class OkrController {
     ));
   }
 
+  @ApiOperation({ summary: 'Update key result' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('key-results/:id')
   @UsePipes(new ZodValidationPipe(OkrUpdateKeyResultSchema))
   async updateKeyResult(@Param('id') id: string, @Body() body: OkrUpdateKeyResultDto) {
@@ -117,6 +144,10 @@ export class OkrController {
     ));
   }
 
+  @ApiOperation({ summary: 'Delete key result' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('key-results/:id')
   @Roles(...DIRECTOR_ROLES)
   async deleteKeyResult(@Param('id') id: string) {
@@ -124,6 +155,8 @@ export class OkrController {
     return { message: "O'chirildi" };
   }
 
+  @ApiOperation({ summary: 'Get dashboard' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard')
   async getDashboard() {
     return unwrapOrInternal(await this.svc.getDashboard());

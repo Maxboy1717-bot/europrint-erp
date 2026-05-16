@@ -32,6 +32,7 @@ import { PendingAdvanceOrdersHandler } from './application/queries/pending-advan
 import { GetInvoicesHandler } from './application/queries/get-invoices.handler';
 import { GetInvoiceHandler } from './application/queries/get-invoice.handler';
 import { DrizzleSalesOrderRepository } from './infrastructure/repositories/drizzle-sales-order.repo';
+import { SALES_ORDER_REPO } from './domain/repositories/i-sales-order.repo';
 import { DealWonListener } from './infrastructure/event-handlers/deal-won.listener';
 import { PaymentReceivedListener } from './infrastructure/event-handlers/payment-received.listener';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
@@ -49,6 +50,8 @@ import { SdCustomersService } from './application/sd-customers.service';
 import { DrizzleSdCustomersRepository } from './infrastructure/repositories/drizzle-sd-customers.repo';
 import { SdLeadsService } from './application/sd-leads.service';
 import { SdLeadsRepository } from './application/sd-leads.repository';
+import { QUOTATION_REPO } from './domain/repositories/i-quotation.repo';
+import { DrizzleQuotationRepo } from './infrastructure/repositories/drizzle-quotation.repo';
 
 const commandHandlers = [
   CreateOrderHandler,
@@ -71,7 +74,7 @@ const eventListeners = [DealWonListener, PaymentReceivedListener];
 
 const repositories = [
   {
-    provide: 'ISalesOrderRepository',
+    provide: SALES_ORDER_REPO,
     useClass: DrizzleSalesOrderRepository,
   },
 ];
@@ -105,7 +108,8 @@ const repositories = [
     SdDashboardRepository,
     SdQuotationsRepository,
     SdQuotationsService,
+    { provide: QUOTATION_REPO, useClass: DrizzleQuotationRepo },
   ],
-  exports: ['ISalesOrderRepository'],
+  exports: [SALES_ORDER_REPO],
 })
 export class SdModule {}

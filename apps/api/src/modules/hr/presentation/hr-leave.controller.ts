@@ -7,9 +7,10 @@ import {
   Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Patch, Post, Query,
   UseGuards, UseInterceptors, InternalServerErrorException, NotFoundException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { assertOk, unwrapOrDefault, unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -30,7 +31,8 @@ import {
 
 interface AuthenticatedUser { id: number; sub?: number; }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Hr Leave')
 @Controller('hr/leave')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -42,6 +44,8 @@ export class HrLeaveController {
     @Inject(HR_REPO) private readonly hrRepo: IHrRepo,
   ) {}
 
+  @ApiOperation({ summary: 'Get leaves' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async getLeaves(@Query() query: Record<string, unknown>) {
@@ -52,6 +56,8 @@ export class HrLeaveController {
     return unwrapOrDefault(result, { items: [], total: 0 });
   }
 
+  @ApiOperation({ summary: 'Get leave stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('stats')
   @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async getLeaveStats() {
@@ -59,6 +65,9 @@ export class HrLeaveController {
     return unwrapOrDefault(result, { byStatus: {}, byType: {}, currentlyOnLeave: 0 });
   }
 
+  @ApiOperation({ summary: 'Get leave balance' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('balance/:employeeId')
   @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async getLeaveBalance(@Param('employeeId') employeeId: string) {
@@ -66,6 +75,9 @@ export class HrLeaveController {
     return unwrapOrDefault(result, { data: null });
   }
 
+  @ApiOperation({ summary: 'Get leave by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async getLeaveById(@Param('id') id: string) {
@@ -76,9 +88,12 @@ export class HrLeaveController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Create leave request' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles('EMPLOYEE', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
-  async createLeaveRequest(@Body() body: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+  async createLeaveRequest(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const validated = CreateLeaveRequestDtoSchema.parse(body);
     const userId = String(user.id);
     const result = await this.commandBus.execute(
@@ -91,11 +106,14 @@ export class HrLeaveController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Approve leave' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id/approve')
   @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async approveLeave(
     @Param('id') leaveId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const validated = ApproveLeaveDtoSchema.parse(body || {});
@@ -107,11 +125,14 @@ export class HrLeaveController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Reject leave' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id/reject')
   @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async rejectLeave(
     @Param('id') leaveId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: unknown,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const validated = RejectLeaveDtoSchema.parse(body);
@@ -123,6 +144,10 @@ export class HrLeaveController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Cancel leave' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/cancel')
   @Roles('EMPLOYEE', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async cancelLeave(@Param('id') leaveId: string, @CurrentUser() user: AuthenticatedUser) {
@@ -130,6 +155,10 @@ export class HrLeaveController {
     return unwrapOrThrow(await this.commandBus.execute(new CancelLeaveCommand(leaveId, userId)));
   }
 
+  @ApiOperation({ summary: 'Delete leave' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')

@@ -6,7 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { v4 as uuid } from 'uuid';
-import { AggregateRoot } from '@nestjs/cqrs';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { SensorStatus, SensorType } from '../enums/sensor-status.enum';
 import { SensorReading } from './sensor-reading.aggregate';
 

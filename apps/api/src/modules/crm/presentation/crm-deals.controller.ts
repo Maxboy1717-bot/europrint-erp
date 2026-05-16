@@ -4,9 +4,41 @@
  */
 
 import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query, UseGuards, UseInterceptors, Logger, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { Throttle} from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
+import { I18nService } from 'nestjs-i18n';
+import { z } from 'zod';
+
+const UpdateDealStageSchema = z.object({
+  stageId: z.string().optional(),
+  stage_id: z.string().optional(),
+  statusId: z.string().optional(),
+}).passthrough();
+
+const PatchDealSchema = z.object({
+  title: z.string().max(500).optional(),
+  stageId: z.string().optional(),
+  stage_id: z.string().optional(),
+  amount: z.union([z.string(), z.number()]).optional(),
+  assignedTo: z.union([z.string(), z.number()]).optional(),
+  assigned_to: z.union([z.string(), z.number()]).optional(),
+  description: z.string().max(2000).optional(),
+  expectedClosureDate: z.string().optional(),
+  expected_closure_date: z.string().optional(),
+});
+
+const QuickDealSchema = z.object({
+  customerName: z.string().optional(),
+  title: z.string().optional(),
+  amount: z.union([z.string(), z.number()]).optional(),
+  opportunity: z.union([z.string(), z.number()]).optional(),
+  status: z.string().optional(),
+  companyId: z.union([z.string(), z.number()]).nullable().optional(),
+  assignedTo: z.union([z.string(), z.number()]).nullable().optional(),
+}).passthrough();
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard} from '../../auth/guards/roles.guard';
 import { Roles} from '../../auth/decorators/roles.decorator';
@@ -20,10 +52,12 @@ import { DealsService } from '../deals/deals.service';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
 
+@ApiTags('Crm Deals')
+@ApiBearerAuth()
 @Controller('crm/deals')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 export class CrmDealsController {
   private readonly logger = new Logger(CrmDealsController.name);
 
@@ -31,8 +65,11 @@ export class CrmDealsController {
   private readonly commandBus: CommandBus,
   private readonly queryBus: QueryBus,
   private readonly dealsService: DealsService,
+  private readonly i18n: I18nService,
  ) {}
 
+ @ApiOperation({ summary: 'List' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
  async list(
@@ -44,6 +81,9 @@ export class CrmDealsController {
   return unwrapOrThrow(await this.dealsService.findAll({ companyId: companyId ? Number(companyId) : undefined, limit, offset }));
 }
 
+ @ApiOperation({ summary: 'Get by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
  async getById(@Param('id') id: number) {
@@ -52,9 +92,12 @@ export class CrmDealsController {
   return unwrapOrThrow(result);
 }
 
+ @ApiOperation({ summary: 'Create' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
- async create(@Body() dto: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+ async create(@Body() dto: unknown, @CurrentUser() user: AuthenticatedUser) {
   const validated = CreateDealDtoSchema.parse(dto);
   this.logger.log('Creating deal');
 
@@ -73,6 +116,10 @@ export class CrmDealsController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Mark won' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/won')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async markWon(@Param('id') id: number) {
@@ -83,46 +130,60 @@ export class CrmDealsController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Update stage' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/stage')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
- async updateStage(@Param('id') id: number, @Body() body: Record<string, unknown>) {
-  const stageId = body.stageId ?? body.stage_id ?? body.statusId;
+ async updateStage(@Param('id') id: number, @Body() body: unknown) {
+  const dto = UpdateDealStageSchema.parse(body);
+  const stageId = dto.stageId ?? dto.stage_id ?? dto.statusId;
   if (!stageId || typeof stageId !== 'string') {
-    throw new BadRequestException('stageId must be a non-empty string');
+    throw new BadRequestException(await this.i18n.t('errors.stageIdRequired'));
   }
   return unwrapOrThrow(await this.dealsService.update(Number(id), { stage_id: stageId }));
 }
 
+ @ApiOperation({ summary: 'Patch deal' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
- async patchDeal(@Param('id') id: number, @Body() body: Record<string, unknown>) {
-  const ALLOWED_PATCH_FIELDS = new Set(['title', 'stageId', 'stage_id', 'amount', 'assignedTo', 'assigned_to', 'description', 'expectedClosureDate', 'expected_closure_date']);
+ async patchDeal(@Param('id') id: number, @Body() body: unknown) {
+  const dto = PatchDealSchema.parse(body);
   const sanitized: Record<string, unknown> = {};
-  for (const key of Object.keys(body)) {
-    if (!ALLOWED_PATCH_FIELDS.has(key)) {
-      throw new BadRequestException(`Field '${key}' is not allowed in deal patch`);
-    }
-    sanitized[key] = body[key];
+  for (const [key, value] of Object.entries(dto)) {
+    if (value !== undefined) sanitized[key] = value;
   }
   return unwrapOrThrow(await this.dealsService.update(Number(id), sanitized));
 }
 
+ @ApiOperation({ summary: 'Delete deal' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Delete(':id')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async deleteDeal(@Param('id') id: number) {
   return unwrapOrThrow(await this.dealsService.remove(Number(id)));
 }
 
+ @ApiOperation({ summary: 'Create quick deal' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post('quick')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
- async createQuickDeal(@Body() body: Record<string, unknown>) {
+ async createQuickDeal(@Body() body: unknown) {
+  const parsed = QuickDealSchema.parse(body);
   // Minimal quick-create: customerName → title, amount, status (defaults to 'new')
   const dto: Record<string, unknown> = {
-   title:       body.customerName ?? body.title ?? 'Yangi bitim',
-   opportunity: body.amount ?? body.opportunity ?? '0',
-   stage_id:    body.status === 'new' || !body.status ? 'C0:NEW' : String(body.status),
-   companyId:   body.companyId ?? null,
-   assignedTo:  body.assignedTo ?? null,
+   title:       parsed.customerName ?? parsed.title ?? 'Yangi bitim',
+   opportunity: parsed.amount ?? parsed.opportunity ?? '0',
+   stage_id:    parsed.status === 'new' || !parsed.status ? 'C0:NEW' : String(parsed.status),
+   companyId:   parsed.companyId ?? null,
+   assignedTo:  parsed.assignedTo ?? null,
   };
   this.logger.log('Creating quick deal');
   return unwrapOrThrow(await this.dealsService.create(dto));

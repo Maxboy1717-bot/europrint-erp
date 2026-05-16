@@ -1,6 +1,6 @@
 /**
  * @module order-status-changed.event
- * @description Domain event payload. Emitted via @nestjs/event-emitter or CQRS event bus.
+ * @description Domain event payload. Published via the CQRS EventBus.
  */
 
 export class OrderStatusChangedEvent {

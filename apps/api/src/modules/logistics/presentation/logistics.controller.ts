@@ -19,10 +19,11 @@ import {
   Query,
   UseGuards,
   UseInterceptors, BadRequestException, InternalServerErrorException} from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
 import { EventEmitter2} from '@nestjs/event-emitter';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '@common/guards/roles.guard';
 import { Roles} from '@common/decorators/roles.decorator';
 import { AuditInterceptor} from '@common/interceptors/audit.interceptor';
@@ -40,7 +41,8 @@ enum Role {
  WAREHOUSE_MANAGER = 'warehouse_manager',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Logistics')
 @Controller('logistics')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -54,6 +56,8 @@ export class LogisticsController {
  @Inject(DELIVERY_REPO) private readonly deliveryRepo: IDeliveryRepo,
  ) {}
 
+ @ApiOperation({ summary: 'Get all' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.WAREHOUSE_MANAGER)
  async getAll(
@@ -74,6 +78,9 @@ export class LogisticsController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Get by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.WAREHOUSE_MANAGER)
  async getById(@Param('id') id: string) {
@@ -82,6 +89,9 @@ export class LogisticsController {
    return { statusCode: HttpStatus.OK, data: result.data };
 }
 
+ @ApiOperation({ summary: 'Dispatch delivery' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.WAREHOUSE_MANAGER)
  async dispatchDelivery(
@@ -95,6 +105,9 @@ export class LogisticsController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Assign driver' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/assign-driver')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
  async assignDriver(
@@ -109,6 +122,9 @@ export class LogisticsController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Complete delivery' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/complete')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
  async completeDelivery(

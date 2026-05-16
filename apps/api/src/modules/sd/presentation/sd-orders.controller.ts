@@ -4,10 +4,12 @@
  */
 
 import { Body, Controller, Get, Inject, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes, Logger , InternalServerErrorException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { ConfirmAdvancePaymentDtoSchema, ConfirmAdvancePaymentDto } from './dto/confirm-advance-payment.dto';
 import { Throttle} from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard} from '../../auth/guards/roles.guard';
@@ -30,16 +32,20 @@ import { TechCheckpointDtoSchema} from './dto/tech-checkpoint.dto';
 import { ConfirmAdvancePaymentCommand } from '../application/commands/confirm-advance-payment.handler';
 import { LOGGER} from '../../shared/infrastructure/logger.provider';
 
+@ApiTags('Sd Orders')
+@ApiBearerAuth()
 @Controller('sd/orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 export class SdOrdersController {
   private readonly logger = new Logger(SdOrdersController.name);
 
  constructor(private readonly commandBus: CommandBus,
   private readonly queryBus: QueryBus) {}
 
+ @ApiOperation({ summary: 'List orders' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE)
  async listOrders(
@@ -54,6 +60,8 @@ export class SdOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Get pending advance orders' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('pending-advance')
  @Roles(Role.FINANCE, Role.DIRECTOR, Role.SUPER_ADMIN)
  async getPendingAdvanceOrders(
@@ -66,6 +74,9 @@ export class SdOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Get order' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
  async getOrder(@Param('id', ParseIntPipe) id: number) {
@@ -75,9 +86,12 @@ export class SdOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Create order' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
- async createOrder(@Body() dto: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+ async createOrder(@Body() dto: unknown, @CurrentUser() user: AuthenticatedUser) {
   const validated = CreateOrderDtoSchema.parse(dto);
   this.logger.log('Creating order');
 
@@ -94,9 +108,13 @@ export class SdOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Update status' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/status')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
- async updateStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: Record<string, unknown>) {
+ async updateStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown) {
   const validated = UpdateStatusDtoSchema.parse(dto);
   this.logger.log('Updating order status');
 
@@ -105,9 +123,13 @@ export class SdOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Bypass advance' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Post(':id/advance-bypass')
  @Roles(Role.DIRECTOR, Role.SUPER_ADMIN)
- async bypassAdvance(@Param('id', ParseIntPipe) id: number, @Body() dto: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+ async bypassAdvance(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown, @CurrentUser() user: AuthenticatedUser) {
   const validated = AdvanceBypassDtoSchema.parse(dto);
   this.logger.log('Approving advance bypass');
 
@@ -116,9 +138,13 @@ export class SdOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Approve checkpoint' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/tech-checkpoint')
  @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN)
- async approveCheckpoint(@Param('id', ParseIntPipe) id: number, @Body() dto: Record<string, unknown>) {
+ async approveCheckpoint(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown) {
   const validated = TechCheckpointDtoSchema.parse(dto);
   this.logger.log('Approving tech checkpoint');
 
@@ -127,6 +153,10 @@ export class SdOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Confirm advance payment' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Post(':id/advance-payment')
  @Roles(Role.FINANCE, Role.FINANCE_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
  @UsePipes(new ZodValidationPipe(ConfirmAdvancePaymentDtoSchema))
@@ -136,9 +166,13 @@ export class SdOrdersController {
   return unwrapOrThrow(res);
  }
 
+ @ApiOperation({ summary: 'Put order status' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Put(':id/status')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
- async putOrderStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: Record<string, unknown>) {
+ async putOrderStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown) {
   const validated = UpdateStatusDtoSchema.parse(dto);
   const command = new UpdateOrderStatusCommand(id, validated.newStatus);
   const res = await this.commandBus.execute(command);

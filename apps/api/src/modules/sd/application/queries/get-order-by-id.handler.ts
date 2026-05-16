@@ -6,7 +6,7 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { AppErr, Err, Ok, Result } from '@common/result';
-import { ISalesOrderRepository } from '../../domain/repositories/i-sales-order.repo';
+import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 
 export class GetOrderByIdQuery {
   private readonly logger = new Logger(GetOrderByIdQuery.name);
@@ -18,7 +18,7 @@ export class GetOrderByIdHandler implements IQueryHandler<GetOrderByIdQuery> {
   private readonly logger = new Logger(GetOrderByIdHandler.name);
 
   constructor(
-    @Inject('ISalesOrderRepository') private readonly orderRepo: ISalesOrderRepository,
+    @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
   ) {}
 
   async execute(query: GetOrderByIdQuery): Promise<Result<Record<string, unknown>>> {

@@ -6,8 +6,9 @@
 import {
   Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put,
   Query, Req, UseGuards, UseInterceptors, UsePipes, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -25,13 +26,17 @@ const KB_ADMIN_ROLES = ['admin', 'super_admin', 'hr_manager', 'lms_manager', 'ma
 
 type MultipartValue = { value: string } | { filename: string; mimetype: string; _buf?: Buffer };
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Knowledge Base')
+@ApiBearerAuth()
 @Controller('knowledge-base')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class KnowledgeBaseController {
   constructor(private readonly svc: KnowledgeBaseService) {}
 
+  @ApiOperation({ summary: 'List' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(...KB_ROLES)
   async list(
@@ -41,40 +46,61 @@ export class KnowledgeBaseController {
     return unwrapOrInternal(await this.svc.findAll(category, search));
   }
 
+  @ApiOperation({ summary: 'Find one' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   @Roles(...KB_ROLES)
   async findOne(@Param('id') id: string) {
     return unwrapOrInternal(await this.svc.findById(id));
   }
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(...KB_ADMIN_ROLES)
   @UsePipes(new ZodValidationPipe(CreateKnowledgeBaseSchema))
-  async create(@Body() body: Record<string, unknown>) {
-    return unwrapOrInternal(await this.svc.create(body));
+  async create(@Body() body: unknown) {
+    return unwrapOrInternal(await this.svc.create(body as Record<string, unknown>));
   }
 
+  @ApiOperation({ summary: 'Replace' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Put(':id')
   @Roles(...KB_ADMIN_ROLES)
   @UsePipes(new ZodValidationPipe(UpdateKnowledgeBaseSchema))
-  async replace(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return unwrapOrInternal(await this.svc.update(id, body));
+  async replace(@Param('id') id: string, @Body() body: unknown) {
+    return unwrapOrInternal(await this.svc.update(id, body as Record<string, unknown>));
   }
 
+  @ApiOperation({ summary: 'Update' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id')
   @Roles(...KB_ADMIN_ROLES)
   @UsePipes(new ZodValidationPipe(UpdateKnowledgeBaseSchema))
-  async update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return unwrapOrInternal(await this.svc.update(id, body));
+  async update(@Param('id') id: string, @Body() body: unknown) {
+    return unwrapOrInternal(await this.svc.update(id, body as Record<string, unknown>));
   }
 
+  @ApiOperation({ summary: 'Remove' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete(':id')
   @Roles(...KB_ADMIN_ROLES)
   async remove(@Param('id') id: string) {
     return unwrapOrInternal(await this.svc.remove(id));
   }
 
+  @ApiOperation({ summary: 'Upload file' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
   @Roles(...KB_ADMIN_ROLES)

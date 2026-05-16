@@ -5,8 +5,9 @@
 
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Body, Controller, Get, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -21,14 +22,18 @@ import {
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 const APPROVE_ROLES = ['admin', 'super_admin', 'director', 'ceo', 'cfo', 'finance_manager', 'finance'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Zno')
 @Controller('hr/zno')
 export class ZnoController {
   private readonly logger = new Logger(ZnoController.name);
 
   constructor(private readonly svc: ZnoService) {}
 
+  @ApiOperation({ summary: 'Create zno' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @UsePipes(new ZodValidationPipe(ZnoCreateSchema))
   async createZno(
@@ -38,6 +43,8 @@ export class ZnoController {
     return unwrapOrThrow(await this.svc.createZnoWithValidation(body, user.id));
   }
 
+  @ApiOperation({ summary: 'List zno' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async listZno(
     @Query('status') status?: string,
@@ -48,6 +55,9 @@ export class ZnoController {
     return unwrapOrInternal(await this.svc.listZno(status ?? null, departmentId ? parseInt(departmentId, 10) : null, maxRows));
   }
 
+  @ApiOperation({ summary: 'Approve zno' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id/approve')
   @UseGuards(RolesGuard)
   @Roles(...APPROVE_ROLES)
@@ -60,6 +70,9 @@ export class ZnoController {
     return unwrapOrThrow(await this.svc.approveZnoWithAuth(parseInt(id, 10), user.id, (body.comment as string) ?? null));
   }
 
+  @ApiOperation({ summary: 'Reject zno' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id/reject')
   @UseGuards(RolesGuard)
   @Roles(...APPROVE_ROLES)
@@ -72,6 +85,9 @@ export class ZnoController {
     return unwrapOrThrow(await this.svc.rejectZnoWithAuth(parseInt(id, 10), user.id, (body.comment as string) ?? null));
   }
 
+  @ApiOperation({ summary: 'Update zno' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles(...APPROVE_ROLES)

@@ -16,6 +16,7 @@ import {
   HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -51,6 +52,8 @@ type CameraEventBodyDto = z.infer<typeof CameraEventBodySchema>;
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'admin', 'security', 'SECURITY')
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Attendance Face')
+@ApiBearerAuth()
 @Controller('hr/attendance')
 export class AttendanceFaceController {
   private readonly logger = new Logger(AttendanceFaceController.name);
@@ -61,6 +64,9 @@ export class AttendanceFaceController {
     private readonly lateArrival: LateArrivalService,
   ) {}
 
+  @ApiOperation({ summary: 'Register face' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('face/register')
   @HttpCode(HttpStatus.OK)
   async registerFace(@Body() raw: unknown) {
@@ -94,6 +100,9 @@ export class AttendanceFaceController {
     return { ok: true, face_id: result.data.id, method: 'single-embedding' };
   }
 
+  @ApiOperation({ summary: 'Camera event' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('territory')
   @HttpCode(HttpStatus.OK)
   async cameraEvent(@Body() raw: unknown) {
@@ -110,6 +119,8 @@ export class AttendanceFaceController {
     };
   }
 
+  @ApiOperation({ summary: 'Get live status' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('live')
   async getLiveStatus() {
     const result = await this.territory.getLiveStatus();
@@ -119,6 +130,8 @@ export class AttendanceFaceController {
     return { ok: true, ...result.data };
   }
 
+  @ApiOperation({ summary: 'Get territory logs' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('territory/logs')
   async getTerritoryLogs(
     @Query('date')        date?: string,
@@ -133,6 +146,8 @@ export class AttendanceFaceController {
     return { ok: true, ...result.data };
   }
 
+  @ApiOperation({ summary: 'Face ai health' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('face/health')
   async faceAiHealth() {
     const result = await this.faceRec.healthCheck();
@@ -142,6 +157,8 @@ export class AttendanceFaceController {
     return { ok: true, ...result.data };
   }
 
+  @ApiOperation({ summary: 'Late arrivals today' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('late-arrivals/today')
   async lateArrivalsToday() {
     const result = await this.lateArrival.getLateArrivalsToday();

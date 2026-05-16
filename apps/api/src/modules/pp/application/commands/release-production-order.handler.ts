@@ -7,7 +7,7 @@ import { Ok, Err } from '@common/result';
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
-import { IPpRepository } from '../../domain/repositories/pp.repository';
+import { IPpRepository, PP_REPO } from '../../domain/repositories/pp.repository';
 
 export class ReleaseProductionOrderCommand {
   constructor(public poId: number) {}
@@ -19,7 +19,7 @@ export class ReleaseProductionOrderHandler
 {
   private readonly logger = new Logger(ReleaseProductionOrderHandler.name);
   constructor(
-    @Inject('IPpRepository') private ppRepo: IPpRepository,
+    @Inject(PP_REPO) private ppRepo: IPpRepository,
     private eventBus: EventBus
   ) {}
 

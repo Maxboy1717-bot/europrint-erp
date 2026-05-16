@@ -3,11 +3,11 @@
  * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
  */
 
-import { Ok, Err } from '@common/result';
+import { Ok, Err, AppErr } from '@common/result';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Inject, ForbiddenException, Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
-import { IMesRepository } from '../../domain/repositories/mes.repository';
+import { IMesRepository, MES_REPO } from '../../domain/repositories/mes.repository';
 import { ProductionSession } from '../../domain/aggregates/production-session.aggregate';
 
 export class StartSessionCommand {
@@ -21,7 +21,7 @@ export class StartSessionCommand {
 export class StartSessionHandler implements ICommandHandler<StartSessionCommand> {
   private readonly logger = new Logger(StartSessionHandler.name);
   constructor(
-    @Inject('IMesRepository') private mesRepo: IMesRepository
+    @Inject(MES_REPO) private mesRepo: IMesRepository
   ) {}
 
   async execute(command: StartSessionCommand): Promise<Result<void>> {
@@ -55,7 +55,7 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
       if (!certResult.ok || !certData?.valid) {
         const errorMsg = `LMS sertifikati kerak: ${certData?.courseName || 'Noma\'lum kurs'}. Muddati: ${certData?.expiresAt || 'tugagan'}`;
         this.logger.warn({ operatorId: command.operatorId }, errorMsg);
-        throw new ForbiddenException(errorMsg);
+        return Err(AppErr('FORBIDDEN', errorMsg));
       }
     }
 

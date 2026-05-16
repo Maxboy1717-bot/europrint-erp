@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { InternalServerErrorException } from '@nestjs/common';
+import { DomainError } from '../../../../shared/domain/errors/domain-error';
 export enum LeaveType {
   ANNUAL = 'annual',
   SICK = 'sick',
@@ -48,8 +48,9 @@ export class LeaveRequest {
 
   approve(approverId: string): void {
     if (this.status !== LeaveStatus.PENDING) {
+      // INVALID_STATE: only PENDING leave requests can be approved.
       // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingApprovable'.
-      throw new InternalServerErrorException('Faqat pending so\'rov tasdiqlanadi');
+      throw new DomainError('INVALID_STATE', 'Faqat pending so\'rov tasdiqlanadi');
     }
     this.status = LeaveStatus.APPROVED;
     this.approvedBy = approverId;
@@ -59,8 +60,9 @@ export class LeaveRequest {
 
   reject(rejectorId: string, reason: string): void {
     if (this.status !== LeaveStatus.PENDING) {
+      // INVALID_STATE: only PENDING leave requests can be rejected.
       // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingRejectable'.
-      throw new InternalServerErrorException('Faqat pending so\'rov rad etiladi');
+      throw new DomainError('INVALID_STATE', 'Faqat pending so\'rov rad etiladi');
     }
     this.status = LeaveStatus.REJECTED;
     this.rejectedBy = rejectorId;
@@ -76,8 +78,9 @@ export class LeaveRequest {
       this.status = LeaveStatus.CANCELLED;
       this.updatedAt = _time.now();
     } else {
+      // INVALID_STATE: cannot cancel from terminal/non-cancellable status.
       // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.leaveCancelNotAllowed'.
-      throw new InternalServerErrorException('Bu ta\'til so\'rovini bekor qilib bo\'lmaydi');
+      throw new DomainError('INVALID_STATE', 'Bu ta\'til so\'rovini bekor qilib bo\'lmaydi');
     }
   }
 

@@ -8,7 +8,7 @@ import type { IAishaTool, ToolResult } from '../../domain/tool.interface';
 import { provSource, provResult } from './_helpers';
 import type { CameraSnapshot } from '../../domain/value-objects/tool-call.vo';
 import { CAMERA_SNAPSHOT_PROVIDER, type ICameraSnapshotProvider } from './get-camera-snapshot.tool';
-import { ClaudeService } from '../llm/claude.service';
+import { CLAUDE_PORT, IClaudePort } from '../../domain/ports/i-claude-port';
 
 export interface WorkerCount {
   count:       number;
@@ -32,7 +32,7 @@ export class DetectWorkersInAreaTool implements IAishaTool {
   };
 
   constructor(
-    private readonly claude: ClaudeService,
+    @Inject(CLAUDE_PORT) private readonly claude: IClaudePort,
     @Optional() @Inject(CAMERA_SNAPSHOT_PROVIDER)
     private readonly provider: ICameraSnapshotProvider | null = null,
   ) {}

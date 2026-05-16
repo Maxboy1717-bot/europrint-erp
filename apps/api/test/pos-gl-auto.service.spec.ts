@@ -24,8 +24,8 @@ jest.mock('../../../lib/db/dist/cjs/index.js', () => {
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { PosGlAutoService } from '../src/modules/pos/services/pos-gl-auto.service';
-import { GlPostingLogRepository } from '../src/modules/pos/repositories/gl-posting-log.repository';
+import { PosGlAutoService } from '../src/modules/pos/application/services/pos-gl-auto.service';
+import { GlPostingLogRepository } from '../src/modules/pos/infrastructure/repositories/gl-posting-log.repository';
 
 // ─── Helper types ─────────────────────────────────────────────────────────────
 

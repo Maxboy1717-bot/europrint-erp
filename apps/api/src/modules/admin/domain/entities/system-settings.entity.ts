@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { InternalServerErrorException } from '@nestjs/common';
+import { DomainError } from '../../../../shared/domain/errors/domain-error';
 export interface SystemSettingsData {
   id: number;
   advancePercent: number;
@@ -40,7 +40,8 @@ export class SystemSettings {
 
   setAdvancePercent(percent: number): void {
     if (percent < 0 || percent > 100) {
-      throw new InternalServerErrorException('Advance percent must be between 0 and 100');
+      // INVALID_INPUT: percent out of [0, 100] range.
+      throw new DomainError('INVALID_INPUT', 'Advance percent must be between 0 and 100');
     }
     this.advancePercent = percent;
     this.updatedAt = _time.now();
@@ -48,7 +49,8 @@ export class SystemSettings {
 
   setFreeStorageDays(days: number): void {
     if (days < 0) {
-      throw new InternalServerErrorException('Free storage days must be >= 0');
+      // INVALID_INPUT: negative days not allowed.
+      throw new DomainError('INVALID_INPUT', 'Free storage days must be >= 0');
     }
     this.freeStorageDays = days;
     this.updatedAt = _time.now();
@@ -56,7 +58,8 @@ export class SystemSettings {
 
   setStorageDailyRate(rate: number): void {
     if (rate < 0) {
-      throw new InternalServerErrorException('Storage daily rate must be >= 0');
+      // INVALID_INPUT: negative rate not allowed.
+      throw new DomainError('INVALID_INPUT', 'Storage daily rate must be >= 0');
     }
     this.storageDailyRate = rate;
     this.updatedAt = _time.now();

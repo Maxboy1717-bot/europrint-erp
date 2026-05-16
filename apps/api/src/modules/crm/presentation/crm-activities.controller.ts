@@ -11,8 +11,9 @@ import {
   BadRequestException, Body, Controller, Delete, Get, Logger, NotFoundException,
   Param, Patch, Post, Query, UseGuards,
   UseInterceptors, InternalServerErrorException, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -25,15 +26,19 @@ import {
 
 const CRM_ROLES = ['sales_manager', 'super_admin', 'director', 'crm_manager', 'SALES'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
+@ApiTags('Crm Activities')
+@ApiBearerAuth()
 @Controller('crm/activities')
 export class CrmActivitiesController {
   private readonly logger = new Logger(CrmActivitiesController.name);
 
   constructor(private readonly svc: CrmActivitiesService) {}
 
+  @ApiOperation({ summary: 'List' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async list(
     @Query('leadId') leadId?: string, @Query('dealId') dealId?: string,
@@ -50,11 +55,16 @@ export class CrmActivitiesController {
     return _rList.data;
   }
 
+  @ApiOperation({ summary: 'Today' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('today')
   async today() {
     return unwrapOrThrow(await this.svc.today());
   }
 
+  @ApiOperation({ summary: 'Get by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   async getById(@Param('id') id: string) {
     const _rGetById = await this.svc.getById(safeInt(id, 0));
@@ -64,6 +74,9 @@ export class CrmActivitiesController {
     return r;
   }
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @UseGuards(RolesGuard)
   @Roles(...CRM_ROLES)
@@ -74,6 +87,10 @@ export class CrmActivitiesController {
     return unwrapOrThrow(await this.svc.create(body.type, body.subject, body.lead_id, body.deal_id, body.assigned_to, body.due_date, body.notes, body.status));
   }
 
+  @ApiOperation({ summary: 'Complete' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/complete')
   @UseGuards(RolesGuard)
   @Roles(...CRM_ROLES)
@@ -86,6 +103,10 @@ export class CrmActivitiesController {
     return r;
   }
 
+  @ApiOperation({ summary: 'Update' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles(...CRM_ROLES)
@@ -98,6 +119,10 @@ export class CrmActivitiesController {
     return r;
   }
 
+  @ApiOperation({ summary: 'Delete' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(...CRM_ROLES)

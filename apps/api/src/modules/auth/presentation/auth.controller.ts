@@ -10,17 +10,18 @@
 import { assertOk, unwrapOrThrow } from '@common/http-result';
 import { assertAuth } from '@common/assertions';
 import { BadRequestException, Body, Controller, Get, Headers, HttpCode, HttpStatus, Inject, Patch, Post, Req, Res, Logger, UnauthorizedException, UseInterceptors } from '@nestjs/common';
-import { Throttle, SkipThrottle } from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
+import { AuthThrottle } from '@common/decorators/throttle-profiles';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { I18nService } from 'nestjs-i18n';
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { LoginHandler, LoginCommand } from '../application/commands/login.handler';
-import { LogoutHandler, LogoutCommand } from '../application/commands/logout.handler';
-import { ChangePasswordHandler, ChangePasswordCommand } from '../application/commands/change-password.handler';
-import { VerifyOtpHandler, VerifyOtpCommand } from '../application/commands/verify-otp.handler';
-import { ResendOtpHandler, ResendOtpCommand } from '../application/commands/resend-otp.handler';
+import { LoginService, LoginCommand } from '../application/services/login.service';
+import { LogoutService, LogoutCommand } from '../application/services/logout.service';
+import { ChangePasswordService, ChangePasswordCommand } from '../application/services/change-password.service';
+import { VerifyOtpService, VerifyOtpCommand } from '../application/services/verify-otp.service';
+import { ResendOtpService, ResendOtpCommand } from '../application/services/resend-otp.service';
 import { LoginDto, LoginSchema } from './dto/login.dto';
 import { ChangePasswordDto, ChangePasswordSchema } from './dto/change-password.dto';
 import { VerifyOtpSchema } from './dto/otp.dto';
@@ -68,7 +69,7 @@ type CookieCapableReply = FastifyReply & {
   clearCookie?: (name: string, opts?: Record<string, unknown>) => unknown;
 };
 
-@Throttle({ default: { limit: 5, ttl: 60_000 } })
+@AuthThrottle() // 5 req/min — slows credential stuffing
 @UseInterceptors(AuditInterceptor)
 @Controller('auth')
 @ApiTags('Auth')
@@ -76,11 +77,11 @@ export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
   constructor(
-    private readonly loginHandler: LoginHandler,
-    private readonly logoutHandler: LogoutHandler,
-    private readonly changePasswordHandler: ChangePasswordHandler,
-    private readonly verifyOtpHandler: VerifyOtpHandler,
-    private readonly resendOtpHandler: ResendOtpHandler,
+    private readonly loginHandler: LoginService,
+    private readonly logoutHandler: LogoutService,
+    private readonly changePasswordHandler: ChangePasswordService,
+    private readonly verifyOtpHandler: VerifyOtpService,
+    private readonly resendOtpHandler: ResendOtpService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @Inject(AUTH_REPO) private readonly authRepo: IAuthRepo,

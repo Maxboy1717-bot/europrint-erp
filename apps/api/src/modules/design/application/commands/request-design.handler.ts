@@ -4,12 +4,12 @@
  */
 
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Result, Ok } from '@common/result';
 import { RequestDesignCommand } from './request-design.command';
 import { DesignRequestedEvent } from '../../domain/events';
 import { DesignOrder } from '../../domain/aggregates/design-order.aggregate';
-import { TelegramService } from '@modules/notifications/domain/services/telegram.service';
+import { ITelegramSender, TELEGRAM_SENDER } from '@modules/notifications/domain/ports/i-telegram-sender.port';
 
 @Injectable()
 @CommandHandler(RequestDesignCommand)
@@ -18,7 +18,7 @@ export class RequestDesignHandler implements ICommandHandler<RequestDesignComman
 
   constructor(
     private readonly eventBus: EventBus,
-    private readonly telegramService: TelegramService,
+    @Inject(TELEGRAM_SENDER) private readonly telegramService: ITelegramSender,
       ) {}
 
   async execute(command: RequestDesignCommand): Promise<Result<string>> {

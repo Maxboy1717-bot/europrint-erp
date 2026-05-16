@@ -5,7 +5,7 @@
 
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { IQcRepository } from '../../application/repositories/qc.repository';
+import { IQcRepository, QC_REPOSITORY_PROVIDER } from '../../application/repositories/qc.repository';
 
 export class MesCompletedEvent {
   private readonly logger = new Logger(MesCompletedEvent.name);
@@ -19,7 +19,7 @@ export class MesCompletedEvent {
 export class MesCompletedListener implements IEventHandler<MesCompletedEvent> {
   private readonly logger = new Logger(MesCompletedListener.name);
   constructor(
-    @Inject('IQcRepository') private readonly qcRepository: IQcRepository,
+    @Inject(QC_REPOSITORY_PROVIDER) private readonly qcRepository: IQcRepository,
   ) {}
 
   async handle(event: MesCompletedEvent): Promise<void> {

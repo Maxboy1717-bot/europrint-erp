@@ -10,7 +10,7 @@ import {
   UseGuards, UseInterceptors, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard }  from '@common/guards/roles.guard';
 import { Roles }       from '@common/decorators/roles.decorator';
@@ -21,10 +21,19 @@ import {
   UpdateRobotDtoSchema, UpdateRobotDto,
   UpdateBoardDtoSchema, UpdateBoardDto,
 } from './dto/kanban-ext.dto';
+import { z } from 'zod';
+
+const CreateFlowSchema = z.object({
+  boardId: z.string().min(1),
+  name: z.string().max(200).optional(),
+  description: z.string().max(2000).optional(),
+  assignmentType: z.string().max(50).optional(),
+  userIds: z.array(z.union([z.string(), z.number()])).optional(),
+}).passthrough();
 
 @ApiTags('§16 Kanban Extended')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('kanban')
 @Roles('super_admin', 'director', 'manager', 'employee')
@@ -43,13 +52,14 @@ export class KanbanCoreController {
   @Post('flows')
   @UseInterceptors(AuditInterceptor)
   @ApiOperation({ summary: 'Yangi flow yaratish' })
-  async createFlow(@Body() body: Record<string, unknown>) {
+  async createFlow(@Body() body: unknown) {
+    const dto = CreateFlowSchema.parse(body);
     return unwrapOrBadRequest(await this.svc.createFlow({
-      boardId: String(body.boardId ?? ''),
-      name: String(body.name ?? 'Yangi oqim'),
-      description: body.description ? String(body.description) : undefined,
-      assignmentType: body.assignmentType ? String(body.assignmentType) : 'round_robin',
-      userIds: Array.isArray(body.userIds) ? body.userIds.map(String) : [],
+      boardId: String(dto.boardId ?? ''),
+      name: String(dto.name ?? 'Yangi oqim'),
+      description: dto.description ? String(dto.description) : undefined,
+      assignmentType: dto.assignmentType ? String(dto.assignmentType) : 'round_robin',
+      userIds: Array.isArray(dto.userIds) ? dto.userIds.map(String) : [],
     }));
   }
 

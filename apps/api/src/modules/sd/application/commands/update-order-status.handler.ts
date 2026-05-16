@@ -4,31 +4,11 @@
  */
 
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Result, Ok, Err } from '@common/result';
-import { Inject, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
-import { SalesOrder } from '../../domain/aggregates/sales-order.aggregate';
-import { ISalesOrderRepository } from '../../domain/repositories/i-sales-order.repo';
+import { Result, Ok, Err, AppErr } from '@common/result';
+import { Inject, Logger } from '@nestjs/common';
+import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 import { OrderStatusChangedEvent } from '../../domain/events/order-status-changed.event';
 import { AdvanceCheckFailedEvent } from '../../domain/events/advance-check-failed.event';
-
-// Valid state transitions (§12)
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  draft: ['pending_approval', 'cancelled'],
-  pending_approval: ['approved', 'rejected', 'cancelled'],
-  approved: ['pending_advance', 'on_hold', 'cancelled'],
-  pending_advance: ['ready_for_planning', 'on_hold', 'cancelled'],
-  ready_for_planning: ['in_planning', 'on_hold', 'cancelled'],
-  in_planning: ['completed_planning', 'on_hold', 'cancelled'],
-  completed_planning: ['ready_for_production', 'on_hold', 'cancelled'],
-  ready_for_production: ['in_production', 'on_hold', 'cancelled'],
-  in_production: ['ready_for_shipment', 'on_hold', 'cancelled'],
-  ready_for_shipment: ['shipped', 'on_hold', 'cancelled'],
-  shipped: ['delivered', 'cancelled'],
-  delivered: ['closed', 'cancelled'],
-  closed: [],
-  cancelled: [],
-  on_hold: ['pending_approval', 'pending_advance', 'ready_for_planning', 'cancelled'],
-};
 
 export class UpdateOrderStatusCommand {
   constructor(public readonly orderId: number,
@@ -39,56 +19,56 @@ export class UpdateOrderStatusCommand {
 export class UpdateOrderStatusHandler implements ICommandHandler<UpdateOrderStatusCommand> {
   private readonly logger = new Logger(UpdateOrderStatusHandler.name);
   constructor(
-    @Inject('ISalesOrderRepository') private readonly orderRepo: ISalesOrderRepository,
+    @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
     private readonly eventBus: EventBus,
   ) {}
 
   async execute(command: UpdateOrderStatusCommand): Promise<Result<void>> {
     const orderResult = await this.orderRepo.findById(command.orderId);
-    if (!orderResult.ok || !(orderResult).data) {
-      throw new BadRequestException('Order not found');
+    if (!orderResult.ok || !orderResult.data) {
+      return Err(AppErr('BAD_REQUEST', 'Order not found'));
     }
 
-    const order = (orderResult).data as SalesOrder & Record<string, unknown>;
-    const currentStatus = order.getStatus();
+    const order = orderResult.data;
 
-    // Check valid transition
-    if (!VALID_TRANSITIONS[currentStatus]?.includes(command.newStatus)) {
-      throw new ForbiddenException(`Cannot transition from ${currentStatus} to ${command.newStatus}`);
-    }
-
-    // §8.1: If transitioning to ready_for_planning, check advance
+    // §8.1: Advance check fires BEFORE the transition so we can still surface
+    // the original status to the AdvanceCheckFailedEvent payload.
     if (command.newStatus === 'ready_for_planning') {
       const advanceCheck = order.checkAdvanceAndBlock();
       if (advanceCheck.blocked) {
         const event = new AdvanceCheckFailedEvent(
           order.getId(),
-          order['advanceRequired'],
-          order['advancePaid'],
+          order.getAdvanceRequired(),
+          order.getAdvancePaid(),
           advanceCheck.reason ?? '',
         );
         this.eventBus.publish(event);
-        throw new ForbiddenException(advanceCheck.reason);
+        return Err(AppErr('FORBIDDEN', advanceCheck.reason ?? 'Avans tasdiqlanmagan'));
       }
     }
 
-    const statusResult = order.updateStatus(command.newStatus);
-    if (!statusResult.ok) {
-      throw new BadRequestException(statusResult.error);
+    // Aggregate guards the transition graph (§12) and applies the new status.
+    const transition = order.transitionStatus(command.newStatus);
+    if (!transition.ok) {
+      const message = transition.error?.message ?? 'Invalid status transition';
+      const code = message.startsWith('Cannot transition') ? 'FORBIDDEN' : 'BAD_REQUEST';
+      return Err(AppErr(code, message));
     }
+
+    const previousStatus = transition.data.previousStatus;
 
     const updateResult = await this.orderRepo.update(order);
     if (!updateResult.ok) {
-      return Err('Failed to update order');
+      return Err(AppErr('INTERNAL', 'Failed to update order'));
     }
 
-    const statusEvent = new OrderStatusChangedEvent(order.getId(), currentStatus, command.newStatus);
+    const statusEvent = new OrderStatusChangedEvent(order.getId(), previousStatus, command.newStatus);
     this.eventBus.publish(statusEvent);
 
     this.logger.log({
       msg: 'Order status updated',
       orderId: command.orderId,
-      from: currentStatus,
+      from: previousStatus,
       to: command.newStatus,
     });
 

@@ -5,7 +5,8 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
-import { SQL, SQLWrapper, sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql, eq, count } from 'drizzle-orm';
+import { courses_table, certificates_table } from '@shared/db';
 import { Result, Ok, Err } from '@common/result';
 import { execLmsCourseDeactivate } from '@common/database/queries-remaining';
 
@@ -31,9 +32,9 @@ export class LmsCoursesExtendedRepository {
           : filters?.category
           ? exec(sql`SELECT * FROM courses WHERE is_active = true AND category = ${filters.category} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`)
           : exec(sql`SELECT * FROM courses WHERE is_active = true ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`),
-        runQuery<{ cnt: number }>(sql`SELECT COUNT(*) AS cnt FROM courses WHERE is_active = true`),
+        db.select({ cnt: count() }).from(courses_table).where(eq(courses_table.is_active, true)),
       ]);
-      return Ok({ items, total: Number(countRows.rows[0]?.cnt ?? 0) });
+      return Ok({ items, total: Number(countRows[0]?.cnt ?? 0) });
     } catch (error) { this.logger.error(`findAll: ${(error as Error).message}`); return Err((error as Error).message); }
   }
 
@@ -92,9 +93,9 @@ export class LmsCoursesExtendedRepository {
         filters?.employeeId
           ? exec(sql`SELECT cert.*, COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'') AS employee_name, c.title_uz AS course_title FROM certificates cert JOIN employees emp ON emp.id = cert.employee_id JOIN courses c ON c.id = cert.course_id WHERE cert.employee_id = ${parseInt(filters.employeeId, 10)} ORDER BY cert.issued_at DESC LIMIT ${limit} OFFSET ${offset}`)
           : exec(sql`SELECT cert.*, COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'') AS employee_name, c.title_uz AS course_title FROM certificates cert JOIN employees emp ON emp.id = cert.employee_id JOIN courses c ON c.id = cert.course_id ORDER BY cert.issued_at DESC LIMIT ${limit} OFFSET ${offset}`),
-        runQuery<{ cnt: number }>(sql`SELECT COUNT(*) AS cnt FROM certificates`),
+        db.select({ cnt: count() }).from(certificates_table),
       ]);
-      return Ok({ items, total: Number(countRows.rows[0]?.cnt ?? 0) });
+      return Ok({ items, total: Number(countRows[0]?.cnt ?? 0) });
     } catch (error) { this.logger.error(`findAllCertificates: ${(error as Error).message}`); return Err((error as Error).message); }
   }
 

@@ -15,8 +15,9 @@ import {
   Query,
   UseGuards,
   UseInterceptors, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@auth/guards/roles.guard';
 import { Roles } from '@auth/decorators/roles.decorator';
 import { CurrentUser } from '@auth/decorators/current-user.decorator';
@@ -26,8 +27,9 @@ import { GetMyPanelQuery } from '../application/queries/get-my-panel.query';
 import { SavePanelDto, SavePanelDtoSchema } from './dto/core.dto';
 import { Panel } from '../domain/aggregates/panel.aggregate';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Panels')
 @Controller('core/panels')
 @Roles('admin', 'manager', 'supervisor', 'operator', 'employee', 'viewer', 'director')
 @UseGuards(RolesGuard)
@@ -36,6 +38,8 @@ export class PanelsController {
 
   constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
 
+  @ApiOperation({ summary: 'Get my panel' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('my')
   async getMyPanel(@CurrentUser() user: AuthenticatedUser): Promise<Panel> {
     this.logger.log(`Get panel for user ${user.id}`);
@@ -43,6 +47,9 @@ export class PanelsController {
     return unwrapOrThrow(res);
   }
 
+  @ApiOperation({ summary: 'Save my panel' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('my')
   async saveMyPanel(@Body() dto: SavePanelDto, @CurrentUser() user: AuthenticatedUser): Promise<Panel> {
     this.logger.log(`Save panel for user ${user.id}`);
@@ -52,6 +59,8 @@ export class PanelsController {
     return unwrapOrThrow(res);
   }
 
+  @ApiOperation({ summary: 'Get default panel' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('default')
   async getDefaultPanel(): Promise<Panel | null> {
     this.logger.log('Get default panel');

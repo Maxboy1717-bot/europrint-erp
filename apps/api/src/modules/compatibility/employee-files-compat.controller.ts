@@ -8,7 +8,7 @@ import {
   UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { unwrapOrThrow } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -18,7 +18,7 @@ import { CompatBodyDto } from './dto/compat-body.dto';
 
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('employee-files')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)

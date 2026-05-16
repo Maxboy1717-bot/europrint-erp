@@ -6,9 +6,10 @@
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Err } from '@common/types/result.type';
 import { Controller, UseGuards, Get, Post, Patch, Body, Param, ParseIntPipe, Logger, NotFoundException, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 import { CareerPathService } from './career-path.service';
@@ -40,19 +41,26 @@ const UpdateProgressSchema = z.object({
 class UpdateProgressDto extends createZodDto(UpdateProgressSchema) {}
 
 @Roles('admin', 'manager', 'supervisor', 'hr_manager', 'employee')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
+@ApiTags('Career Path')
+@ApiBearerAuth()
 @Controller('hr-v2/career-path')
 export class CareerPathController {
   private readonly logger = new Logger(CareerPathController.name);
   constructor(private readonly svc: CareerPathService) {}
 
+  @ApiOperation({ summary: 'Get all' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async getAll() {
     return unwrapOrThrow(await this.svc.getAll());
   }
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   async create(@Body() body: CreatePathDto) {
     const result = await this.svc.createPath({
@@ -66,16 +74,26 @@ export class CareerPathController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get department ladder' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('department/:id/ladder')
   async getDepartmentLadder(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.svc.getDepartmentLadder(id));
   }
 
+  @ApiOperation({ summary: 'Get by employee' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('employee/:id')
   async getByEmployee(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.svc.getByEmployee(id));
   }
 
+  @ApiOperation({ summary: 'Add step' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post(':id/steps')
   async addStep(@Param('id', ParseIntPipe) id: number, @Body() body: AddStepDto) {
     const result = await this.svc.addStep(id, {
@@ -89,6 +107,9 @@ export class CareerPathController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Update progress' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id/steps/:stepId')
   async updateProgress(
     @Param('id', ParseIntPipe) id: number,

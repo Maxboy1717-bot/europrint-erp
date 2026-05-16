@@ -5,8 +5,8 @@
 
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, Get, Post, Body, Param, Logger, UseInterceptors, UsePipes } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Public } from '../../common/decorators/public.decorator';
 import { EcommerceService } from './ecommerce.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -17,7 +17,7 @@ import {
 import { unwrapOrInternal } from '@common/http-result';
 
 @ApiTags('Ecommerce - Public')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller()
 export class EcommercePublicController {
@@ -26,12 +26,17 @@ export class EcommercePublicController {
   constructor(private readonly svc: EcommerceService) {}
 
   @Public()
+  @ApiOperation({ summary: 'Get public categories' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('public/categories')
   async getPublicCategories() {
     return unwrapOrInternal(await this.svc.getPublicCategories());
   }
 
   @Public()
+  @ApiOperation({ summary: 'Create public order' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('public/orders')
   @UsePipes(new ZodValidationPipe(EcommerceBodySchema))
   async createPublicOrder(@Body() body: EcommerceBodyDto) {
@@ -39,6 +44,9 @@ export class EcommercePublicController {
   }
 
   @Public()
+  @ApiOperation({ summary: 'Get public product' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('public/products/:slug')
   async getPublicProduct(@Param('slug') slug: string) {
     return unwrapOrInternal(await this.svc.getPublicProductBySlug(slug));
@@ -49,6 +57,9 @@ export class EcommercePublicController {
    * Lead avtomatik CRM ga tushadi (WebsiteContactLeadListener).
    */
   @Public()
+  @ApiOperation({ summary: 'Submit public contact' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('public/contact')
   @UsePipes(new ZodValidationPipe(PublicContactSchema))
   async submitPublicContact(@Body() body: PublicContactDto) {

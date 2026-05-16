@@ -5,8 +5,9 @@
 
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, UseGuards, Get, Post, Patch, Body, Param, ParseIntPipe, Logger, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 import { PipService } from './pip.service';
@@ -34,24 +35,33 @@ const AddProgressSchema = z.object({
 class AddProgressDto extends createZodDto(AddProgressSchema) {}
 
 @Roles('admin', 'manager', 'supervisor', 'hr_manager')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
+@ApiTags('Pip')
+@ApiBearerAuth()
 @Controller('hr-v2/pip')
 export class PipController {
   private readonly logger = new Logger(PipController.name);
   constructor(private readonly svc: PipService) {}
 
+  @ApiOperation({ summary: 'List all' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async listAll() {
     return unwrapOrInternal(await this.svc.listAll());
   }
 
+  @ApiOperation({ summary: 'Get active' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('active')
   async getActive() {
     return unwrapOrInternal(await this.svc.getActivePips());
   }
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   async create(@Body() body: CreatePipDto) {
     return unwrapOrInternal(await this.svc.createPip({
@@ -66,16 +76,26 @@ export class PipController {
     }));
   }
 
+  @ApiOperation({ summary: 'Get by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   async getById(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.getById(id));
   }
 
+  @ApiOperation({ summary: 'Get by employee' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('employee/:id')
   async getByEmployee(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.getByEmployee(id));
   }
 
+  @ApiOperation({ summary: 'Add progress' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post(':id/progress')
   async addProgress(@Param('id', ParseIntPipe) id: number, @Body() body: AddProgressDto) {
     return unwrapOrInternal(await this.svc.addProgressUpdate(id, {
@@ -85,11 +105,19 @@ export class PipController {
     }));
   }
 
+  @ApiOperation({ summary: 'Acknowledge' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/acknowledge')
   async acknowledge(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.acknowledge(id));
   }
 
+  @ApiOperation({ summary: 'Complete' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/complete')
   async complete(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
     const schema = z.object({ result: z.enum(['PASSED', 'FAILED']).optional() });

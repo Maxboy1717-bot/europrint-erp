@@ -6,7 +6,7 @@
 import { Controller, UseGuards, Get, Post, Body, Param, Query, HttpCode, HttpStatus , UseInterceptors} from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { WarehouseBarcodeOpsService } from './warehouse-barcode-ops.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -16,7 +16,7 @@ import { unwrapOrInternal } from '@common/http-result';
 @ApiTags('Warehouse Barcode Ops (ERP)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
 @Controller('warehouse')

@@ -4,19 +4,31 @@
  */
 
 import {
-  Controller, Get, Logger, Query,
+  Controller, Get, HttpException, HttpStatus, Logger, Query,
   UseGuards,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { WmsCatalogService } from '../application/wms-catalog.service';
 
+// P3-26: throw 501 instead of fake empty payloads so frontend can show
+// "coming soon" empty state instead of pretending the data is empty.
+const notImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
+
 const WH_READ = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Wms Catalog')
+@ApiBearerAuth()
 @Controller('warehouse')
 export class WmsCatalogController {
   private readonly logger = new Logger(WmsCatalogController.name);
@@ -25,18 +37,24 @@ export class WmsCatalogController {
 
   // ── REPORTS ───────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Get reports abc analysis' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('reports/abc-analysis')
   @Roles(...WH_READ)
   getReportsAbcAnalysis() {
     return this.catalogService.getAbcAnalysis();
   }
 
+  @ApiOperation({ summary: 'Get reports aging' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('reports/aging')
   @Roles(...WH_READ)
   getReportsAging(@Query('daysThreshold') daysThreshold?: string) {
     return this.catalogService.getAging(parseInt(daysThreshold ?? '90', 10));
   }
 
+  @ApiOperation({ summary: 'Get reports expiry' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('reports/expiry')
   @Roles(...WH_READ)
   getReportsExpiry(
@@ -46,6 +64,8 @@ export class WmsCatalogController {
     return this.catalogService.getExpiry(parseInt(daysAheadQ ?? days ?? '90', 10));
   }
 
+  @ApiOperation({ summary: 'Get reports stock balance' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('reports/stock-balance')
   @Roles(...WH_READ)
   getReportsStockBalance(
@@ -56,6 +76,8 @@ export class WmsCatalogController {
     return this.catalogService.getStockBalance(warehouseId, category, lowStockOnlyQ === 'true');
   }
 
+  @ApiOperation({ summary: 'Get reports turnover' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('reports/turnover')
   @Roles(...WH_READ)
   getReportsTurnover() {
@@ -64,6 +86,8 @@ export class WmsCatalogController {
 
   // ── STATS ─────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Get stats total' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('stats/total')
   @Roles(...WH_READ)
   getStatsTotal() {
@@ -72,30 +96,40 @@ export class WmsCatalogController {
 
   // ── DASHBOARD ─────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Get dashboard' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard')
   @Roles(...WH_READ)
   getDashboard() {
     return { totalItems: 0, lowStock: 0, pendingReceipts: 0, pendingTransfers: 0 };
   }
 
+  @ApiOperation({ summary: 'Get dashboard kpis' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard/kpis')
   @Roles(...WH_READ)
   getDashboardKpis() {
     return this.catalogService.getDashboardKpis();
   }
 
+  @ApiOperation({ summary: 'Get dashboard movement summary' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard/movement-summary')
   @Roles(...WH_READ)
   getDashboardMovementSummary(@Query('period') period?: string) {
     return this.catalogService.getMovementSummary(period);
   }
 
+  @ApiOperation({ summary: 'Get dashboard alerts' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard/alerts')
   @Roles(...WH_READ)
   getDashboardAlerts() {
     return this.catalogService.getDashboardAlerts();
   }
 
+  @ApiOperation({ summary: 'Get dashboard top materials' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard/top-materials')
   @Roles(...WH_READ)
   getDashboardTopMaterials(
@@ -107,15 +141,21 @@ export class WmsCatalogController {
 
   // ── MISC ──────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Get transactions' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('transactions')
   @Roles(...WH_READ)
   getTransactions() {
-    return { data: [], total: 0 };
+    return notImplemented('GET /warehouse/transactions');
   }
 
+  @ApiOperation({ summary: 'Get orders by date' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('orders-by-date/:date')
   @Roles(...WH_READ)
   getOrdersByDate() {
-    return { data: [], total: 0 };
+    return notImplemented('GET /warehouse/orders-by-date/:date');
   }
 }

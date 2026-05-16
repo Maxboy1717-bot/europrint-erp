@@ -8,7 +8,7 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Result, Ok, Err } from '@common/result';
 import { GetMaterialsQuery } from './get-materials.query';
 import { Material } from '../../domain/aggregates/material.aggregate';
-import { IMmMaterialRepository } from '../../infrastructure/repositories/drizzle-material.repo';
+import { IMmMaterialRepository, MM_MATERIAL_REPO } from '../../infrastructure/repositories/drizzle-material.repo';
 
 @Injectable()
 @QueryHandler(GetMaterialsQuery)
@@ -16,7 +16,7 @@ export class GetMaterialsHandler implements IQueryHandler<GetMaterialsQuery> {
   private readonly logger = new Logger(GetMaterialsHandler.name);
 
   constructor(
-    @Inject('IMmMaterialRepository') private readonly materialRepository: IMmMaterialRepository,
+    @Inject(MM_MATERIAL_REPO) private readonly materialRepository: IMmMaterialRepository,
       ) {}
 
   async execute(query: GetMaterialsQuery): Promise<Result<{ data: Material[]; pagination: Record<string, unknown> }>> {

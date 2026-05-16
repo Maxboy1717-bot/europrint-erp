@@ -4,12 +4,34 @@
  */
 
 import {
-  Controller, Get, HttpCode, HttpStatus, Patch, Post, Body, InternalServerErrorException,
+  Controller, Get, HttpCode, HttpException, HttpStatus, Patch, Post, Body, InternalServerErrorException,
   Param, Query, UseGuards, UseInterceptors,
 } from '@nestjs/common';
+
+// P3-26: predictive maintenance + alert resolve services not yet wired.
+const notImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+
+const ResolveAlertSchema = z.object({
+  notes: z.string().max(2000).optional(),
+  resolution: z.string().max(2000).optional(),
+}).passthrough();
+
+const CreateSensorSchema = z.object({
+  name: z.string().max(200).optional(),
+  type: z.string().max(100).optional(),
+  location: z.string().max(500).optional(),
+  status: z.string().max(50).optional(),
+}).passthrough();
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -25,19 +47,25 @@ import {
 
 const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin', 'technologist'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Iot Sensors Main')
+@ApiBearerAuth()
 @Controller('iot-sensors')
 export class IotSensorsMainController {
   constructor(private readonly svc: IotSensorsExtendedService) {}
 
+  @ApiOperation({ summary: 'Get dashboard' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard')
   @Roles(...IOT_READ)
   async getDashboard() {
     return unwrapOrThrow(await this.svc.getDashboard());
   }
 
+  @ApiOperation({ summary: 'Get live' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('live')
   @Roles(...IOT_READ)
   async getLive(@Query() raw: Record<string, unknown>) {
@@ -45,6 +73,8 @@ export class IotSensorsMainController {
     return unwrapOrThrow(await this.svc.getLiveReadings(q.type, q.location, q.limit));
   }
 
+  @ApiOperation({ summary: 'Get alerts' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('alerts')
   @Roles(...IOT_READ)
   async getAlerts(@Query() raw: Record<string, unknown>) {
@@ -52,6 +82,8 @@ export class IotSensorsMainController {
     return unwrapOrThrow(await this.svc.getAlerts(q.severity, q.limit));
   }
 
+  @ApiOperation({ summary: 'Get oee' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('oee')
   @Roles(...IOT_READ)
   async getOee(@Query() raw: Record<string, unknown>) {
@@ -59,6 +91,8 @@ export class IotSensorsMainController {
     return unwrapOrThrow(await this.svc.getOee(q.device_id, q.period));
   }
 
+  @ApiOperation({ summary: 'List sensors' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(...IOT_READ)
   async listSensors(@Query() raw: Record<string, unknown>) {
@@ -66,6 +100,8 @@ export class IotSensorsMainController {
     return unwrapOrThrow(await this.svc.listSensors(q.type, q.status, q.page, q.limit));
   }
 
+  @ApiOperation({ summary: 'Get trends' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('trends')
   @Roles(...IOT_READ)
   async getTrends(@Query() raw: Record<string, unknown>) {
@@ -73,6 +109,8 @@ export class IotSensorsMainController {
     return unwrapOrThrow(await this.svc.getSensorTrends(q.type, q.period));
   }
 
+  @ApiOperation({ summary: 'Get sensor history' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get(':id/history')
   @Roles(...IOT_READ)
   async getSensorHistory(
@@ -83,19 +121,45 @@ export class IotSensorsMainController {
     return unwrapOrThrow(await this.svc.getSensorHistory(id, q.from, q.to, q.limit));
   }
 
+  @ApiOperation({ summary: 'Get predictive maintenance' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('predictive-maintenance')
-  async getPredictiveMaintenance() { return { data: [], alerts: [] }; }
+  async getPredictiveMaintenance() {
+    return notImplemented('GET /iot/sensors/predictive-maintenance');
+  }
 
+  @ApiOperation({ summary: 'Resolve alert' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Patch('alerts/:alertId/resolve')
-  async resolveAlert(@Param('alertId') alertId: string, @Body() body: Record<string, unknown>) { return { alertId, resolved: true }; }
+  async resolveAlert(@Param('alertId') _alertId: string, @Body() body: unknown) {
+    ResolveAlertSchema.parse(body ?? {});
+    return notImplemented('PATCH /iot/sensors/alerts/:alertId/resolve');
+  }
 
+  @ApiOperation({ summary: 'Create sensor' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(...IOT_READ)
-  async createSensor(@Body() body: Record<string, unknown>) { return { id: Date.now(), ...body, created: true }; }
+  async createSensor(@Body() body: unknown) {
+    const dto = CreateSensorSchema.parse(body);
+    return { id: Date.now(), ...dto, created: true };
+  }
 
+  @ApiOperation({ summary: 'Post resolve alert' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('alerts/:alertId/resolve')
   @HttpCode(HttpStatus.OK)
   @Roles(...IOT_READ)
-  async postResolveAlert(@Param('alertId') alertId: string, @Body() body: Record<string, unknown>) { return { alertId, resolved: true }; }
+  async postResolveAlert(@Param('alertId') alertId: string, @Body() body: unknown) {
+    ResolveAlertSchema.parse(body ?? {});
+    return { alertId, resolved: true };
+  }
 }

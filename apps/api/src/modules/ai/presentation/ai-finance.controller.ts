@@ -9,7 +9,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {Controller, Post, Get, Body, UseGuards, Query, Logger, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../../common/types/user.types';
 import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -56,7 +56,7 @@ const SEVERITY_TO_PRIORITY: Record<string, string> = {
 
 @ApiTags('AI — Finance')
 @ApiBearerAuth()
-@Throttle({ ai: { limit: 20, ttl: 60_000 } })
+@AiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('ai/finance')
 export class AiFinanceController {

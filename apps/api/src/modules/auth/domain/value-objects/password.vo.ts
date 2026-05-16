@@ -1,33 +1,60 @@
 /**
  * @module password.vo
  * @description Value object. Immutable domain primitive with validation in its factory.
+ *
+ * This VO is now PURE — it holds a hashed password and enforces complexity
+ * rules on the plain-text candidate, but contains NO crypto library calls.
+ * Hashing and verification are delegated to the {@link IPasswordHasher} port
+ * (implemented by `BcryptPasswordHasher` in the infrastructure layer).
+ *
+ * Use:
+ *   - `PasswordValueObject.validateComplexity(plain)` — throws BadRequest if weak
+ *   - `PasswordValueObject.fromHash(hash)` — wrap a hash produced by the hasher
+ *   - `vo.getHash()` — read the stored hash for persistence
  */
 
-import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import { DomainError } from '../../../../shared/domain/errors/domain-error';
 
 export class PasswordValueObject {
   private readonly hash: string;
-  private readonly salt: string = '$2b$10$';
 
   private constructor(hash: string) {
     this.hash = hash;
   }
 
-  static async create(plainPassword: string): Promise<PasswordValueObject> {
-    PasswordValueObject.validateComplexity(plainPassword);
-    const hash = await bcrypt.hash(plainPassword, 10);
-    return new PasswordValueObject(hash);
-  }
-
-  static createFromHash(hash: string): PasswordValueObject {
-    if (!hash.startsWith('$2b$')) {
-      throw new InternalServerErrorException('Invalid bcrypt hash format');
+  /**
+   * Builds a VO directly from an already-hashed password (the canonical
+   * factory). Use this after calling `IPasswordHasher.hash(plain)` in a
+   * service.
+   * @param hash - encoded hash produced by an IPasswordHasher (must start with `$2`)
+   * @throws DomainError when the hash format is invalid
+   */
+  static fromHash(hash: string): PasswordValueObject {
+    if (!hash.startsWith('$2')) {
+      throw new DomainError('INVALID_PASSWORD_HASH', 'Invalid password hash format');
     }
     return new PasswordValueObject(hash);
   }
 
-  private static validateComplexity(password: string): void {
+  /**
+   * Legacy alias for {@link fromHash}. Kept for callers that already use the
+   * `createFromHash` name (e.g. the aggregate's constructor).
+   */
+  static createFromHash(hash: string): PasswordValueObject {
+    return PasswordValueObject.fromHash(hash);
+  }
+
+  /**
+   * Validates plain-text password complexity (length, upper, lower, digit,
+   * special). Throws on failure; returns nothing on success.
+   *
+   * Pure function — no crypto, no IO. Callers hash separately via
+   * {@link IPasswordHasher}.
+   *
+   * @param password - plain-text candidate
+   * @throws DomainError with all violations joined by `; `
+   */
+  static validateComplexity(password: string): void {
     const errors: string[] = [];
 
     if (password.length < 8) {
@@ -47,14 +74,11 @@ export class PasswordValueObject {
     }
 
     if (errors.length > 0) {
-      throw new BadRequestException(errors.join('; '));
+      throw new DomainError('PASSWORD_COMPLEXITY', errors.join('; '));
     }
   }
 
-  async verify(plainPassword: string): Promise<boolean> {
-    return bcrypt.compare(plainPassword, this.hash);
-  }
-
+  /** Returns the stored hash for persistence. */
   getHash(): string {
     return this.hash;
   }

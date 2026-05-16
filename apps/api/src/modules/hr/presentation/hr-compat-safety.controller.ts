@@ -5,12 +5,13 @@
 
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { HrCompatSafetyService } from '../application/hr-compat-safety.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
+import { z } from 'zod';
 import {
   HrBrandSettingsSchema, HrBrandSettingsDto,
   HrSafetyIncidentSchema, HrSafetyIncidentDto,
@@ -20,9 +21,13 @@ import {
   HrHealthLeaveSchema, HrHealthLeaveDto,
 } from './dto/hr.dto';
 
+const GenerateMilestonesSchema = z.object({
+  employeeId: z.union([z.string(), z.number()]).optional(),
+}).passthrough();
+
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('hr')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -134,8 +139,9 @@ export class HrCompatSafetyController {
   }
 
   @Post('milestones/generate')
-  async postGenerateMilestones(@Body() body: Record<string, unknown>) {
-    const data = await this.svc.getAdaptationMilestones(body['employeeId'] ? String(body['employeeId']) : undefined);
+  async postGenerateMilestones(@Body() body: unknown) {
+    const dto = GenerateMilestonesSchema.parse(body ?? {});
+    const data = await this.svc.getAdaptationMilestones(dto.employeeId ? String(dto.employeeId) : undefined);
     return { data };
   }
 

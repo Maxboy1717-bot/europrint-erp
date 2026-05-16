@@ -5,7 +5,7 @@
 
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { IMmRepository } from '../../domain/repositories/mm.repository';
+import { IMmRepository, MM_REPO } from '../../domain/repositories/mm.repository';
 
 export interface SupplierQualityFailEvent {
   supplierId: number;
@@ -17,7 +17,7 @@ export interface SupplierQualityFailEvent {
 export class SupplierQualityFailListener {
   private readonly logger = new Logger(SupplierQualityFailListener.name);
 
-  constructor(@Inject('IMmRepository') private readonly mmRepo: IMmRepository) {}
+  constructor(@Inject(MM_REPO) private readonly mmRepo: IMmRepository) {}
 
   @OnEvent('SUPPLIER_QUALITY_FAIL')
   async handle(event: SupplierQualityFailEvent) {

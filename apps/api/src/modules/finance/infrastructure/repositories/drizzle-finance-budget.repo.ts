@@ -8,37 +8,10 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
+import { budgets, budget_lines as budgetLines } from '@shared/db/schema-finance-budgets';
 import { SQL, SQLWrapper, and, desc, eq, sql } from 'drizzle-orm';
-import { pgTable, uuid, text, integer, decimal, timestamp } from 'drizzle-orm/pg-core';
-import { createId } from '@paralleldrive/cuid2';
 import { Result, Err, Ok } from '@common/types/result.type';
 import { FinanceRow } from '../../domain/repositories/i-finance.repo';
-
-const budgets = pgTable('budgets', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  name: text('name').notNull(),
-  fiscalYear: integer('fiscal_year').notNull(),
-  quarter: integer('quarter'),
-  department: text('department'),
-  status: text('status').notNull().default('draft'),
-  totalPlanned: decimal('total_planned', { precision: 18, scale: 2 }).notNull().default('0'),
-  totalActual: decimal('total_actual', { precision: 18, scale: 2 }).notNull().default('0'),
-  createdBy: text('created_by').notNull(),
-  approvedBy: text('approved_by'),
-  approvedAt: timestamp('approved_at', { withTimezone: true }),
-  notes: text('notes'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
-
-const budgetLines = pgTable('budget_lines', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  budgetId: uuid('budget_id').notNull(),
-  category: text('category').notNull(),
-  description: text('description').notNull(),
-  plannedAmount: decimal('planned_amount', { precision: 18, scale: 2 }).notNull(),
-  actualAmount: decimal('actual_amount', { precision: 18, scale: 2 }).notNull().default('0'),
-});
 
 type Row = Record<string, unknown>;
 const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {

@@ -5,7 +5,7 @@
 
 import {
   Controller, Get, Query,
-  UseGuards, Logger, Res,
+  UseGuards, Logger, Res, HttpException, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import type { FastifyReply } from 'fastify';
@@ -28,7 +28,7 @@ const PDF_FONTS = {
   },
 };
 
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard }  from '@common/guards/roles.guard';
 import { Roles }       from '@common/decorators/roles.decorator';
@@ -37,7 +37,7 @@ import { KanbanExtService } from '../application/kanban-ext.service';
 
 @ApiTags('§16 Kanban Extended')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('kanban')
 @Roles('super_admin', 'director', 'manager', 'employee')
@@ -228,7 +228,13 @@ export class KanbanReportsController {
 
   // ─── Projects ─────────────────────────────────────────────────────────────
 
+  // P3-26: projects list service not yet wired; return 501.
   @Get('projects')
   @ApiOperation({ summary: 'Loyihalar ro\'yxati' })
-  getProjects() { return { items: [], total: 0 }; }
+  getProjects() {
+    throw new HttpException(
+      { message: 'Endpoint not yet implemented: GET /kanban/projects', code: 'NOT_IMPLEMENTED' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
+  }
 }

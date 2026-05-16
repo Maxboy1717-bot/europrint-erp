@@ -4,8 +4,8 @@
  */
 
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable, Inject, Logger, InternalServerErrorException } from '@nestjs/common';
-import { PaginatedResult } from '@common/types/result.type';
+import { Injectable, Inject, Logger } from '@nestjs/common';
+import { PaginatedResult, Result, Ok, Err, AppErr } from '@common/types/result.type';
 import { GetInvoicesQuery } from './get-invoices.query';
 import { IFinanceRepo, FINANCE_REPO } from '../../domain/repositories/i-finance.repo';
 
@@ -16,18 +16,18 @@ export class GetInvoicesHandler implements IQueryHandler<GetInvoicesQuery> {
 
   constructor(@Inject(FINANCE_REPO) private readonly financeRepo: IFinanceRepo) {}
 
-  async execute(query: GetInvoicesQuery): Promise<PaginatedResult<Record<string, unknown>>> {
+  async execute(query: GetInvoicesQuery): Promise<Result<PaginatedResult<Record<string, unknown>>>> {
     let result: Awaited<ReturnType<typeof this.financeRepo.findInvoices>>;
     try {
       result = await this.financeRepo.findInvoices(query.filters);
     } catch (err) {
       this.logger.error(`Failed to fetch invoices: ${(err as Error).message}`);
-      throw new InternalServerErrorException('Failed to fetch invoices');
+      return Err(AppErr('INTERNAL', 'Failed to fetch invoices'));
     }
 
     if (!result.ok) {
       this.logger.error(`Failed to fetch invoices: ${result.error}`);
-      throw new InternalServerErrorException('Failed to fetch invoices');
+      return Err(AppErr('INTERNAL', 'Failed to fetch invoices'));
     }
 
     const page = query.filters.page || 1;
@@ -35,11 +35,11 @@ export class GetInvoicesHandler implements IQueryHandler<GetInvoicesQuery> {
 
     this.logger.debug(`Invoices fetched: page=${page}, limit=${limit}, total=${result.data.total}`);
 
-    return {
+    return Ok({
       items: result.data.items,
       total: result.data.total,
       page,
       limit,
-    };
+    });
   }
 }

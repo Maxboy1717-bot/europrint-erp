@@ -9,7 +9,9 @@ import { Result, Err, Ok } from '@common/types/result.type';
 import { Lead } from '../../domain/aggregates/lead.aggregate';
 import { AIScore } from '../../domain/value-objects/ai-score.vo';
 import { LeadStatus } from '../../domain/value-objects/lead-status.vo';
-import { ILeadRepository } from '../../domain/repositories/i-lead.repo';
+import { Email } from '@shared/domain/value-objects/email.vo';
+import { PhoneNumber } from '@shared/domain/value-objects/phone-number.vo';
+import { ILeadRepository, LEAD_REPO } from '../../domain/repositories/i-lead.repo';
 
 export class CreateLeadCommand {
   constructor(public readonly companyId: number,
@@ -27,7 +29,7 @@ export class CreateLeadHandler implements ICommandHandler<CreateLeadCommand> {
   private readonly logger = new Logger(CreateLeadHandler.name);
 
   constructor(
-    @Inject('ILeadRepository') private readonly leadRepo: ILeadRepository,
+    @Inject(LEAD_REPO) private readonly leadRepo: ILeadRepository,
   ) {}
 
   async execute(command: CreateLeadCommand): Promise<Result<Lead>> {
@@ -50,6 +52,14 @@ export class CreateLeadHandler implements ICommandHandler<CreateLeadCommand> {
   }
 
   private buildLead(command: CreateLeadCommand): Result<Lead> {
+    // VO validation — chain failures to a single Err. The handler is the
+    // boundary: raw strings come in from the controller, VOs go into the
+    // aggregate.
+    const emailR = Email.create(command.email);
+    if (!emailR.ok) return Err(emailR.error);
+    const phoneR = PhoneNumber.create(command.phone);
+    if (!phoneR.ok) return Err(phoneR.error);
+
     const aiScoreResult = AIScore.create(Math.round(Math.random() * 100));
     if (!aiScoreResult.ok || !aiScoreResult.data) {
       return Err('Failed to generate AI score');
@@ -62,8 +72,8 @@ export class CreateLeadHandler implements ICommandHandler<CreateLeadCommand> {
       companyId: command.companyId,
       firstName: command.firstName,
       lastName: command.lastName,
-      email: command.email,
-      phone: command.phone,
+      email: emailR.data,
+      phone: phoneR.data,
       status: statusResult.data,
       aiScore: aiScoreResult.data,
       createdBy: command.createdBy,

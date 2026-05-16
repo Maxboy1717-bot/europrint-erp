@@ -5,7 +5,7 @@
 
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { IPpRepository } from '../../domain/repositories/pp.repository';
+import { IPpRepository, PP_REPO } from '../../domain/repositories/pp.repository';
 
 export interface MroStopEvent {
   workCenterId: number;
@@ -18,7 +18,7 @@ export interface MroStopEvent {
 export class MroStopListener {
   private readonly logger = new Logger(MroStopListener.name);
 
-  constructor(@Inject('IPpRepository') private readonly ppRepo: IPpRepository) {}
+  constructor(@Inject(PP_REPO) private readonly ppRepo: IPpRepository) {}
 
   @OnEvent('MRO_MAINTENANCE_STOP')
   async handle(event: MroStopEvent) {
