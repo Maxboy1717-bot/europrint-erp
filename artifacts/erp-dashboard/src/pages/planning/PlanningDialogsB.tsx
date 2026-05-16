@@ -170,7 +170,7 @@ export function MRPRunDialog({ open, onOpenChange, runForm, onFormChange, onCrea
             />
           </div>
           <div className="space-y-1">
-          <Label>Planning Horizon (days)</Label>
+          <Label>{t("planningHorizonDays")}</Label>
             <Input
               type="number"
               value={runForm.planningHorizon}
