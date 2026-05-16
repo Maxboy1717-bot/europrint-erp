@@ -32,7 +32,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { QUOTATION_BASE_NUMBER } from '@common/constants/app.constants';
 import { safeCall, Result, AppError, Ok, Err, AppErr } from '@common/result';
 import { BULK_DISCOUNT_LARGE, BULK_DISCOUNT_SMALL } from '@common/constants/business.constants';
-import { SdQuotationsRepository } from './sd-quotations.repository';
+import { ISdQuotationsRepo, SD_QUOTATIONS_REPO } from '../domain/repositories/i-sd-quotations.repo';
 import {
   IQuotationRepo,
   QUOTATION_REPO,
@@ -46,7 +46,7 @@ type Row = Record<string, unknown>;
 @Injectable()
 export class SdQuotationsService {
   constructor(
-    private readonly repo: SdQuotationsRepository,
+    @Inject(SD_QUOTATIONS_REPO) private readonly repo: ISdQuotationsRepo,
     @Inject(QUOTATION_REPO) private readonly quotationRepo: IQuotationRepo,
   ) {}
 

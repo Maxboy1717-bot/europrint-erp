@@ -1,6 +1,7 @@
 /**
  * @module sd-payments.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ * @layer Infrastructure (SD)
  */
 
 import { TashkentTimeService } from '@common/time';
@@ -9,11 +10,12 @@ import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
+import { ISdPaymentsRepo } from '../../domain/repositories/i-sd-payments.repo';
 type Row = Record<string, unknown>;
 const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
 
 @Injectable()
-export class SdPaymentsRepository {
+export class SdPaymentsRepository implements ISdPaymentsRepo {
   async list(customerId: number | null, status: string | null, lim: number, off: number): Promise<Result<Row[]>>  {
   try {
       const r = customerId && status

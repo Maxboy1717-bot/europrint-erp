@@ -8,6 +8,7 @@ const _time = new TashkentTimeService();
 import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { Err } from '@common/result';
 import { Result } from '@common/result';
+import type { OrderKind } from '@shared/domain/contracts/i-order-header';
 
 export enum PoStatus {
   DRAFT = 'draft',
@@ -28,6 +29,12 @@ export class PurchaseOrderItem {
   }
 }
 
+// TODO PA2-16: Cannot add `implements IOrderHeader` here yet. PurchaseOrder's
+// `id`, `status`, `createdAt`, `createdBy` are all private fields, which
+// TypeScript refuses to align with the public interface members. The
+// `orderNumber` getter below (aliasing `poNumber`) and the `kind` getter
+// give cross-context code most of what it needs; revisit after renaming
+// the backing fields to `_id` etc. so public getters can carry the names.
 export class PurchaseOrder extends AggregateRoot {
   private id: number;
   private poNumber: string;
@@ -141,4 +148,9 @@ export class PurchaseOrder extends AggregateRoot {
     this.status = PoStatus.CLOSED;
     return { ok: true, data: undefined };
   }
+
+  // --- IOrderHeader marker (cross-context "an order" shape) ---
+  /** Alias for poNumber so cross-context audit code can use a single name. */
+  get orderNumber(): string { return this.poNumber; }
+  get kind(): OrderKind { return 'purchase'; }
 }

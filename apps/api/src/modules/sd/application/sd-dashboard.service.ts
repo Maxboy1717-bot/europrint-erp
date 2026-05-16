@@ -3,13 +3,13 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { SdDashboardRepository } from './sd-dashboard.repository';
+import { ISdDashboardRepo, SD_DASHBOARD_REPO } from '../domain/repositories/i-sd-dashboard.repo';
 
 @Injectable()
 export class SdDashboardService {
-  constructor(private readonly repo: SdDashboardRepository) {}
+  constructor(@Inject(SD_DASHBOARD_REPO) private readonly repo: ISdDashboardRepo) {}
 
   async getOverview(): Promise<Result<object, AppError>> {
     return safeCall(async () => {

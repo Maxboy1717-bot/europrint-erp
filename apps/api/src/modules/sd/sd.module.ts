@@ -16,10 +16,13 @@ import { SdPaymentsController } from './presentation/sd-payments.controller';
 import { SdQuotationsController } from './presentation/sd-quotations.controller';
 import { SdContractsController } from './presentation/sd-contracts.controller';
 import { SdPaymentsService } from './application/sd-payments.service';
-import { SdPaymentsRepository } from './application/sd-payments.repository';
-import { SdDashboardRepository } from './application/sd-dashboard.repository';
+import { SdPaymentsRepository } from './infrastructure/repositories/sd-payments.repository';
+import { SD_PAYMENTS_REPO } from './domain/repositories/i-sd-payments.repo';
+import { SdDashboardRepository } from './infrastructure/repositories/sd-dashboard.repository';
+import { SD_DASHBOARD_REPO } from './domain/repositories/i-sd-dashboard.repo';
 import { SdQuotationsService } from './application/sd-quotations.service';
-import { SdQuotationsRepository } from './application/sd-quotations.repository';
+import { SdQuotationsRepository } from './infrastructure/repositories/sd-quotations.repository';
+import { SD_QUOTATIONS_REPO } from './domain/repositories/i-sd-quotations.repo';
 import { CreateOrderHandler } from './application/commands/create-order.handler';
 import { UpdateOrderStatusHandler } from './application/commands/update-order-status.handler';
 import { ApproveAdvanceBypassHandler } from './application/commands/approve-advance-bypass.handler';
@@ -49,7 +52,8 @@ import { SdDashboardService } from './application/sd-dashboard.service';
 import { SdCustomersService } from './application/sd-customers.service';
 import { DrizzleSdCustomersRepository } from './infrastructure/repositories/drizzle-sd-customers.repo';
 import { SdLeadsService } from './application/sd-leads.service';
-import { SdLeadsRepository } from './application/sd-leads.repository';
+import { SdLeadsRepository } from './infrastructure/repositories/sd-leads.repository';
+import { SD_LEADS_REPO } from './domain/repositories/i-sd-leads.repo';
 import { QUOTATION_REPO } from './domain/repositories/i-quotation.repo';
 import { DrizzleQuotationRepo } from './infrastructure/repositories/drizzle-quotation.repo';
 
@@ -101,12 +105,12 @@ const repositories = [
     SdDashboardService,
     SdCustomersService,
     DrizzleSdCustomersRepository,
-    SdLeadsRepository,
+    { provide: SD_LEADS_REPO, useClass: SdLeadsRepository },
     SdLeadsService,
-    SdPaymentsRepository,
+    { provide: SD_PAYMENTS_REPO, useClass: SdPaymentsRepository },
     SdPaymentsService,
-    SdDashboardRepository,
-    SdQuotationsRepository,
+    { provide: SD_DASHBOARD_REPO, useClass: SdDashboardRepository },
+    { provide: SD_QUOTATIONS_REPO, useClass: SdQuotationsRepository },
     SdQuotationsService,
     { provide: QUOTATION_REPO, useClass: DrizzleQuotationRepo },
   ],

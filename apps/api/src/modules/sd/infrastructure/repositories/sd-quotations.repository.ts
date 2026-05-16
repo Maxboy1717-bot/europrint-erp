@@ -1,12 +1,14 @@
 /**
  * @module sd-quotations.repository
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ * @layer Infrastructure (SD)
  */
 
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 import { safeCall, Ok, Err, Result } from '@common/result';
+import { ISdQuotationsRepo } from '../../domain/repositories/i-sd-quotations.repo';
 
 type Row = Record<string, unknown>;
 const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
@@ -17,7 +19,7 @@ const execOne = async (q: SQL | SQLWrapper): Promise<Row | null> => {
 };
 
 @Injectable()
-export class SdQuotationsRepository {
+export class SdQuotationsRepository implements ISdQuotationsRepo {
   async listQuotations(customerId: number | null, status: string | null, lim: number, off: number): Promise<Result<Row[]>> {
     return customerId && status
       ? exec(sql`SELECT q.*, c.name AS customer_name FROM sd_quotations q LEFT JOIN sd_customers c ON c.id = q.customer_id WHERE q.customer_id = ${customerId} AND q.status = ${status} ORDER BY q.created_at DESC LIMIT ${lim} OFFSET ${off}`)
