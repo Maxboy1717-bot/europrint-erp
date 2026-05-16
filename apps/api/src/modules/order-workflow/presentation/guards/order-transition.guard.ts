@@ -11,6 +11,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { db } from '@shared/db';
 import { eq } from 'drizzle-orm';
 import { owOrders } from '@shared/db';
@@ -22,6 +23,8 @@ const ADMIN_ROLES  = new Set(['SUPER_ADMIN', 'DIRECTOR']);
 @Injectable()
 export class OrderTransitionGuard implements CanActivate {
   private readonly logger = new Logger(OrderTransitionGuard.name);
+
+  constructor(private readonly i18n: I18nService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req  = context.switchToHttp().getRequest();
@@ -41,13 +44,13 @@ export class OrderTransitionGuard implements CanActivate {
         .limit(1);
 
       if (!rows[0]) {
-        throw new NotFoundException(`Buyurtma topilmadi: ${orderId}`);
+        throw new NotFoundException(await this.i18n.t('errors.orderNotFound'));
       }
 
       const mgr = rows[0].assignedSalesManager;
       if (mgr !== null && mgr !== user.id) {
         this.logger.warn({ msg: 'IDOR urinish', actorId: user.id, assignedMgr: mgr, orderId });
-        throw new ForbiddenException('Bu buyurtmaga ruxsatingiz yo\'q');
+        throw new ForbiddenException(await this.i18n.t('errors.noOrderAccess'));
       }
     }
 

@@ -1,0 +1,9 @@
+{
+  "orderCancelled": "Заказ отменён",
+  "warehouseDeactivated": "Склад деактивирован",
+  "userDeleted": "Пользователь удалён",
+  "deleted": "Удалено",
+  "created": "Создано",
+  "updated": "Обновлено",
+  "saved": "Сохранено"
+}

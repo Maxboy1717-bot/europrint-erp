@@ -48,6 +48,7 @@ export class LeaveRequest {
 
   approve(approverId: string): void {
     if (this.status !== LeaveStatus.PENDING) {
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingApprovable'.
       throw new InternalServerErrorException('Faqat pending so\'rov tasdiqlanadi');
     }
     this.status = LeaveStatus.APPROVED;
@@ -58,6 +59,7 @@ export class LeaveRequest {
 
   reject(rejectorId: string, reason: string): void {
     if (this.status !== LeaveStatus.PENDING) {
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingRejectable'.
       throw new InternalServerErrorException('Faqat pending so\'rov rad etiladi');
     }
     this.status = LeaveStatus.REJECTED;
@@ -74,6 +76,7 @@ export class LeaveRequest {
       this.status = LeaveStatus.CANCELLED;
       this.updatedAt = _time.now();
     } else {
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.leaveCancelNotAllowed'.
       throw new InternalServerErrorException('Bu ta\'til so\'rovini bekor qilib bo\'lmaydi');
     }
   }

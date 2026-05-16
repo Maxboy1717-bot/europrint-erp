@@ -28,6 +28,7 @@ export class ApprovalRequest {
 
   approve(userId: string, notes?: string): void {
     if (this.status !== ApprovalStatus.PENDING) {
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingApprovable'.
       throw new InternalServerErrorException('Faqat pending so\'rov tasdiqlanadi');
     }
     this.status = ApprovalStatus.APPROVED;
@@ -38,9 +39,11 @@ export class ApprovalRequest {
 
   reject(userId: string, reason: string): void {
     if (this.status !== ApprovalStatus.PENDING) {
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingRejectable'.
       throw new InternalServerErrorException('Faqat pending so\'rov rad etiladi');
     }
     if (!reason || reason.length < 5) {
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.rejectReasonTooShort'.
       throw new InternalServerErrorException('Rad etish sababi kamida 5 ta belgi');
     }
     this.status = ApprovalStatus.REJECTED;

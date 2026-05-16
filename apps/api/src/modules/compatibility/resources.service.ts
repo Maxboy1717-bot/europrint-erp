@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { MAX_LARGE_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db,
   rawSql} from '@shared/db';
@@ -15,6 +16,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class ResourcesCompatService {
+  constructor(private readonly i18n: I18nService) {}
 
   async getWarehouses(page = '1', limit = '100'): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
@@ -253,7 +255,7 @@ export class ResourcesCompatService {
         WHERE id = ${si(id)} RETURNING id, name_uz, description
       `);
       const found = dbRows(result)[0];
-      if (!found) throw new NotFoundException('Lavozim topilmadi');
+      if (!found) throw new NotFoundException(await this.i18n.t('errors.positionNotFound'));
       return found;
     });
   }

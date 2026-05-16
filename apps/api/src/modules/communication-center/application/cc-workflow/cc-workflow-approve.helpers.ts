@@ -101,6 +101,7 @@ export function findMyPendingApproval(
   approverUserId: number,
 ) {
   const mine = approvals.find(a => a.approverUserId === approverUserId && a.state === 'pending');
+  // I18N_LEAK: bare helper, no I18nService DI. Caller may translate via 'errors.noApprovePermission'.
   if (!mine) throw new ForbiddenException('Sizga bu hujjatni tasdiqlash huquqi berilmagan yoki allaqachon imzolagansiz');
   return mine;
 }

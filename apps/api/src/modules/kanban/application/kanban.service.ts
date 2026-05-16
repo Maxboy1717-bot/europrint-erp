@@ -6,6 +6,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { I18nService } from 'nestjs-i18n';
 import { CreateTaskCommand } from './commands/create-task.command';
 import { UpdateTaskCommand } from './commands/update-task.command';
 import { DeleteTaskCommand } from './commands/delete-task.command';
@@ -34,6 +35,7 @@ export class KanbanService {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     private readonly eventEmitter: EventEmitter2,
+    private readonly i18n: I18nService,
   ) {}
 
   async getTasks(filters: { status?: string; assignedTo?: string; page?: number; limit?: number }): Promise<Result<object, AppError>> {
@@ -135,8 +137,8 @@ export class KanbanService {
     return { ...this.wipLimits };
   }
 
-  setWipLimit(status: TaskStatus, maxItems: number): void {
-    if (maxItems < 1) throw new BadRequestException('WIP limit kamida 1 bo\'lishi kerak');
+  async setWipLimit(status: TaskStatus, maxItems: number): Promise<void> {
+    if (maxItems < 1) throw new BadRequestException(await this.i18n.t('errors.wipLimitMin'));
     this.wipLimits[status] = maxItems;
     this.logger.log(`WIP limit yangilandi: ${status} → max ${maxItems}`);
   }

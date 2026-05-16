@@ -7,6 +7,7 @@
 
 import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { I18nService } from 'nestjs-i18n';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 
@@ -43,6 +44,7 @@ interface PublicApprovalRow {
 @Throttle({ default: { limit: 10, ttl: 60_000 } })   // 10 req/min — siqiq limit (enumeration hujumidan himoya)
 @Controller('cc/verify')
 export class CcPublicController {
+  constructor(private readonly i18n: I18nService) {}
   /**
    * GET /api/cc/verify/:id — JWTsiz hujjat tekshiruvi.
    * QR kod qiymati: `${PUBLIC_BASE_URL}/cc/verify/${doc.id}`
@@ -83,7 +85,7 @@ export class CcPublicController {
       WHERE d.id = ${id} LIMIT 1
     `);
     const doc = docRes.rows[0];
-    if (!doc) throw new NotFoundException('Hujjat topilmadi yoki QR kod noto\'g\'ri');
+    if (!doc) throw new NotFoundException(await this.i18n.t('errors.documentOrQrNotFound'));
     return doc;
   }
 

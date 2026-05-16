@@ -15,6 +15,7 @@
  * Approve/reject decisions: see document-workflow-v2-decisions.service.ts (Rule 16).
  */
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
@@ -34,6 +35,8 @@ interface InitiateDocumentDto {
 export class DocumentWorkflowV2Service {
   private readonly logger = new Logger(DocumentWorkflowV2Service.name);
   private readonly decisions = new DocumentWorkflowV2DecisionsService();
+
+  constructor(private readonly i18n: I18nService) {}
 
   /** Hujjat workflow ro'yxati — qaysi turdagi hujjat qanday yo'l yuradi */
   async listRoutes(): Promise<Result<unknown, AppError>> {
@@ -102,7 +105,7 @@ export class DocumentWorkflowV2Service {
     `);
     const doc = dbRows(docRows)[0];
     // WHY: caller wraps this in safeCall which maps BadRequestException → BAD_REQUEST.
-    if (!doc) throw new BadRequestException('Hujjat yaratish bajarilmadi');
+    if (!doc) throw new BadRequestException(await this.i18n.t('errors.documentCreationFailed'));
     return Number(doc['id']);
   }
 

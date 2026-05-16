@@ -59,6 +59,7 @@ export class Budget {
 
   approve(approverId: string): void {
     if (this.status !== BudgetStatus.PENDING_APPROVAL) {
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingApprovable'.
       throw new InternalServerErrorException('Faqat kutayotgan byudjet tasdiqlanadi');
     }
     this.status = BudgetStatus.APPROVED;
@@ -69,6 +70,7 @@ export class Budget {
 
   submitForApproval(): void {
     if (this.status !== BudgetStatus.DRAFT) {
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyDraftSubmittable'.
       throw new InternalServerErrorException('Faqat draft byudjet taqdim etiladi');
     }
     this.status = BudgetStatus.PENDING_APPROVAL;
@@ -77,6 +79,7 @@ export class Budget {
 
   reject(): void {
     if (this.status !== BudgetStatus.PENDING_APPROVAL) {
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingRejectable'.
       throw new InternalServerErrorException('Faqat kutayotgan byudjet rad etiladi');
     }
     this.status = BudgetStatus.REJECTED;
@@ -85,6 +88,7 @@ export class Budget {
 
   close(): void {
     if (this.status !== BudgetStatus.APPROVED) {
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyApprovedClosable'.
       throw new InternalServerErrorException('Faqat tasdiqlangan byudjetni yopish mumkin');
     }
     this.status = BudgetStatus.CLOSED;

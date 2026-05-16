@@ -69,12 +69,13 @@ export class OrdersService {
 
   async cancel(id: number){
     const alreadyCancelledMsg = await this.i18n.t('errors.orderAlreadyCancelled');
+    const cancelledMsg = await this.i18n.t('messages.orderCancelled');
     return safeCall(async () => {
     const order = await this.findOne(id);
     if (order.status === 'cancelled' || order.overallStatus === 'CANCELLED') throw new BadRequestException(alreadyCancelledMsg);
     const result = await this.sdOrdersRepo.cancel(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    return { message: 'Buyurtma bekor qilindi' };
+    return { message: cancelledMsg, code: 'ORDER_CANCELLED' };
 
     });}
 }

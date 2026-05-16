@@ -22,6 +22,8 @@ import { CreateLeadHandler } from './application/commands/create-lead.handler';
 import { QualifyLeadHandler } from './application/commands/qualify-lead.handler';
 import { CreateDealHandler } from './application/commands/create-deal.handler';
 import { MarkDealWonHandler } from './application/commands/mark-deal-won.handler';
+import { MarkDealLostHandler } from './application/commands/mark-deal-lost.handler';
+import { ConvertLeadToDealHandler } from './application/commands/convert-lead-to-deal.handler';
 import { ListLeadsHandler } from './application/queries/list-leads.handler';
 import { GetLeadByIdHandler } from './application/queries/get-lead-by-id.handler';
 import { CrmPipelineHandler } from './application/queries/crm-pipeline.handler';
@@ -64,8 +66,10 @@ import { CrmContactsService } from './application/crm-contacts.service';
 import { CrmContactsRepository } from './application/crm-contacts.repository';
 import { CrmFollowupCompatService } from './application/crm-followup-compat.service';
 import { CrmFollowupCompatRepository } from './application/crm-followup-compat.repository';
-import { CrmLeadsOpsService } from './application/crm-leads-ops.service';
 import { CrmLeadsOpsRepository } from './application/crm-leads-ops.repository';
+import { UpdateLeadHandler } from './application/commands/update-lead.handler';
+import { UpdateLeadStageHandler } from './application/commands/update-lead-stage.handler';
+import { DeleteLeadHandler } from './application/commands/delete-lead.handler';
 import { CrmExtrasService } from './application/crm-extras.service';
 import { CrmExtrasRepository } from './application/crm-extras.repository';
 import { CrmCommsService } from './application/crm-comms.service';
@@ -84,7 +88,11 @@ import { KMeansService } from './analytics/kmeans.service';
 import { ChurnRetrainService } from './analytics/churn-retrain.service';
 import { CrmAnalyticsController } from './presentation/crm-analytics.controller';
 
-const commandHandlers = [CreateLeadHandler, QualifyLeadHandler, CreateDealHandler, MarkDealWonHandler];
+const commandHandlers = [
+  CreateLeadHandler, QualifyLeadHandler, CreateDealHandler,
+  MarkDealWonHandler, MarkDealLostHandler, ConvertLeadToDealHandler,
+  UpdateLeadHandler, UpdateLeadStageHandler, DeleteLeadHandler,
+];
 const queryHandlers = [ListLeadsHandler, GetLeadByIdHandler, CrmPipelineHandler];
 const eventListeners = [
   DealWonListener,
@@ -146,7 +154,6 @@ const repositories = [
     CrmFollowupCompatRepository,
     CrmFollowupCompatService,
     CrmLeadsOpsRepository,
-    CrmLeadsOpsService,
     CrmExtrasRepository,
     CrmExtrasService,
     CrmCommsRepository,

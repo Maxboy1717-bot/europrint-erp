@@ -89,5 +89,17 @@
   "answerAllQuestions": "Avval barcha savollarga javob bering",
   "notYourSession": "Sizning sessiyangiz emas",
   "aiSessionNotFound": "AI sessiyasi topilmadi",
-  "phoneAndItemsRequired": "Telefon raqami va mahsulotlar majburiy"
+  "phoneAndItemsRequired": "Telefon raqami va mahsulotlar majburiy",
+  "warehouseNotFound": "Ombor topilmadi",
+  "categoryHasProducts": "Bu kategoriyada mahsulotlar mavjud. Avval mahsulotlarni boshqa kategoriyaga o'tkazing.",
+  "invalidOrderStatus": "Noto'g'ri buyurtma holati",
+  "invalidPaymentStatus": "Noto'g'ri to'lov holati",
+  "documentOrQrNotFound": "Hujjat topilmadi yoki QR kod noto'g'ri",
+  "alreadyEnrolled": "Foydalanuvchi allaqachon ushbu kursga yozilgan",
+  "onlyDraftSubmittable": "Faqat draft byudjet taqdim etiladi",
+  "onlyPendingRejectable": "Faqat kutayotgan so'rovni rad etish mumkin",
+  "onlyApprovedClosable": "Faqat tasdiqlangan byudjetni yopish mumkin",
+  "leaveCancelNotAllowed": "Bu ta'til so'rovini bekor qilib bo'lmaydi",
+  "rejectReasonTooShort": "Rad etish sababi kamida 5 ta belgi bo'lishi kerak",
+  "noApprovePermission": "Sizga bu hujjatni tasdiqlash huquqi berilmagan yoki allaqachon imzolagansiz"
 }

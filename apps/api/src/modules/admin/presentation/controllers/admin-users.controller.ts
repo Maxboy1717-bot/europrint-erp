@@ -8,6 +8,7 @@ import { assertValidated } from '@common/assertions';
 import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, InternalServerErrorException, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { I18nService } from 'nestjs-i18n';
 
 import { RolesGuard } from '../../infrastructure/guards/roles.guard';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -40,6 +41,7 @@ export class AdminUsersController {
     private readonly updateUserRoleHandler: UpdateUserRoleHandler,
     private readonly listUsersHandler: ListUsersHandler,
     @Inject(USER_REPO) private readonly userRepo: IUserRepo,
+    private readonly i18n: I18nService,
   ) {}
 
   @Post()
@@ -113,8 +115,8 @@ export class AdminUsersController {
     try {
       await this.userRepo.softDelete(userId);
     } catch {
-      throw new InternalServerErrorException("O'chirishda xato");
+      throw new InternalServerErrorException(await this.i18n.t('errors.deleteFailed'));
     }
-    return { message: "Foydalanuvchi o'chirildi" };
+    return { message: await this.i18n.t('messages.userDeleted'), code: 'USER_DELETED' };
   }
 }

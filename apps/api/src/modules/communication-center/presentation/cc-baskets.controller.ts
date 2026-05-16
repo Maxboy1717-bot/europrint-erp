@@ -14,6 +14,7 @@ import {
   Body, Controller, ForbiddenException, Get, NotFoundException, Param, Post, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -41,6 +42,7 @@ export class CcBasketsController {
   constructor(
     private readonly svc:   CcBasketsService,
     private readonly stats: CcStatsService,
+    private readonly i18n:  I18nService,
   ) {}
 
   /** KPI/statistika — javob vaqti, 24h overdue %, kechikkan %, bo'limlar, xodim yuklamasi */
@@ -73,24 +75,24 @@ export class CcBasketsController {
   async getOne(@Param('id') id: string, @CurrentUser() user: { id: number; role: string }) {
     const basket = await this.svc.getOne(id);
     if (!basket) {
-      throw new NotFoundException('Hujjat topilmadi');
+      throw new NotFoundException(await this.i18n.t('errors.documentNotFound'));
     }
     const isPrivileged = ['admin', 'super_admin', 'director', 'ceo'].includes(user.role);
     if (!isPrivileged && basket.basketOwnerUserId !== user.id) {
-      throw new ForbiddenException('Ruxsat yo\'q');
+      throw new ForbiddenException(await this.i18n.t('errors.permissionDenied'));
     }
     return basket;
   }
 
   @Post(':id/move')
-  move(
+  async move(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(MoveBasketSchema)) body: MoveBasketDto,
     @CurrentUser() user: { id: number; role: string },
   ) {
     // Archive uchun super-admin/director cheklovi
     if (body.to === 'archived' && !['admin', 'director', 'ceo'].includes(user.role)) {
-      throw new ForbiddenException('Ruxsat yo\'q');
+      throw new ForbiddenException(await this.i18n.t('errors.permissionDenied'));
     }
     return this.svc.move(id, user.id, body.to as BasketState, body.note);
   }

@@ -200,6 +200,18 @@ export type I18nTranslations = {
         "notYourSession": string;
         "aiSessionNotFound": string;
         "phoneAndItemsRequired": string;
+        "warehouseNotFound": string;
+        "categoryHasProducts": string;
+        "invalidOrderStatus": string;
+        "invalidPaymentStatus": string;
+        "documentOrQrNotFound": string;
+        "alreadyEnrolled": string;
+        "onlyDraftSubmittable": string;
+        "onlyPendingRejectable": string;
+        "onlyApprovedClosable": string;
+        "leaveCancelNotAllowed": string;
+        "rejectReasonTooShort": string;
+        "noApprovePermission": string;
     };
     "validation": {
         "required": string;

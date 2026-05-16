@@ -14,6 +14,7 @@ import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { I18nService } from 'nestjs-i18n';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { LoginHandler, LoginCommand } from '../application/commands/login.handler';
 import { LogoutHandler, LogoutCommand } from '../application/commands/logout.handler';
@@ -49,37 +50,12 @@ const REFRESH_COOKIE_MAX_AGE_SEC = 7 * 24 * 60 * 60; // 7 days
  * Build cookie options. Marked `secure` only in production so local HTTP dev works.
  * `sameSite=strict` mitigates CSRF; combined with httpOnly it also neutralises XSS.
  */
-function accessCookieOpts(nodeEnv: string | undefined): {
-  httpOnly: true;
-  secure: boolean;
-  sameSite: 'strict';
-  path: string;
-  maxAge: number;
-} {
-  return {
-    httpOnly: true,
-    secure: nodeEnv === 'production',
-    sameSite: 'strict',
-    path: '/',
-    maxAge: ACCESS_COOKIE_MAX_AGE_SEC,
-  };
+type CookieOpts = { httpOnly: true; secure: boolean; sameSite: 'strict'; path: string; maxAge: number };
+function cookieOpts(nodeEnv: string | undefined, path: string, maxAge: number): CookieOpts {
+  return { httpOnly: true, secure: nodeEnv === 'production', sameSite: 'strict', path, maxAge };
 }
-
-function refreshCookieOpts(nodeEnv: string | undefined): {
-  httpOnly: true;
-  secure: boolean;
-  sameSite: 'strict';
-  path: string;
-  maxAge: number;
-} {
-  return {
-    httpOnly: true,
-    secure: nodeEnv === 'production',
-    sameSite: 'strict',
-    path: '/api/auth',
-    maxAge: REFRESH_COOKIE_MAX_AGE_SEC,
-  };
-}
+const accessCookieOpts = (env: string | undefined) => cookieOpts(env, '/', ACCESS_COOKIE_MAX_AGE_SEC);
+const refreshCookieOpts = (env: string | undefined) => cookieOpts(env, '/api/auth', REFRESH_COOKIE_MAX_AGE_SEC);
 
 /**
  * FastifyReply at runtime exposes `setCookie` / `clearCookie` only when
@@ -108,6 +84,7 @@ export class AuthController {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @Inject(AUTH_REPO) private readonly authRepo: IAuthRepo,
+    private readonly i18n: I18nService,
   ) {}
 
   /**
@@ -264,14 +241,14 @@ export class AuthController {
     const cookieToken = req.cookies?.[REFRESH_COOKIE_NAME];
     const headerToken = auth?.replace(/^Bearer\s+/i, '');
     const token = cookieToken || headerToken;
-    if (!token) throw new UnauthorizedException('Token required');
+    if (!token) throw new UnauthorizedException(await this.i18n.t('auth.tokenRequired'));
 
     try {
       // getOrThrow: fail loudly if JWT_REFRESH_SECRET is missing — never fall back to JWT_SECRET
       const refreshSecret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
       const payload = this.jwtService.verify(token, { secret: refreshSecret });
       const isBlacklisted = await this.authRepo.isTokenBlacklisted(token);
-      if (isBlacklisted) throw new UnauthorizedException('Token revoked');
+      if (isBlacklisted) throw new UnauthorizedException(await this.i18n.t('auth.tokenRevoked'));
 
       const accessToken = this.jwtService.sign(
         { sub: payload.sub, username: payload.username, role: payload.role },
@@ -287,7 +264,7 @@ export class AuthController {
       return { accessToken };
     } catch (e) {
       if (e instanceof UnauthorizedException) throw e;
-      throw new UnauthorizedException('Token muddati tugagan');
+      throw new UnauthorizedException(await this.i18n.t('auth.tokenExpired'));
     }
   }
 

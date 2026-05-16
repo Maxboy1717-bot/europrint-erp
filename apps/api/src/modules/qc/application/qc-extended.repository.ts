@@ -65,13 +65,15 @@ export class QcExtendedRepository {
   }
 
   async listFinalInspections(status: string | undefined, oid: number | null, lim: number, off: number): Promise<Result<Row[]>>  {
-  try {  
+  try {
+      // NOTE: qc_final_inspections schema uses `result` (not status), `papka_order_id` (not order_id),
+      // `inspected_by` (FK to users, not employees). `inspector_name` is best-effort from users table.
       const rows = await runQuery<Row>(sql`
-        SELECT fi.*, CONCAT(e.first_name, ' ', e.last_name) AS inspector_name
+        SELECT fi.*, fi.result AS status, fi.papka_order_id, u.username AS inspector_name
         FROM qc_final_inspections fi
-        LEFT JOIN employees e ON e.id = fi.inspector_id
-        WHERE (${status ?? null}::text IS NULL OR fi.status = ${status ?? null})
-          AND (${oid}::int IS NULL OR fi.order_id = ${oid})
+        LEFT JOIN users u ON u.id = fi.inspected_by
+        WHERE (${status ?? null}::text IS NULL OR fi.result = ${status ?? null})
+          AND (${oid}::int IS NULL OR fi.papka_order_id::text = ${oid}::text)
         ORDER BY fi.created_at DESC LIMIT ${lim} OFFSET ${off}
       `);
       return Ok(rows.rows as Row[]);  } catch (_e) {
@@ -110,13 +112,18 @@ export class QcExtendedRepository {
   }
 
   async getFinalOrders(lim: number): Promise<Result<Row[]>>  {
-  try {  
+  try {
+      // NOTE: sales_orders columns — document_number (not order_number),
+      // master_status (not status), customer_id (FK; customer name joined from crm_companies).
+      // qc_final_inspections links via papka_order_id, not sales_orders.id — so the inspection
+      // join is best-effort and may be null until orders cross to papka workflow.
       const rows = await runQuery<Row>(sql`
-        SELECT so.id, so.order_number, so.status, so.customer_name,
-               fi.status AS inspection_status, fi.id AS inspection_id
+        SELECT so.id, so.document_number AS order_number, so.master_status AS status,
+               COALESCE(cc.name, so.sold_to_party) AS customer_name,
+               NULL::text AS inspection_status, NULL::int AS inspection_id
         FROM sales_orders so
-        LEFT JOIN qc_final_inspections fi ON fi.order_id = so.id
-        WHERE so.status IN ('production_complete', 'quality_check')
+        LEFT JOIN crm_companies cc ON cc.id = so.customer_id
+        WHERE so.master_status IN ('pending_qc_final', 'in_production', 'qc_failed', 'rework')
         ORDER BY so.created_at DESC LIMIT ${lim}
       `);
       return Ok(rows.rows as Row[]);  } catch (_e) {
