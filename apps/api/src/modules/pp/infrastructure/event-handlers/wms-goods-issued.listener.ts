@@ -1,21 +1,16 @@
 /**
  * @module wms-goods-issued.listener
- * @description Source module. See exports for details.
+ * @description PA2-18: canonical CQRS @EventsHandler form. Listens for
+ *   WmsGoodsIssuedEvent (published by wms/goods-issue.handler) and opens
+ *   the production-balance state on the sales order. Trigger 9.
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { Result, safeCall, isErr } from '@common/result';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
-
-interface WmsGoodsIssuedPayload {
-  orderId: number;
-  goodsIssueId?: number;
-  warehouseId?: number;
-  totalLines?: number;
-}
+import { WmsGoodsIssuedEvent } from '@modules/wms/application/events/wms-goods-issued.event';
 
 type Row = Record<string, unknown>;
 
@@ -28,28 +23,35 @@ type Row = Record<string, unknown>;
  * ARCHITECTURE.md §10 #9
  */
 @Injectable()
-export class WmsGoodsIssuedListener {
+@EventsHandler(WmsGoodsIssuedEvent)
+export class WmsGoodsIssuedListener implements IEventHandler<WmsGoodsIssuedEvent> {
   private readonly logger = new Logger(WmsGoodsIssuedListener.name);
 
-  @OnEvent(ERP_EVENTS.WMS_GOODS_ISSUED, { async: true, promisify: true })
-  async handle(payload: WmsGoodsIssuedPayload): Promise<void> {
-    if (!Number.isFinite(payload?.orderId)) {
-      this.logger.warn(`Trigger 9: orderId yo'q`);
+  async handle(event: WmsGoodsIssuedEvent): Promise<void> {
+    // WmsGoodsIssuedEvent.payload carries the legacy shape {materialId, amount, ppId, timestamp}.
+    // The PP listener still keys on orderId for `master_status` transitions, so accept either
+    // a future orderId field or fall back to ppId (which historically maps 1:1 to sales-order id).
+    const payload = event.payload ?? {};
+    const orderIdRaw = payload['orderId'] ?? payload['ppId'];
+    const orderId = Number(orderIdRaw);
+
+    if (!Number.isFinite(orderId)) {
+      this.logger.warn({ payload }, `Trigger 9: orderId yo'q`);
       return;
     }
 
-    const updR = await this.openProductionBalance(payload.orderId);
+    const updR = await this.openProductionBalance(orderId);
     if (isErr(updR)) {
-      this.logger.error(`Trigger 9: order ${payload.orderId} — ${updR.error.message}`);
+      this.logger.error(`Trigger 9: order ${orderId} — ${updR.error.message}`);
       return;
     }
     if (updR.data) {
       this.logger.log(
-        `Trigger 9 ✅ order ${payload.orderId}: ishlab chiqarish balans ombori ochildi`,
+        `Trigger 9 ✅ order ${orderId}: ishlab chiqarish balans ombori ochildi`,
       );
     } else {
       this.logger.debug(
-        `Trigger 9: order ${payload.orderId} allaqachon ishlab chiqarishda yoki status mos emas`,
+        `Trigger 9: order ${orderId} allaqachon ishlab chiqarishda yoki status mos emas`,
       );
     }
   }

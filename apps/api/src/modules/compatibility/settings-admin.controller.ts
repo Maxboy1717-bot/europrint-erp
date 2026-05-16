@@ -15,6 +15,11 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrBadRequest, unwrapOrNotFound } from '@common/http-result';
 import { z } from 'zod';
 import { SettingsAdminService } from './settings-admin.service';
+import {
+  GuidelineAclTranslator,
+  type LegacyGuidelineRow,
+  type GuidelineDto,
+} from './acl/guideline-acl';
 
 const GuidelineSchema = z.object({
   title:     z.string().min(1),
@@ -39,12 +44,30 @@ const FilterSchema = z.object({
 @UseInterceptors(AuditInterceptor)
 @Controller()
 export class SettingsAdminController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly guidelineAcl = new GuidelineAclTranslator();
+
   constructor(private readonly svc: SettingsAdminService) {}
 
   @Get('guidelines')
   @Roles('super_admin', 'admin', 'manager', 'director')
   async getGuidelines() {
     return unwrapOrBadRequest(await this.svc.getGuidelines());
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of guidelines. New BC-6 (Platform / Admin)
+   * consumers should target this route; `/guidelines` stays for backwards-compat.
+   */
+  @Get('guidelines/v2')
+  @Roles('super_admin', 'admin', 'manager', 'director')
+  async getGuidelinesV2(): Promise<GuidelineDto[]> {
+    const rows = unwrapOrBadRequest(await this.svc.getGuidelines()) as unknown as LegacyGuidelineRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.guidelineAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: GuidelineDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post('guidelines')

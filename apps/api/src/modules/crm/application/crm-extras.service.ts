@@ -5,13 +5,13 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { CrmExtrasRepository } from './crm-extras.repository';
+import { CRM_EXTRAS_REPO, type ICrmExtrasRepo } from '../domain/repositories/i-crm-extras.repo';
 
 @Injectable()
 export class CrmExtrasService {
-  constructor(private readonly repo: CrmExtrasRepository) {}
+  constructor(@Inject(CRM_EXTRAS_REPO) private readonly repo: ICrmExtrasRepo) {}
 
   async listComments(leadId: number | null, dealId: number | null, lim: number, off: number): Promise<Result<object, AppError>> {
     return this.repo.listComments(leadId, dealId, lim, off);

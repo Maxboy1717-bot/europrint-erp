@@ -5,7 +5,7 @@
 
 import { assertFound } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { safeInt } from '../hr/common/db-rows';
+import { safeInt } from '../common/db-rows';
 import {
   Body, Controller, Delete, Get, Logger, NotFoundException,
   Param, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';

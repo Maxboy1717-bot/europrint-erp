@@ -3,13 +3,13 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { CrmBitrixCompatRepository } from './crm-bitrix-compat.repository';
+import { CRM_BITRIX_COMPAT_REPO, type ICrmBitrixCompatRepo } from '../domain/repositories/i-crm-bitrix-compat.repo';
 
 @Injectable()
 export class CrmBitrixCompatService {
-  constructor(private readonly repo: CrmBitrixCompatRepository) {}
+  constructor(@Inject(CRM_BITRIX_COMPAT_REPO) private readonly repo: ICrmBitrixCompatRepo) {}
 
   async listProposals(lim: number, off: number): Promise<Result<object, AppError>> {
     return this.repo.listProposals(lim, off);

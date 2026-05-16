@@ -65,6 +65,12 @@ import { PpIntelligenceService } from './application/services/pp-intelligence.se
 import { PpMpsService } from './application/services/pp-mps.service';
 import { PpCrpService } from './application/services/pp-crp.service';
 import { PpIntelligenceController } from './presentation/pp-intelligence.controller';
+// PA3-17 Wave 5: merged from former modules/technology/ (route prefix '/technology' preserved)
+import { TechnologyController } from './technology/technology.controller';
+import { TechnologyService } from './technology/technology.service';
+import { TechnologyRepository } from './technology/technology.repository';
+import { TechnologySchemaService } from './technology/technology-schema.service';
+import { TechnologySchemaRepository } from './technology/technology-schema.repository';
 
 const handlers = [
   CreateProductionOrderHandler,
@@ -93,7 +99,10 @@ const listeners = [
 
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot()],
-  controllers: [PpOrdersController, PpBomController, PpRoutingController, PpWorkCentersController, PpPlanningController, PpEquipmentController, PpIntelligenceController],
+  controllers: [PpOrdersController, PpBomController, PpRoutingController, PpWorkCentersController, PpPlanningController, PpEquipmentController, PpIntelligenceController,
+    // PA3-17 Wave 5: merged from modules/technology/
+    TechnologyController,
+  ],
   providers: [
     ...handlers,
     ...listeners,
@@ -125,6 +134,11 @@ const listeners = [
     PpIntelligenceService,
     PpMpsService,
     PpCrpService,
+    // PA3-17 Wave 5: merged from modules/technology/
+    TechnologyService,
+    TechnologyRepository,
+    TechnologySchemaService,
+    TechnologySchemaRepository,
   ],
   exports: [PP_REPO, WORK_CENTER_REPO],
 })

@@ -1,28 +1,23 @@
 /**
  * @module delivery-completed.listener
- * @description Source module. See exports for details.
+ * @description PA2-18: canonical CQRS @EventsHandler form. Listens for
+ *   DeliveryCompletedEvent (published by logistics/complete-delivery.handler)
+ *   and reconciles the delivered order with its invoice balance. Trigger 14.
  */
 
 import { FINANCE_REPO } from '../../domain/repositories/i-finance.repo';
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { FinanceRepository } from '../repositories/drizzle-finance.repo';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
-
-export interface DeliveryCompletedEvent {
-  deliveryId: number;
-  orderId: number;
-  customerId: number;
-  deliveryDate: Date;
-}
+import { DeliveryCompletedEvent } from '@modules/logistics/domain/events';
 
 @Injectable()
-export class DeliveryCompletedListener {
+@EventsHandler(DeliveryCompletedEvent)
+export class DeliveryCompletedListener implements IEventHandler<DeliveryCompletedEvent> {
   private readonly logger = new Logger(DeliveryCompletedListener.name);
 
   constructor(@Inject(FINANCE_REPO) private readonly financeRepo: FinanceRepository) {}
 
-  @OnEvent(ERP_EVENTS.DELIVERY_COMPLETED, { async: true })
   async handle(event: DeliveryCompletedEvent): Promise<void> {
     try {
       this.logger.debug(
@@ -52,7 +47,7 @@ export class DeliveryCompletedListener {
         this.logger.log(`Delivery completed and paid in full - Order: ${event.orderId}`);
       }
     } catch (error: unknown) {
-      this.logger.error(`Error processing DELIVERY_COMPLETED event: ${(error as Error).message}`);
+      this.logger.error(`Error processing DeliveryCompletedEvent: ${(error as Error).message}`);
     }
   }
 }

@@ -3,13 +3,13 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { QcExtendedRepository } from './qc-extended.repository';
+import { QC_EXTENDED_REPO, type IQcExtendedRepo } from '../domain/repositories/i-qc-extended.repo';
 
 @Injectable()
 export class QcExtendedService {
-  constructor(private readonly repo: QcExtendedRepository) {}
+  constructor(@Inject(QC_EXTENDED_REPO) private readonly repo: IQcExtendedRepo) {}
 
   async listStandards(category: string | undefined, lim: number, off: number): Promise<Result<object, AppError>> {
     return this.repo.listStandards(category, lim, off);

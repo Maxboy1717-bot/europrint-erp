@@ -1,6 +1,12 @@
 /**
  * @module advance-approved.listener
- * @description Source module. See exports for details.
+ * @description Trigger 7 — FI advance approved → unlock PP planning.
+ *
+ * TODO PA2-18: Promote to canonical `@EventsHandler(AdvanceApprovedEvent)`
+ * once the emit-site (currently `eventEmitter.emit(ERP_EVENTS.ADVANCE_APPROVED,
+ * {...})` in finance/tech-three-checkpoint.listener.ts) is refactored to
+ * publish a typed event class via the CQRS bus. EventBridgeService cannot
+ * translate string→class for legacy emit-sites.
  */
 
 import { Injectable, Logger, Inject } from '@nestjs/common';

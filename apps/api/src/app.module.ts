@@ -96,8 +96,8 @@ import { IntegrationModule } from './modules/integration/integration.module';
 
 // New modules (CRM/SD extensions)
 // PA3-17 Wave 3: SalesModule merged into SdModule
-import { ApplicationsModule } from './modules/applications/applications.module';
-import { SapModule } from './modules/sap/sap.module';
+// PA3-17 Wave 5: ApplicationsModule merged into HrModule (hr/applications/)
+// PA3-17 Wave 5: SapModule merged into IntegrationModule (integration/sap/)
 
 // PP / MES / Production extensions
 import { ProductionModule } from './modules/production/production.module';
@@ -108,7 +108,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { ExportModule } from './modules/export/export.module';
 
 // Design / Technology / HR Assets (Task #262)
-import { TechnologyModule } from './modules/technology/technology.module';
+// PA3-17 Wave 5: TechnologyModule merged into PpModule (pp/technology/)
 // PA3-17 Wave 3: HrAssetsModule merged into HrModule
 
 // Faza 7 — New endpoint modules
@@ -246,8 +246,8 @@ import { OutboxModule } from './modules/shared/outbox/outbox.module';
 
     // ── CRM/SD Extensions ────────────────────────────────────────────────────
     // PA3-17 Wave 3: SalesModule merged into SdModule (controllers/services moved to sd/sales/)
-    ApplicationsModule,
-    SapModule,
+    // PA3-17 Wave 5: ApplicationsModule merged into HrModule (hr/applications/)
+    // PA3-17 Wave 5: SapModule merged into IntegrationModule (integration/sap/)
 
     // ── PP / MES / Production Extensions ─────────────────────────────────────
     ProductionModule,
@@ -258,7 +258,7 @@ import { OutboxModule } from './modules/shared/outbox/outbox.module';
     ExportModule,
 
     // ── Design / Technology / HR Assets (Task #262) ───────────────────────────
-    TechnologyModule,
+    // PA3-17 Wave 5: TechnologyModule merged into PpModule (pp/technology/)
     // PA3-17 Wave 3: HrAssetsModule merged into HrModule (hr/hr-assets/)
 
     // ── Faza 7 — New endpoint modules ─────────────────────────────────────────

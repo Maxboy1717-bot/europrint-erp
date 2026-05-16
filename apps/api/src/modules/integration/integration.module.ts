@@ -15,6 +15,10 @@ import { IntegrationMroRepository } from './integration-mro.repo';
 import { IntegrationEmployeeRepository } from './integration-employee.repo';
 import { IntegrationExtendedMroRepository } from './integration-extended-mro.repo';
 import { IntegrationExtendedHrRepository } from './integration-extended-hr.repo';
+// PA3-17 Wave 5: merged from former modules/sap/ (route prefix '/sap' preserved)
+import { SapController } from './sap/sap.controller';
+import { SapService } from './sap/sap.service';
+import { SapRepository } from './sap/sap.repository';
 
 @Module({
   imports: [AuthModule],
@@ -25,6 +29,8 @@ import { IntegrationExtendedHrRepository } from './integration-extended-hr.repo'
     IntegrationExtendedController,
     IntegrationExtendedHrController,
     IntegrationMroPmController,
+    // PA3-17 Wave 5: merged from modules/sap/
+    SapController,
   ],
   providers: [
     IntegrationMroRepository,
@@ -33,6 +39,10 @@ import { IntegrationExtendedHrRepository } from './integration-extended-hr.repo'
     IntegrationExtendedHrRepository,
     IntegrationMroService,
     IntegrationEmployeeService,
+    // PA3-17 Wave 5: merged from modules/sap/
+    SapRepository,
+    SapService,
   ],
+  exports: [SapService],
 })
 export class IntegrationModule {}
