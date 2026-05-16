@@ -78,10 +78,11 @@ export default function DocumentWorkflowPage() {
   // Mutations
   // -------------------------------------------------------------------------
 
-  const create = useMutation({
-    mutationFn: (d: Record<string, unknown>) => apiRequest("POST", "/api/hr-v2/documents", d),
+  type CreateDocResponse = { doc_number?: string };
+  const create = useMutation<CreateDocResponse, Error, Record<string, unknown>>({
+    mutationFn: (d) => apiRequest<CreateDocResponse>("POST", "/api/hr-v2/documents", d),
     onSuccess: (data) => {
-      toast({ title: t("documentCreated"), description: `${t("docNumber")}: ${data.doc_number}` });
+      toast({ title: t("documentCreated"), description: `${t("docNumber")}: ${data.doc_number ?? ""}` });
       setShowCreate(false);
       setForm({ doc_type: "LEAVE_REQUEST", title: "", content: "", created_by: empId });
       qc.invalidateQueries({ queryKey: ["/api/hr-v2/documents/employee"] });

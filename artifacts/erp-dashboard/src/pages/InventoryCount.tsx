@@ -180,8 +180,8 @@ export default function InventoryCount() {
         <CountDetailHeader 
           countDetail={countDetail} 
           onBack={() => { setIsDetailView(false); setSelectedCount(null); }} 
-          onStatusChange={(status) => statusMutation.mutate({ id: countDetail?.id ?? 0, status })}
-          onGenerateLines={() => generateLinesMutation.mutate(countDetail?.id ?? 0)}
+          onStatusChange={(status) => statusMutation.mutate({ id: String(countDetail?.id ?? ""), status })}
+          onGenerateLines={() => generateLinesMutation.mutate(String(countDetail?.id ?? ""))}
           onSaveAllLines={handleSaveAllLines}
           onExport={handleExport}
           isGeneratingLines={generateLinesMutation.isPending}
@@ -220,7 +220,7 @@ export default function InventoryCount() {
           </div>
         </CardHeader>
         <CardContent>
-          {countsLoading ? <div className="space-y-4">{([...Array(5)]).map((_, i) => (<Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />))}</div> : countsError ? <EPErrorState message={(countsError as Error)?.message} onRetry={() => refetch()} /> : <CountSessionTable counts={filteredCounts} onEdit={(c) => { setEditingCount(c); setFormData({ countDate: c.countDate, warehouseId: c.warehouseId || "", countType: c.countType, assignedTo: c.assignedTo ? String(c.assignedTo) : "", notes: c.notes || "" }); }} onView={handleViewDetail} />}
+          {countsLoading ? <div className="space-y-4">{([...Array(5)]).map((_, i) => (<Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />))}</div> : countsError ? <EPErrorState description={(countsError as Error)?.message} onRetry={() => refetch()} /> :<CountSessionTable counts={filteredCounts} onEdit={(c) => { setEditingCount(c); setFormData({ countDate: c.countDate, warehouseId: c.warehouseId || "", countType: c.countType, assignedTo: c.assignedTo ? String(c.assignedTo) : "", notes: c.notes || "" }); }} onView={handleViewDetail} />}
         </CardContent>
       </Card>
       <CreateUpdateCountDialog isOpen={isCreateDialogOpen || !!editingCount} onOpenChange={(open) => { if (!open) { setIsCreateDialogOpen(false); setEditingCount(null); resetForm(); } else setIsCreateDialogOpen(true); }} isEditing={!!editingCount} formData={formData} onFormChange={(data) => setFormData((prev) => ({ ...prev, ...data }))} onSubmit={handleFormSubmit} isPending={createMutation.isPending || updateMutation.isPending} warehouses={warehouses} users={users} />

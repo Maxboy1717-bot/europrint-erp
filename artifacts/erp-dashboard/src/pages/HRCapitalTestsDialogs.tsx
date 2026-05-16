@@ -41,14 +41,14 @@ export function CreateSessionDialog({open, onOpenChange }: CreateSessionDialogPr
 
   const createSessionMutation = useMutation({
     mutationFn: (form: typeof sessionForm) =>
-      apiRequest("POST", "/api/hr/hrc-tests/sessions", {
+      apiRequest<{ testLink?: string } | null>("POST", "/api/hr/hrc-tests/sessions", {
         test_type:    form.test_type,
         candidate_id: form.candidate_id ? Number(form.candidate_id) : undefined,
         employee_id:  form.employee_id  ? Number(form.employee_id)  : undefined,
         funnel_id:    form.funnel_id    ? Number(form.funnel_id)    : undefined,
         vacancy_id:   form.vacancy_id   ? Number(form.vacancy_id)   : undefined,
       }),
-    onSuccess: (data: { testLink?: string } | null) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/hrc-tests/sessions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/hr/hrc-tests/stats"] });
       onOpenChange(false);

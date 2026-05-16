@@ -48,7 +48,7 @@ function DriftBadge({ calc }: { calc: PayrollCalculation }) {
   };
   const Icon = pct === 0 ? Minus : pct > 0 ? TrendingUp : TrendingDown;
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-medium ${colorMap[color]}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-medium ${colorMap[color as keyof typeof colorMap]}`}>
       <Icon className="h-3 w-3" />
       {label}
     </span>

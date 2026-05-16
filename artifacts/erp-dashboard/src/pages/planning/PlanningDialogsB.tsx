@@ -171,7 +171,7 @@ export function MRPRunDialog({ open, onOpenChange, runForm, onFormChange, onCrea
             />
           </div>
           <div className="space-y-1">
-          <Label>{t("planningHorizonDays")}</Label>
+          <Label>{lang === "uz" ? "Rejalashtirish ufqi (kunlar)" : "Горизонт планирования (дни)"}</Label>
             <Input
               type="number"
               value={runForm.planningHorizon}

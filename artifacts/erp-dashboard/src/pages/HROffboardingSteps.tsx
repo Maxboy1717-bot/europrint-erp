@@ -54,7 +54,7 @@ export function ChecklistPanel({
   const { data: caseDetail, isLoading } = useQuery<CaseDetail>({
     queryKey: ["/api/hr/offboarding/cases", caseId],
     queryFn: () =>
-      apiRequest('GET', `/api/hr/offboarding/cases/${caseId}`).then(r => r.json()),
+      apiRequest<CaseDetail>('GET', `/api/hr/offboarding/cases/${caseId}`),
   });
 
   const markItem = useMutation({
@@ -68,10 +68,10 @@ export function ChecklistPanel({
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
-  const saveInterview = useMutation({
+  const saveInterview = useMutation<ExitInterviewResult, Error, void>({
     mutationFn: () =>
-      apiRequest("POST", `/api/hr/offboarding/cases/${caseId}/exit-interview`, { answers }),
-    onSuccess: (data: ExitInterviewResult) => {
+      apiRequest<ExitInterviewResult>("POST", `/api/hr/offboarding/cases/${caseId}/exit-interview`, { answers }),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/offboarding/cases", caseId] });
       queryClient.invalidateQueries({ queryKey: ["/api/hr/offboarding/cases"] });
       setShowInterviewForm(false);

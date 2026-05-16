@@ -48,9 +48,9 @@ export default function SupplyChainDashboard() {
   const matchMutation = useMutation({
     mutationFn: async (invoiceId: string | number) => {
       setMatchingId(invoiceId);
-      return await apiRequest("POST", `/api/mm/3way-match/${invoiceId}`, { tolerance: 2 });
+      return await apiRequest<ThreeWayMatchResult>("POST", `/api/mm/3way-match/${invoiceId}`, { tolerance: 2 });
     },
-    onSuccess: (data: ThreeWayMatchResult, invoiceId) => {
+    onSuccess: (data, invoiceId) => {
       setMatchResults((prev) => ({ ...prev, [invoiceId]: data }));
       setMatchingId(null);
       queryClient.invalidateQueries({ queryKey: ["/api/mm/vendor-invoices"] });

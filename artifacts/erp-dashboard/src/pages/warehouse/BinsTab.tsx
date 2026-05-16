@@ -17,7 +17,7 @@ import { Bin360Dialog } from "./BinsTabView360";
 
 interface BinsTabProps {
   lang: Lang;
-  t: Translations;
+  t: Translations & ((key: string) => string);
 }
 
 export function BinsTab({ lang, t }: BinsTabProps) {

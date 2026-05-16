@@ -156,12 +156,12 @@ export function BatchesTabContent({
                       <TableCell>{batch.expiryDate || "-"}</TableCell>
                       <TableCell>
                         <Badge className={QC_STATUS_COLORS[batch.qcStatus || "pending"]}>
-                          {(tAny.qcStatuses as unknown as Record<string,string>)?.[batch.qcStatus] || batch.qcStatus}
+                          {(tAny.qcStatuses as unknown as Record<string,string>)?.[batch.qcStatus ?? "pending"] || batch.qcStatus}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge className={STATUS_COLORS[batch.status || "active"]}>
-                          {(tAny.statuses as unknown as Record<string,string>)?.[batch.status] || batch.status}
+                          {(tAny.statuses as unknown as Record<string,string>)?.[batch.status ?? "active"] || batch.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">

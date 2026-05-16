@@ -38,7 +38,7 @@ export interface MainTabContentProps {
   onTaskRatingChange: (val: number) => void;
   hoveredRating: number;
   onHoveredRatingChange: (val: number) => void;
-  t: KanbanTranslations;
+  t: KanbanTranslations & ((key: string) => string);
 }
 
 // Backend may return snake_case (full_name, profile_image_url). This helper

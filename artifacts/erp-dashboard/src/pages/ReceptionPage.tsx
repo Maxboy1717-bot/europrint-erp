@@ -31,9 +31,15 @@ export default function ReceptionPage() {
   const [validateCode, setValidateCode] = useState("");
   const [validateResult, setValidateResult] = useState<ValidateResult | null>(null);
 
-  const { data: stats } = useQuery({
+  interface ReceptionStats {
+    currently_inside?: number;
+    today_visitors?: number;
+    this_week?: number;
+    total_all_time?: number;
+  }
+  const { data: stats } = useQuery<ReceptionStats>({
     queryKey: ["/api/hr-v2/reception/stats"],
-    queryFn: () => apiRequest("GET", "/api/hr-v2/reception/stats"),
+    queryFn: () => apiRequest<ReceptionStats>("GET", "/api/hr-v2/reception/stats"),
     refetchInterval: 30000,
   });
 
@@ -52,8 +58,8 @@ export default function ReceptionPage() {
         .then((j: unknown) => (Array.isArray(j) ? j : ((j as { data?: unknown[] }).data ?? []))),
   });
 
-  const checkIn = useMutation({
-    mutationFn: (data: Record<string, unknown>) => apiRequest("POST", "/api/hr-v2/reception/check-in", data),
+  const checkIn = useMutation<BadgeResult, Error, Record<string, unknown>>({
+    mutationFn: (data) => apiRequest<BadgeResult>("POST", "/api/hr-v2/reception/check-in", data),
     onSuccess: (data) => {
       toast({ title: "✅ Tashrif ro'yxatga olindi", description: `Badge kodi: ${data.badge_code}` });
       setLastBadge(data);
@@ -75,7 +81,7 @@ export default function ReceptionPage() {
   });
 
   const validateBadge = async () => {
-    const data = await apiRequest("GET", `/api/hr-v2/reception/badge/${validateCode}`);
+    const data = await apiRequest<ValidateResult>("GET", `/api/hr-v2/reception/badge/${validateCode}`);
     setValidateResult(data);
   };
 

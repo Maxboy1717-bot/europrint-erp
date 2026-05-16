@@ -48,7 +48,7 @@ export function EntityCard({
     if ((entityType === "leads" || entityType === "deals") && !quickScore && !isLoadingScore) {
       setIsLoadingScore(true);
       const param = entityType === "leads" ? "lead" : "deal";
-      apiRequest("GET", `/api/crm/ai/quick-score/${param}/${entity.id}`)
+      apiRequest<QuickScore>("GET", `/api/crm/ai/quick-score/${param}/${entity.id}`)
         .then((d) => setQuickScore(d))
         .catch(() => setQuickScore({ score: 50, churnRisk: "medium", hasIssues: false }))
         .finally(() => setIsLoadingScore(false));
@@ -150,7 +150,6 @@ export function EntityCard({
   return (
     <motion.div
       ref={setNodeRef}
-      style={{ ...style }}
       initial={{ opacity: 0, y: 12, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.92, transition: { duration: 0.15 } }}
@@ -168,6 +167,7 @@ export function EntityCard({
         "transition-colors duration-150 group select-none overflow-hidden",
       )}
       style={{
+        ...style,
         background: "#FFFFFF",
         boxShadow: isActuallyDragging ? SHADOW_DRAGGING : SHADOW_IDLE,
         transform: isActuallyDragging ? "rotate(3deg) scale(1.03)" : undefined,

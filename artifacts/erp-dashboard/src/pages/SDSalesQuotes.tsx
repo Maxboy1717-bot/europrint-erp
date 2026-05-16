@@ -43,7 +43,7 @@ export default function SDSalesQuotes() {
   const customers = customersData?.data || [];
 
   const calcMut = useMutation({
-    mutationFn: (body: Record<string, unknown>) => apiRequest("POST", "/api/sd/calculate-price", body),
+    mutationFn: (body: Record<string, unknown>) => apiRequest<PriceResult>("POST", "/api/sd/calculate-price", body),
     onSuccess: (data) => setPriceResult(data),
     onError: () => toast({ title: "Hisoblashda xatolik", variant: "destructive" }),
   });

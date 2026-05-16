@@ -123,8 +123,8 @@ export default function AIProductionPlanning() {
 
   const blockMaterialMutation = useMutation({
     mutationFn: ({ orderId, materialName, reason }: { orderId: string; materialName: string; reason: string }) =>
-      apiRequest("POST", `/api/ai-planning/orders/${orderId}/block-material`, { materialName, reason, requiredQuantity: 1 }),
-    onSuccess: (data: { purchaseRequisitionNumber?: string }) => {
+      apiRequest<{ purchaseRequisitionNumber?: string }>("POST", `/api/ai-planning/orders/${orderId}/block-material`, { materialName, reason, requiredQuantity: 1 }),
+    onSuccess: (data) => {
       setShowBlockMaterial(false); setBlockMaterial(""); setBlockOrderId(""); setBlockReason("");
       toast({ title: "Bloklandi", description: data.purchaseRequisitionNumber ? `Xarid talabi: ${data.purchaseRequisitionNumber}` : "MM ga xabar yuborildi" });
     },

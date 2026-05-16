@@ -65,9 +65,9 @@ export default function IoTDashboard() {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const fromDate = thirtyDaysAgo.toISOString().split("T")[0];
 
-  const { data: oeeData = [] } = useQuery({
+  const { data: oeeData = [] } = useQuery<OeeRecord[]>({
     queryKey: ["/api/iot-sensors/oee", fromDate],
-    queryFn: () => apiRequest('GET', `/api/iot-sensors/oee?from=${fromDate}`).then(r => r.json()),
+    queryFn: () => apiRequest<OeeRecord[]>('GET', `/api/iot-sensors/oee?from=${fromDate}`),
     enabled: !!isAuthenticated,
     refetchInterval: 60000,
   });
@@ -96,9 +96,9 @@ export default function IoTDashboard() {
     }
   }
 
-  const { data: alertsData = [] } = useQuery({
+  const { data: alertsData = [] } = useQuery<IotAlert[]>({
     queryKey: ["/api/iot-sensors/alerts"],
-    queryFn: () => apiRequest('GET', "/api/iot-sensors/alerts?resolved=false").then(r => r.json()),
+    queryFn: () => apiRequest<IotAlert[]>('GET', "/api/iot-sensors/alerts?resolved=false"),
     enabled: !!isAuthenticated,
     refetchInterval: 30000,
   });
@@ -116,7 +116,7 @@ export default function IoTDashboard() {
   /* ── Maintenance ── */
   const { data: pmData, isLoading: pmLoading } = useQuery({
     queryKey: ["/api/iot-sensors/predictive-maintenance"],
-    queryFn: () => apiRequest('GET', "/api/iot-sensors/predictive-maintenance").then(r => r.json()),
+    queryFn: () => apiRequest('GET', "/api/iot-sensors/predictive-maintenance"),
     enabled: !!isAuthenticated,
     refetchInterval: 120000,
   });
@@ -163,9 +163,7 @@ export default function IoTDashboard() {
   const { data: healthData } = useQuery({
     queryKey: ["/api/iot/employee-health"],
     queryFn: () =>
-      apiRequest('GET', "/api/iot/employee-health")
-        .then(r => (r.ok ? r.json() : null))
-        .catch(() => null),
+      apiRequest('GET', "/api/iot/employee-health").catch(() => null),
     enabled: !!isAuthenticated,
     refetchInterval: 120000,
   });

@@ -65,7 +65,13 @@ interface KanbanColumnProps {
   onCardClick:    (card: CardWithOwner) => void;
   onAddCard:      () => void;
   onDeleteColumn: (columnId: string) => void;
-  t:              Record<string, Record<string, string>>;
+  /**
+   * Translation bundle from parent. KanbanColumn itself only consumes
+   * `useTranslation` directly; the prop is forwarded for future use by
+   * descendants. Accept the KanbanT-shaped object plus the callable carrier
+   * variant used by KanbanBoard ancestors.
+   */
+  t:              import("../KanbanBoardTypes").KanbanT & ((key: string) => string);
 }
 
 export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteColumn }: KanbanColumnProps) {

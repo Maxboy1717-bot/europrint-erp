@@ -19,6 +19,7 @@ import {
 import { UseFormReturn } from "react-hook-form";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 import { EPStatusPill } from "@/components/ep";
 // ===================== TENANTS SECTION =====================
 
@@ -116,12 +117,12 @@ export function TenantsSection({tenants,
                       <div className="flex items-center gap-1">
                         {t.status === "active" && (
                           <Button variant="ghost" size="sm" onClick={() => onSuspend(String(t.id))} data-testid={`button-suspend-${t.id}`}>
-                            {t("bloklash")}
+                            {tLabel("saas.bloklash", "Bloklash")}
                           </Button>
                         )}
                         {t.status === "suspended" && (
                           <Button variant="ghost" size="sm" onClick={() => onActivate(String(t.id))} data-testid={`button-activate-${t.id}`}>
-                            {t("faollashtirish")}
+                            {tLabel("saas.faollashtirish", "Faollashtirish")}
                           </Button>
                         )}
                         <Button variant="ghost" size="sm" data-testid={`button-manage-${t.id}`}>

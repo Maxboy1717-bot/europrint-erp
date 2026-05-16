@@ -4,6 +4,7 @@
  */
 
 import { useState, useRef, useEffect } from "react";
+import { tLabel } from "@/lib/i18n/tLabel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -161,7 +162,7 @@ export function ChatPanel({
                               <DropdownMenuContent>
                                 <DropdownMenuItem onClick={() => onCreateTaskFromMessage(msg)}>
                                   <Plus className="h-4 w-4 mr-2" />
-                                  {t("vazifaYaratish")}
+                                  {tLabel("kanban.vazifaYaratish", "Vazifa yaratish")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -207,7 +208,7 @@ export function ChatPanel({
           })()}
 
           {chatMessages.length === 0 && (
-            <p className="text-center text-muted-foreground text-sm py-4">{t("xabarlarYoq")}</p>
+            <p className="text-center text-muted-foreground text-sm py-4">{tLabel("kanban.xabarlarYoq", "Xabarlar yo'q")}</p>
           )}
         </div>
       </ScrollArea>

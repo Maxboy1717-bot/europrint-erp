@@ -202,7 +202,7 @@ interface ChatPanelProps {
   selectedConversation: SocialConversation | undefined;
   messages: SocialMessage[] | undefined;
   messagesLoading: boolean;
-  messagesEndRef: RefObject<HTMLDivElement>;
+  messagesEndRef: RefObject<HTMLDivElement | null>;
   replyText: string;
   onReplyTextChange: (v: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;

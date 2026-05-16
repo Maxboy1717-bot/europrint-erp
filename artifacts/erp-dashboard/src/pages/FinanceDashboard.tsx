@@ -166,9 +166,10 @@ export default function FinanceDashboard() {
     },
   });
 
-  const calculateTaxMutation = useMutation({
+  type CalcTaxResponse = { grossSalary: number; inpsAmount: number; jshdAmount: number; netSalary: number };
+  const calculateTaxMutation = useMutation<CalcTaxResponse, Error, number>({
     mutationFn: async (grossSalary: number) => {
-      return apiRequest("POST", "/api/payroll/calculate-tax", { grossSalary });
+      return apiRequest<CalcTaxResponse>("POST", "/api/payroll/calculate-tax", { grossSalary });
     },
   });
 

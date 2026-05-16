@@ -48,7 +48,7 @@ export default function MilestonePage() {
   });
 
   const generateMut = useMutation({
-    mutationFn: (body: Record<string, unknown>) => apiRequest("POST", "/api/hr/milestones/generate", body),
+    mutationFn: (body: Record<string, unknown>) => apiRequest<Record<string, unknown>>("POST", "/api/hr/milestones/generate", body),
     onSuccess: (data: Record<string, unknown>) => {
       if (data?.error) { toast({ title: "Xato", description: String(data.error), variant: "destructive" }); return; }
       toast({ title: "✅ Milestonelar yaratildi!", description: `${Array.isArray(data.created) ? data.created.length : 0} ta milestone qo'shildi` });
@@ -60,8 +60,8 @@ export default function MilestonePage() {
   });
 
   const completeMut = useMutation({
-    mutationFn: ({ id, body }: { id: number; body: Record<string, unknown> }) => apiRequest("POST", `/api/hr/milestones/${id}/complete`, body),
-    onSuccess: (data: Record<string, unknown>) => {
+    mutationFn: ({ id, body }: { id: number; body: Record<string, unknown> }) => apiRequest<Record<string, unknown>>("POST", `/api/hr/milestones/${id}/complete`, body),
+    onSuccess: (data) => {
       if (data?.error) { toast({ title: "Xato", description: String(data.error), variant: "destructive" }); return; }
       toast({ title: "✅ Milestone yakunlandi!", description: "Badge avtomatik berildi" });
       qc.invalidateQueries({ queryKey: ["/api/hr/milestones"] });

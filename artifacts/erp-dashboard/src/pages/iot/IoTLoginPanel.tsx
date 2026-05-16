@@ -32,8 +32,8 @@ export function IoTLoginPanel({ lang, setLang, tabelNumber, setTabelNumber, work
             <User className="h-10 w-10 text-primary" />
           </div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("operatorKirishi")}</b></>}
-        title={t("operatorKirishi")}
+        breadcrumb={<>{t("Boshqaruv paneli", "Панель управления")}<b className="text-foreground">{t("Operator kirishi", "Вход оператора")}</b></>}
+        title={t("Operator kirishi", "Вход оператора")}
         subtitle={t("Tabel raqami va parol bilan kiring", "Войдите с табельным номером и паролем")}
       />
         </CardHeader>

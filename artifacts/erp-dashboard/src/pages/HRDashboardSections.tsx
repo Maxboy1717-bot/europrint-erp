@@ -268,7 +268,7 @@ export function OverviewTab({
           ) : (
             <div className="space-y-2">
               {(Array.isArray(alerts) ? alerts : []).slice(0, 4).map((alert) => {
-                const cfg = SEVERITY_CONFIG[alert.severity];
+                const cfg = SEVERITY_CONFIG[alert.severity as keyof typeof SEVERITY_CONFIG] ?? SEVERITY_CONFIG.info;
                 return (
                   <div key={alert.id} className={`flex items-start gap-3 p-3 rounded-lg border ${cfg.bg} ${cfg.border}`} data-testid={`alert-${alert.id}`}>
                     {alert.severity === "critical" ? <XCircle className={`w-4 h-4 mt-0.5 shrink-0 ${cfg.color}`} /> : alert.severity === "warning" ? <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${cfg.color}`} /> : <Info className={`w-4 h-4 mt-0.5 shrink-0 ${cfg.color}`} />}

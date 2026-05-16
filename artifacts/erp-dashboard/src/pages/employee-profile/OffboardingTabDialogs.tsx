@@ -30,13 +30,14 @@ export function ExitInterviewForm({ caseId, onDone }: ExitInterviewFormProps) {
 
   const { data: questions = [] } = useQuery<Question[]>({
     queryKey: ["/api/hr/offboarding/questions"],
-    queryFn: () => apiRequest('GET', "/api/hr/offboarding/questions").then(r => r.json()),
+    queryFn: () => apiRequest<Question[]>('GET', "/api/hr/offboarding/questions"),
   });
 
-  const save = useMutation({
+  type ExitInterviewResult = { blocksSettlement: boolean; missingAnswers: string[] };
+  const save = useMutation<ExitInterviewResult, Error, void>({
     mutationFn: () =>
-      apiRequest("POST", `/api/hr/offboarding/cases/${caseId}/exit-interview`, { answers }),
-    onSuccess: (data: { blocksSettlement: boolean; missingAnswers: string[] }) => {
+      apiRequest<ExitInterviewResult>("POST", `/api/hr/offboarding/cases/${caseId}/exit-interview`, { answers }),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/offboarding/cases", caseId] });
       if (data?.blocksSettlement) {
         toast({

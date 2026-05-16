@@ -102,7 +102,7 @@ export function HistoryTab({ activities, historyData }: HistoryTabProps) {
 // ---------------------------------------------------------------------------
 
 interface AITabProps {
-  entityType: string;
+  entityType: import("./crm-types").EntityType;
   entityId: number;
 }
 

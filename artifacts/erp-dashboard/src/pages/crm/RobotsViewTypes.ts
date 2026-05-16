@@ -9,17 +9,11 @@ import { Mail, Bell, CheckSquare, GitBranch, Send, Timer, Zap, Settings } from "
 import { tLabel } from '@/lib/i18n/tLabel';
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export interface Robot {
-  id: number;
-  name: string;
-  description?: string;
-  entityType: string;
-  triggerType: string;
-  triggerConditions: unknown;
-  actionType: string;
-  actionConfig: unknown;
-  isActive: boolean;
-}
+// Re-export the canonical Robot interface from crm-types so all consumers
+// share the same shape (avoids "Type Robot is not assignable to Robot" between
+// near-identical local copies).
+import type { Robot } from "./crm-types";
+export type { Robot };
 
 export interface RobotFormData {
   name: string;

@@ -99,10 +99,11 @@ export function DetailSheet({
 
   // ----- Mutation -----
 
+  type StageUpdateResponse = { autoOrder?: { documentNumber: string } };
   const updateStageMutation = useMutation({
     mutationFn: async (stageId: string) => {
       const field = entityType === "leads" ? "statusId" : "stageId";
-      return apiRequest("PATCH", `${endpoint}/${entityId}/stage`, { [field]: stageId });
+      return apiRequest<StageUpdateResponse>("PATCH", `${endpoint}/${entityId}/stage`, { [field]: stageId });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [endpoint] });

@@ -100,7 +100,7 @@ export default function MarketingContent() {
   });
 
   const aiMutation = useMutation({
-    mutationFn: (data: Record<string, unknown>) => apiRequest("POST", "/api/marketing/content/ai-generate", data),
+    mutationFn: (data: Record<string, unknown>) => apiRequest<Record<string, unknown>>("POST", "/api/marketing/content/ai-generate", data),
     onSuccess: (data: Record<string, unknown>) => {
       setForm(prev => ({
         ...prev,

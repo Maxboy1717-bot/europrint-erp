@@ -73,7 +73,7 @@ export function PPEMonitoring() {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {(Array.isArray(z.required) ? z.required : []).map(r => (
+                  {((z.required ?? []) as readonly string[]).map((r) => (
                     <Badge key={r} variant="outline" className="text-xs">{r}</Badge>
                   ))}
                 </div>

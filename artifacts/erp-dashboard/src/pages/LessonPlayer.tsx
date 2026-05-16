@@ -67,15 +67,13 @@ export default function LessonPlayer() {
   // Mutations
   // -------------------------------------------------------------------------
 
-  const completeLesson = useMutation({
+  type CompleteLessonResponse = { certificateIssued?: boolean };
+  const completeLesson = useMutation<CompleteLessonResponse, Error, { lessonId: number; courseId: number }>({
     mutationFn: async ({
       lessonId: lId,
       courseId,
-    }: {
-      lessonId: number;
-      courseId: number;
     }) => {
-      return await apiRequest("POST", "/api/lms/progress/complete", {
+      return await apiRequest<CompleteLessonResponse>("POST", "/api/lms/progress/complete", {
         userId: user?.id,
         lessonId: lId,
         courseId,

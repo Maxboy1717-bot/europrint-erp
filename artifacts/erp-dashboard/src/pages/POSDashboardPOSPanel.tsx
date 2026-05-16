@@ -29,7 +29,7 @@ import {
 export interface POSPanelProps {
   products: PosProduct[];
   isProductsLoading: boolean;
-  barcodeRef: RefObject<HTMLInputElement>;
+  barcodeRef: RefObject<HTMLInputElement | null>;
   barcodeInput: string;
   setBarcodeInput: (v: string) => void;
   searchQuery: string;

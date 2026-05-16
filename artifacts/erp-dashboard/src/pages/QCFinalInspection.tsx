@@ -64,7 +64,7 @@ export default function QCFinalInspection() {
   const inspectMutation = useMutation({
     mutationFn: async () => {
       if (!selectedOrder) throw new Error("Buyurtma tanlanmagan");
-      return apiRequest("POST", "/api/qc/final-inspections", {
+      return apiRequest<{ inspection: FinalInspection }>("POST", "/api/qc/final-inspections", {
         papkaOrderId: selectedOrder.id,
         sampleQty,
         defectQty,
@@ -75,7 +75,7 @@ export default function QCFinalInspection() {
         comments,
       });
     },
-    onSuccess: (data: { inspection: FinalInspection }) => {
+    onSuccess: (data) => {
       const passed = data.inspection.status === "passed";
       toast({
         title: passed ? "Muvaffaqiyat" : "Nuqson aniqlandi",

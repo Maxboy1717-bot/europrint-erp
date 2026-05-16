@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 const BASE = (import.meta.env.BASE_URL ?? '/erp-dashboard/').replace(/\/$/, '');
 function getApiUrl(path: string) { return `${BASE}/api/${path}`; }
 
@@ -100,7 +101,7 @@ function SagaTracker({ detail }: { detail: SagaDetail }) {
           <div className="flex justify-between mb-1.5">
             <span className="text-[13px] font-semibold text-foreground">{t.name}</span>
             {t.isBottleneck && (
-              <span className="text-[11px] text-destructive">{t("bottleneck")}</span>
+              <span className="text-[11px] text-destructive">{tLabel("orders.bottleneck", "Bottleneck")}</span>
             )}
           </div>
           <ProgressBar pct={t.progressPct} color={trackColors[i] ?? '#60a5fa'} />

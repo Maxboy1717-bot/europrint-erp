@@ -94,7 +94,7 @@ export default function OrgNodeDetail() {
           </div>
           <div className="flex items-center gap-2 flex-wrap shrink-0">
             <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)} data-testid="button-edit-node"><Pencil className="h-3.5 w-3.5 mr-1" />{t("edit")}</Button>
-            <Button size="sm" className="bg-primary text-primary-foreground" style={{}} className="hover:opacity-90" onClick={() => setMoveOpen(true)} data-testid="button-move-node"><MoveRight className="h-3.5 w-3.5 mr-1" />{t("move")}</Button>
+            <Button size="sm" className="bg-primary text-primary-foreground hover:opacity-90" onClick={() => setMoveOpen(true)} data-testid="button-move-node"><MoveRight className="h-3.5 w-3.5 mr-1" />{t("move")}</Button>
             <Button size="sm" variant="destructive" onClick={() => setDeleteConfirmOpen(true)} disabled={deleteMutation.isPending} data-testid="button-delete-node"><Trash2 className="h-3.5 w-3.5 mr-1" />{t("delete")}</Button>
             <Button size="sm" variant="ghost" className="text-white hover:text-white hover:bg-white/20" onClick={() => navigate("/org-structure/hierarchy")}><ArrowLeft className="h-3.5 w-3.5 mr-1" />{t("ortga")}</Button>
           </div>

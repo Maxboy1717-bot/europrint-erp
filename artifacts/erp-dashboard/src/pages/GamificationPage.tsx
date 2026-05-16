@@ -55,7 +55,7 @@ export default function GamificationPage() {
   });
 
   const awardBadgeMut = useMutation({
-    mutationFn: (body: Record<string, unknown>) => apiRequest("POST", "/api/hr/gamification/award/badge", body),
+    mutationFn: (body: Record<string, unknown>) => apiRequest<Record<string, unknown>>("POST", "/api/hr/gamification/award/badge", body),
     onSuccess: (data: Record<string, unknown>) => {
       if (data?.error) { toast({ title: "Xato", description: String(data.error), variant: "destructive" }); return; }
       toast({ title: "✅ Badge berildi!", description: "Badge muvaffaqiyatli berildi va ballar qo'shildi" });
@@ -68,7 +68,7 @@ export default function GamificationPage() {
   });
 
   const awardPointsMut = useMutation({
-    mutationFn: (body: Record<string, unknown>) => apiRequest("POST", "/api/hr/gamification/award/points", body),
+    mutationFn: (body: Record<string, unknown>) => apiRequest<Record<string, unknown>>("POST", "/api/hr/gamification/award/points", body),
     onSuccess: (data: Record<string, unknown>) => {
       if (data?.error) { toast({ title: "Xato", description: String(data.error), variant: "destructive" }); return; }
       toast({ title: "✅ Ballar qo'shildi!", description: `${pointsForm.points} ball muvaffaqiyatli berildi` });

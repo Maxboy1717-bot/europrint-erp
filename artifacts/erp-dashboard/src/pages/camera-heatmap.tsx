@@ -29,6 +29,7 @@ import {
   type Period,
   type Metric,
   type ViewMode,
+  type Zone,
 } from "./camera-heatmap-types";
 import { HeatmapControls } from "./camera-heatmap-controls";
 import { GeneralTabContent }  from "./camera-heatmap-general";
@@ -92,7 +93,7 @@ export default function CameraHeatmap() {
   // Derived data
   // ---------------------------------------------------------------------------
 
-  const zones = safeArray(heatmapResponse?.zones).map(z => ({
+  const zones = safeArray<Zone>(heatmapResponse?.zones).map(z => ({
     ...z,
     name:  language === "uz" ? z.name : z.nameRu,
     color: ZONE_COLORS[z.id] ?? "bg-gray-500",

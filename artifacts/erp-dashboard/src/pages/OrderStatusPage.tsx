@@ -63,7 +63,7 @@ export default function OrderStatusPage() {
   const [orderId, setOrderId] = useState("");
   const [searched, setSearched] = useState("");
 
-  const { data: chainData, isLoading: loadingChain, isError, error: errorChain, refetch: refetchChain } =
+  const { data: chainData, isLoading: loadingChain, isError: isChainError, error: errorChain, refetch: refetchChain } =
     useQuery<StatusChain | string[]>({
       queryKey: ["/api/order-status/chain"],
       queryFn: async () => {
@@ -81,7 +81,7 @@ export default function OrderStatusPage() {
       enabled: tab === "chain",
     });
 
-  const { data: logData, isLoading: loadingLog, isError, error: errorLog, refetch: refetchLog } =
+  const { data: logData, isLoading: loadingLog, isError: isLogError, error: errorLog, refetch: refetchLog } =
     useQuery<StatusLog[] | { data?: StatusLog[] }>({
       queryKey: ["/api/order-status/log", searched],
       queryFn: async () => {
@@ -105,7 +105,8 @@ export default function OrderStatusPage() {
     : (transitionsData as Record<string, string[]>) ?? {};
 
   const isLoading = tab === "chain" ? (loadingChain || loadingTransitions) : loadingLog;
-  const isError   = tab === "chain" ? errorChain : (!!searched && errorLog);
+  const isError   = tab === "chain" ? isChainError : (!!searched && isLogError);
+  void errorChain; void errorLog;
   const refetch   = tab === "chain" ? refetchChain : refetchLog;
 
   if (isError) return <EPErrorState onRetry={refetch} />;

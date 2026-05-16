@@ -93,8 +93,8 @@ export default function AssetManagement() {
   });
 
   const depreciateMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("PUT", `/api/asset-management/assets/${id}/depreciate`, {}),
-    onSuccess: (data: { asset: AssetInventoryItem; monthlyDepreciation: number; accumulatedDepreciation: number }) => {
+    mutationFn: (id: number) => apiRequest<{ asset: AssetInventoryItem; monthlyDepreciation: number; accumulatedDepreciation: number }>("PUT", `/api/asset-management/assets/${id}/depreciate`, {}),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/asset-management/assets"] });
       queryClient.invalidateQueries({ queryKey: ["/api/asset-management/assets/summary"] });
       toast({ title: t("depreciationCalculated"), description: `${t("monthlyDepreciationLabel")}: ${formatCurrency(data.monthlyDepreciation)}` });

@@ -143,7 +143,7 @@ export function ToolingTab() {
     setForecastId(id);
     setForecastLoading(true);
     try {
-      const result = await apiRequest("GET", `/api/design/tooling/${id}/wear-forecast`);
+      const result = await apiRequest<Record<string, unknown>>("GET", `/api/design/tooling/${id}/wear-forecast`);
       setForecastData(result);
       toast({ title: "Eskirish prognozi hisoblandi!" });
     } catch {
