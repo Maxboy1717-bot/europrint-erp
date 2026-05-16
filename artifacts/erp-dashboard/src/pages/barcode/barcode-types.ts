@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface BatchData {
   id: string;
   batchNumber: string;
@@ -174,7 +175,7 @@ export const translations = {
     settings: "Sozlamalar",
   },
   ru: {
-    title: "Система Штрих-кодов",
+    title: tLabel('common.barcode-.untitled', "Система Штрих-кодов"),
     subtitle: "Партии, генерация штрих-кодов и сканер",
     batches: "Партии",
     generate: "Генерация штрих-кода",

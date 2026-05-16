@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module AIInterviewPublicPageTypes
  * @description Types, interfaces, and constants for AIInterviewPublicPage.
@@ -88,7 +90,7 @@ export const LABELS: Record<Language, Record<string, string>> = {
     selectLang: "Tilni tanlang",
   },
   ru: {
-    title: "EuroPrint AI Интервью",
+    title: tLabel('common.AIInterviewPublicPage.europrintAi', "EuroPrint AI Интервью"),
     checkDevices: "Проверить устройства",
     camera: "Камера",
     mic: "Микрофон",

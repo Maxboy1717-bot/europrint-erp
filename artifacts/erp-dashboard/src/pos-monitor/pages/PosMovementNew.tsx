@@ -11,6 +11,7 @@
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface MovementTypeConfig {
   value: string;
   icon: string;
@@ -41,7 +42,7 @@ const MOVEMENT_TYPES: MovementTypeConfig[] = [
     variant:    "chiqim",
     badge:      "BARCODE",
     badgeClass: "pos-badge-blue",
-    description: "Ombordan tashqariga chiqarilgan materiallar. Barcode skaner orqali amalga oshiriladi.",
+    description: tLabel('common.PosMovementNew.tsx.ombordanTashqarigaChiqarilganMateriallarBarcode', "Ombordan tashqariga chiqarilgan materiallar. Barcode skaner orqali amalga oshiriladi."),
   },
   {
     value:      "INTERNAL_ISSUE",
@@ -56,7 +57,7 @@ const MOVEMENT_TYPES: MovementTypeConfig[] = [
   {
     value:      "INTERNAL_RETURN",
     icon:       "↩️",
-    label:      "Ichki Qaytarish",
+    label:      tLabel('common.PosMovementNew.tsx.ichkiQaytarish', "Ichki Qaytarish"),
     sublabel:   "(Barcode skaner)",
     variant:    "chiqim",
     badge:      "BARCODE",
@@ -76,7 +77,7 @@ const MOVEMENT_TYPES: MovementTypeConfig[] = [
   {
     value:      "DAMAGE",
     icon:       "⚠️",
-    label:      "Zarar / Nosoz",
+    label:      tLabel('common.PosMovementNew.tsx.zararNosoz', "Zarar / Nosoz"),
     sublabel:   "(Barcode skaner)",
     variant:    "chiqim",
     badge:      "BARCODE",
@@ -91,7 +92,7 @@ const MOVEMENT_TYPES: MovementTypeConfig[] = [
     variant:    "chiqim",
     badge:      "BARCODE",
     badgeClass: "pos-badge-yellow",
-    description: "Inventarizatsiya asosida miqdor tuzatmasi.",
+    description: tLabel('common.PosMovementNew.tsx.inventarizatsiyaAsosidaMiqdorTuzatmasi', "Inventarizatsiya asosida miqdor tuzatmasi."),
   },
 ];
 

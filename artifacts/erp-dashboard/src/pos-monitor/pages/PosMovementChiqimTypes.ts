@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /** @module PosMovementChiqimTypes @description TypeScript interfaces, types, constants, and pure utilities for PosMovementChiqim. No JSX. */
 
 // ─── Movement type ────────────────────────────────────────────────────────────
@@ -59,9 +61,9 @@ export interface EmployeeSuggestion {
 export const MOVEMENT_TYPES: { code: MovementTypeCode; label: string; color: string }[] = [
   { code: "EXTERNAL_OUT",      label: "Tashqi chiqim",   color: "#EF4444" },
   { code: "INTERNAL_ISSUE",    label: "Ichki berish",     color: "#F59E0B" },
-  { code: "INTERNAL_RETURN",   label: "Ichki qaytarish",  color: "#06B6D4" },
+  { code: "INTERNAL_RETURN",   label: tLabel('common.PosMovementChiqim.ichkiQaytarish', "Ichki qaytarish"),  color: "#06B6D4" },
   { code: "INTERNAL_TRANSFER", label: "Ichki ko'chirish", color: "#8B5CF6" },
-  { code: "DAMAGE",            label: "Zarar",            color: "#DC2626" },
+  { code: "DAMAGE",            label: tLabel('common.PosMovementChiqim.zarar', "Zarar"),            color: "#DC2626" },
 ];
 
 // ─── Pure utilities ───────────────────────────────────────────────────────────

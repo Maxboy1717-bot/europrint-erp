@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface Attendee {
   id: string;
   name: string;
@@ -50,10 +51,10 @@ const STATUS_CONFIG: Record<
   Meeting["status"],
   { label: string; variant: "info" | "success" | "error" | "warning" }
 > = {
-  scheduled: { label: "Запланирована", variant: "info" },
-  completed: { label: "Состоялась", variant: "success" },
-  cancelled: { label: "Отменена", variant: "error" },
-  pending: { label: "Ожидает подтверждения", variant: "warning" },
+  scheduled: { label: tLabel('common.MeetingCard.tsx.untitled', "Запланирована"), variant: "info" },
+  completed: { label: tLabel('common.MeetingCard.tsx.untitled', "Состоялась"), variant: "success" },
+  cancelled: { label: tLabel('common.MeetingCard.tsx.untitled', "Отменена"), variant: "error" },
+  pending: { label: tLabel('common.MeetingCard.tsx.untitled', "Ожидает подтверждения"), variant: "warning" },
 };
 
 const MEETING_TYPE_LABELS: Record<string, string> = {

@@ -5,6 +5,7 @@
 
 import { Translations } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export const translations: Record<"uz" | "ru", Translations> = {
   uz: {
     title: "AI Material Zaxira",
@@ -94,7 +95,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
     batchNumber: "Partiya raqami",
   },
   ru: {
-    title: "AI Резерв Материалов",
+    title: tLabel('warehouse.translations.ai', "AI Резерв Материалов"),
     subtitle: "Резервирование материалов на основе AI с FEFO оптимизацией",
     tabs: { aiReservation: "AI Резерв", batches: "Партии", history: "История" },
     dashboard: {
@@ -104,7 +105,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
       aiConfidence: "AI Уверенность",
     },
     aiPanel: {
-      title: "AI Запрос на Резерв",
+      title: tLabel('warehouse.translations.ai', "AI Запрос на Резерв"),
       materialType: "Тип материала",
       quantity: "Количество",
       unit: "Единица",
@@ -116,7 +117,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
     },
     priorities: { low: "Низкий", normal: "Обычный", high: "Высокий", urgent: "Срочный" },
     recommendation: {
-      title: "AI Рекомендация",
+      title: tLabel('warehouse.translations.ai', "AI Рекомендация"),
       batch: "Партия",
       takeQty: "Кол-во для взятия",
       expiry: "Срок годности",
@@ -131,7 +132,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
       noData: "Нажмите кнопку для оптимизации",
     },
     batches: {
-      title: "Партии Материалов",
+      title: tLabel('warehouse.translations.untitled', "Партии Материалов"),
       addBatch: "Добавить партию",
       batchNum: "Партия №",
       material: "Материал",
@@ -148,7 +149,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
       noBatches: "Партии не найдены",
     },
     history: {
-      title: "История Запросов Резервирования",
+      title: tLabel('warehouse.translations.untitled', "История Запросов Резервирования"),
       id: "ID",
       type: "Тип",
       qty: "Кол-во",

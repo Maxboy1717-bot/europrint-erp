@@ -505,7 +505,8 @@
     }
   },
   "warehouse-": {
-    "nomi": "Nomi"
+    "nomi": "Nomi",
+    "untitled": "Название"
   },
   "WarehouseDailyView": {
     "tasdiqlangan": "Подтверждено",
@@ -516,7 +517,11 @@
     "omborQiymatiVaBuxgalteriya": "Ombor qiymati va buxgalteriya",
     "xaridBuyurtmalariVaQaytaBuyurtma": "Xarid buyurtmalari va qayta buyurtma",
     "buyurtmalarUchunMateriallarBoshqaruvi": "Buyurtmalar uchun materiallar boshqaruvi",
-    "ppIshlabChiqarish": "PP - Ishlab Chiqarish"
+    "ppIshlabChiqarish": "PP - Ishlab Chiqarish",
+    "untitled": "Оценка склада и бухгалтерия",
+    "fi": "FI - Финансы",
+    "mm": "MM - Закупки",
+    "pp": "PP - Производство"
   },
   "WarehouseKirimWizard": {
     "tasdiqlash": "Подтвердить",
@@ -557,5 +562,13 @@
     "tsx": {
       "qarzlar": "Qarzlar"
     }
+  },
+  "": {
+    "untitled": "Контроль сроков",
+    "abcXyz": "ABC/XYZ анализ"
+  },
+  "translations": {
+    "untitled": "История Запросов Резервирования",
+    "ai": "AI Рекомендация"
   }
 }

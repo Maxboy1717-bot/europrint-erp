@@ -104,13 +104,15 @@
   "personalProgram": "Shaxsiy dastur (Персональная программа)",
   "dailyTaskList": "Kunlik vazifalar ro'yxati",
   "kanban-": {
+    "3": "3 ta savat tizimi",
     "xabarYozingBilanEslatish": "Xabar yozing... @ bilan eslatish",
     "shablonNomi": "Shablon nomi",
     "shablonlar": "Shablonlar",
     "bildirishnomalar": "Bildirishnomalar",
     "tavsif": "Tavsif",
     "nomi": "Nomi",
-    "potoklar": "Potoklar"
+    "potoklar": "Potoklar",
+    "untitled": "Xabar yozing... @ tilga olish uchun"
   },
   "TaskDetailSheet": {
     "tsx": {

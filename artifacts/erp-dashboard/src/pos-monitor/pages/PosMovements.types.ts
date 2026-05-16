@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /**
  * @module PosMovements.types
  * @description Types, status maps and type icon/label maps for PosMovements.
@@ -33,7 +35,7 @@ export const STATUS_CFG: Record<
   approved: { label: "Tasdiqlandi", headerBg: "#059669", headerText: "#FFF", tab: "process" },
   ai_processing: { label: "AI Ishlaydi", headerBg: "#0891B2", headerText: "#FFF", tab: "process" },
   completed: { label: "Yakunlandi", headerBg: "#047857", headerText: "#FFF", tab: "done" },
-  cancelled: { label: "Bekor", headerBg: "#9CA3AF", headerText: "#FFF", tab: "done" },
+  cancelled: { label: tLabel('common.PosMovements.bekor', "Bekor"), headerBg: "#9CA3AF", headerText: "#FFF", tab: "done" },
 };
 
 export const TYPE_ICON: Record<string, string> = {
@@ -72,15 +74,15 @@ export const TYPE_LIST = [
 export function getMovementAction(status: string): { label: string; newStatus: string; bg: string } | null {
   switch (status) {
     case "draft":
-      return { label: "Yuborish", newStatus: "pending", bg: "#8B7355" };
+      return { label: tLabel('common.PosMovements.yuborish', "Yuborish"), newStatus: "pending", bg: "#8B7355" };
     case "karantin":
-      return { label: "QC Yuborish", newStatus: "qc_pending", bg: "#7C3AED" };
+      return { label: tLabel('common.PosMovements.qcYuborish', "QC Yuborish"), newStatus: "qc_pending", bg: "#7C3AED" };
     case "qc_pending":
       return { label: "QC O'tkazish", newStatus: "qc_approved", bg: "#2563EB" };
     case "qc_approved":
-      return { label: "Tasdiqlash", newStatus: "pending", bg: "#D97706" };
+      return { label: tLabel('common.PosMovements.tasdiqlash', "Tasdiqlash"), newStatus: "pending", bg: "#D97706" };
     case "pending":
-      return { label: "Tasdiqlash", newStatus: "approved", bg: "#059669" };
+      return { label: tLabel('common.PosMovements.tasdiqlash', "Tasdiqlash"), newStatus: "approved", bg: "#059669" };
     case "approved":
       return { label: "Yakunlash", newStatus: "completed", bg: "#047857" };
     case "ai_processing":

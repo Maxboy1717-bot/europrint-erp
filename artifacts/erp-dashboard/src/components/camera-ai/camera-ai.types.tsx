@@ -5,6 +5,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ── i18n labels ──────────────────────────────────────────────────────────────
 
 export const cameraAiLabels: Record<string, Record<string, string>> = {
@@ -46,7 +47,7 @@ export const cameraAiLabels: Record<string, Record<string, string>> = {
     other: "Boshqa",
   },
   ru: {
-    title: "AI Аналитика камер",
+    title: tLabel('common.camera-ai.types.tsx.ai', "AI Аналитика камер"),
     subtitle: "Анализ мониторинга камер на основе искусственного интеллекта",
     safetyScore: "Балл безопасности",
     qualityScore: "Балл качества",

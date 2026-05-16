@@ -1,3 +1,5 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
 /** @module FaceRegistrationTypes @description Shared TypeScript interfaces, type aliases, and UI translation constants for the FaceRegistration feature. No JSX. */
 
 // ---------------------------------------------------------------------------
@@ -113,7 +115,7 @@ export const TRANSLATIONS: Record<'uz' | 'ru', FaceRegTranslations> = {
     nowCapture: "Endi yuzni olishingiz mumkin",
   },
   ru: {
-    title: "Регистрация Лица",
+    title: tLabel('common.FaceRegistration.untitled', "Регистрация Лица"),
     subtitle: "Добавление лиц сотрудников в базу AI",
     selectEmployee: "Выберите Сотрудника",
     searchPlaceholder: "Поиск по имени или ID...",

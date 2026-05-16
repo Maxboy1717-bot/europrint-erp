@@ -193,7 +193,7 @@ export const translations = {
     },
   },
   ru: {
-    title: "Каталог Складов",
+    title: tLabel('warehouse.warehouse-.untitled', "Каталог Складов"),
     subtitle: "Управление складами, зонами, ячейками и перемещениями",
     warehouses: "Склады",
     zones: "Зоны",
@@ -206,7 +206,7 @@ export const translations = {
     save: "Сохранить",
     cancel: "Отмена",
     code: "Код",
-    name: "Название",
+    name: tLabel('warehouse.warehouse-.untitled', "Название"),
     nameRu: "Название (RU)",
     type: "Тип",
     location: "Адрес",

@@ -1,40 +1,20 @@
 {
   "summary": {
-    "totalLeaks": 211,
-    "filesWithLeaks": 109,
+    "totalLeaks": 147,
+    "filesWithLeaks": 87,
     "byKind": {
-      "OBJECT_LABEL": 89,
+      "OBJECT_LABEL": 25,
       "JSX_TEXT": 81,
       "PROP": 41
     },
     "byLocale": {
       "uz": 137,
-      "ru": 74
+      "ru": 10
     },
     "topFiles": [
       {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-        "count": 11
-      },
-      {
         "file": "artifacts\\erp-dashboard\\src\\pages\\TechCardsTypes.ts",
         "count": 11
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\types.ts",
-        "count": 9
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-        "count": 7
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reports\\types.ts",
-        "count": 6
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reservation\\translations.ts",
-        "count": 5
       },
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\OutcomesTab.tsx",
@@ -46,14 +26,6 @@
       },
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseAuditLog.tsx",
-        "count": 4
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\components\\crm\\CallTimelineItem.tsx",
-        "count": 4
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\components\\crm\\MeetingCard.tsx",
         "count": 4
       },
       {
@@ -131,6 +103,34 @@
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\FlowsDialog.tsx",
         "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\NotificationsPanel.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\RobotsDialog.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\MESExtendedTypes.ts",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\crm\\WatcherSelector.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\director\\CompanyStateWidget.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\wms\\hub\\ExitControlPanel.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pos-monitor\\pages\\PosMaterialBalance.tsx",
+        "count": 2
       }
     ]
   },
@@ -155,13 +155,6 @@
       "text": "Dizayn tasdiqlanganda papkaOrders.status = \"pending_tech\" ga o'zgaradi — texnolog moduli avtomatik signal oladi",
       "kind": "JSX_TEXT",
       "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\AIInterviewPublicPageTypes.ts",
-      "line": 91,
-      "text": "EuroPrint AI Интервью",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\AIProductionPlanningTypes.ts",
@@ -255,20 +248,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\barcode\\barcode-types.ts",
-      "line": 177,
-      "text": "Система Штрих-кодов",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\camera-heatmap-types.ts",
-      "line": 177,
-      "text": "Тепловая карта",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\CandidateChecklistTypes.ts",
       "line": 12,
       "text": "CV skrining o",
@@ -316,13 +295,6 @@
       "text": "FAOL",
       "kind": "JSX_TEXT",
       "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\EmployeeTrackingReportTypes.ts",
-      "line": 94,
-      "text": "Отчёт по Отслеживанию Сотрудников",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\erp\\ERPDowntimeTab.tsx",
@@ -388,20 +360,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\FaceRecognitionMonitoringTypes.ts",
-      "line": 75,
-      "text": "Мониторинг распознавания лиц",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\FaceRegistrationTypes.ts",
-      "line": 116,
-      "text": "Регистрация Лица",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\hr-dashboard\\TurnoverTab.tsx",
       "line": 86,
       "text": "Yangi qabul",
@@ -458,83 +416,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 52,
-      "text": "Потоки",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 52,
-      "text": "Название",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 53,
-      "text": "Распределение ресурсов",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 60,
-      "text": "Заголовок",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 60,
-      "text": "Описание",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 63,
-      "text": "Уведомления",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 64,
-      "text": "Роботы автоматизации",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 65,
-      "text": "Шаблоны",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 65,
-      "text": "Название шаблона",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 68,
-      "text": "Напишите сообщение... @ для упоминания",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\kanban-types.ts",
-      "line": 70,
-      "text": "Система 3-х корзин",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\NotificationsPanel.tsx",
       "line": 55,
       "text": "Bildirishnomalar o",
@@ -589,13 +470,6 @@
       "text": "Oldindan to",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PapkaOrdersTypes.ts",
-      "line": 68,
-      "text": "Заказы Папок",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\planning\\PlanningDialogsA.tsx",
@@ -675,13 +549,6 @@
       "locale": "ru"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\PositionsTypes.ts",
-      "line": 40,
-      "text": "Mashinа operatori",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ProductionFactsPage.tsx",
       "line": 250,
       "text": "1-smena",
@@ -729,20 +596,6 @@
       "text": "RACI vazifalar topilmadi",
       "kind": "JSX_TEXT",
       "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\ReportsHubTypes.ts",
-      "line": 103,
-      "text": "Центр отчётов",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\ReportsHubTypes.ts",
-      "line": 119,
-      "text": "Название",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\SaaSExtended.tsx",
@@ -836,20 +689,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\warehouse\\warehouse-types.ts",
-      "line": 196,
-      "text": "Каталог Складов",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\warehouse\\warehouse-types.ts",
-      "line": 209,
-      "text": "Название",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseAuditLog.tsx",
       "line": 201,
       "text": "SANA",
@@ -876,55 +715,6 @@
       "text": "YANGI",
       "kind": "JSX_TEXT",
       "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 104,
-      "text": "Интеграции Склада",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 109,
-      "text": "PP - Производство",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 110,
-      "text": "Управление материалами для заказов",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 119,
-      "text": "MM - Закупки",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 120,
-      "text": "Заказы на закупку и повторные заказы",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 133,
-      "text": "FI - Финансы",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseIntegrationsTypes.ts",
-      "line": 134,
-      "text": "Оценка склада и бухгалтерия",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseKirimWizardSteps.tsx",
@@ -990,13 +780,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\components\\camera-ai\\camera-ai.types.tsx",
-      "line": 49,
-      "text": "AI Аналитика камер",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\components\\cc\\PinPromptModal.tsx",
       "line": 71,
       "text": "Imzo uchun PIN kodingizni kiriting (4-8 raqam).",
@@ -1009,34 +792,6 @@
       "text": "Xabar yozing... (Enter = yuborish, Shift+Enter = yangi qator)",
       "kind": "PROP",
       "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\CallTimelineItem.tsx",
-      "line": 43,
-      "text": "Отвечен",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\CallTimelineItem.tsx",
-      "line": 44,
-      "text": "Пропущен",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\CallTimelineItem.tsx",
-      "line": 45,
-      "text": "Занято",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\CallTimelineItem.tsx",
-      "line": 46,
-      "text": "Голосовая почта",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\crm\\company\\ContactsTab.tsx",
@@ -1058,34 +813,6 @@
       "text": "AI tavsiyalar",
       "kind": "JSX_TEXT",
       "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\MeetingCard.tsx",
-      "line": 53,
-      "text": "Запланирована",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\MeetingCard.tsx",
-      "line": 54,
-      "text": "Состоялась",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\MeetingCard.tsx",
-      "line": 55,
-      "text": "Отменена",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\crm\\MeetingCard.tsx",
-      "line": 56,
-      "text": "Ожидает подтверждения",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\crm\\quick-create\\LeadForm.tsx",
@@ -1228,13 +955,6 @@
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\components\\LanguageSwitcher.tsx",
-      "line": 19,
-      "text": "Русский",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
       "file": "artifacts\\erp-dashboard\\src\\components\\lms\\CourseContentForm.tsx",
       "line": 25,
       "text": "Tavsif (O'zbek) *",
@@ -1261,27 +981,6 @@
       "text": "Kim (qisqacha ma'lumot)",
       "kind": "JSX_TEXT",
       "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\orders\\order-constants.ts",
-      "line": 18,
-      "text": "Quti (Коробка)",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\orders\\order-constants.ts",
-      "line": 21,
-      "text": "Lоток",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\orders\\translations.ts",
-      "line": 89,
-      "text": "Создать новый заказ",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\pos\\AddProductDialog.tsx",
@@ -1323,76 +1022,6 @@
       "line": 135,
       "text": "Ждёт",
       "kind": "JSX_TEXT",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\helpers-constants.tsx",
-      "line": 79,
-      "text": "Ждёт",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\types.ts",
-      "line": 91,
-      "text": "A — Diqqat (Внимание)",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\types.ts",
-      "line": 92,
-      "text": "B — Strategiya (Стратегия)",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\types.ts",
-      "line": 93,
-      "text": "C — Nazorat (Контроль)",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\types.ts",
-      "line": 94,
-      "text": "D — Ishonch (Уверенность)",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\types.ts",
-      "line": 95,
-      "text": "E — Energiya (Энергия)",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\types.ts",
-      "line": 97,
-      "text": "G — Bardosh (Оборона)",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\types.ts",
-      "line": 98,
-      "text": "H — Taktika (Тактика)",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\types.ts",
-      "line": 99,
-      "text": "I — Empatiya (Эмпатия)",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\types.ts",
-      "line": 100,
-      "text": "J — Muloqot (Общение)",
-      "kind": "OBJECT_LABEL",
       "locale": "ru"
     },
     {
@@ -1457,83 +1086,6 @@
       "text": "Oylik xarajat (o",
       "kind": "PROP",
       "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reports\\types.ts",
-      "line": 317,
-      "text": "Складские Отчёты",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reports\\types.ts",
-      "line": 327,
-      "text": "Отчёт по остаткам",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reports\\types.ts",
-      "line": 346,
-      "text": "Отчёт по оборачиваемости",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reports\\types.ts",
-      "line": 361,
-      "text": "ABC/XYZ анализ",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reports\\types.ts",
-      "line": 375,
-      "text": "Отчёт по старению",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reports\\types.ts",
-      "line": 391,
-      "text": "Контроль сроков",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reservation\\translations.ts",
-      "line": 97,
-      "text": "AI Резерв Материалов",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reservation\\translations.ts",
-      "line": 107,
-      "text": "AI Запрос на Резерв",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reservation\\translations.ts",
-      "line": 119,
-      "text": "AI Рекомендация",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reservation\\translations.ts",
-      "line": 134,
-      "text": "Партии Материалов",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\components\\wms\\reservation\\translations.ts",
-      "line": 151,
-      "text": "История Запросов Резервирования",
-      "kind": "OBJECT_LABEL",
-      "locale": "ru"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\wms\\tabs\\WmsFinanceTab.tsx",

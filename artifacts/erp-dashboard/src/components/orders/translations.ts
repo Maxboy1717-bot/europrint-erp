@@ -86,7 +86,7 @@ export const translations: Record<Language, Translation> = {
     noBomSelected: "BOM tanlanmagan",
   },
   ru: {
-    title: "Создать новый заказ",
+    title: tLabel('common.translations.untitled', "Создать новый заказ"),
     step1: "Данные заказа",
     step2: "Выбор BOM",
     step3: "Расчет материалов",

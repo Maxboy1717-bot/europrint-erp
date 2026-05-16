@@ -14,9 +14,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Globe, Check } from 'lucide-react';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 const languages: { code: Language; label: string; shortCode: string }[] = [
   { code: 'uz', label: "O'zbekcha", shortCode: 'UZ' },
-  { code: 'ru', label: 'Русский', shortCode: 'RU' },
+  { code: 'ru', label: tLabel('common.LanguageSwitcher.tsx.untitled', 'Русский'), shortCode: 'RU' },
 ];
 
 export function LanguageSwitcher() {

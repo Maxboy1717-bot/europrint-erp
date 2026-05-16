@@ -15,10 +15,10 @@ export const PRODUCT_TYPES = [
 ];
 
 export const VID_ZAKAZA = [
-  { value: "korobka", label: "Quti (Коробка)", labelRu: "Коробка" },
+  { value: "korobka", label: tLabel('common.order-constants.quti', "Quti (Коробка)"), labelRu: "Коробка" },
   { value: "paket", label: "Paket", labelRu: "Пакет" },
   { value: "korzina", label: "Korzinka", labelRu: "Корзина" },
-  { value: "lоток", label: "Lоток", labelRu: "Лоток" },
+  { value: "lоток", label: tLabel('common.order-constants.l', "Lоток"), labelRu: "Лоток" },
   { value: "display", label: "Display", labelRu: "Дисплей" },
   { value: "gladkiy_karton", label: "Silliq karton", labelRu: "Гладкий картон" },
   { value: "bumaga", label: "Qog'oz", labelRu: "Бумага" },
