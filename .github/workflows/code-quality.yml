@@ -3,43 +3,191 @@ name: Europrint — Kod Sifati
 on:
   pull_request:
     branches: [main, develop]
+  push:
+    branches: [main]
 
 env:
   NODE_VERSION: "20"
   PNPM_VERSION: "9"
 
 jobs:
-  quality-gate:
-    name: Sifat Darvozasi
+  # ────────────────────────────────────────────────────────────────────────
+  # Backend tests + coverage (Jest, Postgres + Redis services)
+  # ────────────────────────────────────────────────────────────────────────
+  test-backend:
+    name: Backend Test + Coverage
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: europrint_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
+        with: { version: "${{ env.PNPM_VERSION }}" }
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-
       - run: pnpm install --frozen-lockfile
-
-      - name: lib/db build (kerak: @workspace/db CJS importi uchun)
-        run: pnpm --filter @workspace/db run build
-
-      - name: Test ishga tushirish va coverage
-        run: pnpm --filter @europrint/api run test
+      - run: pnpm --filter @workspace/db run build
+      - name: Apply schema to test DB
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/europrint_test
+        run: pnpm --filter @workspace/db run push || true
+      - name: Run backend tests with coverage
         env:
           NODE_ENV: test
-        continue-on-error: false
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/europrint_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-min-32-chars-for-testing-only
+          JWT_REFRESH_SECRET: test-refresh-min-32-chars-for-testing
+        run: pnpm --filter @europrint/api run test -- --coverage
+      - uses: codecov/codecov-action@v3
+        with:
+          files: ./apps/api/coverage/lcov.info
+          flags: backend
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Test natijalarini tekshirish
+  # ────────────────────────────────────────────────────────────────────────
+  # Frontend tests + coverage (Vitest)
+  # ────────────────────────────────────────────────────────────────────────
+  test-frontend:
+    name: Frontend Test + Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with: { version: "${{ env.PNPM_VERSION }}" }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - name: Run Vitest
+        run: pnpm --filter erp-dashboard run test -- --coverage
+      - uses: codecov/codecov-action@v3
+        with:
+          files: ./artifacts/erp-dashboard/coverage/lcov.info
+          flags: frontend
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # ────────────────────────────────────────────────────────────────────────
+  # Architecture rules (22 reviewer scripts must all PASS)
+  # ────────────────────────────────────────────────────────────────────────
+  test-architecture:
+    name: Architecture Rules (22)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with: { version: "${{ env.PNPM_VERSION }}" }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - name: Run 22 reviewer scripts
+        run: bash scripts/run-all-reviewers.sh
+      - name: Auto-update ARCHITECTURE_RULES.md and fail on drift
+        # Regenerates the Summary + per-rule Status lines in ARCHITECTURE_RULES.md.
+        # If the doc was stale, `git diff --exit-code` flags it — author must
+        # commit the regenerated doc so it never lags behind the rules.
         run: |
-          echo "Barcha testlar muvaffaqiyatli o'tdi"
+          node scripts/update-architecture-rules-doc.mjs || true
+          git diff --exit-code ARCHITECTURE_RULES.md
+      - name: Run architecture spec
+        env:
+          NODE_ENV: test
+        run: pnpm --filter @europrint/api run test -- --testPathPattern test/architecture
 
-      - name: Semgrep xavfsizlik tekshiruvi
-        uses: returntocorp/semgrep-action@v1
+  # ────────────────────────────────────────────────────────────────────────
+  # Playwright E2E
+  # ────────────────────────────────────────────────────────────────────────
+  test-e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with: { version: "${{ env.PNPM_VERSION }}" }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright browsers
+        run: pnpm --filter erp-dashboard exec playwright install --with-deps chromium
+      - name: Run E2E
+        run: pnpm --filter erp-dashboard run test:e2e
+        env:
+          CI: "1"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: artifacts/erp-dashboard/playwright-report
+
+  # ────────────────────────────────────────────────────────────────────────
+  # i18n Leakage Gate — block PRs that re-introduce hardcoded UI strings
+  # ────────────────────────────────────────────────────────────────────────
+  i18n-leakage:
+    name: i18n — Leak Detector (static)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with: { version: "${{ env.PNPM_VERSION }}" }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - name: Run leak detector
+        run: |
+          node scripts/i18n-leak-detector.mjs --mode=static --out=ci-i18n-leaks.json
+          LEAK_COUNT=$(node -e "console.log(JSON.parse(require('fs').readFileSync('ci-i18n-leaks.json','utf8')).summary.totalLeaks)")
+          echo "Leaks found: $LEAK_COUNT"
+          if [ "$LEAK_COUNT" -gt 0 ]; then
+            echo "❌ $LEAK_COUNT hardcoded user-facing strings detected."
+            echo "Inspect ci-i18n-leaks.json (uploaded as artifact)."
+            echo "Fix using fix-types-i18n.mjs / fix-jsx-and-props.mjs or wrap in tLabel('key', 'fallback')."
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: i18n-leak-report
+          path: ci-i18n-leaks.json
+
+  # ────────────────────────────────────────────────────────────────────────
+  # Security
+  # ────────────────────────────────────────────────────────────────────────
+  security:
+    name: Security — Semgrep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: returntocorp/semgrep-action@v1
         with:
           config: .config/replit/.semgrep/semgrep_rules.json
