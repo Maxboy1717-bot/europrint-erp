@@ -189,3 +189,31 @@ will drop the DEFAULT after backfill verification.
   not. Created from scratch as a proper CQRS handler. The repo-level
   `saveEmployee` was also wrapped in `db.transaction` so the legacy
   controller path is equally safe.
+
+
+### Round 1 — 8 parallel agent merge (2026-05-17)
+
+| Phase | Done | Deferred | Tests | Merge SHA |
+|------:|:-----|:---------|:-----:|:----------|
+| 1 Security | T1.2 RoleGate | T1.3, T1.4, T1.5 | 16 | `01289bc9` |
+| 2 Business | T2.1+T2.3+T2.4+T2.5 | (T2.2 = P5) | 45 | `d4d544cb` |
+| 3 Sidebar | T3.1+T3.2+T3.3 | none | 5 | `e3ab65d3` |
+| 4 Broken APIs | 4 pages fixed, 2 false-positives | /hr/assets, /documents, /referrals | 43 | `85c7b055` |
+| 5 Kanban | T5.1+T5.2 | T5.3-T5.6 | 24 | `7259fa8b` |
+| 6 OrgChart | T6.1+T6.2+T6.3-be+T6.4 | T6.3-fe, T6.5, T6.6 | 40 | `bacb5bca` |
+| 7 Sub-modules | T7.1-T7.5 | T7.6-T7.15 (10) | 108 | `c3c8b463` |
+| 8 Testing | T8.1+T8.2+T8.6 | T8.3-T8.5, T8.7-T8.10 | 30 | `102840eb` |
+
+Total: ~25/60 tasks done, ~310 tests added.
+Audit: 3/10 → 4/10 (some failing checks are false negatives, e.g. RoleGate
+moved from EmployeeProfile.tsx to ProfileHeader.tsx + PersonalTab.tsx).
+
+### Merge caveats for round 2 to address
+
+1. **Phase 4 vs Phase 7 offboarding/PIP**: merge kept Phase 7's superset.
+   Phase 4 bug-fixes may need re-application — grep for stubs in
+   offboarding/PIP controllers.
+2. **OrgChartPage.tsx mobile re-stitch**: Phase 2 added `useIsMobile()` +
+   `MobileAccordionTree`; Phase 6 rewrote into orchestration. Merge kept
+   Phase 6's structure. `MobileAccordionTree` component is present but
+   not rendered. Wire `useIsMobile()` back in OrgChartPage.tsx.
