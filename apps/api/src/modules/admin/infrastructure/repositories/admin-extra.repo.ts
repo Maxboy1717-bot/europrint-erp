@@ -118,6 +118,7 @@ export class AdminExtraRepository {
 
   async getDistinctTables(): Promise<Result<string[]>> {
     return safeCall(async () => {
+      // NOTE: P3-30 — fully literal SELECT string (no interpolation); the surrounding sql.raw wrapper is used only because there are zero parameters; no user input.
       const rows = await db.execute(sql.raw(
         `SELECT DISTINCT table_name FROM audit_logs ORDER BY table_name`
       ));

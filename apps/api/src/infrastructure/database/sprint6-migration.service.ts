@@ -253,6 +253,7 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
     let created = 0;
     for (const ddl of ddls) {
       try {
+        // NOTE: P3-30 — `ddl` is iterated from the literal-string arrays returned by the private `buildCoreKanbanDdls/buildTagsObserversDdls/buildTimeResultsFilesDdls/buildNotificationsTemplatesDdls/buildKanbanCardsAlterDdls` helpers in this same file; no user input.
         await ddlRun(sql.raw(ddl));
         created++;
       } catch (e: unknown) {

@@ -69,9 +69,12 @@ export class ComparePeriodsTool implements IAishaTool {
       // `meta.table` / `meta.column` come from the closed ALLOWED whitelist —
       // safe to inline as identifiers via sql.raw. `p1[0]/p1[1]/p2[0]/p2[1]`
       // come from user input and MUST be parameterised via sql`${...}`.
+      // NOTE: P3-30 — literal SQL fragment; no interpolation.
+      // NOTE: P3-30 — `meta.column` from the static `ALLOWED` dict (keys: revenue/production/defects → fixed column names total/qty_produced/id) guarded by the `if (!meta)` validation above; no user input.
       const aggExpr = metric === 'defects'
         ? sql.raw('COUNT(*)::int')
         : sql.raw(`COALESCE(SUM(${meta.column}),0)::float`);
+      // NOTE: P3-30 — `meta.table` from the static `ALLOWED` dict (fixed table names sales_orders/production_orders/qc_inspections) guarded by the `if (!meta)` validation above; no user input.
       const tableExpr = sql.raw(meta.table);
       const q1 = await db.execute(sql`SELECT ${aggExpr} AS s FROM ${tableExpr} WHERE created_at BETWEEN ${p1[0]}::date AND ${p1[1]}::date`);
       const q2 = await db.execute(sql`SELECT ${aggExpr} AS s FROM ${tableExpr} WHERE created_at BETWEEN ${p2[0]}::date AND ${p2[1]}::date`);

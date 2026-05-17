@@ -54,9 +54,13 @@ export class GenerateKpiReportTool implements IAishaTool {
     return safeCall<ToolResult<KpiReport>>(async () => {
       const start = Date.now();
       const where = this.periodWhere(period);
+      // NOTE: P3-30 — `where` is a switch-bounded period filter from the private `periodWhere()` helper below (exhaustive over Period = 'today'|'week'|'month'); no user-supplied SQL.
       const rev    = rowsOf<{ s: number }>(await db.execute(sql`SELECT COALESCE(SUM(total),0)::float AS s FROM sales_orders WHERE ${sql.raw(where)}`))[0]?.s ?? 0;
+      // NOTE: P3-30 — `where` is a switch-bounded period filter from the private `periodWhere()` helper below (exhaustive over Period = 'today'|'week'|'month'); no user-supplied SQL.
       const units  = rowsOf<{ s: number }>(await db.execute(sql`SELECT COALESCE(SUM(qty_produced),0)::int AS s FROM production_orders WHERE ${sql.raw(where)}`))[0]?.s ?? 0;
+      // NOTE: P3-30 — `where` is a switch-bounded period filter from the private `periodWhere()` helper below; `.replace('created_at','date')` rewrites the literal column for the hr_attendance schema; no user-supplied SQL.
       const atten  = rowsOf<{ p: number }>(await db.execute(sql`SELECT (SUM(CASE WHEN status='present' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*),0) * 100) AS p FROM hr_attendance WHERE ${sql.raw(where.replace('created_at','date'))}`))[0]?.p ?? 0;
+      // NOTE: P3-30 — `where` is a switch-bounded period filter from the private `periodWhere()` helper below; `.replace('created_at','inspected_at')` rewrites the literal column for the qc_inspections schema; no user-supplied SQL.
       const defect = rowsOf<{ p: number }>(await db.execute(sql`SELECT (SUM(CASE WHEN result='reject' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*),0) * 100) AS p FROM qc_inspections WHERE ${sql.raw(where.replace('created_at','inspected_at'))}`))[0]?.p ?? 0;
 
       const reportId = `kpi-${period}-${Date.now()}`;

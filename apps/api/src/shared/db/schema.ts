@@ -110,6 +110,7 @@ export const rawSql = (query: SQL): ReturnType<typeof db.execute> => db.execute(
 // TABLE / ALTER TABLE / CREATE INDEX. Callers pass hard-coded string
 // literals from migration files.
 export const ddlRun = (q: SQL | SQLWrapper | string): ReturnType<typeof db.execute> =>
+  // NOTE: P3-30 — `ddlRun` is the project-wide DDL helper; the string branch is only invoked with hard-coded migration literals (see JSDoc above and call sites in `common/database/ddl-migrations.ts`, `infrastructure/database/sprint*-migration.service.ts`, `crm-migration.service.ts`); no user input.
   db.execute(typeof q === 'string' ? sql.raw(q) : (q as SQL));
 
 /**
