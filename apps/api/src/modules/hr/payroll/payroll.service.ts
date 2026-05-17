@@ -7,6 +7,8 @@ import {
   type PayrollPeriod as DomainPayrollPeriod,
 } from './payroll-closure.service';
 import { safeCall, Result, AppError, Ok, Err, AppErr } from '@common/result';
+import { PayrollRecord } from '../domain/aggregates/payroll-record.aggregate';
+import type { DomainEvent } from '@shared/domain/domain-event';
 
 type Row = Record<string, unknown>;
 
@@ -83,10 +85,16 @@ export class PayrollService {
     const glR = await this.hrPayrollRepo.insertGlJournalLines(periodId, journalR.data);
     if (!glR.ok) return glR as unknown as Result<never>;
 
+    // Per-employee domain events: hydrate a PayrollRecord aggregate for each
+    // row, transition it to `posted`, drain events and forward through the
+    // event bus. Additive — the legacy period-level emit below stays.
+    const recordEvents = this.emitPayrollRecordCompletions(periodId, rows);
+
     this.eventEmitter.emit('payroll.period.closed', {
       periodId,
       totals,
       glLines: journalR.data,
+      recordEventCount: recordEvents,
     });
 
     return Ok({
@@ -124,5 +132,63 @@ export class PayrollService {
     if (typeof v === 'string') return v;
     if (v instanceof Date) return v.toISOString().split('T')[0];
     return String(v);
+  }
+
+  /**
+   * Hydrate one PayrollRecord aggregate per closure row, call completeRun(),
+   * and forward the resulting domain events through EventEmitter2. Returns
+   * the count of events emitted. Failures are logged and skipped — payroll
+   * closure must not be blocked by a downstream listener.
+   */
+  private emitPayrollRecordCompletions(periodId: number, rows: DomainPayrollRow[]): number {
+    let emitted = 0;
+    const now = new Date();
+    for (const row of rows) {
+      const employeeId = Number(row.employeeId);
+      if (!Number.isFinite(employeeId)) {
+        this.logger.warn(`Payroll row id=${row.id} da noto'g'ri employeeId — domain event skip`);
+        continue;
+      }
+      // Row pre-`markRowsPosted` state — `canClose` already filtered out
+      // 'draft' rows, so anything not in our state enum is normalized to
+      // 'approved' (pending posting). The aggregate's completeRun then
+      // performs the draft|approved → posted transition + emits the event.
+      const status: 'draft' | 'approved' | 'posted' =
+        row.status === 'posted' ? 'posted'
+        : row.status === 'draft' ? 'draft'
+        : 'approved';
+      const recordR = PayrollRecord.fromProps({
+        id:           row.id,
+        employeeId,
+        periodId,
+        gross:        row.baseSalary + row.bonus,
+        inps:         0,
+        jshd:         0,
+        other:        row.deductions,
+        status,
+        createdAt:    now,
+        updatedAt:    now,
+      });
+      if (!recordR.ok) {
+        this.logger.warn(`PayrollRecord hydrate xato (row ${row.id}): ${recordR.error.message}`);
+        continue;
+      }
+      const completeR = recordR.data.completeRun();
+      if (!completeR.ok) {
+        this.logger.warn(`completeRun xato (row ${row.id}): ${completeR.error.message}`);
+        continue;
+      }
+      for (const ev of recordR.data.getDomainEvents()) {
+        this.eventEmitter.emit(this.eventNameFor(ev), ev);
+        emitted++;
+      }
+      recordR.data.clearDomainEvents();
+    }
+    return emitted;
+  }
+
+  /** Map a domain event to its EventEmitter2 channel name (lowercased). */
+  private eventNameFor(ev: DomainEvent): string {
+    return `payroll.record.${ev.eventName.toLowerCase()}`;
   }
 }
