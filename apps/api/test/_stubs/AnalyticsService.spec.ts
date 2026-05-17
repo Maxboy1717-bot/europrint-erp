@@ -7,19 +7,19 @@
 
 describe('AnalyticsService contract', () => {
   it('happy: module exports the class', async () => {
-    const mod = await import('../../src/modules/analytics/analytics.service');
+    const mod = await import('../../src/modules/director/analytics/analytics.service');
     expect(mod).toBeDefined();
     expect(mod.AnalyticsService ?? mod.default).toBeDefined();
   });
 
   it('error: importing twice returns the same module instance', async () => {
-    const a = await import('../../src/modules/analytics/analytics.service');
-    const b = await import('../../src/modules/analytics/analytics.service');
+    const a = await import('../../src/modules/director/analytics/analytics.service');
+    const b = await import('../../src/modules/director/analytics/analytics.service');
     expect(a).toBe(b);
   });
 
   it('edge: class name resolves to a function (constructor) or undefined export', async () => {
-    const mod = await import('../../src/modules/analytics/analytics.service');
+    const mod = await import('../../src/modules/director/analytics/analytics.service');
     const exported = mod.AnalyticsService ?? mod.default;
     if (exported !== undefined) {
       expect(typeof exported).toBe('function');

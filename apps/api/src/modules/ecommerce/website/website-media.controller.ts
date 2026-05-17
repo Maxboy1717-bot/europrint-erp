@@ -10,8 +10,8 @@ Controller, Get, Post, Put, Delete, Body, Param, Query, HttpException, HttpStatu
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
-import { Public } from '../../common/decorators/public.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../../common/decorators/public.decorator';
+import { Roles } from '../../../common/decorators/roles.decorator';
 import { WebsiteService } from './website.service';
 import {
   WebsiteCreateBannerSchema, WebsiteCreateBannerDto,

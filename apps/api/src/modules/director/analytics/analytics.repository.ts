@@ -28,7 +28,7 @@ export interface LeaderCourseRow { courseId: string; title: string; enrolled: nu
 @Injectable()
 export class AnalyticsRepository {
   async findStats(): Promise<Result<StatsRow>> {
-    
+
     return safeCall(async () => {
       const [uRows, cRows, tRows, scRows] = await Promise.all([
         runQuery<Row>(sql`SELECT COUNT(*) AS cnt FROM users`),
@@ -44,7 +44,7 @@ export class AnalyticsRepository {
   }
 
   async findCourseProgress(): Promise<Result<CourseProgressRow[]>> {
-    
+
     return safeCall(async () => {
       type CR = { id: string; title: string; enrolled: number; completed: number };
       const rows = (await runQuery<CR>(sql`SELECT c.id, c.title, COUNT(e.id) AS enrolled, COUNT(e.id) FILTER (WHERE e.status='completed') AS completed FROM lms_courses c LEFT JOIN lms_enrollments e ON e.course_id = c.id GROUP BY c.id, c.title ORDER BY enrolled DESC LIMIT 20`)).rows as CR[];
@@ -53,7 +53,7 @@ export class AnalyticsRepository {
   }
 
   async findUserActivity(): Promise<Result<UserActivityRow[]>> {
-    
+
     return safeCall(async () => {
       type AR = { date: string; active_users: number };
       const rows = (await runQuery<AR>(sql`SELECT DATE(created_at)::text AS date, COUNT(DISTINCT user_id) AS active_users FROM lms_test_attempts WHERE created_at >= NOW() - INTERVAL '30 days' GROUP BY DATE(created_at) ORDER BY date ASC`)).rows as AR[];
@@ -62,7 +62,7 @@ export class AnalyticsRepository {
   }
 
   async findTestResults(): Promise<Result<TestResultRow[]>> {
-    
+
     return safeCall(async () => {
       type TR = { id: string; title: string; total: number; avg_score: string; passed: number };
       const rows = (await runQuery<TR>(sql`SELECT t.id, t.title, COUNT(a.id) AS total, AVG(a.score)::numeric AS avg_score, COUNT(a.id) FILTER (WHERE a.passed=true) AS passed FROM lms_tests t LEFT JOIN lms_test_attempts a ON a.test_id = t.id GROUP BY t.id, t.title ORDER BY total DESC LIMIT 20`)).rows as TR[];
@@ -71,7 +71,7 @@ export class AnalyticsRepository {
   }
 
   async findLearningOutcomes(): Promise<Result<LearningOutcomesRow>> {
-    
+
     return safeCall(async () => {
       type LOR = { avg: string; pass_rate: string; completion_rate: string };
       const rows = (await runQuery<LOR>(sql`SELECT AVG(score)::numeric AS avg, COUNT(*) FILTER (WHERE passed=true)::float / NULLIF(COUNT(*),0)*100 AS pass_rate, (SELECT COUNT(*) FILTER (WHERE status='completed')::float / NULLIF(COUNT(*),0)*100 FROM lms_enrollments) AS completion_rate FROM lms_test_attempts`)).rows as LOR[];
@@ -81,7 +81,7 @@ export class AnalyticsRepository {
   }
 
   async findFunnel(): Promise<Result<FunnelRow>> {
-    
+
     return safeCall(async () => {
       type FR = { enrolled: number; started: number; completed: number; passed: number };
       const rows = (await runQuery<FR>(sql`SELECT COUNT(*) AS enrolled, COUNT(*) FILTER (WHERE status != 'enrolled') AS started, COUNT(*) FILTER (WHERE status='completed') AS completed, (SELECT COUNT(*) FILTER (WHERE passed=true) FROM lms_test_attempts) AS passed FROM lms_enrollments`)).rows as FR[];
@@ -91,7 +91,7 @@ export class AnalyticsRepository {
   }
 
   async findByDepartment(): Promise<Result<DeptRow[]>> {
-    
+
     return safeCall(async () => {
       type DR = { id: string; name: string; user_count: number; avg_score: string; completion_rate: string };
       const rows = (await runQuery<DR>(sql`SELECT d.id, d.name, COUNT(DISTINCT u.id) AS user_count, AVG(ta.score)::numeric AS avg_score, COUNT(DISTINCT e.id) FILTER (WHERE e.status='completed')::float / NULLIF(COUNT(DISTINCT e.id),0)*100 AS completion_rate FROM departments d JOIN employees emp ON emp.department_id = d.id JOIN users u ON u.id = emp.user_id LEFT JOIN lms_enrollments e ON e.user_id = u.id LEFT JOIN lms_test_attempts ta ON ta.user_id = u.id GROUP BY d.id, d.name ORDER BY user_count DESC`)).rows as DR[];
@@ -100,7 +100,7 @@ export class AnalyticsRepository {
   }
 
   async findByPosition(): Promise<Result<PosRow[]>> {
-    
+
     return safeCall(async () => {
       type PR = { id: string; title: string; user_count: number; avg_score: string };
       const rows = (await runQuery<PR>(sql`SELECT p.id, p.title, COUNT(DISTINCT u.id) AS user_count, AVG(ta.score)::numeric AS avg_score FROM positions p JOIN employees emp ON emp.position_id = p.id JOIN users u ON u.id = emp.user_id LEFT JOIN lms_test_attempts ta ON ta.user_id = u.id GROUP BY p.id, p.title ORDER BY user_count DESC LIMIT 15`)).rows as PR[];
@@ -109,7 +109,7 @@ export class AnalyticsRepository {
   }
 
   async findLeaderboardEmployees(): Promise<Result<LeaderEmpRow[]>> {
-    
+
     return safeCall(async () => {
       type LR = { id: string; full_name: string; position_name: string; dept_name: string; avg_score: string; completed_courses: number; passed_tests: number };
       const rows = (await runQuery<LR>(sql`SELECT u.id, (u.first_name || ' ' || u.last_name) AS full_name, p.title AS position_name, d.name AS dept_name, AVG(ta.score)::numeric AS avg_score, COUNT(DISTINCT e.id) FILTER (WHERE e.status='completed') AS completed_courses, COUNT(DISTINCT ta.id) FILTER (WHERE ta.passed=true) AS passed_tests FROM users u LEFT JOIN employees emp ON emp.user_id = u.id LEFT JOIN positions p ON p.id = emp.position_id LEFT JOIN departments d ON d.id = emp.department_id LEFT JOIN lms_enrollments e ON e.user_id = u.id LEFT JOIN lms_test_attempts ta ON ta.user_id = u.id GROUP BY u.id, u.first_name, u.last_name, p.title, d.name ORDER BY avg_score DESC NULLS LAST LIMIT 20`)).rows as LR[];
@@ -118,7 +118,7 @@ export class AnalyticsRepository {
   }
 
   async findLeaderboardDepartments(): Promise<Result<LeaderDeptRow[]>> {
-    
+
     return safeCall(async () => {
       type DR2 = { id: string; name: string; total: number; completed: number; user_count: number; avg_score: string };
       const rows = (await runQuery<DR2>(sql`SELECT d.id, d.name, COUNT(DISTINCT e.id) AS total, COUNT(DISTINCT e.id) FILTER (WHERE e.status='completed') AS completed, COUNT(DISTINCT emp.id) AS user_count, AVG(ta.score)::numeric AS avg_score FROM departments d LEFT JOIN employees emp ON emp.department_id = d.id LEFT JOIN lms_enrollments e ON e.user_id = emp.user_id LEFT JOIN lms_test_attempts ta ON ta.user_id = emp.user_id GROUP BY d.id, d.name ORDER BY avg_score DESC NULLS LAST`)).rows as DR2[];
@@ -127,7 +127,7 @@ export class AnalyticsRepository {
   }
 
   async findLeaderboardCourses(): Promise<Result<LeaderCourseRow[]>> {
-    
+
     return safeCall(async () => {
       type CourseR = { id: string; title: string; enrolled: number; completed: number; certs: number; avg_score: string; pass_rate: string };
       const rows = (await runQuery<CourseR>(sql`SELECT c.id, c.title, COUNT(DISTINCT e.id) AS enrolled, COUNT(DISTINCT e.id) FILTER (WHERE e.status='completed') AS completed, COUNT(DISTINCT cert.id) AS certs, AVG(ta.score)::numeric AS avg_score, COUNT(ta.id) FILTER (WHERE ta.passed=true)::float / NULLIF(COUNT(ta.id),0)*100 AS pass_rate FROM lms_courses c LEFT JOIN lms_enrollments e ON e.course_id = c.id LEFT JOIN lms_certificates cert ON cert.course_id = c.id LEFT JOIN lms_test_attempts ta ON ta.course_id = c.id GROUP BY c.id, c.title ORDER BY enrolled DESC LIMIT 10`)).rows as CourseR[];

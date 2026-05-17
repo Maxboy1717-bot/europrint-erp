@@ -52,6 +52,13 @@ import { ZvsService } from './application/zvs.service';
 import { ZvsRepository } from './infrastructure/repositories/zvs.repository';
 import { KaizenRepository } from './infrastructure/repositories/kaizen.repository';
 import { AdvanceBypassApprovedListener } from './infrastructure/event-handlers/advance-bypass-approved.listener';
+// PA3-17 Wave 6: merged from former modules/analytics/ (route prefix '/analytics' preserved)
+import { AnalyticsController } from './analytics/analytics.controller';
+import { AnalyticsExtendedController } from './analytics/analytics-extended.controller';
+import { AnalyticsService } from './analytics/analytics.service';
+import { AnalyticsExtendedService } from './analytics/analytics-extended.service';
+import { AnalyticsRepository } from './analytics/analytics.repository';
+import { AnalyticsExtendedRepository } from './analytics/analytics-extended.repository';
 import { COORDINATION_REPO } from './domain/repositories/i-coordination.repo';
 import { DASHBOARD_QUERY_REPO } from './domain/repositories/i-dashboard-query.repo';
 import { DIRECTOR_DATA_REPO } from './domain/repositories/i-director-data.repo';
@@ -96,6 +103,9 @@ const Repositories = [
     CoordinationController,
     ZvsController,
     ZnoController,
+    // PA3-17 Wave 6: merged from modules/analytics/
+    AnalyticsController,
+    AnalyticsExtendedController,
   ],
   providers: [
     ...CommandHandlers, ...QueryHandlers, ...Repositories,
@@ -125,6 +135,11 @@ const Repositories = [
     ZvsService,
     // PA0 Trigger 20 — advance bypass audit listener
     AdvanceBypassApprovedListener,
+    // PA3-17 Wave 6: merged from modules/analytics/
+    AnalyticsService,
+    AnalyticsExtendedService,
+    AnalyticsRepository,
+    AnalyticsExtendedRepository,
   ],
   exports: [APPROVAL_REPO, DASHBOARD_SVC_REPO, DashboardService],
 })

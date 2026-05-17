@@ -71,6 +71,11 @@ import { TechnologyService } from './technology/technology.service';
 import { TechnologyRepository } from './technology/technology.repository';
 import { TechnologySchemaService } from './technology/technology-schema.service';
 import { TechnologySchemaRepository } from './technology/technology-schema.repository';
+// PA3-17 Wave 6: merged from former modules/production/ (route prefixes '/production' and '/production/shift-reports' preserved)
+import { ProductionShiftReportsController } from './production/production-shift-reports.controller';
+import { ProductionReportsController } from './production/production-reports.controller';
+import { ProductionService } from './production/production.service';
+import { ProductionRepository } from './production/production.repository';
 
 const handlers = [
   CreateProductionOrderHandler,
@@ -102,6 +107,9 @@ const listeners = [
   controllers: [PpOrdersController, PpBomController, PpRoutingController, PpWorkCentersController, PpPlanningController, PpEquipmentController, PpIntelligenceController,
     // PA3-17 Wave 5: merged from modules/technology/
     TechnologyController,
+    // PA3-17 Wave 6: merged from modules/production/
+    ProductionShiftReportsController,
+    ProductionReportsController,
   ],
   providers: [
     ...handlers,
@@ -139,7 +147,10 @@ const listeners = [
     TechnologyRepository,
     TechnologySchemaService,
     TechnologySchemaRepository,
+    // PA3-17 Wave 6: merged from modules/production/
+    ProductionService,
+    ProductionRepository,
   ],
-  exports: [PP_REPO, WORK_CENTER_REPO, BomExplosionService],
+  exports: [PP_REPO, WORK_CENTER_REPO, BomExplosionService, ProductionService],
 })
 export class PpModule {}

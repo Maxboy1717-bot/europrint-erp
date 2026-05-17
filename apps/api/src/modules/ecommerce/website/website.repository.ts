@@ -6,7 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
-import { db } from '../../infrastructure/database/database';
+import { db } from '../../../infrastructure/database/database';
 import {
   websiteSettings, websitePages, websiteBanners, portfolioItems,
 } from '@europrint/schemas';
