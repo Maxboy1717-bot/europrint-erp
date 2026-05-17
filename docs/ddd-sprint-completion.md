@@ -217,3 +217,49 @@ This document scored **tactical** layers (Domain / Application / Infrastructure 
 See `docs/ddd-execution-plan.md` Phase P0-audit through P3-audit (appended 2026-05-17) for 17 new backlog items with file:line evidence.
 
 The honest framing: **"75 tactical → 88 tactical, but strategic/event-flow dimensions remain unaddressed (~55-60); overall honest score ~70/100."** The sprint moved the needle — less than half of the claimed 18-point lift, but the foundation it laid is sound.
+
+---
+
+## Wave 1-14 Closeout (2026-05-17)
+
+Source of truth: `git log b9f12d05..HEAD` (28 commits). Status keys: ✅ DONE · ⏸ PARTIAL · ❌ BLOCKED · 🚫 OUT OF SCOPE.
+
+| Wave | Scope | Status | Commit refs | Outstanding |
+|---:|---|:---:|---|---|
+| **W1** | Security closeout (Qoida A + B): remove hardcoded credentials, unify BCRYPT_ROUNDS, document JWT_REFRESH_SECRET, add hardcoded-credential reviewer | ✅ DONE | `b9f12d05`, `e89fcc36`, `08f5f55c` | — |
+| **W2** | sql.raw() annotation: 25 callsites annotated as P3-30 with static-bound proofs | ✅ DONE | `7881bce4` | — |
+| **W3** | Reviewer regressions close-out: R2/R4/R7/R9/R17/R22 → PASS 16 → 20 | ✅ DONE | `e152d054`, `e681efd5` | R16 file-size still has 2 intentional exceptions (app.module.ts 305, main.ts 367). |
+| **W4** | Event mechanism unification pilot (`@OnEvent` → `@EventsHandler`): notifications + pp/mes Trigger 5+17 | ⏸ PARTIAL | `a5956a48`, `29e53dfc` | 89 `@OnEvent` decorators remain (98 → 89, only 9 migrated). EventBridge bridge still required. |
+| **W5** | Module splits (hr 259 files, finance 145, pos 139, crm 139 → sub-modules) | 🚫 OUT OF SCOPE | — | Multi-day scope; tracked separately. Not touched this session. |
+| **W6** | Backend file-size Rule 16 splits — 2 passes | ✅ DONE | `5c8a1ca0` (3 files), `dfb2eeb5` (8 files) | Only 2 composition roots remain over 300 lines (`app.module.ts` 305, `main.ts` 367) — documented intentional exception. |
+| **W7** | Notification port migration (full domain-port DI rollout across consumers) | ❌ BLOCKED | — | Architectural decision pending: keep EventBridge as long-term seam, or finish the `@EventsHandler` migration across remaining 89 decorators first. Only Wave 4 pilot landed. |
+| **W8** | Delete 49 application-layer shim repos after PA1-9 | ✅ DONE | `577af50e` | Single `qc.repository.ts` (40 lines, genuine port) intentionally retained. |
+| **W9** | Raw-SQL → Drizzle migration of legacy-*.helpers (P3-30 follow-up) | ⏸ PARTIAL | `c4b342a2` | 9 of 39 converted; 30 annotated with explicit blockers (stub pgTables, LATERAL/CTE, FILTER aggregates). Module-wide raw count 105 → 96. |
+| **W10** | Typecheck closure: elevenlabs install + 11 frontend TS errors | ✅ DONE | `9219703d` | Backend 69 → 69 pre-existing schema-mismatch errors NOT FIXED (W3 schema-consumer follow-up). Frontend 11 → 0. |
+| **W11** | Stub endpoint catalog (240 stubs across 44 controllers) | ⏸ PARTIAL | `4814ea7b` | **Inventory only.** 234 consumed stubs still need real implementations. Top-5 priorities documented (IoT SOS, IoT tablet PWA, IoT sessions, Payroll, MM vendor-invoices). |
+| **W12** | HR Tier-1/Tier-2 close-out (H.1 wiring, H.4 controller transport, H.10 PayrollRecord) | ✅ DONE | `62c5c94e`, `0f526490` | H.9/H.11/H.12/H.14 still pending (next sprint). H.15-H.20 Tier-3 out of scope. HR worktree round-2 recovery status unknown. |
+| **W13** | Schema canonicalization — 5 Tier-1 duplicate pgTables consolidated | ⏸ PARTIAL | `a05ccf10` | Surfaced 69 pre-existing consumer typecheck errors (shape drift) — flagged, not fixed. Final 3 pseudo-repos + employees-extra GET ACL **not touched**. |
+| **W14** | Multi-tenancy foundation (ADR + TenantId VO + ALS context + middleware + reviewer) | ⏸ PARTIAL | `95972ceb` | **Scaffolding only.** No `tenant_id` column on any table yet. Rollout phases P2/P3 not started. |
+| **W14b** | Docker/build hygiene (API-only image, pnpm@9.15.9 pin, .dockerignore) | ✅ DONE | `c05532ac`, `1049bef0` | — |
+
+### Final reviewer state (this session close)
+
+**PASS = 23 / FAIL = 1**
+
+The single FAIL is **Rule 16 (file size ≤ 300)** on 2 composition roots:
+- `apps/api/src/app.module.ts` — 305 lines (5-over)
+- `apps/api/src/main.ts` — 367 lines
+
+Both are **intentional documented exceptions**: composition roots aggregate `imports`/`providers` arrays that cannot meaningfully be split without obscuring the application graph. Tracked in the Rule 16 reviewer allowlist.
+
+All other 23 rules PASS:
+- Rules 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22 — production rules.
+- PA-A (hardcoded credentials, new), PA2-14 (legacy ACL).
+
+### Hardest follow-ups (gating the next jump)
+
+1. **Wave 7 architectural decision** — finish `@OnEvent` → `@EventsHandler` migration (89 remaining) before the EventBridge bridge can retire, OR commit to keeping the bridge long-term and align style guide.
+2. **Multi-tenancy P2 column rollout** — add `tenant_id` to first 3 tables (`sd_orders`, `crm_leads`, `crm_deals`) and turn on `reviewer-tenant-isolation.sh` enforcement.
+3. **Wave 11 implementation pass** — pick top-5 priorities from `docs/stub-endpoint-catalog.md`, convert from 501 to real impls.
+4. **Wave 5 module splits** — schedule a dedicated 3-5 day refactor sprint for the 4 oversize modules.
+5. **Wave 13 final pseudo-repo cleanup** — last 3 pseudo-repos + employees-extra GET ACL.

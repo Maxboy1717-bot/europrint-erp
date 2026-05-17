@@ -117,3 +117,86 @@ When in doubt about whether something is a cross-BC call, run:
 grep -rn "from '\(\.\./\)\{2,\}" apps/api/src/modules/<your-module>/
 ```
 Every `../../` two-or-more-levels-up import is a candidate cross-context leak; the legitimate exit is `@modules/*` alias + published events.
+
+---
+
+## 7. Sub-module additions (Wave 1-14, 2026-05-17)
+
+Net new sub-modules / sub-repos / sub-controllers introduced this sprint via the Rule-16 file-size split passes (`5c8a1ca0`, `dfb2eeb5`) and the Wave 4/8/12 work. Each retains the same `@Controller(prefix)` route base + same DI tokens; consumers untouched.
+
+### BC-4 Finance — sub-repos extracted (`5c8a1ca0`)
+
+`drizzle-finance.repo.ts` 953-line umbrella was split behind a 117-line facade that preserves `IFinanceRepo` + `FINANCE_REPO` token. Five sub-repos:
+
+- `drizzle-finance-ops.repo.ts` (264) — operational invoice/payment writes.
+- `drizzle-finance-cfo.repo.ts` (119) — CFO config + dashboard reads.
+- `drizzle-finance-planning.repo.ts` (222) — budget / cashflow.
+- `drizzle-finance-costing.repo.ts` (260) — standard-cost + tiered-pricing.
+- `drizzle-finance-variance.repo.ts` (150) — variance + break-even.
+
+### BC-6 Platform — IoT controllers split (`5c8a1ca0`)
+
+`iot-main.controller.ts` 530 → main 299 + 2 siblings:
+- `iot-alerts.controller.ts` (86) — alert routes split out.
+- `iot-tablet.controller.ts` (221) — 15 tablet / material-kit P3-26 stubs split out.
+
+### BC-6 Platform — Kanban repo split (`5c8a1ca0`)
+
+`kanban-boards.repo.ts` 441 → umbrella 161 + 2 sub-repos behind same `KANBAN_BOARDS_REPO` token:
+- `kanban-cards.repo.ts` (292).
+- `kanban-columns.repo.ts` (82).
+
+### BC-5 HR — providers extraction (`dfb2eeb5`)
+
+`hr.module.ts` 329 → 52 + `hr.providers.ts` (286). `@Module()` spreads from providers file.
+
+### BC-6 Platform — Auth controller split (`dfb2eeb5`)
+
+`auth.controller.ts` 309 → 202 + `auth-account.controller.ts` (100). Session lifecycle stays in original; change-password / verify-otp / resend-otp / me / health → account file.
+
+### BC-6 Platform — Chat split (`dfb2eeb5`)
+
+- `chat.controller.ts` 312 → 218 + `chat-reactions.controller.ts` (135).
+- `chat-advanced.controller.ts` 316 → 173 + `chat-advanced-uploads.controller.ts` (174).
+
+### BC-4 Finance — extended/main controllers split (`dfb2eeb5`)
+
+- `finance-extended.controller.ts` 354 → 88 + 3 new files:
+  - `finance-extended-income.controller.ts` (162) — income/expense/inventory/assets.
+  - `finance-extended-payroll.controller.ts` (136) — payroll/tax/benchmark 501 stubs.
+  - `finance-extended-dtos.ts` (34) — shared schemas + FINANCE_ROLES.
+- `finance-main.controller.ts` 311 → 176 + `finance-main-actions.controller.ts` (174).
+
+### BC-5 HR — onboarding defaults extraction (`dfb2eeb5`)
+
+`onboarding.service.ts` 306 → 229 + `onboarding-defaults.ts` (90) for the DEFAULT_HR_MANAGER_ONBOARDING constant array.
+
+### BC-5 HR — dashboard stubs split (`dfb2eeb5`)
+
+`hr-dashboard-stubs.controller.ts` 317 → 218 + 2 new files:
+- `hr-dashboard-stubs-write.controller.ts` (116) — POST/PATCH/PUT 501-stubs.
+- `hr-dashboard-stubs-common.ts` (17) — shared notImplemented + PassthroughSchema.
+
+**TODO HR-STUB-DUP** flagged in `29e53dfc`: 22/26 stub routes collide with `HrDashboardController` during Fastify route registration. Both `HrDashboardStubsController` + `HrDashboardStubsWriteController` are temporarily DISABLED in `hr.providers.ts` pending the `/v2/` prefix or mock-conversion decision.
+
+### BC-5 HR — recruitment controller 3-way split (`62c5c94e`)
+
+`hr-vacancies-pipeline.controller.ts` 386 → 245 + `HrVacanciesProbationController` (117) + `HrVacanciesAnalyticsController` (97). Wired in `hr.module.ts`.
+
+### BC-2 Manufacturing — Wave 4 round-2 listener splits (`29e53dfc`)
+
+- `design-lab-completed.listener.ts` (2 `@OnEvent` decorators) tombstoned → split into `design-approved-trigger5.listener.ts` (30) + `lab-test-passed-trigger5.listener.ts` (30) + shared `design-lab-join.service.ts` (96).
+- `lms-cert-expired.listener.ts` (2 decorators) tombstoned → split into `lms-cert-expired-mes.listener.ts` (35) + `lms-cert-expired-live-mes.listener.ts` (36) + shared `lms-cert-expired-block.service.ts` (72).
+
+### BC-5 HR — PayrollRecord aggregate + Salary VO (`0f526490`)
+
+New domain artifacts:
+- `payroll-record.aggregate.ts` (250) — `createFromEmployee`, `fromProps`, `increase`/`decrease`/`completeRun` state machine.
+- `salary.vo.ts` (82) — non-negative `net` invariant.
+- 3 domain events: `salary-increased.event.ts`, `salary-decreased.event.ts`, `payroll-run-completed.event.ts`.
+
+### Notifications consumers — port-token DI status
+
+**None yet.** Wave 7 (notification port migration — `ISmsSender` / `IEmailSender` / `ITelegramSender` rollout across consumers) is ❌ BLOCKED on architectural decision (`@OnEvent` → `@EventsHandler` finish-line vs keep EventBridge bridge).
+
+The Wave 4 pilot (`a5956a48`) ONLY converted notifications listeners (`deal-won-notification.listener.ts`, `order-created-notification.listener.ts`, `qc-failed-notification.listener.ts`, `lms-cert-expired-notification.listener.ts`) to canonical `@EventsHandler(EventClass)` form. The 25+ out-of-scope consumers (pos/, ai-agents/, design/, iot/, logistics/, finance/financial-reports/, telegram/, cron/) still inject the concrete `SmsService` / `TelegramService` / `EmailService` classes directly. Port-token DI migration remains pending.
