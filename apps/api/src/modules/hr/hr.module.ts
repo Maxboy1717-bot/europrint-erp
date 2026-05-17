@@ -87,6 +87,8 @@ import { AttendanceService } from './attendance/attendance.service';
 import { HR_PAYROLL_REPO } from './payroll/i-hr-payroll.repo';
 import { DrizzleHrPayrollRepository } from './payroll/drizzle-hr-payroll.repo';
 import { PayrollService } from './payroll/payroll.service';
+import { PayrollClosureService } from './payroll/payroll-closure.service';
+import { HrPayrollClosureController } from './payroll/hr-payroll-closure.controller';
 import { HR_LEAVE_SVC_REPO } from './leave/i-hr-leave-svc.repo';
 import { DrizzleHrLeaveSvcRepository } from './leave/drizzle-hr-leave-svc.repo';
 import { LeaveService } from './leave/leave.service';
@@ -170,6 +172,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     HrVacanciesController,
     HrSafetyController,
     HrOffboardingController,
+    HrPayrollClosureController,
     HrGsdController,
     EmployeesForFaceController,
     AttendanceFaceController,
@@ -185,6 +188,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     { provide: ATTENDANCE_REPO, useClass: DrizzleAttendanceRepository },
     AttendanceService,
     { provide: HR_PAYROLL_REPO, useClass: DrizzleHrPayrollRepository },
+    PayrollClosureService,
     PayrollService,
     { provide: HR_LEAVE_SVC_REPO, useClass: DrizzleHrLeaveSvcRepository },
     LeaveService,
