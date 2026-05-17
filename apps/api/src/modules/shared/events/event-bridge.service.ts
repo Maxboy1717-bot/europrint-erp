@@ -43,6 +43,10 @@ const EVENT_NAME_MAP: Record<string, string> = {
   OrderCreatedEvent: ERP_EVENTS.ORDER_CREATED,
   QcFailedEvent: ERP_EVENTS.QC_FAILED,
   CertificateExpiredEvent: ERP_EVENTS.LMS_CERT_EXPIRED,
+  // Wave 4 round-2 additions — pp + mes listeners migrated off @OnEvent.
+  DesignApprovedEvent: ERP_EVENTS.DESIGN_APPROVED,
+  LabTestPassedEvent: ERP_EVENTS.LAB_TEST_PASSED,
+  CertificateExpiredLiveEvent: ERP_EVENTS.LMS_CERT_EXPIRED_LIVE,
 };
 
 @Injectable()

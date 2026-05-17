@@ -162,8 +162,14 @@ export const hrLegacyRepositories = [LeaveRepository, HrLeaveRepo];
 
 export const hrControllers = [
   HrDashboardController,
-  HrDashboardStubsController,
-  HrDashboardStubsWriteController,
+  // TODO HR-STUB-DUP: Both stub controllers removed — their routes
+  // duplicate HrDashboardController (Fastify rejects duplicates).
+  // - HrDashboardStubsController: 22 of 26 routes are duplicates
+  // - HrDashboardStubsWriteController: similar collisions on POST/PUT
+  // Follow-up: either (a) extract unique stubs into a /v2 prefix controller,
+  // or (b) convert HrDashboardController mock returns to notImplemented() 501.
+  // HrDashboardStubsController,
+  // HrDashboardStubsWriteController,
   HrDashboardExtraController,
   HrCapitalController,
   HrShiftsCompatController,

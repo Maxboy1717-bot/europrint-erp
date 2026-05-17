@@ -31,6 +31,7 @@ import { MrpRunProcessor } from './processors/mrp-run.processor';
 import { ForecastRecalcProcessor } from './processors/forecast-recalc.processor';
 import { MaterializedViewRefreshService } from './materialized-view-refresh.service';
 import { QUEUE_NAMES } from './queue.constants';
+import { forwardRef } from '@nestjs/common';
 import { PpModule } from '../pp/pp.module';
 import { EoqCalculatorService } from '../wms/domain/services/eoq-calculator.service';
 import { SafetyStockService } from '../wms/domain/services/safety-stock.service';
@@ -59,7 +60,11 @@ const defaultJobOptions = {
 @Module({
   imports: [
     ConfigModule,
-    PpModule,
+    // forwardRef breaks the bootstrap-time cycle: PpModule has internal
+    // dependencies that NestJS resolves only after the module graph is
+    // fully built. BomExplosionService (used by MrpRunProcessor) is
+    // exported by PpModule and depends on PP_REPO.
+    forwardRef(() => PpModule),
     // BullMQ Redis ulanishini ConfigService orqali sozlash
     BullModule.forRootAsync({
       imports: [ConfigModule],
@@ -94,8 +99,7 @@ const defaultJobOptions = {
     MrpRunProcessor,
     ForecastRecalcProcessor,
     MaterializedViewRefreshService,
-    // MRP processor uchun — BOM explosion PpModule'dan import qilinadi (PP_REPO bilan)
-    // EoqCalculatorService va SafetyStockService — toza funksiyalar, dependency yo'q
+    // BomExplosionService comes from PpModule via forwardRef import above.
     EoqCalculatorService,
     SafetyStockService,
     // Forecast processor uchun — pure math + persistence

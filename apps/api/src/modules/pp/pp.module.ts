@@ -38,7 +38,11 @@ import { DrizzleWorkCenterRepository } from './infrastructure/repositories/drizz
 import { PP_REPO, WORK_CENTER_REPO } from './domain/repositories/pp.repository';
 import { AdvanceApprovedListener } from './infrastructure/event-handlers/advance-approved.listener';
 import { MroStopListener } from './infrastructure/event-handlers/mro-stop.listener';
-import { DesignLabCompletedListener } from './infrastructure/event-handlers/design-lab-completed.listener';
+// Wave 4 round-2 (PA2-18): DesignLabCompletedListener split into two
+// canonical @EventsHandler listeners + a shared join service.
+import { DesignApprovedTrigger5Listener } from './infrastructure/event-handlers/design-approved-trigger5.listener';
+import { LabTestPassedTrigger5Listener } from './infrastructure/event-handlers/lab-test-passed-trigger5.listener';
+import { DesignLabJoinService } from './infrastructure/event-handlers/design-lab-join.service';
 import { WmsGoodsIssuedListener } from './infrastructure/event-handlers/wms-goods-issued.listener';
 import { PP_PRODUCTION_ORDERS_REPO } from './production-orders/i-pp-production-orders.repo';
 import { DrizzlePpProductionOrdersRepository } from './production-orders/drizzle-pp-production-orders.repo';
@@ -96,10 +100,11 @@ const handlers = [
 ];
 
 const listeners = [
-  AdvanceApprovedListener,         // Trigger 7
-  MroStopListener,                 // Trigger 18
-  DesignLabCompletedListener,      // Trigger 5
-  WmsGoodsIssuedListener,          // Trigger 9
+  AdvanceApprovedListener,            // Trigger 7
+  MroStopListener,                    // Trigger 18
+  DesignApprovedTrigger5Listener,     // Trigger 5 (design side, Wave 4 round-2)
+  LabTestPassedTrigger5Listener,      // Trigger 5 (lab side, Wave 4 round-2)
+  WmsGoodsIssuedListener,             // Trigger 9
 ];
 
 @Module({
@@ -114,6 +119,7 @@ const listeners = [
   providers: [
     ...handlers,
     ...listeners,
+    DesignLabJoinService,            // Wave 4 round-2: shared by Trigger 5 split listeners
     { provide: PP_REPO, useClass: DrizzlePpRepository },
     { provide: WORK_CENTER_REPO, useClass: DrizzleWorkCenterRepository },
     { provide: PP_PRODUCTION_ORDERS_REPO, useClass: DrizzlePpProductionOrdersRepository },

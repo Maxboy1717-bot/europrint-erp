@@ -1,10 +1,15 @@
 /**
  * test/integration/triggers/three-checkpoint-to-pp.spec.ts
  *
- * Trigger 5: design.order.approved / qc.lab.passed -> DesignLabCompletedListener
- * checks both flags on sales_orders, flips master_status, and emits
- * `sd.order.design_lab_completed` so the technologist queue picks it up.
- * The db is mocked so the listener exercise stays hermetic.
+ * Trigger 5: DesignApprovedEvent / LabTestPassedEvent -> two split
+ * canonical @EventsHandler listeners that share `DesignLabJoinService`.
+ * The join service checks both flags on sales_orders, flips master_status,
+ * and emits `sd.order.design_lab_completed` so the technologist queue
+ * picks it up. The db is mocked so the listener exercise stays hermetic.
+ *
+ * Wave 4 round-2 (PA2-18): updated when `DesignLabCompletedListener`
+ *   was split into `DesignApprovedTrigger5Listener` +
+ *   `LabTestPassedTrigger5Listener` + `DesignLabJoinService`.
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -17,7 +22,11 @@ jest.mock('@shared/db', () => ({
   db: { execute: (...args: unknown[]) => dbExecute(...args) },
 }));
 
-import { DesignLabCompletedListener } from '../../../src/modules/pp/infrastructure/event-handlers/design-lab-completed.listener';
+import { DesignApprovedTrigger5Listener } from '../../../src/modules/pp/infrastructure/event-handlers/design-approved-trigger5.listener';
+import { LabTestPassedTrigger5Listener } from '../../../src/modules/pp/infrastructure/event-handlers/lab-test-passed-trigger5.listener';
+import { DesignLabJoinService } from '../../../src/modules/pp/infrastructure/event-handlers/design-lab-join.service';
+import { DesignApprovedEvent } from '../../../src/modules/design/domain/events';
+import { LabTestPassedEvent } from '../../../src/modules/qc/domain/events';
 import { ERP_EVENTS } from '../../../src/common/constants/erp-events.constants';
 
 type EmitterMock = { emit: jest.Mock };
@@ -27,7 +36,8 @@ function wrap(rows: Row[]): { rows: Row[] } {
 }
 
 describe('Trigger 5: Design + Lab -> PP technologist signal', () => {
-  let listener: DesignLabCompletedListener;
+  let designListener: DesignApprovedTrigger5Listener;
+  let labListener: LabTestPassedTrigger5Listener;
   let emitter: EmitterMock;
 
   beforeEach(async () => {
@@ -36,12 +46,15 @@ describe('Trigger 5: Design + Lab -> PP technologist signal', () => {
 
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
-        DesignLabCompletedListener,
+        DesignApprovedTrigger5Listener,
+        LabTestPassedTrigger5Listener,
+        DesignLabJoinService,
         { provide: EventEmitter2, useValue: emitter },
       ],
     }).compile();
 
-    listener = moduleRef.get(DesignLabCompletedListener);
+    designListener = moduleRef.get(DesignApprovedTrigger5Listener);
+    labListener = moduleRef.get(LabTestPassedTrigger5Listener);
   });
 
   it('emits DesignAndLabCompleted when both design and lab are approved', async () => {
@@ -56,7 +69,7 @@ describe('Trigger 5: Design + Lab -> PP technologist signal', () => {
       }]))
       .mockResolvedValueOnce(wrap([{ id: 7 }]));
 
-    await listener.onDesignApproved({ orderId: 7 });
+    await designListener.handle(new DesignApprovedEvent('design-7', 7));
 
     expect(emitter.emit).toHaveBeenCalledTimes(1);
     const [name, payload] = emitter.emit.mock.calls[0];
@@ -74,7 +87,7 @@ describe('Trigger 5: Design + Lab -> PP technologist signal', () => {
       master_status: 'pending_design',
     }]));
 
-    await listener.onDesignApproved({ orderId: 8 });
+    await designListener.handle(new DesignApprovedEvent('design-8', 8));
 
     expect(emitter.emit).not.toHaveBeenCalled();
   });
@@ -91,7 +104,7 @@ describe('Trigger 5: Design + Lab -> PP technologist signal', () => {
       }]))
       .mockResolvedValueOnce(wrap([{ id: 9 }]));
 
-    await listener.onLabPassed({ orderId: 9 });
+    await labListener.handle(new LabTestPassedEvent(9));
 
     expect(emitter.emit).toHaveBeenCalledTimes(1);
     expect(emitter.emit.mock.calls[0][0]).toBe(ERP_EVENTS.DESIGN_AND_LAB_COMPLETED);
@@ -109,13 +122,13 @@ describe('Trigger 5: Design + Lab -> PP technologist signal', () => {
       }]))
       .mockResolvedValueOnce(wrap([])); // UPDATE matched 0 rows -> already done
 
-    await listener.onLabPassed({ orderId: 10 });
+    await labListener.handle(new LabTestPassedEvent(10));
 
     expect(emitter.emit).not.toHaveBeenCalled();
   });
 
-  it('skips work when orderId is not finite in incoming payload', async () => {
-    await listener.onDesignApproved({ orderId: Number.NaN });
+  it('skips work when orderId is not finite in incoming event', async () => {
+    await designListener.handle(new DesignApprovedEvent('design-x', Number.NaN));
 
     expect(dbExecute).not.toHaveBeenCalled();
     expect(emitter.emit).not.toHaveBeenCalled();
