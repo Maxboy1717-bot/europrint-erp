@@ -1,16 +1,13 @@
 /**
  * @module auth.controller
- * @description Authentication HTTP surface. Public endpoints for login,
- * refresh, OTP verification, and health; authenticated endpoints for logout,
- * password change, and `me`. Rate-limited at 5 requests / 60 s per route via
- * `@Throttle` to slow down credential stuffing. Every command delegates to a
- * CQRS handler; the controller stays purely transport.
+ * @description Session HTTP surface — login, logout, refresh. Profile/OTP/me/health
+ * endpoints live in `auth-account.controller.ts` per Rule 16 (≤ 300 lines). Both
+ * controllers share the `/auth` prefix and AuthThrottle so consumers see no change.
+ * Each command delegates to a CQRS handler; the controller stays purely transport.
  */
 
-import { assertOk, unwrapOrThrow } from '@common/http-result';
-import { assertAuth } from '@common/assertions';
-import { BadRequestException, Body, Controller, Get, Headers, HttpCode, HttpStatus, Inject, Patch, Post, Req, Res, Logger, UnauthorizedException, UseInterceptors } from '@nestjs/common';
-import { SkipThrottle } from '@nestjs/throttler';
+import { unwrapOrThrow } from '@common/http-result';
+import { Body, Controller, Headers, HttpCode, HttpStatus, Inject, Post, Req, Res, Logger, UnauthorizedException, UseInterceptors } from '@nestjs/common';
 import { AuthThrottle } from '@common/decorators/throttle-profiles';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -19,20 +16,16 @@ import { I18nService } from 'nestjs-i18n';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { LoginService, LoginCommand } from '../application/services/login.service';
 import { LogoutService, LogoutCommand } from '../application/services/logout.service';
-import { ChangePasswordService, ChangePasswordCommand } from '../application/services/change-password.service';
-import { VerifyOtpService, VerifyOtpCommand } from '../application/services/verify-otp.service';
-import { ResendOtpService, ResendOtpCommand } from '../application/services/resend-otp.service';
 import { LoginDto, LoginSchema } from './dto/login.dto';
-import { ChangePasswordDto, ChangePasswordSchema } from './dto/change-password.dto';
-import { VerifyOtpSchema } from './dto/otp.dto';
 import { CurrentUser } from '../infrastructure/decorators/current-user.decorator';
-import { isErr } from '@common/result';
 import { Public } from '../infrastructure/decorators/public.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { IAuthRepo } from '../domain/repositories/i-auth.repo';
 import { AUTH_REPO } from '../auth.tokens';
+import { AuthenticatedUser } from '../domain/types';
+import { assertOk } from '@common/http-result';
 
-const AUTH_ERROR_CODES = new Set(['USER_NOT_FOUND', 'INVALID_CREDENTIALS', 'ACCOUNT_LOCKED', 'ACCOUNT_INACTIVE']);
+export { AuthAccountController } from './auth-account.controller';
 
 // ─── Cookie configuration ───────────────────────────────────────────────────
 // Access token cookie: short-lived (24h), sent to every /api/* request.
@@ -79,9 +72,6 @@ export class AuthController {
   constructor(
     private readonly loginHandler: LoginService,
     private readonly logoutHandler: LogoutService,
-    private readonly changePasswordHandler: ChangePasswordService,
-    private readonly verifyOtpHandler: VerifyOtpService,
-    private readonly resendOtpHandler: ResendOtpService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @Inject(AUTH_REPO) private readonly authRepo: IAuthRepo,
@@ -90,14 +80,6 @@ export class AuthController {
 
   /**
    * POST /auth/login — exchange username/password for access + refresh tokens.
-   * @param dto - LoginDto, validated against LoginSchema (Zod)
-   * @param req - FastifyRequest, used for IP/User-Agent audit logging
-   * @param reply - FastifyReply (passthrough) used to set httpOnly cookies
-   * @returns { accessToken, refreshToken, user } — body retained for backward
-   *   compatibility (API testing tools / older clients reading from response).
-   *   New clients SHOULD rely on cookies + `credentials: 'include'`.
-   * @throws UnauthorizedException on bad credentials, locked, or inactive account
-   * @throws BadRequestException on schema-validation failure (Zod)
    */
   @Post('login')
   @Public()
@@ -119,7 +101,6 @@ export class AuthController {
     const payload = unwrapOrThrow(result) as { accessToken: string; refreshToken: string; user: unknown };
 
     // Phase 1: set httpOnly cookies in ADDITION to returning tokens in the body.
-    // Old clients (Bearer-only) keep working; new clients use the cookie.
     if (typeof reply.setCookie === 'function') {
       reply.setCookie(ACCESS_COOKIE_NAME, payload.accessToken, accessCookieOpts(this.configService.get<string>('NODE_ENV')));
       reply.setCookie(REFRESH_COOKIE_NAME, payload.refreshToken, refreshCookieOpts(this.configService.get<string>('NODE_ENV')));
@@ -130,13 +111,6 @@ export class AuthController {
 
   /**
    * POST /auth/logout — revokes the current access token (adds jti to blacklist).
-   * Accepts the token from the `access_token` cookie OR the `Authorization`
-   * header (cookie wins if both are present).
-   * @param user - injected from JWT via @CurrentUser()
-   * @param req - FastifyRequest; the raw Bearer token is parsed from headers or cookies
-   * @param reply - FastifyReply (passthrough) used to clear cookies
-   * @returns { message: 'Successfully logged out' }
-   * @throws InternalServerErrorException if the blacklist write fails
    */
   @Post('logout')
   @HttpCode(HttpStatus.OK)
@@ -155,9 +129,6 @@ export class AuthController {
     const result = await this.logoutHandler.execute(command);
     assertOk(result);
 
-    // Clear both cookies regardless of which one was used.
-    // Path must match how the cookie was originally set, otherwise the
-    // browser won't actually delete it.
     if (typeof reply.clearCookie === 'function') {
       reply.clearCookie(ACCESS_COOKIE_NAME, { path: '/' });
       reply.clearCookie(REFRESH_COOKIE_NAME, { path: '/api/auth' });
@@ -167,75 +138,11 @@ export class AuthController {
   }
 
   /**
-   * PATCH /auth/change-password — change the current user's password.
-   * @param user - injected from JWT via @CurrentUser()
-   * @param dto - ChangePasswordDto with oldPassword + newPassword
-   * @returns { message: 'Password changed successfully' }
-   * @throws BadRequestException when the old password is wrong or new password fails complexity
-   * @throws NotFoundException when the userId no longer exists
-   */
-  @Patch('change-password')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Parolni o'zgartirish" })
-  async changePassword(@CurrentUser() user: AuthenticatedUser, @Body() dto: ChangePasswordDto) {
-    const validated = ChangePasswordSchema.parse(dto);
-    const command: ChangePasswordCommand = {
-      userId:      user.id,
-      oldPassword: validated.oldPassword,
-      newPassword: validated.newPassword,
-    };
-    const result = await this.changePasswordHandler.execute(command);
-    assertOk(result);
-    return { message: 'Password changed successfully' };
-  }
-
-  @Post('verify-otp')
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'OTP kodni tasdiqlash' })
-  async verifyOtp(@Body() body: { code: string; sessionId: string }) {
-    const validated = VerifyOtpSchema.parse(body);
-    const command: VerifyOtpCommand = { code: validated.code, sessionId: validated.sessionId };
-    const result = await this.verifyOtpHandler.execute(command);
-    return unwrapOrThrow(result);
-  }
-
-  @Post('resend-otp')
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'OTP kodni qayta yuborish' })
-  async resendOtp(@Req() req: FastifyRequest) {
-    const command: ResendOtpCommand = { ipAddress: (req.ip as string) || 'unknown' };
-    const result = await this.resendOtpHandler.execute(command);
-    return unwrapOrThrow(result);
-  }
-
-  @Get('me')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Joriy foydalanuvchi ma'lumotlari" })
-  me(@CurrentUser() user: AuthenticatedUser) {
-    return user;
-  }
-
-  /**
    * POST /auth/refresh — exchange a valid refresh token for a fresh access token
    * AND a fresh refresh token (rotation). The OLD refresh token is blacklisted
-   * the moment a new pair is issued, so even if an attacker has captured the
-   * old token they can use it at most once before the victim's next refresh
-   * invalidates their session — a classic detection signal.
-   *
+   * the moment a new pair is issued.
    * Uses JWT_REFRESH_SECRET (NOT JWT_SECRET) to verify, so an exfiltrated
    * access token cannot be replayed here.
-   *
-   * Accepts the refresh token from `refresh_token` cookie OR
-   * `Authorization: Bearer <refreshToken>` header (cookie wins if both set).
-   *
-   * @param auth - the `Authorization: Bearer <refreshToken>` header (fallback)
-   * @param req - FastifyRequest, used to read the refresh_token cookie
-   * @param reply - FastifyReply (passthrough), used to set the new cookies
-   * @returns { accessToken, refreshToken } — both rotated
-   * @throws UnauthorizedException for missing, malformed, expired, or revoked refresh tokens
    */
   @Post('refresh')
   @Public()
@@ -274,8 +181,7 @@ export class AuthController {
       );
 
       // Blacklist the OLD refresh token AFTER successfully minting the new pair,
-      // so a transient DB error doesn't leave the user locked out. expiresAt is
-      // computed from the old payload's exp claim (seconds since epoch).
+      // so a transient DB error doesn't leave the user locked out.
       const oldExpiresAt = typeof payload.exp === 'number'
         ? new Date(payload.exp * 1000)
         : new Date(Date.now() + REFRESH_COOKIE_MAX_AGE_SEC * 1000);
@@ -292,18 +198,5 @@ export class AuthController {
       if (e instanceof UnauthorizedException) throw e;
       throw new UnauthorizedException(await this.i18n.t('auth.tokenExpired'));
     }
-  }
-
-  @Get('health')
-  @Public()
-  @SkipThrottle()
-  @ApiOperation({ summary: 'Auth xizmati holati (no auth, no throttle — for health checks + load tests)' })
-  health() {
-    return {
-      status: 'ok',
-      service: 'auth',
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-    };
   }
 }

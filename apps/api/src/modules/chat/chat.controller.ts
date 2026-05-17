@@ -1,14 +1,15 @@
 /**
  * @module chat.controller
- * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
- *
- * Rule 16: Push/upload/video-token endpoints live in chat-uploads.controller.ts.
- * Both controllers must be registered in chat.module.ts.
+ * @description Rooms, messages, members, and read/mute endpoints. The reactions/polls/
+ * edit/delete handlers were extracted to `chat-reactions.controller.ts` per Rule 16
+ * (≤ 300 lines). Push/upload/video-token endpoints already live in
+ * `chat-uploads.controller.ts`. All four controllers share the `/chat` prefix and
+ * are registered in chat.module.ts; route paths and DI tokens are preserved.
  */
 
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query,
+  Controller, Get, Post, Body, Param, Query,
   UseGuards, Logger, UseInterceptors, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
@@ -26,14 +27,11 @@ import {
   ChatCreateGroupSchema, ChatCreateGroupDto,
   ChatSendMessageSchema, ChatSendMessageDto,
   ChatMuteRoomSchema, ChatMuteRoomDto,
-  ChatEditMessageSchema, ChatEditMessageDto,
-  ChatEmojiSchema, ChatEmojiDto,
-  ChatCreatePollSchema, ChatCreatePollDto,
-  ChatVotePollSchema, ChatVotePollDto,
 } from './dto/chat.dto';
 import { unwrapOrInternal } from '@common/http-result';
 
 export { ChatUploadsController } from './chat-uploads.controller';
+export { ChatReactionsController } from './chat-reactions.controller';
 
 @ApiTags('Chat')
 @ApiBearerAuth()
@@ -216,97 +214,5 @@ export class ChatController {
     const muted = body.muted ?? true;
     await this.chatService.toggleMemberMute(roomId, String(user.id), muted);
     return { muted };
-  }
-
-  // ─── Xabarni tahrirlash ───────────────────────────────────────────────────
-  @ApiOperation({ summary: 'Edit message' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Patch('rooms/:roomId/messages/:msgId')
-  @HttpCode(HttpStatus.OK)
-  async editMessage(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('msgId') msgId: string,
-    @Body(new ZodValidationPipe(ChatEditMessageSchema)) body: ChatEditMessageDto,
-  ) {
-    return unwrapOrInternal(await this.chatService.editMessage(msgId, user.id, body.content));
-  }
-
-  // ─── Xabarni o'chirish ────────────────────────────────────────────────────
-  @ApiOperation({ summary: 'Delete message' })
-  @ApiResponse({ status: 204, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Delete('rooms/:roomId/messages/:msgId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteMessage(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('msgId') msgId: string,
-  ) {
-    await this.chatService.deleteMessage(msgId, user.id);
-  }
-
-  // ─── Reaksiya qo'shish / o'chirish (toggle) ───────────────────────────────
-  @ApiOperation({ summary: 'Toggle reaction' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('rooms/:roomId/messages/:msgId/reactions')
-  @HttpCode(HttpStatus.OK)
-  async toggleReaction(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('roomId') roomId: string,
-    @Param('msgId') msgId: string,
-    @Body(new ZodValidationPipe(ChatEmojiSchema)) body: ChatEmojiDto,
-  ) {
-    await this.chatService.assertRoomMember(roomId, user.id);
-    const reaction = await this.chatService.toggleReaction(msgId, user.id, body.emoji);
-    this.gateway.emitToRoom(roomId, 'reaction:updated', { messageId: msgId, ...reaction });
-    return reaction;
-  }
-
-  @ApiOperation({ summary: 'Remove reaction' })
-  @ApiResponse({ status: 204, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Delete('rooms/:roomId/messages/:msgId/reactions/:emoji')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async removeReaction(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('roomId') roomId: string,
-    @Param('msgId') msgId: string,
-    @Param('emoji') emoji: string,
-  ) {
-    await this.chatService.removeReaction(msgId, user.id, decodeURIComponent(emoji));
-    this.gateway.emitToRoom(roomId, 'reaction:updated', { messageId: msgId, emoji, action: 'remove', userId: user.id });
-  }
-
-  // ─── So'rovnoma (Poll) yaratish ───────────────────────────────────────────
-  @ApiOperation({ summary: 'Create poll' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('rooms/:roomId/polls')
-  @HttpCode(HttpStatus.CREATED)
-  async createPoll(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('roomId') roomId: string,
-    @Body(new ZodValidationPipe(ChatCreatePollSchema)) body: ChatCreatePollDto,
-  ) {
-    await this.chatService.assertRoomMember(roomId, user.id);
-    return unwrapOrInternal(await this.chatService.createPoll(
-      roomId, user.id, body.question, body.options,
-      body.isMultiple ?? false, body.isAnonymous ?? false,
-    ));
-  }
-
-  // ─── So'rovnomaga ovoz berish ─────────────────────────────────────────────
-  @ApiOperation({ summary: 'Vote poll' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('polls/:pollId/vote')
-  @HttpCode(HttpStatus.OK)
-  async votePoll(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('pollId') pollId: string,
-    @Body(new ZodValidationPipe(ChatVotePollSchema)) body: ChatVotePollDto,
-  ) {
-    return unwrapOrInternal(await this.chatService.votePoll(pollId, user.id, body.optionIndices));
   }
 }

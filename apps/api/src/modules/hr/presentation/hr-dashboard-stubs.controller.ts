@@ -1,30 +1,23 @@
 /**
  * @module hr-dashboard-stubs.controller
- * @description Stub/placeholder HR dashboard endpoints split out of hr-dashboard.controller.
- * Routes here all live under the same `hr` prefix.
+ * @description Read-side (GET) stub HR dashboard endpoints. The write-side handlers
+ * (POST/PATCH/PUT) live in `hr-dashboard-stubs-write.controller.ts` (Rule 16: ≤ 300 lines).
+ * Both controllers share the `/hr` route prefix so consumers see no change.
  *
  * P3-26: Replaced fake empty payloads with HTTP 501 (Not Implemented) per Rule 10
  * of CLAUDE.md. Frontend pages must handle 501 gracefully (empty-state / coming-soon
- * banner). Bodies are still validated so request shape errors return 400 honestly,
- * but write endpoints also return 501 instead of pretending to persist.
+ * banner).
  */
 
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
-import { z } from 'zod';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { notImplemented } from './hr-dashboard-stubs-common';
 
-const PassthroughSchema = z.record(z.unknown());
-
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
+export { HrDashboardStubsWriteController } from './hr-dashboard-stubs-write.controller';
 
 @ApiThrottle()
 @ApiTags('Hr Dashboard Stubs')
@@ -48,16 +41,6 @@ export class HrDashboardStubsController {
   @Get('alumni/:id')
   getAlumniById(@Param('id') _id: string) {
     return notImplemented('GET /hr/alumni/:id');
-  }
-
-  @ApiOperation({ summary: 'Invite alumni' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Post('alumni/:id/invite')
-  @HttpCode(HttpStatus.OK)
-  inviteAlumni(@Param('id') _id: string, @Body() _body: unknown) {
-    return notImplemented('POST /hr/alumni/:id/invite');
   }
 
   @ApiOperation({ summary: 'Get daily reports' })
@@ -225,93 +208,11 @@ export class HrDashboardStubsController {
     return notImplemented('GET /hr/abc-analysis/:id/calculate');
   }
 
-  @ApiOperation({ summary: 'Post calculate abc analysis' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Post('abc-analysis/:id/calculate')
-  @HttpCode(HttpStatus.OK)
-  postCalculateAbcAnalysis(@Param('id') _id: string) {
-    return notImplemented('POST /hr/abc-analysis/:id/calculate');
-  }
-
-  @ApiOperation({ summary: 'Patch adaptation' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Patch('adaptation/:id')
-  patchAdaptation(@Param('id') _id: string, @Body() body: unknown) {
-    PassthroughSchema.parse(body ?? {});
-    return notImplemented('PATCH /hr/adaptation/:id');
-  }
-
-  @ApiOperation({ summary: 'Patch ai interview session review' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Patch('ai-interview/session/:id/review')
-  patchAiInterviewSessionReview(@Param('id') _id: string, @Body() body: unknown) {
-    PassthroughSchema.parse(body ?? {});
-    return notImplemented('PATCH /hr/ai-interview/session/:id/review');
-  }
-
-  @ApiOperation({ summary: 'Put birthday settings by id' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Put('birthdays/settings/:id')
-  putBirthdaySettingsById(@Param('id') _id: string, @Body() body: unknown) {
-    PassthroughSchema.parse(body ?? {});
-    return notImplemented('PUT /hr/birthdays/settings/:id');
-  }
-
-  @ApiOperation({ summary: 'Create offboarding case' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('offboarding/cases')
-  @HttpCode(HttpStatus.CREATED)
-  createOffboardingCase(@Body() body: unknown) {
-    PassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /hr/offboarding/cases');
-  }
-
-  @ApiOperation({ summary: 'Create onboarding checklist' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('onboarding-checklists')
-  @HttpCode(HttpStatus.CREATED)
-  createOnboardingChecklist(@Body() body: unknown) {
-    PassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /hr/onboarding-checklists');
-  }
-
-  @ApiOperation({ summary: 'Patch onboarding checklist' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Patch('onboarding-checklists/:id')
-  @HttpCode(HttpStatus.OK)
-  patchOnboardingChecklist(@Param('id') _id: string, @Body() body: unknown) {
-    PassthroughSchema.parse(body ?? {});
-    return notImplemented('PATCH /hr/onboarding-checklists/:id');
-  }
-
   @ApiOperation({ summary: 'Get referral by id' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('referrals/:id')
   getReferralById(@Param('id') _id: string) {
     return notImplemented('GET /hr/referrals/:id');
-  }
-
-  @ApiOperation({ summary: 'Patch referral' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Patch('referrals/:id')
-  @HttpCode(HttpStatus.OK)
-  patchReferral(@Param('id') _id: string, @Body() body: unknown) {
-    PassthroughSchema.parse(body ?? {});
-    return notImplemented('PATCH /hr/referrals/:id');
   }
 }
