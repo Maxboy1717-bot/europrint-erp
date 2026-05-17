@@ -43,6 +43,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       username: user.getUsername(),
       email: user.getEmail(),
       role: user.getRole(),
+      // Phase 2 / Task 2.1 — propagate tenant from JWT claim so the
+      // TenantContextInterceptor can pick it up. Optional; falls back
+      // to DEFAULT_TENANT_ID downstream when missing.
+      tenantId: payload.tenantId,
     };
   }
 }

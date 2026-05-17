@@ -11,6 +11,8 @@ import { employees } from "./employees";
 
 export const vacancies = pgTable("vacancies", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy (Phase 2 / Task 2.1). See employees.ts for rationale.
+  tenantId: integer("tenant_id").notNull().default(1),
   positionId: integer("position_id"),
   departmentId: integer("department_id"),
   title: varchar("title", { length: 200 }).notNull(),
@@ -40,6 +42,8 @@ export const vacancies = pgTable("vacancies", {
 
 export const candidates = pgTable("candidates", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy (Phase 2 / Task 2.1). See employees.ts for rationale.
+  tenantId: integer("tenant_id").notNull().default(1),
   vacancyId: integer("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }),
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),

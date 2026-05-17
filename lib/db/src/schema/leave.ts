@@ -11,6 +11,8 @@ import { employees } from "./employees";
 
 export const leaveRequests = pgTable("leave_requests", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy (Phase 2 / Task 2.1). See employees.ts for rationale.
+  tenantId: integer("tenant_id").notNull().default(1),
   employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   leaveType: varchar("leave_type", { length: 20 }).notNull(),
   startDate: date("start_date").notNull(),

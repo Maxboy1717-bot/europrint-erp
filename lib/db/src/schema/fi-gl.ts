@@ -232,6 +232,8 @@ export type InsertAccountingPeriod = z.infer<typeof insertAccountingPeriodSchema
 // Payroll Periods (ish haqi davrlari)
 export const payrollPeriods = pgTable("payroll_periods", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy (Phase 2 / Task 2.1). See lib/db/src/schema/employees.ts.
+  tenantId: integer("tenant_id").notNull().default(1),
   periodName: text("period_name"),
   startDate: varchar("start_date", { length: 10 }),
   endDate: varchar("end_date", { length: 10 }),

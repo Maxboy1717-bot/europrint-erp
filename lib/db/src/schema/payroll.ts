@@ -10,6 +10,8 @@ import { employees } from "./employees";
 
 export const salaryHistory = pgTable("salary_history", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy (Phase 2 / Task 2.1). See employees.ts for rationale.
+  tenantId: integer("tenant_id").notNull().default(1),
   employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   salaryPeriodStart: date("salary_period_start").notNull(),
   salaryPeriodEnd: date("salary_period_end").notNull(),
