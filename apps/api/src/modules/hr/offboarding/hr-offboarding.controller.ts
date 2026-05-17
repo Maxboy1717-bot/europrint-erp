@@ -1,7 +1,8 @@
 import {
-Controller, Patch, Post, Body, Param, ParseIntPipe,
-  UseGuards, UseInterceptors, UsePipes,
+Controller, Get, Patch, Post, Body, Param, Query, ParseIntPipe,
+  UseGuards, UseInterceptors, UsePipes, NotFoundException,
 } from '@nestjs/common';
+import { z } from 'zod';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -14,8 +15,17 @@ import {
   HrOffboardingExitInterviewSchema, HrOffboardingExitInterviewDto,
   HrOffboardingFinalizeSchema, HrOffboardingFinalizeDto,
 } from './dto/hr-offboarding.dto';
+import { unwrapOrInternal } from '@common/http-result';
 
 const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'admin'] as const;
+
+const CreateCaseSchema = z.object({
+  employeeId: z.number().int().positive(),
+  initiatedBy: z.number().int().optional(),
+  dismissalType: z.string().optional(),
+  lastWorkingDay: z.string().nullable().optional(),
+  totalItems: z.number().int().positive().optional(),
+});
 
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,6 +34,56 @@ const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'adm
 @Controller('hr/offboarding')
 export class HrOffboardingController {
   constructor(private readonly svc: HrOffboardingService) {}
+
+  /**
+   * `HROffboarding.tsx:588` calls
+   *   GET /api/hr/offboarding/cases?status=&search=
+   * Returns `[{...case}]`. Frontend uses `Array.isArray` defensively.
+   */
+  @Get('cases')
+  async listCases(
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return unwrapOrInternal(
+      await this.svc.listCases({
+        status,
+        search,
+        limit: limit ? parseInt(limit, 10) : 100,
+      }),
+    );
+  }
+
+  /** `HROffboarding.tsx:583` — `GET /api/hr/offboarding/cases/stats` */
+  @Get('cases/stats')
+  async getStats() {
+    return unwrapOrInternal(await this.svc.getStats());
+  }
+
+  /** `HROffboarding.tsx:111-112` — `GET /api/hr/offboarding/cases/:id` */
+  @Get('cases/:id')
+  async getCase(@Param('id', ParseIntPipe) id: number) {
+    const r = await this.svc.getCaseById(id);
+    const data = unwrapOrInternal(r);
+    if (!data) throw new NotFoundException(`Offboarding case #${id} not found`);
+    return data;
+  }
+
+  /** `HROffboarding.tsx:486-498` — `POST /api/hr/offboarding/cases` */
+  @Post('cases')
+  @UsePipes(new ZodValidationPipe(CreateCaseSchema))
+  async createCase(@Body() body: z.infer<typeof CreateCaseSchema>) {
+    return unwrapOrInternal(
+      await this.svc.createCase({
+        employeeId: body.employeeId,
+        initiatedBy: body.initiatedBy,
+        dismissalType: body.dismissalType,
+        lastWorkingDay: body.lastWorkingDay ?? undefined,
+        totalItems: body.totalItems,
+      }),
+    );
+  }
 
   @Patch('cases/:id/checklist/:itemId')
   @UsePipes(new ZodValidationPipe(HrOffboardingUpdateChecklistSchema))

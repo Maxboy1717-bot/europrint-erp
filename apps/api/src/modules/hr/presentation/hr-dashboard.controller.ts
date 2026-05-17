@@ -145,10 +145,10 @@ export class HrDashboardController {
     return { created: true };
   }
 
-  @Get('offboarding/cases')
-  getOffboardingCases() {
-    return { items: [], total: 0 };
-  }
+  // `GET hr/offboarding/cases` is implemented by `HrOffboardingController`
+  // (see `apps/api/src/modules/hr/offboarding/hr-offboarding.controller.ts`).
+  // The previous stub here returned `{ items: [], total: 0 }` and shadowed the
+  // real handler depending on module-registration order. Removed in Phase 4 Task 4.4.
 
   @Get('offboarding/questions')
   getOffboardingQuestions() {
