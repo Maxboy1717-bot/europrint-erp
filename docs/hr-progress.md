@@ -22,7 +22,7 @@ Started: 2026-05-17
 | 2 | `/hr/daily-reports` | DailyReportPage | `/api/hr-v2/daily-reports/employee`, `/department`, `/by-date?type`, `/stats` | done | (this branch) |
 | 3 | `/hr/documents` | DocumentWorkflowPage | `/api/hr-v2/documents?status&employeeId` + stubs | not_started | — |
 | 4 | `/hr/gamification` | GamificationPage | (false positive — endpoint works) | verified_ok | n/a |
-| 5 | `/hr/offboarding` | HROffboarding | `GET /api/hr/offboarding/cases?status&search` | in_progress | — |
+| 5 | `/hr/offboarding` | HROffboarding | `GET /api/hr/offboarding/cases?status&search` | done | (this branch) |
 | 6 | `/hr/onboarding` | HROnboarding | `GET/POST/PATCH /api/hr/onboarding-checklists` | not_started | — |
 | 7 | `/hr/pip` | PIPPage | `PATCH /api/hr-v2/pip/:id/complete` | done | (this branch) |
 | 8 | `/hr/reception` | ReceptionPage | (false positive — `badge/:badge_number` works) | verified_ok | n/a |
@@ -134,3 +134,18 @@ These violate `CLAUDE.md` Qoida 10 — "Soxta Javoblar Taqiqlangan".
   - Controller flipped to `JwtAuthGuard + RolesGuard`; added
     `hr_specialist` to the role allowlist.
   - 6 unit tests in `apps/api/test/hr/pip.complete.spec.ts`.
+
+- **Task 4.4 done** — `feat(hr-api): implement /hr/offboarding/cases list+create+stats+detail`
+  - Added 4 new routes to `HrOffboardingController`:
+    - `GET /cases?status=&search=&limit=` — filtered list (joins
+      `employees` + `departments` for the FE table)
+    - `GET /cases/stats` — aggregate counts per status
+    - `GET /cases/:id` — case detail with attached `checklist_items`
+    - `POST /cases` — create case (Zod-validated)
+  - Repository methods: `findCases`, `getCaseStats`, `createCase`;
+    updated `findCaseById` to join `employees`/`departments` and
+    attach `checklist_items`.
+  - **Removed stub** `getOffboardingCases` from
+    `hr-dashboard.controller.ts:148-151` that was returning
+    `{ items: [], total: 0 }` and shadowing the real route.
+  - 11 unit tests in `apps/api/test/hr/hr-offboarding.controller.spec.ts`.
