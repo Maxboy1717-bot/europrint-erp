@@ -35,6 +35,7 @@ import { PersonalInfoSection } from "./hr/employee-dialog/PersonalInfoSection";
 import { HouseholdSection } from "./hr/employee-dialog/HouseholdSection";
 import { OrgStructureSection } from "./hr/employee-dialog/OrgStructureSection";
 import { ProfileImageSection } from "./hr/employee-dialog/ProfileImageSection";
+import { ManagerSalarySection } from "./hr/employee-dialog/ManagerSalarySection";
 import { useEmployeeMutation } from "./hr/employee-dialog/useEmployeeMutation";
 import { apiRequest } from '@/lib/queryClient';
 import { useTranslation } from '@/lib/i18n';
@@ -79,6 +80,8 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
       phone: "",
       departmentId: "",
       positionId: "",
+      managerId: "",
+      baseSalary: "",
       shift: "",
       salaryType: "",
       workshopZone: "",
@@ -127,6 +130,12 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         phone: employee.phone || "",
         departmentId: employee.departmentId || "",
         positionId: employee.positionId || "",
+        managerId: employee.managerId !== undefined && employee.managerId !== null
+          ? String(employee.managerId)
+          : "",
+        baseSalary: employee.baseSalary !== undefined && employee.baseSalary !== null
+          ? String(employee.baseSalary)
+          : "",
         shift: employee.shift || "",
         salaryType: employee.salaryType || "",
         workshopZone: employee.workshopZone || "",
@@ -257,6 +266,8 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
             <div className="space-y-8">
               <section><h3 className="text-lg font-medium mb-4">{t("asosiyMalumotlar")}</h3><BasicInfoSection form={form} /></section>
               <section><h3 className="text-lg font-medium mb-4">{t("bolimVaLavozim")}</h3><PositionSection form={form} departments={departments} positions={allPositions} /></section>
+              {/* Phase 2 / Task 2.5 — manager autocomplete + currency-formatted base salary with grade picker */}
+              <section><h3 className="text-lg font-medium mb-4">Rahbar va asosiy maosh</h3><ManagerSalarySection form={form} excludeEmployeeId={employee?.id} /></section>
               <section><h3 className="text-lg font-medium mb-4">{t("shartnomaVaIshHaqi")}</h3><ContractSection form={form} /></section>
               <section><h3 className="text-lg font-medium mb-4">{t("shaxsiyMalumotlar")}</h3><PersonalInfoSection form={form} /></section>
               <section><h3 className="text-lg font-medium mb-4">{t("uyJoyVaJoylashuv")}</h3><HouseholdSection form={form} /></section>
