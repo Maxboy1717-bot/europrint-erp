@@ -1,35 +1,35 @@
-/**
- * @module RecruitingKanban
- * @description React page component. Route-level UI.
- */
-
 import React, { useState, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useChatStore } from "@/store/chatStore";
 import { getSharedSocket } from "@/hooks/chat/useChatSocket";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Briefcase, TrendingUp, Users, CheckCircle, XCircle,
+  AlertTriangle, Bot, CalendarDays,
+} from "lucide-react";
+import { VacancyPortretDialog } from "./VacancyPortretDialog";
+import { ProductivityInterviewDialog } from "./ProductivityInterviewDialog";
+import { JobOfferDialog } from "@/components/hr/JobOfferDialog";
+import { HRAlertBanner } from "./HRAlertBanner";
+import { LaborMarketSheet } from "@/components/hr/LaborMarketSheet";
+import { CandidateReportDialog } from "./CandidateReportDialog";
+import { OnboardingRoadmapDialog } from "@/components/hr/OnboardingRoadmapDialog";
 import {
   type FunnelStage,
   STAGES, TERMINAL_STAGES,
+  StatCard, HCMethodologyBanner,
 } from "@/components/recruiting/helpers";
 import type { PipelineEntry, Vacancy, CreateVacancyResponse, AIInterviewSession } from "@/components/recruiting/types";
+import { KanbanBoardGrid } from "@/components/recruiting/KanbanBoardGrid";
 import { RecruitingHeaderActions } from "@/components/recruiting/RecruitingHeaderActions";
-import { HRAlertBanner } from "./HRAlertBanner";
-import {
-  RecruitingStatsBar,
-  RecruitingFilterBar,
-  RecruitingVacancyPanel,
-  RecruitingKanbanBoard,
-  HCMethodologyBanner,
-} from "./RecruitingKanbanSections";
-import { RecruitingKanbanDialogs } from "./RecruitingKanbanDialogs";
+import { VacancyFilterPanel } from "@/components/recruiting/VacancyFilterPanel";
+import { useKanbanDragDrop } from "@/hooks/use-kanban-dnd";
+import { useKanbanRealtime } from "@/hooks/use-kanban-realtime";
 
-import { useTranslation } from '@/lib/i18n';
-import { EPPageHeader } from "@/components/ep";
 export default function RecruitingKanban() {
-  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
@@ -64,7 +64,6 @@ export default function RecruitingKanban() {
       setOpeningContextRoom(null);
     }
   }, [setActiveRoomId, setLocation]);
-
   const [vacancyPanelOpen, setVacancyPanelOpen] = useState(false);
   const [portretVacancy, setPortretVacancy] = useState<Vacancy | null>(null);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
@@ -77,8 +76,6 @@ export default function RecruitingKanban() {
   const [cpPanelOpen, setCpPanelOpen] = useState<Set<number>>(new Set());
   const [marketVacancy, setMarketVacancy] = useState<Vacancy | null>(null);
   const [newVacancyForm, setNewVacancyForm] = useState({ title: "", vacancy_type: "STANDARD", deadline_working_days: 15 });
-
-  // ─── Mutations ────────────────────────────────────────────────────────────
 
   const createVacancyMutation = useMutation({
     mutationFn: async (form: typeof newVacancyForm) => {
@@ -100,17 +97,46 @@ export default function RecruitingKanban() {
     onError: () => toast({ title: "Vakansiya yaratishda xatolik", variant: "destructive" }),
   });
 
+  const { data: pipelineData, isLoading } = useQuery<{ data: PipelineEntry[] }>({ queryKey: ["/api/hr/recruitment/pipeline"], staleTime: 30_000 });
+  const { data: vacanciesData } = useQuery<{ data: Vacancy[] }>({ queryKey: ["/api/hr/recruitment/vacancies"], staleTime: 60_000 });
+  const { data: aiSessionsData } = useQuery<AIInterviewSession[]>({ queryKey: ["/api/hr/ai-interview/sessions"], staleTime: 30_000 });
+
+  const entries: PipelineEntry[] = pipelineData?.data ?? [];
+  const vacancies: Vacancy[] = vacanciesData?.data ?? [];
+  const aiSessions: AIInterviewSession[] = Array.isArray(aiSessionsData) ? aiSessionsData : [];
+  const openVacancies = (Array.isArray(vacancies) ? vacancies : []).filter(v => v.status === "open" || v.status === "active");
+  const urgentVacancies = (Array.isArray(openVacancies) ? openVacancies : []).filter(v => v.is_urgent);
+
+  // NB: backend endpoint is `POST /api/hr/recruitment/pipeline/:id/stage`
+  // with body `{ stage }` (see HrUpdatePipelineStageSchema in
+  // apps/api/src/modules/hr/recruitment/dto/hr-vacancies.dto.ts).
+  // The previous code used PATCH + { funnel_stage } which did not match
+  // any registered route — those calls returned 404 in production.
   const updateMutation = useMutation({
     mutationFn: ({ id, funnel_stage }: { id: number; funnel_stage: FunnelStage }) =>
-      apiRequest("PATCH", `/api/hr/recruitment/pipeline/${id}/stage`, { funnel_stage }),
+      apiRequest("POST", `/api/hr/recruitment/pipeline/${id}/stage`, { stage: funnel_stage }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] }); toast({ title: "Bosqich yangilandi" }); },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
   const rejectMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("PATCH", `/api/hr/recruitment/pipeline/${id}/stage`, { funnel_stage: "REJECTED", rejection_reason: "Kanban orqali rad etildi" }),
+    mutationFn: (id: number) => apiRequest("POST", `/api/hr/recruitment/pipeline/${id}/stage`, { stage: "REJECTED", notes: "Kanban orqali rad etildi" }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] }); toast({ title: "Nomzod rad etildi" }); },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  const ndaRequestMutation = useMutation({
+    mutationFn: ({ id, notes }: { id: number; notes?: string }) =>
+      apiRequest("POST", `/api/hr/recruitment/pipeline/${id}/nda-request`, { notes }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] }); toast({ title: "NDA so'rovi yuborildi" }); },
+    onError: () => toast({ title: "NDA so'rovida xatolik", variant: "destructive" }),
+  });
+
+  const offerMutation = useMutation({
+    mutationFn: ({ id, salary, start_date }: { id: number; salary?: number; start_date?: string }) =>
+      apiRequest("POST", `/api/hr/recruitment/pipeline/${id}/offer`, { salary, start_date }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] }); toast({ title: "Taklif yuborildi" }); },
+    onError: () => toast({ title: "Taklifda xatolik", variant: "destructive" }),
   });
 
   const createMutation = useMutation({
@@ -140,24 +166,17 @@ export default function RecruitingKanban() {
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
-  // ─── Queries & derived data ───────────────────────────────────────────────
-
-  const { data: pipelineData, isLoading } = useQuery<{ data: PipelineEntry[] }>({ queryKey: ["/api/hr/recruitment/pipeline"], staleTime: 30_000 });
-  const { data: vacanciesData } = useQuery<{ data: Vacancy[] }>({ queryKey: ["/api/hr/recruitment/vacancies"], staleTime: 60_000 });
-  const { data: aiSessionsData } = useQuery<AIInterviewSession[]>({ queryKey: ["/api/hr/ai-interview/sessions"], staleTime: 30_000 });
-
-  const entries: PipelineEntry[] = pipelineData?.data ?? [];
-  const vacancies: Vacancy[] = vacanciesData?.data ?? [];
-  const aiSessions: AIInterviewSession[] = Array.isArray(aiSessionsData) ? aiSessionsData : [];
-  const openVacancies = (Array.isArray(vacancies) ? vacancies : []).filter(v => v.status === "open" || v.status === "active");
-  const urgentVacancies = (Array.isArray(openVacancies) ? openVacancies : []).filter(v => v.is_urgent);
-
   const filtered = (Array.isArray(entries) ? entries : []).filter(e => {
     const matchSearch = !search || e.candidate_name.toLowerCase().includes(search.toLowerCase()) || e.candidate_phone.includes(search);
     const matchVacancy = filterVacancy === "all" || String(e.vacancy_id) === filterVacancy;
     const matchProbation = !showProbationOnly || e.funnel_stage === "PROBATION" || e.funnel_stage === "SINOV_COMPLETE";
     return matchSearch && matchVacancy && matchProbation;
   });
+
+  // T5.1 drag-drop with @dnd-kit (optimistic mutation + rollback inside hook)
+  const dnd = useKanbanDragDrop(filtered);
+  // T5.2 real-time WS sync — invalidate the cache on `candidate:moved`
+  useKanbanRealtime();
 
   const byStage = (stage: FunnelStage) => (Array.isArray(filtered) ? filtered : []).filter(e => e.funnel_stage === stage);
   const counts = STAGES.reduce((acc, s) => { acc[s.key] = (Array.isArray(entries) ? entries : []).filter(e => e.funnel_stage === s.key).length; return acc; }, {} as Record<FunnelStage, number>);
@@ -167,17 +186,12 @@ export default function RecruitingKanban() {
   const conversionRate = hiredCount + rejectedCount > 0 ? Math.round((hiredCount / (hiredCount + rejectedCount)) * 100) : 0;
   const vacancyMap = Object.fromEntries((Array.isArray(vacancies) ? vacancies : []).map(v => [v.id, v]));
 
-  // ─── Render ───────────────────────────────────────────────────────────────
-
   return (
-    <div className="space-y-6 flex flex-col h-full">
+    <div className="flex-1 overflow-auto bg-surface p-6 flex flex-col h-full">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div>
-          <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">Yollash {t('kanban')}</b></>}
-        title="Yollash {t('kanban')}"
-        subtitle={t("hrCapital7BosqichMetodologiyasi")}
-      />
+          <h1 className="text-4xl font-light tracking-tight text-on-surface">Yollash <span className="font-bold text-primary">Kanban</span></h1>
+          <p className="text-on-surface-variant -mt-1">HR Capital 7-bosqich metodologiyasi · Vakansiya muddatiga asoslangan</p>
         </div>
         <RecruitingHeaderActions
           urgentVacancyCount={urgentVacancies.length}
@@ -199,47 +213,46 @@ export default function RecruitingKanban() {
 
       <HCMethodologyBanner />
 
-      <RecruitingStatsBar
-        entries={entries}
-        activeCount={activeCount}
-        hiredCount={hiredCount}
-        rejectedCount={rejectedCount}
-        conversionRate={conversionRate}
-        openVacancies={openVacancies}
-        urgentVacancies={urgentVacancies}
-        aiSessionsCount={aiSessions.length}
-        probationCount={counts.PROBATION ?? 0}
-      />
+      <div className="flex flex-wrap gap-3 mb-4">
+        <StatCard icon={Users} label="Jami nomzodlar" value={entries.length} />
+        <StatCard icon={TrendingUp} label="Faol jarayonlar" value={activeCount} />
+        <StatCard icon={CheckCircle} label="Qabul qilindi" value={hiredCount} color="bg-green-500" />
+        <StatCard icon={XCircle} label="Rad etildi" value={rejectedCount} color="bg-red-500" />
+        <StatCard icon={TrendingUp} label="Samaradorlik" value={`${conversionRate}%`} />
+        <StatCard icon={Briefcase} label="Ochiq vakansiya" value={openVacancies.length} color="bg-indigo-500" />
+        <StatCard icon={AlertTriangle} label="Shoshilinch" value={urgentVacancies.length} color="bg-red-500" />
+        <StatCard icon={Bot} label="AI Sessiyalar" value={aiSessions.length} color="bg-violet-500" />
+        <StatCard icon={CalendarDays} label="Sinov davri" value={counts.PROBATION ?? 0} color="bg-emerald-500" />
+      </div>
 
-      <RecruitingFilterBar
-        showProbationOnly={showProbationOnly}
-        setShowProbationOnly={setShowProbationOnly}
-        probationTotalCount={(counts.PROBATION ?? 0) + (counts.SINOV_COMPLETE ?? 0)}
+      <div className="flex items-center gap-2 mb-3">
+        <Button size="sm" variant={showProbationOnly ? "default" : "outline"} onClick={() => setShowProbationOnly(p => !p)} className={showProbationOnly ? "bg-emerald-600 hover:bg-emerald-700 border-emerald-600" : "border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"} data-testid="button-filter-probation">
+          <CalendarDays className="w-3.5 h-3.5 mr-1" />Sinov Davri ({(counts.PROBATION ?? 0) + (counts.SINOV_COMPLETE ?? 0)})
+        </Button>
+        {showProbationOnly && <span className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-2 py-0.5">Faqat sinov davrida</span>}
+      </div>
+
+      <VacancyFilterPanel
+        open={vacancyPanelOpen}
+        onToggle={() => setVacancyPanelOpen(p => !p)}
+        openVacancies={openVacancies}
+        entries={entries}
         filterVacancy={filterVacancy}
         setFilterVacancy={setFilterVacancy}
-        openVacancies={openVacancies}
-      />
-
-      <RecruitingVacancyPanel
-        openVacancies={openVacancies}
-        filterVacancy={filterVacancy}
-        setFilterVacancy={setFilterVacancy}
-        vacancyPanelOpen={vacancyPanelOpen}
-        setVacancyPanelOpen={setVacancyPanelOpen}
-        entries={entries}
         channelPanelVacancyId={channelPanelVacancyId}
         setChannelPanelVacancyId={setChannelPanelVacancyId}
         setPortretVacancy={setPortretVacancy}
+        onOpenVacancyChat={handleOpenVacancyChat}
         openingContextRoom={openingContextRoom}
-        handleOpenVacancyChat={handleOpenVacancyChat}
       />
 
       <HRAlertBanner className="mb-3" />
 
-      <RecruitingKanbanBoard
-        isLoading={isLoading}
+      <KanbanBoardGrid
+        dnd={dnd}
         byStage={byStage}
         counts={counts}
+        isLoading={isLoading}
         aiSessions={aiSessions}
         vacancyMap={vacancyMap}
         expandedCard={expandedCard}
@@ -255,20 +268,12 @@ export default function RecruitingKanban() {
         setPortretVacancy={setPortretVacancy}
       />
 
-      <RecruitingKanbanDialogs
-        portretVacancy={portretVacancy}
-        setPortretVacancy={setPortretVacancy}
-        interviewEntry={interviewEntry}
-        setInterviewEntry={setInterviewEntry}
-        jobOfferEntry={jobOfferEntry}
-        setJobOfferEntry={setJobOfferEntry}
-        marketVacancy={marketVacancy}
-        setMarketVacancy={setMarketVacancy}
-        reportEntry={reportEntry}
-        setReportEntry={setReportEntry}
-        roadmapEntry={roadmapEntry}
-        setRoadmapEntry={setRoadmapEntry}
-      />
+      {portretVacancy && <VacancyPortretDialog vacancyId={portretVacancy.id} vacancyTitle={portretVacancy.title} isUrgent={portretVacancy.is_urgent} open={!!portretVacancy} onClose={() => setPortretVacancy(null)} />}
+      {interviewEntry && <ProductivityInterviewDialog candidateId={interviewEntry.candidate_id} candidateName={interviewEntry.candidate_name} funnelId={interviewEntry.id} open={!!interviewEntry} onClose={() => setInterviewEntry(null)} />}
+      {jobOfferEntry && <JobOfferDialog open={!!jobOfferEntry} onOpenChange={(open) => { if (!open) setJobOfferEntry(null); }} candidateId={jobOfferEntry.candidate_id} candidateName={jobOfferEntry.candidate_name} funnelId={jobOfferEntry.id} vacancyTitle={jobOfferEntry.vacancy_title} />}
+      {marketVacancy && <LaborMarketSheet vacancyId={marketVacancy.id} vacancyTitle={marketVacancy.title} open={!!marketVacancy} onOpenChange={(open) => { if (!open) setMarketVacancy(null); }} />}
+      {reportEntry && <CandidateReportDialog open={!!reportEntry} onClose={() => setReportEntry(null)} pipelineEntryId={reportEntry.id} candidateName={reportEntry.candidate_name} />}
+      {roadmapEntry && <OnboardingRoadmapDialog open={!!roadmapEntry} onClose={() => setRoadmapEntry(null)} pipelineEntryId={roadmapEntry.id} candidateName={roadmapEntry.candidate_name} vacancyTitle={roadmapEntry.vacancy_title} />}
     </div>
   );
 }
