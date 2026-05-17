@@ -13,6 +13,7 @@ import { DocumentWorkflowModule } from './document-workflow/document-workflow.mo
 import { DisciplineV2Module } from './discipline-v2/discipline-v2.module';
 import { GamificationModule } from './gamification/gamification.module';
 import { DailyReportModule } from './daily-report/daily-report.module';
+import { OnboardingChecklistsModule } from './onboarding-checklists/onboarding-checklists.module';
 import { CareerPathModule } from './career-path/career-path.module';
 import { SkillsMatrixModule } from './skills-matrix/skills-matrix.module';
 import { PipModule } from './pip/pip.module';
@@ -141,6 +142,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     DisciplineV2Module,
     GamificationModule,
     DailyReportModule,
+    OnboardingChecklistsModule,
     CareerPathModule,
     SkillsMatrixModule,
     PipModule,

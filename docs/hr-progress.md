@@ -23,7 +23,7 @@ Started: 2026-05-17
 | 3 | `/hr/documents` | DocumentWorkflowPage | `/api/hr-v2/documents?status&employeeId` + stubs | not_started | — |
 | 4 | `/hr/gamification` | GamificationPage | (false positive — endpoint works) | verified_ok | n/a |
 | 5 | `/hr/offboarding` | HROffboarding | `GET /api/hr/offboarding/cases?status&search` | done | (this branch) |
-| 6 | `/hr/onboarding` | HROnboarding | `GET/POST/PATCH /api/hr/onboarding-checklists` | not_started | — |
+| 6 | `/hr/onboarding` | HROnboarding | `GET/POST/PATCH /api/hr/onboarding-checklists` | done | (this branch) |
 | 7 | `/hr/pip` | PIPPage | `PATCH /api/hr-v2/pip/:id/complete` | done | (this branch) |
 | 8 | `/hr/reception` | ReceptionPage | (false positive — `badge/:badge_number` works) | verified_ok | n/a |
 | 9 | `/hr/referrals` | ReferralPage | `POST/PATCH /api/hr/referrals` | in_progress | — |
@@ -134,6 +134,25 @@ These violate `CLAUDE.md` Qoida 10 — "Soxta Javoblar Taqiqlangan".
   - Controller flipped to `JwtAuthGuard + RolesGuard`; added
     `hr_specialist` to the role allowlist.
   - 6 unit tests in `apps/api/test/hr/pip.complete.spec.ts`.
+
+- **Task 4.5 done** — `feat(hr-api): implement /hr/onboarding-checklists CRUD`
+  - New module `apps/api/src/modules/hr/onboarding-checklists/` with
+    controller + service + repository wired into `HrModule.imports`.
+  - 4 routes:
+    - `GET /api/hr/onboarding-checklists?type=` — list with optional
+      `type` filter (`onboarding` / `offboarding`)
+    - `POST /api/hr/onboarding-checklists` — create-or-return idempotent
+      on `(userId, type)`; coerces `userId` from string to number
+    - `PATCH /api/hr/onboarding-checklists/:id` — update `completedItems`
+      counter (rejects negative values with `VALIDATION` → 400)
+    - `GET /api/hr/onboarding-checklists/:id` — single row (NotFound
+      when missing)
+  - Repository uses `hrOnboardingChecklists` from `@europrint/schemas`
+    (the canonical Drizzle schema at `lib/db/src/schema/core-schema.ts:538`).
+  - **Removed stub** `getOnboardingChecklists` in
+    `hr-dashboard.controller.ts:158-161` that previously served the
+    `/api/hr/onboarding-checklists` path with `{ items: [], total: 0 }`.
+  - 12 unit tests in `apps/api/test/hr/onboarding-checklists.controller.spec.ts`.
 
 - **Task 4.4 done** — `feat(hr-api): implement /hr/offboarding/cases list+create+stats+detail`
   - Added 4 new routes to `HrOffboardingController`:
