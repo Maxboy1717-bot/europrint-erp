@@ -41,12 +41,11 @@
  *   classification accurate per-pipeline.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeNum, safeDiv } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { CRM_ANALYTICS_REPO, ICrmAnalyticsRepo } from './repositories/i-crm-analytics.repo';
 
 /** Extract Ok data from a Result, or return fallback on Err — service-layer only (no HTTP throw) */
 function unwrapResult<T, F>(result: Result<T, AppError>, fallback: F): T | F {
@@ -109,6 +108,10 @@ export interface PipelineVelocityResult {
 
 @Injectable()
 export class FunnelService {
+  constructor(
+    @Inject(CRM_ANALYTICS_REPO) private readonly repo: ICrmAnalyticsRepo,
+  ) {}
+
   @Calculation('crm.funnel.winRate')
   async calculateWinRate(input: WinRateInput): Promise<Result<WinRateResult, AppError>> {
     const won = safeNum(input.won);
@@ -179,29 +182,7 @@ export class FunnelService {
   }
 
   async getStageData(pipelineId?: string): Promise<StageRow[]> {
-    return runQuery<StageRow>(
-      pipelineId
-        ? sql`
-          SELECT cs.name AS stage_name, COUNT(*)::int AS count,
-            COALESCE(cs.is_success, false) AS is_won,
-            COALESCE(cs.is_fail,    false) AS is_lost
-          FROM crm_deals d
-          JOIN crm_stages cs ON cs.id::text = d.stage_id
-          WHERE d.pipeline_id = ${pipelineId} AND d.deleted_at IS NULL
-          GROUP BY cs.name, cs.is_success, cs.is_fail, cs.sort_order
-          ORDER BY cs.sort_order ASC
-        `
-        : sql`
-          SELECT cs.name AS stage_name, COUNT(*)::int AS count,
-            COALESCE(cs.is_success, false) AS is_won,
-            COALESCE(cs.is_fail,    false) AS is_lost
-          FROM crm_deals d
-          JOIN crm_stages cs ON cs.id::text = d.stage_id
-          WHERE d.deleted_at IS NULL
-          GROUP BY cs.name, cs.is_success, cs.is_fail, cs.sort_order
-          ORDER BY cs.sort_order ASC
-        `,
-    );
+    return this.repo.getFunnelStageData(pipelineId);
   }
 
   /**
@@ -252,18 +233,6 @@ export class FunnelService {
   }
 
   async getVelocityData(): Promise<VelocityRow> {
-    const rows = await runQuery<VelocityRow>(sql`
-      SELECT
-        COUNT(*) FILTER (WHERE stage_semantic_id NOT IN ('WON','LOST') OR stage_semantic_id IS NULL)::int AS active_deals,
-        COUNT(*) FILTER (WHERE stage_semantic_id = 'WON')::int  AS won_count,
-        COUNT(*) FILTER (WHERE stage_semantic_id IN ('WON','LOST'))::int AS closed_count,
-        COALESCE(AVG(opportunity::numeric), 0)::float            AS avg_deal_size,
-        COALESCE(AVG(
-          EXTRACT(DAY FROM (close_date::timestamp - date_create))
-        ) FILTER (WHERE close_date IS NOT NULL), 30)::float      AS avg_cycle_days
-      FROM crm_deals
-      WHERE deleted_at IS NULL
-    `);
-    return rows[0] ?? { active_deals: 0, won_count: 0, closed_count: 0, avg_deal_size: 0, avg_cycle_days: 30 };
+    return this.repo.getFunnelVelocityData();
   }
 }

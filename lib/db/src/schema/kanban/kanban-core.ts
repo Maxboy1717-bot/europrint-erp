@@ -24,6 +24,8 @@ export const kanbanBoards = pgTable("kanban_boards", {
   deletedBy: varchar("deleted_by"),
 }, (t) => [
   check("kanban_boards_type_chk", sql`${t.type} IN ('crm_deals','tasks','custom')`),
+  index("idx_kanban_boards_type").on(t.type),
+  index("idx_kanban_boards_deleted_at").on(t.deletedAt),
 ]);
 
 
@@ -49,7 +51,10 @@ export const kanbanColumns = pgTable("kanban_columns", {
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
-});
+}, (t) => [
+  index("idx_kanban_columns_board_id").on(t.boardId),
+  index("idx_kanban_columns_deleted_at").on(t.deletedAt),
+]);
 
 
 export const insertKanbanColumnSchema = createInsertSchema(kanbanColumns, {
@@ -139,7 +144,10 @@ export const kanbanComments = pgTable("kanban_comments", {
   userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   comment: text("comment").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  index("idx_kanban_comments_card_id").on(t.cardId),
+  index("idx_kanban_comments_user_id").on(t.userId),
+]);
 
 
 export const insertKanbanCommentSchema = createInsertSchema(kanbanComments, {

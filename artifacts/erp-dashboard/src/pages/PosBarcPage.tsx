@@ -24,10 +24,7 @@ export default function PosBarcPage() {
   const [history, setHistory]       = useState<HistoryEntry[]>([]);
 
   const scanMutation = useMutation({
-    mutationFn: async (barcode: string) => {
-      const res = (await apiRequest("POST", "/api/pos/barcode/scan", { barcode })) as unknown as Response;
-      return res.json() as Promise<ScanResult>;
-    },
+    mutationFn: (barcode: string) => apiRequest<ScanResult>("POST", "/api/pos/barcode/scan", { barcode }),
     onSuccess: (data) => {
       setScanResult(data);
       const name =
@@ -48,10 +45,7 @@ export default function PosBarcPage() {
   });
 
   const generateMutation = useMutation({
-    mutationFn: async (prefix: string) => {
-      const res = (await apiRequest("POST", "/api/pos/barcode/generate-ean13", { prefix })) as unknown as Response;
-      return res.json() as Promise<GenerateResult>;
-    },
+    mutationFn: (prefix: string) => apiRequest<GenerateResult>("POST", "/api/pos/barcode/generate-ean13", { prefix }),
     onSuccess: (data) => {
       setGenResult(data.barcode);
       toast({ title: "EAN-13 yaratildi", description: data.barcode });

@@ -49,11 +49,12 @@ export class SendEmailTool implements IAishaTool {
     const body = String(input['body'] ?? '');
     if (to.length === 0) return Err(AppErr('VALIDATION', 'to bo\'sh bo\'lmasligi kerak'));
     if (!subject || !body) return Err(AppErr('VALIDATION', 'subject va body majburiy'));
-    if (!this.sender) return Err(AppErr('EXTERNAL_SERVICE', 'EmailSender provayderi yo\'q'));
+    const sender = this.sender;
+    if (!sender) return Err(AppErr('EXTERNAL_SERVICE', 'EmailSender provayderi yo\'q'));
 
     return safeCall<ToolResult<EmailSendResult>>(async () => {
       const start = Date.now();
-      const r = await this.sender!.send({
+      const r = await sender.send({
         to, subject, body,
         attachments: String(input['attachments'] ?? '').split(',').map(s => s.trim()).filter(Boolean),
       });

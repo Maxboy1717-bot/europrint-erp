@@ -53,11 +53,12 @@ export class DetectSafetyViolationsTool implements IAishaTool {
   async execute(input: Record<string, unknown>): Promise<Result<ToolResult<SafetyViolationsResult>>> {
     const id = String(input['cameraId'] ?? input['areaId'] ?? '');
     if (!id) return Err(AppErr('VALIDATION', 'cameraId yoki areaId majburiy'));
-    if (!this.provider) return Err(AppErr('EXTERNAL_SERVICE', 'CameraSnapshotProvider ulanmagan'));
+    const provider = this.provider;
+    if (!provider) return Err(AppErr('EXTERNAL_SERVICE', 'CameraSnapshotProvider ulanmagan'));
 
     return safeCall<ToolResult<SafetyViolationsResult>>(async () => {
       const start = Date.now();
-      const frame = await this.provider!.captureFrame(id);
+      const frame = await provider.captureFrame(id);
       if (!frame.base64) throw new Error('Frame base64 yo\'q');
 
       const r = await this.claude.sendOneShot({

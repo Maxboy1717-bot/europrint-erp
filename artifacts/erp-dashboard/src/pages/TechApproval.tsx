@@ -62,10 +62,10 @@ export default function TechApproval() {
   const { data: rawOrders, isLoading } = useQuery<unknown>({
     queryKey: ["/api/papka-orders", { status: "pending_tech" }],
     queryFn: async () => {
-      const res = (await apiRequest('GET', "/api/papka-orders?status=pending_tech")) as unknown as Response;
-      if (!res.ok) throw new Error("Failed");
-      const d = await res.json();
-      return Array.isArray(d) ? d : (d.items ?? d.data ?? d.orders ?? []);
+      const d = await apiRequest<unknown>('GET', "/api/papka-orders?status=pending_tech");
+      if (Array.isArray(d)) return d;
+      const obj = d as { items?: unknown; data?: unknown; orders?: unknown };
+      return obj.items ?? obj.data ?? obj.orders ?? [];
     },
   });
   const orders: TechOrderData[] = Array.isArray(rawOrders) ? rawOrders : [];

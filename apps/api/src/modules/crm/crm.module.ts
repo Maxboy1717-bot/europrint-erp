@@ -103,6 +103,8 @@ import { CohortService } from './analytics/cohort.service';
 import { KMeansService } from './analytics/kmeans.service';
 import { ChurnRetrainService } from './analytics/churn-retrain.service';
 import { CrmAnalyticsController } from './presentation/crm-analytics.controller';
+import { CRM_ANALYTICS_REPO } from './analytics/repositories/i-crm-analytics.repo';
+import { DrizzleCrmAnalyticsRepository } from './analytics/repositories/drizzle-crm-analytics.repo';
 
 const commandHandlers = [
   CreateLeadHandler, QualifyLeadHandler, CreateDealHandler,
@@ -184,6 +186,7 @@ const repositories = [
     CrmAiExtendedService,
     LeadScorerV2Service,
     EloRatingService,
+    { provide: CRM_ANALYTICS_REPO, useClass: DrizzleCrmAnalyticsRepository },
     RfmService,
     ClvService,
     ChurnService,

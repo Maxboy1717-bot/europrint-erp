@@ -344,8 +344,9 @@ export function ChatLayout() {
       />
 
       {/* Center panel */}
+      {activeRoom ? (
       <ChatLayoutMessages
-        activeRoom={activeRoom!}
+        activeRoom={activeRoom}
         activeRoomId={activeRoomId ?? ""}
         messages={messages}
         memberCount={memberCount}
@@ -394,6 +395,11 @@ export function ChatLayout() {
         }
         mobileShowChat={mobileShowChat}
       />
+      ) : (
+        <div className="flex-1 hidden sm:flex items-center justify-center text-sm text-[var(--tg-text-secondary)]">
+          Suhbatni tanlang
+        </div>
+      )}
 
       {/* Right panel: Thread */}
       {threadRootMsg && (

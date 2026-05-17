@@ -26,12 +26,14 @@ export function FinanceTab({
   const { t } = useTranslation("common");
   const now = new Date();
 
-  const { data: salaryBenchmark, isLoading: loadingBenchmark } = useQuery<SalaryBenchmark>({
+  const { data: salaryBenchmark, isLoading: loadingBenchmark } = useQuery<SalaryBenchmark | null>({
     queryKey: ['/api/finance/salary-benchmark', userId],
     queryFn: async () => {
-      const res = (await apiRequest('GET', `/api/finance/salary-benchmark/${userId}`)) as unknown as Response;
-      if (!res.ok) return null;
-      return res.json();
+      try {
+        return await apiRequest<SalaryBenchmark | null>('GET', `/api/finance/salary-benchmark/${userId}`);
+      } catch {
+        return null;
+      }
     },
     enabled: !!userId,
   });

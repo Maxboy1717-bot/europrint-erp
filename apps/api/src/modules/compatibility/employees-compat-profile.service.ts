@@ -43,6 +43,10 @@ export class EmployeesCompatProfileService {
     return this.raw.getSalaryHistory(id);
   }
 
+  getPayrollSummary(id: string): Promise<Result<Row | null, AppError>> {
+    return this.raw.getPayrollSummary(id);
+  }
+
   getSickLeaves(id: string): Promise<Result<Row[], AppError>> {
     return this.raw.getSickLeaves(id);
   }
@@ -72,6 +76,10 @@ export class EmployeesCompatProfileService {
   }
 
   // ─── Drizzle-ORM surface (delegated) ───────────────────────────────────────
+
+  getPassport(id: string): Promise<Result<Row | null, AppError>> {
+    return this.orm.getPassport(id);
+  }
 
   getMonthlyReport(id: string): Promise<Result<Row | null, AppError>> {
     return this.orm.getMonthlyReport(id);

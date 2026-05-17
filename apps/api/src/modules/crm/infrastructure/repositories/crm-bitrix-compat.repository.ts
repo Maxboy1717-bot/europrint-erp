@@ -130,6 +130,14 @@ export class CrmBitrixCompatRepository implements ICrmBitrixCompatRepo {
     await db.delete(crm_robots).where(eq(crm_robots.id, id));
   }
 
+  async deleteProposal(id: number): Promise<void> {
+    await db.delete(crm_proposals).where(eq(crm_proposals.id, id));
+  }
+
+  async deleteInvoice(id: number): Promise<void> {
+    await db.delete(invoices).where(eq(invoices.id, String(id)));
+  }
+
   async updateProposalStage(id: number, status: string): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.update(crm_proposals)

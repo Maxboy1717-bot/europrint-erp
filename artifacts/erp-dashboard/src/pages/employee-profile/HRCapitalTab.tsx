@@ -26,9 +26,11 @@ export function HRCapitalTab({ employeeId }: HRCapitalTabProps) {
   const { data: profile, isLoading } = useQuery<HRCapitalProfile | null>({
     queryKey: ["/api/employees", employeeId, "capital-profile"],
     queryFn: async () => {
-      const res = (await apiRequest('GET', `/api/employees/${employeeId}/capital-profile`)) as unknown as Response;
-      if (!res.ok) return null;
-      return res.json();
+      try {
+        return await apiRequest('GET', `/api/employees/${employeeId}/capital-profile`);
+      } catch {
+        return null;
+      }
     },
     enabled: !!employeeId,
   });

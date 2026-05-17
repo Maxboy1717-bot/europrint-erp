@@ -20,6 +20,9 @@ import { Design, Order, Product, designOrders } from "./pp-schema";
 // CRM Leads (Potensial mijozlar - b_crm_lead)
 export const crmLeads = pgTable("crm_leads", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column. DEFAULT 1 is intentional — every row backfilled to
+  // tenant 1 on migration; future writers MUST set this from TenantContext.
+  tenantId: integer("tenant_id").notNull().default(1),
   title: text("title").notNull(),
   
   // Personal Info
@@ -69,9 +72,15 @@ export const crmLeads = pgTable("crm_leads", {
   check("crm_leads_source_score_chk", sql`${t.sourceScore} IS NULL OR (${t.sourceScore} >= 1 AND ${t.sourceScore} <= 100)`),
   index("idx_crm_leads_status_id").on(t.statusId),
   index("idx_crm_leads_assigned_by_id").on(t.assignedById),
+  index("idx_crm_leads_created_by_id").on(t.createdById),
   index("idx_crm_leads_source_id").on(t.sourceId),
   index("idx_crm_leads_date_create").on(t.dateCreate),
   index("idx_crm_leads_deleted_at").on(t.deletedAt),
+  index("idx_crm_leads_tenant_id").on(t.tenantId),
+  index("idx_crm_leads_next_activity_at").on(t.nextActivityAt),
+  check("crm_leads_call_status_chk", sql`${t.callStatus} IS NULL OR ${t.callStatus} IN ('none','scheduled','answered','missed')`),
+  check("crm_leads_budget_chk", sql`${t.budget} IS NULL OR ${t.budget} >= 0`),
+  check("crm_leads_opportunity_amount_chk", sql`${t.opportunityAmount} IS NULL OR ${t.opportunityAmount} >= 0`),
 ]);
 
 
@@ -97,7 +106,10 @@ export type InsertCrmLead = z.infer<typeof insertCrmLeadSchema>;
 // CRM Contacts (Shaxslar - b_crm_contact)
 export const crmContacts = pgTable("crm_contacts", {
   id: serial("id").primaryKey(),
-  
+  // Multi-tenancy column. DEFAULT 1 is intentional — every row backfilled to
+  // tenant 1 on migration; future writers MUST set this from TenantContext.
+  tenantId: integer("tenant_id").notNull().default(1),
+
   // Personal Info
   name: text("name"),
   secondName: text("second_name"),
@@ -139,7 +151,9 @@ export const crmContacts = pgTable("crm_contacts", {
 }, (t) => [
   index("idx_crm_contacts_company_id").on(t.companyId),
   index("idx_crm_contacts_assigned_by_id").on(t.assignedById),
+  index("idx_crm_contacts_created_by_id").on(t.createdById),
   index("idx_crm_contacts_deleted_at").on(t.deletedAt),
+  index("idx_crm_contacts_tenant_id").on(t.tenantId),
 ]);
 
 
@@ -185,6 +199,9 @@ export type InsertCrmContactCompany = z.infer<typeof insertCrmContactCompanySche
 // CRM Companies (Kompaniyalar - b_crm_company)
 export const crmCompanies = pgTable("crm_companies", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column. DEFAULT 1 is intentional — every row backfilled to
+  // tenant 1 on migration; future writers MUST set this from TenantContext.
+  tenantId: integer("tenant_id").notNull().default(1),
   title: text("title").notNull(),
   
   // Mijoz kodi (avtomatik: CUS-YYYY-NNNN)
@@ -271,8 +288,11 @@ export const crmCompanies = pgTable("crm_companies", {
   index("idx_crm_companies_customer_category").on(t.customerCategory),
   index("idx_crm_companies_segment").on(t.segment),
   index("idx_crm_companies_assigned_by_id").on(t.assignedById),
+  index("idx_crm_companies_created_by_id").on(t.createdById),
   index("idx_crm_companies_deleted_at").on(t.deletedAt),
   index("idx_crm_companies_is_blocked").on(t.isBlocked),
+  index("idx_crm_companies_tenant_id").on(t.tenantId),
+  index("idx_crm_companies_customer_code").on(t.customerCode),
   check("crm_companies_type_chk", sql`${t.customerType} IS NULL OR ${t.customerType} IN ('legal','individual')`),
   check("crm_companies_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('active','inactive','blacklist')`),
   check("crm_companies_size_chk", sql`${t.companySize} IS NULL OR ${t.companySize} IN ('small','medium','large')`),

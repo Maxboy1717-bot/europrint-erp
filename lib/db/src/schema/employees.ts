@@ -72,9 +72,15 @@ export const employees = pgTable("employees", {
   deletedAt: timestamp("deleted_at"),
 }, (t) => [
   check("employees_status_chk", sql`${t.status} IN ('active','inactive','terminated','on_leave','probation')`),
+  check("employees_employment_status_chk", sql`${t.employmentStatus} IS NULL OR ${t.employmentStatus} IN ('active','inactive','terminated','on_leave','probation')`),
   check("employees_contract_type_chk", sql`${t.contractType} IS NULL OR ${t.contractType} IN ('permanent','contract','probation','part_time','temporary')`),
+  check("employees_gender_chk", sql`${t.gender} IS NULL OR ${t.gender} IN ('male','female','other')`),
   index("idx_employees_status").on(t.status),
   index("idx_employees_department_id").on(t.departmentId),
+  index("idx_employees_position_id").on(t.positionId),
+  index("idx_employees_user_id").on(t.userId),
+  index("idx_employees_manager_id").on(t.managerId),
+  index("idx_employees_manager_department_id").on(t.managerDepartmentId),
   index("idx_employees_deleted_at").on(t.deletedAt),
   index("idx_employees_tenant_id").on(t.tenantId),
 ]);
@@ -103,6 +109,8 @@ export const employmentContracts = pgTable("employment_contracts", {
 }, (t) => [
   check("emp_contracts_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('draft','active','expired','terminated')`),
   check("emp_contracts_type_chk", sql`${t.contractType} IS NULL OR ${t.contractType} IN ('permanent','contract','probation','part_time','temporary')`),
+  index("idx_emp_contracts_employee_id").on(t.employeeId),
+  index("idx_emp_contracts_status").on(t.status),
 ]);
 
 export const employeePassports = pgTable("employee_passports", {
@@ -131,7 +139,9 @@ export const employeeBankAccounts = pgTable("employee_bank_accounts", {
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_employee_bank_accounts_employee_id").on(t.employeeId),
+]);
 
 export const employeeEmergencyContacts = pgTable("employee_emergency_contacts", {
   id: serial("id").primaryKey(),
@@ -143,7 +153,9 @@ export const employeeEmergencyContacts = pgTable("employee_emergency_contacts", 
   address: text("address"),
   priorityOrder: integer("priority_order"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_employee_emergency_contacts_employee_id").on(t.employeeId),
+]);
 
 export const employeeFiles = pgTable("employee_files", {
   id: serial("id").primaryKey(),
@@ -156,7 +168,10 @@ export const employeeFiles = pgTable("employee_files", {
   uploadedBy: integer("uploaded_by"),
   description: text("description"),
   isPublic: boolean("is_public").default(false),
-});
+}, (t) => [
+  index("idx_employee_files_employee_id").on(t.employeeId),
+  index("idx_employee_files_category").on(t.category),
+]);
 
 export const insertEmployeeSchema = createInsertSchema(employees).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;

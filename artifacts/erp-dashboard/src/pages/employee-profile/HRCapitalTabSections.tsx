@@ -153,9 +153,11 @@ export function HRCapitalTestHistory({ employeeId }: { employeeId: string }) {
   const { data } = useQuery<{ data: Record<string, unknown>[] }>({
     queryKey: ["/api/hr/hrc-tests/employee", employeeId, "results"],
     queryFn: async () => {
-      const res = (await apiRequest('GET', `/api/hr/hrc-tests/employee/${employeeId}/results`)) as unknown as Response;
-      if (!res.ok) return { data: [] };
-      return res.json();
+      try {
+        return await apiRequest('GET', `/api/hr/hrc-tests/employee/${employeeId}/results`);
+      } catch {
+        return { data: [] };
+      }
     },
     enabled: !!employeeId,
   });

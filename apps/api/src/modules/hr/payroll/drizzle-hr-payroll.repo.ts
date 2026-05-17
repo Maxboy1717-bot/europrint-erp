@@ -58,7 +58,7 @@ export class DrizzleHrPayrollRepository implements IHrPayrollRepository {
 
   async markPeriodClosed(periodId: number, _totals: { totalBase: number; totalBonus: number; totalDeductions: number; totalNet: number; rowCount: number }): Promise<Result<Row>> {
     try {
-      const today = new Date().toISOString().split('T')[0]!;
+      const today = new Date().toISOString().substring(0, 10);
       const rows = await db
         .update(payrollPeriods)
         .set({ status: 'closed', approvalDate: today })

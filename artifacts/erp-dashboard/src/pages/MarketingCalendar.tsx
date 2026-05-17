@@ -39,10 +39,10 @@ export default function MarketingCalendar() {
   const { data: entries, isLoading, isError, error, refetch} = useQuery<ContentCalendar[]>({
     queryKey: ["/api/marketing/calendar", { month, year }],
     queryFn: async () => {
-      const res = (await apiRequest('GET', `/api/marketing/calendar?month=${month}&year=${year}`)) as unknown as Response;
-      if (!res.ok) throw new Error("Taqvimni yuklashda xatolik");
-      const json = await res.json();
-      return Array.isArray(json) ? json : (json?.data ?? []);
+      const json = await apiRequest<unknown>('GET', `/api/marketing/calendar?month=${month}&year=${year}`);
+      if (Array.isArray(json)) return json as ContentCalendar[];
+      const obj = json as { data?: ContentCalendar[] };
+      return obj?.data ?? [];
     },
   });
 

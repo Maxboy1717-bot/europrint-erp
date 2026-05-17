@@ -18,12 +18,11 @@
  *   P ≤ 0.4: LOW
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeNum, safeSum } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { CRM_ANALYTICS_REPO, ICrmAnalyticsRepo } from './repositories/i-crm-analytics.repo';
 
 export type ChurnRisk = 'HIGH' | 'MEDIUM' | 'LOW';
 
@@ -63,6 +62,10 @@ export interface ChurnResult {
 
 @Injectable()
 export class ChurnService {
+  constructor(
+    @Inject(CRM_ANALYTICS_REPO) private readonly repo: ICrmAnalyticsRepo,
+  ) {}
+
   private sigmoid(z: number): number {
     return 1 / (1 + Math.exp(-z));
   }
@@ -123,15 +126,9 @@ export class ChurnService {
    * Returns null when no active model exists (caller falls back to DEFAULT_CHURN_COEFFICIENTS).
    */
   async loadActiveModel(): Promise<number[] | null> {
-    const rows = await runQuery<{ coefficients: { values: number[] } }>(sql`
-      SELECT coefficients
-      FROM churn_model_params
-      WHERE is_active = true
-      ORDER BY trained_at DESC
-      LIMIT 1
-    `);
-    if (!rows.length) return null;
-    const values = rows[0]?.coefficients?.values;
+    const row = await this.repo.findActiveChurnModel();
+    if (!row) return null;
+    const values = row.coefficients?.values;
     if (!Array.isArray(values) || values.length < 7) return null;
     return values;
   }

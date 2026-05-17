@@ -57,9 +57,11 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
   const { data: configData, refetch } = useQuery<{ configs: PrinterConfig[]; active: PrinterConfig | null }>({
     queryKey: ["/api/warehouse/printer-config"],
     queryFn: async () => {
-      const res = (await apiRequest('GET', "/api/warehouse/printer-config")) as unknown as Response;
-      if (!res.ok) return { configs: [], active: null };
-      return res.json();
+      try {
+        return await apiRequest('GET', "/api/warehouse/printer-config");
+      } catch {
+        return { configs: [], active: null };
+      }
     },
   });
 

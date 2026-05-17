@@ -53,9 +53,8 @@ function useWarehouses(enabled: boolean): WarehouseRow[] {
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
-    apiRequest('GET', "/api/warehouse/warehouses?limit=100&isActive=true")
-      .then(r => (r as unknown as Response).ok ? (r as unknown as Response).json() : { data: [] })
-      .then((resp: unknown) => {
+    apiRequest<unknown>('GET', "/api/warehouse/warehouses?limit=100&isActive=true")
+      .then((resp) => {
         if (cancelled) return;
         const obj = resp as Record<string, unknown>;
         const rows = Array.isArray(resp) ? resp

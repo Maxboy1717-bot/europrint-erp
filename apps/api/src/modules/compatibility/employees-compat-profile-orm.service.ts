@@ -7,7 +7,7 @@
  */
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { db } from '@shared/db';
+import { db, rawSql } from '@shared/db';
 import {
   employee_daily_reports,
   employee_contracts,
@@ -15,7 +15,8 @@ import {
   employee_inventory_ledger,
   employee_files,
 } from '@shared/db';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
+import { dbRows } from '../hr/common/db-rows';
 import { safeCall, Result, AppError } from '@common/result';
 
 type Row = Record<string, unknown>;
@@ -23,6 +24,43 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class EmployeesCompatProfileOrmService {
+
+  /**
+   * Passport ma'lumotlari `employees` jadvalining ustunlarida saqlanadi
+   * (createPassport ham shu yerga yozadi — employees-compat-profile-raw.service.ts:168).
+   * `@shared/db.employees` Drizzle modeli passport ustunlarini eksport qilmaydi
+   * (boshqa schema variantini eksport qiladi), shuning uchun raw SQL ishlatamiz —
+   * `createPassport` ham xuddi shunday raw SQL bilan ishlaydi.
+   */
+  async getPassport(id: string): Promise<Result<Row | null, AppError>> {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        SELECT passport_series, passport_number, passport_issue_date,
+               passport_expiry_date, national_id
+        FROM employees
+        WHERE id = ${si(id)}
+        LIMIT 1
+      `);
+      const row = dbRows(r)[0] as Row | undefined;
+      if (!row) return null;
+      if (
+        row['passport_series'] == null &&
+        row['passport_number'] == null &&
+        row['passport_issue_date'] == null &&
+        row['passport_expiry_date'] == null &&
+        row['national_id'] == null
+      ) {
+        return null;
+      }
+      return {
+        passportSeries:     row['passport_series'] ?? null,
+        passportNumber:     row['passport_number'] ?? null,
+        passportIssueDate:  row['passport_issue_date'] ?? null,
+        passportExpiryDate: row['passport_expiry_date'] ?? null,
+        nationalId:         row['national_id'] ?? null,
+      };
+    });
+  }
 
   async getMonthlyReport(id: string): Promise<Result<Row | null, AppError>> {
     return safeCall(async () => {

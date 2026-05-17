@@ -39,6 +39,7 @@ const LeadCreateSchema = z.object({
 const UpdateLeadStageSchema = z.object({
   statusId: z.string().optional(),
   stageId: z.string().optional(),
+  stage_id: z.union([z.string(), z.number()]).optional(),
   status: z.string().optional(),
 }).passthrough();
 
@@ -149,7 +150,9 @@ export class CrmLeadsController {
   @Patch(':id/stage')
   async updateStage(@Param('id') id: string, @Body() dto: unknown) {
     const parsed = UpdateLeadStageSchema.parse(dto);
-    const statusId = String(parsed.statusId ?? parsed.stageId ?? parsed.status ?? 'NEW');
+    const statusId = String(
+      parsed.stage_id ?? parsed.statusId ?? parsed.stageId ?? parsed.status ?? 'NEW',
+    );
     const res = await this.leadsService.update(safeInt(id, 0), { status: statusId.toLowerCase() });
     return unwrapOrThrow(res);
   }

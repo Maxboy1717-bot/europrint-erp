@@ -128,9 +128,11 @@ export function useIoTTabletData({
   const { data: employeesData = { data: [] } } = useQuery({
     queryKey: ["/api/employees"],
     queryFn: async () => {
-      const res = (await apiRequest('GET', "/api/employees")) as unknown as Response;
-      if (!res.ok) return { data: [] };
-      return res.json();
+      try {
+        return await apiRequest('GET', "/api/employees");
+      } catch {
+        return { data: [] };
+      }
     },
     enabled: isLoggedIn && showChecklistModal,
   });

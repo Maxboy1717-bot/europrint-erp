@@ -73,11 +73,8 @@ export default function WarehouseDailyView() {
 
   const fetchKitItems = async (kit: MaterialKit) => {
     try {
-      const res = (await apiRequest('GET', `/api/warehouse/material-kits/${kit.id}/items`)) as unknown as Response;
-      if (res.ok) {
-        const data = await res.json();
-        setKitItems(data);
-      }
+      const data = await apiRequest<MaterialKitItem[]>('GET', `/api/warehouse/material-kits/${kit.id}/items`);
+      setKitItems(Array.isArray(data) ? data : []);
     } catch {
       setKitItems([]);
     }

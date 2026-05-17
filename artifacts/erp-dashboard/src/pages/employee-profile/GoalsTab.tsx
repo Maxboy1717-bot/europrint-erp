@@ -65,11 +65,15 @@ export function GoalsTab({ userId, tCommon }: GoalsTabProps) {
   const { data: goals, isLoading } = useQuery<Goal[]>({
     queryKey: [`/api/hr/employees/${userId}/goals`],
     queryFn: async () => {
-      const res = (await apiRequest('GET', `/api/hr/employees/${userId}/goals`)) as unknown as Response;
-      if (res.status === 404 || res.status === 204) return [];
-      if (!res.ok) return [];
-      const data = await res.json();
-      return Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : data.goals ?? [];
+      try {
+        const data = await apiRequest<unknown>('GET', `/api/hr/employees/${userId}/goals`);
+        if (Array.isArray(data)) return data as Goal[];
+        const obj = data as { data?: unknown; goals?: unknown };
+        if (Array.isArray(obj?.data)) return obj.data as Goal[];
+        return Array.isArray(obj?.goals) ? (obj.goals as Goal[]) : [];
+      } catch {
+        return [];
+      }
     },
     enabled: !!userId,
   });

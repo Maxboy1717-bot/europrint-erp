@@ -1,14 +1,9 @@
 /**
- * EmployeesExtraController — frontend kutadigan qo'shimcha HTTP method'lar.
- *
- * Sabab: `EmployeesCompatController` 300+ qator chegarasiga yaqin (audit qoidasi 1).
- * Yangi endpoint'lar (PATCH va POST profile-image) shu fayl'da:
- *
- *   - PATCH /api/employees/:id          — frontend `useEmployeeMutation` PATCH ishlatadi
- *   - POST  /api/employees/:id/profile-image — frontend `EmployeeDialog.tsx` POST ishlatadi
- *
- * Bir xil prefix `/employees` ishlatadi — NestJS bir nechta controller bir xil prefix'da
- * ishlashi mumkin (har route alohida ro'yxatga olinadi).
+ * @module employees-extra.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   employees-extra module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
 import {
   Body,

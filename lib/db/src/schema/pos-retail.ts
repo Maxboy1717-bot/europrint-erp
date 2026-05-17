@@ -63,7 +63,10 @@ export const retailPosTransactions = pgTable("retail_pos_transactions", {
 }, (t) => [
   check("retail_pos_txn_payment_chk", sql`${t.payment_method} IN ('cash','card','transfer','mixed')`),
   check("retail_pos_txn_status_chk", sql`${t.status} IN ('completed','refunded','pending')`),
+  check("retail_pos_txn_subtotal_chk", sql`${t.subtotal} >= 0`),
+  check("retail_pos_txn_total_chk", sql`${t.total_amount} >= 0`),
   index("retail_pos_transactions_cashier_idx").on(t.cashier_id),
+  index("retail_pos_transactions_customer_idx").on(t.customer_id),
   index("retail_pos_transactions_status_idx").on(t.status),
   index("retail_pos_transactions_date_idx").on(t.created_at),
 ]);

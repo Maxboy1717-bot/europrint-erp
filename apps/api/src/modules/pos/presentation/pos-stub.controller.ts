@@ -5,9 +5,14 @@
  * P3-26: Read endpoints (sales/daily, inventory/low-stock, etc.) previously
  * returned `{ data: [], total: 0 }`. Per Rule 10 those now return HTTP 501 so the
  * POS frontend shows a "Coming soon" empty state instead of pretending the till is
- * empty. The write endpoints (sales POST, inventory adjust PATCH) keep the original
- * passthrough shape because the POS module is in transitional state and the v2
- * controller (`pos-v2`) is now the canonical writer; these are marked LEGACY_NOOP.
+ * empty.
+ *
+ * A.2 (P0): The legacy `/pos/sales` POST endpoint previously echoed payloads
+ * without persisting to the database (real bug — POSDashboard.tsx and pos-sync.ts
+ * both hit this URL). It now DELEGATES to `CashRegisterService.createTransaction`,
+ * so the frontend's existing URL writes to `retail_pos_transactions`. The legacy
+ * payload shape is adapted to the service's `CreateTransactionSchema` here so we
+ * keep wire compatibility without touching callers.
  */
 
 import { Controller, Get, Post, Patch, Body, Param, UseGuards, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
@@ -17,12 +22,25 @@ import { z } from 'zod';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@common/types/user.types';
+import { CashRegisterService } from '../application/services/cash-register.service';
+import { unwrapOrInternal } from '@common/http-result';
 
-const CreateSaleSchema = z.object({
-  items: z.array(z.record(z.unknown())).optional(),
-  total: z.union([z.string(), z.number()]).optional(),
-  paymentMethod: z.string().max(50).optional(),
-  customerId: z.union([z.string(), z.number()]).optional(),
+const LegacySaleItemSchema = z.object({
+  productId: z.union([z.string(), z.number()]).transform((v) => String(v)),
+  name:      z.string().optional(),
+  quantity:  z.union([z.string(), z.number()]).transform((v) => Number(v)).pipe(z.number().positive()),
+});
+
+const LegacyCreateSaleSchema = z.object({
+  items:          z.array(LegacySaleItemSchema).min(1),
+  paymentMethod:  z.string().max(50).optional(),
+  customerName:   z.string().optional(),
+  customerId:     z.union([z.string(), z.number()]).optional(),
+  discountAmount: z.union([z.string(), z.number()]).optional(),
+  notes:          z.string().optional(),
+  taxRate:        z.union([z.string(), z.number()]).optional(),
 }).passthrough();
 
 const AdjustInventorySchema = z.object({
@@ -37,6 +55,37 @@ const notImplemented = (route: string): never => {
   );
 };
 
+/**
+ * Map legacy `/pos/sales` payload to the canonical CashRegisterService DTO.
+ *
+ * WHY: Two callers (POSDashboard.tsx, pos-sync.ts) still POST to `/api/pos/sales`
+ * with `{ items: [{productId, quantity}], paymentMethod, customerName, discountAmount }`.
+ * The canonical schema (`CreateTransactionSchema` in cash-register.service.ts)
+ * requires `items[].name` and a payment method from the enum
+ * `cash|card|transfer|mixed`. This helper bridges the gap so the legacy URL
+ * persists exactly the same row the canonical `/pos/transactions` does.
+ */
+function adaptLegacySale(body: unknown): Record<string, unknown> {
+  const dto = LegacyCreateSaleSchema.parse(body);
+  const allowedMethods = new Set(['cash', 'card', 'transfer', 'mixed']);
+  const rawMethod = (dto.paymentMethod ?? 'cash').toLowerCase();
+  const paymentMethod = allowedMethods.has(rawMethod)
+    ? rawMethod
+    : rawMethod === 'bank_transfer' ? 'transfer' : 'cash';
+  return {
+    items: dto.items.map((i) => ({
+      productId: i.productId,
+      name:      i.name ?? `Item ${i.productId}`,
+      quantity:  i.quantity,
+    })),
+    customerName:   dto.customerName,
+    paymentMethod,
+    discountAmount: dto.discountAmount !== undefined ? Number(dto.discountAmount) : 0,
+    notes:          dto.notes,
+    ...(dto.taxRate !== undefined ? { taxRate: Number(dto.taxRate) } : {}),
+  };
+}
+
 @ApiTags('POS — Inventar (Stub)')
 @ApiBearerAuth()
 @Roles('cashier', 'pos_manager', 'admin', 'super_admin', 'manager', 'director')
@@ -45,18 +94,23 @@ const notImplemented = (route: string): never => {
 @UseInterceptors(AuditInterceptor)
 @Controller('pos')
 export class PosStubController {
+  constructor(private readonly cashRegisterService: CashRegisterService) {}
 
-  // LEGACY_NOOP: POS v1 sale creation. The pos-v2 module owns persistence now;
-  // this endpoint exists for legacy clients that still POST to /pos/sales. It
-  // echoes the validated payload with a generated sale number for receipt
-  // rendering and does not write to the till. TODO P3-26: migrate remaining
-  // clients to /pos-v2 and remove this controller.
+  // A.2 (P0): Legacy `/pos/sales` now persists via CashRegisterService.
+  // The wire payload (`items[].productId`, `items[].quantity`, `paymentMethod`,
+  // `customerName`, `discountAmount`) is adapted to the canonical Zod schema
+  // before delegation. Response shape preserves the `{ saleNumber, sale }`
+  // contract POSDashboard.tsx and pos-sync.ts already consume.
   @Post('sales')
-  @ApiOperation({ summary: 'Yangi sotuv yaratish (legacy v1 — pos-v2 ga ko\'chirilsin)' })
-  createSale(@Body() body: unknown) {
-    const dto = CreateSaleSchema.parse(body);
-    const saleNumber = `POS-${Date.now()}`;
-    return { saleNumber, sale: { id: saleNumber, ...dto, createdAt: new Date().toISOString() } };
+  @ApiOperation({ summary: 'Yangi sotuv yaratish (haqiqiy persistence — CashRegisterService.createTransaction)' })
+  async createSale(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = adaptLegacySale(body);
+    const cashierId = user?.id !== undefined && user?.id !== null ? String(user.id) : undefined;
+    const sale = unwrapOrInternal(await this.cashRegisterService.createTransaction(dto, cashierId));
+    const saleNumber = (sale as { transactionNumber?: string; id?: string }).transactionNumber
+                    ?? (sale as { id?: string }).id
+                    ?? `POS-${Date.now()}`;
+    return { saleNumber, sale };
   }
 
   @Get('sales/daily')

@@ -142,11 +142,11 @@ export function ChatWidget() {
 
   const loadEmployees = useCallback(async (q?: string) => {
     try {
-      const res = (await apiRequest(
+      const res = await apiRequest<unknown>(
         "GET",
         `/api/chat/employees${q ? `?search=${encodeURIComponent(q)}` : ""}`
-      )) as unknown as Response;
-      if (res.ok) setEmployees(await res.json());
+      );
+      setEmployees(res as Parameters<typeof setEmployees>[0]);
     } catch (e) {
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console

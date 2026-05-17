@@ -22,27 +22,36 @@ type DbRow = Record<string, unknown>;
 @Injectable()
 export class DrizzleLeadRepository implements ILeadRepository {
   async save(lead: Lead): Promise<{ ok: true; data: Lead }> {
+    const now = _time.now();
     const payload = {
-      customer_id:   lead.getCompanyId(),
-      status:        lead.getStatus(),
-      contact_email: lead.getEmail?.() ?? undefined,
-      contact_phone: lead.getPhone?.() ?? undefined,
-      contact_name:  `${lead.getFirstName()} ${lead.getLastName()}`.trim(),
-      source:        lead.getSource?.() ?? undefined,
-      notes:         lead.getNotes?.() ?? undefined,
-      manager_id:    lead.getAssignedTo?.() ?? undefined,
+      customer_id:        lead.getCompanyId(),
+      status:             lead.getStatus(),
+      // status_description carries the AI score so the value is round-tripped
+      // through the compat schema (which has no dedicated ai_score column).
+      status_description: `ai_score:${lead.getAiScore()}`,
+      contact_email:      lead.getEmail?.() ?? undefined,
+      contact_phone:      lead.getPhone?.() ?? undefined,
+      contact_name:       `${lead.getFirstName()} ${lead.getLastName()}`.trim(),
+      source:             lead.getSource?.() ?? undefined,
+      notes:              lead.getNotes?.() ?? undefined,
+      manager_id:         lead.getAssignedTo?.() ?? lead.getCreatedBy?.() ?? undefined,
+      created_at:         now,
+      updated_at:         now,
     } as typeof crmLeads.$inferInsert;
     await db.insert(crmLeads).values(payload)
       .onConflictDoUpdate({
         target: crmLeads.id,
         set: {
-          status:        payload.status,
-          contact_email: payload.contact_email,
-          contact_phone: payload.contact_phone,
-          contact_name:  payload.contact_name,
-          source:        payload.source,
-          notes:         payload.notes,
-          manager_id:    payload.manager_id,
+          customer_id:        payload.customer_id,
+          status:             payload.status,
+          status_description: payload.status_description,
+          contact_email:      payload.contact_email,
+          contact_phone:      payload.contact_phone,
+          contact_name:       payload.contact_name,
+          source:             payload.source,
+          notes:              payload.notes,
+          manager_id:         payload.manager_id,
+          updated_at:         now,
         },
       });
     return { ok: true as const, data: lead };

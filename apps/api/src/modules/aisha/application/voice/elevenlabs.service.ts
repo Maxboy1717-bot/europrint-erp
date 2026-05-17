@@ -27,11 +27,15 @@ export class ElevenLabsService {
 
   private async getSdk(): Promise<ElevenLike> {
     if (this.sdk) return this.sdk;
-    const mod = await import('elevenlabs');
-    const ElevenLabs = (mod as unknown as {
-      ElevenLabsClient: new (opts: { apiKey: string }) => ElevenLike;
-    }).ElevenLabsClient;
-    this.sdk = new ElevenLabs({ apiKey: this.cfg.elevenLabsKey });
+    // Dynamic import — package is optional. Fall back to a stub that throws on
+    // actual use when not installed (build/CI environments without the dep).
+    const mod = await import('elevenlabs' as string).catch(() => null) as unknown as {
+      ElevenLabsClient?: new (opts: { apiKey: string }) => ElevenLike;
+    } | null;
+    if (!mod?.ElevenLabsClient) {
+      throw new Error('elevenlabs package not installed — ElevenLabs voice synthesis disabled');
+    }
+    this.sdk = new mod.ElevenLabsClient({ apiKey: this.cfg.elevenLabsKey });
     return this.sdk;
   }
 

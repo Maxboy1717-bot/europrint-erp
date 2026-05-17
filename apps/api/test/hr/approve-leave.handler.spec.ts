@@ -103,7 +103,7 @@ describe('ApproveLeaveHandler', () => {
     expect(r.ok).toBe(false);
   });
 
-  it('approves pending leave, persists update and emits leave.approved event', async () => {
+  it('approves pending leave, persists update and emits LeaveApproved domain event', async () => {
     const repo = makeRepo();
     repo.findLeaveById.mockResolvedValue(Ok(pendingLeaveRow()));
     const bus = makeBus();
@@ -117,7 +117,10 @@ describe('ApproveLeaveHandler', () => {
       expect(r.data.approvedBy).toBe('mgr-1');
     }
     expect(repo.updateLeave).toHaveBeenCalledTimes(1);
-    expect(bus.emit).toHaveBeenCalledWith('leave.approved', expect.any(Object));
+    expect(bus.emit).toHaveBeenCalledWith('LeaveApproved', expect.objectContaining({
+      eventName: 'LeaveApproved',
+      props: expect.objectContaining({ approverId: 'mgr-1' }),
+    }));
   });
 
   it('throws when leave is not in PENDING state (already approved)', async () => {

@@ -12,7 +12,8 @@ const pendingQueue: Array<{ event: string; data: unknown }> = [];
 
 function flushPendingQueue(socket: import("socket.io-client").Socket) {
   while (pendingQueue.length > 0) {
-    const item = pendingQueue.shift()!;
+    const item = pendingQueue.shift();
+    if (!item) break;
     socket.emit(item.event, item.data);
   }
 }

@@ -21,22 +21,26 @@ import { useTranslation } from '@/lib/i18n';
 
 export function MachineOperatorTab({ employeeId }: MachineOperatorTabProps) {
   const { t } = useTranslation("common");
-  const { data: mes, isLoading } = useQuery<MesSummary>({
+  const { data: mes, isLoading } = useQuery<MesSummary | null>({
     queryKey: ["/api/integration/employee-mes-summary", employeeId],
     queryFn: async () => {
-      const res = (await apiRequest("GET", `/api/integration/employee-mes-summary/${employeeId}?months=3`)) as unknown as Response;
-      if (!res.ok) return null;
-      return res.json();
+      try {
+        return await apiRequest<MesSummary | null>("GET", `/api/integration/employee-mes-summary/${employeeId}?months=3`);
+      } catch {
+        return null;
+      }
     },
     enabled: !!employeeId,
   });
 
-  const { data: mes6 } = useQuery<MesSummary>({
+  const { data: mes6 } = useQuery<MesSummary | null>({
     queryKey: ["/api/integration/employee-mes-summary", employeeId, 6],
     queryFn: async () => {
-      const res = (await apiRequest("GET", `/api/integration/employee-mes-summary/${employeeId}?months=6`)) as unknown as Response;
-      if (!res.ok) return null;
-      return res.json();
+      try {
+        return await apiRequest<MesSummary | null>("GET", `/api/integration/employee-mes-summary/${employeeId}?months=6`);
+      } catch {
+        return null;
+      }
     },
     enabled: !!employeeId,
   });

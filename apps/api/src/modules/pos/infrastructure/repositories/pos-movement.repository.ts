@@ -7,6 +7,7 @@ import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { posMovements, posMovementLines, posMovementTypes, warehouses, db, eq, sql } from '@workspace/db';
 import { execPosDamageQcLinkInsert } from '@common/database/queries-remaining';
+import type { IPosMovementRepository } from '../../domain/repositories/i-pos-movement.repo';
 
 type PosMovement     = typeof posMovements.$inferSelect;
 type PosMovementLine = typeof posMovementLines.$inferSelect;
@@ -15,7 +16,7 @@ type WarehouseTypeRow = { type: string | null };
 type WarehouseIds = { fromWarehouseId: string | null; toWarehouseId: string | null };
 
 @Injectable()
-export class PosMovementRepository {
+export class PosMovementRepository implements IPosMovementRepository {
   async findMovementType(id: number): Promise<Result<PosMovementType | null>> {
     try {
       const [movType] = await db.select().from(posMovementTypes).where(eq(posMovementTypes.id, id));

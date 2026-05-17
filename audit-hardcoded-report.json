@@ -1,1191 +1,5 @@
 [
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\portret\\PortretSection4.tsx",
-    "usesT": 17,
-    "count": 14,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 34,
-        "text": "1. Kompaniya taqdimoti (qisqa)"
-      },
-      {
-        "kind": "jsx",
-        "line": 53,
-        "text": "3. Asboblar/Dasturlar"
-      },
-      {
-        "kind": "jsx",
-        "line": 65,
-        "text": "4. Guruh (soni)"
-      },
-      {
-        "kind": "jsx",
-        "line": 98,
-        "text": "7. Sinov maosh (min)"
-      },
-      {
-        "kind": "jsx",
-        "line": 105,
-        "text": "8. Sinov maosh (max)"
-      },
-      {
-        "kind": "jsx",
-        "line": 130,
-        "text": "11. Yillik ta'til (kun)"
-      },
-      {
-        "kind": "jsx",
-        "line": 139,
-        "text": "12. Ish rejimi (soat)"
-      },
-      {
-        "kind": "jsx",
-        "line": 153,
-        "text": "Muddatsiz (Trudovoy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsDialogs.tsx",
-    "usesT": 15,
-    "count": 13,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 75,
-        "text": "TOOL TEST (Shaxsiyat profili)"
-      },
-      {
-        "kind": "jsx",
-        "line": 83,
-        "text": "Nomzod ID (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 88,
-        "text": "Xodim ID (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 93,
-        "text": "Kanban Funnel ID (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 98,
-        "text": "Vakansiya ID (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 188,
-        "text": "Savol matni (O'zbek) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 193,
-        "text": "Savol matni (Rus) (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 198,
-        "text": "Vazn (ko'rsatkich ta'siri)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\MaterialDialog.tsx",
-    "usesT": 14,
-    "count": 12,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 67,
-        "text": "(e: ChangeEvent"
-      },
-      {
-        "kind": "jsx",
-        "line": 137,
-        "text": "Nomi (O'zbek) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 142,
-        "text": "Nomi (Rus)"
-      },
-      {
-        "kind": "jsx",
-        "line": 165,
-        "text": "ABC segment"
-      },
-      {
-        "kind": "jsx",
-        "line": 170,
-        "text": "A (Yuqori prioritet)"
-      },
-      {
-        "kind": "jsx",
-        "line": 171,
-        "text": "B (O'rta prioritet)"
-      },
-      {
-        "kind": "jsx",
-        "line": 172,
-        "text": "C (Past prioritet)"
-      },
-      {
-        "kind": "jsx",
-        "line": 177,
-        "text": "Yaroqlilik (kun)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\QCSPCTab.tsx",
-    "usesT": 5,
-    "count": 11,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 89,
-        "text": "O'lchov soni (n)"
-      },
-      {
-        "kind": "jsx",
-        "line": 95,
-        "text": "O'rtacha nuqson (X̄)"
-      },
-      {
-        "kind": "jsx",
-        "line": 101,
-        "text": "Standart og'ish (σ)"
-      },
-      {
-        "kind": "jsx",
-        "line": 124,
-        "text": "UCL (Yuqori chegarа)"
-      },
-      {
-        "kind": "jsx",
-        "line": 128,
-        "text": "CL (O'rta chiziq)"
-      },
-      {
-        "kind": "jsx",
-        "line": 132,
-        "text": "LCL (Pastki chegarа)"
-      },
-      {
-        "kind": "jsx",
-        "line": 137,
-        "text": "Sigma (σ)"
-      },
-      {
-        "kind": "jsx",
-        "line": 153,
-        "text": "Cp (Qobiliyat indeksi)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\QuestionnaireTemplatesDialogs.tsx",
-    "usesT": 16,
-    "count": 11,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 57,
-        "text": "5 ta savol"
-      },
-      {
-        "kind": "jsx",
-        "line": 66,
-        "text": "5 ta savol"
-      },
-      {
-        "kind": "jsx",
-        "line": 75,
-        "text": "5 ta savol"
-      },
-      {
-        "kind": "jsx",
-        "line": 84,
-        "text": "5 ta savol"
-      },
-      {
-        "kind": "jsx",
-        "line": 131,
-        "text": "Nomi (UZ)"
-      },
-      {
-        "kind": "jsx",
-        "line": 138,
-        "text": "Nomi (RU)"
-      },
-      {
-        "kind": "jsx",
-        "line": 147,
-        "text": "Tavsif (UZ)"
-      },
-      {
-        "kind": "jsx",
-        "line": 151,
-        "text": "Tavsif (RU)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\JobOfferDialog.tsx",
-    "usesT": 18,
-    "count": 11,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 130,
-        "text": "Bo'linma / Departament"
-      },
-      {
-        "kind": "jsx",
-        "line": 151,
-        "text": "Sinov muddati (oy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 157,
-        "text": "1 oy"
-      },
-      {
-        "kind": "jsx",
-        "line": 158,
-        "text": "2 oy"
-      },
-      {
-        "kind": "jsx",
-        "line": 159,
-        "text": "3 oy"
-      },
-      {
-        "kind": "jsx",
-        "line": 160,
-        "text": "6 oy"
-      },
-      {
-        "kind": "jsx",
-        "line": 168,
-        "text": "Maosh (sinov muddati, UZS)"
-      },
-      {
-        "kind": "jsx",
-        "line": 178,
-        "text": "Maosh (asosiy, UZS)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\employee\\dialogs\\EditEmployeeDialog.tsx",
-    "usesT": 61,
-    "count": 10,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 138,
-        "text": "A smena (07:00–15:00)"
-      },
-      {
-        "kind": "jsx",
-        "line": 139,
-        "text": "B smena (15:00–23:00)"
-      },
-      {
-        "kind": "jsx",
-        "line": 140,
-        "text": "C smena (23:00–07:00)"
-      },
-      {
-        "kind": "jsx",
-        "line": 141,
-        "text": "D smena (Kunduzgi)"
-      },
-      {
-        "kind": "jsx",
-        "line": 171,
-        "text": "Sex / Zona"
-      },
-      {
-        "kind": "jsx",
-        "line": 209,
-        "text": "Kenglik (Latitude)"
-      },
-      {
-        "kind": "jsx",
-        "line": 213,
-        "text": "Uzunlik (Longitude)"
-      },
-      {
-        "kind": "jsx",
-        "line": 231,
-        "text": "Beva/Beva ayol"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\agents\\ProductionDashboard.tsx",
-    "usesT": 6,
-    "count": 8,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 59,
-        "text": "OEE breakdown"
-      },
-      {
-        "kind": "jsx",
-        "line": 69,
-        "text": "Buyurtmalar — Kanban (rejada → jarayon → tekshir → tayyor)"
-      },
-      {
-        "kind": "jsx",
-        "line": 84,
-        "text": "Bottleneck (eng sekin ish markazi)"
-      },
-      {
-        "kind": "label",
-        "line": 53,
-        "text": "Xavf ostidagi (2 kun)"
-      },
-      {
-        "kind": "label",
-        "line": 54,
-        "text": "OEE (%)"
-      },
-      {
-        "kind": "label",
-        "line": 61,
-        "text": "Mavjudlik (Availability)"
-      },
-      {
-        "kind": "label",
-        "line": 62,
-        "text": "Unumdorlik (Performance)"
-      },
-      {
-        "kind": "label",
-        "line": 63,
-        "text": "Sifat (Quality)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AuditLogPageSections.tsx",
-    "usesT": 22,
-    "count": 8,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 55,
-        "text": "Dan (sana)"
-      },
-      {
-        "kind": "jsx",
-        "line": 59,
-        "text": "Gacha (sana)"
-      },
-      {
-        "kind": "jsx",
-        "line": 90,
-        "text": "yuklanmoqda..."
-      },
-      {
-        "kind": "jsx",
-        "line": 98,
-        "text": "Sana/Vaqt"
-      },
-      {
-        "kind": "jsx",
-        "line": 103,
-        "text": "IP manzil"
-      },
-      {
-        "kind": "jsx",
-        "line": 190,
-        "text": "IP manzil"
-      },
-      {
-        "kind": "placeholder",
-        "line": 48,
-        "text": "foydalanuvchi-id..."
-      },
-      {
-        "kind": "placeholder",
-        "line": 52,
-        "text": "jadval, yozuv..."
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseHub12ReportsTab.tsx",
-    "usesT": 22,
-    "count": 8,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 60,
-        "text": "Oylik/yillik brak summasi (UZS)"
-      },
-      {
-        "kind": "jsx",
-        "line": 73,
-        "text": "Ishlamoqda / ta'mirda / yaroqsiz"
-      },
-      {
-        "kind": "jsx",
-        "line": 78,
-        "text": "O'z vaqtida / muddati o'tgan"
-      },
-      {
-        "kind": "jsx",
-        "line": 90,
-        "text": "ABC tahlili"
-      },
-      {
-        "kind": "jsx",
-        "line": 91,
-        "text": "A/B/C kategoriyalar bo'yicha"
-      },
-      {
-        "kind": "jsx",
-        "line": 190,
-        "text": "POS terminallar"
-      },
-      {
-        "kind": "jsx",
-        "line": 205,
-        "text": "jadvaliga yoziladi"
-      },
-      {
-        "kind": "jsx",
-        "line": 207,
-        "text": "\"Hozir sinxronlash\" tugmasi manual signal yuboradi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\StepDemographics.tsx",
-    "usesT": 8,
-    "count": 8,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 28,
-        "text": "5 ta savol"
-      },
-      {
-        "kind": "jsx",
-        "line": 33,
-        "text": "6. Yosh (min)"
-      },
-      {
-        "kind": "jsx",
-        "line": 41,
-        "text": "7. Yosh (max)"
-      },
-      {
-        "kind": "jsx",
-        "line": 62,
-        "text": "9. Oilaviy holat (izoh, ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 76,
-        "text": "O'rta (maktab)"
-      },
-      {
-        "kind": "jsx",
-        "line": 77,
-        "text": "O'rta maxsus (kollej/texnikum)"
-      },
-      {
-        "kind": "jsx",
-        "line": 78,
-        "text": "Oliy (bakalavr)"
-      },
-      {
-        "kind": "jsx",
-        "line": 79,
-        "text": "Magistr / PhD"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\RecruitingHeaderActions.tsx",
-    "usesT": 19,
-    "count": 8,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 66,
-        "text": "Standart (15 ish kun)"
-      },
-      {
-        "kind": "jsx",
-        "line": 67,
-        "text": "Ichki (5 ish kun)"
-      },
-      {
-        "kind": "jsx",
-        "line": 68,
-        "text": "Murakkab (25 ish kun)"
-      },
-      {
-        "kind": "jsx",
-        "line": 69,
-        "text": "Top Menejment (40 ish kun)"
-      },
-      {
-        "kind": "jsx",
-        "line": 73,
-        "text": "SLA muddat (ish kunlari)"
-      },
-      {
-        "kind": "jsx",
-        "line": 94,
-        "text": "Vakansiya (ixtiyoriy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 92,
-        "text": "Email (ixtiyoriy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 113,
-        "text": "Izoh (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\QCCertificateGenerator.tsx",
-    "usesT": 36,
-    "count": 7,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 79,
-        "text": "SIFAT SERTIFIKATI / СЕРТИФИКАТ КАЧЕСТВА"
-      },
-      {
-        "kind": "jsx",
-        "line": 80,
-        "text": "&nbsp;|&nbsp; Sana:"
-      },
-      {
-        "kind": "jsx",
-        "line": 94,
-        "text": "Grammatura (gram vazni)"
-      },
-      {
-        "kind": "jsx",
-        "line": 97,
-        "text": "Yorilish mustahkamligi (BCT)"
-      },
-      {
-        "kind": "jsx",
-        "line": 98,
-        "text": "Qirradan ezilish testi (ECT)"
-      },
-      {
-        "kind": "jsx",
-        "line": 132,
-        "text": "Partiya (Batch) raqami"
-      },
-      {
-        "kind": "jsx",
-        "line": 152,
-        "text": "QC inspektor (F.I.Sh.)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\warehouse\\RollManagementPage.tsx",
-    "usesT": 14,
-    "count": 7,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 71,
-        "text": "Roll qoldiqlari (artikel bo'yicha)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 151,
-        "text": "masalan RL-2026-0042"
-      },
-      {
-        "kind": "placeholder",
-        "line": 152,
-        "text": "masalan GOFRO-180-B"
-      },
-      {
-        "kind": "placeholder",
-        "line": 154,
-        "text": "masalan 250"
-      },
-      {
-        "kind": "placeholder",
-        "line": 156,
-        "text": "masalan A-3-12"
-      },
-      {
-        "kind": "label",
-        "line": 154,
-        "text": "Boshlang"
-      },
-      {
-        "kind": "label",
-        "line": 156,
-        "text": "Bin (joy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseQuarantine.tsx",
-    "usesT": 14,
-    "count": 7,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 77,
-        "text": "QC inspektor qarori kutmoqda — 48 soatdan oshgan harakatlar avtomatik eskalatsiy…"
-      },
-      {
-        "kind": "jsx",
-        "line": 92,
-        "text": "QC qarori kutmoqda"
-      },
-      {
-        "kind": "jsx",
-        "line": 98,
-        "text": "48+ soat kechiktirilgan"
-      },
-      {
-        "kind": "jsx",
-        "line": 196,
-        "text": "QC qarorlari nima qiladi:"
-      },
-      {
-        "kind": "jsx",
-        "line": 198,
-        "text": "→ material avtomatik"
-      },
-      {
-        "kind": "jsx",
-        "line": 198,
-        "text": "RM-MAIN"
-      },
-      {
-        "kind": "jsx",
-        "line": 199,
-        "text": "→ MES moduliga signal yuboriladi (qayta ishlash kerak)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\portret\\PortretBlokA.tsx",
-    "usesT": 8,
-    "count": 7,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 27,
-        "text": "5 ta savol"
-      },
-      {
-        "kind": "jsx",
-        "line": 56,
-        "text": "Yangi lavozim (kengayish)"
-      },
-      {
-        "kind": "jsx",
-        "line": 57,
-        "text": "Xodim ketdi / ishdan bo'shatildi"
-      },
-      {
-        "kind": "jsx",
-        "line": 59,
-        "text": "Dekret / turmush ta'tili"
-      },
-      {
-        "kind": "jsx",
-        "line": 78,
-        "text": "5. Kimga hisobot beradi? (Tuzilmaviy joylashuv)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 33,
-        "text": "Bu lavozimning qanday nomlari bo"
-      },
-      {
-        "kind": "placeholder",
-        "line": 80,
-        "text": "Lavozimi / ismi (masalan: Marketing direktori — Aziz Karimov)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\portret\\PortretBlokB.tsx",
-    "usesT": 8,
-    "count": 7,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 26,
-        "text": "5 ta savol"
-      },
-      {
-        "kind": "jsx",
-        "line": 31,
-        "text": "6. Yosh (min)"
-      },
-      {
-        "kind": "jsx",
-        "line": 37,
-        "text": "7. Yosh (max)"
-      },
-      {
-        "kind": "jsx",
-        "line": 56,
-        "text": "9. Oilaviy holat (izoh, ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 69,
-        "text": "Oliy ma'lumot (bakalavr/magistr)"
-      },
-      {
-        "kind": "jsx",
-        "line": 70,
-        "text": "Tugallanmagan oliy / talaba"
-      },
-      {
-        "kind": "jsx",
-        "line": 71,
-        "text": "O'rta maxsus (kollej/litsey)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\StepBasicInfo.tsx",
-    "usesT": 8,
-    "count": 7,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 29,
-        "text": "5 ta savol"
-      },
-      {
-        "kind": "jsx",
-        "line": 60,
-        "text": "Yangi lavozim (kengayish)"
-      },
-      {
-        "kind": "jsx",
-        "line": 61,
-        "text": "Xodim ketdi / ishdan bo'shatildi"
-      },
-      {
-        "kind": "jsx",
-        "line": 63,
-        "text": "Dekret / turmush ta'tili"
-      },
-      {
-        "kind": "jsx",
-        "line": 82,
-        "text": "5. Kimga hisobot beradi? (Tuzilmaviy joylashuv)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 37,
-        "text": "Bu lavozimning qanday nomlari bo"
-      },
-      {
-        "kind": "placeholder",
-        "line": 84,
-        "text": "Lavozimi va/yoki ismi (masalan: Marketing direktori — Aziz Karimov)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\agents\\AgentsHub.tsx",
-    "usesT": 13,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 123,
-        "text": "AI brifing yuklab bo'lmadi (backend ulanishi tekshirilsin)"
-      },
-      {
-        "kind": "jsx",
-        "line": 133,
-        "text": "AI xulosa"
-      },
-      {
-        "kind": "jsx",
-        "line": 143,
-        "text": "20 modul holati"
-      },
-      {
-        "kind": "jsx",
-        "line": 161,
-        "text": "14 ta AI agent"
-      },
-      {
-        "kind": "jsx",
-        "line": 207,
-        "text": "AI javob"
-      },
-      {
-        "kind": "label",
-        "line": 128,
-        "text": "24h SLA buzilgan"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AIInterviewPageSections.tsx",
-    "usesT": 49,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 131,
-        "text": "Savol (O'zbek)"
-      },
-      {
-        "kind": "jsx",
-        "line": 136,
-        "text": "Savol (Rus) — ixtiyoriy"
-      },
-      {
-        "kind": "jsx",
-        "line": 140,
-        "text": "Savol (Ingliz) — ixtiyoriy"
-      },
-      {
-        "kind": "jsx",
-        "line": 146,
-        "text": "Lavozim (ixtiyoriy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 132,
-        "text": "Savol matnini kiriting (O"
-      },
-      {
-        "kind": "placeholder",
-        "line": 137,
-        "text": "Вопрос на русском языке"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\DesignExtendedSections.tsx",
-    "usesT": 22,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 43,
-        "text": "AI tekshiruv navbati"
-      },
-      {
-        "kind": "jsx",
-        "line": 55,
-        "text": "AI natija"
-      },
-      {
-        "kind": "jsx",
-        "line": 88,
-        "text": "3D render uchun dizayn faylini yuklang"
-      },
-      {
-        "kind": "jsx",
-        "line": 89,
-        "text": "Fayl yuklash (AI/PDF/DXF)"
-      },
-      {
-        "kind": "jsx",
-        "line": 94,
-        "text": "F201: 300×200×150 mm"
-      },
-      {
-        "kind": "jsx",
-        "line": 95,
-        "text": "F302: 150×100×100 mm"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ENPSPage.tsx",
-    "usesT": 17,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 177,
-        "text": "eNPS BALLI"
-      },
-      {
-        "kind": "jsx",
-        "line": 217,
-        "text": "💬 Fikrlar (anonim)"
-      },
-      {
-        "kind": "jsx",
-        "line": 238,
-        "text": "📝 Javob berish (Anonim)"
-      },
-      {
-        "kind": "jsx",
-        "line": 241,
-        "text": "EuroPrint'da ishlashni tavsiya qilasizmi? (0-10)"
-      },
-      {
-        "kind": "jsx",
-        "line": 258,
-        "text": "Qoniqish darajasi (1-5)"
-      },
-      {
-        "kind": "jsx",
-        "line": 269,
-        "text": "Nima yaxshilanishi kerak? (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\LogisticsDashboardDialogs.tsx",
-    "usesT": 33,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 114,
-        "text": "Yuk ko'tarish (kg)"
-      },
-      {
-        "kind": "jsx",
-        "line": 155,
-        "text": "Narxi (so'm/l)"
-      },
-      {
-        "kind": "jsx",
-        "line": 164,
-        "text": "Probeg (km)"
-      },
-      {
-        "kind": "jsx",
-        "line": 219,
-        "text": "Og'irlik (kg)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 87,
-        "text": "01 A 123 AA"
-      },
-      {
-        "kind": "placeholder",
-        "line": 91,
-        "text": "MAN TGS 18.400"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MMExtendedTabs.tsx",
-    "usesT": 24,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 24,
-        "text": "Telegram Chek Bot (OCR)"
-      },
-      {
-        "kind": "jsx",
-        "line": 43,
-        "text": "Sana/Vaqt"
-      },
-      {
-        "kind": "jsx",
-        "line": 70,
-        "text": "@europrint_check_bot"
-      },
-      {
-        "kind": "jsx",
-        "line": 123,
-        "text": "suppliers.europrint.uz"
-      },
-      {
-        "kind": "jsx",
-        "line": 148,
-        "text": "Qabul Aktlari (Goods Receipts)"
-      },
-      {
-        "kind": "jsx",
-        "line": 226,
-        "text": "Qarz (PO summa)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\OrderCostingDialogs.tsx",
-    "usesT": 8,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 78,
-        "text": "Material Xarajati (UZS)"
-      },
-      {
-        "kind": "jsx",
-        "line": 91,
-        "text": "Mehnat Xarajati (UZS)"
-      },
-      {
-        "kind": "jsx",
-        "line": 104,
-        "text": "Ustama Xarajat (UZS)"
-      },
-      {
-        "kind": "jsx",
-        "line": 117,
-        "text": "Energiya Xarajati (UZS)"
-      },
-      {
-        "kind": "jsx",
-        "line": 130,
-        "text": "Isrof Xarajati (UZS)"
-      },
-      {
-        "kind": "jsx",
-        "line": 143,
-        "text": "Sotish Narxi (UZS)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDDebitors.tsx",
-    "usesT": 20,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 111,
-        "text": "Kritik (90+ kun)"
-      },
-      {
-        "kind": "jsx",
-        "line": 153,
-        "text": "0-30 kun"
-      },
-      {
-        "kind": "jsx",
-        "line": 154,
-        "text": "31-60 kun"
-      },
-      {
-        "kind": "jsx",
-        "line": 155,
-        "text": "61-90 kun"
-      },
-      {
-        "kind": "jsx",
-        "line": 156,
-        "text": "90+ kun"
-      },
-      {
-        "kind": "jsx",
-        "line": 247,
-        "text": "Izoh (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\skills-matrix\\SkillDialog.tsx",
-    "usesT": 7,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 64,
-        "text": "Nom (O'zbekcha)"
-      },
-      {
-        "kind": "jsx",
-        "line": 71,
-        "text": "Nom (Русский)"
-      },
-      {
-        "kind": "jsx",
-        "line": 80,
-        "text": "Tavsif (O'zbekcha)"
-      },
-      {
-        "kind": "jsx",
-        "line": 87,
-        "text": "Tavsif (Русский)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 72,
-        "text": "Программирование Python"
-      },
-      {
-        "kind": "placeholder",
-        "line": 88,
-        "text": "Языки программирования Python..."
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseQCReview.tsx",
-    "usesT": 21,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 100,
-        "text": "QC INSPEKTOR"
-      },
-      {
-        "kind": "jsx",
-        "line": 102,
-        "text": "QC qarori kutayotgan materiallar — QABUL / REWORK / CHIQARISH"
-      },
-      {
-        "kind": "jsx",
-        "line": 240,
-        "text": "🎯 QC qarori"
-      },
-      {
-        "kind": "jsx",
-        "line": 268,
-        "text": "QC izoh (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 288,
-        "text": "GL posting avtomatik yaratiladi"
-      },
-      {
-        "kind": "jsx",
-        "line": 293,
-        "text": "MES moduliga signal yuboriladi"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\components\\AbcAnalysisCard.tsx",
     "usesT": 39,
     "count": 6,
@@ -1219,117 +33,6 @@
         "kind": "jsx",
         "line": 295,
         "text": "C Daraja (3 ball)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\employee-dialog\\ContractSection.tsx",
-    "usesT": 18,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 30,
-        "text": "A smena"
-      },
-      {
-        "kind": "jsx",
-        "line": 31,
-        "text": "B smena"
-      },
-      {
-        "kind": "jsx",
-        "line": 32,
-        "text": "C smena"
-      },
-      {
-        "kind": "jsx",
-        "line": 33,
-        "text": "D smena"
-      },
-      {
-        "kind": "jsx",
-        "line": 55,
-        "text": "Fiks (Oylik)"
-      },
-      {
-        "kind": "jsx",
-        "line": 72,
-        "text": "Sex/Hudud"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\orgnode\\EditDialog.tsx",
-    "usesT": 4,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 62,
-        "text": "Nomi (UZ)"
-      },
-      {
-        "kind": "jsx",
-        "line": 66,
-        "text": "Nomi (RU)"
-      },
-      {
-        "kind": "jsx",
-        "line": 90,
-        "text": "QYaM (UZ)"
-      },
-      {
-        "kind": "jsx",
-        "line": 96,
-        "text": "QYaM (RU)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 93,
-        "text": "Asosiy vazifasi (QYaM)..."
-      },
-      {
-        "kind": "placeholder",
-        "line": 99,
-        "text": "ЦКП (RU)..."
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\StepConditions.tsx",
-    "usesT": 7,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 36,
-        "text": "Ish haqi (min)"
-      },
-      {
-        "kind": "jsx",
-        "line": 45,
-        "text": "Ish haqi (max)"
-      },
-      {
-        "kind": "jsx",
-        "line": 57,
-        "text": "Sinov muddati (oy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 69,
-        "text": "5/2 (Dush-Juma)"
-      },
-      {
-        "kind": "jsx",
-        "line": 70,
-        "text": "6/1 (Dush-Shan)"
-      },
-      {
-        "kind": "jsx",
-        "line": 71,
-        "text": "2/2 (Smena)"
       }
     ]
   },
@@ -1408,359 +111,34 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\valuation\\CreateAssetDialog.tsx",
-    "usesT": 21,
-    "count": 6,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 67,
-        "text": "IT uskunalar"
-      },
-      {
-        "kind": "jsx",
-        "line": 103,
-        "text": "Xarid qiymati (UZS) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 112,
-        "text": "Joriy qiymat (UZS) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 123,
-        "text": "Foydali xizmat muddati (yil)"
-      },
-      {
-        "kind": "jsx",
-        "line": 132,
-        "text": "Qoldiq qiymat (UZS)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 164,
-        "text": "1-qavat, A-blok"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\FeedbackTab.tsx",
-    "usesT": 29,
+    "file": "artifacts\\erp-dashboard\\src\\pages\\agents\\ProductionDashboard.tsx",
+    "usesT": 9,
     "count": 5,
     "samples": [
       {
-        "kind": "jsx",
-        "line": 173,
-        "text": "1 hafta, 1 oy, 3 oy suhbatlari"
+        "kind": "label",
+        "line": 53,
+        "text": "Xavf ostidagi (2 kun)"
       },
       {
-        "kind": "jsx",
-        "line": 210,
-        "text": "1 hafta"
+        "kind": "label",
+        "line": 54,
+        "text": "OEE (%)"
       },
       {
-        "kind": "jsx",
-        "line": 211,
-        "text": "1 oy"
-      },
-      {
-        "kind": "jsx",
-        "line": 212,
-        "text": "3 oy"
-      },
-      {
-        "kind": "jsx",
-        "line": 247,
-        "text": "Ball (1-5)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\agents\\StrategicDashboard.tsx",
-    "usesT": 6,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 45,
-        "text": "6 oylik bashorat + scenario simulator + investitsiya tavsiyalari"
-      },
-      {
-        "kind": "jsx",
-        "line": 78,
-        "text": "Scenario simulator (AI tahlil)"
-      },
-      {
-        "kind": "jsx",
-        "line": 92,
-        "text": "AI tahlil natijasi"
-      },
-      {
-        "kind": "jsx",
-        "line": 102,
-        "text": "Investitsiya tavsiyalari (prioritet bo'yicha)"
-      },
-      {
-        "kind": "jsx",
-        "line": 115,
-        "text": "· ROI:"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AIFinancePageSections2.tsx",
-    "usesT": 28,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 75,
-        "text": "Rejalashtirilgan (UZS)"
-      },
-      {
-        "kind": "jsx",
-        "line": 84,
-        "text": "Haqiqiy (UZS)"
-      },
-      {
-        "kind": "jsx",
-        "line": 103,
-        "text": "Qo'shimcha kontekst (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 205,
-        "text": "Yetkazuvchi (vendor)"
-      },
-      {
-        "kind": "jsx",
-        "line": 221,
-        "text": "Miqdor (UZS)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\RemainingTabsB.tsx",
-    "usesT": 20,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 168,
-        "text": "O'rtacha vaqt (soniyalarda)"
-      },
-      {
-        "kind": "jsx",
-        "line": 228,
-        "text": "Oson (80-100% o'tish)"
-      },
-      {
-        "kind": "jsx",
-        "line": 238,
-        "text": "O'rtacha (60-79% o'tish)"
-      },
-      {
-        "kind": "jsx",
-        "line": 248,
-        "text": "Qiyin (40-59% o'tish)"
-      },
-      {
-        "kind": "jsx",
-        "line": 258,
-        "text": "Juda qiyin (0-39% o'tish)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\DocumentsTabDialogs.tsx",
-    "usesT": 20,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 149,
-        "text": "Izoh (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 258,
-        "text": "Fayl nomi (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 263,
-        "text": "Fayl URL (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 268,
-        "text": "Izoh (ixtiyoriy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 264,
-        "text": "Masalan: /uploads/emp/123/passport.pdf"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\HRCapitalTabDialogs.tsx",
-    "usesT": 13,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 32,
-        "text": "Flagman (Yetakchi)"
-      },
-      {
-        "kind": "jsx",
-        "line": 33,
-        "text": "Performer (Bajaruvchi)"
-      },
-      {
-        "kind": "jsx",
-        "line": 34,
-        "text": "Troublemaker (Muammoli)"
-      },
-      {
-        "kind": "jsx",
-        "line": 40,
-        "text": "Tool Test natijasi (A-J)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 108,
-        "text": "HR izohlar..."
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingWebsiteCMS.tsx",
-    "usesT": 22,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 157,
-        "text": "Sarlavha (UZ) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 158,
-        "text": "Sarlavha (RU)"
-      },
-      {
-        "kind": "jsx",
-        "line": 160,
-        "text": "Matn (UZ)"
-      },
-      {
-        "kind": "jsx",
-        "line": 161,
-        "text": "Matn (RU)"
-      },
-      {
-        "kind": "jsx",
-        "line": 164,
-        "text": "Teglar (vergul bilan)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\OrderApprovalWorkflow.tsx",
-    "usesT": 2,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 129,
-        "text": "Процесс утверждения заказов"
-      },
-      {
-        "kind": "jsx",
-        "line": 140,
-        "text": "Tarix / История"
-      },
-      {
-        "kind": "jsx",
-        "line": 147,
-        "text": "Yuklanmoqda... / Загрузка..."
-      },
-      {
-        "kind": "jsx",
-        "line": 153,
-        "text": "Tasdiqlash bosqichlari / Этапы утверждения"
-      },
-      {
-        "kind": "jsx",
-        "line": 154,
-        "text": "Dizayn → Texnolog → Sifat nazorati → Moliya / Дизайн → Технолог → Контроль качес…"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\PosBarcPageSections.tsx",
-    "usesT": 10,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 56,
-        "text": "EAN-13 / QR barcode"
-      },
-      {
-        "kind": "jsx",
-        "line": 197,
-        "text": "Prefiks (2-7 raqam)"
-      },
-      {
-        "kind": "jsx",
-        "line": 263,
-        "text": "EAN-13 haqida:"
-      },
-      {
-        "kind": "jsx",
-        "line": 264,
-        "text": "• 13 raqamdan iborat xalqaro barcode standarti"
-      },
-      {
-        "kind": "jsx",
-        "line": 265,
-        "text": "• Oxirgi raqam — tekshirish raqami (avtomatik hisoblanadi)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\PositionsDialogs.tsx",
-    "usesT": 14,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 49,
-        "text": "Nomi (UZ) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 57,
-        "text": "Nomi (RU)"
-      },
-      {
-        "kind": "jsx",
-        "line": 104,
-        "text": "Min oylik (so'm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 113,
-        "text": "Max oylik (so'm)"
-      },
-      {
-        "kind": "placeholder",
+        "kind": "label",
         "line": 61,
-        "text": "Название должности"
+        "text": "Mavjudlik (Availability)"
+      },
+      {
+        "kind": "label",
+        "line": 62,
+        "text": "Unumdorlik (Performance)"
+      },
+      {
+        "kind": "label",
+        "line": 63,
+        "text": "Sifat (Quality)"
       }
     ]
   },
@@ -1797,598 +175,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\labor-market\\CandidateMarketSection.tsx",
-    "usesT": 3,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 28,
-        "text": "Mavjud kandidatlar soni (taxminiy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 43,
-        "text": "Javob berish muddati (kun)"
-      },
-      {
-        "kind": "jsx",
-        "line": 58,
-        "text": "Maosh kutilmasi (min, so'm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 73,
-        "text": "Maosh kutilmasi (max, so'm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 88,
-        "text": "Ko'nikmalar darajasi (o'rtacha)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\org\\AddNodeDialog.tsx",
-    "usesT": 6,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 80,
-        "text": "Nomi (UZ) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 88,
-        "text": "Nomi (RU)"
-      },
-      {
-        "kind": "jsx",
-        "line": 107,
-        "text": "QYaM (asosiy vazifasi, maks 32 belgi)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 92,
-        "text": "Например: Финансовый отдел"
-      },
-      {
-        "kind": "placeholder",
-        "line": 121,
-        "text": "Masalan: 2 (bo"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\portret\\PortretBlokE.tsx",
-    "usesT": 7,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 25,
-        "text": "5 ta savol"
-      },
-      {
-        "kind": "jsx",
-        "line": 29,
-        "text": "14. Xavfli nomzod tavsifi (Xavf guruhlari)"
-      },
-      {
-        "kind": "jsx",
-        "line": 79,
-        "text": "18. Professional ko'nikmalar (Hard skills)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 31,
-        "text": "Kandidatda qaysi belgilar bo"
-      },
-      {
-        "kind": "placeholder",
-        "line": 81,
-        "text": "Qaysi dasturlarni bilishi shart? (Excel, 1C, Photoshop, Python...)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\portret\\PortretSection3.tsx",
-    "usesT": 3,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 32,
-        "text": "Maosh (min)"
-      },
-      {
-        "kind": "jsx",
-        "line": 36,
-        "text": "Maosh (max)"
-      },
-      {
-        "kind": "jsx",
-        "line": 43,
-        "text": "Sinov muddati (oy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 53,
-        "text": "Ijtimoiy paket (tanlash)"
-      },
-      {
-        "kind": "jsx",
-        "line": 72,
-        "text": "Boshqa sharoitlar / Izoh"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\StepPresentation.tsx",
-    "usesT": 32,
-    "count": 5,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 53,
-        "text": "3. Instrumentlar/Dasturlar"
-      },
-      {
-        "kind": "jsx",
-        "line": 162,
-        "text": "Muddatsiz (doimiy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 164,
-        "text": "Fuqarolik shartnomasi (GPC)"
-      },
-      {
-        "kind": "jsx",
-        "line": 165,
-        "text": "IP / Yakka tartibdagi tadbirkor"
-      },
-      {
-        "kind": "jsx",
-        "line": 184,
-        "text": "15. Ijtimoiy paket (sotsial paket)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabDialogs.tsx",
-    "usesT": 11,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 66,
-        "text": "1 kunlik"
-      },
-      {
-        "kind": "jsx",
-        "line": 75,
-        "text": "1 haftalik"
-      },
-      {
-        "kind": "jsx",
-        "line": 84,
-        "text": "1 oylik"
-      },
-      {
-        "kind": "jsx",
-        "line": 93,
-        "text": "3 oylik"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTabFormDialog.tsx",
-    "usesT": 13,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 96,
-        "text": "Tavsif (UZ)"
-      },
-      {
-        "kind": "jsx",
-        "line": 106,
-        "text": "Tavsif (RU)"
-      },
-      {
-        "kind": "jsx",
-        "line": 164,
-        "text": "Bo'lim (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 178,
-        "text": "Lavozim (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\WelcomeEventsTab.tsx",
-    "usesT": 20,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 158,
-        "text": "Nomi (UZ)"
-      },
-      {
-        "kind": "jsx",
-        "line": 163,
-        "text": "Nomi (RU)"
-      },
-      {
-        "kind": "jsx",
-        "line": 170,
-        "text": "Tavsif (UZ)"
-      },
-      {
-        "kind": "jsx",
-        "line": 174,
-        "text": "Tavsif (RU)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\agents\\HRPerformanceDashboard.tsx",
-    "usesT": 7,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 71,
-        "text": "Bazaviy oylik (so'm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 94,
-        "text": "/100 ball"
-      },
-      {
-        "kind": "jsx",
-        "line": 120,
-        "text": "Oylik bonus (taxminiy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 66,
-        "text": "masalan 1"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\agents\\QualityDashboard.tsx",
-    "usesT": 7,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 41,
-        "text": "7 kunlik brak %"
-      },
-      {
-        "kind": "jsx",
-        "line": 45,
-        "text": "30 kunlik brak %"
-      },
-      {
-        "kind": "jsx",
-        "line": 76,
-        "text": "QC qaroriga muhtoj"
-      },
-      {
-        "kind": "jsx",
-        "line": 86,
-        "text": "AI Vision (defekt aniqlash)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AIProductionPlanningDialogs.tsx",
-    "usesT": 24,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 47,
-        "text": "Override sababi (majburiy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 118,
-        "text": "Sabab (kamida 5 belgi)"
-      },
-      {
-        "kind": "jsx",
-        "line": 184,
-        "text": "Sabab (ixtiyoriy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 181,
-        "text": "masalan: gofrokarton, PP lenta..."
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ApplicationsDialogs.tsx",
-    "usesT": 8,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 91,
-        "text": "Izohlar (ixtiyoriy, faqat HR ko'radi)"
-      },
-      {
-        "kind": "jsx",
-        "line": 103,
-        "text": "Xodimga javob (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 115,
-        "text": "Mas'ul xodim (ixtiyoriy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 96,
-        "text": "HR uchun eslatmalar..."
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\CFODashboardExtra.tsx",
-    "usesT": 35,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 75,
-        "text": "MPV · MQV · LRV · LEV · OV"
-      },
-      {
-        "kind": "jsx",
-        "line": 82,
-        "text": "CVP · BEP tahlili"
-      },
-      {
-        "kind": "jsx",
-        "line": 226,
-        "text": "Debitorlar (AR)"
-      },
-      {
-        "kind": "jsx",
-        "line": 232,
-        "text": "Kreditorlar (AP)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\DocumentWorkflowPageDialogs.tsx",
-    "usesT": 18,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 82,
-        "text": "Daraja (yuqoriga)"
-      },
-      {
-        "kind": "jsx",
-        "line": 108,
-        "text": "Muddat (soat)"
-      },
-      {
-        "kind": "jsx",
-        "line": 116,
-        "text": "1-eslatma (soat qolgunicha)"
-      },
-      {
-        "kind": "jsx",
-        "line": 124,
-        "text": "2-eslatma (soat qolgunicha)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\LeaveTabDialogs.tsx",
-    "usesT": 37,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 155,
-        "text": "To'lov foizi (%)"
-      },
-      {
-        "kind": "jsx",
-        "line": 224,
-        "text": "Kunlik xarajat (so'm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 228,
-        "text": "Transport (so'm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 232,
-        "text": "Yashash (so'm)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ERPDailyReportsDialogs.tsx",
-    "usesT": 18,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 179,
-        "text": "Reja (dona)"
-      },
-      {
-        "kind": "jsx",
-        "line": 191,
-        "text": "Fakt (dona)"
-      },
-      {
-        "kind": "jsx",
-        "line": 206,
-        "text": "Brak (dona)"
-      },
-      {
-        "kind": "jsx",
-        "line": 218,
-        "text": "To'xtash (daqiqa)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\LMSExtended.tsx",
-    "usesT": 37,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 156,
-        "text": "Davomiylik (soat)"
-      },
-      {
-        "kind": "jsx",
-        "line": 210,
-        "text": "O'tish bali (%)"
-      },
-      {
-        "kind": "jsx",
-        "line": 211,
-        "text": "Vaqt chegarasi (min)"
-      },
-      {
-        "kind": "jsx",
-        "line": 223,
-        "text": "Operator Sertifikatsiya (MES uchun ruxsat)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MESProducts.tsx",
-    "usesT": 18,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 206,
-        "text": "Nomi (UZ)"
-      },
-      {
-        "kind": "jsx",
-        "line": 210,
-        "text": "Nomi (RU)"
-      },
-      {
-        "kind": "jsx",
-        "line": 240,
-        "text": "Tannarx (so'm)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 211,
-        "text": "Название"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MMVendorsFormFields.tsx",
-    "usesT": 13,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 100,
-        "text": "Nomi (Ruscha)"
-      },
-      {
-        "kind": "jsx",
-        "line": 161,
-        "text": "Soliq ID (INN)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 102,
-        "text": "Название поставщика"
-      },
-      {
-        "kind": "placeholder",
-        "line": 146,
-        "text": "email@example.com"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\PIPPage.tsx",
-    "usesT": 25,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 87,
-        "text": "Performance Improvement Plans — 30/60/90 kunlik rejalar"
-      },
-      {
-        "kind": "jsx",
-        "line": 111,
-        "text": "Davomiyligi (kun) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 252,
-        "text": "Progress (%)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 130,
-        "text": "PIP maqsadlari va kutilgan natijalar..."
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\POSInventoryPageDialogs.tsx",
-    "usesT": 5,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 66,
-        "text": "Kirim (qo'shish)"
-      },
-      {
-        "kind": "jsx",
-        "line": 67,
-        "text": "Chiqim (ayirish)"
-      },
-      {
-        "kind": "jsx",
-        "line": 68,
-        "text": "Tuzatish (aniq qiymat)"
-      },
-      {
-        "kind": "jsx",
-        "line": 87,
-        "text": "Sabab (ixtiyoriy)"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\QCAIAnalysisTab.tsx",
     "usesT": 7,
     "count": 4,
@@ -2416,6 +202,33 @@
     ]
   },
   {
+    "file": "artifacts\\erp-dashboard\\src\\pages\\QuestionnaireTemplatesDialogs.tsx",
+    "usesT": 23,
+    "count": 4,
+    "samples": [
+      {
+        "kind": "jsx",
+        "line": 131,
+        "text": "Nomi (UZ)"
+      },
+      {
+        "kind": "jsx",
+        "line": 138,
+        "text": "Nomi (RU)"
+      },
+      {
+        "kind": "jsx",
+        "line": 220,
+        "text": "Savol (UZ)"
+      },
+      {
+        "kind": "jsx",
+        "line": 227,
+        "text": "Savol (RU)"
+      }
+    ]
+  },
+  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\QueueMonitorSections.tsx",
     "usesT": 18,
     "count": 4,
@@ -2439,222 +252,6 @@
         "kind": "jsx",
         "line": 27,
         "text": "0) return"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDCustomersSections.tsx",
-    "usesT": 11,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 121,
-        "text": "Qidirish (nom, STIR, kod...)"
-      },
-      {
-        "kind": "label",
-        "line": 64,
-        "text": "VIP (A)"
-      },
-      {
-        "kind": "label",
-        "line": 71,
-        "text": "Doimiy (B)"
-      },
-      {
-        "kind": "label",
-        "line": 78,
-        "text": "Oddiy (C)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDQuotationFormFields.tsx",
-    "usesT": 21,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 46,
-        "text": "Mijoz (kompaniya)"
-      },
-      {
-        "kind": "jsx",
-        "line": 152,
-        "text": "14 kun ichida"
-      },
-      {
-        "kind": "jsx",
-        "line": 153,
-        "text": "30 kun ichida"
-      },
-      {
-        "kind": "jsx",
-        "line": 154,
-        "text": "60 kun ichida"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDSalesQuotesSections.tsx",
-    "usesT": 7,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 151,
-        "text": "Uzunlik (mm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 157,
-        "text": "Kenglik (mm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 163,
-        "text": "Balandlik (mm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 195,
-        "text": "Miqdor (dona)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SuperAdminPanelSections.tsx",
-    "usesT": 59,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 200,
-        "text": "Modul (jadval)"
-      },
-      {
-        "kind": "jsx",
-        "line": 250,
-        "text": "IP manzil"
-      },
-      {
-        "kind": "placeholder",
-        "line": 117,
-        "text": "samarkand.europrint.uz"
-      },
-      {
-        "kind": "placeholder",
-        "line": 125,
-        "text": "admin@company.uz"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseHub12StockOpsTab.tsx",
-    "usesT": 25,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 132,
-        "text": "GRN raqami"
-      },
-      {
-        "kind": "jsx",
-        "line": 252,
-        "text": "Material karantinga kiritiladi (GRN yoki ichki transfer)"
-      },
-      {
-        "kind": "jsx",
-        "line": 254,
-        "text": "Natija kiritiladi: APPROVED (tasdiqlangan) yoki REJECTED (rad)"
-      },
-      {
-        "kind": "jsx",
-        "line": 255,
-        "text": "APPROVED — tegishli omborga chiqariladi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseInventoryPassport.tsx",
-    "usesT": 19,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 107,
-        "text": "INVENTAR PASPORTLARI"
-      },
-      {
-        "kind": "jsx",
-        "line": 109,
-        "text": "EXTERNAL_IN harakatlari uchun inventar pasportlari va QC qarorlari"
-      },
-      {
-        "kind": "jsx",
-        "line": 121,
-        "text": "QC kutmoqda"
-      },
-      {
-        "kind": "jsx",
-        "line": 175,
-        "text": "Og'irlik (kg)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseKpiHub.tsx",
-    "usesT": 21,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 72,
-        "text": "OMBOR KPI HUB"
-      },
-      {
-        "kind": "jsx",
-        "line": 119,
-        "text": "🔄 Harakatlar (30 kun)"
-      },
-      {
-        "kind": "jsx",
-        "line": 166,
-        "text": "JAMI QIYMAT"
-      },
-      {
-        "kind": "label",
-        "line": 94,
-        "text": "QC kutmoqda"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WMSDashboardSections.tsx",
-    "usesT": 18,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 51,
-        "text": "nomenklatura pozitsiya"
-      },
-      {
-        "kind": "jsx",
-        "line": 79,
-        "text": "minimal ostida"
-      },
-      {
-        "kind": "jsx",
-        "line": 227,
-        "text": "QC nazoratida kutayotgan"
-      },
-      {
-        "kind": "jsx",
-        "line": 233,
-        "text": "Muddati yaqin partiyalar (30 kun)"
       }
     ]
   },
@@ -2713,87 +310,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\employee-dialog\\HouseholdSection.tsx",
-    "usesT": 12,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 22,
-        "text": "Uy turi"
-      },
-      {
-        "kind": "jsx",
-        "line": 86,
-        "text": "Kenglik (Latitude)"
-      },
-      {
-        "kind": "jsx",
-        "line": 103,
-        "text": "Uzunlik (Longitude)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 26,
-        "text": "Uy turini tanlang"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\OnboardingRoadmapDialog.tsx",
-    "usesT": 18,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 285,
-        "text": "Reglamentlar ro'yxati (har bir qator — alohida material)"
-      },
-      {
-        "kind": "jsx",
-        "line": 295,
-        "text": "Haftalik maqsadlar (4 hafta)"
-      },
-      {
-        "kind": "jsx",
-        "line": 314,
-        "text": "Sinov muddati (oy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 390,
-        "text": "Gantt-style Jadval (4 hafta)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\portret\\PortretBlokC.tsx",
-    "usesT": 3,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 23,
-        "text": "3 ta savol"
-      },
-      {
-        "kind": "jsx",
-        "line": 27,
-        "text": "11. Bo'lim/jamoa vazifalari"
-      },
-      {
-        "kind": "jsx",
-        "line": 37,
-        "text": "12. Xodim majburiyatlari (Funksional)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 51,
-        "text": "Xodim ishining yakuniy natijasi nima? (masalan: sotilgan mahsulot hajmi, bitgan …"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\components\\production\\report\\ShiftDetailModal.tsx",
     "usesT": 22,
     "count": 4,
@@ -2817,33 +333,6 @@
         "kind": "jsx",
         "line": 269,
         "text": "Qayta ishlash (dona)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\StepExperience.tsx",
-    "usesT": 11,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 29,
-        "text": "5 ta savol"
-      },
-      {
-        "kind": "jsx",
-        "line": 91,
-        "text": "18. Kasb ko'nikmalari (dasturlar, tillar)"
-      },
-      {
-        "kind": "jsx",
-        "line": 101,
-        "text": "Xodim turi (Maqsadli)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 93,
-        "text": "Masalan: Excel (VLOOKUP), 1C, Ingliz tili (B2), Photoshop..."
       }
     ]
   },
@@ -2902,33 +391,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\barcode\\AsosiyTab.tsx",
-    "usesT": 14,
-    "count": 4,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 95,
-        "text": ")?.operatorDebts as Record"
-      },
-      {
-        "kind": "jsx",
-        "line": 96,
-        "text": ")?.exitControl as Record"
-      },
-      {
-        "kind": "jsx",
-        "line": 97,
-        "text": ")?.printQueue as Record"
-      },
-      {
-        "kind": "jsx",
-        "line": 157,
-        "text": "QC kutilmoqda"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\BarcodeSystem.tsx",
     "usesT": 0,
     "count": 3,
@@ -2973,248 +435,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\CRMSettingsDialogs.tsx",
-    "usesT": 7,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 88,
-        "text": "Maydon nomi (ruscha)"
-      },
-      {
-        "kind": "jsx",
-        "line": 166,
-        "text": "Required"
-      },
-      {
-        "kind": "placeholder",
-        "line": 94,
-        "text": "Название поля"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\CustomerPortalConfig.tsx",
-    "usesT": 20,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 193,
-        "text": "CRM_WEBHOOK_SECRET kerak"
-      },
-      {
-        "kind": "jsx",
-        "line": 259,
-        "text": "So'rov tanasi (JSON)"
-      },
-      {
-        "kind": "jsx",
-        "line": 304,
-        "text": "HMAC SHA-256 imzo kaliti"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\DailyReportPageSections.tsx",
-    "usesT": 16,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 122,
-        "text": "(kamida 30 belgi)"
-      },
-      {
-        "kind": "jsx",
-        "line": 137,
-        "text": "(ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 148,
-        "text": "(ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\DocumentWorkflowPageDetail.tsx",
-    "usesT": 16,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 100,
-        "text": "📨 1-eslatma"
-      },
-      {
-        "kind": "jsx",
-        "line": 101,
-        "text": "📨📨 2-eslatma"
-      },
-      {
-        "kind": "placeholder",
-        "line": 130,
-        "text": "Rad etish sababi (majburiy) *"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\CorporateInfoCard.tsx",
-    "usesT": 12,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 127,
-        "text": "Saqlanish muddati (yil)"
-      },
-      {
-        "kind": "jsx",
-        "line": 175,
-        "text": "ERP bloklangan"
-      },
-      {
-        "kind": "placeholder",
-        "line": 123,
-        "text": "xodim@europrint.uz"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\MonthlyReportTabSections.tsx",
-    "usesT": 17,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 171,
-        "text": "- Jarima/chegirma"
-      },
-      {
-        "kind": "jsx",
-        "line": 177,
-        "text": "- Avans (to'lanmagan)"
-      },
-      {
-        "kind": "jsx",
-        "line": 182,
-        "text": "Sof maosh (taxminiy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\EmployeeInventory.tsx",
-    "usesT": 11,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 60,
-        "text": "MENING INVENTARIM"
-      },
-      {
-        "kind": "jsx",
-        "line": 70,
-        "text": "JAMI INVENTAR"
-      },
-      {
-        "kind": "jsx",
-        "line": 79,
-        "text": "JAMI QIYMAT"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\FinanceDashboard.tsx",
-    "usesT": 16,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 253,
-        "text": "INPS (12%):"
-      },
-      {
-        "kind": "jsx",
-        "line": 257,
-        "text": "JSHD (12%):"
-      },
-      {
-        "kind": "title",
-        "line": 213,
-        "text": "Moliya {t("
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRBrandPageTabsB.tsx",
-    "usesT": 24,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 88,
-        "text": "Reyting (1–5)"
-      },
-      {
-        "kind": "jsx",
-        "line": 148,
-        "text": "O'rtacha ish staji (yil)"
-      },
-      {
-        "kind": "jsx",
-        "line": 158,
-        "text": "O'sish foizi (%)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsTabs.tsx",
-    "usesT": 17,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 272,
-        "text": "10 ko'rsatkich (A-J), -100 dan +100 gacha"
-      },
-      {
-        "kind": "jsx",
-        "line": 326,
-        "text": "TOOL TEST"
-      },
-      {
-        "kind": "jsx",
-        "line": 329,
-        "text": "— Ko'rsatmani aniq bajarish qobiliyati (90-100% maqsad)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\InvoiceVerification.tsx",
-    "usesT": 31,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 191,
-        "text": "PO farqi"
-      },
-      {
-        "kind": "jsx",
-        "line": 225,
-        "text": "PO summa"
-      },
-      {
-        "kind": "jsx",
-        "line": 226,
-        "text": "GR summa"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\LogisticsDashboard.tsx",
     "usesT": 12,
     "count": 3,
@@ -3233,270 +453,6 @@
         "kind": "jsx",
         "line": 266,
         "text": "addDeliveryMut.mutate(deliveryForm as Record"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingContent.tsx",
-    "usesT": 23,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 203,
-        "text": "Hashtag'lar (vergul bilan)"
-      },
-      {
-        "kind": "jsx",
-        "line": 207,
-        "text": "AI prompt"
-      },
-      {
-        "kind": "placeholder",
-        "line": 203,
-        "text": "#europrint, #quti"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MMExtendedFleetTabs.tsx",
-    "usesT": 39,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 49,
-        "text": "GPS tracking"
-      },
-      {
-        "kind": "jsx",
-        "line": 102,
-        "text": "Miqdor (L)"
-      },
-      {
-        "kind": "jsx",
-        "line": 246,
-        "text": "AI tavsiya"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MockupShowcase.tsx",
-    "usesT": 53,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 26,
-        "text": "Demo / Style Guide"
-      },
-      {
-        "kind": "jsx",
-        "line": 41,
-        "text": "2. KPI Cards (8 rang)"
-      },
-      {
-        "kind": "jsx",
-        "line": 155,
-        "text": "Yangi (30 kun)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MRODashboardDialogs.tsx",
-    "usesT": 31,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 70,
-        "text": "Nomi (RU)"
-      },
-      {
-        "kind": "jsx",
-        "line": 85,
-        "text": "PPE / Forma"
-      },
-      {
-        "kind": "placeholder",
-        "line": 71,
-        "text": "Название на русском"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ProductionFactsPage.tsx",
-    "usesT": 13,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 214,
-        "text": "Reja (dona)"
-      },
-      {
-        "kind": "jsx",
-        "line": 224,
-        "text": "Haqiqat (dona)"
-      },
-      {
-        "kind": "jsx",
-        "line": 234,
-        "text": "Brak (dona)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ProductionOrder360Shifts.tsx",
-    "usesT": 8,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 129,
-        "text": "A (mavjudlik)"
-      },
-      {
-        "kind": "jsx",
-        "line": 133,
-        "text": "P (unumdorlik)"
-      },
-      {
-        "kind": "jsx",
-        "line": 137,
-        "text": "Q (sifat)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogStep4.tsx",
-    "usesT": 10,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 51,
-        "text": "Ball (1-10)"
-      },
-      {
-        "kind": "jsx",
-        "line": 107,
-        "text": "TOOL TEST natijalari (A-J):"
-      },
-      {
-        "kind": "jsx",
-        "line": 150,
-        "text": "Yakuniy izoh (ixtiyoriy):"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\QCApprovalDialogs.tsx",
-    "usesT": 21,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 64,
-        "text": "Inspeksiya izohi (ixtiyoriy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 167,
-        "text": "QC izoh (ixtiyoriy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 219,
-        "text": "Rad etish sababi - qaysi test muvaffaqiyatsiz bo"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\QCDashboardSections.tsx",
-    "usesT": 16,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 141,
-        "text": "Past sifat (&lt;70)"
-      },
-      {
-        "kind": "jsx",
-        "line": 149,
-        "text": "MM reytingi avtomatik pasaytiriladi"
-      },
-      {
-        "kind": "jsx",
-        "line": 220,
-        "text": "RCA avtomatik ochiladi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\QuestionnaireDialogs.tsx",
-    "usesT": 17,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 68,
-        "text": "Savol (O'zbek)"
-      },
-      {
-        "kind": "jsx",
-        "line": 80,
-        "text": "Savol (Rus)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 87,
-        "text": "Например: Полное имя"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\RecruiterKPIPageTables.tsx",
-    "usesT": 14,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 35,
-        "text": "O'rtacha (kun)"
-      },
-      {
-        "kind": "jsx",
-        "line": 38,
-        "text": "Yopilgan (oy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 110,
-        "text": "Progress (60% maqsad)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ReferralPageDialogs.tsx",
-    "usesT": 17,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 43,
-        "text": "Do'st / tanish tavsiya qilish"
-      },
-      {
-        "kind": "jsx",
-        "line": 114,
-        "text": "Referral holati yangilash (HR)"
-      },
-      {
-        "kind": "jsx",
-        "line": 165,
-        "text": "HR izohi"
       }
     ]
   },
@@ -3523,156 +479,24 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDExtendedSections2.tsx",
-    "usesT": 17,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 51,
-        "text": "Maydon (m²)"
-      },
-      {
-        "kind": "jsx",
-        "line": 54,
-        "text": "Oylik (so'm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 146,
-        "text": "Kritik (muddati o'tgan)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDQuotaDashboardSections.tsx",
+    "file": "artifacts\\erp-dashboard\\src\\pages\\SDCustomersSections.tsx",
     "usesT": 12,
     "count": 3,
     "samples": [
       {
-        "kind": "jsx",
-        "line": 46,
-        "text": "REJA (maqsad)"
-      },
-      {
-        "kind": "jsx",
-        "line": 53,
-        "text": "FAKT (bajarilgan)"
-      },
-      {
-        "kind": "jsx",
-        "line": 115,
-        "text": "Temp (Pace)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SettingsTabContact.tsx",
-    "usesT": 4,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 44,
-        "text": "info@europrint.uz"
-      },
-      {
-        "kind": "placeholder",
+        "kind": "label",
         "line": 64,
-        "text": "www.europrint.uz"
+        "text": "VIP (A)"
       },
       {
-        "kind": "placeholder",
-        "line": 84,
-        "text": "г. Ташкент, Яшнабадский район"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\StrategicTasksPanelTaskDialog.tsx",
-    "usesT": 20,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 111,
-        "text": "Sarlavha (UZ)"
+        "kind": "label",
+        "line": 71,
+        "text": "Doimiy (B)"
       },
       {
-        "kind": "jsx",
-        "line": 124,
-        "text": "Sarlavha (RU)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 126,
-        "text": "Название задачи"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtended.tsx",
-    "usesT": 2,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 52,
-        "text": "BOM/Routing"
-      },
-      {
-        "kind": "jsx",
-        "line": 60,
-        "text": "TEXNOLOG:"
-      },
-      {
-        "kind": "jsx",
-        "line": 72,
-        "text": "AI PP:"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\warehouse\\LotsTab.tsx",
-    "usesT": 31,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 162,
-        "text": "Материал"
-      },
-      {
-        "kind": "jsx",
-        "line": 163,
-        "text": "Miqdor / Mavjud"
-      },
-      {
-        "kind": "jsx",
-        "line": 166,
-        "text": "Yoshi (kun)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseRentalSettings.tsx",
-    "usesT": 6,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 98,
-        "text": "Standart kunlik tarif (m²/kun, so'm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 118,
-        "text": "Dam olish kunlarini (shanba/yakshanba) hisoblamaslik"
-      },
-      {
-        "kind": "placeholder",
-        "line": 162,
-        "text": "Tarif (so"
+        "kind": "label",
+        "line": 78,
+        "text": "Oddiy (C)"
       }
     ]
   },
@@ -3743,94 +567,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\extended\\SafetySection.tsx",
-    "usesT": 69,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 163,
-        "text": "PPE %"
-      },
-      {
-        "kind": "jsx",
-        "line": 293,
-        "text": "createIncident.mutate(d as Record"
-      },
-      {
-        "kind": "jsx",
-        "line": 321,
-        "text": "createPpe.mutate(d as Record"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\portret\\PortretBlokD.tsx",
-    "usesT": 2,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 59,
-        "text": "IQ (min)"
-      },
-      {
-        "kind": "jsx",
-        "line": 66,
-        "text": "Liderlik (min %)"
-      },
-      {
-        "kind": "jsx",
-        "line": 73,
-        "text": "Takrorlash (min %)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\ProbationJournalPanel.dialogs.tsx",
-    "usesT": 19,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 75,
-        "text": "Kayfiyat (1-5) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 128,
-        "text": "Intizom hodisalari (ixtiyoriy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 119,
-        "text": "Nastavnik / mentor izohi..."
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\ProbationReviewDialog.tsx",
-    "usesT": 15,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 233,
-        "text": "Nastavnik / Mentor"
-      },
-      {
-        "kind": "jsx",
-        "line": 256,
-        "text": "Baholash mezonlari (1–10)"
-      },
-      {
-        "kind": "jsx",
-        "line": 327,
-        "text": "HR Menejer ismi (imzo)"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\components\\lms\\CourseContentForm.tsx",
     "usesT": 1,
     "count": 3,
@@ -3853,90 +589,24 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\StepDuties.tsx",
-    "usesT": 3,
+    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\barcode\\AsosiyTab.tsx",
+    "usesT": 15,
     "count": 3,
     "samples": [
       {
         "kind": "jsx",
-        "line": 25,
-        "text": "3 ta savol"
+        "line": 95,
+        "text": ")?.operatorDebts as Record"
       },
       {
         "kind": "jsx",
-        "line": 29,
-        "text": "11. Bo'lim/jamoa qanday vazifalarni bajaradi?"
-      },
-      {
-        "kind": "placeholder",
-        "line": 43,
-        "text": "Har bir funktsiyani yangi qatorga yozing:&#10;1. Mijozlar bilan telefon aloqasi&…"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\portret\\StepToolTest.tsx",
-    "usesT": 2,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 24,
-        "text": "A-J traitlar"
+        "line": 96,
+        "text": ")?.exitControl as Record"
       },
       {
         "kind": "jsx",
-        "line": 51,
-        "text": "IQ (min)"
-      },
-      {
-        "kind": "jsx",
-        "line": 60,
-        "text": "Liderlik (min)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\hub\\ProductionCompletePanel.tsx",
-    "usesT": 3,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 49,
-        "text": "Ishlatildi (kg)"
-      },
-      {
-        "kind": "jsx",
-        "line": 61,
-        "text": "Chiqindi (kg)"
-      },
-      {
-        "kind": "jsx",
-        "line": 71,
-        "text": "Qaytarish (kg)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\material360\\MovementsTab.tsx",
-    "usesT": 3,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 35,
-        "text": "12 oylik trend"
-      },
-      {
-        "kind": "label",
-        "line": 28,
-        "text": "30 kun kirim"
-      },
-      {
-        "kind": "label",
-        "line": 29,
-        "text": "30 kun chiqim"
+        "line": 97,
+        "text": ")?.printQueue as Record"
       }
     ]
   },
@@ -3963,28 +633,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\tabs\\MovementsTab.tsx",
-    "usesT": 4,
-    "count": 3,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 43,
-        "text": "12 oylik trend"
-      },
-      {
-        "kind": "label",
-        "line": 36,
-        "text": "30 kun kirim"
-      },
-      {
-        "kind": "label",
-        "line": 37,
-        "text": "30 kun chiqim"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\components\\wms\\tabs\\StorageTab.tsx",
     "usesT": 3,
     "count": 3,
@@ -4007,23 +655,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\agents\\ProcurementDashboard.tsx",
-    "usesT": 6,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 43,
-        "text": "Yetkazib beruvchilar reytingi (180 kun ichida)"
-      },
-      {
-        "kind": "jsx",
-        "line": 76,
-        "text": "Yetkazib berish xavfi (5 kun ichida)"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\ai-planning\\AIShiftManagementPage.tsx",
     "usesT": 9,
     "count": 2,
@@ -4037,108 +668,6 @@
         "kind": "jsx",
         "line": 64,
         "text": "UTILIZATION_OPTIMAL_MAX ? \"destructive\" : r.utilization"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AiCrmPage.tsx",
-    "usesT": 7,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 113,
-        "text": "AI CRM"
-      },
-      {
-        "kind": "title",
-        "line": 114,
-        "text": "AI CRM"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AIDesignGeneratorPanels.tsx",
-    "usesT": 5,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 176,
-        "text": "Hali asbob/qolip ro'yxati bo'sh"
-      },
-      {
-        "kind": "jsx",
-        "line": 251,
-        "text": "Eskirish Prognozi (AI)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AIFinanceFraudTab.tsx",
-    "usesT": 17,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 65,
-        "text": "Miqdor (UZS)"
-      },
-      {
-        "kind": "jsx",
-        "line": 73,
-        "text": "Yetkazuvchi / Kontragent"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AIFinancePageSections.tsx",
-    "usesT": 21,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 161,
-        "text": "Kirim (UZS)"
-      },
-      {
-        "kind": "jsx",
-        "line": 161,
-        "text": "Chiqim (UZS)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\EngagementTab.tsx",
-    "usesT": 19,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 145,
-        "text": "📈 Retention (Qaytish darajasi)"
-      },
-      {
-        "kind": "jsx",
-        "line": 222,
-        "text": "O'rtacha sessiya davomiyligi (daqiqa)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\BirthdayWidget.tsx",
-    "usesT": 17,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 199,
-        "text": "Barcha hamkasblar yangi tug'ilgan kunlardan xabardor bo'ladi (Telegram)"
-      },
-      {
-        "kind": "jsx",
-        "line": 207,
-        "text": "Xodimning o'ziga shaxsiy tabrik xabari yuboriladi (Telegram)"
       }
     ]
   },
@@ -4160,210 +689,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\CandidateReport.tsx",
-    "usesT": 8,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 104,
-        "text": "YAKUNIY HISOBOT — MATERIAL №55"
-      },
-      {
-        "kind": "title",
-        "line": 151,
-        "text": "Xulosa — Qabul / Rad Etish"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\CandidateReportDialogSections.tsx",
-    "usesT": 18,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 253,
-        "text": "umumiy ball"
-      },
-      {
-        "kind": "label",
-        "line": 87,
-        "text": "TOOL TEST umumiy ball"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\CandidateReportSections.tsx",
-    "usesT": 15,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 69,
-        "text": "TOOL TEST umumiy ball:"
-      },
-      {
-        "kind": "label",
-        "line": 60,
-        "text": "Manba (kanal)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\CfoConfigSettings.tsx",
-    "usesT": 7,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 140,
-        "text": "Debitorlik qarzlari uchun kutilayotgan kredit yo'qotish stavkalari (0.0 — 1.0)"
-      },
-      {
-        "kind": "jsx",
-        "line": 144,
-        "text": "ECL stavkalari topilmadi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\CrmFunnelAnalytics.tsx",
-    "usesT": 34,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 333,
-        "text": "Yutildi (Won)"
-      },
-      {
-        "kind": "jsx",
-        "line": 334,
-        "text": "Yo'qotildi (Lost)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\CVScreeningGuide.tsx",
-    "usesT": 8,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 301,
-        "text": "0–25 ball"
-      },
-      {
-        "kind": "title",
-        "line": 214,
-        "text": "Xavfli belgilar (qizil bayroqlar)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\DesignApproval.tsx",
-    "usesT": 29,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 210,
-        "text": "Izoh (ixtiyoriy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 237,
-        "text": "Rad etish sababi (majburiy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\AdaptationTab.tsx",
-    "usesT": 12,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "title",
-        "line": 230,
-        "text": "Moslashuv Mentori (30 kun)"
-      },
-      {
-        "kind": "title",
-        "line": 242,
-        "text": "Professional Usta (90 kun)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\FinanceTabDialogsBF.tsx",
-    "usesT": 28,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 54,
-        "text": "Summa (so'm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 143,
-        "text": "Summa (so'm)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\FinanceTabDialogsOA.tsx",
-    "usesT": 21,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 67,
-        "text": "Soatlik stavka (so'm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 154,
-        "text": "Summa (so'm)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\OffboardingTabDialogs.tsx",
-    "usesT": 7,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 104,
-        "text": "Ha, tavsiya qilaman"
-      },
-      {
-        "kind": "placeholder",
-        "line": 83,
-        "text": "Baho tanlang (1-5)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTabSections.tsx",
-    "usesT": 26,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 132,
-        "text": "Akkord (Ishbay)"
-      },
-      {
-        "kind": "jsx",
-        "line": 178,
-        "text": "Sex / Zona"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\EmployeeProfile.tsx",
     "usesT": 11,
     "count": 2,
@@ -4377,312 +702,6 @@
         "kind": "jsx",
         "line": 286,
         "text": "c.expiryDate && new Date(c.expiryDate)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\EmployeeProfileMockup.tsx",
-    "usesT": 46,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 90,
-        "text": "\"24-aprel 2026\""
-      },
-      {
-        "kind": "jsx",
-        "line": 153,
-        "text": "kunda keldi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ExpenseManagement.tsx",
-    "usesT": 51,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 187,
-        "text": "Summa (UZS)"
-      },
-      {
-        "kind": "jsx",
-        "line": 325,
-        "text": "Taminotchi/Xodim"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\FaceRegistrationSections.tsx",
-    "usesT": 1,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 31,
-        "text": "Yuz Ro&apos;yxatdan O&apos;tkazish"
-      },
-      {
-        "kind": "title",
-        "line": 32,
-        "text": "Yuz Ro&apos;yxatdan O&apos;tkazish"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\FinanceApproval.tsx",
-    "usesT": 26,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 227,
-        "text": "Moliyaviy izoh (ixtiyoriy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 264,
-        "text": "Rad etish sababi (majburiy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\GLChartOfAccounts.tsx",
-    "usesT": 5,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 188,
-        "text": "Nomi (UZ)"
-      },
-      {
-        "kind": "jsx",
-        "line": 189,
-        "text": "Nomi (RU)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalPublicTestSections.tsx",
-    "usesT": 24,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 116,
-        "text": "Har bir savolga 5 xil javob bor (1 dan 5 gacha)"
-      },
-      {
-        "kind": "jsx",
-        "line": 147,
-        "text": "Aniqlik va to'liqlik o'lchanadi (maqsad: 90%+)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRDashboardMockup.tsx",
-    "usesT": 25,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 227,
-        "text": "Yangi qo'shildi (30 kun)"
-      },
-      {
-        "kind": "label",
-        "line": 85,
-        "text": "Yangi (30 kun)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HROffboardingInterview.tsx",
-    "usesT": 12,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 79,
-        "text": "Ha, tavsiya qilaman"
-      },
-      {
-        "kind": "placeholder",
-        "line": 58,
-        "text": "Baho (1-5)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRSuccessionPlanningSections.tsx",
-    "usesT": 20,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 43,
-        "text": "1 yilda"
-      },
-      {
-        "kind": "jsx",
-        "line": 44,
-        "text": "2 yilda"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRVacationSick.tsx",
-    "usesT": 17,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 81,
-        "text": "r.startDate && r.endDate && new Date(r.startDate)"
-      },
-      {
-        "kind": "jsx",
-        "line": 162,
-        "text": "Ta'til / Kasallik So'rovi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRZnoPage.tsx",
-    "usesT": 14,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 291,
-        "text": "Miqdor (so'm) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 341,
-        "text": "Izoh (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRZvsPageDialogs.tsx",
-    "usesT": 10,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 53,
-        "text": "Miqdor (so'm) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 138,
-        "text": "Izoh (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\InspectionPage.tsx",
-    "usesT": 3,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 55,
-        "text": "a.cleanliness_score"
-      },
-      {
-        "kind": "jsx",
-        "line": 69,
-        "text": "AI tahlil va real-time monitoring"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\IntegrationManagement.tsx",
-    "usesT": 16,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 148,
-        "text": "Har bir integratsiya uchun tegishli muhit o'zgaruvchisi (env variable) kerak:"
-      },
-      {
-        "kind": "jsx",
-        "line": 154,
-        "text": "— Redis kesh uchun (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\IoTExtendedSections.tsx",
-    "usesT": 29,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 76,
-        "text": "Min/Max"
-      },
-      {
-        "kind": "jsx",
-        "line": 212,
-        "text": "OEE yuklanmoqda..."
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\IoTExtendedSectionsExtra.tsx",
-    "usesT": 6,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 63,
-        "text": "AI prognozlar"
-      },
-      {
-        "kind": "jsx",
-        "line": 114,
-        "text": "Three.js / BIM integratsiya tayyorlanmoqda"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\detail\\MainTabContentExtras.tsx",
-    "usesT": 19,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 89,
-        "text": "CRM bitim"
-      },
-      {
-        "kind": "jsx",
-        "line": 103,
-        "text": "Rejalashtirilgan vaqt (soat)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\KnowledgeBaseDialogs.tsx",
-    "usesT": 1,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 164,
-        "text": "Подробная информация о компании..."
-      },
-      {
-        "kind": "placeholder",
-        "line": 207,
-        "text": "europrint, print, bosma"
       }
     ]
   },
@@ -4704,125 +723,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\lms-extended\\MicroLearningTab.tsx",
-    "usesT": 12,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 103,
-        "text": "Davomiyligi (min)"
-      },
-      {
-        "kind": "jsx",
-        "line": 106,
-        "text": "Telegram xabari (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingDashboardDialogs.tsx",
-    "usesT": 7,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 78,
-        "text": "Ball (1-10) *"
-      },
-      {
-        "kind": "placeholder",
-        "line": 68,
-        "text": "Mijozni tanlang (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingDashboardPanels.tsx",
-    "usesT": 9,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 130,
-        "text": "Churn Xavfi (Multi-factor)"
-      },
-      {
-        "kind": "jsx",
-        "line": 146,
-        "text": "ta mijoz 30+ kun buyurtma bermagan"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingExhibitions.tsx",
-    "usesT": 31,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 170,
-        "text": "Nomi (UZ) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 171,
-        "text": "Nomi (RU)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingExtendedSections.tsx",
-    "usesT": 33,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 157,
-        "text": "A/B Test natijalari"
-      },
-      {
-        "kind": "jsx",
-        "line": 160,
-        "text": "A/B testlar mavjud emas"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingPR.tsx",
-    "usesT": 14,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 100,
-        "text": "Havola (URL)"
-      },
-      {
-        "kind": "title",
-        "line": 79,
-        "text": "Marketing {t("
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MaterialsAccountingSections.tsx",
-    "usesT": 32,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 99,
-        "text": "Sarflangan (bu oy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 118,
-        "text": "Qabul qilingan (bu oy)"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\MMDashboard.tsx",
     "usesT": 24,
     "count": 2,
@@ -4836,74 +736,6 @@
         "kind": "jsx",
         "line": 286,
         "text": "m.quantity"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MRODashboardSections2.tsx",
-    "usesT": 24,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 118,
-        "text": "Xona/Zona"
-      },
-      {
-        "kind": "jsx",
-        "line": 119,
-        "text": "Maydon (m²)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MROExtendedTabsB.tsx",
-    "usesT": 26,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 121,
-        "text": "PPE buyumlari mavjud emas"
-      },
-      {
-        "kind": "jsx",
-        "line": 165,
-        "text": "1 ta"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\payroll\\AIPayrollDialog.tsx",
-    "usesT": 1,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 171,
-        "text": "INPS (12%):"
-      },
-      {
-        "kind": "jsx",
-        "line": 175,
-        "text": "JSHD (12%):"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\PeerReviewPage.tsx",
-    "usesT": 13,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 123,
-        "text": "Baholangan (bugun)"
-      },
-      {
-        "kind": "jsx",
-        "line": 145,
-        "text": "Baho (1-5 yulduz)"
       }
     ]
   },
@@ -4925,325 +757,36 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogStep3.tsx",
-    "usesT": 8,
+    "file": "artifacts\\erp-dashboard\\src\\pages\\warehouse\\RollManagementPage.tsx",
+    "usesT": 19,
     "count": 2,
     "samples": [
       {
-        "kind": "jsx",
-        "line": 20,
-        "text": "3 savol + amaliy topshiriq"
+        "kind": "label",
+        "line": 154,
+        "text": "Boshlang"
       },
       {
-        "kind": "placeholder",
-        "line": 69,
-        "text": "Nomzodga berilgan amaliy topshiriq va uning bajarish jarayoni / natijasi..."
+        "kind": "label",
+        "line": 156,
+        "text": "Bin (joy)"
       }
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\QCStandardsTab.tsx",
-    "usesT": 3,
+    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseQuarantine.tsx",
+    "usesT": 19,
     "count": 2,
     "samples": [
       {
         "kind": "jsx",
-        "line": 165,
-        "text": "ISO, GOST va ichki standartlar"
-      },
-      {
-        "kind": "placeholder",
-        "line": 212,
-        "text": "Название стандарта"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SaaSExtendedDialogs.tsx",
-    "usesT": 8,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 43,
-        "text": "zavod.uz"
-      },
-      {
-        "kind": "placeholder",
-        "line": 57,
-        "text": "admin@zavod.uz"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDCustomersDialogs.tsx",
-    "usesT": 17,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 41,
-        "text": "Kompaniya / Ism *"
+        "line": 198,
+        "text": "→ material avtomatik"
       },
       {
         "kind": "jsx",
-        "line": 57,
-        "text": "STIR (INN)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDSalesPayments.tsx",
-    "usesT": 17,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 168,
-        "text": "Summa (so'm) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 194,
-        "text": "0-30 kun:"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SettingsTabTax.tsx",
-    "usesT": 2,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 52,
-        "text": "Minimal ish haqi (so'm)"
-      },
-      {
-        "kind": "jsx",
-        "line": 67,
-        "text": "QQS stavkasi (%)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ShiftScheduleDialogs.tsx",
-    "usesT": 13,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 147,
-        "text": "Kim bilan almashtirish (ixtiyoriy)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 150,
-        "text": "Xodim tanlang (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\skills-matrix\\EmployeeSkillDialog.tsx",
-    "usesT": 16,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 78,
-        "text": "Daraja (1-5)"
-      },
-      {
-        "kind": "jsx",
-        "line": 96,
-        "text": "Izoh (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\TechApprovalDialogs.tsx",
-    "usesT": 20,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 221,
-        "text": "Rad etish sababi (majburiy, kamida 5 belgi)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 73,
-        "text": "Texnik izoh (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\TelegramBotAdmin.tsx",
-    "usesT": 15,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 73,
-        "text": "TELEGRAM_BOT_TOKEN sozlanmagan"
-      },
-      {
-        "kind": "jsx",
-        "line": 108,
-        "text": "Xabar matni (HTML teglari qo'llab-quvvatlanadi)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ThreeWayMatchPage.tsx",
-    "usesT": 8,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 215,
-        "text": "PO ID *"
-      },
-      {
-        "kind": "jsx",
-        "line": 225,
-        "text": "GR ID *"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\UsersPageDialogs.tsx",
-    "usesT": 14,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 123,
-        "text": "username (min 3 belgi)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 132,
-        "text": "email@example.com"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseAuditLog.tsx",
-    "usesT": 11,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 113,
-        "text": "7 yil saqlanadi (O'zbekiston soliq talabi)"
-      },
-      {
-        "kind": "jsx",
-        "line": 220,
-        "text": "IP MANZIL"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseBarcodeQueue.tsx",
-    "usesT": 18,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 103,
-        "text": "BARKOD CHOP ETISH NAVBATI"
-      },
-      {
-        "kind": "jsx",
-        "line": 105,
-        "text": "EXTERNAL_IN harakatlari uchun avtomatik yaratilgan CODE128 barkodlari"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseRentalDialogs.tsx",
-    "usesT": 12,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 143,
-        "text": "Maydon (m²) *"
-      },
-      {
-        "kind": "jsx",
-        "line": 173,
-        "text": "Kunlik tarif (m² uchun)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseRentalTable.tsx",
-    "usesT": 14,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 112,
-        "text": "Mijoz / Menejer"
-      },
-      {
-        "kind": "jsx",
-        "line": 113,
-        "text": "Maydon (m²)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseReportsAll.tsx",
-    "usesT": 1,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 54,
-        "text": "OMBOR HISOBOTLAR MARKAZI"
-      },
-      {
-        "kind": "jsx",
-        "line": 55,
-        "text": "22 ta turdagi hisobot"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WMSDashboardAlerts.tsx",
-    "usesT": 5,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 51,
-        "text": "QC nazoratida kutayotgan"
-      },
-      {
-        "kind": "jsx",
-        "line": 57,
-        "text": "Muddati yaqin partiyalar (30 kun)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WMSDashboardDialogs.tsx",
-    "usesT": 21,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 60,
-        "text": "Brak / Nuqsonli"
-      },
-      {
-        "kind": "jsx",
-        "line": 63,
-        "text": "Xo'jalik (MRO)"
+        "line": 199,
+        "text": "→ MES moduliga signal yuboriladi (qayta ishlash kerak)"
       }
     ]
   },
@@ -5418,57 +961,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\employee\\dialogs\\BankAccountDialog.tsx",
-    "usesT": 6,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 61,
-        "text": "Hisob raqami (20 raqam)"
-      },
-      {
-        "kind": "jsx",
-        "line": 94,
-        "text": "STIR (INN)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\employee\\dialogs\\BonusDialog.tsx",
-    "usesT": 10,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 47,
-        "text": "Mukofot (Bonus) tayinlash"
-      },
-      {
-        "kind": "jsx",
-        "line": 60,
-        "text": "Summa (UZS)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\employee\\dialogs\\ContractDialog.tsx",
-    "usesT": 11,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 96,
-        "text": "Maosh (UZS)"
-      },
-      {
-        "kind": "placeholder",
-        "line": 110,
-        "text": "Masalan: 5/2, 09:00-18:00"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\components\\finance\\income-expense\\CategoryDialog.tsx",
     "usesT": 9,
     "count": 2,
@@ -5520,87 +1012,19 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\extended\\ConflictSection.tsx",
-    "usesT": 20,
+    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\extended\\SafetySection.tsx",
+    "usesT": 70,
     "count": 2,
     "samples": [
       {
         "kind": "jsx",
-        "line": 127,
-        "text": "createConflictReport.mutate(d as Record"
+        "line": 293,
+        "text": "createIncident.mutate(d as Record"
       },
       {
         "kind": "jsx",
-        "line": 153,
-        "text": "Yuqori (Kritik)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\inspection\\ManualInspectionForm.tsx",
-    "usesT": 12,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 182,
-        "text": "Dalil fotosi (ixtiyoriy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 221,
-        "text": "PDF tayyorlandi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\labor-market\\EmployerMarketSection.tsx",
-    "usesT": 9,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 130,
-        "text": "Maosh (min)"
-      },
-      {
-        "kind": "jsx",
-        "line": 140,
-        "text": "Maosh (max)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\orgnode\\FolderTab.tsx",
-    "usesT": 19,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 216,
-        "text": "Test / LMS kurs"
-      },
-      {
-        "kind": "jsx",
-        "line": 231,
-        "text": "URL / Havola"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\orgnode\\MainTab.tsx",
-    "usesT": 5,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 67,
-        "text": "Rahbar tayinlanmagan (vakant)"
-      },
-      {
-        "kind": "jsx",
-        "line": 78,
-        "text": "QYaM / ЦКП"
+        "line": 321,
+        "text": "createPpe.mutate(d as Record"
       }
     ]
   },
@@ -5673,23 +1097,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\CandidateCard.tsx",
-    "usesT": 32,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 171,
-        "text": "💬 Kandidatga aytiladi (IV bo'lim)"
-      },
-      {
-        "kind": "jsx",
-        "line": 203,
-        "text": "TOOL TEST talabi vs natija (A-J):"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\components\\sd\\europrint\\PaymentsTab.tsx",
     "usesT": 15,
     "count": 2,
@@ -5724,169 +1131,36 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\barcode\\QabulBolimi.tsx",
-    "usesT": 10,
+    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\material360\\MovementsTab.tsx",
+    "usesT": 4,
     "count": 2,
     "samples": [
       {
-        "kind": "jsx",
-        "line": 121,
-        "text": "Tarozi (haqiqiy og'irlik)"
+        "kind": "label",
+        "line": 28,
+        "text": "30 kun kirim"
       },
       {
-        "kind": "jsx",
-        "line": 152,
-        "text": "Narx (birlik)"
+        "kind": "label",
+        "line": 29,
+        "text": "30 kun chiqim"
       }
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\hub\\ReceiveMaterialPanel.tsx",
+    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\tabs\\MovementsTab.tsx",
     "usesT": 5,
     "count": 2,
     "samples": [
       {
-        "kind": "jsx",
-        "line": 97,
-        "text": "Lot / Partiya"
-      },
-      {
-        "kind": "jsx",
-        "line": 106,
-        "text": "Narx (birlik)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\material360\\InventoryTab.tsx",
-    "usesT": 2,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 17,
-        "text": "Yo'qolgan (12 oy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 21,
-        "text": "Ortiqcha (12 oy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\tabs\\InventoryTab.tsx",
-    "usesT": 4,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 41,
-        "text": "Yo'qolgan (12 oy)"
-      },
-      {
-        "kind": "jsx",
-        "line": 45,
-        "text": "Ortiqcha (12 oy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\tabs\\ProductionTab.tsx",
-    "usesT": 4,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 48,
-        "text": "BOM (mahsulot tarkibi) bog'liqligi topilmadi"
+        "kind": "label",
+        "line": 36,
+        "text": "30 kun kirim"
       },
       {
         "kind": "label",
-        "line": 25,
-        "text": "Kunlik sarflanish (o"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\valuation\\MaterialInventoryTable.tsx",
-    "usesT": 8,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 61,
-        "text": "Jami qiymat (kitob)"
-      },
-      {
-        "kind": "jsx",
-        "line": 76,
-        "text": "0 ? \"text-[var(--ep-green)]\" : count.totalVariance"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\camera-ai-modern\\pages\\CameraAIModernHub.tsx",
-    "usesT": 3,
-    "count": 2,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 166,
-        "text": "безопасность"
-      },
-      {
-        "kind": "jsx",
-        "line": 167,
-        "text": "производства"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\accountant\\AuditConsoleDialogs.tsx",
-    "usesT": 8,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 78,
-        "text": "O'zgarishlar (Diff):"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\accountant\\AuditConsoleExportTab.tsx",
-    "usesT": 8,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 25,
-        "text": "CSV eksport"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\accountant\\AuditConsoleSections.tsx",
-    "usesT": 19,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 250,
-        "text": "Hujjat raqami (masalan: SO-0001, INV-0001)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\accountant\\ErpRoadmapPhase4_5.tsx",
-    "usesT": 22,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 53,
-        "text": "Hisoblash usuli (minimal darajada)"
+        "line": 37,
+        "text": "30 kun chiqim"
       }
     ]
   },
@@ -5903,86 +1177,38 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\adaptation\\ProgramsTab.tsx",
-    "usesT": 1,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 202,
-        "text": "1 kun, 1 hafta, 1 oy, 3 oy rejalar"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\agents\\FacilitiesDashboard.tsx",
-    "usesT": 11,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 44,
-        "text": "Kommunal to'lovlar (joriy oy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AiCrmPageSections.tsx",
-    "usesT": 9,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 110,
-        "text": "AI asosida har bir bitim uchun muvaffaqiyat ehtimoli"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AiCrmPageSections2.tsx",
-    "usesT": 16,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 119,
-        "text": "AI har bir bitim uchun optimal keyingi qadam tavsiya qiladi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AIDesignGenerator.tsx",
-    "usesT": 25,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 183,
-        "text": "Maxsus Prompt (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AIExams.tsx",
-    "usesT": 19,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 290,
-        "text": "Batafsil tahlil (GPT)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AIInterviewPublicPageInterview.tsx",
+    "file": "artifacts\\erp-dashboard\\src\\pages\\agents\\AgentsHub.tsx",
     "usesT": 18,
     "count": 1,
     "samples": [
       {
+        "kind": "label",
+        "line": 128,
+        "text": "24h SLA buzilgan"
+      }
+    ]
+  },
+  {
+    "file": "artifacts\\erp-dashboard\\src\\pages\\agents\\StrategicDashboard.tsx",
+    "usesT": 10,
+    "count": 1,
+    "samples": [
+      {
         "kind": "jsx",
-        "line": 214,
-        "text": "🤖 AI"
+        "line": 115,
+        "text": "· ROI:"
+      }
+    ]
+  },
+  {
+    "file": "artifacts\\erp-dashboard\\src\\pages\\AIDesignGeneratorPanels.tsx",
+    "usesT": 6,
+    "count": 1,
+    "samples": [
+      {
+        "kind": "jsx",
+        "line": 251,
+        "text": "Eskirish Prognozi (AI)"
       }
     ]
   },
@@ -5999,66 +1225,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AIReservation.tsx",
-    "usesT": 28,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 346,
-        "text": "AI tavsiya"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\RemainingTabsHr.tsx",
-    "usesT": 22,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 43,
-        "text": "Sertifikatlar (7 kun)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\RemainingTabsUsers.tsx",
-    "usesT": 18,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 174,
-        "text": "dars tugatgan"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\analytics\\SystemTabSectionsMore.tsx",
-    "usesT": 19,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 140,
-        "text": "Yangi xodimlar (30 kun):"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\AttendanceMonitorPageSections.tsx",
-    "usesT": 20,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 195,
-        "text": "Sana/Vaqt"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\barcode\\GenerateScannerContent.tsx",
     "usesT": 0,
     "count": 1,
@@ -6071,98 +1237,26 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\barcode\\LabelPrintDialog.tsx",
-    "usesT": 3,
+    "file": "artifacts\\erp-dashboard\\src\\pages\\CandidateReportDialogSections.tsx",
+    "usesT": 19,
     "count": 1,
     "samples": [
       {
-        "kind": "jsx",
-        "line": 178,
-        "text": "Preview / PDF printer"
+        "kind": "label",
+        "line": 87,
+        "text": "TOOL TEST umumiy ball"
       }
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\BarcodeScanner.tsx",
-    "usesT": 9,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 147,
-        "text": "Barcode / QR kod"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\CandidatesPage.tsx",
+    "file": "artifacts\\erp-dashboard\\src\\pages\\CandidateReportSections.tsx",
     "usesT": 16,
     "count": 1,
     "samples": [
       {
-        "kind": "placeholder",
-        "line": 227,
-        "text": "email@example.com"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\AIAnalysisPanelRiskSections.tsx",
-    "usesT": 16,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 129,
-        "text": "xavf balli"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\QuickCreateModal.tsx",
-    "usesT": 12,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 308,
-        "text": "email@example.com"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\RobotsViewDialog.tsx",
-    "usesT": 32,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 108,
-        "text": "Vaqt (soatda)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\DailyReportPage.tsx",
-    "usesT": 4,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 143,
-        "text": "Muddati o'tdi (20:00)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\DailyReportPageDialogs.tsx",
-    "usesT": 13,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 140,
-        "text": "Sabab (majburiy)..."
+        "kind": "label",
+        "line": 60,
+        "text": "Manba (kanal)"
       }
     ]
   },
@@ -6179,18 +1273,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\DesignOrderDetail.tsx",
-    "usesT": 25,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 297,
-        "text": "Chat (Savdo ⇄ Dizayn)"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\DirectorDashboard.tsx",
     "usesT": 7,
     "count": 1,
@@ -6199,18 +1281,6 @@
         "kind": "label",
         "line": 100,
         "text": "24h SLA buzilgan"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\DirectorExtendedDialogs.tsx",
-    "usesT": 7,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 91,
-        "text": "Bugungi holat xulosasi (AI tahlili)"
       }
     ]
   },
@@ -6227,78 +1297,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\DocumentWorkflowPageSections.tsx",
-    "usesT": 18,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 87,
-        "text": "Rad etish sababi (majburiy) *"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\AssessmentTab.tsx",
-    "usesT": 18,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 261,
-        "text": "Baho (1-5)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\CareerTabDialogs.tsx",
-    "usesT": 13,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 80,
-        "text": "HR izohlar..."
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\CareerTabSections.tsx",
-    "usesT": 15,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 39,
-        "text": "AI tavsiya lavozim"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\DocumentsTabSectionsA.tsx",
-    "usesT": 11,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 54,
-        "text": "1 ta faol"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\EmergencyContactCard.tsx",
-    "usesT": 12,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 59,
-        "text": "Ota / Ona / Turmush o"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\FinanceTabSummaryPanels.tsx",
     "usesT": 8,
     "count": 1,
@@ -6307,18 +1305,6 @@
         "kind": "jsx",
         "line": 73,
         "text": "baseSalary ? \"text-[var(--ep-green)]\" : estimatedSalary"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\HRCapitalTabSections.tsx",
-    "usesT": 13,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 69,
-        "text": "A-J shkala"
       }
     ]
   },
@@ -6335,62 +1321,14 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PerformanceTabMesSections.tsx",
-    "usesT": 14,
+    "file": "artifacts\\erp-dashboard\\src\\pages\\EmployeeProfileMockup.tsx",
+    "usesT": 48,
     "count": 1,
     "samples": [
       {
         "kind": "jsx",
-        "line": 242,
-        "text": "Sana/Vaqt"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\RemainingTabs.tsx",
-    "usesT": 11,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 79,
-        "text": "AI kamera orqali aniqlangan buzilishlar"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\TechAccessTab.tsx",
-    "usesT": 10,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 207,
-        "text": "LMS sertifikatlariga asoslanib aniqlangan uskuna ruxsatlari"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\WorkTabSections.tsx",
-    "usesT": 17,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 109,
-        "text": "Me&apos;yor / Holat"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\EmployeeFilesPage.tsx",
-    "usesT": 12,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 220,
-        "text": "passport.pdf"
+        "line": 153,
+        "text": "kunda keldi"
       }
     ]
   },
@@ -6407,110 +1345,14 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\erp\\ERPProductsTab.tsx",
-    "usesT": 21,
+    "file": "artifacts\\erp-dashboard\\src\\pages\\FinanceDashboard.tsx",
+    "usesT": 18,
     "count": 1,
     "samples": [
       {
-        "kind": "placeholder",
-        "line": 131,
-        "text": "Картонная коробка"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\FaceRegistrationDialogs.tsx",
-    "usesT": 1,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 48,
-        "text": "Yuz ma&apos;lumotini o&apos;chirishni tasdiqlang"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\FinanceExtendedDialogs.tsx",
-    "usesT": 7,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 45,
-        "text": "Byudjet (so'm)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\FinanceExtendedSections.tsx",
-    "usesT": 34,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 195,
-        "text": "GL Hujjatlar (Audit Log)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\FinancialReports.tsx",
-    "usesT": 15,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 164,
-        "text": "2 hafta oldin"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\GamificationPage.tsx",
-    "usesT": 29,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 152,
-        "text": "Sabab (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\GLPostingMonitor.tsx",
-    "usesT": 31,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 155,
-        "text": "Hisob Xaritasi (Account Mapping)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\GoalsKPIDialogs.tsx",
-    "usesT": 15,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 179,
-        "text": "Maqsad qiymati (%)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\hr-dashboard\\RiskTab.tsx",
-    "usesT": 16,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 77,
-        "text": "Xavf ostidagi xodimlar (yuqori + kritik)"
+        "kind": "title",
+        "line": 213,
+        "text": "Moliya {t("
       }
     ]
   },
@@ -6527,18 +1369,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRAIDashboardDialogs.tsx",
-    "usesT": 24,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 125,
-        "text": "Tajriba (yil)"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\HRAlertBanner.tsx",
     "usesT": 3,
     "count": 1,
@@ -6551,50 +1381,26 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRAlumni.tsx",
-    "usesT": 24,
+    "file": "artifacts\\erp-dashboard\\src\\pages\\HRCapitalTestsTabs.tsx",
+    "usesT": 19,
     "count": 1,
     "samples": [
       {
         "kind": "jsx",
-        "line": 98,
-        "text": "Shaxsiy xabar (ixtiyoriy)"
+        "line": 329,
+        "text": "— Ko'rsatmani aniq bajarish qobiliyati (90-100% maqsad)"
       }
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRAssetManagementDialogs.tsx",
-    "usesT": 16,
+    "file": "artifacts\\erp-dashboard\\src\\pages\\HRDashboardMockup.tsx",
+    "usesT": 26,
     "count": 1,
     "samples": [
       {
-        "kind": "jsx",
-        "line": 80,
-        "text": "Qiymati (UZS)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HRMap.tsx",
-    "usesT": 9,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 182,
-        "text": "40.5556°N, 70.9280°E"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\HROnboarding.tsx",
-    "usesT": 35,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 221,
-        "text": "Yangi Xodimlar (Onboarding Jarayonida)"
+        "kind": "label",
+        "line": 85,
+        "text": "Yangi (30 kun)"
       }
     ]
   },
@@ -6611,6 +1417,18 @@
     ]
   },
   {
+    "file": "artifacts\\erp-dashboard\\src\\pages\\HRVacationSick.tsx",
+    "usesT": 18,
+    "count": 1,
+    "samples": [
+      {
+        "kind": "jsx",
+        "line": 81,
+        "text": "r.startDate && r.endDate && new Date(r.startDate)"
+      }
+    ]
+  },
+  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\IdealRasmPage.tsx",
     "usesT": 11,
     "count": 1,
@@ -6623,14 +1441,26 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\InternalJobBoardDialogs.tsx",
-    "usesT": 3,
+    "file": "artifacts\\erp-dashboard\\src\\pages\\InspectionPage.tsx",
+    "usesT": 4,
     "count": 1,
     "samples": [
       {
         "kind": "jsx",
-        "line": 80,
-        "text": "Motivatsion xat (ixtiyoriy)"
+        "line": 55,
+        "text": "a.cleanliness_score"
+      }
+    ]
+  },
+  {
+    "file": "artifacts\\erp-dashboard\\src\\pages\\IntegrationManagement.tsx",
+    "usesT": 17,
+    "count": 1,
+    "samples": [
+      {
+        "kind": "jsx",
+        "line": 154,
+        "text": "— Redis kesh uchun (ixtiyoriy)"
       }
     ]
   },
@@ -6659,18 +1489,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\DashboardPanel.tsx",
-    "usesT": 16,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 177,
-        "text": "24s qoida"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\GanttView.tsx",
     "usesT": 6,
     "count": 1,
@@ -6695,66 +1513,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\lms-dashboard\\GamificationTab.tsx",
-    "usesT": 4,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 40,
-        "text": "O'quv Reytingi (Leaderboard)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\lms-extended\\GamificationTab.tsx",
-    "usesT": 8,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 36,
-        "text": "Yutuqlar (Achievements)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\LMSDashboard.tsx",
-    "usesT": 28,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 215,
-        "text": "O'tgan / Qoqilgan"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\LoginSections.tsx",
-    "usesT": 3,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 113,
-        "text": "boshqaruv tizimi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\LogisticsDashboardVehiclesTab.tsx",
-    "usesT": 29,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 195,
-        "text": "Narxi (l)"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingDashboard.tsx",
     "usesT": 7,
     "count": 1,
@@ -6767,182 +1525,26 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingDashboardSections.tsx",
-    "usesT": 12,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 209,
-        "text": "Issiq Lidlar (AI Bashorat)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingLeadsDialogs.tsx",
+    "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingPR.tsx",
     "usesT": 15,
     "count": 1,
     "samples": [
       {
-        "kind": "jsx",
-        "line": 146,
-        "text": "Ball (0-100)"
+        "kind": "title",
+        "line": 79,
+        "text": "Marketing {t("
       }
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingSettingsDialogs.tsx",
-    "usesT": 18,
+    "file": "artifacts\\erp-dashboard\\src\\pages\\MROExtendedTabsB.tsx",
+    "usesT": 27,
     "count": 1,
     "samples": [
       {
         "kind": "jsx",
-        "line": 73,
-        "text": "Page/Bot ID"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MarketingSettingsSections.tsx",
-    "usesT": 10,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 81,
-        "text": "Meta (Instagram/Facebook)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MaterialBalanceDialogs.tsx",
-    "usesT": 6,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 55,
-        "text": "Material (kod yoki nom)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MESDashboard.tsx",
-    "usesT": 22,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 132,
-        "text": "Hozirgi holat (Real-time)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MESExtendedTabsC.tsx",
-    "usesT": 20,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 39,
-        "text": "OEE maqsad"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MESWorkCentersDialogs.tsx",
-    "usesT": 17,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 64,
-        "text": "Quvvat (soat/smena)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MilestonePage.tsx",
-    "usesT": 31,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 287,
-        "text": "1 oy, 3 oy va 6 oylik milestonelar avtomatik yaratiladi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\mini-app\\TelegramMiniAppActions.tsx",
-    "usesT": 6,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 264,
-        "text": "Izoh (ixtiyoriy)..."
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MMExtendedDialogs.tsx",
-    "usesT": 9,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 84,
-        "text": "To'lov muddati (kun)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MRODashboard.tsx",
-    "usesT": 17,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 120,
-        "text": "Bino/Xonalar"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MROExtendedDialogs.tsx",
-    "usesT": 35,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 142,
-        "text": "Material/Ehtiyot Qism Kirim"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\MROExtendedTabsA.tsx",
-    "usesT": 25,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 188,
-        "text": "Kommunal xarajatlar (oylik)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\NotificationCenter.tsx",
-    "usesT": 6,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 106,
-        "text": "XABARNOMALAR MARKAZI"
+        "line": 121,
+        "text": "PPE buyumlari mavjud emas"
       }
     ]
   },
@@ -6955,30 +1557,6 @@
         "kind": "jsx",
         "line": 29,
         "text": "(c.grossProfit || 0)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\OrderWorkflowPage.tsx",
-    "usesT": 11,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 282,
-        "text": "Holat progressi (6 faza)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\OrgStructureHierarchy.tsx",
-    "usesT": 16,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 204,
-        "text": "Qidirish (ism, rahbar...)"
       }
     ]
   },
@@ -7019,90 +1597,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\POSDashboardPOSPanel.tsx",
-    "usesT": 7,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 91,
-        "text": "Mahsulot qidirish (nomi)..."
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\POSInventoryPageChart.tsx",
-    "usesT": 1,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 33,
-        "text": "14 kunlik inventar harakatlari grafigi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\PosMovementsPage.tsx",
-    "usesT": 23,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 95,
-        "text": "POS harakatlar tarixi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\PosStockPage.tsx",
-    "usesT": 23,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 110,
-        "text": "10 yoki -5"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\PosWarehousePage.tsx",
-    "usesT": 8,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 173,
-        "text": "Jami qiymat (UZS)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\PosWarehousePageSections.tsx",
-    "usesT": 26,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 111,
-        "text": "Min/Max"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\PricingTiers.tsx",
-    "usesT": 32,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 160,
-        "text": "/birlik"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\ProductionOrder360.tsx",
     "usesT": 12,
     "count": 1,
@@ -7127,62 +1621,14 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ProductionReport.tsx",
-    "usesT": 19,
+    "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\QCCertificateGenerator.tsx",
+    "usesT": 42,
     "count": 1,
     "samples": [
       {
         "kind": "jsx",
-        "line": 124,
-        "text": "Tannarx (reja)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ProductivityInterviewDialogStep2.tsx",
-    "usesT": 14,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 21,
-        "text": "4 savol + oqim + daraja"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ProductProfitabilitySections.tsx",
-    "usesT": 6,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 74,
-        "text": "Jami Foyda/Zarar"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\QCAITrendTab.tsx",
-    "usesT": 15,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 122,
-        "text": "Brak sabablari (Top 10)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\QCParameterDialog.tsx",
-    "usesT": 1,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 190,
-        "text": "Граммаж"
+        "line": 80,
+        "text": "&nbsp;|&nbsp; Sana:"
       }
     ]
   },
@@ -7199,42 +1645,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\QCFinalInspectionDialogs.tsx",
-    "usesT": 5,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 125,
-        "text": "Izoh (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\QuestionnaireQuestionsPage.tsx",
-    "usesT": 17,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 172,
-        "text": "*majburiy"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\QuestionsPageDialogs.tsx",
-    "usesT": 12,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 116,
-        "text": "Test ID (ixtiyoriy)"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\RaciCrisisPageSections.tsx",
     "usesT": 3,
     "count": 1,
@@ -7243,30 +1653,6 @@
         "kind": "jsx",
         "line": 112,
         "text": "RACI vazifalar topilmadi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\RACIMatrixPageSections.tsx",
-    "usesT": 9,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 51,
-        "text": "RACI vazifalari mavjud emas"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ReceptionPage.tsx",
-    "usesT": 18,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "placeholder",
-        "line": 205,
-        "text": "Badge kodi (masalan: A1B2C3D4)"
       }
     ]
   },
@@ -7283,162 +1669,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\ReferralPage.tsx",
-    "usesT": 4,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 134,
-        "text": "Barcha tavsiyalar (HR)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDDashboard.tsx",
-    "usesT": 5,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 67,
-        "text": "CRM / Savdo Dashbordi"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDExtendedSections.tsx",
-    "usesT": 12,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 162,
-        "text": "Kvota (so'm)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDOverviewDashboard.tsx",
-    "usesT": 12,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 243,
-        "text": "Yutilgan leadlar (Conversion Rate)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDSalesOrders.tsx",
-    "usesT": 13,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 208,
-        "text": "To'landi (Avans)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SDSalesQuotesDialogs.tsx",
-    "usesT": 21,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 177,
-        "text": "Birlik narxi (QQS bilan):"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SecurityExtendedDialogs.tsx",
-    "usesT": 11,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 62,
-        "text": "Mezbon (xodim)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SecurityExtendedSectionsA.tsx",
-    "usesT": 12,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 41,
-        "text": "PPE (Shaxsiy Himoya Vositalari) Nazorati"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SecurityExtendedSectionsB.tsx",
-    "usesT": 7,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 114,
-        "text": "Xodimlar Davomati (Bugun)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SecurityExtendedSectionsC.tsx",
-    "usesT": 12,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 38,
-        "text": "CAS №"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\Settings.tsx",
-    "usesT": 6,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 177,
-        "text": "Soliq / Moliya"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SettingsTabGeneral.tsx",
-    "usesT": 7,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 61,
-        "text": "Русский"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\StrategicTasksPanelTable.tsx",
-    "usesT": 15,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 117,
-        "text": "Название (RU):"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\SupplyChainDashboardDialogs.tsx",
     "usesT": 9,
     "count": 1,
@@ -7447,18 +1677,6 @@
         "kind": "jsx",
         "line": 138,
         "text": "GRN kerak"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\SystemMonitor.tsx",
-    "usesT": 14,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 127,
-        "text": "DB hajmi"
       }
     ]
   },
@@ -7475,42 +1693,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\TechCardsDialogs.tsx",
-    "usesT": 18,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 264,
-        "text": "Tejamkorlik (UZS)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPSections.tsx",
-    "usesT": 39,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 175,
-        "text": "OEE Monitor (Real-time)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\VendorPerformance.tsx",
-    "usesT": 34,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 124,
-        "text": "Ball (0–100)"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseDashboardSections.tsx",
     "usesT": 16,
     "count": 1,
@@ -7523,14 +1705,26 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseMaterial360.tsx",
-    "usesT": 44,
+    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseHub12ReportsTab.tsx",
+    "usesT": 30,
     "count": 1,
     "samples": [
       {
         "kind": "jsx",
-        "line": 143,
-        "text": "MATERIAL 360°"
+        "line": 205,
+        "text": "jadvaliga yoziladi"
+      }
+    ]
+  },
+  {
+    "file": "artifacts\\erp-dashboard\\src\\pages\\WarehouseKpiHub.tsx",
+    "usesT": 24,
+    "count": 1,
+    "samples": [
+      {
+        "kind": "label",
+        "line": 94,
+        "text": "QC kutmoqda"
       }
     ]
   },
@@ -7763,54 +1957,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\employee\\dialogs\\BusinessTripDialog.tsx",
-    "usesT": 8,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 49,
-        "text": "Xizmat safari (K командировка)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\employee\\dialogs\\CashAdvanceDialog.tsx",
-    "usesT": 4,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 59,
-        "text": "Summa (UZS)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\employee\\dialogs\\FineDialog.tsx",
-    "usesT": 11,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 62,
-        "text": "Summa (UZS)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\employee\\dialogs\\OvertimeDialog.tsx",
-    "usesT": 6,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 87,
-        "text": "Soatbay stavka (UZS)"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\components\\employee\\ProfileHeader.tsx",
     "usesT": 11,
     "count": 1,
@@ -7847,26 +1993,14 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\employee-dialog\\PersonalInfoSection.tsx",
+    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\extended\\ConflictSection.tsx",
     "usesT": 21,
     "count": 1,
     "samples": [
       {
         "kind": "jsx",
-        "line": 82,
-        "text": "Beva/Beva ayol"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\employee-dialog\\ProfileImageSection.tsx",
-    "usesT": 4,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 49,
-        "text": "JPG, PNG (maks. 5MB)"
+        "line": 127,
+        "text": "createConflictReport.mutate(d as Record"
       }
     ]
   },
@@ -7879,30 +2013,6 @@
         "kind": "jsx",
         "line": 137,
         "text": "createLeaveRequest.mutate(d as Record"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\inspection\\RoomReferenceUpload.tsx",
-    "usesT": 6,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 125,
-        "text": "Izoh (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\IQScaleChart.tsx",
-    "usesT": 1,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 83,
-        "text": "IQ ball kiritilmagan"
       }
     ]
   },
@@ -7939,42 +2049,6 @@
         "kind": "label",
         "line": 31,
         "text": "Jami bo"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\portret\\HRRequestDialog.tsx",
-    "usesT": 6,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 104,
-        "text": "Izoh (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\stats\\FilesTable.tsx",
-    "usesT": 19,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 98,
-        "text": "Tavsif (ixtiyoriy)"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\hr\\stats\\OrganizationalStructure.tsx",
-    "usesT": 6,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 50,
-        "text": "ЦКП kodi:"
       }
     ]
   },
@@ -8095,18 +2169,6 @@
         "kind": "jsx",
         "line": 71,
         "text": "s ?"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\helpers-dialogs.tsx",
-    "usesT": 19,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 207,
-        "text": "AI xulosasi:"
       }
     ]
   },
@@ -8255,18 +2317,6 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\barcode\\SiklHisobBolimi.tsx",
-    "usesT": 4,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 53,
-        "text": "Barcode (ixtiyoriy)"
-      }
-    ]
-  },
-  {
     "file": "artifacts\\erp-dashboard\\src\\components\\wms\\material360\\FinanceTab.tsx",
     "usesT": 7,
     "count": 1,
@@ -8275,18 +2325,6 @@
         "kind": "label",
         "line": 20,
         "text": "Oylik xarajat (o"
-      }
-    ]
-  },
-  {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\material360\\ForecastTab.tsx",
-    "usesT": 3,
-    "count": 1,
-    "samples": [
-      {
-        "kind": "jsx",
-        "line": 27,
-        "text": "Tugash sanasi (taxmin)"
       }
     ]
   },
@@ -8303,26 +2341,26 @@
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\tabs\\ForecastTab.tsx",
-    "usesT": 4,
+    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\MaterialDialog.tsx",
+    "usesT": 25,
     "count": 1,
     "samples": [
       {
         "kind": "jsx",
-        "line": 41,
-        "text": "Zaxira tugash sanasi (taxmin)"
+        "line": 67,
+        "text": "(e: ChangeEvent"
       }
     ]
   },
   {
-    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\tabs\\QualityTab.tsx",
-    "usesT": 6,
+    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\tabs\\ProductionTab.tsx",
+    "usesT": 5,
     "count": 1,
     "samples": [
       {
-        "kind": "jsx",
-        "line": 45,
-        "text": "Sifat ko'rsatkichlari (Radar)"
+        "kind": "label",
+        "line": 25,
+        "text": "Kunlik sarflanish (o"
       }
     ]
   },
@@ -8359,6 +2397,18 @@
         "kind": "jsx",
         "line": 74,
         "text": "0 ? \"text-[var(--ep-green)]\" : line.valueVariance && line.valueVariance"
+      }
+    ]
+  },
+  {
+    "file": "artifacts\\erp-dashboard\\src\\components\\wms\\valuation\\MaterialInventoryTable.tsx",
+    "usesT": 9,
+    "count": 1,
+    "samples": [
+      {
+        "kind": "jsx",
+        "line": 76,
+        "text": "0 ? \"text-[var(--ep-green)]\" : count.totalVariance"
       }
     ]
   },

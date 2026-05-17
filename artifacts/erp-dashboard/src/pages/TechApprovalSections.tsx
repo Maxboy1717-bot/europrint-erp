@@ -29,8 +29,8 @@ export function AiCheckPanel({ orderId }: { orderId: string }) {
   const run = async () => {
     setLoading(true);
     try {
-      const res = (await apiRequest('POST', `/api/technology/orders/${orderId}/ai-check`, {})) as unknown as Response;
-      if (res.ok) setResult(await res.json());
+      const res = await apiRequest<AiCheckResult>('POST', `/api/technology/orders/${orderId}/ai-check`, {});
+      setResult(res);
     } finally {
       setLoading(false);
     }

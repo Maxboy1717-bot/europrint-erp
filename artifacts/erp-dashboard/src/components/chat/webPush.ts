@@ -3,7 +3,7 @@
  * @description React UI component.
  */
 
-import { getAuthHeaders } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/queryClient';
 
 export async function registerWebPush(vapidPublicKey: string): Promise<boolean> {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -34,20 +34,17 @@ export async function registerWebPush(vapidPublicKey: string): Promise<boolean> 
 
 async function sendSubscription(subscription: PushSubscription): Promise<void> {
   const json = subscription.toJSON();
-  const res = await fetch('/api/chat/push/subscribe', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-    body: JSON.stringify({
+  try {
+    await apiRequest('POST', '/api/chat/push/subscribe', {
       channel:    'WEB_PUSH',
       endpoint:   json.endpoint ?? null,
       p256dh:     json.keys?.p256dh ?? null,
       auth:       json.keys?.auth ?? null,
       deviceInfo: { userAgent: navigator.userAgent },
-    }),
-  });
-  if (!res.ok) {
-    console.warn('Push subscribe failed:', res.status);
+    });
+  } catch (err) {
+    // Push subscription is best-effort — log and continue.
+    console.warn('Push subscribe failed:', err);
   }
 }
 

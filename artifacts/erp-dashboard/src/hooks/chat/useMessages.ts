@@ -31,9 +31,7 @@ export function useMessages(roomId: string | null, limit = 50) {
     queryKey: ["chat-messages", roomId, limit],
     enabled: !!roomId,
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/chat/rooms/${roomId}/messages?limit=${limit}`) as unknown as Response;
-      if (!res.ok) throw new Error("Xabarlar yuklanmadi");
-      const data = await res.json();
+      const data = await apiRequest('GET', `/api/chat/rooms/${roomId}/messages?limit=${limit}`);
       const arr = Array.isArray(data) ? data : (data as { data?: ChatMessage[] }).data ?? [];
       return arr;
     },

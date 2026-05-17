@@ -48,11 +48,12 @@ export class GetCameraSnapshotTool implements IAishaTool {
   async execute(input: Record<string, unknown>): Promise<Result<ToolResult<SnapshotResult>>> {
     const id = String(input['cameraId'] ?? '');
     if (!id) return Err(AppErr('VALIDATION', 'cameraId majburiy'));
-    if (!this.provider) return Err(AppErr('EXTERNAL_SERVICE', 'CameraSnapshotProvider provayderi ulanmagan'));
+    const provider = this.provider;
+    if (!provider) return Err(AppErr('EXTERNAL_SERVICE', 'CameraSnapshotProvider provayderi ulanmagan'));
 
     return safeCall<ToolResult<SnapshotResult>>(async () => {
       const start = Date.now();
-      const frame = await this.provider!.captureFrame(id);
+      const frame = await provider.captureFrame(id);
       const snapshot: CameraSnapshot = {
         cameraId: id, cameraName: frame.name,
         snapshotUrl: frame.url, capturedAt: frame.capturedAt,

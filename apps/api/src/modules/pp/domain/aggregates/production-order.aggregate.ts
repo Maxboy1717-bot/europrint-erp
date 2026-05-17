@@ -80,7 +80,8 @@ export class ProductionOrder extends AggregateRoot implements IOrderHeader {
   addMaterialRequirement(material: MaterialRequirement): Result<void> {
     const exists = this._materialList.find((m) => m.materialId === material.materialId);
     if (exists) {
-      return Err('Material allaqachon qo\'shilgan');
+      // C.23: error CODES only — translation lives in the presentation layer.
+      return Err('MATERIAL_ALREADY_ADDED');
     }
     this._materialList.push(material);
     return { ok: true, data: undefined };
@@ -88,10 +89,10 @@ export class ProductionOrder extends AggregateRoot implements IOrderHeader {
 
   release(): Result<void> {
     if (!this._checkpointValidated) {
-      return Err('Uch checkpoint o\'tilishi kerak');
+      return Err('CHECKPOINT_REQUIRED');
     }
     if (this._status !== PoStatus.PLANNED) {
-      return Err(`Invalid status for release: ${this._status}`);
+      return Err('INVALID_STATUS_FOR_RELEASE');
     }
     this._status = PoStatus.RELEASED_TO_PRODUCTION;
     this.addDomainEvent({ type: 'PP_RELEASED_TO_PRODUCTION', data: { poId: this._id } });
@@ -100,7 +101,7 @@ export class ProductionOrder extends AggregateRoot implements IOrderHeader {
 
   startProduction(): Result<void> {
     if (this._status !== PoStatus.RELEASED_TO_PRODUCTION) {
-      return Err('PP chiqarilmagan');
+      return Err('NOT_RELEASED');
     }
     this._status = PoStatus.IN_PROGRESS;
     this.addDomainEvent({ type: 'PP_STARTED', data: { poId: this._id } });
@@ -109,7 +110,7 @@ export class ProductionOrder extends AggregateRoot implements IOrderHeader {
 
   complete(): Result<void> {
     if (this._status !== PoStatus.IN_PROGRESS) {
-      return Err('PP ish jarayonida emas');
+      return Err('NOT_IN_PROGRESS');
     }
     this._status = PoStatus.COMPLETED;
     this.addDomainEvent({ type: 'PP_COMPLETED', data: { poId: this._id } });

@@ -24,11 +24,7 @@ export function useEmployeeFiles(id: string | undefined) {
   const [fileDescription, setFileDescription] = useState("");
 
   const uploadFileMutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      const response = await apiRequest('POST', `/api/employees/${id}/files`) as unknown as Response;
-      if (!response.ok) throw new Error("Failed to upload file");
-      return response.json();
-    },
+    mutationFn: (data: FormData) => apiRequest<unknown>('POST', `/api/employees/${id}/files`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees", id, "files"] });
       toast({

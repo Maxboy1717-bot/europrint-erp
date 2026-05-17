@@ -42,12 +42,11 @@
  *   orders, port to a single-pass with a `Map<cohortMonth, ActivityBucket>`.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeDiv } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { CRM_ANALYTICS_REPO, ICrmAnalyticsRepo } from './repositories/i-crm-analytics.repo';
 
 export interface OrderRecord {
   customerId: string;
@@ -79,6 +78,10 @@ function monthDiff(cohortMonth: string, activityMonth: string): number {
 
 @Injectable()
 export class CohortService {
+  constructor(
+    @Inject(CRM_ANALYTICS_REPO) private readonly repo: ICrmAnalyticsRepo,
+  ) {}
+
   /**
    * Unified entry point for both count- and revenue-based cohort analysis.
    * Controller delegates here; mode branching is encapsulated in the service.
@@ -177,38 +180,14 @@ export class CohortService {
   async getCountOrderData(months: number): Promise<OrderRecord[]> {
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - months);
-    const cutoffStr = cutoff.toISOString();
-
-    const rows = await runQuery<{ customer_id: string; completed_at: string }>(sql`
-      SELECT customer_id::text, created_at::text AS completed_at
-      FROM sales_orders
-      WHERE customer_id IS NOT NULL
-        AND created_at IS NOT NULL
-        AND created_at >= ${cutoffStr}
-      ORDER BY created_at ASC
-      LIMIT 5000
-    `);
-
+    const rows = await this.repo.getCohortCountOrders(cutoff.toISOString());
     return rows.map(r => ({ customerId: r.customer_id, completedAt: new Date(r.completed_at) }));
   }
 
   async getRevenueOrderData(months: number): Promise<Array<OrderRecord & { revenue: number }>> {
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - months);
-    const cutoffStr = cutoff.toISOString();
-
-    const rows = await runQuery<{ customer_id: string; completed_at: string; revenue: number }>(sql`
-      SELECT customer_id::text,
-             created_at::text AS completed_at,
-             COALESCE(total_amount, 0)::float AS revenue
-      FROM sales_orders
-      WHERE customer_id IS NOT NULL
-        AND created_at IS NOT NULL
-        AND created_at >= ${cutoffStr}
-      ORDER BY created_at ASC
-      LIMIT 5000
-    `);
-
+    const rows = await this.repo.getCohortRevenueOrders(cutoff.toISOString());
     return rows.map(r => ({
       customerId:  r.customer_id,
       completedAt: new Date(r.completed_at),

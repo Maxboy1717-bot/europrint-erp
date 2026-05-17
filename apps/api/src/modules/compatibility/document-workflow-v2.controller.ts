@@ -1,7 +1,9 @@
 /**
- * document-workflow-v2.controller.ts
- *
- * `/api/hr-v2/workflow/*` endpoints — yangi Document Workflow v2.
+ * @module document-workflow-v2.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   document-workflow-v2 module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
 import {
   Controller, Get, Post, Body, Param, Query, ParseIntPipe,

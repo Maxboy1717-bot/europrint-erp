@@ -7,6 +7,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { firstValueFrom, timeout, catchError, of } from 'rxjs';
 import { safeCall, Result, AppError } from '@common/result';
 import { TashkentTimeService } from '@common/time';
@@ -24,7 +25,7 @@ import {
 type Row = Record<string, unknown>;
 
 const ANOMALY_THRESHOLD = 0.6;
-const ROOM_AI_URL = process.env['ROOM_AI_SERVICE_URL'] ?? 'http://hr-room-ai:5002';
+const ROOM_AI_URL_DEFAULT = 'http://hr-room-ai:5002';
 
 interface AiComparisonResult {
   cleanliness_score: number;
@@ -39,11 +40,16 @@ export class InspectionService {
   private readonly logger = new Logger(InspectionService.name);
   private readonly time   = new TashkentTimeService();
 
+  private readonly roomAiUrl: string;
+
   constructor(
     private readonly repo:            InspectionRepository,
     private readonly http:            HttpService,
     private readonly notificationBot: NotificationBotService,
-  ) {}
+    private readonly configService:   ConfigService,
+  ) {
+    this.roomAiUrl = this.configService.get<string>('ROOM_AI_SERVICE_URL') ?? ROOM_AI_URL_DEFAULT;
+  }
 
   async uploadReferencePhoto(
     roomCode:     string,
@@ -249,7 +255,7 @@ export class InspectionService {
     try {
       const resp$ = this.http
         .post<AiComparisonResult>(
-          `${ROOM_AI_URL}/compare-rooms`,
+          `${this.roomAiUrl}/compare-rooms`,
           { reference_url: referenceUrl, current_url: currentPhotoUrl, room_code: roomCode },
           { timeout: 5_000 },
         )

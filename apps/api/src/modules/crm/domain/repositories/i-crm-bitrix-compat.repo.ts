@@ -21,6 +21,8 @@ export interface ICrmBitrixCompatRepo {
   updateRobot(id: number, body: Row): Promise<Result<Row | null>>;
   toggleRobot(id: number): Promise<Result<Row | null>>;
   deleteRobot(id: number): Promise<void>;
+  deleteProposal(id: number): Promise<void>;
+  deleteInvoice(id: number): Promise<void>;
   updateProposalStage(id: number, status: string): Promise<Result<Row | null>>;
   updateInvoiceStage(id: number, status: string): Promise<Result<Row | null>>;
 }

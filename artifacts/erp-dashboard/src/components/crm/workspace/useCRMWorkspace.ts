@@ -159,14 +159,17 @@ export function useCRMWorkspace() {
   const moveItemMutation = useMutation({
     mutationFn: async ({ itemId, stageId }: { itemId: number; stageId: string }) => {
       type MoveResult = { autoOrder?: { documentNumber: string } } | null;
+      // B.9 — consistent snake_case `stage_id` body across all entity types.
+      // Backend schemas accept stage_id / stageId / statusId / status, but the
+      // canonical contract going forward is stage_id.
       if (activeEntity === "leads") {
-        return apiRequest<MoveResult>("PATCH", `/api/crm/leads/${itemId}/stage`, { statusId: stageId });
+        return apiRequest<MoveResult>("PATCH", `/api/crm/leads/${itemId}/stage`, { stage_id: stageId });
       } else if (activeEntity === "deals") {
-        return apiRequest<MoveResult>("PATCH", `/api/crm/deals/${itemId}/stage`, { stageId });
+        return apiRequest<MoveResult>("PATCH", `/api/crm/deals/${itemId}/stage`, { stage_id: stageId });
       } else if (activeEntity === "proposals") {
-        return apiRequest<MoveResult>("PATCH", `/api/crm-bitrix/proposals/${itemId}/stage`, { status: stageId });
+        return apiRequest<MoveResult>("PATCH", `/api/crm-bitrix/proposals/${itemId}/stage`, { stage_id: stageId });
       } else if (activeEntity === "invoices") {
-        return apiRequest<MoveResult>("PATCH", `/api/crm-bitrix/invoices/${itemId}/stage`, { status: stageId });
+        return apiRequest<MoveResult>("PATCH", `/api/crm-bitrix/invoices/${itemId}/stage`, { stage_id: stageId });
       }
       return null;
     },

@@ -135,8 +135,9 @@ export default function HRSafety() {
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" data-testid="button-export-safety-pdf"
-            onClick={() => apiRequest("GET", "/api/hr/safety/export/pdf")
-              .then(r => (r as unknown as Response).blob()).then(blob => {
+            onClick={() => fetch("/api/hr/safety/export/pdf", { credentials: "include" })
+              .then(r => { if (!r.ok) throw new Error("PDF yaratishda xatolik"); return r.blob(); })
+              .then(blob => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url; a.download = "safety-report.pdf"; a.click();

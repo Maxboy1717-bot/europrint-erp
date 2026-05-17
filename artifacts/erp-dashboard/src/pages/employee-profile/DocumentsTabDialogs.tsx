@@ -66,11 +66,7 @@ export function UploadDialog({ open, onOpenChange, employeeId }: UploadDialogPro
       formData.append("category", uploadCategory);
       if (uploadDescription) formData.append("description", uploadDescription);
 
-      const res = await apiRequest('POST', `/api/employees/${employeeId}/files`) as unknown as Response;
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error((err as { error?: string }).error || "Yuklash xatoligi");
-      }
+      await apiRequest('POST', `/api/employees/${employeeId}/files`);
       await qc.invalidateQueries({ queryKey: ["/api/employees", employeeId, "files"] });
       toast({ title: "Fayl muvaffaqiyatli yuklandi" });
       handleClose();
@@ -197,14 +193,10 @@ export function AddDocDialog({ open, onOpenChange, employeeId }: AddDocDialogPro
     setSavingDoc(true);
     try {
       // Auth via httpOnly cookie; apiRequest handles credentials and Content-Type.
-      const res = await apiRequest('POST', `/api/hr/employees/${employeeId}/documents`, {
+      await apiRequest('POST', `/api/hr/employees/${employeeId}/documents`, {
           category:  values.category,
           title:     values.title.trim(),
-      }) as unknown as Response;
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error((err as { error?: string }).error || "Saqlashda xatolik");
-      }
+      });
       await qc.invalidateQueries({ queryKey: ["/api/hr/employees", employeeId, "documents"] });
       toast({ title: "Hujjat muvaffaqiyatli qo'shildi" });
       handleClose();

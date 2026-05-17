@@ -1,7 +1,9 @@
 /**
- * pos-warehouse-integration.controller.ts
- *
- * `/api/pos/*` endpoints — POS frontend warehouse'dan ma'lumot oladi.
+ * @module pos-warehouse-integration.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   pos-warehouse-integration module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
 import {
   Controller, Get, Post, Body, Query, Param,

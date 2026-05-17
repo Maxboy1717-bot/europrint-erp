@@ -40,11 +40,12 @@ export class DetectWorkersInAreaTool implements IAishaTool {
   async execute(input: Record<string, unknown>): Promise<Result<ToolResult<WorkerCount>>> {
     const cameraId = String(input['cameraId'] ?? input['areaId'] ?? '');
     if (!cameraId) return Err(AppErr('VALIDATION', 'cameraId yoki areaId majburiy'));
-    if (!this.provider) return Err(AppErr('EXTERNAL_SERVICE', 'CameraSnapshotProvider ulanmagan'));
+    const provider = this.provider;
+    if (!provider) return Err(AppErr('EXTERNAL_SERVICE', 'CameraSnapshotProvider ulanmagan'));
 
     return safeCall<ToolResult<WorkerCount>>(async () => {
       const start = Date.now();
-      const frame = await this.provider!.captureFrame(cameraId);
+      const frame = await provider.captureFrame(cameraId);
       if (!frame.base64) throw new Error('Frame base64 yo\'q');
 
       const r = await this.claude.sendOneShot({

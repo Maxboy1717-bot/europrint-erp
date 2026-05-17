@@ -213,13 +213,14 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         // Silently fail — asosiy xodim yaratilgan, rasm yuklash optional
       }
     }
-    // Org functions — JSON, Authorization header bilan
-    const orgRes = await apiRequest('POST', `/api/employees/${empId}/assign-org-functions`, { orgDepartmentIds: selectedOrgDepts }) as unknown as Response;
-    if (!orgRes.ok) {
-      const orgError = await orgRes.json().catch(() => ({ error: "Funktsiyalarni saqlashda xatolik" })) as { message?: string; error?: string };
+    // Org functions — JSON, apiRequest throws on non-2xx
+    try {
+      await apiRequest('POST', `/api/employees/${empId}/assign-org-functions`, { orgDepartmentIds: selectedOrgDepts });
+    } catch (e) {
+      const msg = (e as { message?: string })?.message;
       toast({
         title: "Ogohlantirish",
-        description: orgError.message || orgError.error || "Tashkiliy funksiyalarni saqlashda xatolik",
+        description: msg || "Tashkiliy funksiyalarni saqlashda xatolik",
         variant: "destructive",
       });
     }

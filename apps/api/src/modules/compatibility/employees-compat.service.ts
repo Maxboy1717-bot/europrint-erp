@@ -178,8 +178,8 @@ export class EmployeesCompatService {
         const empNumId = Number(emp['num_id']);
         const userId = await ensureUserForEmployee(tx, {
           employeeId: empNumId,
-          firstName: a.firstName!,
-          lastName: a.lastName!,
+          firstName: a.firstName ?? '',
+          lastName: a.lastName ?? '',
           email: a.email,
           phone: a.phoneNumber,
           hireDate: a.hireDate,

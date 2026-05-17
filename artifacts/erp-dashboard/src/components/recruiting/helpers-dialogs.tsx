@@ -182,10 +182,10 @@ export function AIInterviewDialog({
                     <Star className="w-4 h-4 text-amber-400" />
                     {t("aiBaholashNatijalari")}
                   </h4>
-                  {entrySession.overall_score !== null && (
+                  {entrySession.overall_score != null && (
                     <div className="text-center py-2 bg-primary/10 rounded-lg">
                       <div className="text-3xl font-bold text-primary">
-                        {Math.round(entrySession.overall_score!)}%
+                        {Math.round(entrySession.overall_score)}%
                       </div>
                       <div className="text-xs text-muted-foreground">{t("umumiyBall")}</div>
                     </div>

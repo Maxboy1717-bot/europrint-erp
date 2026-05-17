@@ -245,9 +245,14 @@ export const posTransactions = pgTable("pos_transactions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   index("idx_pos_transactions_cashier_id").on(t.cashierId),
+  index("idx_pos_transactions_customer_id").on(t.customerId),
   index("idx_pos_transactions_payment_method").on(t.paymentMethod),
   index("idx_pos_transactions_status").on(t.status),
   index("idx_pos_transactions_created_at").on(t.createdAt),
+  check("pos_transactions_payment_method_chk", sql`${t.paymentMethod} IN ('cash','card','transfer','mixed')`),
+  check("pos_transactions_status_chk", sql`${t.status} IN ('completed','refunded','pending','cancelled')`),
+  check("pos_transactions_subtotal_chk", sql`${t.subtotal} >= 0`),
+  check("pos_transactions_total_amount_chk", sql`${t.totalAmount} >= 0`),
 ]);
 
 

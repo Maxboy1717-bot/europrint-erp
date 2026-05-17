@@ -1,14 +1,10 @@
 /**
  * @module employees-compat-sub.controller
- * @description NestJS controller. Sub-resource / relations routes for employees.
- * Routes: :id/assets, :id/swap-requests, :id/complaints, :id/assessment-skips,
- *         :id/bank-accounts, :id/bonuses, :id/business-trips, :id/capital-profile,
- *         :id/career, :id/cash-advances, :id/contracts, :id/corporate-inventory,
- *         :id/emergency-contacts, :id/files, :id/status, :id/assessments,
- *         :id/fines, :id/leave-requests, :id/overtime, :id/passport,
- *         :id/salary-history, :id/sick-leaves, and more.
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   employees-compat-sub module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
-
 import { Controller, Get, Post, Patch, Delete, Param, Query, Body, HttpCode, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -201,8 +197,18 @@ export class EmployeesCompatSubController {
   async createOvertime(@Param('id') id: string, @Body() body: CompatBodyDto) { return unwrapOrInternal(await this.financials.createOvertime(id, body)); }
 
   // --- Passport ---
+  /**
+   * GET /api/employees/:id/passport
+   * Passport ma'lumotlari `employees` jadvalining ustunlarida saqlanadi
+   * (passport_series, passport_number, passport_issue_date, passport_expiry_date, national_id).
+   * Agar hech qaysi ustunda qiymat bo'lmasa, frontend uchun 404 emas, null qaytariladi —
+   * frontend `EmployeeProfile.tsx` 404/null ni "passport yo'q" sifatida qabul qiladi.
+   */
   @Get(':id/passport')
-  async getPassport(@Param('id') _id: string) { return { passport: null }; }
+  async getPassport(@Param('id') id: string) {
+    const r = await this.profile.getPassport(id);
+    return r.ok ? r.data : null;
+  }
 
   @Post(':id/passport') @HttpCode(HttpStatus.OK)
   async createPassport(@Param('id') id: string, @Body() body: CompatBodyDto) { return unwrapOrInternal(await this.profile.createPassport(id, body)); }
@@ -231,8 +237,16 @@ export class EmployeesCompatSubController {
     return { manager: r.ok ? r.data?.manager ?? null : null, subordinates: r.ok && Array.isArray(r.data?.subordinates) ? r.data.subordinates : [], peers: r.ok && Array.isArray(r.data?.peers) ? r.data.peers : [] };
   }
 
+  /**
+   * GET /api/employees/:id/payroll-summary
+   * So'nggi 12 oy salary_history agregati. Frontend `EmployeeProfile.tsx`
+   * `payrollSummary` queryda ishlatadi va `!res.ok ? null` orqali defensiv ko'rinish.
+   */
   @Get(':id/payroll-summary')
-  async getPayrollSummary(@Param('id') _id: string) { return { summary: null }; }
+  async getPayrollSummary(@Param('id') id: string) {
+    const r = await this.profile.getPayrollSummary(id);
+    return { summary: r.ok ? r.data : null };
+  }
 
   @Post(':id/set-password') @HttpCode(HttpStatus.OK)
   async setPassword(@Param('id') id: string, @Body() body: CompatBodyDto) { return unwrapOrInternal(await this.financials.setPassword(id, body)); }

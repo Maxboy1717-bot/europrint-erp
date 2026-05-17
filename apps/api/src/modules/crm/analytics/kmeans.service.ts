@@ -3,12 +3,11 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeDiv, safeNum } from '@common/math/math-utils';
 import { Ok, Err, Result, AppError } from '@common/result';
-import { rawSql } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { CRM_ANALYTICS_REPO, ICrmAnalyticsRepo } from './repositories/i-crm-analytics.repo';
 
 export const KMEANS_K = 6;
 const KMEANS_MAX_ITER = 100;
@@ -110,6 +109,10 @@ function kmeansOnce(points: number[][], k: number): { labels: number[]; centroid
 export class KMeansService {
   private readonly logger = new Logger(KMeansService.name);
 
+  constructor(
+    @Inject(CRM_ANALYTICS_REPO) private readonly repo: ICrmAnalyticsRepo,
+  ) {}
+
   @Calculation('crm.kmeans.cluster')
   async cluster(points: RfmPoint[]): Promise<Result<ClusterResult[], AppError>> {
     if (!Array.isArray(points) || points.length < KMEANS_K) {
@@ -148,16 +151,7 @@ export class KMeansService {
     const calculatedAt = new Date().toISOString();
     for (const r of results) {
       try {
-        await rawSql(sql`
-          INSERT INTO rfm_clusters
-            (customer_id, cluster_id, r_norm, f_norm, m_norm, segment_label, calculated_at)
-          VALUES
-            (${r.customerId}, ${r.clusterId}, ${r.rNorm}, ${r.fNorm}, ${r.mNorm}, ${r.segmentLabel}, ${calculatedAt})
-          ON CONFLICT (customer_id, calculated_at)
-          DO UPDATE SET
-            cluster_id = EXCLUDED.cluster_id, r_norm = EXCLUDED.r_norm,
-            f_norm = EXCLUDED.f_norm, m_norm = EXCLUDED.m_norm, segment_label = EXCLUDED.segment_label
-        `);
+        await this.repo.upsertRfmCluster(r, calculatedAt);
       } catch (e) {
         return Err({ code: 'DB_ERROR', message: `rfm_clusters ga yozishda xato (customerId=${r.customerId}): ${String(e)}` });
       }

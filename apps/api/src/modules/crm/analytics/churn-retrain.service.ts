@@ -3,12 +3,11 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeDiv, safeNum } from '@common/math/math-utils';
 import { Ok, Err, Result, AppError } from '@common/result';
-import { db, runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { CRM_ANALYTICS_REPO, ICrmAnalyticsRepo } from './repositories/i-crm-analytics.repo';
 
 const LEARNING_RATE = 0.01;
 const LAMBDA = 0.001;
@@ -90,6 +89,10 @@ const AUC_THRESHOLD = 0.70;
 
 @Injectable()
 export class ChurnRetrainService {
+  constructor(
+    @Inject(CRM_ANALYTICS_REPO) private readonly repo: ICrmAnalyticsRepo,
+  ) {}
+
   @Calculation('crm.churn.retrain')
   async retrain(samples: TrainSample[]): Promise<Result<RetrainResult, AppError>> {
     const validationErr = this.validateSamples(samples);
@@ -124,32 +127,10 @@ export class ChurnRetrainService {
   }
 
   private async computeNextVersion(): Promise<number> {
-    const maxVersion = await runQuery<{ v: number }>(sql`
-      SELECT COALESCE(MAX(version), 0) AS v FROM churn_model_params
-    `);
-    return safeNum((maxVersion[0] ?? { v: 0 }).v) + 1;
+    return safeNum(await this.repo.getMaxChurnModelVersion()) + 1;
   }
 
   private async persistModel(version: number, coefficients: number[], auc: number, sampleSize: number): Promise<void> {
-    const coefJson    = JSON.stringify({ values: coefficients });
-    const featuresSql = sql.join(FEATURE_NAMES.map(f => sql`${f}`), sql`, `);
-    await db.transaction(async (tx) => {
-      await tx.execute(sql`
-        UPDATE churn_model_params SET is_active = false WHERE is_active = true
-      `);
-      await tx.execute(sql`
-        INSERT INTO churn_model_params (version, coefficients, feature_names, auc, trained_at, is_active, sample_size)
-        VALUES (
-          ${version}, ${coefJson}::jsonb, ARRAY[${featuresSql}]::text[],
-          ${auc}, NOW(), true, ${sampleSize}
-        )
-        ON CONFLICT (version) DO UPDATE SET
-          coefficients = EXCLUDED.coefficients,
-          auc          = EXCLUDED.auc,
-          trained_at   = EXCLUDED.trained_at,
-          is_active    = true,
-          sample_size  = EXCLUDED.sample_size
-      `);
-    });
+    await this.repo.persistChurnModel(version, coefficients, FEATURE_NAMES, auc, sampleSize);
   }
 }

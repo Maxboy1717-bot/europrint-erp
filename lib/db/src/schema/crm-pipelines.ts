@@ -5,7 +5,7 @@
 
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, date, uuid, check } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, date, uuid, check, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -33,6 +33,10 @@ export const customerInteractions = pgTable("customer_interactions", {
 }, (t) => [
   check("customer_interactions_type_chk", sql`${t.type} IN ('call','email','meeting','note','chat')`),
   check("customer_interactions_direction_chk", sql`${t.direction} IS NULL OR ${t.direction} IN ('in','out')`),
+  index("idx_customer_interactions_customer_id").on(t.customerId),
+  index("idx_customer_interactions_manager_id").on(t.managerId),
+  index("idx_customer_interactions_contact_id").on(t.contactId),
+  index("idx_customer_interactions_date").on(t.interactionDate),
 ]);
 
 export const insertCustomerInteractionSchema = createInsertSchema(customerInteractions).omit({ id: true, createdAt: true } as never);
@@ -51,6 +55,8 @@ export const customerDocuments = pgTable("customer_documents", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   check("customer_documents_type_chk", sql`${t.type} IN ('contract','certificate','nda','invoice','act','other')`),
+  index("idx_customer_documents_customer_id").on(t.customerId),
+  index("idx_customer_documents_uploaded_by").on(t.uploadedBy),
 ]);
 
 export const insertCustomerDocumentSchema = createInsertSchema(customerDocuments).omit({ id: true, createdAt: true } as never);
@@ -80,6 +86,9 @@ export const customerComplaints = pgTable("customer_complaints", {
   check("customer_complaints_type_chk", sql`${t.type} IN ('quality','deadline','delivery','price','other')`),
   check("customer_complaints_satisfaction_chk", sql`${t.satisfactionScore} IS NULL OR (${t.satisfactionScore} >= 1 AND ${t.satisfactionScore} <= 5)`),
   check("customer_complaints_compensation_chk", sql`${t.compensationAmount} IS NULL OR ${t.compensationAmount} >= 0`),
+  index("idx_customer_complaints_customer_id").on(t.customerId),
+  index("idx_customer_complaints_status").on(t.status),
+  index("idx_customer_complaints_resolved_by").on(t.resolvedBy),
 ]);
 
 export const insertCustomerComplaintSchema = createInsertSchema(customerComplaints).omit({ id: true, createdAt: true, updatedAt: true } as never);
@@ -101,6 +110,7 @@ export const customerCompetitors = pgTable("customer_competitors", {
 }, (t) => [
   check("customer_competitors_reason_chk", sql`${t.reason} IS NULL OR ${t.reason} IN ('price','deadline','quality','assortment','other')`),
   check("customer_competitors_win_back_chk", sql`${t.winBackPotential} IS NULL OR ${t.winBackPotential} IN ('high','medium','low')`),
+  index("idx_customer_competitors_customer_id").on(t.customerId),
 ]);
 
 export const insertCustomerCompetitorSchema = createInsertSchema(customerCompetitors).omit({ id: true, createdAt: true } as never);
@@ -161,6 +171,8 @@ export const crmStages = pgTable("crm_stages", {
   semantics: varchar("semantics", { length: 20 }), // process, success, fail
 }, (t) => [
   check("crm_stages_semantics_chk", sql`${t.semantics} IS NULL OR ${t.semantics} IN ('process','success','fail')`),
+  index("idx_crm_stages_category_id").on(t.categoryId),
+  index("idx_crm_stages_entity_id").on(t.entityId),
 ]);
 
 
@@ -180,6 +192,9 @@ export type InsertCrmStage = z.infer<typeof insertCrmStageSchema>;
 // CRM Deals (Kelishuvlar - b_crm_deal) - MARKAZIY ENTITY
 export const crmDeals = pgTable("crm_deals", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column. DEFAULT 1 is intentional — every row backfilled to
+  // tenant 1 on migration; future writers MUST set this from TenantContext.
+  tenantId: integer("tenant_id").notNull().default(1),
   title: text("title").notNull(),
   
   // Pipeline & Stage
@@ -239,6 +254,18 @@ export const crmDeals = pgTable("crm_deals", {
 }, (t) => [
   check("crm_deals_probability_chk", sql`${t.probability} IS NULL OR (${t.probability} >= 0 AND ${t.probability} <= 100)`),
   check("crm_deals_stage_semantic_chk", sql`${t.stageSemanticId} IS NULL OR ${t.stageSemanticId} IN ('process','success','fail')`),
+  index("idx_crm_deals_company_id").on(t.companyId),
+  index("idx_crm_deals_assigned_by_id").on(t.assignedById),
+  index("idx_crm_deals_category_id").on(t.categoryId),
+  index("idx_crm_deals_stage_id").on(t.stageId),
+  index("idx_crm_deals_created_by_id").on(t.createdById),
+  index("idx_crm_deals_date_create").on(t.dateCreate),
+  index("idx_crm_deals_close_date").on(t.closeDate),
+  index("idx_crm_deals_deleted_at").on(t.deletedAt),
+  index("idx_crm_deals_opened").on(t.opened),
+  index("idx_crm_deals_tenant_id").on(t.tenantId),
+  index("idx_crm_deals_closed").on(t.closed),
+  index("idx_crm_deals_next_activity_at").on(t.nextActivityAt),
 ]);
 
 

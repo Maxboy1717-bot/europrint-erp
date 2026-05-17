@@ -20,9 +20,9 @@ export function QCBolimi() {
   const { data: qcMateriallar, isLoading } = useQuery<QcBarcodeItem[]>({
     queryKey: ["/api/barcode-warehouse/barcodes", { status: "QC_HOLD" }],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/barcode-warehouse/barcodes?status=QC_HOLD") as unknown as Response;
-      if (!res.ok) return [];
-      const data = await res.json();
+      let data;
+      try { data = await apiRequest('GET', "/api/barcode-warehouse/barcodes?status=QC_HOLD"); }
+      catch { return []; }
       return Array.isArray(data) ? data : [];
     },
   });

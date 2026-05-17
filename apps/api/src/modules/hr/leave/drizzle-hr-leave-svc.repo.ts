@@ -39,7 +39,7 @@ export class DrizzleHrLeaveSvcRepository implements IHrLeaveSvcRepository {
 
   async findUserById(userId: number): Promise<Result<Row | null>> {
     try {
-      const rows = await db.select().from(users).where(eq(users.id, userId)).limit(1).offset(0);
+      const rows = await db.select().from(users).where(eq(users.id, String(userId))).limit(1).offset(0);
       return Ok(((rows)[0] || null) as Row | null);
     } catch (e: unknown) { return Err((e as Error)?.message || `Foydalanuvchi #${userId} topilmadi`); }
   }
@@ -84,7 +84,7 @@ export class DrizzleHrLeaveSvcRepository implements IHrLeaveSvcRepository {
       const arr = Array.isArray(rows) ? rows : [];
       const out = arr.map((r) => ({
         id: Number(r.id),
-        hireDate: r.hireDate ? (r.hireDate instanceof Date ? r.hireDate.toISOString().split('T')[0]! : String(r.hireDate)) : null,
+        hireDate: r.hireDate ? String(r.hireDate) : null,
       }));
       return Ok(out);
     } catch (e: unknown) {

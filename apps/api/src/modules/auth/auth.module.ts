@@ -22,6 +22,7 @@ import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { DrizzleAuthRepo } from './infrastructure/repositories/drizzle-auth.repo';
 import { DrizzleMyPermissionsRepository } from './infrastructure/repositories/drizzle-my-permissions.repo';
 import { OtpSessionRepository } from './infrastructure/repositories/otp-session.repository';
+import { OtpSessionCleanupCron } from './infrastructure/cron/otp-session-cleanup.cron';
 import { AuthSchemaService } from './infrastructure/auth-schema.service';
 import { AuthSchemaRepository } from './infrastructure/auth-schema.repository';
 import { BcryptPasswordHasher } from './infrastructure/security/bcrypt-password-hasher';
@@ -55,6 +56,7 @@ export { AUTH_REPO } from './auth.tokens';
     GetMyPermissionsService,
     JwtStrategy,
     OtpSessionRepository,
+    OtpSessionCleanupCron,
     AuthSchemaRepository,
     AuthSchemaService,
     DrizzleMyPermissionsRepository,

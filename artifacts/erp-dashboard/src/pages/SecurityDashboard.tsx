@@ -79,9 +79,11 @@ export default function SecurityDashboard() {
   const { data: visitors = [], isLoading: visitorsLoading } = useQuery<Visitor[]>({
     queryKey: ["/api/security/visitors"],
     queryFn: async () => {
-      const res = (await apiRequest('GET', "/api/security/visitors")) as unknown as Response;
-      if (!res.ok) return [];
-      return res.json();
+      try {
+        return await apiRequest('GET', "/api/security/visitors");
+      } catch {
+        return [];
+      }
     },
   });
 

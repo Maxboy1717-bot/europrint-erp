@@ -76,12 +76,10 @@ export class ApproveLeaveHandler
         return Err(`Failed to update leave request: ${updateResult.error}`);
       }
 
-      this.eventEmitter.emit('leave.approved', {
-        leaveId: leaveRequest.id,
-        employeeId: leaveRequest.employeeId,
-        approverId: command.approverId,
-        approvedAt: leaveRequest.approvedAt,
-      });
+      for (const ev of leaveRequest.getDomainEvents()) {
+        this.eventEmitter.emit(ev.eventName, ev);
+      }
+      leaveRequest.clearDomainEvents();
 
       return Ok(leaveRequest);
   }

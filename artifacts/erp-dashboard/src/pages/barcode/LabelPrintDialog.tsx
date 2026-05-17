@@ -64,8 +64,13 @@ export function LabelPrintDialog({
       if (!batch) throw new Error("Batch tanlanmagan");
 
       if (format === "PDF") {
-        const res = (await apiRequest('POST', `/api/warehouse/label/print`, { batchId: batch.id, format: "PDF", copies })) as unknown as Response;
-        if (!res.ok) throw new Error("PDF generatsiyada xatolik");
+        const res = await fetch(`/api/warehouse/label/print`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ batchId: batch.id, format: "PDF", copies }),
+        });
+        if (!res.ok) throw new Error("PDF yuklab olishda xatolik");
 
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
@@ -83,10 +88,7 @@ export function LabelPrintDialog({
         } as LabelPrintResult;
       }
 
-      const res = (await apiRequest('POST', `/api/warehouse/label/print`, { batchId: batch.id, format, copies })) as unknown as Response;
-
-      if (!res.ok) throw new Error("Xatolik");
-      return res.json() as Promise<LabelPrintResult>;
+      return await apiRequest<LabelPrintResult>('POST', `/api/warehouse/label/print`, { batchId: batch.id, format, copies });
     },
     onSuccess: (data) => {
       setResult(data);

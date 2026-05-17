@@ -1,8 +1,10 @@
 /**
  * @module employee-files-compat.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   employee-files module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
-
 import {
   Controller, Get, Patch, Post, Delete, Param, Query, Body,
   UseGuards, UseInterceptors,

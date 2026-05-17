@@ -1,6 +1,8 @@
-node_modules
-dist
-.pnpm-store
+node_modules/
+dist/
+build/
+*.min.*
 pnpm-lock.yaml
-*.min.js
-*.min.css
+*.lockb
+coverage/
+.pnpm-store/

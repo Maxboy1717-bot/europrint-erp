@@ -7,7 +7,7 @@ import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
 import {
   serial, pgTable, text, varchar, integer, boolean,
-  timestamp, jsonb, unique, uuid, pgEnum, check,
+  timestamp, jsonb, unique, uuid, pgEnum, check, index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -169,6 +169,14 @@ export const posMovements = pgTable("pos_movements", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
   check("pos_movements_status_chk", sql`${t.status} IN ('draft','pending','approved','completed','cancelled')`),
+  index("idx_pos_movements_movement_type_id").on(t.movementTypeId),
+  index("idx_pos_movements_from_warehouse_id").on(t.fromWarehouseId),
+  index("idx_pos_movements_to_warehouse_id").on(t.toWarehouseId),
+  index("idx_pos_movements_status").on(t.status),
+  index("idx_pos_movements_created_by").on(t.createdBy),
+  index("idx_pos_movements_approved_by").on(t.approvedBy),
+  index("idx_pos_movements_created_at").on(t.createdAt),
+  index("idx_pos_movements_deleted_at").on(t.deletedAt),
 ]);
 
 export const insertPosMovementSchema = createInsertSchema(posMovements, {
@@ -194,7 +202,11 @@ export const posMovementLines = pgTable("pos_movement_lines", {
   notes: text("notes"),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  index("idx_pos_movement_lines_movement_id").on(t.movementId),
+  index("idx_pos_movement_lines_passport_id").on(t.passportId),
+  index("idx_pos_movement_lines_product_id").on(t.productId),
+]);
 
 export const insertPosMovementLineSchema = createInsertSchema(posMovementLines, {
   productName: z.string().min(1),

@@ -102,6 +102,7 @@ import { LayoutDashboard, X,
   } from "lucide-react";
   import { MenuGroup } from "./types";
   import { translateHrModule } from "./hrNavI18n";
+  import { FEATURE_MARKETING } from "@/lib/feature-flags";
 
   export const menuGroups = {
   tz01: {
@@ -720,8 +721,18 @@ import { LayoutDashboard, X,
   export function getTranslatedMenuGroups(t: (key: string) => string): Record<string, MenuGroup> {
     const groups = menuGroups as Record<string, MenuGroup>;
     const hrModule = groups.tz11;
-    if (!hrModule) return groups;
-    return { ...groups, tz11: translateHrModule(t, hrModule) };
+
+    // Marketing (tz02) backend has ~60/99 endpoints returning 501. Hide the
+    // entire module from the sidebar unless the build explicitly opts in via
+    // VITE_FEATURE_MARKETING=true. See artifacts/erp-dashboard/src/lib/feature-flags.ts.
+    let next: Record<string, MenuGroup> = groups;
+    if (!FEATURE_MARKETING) {
+      const { tz02: _omitted, ...rest } = next;
+      void _omitted;
+      next = rest;
+    }
+    if (!hrModule) return next;
+    return { ...next, tz11: translateHrModule(t, hrModule) };
   }
 
   export function findModuleByPath(path: string): string | null {

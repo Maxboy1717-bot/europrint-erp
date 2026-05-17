@@ -53,6 +53,20 @@ export class CrmBitrixCompatService {
     });
   }
 
+  async deleteProposal(id: number) {
+    return safeCall(async () => {
+      await this.repo.deleteProposal(id);
+      return { deleted: true };
+    });
+  }
+
+  async deleteInvoice(id: number) {
+    return safeCall(async () => {
+      await this.repo.deleteInvoice(id);
+      return { deleted: true };
+    });
+  }
+
   async updateProposalStage(id: number, status: string) {
     return this.repo.updateProposalStage(id, status);
   }

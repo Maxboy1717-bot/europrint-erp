@@ -201,8 +201,11 @@ export type InsertVendor = z.infer<typeof insertVendorSchema>;
 // Purchase Orders (Xarid buyurtmalari)
 export const purchaseOrders = pgTable("purchase_orders", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column. DEFAULT 1 is intentional — every row backfilled to
+  // tenant 1 on migration; future writers MUST set this from TenantContext.
+  tenantId: integer("tenant_id").notNull().default(1),
   poNumber: varchar("po_number", { length: 50 }).notNull().unique(),
-  vendorId: integer("vendor_id").references(() => vendors.id, { onDelete: "cascade" }).notNull(),
+  vendorId: integer("vendor_id").references(() => vendors.id, { onDelete: "restrict" }).notNull(),
   orderDate: varchar("order_date", { length: 10 }).notNull(), // YYYY-MM-DD
   deliveryDate: varchar("delivery_date", { length: 10 }), // YYYY-MM-DD
   status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, sent, confirmed, received, cancelled
@@ -215,6 +218,10 @@ export const purchaseOrders = pgTable("purchase_orders", {
   index("idx_purchase_orders_vendor_id").on(t.vendorId),
   index("idx_purchase_orders_status").on(t.status),
   index("idx_purchase_orders_created_at").on(t.createdAt),
+  index("idx_purchase_orders_tenant_id").on(t.tenantId),
+  index("idx_purchase_orders_created_by").on(t.createdBy),
+  index("idx_purchase_orders_deleted_at").on(t.deletedAt),
   check("purchase_orders_status_chk", sql`${t.status} IN ('draft','sent','confirmed','received','cancelled')`),
+  check("purchase_orders_total_amount_chk", sql`${t.totalAmount} IS NULL OR ${t.totalAmount} >= 0`),
 ]);
 

@@ -88,11 +88,9 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
 
   const handleViewTransfer = async (transfer: TransferData) => {
     try {
-      const res = (await apiRequest('GET', `/api/warehouse/transfers/${transfer.id}`)) as unknown as Response;
-      if (res.ok) {
-        setSelectedTransfer(await res.json());
-        setIsDetailOpen(true);
-      }
+      const res = await apiRequest<TransferData>('GET', `/api/warehouse/transfers/${transfer.id}`);
+      setSelectedTransfer(res);
+      setIsDetailOpen(true);
     } catch {
       toast({ title: lang === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка", variant: "destructive" });
     }
