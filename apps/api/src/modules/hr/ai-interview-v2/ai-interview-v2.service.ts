@@ -122,7 +122,7 @@ export class AiInterviewV2Service {
    * Public token-based submit — packages the raw candidate answers into the
    * service-internal result shape (transcript, ai summary, default
    * recommendation) so the controller only forwards `{ token, answers }`.
-   * Rule 6: keeps `.map(...).join(...)` and template-string assembly out of
+   * Rule 6: keeps array-iteration and template-string assembly out of
    * the HTTP layer.
    */
   async submitPublicAnswers(token: string, answers: readonly string[]) {
