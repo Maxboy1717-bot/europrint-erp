@@ -31,7 +31,7 @@ import { MrpRunProcessor } from './processors/mrp-run.processor';
 import { ForecastRecalcProcessor } from './processors/forecast-recalc.processor';
 import { MaterializedViewRefreshService } from './materialized-view-refresh.service';
 import { QUEUE_NAMES } from './queue.constants';
-import { BomExplosionService } from '../pp/domain/services/bom-explosion.service';
+import { PpModule } from '../pp/pp.module';
 import { EoqCalculatorService } from '../wms/domain/services/eoq-calculator.service';
 import { SafetyStockService } from '../wms/domain/services/safety-stock.service';
 import { ForecastService } from '../ai/forecast/forecast.service';
@@ -59,6 +59,7 @@ const defaultJobOptions = {
 @Module({
   imports: [
     ConfigModule,
+    PpModule,
     // BullMQ Redis ulanishini ConfigService orqali sozlash
     BullModule.forRootAsync({
       imports: [ConfigModule],
@@ -93,8 +94,8 @@ const defaultJobOptions = {
     MrpRunProcessor,
     ForecastRecalcProcessor,
     MaterializedViewRefreshService,
-    // MRP processor uchun — BOM explosion + WMS domain services
-    BomExplosionService,
+    // MRP processor uchun — BOM explosion PpModule'dan import qilinadi (PP_REPO bilan)
+    // EoqCalculatorService va SafetyStockService — toza funksiyalar, dependency yo'q
     EoqCalculatorService,
     SafetyStockService,
     // Forecast processor uchun — pure math + persistence
