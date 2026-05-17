@@ -75,8 +75,11 @@ export default function PosWarehouseDetail() {
     const groups = new Map<string, UnitGroupRow>();
     for (const item of filtered) {
       const u = (item.unit ?? "").trim() || "—";
-      if (!groups.has(u)) groups.set(u, { unit: u, items: [], total: 0, reserved: 0 });
-      const g = groups.get(u)!;
+      let g = groups.get(u);
+      if (!g) {
+        g = { unit: u, items: [], total: 0, reserved: 0 };
+        groups.set(u, g);
+      }
       g.items.push(item);
       g.total += item.availableQty ?? 0;
       g.reserved += item.reservedQty ?? 0;

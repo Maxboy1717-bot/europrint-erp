@@ -72,8 +72,9 @@ export default function PosLotTraceability() {
       const lotMap = new Map<string, Lot>();
       for (const bc of allBarcodes) {
         const key = bc.batch_number || `(barkod-${bc.id})`;
-        if (!lotMap.has(key)) {
-          lotMap.set(key, {
+        let lot = lotMap.get(key);
+        if (!lot) {
+          lot = {
             batchNumber: key,
             materialCardId: bc.material_card_id,
             quantity: 0,
@@ -83,9 +84,9 @@ export default function PosLotTraceability() {
             firstSeen: bc.created_at,
             lastSeen: bc.created_at,
             status: bc.status,
-          });
+          };
+          lotMap.set(key, lot);
         }
-        const lot = lotMap.get(key)!;
         lot.quantity += Number(bc.quantity ?? 0);
         lot.barcodeCount++;
         if (bc.created_at < lot.firstSeen) lot.firstSeen = bc.created_at;

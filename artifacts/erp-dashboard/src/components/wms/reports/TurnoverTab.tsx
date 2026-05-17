@@ -42,9 +42,7 @@ export function TurnoverTab({
     queryKey: ["/api/warehouse/reports/turnover", dateFrom, dateTo],
     queryFn: async () => {
       const params = new URLSearchParams({ dateFrom, dateTo });
-      const res = await apiRequest('GET', `/api/warehouse/reports/turnover?${params}`) as unknown as Response;
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
+      return await apiRequest('GET', `/api/warehouse/reports/turnover?${params}`);
     },
   });
 

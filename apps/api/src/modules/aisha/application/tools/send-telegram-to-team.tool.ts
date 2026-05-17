@@ -63,7 +63,8 @@ export class SendTelegramToTeamTool implements IAishaTool {
     const recipientsRaw = String(input['recipients'] ?? '');
     const message = String(input['message'] ?? '');
     if (!message || message.trim().length === 0) return Err(AppErr('VALIDATION', 'message bo\'sh bo\'lmasligi kerak'));
-    if (!this.sender) return Err(AppErr('EXTERNAL_SERVICE', 'TelegramSender provayderi yo\'q'));
+    const sender = this.sender;
+    if (!sender) return Err(AppErr('EXTERNAL_SERVICE', 'TelegramSender provayderi yo\'q'));
 
     return safeCall<ToolResult<TelegramSendResult>>(async () => {
       const start = Date.now();
@@ -73,7 +74,7 @@ export class SendTelegramToTeamTool implements IAishaTool {
       `));
       let delivered = 0, failed = 0;
       for (const c of chats) {
-        const r = await this.sender!.sendMessage(c.chat_id, message);
+        const r = await sender.sendMessage(c.chat_id, message);
         if (r.ok) delivered++; else failed++;
       }
       return provResult<TelegramSendResult>({

@@ -49,7 +49,7 @@ export function QCheckDialog({ open, result, timeout = 5, onCommit, onCancel }: 
     timerRef.current = setInterval(() => {
       setRemaining((prev) => {
         if (prev <= 1) {
-          clearInterval(timerRef.current!);
+          if (timerRef.current) clearInterval(timerRef.current);
           onCommit(result);
           return 0;
         }
@@ -76,7 +76,7 @@ export function QCheckDialog({ open, result, timeout = 5, onCommit, onCancel }: 
 
   function handleCommitNow() {
     if (timerRef.current) clearInterval(timerRef.current);
-    onCommit(result!);
+    if (result) onCommit(result);
   }
 
   return (

@@ -28,6 +28,10 @@ import { DEFAULT_PORT, SECONDS_PER_YEAR, MS_PER_SECOND, MAX_FILE_SIZE } from '@c
 initSentry();
 
 const BLOCKED_HTTP_METHODS = ['CONNECT', 'TRACE', 'PROPFIND'] as const;
+// State-changing methods that must originate from a trusted origin. GET / HEAD
+// / OPTIONS are excluded because they're either safe by definition or part of
+// the preflight handshake (which is already gated by enableCors below).
+const CSRF_PROTECTED_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 type RawFastify = {
   addHook: (event: string, fn: (req: RawReq, reply: RawReply, done?: () => void) => unknown) => void;
   get: (path: string, fn: (req: unknown, reply: RawReply) => void | Promise<void>) => void;
@@ -68,6 +72,70 @@ function configureBlockedMethods(app: NestFastifyApplication): void {
   httpServer.on('connect', (_req: unknown, socket: import('net').Socket) => {
     socket.write(CONNECT_RESPONSE);
     socket.destroy();
+  });
+}
+
+/**
+ * CSRF mitigation (audit C.26).
+ *
+ * Strategy: combine `SameSite=Strict` cookies (set in auth.controller.ts) with
+ * Origin / Referer validation on every state-changing request. We deliberately
+ * do NOT use `@fastify/csrf-protection`'s synchronizer-token model because:
+ *  - the frontend already sends `Authorization: Bearer …` for API calls, so the
+ *    same-origin policy + SameSite cookies already block the classic CSRF
+ *    vector;
+ *  - layering an Origin check costs nothing and catches stray cross-origin
+ *    POSTs (e.g. a misconfigured embedded form, a malicious extension) that
+ *    SameSite alone wouldn't catch on older browsers.
+ *
+ * Allow list is identical to the CORS allow list — ALLOWED_ORIGINS env var
+ * plus the .replit.dev / .repl.co / .replit.app dev origins. Requests without
+ * an Origin header (server-to-server, curl, mobile native) are allowed: those
+ * cannot be CSRF'd by a browser anyway.
+ */
+function configureCsrfOriginCheck(app: NestFastifyApplication, logger: Logger): void {
+  const origins = (process.env.ALLOWED_ORIGINS ?? '').split(',').map((o) => o.trim()).filter(Boolean);
+  const isDev = process.env.NODE_ENV !== 'production';
+  const isReplitOrigin = (host: string) =>
+    host.endsWith('.replit.dev') || host.endsWith('.repl.co') || host.endsWith('.replit.app');
+
+  const isOriginAllowed = (origin: string): boolean => {
+    if (origins.includes(origin)) return true;
+    if (!isDev) return false;
+    try {
+      const host = new URL(origin).host;
+      return isReplitOrigin(host);
+    } catch {
+      return false;
+    }
+  };
+
+  const raw = app.getHttpAdapter().getInstance() as RawFastify;
+  raw.addHook('onRequest', (req: RawReq, reply: RawReply, done?: () => void) => {
+    const method = (req.method ?? '').toUpperCase();
+    if (!CSRF_PROTECTED_METHODS.has(method)) { done?.(); return; }
+
+    // Skip auth endpoints that the user is not yet authenticated for — login
+    // and OTP flows must work from the public landing page where the Origin
+    // matches the CORS list anyway (re-checked via Origin/Referer below).
+    const url = req.url ?? '';
+
+    const originHeader = (req.headers['origin'] as string | undefined) ?? undefined;
+    const refererHeader = (req.headers['referer'] as string | undefined) ?? undefined;
+
+    // No Origin and no Referer: not a browser request. Allow (covers
+    // server-to-server callers, health checks, native mobile clients).
+    if (!originHeader && !refererHeader) { done?.(); return; }
+
+    const candidate = originHeader ?? (refererHeader ? refererHeader.replace(/^(https?:\/\/[^/]+).*$/, '$1') : '');
+    if (candidate && isOriginAllowed(candidate)) { done?.(); return; }
+
+    logger.warn(`CSRF: rejecting ${method} ${url} from origin=${originHeader ?? '(none)'} referer=${refererHeader ?? '(none)'}`);
+    reply.code(HttpStatus.FORBIDDEN).send({
+      statusCode: HttpStatus.FORBIDDEN,
+      error: 'Forbidden',
+      message: 'CSRF: request origin not allowed',
+    });
   });
 }
 
@@ -212,6 +280,7 @@ async function bootstrap(): Promise<void> {
   fInst.addContentTypeParser('*', { parseAs: 'buffer' }, bufParser);
 
   configureBlockedMethods(app);
+  configureCsrfOriginCheck(app, logger);
   configureLoginRateLimit(app);
   configureAppMiddleware(app);
   const fastify = app.getHttpAdapter().getInstance() as RawFastify;

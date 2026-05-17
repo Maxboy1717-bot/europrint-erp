@@ -278,7 +278,7 @@ export class OnboardingService {
     return safeCall(async () => {
       const all = await this.hrOnboardingRepo.listAllOnboardings();
       if (!all.ok) throw new InternalServerErrorException(all.error);
-      const today = new Date().toISOString().split('T')[0]!;
+      const today = new Date().toISOString().substring(0, 10);
       const rows = Array.isArray(all.data) ? all.data : [];
       const records: OnboardingRecord[] = rows.map((r) => {
         const rec = r as Record<string, unknown>;

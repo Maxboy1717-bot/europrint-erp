@@ -3,7 +3,8 @@
  * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
  */
 
-import { pgTable, serial, varchar, integer, boolean, timestamp, text, decimal } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, integer, boolean, timestamp, text, decimal, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -20,7 +21,10 @@ export const leaveTypes = pgTable("leave_types", {
   isActive: boolean("is_active").default(true).notNull(),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("leave_types_max_days_chk", sql`${t.maxDaysPerYear} IS NULL OR ${t.maxDaysPerYear} >= 0`),
+  check("leave_types_min_days_chk", sql`${t.minDaysBeforeRequest} IS NULL OR ${t.minDaysBeforeRequest} >= 0`),
+]);
 
 export const shiftTypes = pgTable("shift_types", {
   id: serial("id").primaryKey(),
@@ -61,7 +65,10 @@ export const abcThresholds = pgTable("abc_thresholds", {
   lmsWeight: decimal("lms_weight", { precision: 5, scale: 2 }).default("0.15"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("abc_thresholds_category_chk", sql`${t.category} IN ('A','B','C','D')`),
+  check("abc_thresholds_score_range_chk", sql`${t.minScore} <= ${t.maxScore}`),
+]);
 
 export const insertLeaveTypeSchema = createInsertSchema(leaveTypes).omit({ id: true, createdAt: true } as never);
 export type InsertLeaveType = z.infer<typeof insertLeaveTypeSchema>;

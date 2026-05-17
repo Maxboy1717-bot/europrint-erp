@@ -41,14 +41,8 @@ export function RoomSettingsModal({ room, onClose }: Props) {
   const updateRoom = useChatStore((s) => s.updateRoom);
 
   const updateMutation = useMutation({
-    mutationFn: async (data: { name?: string; description?: string; avatarEmoji?: string }) => {
-      const res = await apiRequest('PATCH', `/api/chat/rooms/${room.id}`, data) as unknown as Response;
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Server error" })) as { error?: string };
-        throw new Error(err.error || "Failed to update room");
-      }
-      return res.json();
-    },
+    mutationFn: (data: { name?: string; description?: string; avatarEmoji?: string }) =>
+      apiRequest<{ name?: string; description?: string; avatar_emoji?: string }>('PATCH', `/api/chat/rooms/${room.id}`, data),
     onSuccess: (data) => {
       updateRoom(room.id, {
         name: data.name || name,
@@ -66,11 +60,8 @@ export function RoomSettingsModal({ room, onClose }: Props) {
   });
 
   const muteMutation = useMutation({
-    mutationFn: async (duration: string) => {
-      const res = await apiRequest('POST', `/api/chat/rooms/${room.id}/mute`, { duration }) as unknown as Response;
-      if (!res.ok) throw new Error("Failed to mute");
-      return res.json();
-    },
+    mutationFn: (duration: string) =>
+      apiRequest<{ isMuted: boolean }>('POST', `/api/chat/rooms/${room.id}/mute`, { duration }),
     onSuccess: (data) => {
       updateRoom(room.id, { isMuted: data.isMuted });
       toast({ title: data.isMuted ? "Xona jimlatildi" : "Jimlik olib tashlandi" });
@@ -79,9 +70,7 @@ export function RoomSettingsModal({ room, onClose }: Props) {
 
   const archiveMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest('PATCH', `/api/chat/rooms/${room.id}`, { isArchived: true }) as unknown as Response;
-      if (!res.ok) throw new Error("Failed to archive");
-      return res.json();
+      return await apiRequest('PATCH', `/api/chat/rooms/${room.id}`, { isArchived: true });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["chat-rooms"] });

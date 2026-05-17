@@ -57,15 +57,59 @@ export class PosDatabase extends Dexie {
 
   constructor() {
     super("EuroPrintPOS");
+
+    // ─── SCHEMA MIGRATION CHAIN ──────────────────────────────────────────────
+    // Dexie applies version() chains in order. Each new schema change MUST add
+    // a new .version(N) call with the COMPLETE store definition (Dexie diffs
+    // store strings to figure out which indexes to add/drop). Previous .version
+    // calls MUST stay — they describe upgrade paths for users still on an
+    // older DB.
+    //
+    // PATTERN for adding a field/index:
+    //   1. Bump version number by 1
+    //   2. Re-declare ALL stores (not just the changed one — see Dexie docs)
+    //   3. Add .upgrade(tx => …) to backfill the new field for existing rows.
+    //      Even a no-op modify(() => {}) forces a row rewrite so the new index
+    //      is populated.
+    //   4. If introducing a NEW store, only declare it from this version on.
+    //   5. NEVER edit a previously-shipped .version() — it breaks users in mid
+    //      upgrade.
+    //
+    // Compound indexes: use "[fieldA+fieldB]" — useful for status+createdAt
+    // sorting (current pendingSales query uses status filter + createdAt order
+    // independently; bump to compound if we ever hit perf issues).
     this.version(1).stores({
       products: "id, barcode, name, isActive, cachedAt",
       pendingSales: "++id, localId, status, createdAt",
       syncMeta: "key",
     });
-    // Yangi maydon qo'shilganda shu pattern (version BUMP MAJBURIY):
-    // this.version(2)
-    //   .stores({ pendingSales: "++id, localId, status, createdAt, discountId" })
-    //   .upgrade(tx => tx.table("pendingSales").toCollection().modify(() => {}));
+
+    // Version 2 reserved for the first additive migration. Once you add a real
+    // schema change here, drop the seed-only upgrade() and replace it with the
+    // actual modify() backfill. Until then the chain still proves the pattern
+    // works end-to-end (Dexie executes upgrade hooks on first open after the
+    // version bump only; idempotent no-op modify is safe).
+    this.version(2)
+      .stores({
+        products: "id, barcode, name, isActive, cachedAt",
+        pendingSales: "++id, localId, status, createdAt",
+        syncMeta: "key",
+      })
+      .upgrade(async (tx) => {
+        // Future migrations go here. Examples:
+        //   await tx.table("pendingSales").toCollection().modify(row => {
+        //     row.discountId = row.discountId ?? null;
+        //   });
+        //   await tx.table("products").toCollection().modify(row => {
+        //     row.taxRate = row.taxRate ?? 0;
+        //   });
+        // No-op: keep the upgrade callback so Dexie acknowledges the version
+        // bump even though no fields changed yet. Touching the meta-row makes
+        // the v1 → v2 transition observable for logging if we ever need it.
+        await tx
+          .table("syncMeta")
+          .put({ key: "schemaUpgradedTo", value: 2 });
+      });
   }
 }
 

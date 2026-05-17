@@ -69,10 +69,12 @@ export function AssetsTab({ employeeId }: Props) {
   const { data, isLoading } = useQuery<AssetAssignment[]>({
     queryKey: ["/api/assets/employee", employeeId],
     queryFn: async () => {
-      const res = (await apiRequest('GET', `/api/assets/employee/${employeeId}`)) as unknown as Response;
-      if (!res.ok) return [];
-      const json = await res.json();
-      return Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+      let json: unknown;
+      try { json = await apiRequest<unknown>('GET', `/api/assets/employee/${employeeId}`); }
+      catch { return []; }
+      if (Array.isArray(json)) return json as AssetAssignment[];
+      const obj = json as { data?: unknown };
+      return Array.isArray(obj?.data) ? (obj.data as AssetAssignment[]) : [];
     },
     enabled: !!employeeId,
   });

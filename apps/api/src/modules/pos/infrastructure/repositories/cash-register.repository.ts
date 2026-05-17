@@ -11,6 +11,7 @@ import { Injectable } from '@nestjs/common';
 import { retail_pos_products, retail_pos_transactions } from '@shared/db/schema-pos-retail';
 import { safeCall, Result, Ok, Err } from '@common/result';
 import { createId } from '@paralleldrive/cuid2';
+import type { ICashRegisterRepository } from '../../domain/repositories/i-cash-register.repo';
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 export type RetailProduct = typeof retail_pos_products.$inferSelect;
@@ -45,7 +46,7 @@ export interface CreateTransactionInput {
 }
 
 @Injectable()
-export class CashRegisterRepository {
+export class CashRegisterRepository implements ICashRegisterRepository {
   async findProducts(search?: string): Promise<Result<RetailProduct[]>> {
     try {
     return safeCall(() => {

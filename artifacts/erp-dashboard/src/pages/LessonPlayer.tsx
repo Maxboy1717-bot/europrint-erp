@@ -46,15 +46,16 @@ export default function LessonPlayer() {
   const { data: progressData } = useQuery<ProgressData>({
     queryKey: ["/api/lms/progress/my", id],
     queryFn: async () => {
-      const res = (await apiRequest('GET', `/api/lms/progress/my?courseId=${id}`)) as unknown as Response;
-      if (!res.ok)
+      try {
+        return await apiRequest<ProgressData>('GET', `/api/lms/progress/my?courseId=${id}`);
+      } catch {
         return {
           completedLessonIds: [],
           totalLessons: 0,
           completedLessons: 0,
           progressPercent: 0,
         };
-      return res.json();
+      }
     },
     enabled: !!id,
   });

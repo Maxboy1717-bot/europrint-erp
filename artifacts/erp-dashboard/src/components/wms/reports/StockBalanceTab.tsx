@@ -66,9 +66,7 @@ export function StockBalanceTab({
       const params = new URLSearchParams();
       if (category !== 'all') params.set('category', category);
       if (lowStockOnly) params.set('lowStockOnly', 'true');
-      const res = await apiRequest('GET', `/api/warehouse/reports/stock-balance?${params}`) as unknown as Response;
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
+      return await apiRequest('GET', `/api/warehouse/reports/stock-balance?${params}`);
     },
   });
 

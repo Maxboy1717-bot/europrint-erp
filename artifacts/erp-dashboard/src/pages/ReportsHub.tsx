@@ -51,9 +51,7 @@ export default function ReportsHub() {
   const { data: definitions, isLoading: definitionsLoading } = useQuery<AiReportDefinition[]>({
     queryKey: ["/api/reports-hub/definitions", { categoryId: selectedCategoryId }],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/reports-hub/definitions?categoryId=${selectedCategoryId}`) as unknown as Response;
-      if (!res.ok) throw new Error("Failed to fetch definitions");
-      return res.json();
+      return await apiRequest('GET', `/api/reports-hub/definitions?categoryId=${selectedCategoryId}`);
     },
     enabled: selectedCategoryId !== null,
   });

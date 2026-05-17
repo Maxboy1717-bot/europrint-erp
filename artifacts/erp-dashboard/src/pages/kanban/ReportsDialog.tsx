@@ -43,8 +43,8 @@ export function ReportsDialog({
   const handleExport = async (format: "excel" | "pdf") => {
     setExporting(format);
     try {
-      const res = (await apiRequest('GET', `/api/kanban/reports/export?format=${format}`)) as unknown as Response;
-      if (!res.ok) throw new Error(`Export xatosi: ${res.status}`);
+      const res = await fetch(`/api/kanban/reports/export?format=${format}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

@@ -77,11 +77,8 @@ export default function WarehouseMaterialKits() {
 
   const fetchKitItems = async (kitId: number) => {
     try {
-      const res = (await apiRequest("GET", `/api/iot-enhanced/material-kits/${kitId}/items`)) as unknown as Response;
-      if (res.ok) {
-        const data = await res.json();
-        setKitItems(data);
-      }
+      const data = await apiRequest<MaterialKitItem[]>("GET", `/api/iot-enhanced/material-kits/${kitId}/items`);
+      setKitItems(Array.isArray(data) ? data : []);
     } catch {
       setKitItems([]);
     }

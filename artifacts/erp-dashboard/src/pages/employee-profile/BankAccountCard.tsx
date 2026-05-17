@@ -18,8 +18,9 @@ import { Landmark, Plus } from "lucide-react";
 import type { BankAccount } from "./profile-types";
 import type { BankCardProps } from "./PersonalTabTypes";
 import { EPStatusPill } from "@/components/ep";
+import { RoleGate, PII_VIEWER_ROLES } from "@/components/RoleGate";
 
-export function BankAccountCard({ t, tCommon, bankAccounts, loadingBanks, bankDialogOpen, setBankDialogOpen, bankForm, setBankForm, saveBankMutation, }: BankCardProps) {
+export function BankAccountCard({ t, tCommon, bankAccounts, loadingBanks, bankDialogOpen, setBankDialogOpen, bankForm, setBankForm, saveBankMutation, ownerUserId, }: BankCardProps) {
   const accounts = Array.isArray(bankAccounts) ? bankAccounts : [];
 
   return (
@@ -119,34 +120,45 @@ export function BankAccountCard({ t, tCommon, bankAccounts, loadingBanks, bankDi
             <Skeleton className="h-4 w-3/4 rounded-lg" />
           </div>
         ) : accounts.length > 0 ? (
-          <div className="space-y-4">
-            {accounts.map((bank: BankAccount) => (
-              <div key={bank.id} className="p-3 border rounded-md space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium">{bank.bankName}</p>
-                  {bank.isPrimary && <EPStatusPill tone="neutral">{tCommon("primary")}</EPStatusPill>}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">{t("accountNumber")}</p>
-                    <p>{bank.accountNumber}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{t("cardNumber")}</p>
-                    <p>{bank.cardNumber || tCommon("notSpecified")}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">MFO</p>
-                    <p>{bank.mfo || tCommon("notSpecified")}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">INN</p>
-                    <p>{bank.inn || tCommon("notSpecified")}</p>
-                  </div>
-                </div>
+          <RoleGate
+            roles={PII_VIEWER_ROLES}
+            ownerUserId={ownerUserId}
+            fallback={
+              <div className="text-muted-foreground text-center py-8" data-testid="bank-masked">
+                <p className="text-sm">Bank ma'lumotlari maxfiy</p>
+                <p className="text-xs mt-1">Faqat HR ko'ra oladi</p>
               </div>
-            ))}
-          </div>
+            }
+          >
+            <div className="space-y-4" data-testid="bank-data">
+              {accounts.map((bank: BankAccount) => (
+                <div key={bank.id} className="p-3 border rounded-md space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium">{bank.bankName}</p>
+                    {bank.isPrimary && <EPStatusPill tone="neutral">{tCommon("primary")}</EPStatusPill>}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">{t("accountNumber")}</p>
+                      <p>{bank.accountNumber}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">{t("cardNumber")}</p>
+                      <p>{bank.cardNumber || tCommon("notSpecified")}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">MFO</p>
+                      <p>{bank.mfo || tCommon("notSpecified")}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">INN</p>
+                      <p>{bank.inn || tCommon("notSpecified")}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </RoleGate>
         ) : (
           <p className="text-muted-foreground text-center py-8">{tCommon("noData")}</p>
         )}

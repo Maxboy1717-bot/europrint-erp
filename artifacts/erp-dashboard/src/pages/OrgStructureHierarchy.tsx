@@ -52,10 +52,7 @@ export default function OrgStructureHierarchy() {
   });
 
   const notifyMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/org-departments/notify-vacancies") as unknown as Response;
-      return res.json() as Promise<{ message?: string }>;
-    },
+    mutationFn: () => apiRequest<{ message?: string }>("POST", "/api/org-departments/notify-vacancies"),
     onSuccess: (d) => toast({ title: d.message || "Xabar yuborildi" }),
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });

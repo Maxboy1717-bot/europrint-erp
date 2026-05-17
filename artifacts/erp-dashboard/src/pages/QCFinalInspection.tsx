@@ -43,9 +43,11 @@ export default function QCFinalInspection() {
   const { data: inspections = [] } = useQuery<FinalInspection[]>({
     queryKey: ["/api/qc/final-inspections"],
     queryFn: async () => {
-      const res = (await apiRequest('GET', "/api/qc/final-inspections")) as unknown as Response;
-      if (!res.ok) return [];
-      return res.json();
+      try {
+        return await apiRequest('GET', "/api/qc/final-inspections");
+      } catch {
+        return [];
+      }
     }
   });
 

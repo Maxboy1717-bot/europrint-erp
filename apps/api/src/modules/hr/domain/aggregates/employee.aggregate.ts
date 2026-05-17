@@ -11,7 +11,14 @@ import { SalaryCalculatedEvent } from '../events/salary-calculated.event';
 import { EmployeeId } from '@shared/domain/value-objects/employee-id.vo';
 import { Email } from '@shared/domain/value-objects/email.vo';
 import { PhoneNumber } from '@shared/domain/value-objects/phone-number.vo';
-import { Result, Ok, Err } from '@common/types/result.type';
+import { Result, Ok, Err, AppErr } from '@common/types/result.type';
+import { Money } from '@shared/domain/value-objects/money.vo';
+import {
+  PAYROLL_INPS_RATE_DEFAULT,
+  PAYROLL_JSHD_RATE_DEFAULT,
+  PAYROLL_MONTHLY_HOURS,
+  PAYROLL_OVERTIME_MULTIPLIER,
+} from '@common/constants/business.constants';
 
 /**
  * VO-typed props for Employee.create. Boundary code is responsible for
@@ -109,9 +116,10 @@ export class Employee {
   get phone(): string | undefined { return this.props.phone?.value; }
   get phoneVO(): PhoneNumber | undefined { return this.props.phone; }
 
+  /** Legacy primitive API — kept for back-compat. Prefer `calculateGrossSalaryVO`. */
   calculateGrossSalary(overtimeHours: number, bonus: number): number {
     const base = this.props.baseSalary;
-    const overtime = overtimeHours * (base / 176) * 1.5;
+    const overtime = overtimeHours * (base / PAYROLL_MONTHLY_HOURS) * PAYROLL_OVERTIME_MULTIPLIER;
     const gross = base + overtime + bonus;
     this.logger.debug(
       `Gross calculation - Base: ${base}, OT: ${overtime}, Bonus: ${bonus}, Total: ${gross}`
@@ -119,25 +127,91 @@ export class Employee {
     return gross;
   }
 
-  calculateInps(gross: number, inpsRate: number): number {
+  /**
+   * Result-returning gross salary that returns a `Money` VO. Validates that
+   * `overtimeHours` and `bonus` are non-negative finite numbers (C.22).
+   */
+  calculateGrossSalaryVO(
+    overtimeHours: number,
+    bonus: number,
+    currency: string = 'UZS',
+  ): Result<Money> {
+    const finiteErr = this.requireFiniteNonNegative({ overtimeHours, bonus });
+    if (finiteErr) return finiteErr;
+    if (this.props.baseSalary < 0 || !Number.isFinite(this.props.baseSalary)) {
+      return Err(AppErr('VALIDATION', `Invalid baseSalary: ${this.props.baseSalary}`));
+    }
+    const gross = this.calculateGrossSalary(overtimeHours, bonus);
+    return Money.of(gross, currency);
+  }
+
+  /** Legacy primitive INPS. Prefer `calculateInpsVO`. */
+  calculateInps(gross: number, inpsRate: number = PAYROLL_INPS_RATE_DEFAULT): number {
     return Math.round(gross * inpsRate * 100) / 100;
   }
 
-  calculateJshd(gross: number, jshdRate: number): number {
+  calculateInpsVO(
+    gross: number,
+    inpsRate: number = PAYROLL_INPS_RATE_DEFAULT,
+    currency: string = 'UZS',
+  ): Result<Money> {
+    const e = this.requireFiniteNonNegative({ gross, inpsRate });
+    if (e) return e;
+    return Money.of(Math.round(gross * inpsRate * 100) / 100, currency);
+  }
+
+  /** Legacy primitive JSHD. Prefer `calculateJshdVO`. */
+  calculateJshd(gross: number, jshdRate: number = PAYROLL_JSHD_RATE_DEFAULT): number {
     return Math.round(gross * jshdRate * 100) / 100;
   }
 
-  calculateNetSalary(
+  calculateJshdVO(
     gross: number,
-    inps: number,
-    jshd: number,
-    other: number
-  ): number {
+    jshdRate: number = PAYROLL_JSHD_RATE_DEFAULT,
+    currency: string = 'UZS',
+  ): Result<Money> {
+    const e = this.requireFiniteNonNegative({ gross, jshdRate });
+    if (e) return e;
+    return Money.of(Math.round(gross * jshdRate * 100) / 100, currency);
+  }
+
+  /** Legacy primitive net. Prefer `calculateNetSalaryVO`. */
+  calculateNetSalary(gross: number, inps: number, jshd: number, other: number): number {
     const net = gross - inps - jshd - other;
     this.logger.debug(
       `Net calculation - Gross: ${gross}, INPS: ${inps}, JSHD: ${jshd}, Other: ${other}, Net: ${net}`
     );
     return Math.max(0, net);
+  }
+
+  calculateNetSalaryVO(
+    gross: number,
+    inps: number,
+    jshd: number,
+    other: number,
+    currency: string = 'UZS',
+  ): Result<Money> {
+    const e = this.requireFiniteNonNegative({ gross, inps, jshd, other });
+    if (e) return e;
+    const net = Math.max(0, gross - inps - jshd - other);
+    return Money.of(net, currency);
+  }
+
+  /**
+   * Shared validation gate for tax / salary inputs — returns `Err` if any
+   * field is non-finite or negative; otherwise `null`. We rely on the caller
+   * to immediately propagate via early return.
+   */
+  private requireFiniteNonNegative(fields: Record<string, number>): Result<Money> | null {
+    for (const [name, v] of Object.entries(fields)) {
+      if (typeof v !== 'number' || !Number.isFinite(v)) {
+        return Err(AppErr('VALIDATION', `${name} must be a finite number (got ${v})`));
+      }
+      if (v < 0) {
+        return Err(AppErr('VALIDATION', `${name} must be non-negative (got ${v})`));
+      }
+    }
+    return null;
   }
 
   emitSalaryCalculation(

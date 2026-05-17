@@ -162,3 +162,57 @@ describe('Invoice.clearDomainEvents', () => {
     expect(inv.getDomainEvents()).toHaveLength(0);
   });
 });
+
+// -- DDD C.20 / C.21: VO-backed state + Result-returning methods -----------
+
+describe('Invoice C.20 — Money / Currency / InvoiceStatus VO integration', () => {
+  it('exposes currency from total Money VO', () => {
+    const inv = makeInvoice({ totalAmount: 100 });
+    expect(inv.currency).toBe('UZS');
+  });
+
+  it('totalMoney and paidMoney return Money VOs with matching currency', () => {
+    const inv = makeInvoice({ totalAmount: 100, paidAmount: 25 });
+    expect(inv.totalMoney.amount).toBe(100);
+    expect(inv.paidMoney.amount).toBe(25);
+    expect(inv.totalMoney.currency).toBe(inv.paidMoney.currency);
+  });
+});
+
+describe('Invoice C.21 — Result-returning state transitions', () => {
+  it('markAsPartiallyPaid returns Err on zero / negative / NaN / Infinity', () => {
+    const inv = makeInvoice({ totalAmount: 1_000_000 });
+    expect(inv.markAsPartiallyPaid(0).ok).toBe(false);
+    expect(inv.markAsPartiallyPaid(-1).ok).toBe(false);
+    expect(inv.markAsPartiallyPaid(NaN).ok).toBe(false);
+    expect(inv.markAsPartiallyPaid(Infinity).ok).toBe(false);
+  });
+
+  it('markAsPartiallyPaid returns Ok on valid amount and keeps state in sync', () => {
+    const inv = makeInvoice({ totalAmount: 1_000_000 });
+    const r = inv.markAsPartiallyPaid(250_000);
+    expect(r.ok).toBe(true);
+    expect(inv.paidAmount).toBe(250_000);
+    expect(inv.status).toBe('partial_paid');
+  });
+
+  it('markAsPartiallyPaid returns Err when amount exceeds remaining', () => {
+    const inv = makeInvoice({ totalAmount: 100, paidAmount: 80 });
+    const r = inv.markAsPartiallyPaid(50);
+    expect(r.ok).toBe(false);
+  });
+
+  it('markAsFullyPaid returns Err when final amount is below remaining', () => {
+    const inv = makeInvoice({ totalAmount: 1_000, paidAmount: 200 });
+    const r = inv.markAsFullyPaid(500);
+    expect(r.ok).toBe(false);
+    expect(inv.status).toBe('posted');
+  });
+
+  it('markAsFullyPaid returns Ok on final amount >= remaining', () => {
+    const inv = makeInvoice({ totalAmount: 1_000, paidAmount: 200 });
+    const r = inv.markAsFullyPaid(800);
+    expect(r.ok).toBe(true);
+    expect(inv.status).toBe('full_paid');
+  });
+});

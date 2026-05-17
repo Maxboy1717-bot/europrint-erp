@@ -49,11 +49,12 @@ export class AnalyzeCameraFeedTool implements IAishaTool {
     const cameraId = String(input['cameraId'] ?? '');
     const question = String(input['question'] ?? '');
     if (!cameraId || !question) return Err(AppErr('VALIDATION', 'cameraId va question majburiy'));
-    if (!this.provider) return Err(AppErr('EXTERNAL_SERVICE', 'CameraSnapshotProvider ulanmagan'));
+    const provider = this.provider;
+    if (!provider) return Err(AppErr('EXTERNAL_SERVICE', 'CameraSnapshotProvider ulanmagan'));
 
     return safeCall<ToolResult<VisionAnalysis>>(async () => {
       const start = Date.now();
-      const frame = await this.provider!.captureFrame(cameraId);
+      const frame = await provider.captureFrame(cameraId);
       if (!frame.base64) throw new Error('Kamera kadri base64 formatida qaytarmadi');
 
       const messages = [{

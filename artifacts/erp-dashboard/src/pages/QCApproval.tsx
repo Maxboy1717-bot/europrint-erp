@@ -48,10 +48,10 @@ export default function QCApproval() {
   const { data: orders = [], isLoading } = useQuery<QCOrder[]>({
     queryKey: ["/api/qc/pending/qc"],
     queryFn: async () => {
-      const res = (await apiRequest('GET', "/api/qc/pending/qc")) as unknown as Response;
-      if (!res.ok) throw new Error("Failed to fetch orders");
-      const d = await res.json();
-      return Array.isArray(d) ? d : (d.items ?? d.data ?? d.orders ?? []);
+      const d = await apiRequest<unknown>('GET', "/api/qc/pending/qc");
+      if (Array.isArray(d)) return d as QCOrder[];
+      const obj = d as { items?: QCOrder[]; data?: QCOrder[]; orders?: QCOrder[] };
+      return obj.items ?? obj.data ?? obj.orders ?? [];
     },
   });
 
@@ -59,9 +59,11 @@ export default function QCApproval() {
     queryKey: ["/api/qc/tests", selectedOrder?.id],
     queryFn: async () => {
       if (!selectedOrder?.id) return [];
-      const res = (await apiRequest('GET', `/api/qc/tests/${selectedOrder.id}`)) as unknown as Response;
-      if (!res.ok) return [];
-      return res.json();
+      try {
+        return await apiRequest('GET', `/api/qc/tests/${selectedOrder.id}`);
+      } catch {
+        return [];
+      }
     },
     enabled: !!selectedOrder?.id,
   });

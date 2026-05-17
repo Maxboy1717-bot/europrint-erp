@@ -41,13 +41,10 @@ export default function WarehouseDirectory() {
       let lowStockCount = 0;
       for (const wh of warehouses) {
         try {
-          const res = (await apiRequest('GET', `/api/warehouse/warehouses/${wh.id}/stats`)) as unknown as Response;
-          if (res.ok) {
-            const stats = await res.json();
-            totalMaterials += stats.materialCount || 0;
-            totalValue += stats.stockValue || 0;
-            lowStockCount += stats.lowStockCount || 0;
-          }
+          const stats = await apiRequest<{ materialCount?: number; stockValue?: number; lowStockCount?: number }>('GET', `/api/warehouse/warehouses/${wh.id}/stats`);
+          totalMaterials += stats.materialCount || 0;
+          totalValue += stats.stockValue || 0;
+          lowStockCount += stats.lowStockCount || 0;
         } catch { /* ignore individual warehouse errors */ }
       }
       return { totalMaterials, totalValue, lowStockCount };

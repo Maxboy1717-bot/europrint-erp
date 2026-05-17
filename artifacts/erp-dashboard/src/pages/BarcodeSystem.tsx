@@ -64,9 +64,7 @@ export default function BarcodeSystem() {
       if (warehouseFilter) params.append("warehouseId", warehouseFilter);
       if (statusFilter) params.append("status", statusFilter);
       if (searchQuery) params.append("search", searchQuery);
-      const res = await apiRequest('GET', `/api/warehouse/batches?${params.toString()}`) as unknown as Response;
-      if (!res.ok) throw new Error("Failed to fetch batches");
-      return res.json();
+      return await apiRequest('GET', `/api/warehouse/batches?${params.toString()}`);
     }
   });
 
@@ -102,9 +100,8 @@ export default function BarcodeSystem() {
 
   const fetchPrintPreview = async (id: string, type: string = "batch") => {
     try {
-      const res = await apiRequest('GET', `/api/warehouse/barcode/print/${id}?type=${type}`) as unknown as Response;
-      if (!res.ok) throw new Error();
-      setPrintPreviewData(await res.json());
+      const data = await apiRequest<unknown>('GET', `/api/warehouse/barcode/print/${id}?type=${type}`);
+      setPrintPreviewData(data as Parameters<typeof setPrintPreviewData>[0]);
       setIsPrintPreviewOpen(true);
     } catch { toast({ title: lang === "uz" ? "Xatolik" : "Ошибка", variant: "destructive" }); }
   };

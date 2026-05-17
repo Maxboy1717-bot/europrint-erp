@@ -1,8 +1,10 @@
 /**
  * @module europrint-control-director.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   europrint-control-director module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
-
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Controller, Get, HttpCode, HttpException, Param, Post, Query, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';

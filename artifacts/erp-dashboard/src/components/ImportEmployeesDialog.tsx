@@ -35,16 +35,7 @@ export function ImportEmployeesDialog({
   const { toast } = useToast();
 
   const uploadMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const response = await apiRequest('POST', "/api/employees/import") as unknown as Response;
-
-      if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error || "Import xatolik");
-      }
-
-      return response.json();
-    },
+    mutationFn: (formData: FormData) => apiRequest<unknown>('POST', "/api/employees/import", formData),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
       toast({

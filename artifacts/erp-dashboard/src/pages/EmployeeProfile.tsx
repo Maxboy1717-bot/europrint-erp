@@ -142,10 +142,12 @@ export default function EmployeeProfile() {
     enabled: !!id, 
     retry: false, 
     queryFn: async () => { 
-      const res = (await apiRequest('GET', `/api/employees/${id}/passport`)) as unknown as Response; 
-      if (res.status === 404) return null; 
-      if (!res.ok) throw new Error('Failed to fetch passport'); 
-      return res.json(); 
+      try {
+        return await apiRequest('GET', `/api/employees/${id}/passport`);
+      } catch (e) {
+        if ((e as { status?: number })?.status === 404) return null;
+        throw e;
+      } 
     } 
   });
   const { data: bankAccounts, isLoading: loadingBanks } = useQuery<BankAccount[]>({ queryKey: ['/api/employees', id, 'bank-accounts'], enabled: !!id });
@@ -209,9 +211,11 @@ export default function EmployeeProfile() {
   const { data: mentorshipData, isLoading: loadingMentorship } = useQuery<MentorshipData>({ 
     queryKey: ['/api/integration/employee-mentorships', id], 
     queryFn: async () => { 
-      const res = (await apiRequest('GET', `/api/integration/employee-mentorships/${id}`)) as unknown as Response; 
-      if (!res.ok) return { asMentor: [], asMentee: [] }; 
-      return res.json(); 
+      try {
+        return await apiRequest('GET', `/api/integration/employee-mentorships/${id}`);
+      } catch {
+        return { asMentor: [], asMentee: [] };
+      } 
     }, 
     enabled: !!id 
   });
@@ -255,9 +259,11 @@ export default function EmployeeProfile() {
   const { data: payrollSummary } = useQuery<any | null>({ 
     queryKey: ['/api/employees', id, 'payroll-summary'], 
     queryFn: async () => { 
-      const res = (await apiRequest('GET', `/api/employees/${id}/payroll-summary`)) as unknown as Response; 
-      if (!res.ok) return null; 
-      return res.json(); 
+      try {
+        return await apiRequest('GET', `/api/employees/${id}/payroll-summary`);
+      } catch {
+        return null;
+      } 
     }, 
     enabled: !!id 
   });
@@ -266,9 +272,11 @@ export default function EmployeeProfile() {
   const { data: corpInfoForMachine } = useQuery<{ is_machine_operator?: boolean }>({ 
     queryKey: ['/api/hr/employee-corp', id], 
     queryFn: async () => { 
-      const res = (await apiRequest('GET', `/api/hr/employee-corp/${id}`)) as unknown as Response; 
-      if (!res.ok) return {}; 
-      return res.json(); 
+      try {
+        return await apiRequest('GET', `/api/hr/employee-corp/${id}`);
+      } catch {
+        return {};
+      } 
     }, 
     enabled: !!id 
   });

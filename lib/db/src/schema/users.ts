@@ -3,7 +3,8 @@
  * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
  */
 
-import { pgTable, serial, varchar, integer, boolean, timestamp, text } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, integer, boolean, timestamp, text, index, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { positions } from "./positions";
@@ -27,7 +28,12 @@ export const users = pgTable("users", {
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_users_position_id").on(t.positionId),
+  index("idx_users_department_id").on(t.departmentId),
+  index("idx_users_is_active").on(t.isActive),
+  check("users_language_chk", sql`${t.language} IS NULL OR ${t.language} IN ('uz','ru','en')`),
+]);
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type InsertUser = z.infer<typeof insertUserSchema>;

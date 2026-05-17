@@ -87,8 +87,7 @@ export default function GoalsKPI() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = (await apiRequest('DELETE', `/api/goals/${id}`)) as unknown as Response;
-      if (!res.ok) throw new Error("Failed to delete goal");
+      await apiRequest('DELETE', `/api/goals/${id}`);
       return id;
     },
     onSuccess: (id) => {

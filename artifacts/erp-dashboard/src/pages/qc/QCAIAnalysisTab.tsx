@@ -52,9 +52,11 @@ export function QCAIAnalysisTab() {
   const { data: testsData, isLoading: testsLoading } = useQuery<QcMaterialTest[]>({
     queryKey: ["/api/qc/tests/recent"],
     queryFn: async () => {
-      const res = (await apiRequest('GET', "/api/qc/tests/recent?limit=20")) as unknown as Response;
-      if (!res.ok) return [];
-      return res.json();
+      try {
+        return await apiRequest('GET', "/api/qc/tests/recent?limit=20");
+      } catch {
+        return [];
+      }
     }
   });
 

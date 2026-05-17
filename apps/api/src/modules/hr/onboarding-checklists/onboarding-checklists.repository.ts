@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { hrOnboardingChecklists } from '@europrint/schemas';
+import { hrOnboardingChecklists } from '@workspace/db';
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr, safeCall } from '@common/result';
 

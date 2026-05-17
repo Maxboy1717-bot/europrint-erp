@@ -63,4 +63,23 @@ export class OtpSessionRepository {
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error).message); }
   }
+
+  /**
+   * Deletes OTP sessions whose `expires_at` is in the past. Called from the
+   * session-cleanup cron (audit B.16) to keep the table bounded — without this
+   * the table grows linearly with attempted logins.
+   *
+   * Returns the number of rows deleted so the caller can log / alert if the
+   * value is unusually high (potential abuse signal).
+   */
+  async deleteExpired(): Promise<Result<number>> {
+    try {
+      const result = await db.execute(sql`
+        DELETE FROM otp_sessions
+        WHERE expires_at < NOW()
+      `);
+      const rowCount = (result as unknown as { rowCount?: number }).rowCount ?? 0;
+      return Ok(rowCount);
+    } catch (e: unknown) { return Err((e as Error).message); }
+  }
 }

@@ -32,7 +32,7 @@ async function seed() {
     { code: "DIGITAL", nameUz: "Raqamli bosma", nameRu: "Цифровая печать", vysotskiyFunction: "production", level: 3, sortOrder: 18, parentId: 5 },
     { code: "POSTPRESS", nameUz: "Postpress", nameRu: "Постпресс", vysotskiyFunction: "production", level: 3, sortOrder: 19, parentId: 5 },
     { code: "LARGEFORMAT", nameUz: "Katta format", nameRu: "Широкоформат", vysotskiyFunction: "production", level: 3, sortOrder: 20, parentId: 5 },
-  ]).onConflictDoNothing().returning();
+  ]).onConflictDoNothing({ target: departments.code }).returning();
   console.log(`✅ ${deptRows.length} departments upserted (skip if exists)`);
 
   const posRows = await db.insert(positions).values([
@@ -146,7 +146,7 @@ async function seed() {
     { code: "DEPT_HEAD", nameUz: "Bo'lim boshlig'i", nameRu: "Начальник отдела", level: 3, rbacTier: "manager", isManagement: true, sortOrder: 108 },
     { code: "TEAM_LEAD", nameUz: "Jamoa rahbari", nameRu: "Тимлид", level: 4, rbacTier: "supervisor", isManagement: true, sortOrder: 109 },
     { code: "SENIOR_SPECIALIST", nameUz: "Katta mutaxassis", nameRu: "Старший специалист", level: 4, rbacTier: "specialist", isManagement: false, sortOrder: 110 },
-  ]).onConflictDoNothing().returning();
+  ]).onConflictDoNothing({ target: positions.code }).returning();
   console.log(`✅ ${posRows.length} positions upserted (skip if exists)`);
 
   await db.insert(leaveTypes).values([
@@ -158,7 +158,7 @@ async function seed() {
     { code: "STUDY", nameUz: "O'qish ta'tili", nameRu: "Учебный отпуск", maxDaysPerYear: 30, isPaid: false, requiresMedicalCert: false, requiresDirectorApproval: true, minDaysBeforeRequest: 14, sortOrder: 6 },
     { code: "COMPASSIONATE", nameUz: "Qayg'uli voqea", nameRu: "Семейные обстоятельства", maxDaysPerYear: 5, isPaid: true, requiresMedicalCert: false, requiresDirectorApproval: false, minDaysBeforeRequest: 0, sortOrder: 7 },
     { code: "MARRIAGE", nameUz: "Nikoh ta'tili", nameRu: "Свадебный отпуск", maxDaysPerYear: 3, isPaid: true, requiresMedicalCert: false, requiresDirectorApproval: false, minDaysBeforeRequest: 7, sortOrder: 8 },
-  ]).onConflictDoNothing();
+  ]).onConflictDoNothing({ target: leaveTypes.code });
   console.log("✅ leave_types upserted");
 
   await db.insert(shiftTypes).values([
@@ -167,7 +167,7 @@ async function seed() {
     { code: "NIGHT", nameUz: "Tungi smena", nameRu: "Ночная смена", startTime: "22:00", endTime: "06:00", durationHours: "8.0", isOvernight: true, overtimeMultiplier: "2.0", sortOrder: 3 },
     { code: "EXTENDED", nameUz: "Uzaytirilgan smena", nameRu: "Удлинённая смена", startTime: "07:00", endTime: "19:00", durationHours: "12.0", isOvernight: false, overtimeMultiplier: "1.5", sortOrder: 4 },
     { code: "FLEX", nameUz: "Erkin grafik", nameRu: "Свободный график", startTime: "09:00", endTime: "18:00", durationHours: "8.0", isOvernight: false, overtimeMultiplier: "1.5", sortOrder: 5 },
-  ]).onConflictDoNothing();
+  ]).onConflictDoNothing({ target: shiftTypes.code });
   console.log("✅ shift_types upserted");
 
   await db.insert(skillCategories).values([
@@ -181,14 +181,14 @@ async function seed() {
     { code: "SAFETY_SKILLS", nameUz: "Xavfsizlik ko'nikmalari", nameRu: "Навыки безопасности", sortOrder: 8 },
     { code: "QUALITY_SKILLS", nameUz: "Sifat nazorati", nameRu: "Навыки контроля качества", sortOrder: 9 },
     { code: "LANGUAGE", nameUz: "Til bilimi", nameRu: "Языковые навыки", sortOrder: 10 },
-  ]).onConflictDoNothing();
+  ]).onConflictDoNothing({ target: skillCategories.code });
   console.log("✅ skill_categories upserted");
 
   await db.insert(abcThresholds).values([
     { category: "A", minScore: "90.00", maxScore: "100.00", bonusPercentage: "15.00", description: "A'lo xodim — yuqori bonus", attendanceWeight: "0.40", qualityWeight: "0.25", taskWeight: "0.20", lmsWeight: "0.15" },
     { category: "B", minScore: "70.00", maxScore: "89.99", bonusPercentage: "10.00", description: "Yaxshi xodim — o'rtacha bonus", attendanceWeight: "0.40", qualityWeight: "0.25", taskWeight: "0.20", lmsWeight: "0.15" },
     { category: "C", minScore: "0.00", maxScore: "69.99", bonusPercentage: "5.00", description: "Rivojlanish kerak — minimal bonus", attendanceWeight: "0.40", qualityWeight: "0.25", taskWeight: "0.20", lmsWeight: "0.15" },
-  ]).onConflictDoNothing();
+  ]).onConflictDoNothing({ target: abcThresholds.category });
   console.log("✅ abc_thresholds upserted (A≥90→15%, B≥70→10%, C<70→5%)");
 
   await db.insert(payrollTaxRules).values([

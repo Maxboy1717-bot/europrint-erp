@@ -18,12 +18,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Package, History, Sparkles, TrendingUp } from "lucide-react";
+import { FileText, Package, History, Sparkles, TrendingUp, ArrowRightCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { StageProgressBar } from "@/components/crm/StageProgressBar";
 import { BitrixActivityPanel } from "@/components/crm/BitrixActivityPanel";
-import type { DetailSheetProps, Deal, EntityData } from "./crm-types";
+import type { DetailSheetProps, Deal, Lead, EntityData } from "./crm-types";
 import type { CrmActivity, SdOrder } from "./DetailSheetTypes";
 import {
   getEntityTitle, getCurrentStageId, getEntityPhone,
@@ -118,6 +118,48 @@ export function DetailSheet({
       }
     },
   });
+
+  type ConvertLeadResponse = { leadId?: number; dealId?: number };
+  const convertLeadMutation = useMutation({
+    mutationFn: async () => {
+      const lead = entity as Lead | undefined;
+      const expected_amount = Number((lead as unknown as { opportunity?: number })?.opportunity ?? 0);
+      return apiRequest<ConvertLeadResponse>(
+        "POST",
+        `/api/crm/leads/${entityId}/convert`,
+        { expected_amount },
+      );
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/crm/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/crm/deals"] });
+      queryClient.invalidateQueries({ queryKey: [endpoint, entityId] });
+      toast({
+        title: "Sotuvga aylantirildi",
+        description: data?.dealId ? `Bitim raqami: #${data.dealId}` : undefined,
+      });
+      onClose();
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Aylantirishda xatolik",
+        description: err?.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Lead can be converted when it has reached the "qualified / ready" stage.
+  // Backend domain accepts only `qualified` (lowercase) but the kanban statusId
+  // values surfaced on the frontend are uppercase ("FINAL" / "QUALIFIED" in
+  // legacy data). Accept either spelling.
+  const leadStatusForConvert = ((entity as Lead | undefined)?.statusId
+    ?? (entity as unknown as { status?: string } | undefined)?.status
+    ?? "").toString().toUpperCase();
+  const canConvertLead =
+    entityType === "leads"
+    && entity != null
+    && (leadStatusForConvert === "QUALIFIED" || leadStatusForConvert === "FINAL");
 
   // ----- Derived values -----
 
@@ -291,6 +333,16 @@ export function DetailSheet({
           </Tabs>
 
           <div className="border-t p-4 flex gap-2 justify-end">
+            {canConvertLead && (
+              <Button
+                data-testid="button-convert-lead-to-deal"
+                onClick={() => convertLeadMutation.mutate()}
+                disabled={convertLeadMutation.isPending}
+              >
+                <ArrowRightCircle className="h-4 w-4 mr-1" />
+                {convertLeadMutation.isPending ? "Aylantirilmoqda..." : "Sotuvga aylantirish"}
+              </Button>
+            )}
             <Button variant="outline" onClick={onClose}>{t("close2")}</Button>
           </div>
         </div>

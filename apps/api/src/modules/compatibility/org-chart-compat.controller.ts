@@ -1,11 +1,9 @@
 /**
- * OrgChartCompatController — `/api/org-chart/*` endpoint'lari.
- *
- * Frontend `OrgChartPage.tsx` ishlatadi.
- * Auth: JWT + Role-based (yangi RBAC R4 dan keyin @RequirePermission'ga o'tadi).
- *
- * MUHIM: Avvalgi versiyada faqat `RolesGuard` bor edi (JwtAuthGuard yo'q),
- * shu sababli `req.user` undefined bo'lardi va RolesGuard har doim 403 berardi.
+ * @module org-chart-compat.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   org-chart module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
 import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';

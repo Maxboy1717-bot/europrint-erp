@@ -90,9 +90,8 @@ export default function PosMaterialNew() {
         description:     form.description || undefined,
         supplier_name:   form.supplier_name || undefined,
         token,
-      }) as unknown as Response;
-      const data = await res.json() as { id?: number; message?: string };
-      if (!res.ok) throw new Error(data?.message ?? `HTTP ${res.status}`);
+      });
+      const data = res as { id?: number; message?: string };
       alert(`✅ Material yaratildi! ID: ${data.id}`);
       navigate(`/pos-monitor/materials/360/${data.id}`);
     } catch (e) {

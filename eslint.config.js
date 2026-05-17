@@ -4,6 +4,37 @@ import tsParser from "@typescript-eslint/parser";
 import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 
+// Lightweight inline rule: warn whenever JSX uses `dangerouslySetInnerHTML`
+// without going through `sanitizeHtml()` (artifacts/erp-dashboard/src/lib/sanitize.ts).
+// We don't depend on eslint-plugin-react because it's not in the workspace; this
+// AST scan covers the same surface area (audit C.27).
+const noUnsanitizedDangerouslySetInnerHTML = {
+  meta: {
+    type: "problem",
+    docs: { description: "Require sanitizeHtml() wrapper around dangerouslySetInnerHTML." },
+    messages: {
+      raw: "dangerouslySetInnerHTML must wrap content with sanitizeHtml() from src/lib/sanitize.ts.",
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      JSXAttribute(node) {
+        if (node.name?.name !== "dangerouslySetInnerHTML") return;
+        // Walk the attribute expression looking for any CallExpression named
+        // sanitizeHtml / sanitizeText / DOMPurify.sanitize. If none is found,
+        // warn — the developer is inserting raw HTML.
+        const src = context.getSourceCode().getText(node);
+        // Accept anything that looks like an explicit sanitizer call:
+        //   sanitizeHtml / sanitizeText / sanitizeCss (chart.tsx) / DOMPurify.sanitize
+        // The rule is a guard against raw HTML, not a stylistic single-helper enforcer.
+        if (/sanitize\w*\s*\(|DOMPurify\.sanitize\s*\(/.test(src)) return;
+        context.report({ node, messageId: "raw" });
+      },
+    };
+  },
+};
+
 export default [
   {
     ignores: [
@@ -33,6 +64,11 @@ export default [
     plugins: {
       "@typescript-eslint": tsPlugin,
       "react-hooks": reactHooks,
+      "europrint": {
+        rules: {
+          "no-unsanitized-dangerously-set-inner-html": noUnsanitizedDangerouslySetInnerHTML,
+        },
+      },
     },
     rules: {
       ...tsPlugin.configs.recommended.rules,
@@ -47,6 +83,9 @@ export default [
       "no-unsafe-optional-chaining": "off",
       "no-useless-escape": "off",
       "no-unreachable": "off",
+      // Audit C.27 — DOMPurify enforcement. Warn (not error) so we don't
+      // block the build while the backlog is being cleaned up.
+      "europrint/no-unsanitized-dangerously-set-inner-html": "warn",
     },
   },
 ];

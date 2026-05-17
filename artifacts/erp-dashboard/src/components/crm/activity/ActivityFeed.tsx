@@ -157,17 +157,17 @@ export function ActivityFeed({
                       </div>
 
                       <div className="flex items-center gap-3 mt-3 flex-wrap">
-                        {(item.data as Activity).deadline && (
+                        {((item.data as Activity).deadline) ? (
                           <span className="text-[11px] text-muted-foreground flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {formatDateTime((item.data as Activity).deadline!)}
+                            {formatDateTime((item.data as Activity).deadline ?? '')}
                           </span>
-                        )}
-                        {(item.data as Activity).duration && (
+                        ) : null}
+                        {((item.data as Activity).duration) ? (
                           <span className="text-[11px] text-muted-foreground">
-                            {formatDuration((item.data as Activity).duration!)}
+                            {formatDuration((item.data as Activity).duration ?? 0)}
                           </span>
-                        )}
+                        ) : null}
                         {(item.data as Activity).priority && (
                           <Badge
                             variant="secondary"

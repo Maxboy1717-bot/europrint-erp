@@ -42,11 +42,13 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   const { data: contracts, isLoading: loadingContracts } = useQuery<EmploymentContract[]>({
     queryKey: ["/api/employees", employeeId, "contracts"],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/employees/${employeeId}/contracts`) as unknown as Response;
-      if (!res.ok) return [];
-      const json = await res.json() as { data?: unknown[] };
-      const arr = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
-      return arr as EmploymentContract[];
+      try {
+        const json = await apiRequest('GET', `/api/employees/${employeeId}/contracts`) as unknown;
+        const arr = Array.isArray(json) ? json : (Array.isArray((json as { data?: unknown[] })?.data) ? (json as { data: unknown[] }).data : []);
+        return arr as EmploymentContract[];
+      } catch {
+        return [];
+      }
     },
     enabled: !!employeeId,
   });
@@ -54,11 +56,13 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   const { data: hrDocs, isLoading: loadingDocs } = useQuery<HrDocument[]>({
     queryKey: ["/api/hr-v2/documents/employee", employeeId],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/hr-v2/documents/employee/${employeeId}`) as unknown as Response;
-      if (!res.ok) return [];
-      const json = await res.json() as { data?: unknown[] };
-      const arr = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
-      return arr as HrDocument[];
+      try {
+        const json = await apiRequest('GET', `/api/hr-v2/documents/employee/${employeeId}`) as unknown;
+        const arr = Array.isArray(json) ? json : (Array.isArray((json as { data?: unknown[] })?.data) ? (json as { data: unknown[] }).data : []);
+        return arr as HrDocument[];
+      } catch {
+        return [];
+      }
     },
     enabled: !!employeeId,
   });
@@ -66,11 +70,13 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   const { data: employeeFiles, isLoading: loadingFiles } = useQuery<EmployeeFile[]>({
     queryKey: ["/api/employees", employeeId, "files"],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/employees/${employeeId}/files`) as unknown as Response;
-      if (!res.ok) return [];
-      const json = await res.json() as { data?: unknown[] };
-      const arr = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
-      return arr as EmployeeFile[];
+      try {
+        const json = await apiRequest('GET', `/api/employees/${employeeId}/files`) as unknown;
+        const arr = Array.isArray(json) ? json : (Array.isArray((json as { data?: unknown[] })?.data) ? (json as { data: unknown[] }).data : []);
+        return arr as EmployeeFile[];
+      } catch {
+        return [];
+      }
     },
     enabled: !!employeeId,
   });
@@ -79,11 +85,13 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
     queryKey: ["/api/hr/employees", employeeId, "documents"],
     queryFn: async () => {
       // Auth carried by httpOnly cookie via apiRequest's `credentials: 'include'`.
-      const res = await apiRequest('GET', `/api/hr/employees/${employeeId}/documents`) as unknown as Response;
-      if (!res.ok) return [];
-      const json = await res.json() as { data?: unknown[] };
-      const arr = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
-      return arr as EmployeeDocument[];
+      try {
+        const json = await apiRequest('GET', `/api/hr/employees/${employeeId}/documents`) as unknown;
+        const arr = Array.isArray(json) ? json : (Array.isArray((json as { data?: unknown[] })?.data) ? (json as { data: unknown[] }).data : []);
+        return arr as EmployeeDocument[];
+      } catch {
+        return [];
+      }
     },
     enabled: !!employeeId,
   });
@@ -100,8 +108,7 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   async function handleDelete(fileId: number) {
     setDeletingId(fileId);
     try {
-      const res = await apiRequest('DELETE', `/api/employees/${employeeId}/files/${fileId}`) as unknown as Response;
-      if (!res.ok) throw new Error("O'chirishda xatolik");
+      await apiRequest('DELETE', `/api/employees/${employeeId}/files/${fileId}`);
       await qc.invalidateQueries({ queryKey: ["/api/employees", employeeId, "files"] });
       toast({ title: "Fayl o'chirildi" });
     } catch {
@@ -115,8 +122,7 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
     setDeletingDocId(docId);
     try {
       // Auth via httpOnly cookie; apiRequest sets `credentials: 'include'` internally.
-      const res = await apiRequest('DELETE', `/api/hr/employees/${employeeId}/documents/${docId}`) as unknown as Response;
-      if (!res.ok) throw new Error("O'chirishda xatolik");
+      await apiRequest('DELETE', `/api/hr/employees/${employeeId}/documents/${docId}`);
       await qc.invalidateQueries({ queryKey: ["/api/hr/employees", employeeId, "documents"] });
       toast({ title: "Hujjat o'chirildi" });
     } catch {

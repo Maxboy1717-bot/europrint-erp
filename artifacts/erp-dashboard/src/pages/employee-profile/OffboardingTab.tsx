@@ -30,13 +30,18 @@ export function OffboardingTab({ employeeId }: { employeeId: string }) {
   const { data: offboardingCase, isLoading, isError } = useQuery<OffboardingCase | null>({
     queryKey: ["/api/hr/offboarding/cases", numericId, "byEmployee"],
     queryFn: async () => {
-      const res = (await apiRequest('GET', `/api/hr/offboarding/cases/employee/${numericId}`)) as unknown as Response;
-      if (res.status === 404) return null;
-      if (!res.ok) throw new Error("Failed to fetch");
-      const base = await res.json() as OffboardingCase;
-      const detailRes = (await apiRequest('GET', `/api/hr/offboarding/cases/${base.id}`)) as unknown as Response;
-      if (!detailRes.ok) return base;
-      return detailRes.json() as Promise<OffboardingCase>;
+      let base: OffboardingCase;
+      try {
+        base = await apiRequest<OffboardingCase>('GET', `/api/hr/offboarding/cases/employee/${numericId}`);
+      } catch (e) {
+        if ((e as { status?: number })?.status === 404) return null;
+        throw e;
+      }
+      try {
+        return await apiRequest<OffboardingCase>('GET', `/api/hr/offboarding/cases/${base.id}`);
+      } catch {
+        return base;
+      }
     },
   });
 

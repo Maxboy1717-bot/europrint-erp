@@ -166,7 +166,7 @@ export function ChecklistSheetBody({
                                         ? "bg-green-100 text-[var(--ep-green)] hover:bg-green-200 border-green-300"
                                         : "border-purple-300 text-[var(--ep-purple)] hover:bg-purple-50"
                                     )}
-                                    onClick={() => setProbationDialog({ type: reviewType! })}
+                                    onClick={() => { if (reviewType) setProbationDialog({ type: reviewType }); }}
                                     data-testid={`button-probation-review-${item.key}`}
                                   >
                                     <FileText className="w-2.5 h-2.5" />

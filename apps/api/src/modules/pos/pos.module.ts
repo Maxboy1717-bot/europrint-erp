@@ -47,6 +47,9 @@ import {
   WarehouseEmployeesRepository, GoodsReceiptRepository, AutoBarcodeRepository, WarehouseKpiRepository,
   QuarantineWorkflowRepository, ThreeWayMatchRepository, AutoGlPostingRepository, PosEmployeeBalanceRepository,
 } from './pos.module-imports';
+import { CASH_REGISTER_REPO } from './domain/repositories/i-cash-register.repo';
+import { POS_MOVEMENT_REPO } from './domain/repositories/i-pos-movement.repo';
+import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notifications.repo';
 
 @Module({
   imports: [CqrsModule],
@@ -75,9 +78,11 @@ import {
   providers: [
     { provide: POS_SVC_REPO, useClass: DrizzlePosSvcRepository },
     CashRegisterRepository,
+    { provide: CASH_REGISTER_REPO, useExisting: CashRegisterRepository },
     CashRegisterService,
     PosService,
     PosMovementRepository,
+    { provide: POS_MOVEMENT_REPO, useExisting: PosMovementRepository },
     PosMovementService,
     PosMovementStatusRepository,
     PosMovementStatusService,
@@ -139,6 +144,7 @@ import {
     PosSyncRepository,
     PosSyncService,
     PosNotificationsRepository,
+    { provide: POS_NOTIFICATIONS_REPO, useExisting: PosNotificationsRepository },
     PosNotificationsService,
     PosGateway,
     PosInventoryPassportRepository,

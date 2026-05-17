@@ -178,6 +178,48 @@ export class EmployeesCompatProfileRawService {
     });
   }
 
+  /**
+   * Payroll summary — salary_history dan agregat (so'nggi 12 oy).
+   * Frontend payroll-summary'ni xodim profilida ko'rsatadi.
+   */
+  async getPayrollSummary(id: string): Promise<Result<Row | null, AppError>> {
+    return safeCall(async () => {
+      const aggR = await rawSql(sql`
+        SELECT
+          COUNT(*)::int                                AS total_periods,
+          COALESCE(SUM(base_salary), 0)::numeric(15,2) AS total_base,
+          COALESCE(SUM(salary_earned), 0)::numeric(15,2) AS total_earned,
+          COALESCE(SUM(total_bonuses), 0)::numeric(15,2) AS total_bonuses,
+          COALESCE(AVG(salary_earned), 0)::numeric(15,2) AS avg_earned,
+          MIN(salary_period_start)                     AS first_period,
+          MAX(salary_period_end)                       AS last_period
+        FROM salary_history
+        WHERE employee_id = ${si(id)}
+          AND salary_period_start >= NOW() - INTERVAL '12 months'
+      `);
+      const lastR = await rawSql(sql`
+        SELECT id, employee_id, salary_period_start, salary_period_end,
+               base_salary, salary_earned, total_bonuses, other_bonuses
+        FROM salary_history
+        WHERE employee_id = ${si(id)}
+        ORDER BY salary_period_start DESC NULLS LAST, created_at DESC
+        LIMIT 1
+      `);
+      const agg = dbRows(aggR)[0] as Row | undefined;
+      if (!agg || Number(agg['total_periods'] ?? 0) === 0) return null;
+      return {
+        totalPeriods:  Number(agg['total_periods'] ?? 0),
+        totalBase:     agg['total_base'] ?? '0',
+        totalEarned:   agg['total_earned'] ?? '0',
+        totalBonuses:  agg['total_bonuses'] ?? '0',
+        avgEarned:     agg['avg_earned'] ?? '0',
+        firstPeriod:   agg['first_period'] ?? null,
+        lastPeriod:    agg['last_period'] ?? null,
+        latest:        dbRows(lastR)[0] ?? null,
+      };
+    });
+  }
+
   async createSalaryHistory(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
       const r = await rawSql(sql`

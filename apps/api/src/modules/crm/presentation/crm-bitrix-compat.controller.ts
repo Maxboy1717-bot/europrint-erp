@@ -126,4 +126,16 @@ export class CrmBitrixCompatController {
     const status = String(dto.status ?? dto.stageId ?? dto.stage_id ?? '');
     return unwrapOrThrow(await this.svc.updateInvoiceStage(parseInt(id, 10) || 0, status));
   }
+
+  @Delete('proposals/:id')
+  @Roles('super_admin', 'director', 'manager')
+  async deleteProposal(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.deleteProposal(parseInt(id, 10) || 0));
+  }
+
+  @Delete('invoices/:id')
+  @Roles('super_admin', 'director', 'manager')
+  async deleteInvoice(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.deleteInvoice(parseInt(id, 10) || 0));
+  }
 }

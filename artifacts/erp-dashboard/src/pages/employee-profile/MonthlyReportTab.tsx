@@ -27,16 +27,16 @@ export function MonthlyReportTab({ employeeId }: MonthlyReportTabProps) {
   const { data: report, isLoading, isError } = useQuery<MonthlyReport>({
     queryKey: ["/api/employees", employeeId, "monthly-report", selectedMonth],
     queryFn: async () => {
-      const res = (await apiRequest("GET", `/api/employees/${employeeId}/monthly-report?month=${selectedMonth}`)) as unknown as Response;
-      if (!res.ok) throw new Error("Failed to fetch report");
-      const json = await res.json();
-      const inner = (json?.ok === true && json?.data != null) ? json.data : (json?.data ?? json);
-      if (!inner || typeof inner !== "object" || !inner.employee) return null as unknown as MonthlyReport;
+      const json = await apiRequest<unknown>("GET", `/api/employees/${employeeId}/monthly-report?month=${selectedMonth}`);
+      const wrapped = json as { ok?: boolean; data?: unknown };
+      const innerRaw: unknown = (wrapped?.ok === true && wrapped?.data != null) ? wrapped.data : (wrapped?.data ?? json);
+      if (!innerRaw || typeof innerRaw !== "object" || !(innerRaw as { employee?: unknown }).employee) return null as unknown as MonthlyReport;
+      const inner = innerRaw as MonthlyReport;
       if (!inner.attendance) inner.attendance = { totalDays: 0, presentDays: 0, absentDays: 0, lateDays: 0, sickDays: 0, attendanceRate: 0 };
       if (!inner.discipline) inner.discipline = { warnings: 0, penalties: 0, rewards: 0 };
       if (!inner.finance)    inner.finance    = { baseSalary: 0, totalBonus: 0, totalFines: 0, totalAdvances: 0, pendingAdvances: 0, netSalary: 0 };
       if (!Array.isArray(inner.inventory)) inner.inventory = [];
-      return inner as MonthlyReport;
+      return inner;
     },
     enabled: !!employeeId,
   });

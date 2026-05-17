@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Search, X } from "lucide-react";
 import { getAuthHeaders } from "@/lib/queryClient";
-import { useChatStore } from "@/store/chatStore";
+import { useChatStore, type ChatRoom } from "@/store/chatStore";
 import { useEmployeeSearch } from "@/hooks/chat/useRooms";
 import { ChatAvatar } from "./ChatAvatar";
 import { apiRequest } from '@/lib/queryClient';
@@ -54,31 +54,31 @@ export function CreateRoomModal({ open, onClose }: Props) {
     if (!name.trim() || selected.length === 0) return;
     setLoading(true);
     try {
-      const res = await apiRequest('POST', "/api/chat/rooms/group", {
-        name: name.trim(),
-        memberIds: (Array.isArray(selected) ? selected : []).map((e) => e.id),
-      }) as unknown as Response;
-      if (res.ok) {
-        const room = await res.json();
-        // Refresh full room list so the new room appears with correct member data
-        const refreshRes = await apiRequest('GET', "/api/chat/rooms") as unknown as Response;
-        if (refreshRes.ok) {
-          const allRooms = await refreshRes.json();
-          useChatStore.getState().setRooms(Array.isArray(allRooms) ? allRooms : []);
-        } else {
-          // fallback: prepend the new room
-          const rooms = useChatStore.getState().rooms;
-          useChatStore.getState().setRooms([room, ...rooms]);
-        }
-        useChatStore.getState().setActiveRoomId(room.id);
-        onClose();
-        setName("");
-        setSelected([]);
-        setSearch("");
-      } else {
-        const err = await res.json().catch(() => ({}));
-        alert((err as { message?: string }).message || "Xato yuz berdi");
+      const room = await apiRequest<ChatRoom>(
+        'POST',
+        "/api/chat/rooms/group",
+        {
+          name: name.trim(),
+          memberIds: (Array.isArray(selected) ? selected : []).map((e) => e.id),
+        },
+      );
+      // Refresh full room list so the new room appears with correct member data
+      try {
+        const allRooms = await apiRequest<unknown>('GET', "/api/chat/rooms");
+        useChatStore.getState().setRooms(Array.isArray(allRooms) ? (allRooms as ChatRoom[]) : []);
+      } catch {
+        // fallback: prepend the new room
+        const rooms = useChatStore.getState().rooms;
+        useChatStore.getState().setRooms([room, ...rooms]);
       }
+      useChatStore.getState().setActiveRoomId(room.id);
+      onClose();
+      setName("");
+      setSelected([]);
+      setSearch("");
+    } catch (e) {
+      const msg = (e as { message?: string })?.message;
+      alert(msg || "Xato yuz berdi");
     } finally {
       setLoading(false);
     }

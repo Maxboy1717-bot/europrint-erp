@@ -103,6 +103,8 @@ export interface PassportCardProps {
   passportForm: PassportForm;
   setPassportForm: (form: PassportForm) => void;
   savePassportMutation: UseMutationResult<unknown, Error, PassportForm, unknown>;
+  /** Employee user id — gates PII display behind PII_VIEWER_ROLES via RoleGate. */
+  ownerUserId?: number | string;
 }
 
 export interface BankCardProps {
@@ -115,6 +117,8 @@ export interface BankCardProps {
   bankForm: BankForm;
   setBankForm: (form: BankForm) => void;
   saveBankMutation: UseMutationResult<unknown, Error, BankForm, unknown>;
+  /** Employee user id — gates PII display behind PII_VIEWER_ROLES via RoleGate. */
+  ownerUserId?: number | string;
 }
 
 export interface EmergencyCardProps {

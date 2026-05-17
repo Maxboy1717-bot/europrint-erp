@@ -21,10 +21,12 @@ export function CorporateInventoryTab({ employeeId, isHr }: CorporateInventoryTa
   const { data: items, isLoading } = useQuery<CorporateInventoryItem[]>({
     queryKey: ["/api/employees", employeeId, "corporate-inventory"],
     queryFn: async () => {
-      const res = (await apiRequest('GET', `/api/employees/${employeeId}/corporate-inventory`)) as unknown as Response;
-      if (!res.ok) return [];
-      const json = await res.json();
-      return Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+      let json: unknown;
+      try { json = await apiRequest<unknown>('GET', `/api/employees/${employeeId}/corporate-inventory`); }
+      catch { return []; }
+      if (Array.isArray(json)) return json as CorporateInventoryItem[];
+      const obj = json as { data?: unknown };
+      return Array.isArray(obj?.data) ? (obj.data as CorporateInventoryItem[]) : [];
     },
     enabled: !!employeeId,
   });

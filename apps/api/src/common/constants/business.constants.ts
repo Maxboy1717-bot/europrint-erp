@@ -112,6 +112,22 @@ export const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1_000;
 export const MONTHS_PER_YEAR = 12;
 
 // ---------------------------------------------------------------------------
+// HR Payroll — Uzbek statutory taxes / monthly hours
+// ---------------------------------------------------------------------------
+
+/** Standard monthly working hours (Uzbekistan, 40h x ~4.4 weeks). */
+export const PAYROLL_MONTHLY_HOURS = 176;
+
+/** Overtime rate multiplier — 1.5x base hourly rate (statutory minimum). */
+export const PAYROLL_OVERTIME_MULTIPLIER = 1.5;
+
+/** INPS (pension fund) default contribution rate, employee share (1%). */
+export const PAYROLL_INPS_RATE_DEFAULT = 0.01;
+
+/** JSHD (income tax) default flat rate (12%). */
+export const PAYROLL_JSHD_RATE_DEFAULT = 0.12;
+
+// ---------------------------------------------------------------------------
 // Sales / CRM
 // ---------------------------------------------------------------------------
 

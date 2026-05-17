@@ -1,10 +1,281 @@
 {
   "summary": {
-    "totalLeaks": 0,
-    "filesWithLeaks": 0,
-    "byKind": {},
-    "byLocale": {},
-    "topFiles": []
+    "totalLeaks": 33,
+    "filesWithLeaks": 8,
+    "byKind": {
+      "JSX_TEXT": 12,
+      "PROP": 10,
+      "OBJECT_LABEL": 11
+    },
+    "byLocale": {
+      "uz": 33
+    },
+    "topFiles": [
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
+        "count": 9
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\RecruitingKanban.tsx",
+        "count": 8
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
+        "count": 6
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\hr\\employee-dialog\\BaseSalaryInput.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\org-chart\\OrgChartSearchBar.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\employee\\ProfileHeader.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\hr\\employee-dialog\\ManagerSelect.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\VacancyFilterPanel.tsx",
+        "count": 1
+      }
+    ]
   },
-  "leaks": []
+  "leaks": [
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
+      "line": 156,
+      "text": "Maosh turi",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
+      "line": 176,
+      "text": "Miqdor × tarif formulasi",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
+      "line": 195,
+      "text": "Smena",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
+      "line": 362,
+      "text": "Pasport ma'lumotlari maxfiy",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
+      "line": 363,
+      "text": "Faqat HR ko'ra oladi",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
+      "line": 503,
+      "text": "Bank ma'lumotlari maxfiy",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
+      "line": 504,
+      "text": "Faqat HR ko'ra oladi",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
+      "line": 578,
+      "text": "Ota / Ona / Turmush o'rtog'i",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
+      "line": 608,
+      "text": "Manzil",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\org-chart\\OrgChartSearchBar.tsx",
+      "line": 28,
+      "text": "Bo'lim yoki ism bo'yicha qidirish...",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\org-chart\\OrgChartSearchBar.tsx",
+      "line": 31,
+      "text": "Tashkiliy tuzilma bo'yicha qidirish",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
+      "line": 209,
+      "text": "Jami bo'limlar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
+      "line": 217,
+      "text": "Jami xodimlar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
+      "line": 107,
+      "text": "Fayl muvaffaqiyatli yuklandi",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
+      "line": 161,
+      "text": "Sozlamalar",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
+      "line": 161,
+      "text": "Sozlamalar sahifasi tez orada",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
+      "line": 171,
+      "text": "Tuzilma rasmi yuklanmoqda...",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\RecruitingKanban.tsx",
+      "line": 217,
+      "text": "Jami nomzodlar",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\RecruitingKanban.tsx",
+      "line": 218,
+      "text": "Faol jarayonlar",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\RecruitingKanban.tsx",
+      "line": 222,
+      "text": "Ochiq vakansiya",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\RecruitingKanban.tsx",
+      "line": 224,
+      "text": "AI Sessiyalar",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\RecruitingKanban.tsx",
+      "line": 92,
+      "text": "Vakansiya yaratildi! Endi Portretni to'ldiring.",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\RecruitingKanban.tsx",
+      "line": 131,
+      "text": "NDA so'rovi yuborildi",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\RecruitingKanban.tsx",
+      "line": 132,
+      "text": "NDA so'rovida xatolik",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\RecruitingKanban.tsx",
+      "line": 164,
+      "text": "Nomzod qo'shildi",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\employee\\ProfileHeader.tsx",
+      "line": 133,
+      "text": "Ta'tilda",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\employee\\ProfileHeader.tsx",
+      "line": 185,
+      "text": "Ma'lumot yo'q",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\hr\\employee-dialog\\BaseSalaryInput.tsx",
+      "line": 50,
+      "text": "B — O'rta-yuqori",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\hr\\employee-dialog\\BaseSalaryInput.tsx",
+      "line": 51,
+      "text": "C — O'rta",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\hr\\employee-dialog\\BaseSalaryInput.tsx",
+      "line": 52,
+      "text": "D — Boshlang'ich",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\hr\\employee-dialog\\ManagerSelect.tsx",
+      "line": 125,
+      "text": "Rahbar tanlash",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\hr\\employee-dialog\\ManagerSelect.tsx",
+      "line": 155,
+      "text": "Ism yoki familiya bo'yicha qidiring",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\recruiting\\VacancyFilterPanel.tsx",
+      "line": 90,
+      "text": "Ochiq vakansiyalar yo'q",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    }
+  ]
 }

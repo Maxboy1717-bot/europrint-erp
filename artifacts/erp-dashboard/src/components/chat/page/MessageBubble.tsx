@@ -52,9 +52,9 @@ export function MessageBubble({
 
   const handleStar = useCallback(async () => {
     try {
-      const res = await apiRequest('POST', `/api/chat/messages/${msg.id}/star`) as unknown as Response;
-      if (res.ok) {
-        const data = await res.json() as { starred: boolean };
+      const res = await apiRequest('POST', `/api/chat/messages/${msg.id}/star`);
+      {
+        const data = (res as { starred: boolean });
         setIsStarred(data.starred);
       }
     } catch {

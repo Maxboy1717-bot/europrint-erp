@@ -7,9 +7,10 @@ import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db, eq, desc, and, count } from '@workspace/db';
 import { posNotifications } from '@workspace/db';
+import type { IPosNotificationsRepository } from '../../domain/repositories/i-pos-notifications.repo';
 
 @Injectable()
-export class PosNotificationsRepository {
+export class PosNotificationsRepository implements IPosNotificationsRepository {
   async getForUser(userId: number, limit: number = 50): Promise<Result<(typeof posNotifications.$inferSelect)[]>> {
     try {
       const rows = await db

@@ -15,8 +15,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IdCard, Edit, Plus } from "lucide-react";
 import type { PassportCardProps } from "./PersonalTabTypes";
+import { RoleGate, PII_VIEWER_ROLES } from "@/components/RoleGate";
 
-export function PassportCard({ t, tCommon, passportData, loadingPassport, passportDialogOpen, setPassportDialogOpen, passportForm, setPassportForm, savePassportMutation, }: PassportCardProps) {
+export function PassportCard({ t, tCommon, passportData, loadingPassport, passportDialogOpen, setPassportDialogOpen, passportForm, setPassportForm, savePassportMutation, ownerUserId, }: PassportCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
@@ -124,32 +125,43 @@ export function PassportCard({ t, tCommon, passportData, loadingPassport, passpo
             <Skeleton className="h-4 w-1/2 rounded-lg" />
           </div>
         ) : passportData ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">{t("passportSeries")}</p>
-              <p className="font-medium">{passportData.passportSeries} {passportData.passportNumber}</p>
+          <RoleGate
+            roles={PII_VIEWER_ROLES}
+            ownerUserId={ownerUserId}
+            fallback={
+              <div className="text-muted-foreground text-center py-8" data-testid="passport-masked">
+                <p className="text-sm">Pasport ma'lumotlari maxfiy</p>
+                <p className="text-xs mt-1">Faqat HR ko'ra oladi</p>
+              </div>
+            }
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" data-testid="passport-data">
+              <div>
+                <p className="text-sm text-muted-foreground">{t("passportSeries")}</p>
+                <p className="font-medium">{passportData.passportSeries} {passportData.passportNumber}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{t("issuedBy")}</p>
+                <p className="font-medium">{passportData.issuedBy || tCommon("notSpecified")}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{t("issuedDate")}</p>
+                <p className="font-medium">{passportData.issuedDate || tCommon("notSpecified")}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{t("expiryDate")}</p>
+                <p className="font-medium">{passportData.expiryDate || tCommon("notSpecified")}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{t("birthPlace")}</p>
+                <p className="font-medium">{passportData.birthPlace || tCommon("notSpecified")}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{t("citizenship")}</p>
+                <p className="font-medium">{passportData.citizenship || "Uzbekistan"}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">{t("issuedBy")}</p>
-              <p className="font-medium">{passportData.issuedBy || tCommon("notSpecified")}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">{t("issuedDate")}</p>
-              <p className="font-medium">{passportData.issuedDate || tCommon("notSpecified")}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">{t("expiryDate")}</p>
-              <p className="font-medium">{passportData.expiryDate || tCommon("notSpecified")}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">{t("birthPlace")}</p>
-              <p className="font-medium">{passportData.birthPlace || tCommon("notSpecified")}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">{t("citizenship")}</p>
-              <p className="font-medium">{passportData.citizenship || "Uzbekistan"}</p>
-            </div>
-          </div>
+          </RoleGate>
         ) : (
           <p className="text-muted-foreground text-center py-8">{tCommon("noData")}</p>
         )}

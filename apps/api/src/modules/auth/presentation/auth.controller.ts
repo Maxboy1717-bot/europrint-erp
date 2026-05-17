@@ -219,21 +219,28 @@ export class AuthController {
   }
 
   /**
-   * POST /auth/refresh — exchange a valid refresh token for a fresh access token.
-   * Uses JWT_REFRESH_SECRET (NOT JWT_SECRET) to verify, so an exfiltrated access
-   * token cannot be used here. Blacklist is checked before re-signing.
+   * POST /auth/refresh — exchange a valid refresh token for a fresh access token
+   * AND a fresh refresh token (rotation). The OLD refresh token is blacklisted
+   * the moment a new pair is issued, so even if an attacker has captured the
+   * old token they can use it at most once before the victim's next refresh
+   * invalidates their session — a classic detection signal.
+   *
+   * Uses JWT_REFRESH_SECRET (NOT JWT_SECRET) to verify, so an exfiltrated
+   * access token cannot be replayed here.
+   *
    * Accepts the refresh token from `refresh_token` cookie OR
    * `Authorization: Bearer <refreshToken>` header (cookie wins if both set).
+   *
    * @param auth - the `Authorization: Bearer <refreshToken>` header (fallback)
    * @param req - FastifyRequest, used to read the refresh_token cookie
-   * @param reply - FastifyReply (passthrough), used to set the new access cookie
-   * @returns { accessToken }
+   * @param reply - FastifyReply (passthrough), used to set the new cookies
+   * @returns { accessToken, refreshToken } — both rotated
    * @throws UnauthorizedException for missing, malformed, expired, or revoked refresh tokens
    */
   @Post('refresh')
   @Public()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'JWT tokenni yangilash (refresh)' })
+  @ApiOperation({ summary: 'JWT tokenni yangilash (refresh + rotation)' })
   async refresh(
     @Headers('authorization') auth: string,
     @Req() req: FastifyRequest & { cookies?: Record<string, string | undefined> },
@@ -241,28 +248,46 @@ export class AuthController {
   ) {
     const cookieToken = req.cookies?.[REFRESH_COOKIE_NAME];
     const headerToken = auth?.replace(/^Bearer\s+/i, '');
-    const token = cookieToken || headerToken;
-    if (!token) throw new UnauthorizedException(await this.i18n.t('auth.tokenRequired'));
+    const oldRefreshToken = cookieToken || headerToken;
+    if (!oldRefreshToken) throw new UnauthorizedException(await this.i18n.t('auth.tokenRequired'));
 
     try {
       // getOrThrow: fail loudly if JWT_REFRESH_SECRET is missing — never fall back to JWT_SECRET
       const refreshSecret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
-      const payload = this.jwtService.verify(token, { secret: refreshSecret });
-      const isBlacklisted = await this.authRepo.isTokenBlacklisted(token);
+      const payload = this.jwtService.verify(oldRefreshToken, { secret: refreshSecret });
+
+      // Reject replays: blacklisted tokens must not mint new pairs.
+      const isBlacklisted = await this.authRepo.isTokenBlacklisted(oldRefreshToken);
       if (isBlacklisted) throw new UnauthorizedException(await this.i18n.t('auth.tokenRevoked'));
 
+      // Issue NEW access token (same lifetime / claims as login).
       const accessToken = this.jwtService.sign(
         { sub: payload.sub, username: payload.username, role: payload.role },
         { expiresIn: this.configService.get('JWT_EXPIRES_IN') ?? '24h' },
       );
 
-      // Update the access_token cookie so subsequent requests pick up the new token
-      // automatically. Refresh token cookie stays untouched (rotation handled elsewhere).
+      // Issue NEW refresh token — signed with JWT_REFRESH_SECRET, longer lifetime.
+      const refreshExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d';
+      const refreshToken = this.jwtService.sign(
+        { sub: payload.sub, username: payload.username, role: payload.role },
+        { secret: refreshSecret, expiresIn: refreshExpiresIn },
+      );
+
+      // Blacklist the OLD refresh token AFTER successfully minting the new pair,
+      // so a transient DB error doesn't leave the user locked out. expiresAt is
+      // computed from the old payload's exp claim (seconds since epoch).
+      const oldExpiresAt = typeof payload.exp === 'number'
+        ? new Date(payload.exp * 1000)
+        : new Date(Date.now() + REFRESH_COOKIE_MAX_AGE_SEC * 1000);
+      await this.authRepo.blacklistToken(oldRefreshToken, oldExpiresAt);
+
+      // Rotate both cookies on the response so the browser picks up the new pair.
       if (typeof reply.setCookie === 'function') {
         reply.setCookie(ACCESS_COOKIE_NAME, accessToken, accessCookieOpts(this.configService.get<string>('NODE_ENV')));
+        reply.setCookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOpts(this.configService.get<string>('NODE_ENV')));
       }
 
-      return { accessToken };
+      return { accessToken, refreshToken };
     } catch (e) {
       if (e instanceof UnauthorizedException) throw e;
       throw new UnauthorizedException(await this.i18n.t('auth.tokenExpired'));

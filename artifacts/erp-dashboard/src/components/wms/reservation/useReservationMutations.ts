@@ -24,11 +24,8 @@ export function useReservationMutations({
   const { toast } = useToast();
 
   const optimizeMutation = useMutation({
-    mutationFn: async (params: { materialType: string; quantity: number }) => {
-      const res = await apiRequest('GET', `/api/ai-reservation/optimize?materialType=${encodeURIComponent(params.materialType)}&quantity=${params.quantity}`) as unknown as Response;
-      if (!res.ok) throw new Error("Optimization failed");
-      return res.json();
-    },
+    mutationFn: (params: { materialType: string; quantity: number }) =>
+      apiRequest<OptimizationResult>('GET', `/api/ai-reservation/optimize?materialType=${encodeURIComponent(params.materialType)}&quantity=${params.quantity}`),
     onSuccess: (data: OptimizationResult) => {
       setOptimizationResult(data);
       toast({ title: lang === "uz" ? "Optimallashtirish tayyor" : "Оптимизация готова" });

@@ -152,7 +152,7 @@ export class PipWorkflowService {
 
   // ─── helpers ────────────────────────────────────────────────────────────
   private toIsoDate(d: Date): string {
-    return d.toISOString().split('T')[0]!;
+    return d.toISOString().substring(0, 10);
   }
 
   private parseIsoDate(iso: string): number | null {

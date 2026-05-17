@@ -179,15 +179,11 @@ export default function WarehouseHub() {
   const handleScan = async () => {
     if (!scanInput.trim()) return;
     try {
-      const res = (await apiRequest('GET', `/api/barcode-warehouse/barcodes/scan/${encodeURIComponent(scanInput.trim())}`)) as unknown as Response;
-      if (res.ok) {
-        setScanResult(await res.json());
-        setScanDialogOpen(true);
-      } else {
-        toast({ title: "Barcode topilmadi", variant: "destructive" });
-      }
+      const res = await apiRequest<Parameters<typeof setScanResult>[0]>('GET', `/api/barcode-warehouse/barcodes/scan/${encodeURIComponent(scanInput.trim())}`);
+      setScanResult(res);
+      setScanDialogOpen(true);
     } catch {
-      toast({ title: "Skan xatoligi", variant: "destructive" });
+      toast({ title: "Barcode topilmadi", variant: "destructive" });
     }
     setScanInput("");
   };

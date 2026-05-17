@@ -145,3 +145,56 @@ describe('Employee.clearDomainEvents', () => {
     expect(e.getDomainEvents()).toHaveLength(0);
   });
 });
+
+// -- DDD C.22: Result-returning tax / salary calculations -----------------
+
+describe('Employee C.22 — Result-returning tax / salary methods', () => {
+  it('calculateGrossSalaryVO returns Money on valid input', () => {
+    const e = makeEmployee({ baseSalary: 1_760_000 });
+    const r = e.calculateGrossSalaryVO(10, 0);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.data.amount).toBe(1_910_000);
+    expect(r.data.currency).toBe('UZS');
+  });
+
+  it('calculateGrossSalaryVO returns Err on negative overtime', () => {
+    const e = makeEmployee({ baseSalary: 1_760_000 });
+    const r = e.calculateGrossSalaryVO(-1, 0);
+    expect(r.ok).toBe(false);
+  });
+
+  it('calculateGrossSalaryVO returns Err on NaN bonus', () => {
+    const e = makeEmployee();
+    const r = e.calculateGrossSalaryVO(0, NaN);
+    expect(r.ok).toBe(false);
+  });
+
+  it('calculateInpsVO returns Err on negative gross', () => {
+    const e = makeEmployee();
+    const r = e.calculateInpsVO(-100, 0.01);
+    expect(r.ok).toBe(false);
+  });
+
+  it('calculateInpsVO returns Money on valid input', () => {
+    const e = makeEmployee();
+    const r = e.calculateInpsVO(1_000_000, 0.01);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.data.amount).toBe(10_000);
+  });
+
+  it('calculateJshdVO returns Err on Infinity rate', () => {
+    const e = makeEmployee();
+    const r = e.calculateJshdVO(1_000_000, Infinity);
+    expect(r.ok).toBe(false);
+  });
+
+  it('calculateNetSalaryVO clamps to zero when deductions > gross', () => {
+    const e = makeEmployee();
+    const r = e.calculateNetSalaryVO(100, 60, 50, 20);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.data.amount).toBe(0);
+  });
+});

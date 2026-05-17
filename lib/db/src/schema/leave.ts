@@ -3,7 +3,7 @@
  * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
  */
 
-import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date, uniqueIndex, check } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date, uniqueIndex, check, index } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -41,6 +41,12 @@ export const leaveRequests = pgTable("leave_requests", {
   check("leave_requests_hr_status_chk", sql`${t.hrStatus} IN ('pending','approved','rejected')`),
   check("leave_requests_director_status_chk", sql`${t.directorStatus} IN ('pending','approved','rejected')`),
   check("leave_requests_duration_chk", sql`${t.durationDays} IS NULL OR ${t.durationDays} >= 0`),
+  check("leave_requests_dates_chk", sql`${t.endDate} >= ${t.startDate}`),
+  index("idx_leave_requests_employee_id").on(t.employeeId),
+  index("idx_leave_requests_status").on(t.status),
+  index("idx_leave_requests_tenant_id").on(t.tenantId),
+  index("idx_leave_requests_start_date").on(t.startDate),
+  index("idx_leave_requests_leave_type").on(t.leaveType),
 ]);
 
 export const sickLeaves = pgTable("sick_leaves", {
@@ -57,7 +63,11 @@ export const sickLeaves = pgTable("sick_leaves", {
   approvedBy: integer("approved_by"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_sick_leaves_employee_id").on(t.employeeId),
+  index("idx_sick_leaves_sick_leave_date").on(t.sickLeaveDate),
+  check("sick_leaves_duration_chk", sql`${t.durationDays} IS NULL OR ${t.durationDays} >= 0`),
+]);
 
 export const businessTrips = pgTable("business_trips", {
   id: serial("id").primaryKey(),
@@ -82,6 +92,10 @@ export const businessTrips = pgTable("business_trips", {
   check("business_trips_transport_cost_chk", sql`${t.transportCost} IS NULL OR ${t.transportCost} >= 0`),
   check("business_trips_accommodation_cost_chk", sql`${t.accommodationCost} IS NULL OR ${t.accommodationCost} >= 0`),
   check("business_trips_total_cost_chk", sql`${t.totalCost} IS NULL OR ${t.totalCost} >= 0`),
+  check("business_trips_dates_chk", sql`${t.endDate} >= ${t.startDate}`),
+  index("idx_business_trips_employee_id").on(t.employeeId),
+  index("idx_business_trips_status").on(t.status),
+  index("idx_business_trips_start_date").on(t.startDate),
 ]);
 
 export const leaveBalances = pgTable("leave_balances", {
@@ -100,6 +114,8 @@ export const leaveBalances = pgTable("leave_balances", {
   check("leave_balances_pending_days_chk", sql`${table.pendingDays} >= 0`),
   check("leave_balances_remaining_days_chk", sql`${table.remainingDays} >= 0`),
   uniqueIndex("uq_leave_balance_emp_type_year").on(table.employeeId, table.leaveType, table.year),
+  index("idx_leave_balances_employee_id").on(table.employeeId),
+  index("idx_leave_balances_year").on(table.year),
 ]);
 
 export const insertLeaveRequestSchema = createInsertSchema(leaveRequests).omit({ id: true, createdAt: true, updatedAt: true } as never);

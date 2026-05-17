@@ -91,7 +91,7 @@ export function CandidateCard({entry, stage, aiSessions, vacancyMap,
         const sess = (Array.isArray(aiSessions) ? aiSessions : []).find(s => s.pipeline_entry_id === entry.id || (s.candidate_name && s.candidate_name === entry.candidate_name));
         if (!sess) return null;
         const statusColor: Record<string, string> = { pending: "bg-blue-500/10 text-blue-400", started: "bg-amber-500/10 text-amber-400", completed: "bg-green-500/10 text-green-400", expired: "bg-red-500/10 text-red-400" };
-        return <div className={`flex items-center gap-1 text-[10px] rounded px-1.5 py-0.5 w-fit ${statusColor[sess.status] || "bg-muted/50 text-muted-foreground"}`}><Bot className="w-2.5 h-2.5" />AI: {sess.overall_score !== null ? `${Math.round(sess.overall_score!)}%` : sess.status}</div>;
+        return <div className={`flex items-center gap-1 text-[10px] rounded px-1.5 py-0.5 w-fit ${statusColor[sess.status] || "bg-muted/50 text-muted-foreground"}`}><Bot className="w-2.5 h-2.5" />AI: {sess.overall_score != null ? `${Math.round(sess.overall_score)}%` : sess.status}</div>;
       })()}
 
       {entry.worker_type && (() => {
@@ -242,11 +242,15 @@ export function CandidateCard({entry, stage, aiSessions, vacancyMap,
       <div className="flex flex-col gap-1 mt-1">
         <div className="flex gap-1">
           {stage.key === "PROBATION" && <ProbationCompleteButton entryId={entry.id} isPending={updateMutation.isPending} onComplete={() => updateMutation.mutate({ id: entry.id, funnel_stage: "SINOV_COMPLETE" })} />}
-          {NEXT_STAGE[stage.key] && stage.key !== "PROBATION" && (
-            <Button data-testid={`button-advance-${entry.id}`} size="sm" variant="default" className="h-7 text-xs flex-1" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate({ id: entry.id, funnel_stage: NEXT_STAGE[stage.key]! })}>
-              <ChevronRight className="w-3 h-3 mr-0.5" />{(Array.isArray(STAGES) ? STAGES : []).find(s => s.key === NEXT_STAGE[stage.key])?.label}
-            </Button>
-          )}
+          {(() => {
+            const nextStage = NEXT_STAGE[stage.key];
+            if (!nextStage || stage.key === "PROBATION") return null;
+            return (
+              <Button data-testid={`button-advance-${entry.id}`} size="sm" variant="default" className="h-7 text-xs flex-1" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate({ id: entry.id, funnel_stage: nextStage })}>
+                <ChevronRight className="w-3 h-3 mr-0.5" />{(Array.isArray(STAGES) ? STAGES : []).find(s => s.key === nextStage)?.label}
+              </Button>
+            );
+          })()}
           {!TERMINAL_STAGES.includes(stage.key) && <Button data-testid={`button-reject-${entry.id}`} size="sm" variant="outline" className="h-7 text-xs text-[var(--ep-red)] border-red-500/30" disabled={rejectMutation.isPending} onClick={() => setConfirmRejectId(entry.id)}>✕</Button>}
         </div>
         {stage.key === "OFFER_SENT" && <Button size="sm" variant="outline" className="h-6 text-[10px] text-orange-400 border-orange-500/30 hover:bg-[var(--ep-primary)]/90/10 gap-1" onClick={() => setJobOfferEntry(entry)} data-testid={`button-job-offer-${entry.id}`}><Send className="w-2.5 h-2.5" />{t('jobOffer')}</Button>}

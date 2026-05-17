@@ -1,8 +1,10 @@
 /**
  * @module settings-admin.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   settings-admin module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
-
 import {
   Body, Controller, Delete, Get, HttpCode, Param, Post, Put,
   UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';

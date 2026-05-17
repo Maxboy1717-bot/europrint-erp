@@ -5,7 +5,7 @@
 
 
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, check } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, check, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "../core-schema";
@@ -26,7 +26,10 @@ export const taskSubtasks = pgTable("task_subtasks", {
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  index("idx_task_subtasks_parent_card_id").on(t.parentCardId),
+  index("idx_task_subtasks_assignee_id").on(t.assigneeId),
+]);
 
 
 export const insertTaskSubtaskSchema = createInsertSchema(taskSubtasks, {
@@ -48,7 +51,9 @@ export const taskChecklists = pgTable("task_checklists", {
   title: text("title").notNull(),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  index("idx_task_checklists_card_id").on(t.cardId),
+]);
 
 
 export const insertTaskChecklistSchema = createInsertSchema(taskChecklists, {
@@ -88,7 +93,10 @@ export const taskCardTags = pgTable("task_card_tags", {
   id: serial("id").primaryKey(),
   cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }).notNull(),
   tagId: varchar("tag_id").references(() => taskTags.id, { onDelete: 'cascade' }).notNull(),
-});
+}, (t) => [
+  index("idx_task_card_tags_card_id").on(t.cardId),
+  index("idx_task_card_tags_tag_id").on(t.tagId),
+]);
 
 
 export const insertTaskCardTagSchema = createInsertSchema(taskCardTags).omit({ id: true } as never);
@@ -108,7 +116,11 @@ export const taskReminders = pgTable("task_reminders", {
   sent: boolean("sent").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  index("idx_task_reminders_card_id").on(t.cardId),
+  index("idx_task_reminders_user_id").on(t.userId),
+  index("idx_task_reminders_reminder_at").on(t.reminderAt),
+]);
 
 
 export const insertTaskReminderSchema = createInsertSchema(taskReminders).omit({ id: true, createdAt: true } as never);
@@ -130,7 +142,10 @@ export const taskTimeEntries = pgTable("task_time_entries", {
   description: text("description"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  index("idx_task_time_entries_card_id").on(t.cardId),
+  index("idx_task_time_entries_user_id").on(t.userId),
+]);
 
 
 export const insertTaskTimeEntrySchema = createInsertSchema(taskTimeEntries, {
@@ -153,6 +168,8 @@ export const taskCollaborators = pgTable("task_collaborators", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   check("task_collaborators_role_chk", sql`${t.role} IN ('collaborator','observer')`),
+  index("idx_task_collaborators_card_id").on(t.cardId),
+  index("idx_task_collaborators_user_id").on(t.userId),
 ]);
 
 
@@ -209,7 +226,10 @@ export const taskFiles = pgTable("task_files", {
   uploadedById: varchar("uploaded_by_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  index("idx_task_files_card_id").on(t.cardId),
+  index("idx_task_files_uploaded_by_id").on(t.uploadedById),
+]);
 
 
 export const insertTaskFileSchema = createInsertSchema(taskFiles, {
@@ -235,7 +255,10 @@ export const taskStatusHistory = pgTable("task_status_history", {
   toStatus: varchar("to_status", { length: 50 }),
   changedById: varchar("changed_by_id").references(() => users.id, { onDelete: "set null" }),
   changedAt: timestamp("changed_at").notNull().defaultNow(),
-});
+}, (t) => [
+  index("idx_task_status_history_card_id").on(t.cardId),
+  index("idx_task_status_history_changed_at").on(t.changedAt),
+]);
 
 
 export const insertTaskStatusHistorySchema = createInsertSchema(taskStatusHistory, {

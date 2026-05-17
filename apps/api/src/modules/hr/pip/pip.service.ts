@@ -1,11 +1,11 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { errMsg } from "../hr-v2-error";
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron } from '@nestjs/schedule';
 import { HrV2Events } from '../events/hr-v2-events';
-import { Result, Ok, Err, AppErr, safeCall } from '@common/result';
+import { Result, Ok, Err, AppErr, AppError, safeCall } from '@common/result';
 import { PipRepository } from './pip.repository';
 import {
   PipWorkflowService,
@@ -66,7 +66,7 @@ export class PipService {
     const progressStatus = statusR.data;
 
     const pip = await this.repo.getPip(pipId);
-    if (!pip.ok) return pip;
+    if (!pip.ok) return { ok: false, error: pip.error };
     if (!pip.data) return Err(AppErr('NOT_FOUND', `PIP #${pipId} topilmadi`));
     const currentStatus = String((pip.data as Record<string, unknown>)['status'] ?? 'active') as PipStatus;
     if (currentStatus !== 'active') {
@@ -96,7 +96,7 @@ export class PipService {
 
   async acknowledge(pipId: number): Promise<Result<object>> {
     const pip = await this.repo.getPip(pipId);
-    if (!pip.ok) return pip;
+    if (!pip.ok) return { ok: false, error: pip.error };
     if (!pip.data) return Err(AppErr('NOT_FOUND', `PIP #${pipId} topilmadi`));
     const row = await this.repo.acknowledge(pipId);
     return row as Result<object>;
@@ -104,7 +104,7 @@ export class PipService {
 
   async cancelPip(pipId: number, reason?: string): Promise<Result<object>> {
     const pip = await this.repo.getPip(pipId);
-    if (!pip.ok) return pip;
+    if (!pip.ok) return { ok: false, error: pip.error };
     if (!pip.data) return Err(AppErr('NOT_FOUND', `PIP #${pipId} topilmadi`));
     const currentStatus = String((pip.data as Record<string, unknown>)['status'] ?? 'active') as PipStatus;
     const trans = this.workflow.assertTransition(currentStatus, 'cancelled');
@@ -122,7 +122,7 @@ export class PipService {
       return Err(AppErr('VALIDATION', "extraDays 1..90 oraligida bo'lishi kerak"));
     }
     const pip = await this.repo.getPip(pipId);
-    if (!pip.ok) return pip;
+    if (!pip.ok) return { ok: false, error: pip.error };
     if (!pip.data) return Err(AppErr('NOT_FOUND', `PIP #${pipId} topilmadi`));
     const currentStatus = String((pip.data as Record<string, unknown>)['status'] ?? 'active') as PipStatus;
     if (currentStatus !== 'active') {
@@ -133,7 +133,7 @@ export class PipService {
     if (!Number.isFinite(oldTs)) {
       return Err(AppErr('INTERNAL', `PIP end_date noto'g'ri formatda: ${oldEnd}`));
     }
-    const newEnd = new Date(oldTs + extraDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0]!;
+    const newEnd = new Date(oldTs + extraDays * 24 * 60 * 60 * 1000).toISOString().substring(0, 10);
     return this.repo.updateEndDate(pipId, newEnd) as Promise<Result<object>>;
   }
 
@@ -217,7 +217,7 @@ export class PipService {
   @Cron('0 8 * * *')
   async checkOverduePips() {
     try {
-      const today = _time.now().toISOString().split('T')[0]!;
+      const today = _time.now().toISOString().substring(0, 10);
       const rowsR = await this.repo.getOverduePips(today);
       const rows = (rowsR.ok ? rowsR.data as { id: number; employee_id: number }[] : []);
       for (const pip of rows) {

@@ -79,8 +79,9 @@ export async function downloadReport(
   period: ReportPeriod,
   apiRequest: (method: string, url: string) => Promise<unknown>
 ): Promise<void> {
+  void apiRequest; // unused; raw fetch is needed for binary blob
   const endpoint = format === "pdf" ? "generate-pdf" : "generate-excel";
-  const response = (await apiRequest("GET", `/api/camera-reports/${endpoint}?period=${period}`)) as unknown as Response;
+  const response = await fetch(`/api/camera-reports/${endpoint}?period=${period}`, { credentials: "include" });
   if (!response.ok) return;
   const blob = await response.blob();
   const url = window.URL.createObjectURL(blob);

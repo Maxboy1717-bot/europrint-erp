@@ -132,8 +132,8 @@ export default function Questionnaire() {
 
   const handleDownloadWord = async (responseId: string, fullName: string) => {
     try {
-      const res = (await apiRequest('GET', `/api/questionnaire/responses/${responseId}/export`)) as unknown as Response;
-      if (!res.ok) throw new Error("Download failed");
+      const res = await fetch(`/api/questionnaire/responses/${responseId}/export`, { credentials: "include" });
+      if (!res.ok) throw new Error("Faylni yuklab olishda xatolik");
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);

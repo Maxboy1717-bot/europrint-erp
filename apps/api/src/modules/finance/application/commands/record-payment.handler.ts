@@ -75,7 +75,8 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
 
       if (finalAmountCents >= totalAmountCents) {
         const finalAmount = finalAmountCents / 100;
-        invoice.markAsFullyPaid(finalAmount);
+        const fullPayR = invoice.markAsFullyPaid(finalAmount);
+        if (!fullPayR.ok) return Err(fullPayR.error.message);
 
         await this.financeRepo.recordPayment({
           paymentId: command.paymentId,
@@ -113,7 +114,8 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
         return Ok(command.paymentId);
       }
 
-      invoice.markAsPartiallyPaid(command.amount);
+      const partialR = invoice.markAsPartiallyPaid(command.amount);
+      if (!partialR.ok) return Err(partialR.error.message);
 
       await this.financeRepo.recordPayment({
         paymentId: command.paymentId,

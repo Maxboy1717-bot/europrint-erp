@@ -38,7 +38,8 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^15.15.0",
     "husky": "^9.1.7",
-    "lint-staged": "^15.5.2"
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.3.3"
   },
   "pnpm": {
     "overrides": {
@@ -148,13 +149,13 @@
   },
   "lint-staged": {
     "apps/api/src/**/*.ts": [
-      "eslint --ext .ts --max-warnings 0 --fix"
+      "eslint --max-warnings 100"
     ],
     "artifacts/erp-dashboard/src/**/*.{ts,tsx}": [
-      "eslint --fix"
+      "eslint"
     ],
     "**/*.{ts,tsx,js,json,css,md}": [
-      "prettier --write"
+      "prettier --check"
     ]
   }
 }

@@ -48,9 +48,7 @@ export default function TechCards() {
   const { data: cards = [], isLoading } = useQuery<TechCard[]>({
     queryKey: ["/api/technology/cards"],
     queryFn: async () => {
-      const res = (await apiRequest('GET', "/api/technology/cards")) as unknown as Response;
-      if (!res.ok) throw new Error("Kartalarni yuklashda xatolik");
-      const raw: Record<string, unknown>[] = await res.json();
+      const raw: Record<string, unknown>[] = await apiRequest('GET', "/api/technology/cards");
       return (Array.isArray(raw) ? raw : []).map(mapBackendCard);
     },
   });
@@ -58,20 +56,18 @@ export default function TechCards() {
   const { data: orders = [] } = useQuery<PapkaOrder[]>({
     queryKey: ["/api/papka-orders", "pending_tech"],
     queryFn: async () => {
-      const res = (await apiRequest('GET', "/api/papka-orders?status=pending_tech")) as unknown as Response;
-      if (!res.ok) return [];
-      const d = await res.json();
-      return Array.isArray(d) ? d : (d.items ?? d.data ?? d.orders ?? []);
+      let d: unknown;
+      try { d = await apiRequest<unknown>('GET', "/api/papka-orders?status=pending_tech"); }
+      catch { return []; }
+      if (Array.isArray(d)) return d as PapkaOrder[];
+      const obj = d as { items?: PapkaOrder[]; data?: PapkaOrder[]; orders?: PapkaOrder[] };
+      return obj.items ?? obj.data ?? obj.orders ?? [];
     },
   });
 
   // Mutations
   const optimizeMutation = useMutation({
-    mutationFn: async (cardId: string) => {
-      const res = (await apiRequest('GET', `/api/technology/cards/${cardId}/optimize`)) as unknown as Response;
-      if (!res.ok) throw new Error("Optimizatsiya xatoligi");
-      return res.json() as Promise<OptimizeResult>;
-    },
+    mutationFn: (cardId: string) => apiRequest<OptimizeResult>('GET', `/api/technology/cards/${cardId}/optimize`),
     onSuccess: (data) => setOptimizeResult(data),
     onError: (err: Error) => {
       toast({ title: "Xatolik", description: err.message, variant: "destructive" });
@@ -101,8 +97,8 @@ export default function TechCards() {
 
   const handleViewCard = async (card: TechCard) => {
     try {
-      const res = (await apiRequest('GET', `/api/technology/cards/${card.id}`)) as unknown as Response;
-      setSelectedCard(res.ok ? mapBackendCard(await res.json()) : card);
+      const res = await apiRequest<Record<string, unknown>>('GET', `/api/technology/cards/${card.id}`);
+      setSelectedCard(mapBackendCard(res));
     } catch {
       setSelectedCard(card);
     }

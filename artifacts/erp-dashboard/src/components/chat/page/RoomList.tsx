@@ -147,9 +147,11 @@ export function RoomList({ onRoomSelect, onOpenSearch }: Props) {
   const { data: birthdays = [] } = useQuery<{ id: number; fullName: string }[]>({
     queryKey: ["chat-birthdays-today"],
     queryFn: async () => {
-      const res = await apiRequest('GET', "/api/chat/birthdays/today") as unknown as Response;
-      if (!res.ok) return [];
-      return res.json();
+      try {
+        return await apiRequest('GET', "/api/chat/birthdays/today");
+      } catch {
+        return [];
+      }
     },
     staleTime: 3_600_000,
     refetchOnWindowFocus: false,
