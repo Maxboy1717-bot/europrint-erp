@@ -1,140 +1,112 @@
-/**
- * OrgChartCompatService — `/org-chart/tree` va `/org-chart/flat` uchun.
- *
- * Frontend (`OrgChartPage.tsx`) kutadi:
- *   {
- *     tree: OrgChartNode[],
- *     stats: { totalDepartments, totalEmployees, maxDepth }
- *   }
- *
- * OrgChartNode: { id, name, vep?, employeeCount?, color?, icon?, children? }
- *
- * MUHIM: `safeCall` natijani avtomatik `Ok(value)` bilan o'raydi —
- * shu sababli ichkarida QO'LDA `{ ok: true, data: ... }` qaytarmaslik kerak
- * (avvalgi versiyada double-wrap bor edi → frontend tree undefined olardi).
- */
-import { Injectable } from '@nestjs/common';
-import { rawSql } from '@shared/db';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { db,
+  rawSql} from '@shared/db';
 import { sql } from 'drizzle-orm';
-import { dbRows, type DbRow } from '../hr/common/db-rows';
-import { safeCall, Result, AppError } from '@common/result';
+import { dbRows } from '../hr/common/db-rows';
+import { safeCall, Result } from '@common/result';
 
-interface DeptRow extends DbRow {
-  id: string;
-  name: string;
-  parentId: number | null;
-  managerId: number | null;
-  vep: string | null;
-  color: string | null;
-  icon: string | null;
-  level: number | null;
-  employeeCount: number;
-  children?: DeptRow[];
-}
+/**
+ * O(n) tree builder using a parent→children Map.
+ *
+ * Replaces the previous O(n²) recursive filter implementation that called
+ * `nodes.filter(...)` once per node (visiting every node n times).
+ *
+ * Algorithm (single pass O(n)):
+ *   1. Walk `nodes` once; copy each into a `byId` map keyed by node.id, pre-allocating
+ *      an empty `children` array.
+ *   2. Walk `byId` once; attach each node to its parent's `children` array or to the
+ *      `roots` list when parent_id is null / missing.
+ *
+ * Total work: 2n iterations + n constant-time Map lookups = O(n) time, O(n) space.
+ */
+export function buildTree(
+  nodes: ReadonlyArray<Record<string, unknown>>,
+): Record<string, unknown>[] {
+  const list = Array.isArray(nodes) ? nodes : [];
+  if (list.length === 0) return [];
 
-export interface OrgTreeData {
-  tree: DeptRow[];
-  stats: {
-    totalDepartments: number;
-    totalEmployees: number;
-    maxDepth: number;
-  };
-}
+  const byId = new Map<number, Record<string, unknown>>();
 
-export interface FlatDept extends DbRow {
-  id: string;
-  name: string;
-  parentId: number | null;
-  managerId: number | null;
-  employeeCount: number;
-}
+  // Pass 1: index every node by id with an empty children array.
+  for (const n of list) {
+    const id = Number(n['id']);
+    if (!Number.isFinite(id)) continue;
+    byId.set(id, { ...n, children: [] });
+  }
 
-function buildTree(nodes: DeptRow[], parentId: number | null = null): DeptRow[] {
-  const safe = Array.isArray(nodes) ? nodes : [];
-  return safe
-    .filter((n) => (n.parentId ?? null) === parentId)
-    .map((n) => ({ ...n, children: buildTree(safe, Number(n.id)) }));
-}
+  const roots: Record<string, unknown>[] = [];
 
-function computeMaxDepth(nodes: DeptRow[], depth = 1): number {
-  if (!Array.isArray(nodes) || nodes.length === 0) return depth - 1;
-  return Math.max(...nodes.map((n) => computeMaxDepth(n.children ?? [], depth + 1)));
+  // Pass 2: link each node to its parent or push to roots.
+  for (const [, node] of byId) {
+    const rawParent = node['parent_id'];
+    const parentId = rawParent === null || rawParent === undefined
+      ? null
+      : Number(rawParent);
+
+    if (parentId === null || !Number.isFinite(parentId)) {
+      roots.push(node);
+      continue;
+    }
+
+    const parent = byId.get(parentId);
+    if (!parent) {
+      // Orphan: parent not in result set → treat as root to avoid losing the node.
+      roots.push(node);
+      continue;
+    }
+
+    (parent['children'] as Record<string, unknown>[]).push(node);
+  }
+
+  return roots;
 }
 
 @Injectable()
 export class OrgChartCompatService {
-  /**
-   * `/api/org-chart/tree` — hierarchical bo'limlar daraxti + statistika.
-   */
-  async getOrgTree(departmentId?: string): Promise<Result<OrgTreeData, AppError>> {
-    return safeCall(async () => {
-      const depts = await this.fetchDepartmentsForTree(departmentId);
-      const deptList = dbRows<DeptRow>(depts);
-      const safeList = Array.isArray(deptList) ? deptList : [];
-      const tree = buildTree(safeList, null);
-      const totalEmployees = safeList.reduce(
-        (sum, d) => sum + Number(d.employeeCount ?? 0),
-        0,
-      );
-      return {
-        tree,
-        stats: {
-          totalDepartments: safeList.length,
-          totalEmployees,
-          maxDepth: computeMaxDepth(tree),
-        },
-      };
-    });
-  }
 
-  private fetchDepartmentsForTree(departmentId?: string) {
+  async getOrgTree(departmentId?: string): Promise<Result<Record<string, unknown>>>{
+    return safeCall(async () => {
     const deptFilter = departmentId
       ? sql`WHERE d.id = ${parseInt(departmentId, 10)}`
       : sql``;
-    return rawSql(sql`
-      SELECT
-        d.id::text                                  AS id,
-        COALESCE(d.name_uz, d.name, '')             AS name,
-        d.parent_id                                 AS "parentId",
-        d.manager_id                                AS "managerId",
-        COALESCE(
-          NULLIF(TRIM(mgr.first_name || ' ' || COALESCE(mgr.last_name, '')), ''),
-          d.vep
-        )                                           AS vep,
-        d.color,
-        d.icon,
-        d.level,
-        COUNT(e.id)::int                            AS "employeeCount"
-      FROM departments d
-      LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
-      LEFT JOIN employees mgr ON mgr.id = d.manager_id
-      ${deptFilter}
-      GROUP BY d.id, d.name, d.name_uz, d.parent_id, d.manager_id,
-               d.vep, d.color, d.icon, d.level, d.sort_order,
-               mgr.first_name, mgr.last_name
-      ORDER BY d.parent_id NULLS FIRST, d.sort_order, COALESCE(d.name_uz, d.name)
-    `);
-  }
-
-  /**
-   * `/api/org-chart/flat` — bo'limlar yassi ro'yxati (hierarchy yo'q).
-   */
-  async getOrgFlat(_departmentId?: string): Promise<Result<FlatDept[], AppError>> {
-    return safeCall(async () => {
-      const r = await rawSql(sql`
-        SELECT
-          d.id::text                                  AS id,
-          COALESCE(d.name_uz, d.name, '')             AS name,
-          d.parent_id                                 AS "parentId",
-          d.manager_id                                AS "managerId",
-          COUNT(e.id)::int                            AS "employeeCount"
+    const [depts, emps] = await Promise.all([
+      rawSql(sql`
+        SELECT d.id, d.name, d.name_uz, d.parent_id, d.manager_id,
+               COUNT(e.id) AS employee_count
         FROM departments d
         LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
+        ${deptFilter}
         GROUP BY d.id, d.name, d.name_uz, d.parent_id, d.manager_id
-        ORDER BY COALESCE(d.name_uz, d.name)
-      `);
-      const rows = dbRows<FlatDept>(r);
-      return Array.isArray(rows) ? rows : [];
-    });
-  }
+        ORDER BY d.parent_id NULLS FIRST, d.name
+      `),
+      rawSql(sql`
+        SELECT e.id, e.first_name || ' ' || e.last_name AS full_name,
+               e.department_id, e.photo_url, e.employee_code,
+               COALESCE(p.name, p.name_uz) AS position_name
+        FROM employees e
+        LEFT JOIN positions p ON p.id = e.position_id
+        WHERE e.status = 'active'
+        ORDER BY e.first_name
+      `),
+    ]);
+    const deptList = dbRows(depts);
+    const empList = dbRows(emps);
+    const tree = buildTree(deptList);
+    return { ok: true, data: { tree, departments: deptList, employees: empList } };
+  
+    });}
+
+  async getOrgFlat(_departmentId?: string){
+    return safeCall(async () => {
+    const r = await rawSql(sql`
+      SELECT d.id, d.name, d.name_uz, d.parent_id, d.manager_id,
+             COUNT(e.id) AS employee_count
+      FROM departments d
+      LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
+      GROUP BY d.id, d.name, d.name_uz, d.parent_id, d.manager_id
+      ORDER BY d.name
+    `);
+    return { ok: true, data: dbRows(r) };
+  
+    });}
 }
