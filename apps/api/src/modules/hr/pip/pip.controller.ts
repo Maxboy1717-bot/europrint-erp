@@ -1,7 +1,6 @@
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, UseGuards, Get, Post, Patch, Body, Param, ParseIntPipe, Logger, UseInterceptors } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
-import { RolesGuard } from '@common/guards/roles.guard';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
@@ -25,19 +24,24 @@ const AddProgressSchema = z.object({
   updated_by:     z.number().int().optional(),
   notes:          z.string().optional(),
   progress_notes: z.string().optional(),
-  status:         z.string().optional(),
+  status:         z.enum(['on_track', 'at_risk', 'off_track', 'completed', 'failed']).optional(),
 });
 class AddProgressDto extends createZodDto(AddProgressSchema) {}
 
-const CompletePipSchema = z.object({
-  result: z.enum(['PASSED', 'FAILED']),
+const CancelPipSchema = z.object({
+  reason: z.string().max(500).optional(),
 });
-class CompletePipDto extends createZodDto(CompletePipSchema) {}
+class CancelPipDto extends createZodDto(CancelPipSchema) {}
 
-@Roles('admin', 'manager', 'supervisor', 'hr_manager', 'hr_specialist')
+const ExtendPipSchema = z.object({
+  extra_days: z.number().int().min(1).max(90),
+});
+class ExtendPipDto extends createZodDto(ExtendPipSchema) {}
+
+@Roles('admin', 'manager', 'supervisor', 'hr_manager')
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @UseInterceptors(AuditInterceptor)
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('hr-v2/pip')
 export class PipController {
   private readonly logger = new Logger(PipController.name);
@@ -91,12 +95,13 @@ export class PipController {
     return unwrapOrInternal(await this.svc.acknowledge(id));
   }
 
-  /**
-   * Finalize a PIP with explicit outcome — called from `PIPPage.tsx:68`
-   *   PATCH /api/hr-v2/pip/:id/complete  { result: 'PASSED' | 'FAILED' }
-   */
-  @Patch(':id/complete')
-  async complete(@Param('id', ParseIntPipe) id: number, @Body() body: CompletePipDto) {
-    return unwrapOrInternal(await this.svc.completePip(id, body.result));
+  @Post(':id/cancel')
+  async cancel(@Param('id', ParseIntPipe) id: number, @Body() body: CancelPipDto) {
+    return unwrapOrInternal(await this.svc.cancelPip(id, body.reason));
+  }
+
+  @Post(':id/extend')
+  async extend(@Param('id', ParseIntPipe) id: number, @Body() body: ExtendPipDto) {
+    return unwrapOrInternal(await this.svc.extendPip(id, body.extra_days));
   }
 }

@@ -175,4 +175,27 @@ export class OnboardingController {
   async getMotivationPlan(@Param('employeeId', ParseIntPipe) employeeId: number) {
     return unwrapOrInternal(await this.onboardingService.getEmployeeMotivationPlan(employeeId));
   }
+
+  // ──────────────── BUDDY ASSIGNMENT (Buddy / mentor) ─────────────────────
+
+  @Patch(':id/buddy')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'hr_manager', 'hr')
+  @ApiOperation({ summary: 'Onboarding ga buddy / mentor biriktirish' })
+  @ApiParam({ name: 'id', type: Number })
+  async assignBuddy(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { buddyId: number },
+  ) {
+    const buddyId = Number(body?.buddyId);
+    return unwrapOrInternal(await this.onboardingService.assignBuddy(id, buddyId));
+  }
+
+  // ──────────────── DASHBOARD STATS ───────────────────────────────────────
+
+  @Get('dashboard/stats')
+  @ApiOperation({ summary: 'Onboarding dashboard statistikasi (active / completed / atRisk / overdue)' })
+  async dashboardStats() {
+    return unwrapOrInternal(await this.onboardingService.getDashboardStats());
+  }
 }

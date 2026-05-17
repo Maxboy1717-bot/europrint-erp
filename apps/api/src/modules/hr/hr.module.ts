@@ -85,6 +85,7 @@ import { HR_EMPLOYEES_EXT_REPO } from './domain/repositories/i-hr-employees-ext.
 import { OnboardingController } from './onboarding/onboarding.controller';
 import { OnboardingService } from './onboarding/onboarding.service';
 import { OnboardingJobService } from './onboarding/onboarding-job.service';
+import { OnboardingProgressService } from './onboarding/onboarding-progress.service';
 import { RecruitmentController } from './recruitment/recruitment.controller';
 import { RecruitmentOffersController } from './recruitment/recruitment-offers.controller';
 import { RecruitmentService } from './recruitment/recruitment.service';
@@ -103,9 +104,14 @@ import { AttendanceService } from './attendance/attendance.service';
 import { HR_PAYROLL_REPO } from './payroll/i-hr-payroll.repo';
 import { DrizzleHrPayrollRepository } from './payroll/drizzle-hr-payroll.repo';
 import { PayrollService } from './payroll/payroll.service';
+import { PayrollClosureService } from './payroll/payroll-closure.service';
+import { HrPayrollClosureController } from './payroll/hr-payroll-closure.controller';
 import { HR_LEAVE_SVC_REPO } from './leave/i-hr-leave-svc.repo';
 import { DrizzleHrLeaveSvcRepository } from './leave/drizzle-hr-leave-svc.repo';
 import { LeaveService } from './leave/leave.service';
+import { LeaveAccrualService } from './leave/leave-accrual.service';
+import { LeaveAccrualJobService } from './leave/leave-accrual-job.service';
+import { HrLeaveAccrualController } from './leave/hr-leave-accrual.controller';
 import { HR_ONBOARDING_REPO } from './onboarding/repos/i-hr-onboarding.repo';
 import { DrizzleHrOnboardingRepository } from './onboarding/repos/drizzle-hr-onboarding.repo';
 import { HR_RECRUITMENT_FUNNEL_REPO } from './recruitment/repos/i-hr-recruitment-funnel.repo';
@@ -120,6 +126,7 @@ import { HrSafetyRepository } from './safety/hr-safety.repository';
 import { HrOffboardingController } from './offboarding/hr-offboarding.controller';
 import { HrOffboardingService } from './offboarding/hr-offboarding.service';
 import { HrOffboardingRepository } from './offboarding/hr-offboarding.repository';
+import { OffboardingWorkflowService } from './offboarding/offboarding-workflow.service';
 import { HrGsdController } from './presentation/hr-gsd.controller';
 import { HrGsdService } from './presentation/hr-gsd.service';
 import { HrGsdRepository } from './presentation/hr-gsd.repository';
@@ -213,6 +220,8 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     HrVacanciesPipelineController,
     HrSafetyController,
     HrOffboardingController,
+    HrPayrollClosureController,
+    HrLeaveAccrualController,
     HrGsdController,
     EmployeesForFaceController,
     AttendanceFaceController,
@@ -237,9 +246,12 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     { provide: ATTENDANCE_REPO, useClass: DrizzleAttendanceRepository },
     AttendanceService,
     { provide: HR_PAYROLL_REPO, useClass: DrizzleHrPayrollRepository },
+    PayrollClosureService,
     PayrollService,
     { provide: HR_LEAVE_SVC_REPO, useClass: DrizzleHrLeaveSvcRepository },
     LeaveService,
+    LeaveAccrualService,
+    LeaveAccrualJobService,
     { provide: HR_ONBOARDING_REPO, useClass: DrizzleHrOnboardingRepository },
     { provide: HR_RECRUITMENT_FUNNEL_REPO, useClass: DrizzleHrRecruitmentFunnelRepository },
     ...repositories,
@@ -249,6 +261,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     ...eventListeners,
     OnboardingService,
     OnboardingJobService,
+    OnboardingProgressService,
     RecruitmentService,
     RecruitmentFunnelService,
     RecruitmentGateway,
@@ -279,6 +292,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     HrSafetyRepository,
     HrOffboardingService,
     HrOffboardingRepository,
+    OffboardingWorkflowService,
     HrGsdService,
     HrGsdRepository,
     FaceRecognitionService,

@@ -69,6 +69,26 @@ export class PipRepository {
     }).where(eq(pip_plans.id, pipId));
   }
 
+  async cancel(pipId: number): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const rows = await db.update(pip_plans)
+        .set({ status: 'cancelled', completed_at: _time.now() })
+        .where(eq(pip_plans.id, pipId))
+        .returning();
+      return castTo<Row>((rows[0] ?? {}));
+    }, 'DB_ERROR');
+  }
+
+  async updateEndDate(pipId: number, newEndDate: string): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const rows = await db.update(pip_plans)
+        .set({ end_date: newEndDate })
+        .where(eq(pip_plans.id, pipId))
+        .returning();
+      return castTo<Row>((rows[0] ?? {}));
+    }, 'DB_ERROR');
+  }
+
   async acknowledge(pipId: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.update(pip_plans)
