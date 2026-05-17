@@ -134,20 +134,16 @@ above. Smoke-run timing for the new files when run locally with the API
 unreachable (`pnpm exec playwright test e2e/hr-recruiting.spec.ts`) is
 ~400 ms per spec including Playwright startup.
 
-## Commits (planned, this worktree)
+## Commits (this worktree)
 
-Will be created in three logical chunks per the project's
-"one commit per setup piece" rule:
+Three commits, one per setup piece, on branch
+`worktree-agent-aa4080563bb72ed16` (from `chore/clean-faza-3`):
 
-1. `chore(hr-test): playwright HR specs + axe-core baseline` — adds 3 E2E
-   files in `artifacts/erp-dashboard/e2e/`.
-2. `chore(hr-test): backend integration infra + 3 example specs` — adds
-   `docker-compose.test.yml`, `_helpers/setup-test-db.ts`, and 3 specs
-   under `apps/api/test/hr/`.
-3. `docs(hr): Phase 8 progress note` — this file.
-
-(Commits authored by the user on request, per project rule "create commits
-only when requested".)
+| SHA | Subject | Files |
+|-----|---------|-------|
+| `75f4f54b` | chore(hr-test): playwright HR specs + axe-core a11y baseline | 3 e2e specs (288 LOC) |
+| `261b07e4` | chore(hr-test): backend integration test infra + 3 example specs | docker-compose.test.yml + setup-test-db helper + 3 specs (471 LOC) |
+| `7ec6b0a1` | docs(hr): Phase 8 progress note — 3 infra pieces done, 7 deferred | this file |
 
 ## Open questions / handoff notes
 
