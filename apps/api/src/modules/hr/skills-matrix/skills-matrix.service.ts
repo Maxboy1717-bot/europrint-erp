@@ -5,7 +5,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { errMsg } from "../hr-v2-error";
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron } from '@nestjs/schedule';
 import { HrV2Events } from '../events/hr-v2-events';
 import { safeCall, Result, AppError } from '@common/result';
@@ -76,17 +76,7 @@ export class SkillsMatrixService {
     }
   }
 
-  @OnEvent(HrV2Events.CERTIFICATE_EARNED)
-  async onCertificateEarned(payload: { employeeId: number; skillCode?: string; level?: number }) {
-    return safeCall(async () => {
-      if (payload.skillCode) {
-        await this.upsertSkillScore({
-          employeeId: payload.employeeId,
-          skillCode: payload.skillCode,
-          currentLevel: payload.level || 3,
-        });
-        this.logger.log(`Auto-updated skill ${payload.skillCode} for employee ${payload.employeeId}`);
-      }
-    });
-  }
+  // PA2-18 Wave 4 round-3: the `CERTIFICATE_EARNED` listener was extracted to
+  // `skills-matrix-certificate-earned.listener.ts` using the canonical
+  // `@EventsHandler(CertificateEarnedEvent)` form.
 }

@@ -4,6 +4,7 @@
  */
 
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { EcommerceService } from './ecommerce.service';
 import { EcommerceRepository } from './ecommerce.repository';
@@ -18,7 +19,7 @@ import { WebsiteController } from './website/website.controller';
 import { WebsiteMediaController } from './website/website-media.controller';
 
 @Module({
-  imports: [EventEmitterModule.forRoot()],
+  imports: [CqrsModule, EventEmitterModule.forRoot()],
   providers: [
     EcommerceRepository,
     EcommerceService,

@@ -7,6 +7,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventBus } from '@nestjs/cqrs';
 import {
   RecordPaymentHandler,
   RecordPaymentCommand,
@@ -61,10 +62,15 @@ function makeEmitter() {
   return { emit: jest.fn() } as unknown as EventEmitter2;
 }
 
+function makeEventBus() {
+  return { publish: jest.fn() } as unknown as EventBus;
+}
+
 async function buildHandler(deps: {
   repo: ReturnType<typeof makeRepo>;
   gl: GlPostingService;
   bus: EventEmitter2;
+  cqrsBus?: EventBus;
 }): Promise<RecordPaymentHandler> {
   const module: TestingModule = await Test.createTestingModule({
     providers: [
@@ -72,6 +78,7 @@ async function buildHandler(deps: {
       { provide: FINANCE_REPO, useValue: deps.repo },
       { provide: GlPostingService, useValue: deps.gl },
       { provide: EventEmitter2, useValue: deps.bus },
+      { provide: EventBus, useValue: deps.cqrsBus ?? makeEventBus() },
     ],
   }).compile();
   return module.get(RecordPaymentHandler);

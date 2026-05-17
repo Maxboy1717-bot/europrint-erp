@@ -6,10 +6,14 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { errMsg } from "../hr-v2-error";
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventBus } from '@nestjs/cqrs';
 import { Cron } from '@nestjs/schedule';
 import { HrV2Events } from '../events/hr-v2-events';
 import { safeCall, Result, AppError } from '@common/result';
 import { DocumentWorkflowRepository } from './document-workflow.repository';
+import { DocumentSubmittedEvent } from '../domain/events/document-submitted.event';
+import { DocumentApprovedEvent } from '../domain/events/document-approved.event';
+import { DocumentRejectedEvent } from '../domain/events/document-rejected.event';
 
 @Injectable()
 export class DocumentWorkflowService {
@@ -17,6 +21,7 @@ export class DocumentWorkflowService {
 
   constructor(
     private readonly eventEmitter: EventEmitter2,
+    private readonly eventBus: EventBus,
     private readonly repo: DocumentWorkflowRepository,
   ) {}
 
@@ -42,12 +47,17 @@ export class DocumentWorkflowService {
       const doc = await this.repo.submitDocument(documentId);
       if (!doc.ok || !doc.data) throw new NotFoundException(`Document #${documentId} not found or already submitted`);
       const docData = doc.data as Record<string, unknown>;
-      this.eventEmitter.emit(HrV2Events.DOCUMENT_SUBMITTED, {
+      const submittedPayload = {
         documentId,
-        employeeId: docData['employee_id'],
-        documentType: docData['document_type'],
-        title: docData['title'],
-      });
+        employeeId: Number(docData['employee_id']),
+        documentType: String(docData['document_type']),
+        title: String(docData['title']),
+      };
+      // PA2-18 Wave 4 round-3: dual emit — CQRS bus for canonical
+      // @EventsHandler consumers, plus the legacy string topic for non-migrated
+      // listeners (telegram-bots.service, etc.).
+      this.eventBus.publish(new DocumentSubmittedEvent(submittedPayload));
+      this.eventEmitter.emit(HrV2Events.DOCUMENT_SUBMITTED, submittedPayload);
       return docData;
     });
   }
@@ -97,11 +107,16 @@ export class DocumentWorkflowService {
         const approvedDocData = (approvedDoc.ok && approvedDoc.data) ? approvedDoc.data as Record<string, unknown> : null;
         const employeeId = approvedDocData?.['employee_id'];
         const documentType = approvedDocData?.['document_type'] as string | undefined;
-        this.eventEmitter.emit(HrV2Events.DOCUMENT_APPROVED, {
-          documentId: stepData['document_id'],
-          employeeId,
+        const approvedPayload = {
+          documentId: stepData['document_id'] as number,
+          employeeId: employeeId != null ? Number(employeeId) : undefined,
           documentType,
-        });
+        };
+        // PA2-18 Wave 4 round-3: dual emit — CQRS bus for canonical
+        // @EventsHandler consumers, plus the legacy string topic for
+        // non-migrated listeners (gamification.service, telegram-bots.service).
+        this.eventBus.publish(new DocumentApprovedEvent(approvedPayload));
+        this.eventEmitter.emit(HrV2Events.DOCUMENT_APPROVED, approvedPayload);
         if (documentType === 'dalolatnoma' && employeeId) {
           await this.unblockAfterDalolatnoma(employeeId as number, approverId, stepData['document_id'] as number);
         }
@@ -127,13 +142,18 @@ export class DocumentWorkflowService {
         ? (docRes.data as Record<string, unknown>)
         : null;
 
-      this.eventEmitter.emit(HrV2Events.DOCUMENT_REJECTED, {
+      const rejectedPayload = {
         documentId:     docId,
         rejectionReason: reason,
         documentType:   doc?.['document_type'] as string | undefined,
         employeeId:     doc?.['employee_id']   as number | undefined,
         content:        doc?.['content']       as Record<string, unknown> | undefined,
-      });
+      };
+      // PA2-18 Wave 4 round-3: dual emit — CQRS bus for canonical
+      // @EventsHandler consumers, plus the legacy string topic for
+      // non-migrated listeners (telegram-bots.service, etc.).
+      this.eventBus.publish(new DocumentRejectedEvent(rejectedPayload));
+      this.eventEmitter.emit(HrV2Events.DOCUMENT_REJECTED, rejectedPayload);
       return stepData;
     });
   }
@@ -174,6 +194,9 @@ export class DocumentWorkflowService {
       const nextStep = await this.repo.findPendingStep(documentId);
       if (!nextStep.ok || !nextStep.data) {
         await this.repo.finalizeDocument(documentId);
+        // PA2-18 Wave 4 round-3: dual emit — CQRS bus for canonical
+        // @EventsHandler consumers, plus the legacy string topic.
+        this.eventBus.publish(new DocumentApprovedEvent({ documentId }));
         this.eventEmitter.emit(HrV2Events.DOCUMENT_APPROVED, { documentId });
       }
       return docData;

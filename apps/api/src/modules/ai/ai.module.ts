@@ -5,6 +5,7 @@
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '../auth/auth.module';
@@ -40,7 +41,12 @@ import { AiAutomationService }       from './services/ai-automation.service';
 import { AiAutomationRepository }   from './services/ai-automation.repository';
 import { AiDataRepository }         from './services/ai-data.repository';
 import { AiAutomationDailyService }  from './services/ai-automation-daily.service';
-import { AiAutomationEventsService } from './services/ai-automation-events.service';
+import {
+  AiAutomationEventsService,
+  AiLeadScoreHandler,
+  AiCandidateScreeningHandler,
+  AiInvoiceClassifyHandler,
+} from './services/ai-automation-events.service';
 import { AiHrController }            from './presentation/ai-hr.controller';
 import { AiCrmController }           from './presentation/ai-crm.controller';
 import { AiFinanceController }       from './presentation/ai-finance.controller';
@@ -66,6 +72,7 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
 @Module({
   imports: [
     ConfigModule,
+    CqrsModule,
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     AuthModule,
@@ -92,6 +99,10 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
     AiAutomationService,
     AiAutomationDailyService,
     AiAutomationEventsService,
+    // PA2-18 Wave 4 round-3: canonical @EventsHandler split
+    AiLeadScoreHandler,
+    AiCandidateScreeningHandler,
+    AiInvoiceClassifyHandler,
     DrizzleAiExamRepo,
     DrizzleAiHrNewRepo,
     DrizzleInsightsRepo,
