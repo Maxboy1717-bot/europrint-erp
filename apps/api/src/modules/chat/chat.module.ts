@@ -20,8 +20,8 @@ import { ChatAdminRepository } from './repositories/chat-admin.repository';
 import { ChatRoomRepository } from './repositories/chat-room.repository';
 import { ChatMessageRepository } from './repositories/chat-message.repository';
 import { PushNotificationRepository } from './repositories/push-notification.repository';
-import { ChatController, ChatUploadsController } from './chat.controller';
-import { ChatAdvancedController } from './chat-advanced.controller';
+import { ChatController, ChatUploadsController, ChatReactionsController } from './chat.controller';
+import { ChatAdvancedController, ChatAdvancedUploadsController } from './chat-advanced.controller';
 import { ChatExtController } from './chat-ext.controller';
 import { PushService } from './push.service';
 import { UploadService } from './upload.service';
@@ -39,7 +39,14 @@ import { TelegramBotsModule } from '../hr/telegram-bots/telegram-bots.module';
       }),
     }),
   ],
-  controllers: [ChatController, ChatUploadsController, ChatAdvancedController, ChatExtController],
+  controllers: [
+    ChatController,
+    ChatUploadsController,
+    ChatReactionsController,
+    ChatAdvancedController,
+    ChatAdvancedUploadsController,
+    ChatExtController,
+  ],
   providers: [
     ChatGateway, ChatGatewayHelperService,
     ChatService, ChatRoomService, ChatMessageService, ChatMessageExtService,

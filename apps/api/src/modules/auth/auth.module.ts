@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import type { SignOptions } from 'jsonwebtoken';
 
 import { DatabaseModule } from '@/infrastructure/database/database.module';
-import { AuthController } from './presentation/auth.controller';
+import { AuthController, AuthAccountController } from './presentation/auth.controller';
 import { MePermissionsController } from './presentation/me-permissions.controller';
 import { LoginService } from './application/services/login.service';
 import { LogoutService } from './application/services/logout.service';
@@ -46,7 +46,7 @@ export { AUTH_REPO } from './auth.tokens';
     }),
     DatabaseModule,
   ],
-  controllers: [AuthController, MePermissionsController],
+  controllers: [AuthController, AuthAccountController, MePermissionsController],
   providers: [
     LoginService,
     LogoutService,

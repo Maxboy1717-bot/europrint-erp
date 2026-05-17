@@ -50,7 +50,7 @@ import { FinanceAccountingController } from './presentation/finance-accounting.c
 import { FinancePayrollController } from './presentation/finance-payroll.controller';
 import { FinanceArController } from './presentation/finance-ar.controller';
 import { FinanceApController } from './presentation/finance-ap.controller';
-import { FinanceMainController } from './presentation/finance-main.controller';
+import { FinanceMainController, FinanceMainActionsController } from './presentation/finance-main.controller';
 import { FinanceCfoConfigController } from './presentation/finance-cfo-config.controller';
 import { FinanceAccountingService } from './application/finance-accounting.service';
 import { DrizzleFinanceAccountingRepo } from './infrastructure/repositories/drizzle-finance-accounting.repo';
@@ -76,7 +76,11 @@ import { PayrollService } from './payroll/payroll.service';
 import { FINANCE_EXTENDED_REPO } from './finance-extended/i-finance-extended.repo';
 import { DrizzleFinanceExtendedRepository } from './finance-extended/drizzle-finance-extended.repo';
 import { FinanceExtendedService } from './finance-extended/finance-extended.service';
-import { FinanceExtendedController } from './presentation/finance-extended.controller';
+import {
+  FinanceExtendedController,
+  FinanceExtendedIncomeController,
+  FinanceExtendedPayrollController,
+} from './presentation/finance-extended.controller';
 import { CASHFLOW_REPO } from './cashflow/i-cashflow.repo';
 import { DrizzleCashflowRepository } from './cashflow/drizzle-cashflow.repo';
 import { CashflowService } from './cashflow/cashflow.service';
@@ -142,9 +146,10 @@ const eventListeners = [
   controllers: [
     FinanceInvoicesController, FinancePaymentsController, FinanceGlController,
     FinanceAdvanceController, FinanceBudgetsController, FinanceAccountingController,
-    FinancePayrollController, FinanceArController, FinanceApController, FinanceMainController,
+    FinancePayrollController, FinanceArController, FinanceApController, FinanceMainController, FinanceMainActionsController,
     // New controllers
-    FinanceExtendedController, CashflowController, ReportsController,
+    FinanceExtendedController, FinanceExtendedIncomeController, FinanceExtendedPayrollController,
+    CashflowController, ReportsController,
     OrderCostingController, FiController, BudgetsStandaloneController,
     GlStandaloneController, PayrollPeriodsController, ReportsHubController,
     SalesOrdersStandaloneController, FinanceCfoConfigController,
