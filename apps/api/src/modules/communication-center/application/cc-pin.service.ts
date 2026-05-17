@@ -20,6 +20,8 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
+// SECURITY: PA-S5 — canonical bcrypt cost factor.
+import { BCRYPT_ROUNDS } from '@common/constants/security.constants';
 
 @Injectable()
 export class CcPinService {
@@ -32,7 +34,7 @@ export class CcPinService {
     if (!/^\d{4,8}$/.test(pin)) {
       throw new BadRequestException(await this.i18n.t('errors.pinLengthInvalid'));
     }
-    const pinHash = await bcrypt.hash(pin, 10);
+    const pinHash = await bcrypt.hash(pin, BCRYPT_ROUNDS);
     await runQuery(sql`
       INSERT INTO cc_user_pins (user_id, pin_hash, updated_at)
       VALUES (${userId}, ${pinHash}, NOW())

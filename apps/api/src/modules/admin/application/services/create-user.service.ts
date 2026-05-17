@@ -9,6 +9,8 @@
 import { AppErr, AppError, Err } from '@common/result';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+// SECURITY: PA-S5 — canonical bcrypt cost factor.
+import { BCRYPT_ROUNDS } from '@common/constants/security.constants';
 import { IUserRepo } from '../../domain/repositories/i-user.repo';
 import { USER_REPO } from '../../admin.tokens';
 import { UserAggregate, UserRole } from '../../domain/aggregates/user.aggregate';
@@ -49,7 +51,7 @@ export class CreateUserService {
   }
 
   private async buildUserAggregate(command: CreateUserCommand): Promise<UserAggregate> {
-    const passwordHash = await bcrypt.hash(command.password, 10);
+    const passwordHash = await bcrypt.hash(command.password, BCRYPT_ROUNDS);
     const user = UserAggregate.create(
       command.username,
       command.email,

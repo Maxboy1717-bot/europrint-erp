@@ -12,7 +12,7 @@
 --
 -- Bosqichlar:
 --   1. `org_departments.is_active` ustunini qo'shish (Drizzle schema'da bor, DB'da yo'q)
---   2. `employees`'dan `users`'ga sync (login uchun, password_hash = test123 bcrypt)
+--   2. `employees`'dan `users`'ga sync (password seeded via admin.seed.ts (PA-S2))
 --   3. `departments` → `org_departments` ko'chirish (head_user_id mapping bilan)
 --   4. `employees.department_id` → `employee_org_departments` (xodim-bo'lim biriktirish)
 --
@@ -27,7 +27,7 @@ UPDATE org_departments SET is_active = true WHERE is_active IS NULL;
 -- Har xodim uchun user yarataylik (agar mavjud bo'lmasa).
 -- password_hash: QULFLANGAN — hech kim bu hash bilan kira olmaydi.
 -- Admin panel orqali har bir foydalanuvchiga parol o'rnatilishi kerak.
--- XAVFSIZLIK: Eski 'test123' bcrypt hash ishlatilmaydi (CVE risk).
+-- SECURITY: PA-S2 — password seeded via admin.seed.ts; never via migration.
 
 INSERT INTO users (
   username, email, password_hash, first_name, last_name,

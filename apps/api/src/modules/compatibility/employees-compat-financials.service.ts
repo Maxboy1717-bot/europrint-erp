@@ -9,6 +9,8 @@ import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
 import { safeCall, Result, AppError } from '@common/result';
+// SECURITY: PA-S5 — canonical bcrypt cost factor.
+import { BCRYPT_ROUNDS } from '@common/constants/security.constants';
 
 type Row = Record<string, unknown>;
 const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
@@ -217,7 +219,7 @@ export class EmployeesCompatFinancialsService {
       if (!row || !row.user_id) {
         throw new NotFoundException(`Xodim topilmadi yoki foydalanuvchi bog'liq emas: ${id}`);
       }
-      const passwordHash = await bcrypt.hash(password, 10);
+      const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
       await rawSql(sql`UPDATE users SET password_hash = ${passwordHash}, updated_at = NOW() WHERE id = ${si(row.user_id)}`);
       return { success: true };
     });
