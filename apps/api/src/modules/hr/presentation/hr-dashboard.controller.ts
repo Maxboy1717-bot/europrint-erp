@@ -155,10 +155,9 @@ export class HrDashboardController {
     return { items: [], total: 0 };
   }
 
-  @Get('onboarding-checklists')
-  getOnboardingChecklists() {
-    return { items: [], total: 0 };
-  }
+  // `GET hr/onboarding-checklists` is implemented by
+  // `OnboardingChecklistsController` (apps/api/src/modules/hr/onboarding-checklists/).
+  // The previous stub here shadowed the real handler. Removed in Phase 4 Task 4.5.
 
   @Get('fp-cycle')
   getFpCycle() {
