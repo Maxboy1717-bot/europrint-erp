@@ -152,3 +152,21 @@ export const ABC_SCORE_WEIGHT = {
   margin:     0.15,
   longevity:  0.05,
 } as const;
+
+// ---------------------------------------------------------------------------
+// Multi-tenancy (see docs/multi-tenancy-decision.md, ADR-006)
+// ---------------------------------------------------------------------------
+
+/**
+ * Sentinel tenant id used by `tenant.middleware.ts` when the inbound JWT has
+ * no `tenant_id` claim — i.e., the single-org install today. Once the SaaS
+ * launch issues per-tenant JWTs (rollout phase P4), this default should
+ * become reachable only for unauthenticated public endpoints, and a warning
+ * log fires when the middleware falls back to it.
+ *
+ * Distinct from `shared/db/tenant-context.ts`'s integer `DEFAULT_TENANT_ID = 1`
+ * (legacy HR module). The UUID form here is the canonical SaaS-future
+ * identifier; the integer form is retained for HR backward compatibility
+ * until rollout phase P3 unifies the two systems.
+ */
+export const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001';
