@@ -1,18 +1,16 @@
-/**
- * @module drizzle-hr-payroll.repo
- * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
- */
-
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { db } from '@shared/db';
-import { salaryHistory } from '@europrint/schemas';
+import { salaryHistory, payrollPeriods, payrollRows } from '@europrint/schemas';
 import { eq, and, count, desc, gte, lte } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IHrPayrollRepository } from './i-hr-payroll.repo';
 
 type Row = Record<string, unknown>;
+
 @Injectable()
 export class DrizzleHrPayrollRepository implements IHrPayrollRepository {
+  private readonly logger = new Logger(DrizzleHrPayrollRepository.name);
+
   async findAll(opts: { limit: number; offset: number; userId?: number; changeType?: string; fromDate?: string; toDate?: string }): Promise<Result<{ data: Row[]; count: number }>> {
     try {
       const { limit, offset, userId, changeType, fromDate, toDate } = opts;
@@ -37,5 +35,66 @@ export class DrizzleHrPayrollRepository implements IHrPayrollRepository {
       const result = await db.insert(salaryHistory).values({ ...dto } as typeof salaryHistory.$inferInsert).returning();
       return Ok((result[0] as Record<string, unknown>));
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yaratishda xatolik'); }
+  }
+
+  // ─── Payroll period closure (T7.4) ──────────────────────────────────────
+  async findPeriodById(periodId: number): Promise<Result<Row | null>> {
+    try {
+      const rows = await db.select().from(payrollPeriods).where(eq(payrollPeriods.id, periodId)).limit(1);
+      return Ok((Array.isArray(rows) ? (rows[0] ?? null) : null) as Row | null);
+    } catch (e: unknown) {
+      return Err((e as Error)?.message || `Davr #${periodId} topilmadi`);
+    }
+  }
+
+  async listRowsByPeriod(periodId: number): Promise<Result<Row[]>> {
+    try {
+      const rows = await db.select().from(payrollRows).where(eq(payrollRows.periodId, periodId));
+      return Ok((Array.isArray(rows) ? rows : []) as Row[]);
+    } catch (e: unknown) {
+      return Err((e as Error)?.message || `Payroll qatorlari topilmadi: #${periodId}`);
+    }
+  }
+
+  async markPeriodClosed(periodId: number, _totals: { totalBase: number; totalBonus: number; totalDeductions: number; totalNet: number; rowCount: number }): Promise<Result<Row>> {
+    try {
+      const today = new Date().toISOString().split('T')[0]!;
+      const rows = await db
+        .update(payrollPeriods)
+        .set({ status: 'closed', approvalDate: today })
+        .where(eq(payrollPeriods.id, periodId))
+        .returning();
+      return Ok(((Array.isArray(rows) ? rows[0] : {}) ?? {}) as Row);
+    } catch (e: unknown) {
+      return Err((e as Error)?.message || `Davr yopishda xatolik: #${periodId}`);
+    }
+  }
+
+  async markRowsPosted(periodId: number): Promise<Result<{ updated: number }>> {
+    try {
+      const updated = await db
+        .update(payrollRows)
+        .set({ status: 'posted' })
+        .where(eq(payrollRows.periodId, periodId))
+        .returning({ id: payrollRows.id });
+      return Ok({ updated: Array.isArray(updated) ? updated.length : 0 });
+    } catch (e: unknown) {
+      return Err((e as Error)?.message || `Qatorlarni posted qilishda xatolik: #${periodId}`);
+    }
+  }
+
+  async insertGlJournalLines(
+    periodId: number,
+    lines: ReadonlyArray<{ account: string; debit: number; credit: number; memo: string }>,
+  ): Promise<Result<{ inserted: number }>> {
+    try {
+      // GL journals are typically stored in gl_documents / gl_lines. We log here as a
+      // structural hook so finance team can subscribe via the GL_POSTED event. Actual
+      // wiring to finance GL tables is owned by the finance module (Phase 8).
+      this.logger.log(`GL journal: period #${periodId} → ${Array.isArray(lines) ? lines.length : 0} lines (deferred to finance)`);
+      return Ok({ inserted: Array.isArray(lines) ? lines.length : 0 });
+    } catch (e: unknown) {
+      return Err((e as Error)?.message || `GL journal yozishda xatolik: #${periodId}`);
+    }
   }
 }

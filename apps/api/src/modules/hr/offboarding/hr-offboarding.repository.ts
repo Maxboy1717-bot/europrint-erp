@@ -1,20 +1,77 @@
-/**
- * @module hr-offboarding.repository
- * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
- */
-
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
-import { db , runQuery } from '@shared/db';
+import { db } from '@shared/db';
 import { offboarding_cases, offboarding_checklist_items } from '@shared/db';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
+import type { OffboardingChecklistItem } from './offboarding-workflow.service';
 
 type Row = Record<string, unknown>;
 
 @Injectable()
 export class HrOffboardingRepository {
+  async createCase(input: {
+    employeeId: number;
+    dismissalType?: string;
+    lastWorkingDay?: string;
+    totalItems: number;
+  }): Promise<Result<Row>> {
+    try {
+      const rows = await db
+        .insert(offboarding_cases)
+        .values({
+          employee_id:       input.employeeId,
+          dismissal_type:    input.dismissalType ?? null,
+          last_working_day:  input.lastWorkingDay ?? null,
+          status:            'active',
+          total_items:       input.totalItems,
+          completed_items:   0,
+        })
+        .returning();
+      if (!Array.isArray(rows) || !rows[0]) return Err('CASE_CREATE_FAILED');
+      return Ok(rows[0] as Row);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  async insertChecklistItems(
+    caseId: number,
+    items: ReadonlyArray<OffboardingChecklistItem>,
+  ): Promise<Result<Row[]>> {
+    try {
+      if (!Array.isArray(items) || items.length === 0) return Ok([] as Row[]);
+      const values = items.map((it) => ({
+        case_id:   caseId,
+        item_key:  it.item_key,
+        label:     it.label,
+        done:      false,
+        order_num: it.order_num,
+      }));
+      const rows = await db
+        .insert(offboarding_checklist_items)
+        .values(values)
+        .returning();
+      return Ok((Array.isArray(rows) ? rows : []) as Row[]);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  async listChecklistItems(caseId: number): Promise<Result<Row[]>> {
+    try {
+      const rows = await db
+        .select()
+        .from(offboarding_checklist_items)
+        .where(eq(offboarding_checklist_items.case_id, caseId))
+        .orderBy(offboarding_checklist_items.order_num);
+      return Ok((Array.isArray(rows) ? rows : []) as Row[]);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
   async updateChecklistItem(caseId: number, itemId: number, done: boolean): Promise<Result<Row>> {
     try {
       const rows = await db
@@ -26,6 +83,37 @@ export class HrOffboardingRepository {
             eq(offboarding_checklist_items.case_id, caseId),
           ),
         )
+        .returning();
+      if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
+
+      // Recompute completed_items count and persist on the case row.
+      const doneRows = await db
+        .select({ id: offboarding_checklist_items.id })
+        .from(offboarding_checklist_items)
+        .where(
+          and(
+            eq(offboarding_checklist_items.case_id, caseId),
+            eq(offboarding_checklist_items.done, true),
+          ),
+        );
+      const completed = Array.isArray(doneRows) ? doneRows.length : 0;
+      await db
+        .update(offboarding_cases)
+        .set({ completed_items: completed, updated_at: _time.now() })
+        .where(eq(offboarding_cases.id, caseId));
+
+      return Ok((rows[0] ?? {}) as Row);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  async updateStatus(caseId: number, status: string): Promise<Result<Row>> {
+    try {
+      const rows = await db
+        .update(offboarding_cases)
+        .set({ status, updated_at: _time.now() })
+        .where(eq(offboarding_cases.id, caseId))
         .returning();
       if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
       return Ok((rows[0] ?? {}) as Row);
@@ -64,125 +152,52 @@ export class HrOffboardingRepository {
 
   async findCaseById(id: number): Promise<Result<Row | null>> {
     try {
-      const rows = await runQuery<Row>(sql`
-        SELECT oc.*,
-               e.first_name,
-               e.last_name,
-               e.employee_code,
-               d.name AS department_name
-        FROM offboarding_cases oc
-        LEFT JOIN employees e ON e.id = oc.employee_id
-        LEFT JOIN departments d ON d.id = e.department_id
-        WHERE oc.id = ${id}
-        LIMIT 1
-      `);
-      const r0 = rows.rows[0] ?? null;
-      if (!r0) return Ok(null);
-
-      // Attach checklist items.
-      const items = await db
+      const rows = await db
         .select()
-        .from(offboarding_checklist_items)
-        .where(eq(offboarding_checklist_items.case_id, id))
-        .orderBy(offboarding_checklist_items.order_num);
-      return Ok({ ...(r0 as Row), checklist_items: Array.isArray(items) ? items : [] });
+        .from(offboarding_cases)
+        .where(eq(offboarding_cases.id, id))
+        .limit(1);
+      if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
+      return Ok((rows[0] ?? null) as Row | null);
     } catch (e) {
       return Err(String(e));
     }
   }
 
-  /**
-   * Filtered case list. Supports:
-   *   - status: empty string / 'all' / specific status
-   *   - search: substring on first/last name / employee_code
-   */
-  async findCases(filters: { status?: string; search?: string; limit?: number }): Promise<Result<Row[]>> {
+  async listCases(filters: { status?: string; employeeId?: number } = {}): Promise<Result<Row[]>> {
     try {
-      const status = (filters.status ?? '').trim();
-      const search = (filters.search ?? '').trim();
-      const limit = Math.min(Math.max(filters.limit ?? 100, 1), 500);
-
-      const statusFilter = status && status !== 'all'
-        ? sql`AND oc.status = ${status}`
-        : sql``;
-      const searchFilter = search
-        ? sql`AND (
-            e.first_name ILIKE ${'%' + search + '%'} OR
-            e.last_name  ILIKE ${'%' + search + '%'} OR
-            e.employee_code ILIKE ${'%' + search + '%'}
-          )`
-        : sql``;
-
-      const rows = await runQuery<Row>(sql`
-        SELECT oc.id,
-               oc.employee_id,
-               oc.dismissal_type,
-               oc.last_working_day,
-               oc.status,
-               oc.completed_items,
-               oc.total_items,
-               oc.created_at,
-               oc.updated_at,
-               e.first_name,
-               e.last_name,
-               e.employee_code,
-               d.name AS department_name
-        FROM offboarding_cases oc
-        LEFT JOIN employees e ON e.id = oc.employee_id
-        LEFT JOIN departments d ON d.id = e.department_id
-        WHERE 1=1
-        ${statusFilter}
-        ${searchFilter}
-        ORDER BY oc.created_at DESC
-        LIMIT ${limit}
-      `);
-      return Ok(rows.rows as Row[]);
+      const conditions = [];
+      if (filters.status)     conditions.push(eq(offboarding_cases.status, filters.status));
+      if (filters.employeeId) conditions.push(eq(offboarding_cases.employee_id, filters.employeeId));
+      const wh = conditions.length > 0 ? and(...conditions) : undefined;
+      const rows = wh
+        ? await db.select().from(offboarding_cases).where(wh).orderBy(desc(offboarding_cases.created_at))
+        : await db.select().from(offboarding_cases).orderBy(desc(offboarding_cases.created_at));
+      return Ok((Array.isArray(rows) ? rows : []) as Row[]);
     } catch (e) {
       return Err(String(e));
     }
   }
 
-  /** Counts per status for the offboarding-stats card. */
-  async getCaseStats(): Promise<Result<Row>> {
-    try {
-      const rows = await runQuery<Row>(sql`
-        SELECT
-          COUNT(*) FILTER (WHERE status = 'active')           AS active,
-          COUNT(*) FILTER (WHERE status = 'exit_interviewed') AS exit_interviewed,
-          COUNT(*) FILTER (WHERE status = 'completed')        AS completed,
-          COUNT(*) FILTER (WHERE status = 'cancelled')        AS cancelled,
-          COUNT(*)                                            AS total
-        FROM offboarding_cases
-      `);
-      return Ok((rows.rows[0] ?? {}) as Row);
-    } catch (e) {
-      return Err(String(e));
-    }
-  }
-
-  async createCase(dto: {
-    employeeId: number;
-    initiatedBy?: number;
-    dismissalType?: string;
-    lastWorkingDay?: string;
-    totalItems?: number;
-  }): Promise<Result<Row>> {
+  async stats(): Promise<Result<{ active: number; completed: number; cancelled: number }>> {
     try {
       const rows = await db
-        .insert(offboarding_cases)
-        .values({
-          employee_id: dto.employeeId,
-          dismissal_type: dto.dismissalType ?? 'resignation',
-          last_working_day: dto.lastWorkingDay,
-          status: 'active',
-          total_items: dto.totalItems ?? 8,
-          completed_items: 0,
-          created_at: _time.now(),
-          updated_at: _time.now(),
+        .select({
+          status: offboarding_cases.status,
+          count:  sql<number>`COUNT(*)::int`,
         })
-        .returning();
-      if (!Array.isArray(rows) || rows.length === 0) return Err('CREATE_FAILED');
-      return Ok(rows[0] as Row);
+        .from(offboarding_cases)
+        .groupBy(offboarding_cases.status);
+      const out = { active: 0, completed: 0, cancelled: 0 };
+      const arr = Array.isArray(rows) ? rows : [];
+      for (const r of arr) {
+        const status = String(r['status'] ?? '');
+        const count  = Number(r['count'] ?? 0);
+        if (status === 'active' || status === 'exit_interviewed') out.active += count;
+        else if (status === 'completed') out.completed += count;
+        else if (status === 'cancelled') out.cancelled += count;
+      }
+      return Ok(out);
     } catch (e) {
       return Err(String(e));
     }

@@ -13,6 +13,11 @@ export interface IHrLeaveSvcRepository {
   create(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   approve(id: number): Promise<Result<Record<string, unknown>>>;
   reject(id: number): Promise<Result<Record<string, unknown>>>;
+
+  // ─── Leave balance accrual (T7.5) ──────────────────────────────────────
+  listActiveEmployeesWithHireDate(): Promise<Result<Array<{ id: number; hireDate: string | null }>>>;
+  findBalance(employeeId: number, leaveType: string, year: number): Promise<Result<Row | null>>;
+  upsertBalance(input: { employeeId: number; leaveType: string; year: number; total_days: number; used_days: number; remaining_days: number }): Promise<Result<Row>>;
 }
 
 export const HR_LEAVE_SVC_REPO = 'IHrLeaveSvcRepository';
