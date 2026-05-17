@@ -36,6 +36,13 @@ const EVENT_NAME_MAP: Record<string, string> = {
   MesToHr360Event: ERP_EVENTS.MES_TO_HR_360,
   StockUpdatedEvent: ERP_EVENTS.STOCK_UPDATED,
   AdvanceApprovedEvent: ERP_EVENTS.ADVANCE_APPROVED,
+  // Wave 4 (pilot) additions — keep legacy string-topic consumers alive
+  // while the notifications module migrates to @EventsHandler(EventClass).
+  // Remove these entries in the final retirement commit once every consumer
+  // listens on the event class directly.
+  OrderCreatedEvent: ERP_EVENTS.ORDER_CREATED,
+  QcFailedEvent: ERP_EVENTS.QC_FAILED,
+  CertificateExpiredEvent: ERP_EVENTS.LMS_CERT_EXPIRED,
 };
 
 @Injectable()
