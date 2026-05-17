@@ -30,9 +30,11 @@ import {
   FileText,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "wouter";
 import { useTranslation } from "@/lib/i18n";
 import { EPErrorState } from "@/components/ep";
+import { MobileAccordionTree } from "@/components/hr/org/MobileAccordionTree";
 
 interface OrgChartNode {
   id: string;
@@ -149,6 +151,10 @@ export default function OrgChartPage() {
   const [, navigate] = useLocation();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState<"" | "pdf" | "excel">("");
+  // Phase 2 / Task 2.3 — desktop tree below 768px is unusable (horizontal
+  // scroll, sub-44px hit targets). The mobile branch renders a touch-friendly
+  // Radix accordion that drills in vertically instead of indenting rightward.
+  const isMobile = useIsMobile();
 
   const { data, isLoading, isError, error, refetch} = useQuery<OrgChartData>({
     queryKey: ["/api/org-chart/tree"],
@@ -356,6 +362,10 @@ export default function OrgChartPage() {
               <p className="text-muted-foreground">
                 {t("tashkiliyTuzilmaMavjudEmas")}
               </p>
+            </div>
+          ) : isMobile ? (
+            <div data-testid="org-tree-mobile">
+              <MobileAccordionTree nodes={Array.isArray(tree) ? tree : []} />
             </div>
           ) : (
             <div data-testid="org-tree">
