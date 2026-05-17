@@ -73,6 +73,7 @@ import { OnboardingJobService } from './onboarding/onboarding-job.service';
 import { RecruitmentController } from './recruitment/recruitment.controller';
 import { RecruitmentService } from './recruitment/recruitment.service';
 import { RecruitmentFunnelService } from './recruitment/recruitment-funnel.service';
+import { RecruitmentGateway } from './recruitment/recruitment.gateway';
 import { RecruitmentAssessmentService } from './recruitment/recruitment-assessment.service';
 import { DrizzleRecruitmentAssessmentRepository } from './recruitment/repos/drizzle-recruitment-assessment.repo';
 import { RecruitmentStatsService } from './recruitment/recruitment-stats.service';
@@ -197,6 +198,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     OnboardingJobService,
     RecruitmentService,
     RecruitmentFunnelService,
+    RecruitmentGateway,
     RecruitmentAssessmentService,
     DrizzleRecruitmentAssessmentRepository,
     RecruitmentStatsRepository,

@@ -27,6 +27,7 @@ import { KanbanBoardGrid } from "@/components/recruiting/KanbanBoardGrid";
 import { RecruitingHeaderActions } from "@/components/recruiting/RecruitingHeaderActions";
 import { VacancyFilterPanel } from "@/components/recruiting/VacancyFilterPanel";
 import { useKanbanDragDrop } from "@/hooks/use-kanban-dnd";
+import { useKanbanRealtime } from "@/hooks/use-kanban-realtime";
 
 export default function RecruitingKanban() {
   const { toast } = useToast();
@@ -174,6 +175,8 @@ export default function RecruitingKanban() {
 
   // T5.1 drag-drop with @dnd-kit (optimistic mutation + rollback inside hook)
   const dnd = useKanbanDragDrop(filtered);
+  // T5.2 real-time WS sync — invalidate the cache on `candidate:moved`
+  useKanbanRealtime();
 
   const byStage = (stage: FunnelStage) => (Array.isArray(filtered) ? filtered : []).filter(e => e.funnel_stage === stage);
   const counts = STAGES.reduce((acc, s) => { acc[s.key] = (Array.isArray(entries) ? entries : []).filter(e => e.funnel_stage === s.key).length; return acc; }, {} as Record<FunnelStage, number>);
