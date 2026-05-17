@@ -35,7 +35,6 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/export',                    Stub],
   ['/gl',                        Stub],
   ['/gpt',                       Stub],
-  ['/hr/leave',                  Stub],
   ['/hr/zno',                    Stub],
   ['/hr/zvs',                    Stub],
   ['/insights',                  Stub],
