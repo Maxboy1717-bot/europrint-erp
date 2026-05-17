@@ -1,0 +1,38 @@
+{
+  "warehouse": {
+    "minimumStockAlert": "\n⚠️ <b>Предупреждение о минимальном запасе</b>\n\n📦 <b>Материал:</b> {materialName}\n🔖 <b>Код:</b> {materialCode}\n📊 <b>Текущий:</b> {currentQty} шт\n📉 <b>Минимум:</b> {minimumQty} шт\n\nСрочно оформите заказ!\n        ",
+    "afternoonStockCheck": "\n📋 <b>Вечерняя проверка запасов</b>\n\nПроверьте состояние запасов на конец дня:\n- Поступившие материалы\n- Выданные материалы\n- Физическая инвентаризация (при необходимости)\n\nПортал: {portalUrl}\n      ",
+    "rentalExpiryReminder": "\n⏰ <b>Срок аренды истекает!</b>\n\n📏 <b>Площадь:</b> {areaM2} м²\n💵 <b>Дневной тариф:</b> {dailyRate} USD/м²\n⏳ <b>Осталось дней:</b> {daysRemaining}\n\nПримите решение о продлении или отмене!\n      "
+  },
+  "hr": {
+    "attendanceMissing": "\n❌ <b>Сотрудник не вышел</b>\n\n👤 <b>Имя:</b> {employeeName}\n🆔 <b>ID:</b> <code>{employeeId}</code>\n📅 <b>Сегодня:</b> {today}\n\nНеобходимо срочно связаться.\n      ",
+    "leaveApproved": "\n✅ <b>Отпуск одобрен!</b>\n\n📅 <b>Начало:</b> {startDate}\n📅 <b>Окончание:</b> {endDate}\n📊 <b>Дней:</b> {days}\n\nХорошего отдыха!\n      ",
+    "birthday": "\n🎉 <b>С Днём Рождения!</b>\n\n🎂 Сегодня день рождения {employeeName}!\n\nЖелаем долгих лет, счастья и продуктивности!\n      ",
+    "salaryReminder": "\n💰 <b>Напоминание о выплате зарплаты</b>\n\n👥 <b>Сотрудников:</b> {totalEmployees}\n📅 <b>Срок выплаты:</b> 28-е число (сегодня: 28)\n\nПроверьте расчёт зарплаты и подтвердите выплату.\nHR Портал: {portalUrl}\n      "
+  },
+  "crm": {
+    "leadCreated": "\n✅ <b>Создан новый лид</b>\n\n👤 <b>Имя:</b> {name}\n🏢 <b>Компания:</b> {company}\n📱 <b>Телефон:</b> {phone}\n\nID: <code>{id}</code>\n      ",
+    "dealWon": "\n🎉 <b>Сделка выиграна!</b>\n\n📋 <b>Сделка:</b> {title}\n💵 <b>Сумма:</b> {amount} {currency}\n👤 <b>Ответственный:</b> {assignee}\n\nCRM Статус: <b>{stage}</b>\n      "
+  },
+  "kanban": {
+    "taskAssigned": "\n{emoji} <b>Назначена задача!</b>\n\n📝 <b>Задача:</b> {title}\n👤 <b>Ответственный:</b> {assigneeName}\n📅 <b>Срок:</b> {dueDate}\n🎯 <b>Приоритет:</b> {priority}\n\nID: <code>{id}</code>\n      ",
+    "taskDueSoon": "\n⏰ <b>Срок задачи приближается!</b>\n\n📝 <b>Задача:</b> {title}\n📅 <b>Срок:</b> {dueDate}\n⏳ <b>Осталось:</b> {daysUntilDue} дн.\n\nСрочно начните завершение!\n      "
+  },
+  "aiReports": {
+    "dailyAiReport": "\n🤖 <b>Ежедневная AI аналитика</b> - {date}\n\n📈 <b>Прогноз продаж:</b> {salesForecast} USD\n📊 <b>Спрос:</b> {demandPrediction}\n\n⚠️ <b>Предупреждения о рисках:</b>\n{risksText}\n\n💡 <b>Рекомендации:</b>\n{recsText}\n\nПодробнее: {reportsUrl}\n      "
+  },
+  "lms": {
+    "courseCompleted": "\n🎓 <b>Курс завершён!</b>\n\n📚 <b>Название курса:</b> {courseName}\n✅ <b>Статус:</b> Успешно завершён\n\nДля получения сертификата перейдите на портал.\n      ",
+    "certificateIssued": "\n🏆 <b>Сертификат выдан!</b>\n\n📚 <b>Курс:</b> {courseName}\n📅 <b>Срок действия:</b> {expiryDate}\n⏰ <b>Осталось дней:</b> {daysRemaining}\n\nСкачайте сертификат: {portalUrl}\n      ",
+    "certificateExpiringSoon": "\n⏰ <b>Срок действия сертификата истекает!</b>\n\n📚 <b>Курс:</b> {courseName}\n📅 <b>Окончание:</b> {expiryDate}\n⚠️ <b>Осталось:</b> {daysRemaining} дн.\n\nСрочно зарегистрируйтесь на продление!\n      "
+  },
+  "service": {
+    "directorDailyReport": "\n📊 <b>Ежедневный отчёт директора</b> - {date}\n\n💰 <b>Продажи:</b> {salesAmount} USD\n🎯 <b>Сделок:</b> {dealsCount}\n👥 <b>Новых лидов:</b> {newLeads}\n\n🏭 <b>Производство:</b> {productionUnits} ед. смартфонов\n⭐ <b>Оценка качества:</b> {qualityScore}%\n👤 <b>Посещаемость:</b> {attendanceRate}\n\nПодробнее: {dashboardUrl}\n    "
+  },
+  "production": {
+    "morningShiftHandover": "\n📋 <b>Напоминание о передаче смены</b> - 14:00\n\nЗафиксируйте смену:\n✓ Количество произведённых смартфонов\n✓ Ошибки и неисправности\n✓ Состояние запасов материалов\n✓ Происшествия по охране труда\n\nПередайте подробности следующему смен-лидеру!\n      ",
+    "eveningShiftHandover": "\n📋 <b>Напоминание о передаче смены</b> - 22:00\n\nЗафиксируйте ночную смену:\n✓ Общий объём производства за день\n✓ Результаты контроля качества\n✓ Аварийные ситуации\n✓ Советы и предложения\n\nНачните подготовку к следующему дню!\n      ",
+    "mesEquipmentFailure": "\n🚨 <b>Авария MES!</b>\n\n⚙️ <b>Оборудование:</b> {equipmentName}\n🔴 <b>Код ошибки:</b> {errorCode}\n⏱️ <b>Время простоя:</b> {downtimeMinutes} мин\n\nСрочно отремонтируйте!\n      ",
+    "qcResultsReady": "\n✅ <b>Результат QC готов</b>\n\n📦 <b>Batch ID:</b> {batchId}\n📊 <b>Всего:</b> {totalUnits} шт\n❌ <b>Дефектных:</b> {defectiveUnits} шт\n✔️ <b>Прошли %:</b> {passRate}%\n\nПодробный отчёт QC проверьте на портале.\n      "
+  }
+}

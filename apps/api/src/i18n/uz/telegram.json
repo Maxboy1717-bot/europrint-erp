@@ -1,0 +1,38 @@
+{
+  "warehouse": {
+    "minimumStockAlert": "\n⚠️ <b>Minimal Zaxira Ogohlantirmasi</b>\n\n📦 <b>Material:</b> {materialName}\n🔖 <b>Kod:</b> {materialCode}\n📊 <b>Hozirgi:</b> {currentQty} ta\n📉 <b>Minimal:</b> {minimumQty} ta\n\nTezda buyurtma qiling!\n        ",
+    "afternoonStockCheck": "\n📋 <b>Kechki Zaxira Tekshiruvi</b>\n\nKunning oxiridagi zaxira holatini tekshiring:\n- Kelgan material'lar\n- Chiqarilgan material'lar\n- Fizik inventori qidiruvi (agar zarur)\n\nPortal: {portalUrl}\n      ",
+    "rentalExpiryReminder": "\n⏰ <b>Ijara Muddati Tugaymoqda!</b>\n\n📏 <b>Maydoni:</b> {areaM2} m²\n💵 <b>Kunlik Tarif:</b> {dailyRate} USD/m²\n⏳ <b>Qolgan Kun:</b> {daysRemaining} kun\n\nYangilash yoki bekor qilish bo'yicha qaror qabul qiling!\n      "
+  },
+  "hr": {
+    "attendanceMissing": "\n❌ <b>Xodim Kelmadi</b>\n\n👤 <b>Ism:</b> {employeeName}\n🆔 <b>ID:</b> <code>{employeeId}</code>\n📅 <b>Bugun:</b> {today}\n\nTezda bog'lanib olish kerak.\n      ",
+    "leaveApproved": "\n✅ <b>Ta'til Tasdiqlandi!</b>\n\n📅 <b>Boshlanishi:</b> {startDate}\n📅 <b>Tugatilishi:</b> {endDate}\n📊 <b>Kunlar:</b> {days} kun\n\nSafrdan lazzat oling!\n      ",
+    "birthday": "\n🎉 <b>Tug'ilgan Kun Tabriklaymiz!</b>\n\n🎂 Siz bugun {employeeName} ning tug'ilgan kuniga yetdingiz!\n\nKo'p yoshli, baxt va samarali bo'ling!\n      ",
+    "salaryReminder": "\n💰 <b>Maosh To'lash Eslatmasi</b>\n\n👥 <b>Xodimlar Soni:</b> {totalEmployees} ta\n📅 <b>To'lash Muddati:</b> 28-kun (bugun: 28)\n\nMaosh hisob-kitobini tekshiring va to'lovni tasdiqlang.\nHR Portal: {portalUrl}\n      "
+  },
+  "crm": {
+    "leadCreated": "\n✅ <b>Yangi Lid Yaratildi</b>\n\n👤 <b>Ism:</b> {name}\n🏢 <b>Kompaniya:</b> {company}\n📱 <b>Telefon:</b> {phone}\n\nID: <code>{id}</code>\n      ",
+    "dealWon": "\n🎉 <b>Deal Yutildi!</b>\n\n📋 <b>Deal:</b> {title}\n💵 <b>Summa:</b> {amount} {currency}\n👤 <b>Mas'ul:</b> {assignee}\n\nCRM Status: <b>{stage}</b>\n      "
+  },
+  "kanban": {
+    "taskAssigned": "\n{emoji} <b>Vazifa Tayinlandi!</b>\n\n📝 <b>Vazifa:</b> {title}\n👤 <b>Mas'ul:</b> {assigneeName}\n📅 <b>Muddati:</b> {dueDate}\n🎯 <b>Prioritet:</b> {priority}\n\nID: <code>{id}</code>\n      ",
+    "taskDueSoon": "\n⏰ <b>Vazifa Muddati Yaqinlashdi!</b>\n\n📝 <b>Vazifa:</b> {title}\n📅 <b>Muddati:</b> {dueDate}\n⏳ <b>Qolgan:</b> {daysUntilDue} kun\n\nTezda tugatishni boshlang!\n      "
+  },
+  "aiReports": {
+    "dailyAiReport": "\n🤖 <b>Kunlik AI Tahlili</b> - {date}\n\n📈 <b>Sotuvlar Prognozi:</b> {salesForecast} USD\n📊 <b>Talab:</b> {demandPrediction}\n\n⚠️ <b>Risk Ogohlantirmalari:</b>\n{risksText}\n\n💡 <b>Tavsiyalar:</b>\n{recsText}\n\nBatafsil: {reportsUrl}\n      "
+  },
+  "lms": {
+    "courseCompleted": "\n🎓 <b>Kurs Yakunlandi!</b>\n\n📚 <b>Kurs Nomi:</b> {courseName}\n✅ <b>Status:</b> Muvaffaqiyatli tugallandi\n\nSertifikat olish uchun portal'ga o'ting.\n      ",
+    "certificateIssued": "\n🏆 <b>Sertifikat Berildi!</b>\n\n📚 <b>Kurs:</b> {courseName}\n📅 <b>Muddati Tugaydi:</b> {expiryDate}\n⏰ <b>Qolgan Kun:</b> {daysRemaining} kun\n\nSertifikatni yuklab oling: {portalUrl}\n      ",
+    "certificateExpiringSoon": "\n⏰ <b>Sertifikat Muddati Yakunlanmoqda!</b>\n\n📚 <b>Kurs:</b> {courseName}\n📅 <b>Tugashi:</b> {expiryDate}\n⚠️ <b>Qolgan:</b> {daysRemaining} kun\n\nYangilash uchun tezda ro'yxatdan o'ting!\n      "
+  },
+  "service": {
+    "directorDailyReport": "\n📊 <b>Kunlik Direktor Hisoboti</b> - {date}\n\n💰 <b>Sotuvlar:</b> {salesAmount} USD\n🎯 <b>Deal'lar:</b> {dealsCount} ta\n👥 <b>Yangi Lid'lar:</b> {newLeads} ta\n\n🏭 <b>Ishlab Chiqarish:</b> {productionUnits} ta smartfon\n⭐ <b>Sifat Natijasi:</b> {qualityScore}%\n👤 <b>Davomat:</b> {attendanceRate}\n\nBatafsil: {dashboardUrl}\n    "
+  },
+  "production": {
+    "morningShiftHandover": "\n📋 <b>Smena Topshirish Eslatmasi</b> - 14:00\n\nShift'ni qayd qiling:\n✓ Ishlab chiqarilgan smartfonlar soni\n✓ Xato va nosozliklari\n✓ Zaxira material'lar holati\n✓ Ishchi-xavfsizlik hodisalari\n\nKeyingi shift boshligiga batafsil o'tqazib chiqing!\n      ",
+    "eveningShiftHandover": "\n📋 <b>Smena Topshirish Eslatmasi</b> - 22:00\n\nTungi shift'ni qayd qiling:\n✓ Kunning jami ishlab chiqarish\n✓ Sifat tekshiruv natijalari\n✓ Avariyligi hodisalari\n✓ Maslahatlari va takliflar\n\nKeyingi kun uchun tayyorlanishni boshlang!\n      ",
+    "mesEquipmentFailure": "\n🚨 <b>MES Avariyligi!</b>\n\n⚙️ <b>Qurilma:</b> {equipmentName}\n🔴 <b>Xato Kodi:</b> {errorCode}\n⏱️ <b>To'xtash Vaqti:</b> {downtimeMinutes} minut\n\nTezda ta'mir qiling!\n      ",
+    "qcResultsReady": "\n✅ <b>QC Natija Tayyor</b>\n\n📦 <b>Batch ID:</b> {batchId}\n📊 <b>Jami:</b> {totalUnits} ta\n❌ <b>Xatoli:</b> {defectiveUnits} ta\n✔️ <b>O'tgan %:</b> {passRate}%\n\nBatafsil QC hisobotini portal'da tekshiring.\n      "
+  }
+}

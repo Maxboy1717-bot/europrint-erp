@@ -5,6 +5,7 @@
 
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
+import { I18nService } from 'nestjs-i18n'
 import { TelegramService } from '../telegram.service'
 
 interface StockAlert {
@@ -26,7 +27,10 @@ interface RentalExpiry {
 export class WarehouseHandler {
   private readonly logger = new Logger(WarehouseHandler.name)
 
-  constructor(private telegramService: TelegramService) {}
+  constructor(
+    private telegramService: TelegramService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Cron('0 8 * * *')
   async sendMinimumStockAlert(): Promise<void> {
@@ -36,16 +40,14 @@ export class WarehouseHandler {
       const alerts: StockAlert[] = []
 
       for (const alert of alerts) {
-        const text = `
-⚠️ <b>Minimal Zaxira Ogohlantirmasi</b>
-
-📦 <b>Material:</b> ${alert.material_name}
-🔖 <b>Kod:</b> ${alert.material_code}
-📊 <b>Hozirgi:</b> ${alert.current_qty} ta
-📉 <b>Minimal:</b> ${alert.minimum_qty} ta
-
-Tezda buyurtma qiling!
-        `
+        const text = await this.i18n.t('telegram.warehouse.minimumStockAlert', {
+          args: {
+            materialName: alert.material_name,
+            materialCode: alert.material_code,
+            currentQty: alert.current_qty,
+            minimumQty: alert.minimum_qty,
+          },
+        })
         await this.telegramService.sendMessage(
           alert.warehouse_manager_chat_id,
           text,
@@ -61,16 +63,9 @@ Tezda buyurtma qiling!
   async sendAfternoonStockCheck(): Promise<void> {
     try {
       const warehouseManagerId = process.env.WAREHOUSE_MANAGER_CHAT_ID || ''
-      const text = `
-📋 <b>Kechki Zaxira Tekshiruvi</b>
-
-Kunning oxiridagi zaxira holatini tekshiring:
-- Kelgan material'lar
-- Chiqarilgan material'lar
-- Fizik inventori qidiruvi (agar zarur)
-
-Portal: ${process.env.WAREHOUSE_PORTAL_URL}
-      `
+      const text = await this.i18n.t('telegram.warehouse.afternoonStockCheck', {
+        args: { portalUrl: process.env.WAREHOUSE_PORTAL_URL ?? '' },
+      })
       await this.telegramService.sendMessage(warehouseManagerId, text)
       this.logger.log('Afternoon stock check sent')
     } catch (err) {
@@ -80,15 +75,13 @@ Portal: ${process.env.WAREHOUSE_PORTAL_URL}
 
   async onRentalExpiryReminder(rental: RentalExpiry): Promise<void> {
     try {
-      const text = `
-⏰ <b>Ijara Muddati Tugaymoqda!</b>
-
-📏 <b>Maydoni:</b> ${rental.area_m2} m²
-💵 <b>Kunlik Tarif:</b> ${rental.daily_rate} USD/m²
-⏳ <b>Qolgan Kun:</b> ${rental.days_remaining} kun
-
-Yangilash yoki bekor qilish bo'yicha qaror qabul qiling!
-      `
+      const text = await this.i18n.t('telegram.warehouse.rentalExpiryReminder', {
+        args: {
+          areaM2: rental.area_m2,
+          dailyRate: rental.daily_rate,
+          daysRemaining: rental.days_remaining,
+        },
+      })
       await this.telegramService.sendMessage(rental.manager_chat_id, text)
       this.logger.log('Rental expiry reminder sent')
     } catch (err) {

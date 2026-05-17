@@ -5,6 +5,7 @@
 
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
+import { I18nService } from 'nestjs-i18n'
 import { TelegramService } from '../telegram.service'
 
 interface ShiftHandover {
@@ -33,23 +34,16 @@ interface QcResult {
 export class ProductionHandler {
   private readonly logger = new Logger(ProductionHandler.name)
 
-  constructor(private telegramService: TelegramService) {}
+  constructor(
+    private telegramService: TelegramService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Cron('0 14 * * *')
   async sendMorningShiftHandover(): Promise<void> {
     try {
       const shiftLeadId = process.env.SHIFT_LEAD_CHAT_ID || ''
-      const text = `
-📋 <b>Smena Topshirish Eslatmasi</b> - 14:00
-
-Shift'ni qayd qiling:
-✓ Ishlab chiqarilgan smartfonlar soni
-✓ Xato va nosozliklari
-✓ Zaxira material'lar holati
-✓ Ishchi-xavfsizlik hodisalari
-
-Keyingi shift boshligiga batafsil o'tqazib chiqing!
-      `
+      const text = await this.i18n.t('telegram.production.morningShiftHandover')
       await this.telegramService.sendMessage(shiftLeadId, text)
       this.logger.log('Morning shift handover reminder sent')
     } catch (err) {
@@ -61,17 +55,7 @@ Keyingi shift boshligiga batafsil o'tqazib chiqing!
   async sendEveningShiftHandover(): Promise<void> {
     try {
       const shiftLeadId = process.env.SHIFT_LEAD_CHAT_ID || ''
-      const text = `
-📋 <b>Smena Topshirish Eslatmasi</b> - 22:00
-
-Tungi shift'ni qayd qiling:
-✓ Kunning jami ishlab chiqarish
-✓ Sifat tekshiruv natijalari
-✓ Avariyligi hodisalari
-✓ Maslahatlari va takliflar
-
-Keyingi kun uchun tayyorlanishni boshlang!
-      `
+      const text = await this.i18n.t('telegram.production.eveningShiftHandover')
       await this.telegramService.sendMessage(shiftLeadId, text)
       this.logger.log('Evening shift handover reminder sent')
     } catch (err) {
@@ -81,15 +65,13 @@ Keyingi kun uchun tayyorlanishni boshlang!
 
   async onMesEquipmentFailure(alert: MesAlert): Promise<void> {
     try {
-      const text = `
-🚨 <b>MES Avariyligi!</b>
-
-⚙️ <b>Qurilma:</b> ${alert.equipment_name}
-🔴 <b>Xato Kodi:</b> ${alert.error_code}
-⏱️ <b>To'xtash Vaqti:</b> ${alert.downtime_minutes} minut
-
-Tezda ta'mir qiling!
-      `
+      const text = await this.i18n.t('telegram.production.mesEquipmentFailure', {
+        args: {
+          equipmentName: alert.equipment_name,
+          errorCode: alert.error_code,
+          downtimeMinutes: alert.downtime_minutes,
+        },
+      })
       await this.telegramService.sendMessage(alert.technician_chat_id, text)
       this.logger.log(`MES failure alert sent: ${alert.equipment_name}`)
     } catch (err) {
@@ -99,16 +81,14 @@ Tezda ta'mir qiling!
 
   async onQcResultsReady(result: QcResult): Promise<void> {
     try {
-      const text = `
-✅ <b>QC Natija Tayyor</b>
-
-📦 <b>Batch ID:</b> ${result.batch_id}
-📊 <b>Jami:</b> ${result.total_units} ta
-❌ <b>Xatoli:</b> ${result.defective_units} ta
-✔️ <b>O'tgan %:</b> ${result.pass_rate}%
-
-Batafsil QC hisobotini portal'da tekshiring.
-      `
+      const text = await this.i18n.t('telegram.production.qcResultsReady', {
+        args: {
+          batchId: result.batch_id,
+          totalUnits: result.total_units,
+          defectiveUnits: result.defective_units,
+          passRate: result.pass_rate,
+        },
+      })
       await this.telegramService.sendMessage(result.production_lead_chat_id, text)
       this.logger.log(`QC results notified: ${result.batch_id}`)
     } catch (err) {
