@@ -110,6 +110,45 @@ export class OrgStructureService {
 
   async move(id: number, newParentId: number | null) {
     return safeCall(async () => {
+      // ─── Defensive cycle check ────────────────────────────────────────────
+      // Phase 1 T1.3 (cycle-detector.service) is the canonical implementation.
+      // Until that lands, this inline check prevents the two trivial cycles
+      // that would break the tree:
+      //   (a) self-parent: moving a node under itself.
+      //   (b) ancestor-cycle: moving a node under one of its own descendants.
+      // The check walks newParentId's ancestors via `getHierarchyNodes()` (single
+      // O(n) fetch + O(depth) traversal) — small relative to a write.
+      if (newParentId !== null && newParentId !== undefined) {
+        if (Number(newParentId) === Number(id)) {
+          throw new Error('Tugun o\'zini ota qila olmaydi (self-cycle)');
+        }
+        const nodesR = await this.repo.getHierarchyNodes();
+        if (nodesR.ok) {
+          const parentByChild = new Map<number, number | null>();
+          const rows = Array.isArray(nodesR.data) ? nodesR.data : [];
+          for (const row of rows) {
+            const n = row as Record<string, unknown>;
+            const nid = Number(n['id']);
+            const rawParent = n['parentId'] ?? n['parent_id'];
+            const pid = rawParent === null || rawParent === undefined
+              ? null
+              : Number(rawParent);
+            if (Number.isFinite(nid)) parentByChild.set(nid, pid);
+          }
+          // Walk up from newParentId — if we hit `id` it would create a cycle.
+          let cursor: number | null = Number(newParentId);
+          const visited = new Set<number>();
+          while (cursor !== null && cursor !== undefined) {
+            if (visited.has(cursor)) break; // existing cycle — bail out
+            visited.add(cursor);
+            if (cursor === Number(id)) {
+              throw new Error('Bu ko\'chirish tsiklik bog\'lanish hosil qiladi');
+            }
+            cursor = parentByChild.get(cursor) ?? null;
+          }
+        }
+      }
+
       let level = 0;
       if (newParentId) {
         const levelR = await this.repo.getParentLevel(newParentId);
