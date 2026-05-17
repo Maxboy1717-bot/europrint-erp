@@ -42,6 +42,8 @@ import {
   QualityDefectsCameraController,
 } from './presentation/camera-alerts.controller';
 import { IotMainController } from './presentation/iot-main.controller';
+import { IotAlertsController } from './presentation/iot-alerts.controller';
+import { IotTabletController } from './presentation/iot-tablet.controller';
 import { IotSensorsMainController } from './presentation/iot-sensors-main.controller';
 import { IotCameraService } from './application/iot-camera.service';
 import { IotCameraRepository } from './infrastructure/repositories/iot-camera.repository';
@@ -75,6 +77,8 @@ const newControllers = [
   EmployeeProductivityController,
   QualityDefectsCameraController,
   IotMainController,
+  IotAlertsController,
+  IotTabletController,
   IotSensorsMainController,
 ];
 
