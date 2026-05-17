@@ -18,15 +18,15 @@ Started: 2026-05-17
 
 | # | Page | Component | Broken API(s) | Status | Commit |
 |--:|------|-----------|---------------|:------:|:------:|
-| 1 | `/hr/assets` | HRAssetManagement | `/api/assets?:id` | not_started | — |
+| 1 | `/hr/assets` | HRAssetManagement | `/api/assets?:id` | deferred | (false-positive likely; see handoff) |
 | 2 | `/hr/daily-reports` | DailyReportPage | `/api/hr-v2/daily-reports/employee`, `/department`, `/by-date?type`, `/stats` | done | (this branch) |
-| 3 | `/hr/documents` | DocumentWorkflowPage | `/api/hr-v2/documents?status&employeeId` + stubs | not_started | — |
+| 3 | `/hr/documents` | DocumentWorkflowPage | `/api/hr-v2/documents?status&employeeId` + stubs | deferred | (3 stubs in document-workflow.controller.ts:91-107; needs filter support too) |
 | 4 | `/hr/gamification` | GamificationPage | (false positive — endpoint works) | verified_ok | n/a |
 | 5 | `/hr/offboarding` | HROffboarding | `GET /api/hr/offboarding/cases?status&search` | done | (this branch) |
 | 6 | `/hr/onboarding` | HROnboarding | `GET/POST/PATCH /api/hr/onboarding-checklists` | done | (this branch) |
 | 7 | `/hr/pip` | PIPPage | `PATCH /api/hr-v2/pip/:id/complete` | done | (this branch) |
 | 8 | `/hr/reception` | ReceptionPage | (false positive — `badge/:badge_number` works) | verified_ok | n/a |
-| 9 | `/hr/referrals` | ReferralPage | `POST/PATCH /api/hr/referrals` | in_progress | — |
+| 9 | `/hr/referrals` | ReferralPage | `POST/PATCH /api/hr/referrals` | deferred | (no `hr_referrals` schema exists — needs Drizzle migration first) |
 
 ## Reality-check discrepancies vs. V6 audit
 
@@ -109,6 +109,64 @@ These violate `CLAUDE.md` Qoida 10 — "Soxta Javoblar Taqiqlangan".
 ## Task Log
 
 ### 2026-05-17
+
+## Handoff notes — deferred pages
+
+### Page 1 — `/hr/assets` (HRAssetManagement)
+The audit flagged `/api/assets?:id`. The HR assets module
+(`apps/api/src/modules/hr-assets/`) is **NOT** under the HR scope
+defined in this prompt (`apps/api/src/modules/hr/`) — it's a sibling
+top-level module. The audit's URL template `/api/assets?:id` is the
+script normalizing a query value; `HRAssetManagement.tsx` actually
+calls `/api/assets?employeeId=X` against the existing
+`@Controller('assets')` route. Recommended next step: spot-check
+`apps/api/src/modules/hr-assets/hr-assets.controller.ts` for whether it
+honors `employeeId`. Likely a false positive like
+`/hr/gamification` and `/hr/reception`.
+
+### Page 3 — `/hr/documents` (DocumentWorkflowPage)
+The audit flagged `/api/hr-v2/documents?status=pending&employeeId=:id`.
+Reality:
+- `@Get()` at `document-workflow.controller.ts:86` exists but **ignores
+  query filters** (passes only `limit` to the service).
+- 3 stubs in the same file:
+  - `Get('employee')` → `{ data: [], total: 0 }` (line 91)
+  - `Get('pending')` → `{ data: [], total: 0 }` (line 94)
+  - `Get('admin/workflow-routes')` → `{ data: [], total: 0 }` (line 97)
+- `Get(':id')` returns a fake `{ id, status: 'draft' }` (line 106).
+
+Next step: wire up the existing `DocumentWorkflowService` to honor
+`status` and `employeeId` filters, and replace the 4 stubs with real
+queries against `hr_document_workflows` (table verified in
+`lib/db/src/schema/hr-v2-schema.ts`). Same pattern as Task 4.4.
+
+### Page 9 — `/hr/referrals` (ReferralPage)
+The audit flagged `POST/PATCH /api/hr/referrals`. **Schema does not
+exist** — no `hr_referrals` table in any of `lib/db/src/schema/*.ts`
+nor in any `@shared/db/schema-*.ts` stub. The existing
+`@Get('referrals')` in `hr-gsd.controller.ts:36` actually queries the
+`employees` table (selecting active employees) with column references
+to `full_name` and `position` that don't even match the canonical
+Drizzle schema (`employees.firstName/lastName/positionId`). So the
+existing GET is **also broken at runtime** — it's likely throwing on
+every request.
+
+Two-step fix required (out of scope for one-page commit):
+1. Design `hr_referrals` schema (FE expects `candidate_full_name`,
+   `candidate_phone`, `position_title`, `bonus_paid`, `bonus_type`,
+   `bonus_amount`, `referrer_id`, `referrer_name`, `hr_notes`,
+   `status`, `created_at`). Add Drizzle migration.
+2. Replace the column-name-mismatched `findReferrals` /
+   `findBoomerangs` in `hr-gsd.repository.ts` with real queries on the
+   new table, then add `POST /hr/referrals` + `PATCH /hr/referrals/:id`
+   handlers to `HrGsdController` (or split into a dedicated module).
+
+The audit's "B" backend grade and the F1/F2/F3 frontend pass mask the
+fact that the GET endpoint is queryable but returns nothing the FE can
+use (wrong field names + wrong table). This page needs a full vertical
+slice, not a quick patch.
+
+## Done in this session
 
 - **Task 4.1 done** — `feat(hr-api): implement /hr/daily-reports backend`
   - Replaced 2 stub endpoints (`@Get('employee')`, `@Get('department')`)
