@@ -57,7 +57,6 @@ export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/seven-functions',                  SevenFunctionsDashboard],
 
   ['/raci-matrix',                      RACIMatrixPage],
-  ['/hr/succession-planning',           HRSuccessionPlanning],
   ['/skills-matrix',                    SkillsMatrix],
   ['/mentorship',                       Mentorship],
   ['/events-calendar',                  EventsCalendar],

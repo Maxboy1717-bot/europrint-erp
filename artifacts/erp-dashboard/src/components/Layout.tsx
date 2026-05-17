@@ -40,7 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         { href: "/hr/employees", label: "Xodimlar", icon: Users },
         { href: "/hr/departments", label: "Bo'limlar", icon: Building2 },
         { href: "/hr/attendance", label: "Davomat", icon: Calendar },
-        { href: "/hr/leave", label: "Ta'til", icon: Plane },
+        { href: "/hr/vacation-sick", label: "Ta'til va Kasallik", icon: Plane },
         { href: "/hr/payroll", label: "Ish haqi", icon: Banknote },
         { href: "/hr/payroll-automation", label: "Ish haqi avtomatik", icon: Wallet },
         { href: "/hr/kpi", label: "KPI & Maqsadlar", icon: Target },

@@ -1,8 +1,3 @@
-/**
- * @module AppRouter
- * @description Frontend route definition.
- */
-
 import { Suspense, lazy } from "react";
 import { Route, useLocation, Redirect } from "wouter";
 import { PageLoader } from "@/components/PageLoader";
@@ -67,10 +62,12 @@ const REDIRECT_PATHS = [
   '/erp-cameras', '/erp/cameras/reports', '/erp/cameras/heatmap',
   '/security/dashboard', '/crm', '/crm/dashboard', '/crm/leads',
   '/crm/deals', '/crm/contacts', '/crm/companies', '/crm/proposals',
-  '/crm/invoices', '/erp/planning', '/erp/pp/mrp',
-  '/tech/dashboard',
-  '/iot/live', '/europrint/director', '/qc/dashboard',
-  '/succession-planning', '/feedback', '/logout',
+  '/crm/invoices', '/sd/quota-dashboard', '/erp/planning', '/erp/pp/mrp',
+  '/tech/dashboard', '/tech/approval', '/tech/parameters', '/tech/standards',
+  '/iot/live', '/europrint/director', '/qc/dashboard', '/qc/standards',
+  '/qc/parameters', '/qc/tests', '/succession-planning',
+  '/hr/succession-planning', '/hr/leave',
+  '/feedback', '/logout',
   '/order-workflow', '/sales',
 ];
 
@@ -110,7 +107,7 @@ export function AppRouter() {
       <ModuleGroup roles={SALES_ROLES}        routes={SALES_ROUTES}        />
       <ModuleGroup roles={PRODUCTION_ROLES}   routes={PRODUCTION_ROUTES}   />
       <ModuleGroup roles={DIRECTOR_ROLES}     routes={DIRECTOR_ROUTES}     />
-      <ModuleGroup roles={PRODUCTION_ROLES}   routes={MES_ROUTES}          />
+      <ModuleGroup roles={IOT_ROLES}          routes={MES_ROUTES}          />
       <ModuleGroup roles={QC_ROLES}           routes={QC_ROUTES}           />
       <ModuleGroup roles={DESIGN_ROLES}       routes={DESIGN_ROUTES}       />
       <ModuleGroup roles={MRO_ROLES}          routes={MRO_ROUTES}          />
@@ -125,16 +122,8 @@ export function AppRouter() {
       <ModuleGroup roles={ALL_AUTHENTICATED}  routes={STUB_ROUTES}            />
 
       {/* ── Redirect aliases ── */}
-      <Route path="/departments">
-        <RoleRoute roles={HR_ROLES}>
-          <ErrorBoundary><Suspense fallback={<PageLoader />}><DepartmentsPage /></Suspense></ErrorBoundary>
-        </RoleRoute>
-      </Route>
-      <Route path="/positions">
-        <RoleRoute roles={HR_ROLES}>
-          <ErrorBoundary><Suspense fallback={<PageLoader />}><PositionsPage /></Suspense></ErrorBoundary>
-        </RoleRoute>
-      </Route>
+      <Route path="/departments"><RoleRoute roles={HR_ROLES}><DepartmentsPage /></RoleRoute></Route>
+      <Route path="/positions"><RoleRoute roles={HR_ROLES}><PositionsPage /></RoleRoute></Route>
       <Route path="/orgstructure"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
       <Route path="/org-structure/builder"><RoleRoute roles={HR_ROLES}><Redirect to="/org-chart" /></RoleRoute></Route>
       <Route path="/org-structure/view"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
@@ -154,7 +143,7 @@ export function AppRouter() {
       <Route path="/erp/cameras/reports"><RoleRoute roles={CAMERA_ROLES}><Redirect to="/camera-reports" /></RoleRoute></Route>
       <Route path="/erp/cameras/heatmap"><RoleRoute roles={CAMERA_ROLES}><Redirect to="/camera-heatmap" /></RoleRoute></Route>
       <Route path="/security/dashboard"><RoleRoute roles={CAMERA_ROLES}><Redirect to="/security" /></RoleRoute></Route>
-      <Route path="/sales"><RoleRoute roles={SALES_ROLES}><Redirect to="/sd/dashboard" /></RoleRoute></Route>
+      <Route path="/sales"><RoleRoute roles={SALES_ROLES}><Redirect to="/erp/sales" /></RoleRoute></Route>
       <Route path="/crm"><RoleRoute roles={SALES_ROLES}><Redirect to="/crm-workspace" /></RoleRoute></Route>
       <Route path="/crm/dashboard"><RoleRoute roles={SALES_ROLES}><Redirect to="/crm-workspace" /></RoleRoute></Route>
       <Route path="/crm/leads"><RoleRoute roles={SALES_ROLES}><Redirect to="/crm-workspace" /></RoleRoute></Route>
@@ -163,24 +152,28 @@ export function AppRouter() {
       <Route path="/crm/companies"><RoleRoute roles={SALES_ROLES}><Redirect to="/crm-workspace" /></RoleRoute></Route>
       <Route path="/crm/proposals"><RoleRoute roles={SALES_ROLES}><Redirect to="/crm-workspace" /></RoleRoute></Route>
       <Route path="/crm/invoices"><RoleRoute roles={SALES_ROLES}><Redirect to="/crm-workspace" /></RoleRoute></Route>
+      <Route path="/sd/quota-dashboard"><RoleRoute roles={SALES_ROLES}><Redirect to="/sd/dashboard/quota" /></RoleRoute></Route>
       <Route path="/erp/planning"><RoleRoute roles={PRODUCTION_ROLES}><Redirect to="/planning?tab=plans" /></RoleRoute></Route>
       <Route path="/erp/pp/mrp"><RoleRoute roles={PRODUCTION_ROLES}><Redirect to="/planning?tab=mrp" /></RoleRoute></Route>
-      {/* Legacy redirects — eski URL'lar yangi sahifalarga yo'naltirilgan.
-       *  Sidebar endi to'g'ridan-to'g'ri yangi URL'ga ishora qiladi, lekin
-       *  eski bookmark'lar ishlashi uchun redirect'lar saqlangan. */}
       <Route path="/tech/dashboard"><RoleRoute roles={PRODUCTION_ROLES}><Redirect to="/tech/dashboard-home" /></RoleRoute></Route>
+      <Route path="/tech/approval"><RoleRoute roles={PRODUCTION_ROLES}><Redirect to="/tech-approval" /></RoleRoute></Route>
+      <Route path="/tech/parameters"><RoleRoute roles={PRODUCTION_ROLES}><Redirect to="/tech-approval" /></RoleRoute></Route>
+      <Route path="/tech/standards"><RoleRoute roles={PRODUCTION_ROLES}><Redirect to="/tech-approval" /></RoleRoute></Route>
       <Route path="/iot/live"><RoleRoute roles={IOT_ROLES}><Redirect to="/iot/dashboard" /></RoleRoute></Route>
       <Route path="/europrint/director"><RoleRoute roles={DIRECTOR_ROLES}><Redirect to="/" /></RoleRoute></Route>
       <Route path="/qc/dashboard"><RoleRoute roles={QC_ROLES}><Redirect to="/qc/dashboard-home" /></RoleRoute></Route>
-      {/* /qc/tests, /qc/parameters, /qc/standards endi QCModule'ga to'g'ridan-to'g'ri
-       *  registratsiya qilingan (ProductionRoutes.tsx) — redirect kerak emas. */}
-      <Route path="/succession-planning"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/succession-planning" /></RoleRoute></Route>
+      <Route path="/qc/standards"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
+      <Route path="/qc/parameters"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
+      <Route path="/qc/tests"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
+      <Route path="/succession-planning"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/succession" /></RoleRoute></Route>
+      <Route path="/hr/succession-planning"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/succession" /></RoleRoute></Route>
+      <Route path="/hr/leave"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/vacation-sick" /></RoleRoute></Route>
       <Route path="/feedback"><Redirect to="/kanban" /></Route>
       <Route path="/logout"><Redirect to="/login" /></Route>
 
       {/* ── Order Workflow (Sprint 4) ── */}
       <Route path="/order-workflow">
-        <RoleRoute roles={[...DIRECTOR_ROLES, ...SALES_ROLES, ...PRODUCTION_ROLES, ...FINANCE_ROLES]}>
+        <RoleRoute roles={['SUPER_ADMIN', 'DIRECTOR', 'SALES_MANAGER', 'FINANCE', 'PRODUCTION_MANAGER']}>
           <ErrorBoundary><Suspense fallback={<PageLoader />}><OrderWorkflowPage /></Suspense></ErrorBoundary>
         </RoleRoute>
       </Route>
