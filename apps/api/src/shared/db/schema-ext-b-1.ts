@@ -204,17 +204,8 @@ export const ai_report_runs = pgTable('ai_report_runs', {
 });
 
 // ─── QC Extended Tables ────────────────────────────────────────────────────────
-
-export const qc_standards = pgTable('qc_standards', {
-  id:          serial('id').primaryKey(),
-  name:        text('name').notNull(),
-  category:    text('category'),
-  description: text('description'),
-  parameters:  jsonb('parameters'),
-  is_active:   boolean('is_active').default(true),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
+// qc_standards: re-exported from canonical definition in schema-misc-qc.ts
+export { qc_standards } from './schema-misc-qc';
 
 export const qc_final_inspections = pgTable('qc_final_inspections', {
   id:           serial('id').primaryKey(),

@@ -4,6 +4,8 @@
  */
 
 import { pgTable, uuid, text, boolean, decimal, integer, createId, ts, stub } from './schema-compat-helpers';
+import { work_centers as canonicalWorkCenters } from './schema-manufacturing';
+import { routings as canonicalRoutings } from './schema-manufacturing';
 
 export const mroInventory = stub(pgTable('mro_inventory', {
   id: integer('id').primaryKey(),
@@ -35,15 +37,8 @@ export const productionOrders = stub(pgTable('production_orders', {
   deletedAt: ts('deleted_at'),
 }));
 
-export const routings = stub(pgTable('routings', {
-  id: integer('id').primaryKey(),
-  name: text('name').notNull(),
-  productId: text('product_id'),
-  isActive: boolean('is_active').default(true),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-}));
+// routings: re-exported from canonical definition in schema-manufacturing.ts
+export const routings = canonicalRoutings;
 
 export const routingOperations = stub(pgTable('routing_operations', {
   id: integer('id').primaryKey(),
@@ -77,17 +72,8 @@ export const bomItems = stub(pgTable('bom_items', {
   createdAt: ts('created_at').defaultNow(),
 }));
 
-export const workCenters = stub(pgTable('work_centers', {
-  id: integer('id').primaryKey(),
-  name: text('name').notNull(),
-  code: text('code').unique(),
-  type: text('type'),
-  capacity: decimal('capacity', { precision: 10, scale: 2 }),
-  isActive: boolean('is_active').default(true),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-}));
+// work_centers: re-exported from canonical definition in schema-manufacturing.ts
+export const workCenters = canonicalWorkCenters;
 
 export const downtimeEvents = stub(pgTable('downtime_events', {
   id: integer('id').primaryKey(),

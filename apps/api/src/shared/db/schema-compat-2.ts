@@ -7,17 +7,13 @@ import { pgTable, uuid, varchar, text, boolean, decimal, integer, createId, ts, 
 import { budgets as canonicalBudgets } from './schema-finance-budgets';
 import { accounts as canonicalAccounts } from './schema-ext-b-1';
 import { departments as canonicalDepartments, positions as canonicalPositions } from './schema-hr-lms';
+import { sales_invoices as canonicalSalesInvoices } from './schema-business-c-2-misc';
+import { sd_leads as canonicalSdLeads } from './schema-ext-b-2';
+import { payroll_periods_hr as canonicalPayrollPeriods } from './schema-business-c-2-hr-payroll';
+import { purchase_orders as canonicalPurchaseOrders } from './schema-wms';
 
-export const payrollPeriods = stub(pgTable('payroll_periods', {
-  id:              integer('id').primaryKey(),
-  periodName:      text('period_name'),
-  periodStartDate: text('period_start_date'),
-  periodEndDate:   text('period_end_date'),
-  calculationDate: text('calculation_date'),
-  approvalDate:    text('approval_date'),
-  paymentDate:     text('payment_date'),
-  status:          text('status').default('open'),
-}));
+// payroll_periods: re-exported from canonical definition in schema-business-c-2-hr-payroll.ts
+export const payrollPeriods = canonicalPayrollPeriods;
 
 export const payrollRows = stub(pgTable('payroll_rows', {
   id: integer('id').primaryKey(),
@@ -95,20 +91,8 @@ export const glDocuments = stub(pgTable('gl_documents', {
 // accounts: re-exported from canonical definition in schema-ext-b-1.ts
 export const accounts = canonicalAccounts;
 
-export const salesInvoices = stub(pgTable('sales_invoices', {
-  id: integer('id').primaryKey(),
-  invoiceNumber: text('invoice_number').unique(),
-  salesOrderId: text('sales_order_id'),
-  customerId: text('customer_id'),
-  amount: decimal('amount', { precision: 18, scale: 2 }).notNull(),
-  paidAmount: decimal('paid_amount', { precision: 18, scale: 2 }).default('0'),
-  currency: text('currency').default('UZS'),
-  status: text('status').notNull().default('draft'),
-  dueDate: ts('due_date'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-}));
+// sales_invoices: re-exported from canonical definition in schema-business-c-2-misc.ts
+export const salesInvoices = canonicalSalesInvoices;
 
 export const documentSequences = stub(pgTable('document_sequences', {
   id: integer('id').primaryKey(),
@@ -140,39 +124,11 @@ export const salesOrders = stub(pgTable('sales_orders', {
   deletedAt:      ts('deleted_at'),
 }));
 
-export const sdLeads = stub(pgTable('sd_leads', {
-  id:              integer('id').primaryKey(),
-  firstName:       text('first_name').notNull().default(''),
-  lastName:        text('last_name').notNull().default(''),
-  contactName:     text('contact_name'),
-  contactPhone:    text('contact_phone'),
-  company:         text('company'),
-  email:           text('email'),
-  phone:           text('phone'),
-  status:          text('status').notNull().default('new'),
-  assignedTo:      text('assigned_to'),
-  managerId:       integer('manager_id'),
-  lostReason:      text('lost_reason'),
-  productInterest: text('product_interest'),
-  estimatedValue:  decimal('estimated_value', { precision: 18, scale: 2 }),
-  source:          text('source'),
-  createdAt:       ts('created_at').defaultNow(),
-  updatedAt:       ts('updated_at').defaultNow(),
-  deletedAt:       ts('deleted_at'),
-}));
+// sd_leads: re-exported from canonical definition in schema-ext-b-2.ts
+export const sdLeads = canonicalSdLeads;
 
-export const purchaseOrders = stub(pgTable('purchase_orders', {
-  id: integer('id').primaryKey(),
-  orderNumber: text('order_number').unique(),
-  vendorId: text('vendor_id'),
-  status: text('status').notNull().default('draft'),
-  totalAmount: decimal('total_amount', { precision: 18, scale: 2 }),
-  currency: text('currency').default('UZS'),
-  expectedDelivery: ts('expected_delivery'),
-  createdBy: text('created_by'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-}));
+// purchase_orders: re-exported from canonical definition in schema-wms.ts
+export const purchaseOrders = canonicalPurchaseOrders;
 
 export const purchaseOrderItems = stub(pgTable('purchase_order_items', {
   id: integer('id').primaryKey(),
