@@ -1,16 +1,28 @@
-/**
- * @module recruitment-funnel.service
- * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
- */
-
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
-import { I18nService } from 'nestjs-i18n';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IHrRecruitmentFunnelRepository, HR_RECRUITMENT_FUNNEL_REPO } from './repos/i-hr-recruitment-funnel.repo';
 import type { FunnelStage, ProductivityCategory } from './dto/create-funnel.dto';
 import type { CreateFunnelDto, MoveFunnelStageDto, QuickScreeningDto, ListFunnelDto } from './dto/create-funnel.dto';
 import { safeCall, Result, AppError } from '@common/result';
+
+/**
+ * Event payload emitted after a candidate's funnel stage transitions.
+ * The recruitment websocket gateway picks this up and re-broadcasts it
+ * over Socket.io so any connected Kanban client invalidates its cache.
+ */
+export const CANDIDATE_STAGE_CHANGED_EVENT = 'candidate.stage-changed';
+
+export interface CandidateStageChangedPayload {
+  funnelId: number;
+  candidateId: number | null;
+  fromStage: FunnelStage | null;
+  toStage: FunnelStage;
+  changedById: number;
+  notes?: string | null;
+  occurredAt: Date;
+}
 
 export const VALID_TRANSITIONS: Record<FunnelStage, FunnelStage[]> = {
   NEW:                 ['QUESTIONNAIRE_SENT', 'PHONE_SCREENING', 'REJECTED'],
@@ -33,7 +45,7 @@ export class RecruitmentFunnelService {
 
   constructor(
     @Inject(HR_RECRUITMENT_FUNNEL_REPO) private readonly hrRecruitmentFunnelRepo: IHrRecruitmentFunnelRepository,
-    private readonly i18n: I18nService,
+    private readonly emitter: EventEmitter2,
   ) {}
 
   async createFunnel(dto: CreateFunnelDto, createdById: number): Promise<Result<object, AppError>> {
@@ -93,15 +105,12 @@ export class RecruitmentFunnelService {
     });}
 
   async moveFunnelStage(funnelId: number, dto: MoveFunnelStageDto, changedById: number){
-    const funnelNotFoundMsg = await this.i18n.t('errors.notFound');
-    const funnelClosedMsg = await this.i18n.t('errors.funnelClosed');
-    const referencesRequiredMsg = await this.i18n.t('errors.referencesRequired');
     return safeCall(async () => {
     const funnelResult = await this.hrRecruitmentFunnelRepo.getFunnelById(funnelId);
     if (!funnelResult.ok) throw new InternalServerErrorException(funnelResult.error);
-    if (!funnelResult.data) throw new NotFoundException(funnelNotFoundMsg);
+    if (!funnelResult.data) throw new NotFoundException(`Funnel #${funnelId} topilmadi`);
     const funnel = funnelResult.data;
-    if (!funnel.isActive) throw new BadRequestException(funnelClosedMsg);
+    if (!funnel.isActive) throw new BadRequestException('Funnel yopilgan');
 
     const currentStage = funnel.funnelStage as FunnelStage;
     const allowed = VALID_TRANSITIONS[currentStage] ?? [];
@@ -116,7 +125,7 @@ export class RecruitmentFunnelService {
       const countResult = await this.hrRecruitmentFunnelRepo.countReferencesChecks(funnelId);
       if (!countResult.ok) throw new InternalServerErrorException(countResult.error);
       if (countResult.data === 0) {
-        throw new BadRequestException(referencesRequiredMsg);
+        throw new BadRequestException('REFERENCES_CHECK bosqichiga o\'tish uchun kamida 1 ta navedenie spravok yozuvi kerak.');
       }
     }
 
@@ -132,8 +141,26 @@ export class RecruitmentFunnelService {
     if (!updateResult.ok) throw new InternalServerErrorException(updateResult.error);
 
     await this.hrRecruitmentFunnelRepo.insertFunnelHistory({ funnelId, fromStage: currentStage, toStage: dto.newStage, changedById, notes: dto.notes });
+
+    // T5.2 — emit websocket event so connected Kanban clients refresh
+    // (re-broadcast happens in RecruitmentGateway).
+    const updated = updateResult.data as Record<string, unknown> | undefined;
+    const candidateId = (updated?.['candidateId'] as number | undefined)
+      ?? ((funnel as Record<string, unknown>)['candidateId'] as number | undefined)
+      ?? null;
+    const payload: CandidateStageChangedPayload = {
+      funnelId,
+      candidateId,
+      fromStage: currentStage,
+      toStage: dto.newStage,
+      changedById,
+      notes: dto.notes ?? null,
+      occurredAt: _time.now(),
+    };
+    this.emitter.emit(CANDIDATE_STAGE_CHANGED_EVENT, payload);
+
     return updateResult.data;
-  
+
     });}
 
   async quickScreening(funnelId: number, dto: QuickScreeningDto, userId: number){
