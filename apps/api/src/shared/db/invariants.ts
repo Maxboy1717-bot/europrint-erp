@@ -73,7 +73,15 @@ export async function ensureSchemaAdditions(): Promise<void> {
       // `./invariants/migrations-*.ts`, never user input — these are
       // CREATE TABLE / CREATE INDEX / CREATE OR REPLACE FUNCTION /
       // CREATE TRIGGER statements that Drizzle builders cannot express.
-      // NOTE: P3-30 — `m.sql` is a literal DDL string from the static SCHEMA_MIGRATIONS/TRIGGER_MIGRATIONS/CRM_MIGRATIONS constant arrays; no user input.
+      // SECURITY: PA-S4c — defence in depth. Even though `m.sql` originates
+      // from the static SCHEMA_MIGRATIONS/TRIGGER_MIGRATIONS/CRM_MIGRATIONS
+      // arrays, validate the prefix at runtime so a future contributor can't
+      // accidentally introduce a user-input path here without the check
+      // catching it.
+      if (typeof m.sql !== 'string' || !m.sql.match(/^\s*(CREATE|ALTER|DROP|INSERT|WITH|DO|COMMENT|GRANT|SET)\s/i)) {
+        throw new Error(`PA-S4c: invariant DDL rejected: ${String(m.sql).slice(0, 50)}`);
+      }
+      // NOTE: PA-S4c — DDL must be literal-string from the static migration arrays (not user input).
       await db.execute(sql.raw(m.sql));
       logger.log(`Schema addition OK: ${m.name}`);
     } catch (err) {
