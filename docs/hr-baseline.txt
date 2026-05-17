@@ -1,0 +1,11 @@
+HR audit — 3/10 passed
+  [FAIL] unprotected-hr-controllers — Unprotected: apps/api/src/modules/hr/ai-interview-v2/ai-interview-v2.controller.ts
+  [PASS] guarded-controllers-without-roles — Every guarded HR controller has @Roles or @Public.
+  [FAIL] addemployee-data-loss — Missing in adapter: shift, salaryType, workshopZone, age, childrenCount, maritalStatus, housingType, householdMembers, attestationDate, latitude, longitude
+  [FAIL] salary-masking — EmployeeProfile.tsx mentions salary but no RoleGate component is used.
+  [FAIL] pii-encryption — Missing: encryption.service.ts, repo encrypt usage
+  [FAIL] tenant-id-coverage — 0/10 HR schemas declare tenant_id
+  [FAIL] recruiter-kanban-dnd — artifacts/erp-dashboard/src/pages/RecruitingKanban.tsx does not use @dnd-kit (no real drag-drop).
+  [FAIL] orgchart-cycle-detection — No cycle detection logic found in org-structure.
+  [PASS] sidebar-duplicates — No known HR sidebar duplicate pairs detected.
+  [PASS] frontend-test-coverage — 56 HR-related frontend test files (target ≥ 20)
