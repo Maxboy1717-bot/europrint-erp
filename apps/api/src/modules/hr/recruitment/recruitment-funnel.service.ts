@@ -1,10 +1,28 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IHrRecruitmentFunnelRepository, HR_RECRUITMENT_FUNNEL_REPO } from './repos/i-hr-recruitment-funnel.repo';
 import type { FunnelStage, ProductivityCategory } from './dto/create-funnel.dto';
 import type { CreateFunnelDto, MoveFunnelStageDto, QuickScreeningDto, ListFunnelDto } from './dto/create-funnel.dto';
 import { safeCall, Result, AppError } from '@common/result';
+
+/**
+ * Event payload emitted after a candidate's funnel stage transitions.
+ * The recruitment websocket gateway picks this up and re-broadcasts it
+ * over Socket.io so any connected Kanban client invalidates its cache.
+ */
+export const CANDIDATE_STAGE_CHANGED_EVENT = 'candidate.stage-changed';
+
+export interface CandidateStageChangedPayload {
+  funnelId: number;
+  candidateId: number | null;
+  fromStage: FunnelStage | null;
+  toStage: FunnelStage;
+  changedById: number;
+  notes?: string | null;
+  occurredAt: Date;
+}
 
 export const VALID_TRANSITIONS: Record<FunnelStage, FunnelStage[]> = {
   NEW:                 ['QUESTIONNAIRE_SENT', 'PHONE_SCREENING', 'REJECTED'],
@@ -25,7 +43,10 @@ export const VALID_TRANSITIONS: Record<FunnelStage, FunnelStage[]> = {
 export class RecruitmentFunnelService {
   private readonly logger = new Logger(RecruitmentFunnelService.name);
 
-  constructor(@Inject(HR_RECRUITMENT_FUNNEL_REPO) private readonly hrRecruitmentFunnelRepo: IHrRecruitmentFunnelRepository) {}
+  constructor(
+    @Inject(HR_RECRUITMENT_FUNNEL_REPO) private readonly hrRecruitmentFunnelRepo: IHrRecruitmentFunnelRepository,
+    private readonly emitter: EventEmitter2,
+  ) {}
 
   async createFunnel(dto: CreateFunnelDto, createdById: number): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -120,8 +141,26 @@ export class RecruitmentFunnelService {
     if (!updateResult.ok) throw new InternalServerErrorException(updateResult.error);
 
     await this.hrRecruitmentFunnelRepo.insertFunnelHistory({ funnelId, fromStage: currentStage, toStage: dto.newStage, changedById, notes: dto.notes });
+
+    // T5.2 — emit websocket event so connected Kanban clients refresh
+    // (re-broadcast happens in RecruitmentGateway).
+    const updated = updateResult.data as Record<string, unknown> | undefined;
+    const candidateId = (updated?.['candidateId'] as number | undefined)
+      ?? ((funnel as Record<string, unknown>)['candidateId'] as number | undefined)
+      ?? null;
+    const payload: CandidateStageChangedPayload = {
+      funnelId,
+      candidateId,
+      fromStage: currentStage,
+      toStage: dto.newStage,
+      changedById,
+      notes: dto.notes ?? null,
+      occurredAt: _time.now(),
+    };
+    this.emitter.emit(CANDIDATE_STAGE_CHANGED_EVENT, payload);
+
     return updateResult.data;
-  
+
     });}
 
   async quickScreening(funnelId: number, dto: QuickScreeningDto, userId: number){
