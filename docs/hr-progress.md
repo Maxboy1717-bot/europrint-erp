@@ -44,7 +44,7 @@ adapt the V6 plan to the actual repo state.
 | Task | Title                                  | Status      | Commit | Notes |
 | ---- | -------------------------------------- | ----------- | ------ | ----- |
 | 1.1  | Master-plan scaffolding (Phase 0)      | DEFERRED    | —      | Out of scope for this worktree — depends on Phase 0 commit `037dd98d` that does not exist. |
-| 1.2  | RoleGate + salary masking              | DONE        | _commit pending — created by this agent_ | Implemented against actual `useAuth().hasRole()` + `HR_ROLES`. See "Task 1.2" section. |
+| 1.2  | RoleGate + salary masking              | DONE        | `69891458` | Implemented against actual `useAuth().hasRole()` + `HR_ROLES`. See "Task 1.2" section. |
 | 1.3  | OrgChart cycle detector                | NOT STARTED | —      | See "Handoff" section. |
 | 1.4  | 11 employee personal fields            | NOT STARTED | —      | See "Handoff" section. |
 | 1.5  | PII encryption (pgcrypto + service)    | NOT STARTED | —      | See "Handoff" section. |
