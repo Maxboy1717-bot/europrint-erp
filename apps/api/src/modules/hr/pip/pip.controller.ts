@@ -24,9 +24,19 @@ const AddProgressSchema = z.object({
   updated_by:     z.number().int().optional(),
   notes:          z.string().optional(),
   progress_notes: z.string().optional(),
-  status:         z.string().optional(),
+  status:         z.enum(['on_track', 'at_risk', 'off_track', 'completed', 'failed']).optional(),
 });
 class AddProgressDto extends createZodDto(AddProgressSchema) {}
+
+const CancelPipSchema = z.object({
+  reason: z.string().max(500).optional(),
+});
+class CancelPipDto extends createZodDto(CancelPipSchema) {}
+
+const ExtendPipSchema = z.object({
+  extra_days: z.number().int().min(1).max(90),
+});
+class ExtendPipDto extends createZodDto(ExtendPipSchema) {}
 
 @Roles('admin', 'manager', 'supervisor', 'hr_manager')
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
@@ -83,5 +93,15 @@ export class PipController {
   @Patch(':id/acknowledge')
   async acknowledge(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.acknowledge(id));
+  }
+
+  @Post(':id/cancel')
+  async cancel(@Param('id', ParseIntPipe) id: number, @Body() body: CancelPipDto) {
+    return unwrapOrInternal(await this.svc.cancelPip(id, body.reason));
+  }
+
+  @Post(':id/extend')
+  async extend(@Param('id', ParseIntPipe) id: number, @Body() body: ExtendPipDto) {
+    return unwrapOrInternal(await this.svc.extendPip(id, body.extra_days));
   }
 }
