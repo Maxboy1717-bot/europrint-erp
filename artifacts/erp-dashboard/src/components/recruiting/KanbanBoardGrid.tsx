@@ -95,8 +95,8 @@ export function KanbanBoardGrid({
                     setExpandedCard={setExpandedCard}
                     cpPanelOpen={cpPanelOpen}
                     setCpPanelOpen={setCpPanelOpen}
-                    updateMutation={updateMutation}
-                    rejectMutation={rejectMutation}
+                    updateMutation={updateMutation as unknown as Parameters<typeof DraggableCandidateCard>[0]["updateMutation"]}
+                    rejectMutation={rejectMutation as unknown as Parameters<typeof DraggableCandidateCard>[0]["rejectMutation"]}
                     setInterviewEntry={setInterviewEntry}
                     setJobOfferEntry={setJobOfferEntry}
                     setReportEntry={setReportEntry}

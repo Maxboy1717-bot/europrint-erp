@@ -20,6 +20,17 @@ import {
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+/** Minimal shape of a single PPE violation / camera recognition entry. */
+interface RecognitionLog {
+  id: number | string;
+  timestamp?: string;
+  cameraName?: string;
+  cameraId?: string | number;
+  employeeName?: string;
+  label?: string;
+  confidence?: number;
+}
+
 // ─── PPEMonitoring ────────────────────────────────────────────────────────
 
 export function PPEMonitoring() {
@@ -33,7 +44,7 @@ export function PPEMonitoring() {
       queryKey: ["/api/security/ppe-violations"],
     });
 
-  const violations = safeArray<Record<string, unknown>>(violationsData?.violations);
+  const violations = safeArray<RecognitionLog>(violationsData?.violations as RecognitionLog[] | undefined);
 
   return (
     <div className="space-y-4">
@@ -95,7 +106,7 @@ export function PPEMonitoring() {
             <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow><TableHead>{t("time")}</TableHead><TableHead>{t("camera")}</TableHead><TableHead>{t("xodim1")}</TableHead><TableHead>{t("muammo")}</TableHead><TableHead>{t("ishonch")}</TableHead></TableRow></TableHeader>
               <TableBody>
-                {violations.slice(0, 10).map((v: { id: number | string; timestamp?: string; cameraName?: string; cameraId?: string | number; employeeName?: string; label?: string; confidence?: number }) => (
+                {violations.slice(0, 10).map((v: RecognitionLog) => (
                   <TableRow key={v.id} data-testid={`row-ppe-violation-${v.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="text-xs">{v.timestamp ? new Date(v.timestamp).toLocaleString("uz-UZ") : "—"}</TableCell>
                     <TableCell className="text-sm">{v.cameraName || v.cameraId}</TableCell>

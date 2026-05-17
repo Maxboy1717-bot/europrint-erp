@@ -178,7 +178,7 @@ export default function CRMWorkspace() {
               />
             )}
             {viewMode === "calendar" && (
-              <CrmCalendarView items={filteredItems} stages={stages} onItemClick={setSelectedId} />
+              <CrmCalendarView items={filteredItems as unknown as CalEntity[]} stages={stages} onItemClick={setSelectedId} />
             )}
             {viewMode === "robots" && activeEntity === "robots" && (
               <RobotsView robots={robots} isLoading={robotsLoading} />

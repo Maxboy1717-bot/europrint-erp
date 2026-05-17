@@ -24,7 +24,10 @@ export function useWakeWord({ onWake, accessKey, ppnUrl, sensitivity, enabled }:
     let cancelled = false;
     (async () => {
       try {
-        const porcupine = await import(/* webpackIgnore: true */ '@picovoice/porcupine-web') as {
+        // The shape we use is a strict subset of the real porcupine-web SDK,
+        // which accepts additional `model` / `options` args we don't need.
+        // Widen via `unknown` so the assignment doesn't trip on missing args.
+        const porcupine = (await import(/* webpackIgnore: true */ '@picovoice/porcupine-web')) as unknown as {
           PorcupineWorker: {
             create(key: string, kw: Array<{ publicPath: string; label: string; sensitivity: number }>,
                    cb: (det: { label: string }) => void): Promise<{ release(): Promise<void> }>;

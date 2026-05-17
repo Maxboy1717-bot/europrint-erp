@@ -89,7 +89,7 @@ export function HrTab({ hrStats, attendanceStats, }: Pick<RemainingTabsProps, 'h
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {attendanceStats?.slice(0, 10).map((stat: AttendanceStat & { userId: number; userName: string; totalMinutesLate: number; lateCount: number }) => (
+              {(attendanceStats as unknown as Array<AttendanceStat & { userId: number; userName: string; totalMinutesLate: number; lateCount: number }> | undefined)?.slice(0, 10).map((stat, _index: number) => (
                 <div key={stat.userId} className="flex items-center justify-between p-2 rounded-md border">
                   <div>
                     <p className="font-medium">{stat.userName}</p>

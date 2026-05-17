@@ -42,7 +42,9 @@ export function PlanningBoardHeader({
   onAddOperation,
 }: PlanningBoardHeaderProps) {
   const handleExport = () => {
-    exportOperationsCSV(operationsData);
+    // exportOperationsCSV takes a permissive Record<string, unknown>[] shape;
+    // PlanningOperation is a stricter subtype so we widen via unknown.
+    exportOperationsCSV(operationsData as unknown as { operations?: Record<string, unknown>[]; items?: Record<string, unknown>[] } | undefined);
     onExport();
   };
 
