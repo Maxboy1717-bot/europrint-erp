@@ -123,4 +123,13 @@ entry and the legacy alias is either absent or registered as a redirect.
 Phase 3 commits:
 - T3.1: `86f5a39a`
 - T3.2: `2316b661`
-- T3.3: (will be filled by commit hash)
+- T3.3: `8d363f4e`
+
+Audit script result:
+
+```
+$ node scripts/hr-audit.mjs --summary
+[hr-audit] sidebar-duplicates: PASS
+  · redirect OK: /hr/succession-planning -> /hr/succession
+  · redirect OK: /hr/leave -> /hr/vacation-sick
+```
