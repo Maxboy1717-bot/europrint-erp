@@ -12,6 +12,16 @@ import { FiService } from './fi.service';
 import { CostCenterDto, GlDocumentDto, ProfitCenterDto } from '../compatibility/dto/finance.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  CostCenterAclTranslator,
+  type LegacyCostCenterRow,
+  type CostCenterDto as CostCenterAclDto,
+} from './acl/cost-center-acl';
+import {
+  FiInvoiceAclTranslator,
+  type LegacyFiInvoiceRow,
+  type FiInvoiceDto,
+} from './acl/fi-invoice-acl';
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -19,6 +29,10 @@ import { unwrapOrInternal } from '@common/http-result';
 @UseInterceptors(AuditInterceptor)
 @Controller('legacy/fi')
 export class FiController {
+  /** PA2-14 ACL demonstrators. Stateless — direct instantiation is fine. */
+  private readonly costCenterAcl = new CostCenterAclTranslator();
+  private readonly invoiceAcl = new FiInvoiceAclTranslator();
+
   constructor(private readonly svc: FiService) {}
 
   @Get('stats')
@@ -34,6 +48,20 @@ export class FiController {
   @Get('cost-centers')
   async getCostCenters() {
     return unwrapOrInternal(await this.svc.getCostCenters());
+  }
+
+  /**
+   * PA2-14 ACL-translated variant. New BC-7 consumers should target `/v2`;
+   * the legacy `cost-centers` endpoint stays for backwards-compat.
+   */
+  @Get('cost-centers/v2')
+  async getCostCentersV2(): Promise<CostCenterAclDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getCostCenters()) as unknown as LegacyCostCenterRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.costCenterAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: CostCenterAclDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Get('cost-centers/:id')
@@ -116,5 +144,32 @@ export class FiController {
   @Get('invoices')
   async getInvoices(@Query('page') page?: string, @Query('limit') limit?: string) {
     return unwrapOrInternal(await this.svc.getInvoices(Number(page ?? 1), Number(limit ?? 20)));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of `invoices`. New BC-7 consumers
+   * should target `/v2`; the legacy endpoint stays for backwards-compat.
+   *
+   * The legacy service wraps the rows in `{ data, pagination }`; this
+   * endpoint preserves the envelope while translating only the data array.
+   */
+  @Get('invoices/v2')
+  async getInvoicesV2(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<{ data: FiInvoiceDto[]; pagination: { total: number; page: number; limit: number } }> {
+    const p = Number(page ?? 1);
+    const l = Number(limit ?? 20);
+    const wrapped = unwrapOrInternal(await this.svc.getInvoices(p, l)) as unknown as {
+      data: LegacyFiInvoiceRow[];
+      pagination: { total: number; page: number; limit: number };
+    };
+    const list = Array.isArray(wrapped?.data) ? wrapped.data : [];
+    const data = list
+      .map((row) => this.invoiceAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: FiInvoiceDto } => r.ok)
+      .map((r) => r.data);
+    const pagination = wrapped?.pagination ?? { total: data.length, page: p, limit: l };
+    return { data, pagination };
   }
 }

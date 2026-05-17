@@ -11,6 +11,11 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { MentorshipsCompatService } from './mentorships-compat.service';
 import { CompatBodyDto } from './dto/compat-body.dto';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  MentorAclTranslator,
+  type LegacyMentorRow,
+  type MentorDto,
+} from './acl/mentor-acl';
 
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
@@ -20,6 +25,9 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 @Roles(...HR_ROLES)
 @Controller('mentorships')
 export class MentorshipsCompatController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly mentorAcl = new MentorAclTranslator();
+
   constructor(private readonly svc: MentorshipsCompatService) {}
 
   @Get()
@@ -28,6 +36,23 @@ export class MentorshipsCompatController {
     @Query('status') status?: string,
   ) {
     return unwrapOrInternal(await this.svc.getMentorships(mentorId, status));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant. New BC-3 (Mentorship) consumers
+   * should target `/v2`; the legacy endpoint stays for backwards-compat.
+   */
+  @Get('v2')
+  async getMentorshipsV2(
+    @Query('mentorId') mentorId?: string,
+    @Query('status') status?: string,
+  ): Promise<MentorDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getMentorships(mentorId, status)) as unknown as LegacyMentorRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.mentorAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: MentorDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post()
