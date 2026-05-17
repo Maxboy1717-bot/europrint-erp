@@ -108,4 +108,22 @@ export class DrizzleHrOnboardingRepository implements IHrOnboardingRepository {
       return Ok(rows as EmployeeOnboardingRow[]);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Xodim onboardingi topilmadi'); }
   }
+
+  async assignBuddy(onboardingId: number, buddyId: number) {
+    try {
+      const [updated] = await db
+        .update(hrEmployeeOnboardings)
+        .set({ mentorId: buddyId, updatedAt: new Date() })
+        .where(eq(hrEmployeeOnboardings.id, onboardingId))
+        .returning();
+      return Ok(updated as EmployeeOnboardingRow);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Buddy biriktirishda xatolik'); }
+  }
+
+  async listAllOnboardings() {
+    try {
+      const rows = await db.select().from(hrEmployeeOnboardings).orderBy(desc(hrEmployeeOnboardings.startDate));
+      return Ok(rows as EmployeeOnboardingRow[]);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Onboardinglar topilmadi'); }
+  }
 }
