@@ -1,0 +1,59 @@
+{
+  "summary": {
+    "total": 10,
+    "passed": 3,
+    "failed": 7
+  },
+  "results": {
+    "unprotected-hr-controllers": {
+      "passed": false,
+      "count": 1,
+      "detail": "Unprotected: apps/api/src/modules/hr/ai-interview-v2/ai-interview-v2.controller.ts"
+    },
+    "guarded-controllers-without-roles": {
+      "passed": true,
+      "count": 0,
+      "detail": "Every guarded HR controller has @Roles or @Public."
+    },
+    "addemployee-data-loss": {
+      "passed": false,
+      "count": 11,
+      "detail": "Missing in adapter: shift, salaryType, workshopZone, age, childrenCount, maritalStatus, housingType, householdMembers, attestationDate, latitude, longitude"
+    },
+    "salary-masking": {
+      "passed": false,
+      "count": 1,
+      "detail": "EmployeeProfile.tsx mentions salary but no RoleGate component is used."
+    },
+    "pii-encryption": {
+      "passed": false,
+      "count": 1,
+      "detail": "Missing: encryption.service.ts, repo encrypt usage"
+    },
+    "tenant-id-coverage": {
+      "passed": false,
+      "count": 10,
+      "detail": "0/10 HR schemas declare tenant_id"
+    },
+    "recruiter-kanban-dnd": {
+      "passed": false,
+      "count": 1,
+      "detail": "artifacts/erp-dashboard/src/pages/RecruitingKanban.tsx does not use @dnd-kit (no real drag-drop)."
+    },
+    "orgchart-cycle-detection": {
+      "passed": false,
+      "count": 1,
+      "detail": "No cycle detection logic found in org-structure."
+    },
+    "sidebar-duplicates": {
+      "passed": true,
+      "count": 0,
+      "detail": "No known HR sidebar duplicate pairs detected."
+    },
+    "frontend-test-coverage": {
+      "passed": true,
+      "count": 56,
+      "detail": "56 HR-related frontend test files (target ≥ 20)"
+    }
+  }
+}
