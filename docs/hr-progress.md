@@ -77,3 +77,11 @@ Findings from initial code survey (recorded for transparency, not to dispute the
     here. The new spec is placed at `test/hr/` so it is discovered.
   - `node scripts/hr-audit.mjs --summary` now reports 4/10 passing
     (`unprotected-hr-controllers` flips from FAIL to PASS).
+  - **Commit hygiene note:** the controller change and spec file were
+    physically swept into commits `2a69415a` (sprint 6 wave 1) and
+    `72587078` (sprint 6 wave 2a) by a parallel Claude session running on
+    this machine while this work was in progress. Those commits are
+    primarily about ACL translators but include unrelated HR security
+    work. Tasks in later phases may want to verify HEAD commit attribution
+    before proceeding — the per-task commit model the prompt assumes will
+    not hold if multiple agents commit on the same branch concurrently.
