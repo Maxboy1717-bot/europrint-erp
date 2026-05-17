@@ -4,6 +4,9 @@
  */
 
 import { pgTable, uuid, varchar, text, boolean, decimal, integer, createId, ts, stub } from './schema-compat-helpers';
+import { budgets as canonicalBudgets } from './schema-finance-budgets';
+import { accounts as canonicalAccounts } from './schema-ext-b-1';
+import { departments as canonicalDepartments, positions as canonicalPositions } from './schema-hr-lms';
 
 export const payrollPeriods = stub(pgTable('payroll_periods', {
   id:              integer('id').primaryKey(),
@@ -56,27 +59,9 @@ export const leaveRequests = stub(pgTable('leave_requests', {
   deletedAt: ts('deleted_at'),
 }));
 
-export const departments = stub(pgTable('departments', {
-  id: integer('id').primaryKey(),
-  name: text('name').notNull(),
-  code: text('code').unique(),
-  parentId: text('parent_id'),
-  managerId: text('manager_id'),
-  isActive: boolean('is_active').default(true),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-}));
-
-export const positions = stub(pgTable('positions', {
-  id: integer('id').primaryKey(),
-  name: text('name'),
-  title: text('title').notNull(),
-  departmentId: text('department_id'),
-  level: integer('level').default(1),
-  isActive: boolean('is_active').default(true),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-}));
+// departments / positions: re-exported from canonical schema-hr-lms.ts
+export const departments = canonicalDepartments;
+export const positions = canonicalPositions;
 
 export const positionPermissions = stub(pgTable('position_permissions', {
   id: integer('id').primaryKey(),
@@ -86,20 +71,10 @@ export const positionPermissions = stub(pgTable('position_permissions', {
   createdAt: ts('created_at').defaultNow(),
 }));
 
-export const budgets = stub(pgTable('budgets', {
-  id: integer('id').primaryKey(),
-  departmentId: text('department_id'),
-  year: integer('year').notNull(),
-  month: integer('month'),
-  category: text('category').notNull(),
-  plannedAmount: decimal('planned_amount', { precision: 18, scale: 2 }).notNull(),
-  actualAmount: decimal('actual_amount', { precision: 18, scale: 2 }).default('0'),
-  currency: text('currency').default('UZS'),
-  status: text('status').notNull().default('active'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-}));
+// budgets: re-exported from canonical definition in schema-finance-budgets.ts
+// (the legacy shim columns are kept absent — consumers should reference the
+// canonical UUID/fiscalYear/department schema).
+export const budgets = canonicalBudgets;
 
 export const glDocuments = stub(pgTable('gl_documents', {
   id: integer('id').primaryKey(),
@@ -117,16 +92,8 @@ export const glDocuments = stub(pgTable('gl_documents', {
   deletedAt: ts('deleted_at'),
 }));
 
-export const accounts = stub(pgTable('accounts', {
-  id:          integer('id').primaryKey(),
-  code:        text('account_code').notNull().unique(),
-  name:        text('account_name').notNull(),
-  type:        text('account_type').notNull(),
-  parentId:    integer('parent_account_id'),
-  isActive:    boolean('is_active').default(true),
-  createdAt:   ts('created_at').defaultNow(),
-  deletedAt:   ts('deleted_at'),
-}));
+// accounts: re-exported from canonical definition in schema-ext-b-1.ts
+export const accounts = canonicalAccounts;
 
 export const salesInvoices = stub(pgTable('sales_invoices', {
   id: integer('id').primaryKey(),

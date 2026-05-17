@@ -6,6 +6,7 @@
 import {
   pgTable, integer, text, boolean, timestamp, varchar, date, serial, customType,
 } from 'drizzle-orm/pg-core';
+import { departments as canonicalDepartments, positions as canonicalPositions } from './schema-hr-lms';
 
 const pgVector = (name: string, dim: number) =>
   customType<{ data: number[]; driverData: string }>({
@@ -68,22 +69,12 @@ export const hrEmployees = stub(pgTable('employees', {
   deleted_at:                  timestamp('deleted_at'),
 }));
 
-export const hrPositions = stub(pgTable('positions', {
-  id: integer('id').primaryKey(),
-  name: text('name'),
-  department_id: integer('department_id'),
-  is_active: boolean('is_active').default(true),
-  created_at: timestamp('created_at'),
-}));
-
-export const hrDepartments = stub(pgTable('departments', {
-  id: integer('id').primaryKey(),
-  name: text('name'),
-  code: varchar('code'),
-  parent_id: integer('parent_id'),
-  manager_id: integer('manager_id'),
-  is_active: boolean('is_active'),
-}));
+// hrPositions / hrDepartments: re-exported from canonical schema-hr-lms.ts.
+// Legacy snake_case columns (parent_id, manager_id, is_active) are not present
+// on the canonical schema — consumers referencing those need to migrate to
+// camelCase or fix the column shape upstream.
+export const hrPositions = canonicalPositions;
+export const hrDepartments = canonicalDepartments;
 
 export const shiftSchedules = stub(pgTable('shift_schedules', {
   id: serial('id').primaryKey(),

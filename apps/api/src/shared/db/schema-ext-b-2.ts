@@ -6,6 +6,7 @@
 import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
+import { budgets as canonicalBudgets } from './schema-finance-budgets';
 
 export const mes_maintenance_tasks = pgTable('mes_maintenance_tasks', {
   id:             serial('id').primaryKey(),
@@ -197,17 +198,9 @@ export const sd_quotations = pgTable('sd_quotations', {
 
 // ─── Finance Extended: Payroll, Budgets ───────────────────────────────────────
 
-export const budgets = pgTable('budgets', {
-  id:              serial('id').primaryKey(),
-  name:            text('name'),
-  fiscal_year:     integer('fiscal_year'),
-  department_id:   integer('department_id'),
-  total_amount:    numeric('total_amount', { precision: 15, scale: 2 }).default('0'),
-  spent_amount:    numeric('spent_amount', { precision: 15, scale: 2 }).default('0'),
-  status:          text('status').default('draft'),
-  created_at:      timestamp('created_at').defaultNow(),
-  updated_at:      timestamp('updated_at').defaultNow(),
-});
+// budgets: re-exported from canonical definition in schema-finance-budgets.ts.
+// Consumers should use the canonical UUID/fiscalYear/department schema.
+export const budgets = canonicalBudgets;
 
 export const budget_lines = pgTable('budget_lines', {
   id:          serial('id').primaryKey(),

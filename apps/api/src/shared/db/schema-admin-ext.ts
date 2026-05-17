@@ -5,30 +5,17 @@
 
 import { pgTable, serial, uuid, varchar, text, boolean, integer, jsonb, timestamp, index } from 'drizzle-orm/pg-core';
 import { stub } from './schema-compat-helpers';
+import { auditLogs } from './schema-rbac';
 
 // ============================================================================
 // Admin — Audit log (full schema, as used by admin-extra repository)
 //
-// Distinct from `audit_logs` in schema-core.ts, which is a minimal stub. This
-// `audit_logs_ext` table reflects the actual production columns used by DB
-// triggers and the admin module's audit views.
+// Re-exported from schema-rbac.ts (canonical definition). The legacy name
+// `audit_logs_ext` is preserved as an alias for backwards compatibility with
+// the admin-extra repository which imports it via that alias.
 // ============================================================================
 
-export const audit_logs_ext = pgTable('audit_logs', {
-  id: varchar('id').primaryKey(),
-  tableName: varchar('table_name', { length: 100 }).notNull(),
-  recordId: varchar('record_id', { length: 100 }).notNull(),
-  action: varchar('action', { length: 255 }).notNull(),
-  oldValues: jsonb('old_values'),
-  newValues: jsonb('new_values'),
-  changedFields: text('changed_fields').array(),
-  reason: text('reason'),
-  userId: varchar('user_id'),
-  userFullName: text('user_full_name'),
-  userRole: varchar('user_role', { length: 50 }),
-  ipAddress: varchar('ip_address', { length: 50 }),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+export const audit_logs_ext = auditLogs;
 
 export const system_alerts = pgTable('system_alerts', {
   id: serial('id').primaryKey(),

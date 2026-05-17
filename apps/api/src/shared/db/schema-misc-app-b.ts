@@ -6,6 +6,7 @@
 import {
   pgTable, integer, text, boolean, timestamp, varchar, date,
 } from 'drizzle-orm/pg-core';
+import { accounts as canonicalAccounts } from './schema-ext-b-1';
 const stub = <T extends object>(t: T): T => t;
 
 export { chatReactions, chatPolls, chatPollVotes, chatMessageTasks } from './schema-chat';
@@ -137,11 +138,8 @@ export const invoicesTable = stub(pgTable('invoices', {
   created_at: timestamp('created_at'),
 }));
 
-export const accountsTable = stub(pgTable('accounts', {
-  id: integer('id').primaryKey(),
-  account_type: varchar('account_type'),
-  created_at: timestamp('created_at'),
-}));
+// accountsTable: re-exported from canonical accounts definition in schema-ext-b-1.ts
+export const accountsTable = canonicalAccounts;
 
 export const systemAlerts = stub(pgTable('system_alerts', {
   id: integer('id').primaryKey(),

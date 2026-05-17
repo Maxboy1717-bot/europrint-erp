@@ -10,24 +10,8 @@ import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { db } from '@shared/db';
-import { pgTable, varchar, text, jsonb, timestamp } from 'drizzle-orm/pg-core';
+import { auditLogs as auditLogsTable } from '@shared/db/schema-rbac';
 import { randomUUID } from 'crypto';
-
-const auditLogsTable = pgTable('audit_logs', {
-  id:            varchar('id').primaryKey(),
-  tableName:     varchar('table_name', { length: 100 }).notNull(),
-  recordId:      varchar('record_id', { length: 100 }).notNull(),
-  action:        varchar('action', { length: 255 }).notNull(),
-  oldValues:     jsonb('old_values'),
-  newValues:     jsonb('new_values'),
-  changedFields: text('changed_fields').array(),
-  reason:        text('reason'),
-  userId:        varchar('user_id'),
-  userFullName:  text('user_full_name'),
-  userRole:      varchar('user_role', { length: 50 }),
-  ipAddress:     varchar('ip_address', { length: 50 }),
-  createdAt:     timestamp('created_at').notNull().defaultNow(),
-});
 
 const SKIP_METHODS = ['GET'];
 
