@@ -2,6 +2,7 @@
   "name": "@europrint/workspace",
   "version": "2.0.0",
   "private": true,
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "build": "pnpm --filter @europrint/api run build",
     "build:erp": "pnpm --filter @workspace/erp-dashboard run build",
