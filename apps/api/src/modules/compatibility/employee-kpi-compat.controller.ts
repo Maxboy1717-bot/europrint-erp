@@ -11,6 +11,11 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { EmployeeKpiCompatService } from './employee-kpi-compat.service';
 import { KpiBodyDto, AttendanceBodyDto } from './dto/hr.dto';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  EmployeeKpiAclTranslator,
+  type LegacyEmployeeKpiRow,
+  type EmployeeKpiDto,
+} from './acl/employee-kpi-acl';
 
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
@@ -20,6 +25,9 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 @Roles(...HR_ROLES, 'OPERATOR')
 @Controller('employee-kpi')
 export class EmployeeKpiCompatController {
+  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
+  private readonly kpiAcl = new EmployeeKpiAclTranslator();
+
   constructor(private readonly svc: EmployeeKpiCompatService) {}
 
   @Get()
@@ -29,6 +37,25 @@ export class EmployeeKpiCompatController {
     @Query('limit') limit?: string,
   ) {
     return unwrapOrInternal(await this.svc.getKpis(employeeId, month, limit));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of the daily KPI list. New BC-3 (HR /
+   * Performance) consumers should target this route; `GET /employee-kpi`
+   * stays for backwards-compat.
+   */
+  @Get('v2')
+  async getKpisV2(
+    @Query('employeeId') employeeId?: string,
+    @Query('month') month?: string,
+    @Query('limit') limit?: string,
+  ): Promise<EmployeeKpiDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getKpis(employeeId, month, limit)) as unknown as LegacyEmployeeKpiRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.kpiAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: EmployeeKpiDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post()

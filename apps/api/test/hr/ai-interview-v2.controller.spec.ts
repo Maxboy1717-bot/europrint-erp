@@ -17,6 +17,7 @@ import { Test } from '@nestjs/testing';
 import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
 import { Reflector } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { UnauthorizedException } from '@nestjs/common';
 import { AiInterviewV2Controller } from '../../src/modules/hr/ai-interview-v2/ai-interview-v2.controller';
 import { AiInterviewV2Service } from '../../src/modules/hr/ai-interview-v2/ai-interview-v2.service';
 import { JwtAuthGuard } from '../../src/common/guards/jwt-auth.guard';
@@ -68,7 +69,10 @@ describe('AiInterviewV2Controller (e2e — Task 1.1 security)', () => {
       ],
     })
       .overrideGuard(JwtAuthGuard).useValue({
-        // Mirror the real guard: bypass when @Public() metadata is set.
+        // Mirror the real guard: bypass when @Public() metadata is set,
+        // and throw UnauthorizedException (→ 401) when the JWT is missing.
+        // Returning a plain `false` would give Nest's default 403 instead,
+        // which is what the real JwtAuthGuard avoids by throwing.
         canActivate: (ctx: { getHandler: () => unknown; getClass: () => unknown }): boolean => {
           const reflector = new Reflector();
           const isPublic = reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -76,7 +80,8 @@ describe('AiInterviewV2Controller (e2e — Task 1.1 security)', () => {
             ctx.getClass(),
           ]);
           if (isPublic) return true;
-          return jwtAllowed;
+          if (!jwtAllowed) throw new UnauthorizedException('No JWT');
+          return true;
         },
       })
       .overrideGuard(RolesGuard).useValue({

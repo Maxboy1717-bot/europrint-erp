@@ -14,6 +14,11 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { EuroprintControlDirectorService } from './europrint-control-director.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  DirectorKpiAclTranslator,
+  type LegacyDirectorKpiRow,
+  type DirectorKpiDto,
+} from './acl/director-kpi-acl';
 
 @ApiTags('EuroPrint Control Center (Director)')
 @ApiBearerAuth()
@@ -23,11 +28,29 @@ import { unwrapOrInternal } from '@common/http-result';
 @UseInterceptors(AuditInterceptor)
 @Controller('europrint-control')
 export class EuroprintControlDirectorController {
+  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
+  private readonly kpiAcl = new DirectorKpiAclTranslator();
+
   constructor(private readonly svc: EuroprintControlDirectorService) {}
 
   @Get('director-kpis')
   async getDirectorKpis() {
     return unwrapOrInternal(await this.svc.getDirectorKpis());
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of director KPIs. New BC-9 (Director /
+   * Strategic Dashboards) consumers should target this route;
+   * `/director-kpis` stays for backwards-compat.
+   */
+  @Get('director-kpis/v2')
+  async getDirectorKpisV2(): Promise<DirectorKpiDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getDirectorKpis()) as unknown as LegacyDirectorKpiRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.kpiAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: DirectorKpiDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Get('director-summary')
