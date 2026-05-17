@@ -70,6 +70,7 @@ import { HR_REPO } from './domain/repositories/i-hr.repo';
 import { OnboardingController } from './onboarding/onboarding.controller';
 import { OnboardingService } from './onboarding/onboarding.service';
 import { OnboardingJobService } from './onboarding/onboarding-job.service';
+import { OnboardingProgressService } from './onboarding/onboarding-progress.service';
 import { RecruitmentController } from './recruitment/recruitment.controller';
 import { RecruitmentService } from './recruitment/recruitment.service';
 import { RecruitmentFunnelService } from './recruitment/recruitment-funnel.service';
@@ -196,6 +197,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     ...eventListeners,
     OnboardingService,
     OnboardingJobService,
+    OnboardingProgressService,
     RecruitmentService,
     RecruitmentFunnelService,
     RecruitmentAssessmentService,
