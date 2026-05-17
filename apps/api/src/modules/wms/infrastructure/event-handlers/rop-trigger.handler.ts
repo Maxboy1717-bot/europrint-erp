@@ -56,11 +56,11 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { safeNum } from '@common/math/math-utils';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
+import { StockUpdatedEvent } from '@modules/wms/application/events/stock-updated.event';
 
 const AUTO_ROP_SOURCE = 'AUTO_ROP_TRIGGER';
 // Idempotency window: 24 hours per spec (prevents duplicate requisitions within one business day)
@@ -88,16 +88,22 @@ interface MaterialRow {
   min_order_qty: number;
 }
 
+/**
+ * PA2-18 Wave 6: converted from `@OnEvent(ERP_EVENTS.STOCK_UPDATED)` to canonical
+ *   `@EventsHandler(StockUpdatedEvent)`. The event class lives in
+ *   wms/application/events/stock-updated.event.ts; EventBridge re-emits to any
+ *   straggler @OnEvent listeners during the migration window.
+ */
 @Injectable()
-export class RopTriggerHandler {
+@EventsHandler(StockUpdatedEvent)
+export class RopTriggerHandler implements IEventHandler<StockUpdatedEvent> {
   private readonly logger = new Logger(RopTriggerHandler.name);
 
-  @OnEvent(ERP_EVENTS.STOCK_UPDATED)
-  async handleStockLevelUpdated(payload: StockLevelUpdatedPayload): Promise<void> {
+  async handle(event: StockUpdatedEvent): Promise<void> {
     try {
-      await this.checkAndTrigger(payload.materialId);
+      await this.checkAndTrigger(event.materialId);
     } catch (e) {
-      this.logger.error(`ROP trigger error for material ${payload.materialId}: ${String(e)}`);
+      this.logger.error(`ROP trigger error for material ${event.materialId}: ${String(e)}`);
     }
   }
 

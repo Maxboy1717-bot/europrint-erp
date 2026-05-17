@@ -4,11 +4,13 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
+import { OnEvent } from '@nestjs/event-emitter';
+import { EventBus } from '@nestjs/cqrs';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { Result, safeCall, isErr } from '@common/result';
 import { ERP_EVENTS } from '@common/constants/erp-events.constants';
+import { AdvanceApprovedEvent } from '../../domain/events/advance-approved.event';
 
 interface TechCheckpointPayload {
   orderId: number;
@@ -36,7 +38,7 @@ const ADVANCE_PCT_TOLERANCE = 0.001;    // float taqqos toleransi
 export class TechThreeCheckpointListener {
   private readonly logger = new Logger(TechThreeCheckpointListener.name);
 
-  constructor(private readonly events: EventEmitter2) {}
+  constructor(private readonly eventBus: EventBus) {}
 
   @OnEvent(ERP_EVENTS.TECH_THREE_CHECKPOINT, { async: true, promisify: true })
   async handle(payload: TechCheckpointPayload): Promise<void> {
@@ -78,11 +80,11 @@ export class TechThreeCheckpointListener {
         this.logger.error(`Trigger 6: order ${payload.orderId} update fail — ${updR.error.message}`);
         return;
       }
-      this.events.emit(ERP_EVENTS.ADVANCE_APPROVED, {
-        orderId: payload.orderId,
-        advancePaid,
-        advancePct: advancePaidPct,
-      });
+      // PA2-18 Wave 6: canonical class form; EventBridge re-emits to legacy
+      // @OnEvent(ERP_EVENTS.ADVANCE_APPROVED) listeners (e.g. PP planning unlock).
+      this.eventBus.publish(
+        new AdvanceApprovedEvent(payload.orderId, advancePaid, advancePaidPct),
+      );
       this.logger.log(
         `Trigger 6 ✅ order ${payload.orderId}: advance OK (${advancePaidPct.toFixed(2)}%) → ready_for_planning`,
       );

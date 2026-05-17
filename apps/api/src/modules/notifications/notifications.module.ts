@@ -16,6 +16,7 @@ import { MarkNotificationReadHandler } from './application/commands/mark-notific
 import { CreateNotificationHandler } from './application/commands/create-notification.handler';
 import { GetNotificationsHandler } from './application/queries/get-notifications.handler';
 import { ErpEventsListener } from './infrastructure/event-handlers/erp-events.listener';
+import { MroMachineStoppedNotificationListener } from './infrastructure/event-handlers/mro-machine-stopped-notification.listener';
 import { NotificationsController } from './presentation/notifications.controller';
 import { NOTIFICATION_REPO } from './domain/repositories/i-notification.repo';
 import { DrizzleNotificationRepository } from './infrastructure/repositories/drizzle-notification.repo';
@@ -28,7 +29,7 @@ import { NotificationSchemaService } from './infrastructure/notification-schema.
 import { NotificationSchemaRepository } from './infrastructure/notification-schema.repository';
 
 const commandHandlers = [MarkNotificationReadHandler, CreateNotificationHandler];
-const eventHandlers = [ErpEventsListener];
+const eventHandlers = [ErpEventsListener, MroMachineStoppedNotificationListener];
 const queryHandlers = [GetNotificationsHandler];
 
 // Port → adapter wiring. Consumers depend on the port tokens

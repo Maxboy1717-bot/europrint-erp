@@ -8,6 +8,7 @@ import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
 import { IPpRepository, PP_REPO } from '../../domain/repositories/pp.repository';
+import { PpReleasedEvent } from '../../domain/events/pp-released.event';
 
 export class ReleaseProductionOrderCommand {
   constructor(public poId: number) {}
@@ -44,10 +45,8 @@ export class ReleaseProductionOrderHandler
     }
 
     // Emit events for MES task creation
-    this.eventBus.publish({
-      type: 'PP_RELEASED_TO_PRODUCTION',
-      data: { poId: command.poId, materialList: po.getMaterialList() },
-    });
+    // PA2-18 Wave 6: canonical class form; EventBridge re-emits to legacy @OnEvent listeners.
+    this.eventBus.publish(new PpReleasedEvent(command.poId, po.getMaterialList()));
 
     this.logger.log('Production order released');
     return Ok(undefined);

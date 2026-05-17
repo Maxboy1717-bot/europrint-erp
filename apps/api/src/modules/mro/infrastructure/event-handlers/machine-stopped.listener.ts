@@ -4,55 +4,50 @@
  */
 
 import { Injectable, Inject, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
+import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { MroMaintenanceStopEvent } from '../../domain/events';
 import { MaintenanceOrder } from '../../domain/aggregates/maintenance-order.aggregate';
 import { IMaintenanceRepo, MAINTENANCE_REPO } from '../../domain/repositories/i-maintenance.repo';
 
+/**
+ * PA2-18 Wave 6: converted from string-keyed @OnEvent(ERP_EVENTS.MRO_MACHINE_STOPPED)
+ *   to canonical @EventsHandler(MroMaintenanceStopEvent). The MRO event class is
+ *   the single source of truth; the EventBridge re-emits to any straggler
+ *   @OnEvent listeners.
+ *
+ *   The previous payload shape carried richer fields (equipmentName,
+ *   issueDescription, priority, productionOrderId) that the publisher
+ *   (stop-machine.handler.ts) doesn't actually emit yet. This handler now
+ *   creates a stub maintenance order keyed on machineId; richer fields are
+ *   left as TODO until StopMachineCommand carries them.
+ */
 @Injectable()
-export class MachineStoppedListener {
+@EventsHandler(MroMaintenanceStopEvent)
+export class MachineStoppedListener implements IEventHandler<MroMaintenanceStopEvent> {
   private readonly logger = new Logger(MachineStoppedListener.name);
 
   constructor(
     @Inject(MAINTENANCE_REPO) private readonly maintenanceRepo: IMaintenanceRepo,
-    private readonly eventEmitter: EventEmitter2,
-      ) {}
+  ) {}
 
-  @OnEvent(ERP_EVENTS.MRO_MACHINE_STOPPED)
-  async handleMachineStopped(payload: {
-    equipmentId: string;
-    equipmentName: string;
-    issueDescription: string;
-    priority: 'low' | 'medium' | 'high' | 'critical';
-    productionOrderId?: string;
-  }) {
+  async handle(event: MroMaintenanceStopEvent): Promise<void> {
     this.logger.log('Machine stopped event received - auto-creating maintenance order');
 
-    // Determine priority: high if production is blocked
-    let priority = payload.priority;
-    if (payload.productionOrderId) {
-      priority = 'high';
-    }
-
-    // Create new maintenance order
+    // TODO PA2-18: MroMaintenanceStopEvent only carries {maintenanceId, machineId};
+    // backfill equipmentName/issueDescription/priority from the maintenance record
+    // looked up by maintenanceId once StopMachineCommand carries that context.
     const order = MaintenanceOrder.createForEquipment(
-      payload.equipmentId,
-      payload.equipmentName,
-      payload.issueDescription,
-      priority,
+      event.machineId,
+      event.machineId,
+      'Auto-generated maintenance order from MroMaintenanceStopEvent',
+      'high',
     );
 
-    if (payload.productionOrderId) {
-      order.productionOrderAffected = payload.productionOrderId;
-    }
-
-    // Save to database
     const saveResult = await this.maintenanceRepo.save(order);
 
     if (!saveResult.ok) {
       this.logger.error(
-        { equipmentId: payload.equipmentId, error: saveResult.error },
+        { equipmentId: event.machineId, error: saveResult.error },
         'Failed to create maintenance order',
       );
       return;
@@ -61,8 +56,8 @@ export class MachineStoppedListener {
     this.logger.log(
       {
         maintenanceOrderId: saveResult.data.id,
-        equipmentId: payload.equipmentId,
-        productionOrderId: payload.productionOrderId,
+        equipmentId: event.machineId,
+        maintenanceId: event.maintenanceId,
       },
       'Maintenance order auto-created from machine stopped event',
     );

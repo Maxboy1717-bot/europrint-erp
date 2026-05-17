@@ -7,10 +7,11 @@ import { createHash } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventBus } from '@nestjs/cqrs';
 import { Result, AppError, safeCall } from '@common/result';
 import { StockLedgerRepository } from '../../infrastructure/repositories/stock-ledger.repository';
 import { movementConfirmations, posStockLedger as stockLedger, stockAlerts } from '@workspace/db';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
+import { StockUpdatedEvent } from '@modules/wms/application/events/stock-updated.event';
 
 const MIN_LOW_STOCK_THRESHOLD = 5;
 
@@ -27,6 +28,7 @@ export class StockLedgerService {
   constructor(
     private readonly repo:    StockLedgerRepository,
     private readonly emitter: EventEmitter2,
+    private readonly eventBus: EventBus,
   ) {}
 
   async recordEntry(
@@ -74,10 +76,9 @@ export class StockLedgerService {
         });
       }
 
-      this.emitter.emit(ERP_EVENTS.STOCK_UPDATED, {
-        materialId: materialCardId,
-        newOnHand: balanceAfter,
-      });
+      // PA2-18 Wave 6: canonical class form; EventBridge re-emits to legacy
+      // @OnEvent(ERP_EVENTS.STOCK_UPDATED) listeners (e.g. wms ROP trigger).
+      this.eventBus.publish(new StockUpdatedEvent(materialCardId, balanceAfter));
 
       return entry;
     });

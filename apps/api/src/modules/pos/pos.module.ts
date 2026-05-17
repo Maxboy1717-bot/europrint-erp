@@ -4,6 +4,7 @@
  */
 
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import {
   PosGateway,
   // Controllers
@@ -48,6 +49,7 @@ import {
 } from './pos.module-imports';
 
 @Module({
+  imports: [CqrsModule],
   controllers: [
     PosStubController,
     CashRegisterController,
