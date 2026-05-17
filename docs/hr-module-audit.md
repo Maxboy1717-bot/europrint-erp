@@ -244,40 +244,48 @@ HRBrandPage.tsx                  ~3
 
 ## 4 · Prioritized Remediation Backlog
 
-### Tier 1 — Sprint 2 (critical; ≈18 h)
+### Tier 1 — Sprint 2 (critical; ≈18 h) — ✅ CLOSED (2026-05-17)
 
-| # | Task | Files | Effort |
-|---|---|---|---|
-| H.1 | Split `hr-vacancies-pipeline.controller.ts` (310 lines) — extract pipeline mapping into `HrVacanciesService`; close Rule 16 + Rule 6 together | `recruitment/hr-vacancies-pipeline.controller.ts` | **L** (3 h) |
-| H.2 | Rescue `LeaveRequest` aggregate: private props + `Result<void>` + 3 events | `domain/aggregates/leave-request.aggregate.ts` + handlers | **L** (4 h) |
-| H.3 | Add 3 `leave-*.event.ts` files extending `DomainEvent`; wire emission + listeners | `domain/events/` | **M** (3 h) |
-| H.4 | Move 5–7 controller `.map`/`.filter` chains into services (Rule 6) | `hr-dashboard-extra`, `hr-vacancies-pipeline`, `hr-compat-a`, `hr-compat-safety`, `hr-employees`, `ai-interview-v2` | **M** (3 h) |
-| H.5 | Replace stub `return {}` / `return { items: [], total: 0 }` with `HttpException(NOT_IMPLEMENTED)` | `hr-dashboard-stubs.controller.ts`, `telegram-bots.controller.ts`, `territory.gateway.ts`, `ai-interview-v2.controller.ts` | **S** (1 h) |
-| H.6 | Wrap `face-recognition._validateEmbedding`, `boomerang-embedding.embed`, `inspection.service` null-returns in `Result<T>` | 4 service files | **S** (2 h) |
-| H.7 | Move `inspection.service.ts:27` `ROOM_AI_SERVICE_URL` to `ConfigService` (Rule 7) | `inspection.service.ts` | **XS** (15 min) |
-| H.8 | Inline KPI weight constants from `employee-kpi.handler.ts:94` into `business.constants.ts` (Rule 12) | `employee-kpi.handler.ts`, `business.constants.ts` | **XS** (20 min) |
+All 8 Tier-1 items landed across `b9f12d05` (prior work) and `62c5c94e` (Tier-1 follow-up closeout). Status keys: ✅ DONE.
 
-### Tier 2 — Sprint 3 (high; ≈27 h)
+| # | Task | Status | Files | Evidence |
+|---|---|:---:|---|---|
+| H.1 | Split `hr-vacancies-pipeline.controller.ts` (310 lines) — extract pipeline mapping into `HrVacanciesService`; close Rule 16 + Rule 6 together | ✅ DONE | `recruitment/hr-vacancies-pipeline.controller.ts` 386 → 245 + `HrVacanciesProbationController` (117) + `HrVacanciesAnalyticsController` (97); wired in `hr.module.ts` | `62c5c94e` |
+| H.2 | Rescue `LeaveRequest` aggregate: private props + `Result<void>` + 3 events | ✅ DONE | `domain/aggregates/leave-request.aggregate.ts` + handlers | `b9f12d05` |
+| H.3 | Add 3 `leave-*.event.ts` files extending `DomainEvent`; wire emission + listeners | ✅ DONE | `domain/events/` | `b9f12d05` |
+| H.4 | Move 5–7 controller `.map`/`.filter` chains into services (Rule 6) | ✅ DONE | `hr-dashboard-extra.controller.ts` (5 chains → `HrDashboardExtraService`); `ai-interview-v2.controller.ts` (transcript template + `answers.map(...).join()` → `AiInterviewV2Service.submitPublicAnswers`); other controllers covered in `b9f12d05` | `62c5c94e`, `b9f12d05` |
+| H.5 | Replace stub `return {}` / `return { items: [], total: 0 }` with `HttpException(NOT_IMPLEMENTED)` | ✅ DONE | `hr-dashboard-stubs.controller.ts`, `telegram-bots.controller.ts`, `territory.gateway.ts`, `ai-interview-v2.controller.ts` | `b9f12d05`; Wave 11 cataloged remaining stubs (`4814ea7b`) |
+| H.6 | Wrap `face-recognition._validateEmbedding`, `boomerang-embedding.embed`, `inspection.service` null-returns in `Result<T>` | ✅ DONE | 4 service files | `b9f12d05` |
+| H.7 | Move `inspection.service.ts:27` `ROOM_AI_SERVICE_URL` to `ConfigService` (Rule 7) | ✅ DONE | `inspection.service.ts` | `b9f12d05` |
+| H.8 | Inline KPI weight constants from `employee-kpi.handler.ts:94` into `business.constants.ts` (Rule 12) | ✅ DONE | `employee-kpi.handler.ts`, `business.constants.ts` | `b9f12d05` |
 
-| # | Task | Effort |
-|---|---|---|
-| H.9 | Promote `Funnel` aggregate (recruitment) — `moveStage/reject/makeOffer/hire`, 4 events, move `VALID_TRANSITIONS` from service | **L** (6 h) |
-| H.10 | Create `PayrollRecord` aggregate + `Salary` VO with non-negative `net` invariant | **L** (5 h) |
-| H.11 | Create `OnboardingPlan` aggregate (6-week checkpoint state machine) | **L** (7 h) |
-| H.12 | Refactor `EmployeesService` to use `Employee.fromRaw()` in read path | **M** (4 h) |
-| H.13 | Split `HROnboarding.tsx` (438 lines) into Sections/Dialogs/Types | **M** (2 h) |
-| H.14 | Long-function (Rule 17) extraction: `learning-bot.onProgressCompleted`, `recruitment-bot.publishVacancy`, `ai-interview-v2.gateway.handleAnswerSubmission`, `inspection.compareRoomWithAi`, `late-arrival.onTerritoryEnter` | **M** (3 h) |
+Tier-1 grade impact: Backend `B → B+` · DDD `C- → C+` (LeaveRequest rescued from `D-` to `B+`).
 
-### Tier 3 — Sprint 4 (medium; ≈16 h backlog)
+### Tier 2 — Sprint 3 (high; ≈27 h) — partial
 
-| # | Task | Effort |
-|---|---|---|
-| H.15 | Create `DisciplineRecord` aggregate | **M** (6 h) |
-| H.16 | Create `SkillProfile`, `ShiftAssignment`, `EmployeeGamification` aggregates | **M** (3+3+4 h) |
-| H.17 | Split FE oversize pages: `HRCareerPath` 339, `HRCapitalCourses` 321, `HRHealthMonitoring` 318, `HRAlumni` 315, `HRZnoPage` 352 | **M** (5 × 1.5 h = 7.5 h) |
-| H.18 | Add smoke tests for ≈23 secondary HR pages (basic render + error boundary) | **L** (8 h) |
-| H.19 | Resolve 31-key delta between `uz/hr.json` and `ru/hr.json`; back-fill UZ or trim RU | **M** (3 h) |
-| H.20 | Audit `HRDashboardMockup.tsx` + `agents/HRPerformanceDashboard.tsx` for hardcoded labels → fixture extraction or i18n keys | **S** (2 h) |
+| # | Task | Status | Effort | Evidence |
+|---|---|:---:|---|---|
+| H.9 | Promote `Funnel` aggregate (recruitment) — `moveStage/reject/makeOffer/hire`, 4 events, move `VALID_TRANSITIONS` from service | ⏸ PENDING | **L** (6 h) | Next sprint |
+| H.10 | Create `PayrollRecord` aggregate + `Salary` VO with non-negative `net` invariant | ✅ DONE | **L** (5 h) | `0f526490` — `payroll-record.aggregate.ts` (250) + `salary.vo.ts` (82) + 3 events + 19 unit tests; `PayrollService.closePeriod` emits per-employee `PayrollRunCompleted` |
+| H.11 | Create `OnboardingPlan` aggregate (6-week checkpoint state machine) | ⏸ PENDING | **L** (7 h) | Next sprint |
+| H.12 | Refactor `EmployeesService` to use `Employee.fromRaw()` in read path | ⏸ PENDING | **M** (4 h) | Next sprint |
+| H.13 | Split `HROnboarding.tsx` (438 lines) into Sections/Dialogs/Types | ✅ DONE | **M** (2 h) | Verified in prior session |
+| H.14 | Long-function (Rule 17) extraction: `learning-bot.onProgressCompleted`, `recruitment-bot.publishVacancy`, `ai-interview-v2.gateway.handleAnswerSubmission`, `inspection.compareRoomWithAi`, `late-arrival.onTerritoryEnter` | ⏸ PENDING | **M** (3 h) | Some Rule-17 fixes landed in `e152d054` (`org-chart-compat.getOrgTree`, `create-lead.handler.buildLead`, `employees-compat-profile-raw.getPayrollSummary`); HR-specific 5-function list above NOT TOUCHED. |
+
+Tier-2 closeout: **2 of 6 DONE (H.10, H.13)** · **4 PENDING (H.9, H.11, H.12, H.14)** for the next sprint.
+
+### Tier 3 — Sprint 4 (medium; ≈16 h backlog) — 🚫 OUT OF SCOPE this session
+
+| # | Task | Status | Effort | Reason |
+|---|---|:---:|---|---|
+| H.15 | Create `DisciplineRecord` aggregate | 🚫 OUT OF SCOPE | **M** (6 h) | Sprint-4 backlog; not in Wave 1-14 scope |
+| H.16 | Create `SkillProfile`, `ShiftAssignment`, `EmployeeGamification` aggregates | 🚫 OUT OF SCOPE | **M** (3+3+4 h) | Sprint-4 backlog |
+| H.17 | Split FE oversize pages: `HRCareerPath` 339, `HRCapitalCourses` 321, `HRHealthMonitoring` 318, `HRAlumni` 315, `HRZnoPage` 352 | 🚫 OUT OF SCOPE | **M** (5 × 1.5 h = 7.5 h) | Front-end-only follow-up; not in this sprint |
+| H.18 | Add smoke tests for ≈23 secondary HR pages (basic render + error boundary) | 🚫 OUT OF SCOPE | **L** (8 h) | Testing-infra sprint |
+| H.19 | Resolve 31-key delta between `uz/hr.json` and `ru/hr.json`; back-fill UZ or trim RU | 🚫 OUT OF SCOPE | **M** (3 h) | i18n sprint |
+| H.20 | Audit `HRDashboardMockup.tsx` + `agents/HRPerformanceDashboard.tsx` for hardcoded labels → fixture extraction or i18n keys | 🚫 OUT OF SCOPE | **S** (2 h) | i18n sprint |
+
+Tier-3 grade impact target (when picked up): DDD `C+ → B` (6 aggregates in HR; 5 of them aligned with Auth/CRM quality).
 
 ---
 

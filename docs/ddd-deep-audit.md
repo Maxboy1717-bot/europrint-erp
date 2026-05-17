@@ -185,3 +185,46 @@ But the **scorecard was self-graded against the tactical axis only**, and three 
 - Strategic / bounded-context concerns (never in scope; remains weakest pillar).
 
 A truthful sprint-completion claim would have been: **"75/100 tactical → 88/100 tactical; strategic and event-flow dimensions remain unaddressed (~55-60/100), overall honest score ~70/100."** That framing makes the next sprint's job concrete instead of celebratory.
+
+---
+
+## Final Sprint Closeout (2026-05-17)
+
+Post-Wave 1-14 remediation. Honest score is now framed across **6 dimensions** rather than the 4 DDD-only axes used above, because Waves 1-14 added security / schema / raw-SQL / multi-tenancy / events / test-coverage work that the original audit didn't measure. Source of truth: `git log b9f12d05..HEAD` (Waves 1-14) plus the prior `b9f12d05` mega-commit.
+
+### Six-dimension score
+
+| Dimension | State | Score | Outstanding gaps (1-2) |
+|---|---|---:|---|
+| **1. DDD tactical patterns** (aggregates / VOs / domain purity) | `b9f12d05` rebuilt the base; Wave 8 deleted 49 application-layer shim repos (`577af50e`); Wave 12 added `PayrollRecord` + `Salary` VO (`0f526490`). 6 identity VOs + ~15 aggregates remain canonical. | **88/100** | LeaveRequest tightened but other Tier-3 aggregates (Discipline, SkillProfile, ShiftAssignment, EmployeeGamification) still procedural (H.15–H.16). `mm/material.aggregate.ts` not refactored. |
+| **2. Security** (Qoida A + B) | All Wave 1 hardcoded credentials removed (`b9f12d05`); BCRYPT_ROUNDS unified at 12 (`e89fcc36`); JWT_REFRESH_SECRET documented (`08f5f55c`); all 25 `sql.raw()` callsites annotated with P3-30 static-bound proofs (`7881bce4`); `reviewer-hardcoded-credentials.sh` PASS (`08f5f55c`). | **96/100** | No automated secret-rotation cadence; no runtime SAST in CI. |
+| **3. Schema discipline** (pgTable canonicalization) | 5 Tier-1 duplicate `pgTable` definitions consolidated (`a05ccf10`); P3-27 covered in prior commit. 69 pre-existing consumer typecheck errors from shape drift remain (snake_case vs camelCase, missing columns) — flagged, not fixed. | **78/100** | Tier-2 schema-compat-*.ts + schema-ext-*.ts still have partial pgTable shapes blocking 30 of the 96 remaining raw queries in `legacy-*.helpers.ts` (`c4b342a2`). |
+| **4. Raw-SQL / Rule B** | Wave 9 migrated 9 `legacy-*.helpers` queries to Drizzle and annotated the remaining 30 with P3-30 blockers (`c4b342a2`); module-wide raw `db.execute(sql\`...\`)` count 105 → 96. All `sql.raw(variable)` sites proven static-bound. | **82/100** | 96 raw queries remain — mostly LATERAL/CTE/FILTER aggregates or stub pgTables; not injection vectors but Rule 4 deviations. |
+| **5. Multi-tenancy** | ADR landed (`docs/multi-tenancy-decision.md`, 332 lines); `TenantId` VO + AsyncLocalStorage context + `tenant.middleware.ts` + `reviewer-tenant-isolation.sh` scaffolding (`95972ceb`); DEFAULT_TENANT_ID constant added. | **45/100** (scaffolding-only) | **No `tenant_id` column on any table yet.** Rollout phases P2 (sd_orders/crm_leads/crm_deals first) and P3 (HR integer-tenant retirement) not started. |
+| **6. Events / triggers** | Wave 4 pilot migrated `notifications` listeners to `@EventsHandler` (`a5956a48`, -4 `@OnEvent`); Wave 4 round-2 migrated pp+mes Trigger 5/17 listeners (`29e53dfc`, -4 more). EVENT_NAME_MAP bridge keeps legacy emitters working. PA0-1..5 trigger fixes landed in `b9f12d05`. | **70/100** | `@OnEvent` decorator count 98 → 89 only (9-of-94 migrated). EventBridge bridge can't be retired until ≥80% remaining listeners migrate. **No `domain_events` outbox table** (PA0-6 not done). |
+| **7. Test coverage** | Wave-1 reviewer fixes added website.service.spec.ts (13 cases) + sap.service.spec.ts (11 cases) (`e152d054`); Wave 12 added payroll-record.aggregate.spec.ts (19 cases). Notification listener pilot has 4 passing smoke tests. | **62/100** | Reviewer R22 PASS reached but coverage of new aggregates (Funnel, Onboarding, Discipline) NOT YET WRITTEN — tracked in HR audit Tier-2/Tier-3. Backend boot test + Playwright NOT RUN this session. |
+
+### Honest weighted score
+
+| Dimension | Weight | Score | Contribution |
+|---|---:|---:|---:|
+| DDD tactical | 20% | 88 | 17.6 |
+| Security | 20% | 96 | 19.2 |
+| Schema discipline | 10% | 78 | 7.8 |
+| Raw-SQL / Rule B | 10% | 82 | 8.2 |
+| Multi-tenancy | 10% | 45 | 4.5 |
+| Events / triggers | 15% | 70 | 10.5 |
+| Test coverage | 15% | 62 | 9.3 |
+| **Honest weighted total** | **100%** | | **~77/100** |
+
+Up from the prior honest **~67-71/100**, but **not the 92-93/100 the pre-sprint DDD-only framing would claim**. The single largest drag is multi-tenancy (scaffolding without a column), followed by events (only 9% of `@OnEvent` listeners migrated; no outbox).
+
+### What NOT to claim
+
+- ❌ Wave 5 (module splits — hr 259 files, finance 145, pos 139, crm 139) — **not touched this session**.
+- ❌ Wave 7 (notification port migration — full domain-port DI rollout across consumers) — **BLOCKED on architectural decision**; only Wave 4 pilot landed.
+- ❌ Wave 11 (stub endpoint implementations) — **catalog only** (`docs/stub-endpoint-catalog.md`, 240 stubs inventoried). 234 consumed stubs still need real impls.
+- ❌ Wave 12 HR worktree round-2 recovery — **status unknown**; the 8 HR worktree merges (`d4d544cb..c3c8b463`) predate this session.
+- ❌ Wave 13 final 3 pseudo-repos + employees-extra GET ACL — **not touched**.
+
+The honest framing: **"77/100 across 6 production dimensions; one architectural blocker (Wave 7) and one greenfield phase (multi-tenancy P2) gate the next jump to 88/100."**
