@@ -15,6 +15,9 @@ export const aishaConversations = pgTable(
   'aisha_conversations',
   {
     id:        uuid('id').primaryKey().defaultRandom(),
+    // Multi-tenancy (Phase 2 / Task 2.1). DEFAULT 1 backfills existing rows;
+    // every new write MUST come from TenantContext after middleware lands.
+    tenantId:  integer('tenant_id').notNull().default(1),
     userId:    integer('user_id').notNull(),
     startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
     endedAt:   timestamp('ended_at', { withTimezone: true }),
@@ -24,6 +27,7 @@ export const aishaConversations = pgTable(
   (t) => [
     index('aisha_conv_user_idx').on(t.userId),
     index('aisha_conv_status_idx').on(t.status),
+    index('aisha_conv_tenant_idx').on(t.tenantId),
   ],
 );
 
@@ -31,6 +35,8 @@ export const aishaToolCalls = pgTable(
   'aisha_tool_calls',
   {
     id:             uuid('id').primaryKey().defaultRandom(),
+    // Multi-tenancy (Phase 2 / Task 2.1). See aishaConversations above.
+    tenantId:       integer('tenant_id').notNull().default(1),
     conversationId: uuid('conversation_id').notNull().references(() => aishaConversations.id, { onDelete: 'cascade' }),
     toolName:       text('tool_name').notNull(),
     input:          jsonb('input').notNull(),
@@ -42,6 +48,7 @@ export const aishaToolCalls = pgTable(
   (t) => [
     index('aisha_tool_conv_idx').on(t.conversationId),
     index('aisha_tool_name_idx').on(t.toolName),
+    index('aisha_tool_tenant_idx').on(t.tenantId),
   ],
 );
 

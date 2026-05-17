@@ -25,6 +25,7 @@ import { Sprint3MigrationService } from './modules/common/services/sprint3-migra
 // Common
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { ResultUnwrapInterceptor } from './common/interceptors/result-unwrap.interceptor';
+import { TenantContextInterceptor } from './shared/db/tenant-context.interceptor';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { SodGuard } from './common/guards/sod.guard';
@@ -288,6 +289,12 @@ import { OutboxModule } from './modules/shared/outbox/outbox.module';
 
     // ── Global Interceptors (tartib muhim: Audit → ResultUnwrap) ─────────────
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
+    // TenantContextInterceptor: Phase 2 / Task 2.1 — wraps each request in
+    // an AsyncLocalStorage tenant scope read from JWT. Must run AFTER the
+    // guards (so request.user is populated) but BEFORE any business logic
+    // that calls getTenantId(). Order is determined by registration order
+    // among APP_INTERCEPTOR providers.
+    { provide: APP_INTERCEPTOR, useClass: TenantContextInterceptor },
     // ResultUnwrapInterceptor: controller Result<T> qaytarsa avtomatik unwrap
     // qiladi. isSuccess=true → value qaytaradi; isFailure → 500 tashlaydi.
     { provide: APP_INTERCEPTOR, useClass: ResultUnwrapInterceptor },
