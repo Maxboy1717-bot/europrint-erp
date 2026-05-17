@@ -15,8 +15,11 @@ import { TELEGRAM_SENDER } from './domain/ports/i-telegram-sender.port';
 import { MarkNotificationReadHandler } from './application/commands/mark-notification-read.handler';
 import { CreateNotificationHandler } from './application/commands/create-notification.handler';
 import { GetNotificationsHandler } from './application/queries/get-notifications.handler';
-import { ErpEventsListener } from './infrastructure/event-handlers/erp-events.listener';
 import { MroMachineStoppedNotificationListener } from './infrastructure/event-handlers/mro-machine-stopped-notification.listener';
+import { DealWonNotificationListener } from './infrastructure/event-handlers/deal-won-notification.listener';
+import { OrderCreatedNotificationListener } from './infrastructure/event-handlers/order-created-notification.listener';
+import { QcFailedNotificationListener } from './infrastructure/event-handlers/qc-failed-notification.listener';
+import { LmsCertExpiredNotificationListener } from './infrastructure/event-handlers/lms-cert-expired-notification.listener';
 import { NotificationsController } from './presentation/notifications.controller';
 import { NOTIFICATION_REPO } from './domain/repositories/i-notification.repo';
 import { DrizzleNotificationRepository } from './infrastructure/repositories/drizzle-notification.repo';
@@ -29,7 +32,15 @@ import { NotificationSchemaService } from './infrastructure/notification-schema.
 import { NotificationSchemaRepository } from './infrastructure/notification-schema.repository';
 
 const commandHandlers = [MarkNotificationReadHandler, CreateNotificationHandler];
-const eventHandlers = [ErpEventsListener, MroMachineStoppedNotificationListener];
+const eventHandlers = [
+  MroMachineStoppedNotificationListener,
+  // Wave 4 (pilot) — canonical @EventsHandler(EventClass) replacements for the
+  // legacy ErpEventsListener @OnEvent handlers (now deprecated).
+  DealWonNotificationListener,
+  OrderCreatedNotificationListener,
+  QcFailedNotificationListener,
+  LmsCertExpiredNotificationListener,
+];
 const queryHandlers = [GetNotificationsHandler];
 
 // Port → adapter wiring. Consumers depend on the port tokens
