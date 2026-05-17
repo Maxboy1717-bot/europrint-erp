@@ -38,6 +38,10 @@ import { QcDefectsExtendedRepository } from './infrastructure/repositories/qc-de
 import { QC_DEFECTS_EXTENDED_REPO } from './domain/repositories/i-qc-defects-extended.repo';
 import { QcExtendedService } from './application/qc-extended.service';
 import { QcExtendedRepository } from './infrastructure/repositories/qc-extended.repository';
+import { QcExtendedStandardsRepository } from './infrastructure/repositories/qc-extended-standards.repository';
+import { QcExtendedFinalRepository } from './infrastructure/repositories/qc-extended-final.repository';
+import { QcExtendedInProcessRepository } from './infrastructure/repositories/qc-extended-in-process.repository';
+import { QcExtendedRootCausesRepository } from './infrastructure/repositories/qc-extended-root-causes.repository';
 import { QC_EXTENDED_REPO } from './domain/repositories/i-qc-extended.repo';
 import { QcNewService } from './application/qc-new.service';
 import { QcParametersService } from './application/qc-parameters.service';
@@ -109,6 +113,10 @@ const repositories = [
     QcDefectsExtendedRepository,
     { provide: QC_DEFECTS_EXTENDED_REPO, useClass: QcDefectsExtendedRepository },
     QcDefectsExtendedService,
+    QcExtendedStandardsRepository,
+    QcExtendedFinalRepository,
+    QcExtendedInProcessRepository,
+    QcExtendedRootCausesRepository,
     QcExtendedRepository,
     { provide: QC_EXTENDED_REPO, useClass: QcExtendedRepository },
     QcExtendedService,

@@ -68,6 +68,9 @@ import { CrmAutoLeadRepository } from './infrastructure/repositories/crm-auto-le
 import { CRM_AUTO_LEAD_REPO } from './domain/repositories/i-crm-auto-lead.repo';
 import { CrmBitrixCompatService } from './application/crm-bitrix-compat.service';
 import { CrmBitrixCompatRepository } from './infrastructure/repositories/crm-bitrix-compat.repository';
+import { CrmBitrixCompatProposalsRepository } from './infrastructure/repositories/crm-bitrix-compat-proposals.repository';
+import { CrmBitrixCompatRobotsRepository } from './infrastructure/repositories/crm-bitrix-compat-robots.repository';
+import { CrmBitrixCompatInvoicesRepository } from './infrastructure/repositories/crm-bitrix-compat-invoices.repository';
 import { CRM_BITRIX_COMPAT_REPO } from './domain/repositories/i-crm-bitrix-compat.repo';
 import { CrmCompaniesService } from './application/crm-companies.service';
 import { CrmCompaniesRepository } from './infrastructure/repositories/crm-companies.repository';
@@ -85,6 +88,10 @@ import { UpdateLeadStageHandler } from './application/commands/update-lead-stage
 import { DeleteLeadHandler } from './application/commands/delete-lead.handler';
 import { CrmExtrasService } from './application/crm-extras.service';
 import { CrmExtrasRepository } from './infrastructure/repositories/crm-extras.repository';
+import { CrmExtrasCommentsRepository } from './infrastructure/repositories/crm-extras-comments.repository';
+import { CrmExtrasDashboardRepository } from './infrastructure/repositories/crm-extras-dashboard.repository';
+import { CrmExtrasTasksRepository } from './infrastructure/repositories/crm-extras-tasks.repository';
+import { CrmExtrasDocumentsRepository } from './infrastructure/repositories/crm-extras-documents.repository';
 import { CRM_EXTRAS_REPO } from './domain/repositories/i-crm-extras.repo';
 import { CrmCommsService } from './application/crm-comms.service';
 import { CrmCommsRepository } from './infrastructure/repositories/crm-comms.repository';
@@ -164,6 +171,9 @@ const repositories = [
     CrmAiService,
     { provide: CRM_AUTO_LEAD_REPO, useClass: CrmAutoLeadRepository },
     CrmAutoLeadService,
+    CrmBitrixCompatProposalsRepository,
+    CrmBitrixCompatRobotsRepository,
+    CrmBitrixCompatInvoicesRepository,
     CrmBitrixCompatRepository,
     { provide: CRM_BITRIX_COMPAT_REPO, useClass: CrmBitrixCompatRepository },
     CrmBitrixCompatService,
@@ -175,6 +185,10 @@ const repositories = [
     { provide: CRM_FOLLOWUP_COMPAT_REPO, useClass: CrmFollowupCompatRepository },
     CrmFollowupCompatService,
     { provide: CRM_LEADS_OPS_REPO, useClass: CrmLeadsOpsRepository },
+    CrmExtrasCommentsRepository,
+    CrmExtrasDashboardRepository,
+    CrmExtrasTasksRepository,
+    CrmExtrasDocumentsRepository,
     CrmExtrasRepository,
     { provide: CRM_EXTRAS_REPO, useClass: CrmExtrasRepository },
     CrmExtrasService,

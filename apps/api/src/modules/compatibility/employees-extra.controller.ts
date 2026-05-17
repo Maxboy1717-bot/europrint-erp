@@ -8,8 +8,10 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -17,13 +19,18 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
-import { unwrapOrInternal } from '@common/http-result';
+import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { EmployeesCompatService } from './employees-compat.service';
 import { CompatBodyDto, ProfileImageDto } from './dto/compat-body.dto';
+import {
+  EmployeesExtraAclTranslator,
+  type LegacyEmployeeExtraRow,
+} from './acl/employees-extra-acl';
 
 const HR_ROLES = [
   'HR_MANAGER',
@@ -36,11 +43,33 @@ const HR_ROLES = [
 
 @ApiThrottle()
 @Controller('employees')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Roles(...HR_ROLES)
 export class EmployeesExtraController {
+  private readonly acl = new EmployeesExtraAclTranslator();
+
   constructor(private readonly svc: EmployeesCompatService) {}
+
+  /**
+   * GET /api/employees/extra/:id — Bitrix-style read endpoint added in Wave 13 PR2
+   * for ACL symmetry with other compatibility/ controllers. Delegates to the
+   * canonical `EmployeesCompatService.getEmployee` and translates the raw
+   * snake_case row through `EmployeesExtraAclTranslator` so legacy consumers
+   * get the camelCase envelope shape (mirrors `employee-file-acl.ts`).
+   *
+   * Path is `extra/:id` (not `:id`) to avoid clashing with the existing
+   * `GET /api/employees/:id` route on `EmployeesCompatController`.
+   */
+  @Get('extra/:id')
+  async getEmployeeExtra(@Param('id') id: string) {
+    const row = unwrapOrThrow(await this.svc.getEmployee(id)) as unknown as LegacyEmployeeExtraRow;
+    const translated = this.acl.toDomain(row);
+    if (!translated.ok) {
+      throw new NotFoundException(translated.error.message);
+    }
+    return translated.data;
+  }
 
   /**
    * PATCH /api/employees/:id — partial update.
