@@ -8,11 +8,14 @@ const _time = new TashkentTimeService();
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventBus } from '@nestjs/cqrs';
 import { DELIVERY_FREE_THRESHOLD_UZS, DELIVERY_FEE_UZS } from '@common/constants/app.constants';
 import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 import { LEAD_SUB_SOURCE } from '@common/constants/lead-sources.constants';
 import { safeCall, Result, AppError } from '@common/result';
 import { EcommerceRepository } from './ecommerce.repository';
+import { WebsiteOrderCreatedEvent } from '@modules/crm/domain/events/website-order-created.event';
+import { WebsiteContactSubmittedEvent } from '@modules/crm/domain/events/website-contact-submitted.event';
 import {
   ecommerceListProducts, ecommerceGetProduct, ecommerceCreateProduct, ecommerceUpdateProduct,
   ecommerceListCategories, ecommerceGetCategoryById, ecommerceCreateCategory, ecommerceUpdateCategory,
@@ -35,6 +38,7 @@ export class EcommerceService {
   constructor(
     private readonly repo: EcommerceRepository,
     private readonly events: EventEmitter2,
+    private readonly eventBus: EventBus,
     private readonly i18n: I18nService,
   ) {}
 
@@ -199,6 +203,10 @@ export class EcommerceService {
           subSource: LEAD_SUB_SOURCE.WEBSITE_ORDER,
           occurredAt: _time.now().toISOString(),
         };
+        // PA2-18 Wave 4 round-3: dual emit — CQRS bus for canonical
+        // @EventsHandler(WebsiteOrderCreatedEvent) consumer, plus the legacy
+        // string topic for any non-migrated EventEmitter2 consumer.
+        this.eventBus.publish(new WebsiteOrderCreatedEvent(payload));
         this.events.emit(ERP_EVENTS.WEBSITE_ORDER_CREATED, payload);
       }
 
@@ -215,6 +223,10 @@ export class EcommerceService {
       ...event,
       occurredAt: _time.now().toISOString(),
     };
+    // PA2-18 Wave 4 round-3: dual emit — CQRS bus for canonical
+    // @EventsHandler(WebsiteContactSubmittedEvent) consumer, plus the legacy
+    // string topic for any non-migrated EventEmitter2 consumer.
+    this.eventBus.publish(new WebsiteContactSubmittedEvent(payload));
     this.events.emit(ERP_EVENTS.WEBSITE_CONTACT_SUBMITTED, payload);
   }
 

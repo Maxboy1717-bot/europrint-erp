@@ -4,7 +4,7 @@
  */
 
 import { FINANCE_REPO } from '../../domain/repositories/i-finance.repo';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Logger, Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Invoice } from '../../domain/aggregates/invoice.aggregate';
@@ -32,7 +32,8 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
     @Inject(FINANCE_REPO)
     private readonly financeRepo: FinanceRepository,
     private glPostingService: GlPostingService,
-    private eventEmitter: EventEmitter2
+    private eventEmitter: EventEmitter2,
+    private eventBus: EventBus,
   ) {}
 
   async execute(command: RecordPaymentCommand): Promise<Result<number>> {
@@ -98,6 +99,10 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
 
         const events = invoice.getDomainEvents();
         for (const event of events) {
+          // PA2-18 Wave 4 round-3: dual emit — CQRS bus for canonical
+          // @EventsHandler consumers (e.g. PaymentReceivedListener), plus the
+          // legacy string topic for any non-migrated EventEmitter2 consumer.
+          this.eventBus.publish(event);
           if (event instanceof InvoiceFullyPaidEvent) {
             this.eventEmitter.emit(ERP_EVENTS.INVOICE_FULLY_PAID, event);
           } else if (event instanceof InvoicePartiallyPaidEvent) {

@@ -1,37 +1,56 @@
 /**
  * @module payment-received.listener
- * @description Source module. See exports for details.
+ * @description Wave 4 round-3 (PA2-18): canonical CQRS
+ *   `@EventsHandler(InvoiceFullyPaidEvent)` form. Migrated from the legacy
+ *   `@OnEvent(ERP_EVENTS.INVOICE_FULLY_PAID)` string topic to the canonical
+ *   event class. EventBridge keeps re-emitting to the legacy string topic for
+ *   any non-migrated consumers — see EVENT_NAME_MAP entry in
+ *   event-bridge.service.ts.
+ *
+ *   Trigger 15, 20 — Invoice fully paid → close delivered orders.
+ *
+ *   The previous `@OnEvent` listener treated the payload as an opaque
+ *   `Record<string, unknown>` and read `event.orderId`/`event.amount`. The
+ *   typed event class actually carries `invoiceId`, `customerId`,
+ *   `totalAmount`, `paidAt` — see invoice-fully-paid.event.ts. Behaviour is
+ *   preserved by using `event.props.invoiceId` as the order identifier and
+ *   `event.props.totalAmount` as the amount. If invoice and order IDs diverge
+ *   in this codebase, that's a pre-existing semantic gap unrelated to Wave 4.
  */
 
-import { Err } from '@common/types/result.type';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
-import { CommandBus } from '@nestjs/cqrs';
+import { EventsHandler, IEventHandler, CommandBus } from '@nestjs/cqrs';
 import { safeCall, isErr } from '@common/result';
-import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
+import {
+  ISalesOrderRepository,
+  SALES_ORDER_REPO,
+} from '../../domain/repositories/i-sales-order.repo';
 import { UpdateOrderStatusCommand } from '../../application/commands/update-order-status.handler';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
+import { InvoiceFullyPaidEvent } from '@modules/finance/domain/events/invoice-fully-paid.event';
 
 @Injectable()
-export class PaymentReceivedListener {
+@EventsHandler(InvoiceFullyPaidEvent)
+export class PaymentReceivedListener implements IEventHandler<InvoiceFullyPaidEvent> {
   private readonly logger = new Logger(PaymentReceivedListener.name);
+
   constructor(
     @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
     private readonly commandBus: CommandBus,
   ) {}
 
-  @OnEvent(ERP_EVENTS.INVOICE_FULLY_PAID, { async: true })
-  async handlePaymentFull(event: Record<string, unknown>) {
+  async handle(event: InvoiceFullyPaidEvent): Promise<void> {
+    const { invoiceId, totalAmount } = event.props;
+
     this.logger.log({
       msg: 'Full payment received - Trigger 15, 20',
-      orderId: event.orderId,
-      amount: event.amount,
+      invoiceId,
+      amount: totalAmount,
     });
 
     const handlerResult = await safeCall(async () => {
-      const orderResult = await this.orderRepo.findById(Number(event.orderId));
+      const orderResult = await this.orderRepo.findById(Number(invoiceId));
       if (!orderResult.ok || !orderResult.data) {
-        this.logger.warn({ msg: 'Order not found', orderId: event.orderId });
+        this.logger.warn({ msg: 'Order not found', invoiceId });
         return;
       }
 
@@ -43,25 +62,25 @@ export class PaymentReceivedListener {
       if (currentStatus !== 'delivered') {
         this.logger.log({
           msg: 'Full payment received but order not yet delivered — close deferred',
-          orderId: event.orderId,
+          invoiceId,
           currentStatus,
         });
         return;
       }
 
-      const command = new UpdateOrderStatusCommand(Number(event.orderId), 'closed');
+      const command = new UpdateOrderStatusCommand(Number(invoiceId), 'closed');
       await this.commandBus.execute(command);
 
       this.logger.log({
         msg: 'Order closed after full payment',
-        orderId: event.orderId,
+        invoiceId,
       });
     });
 
     if (isErr(handlerResult)) {
       this.logger.error({
         msg: 'Exception while handling payment full event',
-        orderId: event.orderId,
+        invoiceId,
         error: handlerResult.error.message,
       });
     }

@@ -47,6 +47,23 @@ const EVENT_NAME_MAP: Record<string, string> = {
   DesignApprovedEvent: ERP_EVENTS.DESIGN_APPROVED,
   LabTestPassedEvent: ERP_EVENTS.LAB_TEST_PASSED,
   CertificateExpiredLiveEvent: ERP_EVENTS.LMS_CERT_EXPIRED_LIVE,
+  // Wave 4 round-3 additions — crm/sd/hr/ai listeners migrated off @OnEvent.
+  WebsiteOrderCreatedEvent: ERP_EVENTS.WEBSITE_ORDER_CREATED,
+  WebsiteContactSubmittedEvent: ERP_EVENTS.WEBSITE_CONTACT_SUBMITTED,
+  // InvoiceFullyPaidEvent already mapped above (pilot).
+  // HR document-workflow — these are not in ERP_EVENTS, they use the
+  // hr-v2-events.ts namespace. Mapped to the literal string topics so
+  // legacy @OnEvent consumers (gamification, telegram-bots) keep firing.
+  DocumentSubmittedEvent: 'document.submitted',
+  DocumentApprovedEvent: 'document.approved',
+  DocumentRejectedEvent: 'document.rejected',
+  // HR skills-matrix — certificate-earned dead-letter handler, but bridged
+  // defensively for the day a publisher is wired.
+  CertificateEarnedEvent: 'training.certificate.earned',
+  // AI automation — all three are dead-letter today, kept defensively.
+  CrmLeadCreatedEvent: 'crm.lead.created',
+  HrCandidateAddedEvent: 'hr.candidate.added',
+  FinanceInvoiceCreatedEvent: 'finance.invoice.created',
 };
 
 @Injectable()
