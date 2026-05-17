@@ -65,7 +65,9 @@ const REDIRECT_PATHS = [
   '/crm/invoices', '/sd/quota-dashboard', '/erp/planning', '/erp/pp/mrp',
   '/tech/dashboard', '/tech/approval', '/tech/parameters', '/tech/standards',
   '/iot/live', '/europrint/director', '/qc/dashboard', '/qc/standards',
-  '/qc/parameters', '/qc/tests', '/succession-planning', '/feedback', '/logout',
+  '/qc/parameters', '/qc/tests', '/succession-planning',
+  '/hr/succession-planning', '/hr/leave',
+  '/feedback', '/logout',
   '/order-workflow', '/sales',
 ];
 
@@ -163,7 +165,9 @@ export function AppRouter() {
       <Route path="/qc/standards"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
       <Route path="/qc/parameters"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
       <Route path="/qc/tests"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
-      <Route path="/succession-planning"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/succession-planning" /></RoleRoute></Route>
+      <Route path="/succession-planning"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/succession" /></RoleRoute></Route>
+      <Route path="/hr/succession-planning"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/succession" /></RoleRoute></Route>
+      <Route path="/hr/leave"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/vacation-sick" /></RoleRoute></Route>
       <Route path="/feedback"><Redirect to="/kanban" /></Route>
       <Route path="/logout"><Redirect to="/login" /></Route>
 
