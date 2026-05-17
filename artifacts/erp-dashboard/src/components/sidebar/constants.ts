@@ -101,6 +101,7 @@ import { LayoutDashboard, X,
   Megaphone
   } from "lucide-react";
   import { MenuGroup } from "./types";
+  import { translateHrModule } from "./hrNavI18n";
 
   export const menuGroups = {
   tz01: {
@@ -716,8 +717,11 @@ import { LayoutDashboard, X,
   coordination: "bg-sky-600", chat: "bg-blue-600",
 };
 
-  export function getTranslatedMenuGroups(_t: (key: string) => string): Record<string, MenuGroup> {
-    return menuGroups as Record<string, MenuGroup>;
+  export function getTranslatedMenuGroups(t: (key: string) => string): Record<string, MenuGroup> {
+    const groups = menuGroups as Record<string, MenuGroup>;
+    const hrModule = groups.tz11;
+    if (!hrModule) return groups;
+    return { ...groups, tz11: translateHrModule(t, hrModule) };
   }
 
   export function findModuleByPath(path: string): string | null {
