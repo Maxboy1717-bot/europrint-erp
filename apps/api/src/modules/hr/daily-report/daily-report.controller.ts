@@ -1,29 +1,18 @@
-/**
- * @module daily-report.controller
- * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
- */
-
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { Controller, UseGuards, Get, HttpCode, HttpException, HttpStatus, Post, Patch, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors, Res } from '@nestjs/common';
-
-// P3-26: aggregated employee/department report endpoints aren't wired yet.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import type { FastifyReply } from 'fastify';
+import { BadRequestException, Controller, UseGuards, Get, Post, Patch, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
-import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { RolesGuard } from '@common/guards/roles.guard';
+import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 import { DailyReportService } from './daily-report.service';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { unwrapOrInternal } from '@common/http-result';
+
+const REPORT_TYPES = ['all', 'operator', 'office'] as const;
+type ReportType = (typeof REPORT_TYPES)[number];
 
 const SubmitReportSchema = z.object({
   employee_id:     z.number().int(),
@@ -45,123 +34,102 @@ const OverrideReportSchema = z.object({
 });
 class OverrideReportDto extends createZodDto(OverrideReportSchema) {}
 
-@Roles('admin', 'manager', 'supervisor', 'operator', 'employee')
-@ApiThrottle()
+@Roles('admin', 'manager', 'supervisor', 'operator', 'employee', 'hr_manager', 'hr_specialist')
+@Throttle({ default: { limit: 100, ttl: 60_000 } })
 @UseInterceptors(AuditInterceptor)
-@UseGuards(JwtAuthGuard)
-@ApiTags('Daily Report')
-@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('hr-v2/daily-reports')
 export class DailyReportController {
   private readonly logger = new Logger(DailyReportController.name);
   constructor(private readonly svc: DailyReportService) {}
 
-  @ApiOperation({ summary: 'Submit' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   async submit(@Body() body: SubmitReportDto) {
+    const metrics = body.metrics || (
+      (body.blockers || body.mood || body.productive_hours)
+        ? JSON.stringify({ blockers: body.blockers, mood: body.mood, productiveHours: body.productive_hours })
+        : undefined
+    );
     return unwrapOrInternal(await this.svc.submitReport({
-      employeeId:     body.employee_id,
-      reportDate:     body.report_date,
+      employeeId: body.employee_id,
+      reportDate: body.report_date,
       tasksCompleted: body.tasks_completed || body.completed_tasks || '',
-      metrics:        body.metrics,
-      tomorrowPlan:   body.tomorrow_plan || body.planned_tasks,
-      blockers:       body.blockers,
-      mood:           body.mood,
-      productiveHours: body.productive_hours,
+      metrics,
+      tomorrowPlan: body.tomorrow_plan || body.planned_tasks,
     }));
   }
 
-  @ApiOperation({ summary: 'Override' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/override')
   async override(@Param('id', ParseIntPipe) id: number, @Body() body: OverrideReportDto) {
     return unwrapOrInternal(await this.svc.hrOverride(id, body.hr_user_id || 1, body.override_notes ?? ''));
   }
 
-  @ApiOperation({ summary: 'Stats' })
-  @ApiResponse({ status: 200, description: 'OK' })
   @Get('stats')
   async stats(@Query('date') date: string) {
     return unwrapOrInternal(await this.svc.getStats(date));
   }
 
-  @ApiOperation({ summary: 'By date' })
-  @ApiResponse({ status: 200, description: 'OK' })
   @Get('by-date')
-  async byDate(@Query('date') date: string) {
-    return unwrapOrInternal(await this.svc.getByDate(date || _time.now().toISOString().split('T')[0]));
+  async byDate(
+    @Query('date') date: string,
+    @Query('type') type?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const normalizedType: ReportType = REPORT_TYPES.includes(type as ReportType)
+      ? (type as ReportType)
+      : 'all';
+    const normalizedLimit = Math.min(Math.max(parseInt(limit ?? '100', 10) || 100, 1), 500);
+    return unwrapOrInternal(
+      await this.svc.getByDate(
+        date || _time.now().toISOString().split('T')[0],
+        normalizedType,
+        normalizedLimit,
+      ),
+    );
   }
 
-  @ApiOperation({ summary: 'By employee' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Get('employee/:id')
-  async byEmployee(@Param('id', ParseIntPipe) id: number, @Query('limit') limit: string) {
-    return unwrapOrInternal(await this.svc.getByEmployee(id, parseInt(limit || '30')));
-  }
-
-  @ApiOperation({ summary: 'Get employee reports' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  /**
+   * Frontend (`DailyReportPage.tsx:34`) calls
+   *   GET /api/hr-v2/daily-reports/employee?employeeId=X&limit=14
+   * so we accept `employeeId` as a required query param here.
+   *
+   * Declared before `@Get('employee/:id')` so the static path matches first.
+   */
   @Get('employee')
-  async getEmployeeReports() {
-    return notImplemented('GET /daily-reports/employee');
+  async byEmployeeQuery(
+    @Query('employeeId') employeeId: string,
+    @Query('limit') limit?: string,
+  ) {
+    const empId = parseInt(employeeId, 10);
+    if (!Number.isFinite(empId) || empId <= 0) {
+      throw new BadRequestException('employeeId is required');
+    }
+    return unwrapOrInternal(await this.svc.getByEmployee(empId, this.parseLimit(limit, 30)));
   }
 
-  @ApiOperation({ summary: 'Get department reports' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Get('department')
-  async getDepartmentReports() {
-    return notImplemented('GET /daily-reports/department');
+  @Get('employee/:id')
+  async byEmployeeParam(@Param('id', ParseIntPipe) id: number, @Query('limit') limit?: string) {
+    return unwrapOrInternal(await this.svc.getByEmployee(id, this.parseLimit(limit, 30)));
   }
 
-  @ApiOperation({ summary: 'Get department reports by id' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  /**
+   * Frontend (`DailyReportPage.tsx:50`) calls
+   *   GET /api/hr-v2/daily-reports/department/:id?date=YYYY-MM-DD
+   * Returns `{ submitted, missing }` for the department's active employees.
+   */
   @Get('department/:id')
-  async getDepartmentReportsById(@Param('id') id: string, @Query('date') date?: string) {
-    try {
-      const reportDate = date || _time.now().toISOString().split('T')[0];
-      const r = await this.svc.getByDate(reportDate);
-      if (!r.ok) {
-        this.logger.error(`getDepartmentReportsById: ${r.error?.message ?? 'unknown'}`);
-        return { data: [], total: 0, departmentId: id };
-      }
-      const rows = Array.isArray(r.data) ? r.data : [];
-      return { data: rows, total: rows.length, departmentId: id, date: reportDate };
-    } catch (e) {
-      this.logger.error(`getDepartmentReportsById: ${(e as Error).message}`);
-      return { data: [], total: 0, departmentId: id };
-    }
+  async byDepartment(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('date') date?: string,
+  ) {
+    return unwrapOrInternal(
+      await this.svc.getByDepartment(id, date || _time.now().toISOString().split('T')[0]),
+    );
   }
 
-  @ApiOperation({ summary: 'List reports' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Get()
-  async listReports(@Query('date') _date?: string, @Query('limit') _limit?: string) {
-    return notImplemented('GET /daily-reports');
-  }
-
-  @ApiOperation({ summary: 'Export pdf' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Get(':id/pdf')
-  async exportPdf(@Param('id', ParseIntPipe) id: number, @Res() reply: FastifyReply) {
-    const r = await this.svc.generatePdf(id);
-    if (!r.ok) {
-      await reply.status(404).send({ ok: false, error: r.error?.message ?? 'PDF yaratishda xatolik' });
-      return;
-    }
-    const filename = `daily-report-${id}-${_time.now().toISOString().split('T')[0]}.pdf`;
-    await reply
-      .header('Content-Type', 'application/pdf')
-      .header('Content-Disposition', `attachment; filename="${filename}"`)
-      .send(Buffer.from(r.data));
+  private parseLimit(raw: string | undefined, def: number): number {
+    const parsed = parseInt(raw ?? String(def), 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) return def;
+    return Math.min(parsed, 365);
   }
 }

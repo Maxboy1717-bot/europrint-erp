@@ -1,8 +1,3 @@
-/**
- * @module pip.service
- * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
- */
-
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -91,20 +86,29 @@ export class PipService {
     });
   }
 
-  async complete(pipId: number, result: 'PASSED' | 'FAILED'): Promise<Result<object, AppError>> {
+  /**
+   * Finalize a PIP plan with explicit outcome (PASSED / FAILED).
+   * Frontend calls `PATCH /api/hr-v2/pip/:id/complete { result: 'PASSED'|'FAILED' }`.
+   */
+  async completePip(pipId: number, outcome: 'PASSED' | 'FAILED'): Promise<Result<object, AppError>> {
     return safeCall(async () => {
-      const pip = await this.repo.getPip(pipId);
-      if (!pip.ok || !pip.data) throw new NotFoundException(`PIP #${pipId} not found`);
+      const pipR = await this.repo.getPip(pipId);
+      if (!pipR.ok || !pipR.data) throw new NotFoundException(`PIP #${pipId} not found`);
 
-      if (result === 'PASSED') {
+      if (outcome === 'PASSED') {
         await this.repo.markCompleted(pipId);
-        this.eventEmitter.emit(HrV2Events.PIP_COMPLETED, { pipId, employeeId: pip.data.employee_id });
       } else {
         await this.repo.markFailed(pipId);
-        this.eventEmitter.emit(HrV2Events.PIP_FAILED, { pipId, employeeId: pip.data.employee_id });
       }
 
-      return { pipId, result, completedAt: _time.now().toISOString() };
+      const pip = pipR.data as { employee_id?: number };
+      this.eventEmitter.emit(
+        outcome === 'PASSED' ? HrV2Events.PIP_COMPLETED : HrV2Events.PIP_FAILED,
+        { pipId, employeeId: pip.employee_id, outcome, source: 'manual_complete' },
+      );
+
+      const updated = await this.repo.getPip(pipId);
+      return updated.ok && updated.data ? updated.data : { id: pipId, outcome };
     });
   }
 
