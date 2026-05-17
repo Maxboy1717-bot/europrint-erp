@@ -11,6 +11,11 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { CfoCompatService } from './cfo.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  CfoCashPositionAclTranslator,
+  type LegacyCfoCashPositionRow,
+  type CfoCashPositionDto,
+} from './acl/cfo-cash-position-acl';
 
 @ApiTags('CFO Dashboard (Compat)')
 @ApiBearerAuth()
@@ -20,6 +25,9 @@ import { unwrapOrInternal } from '@common/http-result';
 @UseGuards(JwtAuthGuard)
 @Controller('cfo')
 export class CfoCompatController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly cashPositionAcl = new CfoCashPositionAclTranslator();
+
   constructor(private readonly svc: CfoCompatService) {}
 
   @Get('dashboard')
@@ -30,6 +38,18 @@ export class CfoCompatController {
   @Get('cash-position')
   async getCashPosition() {
     return unwrapOrInternal(await this.svc.getCashPosition());
+  }
+
+  /**
+   * PA2-14 ACL-translated variant. New BC-7 (Finance / CFO) consumers should
+   * target this endpoint; the legacy `/cash-position` route stays for
+   * backwards-compat.
+   */
+  @Get('cash-position/v2')
+  async getCashPositionV2(): Promise<CfoCashPositionDto | null> {
+    const raw = unwrapOrInternal(await this.svc.getCashPosition()) as unknown as LegacyCfoCashPositionRow;
+    const r = this.cashPositionAcl.toDomain(raw);
+    return r.ok ? r.data : null;
   }
 
   @Get('profitability')

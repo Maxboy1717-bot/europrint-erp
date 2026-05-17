@@ -21,6 +21,11 @@ import { EmployeesCompatFinancialsService } from './employees-compat-financials.
 import { CompatBodyDto } from './dto/compat-body.dto';
 import { unwrapOrInternal } from '@common/http-result';
 import { Result, AppError } from '@common/result';
+import {
+  BankAccountAclTranslator,
+  type LegacyBankAccountRow,
+  type BankAccountDto,
+} from './acl/bank-account-acl';
 
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
@@ -33,6 +38,9 @@ const toList = (r: Result<Row[], AppError>) => { const rows = r.ok && Array.isAr
 @UseInterceptors(AuditInterceptor)
 @Roles(...HR_ROLES)
 export class EmployeesCompatSubController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly bankAccountAcl = new BankAccountAclTranslator();
+
   constructor(
     private readonly svc: EmployeesCompatService,
     private readonly subSvc: EmployeesCompatSubService,
@@ -68,6 +76,22 @@ export class EmployeesCompatSubController {
   // --- Bank Accounts ---
   @Get(':id/bank-accounts')
   async getBankAccounts(@Param('id') id: string) { return toList(await this.financials.getBankAccounts(id)); }
+
+  /**
+   * PA2-14 ACL-translated variant. New BC-3 (HR / People — Financials)
+   * consumers should target this endpoint; the legacy `/:id/bank-accounts`
+   * route stays for backwards-compat.
+   */
+  @Get(':id/bank-accounts/v2')
+  async getBankAccountsV2(@Param('id') id: string): Promise<{ items: BankAccountDto[]; total: number }> {
+    const r = await this.financials.getBankAccounts(id);
+    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
+    const items = rows
+      .map((row) => this.bankAccountAcl.toDomain(row as unknown as LegacyBankAccountRow))
+      .filter((res): res is { ok: true; data: BankAccountDto } => res.ok)
+      .map((res) => res.data);
+    return { items, total: items.length };
+  }
 
   @Post(':id/bank-accounts') @HttpCode(HttpStatus.CREATED)
   async createBankAccount(@Param('id') id: string, @Body() body: CompatBodyDto) { return unwrapOrInternal(await this.financials.createBankAccount(id, body)); }

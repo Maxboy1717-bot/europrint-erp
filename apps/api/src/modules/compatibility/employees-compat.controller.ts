@@ -15,6 +15,11 @@ import { EmployeesCompatSubService } from './employees-compat-sub.service';
 import { EmployeesListExtendedService } from './employees-list-extended.service';
 import { CompatBodyDto, ImportEmployeesDto, OrgFunctionsDto, ProfileImageDto } from './dto/compat-body.dto';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  EmployeeListAclTranslator,
+  type LegacyEmployeeListRow,
+  type EmployeeListItemDto,
+} from './acl/employee-list-acl';
 
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
@@ -24,6 +29,9 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 @UseInterceptors(AuditInterceptor)
 @Roles(...HR_ROLES)
 export class EmployeesCompatController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly employeeListAcl = new EmployeeListAclTranslator();
+
   constructor(
     private readonly svc: EmployeesCompatService,
     private readonly subSvc: EmployeesCompatSubService,
@@ -44,6 +52,32 @@ export class EmployeesCompatController {
     return {
       items: itemsRes.ok && Array.isArray(itemsRes.data) ? itemsRes.data : [],
       total: totalRes.ok && typeof totalRes.data === 'number' ? totalRes.data : 0,
+    };
+  }
+
+  /**
+   * PA2-14 ACL-translated variant. New BC-3 (HR / People) consumers should
+   * target this endpoint; the legacy `GET /employees` route stays for
+   * backwards-compat with the existing `Employees.tsx` frontend page.
+   */
+  @Get('v2')
+  async listEmployeesV2(
+    @Query('status') status?: string,
+    @Query('departmentId') departmentId?: string,
+    @Query('search') search?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ): Promise<{ items: EmployeeListItemDto[]; total: number }> {
+    const itemsRes = await this.extendedSvc.listExtended(status, departmentId, search, limit, offset);
+    const totalRes = await this.extendedSvc.countExtended(status, departmentId, search);
+    const rawRows = itemsRes.ok && Array.isArray(itemsRes.data) ? itemsRes.data : [];
+    const items = rawRows
+      .map((row) => this.employeeListAcl.toDomain(row as unknown as LegacyEmployeeListRow))
+      .filter((r): r is { ok: true; data: EmployeeListItemDto } => r.ok)
+      .map((r) => r.data);
+    return {
+      items,
+      total: totalRes.ok && typeof totalRes.data === 'number' ? totalRes.data : items.length,
     };
   }
 
