@@ -140,6 +140,6 @@ const listeners = [
     TechnologySchemaService,
     TechnologySchemaRepository,
   ],
-  exports: [PP_REPO, WORK_CENTER_REPO],
+  exports: [PP_REPO, WORK_CENTER_REPO, BomExplosionService],
 })
 export class PpModule {}
