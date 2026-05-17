@@ -5,14 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  User, MapPin, Phone, Users, Home, Cake, IdCard, Landmark, 
+import {
+  User, MapPin, Phone, Users, Home, Cake, IdCard, Landmark,
   Contact, PhoneCall, Trash2, Edit, Plus, Briefcase, DollarSign, Building2
 } from "lucide-react";
-import type { 
-  Employee, PassportData, BankAccount, EmergencyContact, TranslationFn 
+import type {
+  Employee, PassportData, BankAccount, EmergencyContact, TranslationFn
 } from "./profile-types";
 import type { UseMutationResult } from "@tanstack/react-query";
+import { RoleGate, PII_VIEWER_ROLES } from "@/components/RoleGate";
 
 interface PersonalTabProps {
   employee: Employee;
@@ -353,32 +354,43 @@ export function PersonalTab({
                       <Skeleton className="h-4 w-1/2" />
                     </div>
                   ) : passportData ? (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">{t('passportSeries')}</p>
-                        <p className="font-medium">{passportData.passportSeries} {passportData.passportNumber}</p>
+                    <RoleGate
+                      roles={PII_VIEWER_ROLES}
+                      ownerUserId={employee.id}
+                      fallback={
+                        <div className="text-muted-foreground text-center py-8" data-testid="passport-masked">
+                          <p className="text-sm">Pasport ma'lumotlari maxfiy</p>
+                          <p className="text-xs mt-1">Faqat HR ko'ra oladi</p>
+                        </div>
+                      }
+                    >
+                      <div className="grid grid-cols-2 gap-4" data-testid="passport-data">
+                        <div>
+                          <p className="text-sm text-muted-foreground">{t('passportSeries')}</p>
+                          <p className="font-medium">{passportData.passportSeries} {passportData.passportNumber}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">{t('issuedBy')}</p>
+                          <p className="font-medium">{passportData.issuedBy || tCommon('notSpecified')}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">{t('issuedDate')}</p>
+                          <p className="font-medium">{passportData.issuedDate || tCommon('notSpecified')}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">{t('expiryDate')}</p>
+                          <p className="font-medium">{passportData.expiryDate || tCommon('notSpecified')}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">{t('birthPlace')}</p>
+                          <p className="font-medium">{passportData.birthPlace || tCommon('notSpecified')}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">{t('citizenship')}</p>
+                          <p className="font-medium">{passportData.citizenship || "Uzbekistan"}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">{t('issuedBy')}</p>
-                        <p className="font-medium">{passportData.issuedBy || tCommon('notSpecified')}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">{t('issuedDate')}</p>
-                        <p className="font-medium">{passportData.issuedDate || tCommon('notSpecified')}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">{t('expiryDate')}</p>
-                        <p className="font-medium">{passportData.expiryDate || tCommon('notSpecified')}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">{t('birthPlace')}</p>
-                        <p className="font-medium">{passportData.birthPlace || tCommon('notSpecified')}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">{t('citizenship')}</p>
-                        <p className="font-medium">{passportData.citizenship || "Uzbekistan"}</p>
-                      </div>
-                    </div>
+                    </RoleGate>
                   ) : (
                     <p className="text-muted-foreground text-center py-8">
                       {tCommon('noData')}
@@ -483,34 +495,45 @@ export function PersonalTab({
                       <Skeleton className="h-4 w-3/4" />
                     </div>
                   ) : bankAccounts && bankAccounts.length > 0 ? (
-                    <div className="space-y-4">
-                      {(Array.isArray(bankAccounts) ? bankAccounts : []).map((bank: BankAccount) => (
-                        <div key={bank.id} className="p-3 border rounded-md space-y-2">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium">{bank.bankName}</p>
-                            {bank.isPrimary && <Badge variant="secondary">{tCommon('primary')}</Badge>}
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                              <p className="text-muted-foreground">{t('accountNumber')}</p>
-                              <p>{bank.accountNumber}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">{t('cardNumber')}</p>
-                              <p>{bank.cardNumber || tCommon('notSpecified')}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">MFO</p>
-                              <p>{bank.mfo || tCommon('notSpecified')}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">INN</p>
-                              <p>{bank.inn || tCommon('notSpecified')}</p>
-                            </div>
-                          </div>
+                    <RoleGate
+                      roles={PII_VIEWER_ROLES}
+                      ownerUserId={employee.id}
+                      fallback={
+                        <div className="text-muted-foreground text-center py-8" data-testid="bank-masked">
+                          <p className="text-sm">Bank ma'lumotlari maxfiy</p>
+                          <p className="text-xs mt-1">Faqat HR ko'ra oladi</p>
                         </div>
-                      ))}
-                    </div>
+                      }
+                    >
+                      <div className="space-y-4" data-testid="bank-data">
+                        {(Array.isArray(bankAccounts) ? bankAccounts : []).map((bank: BankAccount) => (
+                          <div key={bank.id} className="p-3 border rounded-md space-y-2">
+                            <div className="flex items-center justify-between">
+                              <p className="font-medium">{bank.bankName}</p>
+                              {bank.isPrimary && <Badge variant="secondary">{tCommon('primary')}</Badge>}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <p className="text-muted-foreground">{t('accountNumber')}</p>
+                                <p>{bank.accountNumber}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">{t('cardNumber')}</p>
+                                <p>{bank.cardNumber || tCommon('notSpecified')}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">MFO</p>
+                                <p>{bank.mfo || tCommon('notSpecified')}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">INN</p>
+                                <p>{bank.inn || tCommon('notSpecified')}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </RoleGate>
                   ) : (
                     <p className="text-muted-foreground text-center py-8">
                       {tCommon('noData')}
