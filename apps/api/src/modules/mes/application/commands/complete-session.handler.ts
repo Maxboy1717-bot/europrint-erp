@@ -10,6 +10,8 @@ import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
 import { IMesRepository, MES_REPO } from '../../domain/repositories/mes.repository';
+import { MesCompletedEvent } from '../../domain/events/mes-completed.event';
+import { MesToHr360Event } from '../../domain/events/mes-to-hr-360.event';
 
 export class CompleteSessionCommand {
   constructor(public sessionId: number) {}
@@ -65,17 +67,13 @@ export class CompleteSessionHandler implements ICommandHandler<CompleteSessionCo
     }
 
     // Trigger 10: MES completed → QC (only after commit)
-    this.eventBus.publish('MES_COMPLETED', {
-      sessionId: command.sessionId,
-      timestamp: _time.now(),
-    });
+    // PA2-18 Wave 6: canonical class form; EventBridge re-emits to legacy @OnEvent listeners.
+    this.eventBus.publish(new MesCompletedEvent(command.sessionId, _time.now()));
 
     // Trigger 16: MES → HR 360° (only after commit)
-    this.eventBus.publish('MES_TO_HR_360', {
-      sessionId: command.sessionId,
-      operatorId: session.getOperatorId(),
-      timestamp: _time.now(),
-    });
+    this.eventBus.publish(
+      new MesToHr360Event(command.sessionId, session.getOperatorId(), _time.now()),
+    );
 
     this.logger.log('MES session completed and sent to QC');
     return Ok(undefined);

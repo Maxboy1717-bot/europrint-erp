@@ -1,34 +1,25 @@
 /**
  * @module advance-approved.listener
- * @description Trigger 7 — FI advance approved → unlock PP planning.
- *
- * TODO PA2-18: Promote to canonical `@EventsHandler(AdvanceApprovedEvent)`
- * once the emit-site (currently `eventEmitter.emit(ERP_EVENTS.ADVANCE_APPROVED,
- * {...})` in finance/tech-three-checkpoint.listener.ts) is refactored to
- * publish a typed event class via the CQRS bus. EventBridgeService cannot
- * translate string→class for legacy emit-sites.
+ * @description PA2-18 Wave 6: canonical CQRS @EventsHandler form. Reacts to
+ *   `AdvanceApprovedEvent` (published by finance/tech-three-checkpoint.listener.ts)
+ *   and unlocks PP planning for the order. Trigger 7.
  */
 
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { IPpRepository, PP_REPO } from '../../domain/repositories/pp.repository';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
-
-export interface AdvanceApprovedEvent {
-  orderId: number;
-  advanceId: number;
-}
+import { AdvanceApprovedEvent } from '@modules/finance/domain/events/advance-approved.event';
 
 @Injectable()
-export class AdvanceApprovedListener {
+@EventsHandler(AdvanceApprovedEvent)
+export class AdvanceApprovedListener implements IEventHandler<AdvanceApprovedEvent> {
   private readonly logger = new Logger(AdvanceApprovedListener.name);
 
   constructor(@Inject(PP_REPO) private readonly ppRepo: IPpRepository) {}
 
-  @OnEvent(ERP_EVENTS.ADVANCE_APPROVED)
-  async handle(event: AdvanceApprovedEvent) {
+  async handle(event: AdvanceApprovedEvent): Promise<void> {
     this.logger.log(
-      { orderId: event.orderId, advanceId: event.advanceId },
+      { orderId: event.orderId, advancePct: event.advancePct },
       'Trigger 7: Advance approved - Unlocking PP planning',
     );
 

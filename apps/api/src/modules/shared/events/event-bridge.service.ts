@@ -29,6 +29,13 @@ const EVENT_NAME_MAP: Record<string, string> = {
   DeliveryCompletedEvent: ERP_EVENTS.DELIVERY_COMPLETED,
   MroMaintenanceStopEvent: ERP_EVENTS.MRO_MAINTENANCE_STOP,
   WmsGoodsIssuedEvent: ERP_EVENTS.WMS_GOODS_ISSUED,
+  // PA2-18 Wave 6 additions
+  PpReleasedEvent: ERP_EVENTS.PP_RELEASED_TO_PRODUCTION,
+  WmsFgReceivedEvent: ERP_EVENTS.WMS_FG_RECEIVED,
+  MesCompletedEvent: ERP_EVENTS.MES_COMPLETED,
+  MesToHr360Event: ERP_EVENTS.MES_TO_HR_360,
+  StockUpdatedEvent: ERP_EVENTS.STOCK_UPDATED,
+  AdvanceApprovedEvent: ERP_EVENTS.ADVANCE_APPROVED,
 };
 
 @Injectable()

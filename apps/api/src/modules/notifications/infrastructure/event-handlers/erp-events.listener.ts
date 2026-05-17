@@ -119,22 +119,6 @@ export class ErpEventsListener {
     );
   }
 
-  @OnEvent(ERP_EVENTS.MRO_MACHINE_STOPPED)
-  async handleMachineStoppedNotification(payload: {
-    equipmentId?: string;
-    equipmentName?: string;
-    issueDescription?: string;
-    priority?: string;
-    userId?: number;
-  }) {
-    this.logger.log('Machine stopped event received - creating notification for director');
-    await this.notifyByRole(
-      'director',
-      'Equipment Stopped',
-      `Machine ${payload.equipmentName} (${payload.equipmentId}) has stopped. Issue: ${payload.issueDescription}. Priority: ${payload.priority}`,
-      'mro_stopped',
-      payload.equipmentId ?? null,
-      'maintenance_order',
-    );
-  }
+  // PA2-18 Wave 6: MRO_MACHINE_STOPPED notification handler moved to
+  // `mro-machine-stopped-notification.listener.ts` (canonical @EventsHandler form).
 }
