@@ -55,11 +55,34 @@ export class CreateLeadHandler implements ICommandHandler<CreateLeadCommand> {
     // VO validation — chain failures to a single Err. The handler is the
     // boundary: raw strings come in from the controller, VOs go into the
     // aggregate.
+    const vosR = this.buildLeadValueObjects(command);
+    if (!vosR.ok) return Err(vosR.error);
+    const { email, phone, status, aiScore } = vosR.data;
+    const lead = Lead.create({
+      companyId: command.companyId,
+      firstName: command.firstName,
+      lastName: command.lastName,
+      email,
+      phone,
+      status,
+      aiScore,
+      createdBy: command.createdBy,
+      source: command.source,
+      notes: command.notes,
+    });
+    return Ok(lead);
+  }
+
+  private buildLeadValueObjects(command: CreateLeadCommand): Result<{
+    email: Email;
+    phone: PhoneNumber;
+    status: LeadStatus;
+    aiScore: AIScore;
+  }> {
     const emailR = Email.create(command.email);
     if (!emailR.ok) return Err(emailR.error);
     const phoneR = PhoneNumber.create(command.phone);
     if (!phoneR.ok) return Err(phoneR.error);
-
     const aiScoreResult = AIScore.create(Math.round(Math.random() * 100));
     if (!aiScoreResult.ok || !aiScoreResult.data) {
       return Err('Failed to generate AI score');
@@ -68,18 +91,11 @@ export class CreateLeadHandler implements ICommandHandler<CreateLeadCommand> {
     if (!statusResult.ok || !statusResult.data) {
       return Err('Failed to set lead status');
     }
-    const lead = Lead.create({
-      companyId: command.companyId,
-      firstName: command.firstName,
-      lastName: command.lastName,
+    return Ok({
       email: emailR.data,
       phone: phoneR.data,
       status: statusResult.data,
       aiScore: aiScoreResult.data,
-      createdBy: command.createdBy,
-      source: command.source,
-      notes: command.notes,
     });
-    return Ok(lead);
   }
 }

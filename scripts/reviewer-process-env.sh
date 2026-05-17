@@ -8,7 +8,7 @@ ALLOWED_FILES=(
   "apps/api/src/config"
   # WebSocket / decorator-time CORS callbacks run BEFORE DI is bootstrapped,
   # so ConfigService is unavailable. process.env is the only correct option.
-  "apps/api/src/modules/pos/pos.gateway.ts"
+  "apps/api/src/modules/pos/presentation/pos.gateway.ts"
 )
 
 # Tekshiriladigan modules
