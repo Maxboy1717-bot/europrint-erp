@@ -11,6 +11,11 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { EuroprintControlCompatService } from './europrint-control.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  AuditLogAclTranslator,
+  type LegacyAuditLogRow,
+  type AuditLogDto,
+} from './acl/audit-log-acl';
 
 @ApiTags('EuroPrint Control Center (Compat)')
 @ApiBearerAuth()
@@ -20,6 +25,9 @@ import { unwrapOrInternal } from '@common/http-result';
 @UseGuards(JwtAuthGuard)
 @Controller('europrint-control')
 export class EuroprintControlCompatController {
+  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
+  private readonly auditAcl = new AuditLogAclTranslator();
+
   constructor(private readonly svc: EuroprintControlCompatService) {}
 
   @Get('business-rules')
@@ -98,6 +106,25 @@ export class EuroprintControlCompatController {
     @Query('limit') limit?: string,
   ) {
     return unwrapOrInternal(await this.svc.getAuditLogs(action, userId, limit));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of the audit-log list. New BC-9
+   * (Director / Compliance) consumers should target this route;
+   * `/audit-logs` stays for backwards-compat.
+   */
+  @Get('audit-logs/v2')
+  async getAuditLogsV2(
+    @Query('action') action?: string,
+    @Query('userId') userId?: string,
+    @Query('limit') limit?: string,
+  ): Promise<AuditLogDto[]> {
+    const rows = (await this.svc.getAuditLogs(action, userId, limit)) as unknown as LegacyAuditLogRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.auditAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: AuditLogDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Get('action-types')

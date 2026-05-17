@@ -11,6 +11,11 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { SuccessionCompatService } from './succession-compat.service';
 import { SuccessionBodyDto } from './dto/hr.dto';
 import { unwrapOrDefault, unwrapOrInternal } from '@common/http-result';
+import {
+  SuccessionPlanAclTranslator,
+  type LegacySuccessionPlanRow,
+  type SuccessionPlanDto,
+} from './acl/succession-plan-acl';
 
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
@@ -20,11 +25,29 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 @Roles(...HR_ROLES)
 @Controller('succession')
 export class SuccessionCompatController {
+  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
+  private readonly planAcl = new SuccessionPlanAclTranslator();
+
   constructor(private readonly svc: SuccessionCompatService) {}
 
   @Get('career-plans')
   async getCareerPlans(@Query('employeeId') employeeId?: string) {
     return unwrapOrInternal(await this.svc.getCareerPlans(employeeId));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of career plans. New BC-3 (Talent)
+   * consumers should target this route; `/career-plans` stays for
+   * backwards-compat.
+   */
+  @Get('career-plans/v2')
+  async getCareerPlansV2(@Query('employeeId') employeeId?: string): Promise<SuccessionPlanDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getCareerPlans(employeeId)) as unknown as LegacySuccessionPlanRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.planAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: SuccessionPlanDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post('career-plans')

@@ -15,6 +15,11 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { OrgChartCompatService } from './org-chart-compat.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  OrgFlatDeptAclTranslator,
+  type LegacyOrgFlatDeptRow,
+  type OrgFlatDeptDto,
+} from './acl/org-flat-dept-acl';
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -27,6 +32,9 @@ import { unwrapOrInternal } from '@common/http-result';
   'SUPER_ADMIN', 'ADMIN', 'DIRECTOR', 'MANAGER', 'HR_MANAGER', 'HR_SPECIALIST',
 )
 export class OrgChartCompatController {
+  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
+  private readonly flatAcl = new OrgFlatDeptAclTranslator();
+
   constructor(private readonly svc: OrgChartCompatService) {}
 
   /**
@@ -43,5 +51,19 @@ export class OrgChartCompatController {
   @Get('flat')
   async getOrgFlat(@Query('departmentId') departmentId?: string) {
     return unwrapOrInternal(await this.svc.getOrgFlat(departmentId));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of the flat department list. New BC-3
+   * consumers should target this route; `/flat` stays for backwards-compat.
+   */
+  @Get('flat/v2')
+  async getOrgFlatV2(@Query('departmentId') departmentId?: string): Promise<OrgFlatDeptDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getOrgFlat(departmentId)) as unknown as LegacyOrgFlatDeptRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.flatAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: OrgFlatDeptDto } => r.ok)
+      .map((r) => r.data);
   }
 }
