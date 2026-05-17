@@ -21,6 +21,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { rawSql } from '@shared/db';
 import { sql, type SQL } from 'drizzle-orm';
+import { randomBytes } from 'crypto';
 import { dbRows } from '../hr/common/db-rows';
 
 /**
@@ -62,7 +63,11 @@ export async function validateOrgDepartmentsExist(orgIds: number[]): Promise<voi
 
 /**
  * `employees.id` uchun `users` yozuvini topadi yoki yaratadi.
- * Login uchun temporary password (bcrypt: "test123").
+ *
+ * SECURITY: PA-S2 — yangi yaratilgan user uchun bcrypt-format'ga to'g'ri kelmaydigan
+ * locked placeholder hash o'rnatiladi (`!` prefix + random hex). Hech kim bu hash
+ * bilan kira olmaydi — admin parolni alohida o'rnatishi kerak. Eski hardcoded
+ * fixture bcrypt hash CVE-risk sifatida olib tashlandi.
  *
  * @param tx - drizzle transaction (yoki global db)
  * @param employeeId - employees.id
@@ -80,8 +85,14 @@ interface UserCreationData {
   departmentId: number | null;
 }
 
-const TEST_PASSWORD_HASH =
-  '$2b$10$9XJ7Bq3X.5Qx5Yz1V8rOUu7K9oN3xQEjPxLkTnZxCzJqG0wLqWxX2';
+/**
+ * Bcrypt-format-incompatible locked placeholder. Bcrypt verifies expect the
+ * prefix `$2[abxy]$` — anything starting with `!` will never match any input.
+ * The random suffix prevents two users sharing the same string in audit logs.
+ */
+function lockedPlaceholderHash(): string {
+  return '!' + randomBytes(20).toString('hex');
+}
 
 export async function ensureUserForEmployee(
   tx: { execute: (q: SQL) => Promise<unknown> } | null,
@@ -115,6 +126,7 @@ export async function ensureUserForEmployee(
       ? 'manager'
       : 'employee';
 
+  const lockedHash = lockedPlaceholderHash();
   const inserted = await exec(sql`
     INSERT INTO users (
       username, email, password_hash, first_name, last_name,
@@ -122,7 +134,7 @@ export async function ensureUserForEmployee(
       department_id, position_id, phone, hire_date,
       created_at, updated_at
     ) VALUES (
-      ${username}, ${data.email}, ${TEST_PASSWORD_HASH},
+      ${username}, ${data.email}, ${lockedHash},
       ${data.firstName}, ${data.lastName},
       ${fullName}, ${data.employeeId}, ${role}, 'active', true,
       ${data.departmentId}, ${data.positionId}, ${data.phone}, ${data.hireDate},

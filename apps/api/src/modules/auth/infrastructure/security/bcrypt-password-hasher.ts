@@ -4,19 +4,15 @@
  * `bcrypt` npm package. Bound to the {@link PASSWORD_HASHER} token in
  * `auth.module.ts`.
  *
- * Cost factor (`BCRYPT_ROUNDS`) is set to 10 to match the canonical level used
- * elsewhere in the codebase (see `admin/application/services/create-user.service.ts`,
- * `compatibility/employees-compat-financials.service.ts`,
- * `communication-center/application/cc-pin.service.ts`). Bumping the cost is a
- * one-line change here and does not require touching any consumer.
+ * SECURITY: PA-S5 — cost factor is imported from
+ * `@common/constants/security.constants` so admin seed and runtime hasher
+ * agree on the same rounds value (was previously 10 here vs. 12 in the seeder).
  */
 
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { BCRYPT_ROUNDS } from '@common/constants/security.constants';
 import { IPasswordHasher } from '../../domain/ports/i-password-hasher.port';
-
-/** Salt rounds for bcrypt. Matches the canonical level used by `admin/create-user.service.ts`. */
-const BCRYPT_ROUNDS = 10;
 
 @Injectable()
 export class BcryptPasswordHasher implements IPasswordHasher {
