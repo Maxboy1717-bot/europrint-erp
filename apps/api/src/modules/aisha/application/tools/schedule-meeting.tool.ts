@@ -65,7 +65,10 @@ export class ScheduleMeetingTool implements IAishaTool {
         VALUES (${topic}, ${startAt}, ${location}, 0)
         RETURNING id::text
       `);
-      const meetingId = ((rows as { rows?: Array<{ id: string }> }).rows ?? [])[0]?.id ?? '';
+      const meetingRows = (rows as { rows?: unknown }).rows;
+      const meetingId = Array.isArray(meetingRows) && typeof (meetingRows[0] as { id?: unknown })?.id === 'string'
+        ? String((meetingRows[0] as { id: string }).id)
+        : '';
       let inviteSent = 0;
       if (this.tg) {
         for (const userId of attendees) {

@@ -16,6 +16,11 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
 import { PosWarehouseIntegrationService } from './pos-warehouse-integration.service';
+import {
+  PosStockAlertAclTranslator,
+  type LegacyPosStockAlertRow,
+  type PosStockAlertDto,
+} from './acl/pos-stock-alert-acl';
 
 @Throttle({ default: { limit: 200, ttl: 60_000 } })
 @UseInterceptors(AuditInterceptor)
@@ -27,6 +32,9 @@ import { PosWarehouseIntegrationService } from './pos-warehouse-integration.serv
 )
 @Controller('pos/wh')
 export class PosWarehouseIntegrationController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly stockAlertAcl = new PosStockAlertAclTranslator();
+
   constructor(
     private readonly svc: PosWarehouseIntegrationService,
     private readonly i18n: I18nService,
@@ -128,5 +136,20 @@ export class PosWarehouseIntegrationController {
   @Get('alerts')
   async getStockAlerts() {
     return unwrapOrInternal(await this.svc.getStockAlerts());
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of the stock alerts. New BC-4 / BC-5
+   * consumers should target `/v2`; the original `alerts` stays for
+   * backwards-compat.
+   */
+  @Get('alerts/v2')
+  async getStockAlertsV2(): Promise<PosStockAlertDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getStockAlerts()) as unknown as LegacyPosStockAlertRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.stockAlertAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: PosStockAlertDto } => r.ok)
+      .map((r) => r.data);
   }
 }

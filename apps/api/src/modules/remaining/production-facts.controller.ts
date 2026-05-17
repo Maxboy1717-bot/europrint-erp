@@ -11,12 +11,20 @@ import { ProductionFactsService } from './production-facts.service';
 import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  ProductionOperatorAclTranslator,
+  type LegacyProductionOperatorRow,
+  type ProductionOperatorDto,
+} from './acl/production-operator-acl';
 
 @ApiThrottle()
 @Roles('admin', 'manager', 'hr_manager', 'director', 'SUPER_ADMIN')
 @UseInterceptors(AuditInterceptor)
 @Controller('production-facts')
 export class ProductionFactsController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly operatorAcl = new ProductionOperatorAclTranslator();
+
   constructor(private readonly svc: ProductionFactsService) {}
 
   @Get()
@@ -32,6 +40,21 @@ export class ProductionFactsController {
   @Get('operators')
   async getOperators() {
     return unwrapOrInternal(await this.svc.getOperators());
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of `operators`. New BC-2 (MES)
+   * consumers should target `/v2`; the legacy endpoint stays for
+   * backwards-compat.
+   */
+  @Get('operators/v2')
+  async getOperatorsV2(): Promise<ProductionOperatorDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getOperators()) as unknown as LegacyProductionOperatorRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.operatorAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: ProductionOperatorDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post()

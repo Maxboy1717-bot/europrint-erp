@@ -68,18 +68,38 @@ run_one() {
   local code=0
   out=$(cd "$ROOT_DIR" && timeout "$TIMEOUT" bash "$path" 2>&1) || code=$?
 
-  # Count violations: last "FAIL: N" line or count of red ✗ markers
-  local count=0
-  if [ "$code" -ne 0 ]; then
-    count=$(echo "$out" | grep -cE '^\s*✗|FAIL.*: [0-9]+' || true)
+  # ── Authoritative violation count ──────────────────────────────
+  # Every reviewer prints a final summary line of the form
+  #   "PASS: A | WARN: B | FAIL: N"   or   "FAIL: N description"
+  # (and "PASS: 0 …" on success). We strip ANSI, find the LAST line that
+  # contains "FAIL: <number>", and pull <number> as the violation count.
+  # This is more reliable than the exit code (some reviewers exit 0
+  # after printing FAIL when the script does not propagate it) and avoids
+  # falsely matching ✗ markers in heading / sample text.
+  local stripped count="" fail_line
+  stripped=$(echo "$out" | sed -E $'s/\x1b\\[[0-9;]*m//g')
+  fail_line=$(echo "$stripped" | grep -oE '(^|[^A-Za-z])FAIL:[[:space:]]*[0-9]+' | tail -1 || true)
+  if [ -n "$fail_line" ]; then
+    count=$(echo "$fail_line" | grep -oE '[0-9]+' | tail -1)
+  fi
+  # Fallback: if no "FAIL: N" line was emitted, count "✗" violation markers
+  if [ -z "$count" ]; then
+    count=$(echo "$stripped" | grep -cE '^[[:space:]]*✗' || true)
+  fi
+  count="${count//[^0-9]/}"; count="${count:-0}"
+
+  # PASS iff count == 0 AND the reviewer exited cleanly. A non-zero exit
+  # with count==0 (e.g. an internal error before the summary) is treated
+  # as a single violation so the failure isn't hidden.
+  if [ "$count" -eq 0 ] && [ "$code" -eq 0 ]; then
+    echo -e "  ${GREEN}✓ PASS${NC}"
+    RESULTS+=("$num|$title|PASS|0")
+    TOTAL_PASS=$((TOTAL_PASS+1))
+  else
     if [ "$count" -eq 0 ]; then count=1; fi
     echo -e "  ${RED}✗ FAIL${NC} ($count violations)"
     RESULTS+=("$num|$title|FAIL|$count")
     TOTAL_FAIL=$((TOTAL_FAIL+1))
-  else
-    echo -e "  ${GREEN}✓ PASS${NC}"
-    RESULTS+=("$num|$title|PASS|0")
-    TOTAL_PASS=$((TOTAL_PASS+1))
   fi
 
   # Optionally show first 5 lines of output for context

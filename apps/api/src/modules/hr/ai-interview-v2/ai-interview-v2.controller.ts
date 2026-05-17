@@ -5,13 +5,15 @@
 
 import { assertValidated } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Logger, UseGuards, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, assertOk, unwrapOrInternal } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 import { AiInterviewV2Service } from './ai-interview-v2.service';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { Public } from '@common/decorators/public.decorator';
 
@@ -54,10 +56,12 @@ const CreateQuestionSchema = z.object({
 });
 class CreateQuestionDto extends createZodDto(CreateQuestionSchema) {}
 
-@Roles('admin', 'manager', 'supervisor', 'hr_manager')
+@ApiTags('Ai Interview V2')
+@ApiBearerAuth()
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
-@ApiTags('Ai Interview V2')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin', 'manager', 'supervisor', 'hr_manager')
 @Controller('hr-v2/ai-interview')
 export class AiInterviewV2Controller {
   private readonly logger = new Logger(AiInterviewV2Controller.name);
