@@ -6,6 +6,9 @@
 import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
+import { wms_alerts as canonicalWmsAlerts } from './schema-business-b-1';
+import { three_way_match_results as canonicalThreeWayMatchResults } from './schema-business-b-2';
+import { purchase_orders as canonicalPurchaseOrders } from './schema-wms';
 
 export const hr_documents_archive = pgTable('hr_documents_archive', {
   id:            integer('id').primaryKey(),
@@ -125,17 +128,8 @@ export const papka_orders_tech = pgTable('papka_orders', {
 });
 
 // ─── WMS Alerts ───────────────────────────────────────────────────────────────
-
-export const wms_alerts = pgTable('wms_alerts', {
-  id:           serial('id').primaryKey(),
-  material_id:  integer('material_id'),
-  warehouse_id: integer('warehouse_id'),
-  type:         text('type'),
-  severity:     text('severity'),
-  message:      text('message'),
-  is_resolved:  boolean('is_resolved').default(false),
-  created_at:   timestamp('created_at').defaultNow(),
-});
+// wms_alerts: re-exported from canonical definition in schema-business-b-1.ts
+export const wms_alerts = canonicalWmsAlerts;
 
 // ─── Gamification ─────────────────────────────────────────────────────────────
 
@@ -168,34 +162,12 @@ export const hr_brand_settings = pgTable('hr_brand_settings', {
 });
 
 // ─── Three Way Match Results ──────────────────────────────────────────────────
-
-export const three_way_match_results = pgTable('three_way_match_results', {
-  id:                serial('id').primaryKey(),
-  po_id:             integer('po_id'),
-  gr_id:             integer('gr_id'),
-  invoice_id:        integer('invoice_id'),
-  vendor_invoice_id: text('vendor_invoice_id'),
-  po_amount:         numeric('po_amount', { precision: 15, scale: 2 }),
-  gr_amount:         numeric('gr_amount', { precision: 15, scale: 2 }),
-  invoice_amount:    numeric('invoice_amount', { precision: 15, scale: 2 }),
-  status:            text('status'),
-  tolerance_percent: numeric('tolerance_percent', { precision: 5, scale: 2 }),
-  matched_at:        timestamp('matched_at'),
-  performed_by:      integer('performed_by'),
-  created_at:        timestamp('created_at').defaultNow(),
-});
+// three_way_match_results: re-exported from canonical definition in schema-business-b-2.ts
+export const three_way_match_results = canonicalThreeWayMatchResults;
 
 // ─── Purchase Orders (legacy table) ──────────────────────────────────────────
-
-export const purchase_orders_legacy = pgTable('purchase_orders', {
-  id:           serial('id').primaryKey(),
-  po_number:    text('po_number'),
-  vendor_name:  text('vendor_name'),
-  total_amount: numeric('total_amount', { precision: 15, scale: 2 }),
-  status:       text('status').default('draft'),
-  created_by:   text('created_by'),
-  created_at:   timestamp('created_at').defaultNow(),
-});
+// purchase_orders_legacy: re-exported from canonical purchase_orders in schema-wms.ts
+export const purchase_orders_legacy = canonicalPurchaseOrders;
 
 // ─── Materials (legacy table) ─────────────────────────────────────────────────
 
