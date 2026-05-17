@@ -21,7 +21,8 @@
  */
 
 import { db } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { internal_requests } from '@shared/db';
+import { sql, desc } from 'drizzle-orm';
 
 import type { PapkaOrderUpdates } from './legacy.types';
 
@@ -201,8 +202,8 @@ export async function getWarehouseLotsRaw(): Promise<Record<string, unknown>[]> 
 
 export async function getWarehouseInternalRequestsRaw(): Promise<Record<string, unknown>[]> {
   try {
-    const r = await db.execute(sql`SELECT * FROM internal_requests ORDER BY created_at DESC LIMIT 100`);
-    return r.rows as Record<string, unknown>[];
+    const rows = await db.select().from(internal_requests).orderBy(desc(internal_requests.created_at)).limit(100);
+    return rows as Record<string, unknown>[];
   } catch { return []; }
 }
 

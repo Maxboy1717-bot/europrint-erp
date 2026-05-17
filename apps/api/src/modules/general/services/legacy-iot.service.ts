@@ -15,8 +15,8 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { db } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { db, downtime_events } from '@shared/db';
+import { sql, desc } from 'drizzle-orm';
 import { safeCall } from '@common/result';
 import type { Result } from '@common/result';
 
@@ -49,6 +49,9 @@ export class LegacyIotService {
     });
   }
 
+  // NOTE: P3-30 — productionSessions Drizzle table is a stub() and lacks the
+  // columns selected here (started_at, deleted_at, equipment_id); also relies on
+  // equipment.name alias for camelCase projection. Keep raw until schema work.
   async getIotProductionSessions(): Promise<Record<string, unknown>[]> {
     try {
       const r = await db.execute(sql`
@@ -64,11 +67,12 @@ export class LegacyIotService {
 
   async getIotDowntimeEvents(): Promise<Record<string, unknown>[]> {
     try {
-      const r = await db.execute(sql`SELECT * FROM downtime_events ORDER BY started_at DESC LIMIT 100`);
-      return r.rows as Record<string, unknown>[];
+      const rows = await db.select().from(downtime_events).orderBy(desc(downtime_events.startedAt)).limit(100);
+      return rows as Record<string, unknown>[];
     } catch { return []; }
   }
 
+  // NOTE: P3-30 — no pgTable definition found for `defect_types`; needs schema work first.
   async getIotTabletDefectReasons(): Promise<Record<string, unknown>[]> {
     try {
       const r = await db.execute(sql`SELECT * FROM defect_types ORDER BY name`);
@@ -84,6 +88,9 @@ export class LegacyIotService {
 
   // ─── Production Orders ───────────────────────────────────────────────────────
 
+  // NOTE: P3-30 — no pgTable definition found for `orders` / `products` in
+  // @shared/db (only canonical productionOrders/posProducts variants); raw
+  // legacy `orders` table with aliased joins cannot be ORM'd yet.
   async getProductionOrdersReport(): Promise<{ orders: Record<string, unknown>[]; total: number }> {
     try {
       const r = await db.execute(sql`
@@ -98,6 +105,7 @@ export class LegacyIotService {
     } catch { return { orders: [], total: 0 }; }
   }
 
+  // NOTE: P3-30 — see getProductionOrdersReport (same `orders` legacy table).
   async getPpProductionOrders(): Promise<Record<string, unknown>[]> {
     try {
       const r = await db.execute(sql`
@@ -111,6 +119,7 @@ export class LegacyIotService {
     } catch { return []; }
   }
 
+  // NOTE: P3-30 — no pgTable definition found for `products`; needs schema work.
   async getProducts(): Promise<Record<string, unknown>[]> {
     try {
       const r = await db.execute(sql`SELECT * FROM products ORDER BY name LIMIT 500`);
@@ -118,6 +127,8 @@ export class LegacyIotService {
     } catch { return []; }
   }
 
+  // NOTE: P3-30 — no pgTable definition found for `technology_cards` or
+  // `products` in @shared/db; needs schema work first.
   async getTechnologyCards(): Promise<Record<string, unknown>[]> {
     try {
       const r = await db.execute(sql`

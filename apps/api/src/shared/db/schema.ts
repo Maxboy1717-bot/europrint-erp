@@ -103,15 +103,24 @@ export const rawSql = (query: SQL): ReturnType<typeof db.execute> => db.execute(
 
 /**
  * DDL operations only (CREATE TABLE, ALTER TABLE, etc.) — cannot use query builder.
- * SECURITY: `q` MUST be a hard-coded string literal — never a user-controlled value.
- * For DML queries use `rawSql(sql\`...\`)` with template-literal parameterisation.
+ * SECURITY: PA-S4b — when `q` is a string, it MUST begin with a recognised DDL
+ * keyword (CREATE / ALTER / DROP / INSERT / UPDATE / DELETE / WITH / DO). The
+ * runtime check below rejects anything else so a misused call site cannot
+ * smuggle in an arbitrary fragment from a request payload.
  */
 // RULE4_EXCEPTION: DDL-only helper. Drizzle has no builder API for CREATE
 // TABLE / ALTER TABLE / CREATE INDEX. Callers pass hard-coded string
 // literals from migration files.
-export const ddlRun = (q: SQL | SQLWrapper | string): ReturnType<typeof db.execute> =>
-  // NOTE: P3-30 — `ddlRun` is the project-wide DDL helper; the string branch is only invoked with hard-coded migration literals (see JSDoc above and call sites in `common/database/ddl-migrations.ts`, `infrastructure/database/sprint*-migration.service.ts`, `crm-migration.service.ts`); no user input.
-  db.execute(typeof q === 'string' ? sql.raw(q) : (q as SQL));
+const DDL_PREFIX_RE = /^\s*(CREATE|ALTER|DROP|INSERT|UPDATE|DELETE|WITH|DO|COMMENT|GRANT|REVOKE|TRUNCATE|REINDEX|ANALYZE|VACUUM|SET|SELECT)\b/i;
+export const ddlRun = (q: SQL | SQLWrapper | string): ReturnType<typeof db.execute> => {
+  if (typeof q === 'string') {
+    if (!DDL_PREFIX_RE.test(q)) {
+      throw new Error(`PA-S4b: unsafe ddlRun() string — must start with a DDL keyword (got: ${q.slice(0, 60)})`);
+    }
+    return db.execute(sql.raw(q));
+  }
+  return db.execute(q as SQL);
+};
 
 /**
  * Typed query helper.
