@@ -116,7 +116,12 @@ import { HR_ONBOARDING_REPO } from './onboarding/repos/i-hr-onboarding.repo';
 import { DrizzleHrOnboardingRepository } from './onboarding/repos/drizzle-hr-onboarding.repo';
 import { HR_RECRUITMENT_FUNNEL_REPO } from './recruitment/repos/i-hr-recruitment-funnel.repo';
 import { DrizzleHrRecruitmentFunnelRepository } from './recruitment/repos/drizzle-hr-recruitment-funnel.repo';
-import { HrVacanciesController, HrVacanciesPipelineController } from './recruitment/hr-vacancies.controller';
+import {
+  HrVacanciesController,
+  HrVacanciesPipelineController,
+  HrVacanciesProbationController,
+  HrVacanciesAnalyticsController,
+} from './recruitment/hr-vacancies.controller';
 import { HrVacanciesService } from './recruitment/hr-vacancies.service';
 import { DrizzleHrVacanciesRepository } from './recruitment/repos/drizzle-hr-vacancies.repo';
 import { DrizzleHrVacanciesFunnelRepository } from './recruitment/repos/drizzle-hr-vacancies-funnel.repo';
@@ -218,6 +223,8 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     RecruitmentOffersController,
     HrVacanciesController,
     HrVacanciesPipelineController,
+    HrVacanciesProbationController,
+    HrVacanciesAnalyticsController,
     HrSafetyController,
     HrOffboardingController,
     HrPayrollClosureController,

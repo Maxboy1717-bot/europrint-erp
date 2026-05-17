@@ -118,6 +118,33 @@ export class AiInterviewV2Service {
     return this.repo.cancelSession(sessionId, reason);
   }
 
+  /**
+   * Public token-based submit — packages the raw candidate answers into the
+   * service-internal result shape (transcript, ai summary, default
+   * recommendation) so the controller only forwards `{ token, answers }`.
+   * Rule 6: keeps `.map(...).join(...)` and template-string assembly out of
+   * the HTTP layer.
+   */
+  async submitPublicAnswers(token: string, answers: readonly string[]) {
+    return safeCall(async () => {
+      const validationResult = await this.validateToken(token);
+      if (!validationResult.ok) throw new Error(validationResult.error.message);
+      const validation = validationResult.data;
+      if (!validation?.valid) throw new Error('Validation failed');
+      const sessionId = validation.session_id ?? 0;
+      const safeAnswers = Array.isArray(answers) ? answers : [];
+      const transcript = safeAnswers.map((a, i) => `Q${i + 1}: ${a}`).join('\n');
+      const aiSummary = `Submitted ${safeAnswers.length} answers`;
+      const r = await this.completeSession(sessionId, {
+        aiSummary,
+        transcript,
+        recommendation: 'CONSIDER',
+      });
+      if (!r.ok) throw new Error(r.error.message);
+      return { submitted: true };
+    });
+  }
+
   async getQuestionsForJob(jobTitle?: string, language: string = 'uz') {
     return aiInterviewGetQuestionsForJob(jobTitle, language);
   }

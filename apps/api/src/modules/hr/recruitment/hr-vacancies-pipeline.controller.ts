@@ -1,7 +1,9 @@
 /**
  * @module hr-vacancies-pipeline.controller
- * @description Pipeline + analytics endpoints split from hr-vacancies.controller.ts (Rule 16).
- * Mounted under the same /hr/recruitment prefix alongside HrVacanciesController.
+ * @description Pipeline core endpoints split from hr-vacancies.controller.ts (Rule 16).
+ * Probation-period endpoints live in hr-vacancies-probation.controller.ts.
+ * Analytics / internal-board endpoints live in hr-vacancies-analytics.controller.ts.
+ * All three are mounted under the same /hr/recruitment prefix.
  */
 
 import {
@@ -19,11 +21,9 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { HrVacanciesService } from './hr-vacancies.service';
 import {
-  HrProbationReviewSchema, HrProbationReviewDto,
   HrNdaRequestSchema, HrNdaRequestDto,
   HrMakeOfferSchema, HrMakeOfferDto,
   HrAddChecklistSchema, HrAddChecklistDto,
-  HrInternalApplySchema, HrInternalApplyDto,
 } from './dto/hr-vacancies.dto';
 import { z } from 'zod';
 
@@ -34,16 +34,6 @@ const PipelineStageSchema = z.object({
 
 const ChecklistSchema = z.object({
   items: z.array(z.union([z.string(), z.record(z.unknown())])).optional(),
-}).passthrough();
-
-const ProbationDatesSchema = z.object({
-  start_date: z.string().optional(),
-  end_date: z.string().optional(),
-}).passthrough();
-
-const ProbationJournalEntrySchema = z.object({
-  note: z.string().max(2000).optional(),
-  date: z.string().optional(),
 }).passthrough();
 
 const RoadmapSchema = z.object({
@@ -143,42 +133,6 @@ export class HrVacanciesPipelineController {
     return { items: rows, total: rows.length };
   }
 
-  @ApiOperation({ summary: 'Get probation journal' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Get('pipeline/:id/probation-journal')
-  async getProbationJournal(@Param('id', ParseIntPipe) id: number) {
-    const r = await this.svc.findProbationJournal(id);
-    const entries = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { data: { pipeline_id: id, entries, total: entries.length } };
-  }
-
-  @ApiOperation({ summary: 'Get probation dates' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Get('pipeline/:id/probation-dates')
-  async getProbationDates(@Param('id', ParseIntPipe) id: number) {
-    const r = await this.svc.findProbationDates(id);
-    const dates = r.ok ? (r.data ?? {}) : {};
-    return { data: { pipeline_id: id, start_date: (dates as Record<string, unknown>)['created_at'] ?? null, end_date: (dates as Record<string, unknown>)['hired_at'] ?? null, ...dates } };
-  }
-
-  @ApiOperation({ summary: 'Submit probation review' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('pipeline/:id/probation-review')
-  @UsePipes(new ZodValidationPipe(HrProbationReviewSchema))
-  async submitProbationReview(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: HrProbationReviewDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    const rating = body.rating ?? null;
-    const notes = `probation_review rating=${rating}`;
-    await this.svc.recordFunnelHistory(String(id), 'probation_reviewed', String(user.id), notes);
-    return { data: { pipeline_id: id, reviewed_by: user.id, rating } };
-  }
-
   @ApiOperation({ summary: 'Get pipeline report' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
@@ -238,68 +192,6 @@ export class HrVacanciesPipelineController {
     return { data: { pipeline_id: id, submitted_by: user.id, items } };
   }
 
-  // ── Recruitment Analytics ─────────────────────────────────────────────────
-  @ApiOperation({ summary: 'Get checklist alerts' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('checklist-alerts')
-  async getChecklistAlerts() {
-    const r = await this.svc.findPipeline();
-    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { items: rows.slice(0, 20), total: rows.length };
-  }
-
-  @ApiOperation({ summary: 'Get kpi' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('kpi')
-  async getKpi() {
-    const r = await this.svc.findKpi();
-    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { items: rows, total: rows.length };
-  }
-
-  @ApiOperation({ summary: 'Get urgent' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('urgent')
-  async getUrgent() {
-    const r = await this.svc.findUrgent();
-    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { items: rows, total: rows.length };
-  }
-
-  @ApiOperation({ summary: 'Get worker type stats' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('worker-type-stats')
-  async getWorkerTypeStats() {
-    const r = await this.svc.findWorkerTypeStats();
-    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { items: rows, total: rows.length };
-  }
-
-  @ApiOperation({ summary: 'Get internal board' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('internal-board')
-  async getInternalBoard() {
-    const r = await this.svc.findInternalBoard();
-    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { items: rows, total: rows.length };
-  }
-
-  @ApiOperation({ summary: 'Internal apply' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('internal-apply/:id')
-  @UsePipes(new ZodValidationPipe(HrInternalApplySchema))
-  async internalApply(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: HrInternalApplyDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    const note = String(body.note ?? '');
-    const r = await this.svc.addCandidateToFunnel(id, user.id, note, 'INTERNAL');
-    const row = r.ok ? r.data : {};
-    return { data: { vacancy_id: id, applied_by: user.id, note, funnel: row } };
-  }
-
   @ApiOperation({ summary: 'Get pipeline checklist' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
@@ -322,39 +214,6 @@ export class HrVacanciesPipelineController {
     const notes = `checklist updated: ${JSON.stringify(items).slice(0, 200)}`;
     await this.svc.updateFunnelNotes(id, notes);
     return { data: { pipeline_id: id, updated_by: user.id, items } };
-  }
-
-  @ApiOperation({ summary: 'Patch probation dates' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Patch('pipeline/:id/probation-dates')
-  async patchProbationDates(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
-    const dto = ProbationDatesSchema.parse(body);
-    return { data: { pipeline_id: id, ...dto, updated: true } };
-  }
-
-  @ApiOperation({ summary: 'Create probation journal entry' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('pipeline/:id/probation-journal')
-  @HttpCode(HttpStatus.CREATED)
-  async createProbationJournalEntry(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: unknown,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    const dto = ProbationJournalEntrySchema.parse(body);
-    await this.svc.recordFunnelHistory(String(id), 'probation_journal_entry', String(user.id), String(dto.note ?? ''));
-    return { data: { pipeline_id: id, created_by: user.id, ...dto } };
-  }
-
-  @ApiOperation({ summary: 'Get probation review' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Get('pipeline/:id/probation-review')
-  async getProbationReview(@Param('id', ParseIntPipe) id: number) {
-    return { data: { pipeline_id: id, review: null } };
   }
 
   @ApiOperation({ summary: 'Create pipeline roadmap' })

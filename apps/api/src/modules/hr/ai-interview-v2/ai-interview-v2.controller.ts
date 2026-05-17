@@ -3,7 +3,6 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { assertValidated } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Logger, UseGuards, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -132,15 +131,7 @@ export class AiInterviewV2Controller {
     @Param('token') token: string,
     @Body() body: { answers: string[] },
   ) {
-    const _rValidation = await this.svc.validateToken(token);
-    const validation = unwrapOrThrow(_rValidation);
-    assertValidated(validation.valid, 'Validation failed');
-    await this.svc.completeSession(validation.session_id ?? 0, {
-      aiSummary: `Submitted ${body.answers?.length || 0} answers`,
-      transcript: (body.answers || []).map((a, i) => `Q${i + 1}: ${a}`).join('\n'),
-      recommendation: 'CONSIDER',
-    });
-    return {};
+    return unwrapOrInternal(await this.svc.submitPublicAnswers(token, body?.answers ?? []));
   }
 
   @ApiOperation({ summary: 'Save results' })
