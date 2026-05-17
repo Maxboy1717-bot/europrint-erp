@@ -9,7 +9,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Ok, Err, Result } from '@common/result';
 import { db } from '@shared/db';
 import { otp_sessions } from '@shared/db';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, lt, sql } from 'drizzle-orm';
 
 export interface OtpSessionRow {
   id: number; sessionId: string; code: string; expiresAt: Date; used: boolean;
@@ -74,11 +74,10 @@ export class OtpSessionRepository {
    */
   async deleteExpired(): Promise<Result<number>> {
     try {
-      const result = await db.execute(sql`
-        DELETE FROM otp_sessions
-        WHERE expires_at < NOW()
-      `);
-      const rowCount = (result as unknown as { rowCount?: number }).rowCount ?? 0;
+      const deleted = await db.delete(otp_sessions)
+        .where(lt(otp_sessions.expires_at, sql`NOW()`))
+        .returning({ id: otp_sessions.id });
+      const rowCount = Array.isArray(deleted) ? deleted.length : 0;
       return Ok(rowCount);
     } catch (e: unknown) { return Err((e as Error).message); }
   }
