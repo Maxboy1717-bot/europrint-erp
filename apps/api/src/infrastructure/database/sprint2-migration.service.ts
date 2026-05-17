@@ -178,6 +178,7 @@ export class Sprint2MigrationService implements OnApplicationBootstrap {
    * Constraint list lives in ./sprint2-migration.constants.ts (Rule 16).
    */
   private async applyConstraint(table: string, name: string, definition: string): Promise<void> {
+    // NOTE: P3-30 — `table`, `name`, `definition` are destructured from the static SPRINT2_CONSTRAINT_DEFINITIONS ReadonlyArray (see ./sprint2-migration.constants.ts); private method, no public callers; no user input.
     await runQuery(sql`
       DO $do$
       BEGIN

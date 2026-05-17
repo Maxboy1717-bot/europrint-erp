@@ -33,6 +33,7 @@ export async function ensureDbInvariants(): Promise<void> {
       // expressed via Drizzle builders. Constraint name + table name are
       // looked up from a static, hard-coded constants list (DB_CONSTRAINTS),
       // never user input.
+      // NOTE: P3-30 — literal DDL template; `c.name`/`c.table`/`c.check` come from the hard-coded DB_CONSTRAINTS array in `./invariants/constraints-data.ts`; no user input.
       await db.execute(sql.raw(`
         DO $$
         BEGIN
@@ -72,6 +73,7 @@ export async function ensureSchemaAdditions(): Promise<void> {
       // `./invariants/migrations-*.ts`, never user input — these are
       // CREATE TABLE / CREATE INDEX / CREATE OR REPLACE FUNCTION /
       // CREATE TRIGGER statements that Drizzle builders cannot express.
+      // NOTE: P3-30 — `m.sql` is a literal DDL string from the static SCHEMA_MIGRATIONS/TRIGGER_MIGRATIONS/CRM_MIGRATIONS constant arrays; no user input.
       await db.execute(sql.raw(m.sql));
       logger.log(`Schema addition OK: ${m.name}`);
     } catch (err) {

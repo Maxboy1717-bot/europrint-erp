@@ -88,6 +88,7 @@ export class CrmMigrationService implements OnApplicationBootstrap {
     let applied = 0;
     for (const ddl of ddls) {
       try {
+        // NOTE: P3-30 — `ddl` is iterated from the literal-string arrays returned by the private `buildAddColumnDdlsPart1/Part2/buildBackfillDdls` helpers in this same file (ALTER TABLE crm_deals … and UPDATE crm_deals … statements); no user input.
         await ddlRun(sql.raw(ddl));
         applied++;
       } catch (e: unknown) {
