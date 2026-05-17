@@ -83,8 +83,12 @@ export class DailyReportService {
     return this.repo.getByEmployee(employeeId, limit);
   }
 
-  async getByDate(date: string) {
-    return this.repo.getByDate(date);
+  async getByDate(date: string, type: 'all' | 'operator' | 'office' = 'all', limit = 100) {
+    return this.repo.getByDate(date, type, limit);
+  }
+
+  async getByDepartment(departmentId: number, date: string) {
+    return this.repo.getByDepartment(departmentId, date);
   }
 
   async generatePdf(reportId: number): Promise<Result<Uint8Array, AppError>> {
