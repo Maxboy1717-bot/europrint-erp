@@ -57,6 +57,8 @@ const PatchPortretSchema = z.object({
 }).passthrough();
 
 export { HrVacanciesPipelineController } from './hr-vacancies-pipeline.controller';
+export { HrVacanciesProbationController } from './hr-vacancies-probation.controller';
+export { HrVacanciesAnalyticsController } from './hr-vacancies-analytics.controller';
 
 const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'hr_manager', 'hr_recruiter', 'hr', 'admin'] as const;
 
