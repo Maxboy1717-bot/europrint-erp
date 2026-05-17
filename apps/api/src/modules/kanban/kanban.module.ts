@@ -28,6 +28,8 @@ import { DrizzleKanbanAnalyticsRepository } from './infrastructure/repositories/
 import { DrizzleKanbanResultsFilesRepository } from './infrastructure/repositories/drizzle-kanban-results-files.repo';
 import { DrizzleKanbanStatsRepository } from './infrastructure/repositories/drizzle-kanban-stats.repo';
 import { KanbanBoardsRepository } from './infrastructure/repositories/kanban-boards.repo';
+import { KanbanColumnsRepository } from './infrastructure/repositories/kanban-columns.repo';
+import { KanbanCardsRepository } from './infrastructure/repositories/kanban-cards.repo';
 import { KanbanController } from './presentation/kanban.controller';
 import { KanbanBoardsController } from './presentation/kanban-boards.controller';
 import { KanbanCoreController } from './presentation/kanban-core.controller';
@@ -79,6 +81,8 @@ const repositories = [
     DrizzleKanbanResultsFilesRepository,
     DrizzleKanbanStatsRepository,
     DrizzleKanbanExtRepository,
+    KanbanColumnsRepository,
+    KanbanCardsRepository,
   ],
   exports: [KANBAN_REPO, KanbanService, KanbanExtService],
 })

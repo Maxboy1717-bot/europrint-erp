@@ -1,11 +1,13 @@
 /**
  * @module iot-main.controller
- * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @description IoT main controller. Hosts dashboard, machine-status, environment/sensors,
+ *              OEE, and device-detail endpoints. After Rule 13/16 split, alerts moved to
+ *              iot-alerts.controller and tablet/production-sessions/material-kit stubs
+ *              moved to iot-tablet.controller.
  */
-
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Patch, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { throwFromError, unwrapOrThrow } from '@common/http-result';
+import { unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -14,51 +16,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { IotMainService } from '../application/iot-main.service';
 import { IotSensorsExtendedService } from '../application/iot-sensors-extended.service';
-
-const IotPassthroughSchema = z.record(z.unknown());
-
-// P3-26: tablet / production-session passthrough stubs return 501 instead of
-// echoing the payload. Frontend (tablet PWA) should display a "coming soon"
-// empty state until the real services are wired.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
-
-const TabletLoginSchema = z.object({
-  username: z.string().max(200).optional(),
-  password: z.string().max(500).optional(),
-  pin: z.string().max(50).optional(),
-}).passthrough();
-
-const TabletSessionSchema = z.object({
-  workerId: z.union([z.string(), z.number()]).optional(),
-  startedAt: z.string().optional(),
-}).passthrough();
-
-const CreateAlertSchema = z.object({
-  type: z.string().max(100).optional(),
-  severity: z.string().max(50).optional(),
-  message: z.string().max(2000).optional(),
-  source: z.string().max(200).optional(),
-}).passthrough();
-
-const PatchDeviceSchema = z.object({
-  name: z.string().max(200).optional(),
-  location: z.string().max(500).optional(),
-  status: z.string().max(50).optional(),
-  metadata: z.record(z.unknown()).optional(),
-}).passthrough();
-
-const ProductionSessionSchema = z.object({
-  orderId: z.union([z.string(), z.number()]).optional(),
-  machineId: z.union([z.string(), z.number()]).optional(),
-  shiftId: z.union([z.string(), z.number()]).optional(),
-}).passthrough();
 import {
-  CameraAlertsQuerySchema,
   DeptLimitQuerySchema,
   DeviceIdQuerySchema,
   EmployeeHealthQuerySchema,
@@ -68,6 +26,20 @@ import {
   ShiftReportQuerySchema,
   StatusLimitQuerySchema,
 } from './dto/iot-camera.dto';
+
+const notImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
+
+const PatchDeviceSchema = z.object({
+  name:     z.string().max(200).optional(),
+  location: z.string().max(500).optional(),
+  status:   z.string().max(50).optional(),
+  metadata: z.record(z.unknown()).optional(),
+}).passthrough();
 
 const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin', 'technologist'];
 const IOT_WRITE = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin'];
@@ -87,21 +59,6 @@ export class IotMainController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard') @Roles(...IOT_READ)
   async getDashboard() { return unwrapOrThrow(await this.svc.getDashboard()); }
-
-  @ApiOperation({ summary: 'Get alerts' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('alerts') @Roles(...IOT_READ)
-  async getAlerts(@Query() raw: Record<string, unknown>) {
-    const q = CameraAlertsQuerySchema.parse(raw);
-    return unwrapOrThrow(await this.svc.getAlerts(q.status, q.severity, q.limit));
-  }
-
-  @ApiOperation({ summary: 'Acknowledge alert' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Post('alerts/:id/acknowledge') @Roles(...IOT_WRITE) @UseInterceptors(AuditInterceptor)
-  async acknowledgeAlert(@Param('id') id: string) { return unwrapOrThrow(await this.svc.acknowledgeAlert(id)); }
 
   @ApiOperation({ summary: 'Get attendance live' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -124,6 +81,7 @@ export class IotMainController {
     return unwrapOrThrow(await this.svc.getEmployeeHealth(q.employee_id, q.limit));
   }
 
+  // ── Machine status ──────────────────────────────────────────────────────────
   @ApiOperation({ summary: 'Get machine status' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('machine-status') @Roles(...IOT_READ)
@@ -138,15 +96,6 @@ export class IotMainController {
     return unwrapOrThrow(await this.svc.getMachineStatusLogs(q.device_id, q.limit));
   }
 
-  @ApiOperation({ summary: 'Get safety violations' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('safety-violations')
-  @Roles(...IOT_READ)
-  async getSafetyViolations(@Query() raw: Record<string, unknown>) {
-    const q = CameraAlertsQuerySchema.parse(raw);
-    return unwrapOrThrow(await this.svc.getSafetyViolations(q.status, q.severity, q.limit));
-  }
-
   @ApiOperation({ summary: 'Get employee productivity' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('employee-productivity')
@@ -156,6 +105,7 @@ export class IotMainController {
     return unwrapOrThrow(await this.svc.getEmployeeProductivity(q.department_id, q.limit));
   }
 
+  // ── Environment / sensors ───────────────────────────────────────────────────
   @ApiOperation({ summary: 'Get environment' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('environment')
@@ -254,6 +204,7 @@ export class IotMainController {
     return unwrapOrThrow(await this.svc.getEnvironmentData('noise', location));
   }
 
+  // ── Production / OEE ────────────────────────────────────────────────────────
   @ApiOperation({ summary: 'Get production metrics' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('production-metrics')
@@ -323,97 +274,8 @@ export class IotMainController {
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('downtime-reason-codes') @Roles(...IOT_READ)
   async getDowntimeReasonCodes() { return notImplemented('GET /iot/downtime-reason-codes'); }
-  @ApiOperation({ summary: 'Get tablet orders' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Get('tablet/orders') @Roles(...IOT_READ)
-  async getTabletOrders() { return notImplemented('GET /iot/tablet/orders'); }
-  @ApiOperation({ summary: 'Get tablet worker schedule' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Get('tablet/worker-schedule') @Roles(...IOT_READ)
-  async getTabletWorkerSchedule() { return notImplemented('GET /iot/tablet/worker-schedule'); }
-  @ApiOperation({ summary: 'Get tablet equipment' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Get('tablet/equipment') @Roles(...IOT_READ)
-  async getTabletEquipment() { return notImplemented('GET /iot/tablet/equipment'); }
-  @ApiOperation({ summary: 'Get tablet shift' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Get('tablet/shift') @Roles(...IOT_READ)
-  async getTabletShift() { return notImplemented('GET /iot/tablet/shift'); }
-  @ApiOperation({ summary: 'Get tablet sessions' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Get('tablet/sessions') @Roles(...IOT_READ)
-  async getTabletSessions() { return notImplemented('GET /iot/tablet/sessions'); }
-  @ApiOperation({ summary: 'Create tablet session' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Post('tablet/sessions') @Roles(...IOT_READ)
-  async createTabletSession(@Body() body: unknown) {
-    TabletSessionSchema.parse(body);
-    return notImplemented('POST /iot/tablet/sessions');
-  }
-  @ApiOperation({ summary: 'Tablet login' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Post('tablet/login') @Roles(...IOT_READ)
-  async tabletLogin(@Body() body: unknown) {
-    TabletLoginSchema.parse(body);
-    return notImplemented('POST /iot/tablet/login');
-  }
-  @ApiOperation({ summary: 'Tablet sos alert' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Post('tablet/sos-alert') @Roles(...IOT_READ)
-  async tabletSosAlert(@Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/tablet/sos-alert');
-  }
-  @ApiOperation({ summary: 'Tablet handover' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Post('tablet/handover') @Roles(...IOT_READ)
-  async tabletHandover(@Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/tablet/handover');
-  }
-  @ApiOperation({ summary: 'Scan material kit item' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Post('material-kit-items/:id/scan') @Roles(...IOT_READ)
-  async scanMaterialKitItem(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/material-kit-items/:id/scan');
-  }
 
-  @ApiOperation({ summary: 'Create alert' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Post('alerts') @Roles(...IOT_WRITE)
-  @UseInterceptors(AuditInterceptor)
-  async createAlert(@Body() body: unknown) {
-    CreateAlertSchema.parse(body);
-    return notImplemented('POST /iot/alerts');
-  }
-
-  @ApiOperation({ summary: 'Patch acknowledge alert' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Patch('alerts/:id/acknowledge') @Roles(...IOT_WRITE)
-  @UseInterceptors(AuditInterceptor)
-  async patchAcknowledgeAlert(@Param('id') id: string) { return unwrapOrThrow(await this.svc.acknowledgeAlert(id)); }
-
+  // ── Device patch ────────────────────────────────────────────────────────────
   @ApiOperation({ summary: 'Patch device' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -424,99 +286,6 @@ export class IotMainController {
   async patchDevice(@Param('id') _id: string, @Body() body: unknown) {
     PatchDeviceSchema.parse(body);
     return notImplemented('PATCH /iot/devices/:id');
-  }
-
-  @ApiOperation({ summary: 'Patch scan material kit item' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Patch('material-kit-items/:id/scan') @Roles(...IOT_READ)
-  async patchScanMaterialKitItem(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('PATCH /iot/material-kit-items/:id/scan');
-  }
-
-  // ── Production-sessions root POST — list (GET) is already served by
-  //    general-legacy-b.controller.ts at @Get('iot/production-sessions')
-  //    via the empty @Controller() prefix. Fastify rejects duplicate GET
-  //    declarations, so we keep only the POST here (no caller-side conflict).
-  @ApiOperation({ summary: 'Create production session' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Post('production-sessions') @Roles(...IOT_READ)
-  async createProductionSession(@Body() body: unknown) {
-    ProductionSessionSchema.parse(body);
-    return notImplemented('POST /iot/production-sessions');
-  }
-
-  @ApiOperation({ summary: 'Get production session crew' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Get('production-sessions/:id/crew') @Roles(...IOT_READ)
-  async getProductionSessionCrew(@Param('id') _id: string) {
-    return notImplemented('GET /iot/production-sessions/:id/crew');
-  }
-  @ApiOperation({ summary: 'Start production session' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Post('production-sessions/:id/start') @Roles(...IOT_READ)
-  async startProductionSession(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/production-sessions/:id/start');
-  }
-  @ApiOperation({ summary: 'Stop production session' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Post('production-sessions/:id/stop') @Roles(...IOT_READ)
-  async stopProductionSession(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/production-sessions/:id/stop');
-  }
-  @ApiOperation({ summary: 'Report production defect' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Post('production-sessions/:id/defect') @Roles(...IOT_READ)
-  async reportProductionDefect(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/production-sessions/:id/defect');
-  }
-  @ApiOperation({ summary: 'Submit production evaluation' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Post('production-sessions/:id/evaluation') @Roles(...IOT_READ)
-  async submitProductionEvaluation(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/production-sessions/:id/evaluation');
-  }
-  @ApiOperation({ summary: 'Submit material return' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Post('production-sessions/:id/material-return') @Roles(...IOT_READ)
-  async submitMaterialReturn(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/production-sessions/:id/material-return');
-  }
-  @ApiOperation({ summary: 'Submit inline qc' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Post('production-sessions/:id/inline-qc') @Roles(...IOT_READ)
-  async submitInlineQc(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/production-sessions/:id/inline-qc');
   }
 
   // OEE live snapshot — real values come from sensor_readings + production_sessions
