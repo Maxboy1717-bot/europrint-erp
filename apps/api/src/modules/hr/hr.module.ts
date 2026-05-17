@@ -92,6 +92,9 @@ import { HrPayrollClosureController } from './payroll/hr-payroll-closure.control
 import { HR_LEAVE_SVC_REPO } from './leave/i-hr-leave-svc.repo';
 import { DrizzleHrLeaveSvcRepository } from './leave/drizzle-hr-leave-svc.repo';
 import { LeaveService } from './leave/leave.service';
+import { LeaveAccrualService } from './leave/leave-accrual.service';
+import { LeaveAccrualJobService } from './leave/leave-accrual-job.service';
+import { HrLeaveAccrualController } from './leave/hr-leave-accrual.controller';
 import { HR_ONBOARDING_REPO } from './onboarding/repos/i-hr-onboarding.repo';
 import { DrizzleHrOnboardingRepository } from './onboarding/repos/drizzle-hr-onboarding.repo';
 import { HR_RECRUITMENT_FUNNEL_REPO } from './recruitment/repos/i-hr-recruitment-funnel.repo';
@@ -173,6 +176,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     HrSafetyController,
     HrOffboardingController,
     HrPayrollClosureController,
+    HrLeaveAccrualController,
     HrGsdController,
     EmployeesForFaceController,
     AttendanceFaceController,
@@ -192,6 +196,8 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     PayrollService,
     { provide: HR_LEAVE_SVC_REPO, useClass: DrizzleHrLeaveSvcRepository },
     LeaveService,
+    LeaveAccrualService,
+    LeaveAccrualJobService,
     { provide: HR_ONBOARDING_REPO, useClass: DrizzleHrOnboardingRepository },
     { provide: HR_RECRUITMENT_FUNNEL_REPO, useClass: DrizzleHrRecruitmentFunnelRepository },
     ...repositories,
