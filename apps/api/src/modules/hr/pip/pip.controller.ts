@@ -1,6 +1,7 @@
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, UseGuards, Get, Post, Patch, Body, Param, ParseIntPipe, Logger, UseInterceptors } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { RolesGuard } from '@common/guards/roles.guard';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
@@ -28,10 +29,15 @@ const AddProgressSchema = z.object({
 });
 class AddProgressDto extends createZodDto(AddProgressSchema) {}
 
-@Roles('admin', 'manager', 'supervisor', 'hr_manager')
+const CompletePipSchema = z.object({
+  result: z.enum(['PASSED', 'FAILED']),
+});
+class CompletePipDto extends createZodDto(CompletePipSchema) {}
+
+@Roles('admin', 'manager', 'supervisor', 'hr_manager', 'hr_specialist')
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @UseInterceptors(AuditInterceptor)
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('hr-v2/pip')
 export class PipController {
   private readonly logger = new Logger(PipController.name);
@@ -83,5 +89,14 @@ export class PipController {
   @Patch(':id/acknowledge')
   async acknowledge(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.acknowledge(id));
+  }
+
+  /**
+   * Finalize a PIP with explicit outcome — called from `PIPPage.tsx:68`
+   *   PATCH /api/hr-v2/pip/:id/complete  { result: 'PASSED' | 'FAILED' }
+   */
+  @Patch(':id/complete')
+  async complete(@Param('id', ParseIntPipe) id: number, @Body() body: CompletePipDto) {
+    return unwrapOrInternal(await this.svc.completePip(id, body.result));
   }
 }

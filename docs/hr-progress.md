@@ -19,12 +19,12 @@ Started: 2026-05-17
 | # | Page | Component | Broken API(s) | Status | Commit |
 |--:|------|-----------|---------------|:------:|:------:|
 | 1 | `/hr/assets` | HRAssetManagement | `/api/assets?:id` | not_started | — |
-| 2 | `/hr/daily-reports` | DailyReportPage | `/api/hr-v2/daily-reports/employee`, `/department`, `/by-date?type`, `/stats` | in_progress | — |
+| 2 | `/hr/daily-reports` | DailyReportPage | `/api/hr-v2/daily-reports/employee`, `/department`, `/by-date?type`, `/stats` | done | (this branch) |
 | 3 | `/hr/documents` | DocumentWorkflowPage | `/api/hr-v2/documents?status&employeeId` + stubs | not_started | — |
 | 4 | `/hr/gamification` | GamificationPage | (false positive — endpoint works) | verified_ok | n/a |
 | 5 | `/hr/offboarding` | HROffboarding | `GET /api/hr/offboarding/cases?status&search` | in_progress | — |
 | 6 | `/hr/onboarding` | HROnboarding | `GET/POST/PATCH /api/hr/onboarding-checklists` | not_started | — |
-| 7 | `/hr/pip` | PIPPage | `PATCH /api/hr-v2/pip/:id/complete` | in_progress | — |
+| 7 | `/hr/pip` | PIPPage | `PATCH /api/hr-v2/pip/:id/complete` | done | (this branch) |
 | 8 | `/hr/reception` | ReceptionPage | (false positive — `badge/:badge_number` works) | verified_ok | n/a |
 | 9 | `/hr/referrals` | ReferralPage | `POST/PATCH /api/hr/referrals` | in_progress | — |
 
@@ -110,4 +110,27 @@ These violate `CLAUDE.md` Qoida 10 — "Soxta Javoblar Taqiqlangan".
 
 ### 2026-05-17
 
-(work in progress — see commits)
+- **Task 4.1 done** — `feat(hr-api): implement /hr/daily-reports backend`
+  - Replaced 2 stub endpoints (`@Get('employee')`, `@Get('department')`)
+    with real DB-backed handlers.
+  - Added `@Get('department/:id')` (frontend uses `/department/${deptId}`).
+  - `@Get('by-date')` now honors `type=operator|office|all` and `limit`.
+  - Controller flipped to `@UseGuards(JwtAuthGuard, RolesGuard)` so the
+    existing `@Roles(...)` decorator is actually enforced. Added
+    `hr_manager` + `hr_specialist` to the role list.
+  - 14 unit tests in `apps/api/test/hr/daily-report.controller.spec.ts`.
+  - Manual verify (when env is set up): submit a report via POST, then
+    `curl /api/hr-v2/daily-reports/employee?employeeId=1&limit=14` and
+    `curl /api/hr-v2/daily-reports/department/3?date=2026-05-17`.
+
+- **Task 4.2 done** — `feat(hr-api): add /hr-v2/pip/:id/complete`
+  - Added `PATCH :id/complete` route with `result: 'PASSED'|'FAILED'`
+    Zod-validated body (frontend `PIPPage.tsx:68` calls this).
+  - New service method `PipService.completePip(id, outcome)` reuses
+    existing `markCompleted` / `markFailed` repository methods.
+  - Emits `HrV2Events.PIP_COMPLETED` / `PIP_FAILED` with
+    `source: 'manual_complete'` so subscribers can distinguish manual
+    completion from the daily cron's overdue-mark logic.
+  - Controller flipped to `JwtAuthGuard + RolesGuard`; added
+    `hr_specialist` to the role allowlist.
+  - 6 unit tests in `apps/api/test/hr/pip.complete.spec.ts`.

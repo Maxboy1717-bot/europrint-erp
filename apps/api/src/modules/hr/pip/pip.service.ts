@@ -86,6 +86,32 @@ export class PipService {
     });
   }
 
+  /**
+   * Finalize a PIP plan with explicit outcome (PASSED / FAILED).
+   * Frontend calls `PATCH /api/hr-v2/pip/:id/complete { result: 'PASSED'|'FAILED' }`.
+   */
+  async completePip(pipId: number, outcome: 'PASSED' | 'FAILED'): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const pipR = await this.repo.getPip(pipId);
+      if (!pipR.ok || !pipR.data) throw new NotFoundException(`PIP #${pipId} not found`);
+
+      if (outcome === 'PASSED') {
+        await this.repo.markCompleted(pipId);
+      } else {
+        await this.repo.markFailed(pipId);
+      }
+
+      const pip = pipR.data as { employee_id?: number };
+      this.eventEmitter.emit(
+        outcome === 'PASSED' ? HrV2Events.PIP_COMPLETED : HrV2Events.PIP_FAILED,
+        { pipId, employeeId: pip.employee_id, outcome, source: 'manual_complete' },
+      );
+
+      const updated = await this.repo.getPip(pipId);
+      return updated.ok && updated.data ? updated.data : { id: pipId, outcome };
+    });
+  }
+
   async getById(pipId: number) {
     return safeCall(async () => {
       const pip = await this.repo.getByIdWithEmployee(pipId);
