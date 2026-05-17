@@ -102,6 +102,7 @@ import { HrSafetyRepository } from './safety/hr-safety.repository';
 import { HrOffboardingController } from './offboarding/hr-offboarding.controller';
 import { HrOffboardingService } from './offboarding/hr-offboarding.service';
 import { HrOffboardingRepository } from './offboarding/hr-offboarding.repository';
+import { OffboardingWorkflowService } from './offboarding/offboarding-workflow.service';
 import { HrGsdController } from './presentation/hr-gsd.controller';
 import { HrGsdService } from './presentation/hr-gsd.service';
 import { HrGsdRepository } from './presentation/hr-gsd.repository';
@@ -218,6 +219,7 @@ const repositories = [LeaveRepository, HrLeaveRepo];
     HrSafetyRepository,
     HrOffboardingService,
     HrOffboardingRepository,
+    OffboardingWorkflowService,
     HrGsdService,
     HrGsdRepository,
     FaceRecognitionService,
