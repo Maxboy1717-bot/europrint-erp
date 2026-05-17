@@ -87,9 +87,13 @@ RUN addgroup -g 1001 -S nodejs && \
 # because apps/api/dist/main.js requires module-alias which lives in workspace deps.
 COPY --from=build --chown=nodejs:nodejs /app /app
 
-# Trim non-runtime files that ended up in the COPY (test, docs, source TS).
-# This shaves ~150 MB without affecting runtime.
-RUN rm -rf /app/apps/api/src /app/apps/api/test /app/lib/*/src /app/lib/*/test \
+# Trim non-runtime files that ended up in the COPY.
+# NOTE: lib/*/src is KEPT — some HR compiled modules (e.g.
+# onboarding-checklists.repository.js) have baked-in relative requires to
+# `../../../../../../lib/db/src` that bypass `@workspace/db`. Keeping the
+# source dirs is ~20 MB extra and avoids MODULE_NOT_FOUND at runtime.
+# Frontend artifacts + scripts + docs + husky + github are safe to drop.
+RUN rm -rf /app/apps/api/src /app/apps/api/test \
     /app/artifacts /app/scripts /app/docs /app/.husky /app/.github 2>/dev/null || true
 
 USER nodejs
