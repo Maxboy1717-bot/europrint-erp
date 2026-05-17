@@ -66,10 +66,19 @@ export class OrgChartCompatService {
 
   async getOrgTree(departmentId?: string): Promise<Result<Record<string, unknown>>>{
     return safeCall(async () => {
+      const [depts, emps] = await this.fetchOrgTreeRaw(departmentId);
+      const deptList = dbRows(depts);
+      const empList = dbRows(emps);
+      const tree = buildTree(deptList);
+      return { ok: true, data: { tree, departments: deptList, employees: empList } };
+    });
+  }
+
+  private async fetchOrgTreeRaw(departmentId?: string) {
     const deptFilter = departmentId
       ? sql`WHERE d.id = ${parseInt(departmentId, 10)}`
       : sql``;
-    const [depts, emps] = await Promise.all([
+    return Promise.all([
       rawSql(sql`
         SELECT d.id, d.name, d.name_uz, d.parent_id, d.manager_id,
                COUNT(e.id) AS employee_count
@@ -89,12 +98,7 @@ export class OrgChartCompatService {
         ORDER BY e.first_name
       `),
     ]);
-    const deptList = dbRows(depts);
-    const empList = dbRows(emps);
-    const tree = buildTree(deptList);
-    return { ok: true, data: { tree, departments: deptList, employees: empList } };
-  
-    });}
+  }
 
   async getOrgFlat(_departmentId?: string){
     return safeCall(async () => {
