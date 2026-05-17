@@ -40,7 +40,8 @@ export class AdminAuthController {
   @Post('auth/refresh')
   @UsePipes(new ZodValidationPipe(LegacyRefreshTokenSchema))
   async refreshToken(@Body() body: LegacyRefreshTokenDto) {
-    // getOrThrow: fail loudly if JWT_REFRESH_SECRET is missing — never fall back to JWT_SECRET
+    // SECURITY: PA-S3 — refresh tokens MUST be verified with JWT_REFRESH_SECRET,
+    // never the access-token secret. getOrThrow fails loudly if env is missing.
     const refreshSecret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
     const decoded = this.jwtService.verify(body.refreshToken, { secret: refreshSecret }) as Record<string, unknown>;
     const admin = await this.legacyService.findAdminById(decoded['id'] as string | number);
