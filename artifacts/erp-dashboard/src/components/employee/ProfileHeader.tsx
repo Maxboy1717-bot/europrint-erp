@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UserCheck, Hash, AlertTriangle, AlertCircle, CheckCircle } from "lucide-react";
 import { Employee, AbcAnalysis, OrgStructureAssignment, EmploymentContract, Certificate, SalaryHistoryRecord } from "@/pages/employee-profile/profile-types";
+import { RoleGate, PII_VIEWER_ROLES } from "@/components/RoleGate";
 
 interface ProfileHeaderProps {
   employee: Employee;
@@ -147,33 +148,44 @@ export function ProfileHeader({
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="text-right">
-                  {payrollSummary?.totalSalary ? (
-                    <>
-                      <div className="flex items-end gap-1">
-                        <span className="text-2xl font-black text-emerald-700 leading-none">
-                          {(Math.round(Number(payrollSummary.totalSalary)) / 1000000).toFixed(1)}M
-                        </span>
-                        <span className="text-sm text-emerald-400 mb-0.5">UZS</span>
-                      </div>
-                      <p className="text-xs text-emerald-400 mt-1">{payrollSummary.periodName || "So'nggi davr"}</p>
-                    </>
-                  ) : salaryHistory && salaryHistory.length > 0 ? (
-                    <>
-                      <div className="flex items-end gap-1">
-                        <span className="text-2xl font-black text-emerald-700 leading-none">
-                          {(Math.round(Number(salaryHistory[0].newSalary)) / 1000000).toFixed(1)}M
-                        </span>
-                        <span className="text-sm text-emerald-400 mb-0.5">UZS</span>
-                      </div>
-                      <p className="text-xs text-emerald-400 mt-1">Maosh tarixi</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-2xl font-black text-muted-foreground leading-none">—</p>
-                      <p className="text-xs text-emerald-400 mt-1">Ma'lumot yo'q</p>
-                    </>
-                  )}
+                <div className="text-right" data-testid="profile-header-salary">
+                  <RoleGate
+                    roles={PII_VIEWER_ROLES}
+                    ownerUserId={employee.id}
+                    fallback={
+                      <>
+                        <p className="text-2xl font-black text-muted-foreground leading-none" data-testid="salary-masked">•••••</p>
+                        <p className="text-xs text-emerald-400 mt-1">Maxfiy</p>
+                      </>
+                    }
+                  >
+                    {payrollSummary?.totalSalary ? (
+                      <>
+                        <div className="flex items-end gap-1">
+                          <span className="text-2xl font-black text-emerald-700 leading-none">
+                            {(Math.round(Number(payrollSummary.totalSalary)) / 1000000).toFixed(1)}M
+                          </span>
+                          <span className="text-sm text-emerald-400 mb-0.5">UZS</span>
+                        </div>
+                        <p className="text-xs text-emerald-400 mt-1">{payrollSummary.periodName || "So'nggi davr"}</p>
+                      </>
+                    ) : salaryHistory && salaryHistory.length > 0 ? (
+                      <>
+                        <div className="flex items-end gap-1">
+                          <span className="text-2xl font-black text-emerald-700 leading-none">
+                            {(Math.round(Number(salaryHistory[0].newSalary)) / 1000000).toFixed(1)}M
+                          </span>
+                          <span className="text-sm text-emerald-400 mb-0.5">UZS</span>
+                        </div>
+                        <p className="text-xs text-emerald-400 mt-1">Maosh tarixi</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-2xl font-black text-muted-foreground leading-none">—</p>
+                        <p className="text-xs text-emerald-400 mt-1">Ma'lumot yo'q</p>
+                      </>
+                    )}
+                  </RoleGate>
                 </div>
               </div>
             </div>
