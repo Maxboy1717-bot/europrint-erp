@@ -11,6 +11,8 @@ import { employees } from "./employees";
 
 export const attendance = pgTable("attendance", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy (Phase 2 / Task 2.1). See employees.ts for rationale.
+  tenantId: integer("tenant_id").notNull().default(1),
   employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   attendanceDate: date("attendance_date").notNull(),
   checkInTime: timestamp("check_in_time"),

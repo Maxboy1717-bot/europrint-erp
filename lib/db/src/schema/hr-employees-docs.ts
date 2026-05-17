@@ -88,6 +88,9 @@ export const employmentContracts = pgTable("employment_contracts", {
 // Salary History (Maosh tarixi)
 export const salaryHistory = pgTable("salary_history", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy (Phase 2 / Task 2.1). DB column added in migration 0016.
+  // See lib/db/src/schema/employees.ts for rationale.
+  tenantId: integer("tenant_id").notNull().default(1),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   effectiveDate: varchar("effective_date", { length: 10 }).notNull(), // YYYY-MM-DD
   previousSalary: numericMoney("previous_salary"),
@@ -177,6 +180,8 @@ export const overtimePayments = pgTable("overtime_payments", {
 // Leave Requests (Ta'til so'rovlari)
 export const leaveRequests = pgTable("leave_requests", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy (Phase 2 / Task 2.1). DB column added in migration 0016.
+  tenantId: integer("tenant_id").notNull().default(1),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   leaveType: varchar("leave_type", { length: 30 }).notNull(), // annual, sick, unpaid, maternity, paternity, study
   startDate: varchar("start_date", { length: 10 }).notNull(),

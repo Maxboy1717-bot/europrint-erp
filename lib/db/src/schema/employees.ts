@@ -13,6 +13,11 @@ import { users } from "./users";
 
 export const employees = pgTable("employees", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (Phase 2 / Task 2.1). DEFAULT 1 is intentional —
+  // every row backfilled to tenant 1 on migration 0016; future writers MUST
+  // set this from TenantContext (see apps/api/src/shared/db/tenant-context.ts).
+  // A follow-up migration drops the DEFAULT after backfill is verified.
+  tenantId: integer("tenant_id").notNull().default(1),
   userId: integer("user_id").references(() => users.id, { onDelete: "set null" }).unique(),
   employeeCode: varchar("employee_code", { length: 20 }).notNull().unique(),
   firstName: varchar("first_name", { length: 100 }).notNull(),
@@ -71,6 +76,7 @@ export const employees = pgTable("employees", {
   index("idx_employees_status").on(t.status),
   index("idx_employees_department_id").on(t.departmentId),
   index("idx_employees_deleted_at").on(t.deletedAt),
+  index("idx_employees_tenant_id").on(t.tenantId),
 ]);
 
 export const employmentContracts = pgTable("employment_contracts", {
