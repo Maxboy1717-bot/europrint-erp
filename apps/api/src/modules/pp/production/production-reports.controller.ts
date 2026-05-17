@@ -26,7 +26,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ProductionService } from './production.service';
-import { safeInt } from '../hr/common/db-rows';
+import { safeInt } from '../../hr/common/db-rows';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
 const PROD_ROLES = ['super_admin', 'director', 'production_manager', 'operator', 'technologist'];

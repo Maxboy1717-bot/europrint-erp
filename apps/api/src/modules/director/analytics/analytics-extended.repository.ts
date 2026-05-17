@@ -26,7 +26,7 @@ const ip = (r: Row | undefined, k: string) => parseInt(String(r?.[k] ?? '0'), 10
 @Injectable()
 export class AnalyticsExtendedRepository extends AnalyticsExtendedBaseRepository {
   async findMentorshipsStats(): Promise<Result<{ total: number; active: number; completed: number; topMentors: { mentorName: string; menteeCount: number }[] }>> {
-    
+
     return safeCall(async () => {
       const [[row], topRows] = await Promise.all([
         db.select({
@@ -50,7 +50,7 @@ export class AnalyticsExtendedRepository extends AnalyticsExtendedBaseRepository
   }
 
   async findEventsStats(): Promise<Result<{ total: number; scheduled: number; completed: number; byType: { type: string; count: number }[] }>> {
-    
+
     return safeCall(async () => {
       const [[row], byTypeRows] = await Promise.all([
         db.select({
@@ -72,7 +72,7 @@ export class AnalyticsExtendedRepository extends AnalyticsExtendedBaseRepository
   }
 
   async findApplicationsStats(): Promise<Result<{ totalApplications: number; totalResponses: number; pendingResponses: number; approvedResponses: number; rejectedResponses: number }>> {
-    
+
     return safeCall(async () => {
       const [row] = await db.select({
         apps: sql<string>`COUNT(${applications.id})`,
@@ -88,7 +88,7 @@ export class AnalyticsExtendedRepository extends AnalyticsExtendedBaseRepository
   }
 
   async findSurveysStats(): Promise<Result<{ total: number; active: number; closed: number; totalResponses: number; responseRate: number }>> {
-    
+
     return safeCall(async () => {
       const [[row], [respRow]] = await Promise.all([
         db.select({
@@ -105,7 +105,7 @@ export class AnalyticsExtendedRepository extends AnalyticsExtendedBaseRepository
   }
 
   async findBroadcastsStats(): Promise<Result<{ total: number; totalRecipients: number; totalSuccess: number; totalFailed: number; successRate: number }>> {
-    
+
     return safeCall(async () => {
       const [row] = await db.select({
         total: sql<string>`COUNT(*)`,
@@ -120,7 +120,7 @@ export class AnalyticsExtendedRepository extends AnalyticsExtendedBaseRepository
   }
 
   async findSkillsStats(): Promise<Result<{ totalSkills: number; totalUserSkills: number; verifiedSkills: number; byCategory: { category: string; count: number }[] }>> {
-    
+
     return safeCall(async () => {
       const [[row], catRows] = await Promise.all([
         db.select({
@@ -142,7 +142,7 @@ export class AnalyticsExtendedRepository extends AnalyticsExtendedBaseRepository
   }
 
   async findEmployeeStats(): Promise<Result<{ newEmployees: number; departedEmployees: number; activeEmployees: number; nonParticipatingEmployees: number; studyingEmployees: number }>> {
-    
+
     return safeCall(async () => {
       const [row] = await db.select({
         new_emp: sql<string>`COUNT(*) FILTER (WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE))`,
@@ -157,7 +157,7 @@ export class AnalyticsExtendedRepository extends AnalyticsExtendedBaseRepository
   }
 
   async findScoreDistribution(): Promise<Result<{ ranges: { range: string; count: number }[] }>> {
-    
+
     return safeCall(async () => {
       const [row] = await db.select({
         r0_20: sql<string>`COUNT(*) FILTER (WHERE score < 20)`,
@@ -172,7 +172,7 @@ export class AnalyticsExtendedRepository extends AnalyticsExtendedBaseRepository
   }
 
   async findAiGeneralAnalysis(): Promise<Result<{ analysis: string; generatedAt: string; stats: Record<string, unknown> }>> {
-    
+
     return safeCall(async () => {
       const [[uRow], [cRow], [taRow]] = await Promise.all([
         db.select({ total: sql<string>`COUNT(*)` }).from(appUsers),
@@ -198,7 +198,7 @@ export class AnalyticsExtendedRepository extends AnalyticsExtendedBaseRepository
   }
 
   async findSkillsMatrix(): Promise<Result<{ subject: string; A: number; B: number }[]>> {
-    
+
     return safeCall(async () => {
       const rows = await db.select({
         subject: hrDepartments.name,

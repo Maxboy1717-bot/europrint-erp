@@ -23,7 +23,7 @@ const ip = (r: Row | undefined, k: string) => parseInt(String(r?.[k] ?? '0'), 10
 
 export class AnalyticsExtendedBaseRepository {
   async findActiveUsers(): Promise<Result<{ dau: number; wau: number; mau: number; totalActiveUsers: number; dau_wau_ratio: number; wau_mau_ratio: number }>> {
-    
+
     return safeCall(async () => {
       const [row] = await db.select({
         dau: sql<string>`COUNT(DISTINCT user_id) FILTER (WHERE created_at >= NOW() - INTERVAL '1 day')`,
@@ -38,7 +38,7 @@ export class AnalyticsExtendedBaseRepository {
   }
 
   async findActivityTrend(): Promise<Result<{ date: string; activeUsers: number }[]>> {
-    
+
     return safeCall(async () => {
       const rows = await db.select({
         date: sql<string>`DATE(created_at)::text`,
@@ -53,7 +53,7 @@ export class AnalyticsExtendedBaseRepository {
   }
 
   async findRetention(): Promise<Result<{ day1Retention: number; day7Retention: number; day30Retention: number; day1Count: number; day7Count: number; day30Count: number; totalUsers: number }>> {
-    
+
     return safeCall(async () => {
       const result = await runQuery<{ total: string; day1: string; day7: string; day30: string }>(sql`
         WITH first_day AS (
@@ -95,7 +95,7 @@ export class AnalyticsExtendedBaseRepository {
   }
 
   async findSessionStats(): Promise<Result<{ totalSessions: number; averageDuration: number; maxDuration: number; minDuration: number }>> {
-    
+
     return safeCall(async () => {
       const [row] = await db.select({
         total: sql<string>`COUNT(*)`,
@@ -109,7 +109,7 @@ export class AnalyticsExtendedBaseRepository {
   }
 
   async findDiscriminationData(): Promise<Result<{ highScorers: { averageScore: number; sampleSize: number }; lowScorers: { averageScore: number; sampleSize: number }; discriminationIndex: number; computedAt: string }>> {
-    
+
     return safeCall(async () => {
       const [[hiRow], [loRow]] = await Promise.all([
         db.select({ avg: sql<string>`AVG(score)::numeric`, cnt: sql<string>`COUNT(*)` }).from(lmsTestAttempts).where(sql`score >= 80`),
@@ -125,7 +125,7 @@ export class AnalyticsExtendedBaseRepository {
   }
 
   async findDifficultyAnalysis(): Promise<Result<{ levels: { level: string; count: number; averageScore: number }[] }>> {
-    
+
     return safeCall(async () => {
       const rows = await db.select({
         level: sql<string>`difficulty_level`,
@@ -141,7 +141,7 @@ export class AnalyticsExtendedBaseRepository {
   }
 
   async findReliabilityData(): Promise<Result<{ cronbachAlpha: number; standardError: number; totalItems: number }>> {
-    
+
     return safeCall(async () => {
       const [row] = await db.select({
         attempts: sql<string>`COUNT(*)`,
@@ -156,7 +156,7 @@ export class AnalyticsExtendedBaseRepository {
   }
 
   async findItemAnalysis(): Promise<Result<{ items: { itemId: string; title: string; attempts: number; facilityIndex: number; averageScore: number }[] }>> {
-    
+
     return safeCall(async () => {
       const rows = await db.select({
         id: lmsTests.id,

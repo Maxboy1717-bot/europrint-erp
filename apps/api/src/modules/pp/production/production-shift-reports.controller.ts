@@ -27,7 +27,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ProductionService } from './production.service';
-import { safeInt } from '../hr/common/db-rows';
+import { safeInt } from '../../hr/common/db-rows';
 import {
   ProductionCreateShiftReportSchema, ProductionCreateShiftReportDto,
   ProductionUpdateShiftReportSchema, ProductionUpdateShiftReportDto,

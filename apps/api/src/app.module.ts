@@ -79,8 +79,8 @@ import { ChatModule } from './modules/chat/chat.module';
 import { StorageModule } from './modules/storage/storage.module';
 
 // Ecommerce & Website (Express dan ko'chirildi — NestJS native)
+// PA3-17 Wave 6: WebsiteModule merged into EcommerceModule (ecommerce/website/)
 import { EcommerceModule } from './modules/ecommerce/ecommerce.module';
-import { WebsiteModule } from './modules/website/website.module';
 
 // Legacy & Compatibility (minimallashtirilgan — asosiy route'lar ko'chirildi)
 import { LegacyModule } from './modules/general/legacy.module';
@@ -100,11 +100,11 @@ import { IntegrationModule } from './modules/integration/integration.module';
 // PA3-17 Wave 5: SapModule merged into IntegrationModule (integration/sap/)
 
 // PP / MES / Production extensions
-import { ProductionModule } from './modules/production/production.module';
+// PA3-17 Wave 6: ProductionModule merged into PpModule (pp/production/)
 import { ErpModule } from './modules/erp/erp.module';
 
 // Analytics & Export
-import { AnalyticsModule } from './modules/analytics/analytics.module';
+// PA3-17 Wave 6: AnalyticsModule merged into DirectorModule (director/analytics/)
 import { ExportModule } from './modules/export/export.module';
 
 // Design / Technology / HR Assets (Task #262)
@@ -229,8 +229,8 @@ import { OutboxModule } from './modules/shared/outbox/outbox.module';
     StorageModule,
 
     // ── Ecommerce & Website (NestJS native — Express dan ko'chirildi) ──────────
+    // PA3-17 Wave 6: WebsiteModule merged into EcommerceModule (ecommerce/website/)
     EcommerceModule,
-    WebsiteModule,
 
     // ── Legacy & Compatibility (minimallashtirilgan — saqlanadi chunki funksiya yo'qolmasligi shart) ──
     CompatibilityModule,
@@ -250,11 +250,11 @@ import { OutboxModule } from './modules/shared/outbox/outbox.module';
     // PA3-17 Wave 5: SapModule merged into IntegrationModule (integration/sap/)
 
     // ── PP / MES / Production Extensions ─────────────────────────────────────
-    ProductionModule,
+    // PA3-17 Wave 6: ProductionModule merged into PpModule (pp/production/)
     ErpModule,
 
     // ── Analytics & Export ────────────────────────────────────────────────────
-    AnalyticsModule,
+    // PA3-17 Wave 6: AnalyticsModule merged into DirectorModule (director/analytics/)
     ExportModule,
 
     // ── Design / Technology / HR Assets (Task #262) ───────────────────────────
