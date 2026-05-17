@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TabsContent } from "@/components/ui/tabs";
 import { MessageSquare, Building2, PackageCheck, CheckCircle } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { GoodsReceipt, PurchaseOrder } from "./MMExtendedTypes";
 import { fmtMoney } from "./MMExtendedTypes";
 
@@ -84,12 +85,12 @@ interface SupplierPortalTabProps {
   purchaseOrdersCount: number;
   requisitionsCount: number;
   metaTitle: string;
-  MetaIcon: React.ComponentType<{ className?: string }>;
+  MetaIcon: LucideIcon | React.ComponentType<{ className?: string }>;
   ModuleSectionHeaderComponent: React.ComponentType<{
     moduleName: string;
     moduleColor: string;
     sectionTitle: string;
-    icon: React.ComponentType<{ className?: string }>;
+    icon: LucideIcon;
   }>;
 }
 
@@ -119,7 +120,7 @@ export function SupplierPortalTab({ vendorsCount, purchaseOrdersCount, requisiti
           <CardHeader><CardTitle className="text-base">{t("portalKirish")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div className="p-4 rounded-md bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
-              <ModuleSectionHeaderComponent moduleName="MM" moduleColor="text-[var(--ep-cyan)]" sectionTitle={metaTitle} icon={MetaIcon} />
+              <ModuleSectionHeaderComponent moduleName="MM" moduleColor="text-[var(--ep-cyan)]" sectionTitle={metaTitle} icon={MetaIcon as LucideIcon} />
               <div className="font-semibold">{t("suppliersEuroprintUz")}</div>
               <div className="text-sm text-muted-foreground mt-1">{t("yetkazuvchilarTashqiPortalManzili")}</div>
             </div>

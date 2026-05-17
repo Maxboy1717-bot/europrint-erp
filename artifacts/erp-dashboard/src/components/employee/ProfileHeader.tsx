@@ -15,6 +15,12 @@ interface ProfileHeaderProps {
   expiredCerts: Certificate[];
   expiringSoonCerts: Certificate[];
   getInitials: (name: string) => string;
+  /** Optional callback to open the edit-profile dialog. */
+  onEdit?: () => void;
+  /** Optional attendance summary used by the header's quick stats. */
+  attendanceStats?: unknown;
+  /** Optional raw attendance records passed through for downstream widgets. */
+  attendanceData?: unknown;
 }
 
 export function ProfileHeader({

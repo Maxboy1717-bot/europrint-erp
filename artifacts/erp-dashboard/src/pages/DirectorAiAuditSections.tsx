@@ -201,7 +201,7 @@ export function DecisionsTab({ decisions, isLoading, selectedAgent, onSelectAgen
                     <Badge variant={d.autoExecuted ? 'default' : 'secondary'}>
                       {d.autoExecuted ? `✅ ${t('autoTag')}` : `👤 ${t('humanTag')}`}
                     </Badge>
-                    {d.humanOverride && (
+                    {Boolean(d.humanOverride) && (
                       <Badge variant="outline" className="text-[var(--ep-primary)] border-orange-300">{t('overriddenTag')}</Badge>
                     )}
                     <span className="text-sm font-medium">{d.decision?.action ?? 'N/A'}</span>

@@ -177,7 +177,12 @@ export default function KanbanBoard() {
             updateCardMutation={updateCardMutation}
             t={t}
             quickTaskType={quickTaskType}
-            setQuickTaskType={setQuickTaskType}
+            setQuickTaskType={(v: string) => {
+              // Narrow via type predicate before delegating to the strict setter.
+              const isKanbanTaskType = (x: string): x is "task" | "project" | "template" =>
+                x === "task" || x === "project" || x === "template";
+              if (isKanbanTaskType(v)) setQuickTaskType(v);
+            }}
           />
         )}
       </div>

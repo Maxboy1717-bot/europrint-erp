@@ -315,7 +315,7 @@ export interface EntityCardProps {
   entityType: EntityType;
   isDragging?: boolean;
   onClick?: (id: number) => void;
-  onAddTask?: (id: number) => void;
+  onAddTask?: (id: number | string) => void;
   stageColor?: string;
   stageIndex?: number;
   totalStages?: number;
@@ -330,7 +330,7 @@ export interface KanbanColumnProps {
   entityType: EntityType;
   totalValue?: number;
   onEntityClick?: (id: number) => void;
-  onAddTask?: (id: number) => void;
+  onAddTask?: (id: number | string) => void;
   onQuickAdd?: () => void;
   stageIndex?: number;
   totalStages?: number;
