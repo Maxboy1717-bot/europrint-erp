@@ -11,6 +11,11 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { SystemService } from './system.service';
 import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import {
+  CronJobAclTranslator,
+  type LegacyCronJobRow,
+  type CronJobDto,
+} from './acl/cron-job-acl';
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -18,6 +23,9 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 @Controller('system')
 @Roles('admin', 'super_admin', 'director')
 export class SystemController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly cronAcl = new CronJobAclTranslator();
+
   constructor(private readonly svc: SystemService) {}
 
   // P3-26: there is no real create-system endpoint yet — the SystemService
@@ -45,6 +53,22 @@ export class SystemController {
     const r = this.svc.getCronJobs();
     assertOk(r);
     return r.data;
+  }
+
+  /**
+   * PA2-14 ACL-translated variant. New BC-10 (Platform / Ops) consumers
+   * should target this endpoint; the legacy `/cron-jobs` route stays for
+   * backwards-compat.
+   */
+  @Get('cron-jobs/v2')
+  getCronJobsV2(): CronJobDto[] {
+    const r = this.svc.getCronJobs();
+    assertOk(r);
+    const rows = Array.isArray(r.data) ? r.data : [];
+    return rows
+      .map((row) => this.cronAcl.toDomain(row as unknown as LegacyCronJobRow))
+      .filter((res): res is { ok: true; data: CronJobDto } => res.ok)
+      .map((res) => res.data);
   }
 
   @Get()
