@@ -13,16 +13,9 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { WmsCatalogService } from '../application/wms-catalog.service';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 // P3-26: throw 501 instead of fake empty payloads so frontend can show
-// "coming soon" empty state instead of pretending the data is empty.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
-
 const WH_READ = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
 
 @ApiThrottle()
@@ -35,7 +28,7 @@ export class WmsCatalogController {
 
   constructor(private readonly catalogService: WmsCatalogService) {}
 
-  // ── REPORTS ───────────────────────────────────────────────────────────────
+  // -- REPORTS ---------------------------------------------------------------
 
   @ApiOperation({ summary: 'Get reports abc analysis' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -84,7 +77,7 @@ export class WmsCatalogController {
     return this.catalogService.getTurnover();
   }
 
-  // ── STATS ─────────────────────────────────────────────────────────────────
+  // -- STATS -----------------------------------------------------------------
 
   @ApiOperation({ summary: 'Get stats total' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -94,7 +87,7 @@ export class WmsCatalogController {
     return this.catalogService.getStatsTotal();
   }
 
-  // ── DASHBOARD ─────────────────────────────────────────────────────────────
+  // -- DASHBOARD -------------------------------------------------------------
 
   @ApiOperation({ summary: 'Get dashboard' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -139,7 +132,7 @@ export class WmsCatalogController {
     return this.catalogService.getTopMaterials(parseInt(limit ?? '8', 10) || 8);
   }
 
-  // ── MISC ──────────────────────────────────────────────────────────────────
+  // -- MISC ------------------------------------------------------------------
 
   @ApiOperation({ summary: 'Get transactions' })
   @ApiResponse({ status: 200, description: 'OK' })

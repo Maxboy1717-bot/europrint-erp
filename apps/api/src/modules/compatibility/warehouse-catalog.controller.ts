@@ -14,6 +14,7 @@ import { WarehouseCatalogService } from './warehouse-catalog.service';
 import { CompatBodyDto } from './dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   WarehouseMaterialAclTranslator,
   type LegacyWarehouseMaterialRow,
@@ -28,7 +29,7 @@ import {
 @UseGuards(JwtAuthGuard)
 @Controller('warehouse')
 export class WarehouseCatalogController {
-  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
+  /** PA2-14 ACL translator. Stateless - direct instantiation is fine. */
   private readonly materialAcl = new WarehouseMaterialAclTranslator();
 
   constructor(private readonly svc: WarehouseCatalogService) {}
@@ -59,7 +60,7 @@ export class WarehouseCatalogController {
    * wms/movements (which lives at /api/wms/movements) but kept here so the
    * accounting page does not need to change its URL.
    *
-   * P3-26: aggregator service not yet wired — clients should use
+   * P3-26: aggregator service not yet wired - clients should use
    * /api/wms/movements directly until this gateway is implemented.
    */
   @Get('movements')
@@ -68,10 +69,7 @@ export class WarehouseCatalogController {
     @Query('warehouseId') _warehouseId?: string,
     @Query('materialId') _materialId?: string,
   ) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /warehouse/movements (use /wms/movements instead)', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /warehouse/movements (use /wms/movements instead)');
   }
 
   @Get('batches/stats')

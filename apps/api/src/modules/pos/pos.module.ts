@@ -39,6 +39,7 @@ import {
   PosInventoryService, PosInventoryRepository,
   PosService, DrizzlePosSvcRepository, POS_SVC_REPO,
   PosEventHandler, PosSecondaryEventsHandler, PosEventRepository, PosDepartmentGuard,
+  PosGlAutoListener, PosWmsSyncCompletedListener, PosWmsSyncCreatedListener,
   PosRequisitionWorkflowService, PosEmployeeBalanceService,
   PosWmsSyncService, PosWmsQueryService,
   WarehouseEmployeesService, AutoBarcodeService, Material360Service, AutoGlPostingService,
@@ -157,6 +158,10 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     PosEmployeeBalanceService,
     PosWmsSyncService,
     PosWmsQueryService,
+    // Wave 4 round-4 — canonical CQRS handlers replacing legacy @OnEvent listeners
+    PosGlAutoListener,
+    PosWmsSyncCompletedListener,
+    PosWmsSyncCreatedListener,
     PosInactiveMaterialsJob,
     // Warehouse features — repositories (Sprint B)
     WarehouseEmployeesRepository,

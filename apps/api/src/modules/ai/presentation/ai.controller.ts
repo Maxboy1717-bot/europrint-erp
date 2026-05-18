@@ -31,23 +31,16 @@ import { isOk } from '@common/result';
 import { AiCallDto} from './dto/ai.dto';
 import { AiRequest } from '../domain/types/ai.types';
 import { z } from 'zod';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const RejectRushOrderSchema = z.object({
   reason: z.string().max(2000).optional(),
 }).passthrough();
 
-// FEATURE_FLAGGED: forecast/rush-order AI pipeline not yet implemented
-// (tracking #FX-5). Frontend pages (DemandForecastingPage, RushOrderPage)
-// branch on 501 to render a "Coming soon" empty state.
-const aiNotImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
+
 
 @ApiTags('§15 AI Router')
-// AI endpointlar — LLM chaqiruvi qimmat, 20/daq cheklov (env: THROTTLE_AI_LIMIT)
+// AI endpointlar - LLM chaqiruvi qimmat, 20/daq cheklov (env: THROTTLE_AI_LIMIT)
 @AiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('ai')
@@ -183,36 +176,36 @@ export class AiController {
  @Get('forecast/demand')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'AI talab bashorati' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-5' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-5' })
  getDemandForecast() {
-   return aiNotImplemented('GET /ai/forecast/demand');
+   return notImplemented('GET /ai/forecast/demand');
  }
 
  @Get('rush-orders')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'Shoshilinch buyurtmalar ro\'yxati' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-5' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-5' })
  getRushOrders() {
-   return aiNotImplemented('GET /ai/rush-orders');
+   return notImplemented('GET /ai/rush-orders');
  }
 
  @Post('rush-orders/:id/approve')
  @HttpCode(HttpStatus.OK)
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'Shoshilinch buyurtmani tasdiqlash' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-5' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-5' })
  approveRushOrder(@Param('id') _id: string) {
-   return aiNotImplemented('POST /ai/rush-orders/:id/approve');
+   return notImplemented('POST /ai/rush-orders/:id/approve');
  }
 
  @Post('rush-orders/:id/reject')
  @HttpCode(HttpStatus.OK)
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'Shoshilinch buyurtmani rad etish' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-5' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-5' })
  rejectRushOrder(@Param('id') _id: string, @Body() body: unknown) {
    RejectRushOrderSchema.parse(body);
-   return aiNotImplemented('POST /ai/rush-orders/:id/reject');
+   return notImplemented('POST /ai/rush-orders/:id/reject');
  }
 
  @Get('shift/recommendations')

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module iot-alerts.controller
  * @description NestJS controller for IoT alert endpoints (GET, acknowledge, create).
  *              Extracted from iot-main.controller as part of Rule 13/16 split.
@@ -15,13 +15,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { IotMainService } from '../application/iot-main.service';
 import { CameraAlertsQuerySchema } from './dto/iot-camera.dto';
-
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const CreateAlertSchema = z.object({
   type:     z.string().max(100).optional(),

@@ -10,13 +10,6 @@ import {
 Controller, Get, HttpException, HttpStatus, Post, Patch, Delete, Body, Param, Query, ParseIntPipe, Res, Logger, UseGuards, UseInterceptors, UsePipes, InternalServerErrorException,
 } from '@nestjs/common';
 
-// P3-26: node-level history/hr-request services aren't yet wired.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -28,6 +21,7 @@ import type { FastifyReply } from 'fastify';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { assertOk, unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const OrgNodeSchema = z.object({
   name: z.string().max(500).optional(),
@@ -152,7 +146,7 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.service.assignUserToNode(userId, nodeId));
   }
 
-  // ─── Export ───────────────────────────────────────────────────────────────
+  // --- Export ---------------------------------------------------------------
 
   @ApiOperation({ summary: 'Export excel' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -180,7 +174,7 @@ export class OrgStructureController {
       .send(r.data);
   }
 
-  // ─── Position Folder ──────────────────────────────────────────────────────
+  // --- Position Folder ------------------------------------------------------
 
   @ApiOperation({ summary: 'Get folder items' })
   @ApiResponse({ status: 200, description: 'OK' })

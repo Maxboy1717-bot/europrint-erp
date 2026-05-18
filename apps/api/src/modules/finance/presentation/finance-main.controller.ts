@@ -3,7 +3,7 @@
  * @description Read endpoints under `/finance` (dashboard, GL, exchange rates,
  * transactions, expenses, loans). The write/action endpoints (GL POST, reversal,
  * profitability recalc, AP/AR entries, salary benchmark) were extracted to
- * `finance-main-actions.controller.ts` per Rule 16 (≤ 300 lines). Both controllers
+ * `finance-main-actions.controller.ts` per Rule 16 (в‰¤ 300 lines). Both controllers
  * share the `/finance` prefix and FINANCE_ROLES guard so consumers see no change.
  */
 
@@ -22,19 +22,13 @@ import { CashflowService } from '../cashflow/cashflow.service';
 import { BudgetsService } from '../budgets/budgets.service';
 import { RATE_USD_UZS, RATE_EUR_UZS, RATE_CNY_UZS } from '@common/constants/app.constants';
 import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 export { FinanceMainActionsController } from './finance-main-actions.controller';
 
 const FINANCE_ROLES = ['FINANCE_MANAGER', 'ACCOUNTANT', 'SUPER_ADMIN', 'DIRECTOR'];
 
-// FEATURE_FLAGGED: shared helper for the two remaining unwired finance endpoints
-// (tracking #FX-4). Reports & loans pipelines aren't connected to a service yet.
-const financeNotImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
+
 
 @ApiThrottle()
 @ApiTags('Finance Main')
@@ -106,10 +100,10 @@ export class FinanceMainController {
 
   // FEATURE_FLAGGED: finance reports listing not wired (tracking #FX-4).
   @ApiOperation({ summary: 'Get reports' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-4' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-4' })
   @Get('reports')
   getReports(@Query() _query: Record<string, unknown>) {
-    return financeNotImplemented('GET /finance/reports');
+    return notImplemented('GET /finance/reports');
   }
 
   @ApiOperation({ summary: 'Get accounts' })
@@ -150,12 +144,12 @@ export class FinanceMainController {
   }
 
   // FEATURE_FLAGGED: loans module not implemented in finance service (tracking #FX-4).
-  // Note: GET /finance/loans/:id deleted — no frontend consumer (catalog 2026-05-17).
+  // Note: GET /finance/loans/:id deleted - no frontend consumer (catalog 2026-05-17).
   @ApiOperation({ summary: 'Get loans' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-4' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-4' })
   @Get('loans')
   getLoans(@Query('status') _status?: string, @Query('page') _page?: string) {
-    return financeNotImplemented('GET /finance/loans');
+    return notImplemented('GET /finance/loans');
   }
 
   @ApiOperation({ summary: 'Get accounting overview' })

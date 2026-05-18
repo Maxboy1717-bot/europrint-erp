@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module technology.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
@@ -17,17 +17,12 @@ import { unwrapOrInternal } from '@common/http-result';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { TechnologyService } from './technology.service';
 import { z } from 'zod';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const ApproveDto = z.object({ bomApproved: z.boolean().default(false), routingApproved: z.boolean().default(false), techCardApproved: z.boolean().default(false), notes: z.string().optional() });
 const RejectDto = z.object({ reason: z.string().min(1), returnTo: z.enum(['manager', 'designer']).default('manager') });
 
-// FEATURE_FLAGGED: technology-cards CRUD not wired to a service (tracking #FX-8).
-const techNotImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
+
 
 @ApiTags('Technology')
 @ApiBearerAuth()
@@ -109,27 +104,27 @@ export class TechnologyController {
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'List technology cards' })
   async getCards(@Query('status') _status?: string) {
-    return techNotImplemented('GET /technology/cards');
+    return notImplemented('GET /technology/cards');
   }
 
   @Post('cards/generate')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'Generate technology card' })
   async generateCard(@Body() _body: unknown) {
-    return techNotImplemented('POST /technology/cards/generate');
+    return notImplemented('POST /technology/cards/generate');
   }
 
   @Get('cards/:id')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'Get technology card by ID' })
   async getCardById(@Param('id') _id: string) {
-    return techNotImplemented('GET /technology/cards/:id');
+    return notImplemented('GET /technology/cards/:id');
   }
 
   @Post('cards/:id/optimize')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'Optimize technology card' })
   async optimizeCard(@Param('id') _id: string, @Body() _body: unknown) {
-    return techNotImplemented('POST /technology/cards/:id/optimize');
+    return notImplemented('POST /technology/cards/:id/optimize');
   }
 }

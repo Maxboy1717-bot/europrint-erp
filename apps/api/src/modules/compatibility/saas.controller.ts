@@ -9,13 +9,6 @@ import {
   Body, Controller, Delete, Get, HttpCode, HttpException, Param, Patch, Post, Put,
   UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 
-// P3-26: tenant-modules / orders-registry stubs not yet wired.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -26,6 +19,7 @@ import { unwrapOrBadRequest, unwrapOrInternal, unwrapOrNotFound } from '@common/
 import { z } from 'zod';
 import { SaasService } from './saas.service';
 import { DEFAULT_PAGE_SIZE } from '@common/constants/app.constants';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   SaasTenantAclTranslator,
   type LegacySaasTenantRow,
@@ -58,7 +52,7 @@ const OnboardTenantSchema = z.object({
 @UseInterceptors(AuditInterceptor)
 @Controller('saas')
 export class SaasController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  /** PA2-14 ACL demonstrator. Stateless - direct instantiation is fine. */
   private readonly tenantAcl = new SaasTenantAclTranslator();
 
   constructor(private readonly svc: SaasService) {}

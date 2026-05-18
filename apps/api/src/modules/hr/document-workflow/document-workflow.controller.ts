@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module document-workflow.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
@@ -6,13 +6,6 @@
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, Delete, HttpCode, HttpException, HttpStatus, NotFoundException, UseGuards, Post, Get, Patch, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors } from '@nestjs/common';
 
-// P3-26: document/workflow listing endpoints aren't wired yet.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -22,6 +15,7 @@ import { Public } from '@common/decorators/public.decorator';
 import { DocumentWorkflowService } from './document-workflow.service';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { unwrapOrInternal } from '@common/http-result';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const CreateDocumentSchema = z.object({
   employee_id:   z.number().int(),

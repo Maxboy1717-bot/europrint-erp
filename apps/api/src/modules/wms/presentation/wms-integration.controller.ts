@@ -18,6 +18,7 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { safeInt } from '../../hr/common/db-rows';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const IntegrationCreateSchema = z.object({
   name: z.string().max(200).optional(),
@@ -30,14 +31,6 @@ const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'wareh
 const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
 
 // FEATURE_FLAGGED: warehouse MM/FI integration not yet wired (tracking #FX-3).
-// Returning 501 lets WarehouseIntegrations.tsx render a "Coming soon" state.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
-
 /**
  * WmsIntegrationController
  * Routes: /warehouse/integration/*, /warehouse/warehouses/:id/sync-pos
@@ -56,7 +49,7 @@ export class WmsIntegrationController {
     private readonly i18n: I18nService,
   ) {}
 
-  // ── POS SYNC ──────────────────────────────────────────────────────────────
+  // -- POS SYNC --------------------------------------------------------------
 
   /**
    * POST /api/warehouse/warehouses/:id/sync-pos
@@ -84,44 +77,44 @@ export class WmsIntegrationController {
     }
   }
 
-  // ── MM/FI INTEGRATION ─────────────────────────────────────────────────────
+  // -- MM/FI INTEGRATION -----------------------------------------------------
   @ApiOperation({ summary: 'Get integration mm pending deliveries' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-3' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-3' })
   @Get('integration/mm/pending-deliveries') @Roles(...WH_READ)
   async getIntegrationMmPendingDeliveries() {
     return notImplemented('GET /warehouse/integration/mm/pending-deliveries');
   }
 
   @ApiOperation({ summary: 'Get integration mm reorder suggestions' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-3' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-3' })
   @Get('integration/mm/reorder-suggestions') @Roles(...WH_READ)
   async getIntegrationMmReorderSuggestions() {
     return notImplemented('GET /warehouse/integration/mm/reorder-suggestions');
   }
 
   @ApiOperation({ summary: 'Get integration fi stock valuation' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-3' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-3' })
   @Get('integration/fi/stock-valuation') @Roles(...WH_READ)
   async getIntegrationFiStockValuation() {
     return notImplemented('GET /warehouse/integration/fi/stock-valuation');
   }
 
   @ApiOperation({ summary: 'Get integration summary' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-3' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-3' })
   @Get('integration/summary') @Roles(...WH_READ)
   async getIntegrationSummary() {
     return notImplemented('GET /warehouse/integration/summary');
   }
 
   @ApiOperation({ summary: 'Get integration' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-3' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-3' })
   @Get('integration') @Roles(...WH_READ)
   async getIntegration() {
     return notImplemented('GET /warehouse/integration');
   }
 
   @ApiOperation({ summary: 'Create integration' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-3' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-3' })
   @Post('integration') @Roles(...WH_WRITE)
   async createIntegration(@Body() body: unknown) {
     IntegrationCreateSchema.parse(body);

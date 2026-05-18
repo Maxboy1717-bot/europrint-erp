@@ -12,13 +12,6 @@ import {
   UseGuards, UseInterceptors, Logger, HttpCode, HttpException, HttpStatus,
 } from '@nestjs/common';
 
-// P3-26: chat-message file attachment endpoints are not yet wired.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -30,6 +23,7 @@ import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { KanbanExtService } from '../application/kanban-ext.service';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const KanbanCardCreateSchema = z.object({
   boardId: z.string().optional(),
@@ -78,7 +72,7 @@ export class KanbanCardsController {
 
   constructor(private readonly svc: KanbanExtService) {}
 
-  // ─── Cards extended ───────────────────────────────────────────────────────
+  // --- Cards extended -------------------------------------------------------
 
   @Get('boards/:boardId/cards')
   @ApiOperation({ summary: 'Board kartalarini qaytarish (allCards uchun)' })
@@ -160,7 +154,7 @@ export class KanbanCardsController {
     );
   }
 
-  // ─── Chat ─────────────────────────────────────────────────────────────────
+  // --- Chat -----------------------------------------------------------------
 
   @Get('cards/:id/chat')
   @ApiOperation({ summary: 'Karta chat xabarlari ro\'yxati' })
@@ -195,7 +189,7 @@ export class KanbanCardsController {
     return notImplemented('POST /kanban/chat-messages/:id/files');
   }
 
-  // ─── Tags ─────────────────────────────────────────────────────────────────
+  // --- Tags -----------------------------------------------------------------
 
   @Get('cards/:id/tags')
   @ApiOperation({ summary: 'Karta teglari' })
@@ -223,7 +217,7 @@ export class KanbanCardsController {
     return { removed: true, cardId: id, tagId };
   }
 
-  // ─── Observers ────────────────────────────────────────────────────────────
+  // --- Observers ------------------------------------------------------------
 
   @Get('cards/:id/observers')
   @ApiOperation({ summary: 'Karta kuzatuvchilari' })
@@ -247,7 +241,7 @@ export class KanbanCardsController {
     return { removed: true };
   }
 
-  // ─── Co-Executors ─────────────────────────────────────────────────────────
+  // --- Co-Executors ---------------------------------------------------------
 
   @Get('cards/:id/co-executors')
   @ApiOperation({ summary: 'Karta hamijrochilari' })

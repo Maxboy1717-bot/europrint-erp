@@ -78,6 +78,7 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { SdCustomersService } from '../application/sd-customers.service';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   SdUpdateCustomerSchema, SdUpdateCustomerDto,
   SdAddContactSchema, SdAddContactDto,
@@ -345,7 +346,7 @@ export class SdCustomersController {
     return {};
   }
 
-  // ── NPS endpoints ──────────────────────────────────────────────────────────
+  // -- NPS endpoints ----------------------------------------------------------
   @ApiOperation({ summary: 'Get nps' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
@@ -365,7 +366,7 @@ export class SdCustomersController {
     return unwrapOrThrow(await this.svc.addNps(safeInt(id, 0), dto.score, dto.comment));
   }
 
-  // ── Internal intelligence (Layer 7) ───────────────────────────────────────
+  // -- Internal intelligence (Layer 7) ---------------------------------------
   @ApiOperation({ summary: 'Update internal notes' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -385,7 +386,7 @@ export class SdCustomersController {
     return unwrapOrThrow(await this.svc.getComplaints(safeInt(id, 0)));
   }
 
-  // P3-26: createComplaint is not yet wired — the real SdCustomersService only
+  // P3-26: createComplaint is not yet wired - the real SdCustomersService only
   // exposes getComplaints/resolveComplaint. Validate the payload then return
   // 501 instead of echoing a fake created record.
   @ApiOperation({ summary: 'Create complaint' })
@@ -398,10 +399,7 @@ export class SdCustomersController {
   @Roles(...SD_WRITE_ROLES)
   async createComplaint(@Param('id') _id: string, @Body() body: unknown) {
     CreateComplaintSchema.parse(body);
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: POST /sd/customers/:id/complaints', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('POST /sd/customers/:id/complaints');
   }
 
   @ApiOperation({ summary: 'Resolve complaint' })

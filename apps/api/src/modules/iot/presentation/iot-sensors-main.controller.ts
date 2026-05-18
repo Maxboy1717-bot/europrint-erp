@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module iot-sensors-main.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
@@ -8,13 +8,6 @@ import {
   Param, Query, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 
-// P3-26: predictive maintenance + alert resolve services not yet wired.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -36,6 +29,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { IotSensorsExtendedService } from '../application/iot-sensors-extended.service';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   OeeQuerySchema,
   SensorHistoryQuerySchema,

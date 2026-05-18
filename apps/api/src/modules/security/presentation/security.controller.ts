@@ -25,6 +25,7 @@ import { ReportIncidentDto, UpdateIncidentDto, ResolveIncidentDto} from './dto/s
 import { IIncidentRepo, INCIDENT_REPO } from '../domain/repositories/i-incident.repo';
 import { AttendanceService } from '../attendance/attendance.service';
 import { AccessService } from '../access/access.service';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 enum Role {
  SUPER_ADMIN = 'super_admin',
@@ -32,14 +33,7 @@ enum Role {
  SECURITY = 'security',
 }
 
-// FEATURE_FLAGGED: security dashboard aggregates (daily-summary, fire-sensors,
-// PPE checks/stats/violations) not yet wired to a service (tracking #FX-6).
-const secNotImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
+
 
 @ApiThrottle()
 @ApiTags('Security')
@@ -189,34 +183,34 @@ export class SecurityController {
  }
 
  @ApiOperation({ summary: 'Get daily summary' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-6' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-6' })
  @Get('daily-summary')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getDailySummary() { return secNotImplemented('GET /security/daily-summary'); }
+ getDailySummary() { return notImplemented('GET /security/daily-summary'); }
 
  @ApiOperation({ summary: 'Get fire sensors' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-6' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-6' })
  @Get('fire-sensors')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getFireSensors() { return secNotImplemented('GET /security/fire-sensors'); }
+ getFireSensors() { return notImplemented('GET /security/fire-sensors'); }
 
  @ApiOperation({ summary: 'Get ppe checks' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-6' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-6' })
  @Get('ppe-checks')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getPpeChecks() { return secNotImplemented('GET /security/ppe-checks'); }
+ getPpeChecks() { return notImplemented('GET /security/ppe-checks'); }
 
  @ApiOperation({ summary: 'Get ppe stats' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-6' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-6' })
  @Get('ppe-stats')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getPpeStats() { return secNotImplemented('GET /security/ppe-stats'); }
+ getPpeStats() { return notImplemented('GET /security/ppe-stats'); }
 
  @ApiOperation({ summary: 'Get ppe violations' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-6' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-6' })
  @Get('ppe-violations')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getPpeViolations() { return secNotImplemented('GET /security/ppe-violations'); }
+ getPpeViolations() { return notImplemented('GET /security/ppe-violations'); }
 
  @ApiOperation({ summary: 'Patch visitor exit' })
  @ApiResponse({ status: 200, description: 'OK' })

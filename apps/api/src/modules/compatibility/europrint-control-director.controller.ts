@@ -16,6 +16,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { EuroprintControlDirectorService } from './europrint-control-director.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   DirectorKpiAclTranslator,
   type LegacyDirectorKpiRow,
@@ -30,7 +31,7 @@ import {
 @UseInterceptors(AuditInterceptor)
 @Controller('europrint-control')
 export class EuroprintControlDirectorController {
-  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
+  /** PA2-14 ACL translator. Stateless - direct instantiation is fine. */
   private readonly kpiAcl = new DirectorKpiAclTranslator();
 
   constructor(private readonly svc: EuroprintControlDirectorService) {}
@@ -120,9 +121,6 @@ export class EuroprintControlDirectorController {
    */
   @Get('menus/admin')
   async getAdminMenus() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /europrint-control/menus/admin', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /europrint-control/menus/admin');
   }
 }

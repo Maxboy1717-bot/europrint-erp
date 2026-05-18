@@ -30,21 +30,14 @@ import { MmDashboardService } from '../application/mm-dashboard.service';
 import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { MmCreateFleetVehicleSchema, MmCreateFleetVehicleDto, MmCreateFuelLogSchema, MmCreateFuelLogDto } from '../dto/mm.dto';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const MM_READ = ['super_admin', 'mm_manager', 'ERP_MANAGER', 'director', 'purchasing_manager'];
 const MM_WRITE = ['super_admin', 'mm_manager', 'ERP_MANAGER', 'director'];
 
 // FEATURE_FLAGGED: vendor-invoice / 3-way-match / fleet logistics endpoints
-// (tracking #FX-2) — not wired to a service yet. Returning 501 instead of fake
+// (tracking #FX-2) - not wired to a service yet. Returning 501 instead of fake
 // payloads so the InvoiceVerification & LogisticsDashboard pages can render a
-// "Coming soon" empty state.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
-
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Mm Dashboard')
@@ -153,98 +146,98 @@ export class MmDashboardController {
   }
 
   @ApiOperation({ summary: 'Get vendor invoices' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Get('vendor-invoices') @Roles(...MM_READ)
   async getVendorInvoices() { return notImplemented('GET /mm/vendor-invoices'); }
 
   @ApiOperation({ summary: 'Get vendor invoice by id' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Get('vendor-invoices/:id') @Roles(...MM_READ)
   async getVendorInvoiceById(@Param('id') _id: string) { return notImplemented('GET /mm/vendor-invoices/:id'); }
 
   @ApiOperation({ summary: 'Approve vendor invoice' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Patch('vendor-invoices/:id/approve') @Roles(...MM_WRITE)
   async approveVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
     return notImplemented('PATCH /mm/vendor-invoices/:id/approve');
   }
 
   @ApiOperation({ summary: 'Match vendor invoice' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Patch('vendor-invoices/:id/match') @Roles(...MM_WRITE)
   async matchVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
     return notImplemented('PATCH /mm/vendor-invoices/:id/match');
   }
 
   @ApiOperation({ summary: 'Pay vendor invoice' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Post('vendor-invoices/:id/payment') @Roles(...MM_WRITE)
   async payVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
     return notImplemented('POST /mm/vendor-invoices/:id/payment');
   }
 
   @ApiOperation({ summary: 'Get three way match' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Get('three-way-match') @Roles(...MM_READ)
   async getThreeWayMatch() { return notImplemented('GET /mm/three-way-match'); }
 
   @ApiOperation({ summary: 'Get 3-way match by invoice id' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Get('3way-match/:invoiceId') @Roles(...MM_READ)
   async get3wayMatch(@Param('invoiceId') _invoiceId: string) {
     return notImplemented('GET /mm/3way-match/:invoiceId');
   }
 
   @ApiOperation({ summary: 'Get fleet maintenance' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Get('fleet/maintenance') @Roles(...MM_READ)
   async getFleetMaintenance() { return notImplemented('GET /mm/fleet/maintenance'); }
 
   @ApiOperation({ summary: 'Get fleet deliveries' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Get('fleet/deliveries') @Roles(...MM_READ)
   async getFleetDeliveries() { return notImplemented('GET /mm/fleet/deliveries'); }
 
   @ApiOperation({ summary: 'Update fleet delivery status' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Patch('fleet/deliveries/:id/status') @Roles(...MM_WRITE)
   async updateFleetDeliveryStatus(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
     return notImplemented('PATCH /mm/fleet/deliveries/:id/status');
   }
 
   @ApiOperation({ summary: 'Get vehicle locations' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Get('vehicles/locations') @Roles(...MM_READ)
   async getVehicleLocations() { return notImplemented('GET /mm/vehicles/locations'); }
 
   @ApiOperation({ summary: 'Get driver expenses' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Get('driver/expenses') @Roles(...MM_READ)
   async getDriverExpenses() { return notImplemented('GET /mm/driver/expenses'); }
 
   @ApiOperation({ summary: 'Get material suppliers' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Get('materials/:id/suppliers') @Roles(...MM_READ)
   async getMaterialSuppliers(@Param('id') _id: string) {
     return notImplemented('GET /mm/materials/:id/suppliers');
   }
 
   @ApiOperation({ summary: 'Create 3-way match (POST mirror)' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Post('3way-match/:invoiceId') @Roles(...MM_WRITE)
   async post3wayMatch(@Param('invoiceId') _invoiceId: string, @Body() _body: Record<string, unknown>) {
     return notImplemented('POST /mm/3way-match/:invoiceId');
   }
 
   @ApiOperation({ summary: 'Create fleet delivery' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Post('fleet/deliveries') @Roles(...MM_WRITE)
   async createFleetDelivery(@Body() _body: Record<string, unknown>) {
     return notImplemented('POST /mm/fleet/deliveries');
   }
 
   @ApiOperation({ summary: 'Match vendor invoice (POST mirror)' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
   @Post('vendor-invoices/:id/match') @Roles(...MM_WRITE)
   async postMatchVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
     return notImplemented('POST /mm/vendor-invoices/:id/match');

@@ -20,6 +20,7 @@ import { GoodsReceiptCommand } from '../application/commands/goods-receipt.handl
 import { db } from '@shared/db';
 import { mm_purchase_orders } from '@shared/db';
 import { eq, desc } from 'drizzle-orm';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 enum Role {
   PURCHASER = 'purchaser',
@@ -28,14 +29,7 @@ enum Role {
   DIRECTOR = 'director',
 }
 
-// FEATURE_FLAGGED: single-PO fetch, delete, update PO commands not wired
-// through commandBus yet (tracking #FX-10).
-const poNotImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
+
 
 @ApiThrottle()
 @ApiTags('Mm Purchase Orders')
@@ -97,12 +91,12 @@ export class MmPurchaseOrdersController {
   }
 
   @ApiOperation({ summary: 'Get po' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-10 (use list endpoint)' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-10 (use list endpoint)' })
   @Get(':id')
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async getPo(@Param('id') _id: number){
     this.logger.log('Getting purchase order');
-    return poNotImplemented('GET /mm/purchase-orders/:id');
+    return notImplemented('GET /mm/purchase-orders/:id');
   }
 
   @ApiOperation({ summary: 'Create po' })
@@ -156,23 +150,23 @@ export class MmPurchaseOrdersController {
   }
 
   @ApiOperation({ summary: 'Delete po' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-10' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-10' })
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @Roles(Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async deletePo(@Param('id') _id: number) {
-    return poNotImplemented('DELETE /mm/purchase-orders/:id');
+    return notImplemented('DELETE /mm/purchase-orders/:id');
   }
 
   @ApiOperation({ summary: 'Update po' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-10' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-10' })
   @Patch(':id')
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async updatePo(
     @Param('id') _id: number,
     @Body() _dto: Partial<{ supplierId: number; items: Array<{ materialId: number; quantity: number; unitPrice: number }>; notes: string }>,
   ) {
-    return poNotImplemented('PATCH /mm/purchase-orders/:id');
+    return notImplemented('PATCH /mm/purchase-orders/:id');
   }
 
   @ApiOperation({ summary: 'Patch approve po' })

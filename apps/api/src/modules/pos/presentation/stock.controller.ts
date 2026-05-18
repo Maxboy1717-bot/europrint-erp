@@ -5,7 +5,7 @@
 
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 /**
- * POS — Stock Controller
+ * POS - Stock Controller
  * Stok balans va ogohlantirishlar endpointlari
  */
 import {
@@ -22,6 +22,7 @@ import { AuthenticatedUser } from '@common/types/user.types';
 import { unwrapOrInternal } from '@common/http-result';
 import { StockLedgerService } from '../application/services/stock-ledger.service';
 import { z } from 'zod';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const AdjustStockSchema = z.object({
   materialCardId: z.number().int().positive(),
@@ -31,7 +32,7 @@ const AdjustStockSchema = z.object({
 
 const EXPIRY_DAYS_DEFAULT = 7;
 
-@ApiTags('POS — Stok')
+@ApiTags('POS - Stok')
 @ApiBearerAuth()
 @UseGuards(PermissionGuard)
 @ApiThrottle()
@@ -99,10 +100,7 @@ export class StockController {
     @Query('offset') _offset?: string,
     @Query('warehouseId') _warehouseId?: string,
   ) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /pos/stock/movements', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /pos/stock/movements');
   }
 
   @Get(':warehouseId/:materialId')

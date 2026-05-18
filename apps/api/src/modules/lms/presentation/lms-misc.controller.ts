@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module lms-misc.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
@@ -18,13 +18,6 @@ import {
   UsePipes
 } from '@nestjs/common';
 
-// P3-26: video-progress + progress aggregation services are not yet wired.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrInternal } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -37,6 +30,7 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { LmsMiscService } from '../application/services/lms-misc.service';
 import { VideoProgressSchema, VideoProgressDto } from './dto/courses.dto';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 @ApiThrottle()
 @ApiTags('Lms Misc')
