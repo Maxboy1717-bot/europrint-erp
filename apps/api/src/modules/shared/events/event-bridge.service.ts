@@ -64,6 +64,18 @@ const EVENT_NAME_MAP: Record<string, string> = {
   CrmLeadCreatedEvent: 'crm.lead.created',
   HrCandidateAddedEvent: 'hr.candidate.added',
   FinanceInvoiceCreatedEvent: 'finance.invoice.created',
+  // Wave 11 P1 — IoT tablet SOS button (safety-critical).
+  SosAlertRaisedEvent: ERP_EVENTS.IOT_SOS_RAISED,
+  // Wave 4 round-4 additions — pos/finance/hr/logistics/cc listeners migrated
+  // off @OnEvent. Each entry mirrors the legacy string topic so non-migrated
+  // emit sites keep firing until publishers are switched to typed events.
+  CcSpawnRequestedEvent: 'cc.spawn',
+  TechThreeCheckpointEvent: ERP_EVENTS.TECH_THREE_CHECKPOINT,
+  PosMovementCompletedEvent: 'pos.movement.data.completed',
+  PosMovementCreatedEvent: 'pos.movement.data.created',
+  DailyReportSubmittedEvent: 'daily.report.submitted',
+  // OrderCreatedEvent already mapped above (Wave 4 pilot).
+  OrderStatusChangedEvent: ERP_EVENTS.ORDER_STATUS_CHANGED,
 };
 
 @Injectable()

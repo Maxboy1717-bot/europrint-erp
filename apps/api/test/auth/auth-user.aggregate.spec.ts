@@ -2,10 +2,16 @@
  * test/auth/auth-user.aggregate.spec.ts
  * Unit tests for AuthUserAggregate — login state, lockout policy,
  * failed-attempt counter, and password change handshake.
+ *
+ * Wave 1 (bcrypt → IPasswordHasher) made `verifyPassword`/`changePassword`
+ * require an `IPasswordHasher` argument. We use a bcrypt-backed fake here
+ * because the existing fixtures already hash with bcrypt, and reproducing
+ * that behaviour keeps the round-trip semantics identical.
  */
 import * as bcrypt from 'bcrypt';
 import { AuthUserAggregate, AuthUserData } from '../../src/modules/auth/domain/aggregates/auth-user.aggregate';
 import { PasswordValueObject } from '../../src/modules/auth/domain/value-objects/password.vo';
+import type { IPasswordHasher } from '../../src/modules/auth/domain/ports/i-password-hasher.port';
 import { userFactory } from '../_fixtures/factories';
 
 // bcrypt hash of "Original#1" — used as the initial password for change-password tests.
@@ -13,6 +19,16 @@ const ORIGINAL_PASSWORD = 'Original#1';
 let originalHash = '';
 let originalVo: PasswordValueObject;
 let replacementVo: PasswordValueObject;
+
+/**
+ * Bcrypt-backed fake of the IPasswordHasher port — matches the production
+ * BcryptPasswordHasher behaviour so existing bcrypt hashes in fixtures
+ * verify correctly without any extra plumbing.
+ */
+const hasher: IPasswordHasher = {
+  hash: (plain: string) => bcrypt.hash(plain, 4),
+  verify: (plain: string, hashed: string) => bcrypt.compare(plain, hashed),
+};
 
 beforeAll(async () => {
   originalHash = await bcrypt.hash(ORIGINAL_PASSWORD, 4);
@@ -66,13 +82,13 @@ describe('AuthUserAggregate', () => {
   describe('verifyPassword()', () => {
     it('returns true when plain matches stored hash', async () => {
       const u = new AuthUserAggregate(buildData());
-      const ok = await u.verifyPassword(ORIGINAL_PASSWORD);
+      const ok = await u.verifyPassword(ORIGINAL_PASSWORD, hasher);
       expect(ok).toBe(true);
     });
 
     it('returns false when plain differs from stored hash', async () => {
       const u = new AuthUserAggregate(buildData());
-      const ok = await u.verifyPassword('WrongPass#1');
+      const ok = await u.verifyPassword('WrongPass#1', hasher);
       expect(ok).toBe(false);
     });
   });
@@ -143,18 +159,18 @@ describe('AuthUserAggregate', () => {
   describe('changePassword()', () => {
     it('returns true and swaps hash when old password is correct', async () => {
       const u = new AuthUserAggregate(buildData());
-      const ok = await u.changePassword(ORIGINAL_PASSWORD, replacementVo);
+      const ok = await u.changePassword(ORIGINAL_PASSWORD, replacementVo, hasher);
       expect(ok).toBe(true);
       // new password now verifies
-      const verified = await u.verifyPassword('Replacement#9');
+      const verified = await u.verifyPassword('Replacement#9', hasher);
       expect(verified).toBe(true);
     });
 
     it('returns false and keeps hash when old password is wrong', async () => {
       const u = new AuthUserAggregate(buildData());
-      const ok = await u.changePassword('WrongOld#1', replacementVo);
+      const ok = await u.changePassword('WrongOld#1', replacementVo, hasher);
       expect(ok).toBe(false);
-      const stillOriginal = await u.verifyPassword(ORIGINAL_PASSWORD);
+      const stillOriginal = await u.verifyPassword(ORIGINAL_PASSWORD, hasher);
       expect(stillOriginal).toBe(true);
     });
   });

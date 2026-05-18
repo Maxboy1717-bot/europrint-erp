@@ -36,6 +36,16 @@ const RejectRushOrderSchema = z.object({
   reason: z.string().max(2000).optional(),
 }).passthrough();
 
+// FEATURE_FLAGGED: forecast/rush-order AI pipeline not yet implemented
+// (tracking #FX-5). Frontend pages (DemandForecastingPage, RushOrderPage)
+// branch on 501 to render a "Coming soon" empty state.
+const aiNotImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
+
 @ApiTags('§15 AI Router')
 // AI endpointlar — LLM chaqiruvi qimmat, 20/daq cheklov (env: THROTTLE_AI_LIMIT)
 @AiThrottle()
@@ -170,50 +180,39 @@ export class AiController {
    return { bottlenecks: [], analyzedAt: new Date().toISOString() };
  }
 
- // P3-26: forecast & rush-order endpoints have no AI service implementation yet.
- // Return 501 instead of fake empty payloads so the UI can show a "Coming soon"
- // state for /ai/forecast and /ai/rush-orders.
  @Get('forecast/demand')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'AI talab bashorati' })
+ @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-5' })
  getDemandForecast() {
-   throw new HttpException(
-     { message: 'Endpoint not yet implemented: GET /ai/forecast/demand', code: 'NOT_IMPLEMENTED' },
-     HttpStatus.NOT_IMPLEMENTED,
-   );
+   return aiNotImplemented('GET /ai/forecast/demand');
  }
 
  @Get('rush-orders')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'Shoshilinch buyurtmalar ro\'yxati' })
+ @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-5' })
  getRushOrders() {
-   throw new HttpException(
-     { message: 'Endpoint not yet implemented: GET /ai/rush-orders', code: 'NOT_IMPLEMENTED' },
-     HttpStatus.NOT_IMPLEMENTED,
-   );
+   return aiNotImplemented('GET /ai/rush-orders');
  }
 
  @Post('rush-orders/:id/approve')
  @HttpCode(HttpStatus.OK)
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'Shoshilinch buyurtmani tasdiqlash' })
+ @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-5' })
  approveRushOrder(@Param('id') _id: string) {
-   throw new HttpException(
-     { message: 'Endpoint not yet implemented: POST /ai/rush-orders/:id/approve', code: 'NOT_IMPLEMENTED' },
-     HttpStatus.NOT_IMPLEMENTED,
-   );
+   return aiNotImplemented('POST /ai/rush-orders/:id/approve');
  }
 
  @Post('rush-orders/:id/reject')
  @HttpCode(HttpStatus.OK)
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
  @ApiOperation({ summary: 'Shoshilinch buyurtmani rad etish' })
+ @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-5' })
  rejectRushOrder(@Param('id') _id: string, @Body() body: unknown) {
    RejectRushOrderSchema.parse(body);
-   throw new HttpException(
-     { message: 'Endpoint not yet implemented: POST /ai/rush-orders/:id/reject', code: 'NOT_IMPLEMENTED' },
-     HttpStatus.NOT_IMPLEMENTED,
-   );
+   return aiNotImplemented('POST /ai/rush-orders/:id/reject');
  }
 
  @Get('shift/recommendations')

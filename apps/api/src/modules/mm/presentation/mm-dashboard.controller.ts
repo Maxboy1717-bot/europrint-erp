@@ -34,6 +34,17 @@ import { MmCreateFleetVehicleSchema, MmCreateFleetVehicleDto, MmCreateFuelLogSch
 const MM_READ = ['super_admin', 'mm_manager', 'ERP_MANAGER', 'director', 'purchasing_manager'];
 const MM_WRITE = ['super_admin', 'mm_manager', 'ERP_MANAGER', 'director'];
 
+// FEATURE_FLAGGED: vendor-invoice / 3-way-match / fleet logistics endpoints
+// (tracking #FX-2) — not wired to a service yet. Returning 501 instead of fake
+// payloads so the InvoiceVerification & LogisticsDashboard pages can render a
+// "Coming soon" empty state.
+const notImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
+
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Mm Dashboard')
@@ -141,134 +152,102 @@ export class MmDashboardController {
     return unwrapOrThrow(await this.svc.getPriceHistory(safeInt(id, 0)));
   }
 
-  // P3-26: vendor-invoices / 3-way-match / fleet endpoints are not wired to a
-  // service yet. Return 501 instead of fake empty payloads.
   @ApiOperation({ summary: 'Get vendor invoices' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Get('vendor-invoices') @Roles(...MM_READ)
-  async getVendorInvoices() {
-    throw new HttpException({ message: 'Endpoint not yet implemented: GET /mm/vendor-invoices', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
-  }
+  async getVendorInvoices() { return notImplemented('GET /mm/vendor-invoices'); }
 
   @ApiOperation({ summary: 'Get vendor invoice by id' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Get('vendor-invoices/:id') @Roles(...MM_READ)
-  async getVendorInvoiceById(@Param('id') _id: string) {
-    throw new HttpException({ message: 'Endpoint not yet implemented: GET /mm/vendor-invoices/:id', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
-  }
+  async getVendorInvoiceById(@Param('id') _id: string) { return notImplemented('GET /mm/vendor-invoices/:id'); }
 
   @ApiOperation({ summary: 'Approve vendor invoice' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Patch('vendor-invoices/:id/approve') @Roles(...MM_WRITE)
   async approveVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    throw new HttpException({ message: 'Endpoint not yet implemented: PATCH /mm/vendor-invoices/:id/approve', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
+    return notImplemented('PATCH /mm/vendor-invoices/:id/approve');
   }
 
   @ApiOperation({ summary: 'Match vendor invoice' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Patch('vendor-invoices/:id/match') @Roles(...MM_WRITE)
   async matchVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    throw new HttpException({ message: 'Endpoint not yet implemented: PATCH /mm/vendor-invoices/:id/match', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
+    return notImplemented('PATCH /mm/vendor-invoices/:id/match');
   }
 
   @ApiOperation({ summary: 'Pay vendor invoice' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Post('vendor-invoices/:id/payment') @Roles(...MM_WRITE)
   async payVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    throw new HttpException({ message: 'Endpoint not yet implemented: POST /mm/vendor-invoices/:id/payment', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
+    return notImplemented('POST /mm/vendor-invoices/:id/payment');
   }
 
   @ApiOperation({ summary: 'Get three way match' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Get('three-way-match') @Roles(...MM_READ)
-  async getThreeWayMatch() {
-    throw new HttpException({ message: 'Endpoint not yet implemented: GET /mm/three-way-match', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
-  }
+  async getThreeWayMatch() { return notImplemented('GET /mm/three-way-match'); }
 
-  @ApiOperation({ summary: 'Get3way match' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiOperation({ summary: 'Get 3-way match by invoice id' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Get('3way-match/:invoiceId') @Roles(...MM_READ)
   async get3wayMatch(@Param('invoiceId') _invoiceId: string) {
-    throw new HttpException({ message: 'Endpoint not yet implemented: GET /mm/3way-match/:invoiceId', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
+    return notImplemented('GET /mm/3way-match/:invoiceId');
   }
 
   @ApiOperation({ summary: 'Get fleet maintenance' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Get('fleet/maintenance') @Roles(...MM_READ)
-  async getFleetMaintenance() {
-    throw new HttpException({ message: 'Endpoint not yet implemented: GET /mm/fleet/maintenance', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
-  }
+  async getFleetMaintenance() { return notImplemented('GET /mm/fleet/maintenance'); }
 
   @ApiOperation({ summary: 'Get fleet deliveries' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Get('fleet/deliveries') @Roles(...MM_READ)
-  async getFleetDeliveries() {
-    throw new HttpException({ message: 'Endpoint not yet implemented: GET /mm/fleet/deliveries', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
-  }
+  async getFleetDeliveries() { return notImplemented('GET /mm/fleet/deliveries'); }
 
   @ApiOperation({ summary: 'Update fleet delivery status' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Patch('fleet/deliveries/:id/status') @Roles(...MM_WRITE)
   async updateFleetDeliveryStatus(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    throw new HttpException({ message: 'Endpoint not yet implemented: PATCH /mm/fleet/deliveries/:id/status', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
+    return notImplemented('PATCH /mm/fleet/deliveries/:id/status');
   }
 
   @ApiOperation({ summary: 'Get vehicle locations' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Get('vehicles/locations') @Roles(...MM_READ)
-  async getVehicleLocations() {
-    throw new HttpException({ message: 'Endpoint not yet implemented: GET /mm/vehicles/locations', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
-  }
+  async getVehicleLocations() { return notImplemented('GET /mm/vehicles/locations'); }
 
   @ApiOperation({ summary: 'Get driver expenses' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Get('driver/expenses') @Roles(...MM_READ)
-  async getDriverExpenses() {
-    throw new HttpException({ message: 'Endpoint not yet implemented: GET /mm/driver/expenses', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
-  }
+  async getDriverExpenses() { return notImplemented('GET /mm/driver/expenses'); }
 
   @ApiOperation({ summary: 'Get material suppliers' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Get('materials/:id/suppliers') @Roles(...MM_READ)
   async getMaterialSuppliers(@Param('id') _id: string) {
-    throw new HttpException({ message: 'Endpoint not yet implemented: GET /mm/materials/:id/suppliers', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
+    return notImplemented('GET /mm/materials/:id/suppliers');
   }
 
-  @ApiOperation({ summary: 'Post3way match' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiOperation({ summary: 'Create 3-way match (POST mirror)' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Post('3way-match/:invoiceId') @Roles(...MM_WRITE)
   async post3wayMatch(@Param('invoiceId') _invoiceId: string, @Body() _body: Record<string, unknown>) {
-    throw new HttpException({ message: 'Endpoint not yet implemented: POST /mm/3way-match/:invoiceId', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
+    return notImplemented('POST /mm/3way-match/:invoiceId');
   }
 
   @ApiOperation({ summary: 'Create fleet delivery' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Post('fleet/deliveries') @Roles(...MM_WRITE)
   async createFleetDelivery(@Body() _body: Record<string, unknown>) {
-    throw new HttpException({ message: 'Endpoint not yet implemented: POST /mm/fleet/deliveries', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
+    return notImplemented('POST /mm/fleet/deliveries');
   }
 
-  @ApiOperation({ summary: 'Post match vendor invoice' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiOperation({ summary: 'Match vendor invoice (POST mirror)' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-2' })
   @Post('vendor-invoices/:id/match') @Roles(...MM_WRITE)
   async postMatchVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    throw new HttpException({ message: 'Endpoint not yet implemented: POST /mm/vendor-invoices/:id/match', code: 'NOT_IMPLEMENTED' }, HttpStatus.NOT_IMPLEMENTED);
+    return notImplemented('POST /mm/vendor-invoices/:id/match');
   }
 
   @ApiOperation({ summary: 'Patch pay vendor invoice' })

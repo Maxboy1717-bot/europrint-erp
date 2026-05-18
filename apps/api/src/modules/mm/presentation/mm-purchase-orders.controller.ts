@@ -28,6 +28,15 @@ enum Role {
   DIRECTOR = 'director',
 }
 
+// FEATURE_FLAGGED: single-PO fetch, delete, update PO commands not wired
+// through commandBus yet (tracking #FX-10).
+const poNotImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
+
 @ApiThrottle()
 @ApiTags('Mm Purchase Orders')
 @Controller('mm/purchase-orders')
@@ -87,18 +96,13 @@ export class MmPurchaseOrdersController {
     } catch (_e) { return []; }
   }
 
-  // P3-26: single-PO fetch service not yet implemented; use list endpoint.
   @ApiOperation({ summary: 'Get po' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-10 (use list endpoint)' })
   @Get(':id')
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async getPo(@Param('id') _id: number){
     this.logger.log('Getting purchase order');
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /mm/purchase-orders/:id', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return poNotImplemented('GET /mm/purchase-orders/:id');
   }
 
   @ApiOperation({ summary: 'Create po' })
@@ -151,35 +155,24 @@ export class MmPurchaseOrdersController {
     return unwrapOrThrow(res);
   }
 
-  // P3-26: delete & update PO commands not yet wired through commandBus —
-  // return 501 instead of pretending to delete/update.
   @ApiOperation({ summary: 'Delete po' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-10' })
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @Roles(Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async deletePo(@Param('id') _id: number) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: DELETE /mm/purchase-orders/:id', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return poNotImplemented('DELETE /mm/purchase-orders/:id');
   }
 
   @ApiOperation({ summary: 'Update po' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-10' })
   @Patch(':id')
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async updatePo(
     @Param('id') _id: number,
     @Body() _dto: Partial<{ supplierId: number; items: Array<{ materialId: number; quantity: number; unitPrice: number }>; notes: string }>,
   ) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: PATCH /mm/purchase-orders/:id', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return poNotImplemented('PATCH /mm/purchase-orders/:id');
   }
 
   @ApiOperation({ summary: 'Patch approve po' })

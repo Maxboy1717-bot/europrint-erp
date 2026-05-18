@@ -3,17 +3,8 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Get, HttpException, HttpStatus, Post, Body, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
-
-// P3-26: complaint/assessment/skill-gap/expense/invoice aggregators are not yet
-// wired. Return 501 instead of fake empty lists so the integration page can
-// show a "coming soon" empty state.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
+import { Controller, Get, Post, Body, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';

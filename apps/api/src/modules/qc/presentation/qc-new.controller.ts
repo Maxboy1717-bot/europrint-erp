@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Get, HttpException, HttpStatus, Post, Query, Param, Body, UseGuards, UseInterceptors, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Query, Param, Body, UseGuards, UseInterceptors, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -12,6 +12,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Roles } from '@common/decorators/roles.decorator';
 import { Role } from '@common/constants/roles.constants';
 import { unwrapOrInternal, unwrapOrNotFound } from '@common/http-result';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import { QcNewService } from '../application/qc-new.service';
 import { SpcService } from '../domain/services/spc.service';
 import { z } from 'zod';
@@ -107,17 +108,12 @@ export class QcNewController {
     return unwrapOrInternal(await this.svc.getSpcControlChart(pid));
   }
 
-  // P3-26: SPC control-charts list endpoint is not yet wired. Real charts
-  // require an `SpcService.listControlCharts()` aggregation that doesn't exist
-  // yet. Return 501 instead of a fake empty list.
+  // FEATURE_FLAGGED: SPC control-charts list aggregation not yet wired (#FX-11).
   @Get('control-charts')
   @Roles(...QC_ROLES)
   @ApiOperation({ summary: 'SPC control charts list' })
   async getControlCharts() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /qc/control-charts', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /qc/control-charts');
   }
 
   @Get('control-charts/:processId')

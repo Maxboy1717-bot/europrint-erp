@@ -246,6 +246,44 @@ export type I18nTranslations = {
         "updated": string;
         "saved": string;
     };
+    "telegram": {
+        "warehouse": {
+            "minimumStockAlert": string;
+            "afternoonStockCheck": string;
+            "rentalExpiryReminder": string;
+        };
+        "hr": {
+            "attendanceMissing": string;
+            "leaveApproved": string;
+            "birthday": string;
+            "salaryReminder": string;
+        };
+        "crm": {
+            "leadCreated": string;
+            "dealWon": string;
+        };
+        "kanban": {
+            "taskAssigned": string;
+            "taskDueSoon": string;
+        };
+        "aiReports": {
+            "dailyAiReport": string;
+        };
+        "lms": {
+            "courseCompleted": string;
+            "certificateIssued": string;
+            "certificateExpiringSoon": string;
+        };
+        "service": {
+            "directorDailyReport": string;
+        };
+        "production": {
+            "morningShiftHandover": string;
+            "eveningShiftHandover": string;
+            "mesEquipmentFailure": string;
+            "qcResultsReady": string;
+        };
+    };
     "validation": {
         "required": string;
         "invalidEmail": string;

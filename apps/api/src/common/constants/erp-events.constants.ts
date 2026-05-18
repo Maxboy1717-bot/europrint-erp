@@ -54,6 +54,9 @@ export const ERP_EVENTS = {
   // PA0 event-bridge fix (Trigger 15, 20) — see EventBridgeService
   INVOICE_FULLY_PAID:        'fi.invoice.fully_paid',
   ADVANCE_BYPASS_APPROVED:   'sd.advance.bypass_approved',
+
+  // Wave 11 P1 — IoT tablet safety SOS button
+  IOT_SOS_RAISED:            'iot.sos.raised',
 } as const
 
 export type ErpEventKey = keyof typeof ERP_EVENTS

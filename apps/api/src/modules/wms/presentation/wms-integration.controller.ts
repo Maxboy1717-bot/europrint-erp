@@ -29,6 +29,15 @@ const IntegrationCreateSchema = z.object({
 const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
 const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
 
+// FEATURE_FLAGGED: warehouse MM/FI integration not yet wired (tracking #FX-3).
+// Returning 501 lets WarehouseIntegrations.tsx render a "Coming soon" state.
+const notImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
+
 /**
  * WmsIntegrationController
  * Routes: /warehouse/integration/*, /warehouse/warehouses/:id/sync-pos
@@ -75,80 +84,47 @@ export class WmsIntegrationController {
     }
   }
 
-  // ── MM (Materials Management) INTEGRATION ─────────────────────────────────
-  // P3-26: MM/FI integration services are not yet wired. Return 501 instead of
-  // fake empty payloads so the warehouse integration page shows an honest
-  // "coming soon" state.
-
+  // ── MM/FI INTEGRATION ─────────────────────────────────────────────────────
   @ApiOperation({ summary: 'Get integration mm pending deliveries' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('integration/mm/pending-deliveries')
-  @Roles(...WH_READ)
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-3' })
+  @Get('integration/mm/pending-deliveries') @Roles(...WH_READ)
   async getIntegrationMmPendingDeliveries() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /warehouse/integration/mm/pending-deliveries', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /warehouse/integration/mm/pending-deliveries');
   }
 
   @ApiOperation({ summary: 'Get integration mm reorder suggestions' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('integration/mm/reorder-suggestions')
-  @Roles(...WH_READ)
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-3' })
+  @Get('integration/mm/reorder-suggestions') @Roles(...WH_READ)
   async getIntegrationMmReorderSuggestions() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /warehouse/integration/mm/reorder-suggestions', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /warehouse/integration/mm/reorder-suggestions');
   }
-
-  // ── FI (Finance) INTEGRATION ──────────────────────────────────────────────
 
   @ApiOperation({ summary: 'Get integration fi stock valuation' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('integration/fi/stock-valuation')
-  @Roles(...WH_READ)
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-3' })
+  @Get('integration/fi/stock-valuation') @Roles(...WH_READ)
   async getIntegrationFiStockValuation() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /warehouse/integration/fi/stock-valuation', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /warehouse/integration/fi/stock-valuation');
   }
 
-  // ── GENERAL INTEGRATION ───────────────────────────────────────────────────
-
   @ApiOperation({ summary: 'Get integration summary' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('integration/summary')
-  @Roles(...WH_READ)
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-3' })
+  @Get('integration/summary') @Roles(...WH_READ)
   async getIntegrationSummary() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /warehouse/integration/summary', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /warehouse/integration/summary');
   }
 
   @ApiOperation({ summary: 'Get integration' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('integration')
-  @Roles(...WH_READ)
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-3' })
+  @Get('integration') @Roles(...WH_READ)
   async getIntegration() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /warehouse/integration', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /warehouse/integration');
   }
 
   @ApiOperation({ summary: 'Create integration' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('integration')
-  @Roles(...WH_WRITE)
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-3' })
+  @Post('integration') @Roles(...WH_WRITE)
   async createIntegration(@Body() body: unknown) {
     IntegrationCreateSchema.parse(body);
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: POST /warehouse/integration', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('POST /warehouse/integration');
   }
 }

@@ -56,6 +56,8 @@ import { CameraExtendedService } from './application/camera-extended.service';
 import { CameraDashboardService } from './application/camera-dashboard.service';
 import { IotMainService } from './application/iot-main.service';
 import { IotSensorsExtendedService } from './application/iot-sensors-extended.service';
+import { IotTabletService } from './application/iot-tablet.service';
+import { DrizzleIotTabletRepo } from './infrastructure/repositories/drizzle-iot-tablet.repo';
 
 const commandHandlers = [RecordSensorReadingHandler, RegisterDeviceHandler, UpdateDeviceThresholdsHandler];
 const eventHandlers = [AnomalyDetectedHandler];
@@ -89,6 +91,7 @@ const newRepositories = [
   DrizzleCameraDashboardRepo,
   DrizzleIotSensorsRepo,
   DrizzleCameraAiRepo,
+  DrizzleIotTabletRepo,
 ];
 
 @Module({
@@ -117,6 +120,7 @@ const newRepositories = [
     CameraDashboardService,
     IotMainService,
     IotSensorsExtendedService,
+    IotTabletService,
   ],
   exports: [SENSOR_REPO],
 })

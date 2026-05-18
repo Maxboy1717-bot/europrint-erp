@@ -21,6 +21,14 @@ import { z } from 'zod';
 const ApproveDto = z.object({ bomApproved: z.boolean().default(false), routingApproved: z.boolean().default(false), techCardApproved: z.boolean().default(false), notes: z.string().optional() });
 const RejectDto = z.object({ reason: z.string().min(1), returnTo: z.enum(['manager', 'designer']).default('manager') });
 
+// FEATURE_FLAGGED: technology-cards CRUD not wired to a service (tracking #FX-8).
+const techNotImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
+
 @ApiTags('Technology')
 @ApiBearerAuth()
 @ApiThrottle()
@@ -97,45 +105,31 @@ export class TechnologyController {
     return { orderId: id, rejectedAt: _time.now().toISOString() };
   }
 
-  // P3-26: tech-cards CRUD is not yet wired to a service. Return 501 instead of
-  // pretending to return cards / pretending to generate them.
   @Get('cards')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'List technology cards' })
   async getCards(@Query('status') _status?: string) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /technology/cards', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return techNotImplemented('GET /technology/cards');
   }
 
   @Post('cards/generate')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'Generate technology card' })
   async generateCard(@Body() _body: unknown) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: POST /technology/cards/generate', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return techNotImplemented('POST /technology/cards/generate');
   }
 
   @Get('cards/:id')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'Get technology card by ID' })
   async getCardById(@Param('id') _id: string) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /technology/cards/:id', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return techNotImplemented('GET /technology/cards/:id');
   }
 
   @Post('cards/:id/optimize')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'Optimize technology card' })
   async optimizeCard(@Param('id') _id: string, @Body() _body: unknown) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: POST /technology/cards/:id/optimize', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return techNotImplemented('POST /technology/cards/:id/optimize');
   }
 }

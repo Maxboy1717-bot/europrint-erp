@@ -8,9 +8,8 @@
  */
 
 import {
-  Controller, Get, Post, Delete, Patch, Body, Param, ParseIntPipe,
-  UseGuards, UseInterceptors, Logger,
-  HttpException, HttpStatus } from '@nestjs/common';
+  Controller, Post, Delete, Patch, Body, Param, ParseIntPipe,
+  UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { CommandBus } from '@nestjs/cqrs';
@@ -37,24 +36,9 @@ enum Role {
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class WmsRentalController {
-  private readonly logger = new Logger(WmsRentalController.name);
-
   constructor(private readonly commandBus: CommandBus) {}
 
-  @ApiOperation({ summary: 'Get rentals' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
-  @Get(':warehouseId')
-  @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
-  async getRentals(@Param('warehouseId') warehouseId: number) {
-    // PA1-11 / Rule 10: previously returned a stub `[]`. Wire to a real
-    // GetRentalsQuery + handler when the read model is defined.
-    // TODO PA1-11: implement GetRentalsByWarehouseQuery and switch from 501.
-    this.logger.warn({ msg: 'getRentals not implemented', warehouseId });
-    throw new HttpException(
-      "Tez orada amalga oshiriladi (rentals by warehouse)",
-      HttpStatus.NOT_IMPLEMENTED,
-    );
-  }
+  // GET /wms/rental/:warehouseId removed — no frontend consumer; reads use /wms directly.
 
   @ApiOperation({ summary: 'Receive fg' })
   @ApiResponse({ status: 201, description: 'OK' })

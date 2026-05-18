@@ -12,6 +12,14 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { HrDashboardExtraService } from '../application/hr-dashboard-extra.service';
 
+// FEATURE_FLAGGED: bulk contracts + HrCapital courses/stats not wired (tracking #FX-9).
+const hrExtraNotImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
+
 @ApiThrottle()
 @ApiTags('Hr Dashboard Extra')
 @Controller('hr')
@@ -70,15 +78,11 @@ export class HrDashboardExtraController {
     return { data: unwrapOrInternal(await this.svc.getSafetyOverview()) };
   }
 
-  // P3-26: bulk contracts listing not yet wired — use /contracts/expiring.
   @ApiOperation({ summary: 'Get contracts' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-9 (use /contracts/expiring)' })
   @Get('contracts')
   async getContracts(@Query() _query: Record<string, unknown>) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /hr/contracts', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return hrExtraNotImplemented('GET /hr/contracts');
   }
 
   @ApiOperation({ summary: 'Get contracts expiring' })
@@ -95,25 +99,17 @@ export class HrDashboardExtraController {
 @UseInterceptors(AuditInterceptor)
 @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN')
 export class HrCapitalController {
-  // P3-26: HrCapital module (courses/stats) is not yet wired to a service.
-  // Return 501 instead of fake empty payloads.
   @ApiOperation({ summary: 'Get courses' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-9' })
   @Get('courses')
   async getCourses(@Query() _q: Record<string, unknown>) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /hr-capital/courses', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return hrExtraNotImplemented('GET /hr-capital/courses');
   }
 
   @ApiOperation({ summary: 'Get stats' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-9' })
   @Get('stats')
   async getStats() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /hr-capital/stats', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return hrExtraNotImplemented('GET /hr-capital/stats');
   }
 }
