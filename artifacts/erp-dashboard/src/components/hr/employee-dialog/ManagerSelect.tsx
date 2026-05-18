@@ -35,6 +35,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 interface ManagerOption {
   id: string | number;
@@ -122,7 +123,7 @@ export function ManagerSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          aria-label="Rahbar tanlash"
+          aria-label={tLabel("hr.manager.select_label", "Rahbar tanlash")}
           className={cn(
             "w-full justify-between font-normal h-9",
             !selected && "text-muted-foreground",
@@ -152,7 +153,7 @@ export function ManagerSelect({
       <PopoverContent className="w-[300px] p-0" align="start">
         <Command shouldFilter={false} data-testid="manager-select-command">
           <CommandInput
-            placeholder="Ism yoki familiya bo'yicha qidiring"
+            placeholder={tLabel("hr.manager.search_placeholder", "Ism yoki familiya bo'yicha qidiring")}
             value={search}
             onValueChange={setSearch}
             data-testid="manager-select-input"

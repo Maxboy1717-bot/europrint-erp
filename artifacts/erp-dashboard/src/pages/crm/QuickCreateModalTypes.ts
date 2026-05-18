@@ -4,6 +4,7 @@
  * QuickCreateModal page. JSX-free where reasonable — icons remain in a .tsx
  * map to keep this file importable from .ts callers.
  */
+import { tLabel } from "@/lib/i18n/tLabel";
 
 export interface DuplicateEntry {
   id: number;
@@ -12,21 +13,21 @@ export interface DuplicateEntry {
 }
 
 export const SOURCE_OPTIONS = [
-  { value: "CALL",     label: "Qo'ng'iroq" },
-  { value: "WEBFORM",  label: "Veb-forma" },
+  { value: "CALL",     label: tLabel("crm.source.call",     "Qo'ng'iroq") },
+  { value: "WEBFORM",  label: tLabel("crm.source.webform",  "Veb-forma") },
   { value: "TELEGRAM", label: "Telegram" },
   { value: "EMAIL",    label: "Email" },
-  { value: "WEB",      label: "Veb-sayt" },
-  { value: "INBOUND",  label: "Kiruvchi" },
-  { value: "PARTNER",  label: "Hamkor" },
-  { value: "OTHER",    label: "Boshqa" },
+  { value: "WEB",      label: tLabel("crm.source.web",      "Veb-sayt") },
+  { value: "INBOUND",  label: tLabel("crm.source.inbound",  "Kiruvchi") },
+  { value: "PARTNER",  label: tLabel("crm.source.partner",  "Hamkor") },
+  { value: "OTHER",    label: tLabel("crm.source.other",    "Boshqa") },
 ] as const;
 
 export const CURRENCY_OPTIONS = [
-  { value: "UZS", label: "UZS — So'm" },
-  { value: "USD", label: "USD — Dollar" },
-  { value: "EUR", label: "EUR — Yevro" },
-  { value: "RUB", label: "RUB — Rubl" },
+  { value: "UZS", label: tLabel("crm.currency.uzs", "UZS — So'm") },
+  { value: "USD", label: tLabel("crm.currency.usd", "USD — Dollar") },
+  { value: "EUR", label: tLabel("crm.currency.eur", "EUR — Yevro") },
+  { value: "RUB", label: tLabel("crm.currency.rub", "RUB — Rubl") },
 ] as const;
 
 export interface QuickCreateFormState {

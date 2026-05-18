@@ -19,6 +19,7 @@ import type { BankAccount } from "./profile-types";
 import type { BankCardProps } from "./PersonalTabTypes";
 import { EPStatusPill } from "@/components/ep";
 import { RoleGate, PII_VIEWER_ROLES } from "@/components/RoleGate";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 export function BankAccountCard({ t, tCommon, bankAccounts, loadingBanks, bankDialogOpen, setBankDialogOpen, bankForm, setBankForm, saveBankMutation, ownerUserId, }: BankCardProps) {
   const accounts = Array.isArray(bankAccounts) ? bankAccounts : [];
@@ -125,8 +126,8 @@ export function BankAccountCard({ t, tCommon, bankAccounts, loadingBanks, bankDi
             ownerUserId={ownerUserId}
             fallback={
               <div className="text-muted-foreground text-center py-8" data-testid="bank-masked">
-                <p className="text-sm">Bank ma'lumotlari maxfiy</p>
-                <p className="text-xs mt-1">Faqat HR ko'ra oladi</p>
+                <p className="text-sm">{tLabel("employee.bank.private", "Bank ma'lumotlari maxfiy")}</p>
+                <p className="text-xs mt-1">{tLabel("employee.bank.hr_only", "Faqat HR ko'ra oladi")}</p>
               </div>
             }
           >

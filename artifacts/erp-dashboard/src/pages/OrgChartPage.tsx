@@ -24,6 +24,7 @@ import type { OrgChartData } from "./org-chart/orgChartTypes";
 import { OrgChartTreeNode } from "./org-chart/OrgChartTreeNode";
 import { OrgChartSearchBar } from "./org-chart/OrgChartSearchBar";
 import { buildIndex, searchTree } from "./org-chart/orgChartUtils";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 const TreeSkeleton = () => (
   <Card>
@@ -108,7 +109,7 @@ export default function OrgChartPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast({ title: format === "pdf" ? "PDF yuklandi" : "Excel yuklandi", description: "Fayl muvaffaqiyatli yuklandi" });
+      toast({ title: format === "pdf" ? tLabel("orgchart.export.pdf_done", "PDF yuklandi") : tLabel("orgchart.export.excel_done", "Excel yuklandi"), description: tLabel("orgchart.export.success", "Fayl muvaffaqiyatli yuklandi") });
     } catch {
       toast({ title: "Xatolik", description: "Eksport amalga oshmadi", variant: "destructive" });
     } finally {
@@ -162,7 +163,7 @@ export default function OrgChartPage() {
             size="icon"
             data-testid="button-settings"
             onClick={() => {
-              toast({ title: "Sozlamalar", description: "Sozlamalar sahifasi tez orada" });
+              toast({ title: tLabel("orgchart.settings.title", "Sozlamalar"), description: tLabel("orgchart.settings.coming_soon", "Sozlamalar sahifasi tez orada") });
             }}
           >
             <Settings className="h-4 w-4" />
@@ -172,7 +173,7 @@ export default function OrgChartPage() {
             size="icon"
             data-testid="button-snapshot"
             onClick={() => {
-              toast({ title: "Snapshot", description: "Tuzilma rasmi yuklanmoqda..." });
+              toast({ title: "Snapshot", description: tLabel("orgchart.snapshot.loading", "Tuzilma rasmi yuklanmoqda...") });
             }}
           >
             <Camera className="h-4 w-4" />
@@ -210,7 +211,7 @@ export default function OrgChartPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Jami bo'limlar</p>
+            <p className="text-sm text-muted-foreground">{tLabel("orgchart.stats.total_departments", "Jami bo'limlar")}</p>
             <p className="text-2xl font-bold" data-testid="text-total-departments">
               {stats?.totalDepartments || 0}
             </p>
@@ -218,7 +219,7 @@ export default function OrgChartPage() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Jami xodimlar</p>
+            <p className="text-sm text-muted-foreground">{tLabel("orgchart.stats.total_employees", "Jami xodimlar")}</p>
             <p className="text-2xl font-bold" data-testid="text-total-employees">
               {stats?.totalEmployees || 0}
             </p>
