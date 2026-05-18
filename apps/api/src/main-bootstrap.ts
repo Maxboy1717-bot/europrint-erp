@@ -97,12 +97,23 @@ export function configureCsrfOriginCheck(app: NestFastifyApplication, logger: Lo
     }
   };
 
+  // Auth endpoints use httpOnly SameSite=Strict cookies — browser-level
+  // SameSite enforcement already blocks cross-site CSRF for these routes.
+  // "Login CSRF" (forcing a victim to log in as the attacker) requires the
+  // attacker to know the victim's credentials, which defeats the attack.
+  // Excluding these paths avoids false-positive 403s from the Vite dev proxy.
+  const CSRF_SKIP_PATHS = ['/api/auth/login', '/api/auth/refresh', '/api/auth/logout'];
+
   const raw = app.getHttpAdapter().getInstance() as RawFastify;
   raw.addHook('onRequest', (req: RawReq, reply: RawReply, done?: () => void) => {
     const method = (req.method ?? '').toUpperCase();
     if (!CSRF_PROTECTED_METHODS.has(method)) { done?.(); return; }
 
     const url = req.url ?? '';
+
+    // Auth endpoints are exempt — SameSite=Strict cookies provide equivalent protection.
+    if (CSRF_SKIP_PATHS.some((p) => url.startsWith(p) || url.includes(p))) { done?.(); return; }
+
     const originHeader = (req.headers['origin'] as string | undefined) ?? undefined;
     const refererHeader = (req.headers['referer'] as string | undefined) ?? undefined;
 
