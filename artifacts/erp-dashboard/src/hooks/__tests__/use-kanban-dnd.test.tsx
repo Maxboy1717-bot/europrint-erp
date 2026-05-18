@@ -21,8 +21,12 @@ vi.mock("@/hooks/use-toast", () => ({
 
 vi.mock("@/lib/queryClient", async () => {
   const { QueryClient } = await import("@tanstack/react-query");
+  // gcTime kept generous so cache entries seeded by tests via setQueryData
+  // survive until the hook's optimistic onMutate / rollback reads them.
+  // Setting gcTime: 0 was eagerly garbage-collecting the seeded data before
+  // the mutation could snapshot it.
   const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+    defaultOptions: { queries: { retry: false, gcTime: 60_000 }, mutations: { retry: false } },
   });
   sharedClient.current = client;
   return {
@@ -141,9 +145,12 @@ describe("useKanbanDragDrop", () => {
       result.current.handleDragEnd(buildDragEnd(42, "PHONE_SCREENING"));
     });
 
-    // Optimistic update should be visible synchronously
-    const optimistic = getClient().getQueryData<{ data: PipelineEntry[] }>(KANBAN_QUERY_KEY);
-    expect(optimistic?.data?.[0]?.funnel_stage).toBe("PHONE_SCREENING");
+    // Optimistic update is applied inside `onMutate` (async because of
+    // `cancelQueries`), so wait for the cache to settle before asserting.
+    await waitFor(() => {
+      const optimistic = getClient().getQueryData<{ data: PipelineEntry[] }>(KANBAN_QUERY_KEY);
+      expect(optimistic?.data?.[0]?.funnel_stage).toBe("PHONE_SCREENING");
+    });
 
     await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
     expect(apiRequestMock).toHaveBeenCalledWith(

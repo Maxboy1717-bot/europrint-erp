@@ -44,7 +44,7 @@ export class HrBaseRepository {
         email_work:      hrEmployees.email_work,
         photo_url:       hrEmployees.photo_url,
         department_name: hrDepartments.name,
-        position_name:   hrPositions.name,
+        position_name:   hrPositions.title,
       })
         .from(hrEmployees)
         .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))
@@ -88,7 +88,7 @@ export class HrBaseRepository {
           email_work:      hrEmployees.email_work,
           photo_url:       hrEmployees.photo_url,
           department_name: hrDepartments.name,
-          position_name:   hrPositions.name,
+          position_name:   hrPositions.title,
         })
           .from(hrEmployees)
           .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))

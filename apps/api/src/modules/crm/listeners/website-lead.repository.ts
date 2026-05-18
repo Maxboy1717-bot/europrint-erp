@@ -106,11 +106,12 @@ export class WebsiteLeadRepository {
    * Mavjud lead'ga sotuv menejerini biriktiradi (manager bo'sh bo'lsa).
    */
   async assignManagerIfMissing(leadId: number, managerId: number): Promise<Result<boolean>> {
+    // sd_leads canonical schema uses `assigned_to` (integer) not `managerId`.
     return safeCall(async () => {
       const updated = await db
         .update(sdLeads)
-        .set({ managerId })
-        .where(sql`${sdLeads.id} = ${leadId} AND ${sdLeads.managerId} IS NULL`)
+        .set({ assigned_to: managerId })
+        .where(sql`${sdLeads.id} = ${leadId} AND ${sdLeads.assigned_to} IS NULL`)
         .returning({ id: sdLeads.id });
       return Array.isArray(updated) && updated.length > 0;
     }, 'DB_ERROR');

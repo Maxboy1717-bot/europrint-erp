@@ -75,7 +75,7 @@ export class HrDashboardExtraService {
     endDate: string; daysLeft: number; urgency: 'critical' | 'warning' | 'info';
   }[], AppError>> {
     const r = await this.repo.getContractsExpiring(days);
-    if (!r.ok) return r;
+    if (!r.ok) return r as Result<never, AppError>;
     const rows = (Array.isArray(r.data) ? r.data : []) as Record<string, unknown>[];
     return Ok(rows.map(row => {
       const dl = Number(row.days_left ?? 0);
@@ -108,7 +108,7 @@ export class HrDashboardExtraService {
 
   async getResignationStatsProjected(): Promise<Result<ResignationStatsRow[], AppError>> {
     const r = await this.repo.getResignationStats();
-    if (!r.ok) return r;
+    if (!r.ok) return r as Result<never, AppError>;
     const rows = (Array.isArray(r.data) ? r.data : []) as Record<string, unknown>[];
     if (rows.length === 0) {
       return Ok([{ reason: "Ma'lumot yo'q", count: 0, color: COLORS[0]! }]);
@@ -122,7 +122,7 @@ export class HrDashboardExtraService {
 
   async getRiskScoresProjected(): Promise<Result<RiskScoresPayload, AppError>> {
     const r = await this.repo.getRiskScores();
-    if (!r.ok) return r;
+    if (!r.ok) return r as Result<never, AppError>;
     const rows = (Array.isArray(r.data) ? r.data : []) as Record<string, unknown>[];
     const scores = rows.map(row => ({
       id: String(row.id ?? ''),

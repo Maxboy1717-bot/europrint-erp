@@ -58,10 +58,10 @@ export class DrizzleHrPayrollRepository implements IHrPayrollRepository {
 
   async markPeriodClosed(periodId: number, _totals: { totalBase: number; totalBonus: number; totalDeductions: number; totalNet: number; rowCount: number }): Promise<Result<Row>> {
     try {
-      const today = new Date().toISOString().substring(0, 10);
+      // payroll_periods canonical schema uses `closed_at` (timestamp) — no `approvalDate` column.
       const rows = await db
         .update(payrollPeriods)
-        .set({ status: 'closed', approvalDate: today })
+        .set({ status: 'closed', closed_at: new Date() })
         .where(eq(payrollPeriods.id, periodId))
         .returning();
       return Ok(((Array.isArray(rows) ? rows[0] : {}) ?? {}) as Row);

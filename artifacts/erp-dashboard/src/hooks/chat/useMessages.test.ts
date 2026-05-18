@@ -29,13 +29,6 @@ function makeWrapper(): React.FC<{ children: ReactNode }> {
   return Wrapper;
 }
 
-function buildResponse(payload: unknown): Response {
-  return {
-    ok: true,
-    json: async () => payload,
-  } as Response;
-}
-
 describe('useMessages', () => {
   beforeEach(() => mockedApi.mockReset());
 
@@ -47,7 +40,7 @@ describe('useMessages', () => {
   });
 
   it('fetches messages with default limit of 50', async () => {
-    mockedApi.mockResolvedValueOnce(buildResponse([{ id: 'm-1' }]));
+    mockedApi.mockResolvedValueOnce([{ id: 'm-1' }]);
     const { result } = renderHook(() => useMessages('r-1'), {
       wrapper: makeWrapper(),
     });
@@ -59,7 +52,7 @@ describe('useMessages', () => {
   });
 
   it('passes custom limit in the URL', async () => {
-    mockedApi.mockResolvedValueOnce(buildResponse([]));
+    mockedApi.mockResolvedValueOnce([]);
     const { result } = renderHook(() => useMessages('r-2', 10), {
       wrapper: makeWrapper(),
     });
@@ -71,7 +64,9 @@ describe('useMessages', () => {
   });
 
   it('unwraps envelope shape { data: [...] }', async () => {
-    mockedApi.mockResolvedValueOnce(buildResponse({ data: [{ id: 'm-9' }] }));
+    // apiRequest now returns already-unwrapped data, but the hook also tolerates
+    // an unwrapped envelope shape — covers backends that hand back `{ data: [...] }`.
+    mockedApi.mockResolvedValueOnce({ data: [{ id: 'm-9' }] });
     const { result } = renderHook(() => useMessages('r-3'), {
       wrapper: makeWrapper(),
     });
@@ -79,8 +74,8 @@ describe('useMessages', () => {
     expect(result.current.data).toEqual([{ id: 'm-9' }]);
   });
 
-  it('surfaces error when response indicates failure', async () => {
-    mockedApi.mockResolvedValueOnce({ ok: false } as Response);
+  it('surfaces error when apiRequest rejects', async () => {
+    mockedApi.mockRejectedValueOnce(new Error('Xabarlar yuklanmadi'));
     const { result } = renderHook(() => useMessages('r-4'), {
       wrapper: makeWrapper(),
     });
