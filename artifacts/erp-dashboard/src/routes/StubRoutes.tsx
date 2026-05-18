@@ -115,7 +115,6 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/equipment',                 EquipmentPage],
   ['/europrint-control',         EuroprintControlPage],
   ['/gl',                        GLDocumentsPage],
-  ['/hr/leave',                  HRVacationPage],
   ['/hr/zno',                    HRZnoPage],
   ['/hr/zvs',                    HRZvsPage],
   ['/iot-sensors',               IotSensorsPage],

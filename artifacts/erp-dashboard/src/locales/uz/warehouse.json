@@ -1,9 +1,6 @@
 {
   "warehouse": "Ombor",
   "warehouses": "Omborlar",
-  "inventory": {
-    "sku": "SKU"
-  },
   "stock": "Zaxira",
   "stockLevel": "Zaxira darajasi",
   "locations": "Joylar",
@@ -314,48 +311,9 @@
   "posSync.sync": "Sinxronizatsiya",
   "product001": "product-001",
   "dashboard9": "Dashboard 9",
-  "hub": {
-    "newReceipt": "New receipt",
-    "openWithLayers": "Open with layers",
-    "posSync": "Pos sync"
-  },
   "mahsulotId": "Mahsulot id",
   "miqdorOzgarishi": "Miqdor ozgarishi",
   "miqdorniSozlash": "Miqdorni sozlash",
-  "mm": {
-    "actions": "Harakatlar",
-    "amount": "Miqdor",
-    "confirmDeleteDesc": "Confirm delete desc",
-    "confirmDeleteTitle": "Confirm delete title",
-    "date": "Sana",
-    "deliveryDate": "Delivery date",
-    "emptyDescription": "Empty description",
-    "emptyTitle": "Empty title",
-    "errorLoadMessage": "Error load message",
-    "errorLoadTitle": "Error load title",
-    "orderDate": "Order date",
-    "orderItems": "Order items",
-    "poListTitle": "Po list title",
-    "poNumber": "Po number",
-    "price": "Narx",
-    "purchaseOrdersSubtitle": "Purchase orders subtitle",
-    "purchaseOrdersTitle": "Purchase orders title",
-    "quantity": "Miqdori",
-    "rawMaterial": "Raw material",
-    "status": "Holati",
-    "statusCancelled": "Status cancelled",
-    "statusConfirmed": "Status confirmed",
-    "statusDraft": "Status draft",
-    "statusReceived": "Status received",
-    "statusSent": "Status sent",
-    "toastCreated": "Toast created",
-    "toastDeleted": "Toast deleted",
-    "total": "Jami summa",
-    "totalAmount": "Total amount",
-    "unit": "Birlik",
-    "vendor": "Ta'minotchi",
-    "viewTitle": "View title"
-  },
   "sabab": "Sabab matni",
   "sabab2": "Sabab 2",
   "Xom Ashyo": "Xom ashyo",
@@ -368,57 +326,8 @@
   "Xo'jalik Mollari": "Xo'jalik mollari",
   "MRO Ehtiyot Qism": "Mro ehtiyot qism",
   "Umumiy": "Umumiy ko'rsatkich",
-  "Asosiy xom ashyo ombori — ishlab chiqarish uchun barcha materiallar shu yerda saqlanadi": {
-    " Yetkazib beruvchilardan keladigan materiallar birinchi bu omborga qabul qilinadi": {
-      "": "Asosiy xom ashyo ombori — ishlab chiqarish uchun barcha materiallar shu yerda saqlanadi. yetkazib beruvchilardan keladigan materiallar birinchi bu omborga qabul qilinadi."
-    }
-  },
-  "Rulon materiallari ombori — qog'oz, plyonka, vinillar rulonlarda saqlanadi": {
-    " Har bir rulonning kengligi, uzunligi va og'irligi kuzatiladi": {
-      "": "Rulon materiallari ombori — qog'oz, plyonka, vinillar rulonlarda saqlanadi. har bir rulonning kengligi, uzunligi va og'irligi kuzatiladi."
-    }
-  },
-  "Tayyor mahsulot ombori — ishlab chiqarish tugagan buyumlar jo'natishga tayyor holda saqlanadi": {
-    " Buyurtmachi kutayotgan mahsulotlar shu yerda": {
-      "": "Tayyor mahsulot ombori — ishlab chiqarish tugagan buyumlar jo'natishga tayyor holda saqlanadi. buyurtmachi kutayotgan mahsulotlar shu yerda."
-    }
-  },
-  "Yarim tayyor mahsulot ombori — ishlab chiqarish jarayonidagi materiallar": {
-    " Bir sexdan ikkinchisiga o'tayotgan yarim tayyor buyumlar shu yerda": {
-      "": "Yarim tayyor mahsulot ombori — ishlab chiqarish jarayonidagi materiallar. bir sexdan ikkinchisiga o'tayotgan yarim tayyor buyumlar shu yerda."
-    }
-  },
-  "Brak ombori — yaroqsiz va nuqsonli materiallar ajratib saqlanadi": {
-    " Utilizatsiya yoki qayta ishlash uchun kutayotgan buyumlar": {
-      "": "Brak ombori — yaroqsiz va nuqsonli materiallar ajratib saqlanadi. utilizatsiya yoki qayta ishlash uchun kutayotgan buyumlar."
-    }
-  },
-  "Karantin ombori — sifat nazorati tekshiruvidan o'tayotgan materiallar vaqtincha shu yerda saqlanadi": {
-    " QC qaroriga qarab chiqariladi yoki brakka o'tkaziladi": {
-      "": "Karantin ombori — sifat nazorati tekshiruvidan o'tayotgan materiallar vaqtincha shu yerda saqlanadi. qc qaroriga qarab chiqariladi yoki brakka o'tkaziladi."
-    }
-  },
-  "Asbob-uskuna ombori — ishlab chiqarish uskunalari, ehtiyot qismlar, o'lchov asboblari": {
-    " Har bir asbobning holati va kalibratsiya muddati kuzatiladi": {
-      "": "Asbob-uskuna ombori — ishlab chiqarish uskunalari, ehtiyot qismlar, o'lchov asboblari. har bir asbobning holati va kalibratsiya muddati kuzatiladi."
-    }
-  },
-  "Xo'jalik materiallari ombori — tozalash vositalari, ofis mollari, yordamchi materiallar": {
-    " Kundalik sarflanadigan narsalar boshqariladi": {
-      "": "Xo'jalik materiallari ombori — tozalash vositalari, ofis mollari, yordamchi materiallar. kundalik sarflanadigan narsalar boshqariladi."
-    }
-  },
-  "MRO (Maintenance, Repair, Operations) ombori — uskunalarni ta'mirlash va texnik xizmat ko'rsatish uchun ehtiyot qismlar va materiallar": {
-    "": "Mro (maintenance, repair, operations) ombori — uskunalarni ta'mirlash va texnik xizmat ko'rsatish uchun ehtiyot qismlar va materiallar."
-  },
-  "Umumiy ombor — barcha turdagi materiallar saqlanadi": {
-    "": "Umumiy ombor — barcha turdagi materiallar saqlanadi."
-  },
   "Xom ashyo turlari": "Xom ashyo turlari",
   "Yetkazib berishda": "Yetkazib berishda",
-  "Min": {
-    " darajadan past": "Darajadan past"
-  },
   "Xom ashyo qiymati": "Xom ashyo qiymati",
   "Rulon turlari": "Rulon turlari",
   "Jami uzunlik (m)": "Jami uzunlik (m)",
@@ -492,120 +401,50 @@
   "Kritik zaxira ogohlantirish": "Kritik zaxira ogohlantirish",
   "Yetkazib beruvchi kataloglari": "Yetkazib beruvchi kataloglari",
   "k10Yoki5": "10 yoki -5",
-  "PosWarehousePage": {
-    "zararAkti": "Zarar akti",
-    "qaytarish": "Qaytarish",
-    "omborKochirish": "Ombor ko'chirish",
-    "bolimgaBerish": "Bo'limga berish"
-  },
-  "InventarizatsiyaPanel": {
-    "tsx": {
-      "bekor": "Bekor",
-      "jarayonda": "Jarayonda"
-    }
-  },
-  "LotsTab": {
-    "tsx": {
-      "tasdiqlangan": "Tasdiqlangan"
-    }
-  },
-  "warehouse-": {
-    "nomi": "Nomi",
-    "untitled": "Nomi",
-    "omborlarZonalarBinlarVaKochirishlarni": "Omborlar, zonalar, binlar va ko'chirishlarni boshqarish"
-  },
-  "WarehouseDailyView": {
-    "tasdiqlangan": "Tasdiqlangan",
-    "tayyorlanmoqda": "Tayyorlanmoqda",
-    "kutilmoqda": "Kutilmoqda"
-  },
-  "WarehouseIntegrations": {
-    "omborQiymatiVaBuxgalteriya": "Ombor qiymati va buxgalteriya",
-    "xaridBuyurtmalariVaQaytaBuyurtma": "Xarid buyurtmalari va qayta buyurtma",
-    "buyurtmalarUchunMateriallarBoshqaruvi": "Buyurtmalar uchun materiallar boshqaruvi",
-    "ppIshlabChiqarish": "PP - Ishlab Chiqarish",
-    "untitled": "Оценка склада и бухгалтерия",
-    "fi": "FI - Финансы",
-    "mm": "MM - Закупки",
-    "pp": "PP - Производство",
-    "ppMmFi": "Связь с модулями PP, MM и FI",
-    "ppMmVaFiModullari": "PP, MM va FI modullari bilan bog'lanish"
-  },
-  "WarehouseKirimWizard": {
-    "tasdiqlash": "Tasdiqlash",
-    "materiallar": "Materiallar",
-    "mroOmboriTexnikMateriallarKirim": "MRO Ombori — Texnik Materiallar Kirim",
-    "yarimTayyorLiniyadanQabul": "Yarim Tayyor — Liniyadan Qabul",
-    "tayyorMahsulotIshlabChiqarishdanQabul": "Tayyor Mahsulot — Ishlab Chiqarishdan Qabul",
-    "koribChiqish": "Ko'rib chiqish",
-    "asosiyMalumotlar": "Asosiy ma'lumotlar",
-    "tashqiKirimQolda": "Tashqi Kirim (Qo'lda)",
-    "xojalikOmboriMateriallarKirim": "Xo'jalik Ombori — Materiallar Kirim"
-  },
-  "WarehouseMaterialKits": {
-    "tayyorlanmoqda": "Tayyorlanmoqda",
-    "kutilmoqda": "Kutilmoqda"
-  },
-  "WarehouseRental": {
-    "yopilgan": "Yopilgan",
-    "tolangan": "To'langan"
-  },
-  "WarehouseReports": {
-    "tsx": {
-      "birlik": "Birlik",
-      "joriyMiqdor": "Joriy miqdor"
-    }
-  },
-  "WarehouseReportsAll": {
-    "chopEtilganBarkodlarTarixi": "Chop etilgan barkodlar tarixi",
-    "harXodimningMaterialBalansi": "Har xodimning material balansi",
-    "xodimBalansi": "Xodim Balansi",
-    "harakatTasdiqlashAudit": "Harakat tasdiqlash audit",
-    "tasdiqlashAuditi": "Tasdiqlash Auditi",
-    "qcHisobot": "QC Hisobot",
-    "3TomonlamaTaqqoslash": "3-Tomonlama Taqqoslash",
-    "glHisobotAudit": "GL Hisobot (Audit)",
-    "zararHarakatlari": "Zarar Harakatlari",
-    "partiyalarQarilikTahlili": "Partiyalar qarilik tahlili",
-    "materiallarABCGuruhlari": "Materiallar A/B/C guruhlari (Pareto)",
-    "muddatOgohlantirish": "Muddat Ogohlantirish",
-    "minimalQoldiqdanPastMateriallar": "Minimal qoldiqdan past materiallar",
-    "taminotchilarReytingKorsatkichi": "Ta'minotchilar reyting ko'rsatkichi",
-    "taminotchiReytingi": "Ta'minotchi Reytingi",
-    "ichkiSorovlarBajarilishi": "Ichki so'rovlar bajarilishi",
-    "sorovBajarish": "So'rov Bajarish",
-    "damageTuriZararlarRoyxati": "DAMAGE turi - zararlar ro'yxati",
-    "barchaKirimChiqimKochirish": "Barcha kirim/chiqim/ko'chirish"
-  },
-  "WarehouseStatsPanel": {
-    "tsx": {
-      "qarzlar": "Qarzlar"
-    }
-  },
-  "": {
-    "untitled": "Контроль сроков",
-    "abcXyz": "ABC/XYZ анализ"
-  },
-  "translations": {
-    "untitled": "История Запросов Резервирования",
-    "ai": "AI Рекомендация",
-    "aiFefo": "Резервирование материалов на основе AI с FEFO оптимизацией",
-    "zaxiraSorovlariTarixi": "Zaxira So'rovlari Tarixi",
-    "aiZaxiraSorovi": "AI Zaxira So'rovi",
-    "fefoOptimizatsiyasiBilanAiAsosiy": "FEFO optimizatsiyasi bilan AI-asosiy material rezervatsiyasi"
-  },
-  "WarehouseDashboard": {
-    "ichkiSorov": "Ichki So'rov",
-    "kochirish": "Ko'chirish"
-  },
-  "WMSExtended": {
-    "ichkiSorovlar": "Ichki So'rovlar",
-    "kochirish": "Ko'chirish"
-  },
-  "PosWarehouseDetail": {
-    "nomalum": "Noma'lum"
-  },
-  "RollManagementPage": {
-    "boshlangichOgirlikKg": "Boshlang'ich og'irlik (kg) *"
-  }
+  "hub.openWithLayers": "Открыть ({n} приоритетных слоёв)",
+  "hub.newReceipt": "Новая приёмка",
+  "hub.posSync": "POS Sync",
+  "Asosiy xom ashyo ombori — ishlab chiqarish uchun barcha materiallar shu yerda saqlanadi. Yetkazib beruvchilardan keladigan materiallar birinchi bu omborga qabul qilinadi.": "Главный склад сырья — здесь хранятся все материалы для производства. Материалы от поставщиков сначала поступают на этот склад.",
+  "Rulon materiallari ombori — qog'oz, plyonka, vinillar rulonlarda saqlanadi. Har bir rulonning kengligi, uzunligi va og'irligi kuzatiladi.": "Склад рулонных материалов — бумага, плёнка, винил хранятся в рулонах. Для каждого рулона отслеживаются ширина, длина и вес.",
+  "Tayyor mahsulot ombori — ishlab chiqarish tugagan buyumlar jo'natishga tayyor holda saqlanadi. Buyurtmachi kutayotgan mahsulotlar shu yerda.": "Склад готовой продукции — изделия после производства хранятся готовыми к отгрузке. Здесь продукция, ожидающая клиента.",
+  "Yarim tayyor mahsulot ombori — ishlab chiqarish jarayonidagi materiallar. Bir sexdan ikkinchisiga o'tayotgan yarim tayyor buyumlar shu yerda.": "Склад полуфабрикатов — материалы в процессе производства. Здесь полуфабрикаты, перемещающиеся из цеха в цех.",
+  "Brak ombori — yaroqsiz va nuqsonli materiallar ajratib saqlanadi. Utilizatsiya yoki qayta ishlash uchun kutayotgan buyumlar.": "Склад брака — негодные и дефектные материалы хранятся отдельно. Изделия, ожидающие утилизации или переработки.",
+  "Karantin ombori — sifat nazorati tekshiruvidan o'tayotgan materiallar vaqtincha shu yerda saqlanadi. QC qaroriga qarab chiqariladi yoki brakka o'tkaziladi.": "Карантинный склад — материалы на проверке QC временно хранятся здесь. По решению QC выпускаются или передаются в брак.",
+  "Asbob-uskuna ombori — ishlab chiqarish uskunalari, ehtiyot qismlar, o'lchov asboblari. Har bir asbobning holati va kalibratsiya muddati kuzatiladi.": "Склад инструментов и оборудования — производственное оборудование, запчасти, измерительные приборы. Отслеживается состояние и срок калибровки каждого инструмента.",
+  "Xo'jalik materiallari ombori — tozalash vositalari, ofis mollari, yordamchi materiallar. Kundalik sarflanadigan narsalar boshqariladi.": "Склад хозтоваров — чистящие средства, офисные принадлежности, вспомогательные материалы. Управление ежедневно расходуемыми товарами.",
+  "MRO (Maintenance, Repair, Operations) ombori — uskunalarni ta'mirlash va texnik xizmat ko'rsatish uchun ehtiyot qismlar va materiallar.": "Склад MRO (Обслуживание, Ремонт, Эксплуатация) — запчасти и материалы для ремонта и техобслуживания оборудования.",
+  "Umumiy ombor — barcha turdagi materiallar saqlanadi.": "Общий склад — хранятся все виды материалов.",
+  "Min. darajadan past": "Ниже мин. уровня",
+  "mm.purchaseOrdersTitle": "Заказы на закупку",
+  "mm.purchaseOrdersSubtitle": "Управление заказами на закупку",
+  "mm.poListTitle": "Список заказов на закупку",
+  "mm.poNumber": "№ ЗнЗ",
+  "mm.vendor": "Поставщик",
+  "mm.date": "Дата",
+  "mm.amount": "Сумма",
+  "mm.status": "Статус",
+  "mm.actions": "Действия",
+  "mm.statusDraft": "Черновик",
+  "mm.statusSent": "Отправлено",
+  "mm.statusConfirmed": "Подтверждено",
+  "mm.statusReceived": "Принято",
+  "mm.statusCancelled": "Отменено",
+  "mm.toastCreated": "Заказ на закупку создан",
+  "mm.toastDeleted": "Заказ на закупку удалён",
+  "mm.errorLoadTitle": "Заказы не загружены",
+  "mm.errorLoadMessage": "Ошибка соединения с сервером.",
+  "mm.emptyTitle": "Заказы не найдены",
+  "mm.emptyDescription": "Создайте новый заказ на закупку.",
+  "mm.viewTitle": "Детали заказа",
+  "mm.orderDate": "Дата заказа",
+  "mm.deliveryDate": "Дата доставки",
+  "mm.totalAmount": "Общая сумма",
+  "mm.orderItems": "Элементы заказа",
+  "mm.rawMaterial": "Сырьё",
+  "mm.quantity": "Кол-во",
+  "mm.unit": "Ед.",
+  "mm.price": "Цена",
+  "mm.total": "Итого",
+  "mm.confirmDeleteTitle": "Удалить заказ на закупку",
+  "mm.confirmDeleteDesc": "Подтверждаете удаление этого заказа? Это действие нельзя отменить."
 }

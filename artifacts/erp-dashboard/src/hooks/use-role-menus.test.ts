@@ -87,18 +87,26 @@ describe('useRoleMenus', () => {
   });
 
   it('uses DB-configured menus when provided', async () => {
-    apiRequestMock.mockResolvedValueOnce({ id: '5', role: 'finance' });
-    apiRequestMock.mockResolvedValueOnce([
-      { id: 'm1', menuPath: 'reports', role: 'finance' },
-    ]);
+    // The hook fires `/api/auth/me` once, then `/api/europrint-control/menus`
+    // potentially twice (initial role='viewer' default, then again once the
+    // user resolves to 'finance'). Use a route-aware mock so every menus call
+    // returns the seeded menu list regardless of how many times it fires.
+    apiRequestMock.mockImplementation(async (_method: string, url: string) => {
+      if (url === '/api/auth/me') return { id: '5', role: 'finance' };
+      if (url === '/api/europrint-control/menus') {
+        return [{ id: 'm1', menuPath: 'reports', role: 'finance' }];
+      }
+      return undefined;
+    });
     const { result } = renderHook(() => useRoleMenus(), {
       wrapper: makeWrapper(),
     });
-    await waitFor(() => expect(result.current.allowedMenus).toBeDefined());
     await waitFor(() =>
       expect(result.current.allowedMenus?.length ?? 0).toBeGreaterThan(0),
     );
-    expect(result.current.isMenuAllowed('reports/balance')).toBe(true);
+    await waitFor(() =>
+      expect(result.current.isMenuAllowed('reports/balance')).toBe(true),
+    );
   });
 
   it('defaults role to viewer when user has none', async () => {

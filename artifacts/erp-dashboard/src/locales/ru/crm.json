@@ -15,9 +15,6 @@
   "leadUpdated": "Лид обновлён",
   "leadsDeleted": "Лиды удалены",
   "contacts": "Контакты",
-  "contact": {
-    "email": "Электронная почта"
-  },
   "addContact": "Добавить контакт",
   "searchContact": "Поиск контакта...",
   "contactsNotFound": "Контакты не найдены",
@@ -421,59 +418,6 @@
   "yopishSanasi": "Дата закрытия",
   "companyDataUpdated": "Данные компании обновлены",
   "dataUpdateError": "Ошибка обновления данных",
-  "activity": {
-    "email": "Электронная почта"
-  },
-  "activityType": {
-    "email": "Электронная почта"
-  },
   "yoQotildiLost": "Проиграно (Lost)",
-  "yutildiWon": "Выиграно (Won)",
-  "crm-": {
-    "robotlar": "Роботы",
-    "fakturalar": "Счета",
-    "takliflar": "Предложения",
-    "kompaniyalar": "Компании",
-    "kontaktlar": "Контакты",
-    "bitimlar": "Сделки",
-    "lidlar": "Лиды",
-    "bekorQilindi": "Отменено",
-    "yangi": "Новый",
-    "yetkazish": "Доставка",
-    "yetkazishKutilmoqda": "Ожидание доставки",
-    "buyurtma": "Заказ",
-    "emailYuborish": "Отправить email",
-    "vazifaYaratish": "Создать задачу",
-    "xabarYuborish": "Отправить сообщение",
-    "yaratilganda": "При создании",
-    "tolandi": "Оплачено",
-    "qismanTolandi": "Частично оплачено",
-    "korildi": "Просмотрено",
-    "tolovKutilmoqda": "Ожидание оплаты",
-    "yoqotildi": "Проиграно",
-    "maydonniOzgartirish": "Изменить поле",
-    "bosqichniOzgartirish": "Изменить этап",
-    "vaqtOtganda": "По времени",
-    "maydonOzgarganda": "При изменении поля",
-    "bosqichOzgarganda": "При изменении этапа"
-  },
-  "RobotsView": {
-    "telegramYuborish": "Отправить в Telegram",
-    "emailYuborish": "Отправить email",
-    "vazifaYaratish": "Создать задачу",
-    "xabarnomaYuborish": "Отправить уведомление",
-    "yaratilganda": "При создании",
-    "bosqichniOzgartirish": "Изменить этап",
-    "vaqtOtganda": "По времени",
-    "maydonOzgarganda": "При изменении поля",
-    "bosqichOzgarganda": "При изменении этапа"
-  },
-  "EntityCard": {
-    "orta": "→ Средний",
-    "qongiroq": "Звонок"
-  },
-  "ExtendedAIPanelSections": {
-    "faoliyatsizBitimlar3Kun": "Неактивные сделки (3+ дней)",
-    "slaBuzilishlar": "Нарушения SLA"
-  }
+  "yutildiWon": "Выиграно (Won)"
 }

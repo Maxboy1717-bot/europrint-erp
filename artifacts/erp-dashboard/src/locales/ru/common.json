@@ -50,9 +50,6 @@
   "yesterday": "Вчера",
   "thisWeek": "Эта неделя",
   "thisMonth": "Этот месяц",
-  "language": {
-    "ru": "Русский"
-  },
   "create": "Создать",
   "update": "Обновить",
   "remove": "Удалить",
@@ -7012,28 +7009,11 @@
   "Bekor qilish": "Отмена",
   "Boshqa sanani tanlang yoki yangi komplekt yarating": "Выберите другую дату или создайте новый комплект",
   "Bosqich (ishlab chiqarish operatsiyasi)": "Этап (производственная операция)",
-  "Bosqich tanlang": {
-    "": {
-      "": {
-        "": "Выберите этап..."
-      }
-    }
-  },
   "Brak hisoboti": "Отчёт о браке",
   "Brak qayd etildi": "Брак зарегистрирован",
   "Brak sababi": "Причина брака",
   "Brak soni": "Количество брака",
-  "Bu baholash MAJBURIY": {
-    " Tugatmasdan chiqib bo": "Эта оценка ОБЯЗАТЕЛЬНА. Нельзя выйти без завершения"
-  },
   "Bu kunga buyurtmalar yo": "На этот день нет заказов",
-  "Bu smena muammolari": {
-    "": {
-      "": {
-        "": "Проблемы этой смены..."
-      }
-    }
-  },
   "Bugun uchun vazifalar yo": "На сегодня задач нет",
   "Buyurtma uchun material to": "Материал для заказа",
   "Buyurtma va Mahsulot": "Заказ va Продукт",
@@ -7049,13 +7029,6 @@
   "Inline sifat nazorati": "Inline контроль качества",
   "Inline sifat nazorati!": "Inline контроль качества!",
   "Internet aloqasi yo": "Нет интернет-соединения",
-  "Internet tiklandi — sinxronlash": {
-    "": {
-      "": {
-        "": "Интернет восстановлен — синхронизация..."
-      }
-    }
-  },
   "Ish jarayoni": "Рабочий процесс",
   "Ish vaqti": "Рабочее время",
   "Ishlab chiqarish boshlandi": "Производство началось",
@@ -7082,31 +7055,10 @@
   "Material tayyor": "Материал готов",
   "Material to": "Материал",
   "Materiallar ro": "Список материалов",
-  "Materiallar yuklanmoqda": {
-    "": {
-      "": {
-        "": "Материалы загружаются..."
-      }
-    }
-  },
   "Materiallarni skanerlash": "Сканирование материалов",
   "Miqdor (dona)": "Количество (dona)",
   "Muammolar (ixtiyoriy)": "Проблемы (опционально)",
-  "Muammoni tasvirlab bering": {
-    "": {
-      "": {
-        "": "Опишите проблему..."
-      }
-    }
-  },
   "Namuna hajmi": "Размер выборки",
-  "Nima uchun ishlatilmagan": {
-    "": {
-      "": {
-        "": "Почему не использовалось..."
-      }
-    }
-  },
   "Noto": "Неверно",
   "O": "O",
   "Ombor Kunlik Rejasi": "Дневной план склада",
@@ -7120,33 +7072,14 @@
   "Qo": "Добавить",
   "Raqamli imzo (majburiy)": "Цифровая подпись (обязательно)",
   "Raqamli imzo majburiy": "Цифровая подпись обязательна",
-  "Reja yuklanmoqda": {
-    "": {
-      "": {
-        "": "План загружается..."
-      }
-    }
-  },
   "SOS xabari yuborildi!": "Сообщение SOS отправлено!",
   "SOS — Shoshilinch xabar": "SOS — Срочное сообщение",
   "SOZLASH TUGADI - BOSHLASH": "НАСТРОЙКА ЗАВЕРШЕНА - НАЧАТЬ",
   "SOZLASHNI BOSHLASH": "SOZLASHNI Начало",
   "Sabab / izoh (ixtiyoriy)": "Причина / комментарий (опционально)",
-  "Sabab tanlang": {
-    "": {
-      "": {
-        "": "Выберите причину..."
-      }
-    }
-  },
   "Sabablar yuklanmadi": "Причины не загружены",
   "Server bilan bog": "Связь с сервером",
   "Sessiya ma": "Данные сессии",
-  "Sessiya muddati tugadi": {
-    " Iltimos qayta kiring": {
-      "": "Срок сессии истёк. Пожалуйста, войдите снова."
-    }
-  },
   "Sessiya muddati tugagan — iltimos qayta kiring": "Срок сессии истёк — пожалуйста, войдите снова",
   "Sessiya muddati tugagan, qayta kiring": "Срок сессии истёк, войдите снова",
   "Sessiya yakunlandi": "Сессия завершена",
@@ -7179,13 +7112,6 @@
   "Xavfsizlik": "Безопасность",
   "Xush kelibsiz!": "Добро пожаловать!",
   "Yangi to": "Новый to",
-  "Yaxshilash takliflari": {
-    "": {
-      "": {
-        "": "Предложения по улучшению..."
-      }
-    }
-  },
   "Yopish va yangi buyurtmaga o": "Закрыть и перейти к новому заказу",
   "Yuborishda xatolik": "Ошибка отправки",
   "absent": "Отсутствует",
@@ -7233,18 +7159,6 @@
   "btnApprove": "Одобрить",
   "btnReject": "Отклонить",
   "btnSubmit": "Отправить",
-  "canteen": {
-    "consumption": "Потребление в столовой",
-    "costPerMeal": "Стоимость за приём пищи",
-    "costToday": "Расход сегодня",
-    "description": "Описание столовой",
-    "employeesServed": "Обслужено сотрудников",
-    "mealsToday": "Приёмов пищи сегодня",
-    "noConsumption": "Нет потребления",
-    "noMeals": "Нет приёмов пищи",
-    "title": "Столовая",
-    "topMeals": "Топ блюд"
-  },
   "capacityLoadComparison": "Сравнение загрузки мощности",
   "cardHolder": "Держатель карты",
   "cardNumber": "Номер карты",
@@ -7255,16 +7169,6 @@
   "citizenship": "Гражданство",
   "ckpAndAttestation": "CKP и аттестация",
   "ckpCode": "Код CKP",
-  "cleaning": {
-    "description": "Описание уборки",
-    "done": "Уборка выполнена",
-    "empty": "Нет уборок",
-    "list": "Список уборок",
-    "overdue": "Просроченные уборки",
-    "title": "Уборка",
-    "today": "Сегодня",
-    "total": "Всего уборок"
-  },
   "col_avg_balance": "Средний баланс",
   "col_category": "Категория",
   "col_current": "Текущий",
@@ -7330,16 +7234,6 @@
   "experience": "Опыт",
   "expired": "Истёк",
   "expiryDate": "Дата истечения",
-  "facility": {
-    "active": "Активно",
-    "description": "Описание объекта",
-    "empty": "Нет объектов",
-    "list": "Список объектов",
-    "title": "Объект",
-    "total": "Всего",
-    "totalArea": "Общая площадь",
-    "totalItems": "Всего позиций"
-  },
   "familyInfo": "Информация о семье",
   "female": "Женский",
   "fine": "Штраф",
@@ -7429,16 +7323,6 @@
   "payment": "Платёж",
   "pendingLabel": "В ожидании",
   "personalInfo": "Личные данные",
-  "pm": {
-    "completed": "Завершено",
-    "description": "Описание ПО",
-    "dueSoon": "Скоро срок",
-    "empty": "Нет записей",
-    "overdue": "Просрочено",
-    "schedules": "Графики",
-    "title": "Профилактическое обслуживание",
-    "total": "Всего"
-  },
   "posMonitor": "POS Монитор",
   "positionChanges": "Изменения должностей",
   "predictiveMaintenance": "Прогнозное обслуживание",
@@ -7488,23 +7372,6 @@
   "setupTimeLabel": "Время настройки",
   "shift": "Смена",
   "shiftName": "Название смены",
-  "spareParts": {
-    "category": "Категория",
-    "code": "Код",
-    "description": "Описание",
-    "empty": "Нет запчастей",
-    "list": "Список запчастей",
-    "location": "Расположение",
-    "lowStock": "Низкий запас",
-    "min": "Минимум",
-    "name": "Название",
-    "qty": "Кол-во",
-    "status": "Статус",
-    "title": "Запчасти",
-    "total": "Всего",
-    "totalValue": "Общая стоимость",
-    "value": "Стоимость"
-  },
   "staffCount": "Количество персонала",
   "start": "Начало",
   "startTime": "Время начала",
@@ -7529,24 +7396,6 @@
   "unpaid": "Не оплачено",
   "urgentPriority": "Срочный приоритет",
   "usd": "USD",
-  "utility": {
-    "consumption": "Потребление",
-    "cost": "Стоимость",
-    "current": "Текущее",
-    "date": "Дата",
-    "description": "Описание",
-    "electricity": "Электричество",
-    "empty": "Нет данных",
-    "facility": "Объект",
-    "gas": "Газ",
-    "meter": "Счётчик",
-    "previous": "Предыдущее",
-    "readings": "Показания",
-    "title": "Коммунальные услуги",
-    "totalCost": "Общая стоимость",
-    "type": "Тип",
-    "water": "Вода"
-  },
   "utilizationTarget": "Цель утилизации",
   "uzs": "UZS",
   "viewPhoto": "Посмотреть фото",
@@ -7573,35 +7422,12 @@
   "forecastDesc": "Описание прогноза",
   "ci95Lower": "CI 95% нижний",
   "hitlWarning": "Внимание HITL",
-  "defectMgmt": {
-    "description": "Описание управления дефектами",
-    "scrap": "Брак",
-    "title": "Управление дефектами",
-    "rootCause": "Корневая причина",
-    "empty": "Нет дефектов",
-    "total": "Всего",
-    "list": "Список дефектов",
-    "rework": "Переделка",
-    "loss": "Потери"
-  },
   "modelEnsemble": "Ансамбль моделей",
   "totalArea": "Общая площадь",
   "rfmScatterTitle": "RFM Разброс",
   "cohortNoData": "Нет данных когорты",
   "areaLabel": "Площадь",
   "frequencyLabel": "Частота",
-  "certs": {
-    "empty": "Нет сертификатов",
-    "list": "Список сертификатов",
-    "expired": "Истёкшие сертификаты",
-    "description": "Описание",
-    "parameters": "Параметры",
-    "total": "Всего",
-    "expiringSoon": "Скоро истекают",
-    "title": "Сертификаты",
-    "daysLeft": "Дней осталось",
-    "valid": "Действителен"
-  },
   "revenueBasedBadge": "Бэйдж по выручке",
   "avgCycleDays": "Средний цикл (дней)",
   "calculating": "Расчёт",
@@ -8522,741 +8348,5 @@
   "aSmena07001500": "Смена A (07:00–15:00)",
   "soatbayStavkaUzs": "Часовая ставка (UZS)",
   "jpegPng": "JPEG / PNG",
-  "untitled2": "производства",
-  "ApprovalWorkflowPage": {
-    "kutilmoqda": "Ожидает"
-  },
-  "CandidateReport": {
-    "samarasiz": "Неэффективен"
-  },
-  "CoordinationPageHelpers": {
-    "tsx": {
-      "bajarilmoqda": "Выполняется",
-      "muddatiOtdi": "Просрочено",
-      "oqildi": "Прочитано"
-    }
-  },
-  "CRMSettings": {
-    "maxsusMaydonlar": "Дополнительные поля",
-    "integratsiyalar": "Интеграции",
-    "tovarlarVaOmborlar": "Товары и склады",
-    "kompaniyalar": "Компании",
-    "kontaktlar": "Контакты",
-    "bitimlar": "Сделки",
-    "lidlar": "Лиды",
-    "sana": "Дата",
-    "kopTanlov": "Множественный выбор"
-  },
-  "DesignExtended": {
-    "dizaynAssetVaFayllarKutubxonasi": "Библиотека дизайн-ассетов и файлов",
-    "dizaynXarajatKalkulyatori": "Калькулятор затрат на дизайн",
-    "bosmaAsboblarVaPlastinalarInventari": "Инвентарь печатных инструментов и пластин",
-    "asboblar": "Инструменты",
-    "qoliplar": "Формы",
-    "taqqoslash": "Сравнение",
-    "korporativBrendQoidalariVaRanglar": "Корпоративные правила бренда и цвета",
-    "qoshimcha": "Дополнительно",
-    "tayyorQoliplarVaStandartOlchamlar": "Готовые формы и стандартные размеры"
-  },
-  "AttendanceTab": {
-    "bekorQilingan": "Отменено",
-    "tasdiqlangan": "Подтверждено",
-    "kutilmoqda": "Ожидает",
-    "tatil": "Отпуск"
-  },
-  "CorporateInventoryTab": {
-    "yangi": "Новый",
-    "jihozlar": "Оборудование",
-    "tsx": {
-      "inventarQoshildi": "Инвентарь добавлен"
-    },
-    "ortacha": "Средний"
-  },
-  "DocumentsTab": {
-    "tibbiyHujjatlar": "Медицинские документы",
-    "buyruqlar": "Приказы",
-    "shaxsiyHujjatlar": "Личные документы",
-    "shartnomalar": "Договоры",
-    "bekorQilindi": "Отменено",
-    "kutilmoqda": "Ожидает",
-    "oqitishVaSertifikatlar": "Обучение и сертификаты",
-    "talimHujjatlari": "Документы об образовании"
-  },
-  "FinanceTab": {
-    "tasdiqlangan": "Подтверждено",
-    "kutilmoqda": "Ожидает",
-    "tolangan": "Оплачено",
-    "oylikXarajatOrt": "Месячный расход (средний)"
-  },
-  "OffboardingTab": {
-    "kutilmoqda": "Ожидает",
-    "bekorQilindi": "Отменено",
-    "faol": "Активный",
-    "talabYoq": "Нет запроса",
-    "yoqolgan": "Утеряно"
-  },
-  "RemainingTabs": {
-    "ochiq": "Открыто",
-    "orta": "Средний"
-  },
-  "EmployeeDailyKPIPanel": {
-    "vazifalar": "Задачи"
-  },
-  "EmployeeTrackingReport": {
-    "xodimlarKuzatuviHisoboti": "Отчёт о мониторинге сотрудников",
-    "untitled": "Отчёт по Отслеживанию Сотрудников"
-  },
-  "EventsCalendarGrid": {
-    "tsx": {
-      "treninglar": "Тренинги",
-      "kelgusiTadbirlar": "Предстоящие события",
-      "jamiTadbirlar": "Всего событий",
-      "yigilishlar": "Совещания"
-    }
-  },
-  "EventsCalendar": {
-    "trening": "Тренинг",
-    "yigilish": "Совещание"
-  },
-  "FinanceExtended": {
-    "xarajatMarkazlari": "Центры затрат",
-    "tolovlar": "Платежи"
-  },
-  "GoalsKPI": {
-    "bekorQilindi": "Отменено",
-    "faol": "Активный",
-    "xodim": "Сотрудник",
-    "lavozim": "Должность",
-    "tugatishKurslarniYakunlash": "Завершить (окончание курсов)",
-    "orta": "Средний",
-    "bolim": "Отдел",
-    "oquvTalimOlish": "Учёба (получение образования)"
-  },
-  "InspectionPage": {
-    "sanitarXonalar": "Санитарные помещения"
-  },
-  "IoTExtended": {
-    "ogohlantirishlar": "Предупреждения"
-  },
-  "KaizenPage": {
-    "amalgaOshirilmoqda": "Реализуется",
-    "koribChiqilmoqda": "На рассмотрении"
-  },
-  "KnowledgeBase": {
-    "tartibQoidalar": "Правила и нормы",
-    "siyosatlar": "Политики",
-    "xizmatlar": "Услуги",
-    "mahsulotlar": "Продукты"
-  },
-  "": {
-    "microLearning": "Micro-learning",
-    "testlar": "Тесты",
-    "mesIshlabChiqarishAlerti": "Алерт производства MES",
-    "qcSifatAlertiYaratish": "Создать алерт качества QC",
-    "xavfsizlikAlerrtiYaratish": "Создать алерт безопасности",
-    "ruxsatsizKirish": "Несанкционированный доступ",
-    "jMuloqot": "J — Общение",
-    "iEmpatiya": "I — Эмпатия",
-    "hTaktika": "H — Тактика",
-    "gBardosh": "G — Оборона",
-    "eEnergiya": "E — Энергия",
-    "dIshonch": "D — Уверенность",
-    "cNazorat": "C — Контроль",
-    "bStrategiya": "B — Стратегия",
-    "aDiqqat": "A — Внимание",
-    "oquvByudjet": "Учебный бюджет",
-    "orta": "Средний",
-    "boshlangich": "Начальный",
-    "uchrashuvimizHaqidaEslatibOtmoqchiman": "Хотел бы напомнить о нашей встрече...",
-    "sizgaMaxsusTaklifimizBor": "У нас есть для вас специальное предложение...",
-    "oldingiSuhbatimizBoyichaXabarBerishni": "Хотел сообщить по поводу нашего предыдущего разговора...",
-    "qongiroq": "Звонок",
-    "yoqotildi": "Проиграно",
-    "kommunikatsiyaAloqaOrnatish": "Коммуникация, установление связей",
-    "fQatiylik": "F — Решительность",
-    "ozigaVaQarorlarigaIshonch": "Уверенность в себе и своих решениях",
-    "emotsiyalarniBoshqarishSakinBolish": "Управление эмоциями, сохранение спокойствия",
-    "uzoqniKorishRejalashtirish": "Дальновидность, планирование",
-    "tafsilotlargaEtiborZiyraklik": "Внимание к деталям, бдительность",
-    "galayonliOlomon": "Беспорядки в толпе",
-    "suyuqlikTokilishi": "Разлив жидкости",
-    "materialNotogriJoyda": "Материал не на своём месте",
-    "yonginTutunAniqlash": "Обнаружение пожара / дыма",
-    "ppeYoqligiShlemKozoynakQolqop": "Отсутствие СИЗ (каска, очки, перчатки)"
-  },
-  "MarketingExtended": {
-    "raqobatchilar": "Конкуренты"
-  },
-  "MESExtended": {
-    "ishlabChiqarishVazifalari": "Производственные задачи",
-    "smenaOtkazish": "Передача смены",
-    "toxtashSabablar": "Причины остановки"
-  },
-  "MESHomeDashboard": {
-    "kutilmoqda": "Ожидает",
-    "ishlamoqda": "Работает",
-    "toxtadi": "Остановлено",
-    "toxtatildi": "Остановлено"
-  },
-  "MESWorkCenters": {
-    "kutilmoqda": "Ожидает",
-    "ishlamoqda": "Работает",
-    "toxtadi": "Остановлено",
-    "toxtatildi": "Остановлено"
-  },
-  "MMExtended": {
-    "haydovchilar": "Водители",
-    "marshrutRejasi": "План маршрута",
-    "kreditorQarzlar": "Кредиторская задолженность",
-    "yoqilgiNazorat": "Контроль топлива"
-  },
-  "MROExtended": {
-    "xarajatNazorati": "Контроль расходов",
-    "kommunalXizmatlar": "Коммунальные услуги",
-    "ehtiyotQismlar": "Запчасти"
-  },
-  "PapkaOrders": {
-    "bekorQilindi": "Отменено",
-    "ishlabChiqarish": "Производство",
-    "rejalashtirish": "Планирование",
-    "yangi": "Новый",
-    "untitled": "Заказы Папок"
-  },
-  "POSInventoryPage": {
-    "qaytarish": "Вернуть",
-    "sotuv": "Продажа"
-  },
-  "Positions": {
-    "daromadBitimlarLeadKonversiyasiNps": "Доход, сделки, конверсия лидов, NPS",
-    "sotuvMenejeri": "Менеджер по продажам",
-    "ishlabChiqarishNuqsonlarIshVaqti": "Производство, брак, рабочее время, безопасность",
-    "davomatSifatVazifalarLmsJamoa": "Посещаемость, качество, задачи, LMS, командная работа",
-    "standartXodim": "Стандартный сотрудник",
-    "mashinOperatori": "Оператор машины"
-  },
-  "ProductivityInterviewDialog": {
-    "yakuniyXulosa": "Итоговый вывод",
-    "asosanModdiyManfaatUchunIshlaydi": "Работает в основном ради материальной выгоды. Размер зарплаты на первом месте.",
-    "natijaVaMukofotUchunIshlaydi": "Работает ради результата и вознаграждения. Возможности роста, карьера и профессиональное развитие.",
-    "ishigaIshonadiMissiyagaMosHarakat": "Верит в свою работу, действует в соответствии с миссией. Внутренние ценности и идейная мотивация.",
-    "etiqod": "Убеждения",
-    "masuliyatVaMajburiyatAsosidaIshlaydi": "Работает на основе ответственности и обязательств. Чувство долга перед обществом и компанией."
-  },
-  "QCDashboardHelpers": {
-    "tsx": {
-      "faol": "Активный",
-      "etiborKerak": "Требуется внимание"
-    }
-  },
-  "QCDashboard": {
-    "kutilmoqda": "Ожидает",
-    "muvaffaqiyatsiz": "Не прошёл",
-    "shartliOtdi": "Условно прошёл",
-    "otdi": "Прошёл"
-  },
-  "QCFinalInspection": {
-    "bekorQilingan": "Отменено",
-    "rejalashtirishUchunTayyor": "Готово к планированию",
-    "tasdiqlangan": "Подтверждено",
-    "qcKutilmoqda": "Ожидает QC",
-    "texnikKutilmoqda": "Ожидает технолога",
-    "dizaynKutilmoqda": "Ожидает дизайнера"
-  },
-  "QCModule": {
-    "reklamatsiyalar": "Рекламации",
-    "normalar": "Нормы",
-    "fizikXususiyatlar": "Физические свойства",
-    "kimyoviyKorsatkichlar": "Химические показатели"
-  },
-  "QuestionnaireTemplates": {
-    "mijozlarBilanIshlashMahsulotBilimi": "Работа с клиентами, знание продукта, опыт продаж",
-    "smmContentYaratishKampaniyaBoshqarish": "SMM, создание контента, управление кампаниями",
-    "texnikKonikmalarTajribaLoyihalar": "Технические навыки, опыт, проекты",
-    "mehmonlarniQabulQilishTelefonQongiroqlari": "Приём гостей, телефонные звонки, разрешение ситуаций"
-  },
-  "RaciCrisisPage": {
-    "bekor": "Отмена",
-    "jarayonda": "В процессе",
-    "ochiq": "Открыто"
-  },
-  "RecruiterKPIPage": {
-    "gazetalarMatbuot": "Газеты / Пресса",
-    "referralXodimTavsiyasi": "Реферал (рекомендация сотрудника)"
-  },
-  "ReferralPage": {
-    "kutilmoqda": "Ожидает"
-  },
-  "ReportsHub": {
-    "155": "Управление 155+ автоматизированными отчётами",
-    "nomi": "Название",
-    "hisobotlarMarkazi": "Центр отчётов",
-    "untitled": "Название"
-  },
-  "SaaSExtended": {
-    "xatolarJurnali": "Журнал ошибок",
-    "xavfsizlik": "Безопасность",
-    "crmSavdo": "CRM + Продажи",
-    "tsx": {
-      "yangiTenantMuvaffaqiyatliQoshildi": "Новый tenant успешно добавлен"
-    },
-    "mroXojalik": "MRO Хозяйство",
-    "lmsTalim": "LMS Обучение",
-    "taminotMm": "Снабжение (MM)"
-  },
-  "SDCustomers": {
-    "nofaol": "Неактивный",
-    "yangi": "Новый",
-    "qoraRoyxat": "Чёрный список"
-  },
-  "SDExtended": {
-    "avansNazorat": "Контроль авансов",
-    "menejerPaneli": "Панель менеджера"
-  },
-  "SDSalesQuotes": {
-    "bossiz": "Без босса",
-    "4RangToliqCmyk": "4 цвета (Полный CMYK)",
-    "cFlute4mmOrta": "C-flute 4mm (Средний)"
-  },
-  "SecurityDashboardCards": {
-    "tsx": {
-      "ogohlantirish": "Предупреждение",
-      "ochiqHodisalar": "Открытые инциденты",
-      "tashrifchilar": "Посетители"
-    }
-  },
-  "SecurityExtended": {
-    "xavfsizlikReytingi": "Рейтинг безопасности",
-    "xavfliModdalar": "Опасные вещества",
-    "mehmonlar": "Гости"
-  },
-  "StrategicTasksPanel": {
-    "bekorQilingan": "Отменено",
-    "kutilmoqda": "Ожидает",
-    "jarayonda": "В процессе",
-    "orta": "Средний"
-  },
-  "UsersPage": {
-    "xodim": "Сотрудник",
-    "bolimBoshligi": "Начальник отдела"
-  },
-  "WasteTrackingDialogs": {
-    "tsx": {
-      "muvaffaqiyatliSaqlandi": "Успешно сохранено"
-    }
-  },
-  "ContactDetailSheet": {
-    "tsx": {
-      "kontaktMuvaffaqiyatliYangilandi": "Контакт успешно обновлён"
-    }
-  },
-  "CRMKpiCards": {
-    "tsx": {
-      "yakunlangan": "Завершено",
-      "jarayondagilar": "В процессе",
-      "jamiVazifalar": "Всего задач",
-      "jami": "Всего"
-    }
-  },
-  "useCRMWorkspace": {
-    "lidYutildiSdBuyurtmaYaratildi": "Лид выигран — создан заказ SD",
-    "qismanOchirildi": "Частично удалено",
-    "ochirildi": "Удалено",
-    "kochirildi": "Перемещено",
-    "faoliyatQoshildi": "Активность добавлена"
-  },
-  "DataTable": {
-    "ishdanKetgan": "Уволен",
-    "tatilda": "В отпуске"
-  },
-  "order-constants": {
-    "00Rangsiz": "0+0 (Бесцветный)",
-    "yangi": "Новый",
-    "l": "Лоток",
-    "quti": "Коробка",
-    "qogoz": "Бумага"
-  },
-  "translations": {
-    "yangiBuyurtmaYaratish": "Создать новый заказ",
-    "untitled": "Создать новый заказ"
-  },
-  "helpers-constants": {
-    "tsx": {
-      "tavsiyalarTekshiruvi": "Проверка рекомендаций",
-      "yangiAriza": "Новая заявка",
-      "untitled": "Ждёт",
-      "elonBerildi": "Объявлено",
-      "suhbatOtdi": "Собеседование пройдено"
-    }
-  },
-  "GLPostingStatus": {
-    "tsx": {
-      "kutmoqda": "Ожидает"
-    }
-  },
-  "PosMovementChiqim": {
-    "zarar": "Убыток",
-    "ichkiQaytarish": "Внутренний возврат",
-    "ichkiKochirish": "Внутреннее перемещение"
-  },
-  "PosMovementKirim": {
-    "mroOmboriTexnikMateriallarKirim": "Склад MRO — Приёмка технических материалов",
-    "yarimTayyorLiniyadanQabul": "Полуфабрикат — Приёмка с линии",
-    "tayyorMahsulotIshlabChiqarishdanQabul": "Готовая продукция — Приёмка из производства",
-    "tashqiKirimQolda": "Внешняя приёмка (Вручную)",
-    "xojalikOmboriMateriallarKirim": "Хозяйственный склад — Приёмка материалов"
-  },
-  "PosMovementNew": {
-    "tsx": {
-      "inventarizatsiyaAsosidaMiqdorTuzatmasi": "Корректировка количества по результатам инвентаризации.",
-      "zararNosoz": "Убыток / Брак",
-      "ichkiQaytarish": "Внутренний возврат",
-      "ombordanTashqarigaChiqarilganMateriallarBarcode": "Материалы, выданные со склада. Осуществляется через сканер штрих-кодов.",
-      "zararKorganYokiNosozMateriallar": "Регистрация повреждённых или бракованных материалов.",
-      "omborlarOrasidaMaterialKochirish": "Перемещение материала между складами.",
-      "ichkiKochirish": "Внутреннее перемещение",
-      "bolimYokiXodimdanMaterialQaytarish": "Возврат материала от подразделения или сотрудника.",
-      "bolimgaYokiXodimgaMaterialBerish": "Выдача материала подразделению или сотруднику. Через сканер штрих-кодов.",
-      "taminotchidanYetibKelganMateriallarBarcha": "Материалы, полученные от поставщика. Все поля заполняются вручную — сканер штрих-кодов не требуется."
-    }
-  },
-  "PosMovements": {
-    "tasdiqlash": "Подтвердить",
-    "qcYuborish": "Отправить в QC",
-    "yuborish": "Отправить",
-    "bekor": "Отмена",
-    "qcOtkazish": "Провести QC",
-    "qcOtdi": "QC пройден"
-  },
-  "PosReports": {
-    "tsx": {
-      "jamiBalans": "Общий баланс",
-      "jamiQatorlar": "Всего строк"
-    },
-    "umumiySavdoBarchaVaqt": "Общие продажи (всё время)"
-  },
-  "AIInterviewPublicPage": {
-    "europrintAi": "EuroPrint AI Интервью"
-  },
-  "barcode-": {
-    "untitled": "Система Штрих-кодов",
-    "partiyalarShtrixKodYaratishVa": "Партии, создание штрих-кодов и сканер"
-  },
-  "camera-heatmap-": {
-    "untitled": "Тепловая карта",
-    "ishlabChiqarishMaydonidaFaollikVizualizatsiyasi": "Визуализация активности на производственной площадке"
-  },
-  "FaceRecognitionMonitoring": {
-    "untitled": "Мониторинг распознавания лиц"
-  },
-  "FaceRegistration": {
-    "untitled": "Регистрация Лица",
-    "ai": "Добавление лиц сотрудников в базу AI",
-    "xodimlarYuziniAiBazasigaQoshish": "Добавление лиц сотрудников в базу AI",
-    "yuzRoyxatdanOtkazish": "Регистрация лица"
-  },
-  "camera-ai": {
-    "types": {
-      "tsx": {
-        "ai": "AI Аналитика камер",
-        "untitled": "Анализ мониторинга камер на основе искусственного интеллекта",
-        "suniyIntellektAsosidaKameraMonitoringi": "Анализ мониторинга камер на основе искусственного интеллекта"
-      }
-    }
-  },
-  "CallTimelineItem": {
-    "tsx": {
-      "untitled": "Голосовая почта"
-    }
-  },
-  "MeetingCard": {
-    "tsx": {
-      "untitled": "Ожидает подтверждения"
-    }
-  },
-  "LanguageSwitcher": {
-    "tsx": {
-      "untitled": "Русский",
-      "ozbekcha": "Узбекский"
-    }
-  },
-  "CandidateReportDialog": {
-    "etiqod": "Убеждения"
-  },
-  "MMVendors": {
-    "oldindanTolov": "Предоплата"
-  },
-  "POSDashboard": {
-    "otkazma": "Перевод"
-  },
-  "QuestionnaireTemplatesHooks": {
-    "savolOchirildi": "Вопрос удалён",
-    "savolQoshildi": "Вопрос добавлен",
-    "shablonYaratildiVaSavollarQoshildi": "Шаблон создан и вопросы добавлены!",
-    "shablonOchirildi": "Шаблон удалён"
-  },
-  "QuestionsPage": {
-    "ortacha": "Средний"
-  },
-  "SDQuotationsHooks": {
-    "taklifOchirildi": "Предложение удалено"
-  },
-  "usePosCart": {
-    "mahsulotOmbordaYoq": "Товара нет на складе",
-    "ombordaYetarliMahsulotYoq": "На складе недостаточно товара"
-  },
-  "deal-schema": {
-    "uzsSom": "UZS (сум)"
-  },
-  "lead-schema": {
-    "orta": "🔵 Средний",
-    "qongiroq": "📞 Звонок"
-  },
-  "helpers": {
-    "tsx": {
-      "osish": "РОСТ"
-    }
-  },
-  "BoardDialogs": {
-    "tsx": {
-      "orta": "🟢 Средний"
-    }
-  },
-  "RequisitionForm": {
-    "tsx": {
-      "orta": "Средний"
-    }
-  },
-  "PosLogin": {
-    "tsx": {
-      "kirishXatosiQaytadanUrinibKoring": "Ошибка входа. Попробуйте снова."
-    }
-  },
-  "AIDesignGenerator": {
-    "dizaynTasdiqlangandaPapkaordersStatusPending": "При утверждении дизайна papkaOrders.status = \"pending_tech\" — модуль технолога автоматически получает сигнал"
-  },
-  "AIProductionPlanningTypes": {
-    "optimallashtirishKorsatkichlari": "Показатели оптимизации",
-    "smena": "Смена",
-    "ishlabChiqarishJadvali": "График производства"
-  },
-  "CandidateReportSections": {
-    "manbaKanal": "Источник (канал)"
-  },
-  "DesignDashboard": {
-    "buyurtmalar": "Заказы"
-  },
-  "EmployeeDailyKPIPanelSections": {
-    "bolimOrtacha": "Средний по отделу",
-    "kompaniyaOrtacha": "Средний по компании"
-  },
-  "EmployeeInventory": {
-    "faol": "Активный"
-  },
-  "ERPDailyReportsDialogs": {
-    "3Smena": "3-смена",
-    "2Smena": "2-смена",
-    "1Smena": "1-смена"
-  },
-  "ERPDailyReportsSections": {
-    "3Smena": "3-смена",
-    "2Smena": "2-смена",
-    "1Smena": "1-смена"
-  },
-  "TurnoverTab": {
-    "ketganlar": "Уволенные",
-    "yangiQabul": "Новый приём"
-  },
-  "HRDashboardMockup": {
-    "yangi30Kun": "Новые (30 дней)"
-  },
-  "KnowledgeBaseSections": {
-    "untitled": "Русский:"
-  },
-  "POSDashboardCharts": {
-    "30KunlikSotuvGrafigi": "График продаж за 30 дней"
-  },
-  "POSDashboardDialogs": {
-    "jami": "ВСЕГО:"
-  },
-  "POSInventoryPageChart": {
-    "sotuv": "Продажа"
-  },
-  "PositionsSections": {
-    "sht": "Штат"
-  },
-  "ProductionFactsPage": {
-    "1Smena": "1-смена"
-  },
-  "QuestionnaireTemplatesDialogs": {
-    "haYoq": "Да/Нет"
-  },
-  "RaciCrisisPageSections": {
-    "raciVazifalarTopilmadi": "Задачи RACI не найдены"
-  },
-  "TechApprovalSections": {
-    "materialNomiMasalanGofrokarton": "Название материала (например: гофрокартон)"
-  },
-  "TechCardsTypes": {
-    "birlik": "Единица",
-    "miqdor1000": "Количество/1000",
-    "materialNomi": "Название материала",
-    "materiallarBom": "Материалы (BOM)",
-    "operatsiyaNomi": "Название операции",
-    "operatsiyalarRouting": "Операции (Routing)",
-    "jamiDavomiylik": "Общая длительность:",
-    "mahsulotTuri": "Тип продукта:",
-    "umumiyMalumotlar": "Общие сведения",
-    "materiallarMavjudEmas": "Материалы отсутствуют",
-    "operatsiyalarMavjudEmas": "Операции отсутствуют"
-  },
-  "WarehouseAuditLog": {
-    "yangi": "Новый",
-    "oldingi": "ПРЕДЫДУЩИЙ",
-    "foydalanuvchi": "ПОЛЬЗОВАТЕЛЬ",
-    "sana": "ДАТА"
-  },
-  "WarehouseKirimWizardSteps": {
-    "jami": "ВСЕГО",
-    "ogirlikKg": "Вес (кг)",
-    "taminotchiStirInn": "STIR/INN поставщика"
-  },
-  "WarehouseKpiHub": {
-    "qcKutmoqda": "Ожидает QC"
-  },
-  "AdvancedFilters": {
-    "tavsifIxtiyoriy": "Описание (необязательно)"
-  },
-  "EmployeeDetailDialog": {
-    "buzilishlar": "Нарушения",
-    "jamiHodisalar": "Всего событий",
-    "kunlikFaollikSonggi7Kun": "Ежедневная активность (Последние 7 дней)"
-  },
-  "PinPromptModal": {
-    "imzoUchunPinKodingizniKiriting": "Введите ваш PIN-код для подписи (4-8 цифр)."
-  },
-  "MessageInput": {
-    "xabarYozingEnterYuborishShift": "Напишите сообщение... (Enter = отправить, Shift+Enter = новая строка)"
-  },
-  "ContactsTab": {
-    "rolLavozim": "Роль / Должность"
-  },
-  "CreditTab": {
-    "yangiKreditLimitiUzs": "Новый кредитный лимит (UZS) *"
-  },
-  "CustomerCard": {
-    "aiTavsiyalar": "AI рекомендации"
-  },
-  "LeadForm": {
-    "manbaTavsifiQiziqishMahsuloti": "Описание источника / Интересующий продукт"
-  },
-  "WatcherSelector": {
-    "untitled": "Поиск сотрудников..."
-  },
-  "CompanyStateWidget": {
-    "daromadMaqsad": "Доход / Цель",
-    "foydaMaqsad": "Прибыль / Цель"
-  },
-  "Login": {
-    "boshqaruvTizimi": "Система управления"
-  },
-  "NotificationBell": {
-    "menyuniOchishYopish": "Открыть/закрыть меню"
-  },
-  "EditPersonalInfoDialog": {
-    "uyTuri": "Тип жилья"
-  },
-  "CostCentersTab": {
-    "untitled": "Производство",
-    "nomiRu": "Название (RU)",
-    "nomiUz": "Название (UZ)"
-  },
-  "CategoryDialog": {
-    "untitled": "Название категории"
-  },
-  "ProfitCentersTab": {
-    "untitled": "Основные продажи",
-    "nomiRu": "Название (RU)",
-    "nomiUz": "Название (UZ)"
-  },
-  "CashFlowARAP": {
-    "arApHaftalikOzgarishlari": "Еженедельные изменения AR/AP"
-  },
-  "IncomeStatement": {
-    "operatsionFoydaEbit": "Операционная прибыль (EBIT)"
-  },
-  "ProductionStats": {
-    "ozVaqtidaYetkazishOtd": "Своевременная доставка (OTD)"
-  },
-  "ExtraTabs": {
-    "jamiBolimlarFarzand": "Всего отделов (дочерних)"
-  },
-  "StatsCharts": {
-    "otishBalli": "Проходной балл"
-  },
-  "CourseContentForm": {
-    "untitled": "Подробное описание курса...",
-    "tavsifRus": "Описание (Рус) *",
-    "tavsifOzbek": "Описание (Узб) *"
-  },
-  "MentorForm": {
-    "kimQisqachaMalumot": "Кто (краткая информация)"
-  },
-  "AddProductDialog": {
-    "minZaxiraOgohlantirish": "Мин. запас (предупреждение)"
-  },
-  "CreateShiftModal": {
-    "3Smena": "3-смена",
-    "2Smena": "2-смена",
-    "1Smena": "1-смена"
-  },
-  "helpers-channel-status": {
-    "untitled": "Ждёт"
-  },
-  "LeadsTab": {
-    "taxminiyQiymatSom": "Примерная стоимость (сум)"
-  },
-  "PaymentsTab": {
-    "summaSom": "Сумма (сум)"
-  },
-  "QuotationsTab": {
-    "miqdorDona": "Количество (шт)"
-  },
-  "CameraAIPrompts": {
-    "buKameraUchunAiKorsatmasi": "Введите AI инструкцию (промпт) для этой камеры..."
-  },
-  "TaxCalculator": {
-    "daromadSoligi12": "Подоходный налог (12%):"
-  },
-  "SiklHisobBolimi": {
-    "farq25SupervisorTasdigi": "Расхождение 2-5% = требуется подтверждение супервайзера"
-  },
-  "ExitControlPanel": {
-    "ogohlantirish": "ПРЕДУПРЕЖДЕНИЕ",
-    "ruxsat": "ДОПУСК"
-  },
-  "ProductionTab": {
-    "kunlikSarflanishOrt": "Дневной расход (средний)"
-  },
-  "WmsFinanceTab": {
-    "oylikXarajatOrt": "Месячный расход (средний)"
-  },
-  "PosAdminSections": {
-    "ipManzil": "IP-адрес"
-  },
-  "PosKpiDashboard": {
-    "qcKutmoqda": "Ожидает QC"
-  },
-  "PosMaterialBalance": {
-    "jamiMiqdor": "ВСЕГО КОЛИЧЕСТВО",
-    "jamiQiymat": "ВСЕГО СТОИМОСТЬ"
-  },
-  "PosMaterialNew": {
-    "300": "Бумага 300г/м²",
-    "materialNomiRuscha": "Название материала (на русском)",
-    "qogoz300gM": "Бумага 300г/м²",
-    "materialNomiOzbekcha": "Название материала (на узбекском) *"
-  },
-  "PosMaterials": {
-    "material360ProfiliHarOmborda": "Профиль материала 360° (остатки, движения, цены на каждом складе)"
-  }
+  "untitled2": "производства"
 }

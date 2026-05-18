@@ -444,13 +444,6 @@
   "open1": "Ochiq",
   "dashboard3": "Boshqaruv paneli",
   "Mahsulot": "Mahsulot nomi",
-  "Yuklanmoqda": {
-    "": {
-      "": {
-        "": "Yuklanmoqda..."
-      }
-    }
-  },
   "active": "Faol",
   "actual": "Haqiqiy qiymat",
   "aiRuleBased": "Ai rule based",
@@ -567,16 +560,6 @@
   "daysOverdueLabel": "Kechikish (kun)",
   "noData": "Ma'lumot yo'q",
   "noDataForExport": "Eksport uchun ma'lumot topilmadi",
-  "cfo": {
-    "altman": {
-      "de": "D/E",
-      "title": "Altman Z-Score",
-      "roa": "ROA"
-    },
-    "cashflow": {
-      "mSuffix": "млн"
-    }
-  },
   "kreditorlarAp": "Kreditorlar (AP)",
   "debitorlarAr": "Debitorlar (AR)",
   "cvpBepTahlili": "CVP · BEP tahlili",

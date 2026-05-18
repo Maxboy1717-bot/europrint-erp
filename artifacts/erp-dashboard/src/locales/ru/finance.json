@@ -444,13 +444,6 @@
   "open1": "Открыто",
   "dashboard3": "Панель управления",
   "Mahsulot": "Продукт",
-  "Yuklanmoqda": {
-    "": {
-      "": {
-        "": "Загрузка..."
-      }
-    }
-  },
   "active": "Активный",
   "actual": "Фактический",
   "aiRuleBased": "AI на основе правил",
@@ -567,16 +560,6 @@
   "daysOverdueLabel": "Просрочка (дней)",
   "noData": "Нет данных",
   "noDataForExport": "Нет данных для экспорта",
-  "cfo": {
-    "altman": {
-      "de": "D/E",
-      "title": "Altman Z-Score",
-      "roa": "ROA"
-    },
-    "cashflow": {
-      "mSuffix": "млн"
-    }
-  },
   "kreditorlarAp": "Кредиторы (AP)",
   "debitorlarAr": "Дебиторы (AR)",
   "cvpBepTahlili": "Анализ CVP · BEP",

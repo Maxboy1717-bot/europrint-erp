@@ -83,39 +83,6 @@
   "workInfo": "Ish ma'lumotlari",
   "documents": "Hujjatlar",
   "education": "Ta'lim",
-  "skills": {
-    "assignSkill": "Assign skill",
-    "category": "Kategoriya",
-    "createError": "Create error",
-    "createSkill": "Create skill",
-    "createdOk": "Created ok",
-    "deleteEmpSkillDesc": "Delete emp skill desc",
-    "deleteEmpSkillTitle": "Delete emp skill title",
-    "deleteError": "Delete error",
-    "deleteSkillDesc": "Delete skill desc",
-    "deleteSkillTitle": "Delete skill title",
-    "deletedOk": "Deleted ok",
-    "empAddError": "Emp add error",
-    "empAddedOk": "Emp added ok",
-    "empDeleteError": "Emp delete error",
-    "empDeletedOk": "Emp deleted ok",
-    "empSkillsDesc": "Emp skills desc",
-    "empSkillsTitle": "Emp skills title",
-    "emptyEmpSkillsDesc": "Empty emp skills desc",
-    "emptyEmpSkillsTitle": "Empty emp skills title",
-    "emptySkillsDesc": "Empty skills desc",
-    "emptySkillsTitle": "Empty skills title",
-    "name": "Nomi",
-    "skilledEmployees": "Skilled employees",
-    "skillsListDesc": "Skills list desc",
-    "skillsListTitle": "Skills list title",
-    "subtitle": "Qo'shimcha sarlavha",
-    "title": "Sarlavha",
-    "totalAssigned": "Total assigned",
-    "totalSkills": "Total skills",
-    "updateError": "Update error",
-    "updatedOk": "Updated ok"
-  },
   "certificates": "Sertifikatlar",
   "payrollPeriod": "Ish haqi davri",
   "calculatePayroll": "Ish haqini hisoblash",
@@ -197,9 +164,6 @@
   "workHistory": "Ish tarixi",
   "workSchedule": "Ish jadvali",
   "years": "Yillar",
-  "employee": {
-    "email": "Электронная почта"
-  },
   "oralWarning": "Og'zaki",
   "writtenWarning": "Yozma",
   "finalWarning": "Oxirgi ogohlantirish",
@@ -576,87 +540,35 @@
   "selectHrAdmin": "HR/Admin tanlang",
   "jshd12": "JSHD (12%):",
   "inps12": "INPS (12%):",
-  "HRCapitalTab": {
-    "yakunlangan": "Yakunlangan"
-  },
-  "": {
-    "ogohlantirish": "Ogohlantirish",
-    "xavfsizlik": "Xavfsizlik",
-    "kadrlar": "Kadrlar",
-    "alertlar": "Alertlar",
-    "orta": "O'rta",
-    "malumot": "Ma'lumot"
-  },
-  "HRCapitalTestsHelpers": {
-    "tsx": {
-      "jarayonda": "Jarayonda",
-      "kutilmoqda": "Kutilmoqda",
-      "muddatiOtdi": "Muddati o'tdi"
-    }
-  },
-  "HRCapitalTests": {
-    "boshqalarningFikriniHisobgaOlmaydi": "Boshqalarning fikrini hisobga olmaydi",
-    "ortadanPast8089": "O'rtadan past (80-89)",
-    "orta9099": "O'rta (90-99)",
-    "ortadanYuqori100109": "O'rtadan yuqori (100-109)",
-    "goyalargaTolaLekinTartibsizYakunlamaydigan": "G'oyalarga to'la lekin tartibsiz, yakunlamaydigan",
-    "jamoaBilanIshlashniAfzalKoradi": "Jamoa bilan ishlashni afzal ko'radi lekin komunikatsiyasi zaif",
-    "jamoaQogirchoqi": "Jamoa Qo'g'irchoq'i",
-    "tanqidVaOsishImkoniyatlaridanQorqadi": "Tanqid va o'sish imkoniyatlaridan qo'rqadi",
-    "osishdanQochuvchi": "O'sishdan Qochuvchi",
-    "stressgaNisbatanKuchliTasirlanuvchan": "Stressga nisbatan kuchli ta'sirlanuvchan",
-    "ishlarniKechiktiradiQarorQabulQilishdan": "Ishlarni kechiktiradi, qaror qabul qilishdan qo'rqadi",
-    "pastSamaradorlikMasuliyatdanQochadi": "Past samaradorlik, mas'uliyatdan qochadi",
-    "boshqalarniBoshqarishUchunTasirVositalaridan": "Boshqalarni boshqarish uchun ta'sir vositalaridan foydalanadi",
-    "ortiqchaOptimistXatarlarniKormaydi": "Ortiqcha optimist, xatarlarni ko'rmaydi",
-    "qattiqTartibTarafdoriOzgarishlargaQarshilik": "Qattiq tartib tarafdori, o'zgarishlarga qarshilik ko'rsatadi",
-    "osishgaTayyorlik": "O'sishga tayyorlik"
-  },
-  "HRDashboard": {
-    "malakalarMatritsasi": "Malakalar Matritsasi",
-    "pipRejalar": "PIP Rejalar",
-    "kunlikHisobot": "Kunlik Hisobot",
-    "hujjatOqimi": "Hujjat Oqimi",
-    "enpsSorov": "eNPS So'rov"
-  },
-  "HROffboarding": {
-    "ketishSababingizNima": "Ketish sababingiz nima?",
-    "bekorQilindi": "Bekor qilindi",
-    "faol": "Faol"
-  },
-  "HRSuccessionPlanning": {
-    "asosiyIshchilar": "Asosiy ishchilar",
-    "yashirinYulduzlar": "Yashirin yulduzlar",
-    "ishchiOtliqlar": "Ishchi otliqlar",
-    "yulduzlar": "Yulduzlar"
-  },
-  "HRZvsPage": {
-    "tasdiqlangan": "Tasdiqlangan",
-    "kutilmoqda": "Kutilmoqda",
-    "ortacha": "O'rtacha"
-  },
-  "utils": {
-    "ogohlantirish": "Ogohlantirish",
-    "nofaol": "Nofaol",
-    "ishdanKetgan": "Ishdan ketgan",
-    "ishlamoqda": "Ishlamoqda",
-    "ragbatlantirish": "Rag'batlantirish"
-  },
-  "HRCapitalPublicTest": {
-    "osishgaTayyorlik": "O'sishga tayyorlik"
-  },
-  "MarketHeatBadge": {
-    "tsx": {
-      "ortachaBozor": "O'rtacha bozor",
-      "qizginBozor": "Qizg'in bozor"
-    }
-  },
-  "useOrgNodeData": {
-    "ochirildi": "O'chirildi"
-  },
-  "useEmployeeFiles": {
-    "faylniOchiribBolmadi": "Faylni o'chirib bo'lmadi",
-    "faylOchirildi": "Fayl o'chirildi",
-    "faylniYuklabBolmadi": "Faylni yuklab bo'lmadi"
-  }
+  "skills.title": "Ko'nikmalar matritsasi",
+  "skills.subtitle": "Xodimlarning ko'nikmalari va kompetentsiyalarini boshqarish",
+  "skills.totalSkills": "Jami ko'nikmalar",
+  "skills.skilledEmployees": "Ko'nikmalarga ega xodimlar",
+  "skills.totalAssigned": "Jami tayinlangan",
+  "skills.skillsListTitle": "Ko'nikmalar",
+  "skills.skillsListDesc": "Tizimda mavjud ko'nikmalar",
+  "skills.empSkillsTitle": "Xodimlar ko'nikmalari",
+  "skills.empSkillsDesc": "Tayinlangan ko'nikmalar va darajalar",
+  "skills.name": "Nomi",
+  "skills.category": "Kategoriya",
+  "skills.emptySkillsTitle": "Ko'nikmalar topilmadi",
+  "skills.emptySkillsDesc": "Hozircha birorta ko'nikma yo'q.",
+  "skills.createSkill": "Ko'nikma yaratish",
+  "skills.emptyEmpSkillsTitle": "Xodimlar ko'nikmalari topilmadi",
+  "skills.emptyEmpSkillsDesc": "Hozircha birorta xodimga ko'nikma tayinlanmagan.",
+  "skills.assignSkill": "Ko'nikma tayinlash",
+  "skills.deleteSkillTitle": "Ko'nikmani o'chirish",
+  "skills.deleteSkillDesc": "Bu ko'nikmani o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi.",
+  "skills.deleteEmpSkillTitle": "Xodim ko'nikmasini o'chirish",
+  "skills.deleteEmpSkillDesc": "Bu xodim ko'nikmasini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi.",
+  "skills.createdOk": "Ko'nikma muvaffaqiyatli yaratildi",
+  "skills.updatedOk": "Ko'nikma muvaffaqiyatli yangilandi",
+  "skills.deletedOk": "Ko'nikma muvaffaqiyatli o'chirildi",
+  "skills.empAddedOk": "Xodim ko'nikmasini muvaffaqiyatli qo'shildi",
+  "skills.empDeletedOk": "Xodim ko'nikmasi muvaffaqiyatli o'chirildi",
+  "skills.createError": "Ko'nikma yaratishda xatolik",
+  "skills.updateError": "Ko'nikmani yangilashda xatolik",
+  "skills.deleteError": "Ko'nikmani o'chirishda xatolik",
+  "skills.empAddError": "Xodim ko'nikmasini qo'shishda xatolik",
+  "skills.empDeleteError": "Xodim ko'nikmasini o'chirishda xatolik"
 }

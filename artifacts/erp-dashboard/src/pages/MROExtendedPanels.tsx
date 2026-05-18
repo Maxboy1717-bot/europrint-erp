@@ -28,8 +28,13 @@ export function PMUpcomingPanel() {
   const upcoming = data?.upcoming ?? [];
   const overdue  = data?.overdue  ?? [];
 
-  if (isLoading) return null;
-  if (upcoming.length === 0 && overdue.length === 0) return null;
+  if (isLoading) return <div className="animate-pulse h-16 rounded-lg bg-muted" />;
+  if (upcoming.length === 0 && overdue.length === 0) return (
+    <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
+      <CheckCircle className="h-4 w-4 text-[var(--ep-green)]" />
+      Barcha PM vazifalari bajarildi
+    </div>
+  );
 
   return (
     <div className="space-y-3">
