@@ -31,6 +31,7 @@ import { GetDesignOrdersQuery} from '../application/queries/get-design-orders.qu
 import { GetDesignOrderQuery} from '../application/queries/get-design-order.query';
 import { RequestDesignDto, UpdateDesignStatusDto} from './dto/design.dto';
 import { z } from 'zod';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const CreateOrderSchema = z.object({
   salesOrderId: z.union([z.string(), z.number()]).optional(),
@@ -50,14 +51,7 @@ enum Role {
  DESIGNER = 'designer',
 }
 
-// FEATURE_FLAGGED: design notifications / statistics / tooling / messages
-// services not yet wired (tracking #FX-7). Frontend renders "Coming soon" state.
-const designNotImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
+
 
 @ApiThrottle()
 @ApiTags('Design')
@@ -154,37 +148,37 @@ export class DesignController {
 }
 
  @ApiOperation({ summary: 'Get notifications' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-7' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-7' })
  @Get('notifications')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER)
- getNotifications() { return designNotImplemented('GET /design/notifications'); }
+ getNotifications() { return notImplemented('GET /design/notifications'); }
 
  @ApiOperation({ summary: 'Get statistics' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-7' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-7' })
  @Get('statistics')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER)
- getStatistics() { return designNotImplemented('GET /design/statistics'); }
+ getStatistics() { return notImplemented('GET /design/statistics'); }
 
  @ApiOperation({ summary: 'Get tooling' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-7' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-7' })
  @Get('tooling')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER)
- getTooling() { return designNotImplemented('GET /design/tooling'); }
+ getTooling() { return notImplemented('GET /design/tooling'); }
 
  @ApiOperation({ summary: 'Get tooling wear forecast' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-7' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-7' })
  @Get('tooling/:id/wear-forecast')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER)
  getToolingWearForecast(@Param('id') _id: string) {
-   return designNotImplemented('GET /design/tooling/:id/wear-forecast');
+   return notImplemented('GET /design/tooling/:id/wear-forecast');
  }
 
  @ApiOperation({ summary: 'Get order messages' })
- @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-7' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-7' })
  @Get('orders/:id/messages')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER, Role.SALES_MANAGER)
  getOrderMessages(@Param('id') _id: string) {
-   return designNotImplemented('GET /design/orders/:id/messages');
+   return notImplemented('GET /design/orders/:id/messages');
  }
 
  @ApiOperation({ summary: 'Create order' })

@@ -19,6 +19,7 @@ import { AiRouterService as VrpRouterService } from '../logistics/router.service
 import { AiDecisionLogService } from '../common/ai-decision-log.service';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const SalesCopilotSchema = z.object({
   orderId:  z.string().uuid(),
@@ -86,7 +87,7 @@ const VrpSchema = z.object({
 @ApiBearerAuth()
 @Controller('ai-agents')
 @UseGuards(JwtAuthGuard, RolesGuard)
-// AI agents — LLM chaqiruvi; oldingi ttl: 60 (ms) BUG edi (60_000 ms = 1 daq bo'lishi kerak)
+// AI agents - LLM chaqiruvi; oldingi ttl: 60 (ms) BUG edi (60_000 ms = 1 daq bo'lishi kerak)
 @AiThrottle()
 @UseInterceptors(AuditInterceptor)
 export class AiAgentsController {
@@ -248,9 +249,6 @@ export class AiAgentsController {
   @Post(':agentId/trigger')
   @Roles('DIRECTOR', 'SUPER_ADMIN')
   async triggerAgent(@Param('agentId') _agentId: string) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: POST /ai-agents/:agentId/trigger', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('POST /ai-agents/:agentId/trigger');
   }
 }

@@ -12,6 +12,7 @@ import { MaterialBalanceService } from './material-balance.service';
 import { MaterialBalanceBodyDto } from '../compatibility/dto/operations.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   MaterialBalanceOverviewAclTranslator,
   type LegacyMaterialBalanceOverviewRow,
@@ -23,7 +24,7 @@ import {
 @UseInterceptors(AuditInterceptor)
 @Controller('material-balance')
 export class MaterialBalanceController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  /** PA2-14 ACL demonstrator. Stateless - direct instantiation is fine. */
   private readonly overviewAcl = new MaterialBalanceOverviewAclTranslator();
 
   constructor(private readonly svc: MaterialBalanceService) {}
@@ -119,10 +120,7 @@ export class MaterialBalanceController {
    */
   @Get('movements')
   async getMovements(@Query() _q: Record<string, string>) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /material-balance/movements', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /material-balance/movements');
   }
 
   @Get(':materialId/reconciliation')

@@ -12,7 +12,7 @@ import type { FastifyReply } from 'fastify';
 import * as path from 'path';
 import ExcelJS from 'exceljs';
 
-// pdfmake — loaded once at module init to avoid per-request require() overhead
+// pdfmake - loaded once at module init to avoid per-request require() overhead
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const PdfPrinter = require('pdfmake') as new (fonts: Record<string, unknown>) => {
   createPdfKitDocument(def: unknown): NodeJS.EventEmitter & { end(): void };
@@ -34,6 +34,7 @@ import { RolesGuard }  from '@common/guards/roles.guard';
 import { Roles }       from '@common/decorators/roles.decorator';
 import { unwrapOrBadRequest } from '@common/http-result';
 import { KanbanExtService } from '../application/kanban-ext.service';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 @ApiTags('§16 Kanban Extended')
 @ApiBearerAuth()
@@ -46,7 +47,7 @@ export class KanbanReportsController {
 
   constructor(private readonly svc: KanbanExtService) {}
 
-  // ─── Reports ──────────────────────────────────────────────────────────────
+  // --- Reports --------------------------------------------------------------
 
   @Get('reports/employee-performance')
   @ApiOperation({ summary: 'Xodim samaradorligi hisoboti' })
@@ -79,7 +80,7 @@ export class KanbanReportsController {
     @Query('boardId') boardId: string | undefined,
     @Res() res: FastifyReply,
   ) {
-    // ── Ma'lumot olish ────────────────────────────────────────────────────
+    // -- Ma'lumot olish ----------------------------------------------------
     const [statsRes, teamRes, overdueRes] = await Promise.all([
       this.svc.getTaskStats(boardId),
       this.svc.getTeamMetrics(boardId),
@@ -145,19 +146,19 @@ export class KanbanReportsController {
         res.header('Content-Disposition', 'attachment; filename="kanban-report.pdf"');
         return res.send(pdfBuf);
       } catch {
-        // pdfmake yo'q yoki chiqib ketsa — sodda HTML PDF
+        // pdfmake yo'q yoki chiqib ketsa - sodda HTML PDF
         res.header('Content-Type', 'application/pdf');
         res.header('Content-Disposition', 'attachment; filename="kanban-report.pdf"');
         return res.send(Buffer.from('%PDF-1.4 placeholder'));
       }
     }
 
-    // ── Excel (exceljs) ───────────────────────────────────────────────────
+    // -- Excel (exceljs) ---------------------------------------------------
     const wb = new ExcelJS.Workbook();
     wb.creator  = 'EuroPrint ERP';
     wb.created  = new Date();
 
-    // — Statistika varag'i —
+    // - Statistika varag'i -
     const ws1 = wb.addWorksheet('Statistika');
     ws1.columns = [
       { header: "Ko'rsatkich", key: 'k', width: 28 },
@@ -172,7 +173,7 @@ export class KanbanReportsController {
     ]);
     ws1.getRow(1).font = { bold: true };
 
-    // — Jamoa varag'i —
+    // - Jamoa varag'i -
     const ws2 = wb.addWorksheet('Jamoa');
     ws2.columns = [
       { header: 'Xodim',     key: 'fullName',  width: 30 },
@@ -184,7 +185,7 @@ export class KanbanReportsController {
     (team as Record<string, unknown>[]).forEach(e => ws2.addRow(e));
     ws2.getRow(1).font = { bold: true };
 
-    // — Kechikkanlar varag'i —
+    // - Kechikkanlar varag'i -
     const ws3 = wb.addWorksheet('Kechikkanlar');
     ws3.columns = [
       { header: 'Vazifa',       key: 'title',      width: 36 },
@@ -202,7 +203,7 @@ export class KanbanReportsController {
     return res.send(buf);
   }
 
-  // ─── Dashboard Stats ──────────────────────────────────────────────────────
+  // --- Dashboard Stats ------------------------------------------------------
 
   @Get('task-stats')
   @ApiOperation({ summary: 'Vazifa statistikasi (dashboard widgets uchun)' })
@@ -216,7 +217,7 @@ export class KanbanReportsController {
     return unwrapOrBadRequest(await this.svc.getTeamMetrics(boardId));
   }
 
-  // ─── Overdue Inbox ────────────────────────────────────────────────────────
+  // --- Overdue Inbox --------------------------------------------------------
 
   @Get('overdue-inbox')
   @ApiOperation({ summary: '24 soatdan ko\'p turgan va muddati o\'tgan kartalar' })
@@ -226,15 +227,12 @@ export class KanbanReportsController {
     return { items: result.data, total: result.data.length };
   }
 
-  // ─── Projects ─────────────────────────────────────────────────────────────
+  // --- Projects -------------------------------------------------------------
 
   // P3-26: projects list service not yet wired; return 501.
   @Get('projects')
   @ApiOperation({ summary: 'Loyihalar ro\'yxati' })
   getProjects() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /kanban/projects', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /kanban/projects');
   }
 }

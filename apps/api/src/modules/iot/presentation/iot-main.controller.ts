@@ -16,6 +16,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { IotMainService } from '../application/iot-main.service';
 import { IotSensorsExtendedService } from '../application/iot-sensors-extended.service';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   DeptLimitQuerySchema,
   DeviceIdQuerySchema,
@@ -26,13 +27,6 @@ import {
   ShiftReportQuerySchema,
   StatusLimitQuerySchema,
 } from './dto/iot-camera.dto';
-
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
 
 const PatchDeviceSchema = z.object({
   name:     z.string().max(200).optional(),
@@ -81,7 +75,7 @@ export class IotMainController {
     return unwrapOrThrow(await this.svc.getEmployeeHealth(q.employee_id, q.limit));
   }
 
-  // ── Machine status ──────────────────────────────────────────────────────────
+  // -- Machine status ----------------------------------------------------------
   @ApiOperation({ summary: 'Get machine status' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('machine-status') @Roles(...IOT_READ)
@@ -105,7 +99,7 @@ export class IotMainController {
     return unwrapOrThrow(await this.svc.getEmployeeProductivity(q.department_id, q.limit));
   }
 
-  // ── Environment / sensors ───────────────────────────────────────────────────
+  // -- Environment / sensors ---------------------------------------------------
   @ApiOperation({ summary: 'Get environment' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('environment')
@@ -204,7 +198,7 @@ export class IotMainController {
     return unwrapOrThrow(await this.svc.getEnvironmentData('noise', location));
   }
 
-  // ── Production / OEE ────────────────────────────────────────────────────────
+  // -- Production / OEE --------------------------------------------------------
   @ApiOperation({ summary: 'Get production metrics' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('production-metrics')
@@ -275,7 +269,7 @@ export class IotMainController {
   @Get('downtime-reason-codes') @Roles(...IOT_READ)
   async getDowntimeReasonCodes() { return notImplemented('GET /iot/downtime-reason-codes'); }
 
-  // ── Device patch ────────────────────────────────────────────────────────────
+  // -- Device patch ------------------------------------------------------------
   @ApiOperation({ summary: 'Patch device' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -288,7 +282,7 @@ export class IotMainController {
     return notImplemented('PATCH /iot/devices/:id');
   }
 
-  // OEE live snapshot — real values come from sensor_readings + production_sessions
+  // OEE live snapshot - real values come from sensor_readings + production_sessions
   // aggregation; for now we serve a typed empty snapshot so the page renders.
   @ApiOperation({ summary: 'Get oee live' })
   @ApiResponse({ status: 200, description: 'OK' })

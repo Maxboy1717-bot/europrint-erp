@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module enps.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
@@ -13,6 +13,7 @@ import { createZodDto } from '@anatine/zod-nestjs';
 import { EnpsService } from './enps.service';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { unwrapOrInternal } from '@common/http-result';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const CreateSurveySchema = z.object({
   title:       z.string().min(1),
@@ -113,9 +114,6 @@ export class EnpsController {
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('results')
   async getEnpsResults() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /enps/results', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /enps/results');
   }
 }

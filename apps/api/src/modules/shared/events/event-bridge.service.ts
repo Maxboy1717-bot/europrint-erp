@@ -72,7 +72,9 @@ const EVENT_NAME_MAP: Record<string, string> = {
   CcSpawnRequestedEvent: 'cc.spawn',
   TechThreeCheckpointEvent: ERP_EVENTS.TECH_THREE_CHECKPOINT,
   PosMovementCompletedEvent: 'pos.movement.data.completed',
-  PosMovementCreatedEvent: 'pos.movement.data.created',
+  // PosMovementCreatedEvent intentionally NOT mapped: pos-movement.service.ts
+  // publishes both the typed event AND the legacy string topic directly. If
+  // the bridge re-emitted, string consumers would fire twice.
   DailyReportSubmittedEvent: 'daily.report.submitted',
   // OrderCreatedEvent already mapped above (Wave 4 pilot).
   OrderStatusChangedEvent: ERP_EVENTS.ORDER_STATUS_CHANGED,

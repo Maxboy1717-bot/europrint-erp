@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module iot-enhanced.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
@@ -31,6 +31,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { IotEnhancedService } from '../application/iot-enhanced.service';
 import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const IOT_READ = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'production_manager', 'ERP_MANAGER'];
 const IOT_WRITE = ['super_admin', 'warehouse_manager', 'production_manager', 'ERP_MANAGER'];
@@ -126,9 +127,6 @@ export class IotEnhancedController {
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('orders')
   async getOrders() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /iot-enhanced/orders', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /iot-enhanced/orders');
   }
 }

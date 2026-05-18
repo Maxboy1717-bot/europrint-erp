@@ -116,6 +116,10 @@ export { PosEventHandler }         from './application/event-handlers/pos.events
 export { PosSecondaryEventsHandler } from './application/event-handlers/pos-secondary-events.handler';
 export { PosEventRepository }      from './infrastructure/repositories/pos-event.repository';
 export { PosDepartmentGuard }      from './presentation/guards/pos-department.guard';
+// Wave 4 round-4 — canonical CQRS event handlers replacing legacy @OnEvent
+export { PosGlAutoListener }       from './application/event-handlers/pos-gl-auto.listener';
+export { PosWmsSyncCompletedListener } from './application/event-handlers/pos-wms-sync-completed.listener';
+export { PosWmsSyncCreatedListener }   from './application/event-handlers/pos-wms-sync-created.listener';
 
 // New workflow & balance services
 export { PosRequisitionWorkflowService } from './application/services/pos-requisition-workflow.service';

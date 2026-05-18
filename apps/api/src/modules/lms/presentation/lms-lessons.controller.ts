@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module lms-lessons.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
@@ -20,13 +20,6 @@ import {
   UseInterceptors
 } from '@nestjs/common';
 
-// P3-26: modules listing endpoint is not yet wired; 501 instead of fake empty.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrInternal } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -36,6 +29,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { LmsCoursesExtendedService } from '../application/services/lms-courses-extended.service';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   CreateLessonSchema, CreateLessonDto,
   UpdateLessonSchema, UpdateLessonDto,

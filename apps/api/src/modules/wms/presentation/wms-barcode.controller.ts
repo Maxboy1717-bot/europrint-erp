@@ -14,16 +14,9 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 // P3-26: barcode/material-kit persistence is not yet wired. Return 501 instead of
-// echoing fake payloads so the warehouse barcode page can show a "coming soon" state.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
-
 const PrinterConfigSchema = z.object({
   name: z.string().max(200).optional(),
   ipAddress: z.string().max(50).optional(),
@@ -58,7 +51,7 @@ const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER']
 export class WmsBarcodeController {
   constructor(private readonly svc: WmsWarehouseGatewayService) {}
 
-  // ── PRINTER CONFIG ────────────────────────────────────────────────────────
+  // -- PRINTER CONFIG --------------------------------------------------------
 
   @ApiOperation({ summary: 'Get printer configs' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -105,7 +98,7 @@ export class WmsBarcodeController {
     return notImplemented('DELETE /warehouse/printer-config/:id');
   }
 
-  // ── MATERIAL KITS (item-scan / kit assembly) ──────────────────────────────
+  // -- MATERIAL KITS (item-scan / kit assembly) ------------------------------
 
   @ApiOperation({ summary: 'Get material kits' })
   @ApiResponse({ status: 200, description: 'OK' })

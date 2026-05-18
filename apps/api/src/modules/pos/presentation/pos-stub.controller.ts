@@ -8,7 +8,7 @@
  * empty.
  *
  * A.2 (P0): The legacy `/pos/sales` POST endpoint previously echoed payloads
- * without persisting to the database (real bug — POSDashboard.tsx and pos-sync.ts
+ * without persisting to the database (real bug - POSDashboard.tsx and pos-sync.ts
  * both hit this URL). It now DELEGATES to `CashRegisterService.createTransaction`,
  * so the frontend's existing URL writes to `retail_pos_transactions`. The legacy
  * payload shape is adapted to the service's `CreateTransactionSchema` here so we
@@ -26,6 +26,7 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '@common/types/user.types';
 import { CashRegisterService } from '../application/services/cash-register.service';
 import { unwrapOrInternal } from '@common/http-result';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const LegacySaleItemSchema = z.object({
   productId: z.union([z.string(), z.number()]).transform((v) => String(v)),
@@ -47,13 +48,6 @@ const AdjustInventorySchema = z.object({
   quantity: z.union([z.string(), z.number()]).optional(),
   reason: z.string().max(500).optional(),
 }).passthrough();
-
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
 
 /**
  * Map legacy `/pos/sales` payload to the canonical CashRegisterService DTO.
@@ -86,7 +80,7 @@ function adaptLegacySale(body: unknown): Record<string, unknown> {
   };
 }
 
-@ApiTags('POS — Inventar (Stub)')
+@ApiTags('POS - Inventar (Stub)')
 @ApiBearerAuth()
 @Roles('cashier', 'pos_manager', 'admin', 'super_admin', 'manager', 'director')
 @UseGuards(RolesGuard)
@@ -102,7 +96,7 @@ export class PosStubController {
   // before delegation. Response shape preserves the `{ saleNumber, sale }`
   // contract POSDashboard.tsx and pos-sync.ts already consume.
   @Post('sales')
-  @ApiOperation({ summary: 'Yangi sotuv yaratish (haqiqiy persistence — CashRegisterService.createTransaction)' })
+  @ApiOperation({ summary: 'Yangi sotuv yaratish (haqiqiy persistence - CashRegisterService.createTransaction)' })
   async createSale(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = adaptLegacySale(body);
     const cashierId = user?.id !== undefined && user?.id !== null ? String(user.id) : undefined;

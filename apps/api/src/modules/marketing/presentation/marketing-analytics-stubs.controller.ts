@@ -22,15 +22,9 @@ import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const StubBodySchema = z.record(z.unknown());
-
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
 
 @ApiTags('§17 Marketing Analytics (placeholders)')
 @ApiBearerAuth()
@@ -41,11 +35,11 @@ const notImplemented = (route: string): never => {
 export class MarketingAnalyticsStubsController {
   private readonly logger = new Logger(MarketingAnalyticsStubsController.name);
 
-  // ── Content ───────────────────────────────────────────────────────────────
+  // -- Content ---------------------------------------------------------------
   @Post('content/ai-generate') @Roles('super_admin', 'marketing_manager', 'director')
   async aiGenerateContent(@Body() _body: unknown) { return notImplemented('POST /marketing/content/ai-generate'); }
 
-  // ── NPS & Churn ───────────────────────────────────────────────────────────
+  // -- NPS & Churn -----------------------------------------------------------
   @Get('nps/stats')    @Roles('super_admin', 'marketing_manager', 'director') async getNpsStats()    { return notImplemented('GET /marketing/nps/stats'); }
   @Get('nps/monthly')  @Roles('super_admin', 'marketing_manager', 'director') async getNpsMonthly()  { return notImplemented('GET /marketing/nps/monthly'); }
   @Get('nps')          @Roles('super_admin', 'marketing_manager', 'director') async getNps()         { return notImplemented('GET /marketing/nps'); }
@@ -55,7 +49,7 @@ export class MarketingAnalyticsStubsController {
   @Post('churn-risk/ai-signal') @Roles('super_admin', 'marketing_manager', 'director') @HttpCode(HttpStatus.OK)
   async postChurnRiskAiSignal(@Body() _body: unknown) { return notImplemented('POST /marketing/churn-risk/ai-signal'); }
 
-  // ── AI / Leads ────────────────────────────────────────────────────────────
+  // -- AI / Leads ------------------------------------------------------------
   @Get('ai/hot-leads') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager') async getAiHotLeads() { return notImplemented('GET /marketing/ai/hot-leads'); }
   @Get('ai-assistant') @Roles('super_admin', 'marketing_manager', 'director') async getAiAssistant() { return notImplemented('GET /marketing/ai-assistant'); }
 
@@ -75,7 +69,7 @@ export class MarketingAnalyticsStubsController {
   @Delete('leads/:id') @Roles('super_admin', 'marketing_manager', 'director')
   async deleteLead(@Param('id') _id: string) { return notImplemented('DELETE /marketing/leads/:id'); }
 
-  // ── Inbox (social conversations + messages) ───────────────────────────────
+  // -- Inbox (social conversations + messages) -------------------------------
   @Get('inbox/stats')         @Roles('super_admin', 'marketing_manager', 'director')
   async getInboxStats() { return notImplemented('GET /marketing/inbox/stats'); }
 
@@ -94,24 +88,24 @@ export class MarketingAnalyticsStubsController {
   @Patch('inbox/conversations/:id/status') @Roles('super_admin', 'marketing_manager', 'director')
   async updateConversationStatus(@Param('id') _id: string, @Body() _body: unknown) { return notImplemented('PATCH /marketing/inbox/conversations/:id/status'); }
 
-  // ── A/B tests + competitors ───────────────────────────────────────────────
+  // -- A/B tests + competitors -----------------------------------------------
   @Get('ab-tests')    @Roles('super_admin', 'marketing_manager', 'director') async getAbTests()    { return notImplemented('GET /marketing/ab-tests'); }
   @Get('competitors') @Roles('super_admin', 'marketing_manager', 'director') async getCompetitors() { return notImplemented('GET /marketing/competitors'); }
 
-  // ── Budget ────────────────────────────────────────────────────────────────
+  // -- Budget ----------------------------------------------------------------
   @Get('budget')       @Roles('super_admin', 'marketing_manager', 'director') async getBudget(@Query('year') _year?: string) { return notImplemented('GET /marketing/budget'); }
   @Get('budget/:id')   @Roles('super_admin', 'marketing_manager', 'director') async getBudgetById(@Param('id') _id: string) { return notImplemented('GET /marketing/budget/:id'); }
   @Post('budget')      @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.CREATED)
   async createBudget(@Body() _body: unknown) { return notImplemented('POST /marketing/budget'); }
 
-  // ── Calendar ──────────────────────────────────────────────────────────────
+  // -- Calendar --------------------------------------------------------------
   @Get('calendar')     @Roles('super_admin', 'marketing_manager', 'director')
   async getCalendar(@Query('month') _month?: string, @Query('year') _year?: string) { return notImplemented('GET /marketing/calendar'); }
   @Get('calendar/:id') @Roles('super_admin', 'marketing_manager', 'director') async getCalendarById(@Param('id') _id: string) { return notImplemented('GET /marketing/calendar/:id'); }
   @Post('calendar')    @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.CREATED)
   async createCalendarEvent(@Body() _body: unknown) { return notImplemented('POST /marketing/calendar'); }
 
-  // ── Exhibitions ───────────────────────────────────────────────────────────
+  // -- Exhibitions -----------------------------------------------------------
   @Get('exhibitions')           @Roles('super_admin', 'marketing_manager', 'director') async getExhibitions() { return notImplemented('GET /marketing/exhibitions'); }
   @Get('exhibitions/:id')       @Roles('super_admin', 'marketing_manager', 'director') async getExhibitionById(@Param('id') _id: string) { return notImplemented('GET /marketing/exhibitions/:id'); }
   @Get('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'director') async getExhibitionLeads(@Param('id') _id: string) { return notImplemented('GET /marketing/exhibitions/:id/leads'); }
@@ -123,13 +117,13 @@ export class MarketingAnalyticsStubsController {
   @Post('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.OK)
   async generateExhibitionQr(@Param('id') _id: string) { return notImplemented('POST /marketing/exhibitions/:id/qr'); }
 
-  // ── PR ────────────────────────────────────────────────────────────────────
+  // -- PR --------------------------------------------------------------------
   @Get('pr')     @Roles('super_admin', 'marketing_manager', 'director') async getPr() { return notImplemented('GET /marketing/pr'); }
   @Get('pr/:id') @Roles('super_admin', 'marketing_manager', 'director') async getPrById(@Param('id') _id: string) { return notImplemented('GET /marketing/pr/:id'); }
   @Post('pr')    @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.CREATED)
   async createPr(@Body() _body: unknown) { return notImplemented('POST /marketing/pr'); }
 
-  // ── Settings ──────────────────────────────────────────────────────────────
+  // -- Settings --------------------------------------------------------------
   @Get('settings')                 @Roles('super_admin', 'marketing_manager') async getSettings()                 { return notImplemented('GET /marketing/settings'); }
   @Get('settings/social-api')      @Roles('super_admin', 'marketing_manager') async getSocialApiSettings()        { return notImplemented('GET /marketing/settings/social-api'); }
   @Post('settings')                @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.OK)
@@ -143,7 +137,7 @@ export class MarketingAnalyticsStubsController {
   @Post('settings/setup-telegram-webhook') @Roles('super_admin', 'marketing_manager')
   async setupTelegramWebhook(@Body() _body: unknown) { return notImplemented('POST /marketing/settings/setup-telegram-webhook'); }
 
-  // ── Website / Blog ────────────────────────────────────────────────────────
+  // -- Website / Blog --------------------------------------------------------
   @Get('website/blog')      @Roles('super_admin', 'marketing_manager', 'director') async getBlogPosts() { return notImplemented('GET /marketing/website/blog'); }
   @Get('website/blog/:id')  @Roles('super_admin', 'marketing_manager', 'director') async getBlogPostById(@Param('id') _id: string) { return notImplemented('GET /marketing/website/blog/:id'); }
   @Patch('website/blog/:id') @Roles('super_admin', 'marketing_manager') async updateBlogPost(@Param('id') _id: string, @Body() _body: unknown) { return notImplemented('PATCH /marketing/website/blog/:id'); }
@@ -155,18 +149,18 @@ export class MarketingAnalyticsStubsController {
   async createBlogPost(@Body() _body: unknown) { return notImplemented('POST /marketing/website/blog'); }
   @Delete('website/blog/:id') @Roles('super_admin', 'marketing_manager') async deleteBlogPost(@Param('id') _id: string) { return notImplemented('DELETE /marketing/website/blog/:id'); }
 
-  // ── Overview (root) ───────────────────────────────────────────────────────
+  // -- Overview (root) -------------------------------------------------------
   @Get() @Roles('super_admin', 'marketing_manager', 'director', 'manager')
   async getMarketingOverview() { return notImplemented('GET /marketing'); }
 
-  // ── Lead score recalculation ──────────────────────────────────────────────
+  // -- Lead score recalculation ----------------------------------------------
   @Post('leads/recalculate-scores') @Roles('super_admin', 'marketing_manager', 'director')
   @HttpCode(HttpStatus.OK)
   async recalculateLeadScores(@Body() _body: unknown) {
     return notImplemented('POST /marketing/leads/recalculate-scores');
   }
 
-  // ── Settings — singular PATCH by id ───────────────────────────────────────
+  // -- Settings - singular PATCH by id ---------------------------------------
   @Patch('settings/:id') @Roles('super_admin', 'marketing_manager')
   async patchSettingById(@Param('id') _id: string, @Body() body: unknown) {
     StubBodySchema.parse(body ?? {});

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module production-reports.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
@@ -29,6 +29,7 @@ import { ProductionService } from './production.service';
 import { safeInt } from '../../hr/common/db-rows';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
+import { notImplemented } from '@common/exceptions/not-implemented';
 const PROD_ROLES = ['super_admin', 'director', 'production_manager', 'operator', 'technologist'];
 
 @ApiThrottle()
@@ -77,9 +78,6 @@ export class ProductionReportsController {
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('orders')
   async getOrders() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /production-reports/orders', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /production-reports/orders');
   }
 }

@@ -11,14 +11,9 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { HrDashboardExtraService } from '../application/hr-dashboard-extra.service';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
-// FEATURE_FLAGGED: bulk contracts + HrCapital courses/stats not wired (tracking #FX-9).
-const hrExtraNotImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
+
 
 @ApiThrottle()
 @ApiTags('Hr Dashboard Extra')
@@ -79,10 +74,10 @@ export class HrDashboardExtraController {
   }
 
   @ApiOperation({ summary: 'Get contracts' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-9 (use /contracts/expiring)' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-9 (use /contracts/expiring)' })
   @Get('contracts')
   async getContracts(@Query() _query: Record<string, unknown>) {
-    return hrExtraNotImplemented('GET /hr/contracts');
+    return notImplemented('GET /hr/contracts');
   }
 
   @ApiOperation({ summary: 'Get contracts expiring' })
@@ -100,16 +95,16 @@ export class HrDashboardExtraController {
 @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN')
 export class HrCapitalController {
   @ApiOperation({ summary: 'Get courses' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-9' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-9' })
   @Get('courses')
   async getCourses(@Query() _q: Record<string, unknown>) {
-    return hrExtraNotImplemented('GET /hr-capital/courses');
+    return notImplemented('GET /hr-capital/courses');
   }
 
   @ApiOperation({ summary: 'Get stats' })
-  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-9' })
+  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-9' })
   @Get('stats')
   async getStats() {
-    return hrExtraNotImplemented('GET /hr-capital/stats');
+    return notImplemented('GET /hr-capital/stats');
   }
 }

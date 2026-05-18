@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module hr-compat-a.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
@@ -21,13 +21,6 @@ import {
   UsePipes,
 } from '@nestjs/common';
 
-// P3-26: HRC test/employee-skill mutation endpoints aren't yet wired.
-const notImplemented = (route: string): never => {
-  throw new HttpException(
-    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
-    HttpStatus.NOT_IMPLEMENTED,
-  );
-};
 import { throwFromError, unwrapOrThrow, assertOk, unwrapOrInternal } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -36,6 +29,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { HrCompatAService } from '../application/hr-compat-a.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { z } from 'zod';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   Hr360ReviewSchema, Hr360ReviewDto,
   HrConflictReportSchema, HrConflictReportDto,

@@ -12,6 +12,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { FinanceReportsService } from '../reports/reports.service';
 import { unwrapOrInternal } from '@common/http-result';
 import { TashkentTimeService } from '@common/time';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 @ApiThrottle()
 @ApiTags('Reports')
@@ -73,14 +74,11 @@ export class ReportsController {
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('production-efficiency')
   getProductionEfficiency() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /reports/production-efficiency', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /reports/production-efficiency');
   }
 
   /**
-   * POST /api/reports/profitability/export — request an async profitability
+   * POST /api/reports/profitability/export - request an async profitability
    * export. Returns a job descriptor so the client can poll via job status.
    * The actual file generation runs in the background queue.
    */
