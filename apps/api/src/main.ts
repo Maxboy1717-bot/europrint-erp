@@ -1,230 +1,43 @@
 /**
  * @module main
- * @description Source module. See exports for details.
+ * @description Entry point. Bootstraps the NestJS+Fastify app, registers
+ *   security headers / CSRF / rate-limit / Swagger / health routes via the
+ *   helpers in `main-bootstrap.ts`, and runs the post-listen DB seed jobs.
+ *
+ *   Helpers were extracted to `main-bootstrap.ts` to keep this file under
+ *   the 300-line cap (Rule 16).
  */
 
 import 'module-alias/register';
 import 'reflect-metadata';
-import { initSentry, SentryInterceptor } from './common/monitoring/sentry.config';
-import { register as promRegister } from 'prom-client';
+import { initSentry } from './common/monitoring/sentry.config';
 import { NestFactory } from '@nestjs/core';
 import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
-import { HttpStatus, Logger, RequestMethod } from '@nestjs/common';
-import { ZodValidationPipe } from '@anatine/zod-nestjs';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { AppModule } from './app.module';
-import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ChatService } from './modules/chat/chat.service';
 import { ensureDbInvariants, ensureSchemaAdditions } from './shared/db/invariants';
 import { seedPosMovementTypes } from './shared/db/seed-pos-movement-types';
 
-import { DEFAULT_PORT, SECONDS_PER_YEAR, MS_PER_SECOND, MAX_FILE_SIZE } from '@common/constants/app.constants';
+import { DEFAULT_PORT, MAX_FILE_SIZE } from '@common/constants/app.constants';
+import {
+  configureSecurityHeaders,
+  configureBlockedMethods,
+  configureCsrfOriginCheck,
+  configureLoginRateLimit,
+  configureAppMiddleware,
+  configureSwagger,
+  configureHealthRoutes,
+  registerBufferParsers,
+  RawFastify,
+} from './main-bootstrap';
 
 // Initialise Sentry as early as possible — its `process.on('uncaughtException')`
 // hook must be attached BEFORE bootstrap() runs.  `initSentry()` is a no-op
 // (with warn log) when SENTRY_DSN is empty (graceful degradation, matches
 // AishaConfig).  Module-level call runs synchronously on first import.
 initSentry();
-
-const BLOCKED_HTTP_METHODS = ['CONNECT', 'TRACE', 'PROPFIND'] as const;
-// State-changing methods that must originate from a trusted origin. GET / HEAD
-// / OPTIONS are excluded because they're either safe by definition or part of
-// the preflight handshake (which is already gated by enableCors below).
-const CSRF_PROTECTED_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
-type RawFastify = {
-  addHook: (event: string, fn: (req: RawReq, reply: RawReply, done?: () => void) => unknown) => void;
-  get: (path: string, fn: (req: unknown, reply: RawReply) => void | Promise<void>) => void;
-};
-type RawReq = { method?: string; url?: string; headers: Record<string, string | string[] | undefined>; ip?: string };
-type RawReply = { code: (n: number) => RawReply; header: (k: string, v: string) => RawReply; send: (b: unknown) => void };
-
-async function configureSecurityHeaders(app: NestFastifyApplication): Promise<void> {
-  await app.register(require('@fastify/helmet'), {
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'"], scriptSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'https:'], connectSrc: ["'self'"], fontSrc: ["'self'"],
-        objectSrc: ["'none'"], upgradeInsecureRequests: [],
-      },
-    },
-    crossOriginEmbedderPolicy: false,
-    frameguard: { action: 'deny' },
-    noSniff: true,
-    hsts: { maxAge: SECONDS_PER_YEAR, includeSubDomains: true },
-  });
-}
-
-function configureBlockedMethods(app: NestFastifyApplication): void {
-  const raw = app.getHttpAdapter().getInstance() as RawFastify;
-  raw.addHook('onRequest', (req: RawReq, reply: RawReply, done?: () => void) => {
-    if (BLOCKED_HTTP_METHODS.includes(req.method as (typeof BLOCKED_HTTP_METHODS)[number])) {
-      reply.code(HttpStatus.METHOD_NOT_ALLOWED).header('Allow', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
-        .send({ statusCode: HttpStatus.METHOD_NOT_ALLOWED, error: 'Method Not Allowed', message: `${req.method} metodi taqiqlangan` });
-      return;
-    }
-    done?.();
-  });
-
-  const CONNECT_RESPONSE = 'HTTP/1.1 405 Method Not Allowed\r\nAllow: GET, POST, PUT, PATCH, DELETE, OPTIONS\r\nContent-Length: 0\r\nConnection: close\r\n\r\n';
-
-  const httpServer = app.getHttpServer() as import('net').Server;
-  httpServer.on('connect', (_req: unknown, socket: import('net').Socket) => {
-    socket.write(CONNECT_RESPONSE);
-    socket.destroy();
-  });
-}
-
-/**
- * CSRF mitigation (audit C.26).
- *
- * Strategy: combine `SameSite=Strict` cookies (set in auth.controller.ts) with
- * Origin / Referer validation on every state-changing request. We deliberately
- * do NOT use `@fastify/csrf-protection`'s synchronizer-token model because:
- *  - the frontend already sends `Authorization: Bearer …` for API calls, so the
- *    same-origin policy + SameSite cookies already block the classic CSRF
- *    vector;
- *  - layering an Origin check costs nothing and catches stray cross-origin
- *    POSTs (e.g. a misconfigured embedded form, a malicious extension) that
- *    SameSite alone wouldn't catch on older browsers.
- *
- * Allow list is identical to the CORS allow list — ALLOWED_ORIGINS env var
- * plus the .replit.dev / .repl.co / .replit.app dev origins. Requests without
- * an Origin header (server-to-server, curl, mobile native) are allowed: those
- * cannot be CSRF'd by a browser anyway.
- */
-function configureCsrfOriginCheck(app: NestFastifyApplication, logger: Logger): void {
-  const origins = (process.env.ALLOWED_ORIGINS ?? '').split(',').map((o) => o.trim()).filter(Boolean);
-  const isDev = process.env.NODE_ENV !== 'production';
-  const isReplitOrigin = (host: string) =>
-    host.endsWith('.replit.dev') || host.endsWith('.repl.co') || host.endsWith('.replit.app');
-
-  const isOriginAllowed = (origin: string): boolean => {
-    if (origins.includes(origin)) return true;
-    if (!isDev) return false;
-    try {
-      const host = new URL(origin).host;
-      return isReplitOrigin(host);
-    } catch {
-      return false;
-    }
-  };
-
-  const raw = app.getHttpAdapter().getInstance() as RawFastify;
-  raw.addHook('onRequest', (req: RawReq, reply: RawReply, done?: () => void) => {
-    const method = (req.method ?? '').toUpperCase();
-    if (!CSRF_PROTECTED_METHODS.has(method)) { done?.(); return; }
-
-    // Skip auth endpoints that the user is not yet authenticated for — login
-    // and OTP flows must work from the public landing page where the Origin
-    // matches the CORS list anyway (re-checked via Origin/Referer below).
-    const url = req.url ?? '';
-
-    const originHeader = (req.headers['origin'] as string | undefined) ?? undefined;
-    const refererHeader = (req.headers['referer'] as string | undefined) ?? undefined;
-
-    // No Origin and no Referer: not a browser request. Allow (covers
-    // server-to-server callers, health checks, native mobile clients).
-    if (!originHeader && !refererHeader) { done?.(); return; }
-
-    const candidate = originHeader ?? (refererHeader ? refererHeader.replace(/^(https?:\/\/[^/]+).*$/, '$1') : '');
-    if (candidate && isOriginAllowed(candidate)) { done?.(); return; }
-
-    logger.warn(`CSRF: rejecting ${method} ${url} from origin=${originHeader ?? '(none)'} referer=${refererHeader ?? '(none)'}`);
-    reply.code(HttpStatus.FORBIDDEN).send({
-      statusCode: HttpStatus.FORBIDDEN,
-      error: 'Forbidden',
-      message: 'CSRF: request origin not allowed',
-    });
-  });
-}
-
-function configureLoginRateLimit(app: NestFastifyApplication): void {
-  const loginBucket = new Map<string, { count: number; resetAt: number }>();
-  // Env orqali sozlanadigan limit:
-  //   LOGIN_RATE_LIMIT  — bir TTL ichida ruxsat etilgan urinishlar (default 5)
-  //   LOGIN_TTL_MS      — derazaning uzunligi (default 60_000 = 1 daqiqa)
-  const LOGIN_LIMIT = parseInt(process.env.LOGIN_RATE_LIMIT ?? '5', 10);
-  const LOGIN_TTL_MS = parseInt(process.env.LOGIN_TTL_MS ?? '60000', 10);
-  const raw = app.getHttpAdapter().getInstance() as RawFastify;
-  raw.addHook('onRequest', async (req: RawReq, reply: RawReply) => {
-    if (req.method !== 'POST' || !req.url?.startsWith('/api/auth/login')) return;
-    const fwd = req.headers['x-forwarded-for'];
-    const ip = (Array.isArray(fwd) ? fwd[0] : fwd?.split(',')[0]?.trim()) ?? req.ip ?? 'unknown';
-    const now = Date.now();
-    let entry = loginBucket.get(ip);
-    if (!entry || now > entry.resetAt) { entry = { count: 0, resetAt: now + LOGIN_TTL_MS }; loginBucket.set(ip, entry); }
-    entry.count++;
-    if (entry.count >= LOGIN_LIMIT) {
-      const retryAfter = Math.ceil((entry.resetAt - now) / MS_PER_SECOND);
-      reply.code(HttpStatus.TOO_MANY_REQUESTS).header('Retry-After', String(retryAfter))
-        .send({ statusCode: HttpStatus.TOO_MANY_REQUESTS, error: 'Too Many Requests', message: `Login uchun juda ko'p urinish. ${retryAfter}s dan keyin qayta urinib ko'ring.` });
-    }
-    // Periodic pruning to prevent memory leak (1% chance per request)
-    if (Math.random() < 0.01) {
-      for (const [k, v] of loginBucket.entries()) {
-        if (v.resetAt < now) loginBucket.delete(k);
-      }
-    }
-  });
-}
-
-function configureAppMiddleware(app: NestFastifyApplication): void {
-  app.setGlobalPrefix('api', {
-    exclude: [{ path: 'health', method: RequestMethod.GET }, { path: 'api/health', method: RequestMethod.GET }],
-  });
-  const origins = (process.env.ALLOWED_ORIGINS ?? '').split(',').map((o) => o.trim()).filter(Boolean);
-  const isDev = process.env.NODE_ENV !== 'production';
-  const isReplitOrigin = (o: string) =>
-    o.endsWith('.replit.dev') || o.endsWith('.repl.co') || o.endsWith('.replit.app');
-  app.enableCors({
-    origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
-      if (!origin) { cb(null, true); return; }
-      if ((Array.isArray(origins) ? origins : []).some((a) => origin === a)) { cb(null, true); return; }
-      if (isDev && isReplitOrigin(origin)) { cb(null, true); return; }
-      cb(new Error(`CORS: origin '${origin}' ruxsat etilmagan`), false);
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'x-tg-session'],
-  });
-  // ZodValidationPipe validates only createZodDto-backed classes; unknown keys are
-  // stripped (Zod default) rather than rejected — all DTO schemas are fully migrated.
-  // class-validator/class-transformer packages are retained as @nestjs/swagger peer deps.
-  app.useGlobalPipes(new ZodValidationPipe());
-  // Sentry interceptor MUST be registered BEFORE GlobalExceptionFilter so the
-  // exception is captured before the filter converts it into an HTTP response.
-  app.useGlobalInterceptors(new SentryInterceptor());
-  app.useGlobalFilters(new GlobalExceptionFilter());
-}
-
-function configureSwagger(app: NestFastifyApplication, fastify: RawFastify, port: number, logger: Logger): void {
-  if (process.env.NODE_ENV === 'production') return;
-  const secret = process.env.SWAGGER_SECRET;
-  if (!secret) { logger.warn('SWAGGER_SECRET not set — Swagger UI is disabled'); return; }
-  fastify.addHook('onRequest', (req: RawReq, reply: RawReply, done?: () => void) => {
-    if (req.url?.startsWith('/api/docs')) {
-      const params = new URLSearchParams(req.url.split('?')[1] ?? '');
-      if (params.get('secret') !== secret) { reply.code(HttpStatus.FORBIDDEN).send({ error: 'Forbidden' }); return; }
-    }
-    done?.();
-  });
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('EuroPrint ERP API v2')
-    .setDescription('NestJS + Fastify + DDD + CQRS | ARCHITECTURE.md muvofiq')
-    .setVersion('2.0').addBearerAuth().build();
-  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, swaggerConfig));
-  logger.log(`Swagger UI: http://localhost:${port}/api/docs (secret required)`);
-}
-
-function configureHealthRoutes(fastify: RawFastify): void {
-  fastify.get('/', (_req, reply) => reply.code(200).send({ status: 'ok', service: 'europrint-api' }));
-  fastify.get('/health', (_req, reply) => reply.code(200).send({ status: 'ok' }));
-  fastify.get('/metrics', async (_req, reply) => {
-    const metrics = await promRegister.metrics();
-    reply.code(200).header('content-type', promRegister.contentType).send(metrics);
-  });
-}
 
 // Eslatma: 404 handling NestJS Global Exception Filter ichida amalga oshiriladi
 // (apps/api/src/common/filters/global-exception.filter.ts). Fastify'ning
@@ -258,26 +71,12 @@ async function bootstrap(): Promise<void> {
       `@fastify/cookie ro'yxatdan o'tmadi — Bearer token rejimi ishlatiladi: ${String(e)}`,
     );
   }
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   await app.register(require('@fastify/multipart'), { limits: { fileSize: MAX_FILE_SIZE, files: 1 } });
 
   // Parse raw binary uploads as Buffer. Registered AFTER multipart so
   // multipart/form-data is still handled by @fastify/multipart.
-  // We register explicit types first for reliability, then a '*' wildcard fallback.
-  type CtParser = {
-    addContentTypeParser: (
-      ct: string | RegExp,
-      opts: { parseAs: 'buffer' },
-      fn: (req: unknown, body: Buffer, done: (e: Error | null, b: Buffer) => void) => void,
-    ) => void;
-  };
-  const fInst = app.getHttpAdapter().getInstance() as unknown as CtParser;
-  const bufParser = (_req: unknown, body: Buffer, done: (e: Error | null, b: Buffer) => void) => done(null, body);
-  fInst.addContentTypeParser('application/octet-stream', { parseAs: 'buffer' }, bufParser);
-  fInst.addContentTypeParser(/^image\//, { parseAs: 'buffer' }, bufParser);
-  fInst.addContentTypeParser(/^audio\//, { parseAs: 'buffer' }, bufParser);
-  fInst.addContentTypeParser(/^video\//, { parseAs: 'buffer' }, bufParser);
-  fInst.addContentTypeParser('application/pdf', { parseAs: 'buffer' }, bufParser);
-  fInst.addContentTypeParser('*', { parseAs: 'buffer' }, bufParser);
+  registerBufferParsers(app);
 
   configureBlockedMethods(app);
   configureCsrfOriginCheck(app, logger);

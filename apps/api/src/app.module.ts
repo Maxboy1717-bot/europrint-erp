@@ -1,6 +1,8 @@
 /**
  * @module app.module
- * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ * @description NestJS @Module() definition. Providers, controllers, and imports
+ *   for this feature slice. Feature-module imports were extracted to
+ *   `feature-modules.ts` to keep this file under the 300-line cap (Rule 16).
  */
 
 import { Module, Logger } from '@nestjs/common';
@@ -36,96 +38,22 @@ import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
 import redisConfig from './config/redis.config';
 
-// Infrastructure
-import { DatabaseModule } from './infrastructure/database/database.module';
-import { RedisModule } from './infrastructure/redis/redis.module';
-
-// Sprint 5 — Infratuzilma (TZ-59 Cache, TZ-60 BullMQ)
-import { CacheModule } from './common/cache/cache.module';
-import { QueueModule } from './modules/queue/queue.module';
-
-// Core modules (24 ta — to'liq NestJS)
-import { AuthModule } from './modules/auth/auth.module';
-import { AdminModule } from './modules/admin/admin.module';
-import { CrmModule } from './modules/crm/crm.module';
-import { SdModule } from './modules/sd/sd.module';
-import { PpModule } from './modules/pp/pp.module';
-import { MesModule } from './modules/mes/mes.module';
-import { WmsModule } from './modules/wms/wms.module';
-import { QcModule } from './modules/qc/qc.module';
-import { HrModule } from './modules/hr/hr.module';
-import { LmsModule } from './modules/lms/lms.module';
-import { FinanceModule } from './modules/finance/finance.module';
-import { MmModule } from './modules/mm/mm.module';
-import { LogisticsModule } from './modules/logistics/logistics.module';
-import { NotificationsModule } from './modules/notifications/notifications.module';
-import { IotModule } from './modules/iot/iot.module';
-import { DesignModule } from './modules/design/design.module';
-import { MarketingModule } from './modules/marketing/marketing.module';
-import { MroModule } from './modules/mro/mro.module';
-import { SecurityModule } from './modules/security/security.module';
-import { KanbanModule } from './modules/kanban/kanban.module';
-import { AiModule } from './modules/ai/ai.module';
-import { AiAgentsModule } from './modules/ai-agents/ai-agents.module';
-import { BotGatewayModule } from './modules/bot-gateway/bot-gateway.module';
-import { DirectorModule } from './modules/director/director.module';
-import { AishaModule } from './modules/aisha/aisha.module';
-import { CommunicationCenterModule } from './modules/communication-center/communication-center.module';
-import { AgentsModule } from './modules/agents/agents.module';
-import { PosModule } from './modules/pos/pos.module';
-import { PosV2Module } from './modules/pos-v2/pos-v2.module';
-import { CoreModule } from './modules/core/core.module';
-import { OrgStructureModule } from './modules/org-structure/org-structure.module';
-import { ChatModule } from './modules/chat/chat.module';
-import { StorageModule } from './modules/storage/storage.module';
-
-// Ecommerce & Website (Express dan ko'chirildi — NestJS native)
-// PA3-17 Wave 6: WebsiteModule merged into EcommerceModule (ecommerce/website/)
-import { EcommerceModule } from './modules/ecommerce/ecommerce.module';
-
-// Legacy & Compatibility (minimallashtirilgan — asosiy route'lar ko'chirildi)
-import { LegacyModule } from './modules/general/legacy.module';
-import { CompatibilityModule } from './modules/compatibility/compatibility.module';
-
-// Cron + Telegram
-import { CronModule } from './cron/cron.module';
-import { TelegramModule } from './telegram/telegram.module';
-
-// Remaining routes (to'liq NestJS — Express o'chirildi)
-import { RemainingModule } from './modules/remaining/remaining.module';
-import { IntegrationModule } from './modules/integration/integration.module';
-
-// New modules (CRM/SD extensions)
-// PA3-17 Wave 3: SalesModule merged into SdModule
-// PA3-17 Wave 5: ApplicationsModule merged into HrModule (hr/applications/)
-// PA3-17 Wave 5: SapModule merged into IntegrationModule (integration/sap/)
-
-// PP / MES / Production extensions
-// PA3-17 Wave 6: ProductionModule merged into PpModule (pp/production/)
-import { ErpModule } from './modules/erp/erp.module';
-
-// Analytics & Export
-// PA3-17 Wave 6: AnalyticsModule merged into DirectorModule (director/analytics/)
-import { ExportModule } from './modules/export/export.module';
-
-// Design / Technology / HR Assets (Task #262)
-// PA3-17 Wave 5: TechnologyModule merged into PpModule (pp/technology/)
-// PA3-17 Wave 3: HrAssetsModule merged into HrModule
-
-// Faza 7 — New endpoint modules
-// PA3-17 Wave 3: AdaptationModule merged into HrModule
-// CameraModule removed — its routes were dead code (no frontend usage). All
-// active camera functionality now lives under IotModule.
-// PA3-17 Wave 3: Feedback360Module merged into HrModule
-
-// Sprint 4 — Order-to-Cash Workflow
-import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.module';
-
-// PA0 event-bridge fix — CQRS EventBus → EventEmitter2 (Trigger 2, 7, 14, 15, 20)
-import { SharedEventsModule } from './modules/shared/events/shared-events.module';
-
-// PA0-6 — Outbox pattern (persisted domain events + scheduled publisher)
-import { OutboxModule } from './modules/shared/outbox/outbox.module';
+// Feature modules — extracted to keep this file under 300 lines (Rule 16).
+import {
+  DatabaseModule, RedisModule,
+  CacheModule, QueueModule,
+  AuthModule, AdminModule, CrmModule, SdModule, PpModule, MesModule,
+  WmsModule, QcModule, HrModule, LmsModule, FinanceModule, MmModule,
+  LogisticsModule, NotificationsModule, IotModule, DesignModule,
+  MarketingModule, MroModule, SecurityModule, KanbanModule, AiModule,
+  AiAgentsModule, BotGatewayModule, DirectorModule, AishaModule,
+  CommunicationCenterModule, AgentsModule, PosModule, PosV2Module,
+  CoreModule, OrgStructureModule, ChatModule, StorageModule,
+  EcommerceModule, LegacyModule, CompatibilityModule,
+  CronModule, TelegramModule, RemainingModule, IntegrationModule,
+  ErpModule, ExportModule, OrderWorkflowModule,
+  SharedEventsModule, OutboxModule,
+} from './feature-modules';
 
 @Module({
   imports: [
@@ -230,10 +158,9 @@ import { OutboxModule } from './modules/shared/outbox/outbox.module';
     StorageModule,
 
     // ── Ecommerce & Website (NestJS native — Express dan ko'chirildi) ──────────
-    // PA3-17 Wave 6: WebsiteModule merged into EcommerceModule (ecommerce/website/)
     EcommerceModule,
 
-    // ── Legacy & Compatibility (minimallashtirilgan — saqlanadi chunki funksiya yo'qolmasligi shart) ──
+    // ── Legacy & Compatibility (minimallashtirilgan) ────────────────────────────
     CompatibilityModule,
     LegacyModule,
 
@@ -245,26 +172,11 @@ import { OutboxModule } from './modules/shared/outbox/outbox.module';
     RemainingModule,
     IntegrationModule,
 
-    // ── CRM/SD Extensions ────────────────────────────────────────────────────
-    // PA3-17 Wave 3: SalesModule merged into SdModule (controllers/services moved to sd/sales/)
-    // PA3-17 Wave 5: ApplicationsModule merged into HrModule (hr/applications/)
-    // PA3-17 Wave 5: SapModule merged into IntegrationModule (integration/sap/)
-
     // ── PP / MES / Production Extensions ─────────────────────────────────────
-    // PA3-17 Wave 6: ProductionModule merged into PpModule (pp/production/)
     ErpModule,
 
     // ── Analytics & Export ────────────────────────────────────────────────────
-    // PA3-17 Wave 6: AnalyticsModule merged into DirectorModule (director/analytics/)
     ExportModule,
-
-    // ── Design / Technology / HR Assets (Task #262) ───────────────────────────
-    // PA3-17 Wave 5: TechnologyModule merged into PpModule (pp/technology/)
-    // PA3-17 Wave 3: HrAssetsModule merged into HrModule (hr/hr-assets/)
-
-    // ── Faza 7 — New endpoint modules ─────────────────────────────────────────
-    // PA3-17 Wave 3: AdaptationModule + Feedback360Module merged into HrModule
-    //   (hr/adaptation/ and hr/feedback-360/)
 
     // ── Sprint 4 — Order-to-Cash Workflow ─────────────────────────────────────
     OrderWorkflowModule,
@@ -284,7 +196,8 @@ import { OutboxModule } from './modules/shared/outbox/outbox.module';
     { provide: APP_GUARD, useClass: SodGuard },
     { provide: APP_GUARD, useClass: PermissionGuard },
 
-    // ── Sprint 3 startup migration (ensures rfm_clusters, churn_model_params, imposition_layouts) ──
+    // ── Sprint 3 startup migration ─────────────────────────────────────────
+    // Ensures rfm_clusters, churn_model_params, imposition_layouts.
     Sprint3MigrationService,
 
     // ── Global Interceptors (tartib muhim: Audit → ResultUnwrap) ─────────────
