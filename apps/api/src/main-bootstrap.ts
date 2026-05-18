@@ -78,12 +78,20 @@ export function configureCsrfOriginCheck(app: NestFastifyApplication, logger: Lo
   const isReplitOrigin = (host: string) =>
     host.endsWith('.replit.dev') || host.endsWith('.repl.co') || host.endsWith('.replit.app');
 
+  const isLocalhostOrigin = (host: string) =>
+    host === 'localhost' || host.startsWith('localhost:') ||
+    host === '127.0.0.1' || host.startsWith('127.0.0.1:') ||
+    host === '[::1]' || host.startsWith('[::1]:');
+
   const isOriginAllowed = (origin: string): boolean => {
     if (origins.includes(origin)) return true;
     if (!isDev) return false;
     try {
       const host = new URL(origin).host;
-      return isReplitOrigin(host);
+      // In development allow any localhost/127.0.0.1 origin so the Vite dev
+      // server (any port) can reach the API without listing every port in
+      // ALLOWED_ORIGINS. Production still requires explicit origin allowlisting.
+      return isReplitOrigin(host) || isLocalhostOrigin(host);
     } catch {
       return false;
     }
