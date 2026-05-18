@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -117,12 +116,10 @@ export default function OrderCosting() {
                 <p className="text-white/75 text-sm">{t("harBirBuyurtmaUchunXarajatlar")}</p>
               </div>
             </div>
-            <DialogTrigger asChild onClick={() => setCreateDialogOpen(true)}>
-              <Button className="bg-card text-[var(--ep-green)] hover:bg-green-50 gap-2" data-testid="button-create-costing">
-                <Plus className="h-4 w-4" />
-                {t("yangiTannarx")}
-              </Button>
-            </DialogTrigger>
+            <Button className="bg-card text-[var(--ep-green)] hover:bg-green-50 gap-2" data-testid="button-create-costing" onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4" />
+              {t("yangiTannarx")}
+            </Button>
           </div>
         </div>
       </div>

@@ -79,39 +79,6 @@
   "workInfo": "Рабочие данные",
   "documents": "Документы",
   "education": "Образование",
-  "skills": {
-    "assignSkill": "skills.assignSkill",
-    "category": "skills.category",
-    "createError": "skills.createError",
-    "createSkill": "skills.createSkill",
-    "createdOk": "skills.createdOk",
-    "deleteEmpSkillDesc": "skills.deleteEmpSkillDesc",
-    "deleteEmpSkillTitle": "skills.deleteEmpSkillTitle",
-    "deleteError": "skills.deleteError",
-    "deleteSkillDesc": "skills.deleteSkillDesc",
-    "deleteSkillTitle": "skills.deleteSkillTitle",
-    "deletedOk": "skills.deletedOk",
-    "empAddError": "skills.empAddError",
-    "empAddedOk": "skills.empAddedOk",
-    "empDeleteError": "skills.empDeleteError",
-    "empDeletedOk": "skills.empDeletedOk",
-    "empSkillsDesc": "skills.empSkillsDesc",
-    "empSkillsTitle": "skills.empSkillsTitle",
-    "emptyEmpSkillsDesc": "skills.emptyEmpSkillsDesc",
-    "emptyEmpSkillsTitle": "skills.emptyEmpSkillsTitle",
-    "emptySkillsDesc": "skills.emptySkillsDesc",
-    "emptySkillsTitle": "skills.emptySkillsTitle",
-    "name": "skills.name",
-    "skilledEmployees": "skills.skilledEmployees",
-    "skillsListDesc": "skills.skillsListDesc",
-    "skillsListTitle": "skills.skillsListTitle",
-    "subtitle": "skills.subtitle",
-    "title": "skills.title",
-    "totalAssigned": "skills.totalAssigned",
-    "totalSkills": "skills.totalSkills",
-    "updateError": "skills.updateError",
-    "updatedOk": "skills.updatedOk"
-  },
   "certificates": "Сертификаты",
   "payrollPeriod": "Расчётный период",
   "calculatePayroll": "Рассчитать зарплату",
@@ -193,9 +160,6 @@
   "workHistory": "Трудовая история",
   "workSchedule": "Рабочий график",
   "years": "лет",
-  "employee": {
-    "email": "Электронная почта"
-  },
   "oralWarning": "Устное",
   "writtenWarning": "Письменное",
   "finalWarning": "Последнее предупреждение",
@@ -606,88 +570,5 @@
   "reasonRuPlaceholder": "Причина и подробности...",
   "selectHrAdmin": "Выберите HR/Admin",
   "jshd12": "JSHD (12%):",
-  "inps12": "INPS (12%):",
-  "HRCapitalTab": {
-    "yakunlangan": "Завершено"
-  },
-  "": {
-    "ogohlantirish": "Предупреждение",
-    "xavfsizlik": "Безопасность",
-    "kadrlar": "Кадры",
-    "alertlar": "Оповещения",
-    "orta": "Средний",
-    "malumot": "Информация"
-  },
-  "HRCapitalTestsHelpers": {
-    "tsx": {
-      "jarayonda": "В процессе",
-      "kutilmoqda": "Ожидает",
-      "muddatiOtdi": "Просрочено"
-    }
-  },
-  "HRCapitalTests": {
-    "boshqalarningFikriniHisobgaOlmaydi": "Не учитывает мнение других",
-    "ortadanPast8089": "Ниже среднего (80-89)",
-    "orta9099": "Средний (90-99)",
-    "ortadanYuqori100109": "Выше среднего (100-109)",
-    "goyalargaTolaLekinTartibsizYakunlamaydigan": "Полон идей, но неупорядочен, не завершает",
-    "jamoaBilanIshlashniAfzalKoradi": "Предпочитает работать в команде, но коммуникация слабая",
-    "jamoaQogirchoqi": "Командная марионетка",
-    "tanqidVaOsishImkoniyatlaridanQorqadi": "Боится критики и возможностей роста",
-    "osishdanQochuvchi": "Избегающий роста",
-    "stressgaNisbatanKuchliTasirlanuvchan": "Сильно подвержен стрессу",
-    "ishlarniKechiktiradiQarorQabulQilishdan": "Откладывает дела, боится принимать решения",
-    "pastSamaradorlikMasuliyatdanQochadi": "Низкая эффективность, избегает ответственности",
-    "boshqalarniBoshqarishUchunTasirVositalaridan": "Использует средства влияния для управления другими",
-    "ortiqchaOptimistXatarlarniKormaydi": "Чрезмерно оптимистичен, не видит рисков",
-    "qattiqTartibTarafdoriOzgarishlargaQarshilik": "Сторонник жёсткого порядка, сопротивляется изменениям",
-    "osishgaTayyorlik": "Готовность к росту"
-  },
-  "HRDashboard": {
-    "malakalarMatritsasi": "Матрица навыков",
-    "pipRejalar": "Планы PIP",
-    "kunlikHisobot": "Ежедневный отчёт",
-    "hujjatOqimi": "Документооборот",
-    "enpsSorov": "Опрос eNPS"
-  },
-  "HROffboarding": {
-    "ketishSababingizNima": "Какова причина вашего ухода?",
-    "bekorQilindi": "Отменено",
-    "faol": "Активный"
-  },
-  "HRSuccessionPlanning": {
-    "asosiyIshchilar": "Ключевые работники",
-    "yashirinYulduzlar": "Скрытые звёзды",
-    "ishchiOtliqlar": "Рабочие лошадки",
-    "yulduzlar": "Звёзды"
-  },
-  "HRZvsPage": {
-    "tasdiqlangan": "Подтверждено",
-    "kutilmoqda": "Ожидает",
-    "ortacha": "Средний"
-  },
-  "utils": {
-    "ogohlantirish": "Предупреждение",
-    "nofaol": "Неактивный",
-    "ishdanKetgan": "Уволен",
-    "ishlamoqda": "Работает",
-    "ragbatlantirish": "Поощрение"
-  },
-  "HRCapitalPublicTest": {
-    "osishgaTayyorlik": "Готовность к росту"
-  },
-  "MarketHeatBadge": {
-    "tsx": {
-      "ortachaBozor": "Средний рынок",
-      "qizginBozor": "Горячий рынок"
-    }
-  },
-  "useOrgNodeData": {
-    "ochirildi": "Удалено"
-  },
-  "useEmployeeFiles": {
-    "faylniOchiribBolmadi": "Не удалось удалить файл",
-    "faylOchirildi": "Файл удалён",
-    "faylniYuklabBolmadi": "Не удалось загрузить файл"
-  }
+  "inps12": "INPS (12%):"
 }

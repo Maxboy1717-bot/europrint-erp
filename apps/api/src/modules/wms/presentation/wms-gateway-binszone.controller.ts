@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module wms-gateway-binszone.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
@@ -80,10 +80,9 @@ export class WmsGatewayBinZoneController {
 
   constructor(private readonly svc: WmsWarehouseGatewayService) {}
 
-  // ── BINS ──────────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ BINS в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
   @ApiOperation({ summary: 'Get bins' })
-  @ApiResponse({ status: 200, description: 'OK' })
   @Get('bins')
   @Roles(...WH_READ)
   async getBins(
@@ -141,7 +140,6 @@ export class WmsGatewayBinZoneController {
   }
 
   @ApiOperation({ summary: 'Get bin360' })
-  @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('bins/:id/360')
   @Roles(...WH_READ)
@@ -161,7 +159,6 @@ export class WmsGatewayBinZoneController {
   }
 
   @ApiOperation({ summary: 'Get bin by id' })
-  @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('bins/:id')
   @Roles(...WH_READ)
@@ -181,7 +178,6 @@ export class WmsGatewayBinZoneController {
   }
 
   @ApiOperation({ summary: 'Update bin' })
-  @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('bins/:id')
@@ -203,7 +199,6 @@ export class WmsGatewayBinZoneController {
   }
 
   @ApiOperation({ summary: 'Delete bin' })
-  @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('bins/:id')
@@ -215,10 +210,9 @@ export class WmsGatewayBinZoneController {
     } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
-  // ── ZONES ─────────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ ZONES в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
   @ApiOperation({ summary: 'Get zones' })
-  @ApiResponse({ status: 200, description: 'OK' })
   @Get('zones')
   @Roles(...WH_READ)
   async getZones(@Query('warehouse_id') warehouseId?: string) {
@@ -267,7 +261,6 @@ export class WmsGatewayBinZoneController {
   }
 
   @ApiOperation({ summary: 'Update zone' })
-  @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('zones/:id')
@@ -290,7 +283,6 @@ export class WmsGatewayBinZoneController {
   }
 
   @ApiOperation({ summary: 'Delete zone' })
-  @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('zones/:id')

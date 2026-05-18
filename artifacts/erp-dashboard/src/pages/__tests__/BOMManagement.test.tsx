@@ -33,13 +33,11 @@ const responses = {
   // Non-empty data prevents the page from short-circuiting to the empty
   // state (which renders no buttons), so the "after data resolves" assertion
   // can find actual interactive controls.
+  // Shape must match Array<{ bom: BOMHeader; product: Product }> as expected by BOMManagement.
   '/api/erp/bom-headers': [
     {
-      id: 'b-1',
-      bomNumber: 'BOM-001',
-      productId: 'p-1',
-      version: 1,
-      status: 'active',
+      bom: { id: 'b-1', bomNumber: 'BOM-001', version: 1, status: 'active', baseQuantity: 1, unit: 'pcs', productId: 'p-1' },
+      product: { id: 'p-1', code: 'P001', name: 'Test product' },
     },
   ],
   '/api/erp/products': [

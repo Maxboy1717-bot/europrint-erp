@@ -9,6 +9,7 @@
  */
 
 import { QueryClient, QueryClientProvider, type QueryFunction } from '@tanstack/react-query';
+import { LanguageProvider } from '@/lib/i18n';
 import type { ReactNode } from 'react';
 
 export type UrlResponses = Record<string, unknown | (() => unknown)>;
@@ -55,7 +56,11 @@ export function makeQueryWrapper(opts: TestQueryOptions = {}) {
     },
   });
   return function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
+    return (
+      <LanguageProvider>
+        <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+      </LanguageProvider>
+    );
   };
 }
 

@@ -1,9 +1,6 @@
 {
   "warehouse": "Склад",
   "warehouses": "Склады",
-  "inventory": {
-    "sku": "SKU"
-  },
   "stock": "Запас",
   "stockLevel": "Уровень запасов",
   "locations": "Места хранения",
@@ -444,165 +441,10 @@
   "mm.confirmDeleteTitle": "Удалить заказ на закупку",
   "mm.confirmDeleteDesc": "Подтверждаете удаление этого заказа? Это действие нельзя отменить.",
   "dashboard9": "Дашборд 9",
-  "hub": {
-    "newReceipt": "Новый приём",
-    "openWithLayers": "Открыть со слоями",
-    "posSync": "POS Синхр."
-  },
   "mahsulotId": "ID продукта",
   "miqdorOzgarishi": "Изменение количества",
   "miqdorniSozlash": "Настройка количества",
-  "mm": {
-    "actions": "Действия",
-    "amount": "Сумма",
-    "confirmDeleteDesc": "Подтверждаете удаление?",
-    "confirmDeleteTitle": "Подтвердите удаление",
-    "date": "Дата",
-    "deliveryDate": "Дата доставки",
-    "emptyDescription": "Нет данных",
-    "emptyTitle": "Пусто",
-    "errorLoadMessage": "Не удалось загрузить данные",
-    "errorLoadTitle": "Ошибка загрузки",
-    "orderDate": "Дата заказа",
-    "orderItems": "Позиции заказа",
-    "poListTitle": "Список заказов",
-    "poNumber": "Номер заказа",
-    "price": "Цена",
-    "purchaseOrdersSubtitle": "Управление закупками",
-    "purchaseOrdersTitle": "Заказы на закупку",
-    "quantity": "Количество",
-    "rawMaterial": "Сырьё",
-    "status": "Статус",
-    "statusCancelled": "Отменено",
-    "statusConfirmed": "Подтверждено",
-    "statusDraft": "Черновик",
-    "statusReceived": "Получено",
-    "statusSent": "Отправлено",
-    "toastCreated": "Создано",
-    "toastDeleted": "Удалено",
-    "total": "Всего",
-    "totalAmount": "Общая сумма",
-    "unit": "Единица",
-    "vendor": "Поставщик",
-    "viewTitle": "Просмотр"
-  },
   "sabab": "Причина",
   "sabab2": "Причина",
-  "k10Yoki5": "10 или -5",
-  "PosWarehousePage": {
-    "zararAkti": "Акт убытка",
-    "qaytarish": "Вернуть",
-    "omborKochirish": "Перемещение склада",
-    "bolimgaBerish": "Выдача в подразделение"
-  },
-  "InventarizatsiyaPanel": {
-    "tsx": {
-      "bekor": "Отмена",
-      "jarayonda": "В процессе"
-    }
-  },
-  "LotsTab": {
-    "tsx": {
-      "tasdiqlangan": "Подтверждено"
-    }
-  },
-  "warehouse-": {
-    "nomi": "Название",
-    "untitled": "Название",
-    "omborlarZonalarBinlarVaKochirishlarni": "Управление складами, зонами, ячейками и перемещениями"
-  },
-  "WarehouseDailyView": {
-    "tasdiqlangan": "Подтверждено",
-    "tayyorlanmoqda": "Готовится",
-    "kutilmoqda": "Ожидает"
-  },
-  "WarehouseIntegrations": {
-    "omborQiymatiVaBuxgalteriya": "Стоимость склада и бухгалтерия",
-    "xaridBuyurtmalariVaQaytaBuyurtma": "Закупочные заказы и повторный заказ",
-    "buyurtmalarUchunMateriallarBoshqaruvi": "Управление материалами для заказов",
-    "ppIshlabChiqarish": "PP - Производство",
-    "untitled": "Оценка склада и бухгалтерия",
-    "fi": "FI - Финансы",
-    "mm": "MM - Закупки",
-    "pp": "PP - Производство",
-    "ppMmFi": "Связь с модулями PP, MM и FI",
-    "ppMmVaFiModullari": "Связь с модулями PP, MM и FI"
-  },
-  "WarehouseKirimWizard": {
-    "tasdiqlash": "Подтвердить",
-    "materiallar": "Материалы",
-    "mroOmboriTexnikMateriallarKirim": "Склад MRO — Приёмка технических материалов",
-    "yarimTayyorLiniyadanQabul": "Полуфабрикат — Приёмка с линии",
-    "tayyorMahsulotIshlabChiqarishdanQabul": "Готовая продукция — Приёмка из производства",
-    "koribChiqish": "Просмотр",
-    "asosiyMalumotlar": "Основные данные",
-    "tashqiKirimQolda": "Внешняя приёмка (Вручную)",
-    "xojalikOmboriMateriallarKirim": "Хозяйственный склад — Приёмка материалов"
-  },
-  "WarehouseMaterialKits": {
-    "tayyorlanmoqda": "Готовится",
-    "kutilmoqda": "Ожидает"
-  },
-  "WarehouseRental": {
-    "yopilgan": "Закрыто",
-    "tolangan": "Оплачено"
-  },
-  "WarehouseReports": {
-    "tsx": {
-      "birlik": "Единица",
-      "joriyMiqdor": "Текущее количество"
-    }
-  },
-  "WarehouseReportsAll": {
-    "chopEtilganBarkodlarTarixi": "История напечатанных штрих-кодов",
-    "harXodimningMaterialBalansi": "Баланс материалов по каждому сотруднику",
-    "xodimBalansi": "Баланс сотрудника",
-    "harakatTasdiqlashAudit": "Аудит подтверждения операций",
-    "tasdiqlashAuditi": "Аудит подтверждений",
-    "qcHisobot": "Отчёт QC",
-    "3TomonlamaTaqqoslash": "3-стороннее сравнение",
-    "glHisobotAudit": "Отчёт GL (Аудит)",
-    "zararHarakatlari": "Операции списания",
-    "partiyalarQarilikTahlili": "Анализ старения партий",
-    "materiallarABCGuruhlari": "Материалы по группам A/B/C (Парето)",
-    "muddatOgohlantirish": "Уведомление о сроке",
-    "minimalQoldiqdanPastMateriallar": "Материалы ниже минимального остатка",
-    "taminotchilarReytingKorsatkichi": "Рейтинг поставщиков",
-    "taminotchiReytingi": "Рейтинг поставщиков",
-    "ichkiSorovlarBajarilishi": "Исполнение внутренних запросов",
-    "sorovBajarish": "Исполнение запросов",
-    "damageTuriZararlarRoyxati": "Тип DAMAGE — список потерь",
-    "barchaKirimChiqimKochirish": "Все приходы/расходы/перемещения"
-  },
-  "WarehouseStatsPanel": {
-    "tsx": {
-      "qarzlar": "Задолженности"
-    }
-  },
-  "": {
-    "untitled": "Контроль сроков",
-    "abcXyz": "ABC/XYZ анализ"
-  },
-  "translations": {
-    "untitled": "История Запросов Резервирования",
-    "ai": "AI рекомендация",
-    "aiFefo": "Резервирование материалов на основе AI с FEFO оптимизацией",
-    "zaxiraSorovlariTarixi": "История запросов резервирования",
-    "aiZaxiraSorovi": "AI запрос резервирования",
-    "fefoOptimizatsiyasiBilanAiAsosiy": "AI-резервирование материалов с FEFO оптимизацией"
-  },
-  "WarehouseDashboard": {
-    "ichkiSorov": "Внутренний запрос",
-    "kochirish": "Перемещение"
-  },
-  "WMSExtended": {
-    "ichkiSorovlar": "Внутренние запросы",
-    "kochirish": "Перемещение"
-  },
-  "PosWarehouseDetail": {
-    "nomalum": "Неизвестно"
-  },
-  "RollManagementPage": {
-    "boshlangichOgirlikKg": "Начальный вес (кг) *"
-  }
+  "k10Yoki5": "10 или -5"
 }

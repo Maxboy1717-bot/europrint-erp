@@ -454,44 +454,5 @@
   "ushbuSifatParametriniOchirishniTasdiqlaysizmi": "Подтверждаете удаление этого параметра качества?",
   "ushbuXodimTayinlashiniOchirishniTasdiqlaysizmi": "Подтверждаете удаление назначения этого сотрудника?",
   "yangiBuyurtma": "Новый заказ",
-  "untitled": "Картонная коробка",
-  "AIProductionPlanning": {
-    "bajarilmoqda": "Выполняется",
-    "tasdiqlangan": "Подтверждено",
-    "avtoTasdiqlangan": "Авто-подтверждено"
-  },
-  "CandidateChecklist": {
-    "tavsiyalarTekshirildiReferenceCheck": "Рекомендации проверены (Reference check)",
-    "fonTekshiruviIjtimoiyTarmoqlarMat": "Фон-проверка (соцсети, Мат. №54)",
-    "30KunBaholashSuhbatiOtkazildi": "Проведена 30-дневная оценочная беседа",
-    "taklifYuborildiOgzakiTaklifBerildi": "Предложение отправлено / устное предложение дано",
-    "material46MahsuldorlikShakliToldirildi": "Материал №46 — Заполнена форма продуктивности",
-    "aiSuhbatErpTizimidaOtkazildi": "Проведено AI собеседование (в системе ERP)",
-    "hrCapitalToolTestOtkazildi": "Проведён HR Capital TOOL TEST (A-J)",
-    "asosiySuhbatOtkazildiMaterial11": "Проведено основное собеседование (Материал №11)",
-    "mahsuldorlikAnketaToldirildi": "Заполнена анкета продуктивности",
-    "telefonSuhbatiOtkazildiMaterial53": "Проведено телефонное интервью (Материал №53)",
-    "cvSkriningOtkazildiMaterial52": "Проведён скрининг CV (Материал №52)",
-    "cvQabulQilindiVaRoyxatga": "CV получено и зарегистрировано"
-  },
-  "ProductionOrder360": {
-    "jarayonda": "В процессе",
-    "qcToxtatdi": "QC остановил"
-  },
-  "TechPPExtended": {
-    "yetkazishKalk": "Расчёт доставки",
-    "parallelJarayonlar": "Параллельные процессы",
-    "smenaBoshqaruvi": "Управление сменой",
-    "parallelBuyurtmalar": "Параллельные заказы",
-    "mijozTalablari": "Требования клиента",
-    "xarajatOptimizatsiya": "Оптимизация затрат",
-    "stanoqTanlash": "Выбор станка",
-    "kpiOgish": "Отклонение KPI",
-    "ozgarishlarTarixi": "История изменений"
-  },
-  "helpers": {
-    "jarayonda": "В процессе",
-    "rejalashtirilganTexnikKorik": "Запланированный технический осмотр",
-    "qcToxtatdi": "QC остановил"
-  }
+  "untitled": "Картонная коробка"
 }

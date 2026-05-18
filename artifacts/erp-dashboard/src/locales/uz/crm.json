@@ -15,9 +15,6 @@
   "leadUpdated": "Lead yangilandi",
   "leadsDeleted": "Lidlar o'chirildi",
   "contacts": "Kontaktlar",
-  "contact": {
-    "email": "Электронная почта"
-  },
   "addContact": "Kontakt qo'shish",
   "searchContact": "Kontakt qidirish...",
   "contactsNotFound": "Kontaktlar topilmadi",
@@ -421,59 +418,6 @@
   "yopishSanasi": "Yopish sanasi",
   "companyDataUpdated": "Kompaniya ma'lumotlari yangilandi",
   "dataUpdateError": "Ma'lumotlarni yangilashda xatolik",
-  "activity": {
-    "email": "Электронная почта"
-  },
-  "activityType": {
-    "email": "Электронная почта"
-  },
   "yoQotildiLost": "Yo'qotildi (Lost)",
-  "yutildiWon": "Yutildi (Won)",
-  "crm-": {
-    "robotlar": "Robotlar",
-    "fakturalar": "Fakturalar",
-    "takliflar": "Takliflar",
-    "kompaniyalar": "Kompaniyalar",
-    "kontaktlar": "Kontaktlar",
-    "bitimlar": "Bitimlar",
-    "lidlar": "Lidlar",
-    "bekorQilindi": "Bekor qilindi",
-    "yangi": "Yangi",
-    "yetkazish": "Yetkazish",
-    "yetkazishKutilmoqda": "Yetkazish kutilmoqda",
-    "buyurtma": "Buyurtma",
-    "emailYuborish": "Email yuborish",
-    "vazifaYaratish": "Vazifa yaratish",
-    "xabarYuborish": "Xabar yuborish",
-    "yaratilganda": "Yaratilganda",
-    "tolandi": "To'landi",
-    "qismanTolandi": "Qisman to'landi",
-    "korildi": "Ko'rildi",
-    "tolovKutilmoqda": "To'lov kutilmoqda",
-    "yoqotildi": "Yo'qotildi",
-    "maydonniOzgartirish": "Maydonni o'zgartirish",
-    "bosqichniOzgartirish": "Bosqichni o'zgartirish",
-    "vaqtOtganda": "Vaqt o'tganda",
-    "maydonOzgarganda": "Maydon o'zgarganda",
-    "bosqichOzgarganda": "Bosqich o'zgarganda"
-  },
-  "RobotsView": {
-    "telegramYuborish": "Telegram yuborish",
-    "emailYuborish": "Email yuborish",
-    "vazifaYaratish": "Vazifa yaratish",
-    "xabarnomaYuborish": "Xabarnoma yuborish",
-    "yaratilganda": "Yaratilganda",
-    "bosqichniOzgartirish": "Bosqichni o'zgartirish",
-    "vaqtOtganda": "Vaqt o'tganda",
-    "maydonOzgarganda": "Maydon o'zgarganda",
-    "bosqichOzgarganda": "Bosqich o'zgarganda"
-  },
-  "EntityCard": {
-    "orta": "→ O'rta",
-    "qongiroq": "Qo'ng'iroq"
-  },
-  "ExtendedAIPanelSections": {
-    "faoliyatsizBitimlar3Kun": "Faoliyatsiz bitimlar (3+ kun)",
-    "slaBuzilishlar": "SLA buzilishlar"
-  }
+  "yutildiWon": "Yutildi (Won)"
 }

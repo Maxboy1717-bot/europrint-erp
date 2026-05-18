@@ -19,7 +19,8 @@
  * Whitelist: brand names + acronyms that legitimately appear in both locales.
  */
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // ── Brand / acronym whitelist — these appear identically in UZ and RU ──────
 const WHITELIST = new Set([
@@ -239,49 +240,57 @@ async function domMode(htmlPath, locale) {
 // ── CLI ────────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
 function arg(name) {
+  // supports both --key=value and --key value forms
+  const eq = args.find(a => a.startsWith(`--${name}=`));
+  if (eq) return eq.slice(`--${name}=`.length);
   const i = args.indexOf(`--${name}`);
   return i >= 0 ? args[i + 1] : null;
 }
 
-const mode = arg('mode') ?? 'static';
+const __filename = fileURLToPath(import.meta.url);
+const isMain = resolve(process.argv[1] ?? '') === resolve(__filename);
 
-if (mode === 'dom') {
-  const html = arg('html');
-  const locale = arg('locale') ?? 'ru';
-  if (!html) {
-    console.error('Usage: --mode=dom --html <path> --locale ru|uz');
+if (isMain) {
+  const mode = arg('mode') ?? 'static';
+
+  if (mode === 'dom') {
+    const html = arg('html');
+    const locale = arg('locale') ?? 'ru';
+    if (!html) {
+      console.error('Usage: --mode=dom --html <path> --locale ru|uz');
+      process.exit(1);
+    }
+    const leaks = await domMode(html, locale);
+    console.log(JSON.stringify({ leaks }, null, 2));
+  } else if (mode === 'static') {
+    const target = arg('out') ?? 'docs/i18n-leakage-baseline.json';
+    const all = [];
+    for (const dir of SCAN_DIRS) {
+      try { statSync(dir); } catch { continue; }
+      for (const f of walk(dir)) {
+        const fs = scanFile(f);
+        all.push(...fs);
+      }
+    }
+    // Aggregate by file
+    const byFile = {};
+    for (const f of all) {
+      byFile[f.file] = byFile[f.file] || [];
+      byFile[f.file].push(f);
+    }
+    const sorted = Object.entries(byFile).sort((a, b) => b[1].length - a[1].length);
+    const summary = {
+      totalLeaks: all.length,
+      filesWithLeaks: Object.keys(byFile).length,
+      byKind: all.reduce((o, f) => { o[f.kind] = (o[f.kind] || 0) + 1; return o; }, {}),
+      byLocale: all.reduce((o, f) => { o[f.locale] = (o[f.locale] || 0) + 1; return o; }, {}),
+      topFiles: sorted.slice(0, 30).map(([f, arr]) => ({ file: f.replace(/^artifacts\/erp-dashboard\/src\//, ''), count: arr.length })),
+    };
+    writeFileSync(target, JSON.stringify({ summary, leaks: all }, null, 2));
+    console.log(JSON.stringify(summary, null, 2));
+    console.log(`\nFull report: ${target}`);
+  } else {
+    console.error(`Unknown mode: ${mode}. Use --mode=static or --mode=dom`);
     process.exit(1);
   }
-  const leaks = await domMode(html, locale);
-  console.log(JSON.stringify({ leaks }, null, 2));
-} else if (mode === 'static') {
-  const target = arg('out') ?? 'docs/i18n-leakage-baseline.json';
-  const all = [];
-  for (const dir of SCAN_DIRS) {
-    try { statSync(dir); } catch { continue; }
-    for (const f of walk(dir)) {
-      const fs = scanFile(f);
-      all.push(...fs);
-    }
-  }
-  // Aggregate by file
-  const byFile = {};
-  for (const f of all) {
-    byFile[f.file] = byFile[f.file] || [];
-    byFile[f.file].push(f);
-  }
-  const sorted = Object.entries(byFile).sort((a, b) => b[1].length - a[1].length);
-  const summary = {
-    totalLeaks: all.length,
-    filesWithLeaks: Object.keys(byFile).length,
-    byKind: all.reduce((o, f) => { o[f.kind] = (o[f.kind] || 0) + 1; return o; }, {}),
-    byLocale: all.reduce((o, f) => { o[f.locale] = (o[f.locale] || 0) + 1; return o; }, {}),
-    topFiles: sorted.slice(0, 30).map(([f, arr]) => ({ file: f.replace(/^artifacts\/erp-dashboard\/src\//, ''), count: arr.length })),
-  };
-  writeFileSync(target, JSON.stringify({ summary, leaks: all }, null, 2));
-  console.log(JSON.stringify(summary, null, 2));
-  console.log(`\nFull report: ${target}`);
-} else {
-  console.error(`Unknown mode: ${mode}. Use --mode=static or --mode=dom`);
-  process.exit(1);
 }
