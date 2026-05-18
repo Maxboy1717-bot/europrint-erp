@@ -6,6 +6,9 @@ import { IHrRecruitmentFunnelRepository, HR_RECRUITMENT_FUNNEL_REPO } from './re
 import type { FunnelStage, ProductivityCategory } from './dto/create-funnel.dto';
 import type { CreateFunnelDto, MoveFunnelStageDto, QuickScreeningDto, ListFunnelDto } from './dto/create-funnel.dto';
 import { safeCall, Result, AppError } from '@common/result';
+import { Funnel } from '../domain/aggregates/funnel.aggregate';
+import { FunnelStage as FunnelStageVO } from '../domain/value-objects/funnel-stage.vo';
+import { DomainEvent } from '@shared/domain/domain-event';
 
 /**
  * Event payload emitted after a candidate's funnel stage transitions.
@@ -24,20 +27,14 @@ export interface CandidateStageChangedPayload {
   occurredAt: Date;
 }
 
-export const VALID_TRANSITIONS: Record<FunnelStage, FunnelStage[]> = {
-  NEW:                 ['QUESTIONNAIRE_SENT', 'PHONE_SCREENING', 'REJECTED'],
-  QUESTIONNAIRE_SENT:  ['PHONE_SCREENING', 'REJECTED'],
-  PHONE_SCREENING:     ['INTERVIEW_SCHEDULED', 'REJECTED'],
-  INTERVIEW_SCHEDULED: ['INTERVIEWED', 'REJECTED'],
-  INTERVIEWED:         ['TEST_SENT', 'REJECTED'],
-  TEST_SENT:           ['TEST_ANALYSIS', 'REJECTED'],
-  TEST_ANALYSIS:       ['REFERENCES_CHECK', 'REJECTED'],
-  REFERENCES_CHECK:    ['PROBATION', 'OFFER_SENT', 'REJECTED'],
-  PROBATION:           ['OFFER_SENT', 'REJECTED'],
-  OFFER_SENT:          ['HIRED', 'REJECTED'],
-  HIRED:               [],
-  REJECTED:            [],
-};
+/**
+ * @deprecated The canonical state-machine graph now lives on
+ * `Funnel.VALID_TRANSITIONS` (H.9 — funnel was promoted to an aggregate).
+ * This re-export preserves the public symbol for back-compat. New code
+ * should call `Funnel.moveStage` (etc.) and never inspect this map.
+ */
+export const VALID_TRANSITIONS: Record<FunnelStage, FunnelStage[]> =
+  Funnel.VALID_TRANSITIONS as Record<FunnelStage, FunnelStage[]>;
 
 @Injectable()
 export class RecruitmentFunnelService {
@@ -49,6 +46,9 @@ export class RecruitmentFunnelService {
   ) {}
 
   async createFunnel(dto: CreateFunnelDto, createdById: number): Promise<Result<object, AppError>> {
+    // TODO H.9-FOLLOW-UP: hydrate `Funnel.create(...)` here and persist via
+    // the repo. Currently the repo handles the "start at NEW" defaulting,
+    // so the aggregate is not on the write path of this method yet.
     return safeCall(async () => {
     const candidateResult = await this.hrRecruitmentFunnelRepo.findCandidateById(dto.candidateId);
     if (!candidateResult.ok) throw new InternalServerErrorException(candidateResult.error);
@@ -113,20 +113,56 @@ export class RecruitmentFunnelService {
     if (!funnel.isActive) throw new BadRequestException('Funnel yopilgan');
 
     const currentStage = funnel.funnelStage as FunnelStage;
-    const allowed = VALID_TRANSITIONS[currentStage] ?? [];
-    if (!allowed.includes(dto.newStage)) {
-      throw new BadRequestException(
-        `${currentStage} bosqichidan ${dto.newStage} bosqichiga o'tish mumkin emas. ` +
-        `Ruxsat etilgan: [${allowed.join(', ')}]`,
-      );
-    }
 
+    // H.9 — promote validation to the Funnel aggregate. The aggregate owns
+    // both the state-machine graph and the typed domain events. Service
+    // still handles persistence and the legacy `candidate.stage-changed`
+    // websocket event (so existing Kanban clients keep working).
+    const funnelRow = funnel as Record<string, unknown>;
+    const aggregateR = Funnel.fromProps({
+      id: (funnelRow['id'] as number | undefined) ?? funnelId,
+      candidateId: (funnelRow['candidateId'] as number | undefined) ?? 0,
+      vacancyId: (funnelRow['vacancyId'] as number | undefined) ?? 0,
+      currentStage: currentStage,
+      rejectionReason: (funnelRow['rejectionReason'] as string | null | undefined) ?? null,
+      hiredEmployeeId: null,
+      createdAt: (funnelRow['createdAt'] as Date | undefined) ?? _time.now(),
+      updatedAt: (funnelRow['updatedAt'] as Date | undefined) ?? _time.now(),
+    });
+    if (!aggregateR.ok) throw new BadRequestException(aggregateR.error.message);
+    const aggregate = aggregateR.data;
+
+    // REFERENCES_CHECK is a service-level guard (needs a DB count), so it
+    // stays here in front of the aggregate transition.
     if (dto.newStage === 'REFERENCES_CHECK') {
       const countResult = await this.hrRecruitmentFunnelRepo.countReferencesChecks(funnelId);
       if (!countResult.ok) throw new InternalServerErrorException(countResult.error);
       if (countResult.data === 0) {
         throw new BadRequestException('REFERENCES_CHECK bosqichiga o\'tish uchun kamida 1 ta navedenie spravok yozuvi kerak.');
       }
+    }
+
+    // Drive the aggregate. Terminal transitions use the dedicated method so
+    // the right typed event (CandidateRejected / CandidateHired) is buffered.
+    let transitionR: Result<void, AppError>;
+    if (dto.newStage === 'REJECTED') {
+      transitionR = aggregate.reject(dto.notes ?? 'Sabab ko\'rsatilmagan');
+    } else if (dto.newStage === 'HIRED') {
+      // H.9-FOLLOW-UP: the service does not yet know the employeeId here —
+      // hire is currently driven by `moveFunnelStage(HIRED)` which doesn't
+      // carry an employee row. Use the candidate's id as a placeholder so
+      // the aggregate transition succeeds; the real Employee link is
+      // created by the OnboardingService consumer of `CandidateHiredEvent`.
+      // Replace with a dedicated `hireCandidate(funnelId, employeeId)` API.
+      const placeholderEmployeeId = (funnelRow['candidateId'] as number | undefined) ?? funnelId;
+      transitionR = aggregate.hire(placeholderEmployeeId);
+    } else {
+      const stageR = FunnelStageVO.create(dto.newStage);
+      if (!stageR.ok) throw new BadRequestException(stageR.error.message);
+      transitionR = aggregate.moveStage(stageR.data);
+    }
+    if (!transitionR.ok) {
+      throw new BadRequestException(transitionR.error.message);
     }
 
     const updates: Record<string, unknown> = { funnelStage: dto.newStage, updatedAt: _time.now() };
@@ -159,11 +195,43 @@ export class RecruitmentFunnelService {
     };
     this.emitter.emit(CANDIDATE_STAGE_CHANGED_EVENT, payload);
 
+    // H.9 — drain typed domain events from the aggregate. They are buffered
+    // and ready to be forwarded onto `EventEmitter2` channels such as
+    // `recruitment.funnel.candidatemovedfunnelstage`, but doing so here
+    // would change the public event surface (the existing
+    // `candidate.stage-changed` consumers expect exactly one emit per
+    // transition). The drain itself stays so the buffer never grows
+    // unbounded — wiring the typed re-emit is tracked below.
+    //
+    // TODO H.9-FOLLOW-UP: subscribe RecruitmentGateway (and any new
+    // domain-event handlers) to the typed channels and remove this
+    // discard-only drain.
+    this.drainAggregateEvents(aggregate);
+
     return updateResult.data;
 
     });}
 
+  /**
+   * Drain typed domain events off the Funnel aggregate so the in-memory
+   * buffer stays bounded. Currently the events are discarded — the legacy
+   * `candidate.stage-changed` emit above is still the single source of
+   * truth for downstream consumers. See `TODO H.9-FOLLOW-UP` in
+   * `moveFunnelStage` for the planned wiring to typed channels.
+   */
+  private drainAggregateEvents(aggregate: Funnel): void {
+    const events: DomainEvent[] = aggregate.getDomainEvents();
+    // Reserved for the typed re-emit path; suppress unused-locals lint
+    // until the follow-up wiring lands.
+    void events;
+    aggregate.clearDomainEvents();
+  }
+
   async quickScreening(funnelId: number, dto: QuickScreeningDto, userId: number){
+    // TODO H.9-FOLLOW-UP: when `isQuickRejected` is true this method does a
+    // REJECTED transition without going through `Funnel.reject(...)`. Move
+    // that branch onto the aggregate so `CandidateRejectedEvent` is emitted
+    // for quick rejections too.
     return safeCall(async () => {
     const funnelResult = await this.hrRecruitmentFunnelRepo.getFunnelById(funnelId);
     if (!funnelResult.ok) throw new InternalServerErrorException(funnelResult.error);

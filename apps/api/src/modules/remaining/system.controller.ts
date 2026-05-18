@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -28,15 +28,7 @@ export class SystemController {
 
   constructor(private readonly svc: SystemService) {}
 
-  // P3-26: there is no real create-system endpoint yet — the SystemService
-  // exposes only read-only health/stats. Return 501 instead of fake success.
-  @Post()
-  async create() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: POST /system', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
-  }
+  // POST /system endpoint removed — no frontend consumer, no service backing.
 
   @Get('health')
   async getHealth() {

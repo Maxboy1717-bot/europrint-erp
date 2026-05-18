@@ -28,6 +28,7 @@ import { RecruitingHeaderActions } from "@/components/recruiting/RecruitingHeade
 import { VacancyFilterPanel } from "@/components/recruiting/VacancyFilterPanel";
 import { useKanbanDragDrop } from "@/hooks/use-kanban-dnd";
 import { useKanbanRealtime } from "@/hooks/use-kanban-realtime";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 export default function RecruitingKanban() {
   const { toast } = useToast();
@@ -89,7 +90,7 @@ export default function RecruitingKanban() {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/vacancies"] });
       setCreateVacancyOpen(false);
       setNewVacancyForm({ title: "", vacancy_type: "STANDARD", deadline_working_days: 15 });
-      toast({ title: "Vakansiya yaratildi! Endi Portretni to'ldiring." });
+      toast({ title: tLabel("recruiting.toast.vacancy_created", "Vakansiya yaratildi! Endi Portretni to'ldiring.") });
       const newId = row?.id;
       const newTitle = row?.title || form.title;
       if (newId) setPortretVacancy({ id: newId, title: newTitle, status: "open", is_urgent: false });
@@ -128,8 +129,8 @@ export default function RecruitingKanban() {
   const ndaRequestMutation = useMutation({
     mutationFn: ({ id, notes }: { id: number; notes?: string }) =>
       apiRequest("POST", `/api/hr/recruitment/pipeline/${id}/nda-request`, { notes }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] }); toast({ title: "NDA so'rovi yuborildi" }); },
-    onError: () => toast({ title: "NDA so'rovida xatolik", variant: "destructive" }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] }); toast({ title: tLabel("recruiting.toast.nda_sent", "NDA so'rovi yuborildi") }); },
+    onError: () => toast({ title: tLabel("recruiting.toast.nda_error", "NDA so'rovida xatolik"), variant: "destructive" }),
   });
 
   const offerMutation = useMutation({
@@ -161,7 +162,7 @@ export default function RecruitingKanban() {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] });
       setAddOpen(false);
       setNewForm({ fullName: "", phone: "", email: "", source: "OTHER", notes: "", vacancyId: "none" });
-      toast({ title: "Nomzod qo'shildi" });
+      toast({ title: tLabel("recruiting.toast.candidate_added", "Nomzod qo'shildi") });
     },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
@@ -214,15 +215,15 @@ export default function RecruitingKanban() {
       <HCMethodologyBanner />
 
       <div className="flex flex-wrap gap-3 mb-4">
-        <StatCard icon={Users} label="Jami nomzodlar" value={entries.length} />
-        <StatCard icon={TrendingUp} label="Faol jarayonlar" value={activeCount} />
-        <StatCard icon={CheckCircle} label="Qabul qilindi" value={hiredCount} color="bg-green-500" />
-        <StatCard icon={XCircle} label="Rad etildi" value={rejectedCount} color="bg-red-500" />
-        <StatCard icon={TrendingUp} label="Samaradorlik" value={`${conversionRate}%`} />
-        <StatCard icon={Briefcase} label="Ochiq vakansiya" value={openVacancies.length} color="bg-indigo-500" />
-        <StatCard icon={AlertTriangle} label="Shoshilinch" value={urgentVacancies.length} color="bg-red-500" />
-        <StatCard icon={Bot} label="AI Sessiyalar" value={aiSessions.length} color="bg-violet-500" />
-        <StatCard icon={CalendarDays} label="Sinov davri" value={counts.PROBATION ?? 0} color="bg-emerald-500" />
+        <StatCard icon={Users} label={tLabel("recruiting.stats.total_candidates", "Jami nomzodlar")} value={entries.length} />
+        <StatCard icon={TrendingUp} label={tLabel("recruiting.stats.active_processes", "Faol jarayonlar")} value={activeCount} />
+        <StatCard icon={CheckCircle} label={tLabel("recruiting.stats.hired", "Qabul qilindi")} value={hiredCount} color="bg-green-500" />
+        <StatCard icon={XCircle} label={tLabel("recruiting.stats.rejected", "Rad etildi")} value={rejectedCount} color="bg-red-500" />
+        <StatCard icon={TrendingUp} label={tLabel("recruiting.stats.conversion", "Samaradorlik")} value={`${conversionRate}%`} />
+        <StatCard icon={Briefcase} label={tLabel("recruiting.stats.open_vacancies", "Ochiq vakansiya")} value={openVacancies.length} color="bg-indigo-500" />
+        <StatCard icon={AlertTriangle} label={tLabel("recruiting.stats.urgent", "Shoshilinch")} value={urgentVacancies.length} color="bg-red-500" />
+        <StatCard icon={Bot} label={tLabel("recruiting.stats.ai_sessions", "AI Sessiyalar")} value={aiSessions.length} color="bg-violet-500" />
+        <StatCard icon={CalendarDays} label={tLabel("recruiting.stats.probation", "Sinov davri")} value={counts.PROBATION ?? 0} color="bg-emerald-500" />
       </div>
 
       <div className="flex items-center gap-2 mb-3">

@@ -27,6 +27,15 @@ export { FinanceMainActionsController } from './finance-main-actions.controller'
 
 const FINANCE_ROLES = ['FINANCE_MANAGER', 'ACCOUNTANT', 'SUPER_ADMIN', 'DIRECTOR'];
 
+// FEATURE_FLAGGED: shared helper for the two remaining unwired finance endpoints
+// (tracking #FX-4). Reports & loans pipelines aren't connected to a service yet.
+const financeNotImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
+
 @ApiThrottle()
 @ApiTags('Finance Main')
 @ApiBearerAuth()
@@ -95,16 +104,12 @@ export class FinanceMainController {
     return unwrapOrThrow(await this.cashflowSvc.findTransactions(query));
   }
 
-  // P3-26: finance reports listing not yet wired.
+  // FEATURE_FLAGGED: finance reports listing not wired (tracking #FX-4).
   @ApiOperation({ summary: 'Get reports' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-4' })
   @Get('reports')
   getReports(@Query() _query: Record<string, unknown>) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /finance/reports', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return financeNotImplemented('GET /finance/reports');
   }
 
   @ApiOperation({ summary: 'Get accounts' })
@@ -144,26 +149,13 @@ export class FinanceMainController {
     return unwrapOrInternal(await this.accountingSvc.getExpenseReportById(id));
   }
 
-  // P3-26: loans module is not yet implemented in the finance service layer.
+  // FEATURE_FLAGGED: loans module not implemented in finance service (tracking #FX-4).
+  // Note: GET /finance/loans/:id deleted — no frontend consumer (catalog 2026-05-17).
   @ApiOperation({ summary: 'Get loans' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-4' })
   @Get('loans')
   getLoans(@Query('status') _status?: string, @Query('page') _page?: string) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /finance/loans', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
-  }
-
-  @ApiOperation({ summary: 'Get loan by id' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Get('loans/:id')
-  getLoanById(@Param('id') _id: string) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /finance/loans/:id', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return financeNotImplemented('GET /finance/loans');
   }
 
   @ApiOperation({ summary: 'Get accounting overview' })

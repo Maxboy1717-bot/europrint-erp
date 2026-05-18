@@ -13,6 +13,7 @@
  */
 
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AiModule } from '../ai/ai.module';
@@ -50,6 +51,7 @@ import { CcEventListener } from './events/cc-event.listener';
 
 @Module({
   imports: [
+    CqrsModule,
     AiModule,
     AgentsModule,                  // CcBotService → DirectorAgentService + StrategicAgentService
     JwtModule.registerAsync({

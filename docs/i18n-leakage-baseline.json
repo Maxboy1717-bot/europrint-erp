@@ -1,20 +1,16 @@
 {
   "summary": {
-    "totalLeaks": 33,
-    "filesWithLeaks": 8,
+    "totalLeaks": 31,
+    "filesWithLeaks": 10,
     "byKind": {
-      "JSX_TEXT": 12,
-      "PROP": 10,
-      "OBJECT_LABEL": 11
+      "OBJECT_LABEL": 14,
+      "JSX_TEXT": 9,
+      "PROP": 8
     },
     "byLocale": {
-      "uz": 33
+      "uz": 31
     },
     "topFiles": [
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
-        "count": 9
-      },
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\RecruitingKanban.tsx",
         "count": 8
@@ -24,8 +20,20 @@
         "count": 6
       },
       {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\QuickCreateModalTypes.ts",
+        "count": 3
+      },
+      {
         "file": "artifacts\\erp-dashboard\\src\\components\\hr\\employee-dialog\\BaseSalaryInput.tsx",
         "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\BankAccountCard.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PassportCard.tsx",
+        "count": 2
       },
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\org-chart\\OrgChartSearchBar.tsx",
@@ -47,66 +55,52 @@
   },
   "leaks": [
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
-      "line": 156,
-      "text": "Maosh turi",
-      "kind": "JSX_TEXT",
+      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\QuickCreateModalTypes.ts",
+      "line": 15,
+      "text": "Qo'ng'iroq",
+      "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
-      "line": 176,
-      "text": "Miqdor × tarif formulasi",
-      "kind": "JSX_TEXT",
+      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\QuickCreateModalTypes.ts",
+      "line": 26,
+      "text": "UZS — So'm",
+      "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
-      "line": 195,
-      "text": "Smena",
-      "kind": "JSX_TEXT",
+      "file": "artifacts\\erp-dashboard\\src\\pages\\crm\\QuickCreateModalTypes.ts",
+      "line": 27,
+      "text": "USD — Dollar",
+      "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
-      "line": 362,
-      "text": "Pasport ma'lumotlari maxfiy",
-      "kind": "JSX_TEXT",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
-      "line": 363,
-      "text": "Faqat HR ko'ra oladi",
-      "kind": "JSX_TEXT",
-      "locale": "uz"
-    },
-    {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
-      "line": 503,
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\BankAccountCard.tsx",
+      "line": 128,
       "text": "Bank ma'lumotlari maxfiy",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
-      "line": 504,
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\BankAccountCard.tsx",
+      "line": 129,
       "text": "Faqat HR ko'ra oladi",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
-      "line": 578,
-      "text": "Ota / Ona / Turmush o'rtog'i",
-      "kind": "PROP",
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PassportCard.tsx",
+      "line": 133,
+      "text": "Pasport ma'lumotlari maxfiy",
+      "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
-      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PersonalTab.tsx",
-      "line": 608,
-      "text": "Manzil",
-      "kind": "PROP",
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\PassportCard.tsx",
+      "line": 134,
+      "text": "Faqat HR ko'ra oladi",
+      "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
@@ -125,42 +119,42 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
-      "line": 209,
+      "line": 213,
       "text": "Jami bo'limlar",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
-      "line": 217,
+      "line": 221,
       "text": "Jami xodimlar",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
-      "line": 107,
+      "line": 111,
       "text": "Fayl muvaffaqiyatli yuklandi",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
-      "line": 161,
+      "line": 165,
       "text": "Sozlamalar",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
-      "line": 161,
+      "line": 165,
       "text": "Sozlamalar sahifasi tez orada",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\OrgChartPage.tsx",
-      "line": 171,
+      "line": 175,
       "text": "Tuzilma rasmi yuklanmoqda...",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
@@ -223,14 +217,14 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\employee\\ProfileHeader.tsx",
-      "line": 133,
+      "line": 139,
       "text": "Ta'tilda",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\employee\\ProfileHeader.tsx",
-      "line": 185,
+      "line": 191,
       "text": "Ma'lumot yo'q",
       "kind": "JSX_TEXT",
       "locale": "uz"

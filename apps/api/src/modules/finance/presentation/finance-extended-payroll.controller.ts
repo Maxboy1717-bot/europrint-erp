@@ -3,6 +3,8 @@
  * @description Payroll/tax/benchmark stub endpoints split from finance-extended.controller.ts
  * (Rule 16: ≤ 300 lines). All routes currently return HTTP 501 — the real PayrollService
  * INPS/JSHD/IT pipeline isn't wired here yet (see P3-26).
+ *
+ * FEATURE_FLAGGED: Wave 12 work to wire PayrollService. Tracking #FX-1.
  */
 
 import { Controller, Post, Get, Patch, Body, Param, Query, HttpCode, HttpException, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
@@ -13,6 +15,14 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { FINANCE_ROLES, PayrollCalculateSchema, ApprovePayrollSchema } from './finance-extended-dtos';
 
+// FEATURE_FLAGGED: payroll/tax/benchmark services not yet wired (Tracking #FX-1).
+const notImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
+
 @ApiThrottle()
 @ApiTags('Finance Extended Payroll')
 @Controller('finance-extended')
@@ -20,117 +30,74 @@ import { FINANCE_ROLES, PayrollCalculateSchema, ApprovePayrollSchema } from './f
 @UseInterceptors(AuditInterceptor)
 @Roles(...FINANCE_ROLES)
 export class FinanceExtendedPayrollController {
-  // P3-26: payroll calculation pipeline not yet wired. The real PayrollService
-  // computes INPS/JSHD/IT withholdings but isn't connected here yet. Return 501
-  // so the frontend payroll page can show a "coming soon" empty state.
   @ApiOperation({ summary: 'Calculate payroll' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-1' })
   @Post('payroll/calculate')
   @HttpCode(HttpStatus.OK)
   calculatePayroll(@Body() body: unknown) {
     PayrollCalculateSchema.parse(body);
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: POST /finance/payroll/calculate', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('POST /finance-extended/payroll/calculate');
   }
 
-  @ApiOperation({ summary: 'Ai calculate payroll' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiOperation({ summary: 'AI calculate payroll' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-1' })
   @Post('payroll/ai-calculate')
   @HttpCode(HttpStatus.OK)
   aiCalculatePayroll(@Body() body: unknown) {
     PayrollCalculateSchema.parse(body);
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: POST /finance/payroll/ai-calculate', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('POST /finance-extended/payroll/ai-calculate');
   }
 
   @ApiOperation({ summary: 'Get payroll calculations' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-1' })
   @Get('payroll-calculations')
   getPayrollCalculations(@Query() _query: Record<string, unknown>) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /finance/payroll-calculations', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /finance-extended/payroll-calculations');
   }
 
   @ApiOperation({ summary: 'Approve payroll calculation' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-1' })
   @Patch('payroll-calculations/:id/approve')
   @HttpCode(HttpStatus.OK)
   approvePayrollCalculation(@Param('id') _id: string, @Body() body: unknown) {
     ApprovePayrollSchema.parse(body ?? {});
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: PATCH /finance/payroll-calculations/:id/approve', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('PATCH /finance-extended/payroll-calculations/:id/approve');
   }
 
-  @ApiOperation({ summary: 'Post approve payroll calculation' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiOperation({ summary: 'Approve payroll calculation (POST mirror)' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-1' })
   @Post('payroll-calculations/:id/approve')
   @HttpCode(HttpStatus.OK)
   postApprovePayrollCalculation(@Param('id') _id: string, @Body() body: unknown) {
     ApprovePayrollSchema.parse(body ?? {});
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: POST /finance/payroll-calculations/:id/approve', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('POST /finance-extended/payroll-calculations/:id/approve');
   }
 
-  // P3-26: payroll/tax/benchmark services not wired yet — return 501.
   @ApiOperation({ summary: 'Get payroll contracts' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-1' })
   @Get('payroll-contracts')
   getPayrollContracts(@Query() _query: Record<string, unknown>) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /finance-extended/payroll-contracts', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /finance-extended/payroll-contracts');
   }
 
   @ApiOperation({ summary: 'Get payroll tax rules' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-1' })
   @Get('payroll-tax-rules')
   getPayrollTaxRules() {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /finance-extended/payroll-tax-rules', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /finance-extended/payroll-tax-rules');
   }
 
   @ApiOperation({ summary: 'Get tax calendar' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-1' })
   @Get('tax-calendar')
   getTaxCalendar(@Query('year') _year?: string) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /finance-extended/tax-calendar', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /finance-extended/tax-calendar');
   }
 
   @ApiOperation({ summary: 'Get salary benchmark' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-1' })
   @Get('salary-benchmark/:id')
   getSalaryBenchmark(@Param('id') _id: string) {
-    throw new HttpException(
-      { message: 'Endpoint not yet implemented: GET /finance-extended/salary-benchmark/:id', code: 'NOT_IMPLEMENTED' },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+    return notImplemented('GET /finance-extended/salary-benchmark/:id');
   }
 }

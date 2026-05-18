@@ -50,6 +50,15 @@ enum Role {
  DESIGNER = 'designer',
 }
 
+// FEATURE_FLAGGED: design notifications / statistics / tooling / messages
+// services not yet wired (tracking #FX-7). Frontend renders "Coming soon" state.
+const designNotImplemented = (route: string): never => {
+  throw new HttpException(
+    { message: `Endpoint not yet implemented: ${route}`, code: 'NOT_IMPLEMENTED' },
+    HttpStatus.NOT_IMPLEMENTED,
+  );
+};
+
 @ApiThrottle()
 @ApiTags('Design')
 @Controller('design')
@@ -144,63 +153,38 @@ export class DesignController {
  return result.data;
 }
 
- // P3-26: notifications/statistics/tooling/messages services aren't wired yet.
- // Return 501 so the frontend renders a "coming soon" state.
  @ApiOperation({ summary: 'Get notifications' })
- @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-7' })
  @Get('notifications')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER)
- getNotifications() {
-   throw new HttpException(
-     { message: 'Endpoint not yet implemented: GET /design/notifications', code: 'NOT_IMPLEMENTED' },
-     HttpStatus.NOT_IMPLEMENTED,
-   );
- }
+ getNotifications() { return designNotImplemented('GET /design/notifications'); }
 
  @ApiOperation({ summary: 'Get statistics' })
- @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-7' })
  @Get('statistics')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER)
- getStatistics() {
-   throw new HttpException(
-     { message: 'Endpoint not yet implemented: GET /design/statistics', code: 'NOT_IMPLEMENTED' },
-     HttpStatus.NOT_IMPLEMENTED,
-   );
- }
+ getStatistics() { return designNotImplemented('GET /design/statistics'); }
 
  @ApiOperation({ summary: 'Get tooling' })
- @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-7' })
  @Get('tooling')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER)
- getTooling() {
-   throw new HttpException(
-     { message: 'Endpoint not yet implemented: GET /design/tooling', code: 'NOT_IMPLEMENTED' },
-     HttpStatus.NOT_IMPLEMENTED,
-   );
- }
+ getTooling() { return designNotImplemented('GET /design/tooling'); }
 
  @ApiOperation({ summary: 'Get tooling wear forecast' })
- @ApiResponse({ status: 200, description: 'OK' })
- @ApiResponse({ status: 404, description: 'Not found' })
+ @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-7' })
  @Get('tooling/:id/wear-forecast')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER)
  getToolingWearForecast(@Param('id') _id: string) {
-   throw new HttpException(
-     { message: 'Endpoint not yet implemented: GET /design/tooling/:id/wear-forecast', code: 'NOT_IMPLEMENTED' },
-     HttpStatus.NOT_IMPLEMENTED,
-   );
+   return designNotImplemented('GET /design/tooling/:id/wear-forecast');
  }
 
  @ApiOperation({ summary: 'Get order messages' })
- @ApiResponse({ status: 200, description: 'OK' })
- @ApiResponse({ status: 404, description: 'Not found' })
+ @ApiResponse({ status: 501, description: 'Feature gated off — tracking #FX-7' })
  @Get('orders/:id/messages')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER, Role.SALES_MANAGER)
  getOrderMessages(@Param('id') _id: string) {
-   throw new HttpException(
-     { message: 'Endpoint not yet implemented: GET /design/orders/:id/messages', code: 'NOT_IMPLEMENTED' },
-     HttpStatus.NOT_IMPLEMENTED,
-   );
+   return designNotImplemented('GET /design/orders/:id/messages');
  }
 
  @ApiOperation({ summary: 'Create order' })

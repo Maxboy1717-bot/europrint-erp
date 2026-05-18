@@ -1,11 +1,17 @@
 /**
  * Communication Center — ERP modullar bilan EventBus integratsiyasi
  *
- * Boshqa modullar voqea chiqaradi (`eventEmitter.emit('cc.spawn', payload)`),
- * bu listener qabul qiladi va kerakli hujjat shabloni asosida draft yaratib
- * birinchi tasdiqlash bosqichiga yuboradi.
+ * Wave 4 round-4 (PA2-18): migrated from legacy `@OnEvent('cc.spawn')` string
+ * topic to canonical CQRS `@EventsHandler(CcSpawnRequestedEvent)`. EventBridge
+ * keeps re-emitting to the legacy string topic for non-migrated emit sites
+ * (notably `cc-webhook.controller.ts` still emits the string form) — see
+ * EVENT_NAME_MAP entry in event-bridge.service.ts.
  *
- * Standart event nomi: 'cc.spawn'
+ * Boshqa modullar voqea chiqaradi (`eventBus.publish(new CcSpawnRequestedEvent(payload))`
+ * yoki legacy `eventEmitter.emit('cc.spawn', payload)`), bu listener qabul qiladi va
+ * kerakli hujjat shabloni asosida draft yaratib birinchi tasdiqlash bosqichiga yuboradi.
+ *
+ * Standart event nomi: 'cc.spawn' (legacy) / CcSpawnRequestedEvent (canonical)
  *
  * Payload:
  * {
@@ -21,28 +27,19 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { isOk } from '@common/result';
 import { CcWorkflowService } from '../application/cc-workflow.service';
 import { CcDocumentsRepository } from '../infrastructure/repositories/cc-documents.repo';
 import { CcDocumentNumberService } from '../application/cc-document-number.service';
-import type { Priority, Language } from '../domain/types';
-
-export interface CcSpawnPayload {
-  templateCode:  string;
-  senderUserId:  number;
-  subject:       string;
-  body:          string;
-  priority?:     Priority;
-  language?:     Language;
-  metadata?:     Record<string, unknown>;
-  autoSend?:     boolean;
-}
+import { CcSpawnRequestedEvent } from '../domain/events/cc-spawn-requested.event';
+import type { Priority } from '../domain/types';
 
 @Injectable()
-export class CcEventListener {
+@EventsHandler(CcSpawnRequestedEvent)
+export class CcEventListener implements IEventHandler<CcSpawnRequestedEvent> {
   private readonly logger = new Logger(CcEventListener.name);
 
   constructor(
@@ -51,9 +48,9 @@ export class CcEventListener {
     private readonly numbers: CcDocumentNumberService,
   ) {}
 
-  /** Universal hujjat yaratish event'i — boshqa modullar shu nomda emit qiladi */
-  @OnEvent('cc.spawn', { async: true })
-  async onSpawn(payload: CcSpawnPayload): Promise<void> {
+  /** Universal hujjat yaratish event'i — CqrsEventBus orqali */
+  async handle(event: CcSpawnRequestedEvent): Promise<void> {
+    const payload = event.props;
     try {
       // 1) Template'ni kod bo'yicha topamiz
       const tmplR = await runQuery<{ id: string; version: number; default_priority: string; number_format: string }>(sql`
