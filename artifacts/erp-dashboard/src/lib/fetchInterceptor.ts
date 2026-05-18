@@ -18,8 +18,14 @@ export function installFetchInterceptor() {
   window.fetch = function patchedFetch(input, init) {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
 
+    // Auth endpoints must never receive a stale/expired token — doing so
+    // causes the backend to return 403 instead of processing the request.
+    const AUTH_SKIP_PATHS = ["/api/auth/login", "/api/auth/refresh", "/api/auth/logout"];
+    const isAuthEndpoint = typeof url === "string" && AUTH_SKIP_PATHS.some((p) => url.includes(p));
+
     const isApiCall =
       typeof url === "string" &&
+      !isAuthEndpoint &&
       (url.startsWith("/api/") || url.startsWith(window.location.origin + "/api/"));
 
     if (isApiCall) {

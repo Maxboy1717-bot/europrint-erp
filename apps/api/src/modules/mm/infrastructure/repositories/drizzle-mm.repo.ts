@@ -75,12 +75,14 @@ export class DrizzleMmRepository implements IMmRepository {
     try {
       if (tx) {
         // In-transaction path: inline against the supplied tx executor.
+        // purchase_orders status is an enum union; cast the runtime string at the call site.
+        type PoStatus = 'draft' | 'cancelled' | 'invoiced' | 'pending' | 'approved' | 'partially_received' | 'received' | 'paid';
         const exec = asExec(tx);
         await exec.insert(purchase_orders_legacy).values({
           po_number: po.getPoNumber(),
           vendor_name: String(po.getSupplierId()),
           total_amount: String(po.getTotalAmount()),
-          status: String(po.getStatus()),
+          status: String(po.getStatus()) as PoStatus,
           created_by: String(po.getCreatedBy()),
         });
         return Ok(1);

@@ -28,11 +28,13 @@ export async function execMmPurchaseOrderInsert(
   poNumber: string, vendorName: string, totalAmount: number | string,
   status: string, createdBy: string,
 ): Promise<void> {
+  // status is a runtime string; cast through the enum union to satisfy Drizzle's typed insert.
+  type PoStatus = 'draft' | 'cancelled' | 'invoiced' | 'pending' | 'approved' | 'partially_received' | 'received' | 'paid';
   await db.insert(purchase_orders_legacy).values({
     po_number: poNumber,
     vendor_name: vendorName,
     total_amount: String(totalAmount),
-    status,
+    status: status as PoStatus,
     created_by: createdBy,
   });
 }
@@ -149,21 +151,23 @@ export async function execDailyReportMarkAbsent(today: string): Promise<void> {
 
   if (!activeEmps.length) return;
 
-  const positionIds = [...new Set((Array.isArray(activeEmps) ? activeEmps : []).map(e => e.position_id).filter(Boolean))] as number[];
+  // Canonical positions uses string (UUID) id and `title` (not `name`).
+  // employees.position_id is integer; cast to strings via String() for comparison.
+  const positionIds = [...new Set((Array.isArray(activeEmps) ? activeEmps : []).map(e => e.position_id).filter(Boolean))].map(id => String(id)) as string[];
   const operatorPosIds = positionIds.length
     ? (await db
         .select({ id: hrPositions.id })
         .from(hrPositions)
         .where(and(
           inArray(hrPositions.id, positionIds),
-          sql`(${ilike(hrPositions.name, operatorVariants[0])} OR ${ilike(hrPositions.name, operatorVariants[1])} OR ${ilike(hrPositions.name, operatorVariants[2])})`,
+          sql`(${ilike(hrPositions.title, operatorVariants[0])} OR ${ilike(hrPositions.title, operatorVariants[1])} OR ${ilike(hrPositions.title, operatorVariants[2])})`,
         ))
     ).map(p => p.id)
     : [];
 
   const toInsert = (Array.isArray(activeEmps) ? activeEmps : []).filter(e => {
     if (existingIds.has(e.id)) return false;
-    if (e.position_id && operatorPosIds.includes(e.position_id)) return false;
+    if (e.position_id && operatorPosIds.includes(String(e.position_id))) return false;
     return true;
   });
 

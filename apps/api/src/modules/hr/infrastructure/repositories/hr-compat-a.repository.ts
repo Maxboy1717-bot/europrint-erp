@@ -227,17 +227,18 @@ export class HrCompatARepository implements IHrCompatARepo {
 
   async getDepartments(isActive?: boolean): Promise<Result<Row[]>> {
     return safeCall(async () => {
+      // Canonical hrDepartments uses camelCase: parentId, headId, isActive. Map to snake_case in output.
       const rows = await db
         .select({
           id:         hrDepartments.id,
           name:       hrDepartments.name,
           code:       hrDepartments.code,
-          parent_id:  hrDepartments.parent_id,
-          manager_id: hrDepartments.manager_id,
-          is_active:  hrDepartments.is_active,
+          parent_id:  hrDepartments.parentId,
+          manager_id: hrDepartments.headId,
+          is_active:  hrDepartments.isActive,
         })
         .from(hrDepartments)
-        .where(isActive !== undefined ? eq(hrDepartments.is_active, isActive) : sql`TRUE`)
+        .where(isActive !== undefined ? eq(hrDepartments.isActive, isActive) : sql`TRUE`)
         .orderBy(asc(hrDepartments.name));
       return castTo<Row[]>(rows);
     }, 'DB_ERROR');
@@ -245,20 +246,21 @@ export class HrCompatARepository implements IHrCompatARepo {
 
   async getPositions(departmentId?: number, isActive?: boolean): Promise<Result<Row[]>> {
     return safeCall(async () => {
+      // Canonical positions uses: title (not name), departmentId, isActive, createdAt.
       const rows = await db
         .select({
           id:            hrPositions.id,
-          name:          hrPositions.name,
-          department_id: hrPositions.department_id,
-          is_active:     hrPositions.is_active,
-          created_at:    hrPositions.created_at,
+          name:          hrPositions.title,
+          department_id: hrPositions.departmentId,
+          is_active:     hrPositions.isActive,
+          created_at:    hrPositions.createdAt,
         })
         .from(hrPositions)
         .where(
-          sql`(${departmentId ?? null}::int IS NULL OR ${hrPositions.department_id} = ${departmentId ?? null})
-            AND (${isActive ?? null}::boolean IS NULL OR ${hrPositions.is_active} = ${isActive ?? null})`,
+          sql`(${departmentId ?? null}::int IS NULL OR ${hrPositions.departmentId} = ${departmentId ?? null})
+            AND (${isActive ?? null}::boolean IS NULL OR ${hrPositions.isActive} = ${isActive ?? null})`,
         )
-        .orderBy(asc(hrPositions.name));
+        .orderBy(asc(hrPositions.title));
       return castTo<Row[]>(rows);
     }, 'DB_ERROR');
   }

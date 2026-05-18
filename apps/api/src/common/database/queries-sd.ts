@@ -40,7 +40,7 @@ export async function execSdLeadDelete(lid: number): Promise<void> {
 
 export async function execSdLeadConvert(lid: number): Promise<void> {
   await db.update(sdLeads)
-    .set({ status: 'converted', updatedAt: sql`NOW()` })
+    .set({ status: 'converted', updated_at: sql`NOW()` })
     .where(eq(sdLeads.id, lid));
 }
 

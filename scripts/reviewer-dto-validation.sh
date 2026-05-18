@@ -156,11 +156,17 @@ echo -e "${BOLD}§2 — Global Zod pipe (main.ts)${NC}"
 echo "──────────────────────────────────────────────────────"
 
 MAIN_FILE="apps/api/src/main.ts"
+BOOTSTRAP_FILE="apps/api/src/main-bootstrap.ts"
 if [ -f "$MAIN_FILE" ]; then
-  has_pipe=$(grep -cE "ZodValidationPipe|ValidationPipe|useGlobalPipes|ZodGuard" "$MAIN_FILE" 2>/dev/null) || true
-  has_pipe="${has_pipe//[^0-9]/}"; has_pipe="${has_pipe:-0}"
+  has_pipe=0
+  for f in "$MAIN_FILE" "$BOOTSTRAP_FILE"; do
+    [ -f "$f" ] || continue
+    n=$(grep -cE "ZodValidationPipe|ValidationPipe|useGlobalPipes|ZodGuard" "$f" 2>/dev/null) || true
+    n="${n//[^0-9]/}"; n="${n:-0}"
+    has_pipe=$((has_pipe + n))
+  done
   if [ "$has_pipe" -gt 0 ]; then
-    ok "main.ts — global pipe o'rnatilgan"
+    ok "main.ts/main-bootstrap.ts — global pipe o'rnatilgan"
   else
     ng "main.ts — global validation pipe yo'q"
   fi

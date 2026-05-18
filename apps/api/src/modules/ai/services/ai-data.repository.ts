@@ -88,7 +88,7 @@ export class AiDataRepository {
 
   async getEmployeeWithPosition(employeeId: number): Promise<{ fullName: string | null; positionName: string | null } | null> {
     const rows = await db
-      .select({ fullName: users.fullName, positionName: positions.name })
+      .select({ fullName: users.fullName, positionName: positions.title })
       .from(users)
       .leftJoin(positions, eq(users.positionId, positions.id))
       .where(eq(users.id, employeeId))

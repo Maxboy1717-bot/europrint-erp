@@ -37,6 +37,15 @@ export class PosWmsSyncCreatedListener
     // is INSERT-only with no uniqueness conflict path; duplicate emits from
     // the parallel legacy string topic are tolerated (downstream WMS reads
     // are aggregate-based).
-    await this.wmsSync.onMovementCreated(event.props);
+    // PosWmsSyncService.onMovementCreated() expects the helpers `PosMovementCreatedEvent` shape
+    // (movementId/movementNumber/oldStatus/newStatus/updatedById). The domain event carries
+    // a different schema in `event.props` — translate fields here.
+    await this.wmsSync.onMovementCreated({
+      movementId:     event.props.movementId,
+      movementNumber: event.props.movementNumber,
+      oldStatus:      '',
+      newStatus:      'created',
+      updatedById:    event.props.createdById,
+    });
   }
 }

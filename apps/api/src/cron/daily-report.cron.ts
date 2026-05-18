@@ -29,16 +29,16 @@ export class DailyReportCron {
       const reportedIds = (Array.isArray(alreadyReported) ? alreadyReported : []).map(r => r.employee_id)
 
       const baseQuery = db
-        .select({ id: hrEmployees.id, position_name: hrPositions.name })
+        .select({ id: hrEmployees.id, position_name: hrPositions.title })
         .from(hrEmployees)
         .leftJoin(hrPositions, eq(hrPositions.id, hrEmployees.position_id))
         .where(
           and(
             eq(hrEmployees.status, 'active'),
             isNull(hrEmployees.deleted_at),
-            or(isNull(hrPositions.name), not(ilike(hrPositions.name, '%mashina operator%'))),
-            or(isNull(hrPositions.name), not(ilike(hrPositions.name, '%mashin operator%'))),
-            or(isNull(hrPositions.name), not(ilike(hrPositions.name, '%machine operator%'))),
+            or(isNull(hrPositions.title), not(ilike(hrPositions.title, '%mashina operator%'))),
+            or(isNull(hrPositions.title), not(ilike(hrPositions.title, '%mashin operator%'))),
+            or(isNull(hrPositions.title), not(ilike(hrPositions.title, '%machine operator%'))),
             reportedIds.length > 0 ? notInArray(hrEmployees.id, reportedIds) : undefined,
           ),
         )

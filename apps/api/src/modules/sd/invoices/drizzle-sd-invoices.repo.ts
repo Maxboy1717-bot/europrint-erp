@@ -31,11 +31,12 @@ const asExec = (tx?: DrizzleExecutor): ExecLike => (tx ?? db) as unknown as Exec
 
 @Injectable()
 export class DrizzleSdInvoicesRepository implements ISdInvoicesRepository {
+  // Canonical sales_invoices has snake_case columns and no deletedAt column.
   async findAll(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>> {
     try {
       const [countResult, data] = await Promise.all([
-        db.select({ count: count() }).from(salesInvoices).where(isNull(salesInvoices.deletedAt)).limit(1).offset(0),
-        db.select().from(salesInvoices).where(isNull(salesInvoices.deletedAt)).orderBy(desc(salesInvoices.createdAt)).limit(limit).offset(offset),
+        db.select({ count: count() }).from(salesInvoices).limit(1).offset(0),
+        db.select().from(salesInvoices).orderBy(desc(salesInvoices.created_at)).limit(limit).offset(offset),
       ]);
       return Ok({ data, count: Number(countResult[0]?.count || 0) });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Hisob-fakturalar topilmadi'); }
@@ -50,7 +51,7 @@ export class DrizzleSdInvoicesRepository implements ISdInvoicesRepository {
 
   async findByInvoiceNumber(invoiceNumber: string): Promise<Result<any | null>> {
     try {
-      const rows = await db.select().from(salesInvoices).where(eq(salesInvoices.invoiceNumber, invoiceNumber)).limit(1).offset(0);
+      const rows = await db.select().from(salesInvoices).where(eq(salesInvoices.invoice_number, invoiceNumber)).limit(1).offset(0);
       return Ok((rows)[0] || null);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Hisob-faktura topilmadi'); }
   }

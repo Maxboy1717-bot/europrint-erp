@@ -29,7 +29,7 @@ import * as crypto from 'crypto';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { z } from 'zod';
-import type { CcSpawnPayload } from '../events/cc-event.listener';
+import type { CcSpawnRequestedEventProps as CcSpawnPayload } from '../domain/events/cc-spawn-requested.event';
 
 const CcWebhookSchema = z.object({
   templateCode: z.string().min(1),

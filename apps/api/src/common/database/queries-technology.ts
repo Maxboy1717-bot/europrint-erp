@@ -9,115 +9,141 @@ import { eq, sql } from 'drizzle-orm';
 
 type Row = Record<string, unknown>;
 
+// NOTE: papka_orders_tech is re-exported from schema-business-c-1.ts (messaging schema).
+// queries-technology expects the print-orders schema (papkaNo/mijozNomi/etc). All field
+// accesses below are projected via raw SQL to preserve runtime behavior at the cost of
+// some type safety. Once the duplicate papka_orders schemas are unified, revisit this.
+// TODO PA-SCHEMA: papka_orders duplicate — schema-business-c-1.ts (messaging) vs
+// canonical lib/db/src/schema/pp/pp-papka.ts (print orders). queries-technology.ts
+// assumes the print-orders shape; here we project via raw SQL.
+
 export async function queryTechOrders(status?: string): Promise<Row[]> {
-  const rows = await db.select({
-    id:                 sql<string>`${papka_orders_tech.id}::text`,
-    papkaNo:            papka_orders_tech.order_number,
-    mijozNomi:          sql<string>`COALESCE(${clients.name}, ${papka_orders_tech.client_name}, 'Noma''lum')`,
-    mahsulotNomi:       sql<string>`COALESCE(${papka_orders_tech.product_name}, '-')`,
-    mahsulotTuri:       sql<string>`COALESCE(${papka_orders_tech.product_type}, '-')`,
-    tiraj:              sql<number>`COALESCE(${papka_orders_tech.quantity}, 0)`,
-    formatA:            sql<number>`COALESCE(${papka_orders_tech.format_width}, 0)`,
-    formatB:            sql<number>`COALESCE(${papka_orders_tech.format_height}, 0)`,
-    tayyorBolishSanasi: sql<string>`${papka_orders_tech.deadline}::text`,
-    status:             papka_orders_tech.status,
-  })
-    .from(papka_orders_tech)
-    .leftJoin(clients, eq(sql`${clients.id}::text`, papka_orders_tech.client_name))
-    .where(status ? eq(papka_orders_tech.status, status) : sql`TRUE`)
-    .orderBy(sql`${papka_orders_tech.created_at} DESC`)
-    .limit(100);
-  return rows as Row[];
+  const t = papka_orders_tech as unknown as Record<string, never>;
+  void t;
+  const rows = await db.execute(sql`
+    SELECT
+      po.id::text AS id,
+      po.papka_no AS "papkaNo",
+      COALESCE(c.name, po.mijoz_nomi, 'Noma''lum') AS "mijozNomi",
+      COALESCE(po.mahsulot_nomi, '-') AS "mahsulotNomi",
+      COALESCE(po.mahsulot_turi, '-') AS "mahsulotTuri",
+      COALESCE(po.tiraj, 0) AS tiraj,
+      COALESCE(po.format_a, 0) AS "formatA",
+      COALESCE(po.format_b, 0) AS "formatB",
+      po.tayyor_bolish_sanasi::text AS "tayyorBolishSanasi",
+      po.status AS status
+    FROM papka_orders po
+    LEFT JOIN clients c ON c.id::text = po.mijoz_nomi
+    WHERE ${status ? sql`po.status = ${status}` : sql`TRUE`}
+    ORDER BY po.created_at DESC
+    LIMIT 100
+  `);
+  void clients; void eq;
+  return ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[])) as Row[];
 }
 
+// Functions below use raw SQL to access the print-orders papka_orders schema
+// since the typed re-export points to the messaging variant.
+// TODO PA-SCHEMA: Unify papka_orders duplicates and restore Drizzle column access.
+
 export async function queryTechApprovalLog(orderId: string): Promise<Row> {
-  const rows = await db.select({
-    id:              sql<string>`${technology_approvals.id}::text`,
-    order_no:        papka_orders_tech.order_number,
-    current_status:  papka_orders_tech.status,
-    tech_action:     sql<string>`COALESCE(${technology_approvals.action}, 'pending')`,
-    bom_approved:    technology_approvals.bom_approved,
-    routing_approved: technology_approvals.routing_approved,
-    tech_card_approved: technology_approvals.tech_card_approved,
-    approved_at:     sql<string>`${technology_approvals.approved_at}::text`,
-    approved_by:     sql<string>`(SELECT full_name FROM users WHERE id::text = ${technology_approvals.approved_by_id}::text LIMIT 1)`,
-    notes:           technology_approvals.notes,
-    is_rejected:     technology_approvals.is_rejected,
-  })
-    .from(papka_orders_tech)
-    .leftJoin(technology_approvals, eq(technology_approvals.papka_order_id, sql`${papka_orders_tech.id}::text`))
-    .where(eq(sql`${papka_orders_tech.id}::text`, orderId))
-    .limit(1);
-  return (rows[0] ?? {}) as Row;
+  const rows = await db.execute(sql`
+    SELECT
+      ta.id::text AS id,
+      po.papka_no AS order_no,
+      po.status AS current_status,
+      COALESCE(ta.action, 'pending') AS tech_action,
+      ta.bom_approved,
+      ta.routing_approved,
+      ta.tech_card_approved,
+      ta.approved_at::text AS approved_at,
+      (SELECT full_name FROM users WHERE id::text = ta.approved_by_id::text LIMIT 1) AS approved_by,
+      ta.notes,
+      ta.is_rejected
+    FROM papka_orders po
+    LEFT JOIN technology_approvals ta ON ta.papka_order_id = po.id::text
+    WHERE po.id::text = ${orderId}
+    LIMIT 1
+  `);
+  const out = ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[]))[0];
+  return (out ?? {}) as Row;
 }
 
 export async function queryTechDashboardStats(): Promise<Row> {
-  const rows = await db.select({
-    pending:        sql<number>`COUNT(*) FILTER (WHERE ${papka_orders_tech.status} = 'pending_tech')`,
-    approved_today: sql<number>`COUNT(*) FILTER (WHERE ${papka_orders_tech.status} = 'approved' AND ${papka_orders_tech.updated_at}::date = CURRENT_DATE)`,
-    rejected_today: sql<number>`COUNT(*) FILTER (WHERE ${papka_orders_tech.status} = 'rejected' AND ${papka_orders_tech.updated_at}::date = CURRENT_DATE)`,
-  })
-    .from(papka_orders_tech)
-    .where(sql`${papka_orders_tech.created_at} >= NOW() - INTERVAL '30 days'`);
-  return (rows[0] ?? {}) as Row;
+  const rows = await db.execute(sql`
+    SELECT
+      COUNT(*) FILTER (WHERE status = 'pending_tech') AS pending,
+      COUNT(*) FILTER (WHERE status = 'approved' AND updated_at::date = CURRENT_DATE) AS approved_today,
+      COUNT(*) FILTER (WHERE status = 'rejected' AND updated_at::date = CURRENT_DATE) AS rejected_today
+    FROM papka_orders
+    WHERE created_at >= NOW() - INTERVAL '30 days'
+  `);
+  const out = ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[]))[0];
+  return (out ?? {}) as Row;
 }
 
 export async function queryTechCards(): Promise<Row[]> {
-  const rows = await db.select({
-    id:         sql<string>`${tech_cards.id}::text`,
-    order_id:   sql<string>`${tech_cards.papka_order_id}::text`,
-    order_number: papka_orders_tech.order_number,
-    material:   tech_cards.material,
-    ink_colors: tech_cards.ink_colors,
-    print_type: tech_cards.print_type,
-    finishing:  tech_cards.finishing,
-    created_at: sql<string>`${tech_cards.created_at}::text`,
-  })
-    .from(tech_cards)
-    .leftJoin(papka_orders_tech, eq(papka_orders_tech.id, tech_cards.papka_order_id))
-    .orderBy(sql`${tech_cards.created_at} DESC`)
-    .limit(50);
-  return rows as Row[];
+  const rows = await db.execute(sql`
+    SELECT
+      tc.id::text AS id,
+      tc.papka_order_id::text AS order_id,
+      po.papka_no AS order_number,
+      tc.material,
+      tc.ink_colors,
+      tc.print_type,
+      tc.finishing,
+      tc.created_at::text AS created_at
+    FROM tech_cards tc
+    LEFT JOIN papka_orders po ON po.id = tc.papka_order_id
+    ORDER BY tc.created_at DESC
+    LIMIT 50
+  `);
+  return ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[])) as Row[];
 }
 
 export async function queryOrderTechCard(orderId: string): Promise<Row> {
-  const rows = await db.select({
-    id:             tech_cards.id,
-    papka_order_id: tech_cards.papka_order_id,
-    material:       tech_cards.material,
-    ink_colors:     tech_cards.ink_colors,
-    print_type:     tech_cards.print_type,
-    finishing:      tech_cards.finishing,
-    created_at:     tech_cards.created_at,
-    order_number:   papka_orders_tech.order_number,
-  })
-    .from(tech_cards)
-    .leftJoin(papka_orders_tech, eq(papka_orders_tech.id, tech_cards.papka_order_id))
-    .where(eq(tech_cards.papka_order_id, Number(orderId)))
-    .limit(1);
-  return (rows[0] ?? { orderId, message: 'Texkarta yaratilmagan' }) as Row;
+  const rows = await db.execute(sql`
+    SELECT
+      tc.id,
+      tc.papka_order_id,
+      tc.material,
+      tc.ink_colors,
+      tc.print_type,
+      tc.finishing,
+      tc.created_at,
+      po.papka_no AS order_number
+    FROM tech_cards tc
+    LEFT JOIN papka_orders po ON po.id = tc.papka_order_id
+    WHERE tc.papka_order_id = ${Number(orderId)}
+    LIMIT 1
+  `);
+  const out = ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[]))[0];
+  return (out ?? { orderId, message: 'Texkarta yaratilmagan' }) as Row;
 }
 
 export async function queryRunAiCheck(orderId: string): Promise<Row> {
-  const rows = await db.select({
-    order_number:   papka_orders_tech.order_number,
-    quantity:       papka_orders_tech.quantity,
-    format_width:   papka_orders_tech.format_width,
-    format_height:  papka_orders_tech.format_height,
-    product_type:   papka_orders_tech.product_type,
-    tech_card_id:   tech_cards.id,
-  })
-    .from(papka_orders_tech)
-    .leftJoin(tech_cards, eq(tech_cards.papka_order_id, papka_orders_tech.id))
-    .where(eq(papka_orders_tech.id, Number(orderId)))
-    .limit(1);
-  return (rows[0] ?? {}) as Row;
+  const rows = await db.execute(sql`
+    SELECT
+      po.papka_no AS order_number,
+      po.tiraj AS quantity,
+      po.format_a AS format_width,
+      po.format_b AS format_height,
+      po.mahsulot_turi AS product_type,
+      tc.id AS tech_card_id
+    FROM papka_orders po
+    LEFT JOIN tech_cards tc ON tc.papka_order_id = po.id
+    WHERE po.id = ${Number(orderId)}
+    LIMIT 1
+  `);
+  const out = ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[]))[0];
+  return (out ?? {}) as Row;
 }
 
 export async function execTechApproveOrder(orderId: string, data: { bomApproved: boolean; routingApproved: boolean; techCardApproved: boolean; notes?: string; approvedById: string }): Promise<void> {
-  await db.update(papka_orders_tech)
-    .set({ status: 'approved', updated_at: sql`NOW()` })
-    .where(eq(papka_orders_tech.id, Number(orderId)));
+  await db.execute(sql`
+    UPDATE papka_orders SET status = 'approved', updated_at = NOW()
+    WHERE id = ${Number(orderId)}
+  `);
 
   await db.insert(technology_approvals).values({
     papka_order_id: orderId,
@@ -147,9 +173,10 @@ export async function execTechApproveOrder(orderId: string, data: { bomApproved:
 
 export async function execTechRejectOrder(orderId: string, data: { reason: string; returnTo: string; rejectedById: string }): Promise<void> {
   const returnStatus = data.returnTo === 'designer' ? 'pending_design' : 'pending_manager';
-  await db.update(papka_orders_tech)
-    .set({ status: returnStatus, updated_at: sql`NOW()` })
-    .where(eq(papka_orders_tech.id, Number(orderId)));
+  await db.execute(sql`
+    UPDATE papka_orders SET status = ${returnStatus}, updated_at = NOW()
+    WHERE id = ${Number(orderId)}
+  `);
 
   await db.insert(technology_approvals).values({
     papka_order_id: orderId,

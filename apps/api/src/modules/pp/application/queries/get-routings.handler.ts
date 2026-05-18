@@ -22,7 +22,7 @@ export class GetRoutingsHandler implements IQueryHandler<GetRoutingsQuery> {
 
       const total = await db.select({ count: sql<number>`count(*)` }).from(routings);
 
-      const items = await db.select().from(routings).orderBy(desc(routings.createdAt)).limit(limit).offset(offset);
+      const items = await db.select().from(routings).orderBy(desc(routings.created_at)).limit(limit).offset(offset);
 
       const paginatedResult: PaginatedResult<Record<string, unknown>> = {
         items,

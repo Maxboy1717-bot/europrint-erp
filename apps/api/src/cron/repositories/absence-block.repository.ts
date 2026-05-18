@@ -150,10 +150,10 @@ export class AbsenceBlockRepository {
           isNull(hrEmployees.deleted_at),
           isNotNull(hrEmployees.telegram_chat_id),
           sql`(
-            LOWER(${hrPositions.name}) LIKE '%hr%' OR
-            LOWER(${hrPositions.name}) LIKE '%human resource%' OR
-            LOWER(${hrPositions.name}) LIKE '%kadrlar%' OR
-            LOWER(${hrPositions.name}) LIKE '%xodimlar%'
+            LOWER(${hrPositions.title}) LIKE '%hr%' OR
+            LOWER(${hrPositions.title}) LIKE '%human resource%' OR
+            LOWER(${hrPositions.title}) LIKE '%kadrlar%' OR
+            LOWER(${hrPositions.title}) LIKE '%xodimlar%'
           )`,
         ),
       )
@@ -175,10 +175,10 @@ export class AbsenceBlockRepository {
           isNull(hrEmployees.deleted_at),
           isNotNull(hrEmployees.telegram_chat_id),
           sql`(
-            LOWER(${hrPositions.name}) LIKE '%director%' OR
-            LOWER(${hrPositions.name}) LIKE '%direktor%' OR
-            LOWER(${hrPositions.name}) LIKE '%ceo%' OR
-            LOWER(${hrPositions.name}) LIKE '%bosh%'
+            LOWER(${hrPositions.title}) LIKE '%director%' OR
+            LOWER(${hrPositions.title}) LIKE '%direktor%' OR
+            LOWER(${hrPositions.title}) LIKE '%ceo%' OR
+            LOWER(${hrPositions.title}) LIKE '%bosh%'
           )`,
         ),
       )
@@ -201,10 +201,10 @@ export class AbsenceBlockRepository {
           isNull(hrEmployees.deleted_at),
           isNotNull(hrEmployees.telegram_chat_id),
           sql`(
-            LOWER(${hrPositions.name}) LIKE '%manager%' OR
-            LOWER(${hrPositions.name}) LIKE '%menejer%' OR
-            LOWER(${hrPositions.name}) LIKE '%rahbar%' OR
-            LOWER(${hrPositions.name}) LIKE '%boshliq%'
+            LOWER(${hrPositions.title}) LIKE '%manager%' OR
+            LOWER(${hrPositions.title}) LIKE '%menejer%' OR
+            LOWER(${hrPositions.title}) LIKE '%rahbar%' OR
+            LOWER(${hrPositions.title}) LIKE '%boshliq%'
           )`,
         ),
       )

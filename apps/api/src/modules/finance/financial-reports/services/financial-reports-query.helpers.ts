@@ -124,7 +124,7 @@ export async function queryBalanceSheet(date?: string): Promise<Result<BalanceSh
   try {
     const targetDate = date ?? _time.now().toISOString().slice(0, 10);
     const rows = await db.select({
-      type: accounts.type,
+      type: accounts.account_type,
       total: sql<number>`COALESCE(SUM(${entries.amount}::numeric), 0)`,
     })
       .from(accounts)
@@ -132,8 +132,8 @@ export async function queryBalanceSheet(date?: string): Promise<Result<BalanceSh
         eq(entries.debitAccountId, sql`${accounts.id}::varchar`),
         sql`DATE(${entries.createdAt}) <= ${targetDate}`,
       ))
-      .where(eq(accounts.isActive, true))
-      .groupBy(accounts.type);
+      .where(eq(accounts.is_active, true))
+      .groupBy(accounts.account_type);
 
     const byType: Record<string, number> = {};
     for (const row of rows) byType[row.type ?? ''] = Number(row.total ?? 0);

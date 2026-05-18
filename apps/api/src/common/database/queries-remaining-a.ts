@@ -137,15 +137,21 @@ export async function execThreeWayMatchInsert(
   poAmount: number, grAmount: number, invoiceAmount: number,
   status: string, userId: number,
 ): Promise<void> {
+  // Canonical three_way_match_results uses: invoice_id, status, match_details (jsonb), matched_at.
+  // We pack po/gr/amount details into match_details for traceability.
   await db.insert(three_way_match_results).values({
-    po_id: poId,
-    gr_id: grId,
-    vendor_invoice_id: vendorInvoiceId,
-    po_amount: String(poAmount),
-    gr_amount: String(grAmount),
-    invoice_amount: String(invoiceAmount),
+    invoice_id: Number(vendorInvoiceId) || 0,
     status,
-    performed_by: userId,
+    match_details: {
+      po_id: poId,
+      gr_id: grId,
+      vendor_invoice_id: vendorInvoiceId,
+      po_amount: String(poAmount),
+      gr_amount: String(grAmount),
+      invoice_amount: String(invoiceAmount),
+      performed_by: userId,
+    },
+    matched_at: new Date(),
   }).onConflictDoNothing();
 }
 
