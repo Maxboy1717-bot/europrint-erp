@@ -6,9 +6,13 @@
 import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
-import { wms_alerts as canonicalWmsAlerts } from './schema-business-b-1';
+import { wms_alerts as canonicalWmsAlerts, mm_goods_issues as canonicalMmGoodsIssues, mm_goods_receipts as canonicalMmGoodsReceipts, mm_purchase_requisition_items as canonicalMmPurchaseRequisitionItems } from './schema-business-b-1';
 import { three_way_match_results as canonicalThreeWayMatchResults } from './schema-business-b-2';
 import { purchase_orders as canonicalPurchaseOrders } from './schema-wms';
+import { absence_tracking as canonicalAbsenceTracking } from './schema-business-a-1';
+import { asset_items as canonicalAssetItems, gamification_totals as canonicalGamificationTotals, papka_orders as canonicalPapkaOrders } from './schema-business-c-1';
+import { hr_brand_settings as canonicalHrBrandSettings } from './schema-business-c-2-hr-safety';
+import { mm_vendors as canonicalMmVendors } from './schema-misc-qc';
 
 export const hr_documents_archive = pgTable('hr_documents_archive', {
   id:            integer('id').primaryKey(),
@@ -46,27 +50,11 @@ export const mm_goods_issue_items = pgTable('mm_goods_issue_items', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
-export const mm_goods_issues_ext = pgTable('mm_goods_issues', {
-  id:           serial('id').primaryKey(),
-  issued_by:    integer('issued_by'),
-  cost_center:  text('cost_center'),
-  work_order_id: integer('work_order_id'),
-  notes:        text('notes'),
-  status:       text('status').default('pending'),
-  created_at:   timestamp('created_at').defaultNow(),
-  updated_at:   timestamp('updated_at').defaultNow(),
-});
+// mm_goods_issues: re-exported from canonical definition in schema-business-b-1.ts
+export const mm_goods_issues_ext = canonicalMmGoodsIssues;
 
-export const mm_goods_receipts_ext = pgTable('mm_goods_receipts', {
-  id:               serial('id').primaryKey(),
-  purchase_order_id: integer('purchase_order_id'),
-  received_by:      integer('received_by'),
-  notes:            text('notes'),
-  delivery_note:    text('delivery_note'),
-  status:           text('status').default('pending'),
-  created_at:       timestamp('created_at').defaultNow(),
-  updated_at:       timestamp('updated_at').defaultNow(),
-});
+// mm_goods_receipts: re-exported from canonical definition in schema-business-b-1.ts
+export const mm_goods_receipts_ext = canonicalMmGoodsReceipts;
 
 export const mm_purchase_order_items = pgTable('mm_purchase_order_items', {
   id:                serial('id').primaryKey(),
@@ -84,10 +72,8 @@ export const mm_materials_ext = pgTable('mm_materials', {
   created_at:      timestamp('created_at').defaultNow(),
 });
 
-export const mm_vendors_ext = pgTable('mm_vendors', {
-  id:   serial('id').primaryKey(),
-  name: text('name'),
-});
+// mm_vendors: re-exported from canonical definition in schema-misc-qc.ts
+export const mm_vendors_ext = canonicalMmVendors;
 
 // ─── Technology: Tech Cards & Clients ────────────────────────────────────────
 
@@ -111,55 +97,24 @@ export const clients = pgTable('clients', {
 // NOTE: papka_orders in schema-business.ts is messaging-focused.
 // This is the technology/production-order view of the same table.
 
-export const papka_orders_tech = pgTable('papka_orders', {
-  id:             serial('id').primaryKey(),
-  order_number:   text('order_number'),
-  status:         text('status').default('pending_tech'),
-  sales_order_id: integer('sales_order_id'),
-  client_name:    text('client_name'),
-  product_name:   text('product_name'),
-  product_type:   text('product_type'),
-  quantity:       integer('quantity'),
-  format_width:   numeric('format_width', { precision: 10, scale: 2 }),
-  format_height:  numeric('format_height', { precision: 10, scale: 2 }),
-  deadline:       date('deadline'),
-  created_at:     timestamp('created_at').defaultNow(),
-  updated_at:     timestamp('updated_at').defaultNow(),
-});
+// papka_orders: re-exported from canonical definition in schema-business-c-1.ts
+export const papka_orders_tech = canonicalPapkaOrders;
 
 // ─── WMS Alerts ───────────────────────────────────────────────────────────────
 // wms_alerts: re-exported from canonical definition in schema-business-b-1.ts
 export const wms_alerts = canonicalWmsAlerts;
 
 // ─── Gamification ─────────────────────────────────────────────────────────────
-
-export const gamification_totals = pgTable('gamification_totals', {
-  id:               serial('id').primaryKey(),
-  employee_id:      integer('employee_id').unique(),
-  total_points:     integer('total_points').default(0),
-  monthly_points:   integer('monthly_points').default(0),
-  quarterly_points: integer('quarterly_points').default(0),
-  updated_at:       timestamp('updated_at').defaultNow(),
-});
+// gamification_totals: re-exported from canonical definition in schema-business-c-1.ts
+export const gamification_totals = canonicalGamificationTotals;
 
 // ─── Absence Tracking ─────────────────────────────────────────────────────────
-
-export const absence_tracking = pgTable('absence_tracking', {
-  id:                    serial('id').primaryKey(),
-  employee_id:           integer('employee_id'),
-  absence_date:          date('absence_date'),
-  consecutive_day_count: integer('consecutive_day_count').default(1),
-  auto_blocked:          boolean('auto_blocked').default(false),
-});
+// absence_tracking: re-exported from canonical definition in schema-business-a-1.ts
+export const absence_tracking = canonicalAbsenceTracking;
 
 // ─── HR Brand Settings ────────────────────────────────────────────────────────
-
-export const hr_brand_settings = pgTable('hr_brand_settings', {
-  id:         serial('id').primaryKey(),
-  company_id: text('company_id').unique(),
-  brand_data: text('brand_data'),
-  updated_at: timestamp('updated_at').defaultNow(),
-});
+// hr_brand_settings: re-exported from canonical definition in schema-business-c-2-hr-safety.ts
+export const hr_brand_settings = canonicalHrBrandSettings;
 
 // ─── Three Way Match Results ──────────────────────────────────────────────────
 // three_way_match_results: re-exported from canonical definition in schema-business-b-2.ts
@@ -182,34 +137,12 @@ export const materials_legacy = pgTable('materials', {
 });
 
 // ─── MM Purchase Requisition Items ────────────────────────────────────────────
-
-export const mm_purchase_requisition_items = pgTable('mm_purchase_requisition_items', {
-  id:            serial('id').primaryKey(),
-  requisition_id: integer('requisition_id'),
-  material_id:   integer('material_id'),
-  quantity:      numeric('quantity', { precision: 15, scale: 3 }),
-  unit_price:    numeric('unit_price', { precision: 15, scale: 2 }).default('0'),
-  created_at:    timestamp('created_at').defaultNow(),
-});
+// mm_purchase_requisition_items: re-exported from canonical definition in schema-business-b-1.ts
+export const mm_purchase_requisition_items = canonicalMmPurchaseRequisitionItems;
 
 // ─── Asset Items extended (includes DB columns not yet in schema-business.ts) ─
-
-export const asset_items_ext = pgTable('asset_items', {
-  id:              serial('id').primaryKey(),
-  name:            text('name'),
-  category:        text('category'),
-  assigned_to:     integer('assigned_to'),
-  department_id:   integer('department_id'),
-  serial_number:   text('serial_number'),
-  purchase_date:   date('purchase_date'),
-  purchase_value:  numeric('purchase_value', { precision: 15, scale: 2 }),
-  notes:           text('notes'),
-  status:          text('status').default('in_use'),
-  location:        text('location'),
-  is_active:       boolean('is_active').default(true),
-  created_at:      timestamp('created_at').defaultNow(),
-  updated_at:      timestamp('updated_at').defaultNow(),
-});
+// asset_items: re-exported from canonical definition in schema-business-c-1.ts
+export const asset_items_ext = canonicalAssetItems;
 
 // ─── Employee Assets (bridge) ─────────────────────────────────────────────────
 

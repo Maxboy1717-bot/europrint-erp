@@ -6,6 +6,7 @@
 import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
+import { employee_badges as canonicalEmployeeBadges } from './schema-business-c-1';
 
 export const employee_transfers_ext = pgTable('employee_transfers', {
   id:              serial('id').primaryKey(),
@@ -45,14 +46,8 @@ export const employee_rating_goals = pgTable('employee_rating_goals', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
-export const employee_badges_ext = pgTable('employee_badges', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id'),
-  badge_id:    integer('badge_id'),
-  reason:      text('reason'),
-  awarded_by:  integer('awarded_by'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// employee_badges: re-exported from canonical definition in schema-business-c-1.ts
+export const employee_badges_ext = canonicalEmployeeBadges;
 
 export const employee_daily_reports = pgTable('employee_daily_reports', {
   id:          serial('id').primaryKey(),

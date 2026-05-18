@@ -7,6 +7,7 @@ import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { employee_contracts as canonicalEmployeeContracts } from './schema-business-c-3';
 
 // ─── MES: Equipment & Machines ────────────────────────────────────────────────
 
@@ -274,15 +275,5 @@ export const employee_benefits = pgTable('employee_benefits', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
-export const employee_contracts = pgTable('employee_contracts', {
-  id:              serial('id').primaryKey(),
-  employee_id:     integer('employee_id'),
-  contract_number: text('contract_number'),
-  contract_type:   text('contract_type'),
-  start_date:      date('start_date'),
-  end_date:        date('end_date'),
-  salary:          numeric('salary', { precision: 15, scale: 2 }),
-  status:          text('status').default('active'),
-  created_at:      timestamp('created_at').defaultNow(),
-  updated_at:      timestamp('updated_at').defaultNow(),
-});
+// employee_contracts: re-exported from canonical definition in schema-business-c-3.ts
+export const employee_contracts = canonicalEmployeeContracts;
