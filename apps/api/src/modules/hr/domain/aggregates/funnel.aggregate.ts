@@ -1,23 +1,14 @@
 /**
  * @module funnel.aggregate
- * @description Funnel aggregate root — represents one candidate's journey
- * through the recruitment pipeline. Owns the VALID_TRANSITIONS graph (moved
- * here from `recruitment-funnel.service.ts` per HR audit task H.9) so the
- * state machine is enforced inside the domain instead of inside a service.
+ * @description Funnel aggregate root — one candidate's journey through the
+ * recruitment pipeline. Owns the VALID_TRANSITIONS graph (per HR audit task
+ * H.9) so the state machine is enforced inside the domain, not a service.
+ * Graph + payload validators live in `funnel-helpers.ts` (Rule 16).
  *
- * Pattern: mirrors LeaveRequest / PayrollRecord — private `props` bag,
- * value-object `FunnelStage`, `Result<void>` transitions, internal
- * `events: DomainEvent[]` buffer drained via `getDomainEvents()` +
- * `clearDomainEvents()` after persistence.
- *
- * Transition methods:
- *   - moveStage(to)              — generic next-step move; validates against
- *                                  VALID_TRANSITIONS and emits
- *                                  CandidateMovedFunnelStageEvent
- *   - reject(reason)             — terminal; emits CandidateRejectedEvent
- *   - makeOffer(amount, ...)     — moves to OFFER_SENT; emits OfferMadeEvent
- *   - hire(employeeId)           — terminal; emits CandidateHiredEvent;
- *                                  requires current stage = OFFER_SENT
+ * Pattern mirrors LeaveRequest/PayrollRecord: private `props`, VO stage,
+ * `Result<void>` transitions, internal `events` drained after persistence.
+ * Transitions: moveStage / reject / makeOffer / hire — each emits the
+ * corresponding CQRS event.
  */
 
 import { Logger } from '@nestjs/common';
@@ -29,6 +20,16 @@ import { CandidateMovedFunnelStageEvent } from '../events/candidate-moved-funnel
 import { CandidateRejectedEvent } from '../events/candidate-rejected.event';
 import { OfferMadeEvent } from '../events/offer-made.event';
 import { CandidateHiredEvent } from '../events/candidate-hired.event';
+import {
+  VALID_TRANSITIONS,
+  ensureNotClosed,
+  ensureTransitionAllowed,
+  validateRejectReason,
+  validateOfferAmount,
+  validateCurrency,
+  validateStartDate,
+  validateEmployeeId,
+} from './funnel-helpers';
 
 const _time = new TashkentTimeService();
 
@@ -67,25 +68,9 @@ export class Funnel {
   private readonly logger = new Logger(Funnel.name);
   private events: DomainEvent[] = [];
 
-  /**
-   * The state-machine graph. Lifted from the (now-removed) module constant
-   * `VALID_TRANSITIONS` in `recruitment-funnel.service.ts`. Source of truth
-   * for what counts as a legal stage move.
-   */
-  static readonly VALID_TRANSITIONS: Record<FunnelStageValue, FunnelStageValue[]> = {
-    NEW:                 ['QUESTIONNAIRE_SENT', 'PHONE_SCREENING', 'REJECTED'],
-    QUESTIONNAIRE_SENT:  ['PHONE_SCREENING', 'REJECTED'],
-    PHONE_SCREENING:     ['INTERVIEW_SCHEDULED', 'REJECTED'],
-    INTERVIEW_SCHEDULED: ['INTERVIEWED', 'REJECTED'],
-    INTERVIEWED:         ['TEST_SENT', 'REJECTED'],
-    TEST_SENT:           ['TEST_ANALYSIS', 'REJECTED'],
-    TEST_ANALYSIS:       ['REFERENCES_CHECK', 'REJECTED'],
-    REFERENCES_CHECK:    ['PROBATION', 'OFFER_SENT', 'REJECTED'],
-    PROBATION:           ['OFFER_SENT', 'REJECTED'],
-    OFFER_SENT:          ['HIRED', 'REJECTED'],
-    HIRED:               [],
-    REJECTED:            [],
-  };
+  /** Re-exported for callers that read the graph (tests, repository projection). */
+  static readonly VALID_TRANSITIONS: Record<FunnelStageValue, FunnelStageValue[]> =
+    VALID_TRANSITIONS;
 
   private constructor(private props: FunnelProps) {}
 
@@ -158,146 +143,99 @@ export class Funnel {
   // ─── State transitions ──────────────────────────────────────────────────
 
   /**
-   * Move the candidate to a new stage. Validates the transition against
-   * `Funnel.VALID_TRANSITIONS`. Use the dedicated `reject`, `makeOffer`, or
-   * `hire` methods for the terminal/offer transitions so the right event
-   * type is emitted with its payload.
+   * Generic stage move. Validates against `Funnel.VALID_TRANSITIONS`.
+   * Use `reject` / `makeOffer` / `hire` for transitions that carry payload.
    */
   moveStage(to: FunnelStage): Result<void> {
-    if (this.isClosed) {
-      return Err(AppErr('INVALID_TRANSITION', "Yopilgan funnel bosqichini o'zgartirib bo'lmaydi"));
-    }
     const from = this.props.currentStage.getValue();
     const target = to.getValue();
-    const allowed = Funnel.VALID_TRANSITIONS[from] ?? [];
-    if (!allowed.includes(target)) {
-      return Err(AppErr(
-        'INVALID_TRANSITION',
-        `${from} bosqichidan ${target} bosqichiga o'tish mumkin emas. Ruxsat etilgan: [${allowed.join(', ')}]`,
-      ));
-    }
+    const guardR = ensureNotClosed(from, "Yopilgan funnel bosqichini o'zgartirib bo'lmaydi");
+    if (!guardR.ok) return guardR;
+    const transitionR = ensureTransitionAllowed(from, target, true);
+    if (!transitionR.ok) return transitionR;
+
     const now = _time.now();
     this.props.currentStage = to;
     this.props.updatedAt = now;
     this.events.push(new CandidateMovedFunnelStageEvent({
-      funnelId: this.props.id,
-      candidateId: this.props.candidateId,
-      fromStage: from,
-      toStage: target,
-      movedAt: now,
+      funnelId: this.props.id, candidateId: this.props.candidateId,
+      fromStage: from, toStage: target, movedAt: now,
     }));
     return Ok();
   }
 
-  /**
-   * Reject the candidate from any non-terminal stage. Stores the reason
-   * and emits CandidateRejectedEvent.
-   */
+  /** Terminal reject. Stores reason and emits CandidateRejectedEvent. */
   reject(reason: string): Result<void> {
-    if (typeof reason !== 'string' || reason.trim().length === 0) {
-      return Err(AppErr('VALIDATION', "Rad etish sababi ko'rsatilishi shart"));
-    }
-    if (this.isClosed) {
-      return Err(AppErr('INVALID_TRANSITION', "Yopilgan funnel rad etib bo'lmaydi"));
-    }
+    const reasonR = validateRejectReason(reason);
+    if (!reasonR.ok) return Err(reasonR.error);
     const from = this.props.currentStage.getValue();
-    const allowed = Funnel.VALID_TRANSITIONS[from] ?? [];
-    if (!allowed.includes('REJECTED')) {
-      return Err(AppErr(
-        'INVALID_TRANSITION',
-        `${from} bosqichidan REJECTED bosqichiga o'tish mumkin emas`,
-      ));
-    }
+    const guardR = ensureNotClosed(from, "Yopilgan funnel rad etib bo'lmaydi");
+    if (!guardR.ok) return guardR;
+    const transitionR = ensureTransitionAllowed(from, 'REJECTED');
+    if (!transitionR.ok) return transitionR;
     const rejectedR = FunnelStage.create('REJECTED');
     if (!rejectedR.ok) return Err(rejectedR.error);
 
     const now = _time.now();
     this.props.currentStage = rejectedR.data;
-    this.props.rejectionReason = reason;
+    this.props.rejectionReason = reasonR.data;
     this.props.updatedAt = now;
     this.events.push(new CandidateRejectedEvent({
-      funnelId: this.props.id,
-      candidateId: this.props.candidateId,
-      reason,
-      rejectedAt: now,
+      funnelId: this.props.id, candidateId: this.props.candidateId,
+      reason: reasonR.data, rejectedAt: now,
     }));
     return Ok();
   }
 
-  /**
-   * Move the candidate to OFFER_SENT with the offer payload. Validates the
-   * transition (REFERENCES_CHECK or PROBATION → OFFER_SENT) and emits
-   * OfferMadeEvent.
-   */
+  /** Move to OFFER_SENT (from REFERENCES_CHECK or PROBATION). Emits OfferMadeEvent. */
   makeOffer(amount: number, currency: string, startDate: Date): Result<void> {
-    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
-      return Err(AppErr('VALIDATION', `Offer summasi musbat son bo'lishi kerak (got ${amount})`));
-    }
-    if (typeof currency !== 'string' || currency.length !== 3) {
-      return Err(AppErr('VALIDATION', `Valyuta kodi 3 belgili bo'lishi kerak (got ${currency})`));
-    }
-    if (!(startDate instanceof Date) || Number.isNaN(startDate.getTime())) {
-      return Err(AppErr('VALIDATION', 'Ish boshlash sanasi noto\'g\'ri'));
-    }
-    if (this.isClosed) {
-      return Err(AppErr('INVALID_TRANSITION', "Yopilgan funnel uchun offer chiqarib bo'lmaydi"));
-    }
+    const amountR = validateOfferAmount(amount);
+    if (!amountR.ok) return Err(amountR.error);
+    const currencyR = validateCurrency(currency);
+    if (!currencyR.ok) return Err(currencyR.error);
+    const startDateR = validateStartDate(startDate);
+    if (!startDateR.ok) return Err(startDateR.error);
+
     const from = this.props.currentStage.getValue();
-    const allowed = Funnel.VALID_TRANSITIONS[from] ?? [];
-    if (!allowed.includes('OFFER_SENT')) {
-      return Err(AppErr(
-        'INVALID_TRANSITION',
-        `${from} bosqichidan OFFER_SENT bosqichiga o'tish mumkin emas`,
-      ));
-    }
+    const guardR = ensureNotClosed(from, "Yopilgan funnel uchun offer chiqarib bo'lmaydi");
+    if (!guardR.ok) return guardR;
+    const transitionR = ensureTransitionAllowed(from, 'OFFER_SENT');
+    if (!transitionR.ok) return transitionR;
     const offerR = FunnelStage.create('OFFER_SENT');
     if (!offerR.ok) return Err(offerR.error);
 
     const now = _time.now();
-    const cur = currency.toUpperCase();
     this.props.currentStage = offerR.data;
-    this.props.offerDetails = { amount, currency: cur, startDate };
+    this.props.offerDetails = { amount: amountR.data, currency: currencyR.data, startDate: startDateR.data };
     this.props.updatedAt = now;
     this.events.push(new OfferMadeEvent({
-      funnelId: this.props.id,
-      candidateId: this.props.candidateId,
-      amount,
-      currency: cur,
-      startDate,
-      madeAt: now,
+      funnelId: this.props.id, candidateId: this.props.candidateId,
+      amount: amountR.data, currency: currencyR.data, startDate: startDateR.data, madeAt: now,
     }));
     return Ok();
   }
 
-  /**
-   * Hire the candidate. Only allowed from OFFER_SENT. Stores the resulting
-   * employeeId and emits CandidateHiredEvent.
-   */
+  /** Terminal hire. Only allowed from OFFER_SENT. Emits CandidateHiredEvent. */
   hire(employeeId: number): Result<void> {
-    if (typeof employeeId !== 'number' || !Number.isInteger(employeeId) || employeeId <= 0) {
-      return Err(AppErr('VALIDATION', `Employee id musbat butun son bo'lishi kerak (got ${employeeId})`));
-    }
-    if (this.isClosed) {
-      return Err(AppErr('INVALID_TRANSITION', "Yopilgan funnel uchun yollab bo'lmaydi"));
-    }
-    if (this.props.currentStage.getValue() !== 'OFFER_SENT') {
-      return Err(AppErr(
-        'INVALID_TRANSITION',
-        `Faqat OFFER_SENT bosqichidan HIRED ga o'tish mumkin (current: ${this.props.currentStage.getValue()})`,
-      ));
+    const employeeIdR = validateEmployeeId(employeeId);
+    if (!employeeIdR.ok) return Err(employeeIdR.error);
+    const from = this.props.currentStage.getValue();
+    const guardR = ensureNotClosed(from, "Yopilgan funnel uchun yollab bo'lmaydi");
+    if (!guardR.ok) return guardR;
+    if (from !== 'OFFER_SENT') {
+      return Err(AppErr('INVALID_TRANSITION',
+        `Faqat OFFER_SENT bosqichidan HIRED ga o'tish mumkin (current: ${from})`));
     }
     const hiredR = FunnelStage.create('HIRED');
     if (!hiredR.ok) return Err(hiredR.error);
 
     const now = _time.now();
     this.props.currentStage = hiredR.data;
-    this.props.hiredEmployeeId = employeeId;
+    this.props.hiredEmployeeId = employeeIdR.data;
     this.props.updatedAt = now;
     this.events.push(new CandidateHiredEvent({
-      funnelId: this.props.id,
-      candidateId: this.props.candidateId,
-      employeeId,
-      hiredAt: now,
+      funnelId: this.props.id, candidateId: this.props.candidateId,
+      employeeId: employeeIdR.data, hiredAt: now,
     }));
     return Ok();
   }

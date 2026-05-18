@@ -20,7 +20,6 @@
  *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
  */
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { broadcastPosEvent } from '../../presentation/pos.gateway';
@@ -39,8 +38,12 @@ export class PosWmsSyncService {
 
   // =========================================================================
   // COMPLETED — warehouse_stock upsert + warehouse_transactions insert
+  //
+  // Wave 4 round-4 (PA2-18): the legacy @OnEvent('pos.movement.data.completed')
+  // wrapper was removed — the canonical CQRS handler now lives in
+  // `pos-wms-sync-completed.listener.ts` and delegates back into this method.
+  // The method body is unchanged so the WMS sync semantics are preserved.
   // =========================================================================
-  @OnEvent('pos.movement.data.completed', { async: true })
   async onMovementCompleted(event: PosMovementCompletedEvent): Promise<void> {
     try {
       const movId = event.movementId;
@@ -157,8 +160,13 @@ export class PosWmsSyncService {
 
   // =========================================================================
   // CREATED — draft warehouse_transaction insert
+  //
+  // Wave 4 round-4 (PA2-18): the legacy @OnEvent('pos.movement.data.created')
+  // wrapper was removed — the canonical CQRS handler now lives in
+  // `pos-wms-sync-created.listener.ts` and delegates back into this method.
+  // The method body is unchanged so the warehouse_transactions draft insert
+  // semantics are preserved.
   // =========================================================================
-  @OnEvent('pos.movement.data.created', { async: true })
   async onMovementCreated(event: PosMovementCreatedEvent): Promise<void> {
     try {
       const movId = event.movementId;
