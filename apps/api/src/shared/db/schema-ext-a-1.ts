@@ -6,6 +6,7 @@
 import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date, unique,
 } from 'drizzle-orm/pg-core';
+import { kanbanCards as canonicalKanbanCards, kanbanColumns as canonicalKanbanColumns } from './schema-kanban';
 
 // ─── WMS: Stocks ──────────────────────────────────────────────────────────────
 
@@ -215,23 +216,11 @@ export const sd_advance_idempotency_keys = pgTable('sd_advance_idempotency_keys'
 }));
 
 // ─── Kanban: Columns & Cards ──────────────────────────────────────────────────
+// kanban_columns: re-exported from canonical definition in schema-kanban.ts
+export const kanban_columns = canonicalKanbanColumns;
 
-export const kanban_columns = pgTable('kanban_columns', {
-  id:         serial('id').primaryKey(),
-  board_id:   integer('board_id'),
-  title:      text('title'),
-  position:   integer('position').default(0),
-  deleted_at: timestamp('deleted_at'),
-  created_at: timestamp('created_at').defaultNow(),
-});
-
-export const kanban_cards = pgTable('kanban_cards', {
-  id:         serial('id').primaryKey(),
-  column_id:  integer('column_id'),
-  title:      text('title'),
-  deleted_at: timestamp('deleted_at'),
-  created_at: timestamp('created_at').defaultNow(),
-});
+// kanban_cards: re-exported from canonical definition in schema-kanban.ts
+export const kanban_cards = canonicalKanbanCards;
 
 // ─── Questionnaire: Templates ─────────────────────────────────────────────────
 

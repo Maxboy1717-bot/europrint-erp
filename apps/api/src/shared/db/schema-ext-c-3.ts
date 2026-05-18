@@ -6,6 +6,8 @@
 import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
+import { dokla as canonicalDokla, rasporyazhenie as canonicalRasporyazhenie } from './schema-business-a-2';
+import { enps_survey_responses as canonicalEnpsSurveyResponses } from './schema-business-a-1';
 
 export const warehouse_transactions = pgTable('warehouse_transactions', {
   id:           serial('id').primaryKey(),
@@ -97,24 +99,11 @@ export const weekly_plans = pgTable('weekly_plans', {
 });
 
 // ─── Dokla & Rasporyazhenie ────────────────────────────────────────────────────
+// dokla: re-exported from canonical definition in schema-business-a-2.ts
+export const dokla_ext = canonicalDokla;
 
-export const dokla_ext = pgTable('dokla', {
-  id:          serial('id').primaryKey(),
-  title:       text('title'),
-  employee_id: integer('employee_id'),
-  status:      text('status').default('draft'),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
-
-export const rasporyazhenie_ext = pgTable('rasporyazhenie', {
-  id:          serial('id').primaryKey(),
-  title:       text('title'),
-  issued_by:   integer('issued_by'),
-  status:      text('status').default('draft'),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
+// rasporyazhenie: re-exported from canonical definition in schema-business-a-2.ts
+export const rasporyazhenie_ext = canonicalRasporyazhenie;
 
 // ─── Deficit & Monitoring ─────────────────────────────────────────────────────
 
@@ -181,13 +170,5 @@ export const ai_interview_sessions = pgTable('ai_interview_sessions', {
 });
 
 // ─── Enps ──────────────────────────────────────────────────────────────────────
-
-export const enps_survey_responses_ext = pgTable('enps_survey_responses', {
-  id:          serial('id').primaryKey(),
-  survey_id:   integer('survey_id'),
-  employee_id: integer('employee_id'),
-  score:       integer('score'),
-  comment:     text('comment'),
-  submitted_at: timestamp('submitted_at'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// enps_survey_responses: re-exported from canonical definition in schema-business-a-1.ts
+export const enps_survey_responses_ext = canonicalEnpsSurveyResponses;

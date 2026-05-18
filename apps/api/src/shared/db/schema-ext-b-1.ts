@@ -7,6 +7,8 @@ import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { mm_purchase_orders as canonicalMmPurchaseOrders } from './schema-business-b-1';
+import { fi_invoices as canonicalFiInvoices } from './schema-business-b-2';
 
 // ─── MM Extended: Receipt Lines & Materials ────────────────────────────────────
 
@@ -23,14 +25,8 @@ export const mm_goods_receipt_lines = pgTable('mm_goods_receipt_lines', {
   created_at:       timestamp('created_at').defaultNow(),
 });
 
-export const mm_purchase_orders_int = pgTable('mm_purchase_orders', {
-  id:               serial('id').primaryKey(),
-  reference_number: text('reference_number'),
-  received_by:      integer('received_by'),
-  status:           text('status'),
-  notes:            text('notes'),
-  created_at:       timestamp('created_at').defaultNow(),
-});
+// mm_purchase_orders: re-exported from canonical definition in schema-business-b-1.ts
+export const mm_purchase_orders_int = canonicalMmPurchaseOrders;
 
 // ─── HR Core Tables ────────────────────────────────────────────────────────────
 
@@ -116,18 +112,8 @@ export const expense_reports = pgTable('expense_reports', {
   updated_at:   timestamp('updated_at').defaultNow(),
 });
 
-export const fi_invoices = pgTable('fi_invoices', {
-  id:             serial('id').primaryKey(),
-  invoice_number: text('invoice_number'),
-  invoice_date:   date('invoice_date'),
-  due_date:       date('due_date'),
-  customer_name:  text('customer_name'),
-  amount:         numeric('amount', { precision: 15, scale: 2 }),
-  currency:       text('currency').default('UZS'),
-  status:         text('status').default('draft'),
-  created_at:     timestamp('created_at').defaultNow(),
-  updated_at:     timestamp('updated_at').defaultNow(),
-});
+// fi_invoices: re-exported from canonical definition in schema-business-b-2.ts
+export const fi_invoices = canonicalFiInvoices;
 
 // ─── SD Extended Tables ────────────────────────────────────────────────────────
 
