@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 interface BaseSalaryInputProps {
   /** Raw digits string. Empty string when blank. */
@@ -46,10 +47,10 @@ interface BaseSalaryInputProps {
  * pre-fill the input and let HR adjust upward from there.
  */
 const GRADE_PRESETS: ReadonlyArray<{ value: string; label: string; midpoint: number }> = [
-  { value: "A", label: "A — Yuqori sinf",     midpoint: 12_000_000 },
-  { value: "B", label: "B — O'rta-yuqori",     midpoint:  8_000_000 },
-  { value: "C", label: "C — O'rta",             midpoint:  5_000_000 },
-  { value: "D", label: "D — Boshlang'ich",      midpoint:  3_000_000 },
+  { value: "A", label: tLabel("hr.grade.a", "A — Yuqori sinf"),    midpoint: 12_000_000 },
+  { value: "B", label: tLabel("hr.grade.b", "B — O'rta-yuqori"),   midpoint:  8_000_000 },
+  { value: "C", label: tLabel("hr.grade.c", "C — O'rta"),          midpoint:  5_000_000 },
+  { value: "D", label: tLabel("hr.grade.d", "D — Boshlang'ich"),   midpoint:  3_000_000 },
 ];
 
 /** Strip every non-digit character. Negative / decimal salaries are out of scope. */

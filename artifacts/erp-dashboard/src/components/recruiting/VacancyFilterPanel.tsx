@@ -11,6 +11,7 @@ import {
   ChannelDots, ChannelStatusPanel, VacancyMarketBadge,
 } from "@/components/recruiting/helpers";
 import type { PipelineEntry, Vacancy } from "@/components/recruiting/types";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 export interface VacancyFilterPanelProps {
   open: boolean;
@@ -87,7 +88,7 @@ export function VacancyFilterPanel({
               </Button>
             ))}
             {safeVacancies.length === 0 && (
-              <span className="text-sm text-muted-foreground">Ochiq vakansiyalar yo'q</span>
+              <span className="text-sm text-muted-foreground">{tLabel("recruiting.no_open_vacancies", "Ochiq vakansiyalar yo'q")}</span>
             )}
           </div>
           {safeVacancies.length > 0 && (

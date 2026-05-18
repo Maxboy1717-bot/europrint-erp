@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { IdCard, Edit, Plus } from "lucide-react";
 import type { PassportCardProps } from "./PersonalTabTypes";
 import { RoleGate, PII_VIEWER_ROLES } from "@/components/RoleGate";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 export function PassportCard({ t, tCommon, passportData, loadingPassport, passportDialogOpen, setPassportDialogOpen, passportForm, setPassportForm, savePassportMutation, ownerUserId, }: PassportCardProps) {
   return (
@@ -130,8 +131,8 @@ export function PassportCard({ t, tCommon, passportData, loadingPassport, passpo
             ownerUserId={ownerUserId}
             fallback={
               <div className="text-muted-foreground text-center py-8" data-testid="passport-masked">
-                <p className="text-sm">Pasport ma'lumotlari maxfiy</p>
-                <p className="text-xs mt-1">Faqat HR ko'ra oladi</p>
+                <p className="text-sm">{tLabel("employee.passport.private", "Pasport ma'lumotlari maxfiy")}</p>
+                <p className="text-xs mt-1">{tLabel("employee.passport.hr_only", "Faqat HR ko'ra oladi")}</p>
               </div>
             }
           >

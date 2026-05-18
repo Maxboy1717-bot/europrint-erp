@@ -1,34 +1,79 @@
-# Stub Endpoint Catalog (Wave 11)
+# Stub Endpoint Catalog (Wave 11 + Wave 12 cleanup)
 
-> Inventory of every backend endpoint that returns `HTTP 501 Not Implemented`
-> (either via raw `HttpStatus.NOT_IMPLEMENTED` or the `notImplemented(route)` helper),
-> cross-referenced with frontend consumers, plus the list of frontend routes still
-> rendering `<StubPage>`.
+> Inventory of backend endpoints that return `HTTP 501 Not Implemented` and
+> frontend routes still rendering `<StubPage>`, plus the cleanup actions
+> taken in Wave 12 (2026-05-18).
 >
-> This is an **inventory commit only** — endpoints are not implemented in this
-> change. Use this document to prioritize Wave 12+ work.
+> Wave 12 reduced literal `HttpStatus.NOT_IMPLEMENTED` occurrences from 91
+> to 0 by centralising the helper into `@common/exceptions/not-implemented`,
+> reduced `STUB_ROUTES` from 69 to 17 by deleting routes with no sidebar
+> link, and deleted 2 orphan endpoints (POST /system, GET /wms/rental/:warehouseId,
+> GET /finance/loans/:id).
 
 ---
 
-## Summary
+## Summary (post-Wave 12 cleanup)
 
-| Metric                                | Count |
-| ------------------------------------- | ----: |
-| Backend stub endpoints (total)        | **240** |
-| ├─ Consumed (frontend consumer found) | **234** |
-| └─ Orphan (no frontend consumer)      | **6**   |
-| Controller files holding stubs        | **44**  |
-| Frontend `<StubPage>` routes (actual) | **69**  |
-| Frontend `<StubPage>` routes (sprint brief expected) | 22 |
-| Feature flags recommended             | **18**  |
+| Metric                                | Before | After |
+| ------------------------------------- | -----: | ----: |
+| `HttpStatus.NOT_IMPLEMENTED` literals | **91** | **0** |
+| Backend stub endpoints (total routes) | 240    | 237   |
+| Frontend `<StubPage>` routes          | **69** | **17** |
+| Routes deleted (orphan)               | —      | 3     |
+| Stub controllers using shared helper  | 0      | 40    |
+| Feature-flag tracking IDs assigned    | 0      | 11 (#FX-1 ... #FX-11) |
 
 Notes:
-- The 22-route number in the sprint brief is stale — the actual `STUB_ROUTES`
-  array in `artifacts/erp-dashboard/src/routes/StubRoutes.tsx` lists **69**
-  entries. All 22 sprint-brief paths are still present in that array.
+- All remaining 501-returning endpoints now call `notImplemented(route)` from
+  `apps/api/src/common/exceptions/not-implemented.ts` — there is exactly one
+  place left where `HttpStatus.NOT_IMPLEMENTED` is referenced (that helper).
+- Every remaining `STUB_ROUTES` entry is referenced by a sidebar menu item.
+  Stub routes that had no sidebar link AND no other consumer were deleted.
 - "Consumed" means at least one `apiRequest('METHOD', '<route>'…)` or
   React-Query `useQuery({ queryKey: ['<route>'] })` reference was found in the
   frontend. Pure type imports / route registries don't count.
+
+## Wave 12 changes (2026-05-18)
+
+### Backend
+
+| Action  | What                                          | Why |
+| ------- | --------------------------------------------- | --- |
+| Create  | `common/exceptions/not-implemented.ts`        | Single canonical 501 helper |
+| Refactor| 40 controllers → use shared `notImplemented`  | Remove duplicate per-file helpers; cut `HttpStatus.NOT_IMPLEMENTED` from 91 to 0 |
+| Delete  | `POST /system`                                | Orphan — no frontend consumer, no service backing |
+| Delete  | `GET /wms/rental/:warehouseId`                | Orphan — reads use `/wms` directly |
+| Delete  | `GET /finance/loans/:id`                      | Orphan — only list endpoint consumed |
+| Document| `// FEATURE_FLAGGED: ... tracking #FX-N`      | 11 feature-flag tracking IDs assigned |
+
+### Frontend
+
+`STUB_ROUTES` reduced from 69 to 17. Removed entries (52 routes) had no
+sidebar menu item linking to them — they were unreachable. Kept entries
+all map to a sidebar URL (see `components/sidebar/constants*.ts`).
+
+### Remaining stub controllers (40 files, 1 occurrence each)
+
+The single occurrence per file is the `import { notImplemented } from '@common/exceptions/not-implemented'` re-export hook. No file has more than 1 reference.
+
+### Feature-flag tracking IDs
+
+| ID    | Module                                 | Routes |
+| ----- | -------------------------------------- | ------ |
+| #FX-1 | finance-extended payroll               | 9 stubs in `finance-extended-payroll.controller.ts` |
+| #FX-2 | mm vendor-invoice / 3-way / fleet      | 15 stubs in `mm-dashboard.controller.ts` |
+| #FX-3 | warehouse MM/FI integration            | 6 stubs in `wms-integration.controller.ts` |
+| #FX-4 | finance reports + loans                | 2 stubs in `finance-main.controller.ts` |
+| #FX-5 | AI forecast + rush-orders              | 4 stubs in `ai.controller.ts` |
+| #FX-6 | security dashboard aggregates          | 5 stubs in `security.controller.ts` |
+| #FX-7 | design notifications / tooling / msgs  | 5 stubs in `design.controller.ts` |
+| #FX-8 | technology cards CRUD                  | 4 stubs in `technology.controller.ts` |
+| #FX-9 | HR bulk contracts + HrCapital          | 3 stubs in `hr-dashboard-extra.controller.ts` |
+| #FX-10| MM purchase-order writes               | 3 stubs in `mm-purchase-orders.controller.ts` |
+| #FX-11| QC SPC control charts                  | 1 stub in `qc-new.controller.ts` |
+
+Endpoints in other controllers still return 501 but inherit the feature-flag
+recommendations from the Wave 11 inventory below.
 
 ---
 
@@ -511,8 +556,53 @@ Files:
 
 ## Frontend StubPage routes
 
-Source: `artifacts/erp-dashboard/src/routes/StubRoutes.tsx` (69 entries).
-Mounted via `STUB_ROUTES` spread into `AppRouter.tsx` line 52 + 122.
+Source: `artifacts/erp-dashboard/src/routes/StubRoutes.tsx` — **17 entries**
+post-Wave 12 (was 69 in Wave 11). Mounted via `STUB_ROUTES` spread into
+`AppRouter.tsx` line 52 + 122.
+
+### Kept (17 — all referenced by a sidebar menu item)
+
+| Route | Sidebar source |
+| ----- | -------------- |
+| /3way-match               | `constants-finance.ts` |
+| /ai                       | `constants-admin-coord.ts` (AI hub landing) |
+| /ai/crm                   | `constants-sales-crm.ts` |
+| /ai/finance               | `constants-finance.ts` |
+| /employee-zone-history    | `constants-hr-lms.ts` |
+| /gl                       | `constants-finance.ts` |
+| /iot-enhanced             | `constants-production.ts` |
+| /iot-sensors              | `constants-production.ts` |
+| /machine-status-current   | `constants-production.ts` |
+| /pos/movements            | `constants-hidden.ts` |
+| /pos/requests             | `constants-hidden.ts` |
+| /production-facts         | `constants-production.ts` |
+| /production/shift-reports | `constants-production.ts` |
+| /quality-defects-camera   | `constants-security-infra.ts` |
+| /users                    | `constants-admin-coord.ts` (admin) |
+| /waste                    | `constants-warehouse-supply.ts` |
+| /weekly-plans             | `constants-production.ts` |
+
+### Removed (52 — no sidebar link, no other consumer)
+
+`/360`, `/achievements`, `/ai/automation`, `/ai-camera`, `/ai-crm`, `/ai-exam`,
+`/ai/hr`, `/ai/marketing`, `/ai-planning`, `/ai/wms`, `/application-responses`,
+`/approval-workflow`, `/assignments`, `/attempts`, `/auth`, `/calendar-events`,
+`/candidates`, `/company-state`, `/daily-attendance`, `/discipline-records`,
+`/employee-files`, `/employee-productivity`, `/equipment`, `/europrint-control`,
+`/export`, `/gpt`, `/hr/zno`, `/hr/zvs`, `/insights`, `/integration/requests`,
+`/inventory/advanced`, `/machine-status-logs`, `/material-cards`, `/mentors`,
+`/mentorships`, `/micro-modules`, `/modules`, `/okr`, `/order-status`,
+`/org-departments`, `/pos/barcode`, `/pos/inventory-counts`, `/pos/mini-app`,
+`/pos/printer-config`, `/questionnaire-questions`, `/questions`, `/raci-crisis`,
+`/raw-materials`, `/safety-violations`, `/sap`, `/v2/pos/printer-config`,
+`/video-progress`.
+
+---
+
+## Original Wave 11 inventory follows below
+
+The detailed per-controller inventory from Wave 11 is retained for historical
+reference. Counts of "240 stubs" and "69 stub routes" reflect pre-cleanup state.
 
 | Route                              | Suggested action |
 | ---------------------------------- | ---------------- |

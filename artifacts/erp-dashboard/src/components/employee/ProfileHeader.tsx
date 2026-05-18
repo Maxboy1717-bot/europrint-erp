@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserCheck, Hash, AlertTriangle, AlertCircle, CheckCircle } from "lucide-react";
 import { Employee, AbcAnalysis, OrgStructureAssignment, EmploymentContract, Certificate, SalaryHistoryRecord } from "@/pages/employee-profile/profile-types";
 import { RoleGate, PII_VIEWER_ROLES } from "@/components/RoleGate";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 interface ProfileHeaderProps {
   employee: Employee;
@@ -136,7 +137,7 @@ export function ProfileHeader({
                       <UserCheck className="h-3 w-3" /> Faol
                     </Badge>
                   ) : employee.status === "on_leave" ? (
-                    <Badge className="bg-blue-100 text-blue-800 border-none">Ta'tilda</Badge>
+                    <Badge className="bg-blue-100 text-blue-800 border-none">{tLabel("employee.status.on_leave", "Ta'tilda")}</Badge>
                   ) : employee.status === "sick" ? (
                     <Badge className="bg-purple-100 text-purple-800 border-none">Kasalxonada</Badge>
                   ) : (
@@ -188,7 +189,7 @@ export function ProfileHeader({
                     ) : (
                       <>
                         <p className="text-2xl font-black text-muted-foreground leading-none">—</p>
-                        <p className="text-xs text-emerald-400 mt-1">Ma'lumot yo'q</p>
+                        <p className="text-xs text-emerald-400 mt-1">{tLabel("employee.salary.no_data", "Ma'lumot yo'q")}</p>
                       </>
                     )}
                   </RoleGate>

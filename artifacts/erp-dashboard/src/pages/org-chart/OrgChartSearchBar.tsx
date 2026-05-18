@@ -8,6 +8,7 @@
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 interface Props {
   value: string;
@@ -25,10 +26,10 @@ export function OrgChartSearchBar({ value, onChange, matchCount }: Props) {
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Bo'lim yoki ism bo'yicha qidirish..."
+          placeholder={tLabel("orgchart.search.placeholder", "Bo'lim yoki ism bo'yicha qidirish...")}
           className="pl-9"
           data-testid="orgchart-search-input"
-          aria-label="Tashkiliy tuzilma bo'yicha qidirish"
+          aria-label={tLabel("orgchart.search.aria_label", "Tashkiliy tuzilma bo'yicha qidirish")}
         />
       </div>
       {hasQuery && (
