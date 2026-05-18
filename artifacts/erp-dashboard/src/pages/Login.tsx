@@ -51,14 +51,20 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     key: K, value: LoginFormState[K]
   ) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setField("error", null);
 
-    const parsed = loginSchema.safeParse({
-      username: form.username,
-      password: form.password,
-    });
+    // Browser autofill does not always fire onChange on controlled inputs.
+    // Read directly from DOM as the authoritative source so autofilled
+    // values are never silently lost.
+    const formEl = e.currentTarget;
+    const domUsername = (formEl.querySelector('#username') as HTMLInputElement | null)?.value ?? '';
+    const domPassword = (formEl.querySelector('#password') as HTMLInputElement | null)?.value ?? '';
+    const username = domUsername || form.username;
+    const password = domPassword || form.password;
+
+    const parsed = loginSchema.safeParse({ username, password });
 
     if (!parsed.success) {
       setField("error", parsed.error.errors[0].message);
@@ -71,8 +77,8 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         accessToken?: string;
         user?: { id: string | number; username: string; role: string };
       }>('POST', "/api/auth/login", {
-        username: form.username.trim().toLowerCase(),
-        password: form.password,
+        username: username.trim().toLowerCase(),
+        password,
       });
 
       if (data.accessToken) {

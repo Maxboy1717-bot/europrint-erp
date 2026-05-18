@@ -47,11 +47,12 @@ export function FloatingInput({
     <div className="relative">
       <Input
         id={id}
+        name={id}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+        onBlur={(e) => { setFocused(false); onChange(e.target.value); }}
         autoComplete={autoComplete}
         data-testid={testId}
         aria-label={label}
