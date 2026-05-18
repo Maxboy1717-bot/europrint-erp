@@ -36,8 +36,6 @@ import {
 } from "@/routes/roleConstants";
 
 const DirectorDashboard = lazy(() => import("@/pages/DirectorDashboard"));
-const DepartmentsPage = lazy(() => import("@/pages/Departments"));
-const PositionsPage = lazy(() => import("@/pages/Positions"));
 const OrderWorkflowPage = lazy(() => import("@/pages/OrderWorkflowPage"));
 
 const ALL_MODULE_ROUTES = [
@@ -54,7 +52,7 @@ const ALL_MODULE_ROUTES = [
 
 const REDIRECT_PATHS = [
   '/chat', '/chat/admin',
-  '/departments', '/positions', '/orgstructure', '/org-structure/builder',
+  '/orgstructure', '/org-structure/builder',
   '/org-structure/view', '/erp-analytics', '/erp-roles',
   '/warehouse-management', '/warehouse/dashboard', '/logistics/dashboard',
   '/accounting-dashboard', '/fi-finance', '/erp-finance', '/fi/dashboard',
@@ -122,8 +120,6 @@ export function AppRouter() {
       <ModuleGroup roles={ALL_AUTHENTICATED}  routes={STUB_ROUTES}            />
 
       {/* ── Redirect aliases ── */}
-      <Route path="/departments"><RoleRoute roles={HR_ROLES}><DepartmentsPage /></RoleRoute></Route>
-      <Route path="/positions"><RoleRoute roles={HR_ROLES}><PositionsPage /></RoleRoute></Route>
       <Route path="/orgstructure"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
       <Route path="/org-structure/builder"><RoleRoute roles={HR_ROLES}><Redirect to="/org-chart" /></RoleRoute></Route>
       <Route path="/org-structure/view"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>

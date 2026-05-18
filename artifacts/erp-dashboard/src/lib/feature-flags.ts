@@ -18,9 +18,10 @@
  * mirrors the convention used by most Vite-based feature-flag setups and keeps
  * the on/off decision unambiguous.
  */
-function readFlag(name: string): boolean {
+function readFlag(name: string, defaultValue = false): boolean {
   // import.meta.env values are typed as `any` in user code; coerce explicitly.
   const raw = (import.meta.env as Record<string, string | undefined>)[name];
+  if (raw === undefined || raw === null) return defaultValue;
   return raw === 'true';
 }
 
@@ -29,7 +30,7 @@ function readFlag(name: string): boolean {
  * so we hide the menu group from end users until the API ships. Defaults to
  * off; flip to `true` in `.env.local` to surface the menu during development.
  */
-export const FEATURE_MARKETING: boolean = readFlag('VITE_FEATURE_MARKETING');
+export const FEATURE_MARKETING: boolean = readFlag('VITE_FEATURE_MARKETING', true);
 
 /**
  * Internal helper for tests/debug — never call from product code.
