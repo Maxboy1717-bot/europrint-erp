@@ -14,7 +14,9 @@ const _time = new TashkentTimeService();
 import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException, InternalServerErrorException, HttpException, HttpStatus } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventBus } from '@nestjs/cqrs';
 
+import { PosMovementCreatedEvent } from '../../domain/events/pos-movement-created.event';
 import { LifecycleBlockService }   from './lifecycle-block.service';
 import { StockReservationService } from './stock-reservation.service';
 import { EmployeeLedgerService }   from './employee-ledger.service';
@@ -48,6 +50,7 @@ export class PosMovementService {
     private readonly auditService:     PosAuditService,
     private readonly balanceGuard:     PosBalanceGuardService,
     private readonly eventEmitter:     EventEmitter2,
+    private readonly eventBus:         EventBus,
     private readonly repo:             PosMovementRepository,
   ) {}
 
@@ -160,7 +163,12 @@ export class PosMovementService {
         entityId: movement.id, newValue: { movementNumber, type: movType.code, status: 'draft' }, ipAddress,
       });
       this.logger.log(`[POS] Harakat yaratildi: ${movementNumber} type=${movType.code}`);
+      // Wave 4 round-4 (PA2-18): publish both legacy string topic AND canonical
+      // typed event. EventBridge bridges CQRS → string for any consumer not
+      // yet migrated; the legacy emit is kept here as a belt-and-suspenders
+      // measure while migration is in flight.
       this.eventEmitter.emit('pos.movement.data.created', { movementId: movement.id, movementNumber, typeCode: movType.code, createdById });
+      this.eventBus.publish(new PosMovementCreatedEvent({ movementId: movement.id, movementNumber, typeCode: movType.code, createdById }));
 
       if (dto.submit) {
         const statusR = await this.repo.updateMovementStatus(movement.id, 'pending');
