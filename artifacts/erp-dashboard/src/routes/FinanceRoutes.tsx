@@ -6,6 +6,10 @@
 import { lazy } from "react";
 
 const FinanceDashboard = lazy(() => import("@/pages/FinanceDashboard"));
+const FinanceVariance = lazy(() => import("@/pages/FinanceVariance"));
+const FinanceBreakEven = lazy(() => import("@/pages/FinanceBreakEven"));
+const PricingTiers = lazy(() => import("@/pages/PricingTiers"));
+const CFODashboard = lazy(() => import("@/pages/CFODashboard"));
 const CashFlowManagement = lazy(() => import("@/pages/CashFlowManagement"));
 const BudgetManagement = lazy(() => import("@/pages/BudgetManagement"));
 const OrderCosting = lazy(() => import("@/pages/OrderCosting"));
@@ -27,11 +31,12 @@ const InventoryValuation = lazy(() => import("@/pages/InventoryValuation"));
 const AssetManagement = lazy(() => import("@/pages/AssetManagement"));
 const FinanceExtended = lazy(() => import("@/pages/FinanceExtended"));
 const GLChartOfAccounts = lazy(() => import("@/pages/GLChartOfAccounts"));
+const CfoConfigSettings = lazy(() => import("@/pages/CfoConfigSettings"));
 const AIFinancePage = lazy(() => import("@/pages/AIFinancePage"));
 
 export const FINANCE_ROUTES: [string, React.ComponentType][] = [
   ['/finance-dashboard',               FinanceDashboard],
-
+  ['/cfo/dashboard',                   CFODashboard],
   ['/finance/cashflow',                CashFlowManagement],
   ['/finance/budgets',                 BudgetManagement],
   ['/finance/order-costing',           OrderCosting],
@@ -58,6 +63,9 @@ export const FINANCE_ROUTES: [string, React.ComponentType][] = [
   ['/fi/audit-log',                    FinanceExtended],
   ['/fi/risk-ai',                      FinanceExtended],
   ['/finance/gl-chart-of-accounts',    GLChartOfAccounts],
-
+  ['/cfo/config',                      CfoConfigSettings],
+  ['/finance/variance',                FinanceVariance],
+  ['/finance/break-even',              FinanceBreakEven],
+  ['/finance/pricing-tiers',           PricingTiers],
   ['/ai/finance',                      AIFinancePage],
 ];

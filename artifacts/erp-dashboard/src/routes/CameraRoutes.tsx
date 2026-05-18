@@ -20,7 +20,10 @@ const CameraLiveMonitoring = lazy(() => import("@/pages/CameraLiveMonitoring"));
 const FaceRecognitionMonitoring = lazy(() => import("@/pages/FaceRecognitionMonitoring"));
 const FaceRegistration = lazy(() => import("@/pages/FaceRegistration"));
 const AttendanceMonitorPage = lazy(() => import("@/pages/AttendanceMonitorPage"));
-const CameraAIModernHub = lazy(() => import("@/camera-ai-modern/pages/CameraAIModernHub"));const SecurityDashboard = lazy(() => import("@/pages/SecurityDashboard"));
+const CameraAIAnalytics = lazy(() => import("@/pages/CameraAIAnalytics"));
+const CameraAIModernHub = lazy(() => import("@/camera-ai-modern/pages/CameraAIModernHub"));
+const EmployeeTrackingReport = lazy(() => import("@/pages/EmployeeTrackingReport"));
+const SecurityDashboard = lazy(() => import("@/pages/SecurityDashboard"));
 const SecurityExtended = lazy(() => import("@/pages/SecurityExtended"));
 
 export const CAMERA_ROUTES: [string, React.ComponentType][] = [
@@ -39,7 +42,8 @@ export const CAMERA_ROUTES: [string, React.ComponentType][] = [
   ['/camera/monitoring',             FaceRecognitionMonitoring],
   ['/face-registration',             FaceRegistration],
   ['/attendance-monitor',            AttendanceMonitorPage],
-
+  ['/employee-tracking',             EmployeeTrackingReport],
+  ['/europrint/camera-ai-analytics', CameraAIAnalytics],
   ['/camera-ai',                     CameraAIModernHub],
   ['/security',                      SecurityDashboard],
   ['/security/attendance',           SecurityExtended],
