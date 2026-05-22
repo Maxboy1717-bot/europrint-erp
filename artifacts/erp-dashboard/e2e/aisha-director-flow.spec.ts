@@ -9,12 +9,22 @@
 import { test, expect, Page } from '@playwright/test';
 
 async function loginAsDirector(page: Page): Promise<void> {
-  await page.goto('/login');
-  await page.fill('input[name="email"]', 'director@example.com');
-  await page.fill('input[name="password"]', process.env.E2E_DIRECTOR_PASSWORD ?? 'changeme');
-  await page.click('button[type="submit"]');
-  // Director role maps to '/' — wait until we navigate away from the login page
-  await page.waitForURL(url => !url.includes('/login'), { timeout: 10_000 });
+  // Inject the mock auth cookie before navigation so the app sees it on first load.
+  // This avoids the React-controlled-input / Playwright timing issue where the Login
+  // form's inputs get detached from the DOM during useAuth() loading re-renders.
+  await page.context().addCookies([{
+    name: 'access_token',
+    value: 'e2e-mock-access-token-valid',
+    domain: 'localhost',
+    path: '/',
+    httpOnly: true,
+    sameSite: 'Lax',
+  }]);
+  // Navigate directly to the director dashboard root.
+  // RoleRoute shows a spinner while /api/auth/me resolves; admin ∈ DIRECTOR_ROLES.
+  await page.goto('/');
+  // URL is already '/' (not '/login') so this resolves immediately once loaded.
+  await page.waitForURL(url => !url.includes('/login'), { timeout: 15_000 });
 }
 
 async function driveStore(page: Page, mutator: string): Promise<void> {
