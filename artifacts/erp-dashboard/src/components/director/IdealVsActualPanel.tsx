@@ -86,7 +86,7 @@ export function IdealVsActualPanel() {
                 </div>
               </div>
             ))}
-            {data && (
+            {data?.orders && (
               <div className="pt-2 border-t">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{t("buyurtmalarBajarilishi")}</span>

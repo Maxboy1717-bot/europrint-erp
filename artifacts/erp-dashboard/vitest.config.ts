@@ -60,6 +60,11 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
       '@shared/schema': path.resolve(__dirname, 'src/shared-schema.ts'),
       '@assets': path.resolve(__dirname, '..', '..', 'attached_assets'),
+      // Stub out the porcupine wake-word SDK — it ships browser-native WASM/
+      // AudioWorklet code that cannot resolve in the jsdom test environment.
+      // The use-wake-word hook already returns early when accessKey is null,
+      // so no real functionality is lost in tests.
+      '@picovoice/porcupine-web': path.resolve(__dirname, 'src/test/__mocks__/porcupine-web.ts'),
     },
   },
 });

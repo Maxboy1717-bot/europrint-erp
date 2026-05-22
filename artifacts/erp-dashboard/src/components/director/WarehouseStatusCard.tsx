@@ -53,7 +53,7 @@ export function WarehouseStatusCard({ dash, wmsRental, wmsRentalLoad, validation
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Ombor Ichki Ijara (0.15%/oy)</p>
           {wmsRentalLoad ? (
             <Skeleton className="h-20 rounded-lg" />
-          ) : wmsRental && wmsRental.rentalData.length > 0 ? (
+          ) : wmsRental?.rentalData && wmsRental.rentalData.length > 0 ? (
             <div className="space-y-2">
               {wmsRental.rentalData.slice(0, 3).map((row, i) => (
                 <div key={`k-${i}`} className="flex items-center justify-between p-2 rounded-lg bg-muted/20" data-testid={`wms-rental-row-${i}`}>
