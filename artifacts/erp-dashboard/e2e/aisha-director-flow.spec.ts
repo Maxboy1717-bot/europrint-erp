@@ -24,7 +24,7 @@ async function loginAsDirector(page: Page): Promise<void> {
   // RoleRoute shows a spinner while /api/auth/me resolves; admin ∈ DIRECTOR_ROLES.
   await page.goto('/');
   // URL is already '/' (not '/login') so this resolves immediately once loaded.
-  await page.waitForURL(url => !url.includes('/login'), { timeout: 15_000 });
+  await page.waitForURL(url => !url.href.includes('/login'), { timeout: 15_000 });
 }
 
 async function driveStore(page: Page, mutator: string): Promise<void> {
