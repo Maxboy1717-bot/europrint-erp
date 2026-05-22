@@ -4,18 +4,6 @@
 
 ## Summary
 
-
-
-
-
-
-
-
-
-
-
-
-
 | # | Rule | Status | Violations |
 |---|------|--------|------------|
 | 1 | Result Pattern | ✅ PASS | 0 |
