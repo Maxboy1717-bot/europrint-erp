@@ -82,7 +82,11 @@ function renderSummaryTable(rows) {
 function replaceSummary(doc, newTable) {
   // Replace the block between "## Summary" and the next "---" separator.
   // Tolerates both LF and CRLF line endings.
-  const summaryRe = /(## Summary\s*\r?\n)([\s\S]*?)(\r?\n---\r?\n)/;
+  // NOTE: use [^\S\r\n]* instead of \s* so that only horizontal whitespace
+  // (spaces/tabs) on the Summary line is consumed into $1. Using \s* would
+  // greedily capture blank lines into $1, causing the replacement to append
+  // an extra blank line on every run (infinite drift loop).
+  const summaryRe = /(## Summary[^\S\r\n]*\r?\n)([\s\S]*?)(\r?\n---\r?\n)/;
   if (!summaryRe.test(doc)) {
     throw new Error('Could not locate "## Summary" section in ARCHITECTURE_RULES.md.');
   }
