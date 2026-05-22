@@ -8,12 +8,18 @@ import { defineConfig, devices } from "@playwright/test";
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173";
 const MOCK_API_PORT = process.env.MOCK_API_PORT ?? "8080";
 
+// In CI: only run the mock-backend-compatible test suite to stay fast.
+// Other spec files require a live NestJS + DB — run them with test:e2e:api locally.
+const CI_TEST_MATCH = ['**/aisha-director-flow.spec.ts'];
+
 export default defineConfig({
   testDir: "./e2e",
+  testMatch: process.env.CI ? CI_TEST_MATCH : undefined,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   workers: 1,
+  globalTimeout: process.env.CI ? 300_000 : undefined,
   reporter: [
     ["html"],
     ["junit", { outputFile: "test-results/playwright-junit.xml" }],
