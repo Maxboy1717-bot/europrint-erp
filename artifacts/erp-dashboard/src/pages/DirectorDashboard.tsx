@@ -29,12 +29,22 @@ import { AlertFeed } from "@/components/director/AlertFeed";
 import { AIAdvisor } from "@/components/director/AIAdvisor";
 import { ModuleHealthGrid } from "@/components/director/ModuleHealthGrid";
 import { AishaChatPanel } from "@/components/aisha/AishaChatPanel";
+import { AishaPanel } from "@/components/aisha/AishaPanel";
+import { TransparencyPanel } from "@/components/aisha/TransparencyPanel";
+import { useAishaStore } from "@/aisha/store";
 import { Inbox, AlertTriangle, Package, Activity, Sparkles } from "lucide-react";
 import { useTranslation } from '@/lib/i18n';
 import type {
   DirectorSummary, DirDashboard, DirSummary, ProductionData,
   HRData, FinanceData, AlertItem, AISummary, WMSRentalData, KpiWithValue,
 } from "@/components/director/types";
+
+// Expose Zustand store for Playwright E2E tests (non-production only).
+// Allows test helpers to call window.__AISHA_STORE__.setState({...}) to
+// simulate AIsha voice-command results without a real microphone.
+if (typeof window !== 'undefined' && import.meta.env.MODE !== 'production') {
+  (window as Window & { __AISHA_STORE__?: typeof useAishaStore }).__AISHA_STORE__ = useAishaStore;
+}
 
 export default function DirectorDashboard() {
   const { t } = useTranslation("common");
@@ -220,6 +230,10 @@ export default function DirectorDashboard() {
 
       {/* ── AIsha AI Yordamchi — floating chat panel ── */}
       <AishaChatPanel isDirector />
+
+      {/* ── AIsha wake-word panel + transparency (fixed overlays, E2E testable) ── */}
+      <AishaPanel isDirector />
+      <TransparencyPanel />
     </div>
   );
 }

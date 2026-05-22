@@ -61,7 +61,6 @@ temp/
 *.bak
 *.old
 _archive/
-reviewer-*.sh
 
 # PostgreSQL backups (avto-yaratiladi backup.sh tomonidan)
 backups/

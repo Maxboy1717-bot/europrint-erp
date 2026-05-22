@@ -53,16 +53,21 @@ export function HRAlertBanner({ className }: { className?: string }) {
 
   const alerts = data?.data ?? [];
 
-  if (dismissed || isLoading || alerts.length === 0) {
-    if (!isLoading && alerts.length === 0) {
-      return (
-        <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-md bg-green-50 border border-green-200 text-xs text-[var(--ep-green)]", className)}>
-          <Bell className="w-3.5 h-3.5" />
-          {t("barchaCheklistBandlariMuddatidaBajarilmoqda")}
-        </div>
-      );
-    }
-    return null;
+  if (dismissed) return null;
+
+  if (isLoading) {
+    return (
+      <div className={cn("h-8 rounded-md bg-slate-100 animate-pulse", className)} aria-busy="true" />
+    );
+  }
+
+  if (alerts.length === 0) {
+    return (
+      <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-md bg-green-50 border border-green-200 text-xs text-[var(--ep-green)]", className)}>
+        <Bell className="w-3.5 h-3.5" />
+        {t("barchaCheklistBandlariMuddatidaBajarilmoqda")}
+      </div>
+    );
   }
 
   const critical = (Array.isArray(alerts) ? alerts : []).filter(a => a.overdue_hours > 48);

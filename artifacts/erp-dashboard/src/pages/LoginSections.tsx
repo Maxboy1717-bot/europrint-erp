@@ -26,6 +26,8 @@ export const HERO_STATS = [
 
 export interface FloatingInputProps {
   id: string;
+  /** Overrides the default `name={id}` — useful when tests select by a different name. */
+  name?: string;
   label: string;
   type?: string;
   value: string;
@@ -36,7 +38,7 @@ export interface FloatingInputProps {
 }
 
 export function FloatingInput({
-  id, label, type = "text", value, onChange,
+  id, name, label, type = "text", value, onChange,
   autoComplete, "data-testid": testId, rightElement,
 }: FloatingInputProps) {
   const { t } = useTranslation("common");
@@ -47,7 +49,7 @@ export function FloatingInput({
     <div className="relative">
       <Input
         id={id}
-        name={id}
+        name={name ?? id}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
