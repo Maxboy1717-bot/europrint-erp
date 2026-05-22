@@ -237,10 +237,13 @@ const _cache: Cache = {};
  */
 function getCachedModule(lang: Language, module: TranslationModuleName): TranslationModule {
   if (!_cache[lang]) _cache[lang] = {};
-  if (!_cache[lang]![module]) {
-    _cache[lang]![module] = ALL_TRANSLATIONS[lang]?.[module] ?? {};
+  // After the guard above, _cache[lang] is guaranteed to be defined.
+  // Use a local reference to avoid non-null assertion operators.
+  const langCache = _cache[lang] as Record<TranslationModuleName, TranslationModule>;
+  if (!langCache[module]) {
+    langCache[module] = ALL_TRANSLATIONS[lang]?.[module] ?? {};
   }
-  return _cache[lang]![module]!;
+  return langCache[module];
 }
 
 /**

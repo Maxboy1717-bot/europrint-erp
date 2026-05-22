@@ -186,7 +186,7 @@ export function CustomerCard({ customerId }: { customerId: number }) {
   );
 }
 
-function Field({ label, value }: { label: string; value: any }) {
+function Field({ label, value }: { label: string; value: string | number | boolean | null | undefined }) {
   return (
     <div>
       <div className="text-xs text-muted-foreground">{label}</div>

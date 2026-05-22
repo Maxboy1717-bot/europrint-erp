@@ -27,6 +27,7 @@ while IFS= read -r file; do
   #   - limit > 1000 / > 100         (pagination cap — local to handler)
   #   - x / 100                      (percent-to-decimal conversion)
   hits=$(grep -nE '(\* 0\.[1-9])' "$file" 2>/dev/null \
+    | grep -vE '^[0-9]+:[[:space:]]*(//|/?\*|\*/)' \
     | grep -vE '(HttpStatus\.|status\s*=\s*[2-5][0-9]{2}|200|201|204|301|400|401|403|404|409|413|422|429|500|501|502|503)' \
     | grep -vE '\.constants\.|business\.constants|test/|\.spec\.' \
     | grep -vE 'Math\.(round|floor|ceil|min|max)|jitter|alpha|probability|holdLen|series\.length|\.length \* 0|expected_amount|VIP|trial' \

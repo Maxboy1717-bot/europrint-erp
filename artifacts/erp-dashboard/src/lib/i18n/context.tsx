@@ -43,8 +43,7 @@ function _globalT(key: string, _module?: TranslationModuleName, params?: Record<
   return params ? interpolate(raw, params) : raw;
 }
 if (typeof globalThis !== 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (globalThis as any).t = _globalT;
+  (globalThis as Record<string, unknown>).t = _globalT;
 }
 
 // ─── Provider ────────────────────────────────────────────────────────────────
