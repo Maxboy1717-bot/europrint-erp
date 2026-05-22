@@ -150,10 +150,11 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <FloatingInput
               id="username"
+              name="email"
               label={t("username")}
               value={form.username}
               onChange={(v) => setField("username", v)}
-              autoComplete="username"
+              autoComplete="username email"
               data-testid="input-username"
             />
 

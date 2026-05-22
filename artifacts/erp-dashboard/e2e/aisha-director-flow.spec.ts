@@ -13,7 +13,8 @@ async function loginAsDirector(page: Page): Promise<void> {
   await page.fill('input[name="email"]', 'director@example.com');
   await page.fill('input[name="password"]', process.env.E2E_DIRECTOR_PASSWORD ?? 'changeme');
   await page.click('button[type="submit"]');
-  await page.waitForURL(/director/i, { timeout: 10_000 });
+  // Director role maps to '/' — wait until we navigate away from the login page
+  await page.waitForURL(url => !url.includes('/login'), { timeout: 10_000 });
 }
 
 async function driveStore(page: Page, mutator: string): Promise<void> {
