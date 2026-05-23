@@ -26,18 +26,27 @@ jest.mock('@shared/db', () => {
 });
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventBus } from '@nestjs/cqrs';
 import { TransitionStatusHandler, TransitionStatusCommand } from '../../src/modules/order-workflow/application/commands/transition-status.handler';
 import { ORDER_WF_REPO } from '../../src/modules/order-workflow/infrastructure/repositories/i-order.repo';
 import { OrderAggregate } from '../../src/modules/order-workflow/domain/aggregates/order.aggregate';
 import { Ok, Err, AppErr } from '../../src/common/result';
 
-interface RepoMock { save: jest.Mock; findById: jest.Mock; findAll: jest.Mock; }
-function makeRepo(): RepoMock {
-  return { save: jest.fn(), findById: jest.fn(), findAll: jest.fn() };
+interface RepoMock {
+  save: jest.Mock; findById: jest.Mock; findAll: jest.Mock;
+  persistStatusTransition: jest.Mock;
+  findOrderGuardFields: jest.Mock;
+  findPaymentPlanEntries: jest.Mock;
+  findMaterialRequirements: jest.Mock;
 }
-function makeEmitter(): EventEmitter2 {
-  return { emit: jest.fn().mockReturnValue(true) } as unknown as EventEmitter2;
+function makeRepo(): RepoMock {
+  return {
+    save: jest.fn(), findById: jest.fn(), findAll: jest.fn(),
+    persistStatusTransition: jest.fn().mockResolvedValue(Ok(undefined)),
+    findOrderGuardFields: jest.fn(),
+    findPaymentPlanEntries: jest.fn(),
+    findMaterialRequirements: jest.fn(),
+  };
 }
 
 function makeOrder(assignedSalesManager: number | null = null): OrderAggregate {
@@ -54,19 +63,19 @@ function makeOrder(assignedSalesManager: number | null = null): OrderAggregate {
 describe('TransitionStatusHandler', () => {
   let handler: TransitionStatusHandler;
   let repo: RepoMock;
-  let emitter: EventEmitter2;
+  let publishSpy: jest.SpyInstance;
 
   beforeEach(async () => {
     repo = makeRepo();
-    emitter = makeEmitter();
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
         TransitionStatusHandler,
         { provide: ORDER_WF_REPO, useValue: repo },
-        { provide: EventEmitter2, useValue: emitter },
+        { provide: EventBus, useValue: { publish: jest.fn() } },
       ],
     }).compile();
     handler = moduleRef.get(TransitionStatusHandler);
+    publishSpy = jest.spyOn(moduleRef.get(EventBus), 'publish');
   });
 
   it('returns NOT_FOUND when order does not exist in repo', async () => {
@@ -111,16 +120,14 @@ describe('TransitionStatusHandler', () => {
 
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.data.status).toBe('PRICING');
-    expect((emitter.emit as jest.Mock)).toHaveBeenCalledWith(
-      'order.status_changed',
+    expect(publishSpy).toHaveBeenCalledWith(
       expect.objectContaining({ toStatus: 'PRICING' }),
     );
   });
 
   it('returns DB_ERROR when underlying transaction rejects', async () => {
     repo.findById.mockResolvedValue(Ok(makeOrder()));
-    const { db } = jest.requireMock('@shared/db') as { db: { transaction: jest.Mock } };
-    db.transaction.mockRejectedValueOnce(new Error('tx down'));
+    repo.persistStatusTransition.mockResolvedValueOnce(Err(AppErr('DB_ERROR', 'tx down')));
 
     const r = await handler.execute(
       new TransitionStatusCommand('order-1', 'PRICING', 'r', 1),

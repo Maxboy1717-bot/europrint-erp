@@ -26,7 +26,8 @@ export class GetBomsHandler implements IQueryHandler<GetBomsQuery> {
       exec(sql`SELECT COUNT(*)::int AS count FROM bom_headers`),
       exec(sql`SELECT bh.*, mc.xom_ashyo AS product_name FROM bom_headers bh LEFT JOIN material_cards mc ON bh.product_id = mc.id ORDER BY bh.created_at DESC LIMIT ${limit} OFFSET ${offset}`),
     ]);
-    const total = Number(countRows[0]?.count ?? 0);
+    const rawTotal = Number(countRows[0]?.count ?? 0);
+    const total = Number.isFinite(rawTotal) ? rawTotal : 0;
     this.logger.debug(`BOMs fetched: page=${page}, limit=${limit}, total=${total}`);
     return { items, total, page, limit };
   }

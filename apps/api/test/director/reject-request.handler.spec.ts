@@ -6,13 +6,12 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventBus } from '@nestjs/cqrs';
 import { RejectRequestHandler } from '../../src/modules/director/application/commands/reject-request.handler';
 import { RejectRequestCommand } from '../../src/modules/director/application/commands/reject-request.command';
 import { ApprovalRequest } from '../../src/modules/director/domain/aggregates/approval-request.aggregate';
 import { APPROVAL_REPO } from '../../src/modules/director/domain/repositories/i-approval.repo';
 import { HitlDocumentType, ApprovalStatus } from '../../src/modules/director/domain/enums/hitl-document-type.enum';
-import { ERP_EVENTS } from '../../src/common/constants/erp-events.constants';
 import { Ok, Err } from '../../src/common/result';
 
 interface RepoMock {
@@ -39,8 +38,7 @@ function makeRequest(status: ApprovalStatus = ApprovalStatus.PENDING): ApprovalR
 describe('RejectRequestHandler', () => {
   let handler: RejectRequestHandler;
   let repo: RepoMock;
-  let emitter: EventEmitter2;
-  let emitSpy: jest.SpyInstance;
+  let publishSpy: jest.SpyInstance;
 
   beforeEach(async () => {
     repo = makeRepo();
@@ -48,12 +46,11 @@ describe('RejectRequestHandler', () => {
       providers: [
         RejectRequestHandler,
         { provide: APPROVAL_REPO, useValue: repo },
-        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
+        { provide: EventBus, useValue: { publish: jest.fn() } },
       ],
     }).compile();
     handler = module.get(RejectRequestHandler);
-    emitter = module.get(EventEmitter2);
-    emitSpy = jest.spyOn(emitter, 'emit');
+    publishSpy = jest.spyOn(module.get(EventBus), 'publish');
   });
 
   const cmd = new RejectRequestCommand('req-1', 'user-42', 'Budget exceeds quarterly cap');
@@ -94,7 +91,7 @@ describe('RejectRequestHandler', () => {
 
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('INTERNAL');
-    expect(emitSpy).not.toHaveBeenCalled();
+    expect(publishSpy).not.toHaveBeenCalled();
   });
 
   it('returns Ok and emits HITL_REJECTED on a happy-path reject', async () => {
@@ -107,7 +104,7 @@ describe('RejectRequestHandler', () => {
     expect(req.status).toBe(ApprovalStatus.REJECTED);
     expect(req.rejectedBy).toBe('user-42');
     expect(req.rejectionReason).toBe('Budget exceeds quarterly cap');
-    expect(emitSpy).toHaveBeenCalledWith(ERP_EVENTS.HITL_REJECTED, expect.objectContaining({
+    expect(publishSpy).toHaveBeenCalledWith(expect.objectContaining({
       id: 'req-1', rejectedBy: 'user-42', reason: 'Budget exceeds quarterly cap',
     }));
   });
