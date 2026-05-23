@@ -10,7 +10,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotFoundException } from '@nestjs/common';
 import { PipService } from '../../src/modules/hr/pip/pip.service';
 import { PipRepository } from '../../src/modules/hr/pip/pip.repository';
-import { Ok } from '../../src/common/result';
+import { PipWorkflowService } from '../../src/modules/hr/pip/pip-workflow.service';
+import { Ok, Err, AppErr } from '../../src/common/result';
 
 interface RepoMock {
   createPip: jest.Mock;
@@ -29,11 +30,11 @@ interface RepoMock {
 function makeRepo(overrides: Partial<RepoMock> = {}): RepoMock {
   return {
     createPip: jest.fn().mockResolvedValue(Ok({ id: 100, employee_id: 5 })),
-    addProgressUpdate: jest.fn().mockResolvedValue({ id: 1 }),
+    addProgressUpdate: jest.fn().mockResolvedValue(Ok({ id: 1 })),
     getPip: jest.fn().mockResolvedValue(Ok({ id: 100, employee_id: 5 })),
-    markCompleted: jest.fn().mockResolvedValue({ id: 100, status: 'completed' }),
-    markFailed: jest.fn().mockResolvedValue({ id: 100, status: 'failed' }),
-    acknowledge: jest.fn().mockResolvedValue({ id: 100 }),
+    markCompleted: jest.fn().mockResolvedValue(Ok({ id: 100, status: 'completed' })),
+    markFailed: jest.fn().mockResolvedValue(Ok({ id: 100, status: 'failed' })),
+    acknowledge: jest.fn().mockResolvedValue(Ok({ id: 100 })),
     getByIdWithEmployee: jest.fn().mockResolvedValue(Ok({ id: 100, employee_id: 5 })),
     getProgressUpdates: jest.fn().mockResolvedValue([]),
     getByEmployee: jest.fn().mockResolvedValue(Ok([{ id: 1, employee_id: 5 }])),
@@ -51,6 +52,7 @@ async function buildSvc(repo: RepoMock, emitter: EventEmitter2 = makeEmitter()):
   const mod: TestingModule = await Test.createTestingModule({
     providers: [
       PipService,
+      PipWorkflowService,
       { provide: PipRepository, useValue: repo },
       { provide: EventEmitter2, useValue: emitter },
     ],
@@ -144,7 +146,7 @@ describe('PipService', () => {
     });
 
     it('returns failure Result when row missing', async () => {
-      const repo = makeRepo({ acknowledge: jest.fn().mockResolvedValue(null) });
+      const repo = makeRepo({ acknowledge: jest.fn().mockResolvedValue(Err(AppErr('NOT_FOUND', 'pip not found'))) });
       const svc = await buildSvc(repo);
 
       const r = await svc.acknowledge(999);

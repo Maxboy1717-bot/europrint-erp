@@ -26,17 +26,18 @@ import { AuditInterceptor } from '../../src/common/interceptors/audit.intercepto
 import { IS_PUBLIC_KEY } from '../../src/common/decorators/public.decorator';
 
 interface SvcMock {
-  listSessions:   jest.Mock;
-  getPipelineStats: jest.Mock;
-  createSession:  jest.Mock;
-  getSession:     jest.Mock;
-  validateToken:  jest.Mock;
+  listSessions:          jest.Mock;
+  getPipelineStats:      jest.Mock;
+  createSession:         jest.Mock;
+  getSession:            jest.Mock;
+  validateToken:         jest.Mock;
   reportCameraRejection: jest.Mock;
-  completeSession: jest.Mock;
-  listQuestions:  jest.Mock;
-  getQuestionsForJob: jest.Mock;
-  createQuestion: jest.Mock;
-  deleteQuestion: jest.Mock;
+  completeSession:       jest.Mock;
+  submitPublicAnswers:   jest.Mock;
+  listQuestions:         jest.Mock;
+  getQuestionsForJob:    jest.Mock;
+  createQuestion:        jest.Mock;
+  deleteQuestion:        jest.Mock;
 }
 
 describe('AiInterviewV2Controller (e2e — Task 1.1 security)', () => {
@@ -54,6 +55,7 @@ describe('AiInterviewV2Controller (e2e — Task 1.1 security)', () => {
       validateToken:         jest.fn(),
       reportCameraRejection: jest.fn(),
       completeSession:       jest.fn(),
+      submitPublicAnswers:   jest.fn(),
       listQuestions:         jest.fn(),
       getQuestionsForJob:    jest.fn(),
       createQuestion:        jest.fn(),
@@ -158,17 +160,13 @@ describe('AiInterviewV2Controller (e2e — Task 1.1 security)', () => {
   it('allows the @Public() candidate submit endpoint when no auth context is present', async () => {
     jwtAllowed = false;
     rolesAllowed = false;
-    svc.validateToken.mockResolvedValue({ ok: true, data: { valid: true, session_id: 99 } });
-    svc.completeSession.mockResolvedValue({ ok: true, data: undefined });
+    svc.submitPublicAnswers.mockResolvedValue({ ok: true, data: undefined });
     const res = await app.inject({
       method: 'POST', url: '/hr-v2/ai-interview/session/abc123/submit',
       payload: { answers: ['answer one', 'answer two'] },
     });
     expect(res.statusCode).toBe(201);
-    expect(svc.validateToken).toHaveBeenCalledWith('abc123');
-    expect(svc.completeSession).toHaveBeenCalledWith(99, expect.objectContaining({
-      transcript: expect.stringContaining('Q1: answer one'),
-      recommendation: 'CONSIDER',
-    }));
+    // Controller delegates the entire submit flow to submitPublicAnswers
+    expect(svc.submitPublicAnswers).toHaveBeenCalledWith('abc123', ['answer one', 'answer two']);
   });
 });

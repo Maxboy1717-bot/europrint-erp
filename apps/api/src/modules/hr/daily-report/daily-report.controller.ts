@@ -78,7 +78,8 @@ export class DailyReportController {
     const normalizedType: ReportType = REPORT_TYPES.includes(type as ReportType)
       ? (type as ReportType)
       : 'all';
-    const normalizedLimit = Math.min(Math.max(parseInt(limit ?? '100', 10) || 100, 1), 500);
+    const rawLimit = parseInt(limit ?? '', 10);
+    const normalizedLimit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 500) : 100;
     return unwrapOrInternal(
       await this.svc.getByDate(
         date || _time.now().toISOString().split('T')[0],

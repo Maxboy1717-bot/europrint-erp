@@ -1,47 +1,38 @@
 /**
  * test/iot/update-device-thresholds.handler.spec.ts
  *
- * Unit tests for UpdateDeviceThresholdsHandler. Mocks @shared/db.runQuery for
- * the two raw SQL calls (existence check + UPDATE … RETURNING).
+ * Unit tests for UpdateDeviceThresholdsHandler.
+ * The handler delegates to ISensorRepo.updateThresholds — we mock that method.
  */
 
-interface QueryResult { rows: Array<Record<string, unknown>> }
-
-const runQueryMock = jest.fn();
-
-jest.mock('@shared/db', () => ({
-  db: {},
-  runQuery: runQueryMock,
-}));
+jest.mock('@shared/db', () => ({ db: {}, runQuery: jest.fn() }));
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { UpdateDeviceThresholdsHandler } from '../../src/modules/iot/application/commands/update-device-thresholds.handler';
 import { UpdateDeviceThresholdsCommand } from '../../src/modules/iot/application/commands/update-device-thresholds.command';
 import { SENSOR_REPO, ISensorRepo } from '../../src/modules/iot/domain/repositories/i-sensor.repo';
+import { Ok, Err, AppErr } from '../../src/common/result';
 
 function makeRepo(): jest.Mocked<ISensorRepo> {
   return {
-    findDeviceById: jest.fn(),
-    findAllDevices: jest.fn(),
-    saveDevice: jest.fn(),
-    updateDevice: jest.fn(),
-    saveReading: jest.fn(),
-    findReadings: jest.fn(),
-    findAnomalies: jest.fn(),
+    findDeviceById:  jest.fn(),
+    findAllDevices:  jest.fn(),
+    saveDevice:      jest.fn(),
+    updateDevice:    jest.fn(),
+    saveReading:     jest.fn(),
+    findReadings:    jest.fn(),
+    findAnomalies:   jest.fn(),
+    existsByCode:    jest.fn(),
+    registerDevice:  jest.fn(),
+    updateThresholds: jest.fn(),
   } as jest.Mocked<ISensorRepo>;
 }
 
-function queue(...replies: QueryResult[]): void {
-  runQueryMock.mockReset();
-  let i = 0;
-  runQueryMock.mockImplementation(() => Promise.resolve(replies[i++] ?? { rows: [] }));
-}
-
-async function build(): Promise<UpdateDeviceThresholdsHandler> {
+async function build(repo: ReturnType<typeof makeRepo>): Promise<UpdateDeviceThresholdsHandler> {
   const module: TestingModule = await Test.createTestingModule({
     providers: [
       UpdateDeviceThresholdsHandler,
-      { provide: SENSOR_REPO, useValue: makeRepo() },
+      { provide: SENSOR_REPO, useValue: repo },
     ],
   }).compile();
   return module.get(UpdateDeviceThresholdsHandler);
@@ -51,8 +42,9 @@ const cmd = new UpdateDeviceThresholdsCommand('dev-1', { min: 5, max: 95, unit: 
 
 describe('UpdateDeviceThresholdsHandler', () => {
   it('returns NOT_FOUND when device does not exist', async () => {
-    queue({ rows: [] });
-    const handler = await build();
+    const repo = makeRepo();
+    repo.updateThresholds.mockResolvedValue(Err(AppErr('NOT_FOUND', 'Device not found')));
+    const handler = await build(repo);
 
     const r = await handler.execute(cmd);
 
@@ -60,12 +52,10 @@ describe('UpdateDeviceThresholdsHandler', () => {
     if (!r.ok) expect(r.error.code).toBe('NOT_FOUND');
   });
 
-  it('returns Err when UPDATE returns no rows', async () => {
-    queue(
-      { rows: [{ id: 'dev-1' }] },
-      { rows: [] },
-    );
-    const handler = await build();
+  it('returns Err when repository reports update failure', async () => {
+    const repo = makeRepo();
+    repo.updateThresholds.mockResolvedValue(Err(AppErr('INTERNAL', 'Update failed')));
+    const handler = await build(repo);
 
     const r = await handler.execute(cmd);
 
@@ -73,20 +63,11 @@ describe('UpdateDeviceThresholdsHandler', () => {
   });
 
   it('returns Ok with updated thresholds on success', async () => {
-    queue(
-      { rows: [{ id: 'dev-1' }] },
-      {
-        rows: [{
-          id: 'dev-1',
-          name: 'Temp',
-          type: 'temperature',
-          min_threshold: 5,
-          max_threshold: 95,
-          created_at: '2024-01-01T00:00:00Z',
-        }],
-      },
+    const repo = makeRepo();
+    repo.updateThresholds.mockResolvedValue(
+      Ok({ thresholds: { min: 5, max: 95 } } as never),
     );
-    const handler = await build();
+    const handler = await build(repo);
 
     const r = await handler.execute(cmd);
 
@@ -97,42 +78,26 @@ describe('UpdateDeviceThresholdsHandler', () => {
     }
   });
 
-  it('runs existence check before UPDATE (two queries total)', async () => {
-    queue(
-      { rows: [{ id: 'dev-1' }] },
-      {
-        rows: [{
-          id: 'dev-1',
-          name: 'Temp',
-          type: 'temperature',
-          min_threshold: null,
-          max_threshold: null,
-          created_at: '2024-01-01T00:00:00Z',
-        }],
-      },
+  it('delegates to repository updateThresholds exactly once', async () => {
+    const repo = makeRepo();
+    repo.updateThresholds.mockResolvedValue(
+      Ok({ thresholds: { min: 5, max: 95 } } as never),
     );
-    const handler = await build();
+    const handler = await build(repo);
 
     await handler.execute(cmd);
 
-    expect(runQueryMock).toHaveBeenCalledTimes(2);
+    expect(repo.updateThresholds).toHaveBeenCalledTimes(1);
+    // cmd has { min: 5, max: 95 } — both are non-null so ?? null keeps the values
+    expect(repo.updateThresholds).toHaveBeenCalledWith('dev-1', { min: 5, max: 95 });
   });
 
-  it('returns undefined min/max when database row has null threshold values', async () => {
-    queue(
-      { rows: [{ id: 'dev-1' }] },
-      {
-        rows: [{
-          id: 'dev-1',
-          name: 'Temp',
-          type: 'temperature',
-          min_threshold: null,
-          max_threshold: null,
-          created_at: '2024-01-01T00:00:00Z',
-        }],
-      },
+  it('returns undefined min/max when repository row has no threshold values', async () => {
+    const repo = makeRepo();
+    repo.updateThresholds.mockResolvedValue(
+      Ok({ thresholds: undefined } as never),
     );
-    const handler = await build();
+    const handler = await build(repo);
 
     const r = await handler.execute(cmd);
 

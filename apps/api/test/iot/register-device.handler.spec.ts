@@ -1,48 +1,38 @@
 /**
  * test/iot/register-device.handler.spec.ts
  *
- * Unit tests for RegisterDeviceHandler. The handler runs raw SQL via runQuery;
- * we mock @shared/db.runQuery and the ISensorRepo (which is injected but not
- * used by the existing code path).
+ * Unit tests for RegisterDeviceHandler.
+ * The handler delegates to ISensorRepo.existsByCode + registerDevice — we mock those.
  */
 
-interface QueryResult { rows: Array<Record<string, unknown>> }
-
-const runQueryMock = jest.fn();
-
-jest.mock('@shared/db', () => ({
-  db: {},
-  runQuery: runQueryMock,
-}));
+jest.mock('@shared/db', () => ({ db: {}, runQuery: jest.fn() }));
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { RegisterDeviceHandler } from '../../src/modules/iot/application/commands/register-device.handler';
 import { RegisterDeviceCommand } from '../../src/modules/iot/application/commands/register-device.command';
 import { SENSOR_REPO, ISensorRepo } from '../../src/modules/iot/domain/repositories/i-sensor.repo';
+import { Ok, Err, AppErr } from '../../src/common/result';
 
 function makeRepo(): jest.Mocked<ISensorRepo> {
   return {
-    findDeviceById: jest.fn(),
-    findAllDevices: jest.fn(),
-    saveDevice: jest.fn(),
-    updateDevice: jest.fn(),
-    saveReading: jest.fn(),
-    findReadings: jest.fn(),
-    findAnomalies: jest.fn(),
+    findDeviceById:   jest.fn(),
+    findAllDevices:   jest.fn(),
+    saveDevice:       jest.fn(),
+    updateDevice:     jest.fn(),
+    saveReading:      jest.fn(),
+    findReadings:     jest.fn(),
+    findAnomalies:    jest.fn(),
+    existsByCode:     jest.fn(),
+    registerDevice:   jest.fn(),
+    updateThresholds: jest.fn(),
   } as jest.Mocked<ISensorRepo>;
 }
 
-function queue(...replies: QueryResult[]): void {
-  runQueryMock.mockReset();
-  let i = 0;
-  runQueryMock.mockImplementation(() => Promise.resolve(replies[i++] ?? { rows: [] }));
-}
-
-async function build(): Promise<RegisterDeviceHandler> {
+async function build(repo: ReturnType<typeof makeRepo>): Promise<RegisterDeviceHandler> {
   const module: TestingModule = await Test.createTestingModule({
     providers: [
       RegisterDeviceHandler,
-      { provide: SENSOR_REPO, useValue: makeRepo() },
+      { provide: SENSOR_REPO, useValue: repo },
     ],
   }).compile();
   return module.get(RegisterDeviceHandler);
@@ -55,8 +45,9 @@ const cmd = new RegisterDeviceCommand(
 
 describe('RegisterDeviceHandler', () => {
   it('returns CONFLICT when device code already exists', async () => {
-    queue({ rows: [{ id: 'existing' }] });
-    const handler = await build();
+    const repo = makeRepo();
+    repo.existsByCode.mockResolvedValue(Ok(true));
+    const handler = await build(repo);
 
     const r = await handler.execute(cmd);
 
@@ -65,39 +56,41 @@ describe('RegisterDeviceHandler', () => {
   });
 
   it('inserts and returns the new device when code is unique', async () => {
-    queue(
-      { rows: [] },
-      { rows: [{ id: 'new-1', name: 'Press Temp', type: 'temperature', created_at: '2024-01-01T00:00:00Z' }] },
+    const repo = makeRepo();
+    repo.existsByCode.mockResolvedValue(Ok(false));
+    repo.registerDevice.mockResolvedValue(
+      Ok({ id: 'new-1', name: 'Press Temp', type: 'temperature' } as never),
     );
-    const handler = await build();
+    const handler = await build(repo);
 
     const r = await handler.execute(cmd);
 
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.data.id).toBe('new-1');
+    if (r.ok) expect((r.data as never as { id: string }).id).toBe('new-1');
   });
 
-  it('returns Err when INSERT returns no rows', async () => {
-    queue(
-      { rows: [] },
-      { rows: [] },
-    );
-    const handler = await build();
+  it('returns Err when repository fails to insert', async () => {
+    const repo = makeRepo();
+    repo.existsByCode.mockResolvedValue(Ok(false));
+    repo.registerDevice.mockResolvedValue(Err(AppErr('INTERNAL', 'Insert failed')));
+    const handler = await build(repo);
 
     const r = await handler.execute(cmd);
 
     expect(r.ok).toBe(false);
   });
 
-  it('runs lookup query before insert query (two runQuery calls total)', async () => {
-    queue(
-      { rows: [] },
-      { rows: [{ id: 'x', name: 'n', type: 'temperature', created_at: '2024-01-01T00:00:00Z' }] },
+  it('checks existence before inserting (existsByCode then registerDevice)', async () => {
+    const repo = makeRepo();
+    repo.existsByCode.mockResolvedValue(Ok(false));
+    repo.registerDevice.mockResolvedValue(
+      Ok({ id: 'x', name: 'n', type: 'temperature' } as never),
     );
-    const handler = await build();
+    const handler = await build(repo);
 
     await handler.execute(cmd);
 
-    expect(runQueryMock).toHaveBeenCalledTimes(2);
+    expect(repo.existsByCode).toHaveBeenCalledWith('SENSOR-001');
+    expect(repo.registerDevice).toHaveBeenCalledTimes(1);
   });
 });
