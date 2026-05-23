@@ -9,10 +9,20 @@ import { makeDbMock } from '../_setup/drizzle-db-mock';
 
 const kit = makeDbMock();
 
+const approvalTableStub = {
+  id: 'ar.id', documentType: 'ar.documentType', documentId: 'ar.documentId',
+  documentNumber: 'ar.documentNumber', amount: 'ar.amount', currency: 'ar.currency',
+  status: 'ar.status', requestedBy: 'ar.requestedBy', approvedBy: 'ar.approvedBy',
+  approvedAt: 'ar.approvedAt', rejectedBy: 'ar.rejectedBy', rejectedAt: 'ar.rejectedAt',
+  rejectionReason: 'ar.rejectionReason', notes: 'ar.notes',
+  createdAt: 'ar.createdAt', updatedAt: 'ar.updatedAt',
+};
+
 jest.mock('@shared/db', () => ({
   db: kit.db,
   runQuery: kit.runQuery,
   rawSql: kit.rawSql,
+  approval_requests: approvalTableStub,
 }));
 
 jest.mock('@paralleldrive/cuid2', () => ({

@@ -4,6 +4,7 @@
  */
 
 import { ClaudeService, type StreamEvent } from '../../src/modules/aisha/application/llm/claude.service';
+import { ClaudeAdapter } from '../../src/modules/aisha/infrastructure/external/claude.adapter';
 import { AishaConfig } from '../../src/modules/aisha/config/aisha.config';
 
 function fakeSdk(events: Array<Record<string, unknown>>) {
@@ -27,9 +28,13 @@ async function collect(it: AsyncIterable<StreamEvent>): Promise<StreamEvent[]> {
   return out;
 }
 
+function makeSvc(cfg: AishaConfig): ClaudeService {
+  return new ClaudeService(new ClaudeAdapter(cfg));
+}
+
 describe('ClaudeService', () => {
   it('emits text_delta events from content_block_delta', async () => {
-    const svc = new ClaudeService(fakeCfg());
+    const svc = makeSvc(fakeCfg());
     svc.setSdkForTesting(fakeSdk([
       { type: 'content_block_delta', delta: { type: 'text_delta', text: 'hello' } },
       { type: 'message_stop' },
@@ -40,7 +45,7 @@ describe('ClaudeService', () => {
   });
 
   it('emits tool_use events from content_block_start', async () => {
-    const svc = new ClaudeService(fakeCfg());
+    const svc = makeSvc(fakeCfg());
     svc.setSdkForTesting(fakeSdk([
       { type: 'content_block_start', content_block: { type: 'tool_use', id: 't1', name: 'get_x', input: { a: 1 } } },
       { type: 'message_stop' },
@@ -50,7 +55,7 @@ describe('ClaudeService', () => {
   });
 
   it('sendOneShot concatenates text deltas', async () => {
-    const svc = new ClaudeService(fakeCfg());
+    const svc = makeSvc(fakeCfg());
     svc.setSdkForTesting(fakeSdk([
       { type: 'content_block_delta', delta: { type: 'text_delta', text: 'foo ' } },
       { type: 'content_block_delta', delta: { type: 'text_delta', text: 'bar' } },
@@ -61,7 +66,7 @@ describe('ClaudeService', () => {
   });
 
   it('reports error when SDK throws', async () => {
-    const svc = new ClaudeService(fakeCfg());
+    const svc = makeSvc(fakeCfg());
     svc.setSdkForTesting({
       messages: {
         // eslint-disable-next-line @typescript-eslint/require-await
@@ -73,7 +78,7 @@ describe('ClaudeService', () => {
   });
 
   it('ignores unrelated event types', async () => {
-    const svc = new ClaudeService(fakeCfg());
+    const svc = makeSvc(fakeCfg());
     svc.setSdkForTesting(fakeSdk([
       { type: 'unknown_event' },
       { type: 'message_stop' },

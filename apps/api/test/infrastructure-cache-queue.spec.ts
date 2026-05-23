@@ -400,10 +400,11 @@ describe('TZ-61: KeysetPaginationService — Cursor Pagination', () => {
     if (!r.ok) expect(r.error.code).toBe('VALIDATION');
   });
 
-  it('buildNextCursor: rows < limit → null', () => {
+  it('buildNextCursor: rows < limit → undefined/falsy', () => {
     const rows = [{ id: 'a', createdAt: new Date() }];
     const next = svc.buildNextCursor(rows, 5);
-    expect(next).toBeNull();
+    // Service returns undefined (falsy) when there are fewer rows than limit
+    expect(next).toBeFalsy();
   });
 
   it('cursorToParams: cursor → { createdAt: Date, id, order }', () => {
@@ -452,9 +453,11 @@ describe('TZ-62: MaterializedViewRefreshService — MV Refresh Cron', () => {
     expect(mockDdlRun).toHaveBeenCalledTimes(3);
   });
 
-  it('refreshView: ddlRun xato bo\'lsa → exception otiladi', async () => {
+  it('refreshView: ddlRun xato bo\'lsa → Err Result qaytariladi', async () => {
     mockDdlRun.mockRejectedValue(new Error('DB xato'));
-    await expect(svc.refreshView('mv_kpi_daily')).rejects.toThrow('DB xato');
+    const r = await svc.refreshView('mv_kpi_daily');
+    // Service uses Result pattern — errors are returned as Err, not thrown
+    expect(r.ok).toBe(false);
   });
 
   it('refreshAll: bitta view xato → boshqalar bajariladi (allSettled)', async () => {

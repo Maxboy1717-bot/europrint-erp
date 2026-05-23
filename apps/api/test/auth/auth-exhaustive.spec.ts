@@ -67,6 +67,16 @@ function makeI18n() {
   } as unknown as import('nestjs-i18n').I18nService;
 }
 
+// Password hasher mock — returns a bcrypt-format placeholder ($2b prefix required
+// by PasswordValueObject.fromHash), verify always returns true.
+const BCRYPT_STUB = '$2b$10$AAAAAAAAAAAAAAAAAAAAAuBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB';
+function makePasswordHasher() {
+  return {
+    hash: jest.fn().mockResolvedValue(BCRYPT_STUB),
+    verify: jest.fn().mockResolvedValue(true),
+  };
+}
+
 // Map AuthErrorCode → the i18n key that LoginService now resolves to.
 // Keeps the existing parametric test table small and readable.
 const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
@@ -97,7 +107,7 @@ const ROLES = ['admin', 'super_admin', 'hr', 'cfo', 'sales_manager', 'operator',
 describe('LoginService — every role can log in successfully', () => {
   it.each(ROLES)('role=%s', async (role) => {
     const user = makeUser({ role });
-    const handler = new LoginService(makeRepo(user) as never, makeJwt(), makeI18n());
+    const handler = new LoginService(makeRepo(user) as never, makePasswordHasher() as never, makeJwt(), makeI18n());
     const r = await handler.execute({ username: 'u', password: 'p', ipAddress: '127.0.0.1', userAgent: 'jest' });
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.data.user.role).toBe(role);
@@ -113,7 +123,7 @@ describe('LoginService — failure scenarios', () => {
   ];
 
   it.each(cases)('%s', async (_, user, expectedMsg) => {
-    const handler = new LoginService(makeRepo(user) as never, makeJwt(), makeI18n());
+    const handler = new LoginService(makeRepo(user) as never, makePasswordHasher() as never, makeJwt(), makeI18n());
     const r = await handler.execute({ username: 'u', password: 'p', ipAddress: '127.0.0.1', userAgent: 'j' });
     expect(r.ok).toBe(false);
     // After i18n migration, the message is an i18n key (mock returns the key
@@ -134,21 +144,21 @@ describe('LoginService — token issuance details', () => {
     ['with hyphen', 'first-last'],
   ])('issues tokens for username "%s"', async (_, username) => {
     const user = makeUser({ username });
-    const handler = new LoginService(makeRepo(user) as never, makeJwt(), makeI18n());
+    const handler = new LoginService(makeRepo(user) as never, makePasswordHasher() as never, makeJwt(), makeI18n());
     const r = await handler.execute({ username, password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(r.ok).toBe(true);
   });
 
   it('access token expires in 8h', async () => {
     const jwt = makeJwt();
-    const handler = new LoginService(makeRepo(makeUser()) as never, jwt, makeI18n());
+    const handler = new LoginService(makeRepo(makeUser()) as never, makePasswordHasher() as never, jwt, makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect((jwt.sign as jest.Mock).mock.calls[0][1]).toEqual({ expiresIn: '8h' });
   });
 
   it('refresh token expires in 30d with separate secret', async () => {
     const jwt = makeJwt();
-    const handler = new LoginService(makeRepo(makeUser()) as never, jwt, makeI18n());
+    const handler = new LoginService(makeRepo(makeUser()) as never, makePasswordHasher() as never, jwt, makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     const refreshCall = (jwt.sign as jest.Mock).mock.calls[1][1];
     expect(refreshCall.expiresIn).toBe('30d');
@@ -157,14 +167,14 @@ describe('LoginService — token issuance details', () => {
 
   it('failed-attempt counter is incremented in repo on bad password', async () => {
     const repo = makeRepo(makeUser({ passwordOk: false }));
-    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher() as never, makeJwt(), makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(repo.incrementFailedAttempts).toHaveBeenCalledWith(1);
   });
 
   it('counter resets and last-login updates on success', async () => {
     const repo = makeRepo(makeUser({ failedAttempts: 4 }));
-    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher() as never, makeJwt(), makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(repo.resetFailedAttempts).toHaveBeenCalled();
     expect(repo.updateLastLogin).toHaveBeenCalled();
@@ -173,7 +183,7 @@ describe('LoginService — token issuance details', () => {
   it('audit log failure does not break login flow', async () => {
     const { runQuery } = await import('@shared/db');
     (runQuery as jest.Mock).mockRejectedValueOnce(new Error('db'));
-    const handler = new LoginService(makeRepo(makeUser()) as never, makeJwt(), makeI18n());
+    const handler = new LoginService(makeRepo(makeUser()) as never, makePasswordHasher() as never, makeJwt(), makeI18n());
     const r = await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(r.ok).toBe(true);
   });
@@ -183,7 +193,7 @@ describe('LoginService — token issuance details', () => {
 
 describe('ChangePasswordService — every path', () => {
   it('returns NOT_FOUND when user missing', async () => {
-    const handler = new ChangePasswordService(makeRepo(null) as never, makeI18n());
+    const handler = new ChangePasswordService(makeRepo(null) as never, makePasswordHasher() as never, makeI18n());
     const r = await handler.execute({ userId: 1, oldPassword: 'o', newPassword: 'NewSecure!2026' });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('NOT_FOUND');
@@ -200,7 +210,7 @@ describe('ChangePasswordService — every path', () => {
   ])('rejects weak password (%s)', async (_, newPassword) => {
     const user = { changePassword: jest.fn().mockResolvedValue(true) };
     const repo = { findById: jest.fn().mockResolvedValue(user), save: jest.fn() };
-    const handler = new ChangePasswordService(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makePasswordHasher() as never, makeI18n());
     const r = await handler.execute({ userId: 1, oldPassword: 'o', newPassword });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('VALIDATION');
@@ -209,7 +219,7 @@ describe('ChangePasswordService — every path', () => {
   it('rejects when old password is wrong (user.changePassword returns false)', async () => {
     const user = { changePassword: jest.fn().mockResolvedValue(false) };
     const repo = { findById: jest.fn().mockResolvedValue(user), save: jest.fn() };
-    const handler = new ChangePasswordService(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makePasswordHasher() as never, makeI18n());
     const r = await handler.execute({ userId: 1, oldPassword: 'wrong', newPassword: 'NewSecure!2026' });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.message).toMatch(/currentPasswordIncorrect|old password/i);
@@ -218,7 +228,7 @@ describe('ChangePasswordService — every path', () => {
   it('persists the user on success', async () => {
     const user = { changePassword: jest.fn().mockResolvedValue(true) };
     const repo = { findById: jest.fn().mockResolvedValue(user), save: jest.fn().mockResolvedValue(undefined) };
-    const handler = new ChangePasswordService(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makePasswordHasher() as never, makeI18n());
     const r = await handler.execute({ userId: 1, oldPassword: 'o', newPassword: 'NewSecure!2026' });
     expect(r.ok).toBe(true);
     expect(repo.save).toHaveBeenCalledWith(user);
@@ -229,20 +239,20 @@ describe('ChangePasswordService — every path', () => {
 
 describe('JwtAuthGuard — public route bypass', () => {
   it.each([true, 1, 'yes'])('value %p marks public', async (publicVal) => {
-    const guard = new JwtAuthGuard(makeReflector(publicVal), makeJwt());
+    const guard = new JwtAuthGuard(makeReflector(publicVal), makeJwt(), makeI18n());
     await expect(guard.canActivate(makeCtx())).resolves.toBe(true);
   });
 
   it.each([false, 0, '', null, undefined])('value %p requires auth', async (val) => {
     const jwt = makeJwt();
-    const guard = new JwtAuthGuard(makeReflector(val), jwt);
+    const guard = new JwtAuthGuard(makeReflector(val), jwt, makeI18n());
     await expect(guard.canActivate(makeCtx())).rejects.toThrow(UnauthorizedException);
   });
 });
 
 describe('JwtAuthGuard — token presence', () => {
   it('rejects when no Authorization header', async () => {
-    const guard = new JwtAuthGuard(makeReflector(false), makeJwt());
+    const guard = new JwtAuthGuard(makeReflector(false), makeJwt(), makeI18n());
     await expect(guard.canActivate(makeCtx())).rejects.toThrow(UnauthorizedException);
   });
 
@@ -255,6 +265,7 @@ describe('JwtAuthGuard — token presence', () => {
     const guard = new JwtAuthGuard(
       makeReflector(false),
       { verify: jest.fn(() => { throw new Error('bad'); }), sign: jest.fn() } as unknown as JwtService,
+      makeI18n(),
     );
     await expect(guard.canActivate(makeCtx({ headers: { authorization: header } }))).rejects.toThrow(
       UnauthorizedException,
@@ -269,7 +280,7 @@ describe('JwtAuthGuard — payload validation', () => {
     {},
   ])('rejects payload missing user identifier: %j', async (payload) => {
     const jwt = { verify: jest.fn().mockReturnValue(payload), sign: jest.fn() } as unknown as JwtService;
-    const guard = new JwtAuthGuard(makeReflector(false), jwt);
+    const guard = new JwtAuthGuard(makeReflector(false), jwt, makeI18n());
     await expect(guard.canActivate(makeCtx({ headers: { authorization: 'Bearer x.y.z' } }))).rejects.toThrow(
       UnauthorizedException,
     );
@@ -282,7 +293,7 @@ describe('JwtAuthGuard — payload validation', () => {
   ])('accepts payload with user identifier: %j', async (payload) => {
     const future = Math.floor(Date.now() / 1000) + 3600;
     const jwt = { verify: jest.fn().mockReturnValue({ ...payload, exp: future }), sign: jest.fn() } as unknown as JwtService;
-    const guard = new JwtAuthGuard(makeReflector(false), jwt);
+    const guard = new JwtAuthGuard(makeReflector(false), jwt, makeI18n());
     const req = { headers: { authorization: 'Bearer x.y.z' }, user: undefined as unknown };
     const ctx = {
       switchToHttp: () => ({ getRequest: () => req }),
@@ -298,7 +309,7 @@ describe('JwtAuthGuard — expiry', () => {
   it.each([1, 100, 1000, 86400])('expired %i seconds ago rejected', async (secondsAgo) => {
     const exp = Math.floor(Date.now() / 1000) - secondsAgo;
     const jwt = { verify: jest.fn().mockReturnValue({ sub: 1, exp }), sign: jest.fn() } as unknown as JwtService;
-    const guard = new JwtAuthGuard(makeReflector(false), jwt);
+    const guard = new JwtAuthGuard(makeReflector(false), jwt, makeI18n());
     await expect(guard.canActivate(makeCtx({ headers: { authorization: 'Bearer x.y.z' } }))).rejects.toThrow(
       UnauthorizedException,
     );
@@ -307,7 +318,7 @@ describe('JwtAuthGuard — expiry', () => {
   it.each([60, 3600, 86400, 604800])('valid %i seconds in future accepted', async (secondsAhead) => {
     const exp = Math.floor(Date.now() / 1000) + secondsAhead;
     const jwt = { verify: jest.fn().mockReturnValue({ sub: 1, exp }), sign: jest.fn() } as unknown as JwtService;
-    const guard = new JwtAuthGuard(makeReflector(false), jwt);
+    const guard = new JwtAuthGuard(makeReflector(false), jwt, makeI18n());
     const req = { headers: { authorization: 'Bearer x.y.z' } };
     const ctx = {
       switchToHttp: () => ({ getRequest: () => req }),
@@ -336,23 +347,23 @@ const ROLE_MATRIX: Array<[string, string[], boolean]> = [
 ];
 
 describe('RolesGuard — every role × required-list combination', () => {
-  it.each(ROLE_MATRIX)('user=%s required=%j → allowed=%s', (role, required, allowed) => {
-    const guard = new RolesGuard(makeReflector(required));
+  it.each(ROLE_MATRIX)('user=%s required=%j → allowed=%s', async (role, required, allowed) => {
+    const guard = new RolesGuard(makeReflector(required), makeI18n());
     if (allowed) {
-      expect(guard.canActivate(makeCtx({ user: role ? { role } : {} }))).toBe(true);
+      await expect(guard.canActivate(makeCtx({ user: role ? { role } : {} }))).resolves.toBe(true);
     } else {
-      expect(() => guard.canActivate(makeCtx({ user: role ? { role } : {} }))).toThrow(ForbiddenException);
+      await expect(guard.canActivate(makeCtx({ user: role ? { role } : {} }))).rejects.toThrow(ForbiddenException);
     }
   });
 
-  it('allows everything when @Roles() metadata is undefined', () => {
-    const guard = new RolesGuard(makeReflector(undefined));
-    expect(guard.canActivate(makeCtx({ user: { role: 'anything' } }))).toBe(true);
+  it('allows everything when @Roles() metadata is undefined', async () => {
+    const guard = new RolesGuard(makeReflector(undefined), makeI18n());
+    await expect(guard.canActivate(makeCtx({ user: { role: 'anything' } }))).resolves.toBe(true);
   });
 
-  it('rejects when user has no role', () => {
-    const guard = new RolesGuard(makeReflector(['hr']));
-    expect(() => guard.canActivate(makeCtx({ user: {} }))).toThrow(ForbiddenException);
+  it('rejects when user has no role', async () => {
+    const guard = new RolesGuard(makeReflector(['hr']), makeI18n());
+    await expect(guard.canActivate(makeCtx({ user: {} }))).rejects.toThrow(ForbiddenException);
   });
 });
 
