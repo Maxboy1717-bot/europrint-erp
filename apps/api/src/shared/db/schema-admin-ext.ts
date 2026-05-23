@@ -87,23 +87,8 @@ export const calendarEvents = stub(pgTable('calendar_events', {
   updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [index('calendar_events_start_idx').on(t.startDate)]));
 
-export const assetItems = stub(pgTable('asset_items', {
-  id:            uuid('id').primaryKey().defaultRandom(),
-  name:          text('name').notNull(),
-  assetCode:     text('asset_code'),
-  category:      text('category').notNull().default('equipment'),
-  status:        text('status').notNull().default('active'),
-  purchaseDate:  timestamp('purchase_date', { withTimezone: true }),
-  purchaseValue: text('purchase_value'),
-  currentValue:  text('current_value'),
-  location:      text('location'),
-  assignedTo:    text('assigned_to'),
-  departmentId:  integer('department_id'),
-  serialNumber:  text('serial_number'),
-  notes:         text('notes'),
-  createdAt:     timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt:     timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('asset_items_status_idx').on(t.status), index('asset_items_category_idx').on(t.category)]));
+// assetItems: canonical definition in lib/db (admin-assets.ts) — identical columns.
+export { assetItems } from '@workspace/db';
 
 export const assetMaintenance = stub(pgTable('asset_maintenance', {
   id:          uuid('id').primaryKey().defaultRandom(),
