@@ -18,12 +18,15 @@ export class DeliveriesService {
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
-    const { page = 1, limit = 10 } = query;
+    const rawPage  = Number(query.page);
+    const rawLimit = Number(query.limit);
+    const page  = Number.isFinite(rawPage)  && rawPage  > 0 ? Math.floor(rawPage)  : 1;
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(Math.floor(rawLimit), 200) : 10;
     const result = await this.deliveriesRepo.findAll();
     if (!result.ok) throw new InternalServerErrorException(result.error);
     const deliveries = result.data;
     const total = deliveries.length;
-    const data = (deliveries as Record<string, unknown>[]).slice((Number(page) - 1) * Number(limit), Number(page) * Number(limit)).map((d) => ({
+    const data = (deliveries as Record<string, unknown>[]).slice((page - 1) * limit, page * limit).map((d) => ({
       ...d,
       cost: d['cost'] !== undefined ? Number(d['cost']) : d['cost'],
       weight: d['weight'] !== undefined ? Number(d['weight']) : d['weight'],

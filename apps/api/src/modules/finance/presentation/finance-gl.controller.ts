@@ -12,6 +12,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GlPostingService } from '../domain/services/gl-posting.service';
+import { GlService } from '../gl/gl.service';
 import { GetGlEntriesQuery } from '../application/queries/get-gl-entries.query';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {
@@ -36,7 +37,8 @@ export class FinanceGlController {
 
   constructor(private commandBus: CommandBus,
     private queryBus: QueryBus,
-    private glPostingService: GlPostingService) {}
+    private glPostingService: GlPostingService,
+    private glService: GlService) {}
 
   @ApiOperation({ summary: 'List gl entries' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -85,10 +87,9 @@ export class FinanceGlController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('trial-balance')
   @Roles(Role.ACCOUNTANT, Role.DIRECTOR, Role.SUPER_ADMIN)
-  async getTrialBalance() {
-
-      return { data: { debit: 0, credit: 0, balanced: true } };
-    
+  async getTrialBalance(@Query('date') date?: string) {
+    const result = await this.glService.getTrialBalance(date);
+    return unwrapOrThrow(result);
   }
 
   @ApiOperation({ summary: 'Get ledger' })
@@ -96,9 +97,14 @@ export class FinanceGlController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('ledger/:accountCode')
   @Roles(Role.ACCOUNTANT, Role.DIRECTOR, Role.SUPER_ADMIN)
-  async getLedger(@Param('accountCode') accountCode: string) {
-
-      return { data: { accountCode, entries: [] as Record<string, unknown>[] } };
-    
+  async getLedger(
+    @Param('accountCode') accountCode: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const p = Math.max(1, Number.isFinite(Number(page))  ? Number(page)  : 1);
+    const l = Math.min(200, Math.max(1, Number.isFinite(Number(limit)) ? Number(limit) : 50));
+    const result = await this.glService.getLedger(accountCode, p, l);
+    return unwrapOrThrow(result);
   }
 }

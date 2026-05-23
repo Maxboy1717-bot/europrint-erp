@@ -71,7 +71,7 @@ export const qcParameterDefinitions = pgTable("qc_parameter_definitions", {
 export const qcMaterialTests = pgTable("qc_material_tests", {
   id: serial("id").primaryKey(),
   orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "set null" }), // Buyurtma
-  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }), // Material
+  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }), // Material
   batchNumber: varchar("batch_number", { length: 50 }), // Partiya raqami
   testCategory: varchar("test_category", { length: 50 }).notNull().default("physical"), // Category being tested
   testDate: varchar("test_date", { length: 10 }).notNull(), // YYYY-MM-DD
@@ -276,7 +276,7 @@ export const qcSupplierQuality = pgTable("qc_supplier_quality", {
   id: serial("id").primaryKey(),
   supplierId: varchar("supplier_id"),
   supplierName: text("supplier_name").notNull(),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
+  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
   deliveryDate: varchar("delivery_date", { length: 10 }).notNull(),
   totalQuantity: integer("total_quantity").notNull().default(0),
   rejectedQuantity: integer("rejected_quantity").default(0),

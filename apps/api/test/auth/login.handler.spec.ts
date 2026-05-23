@@ -68,6 +68,15 @@ function makeJwt() {
   } as unknown as JwtService;
 }
 
+// Mock IPasswordHasher — hash/compare are not needed by the service directly
+// (it's passed through to user.verifyPassword which is also mocked).
+function makePasswordHasher() {
+  return {
+    hash:    jest.fn().mockResolvedValue('$hashed$'),
+    compare: jest.fn().mockResolvedValue(true),
+  } as unknown as import('../../src/modules/auth/domain/ports/i-password-hasher.port').IPasswordHasher;
+}
+
 // Mock I18nService — returns the key itself so tests stay deterministic
 // without loading translation JSON files.
 function makeI18n() {
@@ -91,7 +100,7 @@ describe('LoginService', () => {
 
   it('returns UNAUTHORIZED / USER_NOT_FOUND when user does not exist', async () => {
     const repo = makeRepo(null);
-    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -107,7 +116,7 @@ describe('LoginService', () => {
   it('returns UNAUTHORIZED / ACCOUNT_LOCKED for locked accounts', async () => {
     const user = makeFakeUser({ locked: true });
     const repo = makeRepo(user);
-    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -118,7 +127,7 @@ describe('LoginService', () => {
   it('returns UNAUTHORIZED / ACCOUNT_INACTIVE for inactive accounts', async () => {
     const user = makeFakeUser({ active: false });
     const repo = makeRepo(user);
-    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -129,7 +138,7 @@ describe('LoginService', () => {
   it('returns UNAUTHORIZED / INVALID_CREDENTIALS on bad password', async () => {
     const user = makeFakeUser({ passwordOk: false });
     const repo = makeRepo(user);
-    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -143,7 +152,7 @@ describe('LoginService', () => {
     const user = makeFakeUser();
     const repo = makeRepo(user);
     const jwt = makeJwt();
-    const handler = new LoginService(repo as never, jwt, makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), jwt, makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -166,7 +175,7 @@ describe('LoginService', () => {
   it('resets failed-attempt counter and updates last-login on success', async () => {
     const user = makeFakeUser({ failedAttempts: 3 });
     const repo = makeRepo(user);
-    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeI18n());
 
     await handler.execute(cmdBase);
 
@@ -180,7 +189,7 @@ describe('LoginService', () => {
     (runQuery as jest.Mock).mockRejectedValueOnce(new Error('db gone'));
     const user = makeFakeUser({ passwordOk: false });
     const repo = makeRepo(user);
-    const handler = new LoginService(repo as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 

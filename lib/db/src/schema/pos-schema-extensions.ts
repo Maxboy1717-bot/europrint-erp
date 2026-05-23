@@ -55,7 +55,7 @@ export const varianceTypeEnum = pgEnum('pos_variance_type_enum', [
 export const posStockLedger = pgTable('pos_stock_ledger', {
   id:             bigserial('id', { mode: 'number' }).primaryKey(),
   ts:             timestamp('ts').notNull().defaultNow(),
-  materialCardId: integer('material_card_id').notNull(),
+  materialCardId: integer('material_id').notNull(),
   warehouseId:    varchar('warehouse_id', { length: 50 }).notNull(),
   batchId:        integer('batch_id'),
   movementId:     integer('movement_id'),
@@ -90,7 +90,7 @@ export const barcodeMap = pgTable('pos_barcode_map', {
   id:             serial('id').primaryKey(),
   barcode:        varchar('barcode', { length: 200 }).notNull().unique(),
   barcodeType:    barcodeTypeEnum('barcode_type').notNull().default('EAN13'),
-  materialCardId: integer('material_card_id').notNull(),
+  materialCardId: integer('material_id').notNull(),
   batchId:        integer('batch_id'),
   isPrimary:      boolean('is_primary').notNull().default(false),
   scanCount:      integer('scan_count').notNull().default(0),
@@ -105,7 +105,7 @@ export const barcodeMap = pgTable('pos_barcode_map', {
 
 export const materialPassports = pgTable('pos_material_passports', {
   id:                    serial('id').primaryKey(),
-  materialCardId:        integer('material_card_id').notNull(),
+  materialCardId:        integer('material_id').notNull(),
   batchId:               integer('batch_id'),
   externalInMovementId:  integer('external_in_movement_id').notNull(),
   supplierInvoiceUrl:    text('supplier_invoice_url'),
@@ -124,7 +124,7 @@ export const materialPassports = pgTable('pos_material_passports', {
 
 export const stockAlerts = pgTable('pos_stock_alerts', {
   id:             serial('id').primaryKey(),
-  materialCardId: integer('material_card_id').notNull(),
+  materialCardId: integer('material_id').notNull(),
   warehouseId:    varchar('warehouse_id', { length: 50 }).notNull(),
   alertType:      stockAlertTypeEnum('alert_type').notNull(),
   thresholdValue: numericMoney('threshold_value'),
@@ -187,7 +187,7 @@ export const inventoryPlans = pgTable('pos_inventory_plans', {
 export const inventoryVariances = pgTable('pos_inventory_variances', {
   id:             serial('id').primaryKey(),
   planId:         integer('plan_id').notNull(),
-  materialCardId: integer('material_card_id').notNull(),
+  materialCardId: integer('material_id').notNull(),
   diffQty:        numericMoney('diff_qty').notNull(),
   diffAmount:     numericMoney('diff_amount').notNull().default(sql`'0'`),
   varianceType:   varianceTypeEnum('variance_type').notNull(),

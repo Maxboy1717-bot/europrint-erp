@@ -25,12 +25,15 @@ export class MaintenanceService {
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
-    const { page = 1, limit = 10 } = query;
+    const rawPage  = Number(query.page);
+    const rawLimit = Number(query.limit);
+    const page  = Number.isFinite(rawPage)  && rawPage  > 0 ? Math.floor(rawPage)  : 1;
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(Math.floor(rawLimit), 200) : 10;
     const result = await this.maintenanceSvcRepo.findAll();
     if (!result.ok) throw new InternalServerErrorException(result.error);
     const rows = result.data;
     const total = rows.length;
-    const data = (rows as Record<string, unknown>[]).slice((Number(page) - 1) * Number(limit), Number(page) * Number(limit)).map((r) => this.mapRow(r));
+    const data = (rows as Record<string, unknown>[]).slice((page - 1) * limit, page * limit).map((r) => this.mapRow(r));
     return { data, total, page, limit };
   
     });}

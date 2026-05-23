@@ -133,7 +133,7 @@ export const posMovements = pgTable('pos_movements', {
 export const posMovementLines = pgTable('pos_movement_lines', {
   id:                  serial('id').primaryKey(),
   movementId:          integer('movement_id').notNull(),
-  materialCardId:      integer('material_card_id').notNull(),
+  materialCardId:      integer('material_id').notNull(),
   batchId:             integer('batch_id'),
   serialNumberItemId:  integer('serial_number_item_id'),
   binId:               varchar('bin_id', { length: 50 }),
@@ -189,7 +189,7 @@ export const posMaterialRequests = pgTable('pos_material_requests', {
 export const posMaterialRequestLines = pgTable('pos_material_request_lines', {
   id:           serial('id').primaryKey(),
   requestId:    integer('request_id').notNull(),
-  materialCardId: integer('material_card_id').notNull(),
+  materialCardId: integer('material_id').notNull(),
   requestedQty: numericMoney('requested_qty').notNull(),
   approvedQty:  numericMoney('approved_qty'),
   issuedQty:    numericMoney('issued_qty').default(sql`'0'`),
@@ -207,7 +207,7 @@ export const posMaterialRequestLines = pgTable('pos_material_request_lines', {
 export const employeeIssuanceLog = pgTable('employee_issuance_log', {
   id:              serial('id').primaryKey(),
   userId:          integer('user_id').notNull(),
-  materialCardId:  integer('material_card_id').notNull(),
+  materialCardId:  integer('material_id').notNull(),
   warehouseId:     varchar('warehouse_id', { length: 50 }).notNull(),
   movementLineId:  integer('movement_line_id'),
   quantityIssued:  numericMoney('quantity_issued').notNull(),
@@ -226,7 +226,7 @@ export const employeeIssuanceLog = pgTable('employee_issuance_log', {
 export const employeeInventoryLedger = pgTable('employee_inventory_ledger', {
   id:              serial('id').primaryKey(),
   userId:          integer('user_id').notNull(),
-  materialCardId:  integer('material_card_id').notNull(),
+  materialCardId:  integer('material_id').notNull(),
   warehouseId:     varchar('warehouse_id', { length: 50 }).notNull(),
   entryType:       varchar('entry_type', { length: 10 }).notNull(),
   quantity:        numericMoney('quantity').notNull(),
@@ -274,7 +274,7 @@ export const employeeWriteOffActs = pgTable('employee_write_off_acts', {
 export const employeeWriteOffActLines = pgTable('employee_write_off_act_lines', {
   id:              serial('id').primaryKey(),
   actId:           integer('act_id').notNull(),
-  materialCardId:  integer('material_card_id').notNull(),
+  materialCardId:  integer('material_id').notNull(),
   issuanceLogId:   integer('issuance_log_id'),
   quantity:        numericMoney('quantity').notNull(),
   unitPrice:       numericMoney('unit_price').notNull().default(sql`'0'`),
@@ -289,7 +289,7 @@ export const employeeLiabilityCases = pgTable('employee_liability_cases', {
   id:                   serial('id').primaryKey(),
   caseNumber:           varchar('case_number', { length: 50 }).notNull().unique(),
   userId:               integer('user_id').notNull(),
-  materialCardId:       integer('material_card_id').notNull(),
+  materialCardId:       integer('material_id').notNull(),
   serialNumberItemId:   integer('serial_number_item_id'),
   warehouseId:          varchar('warehouse_id', { length: 50 }),
   issuanceLogId:        integer('issuance_log_id'),
@@ -321,7 +321,7 @@ export const productionMaterialAllocs = pgTable('production_material_allocs', {
   id:                        serial('id').primaryKey(),
   allocationNumber:          varchar('allocation_number', { length: 50 }).notNull().unique(),
   productionOrderId:         varchar('production_order_id', { length: 50 }).notNull(),
-  materialCardId:            integer('material_card_id').notNull(),
+  materialCardId:            integer('material_id').notNull(),
   batchId:                   integer('batch_id'),
   fromWarehouseId:           varchar('from_warehouse_id', { length: 50 }).notNull(),
   toWarehouseId:             varchar('to_warehouse_id', { length: 50 }).notNull(),
@@ -353,7 +353,7 @@ export const posStockReservations = pgTable('pos_stock_reservations', {
   id:                 serial('id').primaryKey(),
   reservationNumber:  varchar('reservation_number', { length: 50 }).notNull().unique(),
   productionOrderId:  varchar('production_order_id', { length: 50 }).notNull(),
-  materialCardId:     integer('material_card_id').notNull(),
+  materialCardId:     integer('material_id').notNull(),
   warehouseId:        varchar('warehouse_id', { length: 50 }).notNull(),
   batchId:            integer('batch_id'),
   reservedQty:        numericMoney('reserved_qty').notNull(),
@@ -376,7 +376,7 @@ export const posStockReservations = pgTable('pos_stock_reservations', {
 
 export const posSerialNumberItems = pgTable('pos_serial_number_items', {
   id:                  serial('id').primaryKey(),
-  materialCardId:      integer('material_card_id').notNull(),
+  materialCardId:      integer('material_id').notNull(),
   serialNumber:        varchar('serial_number', { length: 100 }).notNull(),
   barcode:             varchar('barcode', { length: 200 }).unique(),
   warehouseId:         varchar('warehouse_id', { length: 50 }),
@@ -424,7 +424,7 @@ export const posInventoryCounts = pgTable('pos_inventory_counts', {
 export const posInventoryCountLines = pgTable('pos_inventory_count_lines', {
   id:             serial('id').primaryKey(),
   countId:        integer('count_id').notNull(),
-  materialCardId: integer('material_card_id').notNull(),
+  materialCardId: integer('material_id').notNull(),
   batchId:        integer('batch_id'),
   binLocation:    varchar('bin_location', { length: 100 }),
   systemQty:      numericMoney('system_qty').notNull(),
@@ -467,7 +467,7 @@ export const posOfflineQueue = pgTable('pos_offline_queue', {
 
 export const posBarcodePrintQueue = pgTable('pos_barcode_print_queue', {
   id:                   serial('id').primaryKey(),
-  materialCardId:       integer('material_card_id').notNull(),
+  materialCardId:       integer('material_id').notNull(),
   batchId:              integer('batch_id'),
   serialNumberItemId:   integer('serial_number_item_id'),
   posMovementId:        integer('pos_movement_id'),
@@ -492,7 +492,7 @@ export const posBarcodePrintQueue = pgTable('pos_barcode_print_queue', {
 export const posDamageQcLinks = pgTable('pos_damage_qc_links', {
   id:                     serial('id').primaryKey(),
   posMovementId:          integer('pos_movement_id').notNull(),
-  materialCardId:         integer('material_card_id').notNull(),
+  materialCardId:         integer('material_id').notNull(),
   damagedQty:             numericMoney('damaged_qty').notNull(),
   unitCost:               numericMoney('unit_cost').notNull().default(sql`'0'`),
   totalValue:             numericMoney('total_value').notNull().default(sql`'0'`),
