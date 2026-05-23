@@ -6,13 +6,12 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventBus } from '@nestjs/cqrs';
 import { CreateApprovalRequestHandler } from '../../src/modules/director/application/commands/create-approval-request.handler';
 import { CreateApprovalRequestCommand } from '../../src/modules/director/application/commands/create-approval-request.command';
 import { ApprovalRequest } from '../../src/modules/director/domain/aggregates/approval-request.aggregate';
 import { APPROVAL_REPO } from '../../src/modules/director/domain/repositories/i-approval.repo';
 import { HitlDocumentType, ApprovalStatus } from '../../src/modules/director/domain/enums/hitl-document-type.enum';
-import { ERP_EVENTS } from '../../src/common/constants/erp-events.constants';
 import { Ok, Err } from '../../src/common/result';
 
 interface RepoMock {
@@ -39,8 +38,7 @@ function makeExistingRequest(): ApprovalRequest {
 describe('CreateApprovalRequestHandler', () => {
   let handler: CreateApprovalRequestHandler;
   let repo: RepoMock;
-  let emitter: EventEmitter2;
-  let emitSpy: jest.SpyInstance;
+  let publishSpy: jest.SpyInstance;
 
   beforeEach(async () => {
     repo = makeRepo();
@@ -48,12 +46,11 @@ describe('CreateApprovalRequestHandler', () => {
       providers: [
         CreateApprovalRequestHandler,
         { provide: APPROVAL_REPO, useValue: repo },
-        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
+        { provide: EventBus, useValue: { publish: jest.fn() } },
       ],
     }).compile();
     handler = module.get(CreateApprovalRequestHandler);
-    emitter = module.get(EventEmitter2);
-    emitSpy = jest.spyOn(emitter, 'emit');
+    publishSpy = jest.spyOn(module.get(EventBus), 'publish');
   });
 
   const cmd = new CreateApprovalRequestCommand(
@@ -69,7 +66,7 @@ describe('CreateApprovalRequestHandler', () => {
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.data).toBe(existing);
     expect(repo.save).not.toHaveBeenCalled();
-    expect(emitSpy).not.toHaveBeenCalled();
+    expect(publishSpy).not.toHaveBeenCalled();
   });
 
   it('returns Err when findExistingPending fails', async () => {
@@ -86,7 +83,7 @@ describe('CreateApprovalRequestHandler', () => {
     const r = await handler.execute(cmd);
 
     expect(r.ok).toBe(false);
-    expect(emitSpy).not.toHaveBeenCalled();
+    expect(publishSpy).not.toHaveBeenCalled();
   });
 
   it('returns Ok and emits HITL_APPROVAL_REQUESTED on successful save', async () => {
@@ -96,7 +93,7 @@ describe('CreateApprovalRequestHandler', () => {
     const r = await handler.execute(cmd);
 
     expect(r.ok).toBe(true);
-    expect(emitSpy).toHaveBeenCalledWith(ERP_EVENTS.HITL_APPROVAL_REQUESTED, expect.objectContaining({
+    expect(publishSpy).toHaveBeenCalledWith(expect.objectContaining({
       id: saved.id, amount: saved.amount, requestedBy: saved.requestedBy,
     }));
   });

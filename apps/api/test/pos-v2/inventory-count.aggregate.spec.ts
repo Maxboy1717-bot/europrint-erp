@@ -10,7 +10,7 @@ import {
   CountStatus,
   CountLine,
 } from '../../src/modules/pos-v2/domain/aggregates/inventory-count.aggregate';
-import { InternalServerErrorException } from '@nestjs/common';
+import { DomainError } from '../../src/shared/domain/errors/domain-error';
 import { stockFactory } from '../_fixtures/factories';
 
 function makeLine(overrides: Partial<CountLine> = {}): CountLine {
@@ -64,14 +64,14 @@ describe('InventoryCount aggregate', () => {
       expect(c.updatedAt.getTime()).toBeGreaterThanOrEqual(before);
     });
 
-    it('throws InternalServerErrorException when complete is called on DRAFT', () => {
+    it('throws DomainError when complete is called on DRAFT', () => {
       const c = makeCount(CountStatus.DRAFT);
-      expect(() => c.complete()).toThrow(InternalServerErrorException);
+      expect(() => c.complete()).toThrow(DomainError);
     });
 
-    it('throws InternalServerErrorException when complete is called on already COMPLETED', () => {
+    it('throws DomainError when complete is called on already COMPLETED', () => {
       const c = makeCount(CountStatus.COMPLETED);
-      expect(() => c.complete()).toThrow(InternalServerErrorException);
+      expect(() => c.complete()).toThrow(DomainError);
     });
   });
 
@@ -84,14 +84,14 @@ describe('InventoryCount aggregate', () => {
       expect(c.approvedAt).toBeInstanceOf(Date);
     });
 
-    it('throws InternalServerErrorException when approve is called on IN_PROGRESS', () => {
+    it('throws DomainError when approve is called on IN_PROGRESS', () => {
       const c = makeCount(CountStatus.IN_PROGRESS);
-      expect(() => c.approve('u')).toThrow(InternalServerErrorException);
+      expect(() => c.approve('u')).toThrow(DomainError);
     });
 
-    it('throws InternalServerErrorException when approve is called on DRAFT', () => {
+    it('throws DomainError when approve is called on DRAFT', () => {
       const c = makeCount(CountStatus.DRAFT);
-      expect(() => c.approve('u')).toThrow(InternalServerErrorException);
+      expect(() => c.approve('u')).toThrow(DomainError);
     });
 
     it('leaves approvedBy null when approve is rejected', () => {

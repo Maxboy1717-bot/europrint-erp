@@ -27,20 +27,21 @@ jest.mock('@shared/db', () => {
 });
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventBus } from '@nestjs/cqrs';
 import { CreateOrderHandler, CreateOrderCommand } from '../../src/modules/order-workflow/application/commands/create-order.handler';
 import { ORDER_WF_REPO } from '../../src/modules/order-workflow/infrastructure/repositories/i-order.repo';
+import { Ok } from '../../src/common/result';
 import { salesOrderFactory } from '../_fixtures/factories';
 
 interface RepoMock {
   save: jest.Mock; findById: jest.Mock; findAll: jest.Mock;
+  insertOrderWithInitialStatus: jest.Mock;
 }
 function makeRepo(): RepoMock {
-  return { save: jest.fn(), findById: jest.fn(), findAll: jest.fn() };
-}
-
-function makeEmitter(): EventEmitter2 {
-  return { emit: jest.fn().mockReturnValue(true) } as unknown as EventEmitter2;
+  return {
+    save: jest.fn(), findById: jest.fn(), findAll: jest.fn(),
+    insertOrderWithInitialStatus: jest.fn().mockResolvedValue(Ok(undefined)),
+  };
 }
 
 function makeCmd(over: Partial<CreateOrderCommand> = {}): CreateOrderCommand {
@@ -58,19 +59,19 @@ function makeCmd(over: Partial<CreateOrderCommand> = {}): CreateOrderCommand {
 describe('CreateOrderHandler', () => {
   let handler: CreateOrderHandler;
   let repo: RepoMock;
-  let emitter: EventEmitter2;
+  let publishSpy: jest.SpyInstance;
 
   beforeEach(async () => {
     repo = makeRepo();
-    emitter = makeEmitter();
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
         CreateOrderHandler,
         { provide: ORDER_WF_REPO, useValue: repo },
-        { provide: EventEmitter2, useValue: emitter },
+        { provide: EventBus, useValue: { publish: jest.fn() } },
       ],
     }).compile();
     handler = moduleRef.get(CreateOrderHandler);
+    publishSpy = jest.spyOn(moduleRef.get(EventBus), 'publish');
   });
 
   it('returns Ok with order in LEAD_INTAKE status when persistence succeeds', async () => {
@@ -86,8 +87,7 @@ describe('CreateOrderHandler', () => {
   it('emits order.status_changed event from DRAFT to LEAD_INTAKE when order is created', async () => {
     await handler.execute(makeCmd());
 
-    expect((emitter.emit as jest.Mock)).toHaveBeenCalledWith(
-      'order.status_changed',
+    expect(publishSpy).toHaveBeenCalledWith(
       expect.objectContaining({ fromStatus: 'DRAFT', toStatus: 'LEAD_INTAKE' }),
     );
   });
@@ -103,15 +103,14 @@ describe('CreateOrderHandler', () => {
   });
 
   it('returns DB_ERROR when underlying db.transaction rejects', async () => {
-    const { db } = jest.requireMock('@shared/db') as { db: { transaction: jest.Mock } };
-    db.transaction.mockRejectedValueOnce(new Error('connection lost'));
+    const { Err: mkErr, AppErr: mkAppErr } = jest.requireActual('../../src/common/result') as typeof import('../../src/common/result');
+    repo.insertOrderWithInitialStatus.mockResolvedValueOnce(mkErr(mkAppErr('DB_ERROR', 'Buyurtma saqlanmadi')));
 
     const r = await handler.execute(makeCmd());
 
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.error.code).toBe('DB_ERROR');
-      expect(r.error.message).toMatch(/saqlanmadi/i);
     }
   });
 

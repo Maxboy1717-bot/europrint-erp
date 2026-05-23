@@ -14,6 +14,7 @@ import {
   PoStatus,
   MaterialRequirement,
 } from '../../src/modules/pp/domain/aggregates/production-order.aggregate';
+import { PpReleasedEvent } from '../../src/modules/pp/domain/events/pp-released.event';
 import { Ok, Err, AppErr } from '../../src/common/result';
 import { IPpRepository } from '../../src/modules/pp/domain/repositories/pp.repository';
 import { productionOrderFactory } from '../_fixtures/factories';
@@ -103,8 +104,6 @@ describe('ReleaseProductionOrderHandler', () => {
     expect(r.ok).toBe(true);
     expect(po.getStatus()).toBe(PoStatus.RELEASED_TO_PRODUCTION);
     expect(repo.savePo).toHaveBeenCalledWith(po);
-    expect(bus.publish).toHaveBeenCalledWith(expect.objectContaining({
-      type: 'PP_RELEASED_TO_PRODUCTION',
-    }));
+    expect(bus.publish).toHaveBeenCalledWith(expect.any(PpReleasedEvent));
   });
 });
