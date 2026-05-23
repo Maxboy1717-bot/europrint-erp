@@ -8,6 +8,7 @@ import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
 
+// hr_brand_settings: NOT in lib/db barrel — kept as local stub.
 export const hr_brand_settings = pgTable('hr_brand_settings', {
   id:         serial('id').primaryKey(),
   company_id: text('company_id').unique().notNull(),
@@ -15,6 +16,8 @@ export const hr_brand_settings = pgTable('hr_brand_settings', {
   updated_at: timestamp('updated_at').defaultNow(),
 });
 
+// safety_incidents: used with snake_case columns in hr-dashboard-extra.repository.ts
+// Canonical safetyIncidents uses camelCase — kept as local stub.
 export const safety_incidents = pgTable('safety_incidents', {
   id:                   serial('id').primaryKey(),
   incident_type:        text('incident_type'),
@@ -29,6 +32,8 @@ export const safety_incidents = pgTable('safety_incidents', {
   updated_at:           timestamp('updated_at').defaultNow(),
 });
 
+// safety_training_records: used with snake_case columns in hr-compat-safety.repository.ts
+// Canonical safetyTrainingRecords uses camelCase — kept as local stub.
 export const safety_training_records = pgTable('safety_training_records', {
   id:              serial('id').primaryKey(),
   training_id:     integer('training_id'),
@@ -41,6 +46,8 @@ export const safety_training_records = pgTable('safety_training_records', {
   created_at:      timestamp('created_at').defaultNow(),
 });
 
+// hazard_zones: used with snake_case columns in hr-compat-safety.repository.ts
+// Canonical hazardZones uses camelCase — kept as local stub.
 export const hazard_zones = pgTable('hazard_zones', {
   id:                    serial('id').primaryKey(),
   zone_name:             text('zone_name').notNull(),
@@ -55,6 +62,8 @@ export const hazard_zones = pgTable('hazard_zones', {
   created_at:            timestamp('created_at').defaultNow(),
 });
 
+// ppe_compliance: used with snake_case columns in hr-compat-safety.repository.ts
+// Canonical ppeCompliance uses camelCase — kept as local stub.
 export const ppe_compliance = pgTable('ppe_compliance', {
   id:          serial('id').primaryKey(),
   employee_id: integer('employee_id'),
@@ -65,6 +74,7 @@ export const ppe_compliance = pgTable('ppe_compliance', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
+// hr_leave_requests: NOT in lib/db barrel (canonical is leave_requests, different table name) — kept as local stub.
 export const hr_leave_requests = pgTable('hr_leave_requests', {
   id:           serial('id').primaryKey(),
   employee_id:  integer('employee_id'),
@@ -77,6 +87,8 @@ export const hr_leave_requests = pgTable('hr_leave_requests', {
   notes:        text('notes'),
 });
 
+// shift_schedules: used with snake_case columns in hr-employees-ext.repository.ts
+// Canonical shiftSchedules uses camelCase — kept as local stub.
 export const shift_schedules = pgTable('shift_schedules', {
   id:          serial('id').primaryKey(),
   employee_id: integer('employee_id').notNull(),
@@ -89,6 +101,7 @@ export const shift_schedules = pgTable('shift_schedules', {
   updated_at:  timestamp('updated_at').defaultNow(),
 });
 
+// document_templates: NOT in lib/db barrel (cc_document_templates is a different table) — kept as local stub.
 export const document_templates = pgTable('document_templates', {
   id:          serial('id').primaryKey(),
   name:        text('name'),
@@ -98,6 +111,8 @@ export const document_templates = pgTable('document_templates', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
+// workflow_route_configs: used with snake_case columns in document-workflow.repository.ts
+// Canonical documentWorkflowRoutes uses camelCase — kept as local stub.
 export const workflow_route_configs = pgTable('workflow_route_configs', {
   id:            serial('id').primaryKey(),
   document_type: text('document_type').notNull(),
@@ -106,6 +121,8 @@ export const workflow_route_configs = pgTable('workflow_route_configs', {
   created_at:    timestamp('created_at').defaultNow(),
 });
 
+// adaptation_programs: used with snake_case columns in hr-compat-safety.repository.ts
+// Canonical adaptationPrograms uses camelCase — kept as local stub.
 export const adaptation_programs = pgTable('adaptation_programs', {
   id:           serial('id').primaryKey(),
   program_name: text('program_name').notNull(),
@@ -115,6 +132,8 @@ export const adaptation_programs = pgTable('adaptation_programs', {
   created_at:   timestamp('created_at').defaultNow(),
 });
 
+// adaptation_records: used with snake_case columns in hr-compat-safety.repository.ts
+// Canonical adaptationRecords uses camelCase — kept as local stub.
 export const adaptation_records = pgTable('adaptation_records', {
   id:          serial('id').primaryKey(),
   employee_id: integer('employee_id').notNull(),
@@ -125,6 +144,7 @@ export const adaptation_records = pgTable('adaptation_records', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
+// adaptation_milestones: only in adaptation.ts which is NOT in barrel — kept as local stub.
 export const adaptation_milestones = pgTable('adaptation_milestones', {
   id:               serial('id').primaryKey(),
   record_id:        integer('record_id'),

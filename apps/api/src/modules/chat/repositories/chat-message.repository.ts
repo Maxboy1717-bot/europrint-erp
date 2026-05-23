@@ -23,14 +23,14 @@ export class ChatMessageRepository extends ChatMessagePollsRepository {
       const [row] = await db
         .insert(chatMessages)
         .values({
-          room_id: targetRoomIdStr,
-          sender_id: senderIdStr,
+          roomId: targetRoomIdStr,
+          senderId: senderIdStr,
           content: orig.msg_content as string | null,
-          file_url: (orig.file_url as string) ?? null,
-          file_name: (orig.file_name as string) ?? null,
-          file_type: (orig.file_type as string) ?? null,
-          message_type: orig.message_type as string,
-          forward_from_id: msgIdStr,
+          fileUrl: (orig.file_url as string) ?? null,
+          fileName: (orig.file_name as string) ?? null,
+          fileType: (orig.file_type as string) ?? null,
+          messageType: orig.message_type as string,
+          forwardFromId: msgIdStr,
         })
         .returning();
       return castTo<Record<string, unknown>>(row);
@@ -42,21 +42,21 @@ export class ChatMessageRepository extends ChatMessagePollsRepository {
       const rows = await db
         .select({
           id: chatMessages.id,
-          roomId: chatMessages.room_id,
-          senderId: chatMessages.sender_id,
+          roomId: chatMessages.roomId,
+          senderId: chatMessages.senderId,
           content: sql<string>`COALESCE(${chatMessages.content}, ${chatMessages.text})`,
-          messageType: sql<string>`LOWER(${chatMessages.message_type})`,
-          isDeleted: chatMessages.is_deleted,
-          isEdited: chatMessages.is_edited,
-          threadRootId: chatMessages.thread_root_id,
-          createdAt: chatMessages.created_at,
+          messageType: sql<string>`LOWER(${chatMessages.messageType})`,
+          isDeleted: chatMessages.isDeleted,
+          isEdited: chatMessages.isEdited,
+          threadRootId: chatMessages.threadRootId,
+          createdAt: chatMessages.createdAt,
           senderName: appUsers.full_name,
           senderAvatar: appUsers.profile_image_url,
         })
         .from(chatMessages)
-        .leftJoin(appUsers, sql`${appUsers.id} = ${chatMessages.sender_id}::int`)
-        .where(and(eq(chatMessages.thread_root_id, rootMsgIdStr), eq(chatMessages.is_deleted, false)))
-        .orderBy(chatMessages.created_at);
+        .leftJoin(appUsers, sql`${appUsers.id} = ${chatMessages.senderId}::int`)
+        .where(and(eq(chatMessages.threadRootId, rootMsgIdStr), eq(chatMessages.isDeleted, false)))
+        .orderBy(chatMessages.createdAt);
       return castTo<Record<string, unknown>[]>(rows);
       }, 'DB_ERROR');
   }
@@ -64,10 +64,10 @@ export class ChatMessageRepository extends ChatMessagePollsRepository {
   async findRootMessageRoomId(rootMsgIdStr: string, requireNotDeleted = false): Promise<Result<Record<string, unknown> | null>> {
     return safeCall(async () => {
       const cond = requireNotDeleted
-        ? and(eq(chatMessages.id, rootMsgIdStr), eq(chatMessages.is_deleted, false))
+        ? and(eq(chatMessages.id, rootMsgIdStr), eq(chatMessages.isDeleted, false))
         : eq(chatMessages.id, rootMsgIdStr);
       const [row] = await db
-        .select({ room_id: chatMessages.room_id })
+        .select({ room_id: chatMessages.roomId })
         .from(chatMessages)
         .where(cond)
         .limit(1);
@@ -80,11 +80,11 @@ export class ChatMessageRepository extends ChatMessagePollsRepository {
       const [row] = await db
         .insert(chatMessages)
         .values({
-          room_id: roomId as string,
-          sender_id: senderIdStr,
+          roomId: roomId as string,
+          senderId: senderIdStr,
           content,
-          message_type: 'TEXT',
-          thread_root_id: rootMsgIdStr,
+          messageType: 'TEXT',
+          threadRootId: rootMsgIdStr,
         })
         .returning();
       return castTo<Record<string, unknown>>(row);
@@ -94,7 +94,7 @@ export class ChatMessageRepository extends ChatMessagePollsRepository {
   async incrementThreadCount(rootMsgIdStr: string): Promise<void> {
     await db
       .update(chatMessages)
-      .set({ thread_count: sql`COALESCE(${chatMessages.thread_count}, 0) + 1` })
+      .set({ threadCount: sql`COALESCE(${chatMessages.threadCount}, 0) + 1` })
       .where(eq(chatMessages.id, rootMsgIdStr));
   }
 
@@ -103,7 +103,7 @@ export class ChatMessageRepository extends ChatMessagePollsRepository {
       const [row] = await db
         .select({ count: sql<number>`COUNT(*)::int` })
         .from(chatMessages)
-        .where(and(eq(chatMessages.thread_root_id, rootMsgIdStr), eq(chatMessages.is_deleted, false)));
+        .where(and(eq(chatMessages.threadRootId, rootMsgIdStr), eq(chatMessages.isDeleted, false)));
       return Number(row?.count ?? 0);
       }, 'DB_ERROR');
   }
@@ -116,13 +116,13 @@ export class ChatMessageRepository extends ChatMessagePollsRepository {
       const [row] = await db
         .insert(chatMessages)
         .values({
-          room_id: roomIdStr,
-          sender_id: senderIdStr,
+          roomId: roomIdStr,
+          senderId: senderIdStr,
           content: fileName,
-          file_url: fileUrl,
-          file_name: fileName,
-          file_type: fileType,
-          message_type: messageType,
+          fileUrl: fileUrl,
+          fileName: fileName,
+          fileType: fileType,
+          messageType: messageType,
         })
         .returning();
       return castTo<Record<string, unknown>>(row);

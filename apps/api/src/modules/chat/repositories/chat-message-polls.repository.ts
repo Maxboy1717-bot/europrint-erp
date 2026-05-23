@@ -16,9 +16,9 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
   async findMessageRoomForReaction(msgIdStr: string): Promise<Result<Record<string, unknown> | null>> {
     return safeCall(async () => {
       const [row] = await db
-        .select({ room_id: chatMessages.room_id })
+        .select({ room_id: chatMessages.roomId })
         .from(chatMessages)
-        .where(and(eq(chatMessages.id, msgIdStr), eq(chatMessages.is_deleted, false)))
+        .where(and(eq(chatMessages.id, msgIdStr), eq(chatMessages.isDeleted, false)))
         .limit(1);
       return (castTo<Record<string, unknown>>(row)) ?? null;
       }, 'DB_ERROR');
@@ -31,8 +31,8 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
         .from(chatReactions)
         .where(
           and(
-            eq(chatReactions.message_id, msgIdStr),
-            eq(chatReactions.user_id, userIdStr),
+            eq(chatReactions.messageId, msgIdStr),
+            eq(chatReactions.userId, userIdStr),
             eq(chatReactions.emoji, emoji),
           ),
         )
@@ -46,8 +46,8 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
       .delete(chatReactions)
       .where(
         and(
-          eq(chatReactions.message_id, msgIdStr),
-          eq(chatReactions.user_id, userIdStr),
+          eq(chatReactions.messageId, msgIdStr),
+          eq(chatReactions.userId, userIdStr),
           eq(chatReactions.emoji, emoji),
         ),
       );
@@ -56,7 +56,7 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
   async insertReaction(msgIdStr: string, userIdStr: string, emoji: string): Promise<void> {
     await db
       .insert(chatReactions)
-      .values({ message_id: msgIdStr, user_id: userIdStr, emoji })
+      .values({ messageId: msgIdStr, userId: userIdStr, emoji })
       .onConflictDoNothing();
   }
 
@@ -67,11 +67,11 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
           emoji: chatReactions.emoji,
           count: sql<number>`COUNT(*)::int`,
           users: sql<unknown>`json_agg(${appUsers.full_name})`,
-          userIds: sql<unknown>`json_agg(${chatReactions.user_id})`,
+          userIds: sql<unknown>`json_agg(${chatReactions.userId})`,
         })
         .from(chatReactions)
-        .leftJoin(appUsers, sql`${appUsers.id} = ${chatReactions.user_id}::int`)
-        .where(eq(chatReactions.message_id, msgIdStr))
+        .leftJoin(appUsers, sql`${appUsers.id} = ${chatReactions.userId}::int`)
+        .where(eq(chatReactions.messageId, msgIdStr))
         .groupBy(chatReactions.emoji);
       return castTo<Record<string, unknown>[]>(rows);
       }, 'DB_ERROR');
@@ -82,10 +82,10 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
       const [row] = await db
         .insert(chatMessages)
         .values({
-          room_id: roomIdStr,
-          sender_id: senderIdStr,
+          roomId: roomIdStr,
+          senderId: senderIdStr,
           content: question,
-          message_type: 'POLL',
+          messageType: 'POLL',
         })
         .returning();
       return castTo<Record<string, unknown>>(row);
@@ -100,11 +100,11 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
       const [row] = await db
         .insert(chatPolls)
         .values({
-          message_id: msgIdStr,
+          messageId: msgIdStr,
           question,
           options: sql`${optionsJson}::jsonb`,
-          is_multiple: isMultiple,
-          is_anonymous: isAnonymous,
+          isMultiple: isMultiple,
+          isAnonymous: isAnonymous,
         })
         .returning();
       return castTo<Record<string, unknown>>(row);
@@ -116,13 +116,13 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
       const [row] = await db
         .select({
           id: chatPolls.id,
-          message_id: chatPolls.message_id,
-          is_multiple: chatPolls.is_multiple,
-          is_anonymous: chatPolls.is_anonymous,
-          room_id: chatMessages.room_id,
+          message_id: chatPolls.messageId,
+          is_multiple: chatPolls.isMultiple,
+          is_anonymous: chatPolls.isAnonymous,
+          room_id: chatMessages.roomId,
         })
         .from(chatPolls)
-        .innerJoin(chatMessages, eq(chatMessages.id, chatPolls.message_id))
+        .innerJoin(chatMessages, eq(chatMessages.id, chatPolls.messageId))
         .where(eq(chatPolls.id, pollIdStr))
         .limit(1);
       return (castTo<Record<string, unknown>>(row)) ?? null;
@@ -132,13 +132,13 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
   async deletePollVotes(pollIdStr: string, userIdStr: string): Promise<void> {
     await db
       .delete(chatPollVotes)
-      .where(and(eq(chatPollVotes.poll_id, pollIdStr), eq(chatPollVotes.user_id, userIdStr)));
+      .where(and(eq(chatPollVotes.pollId, pollIdStr), eq(chatPollVotes.userId, userIdStr)));
   }
 
   async insertPollVote(pollIdStr: string, userIdStr: string, idx: number): Promise<void> {
     await db
       .insert(chatPollVotes)
-      .values({ poll_id: pollIdStr, user_id: userIdStr, option_index: idx })
+      .values({ pollId: pollIdStr, userId: userIdStr, optionIndex: idx })
       .onConflictDoNothing();
   }
 
@@ -146,20 +146,20 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
     return safeCall(async () => {
       const rows = await db
         .select({
-          option_index: chatPollVotes.option_index,
-          user_id: chatPollVotes.user_id,
+          option_index: chatPollVotes.optionIndex,
+          user_id: chatPollVotes.userId,
           full_name: appUsers.full_name,
         })
         .from(chatPollVotes)
-        .leftJoin(appUsers, sql`${appUsers.id} = ${chatPollVotes.user_id}::int`)
-        .where(eq(chatPollVotes.poll_id, pollIdStr));
+        .leftJoin(appUsers, sql`${appUsers.id} = ${chatPollVotes.userId}::int`)
+        .where(eq(chatPollVotes.pollId, pollIdStr));
       return castTo<Record<string, unknown>[]>(rows);
       }, 'DB_ERROR');
   }
 
   async findMessageRoomForStar(messageId: string): Promise<Result<{ room_id: string } | null>> {
     return safeCall(async () => {
-      const [row] = await db.select({ room_id: chatMessages.room_id })
+      const [row] = await db.select({ room_id: chatMessages.roomId })
         .from(chatMessages).where(eq(chatMessages.id, messageId)).limit(1);
       return row ?? null;
       }, 'DB_ERROR');
@@ -169,7 +169,7 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
     return safeCall(async () => {
       const [row] = await db.select({ id: chatMembers.id })
         .from(chatMembers)
-        .where(and(eq(chatMembers.room_id, roomId), eq(chatMembers.user_id, userId)))
+        .where(and(eq(chatMembers.roomId, roomId), eq(chatMembers.userId, userId)))
         .limit(1);
       return !!row;
       }, 'DB_ERROR');
@@ -177,12 +177,12 @@ export class ChatMessagePollsRepository extends ChatMessageBaseRepository {
 
   async starMessage(messageId: string, userId: string): Promise<void> {
     await db.insert(chatStarredMessages)
-      .values({ message_id: messageId, user_id: userId })
+      .values({ messageId: messageId, userId: userId })
       .onConflictDoNothing();
   }
 
   async unstarMessage(messageId: string, userId: string): Promise<void> {
     await db.delete(chatStarredMessages)
-      .where(and(eq(chatStarredMessages.message_id, messageId), eq(chatStarredMessages.user_id, userId)));
+      .where(and(eq(chatStarredMessages.messageId, messageId), eq(chatStarredMessages.userId, userId)));
   }
 }

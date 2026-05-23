@@ -27,6 +27,7 @@ export const marketingSocialAccounts = stub(pgTable('marketing_social_accounts',
   accountName:  text('account_name').notNull(),
   accountId:    text('account_id'),
   isActive:     boolean('is_active').notNull().default(true),
+  accessToken:  text('access_token'),
   createdAt:    timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }));
 

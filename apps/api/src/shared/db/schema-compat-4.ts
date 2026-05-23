@@ -146,14 +146,7 @@ export const portfolioItems = stub(pgTable('portfolio_items', {
   deletedAt: ts('deleted_at'),
 }));
 
-export const modules = stub(pgTable('lms_modules', {
-  id: integer('id').primaryKey(),
-  courseId: integer('course_id').notNull(),
-  title: text('title').notNull(),
-  description: text('description'),
-  orderIndex: integer('order_index').default(0),
-  createdAt: ts('created_at').defaultNow(),
-}));
+export { lmsModules as modules } from '@workspace/db';
 
 export const tests = stub(pgTable('lms_tests', {
   id: integer('id').primaryKey(),

@@ -329,3 +329,23 @@ export type OkrObjective = typeof okrObjectives.$inferSelect;
 export type InsertOkrObjective = z.infer<typeof insertOkrObjectiveSchema>;
 export type OkrKeyResult = typeof okrKeyResults.$inferSelect;
 export type InsertOkrKeyResult = z.infer<typeof insertOkrKeyResultSchema>;
+
+// ============================================================
+// RACI MATRIX (extended — task/employee/role junction)
+// NOTE: raci_tasks and raci_assignments (named-role RACI) are above.
+//       raci_matrix is a simpler legacy junction used by older reports.
+// Canonical source: apps/api/src/shared/db/schema-ext-b-2.ts
+// ============================================================
+
+export const raciMatrix = pgTable('raci_matrix', {
+  id:         serial('id').primaryKey(),
+  taskId:     integer('task_id'),
+  employeeId: integer('employee_id'),
+  roleType:   text('role_type'),
+  stageId:    integer('stage_id'),
+  createdAt:  timestamp('created_at').notNull().defaultNow(),
+});
+
+export const insertRaciMatrixSchema = createInsertSchema(raciMatrix).omit({ id: true, createdAt: true } as never);
+export type RaciMatrix = typeof raciMatrix.$inferSelect;
+export type InsertRaciMatrix = z.infer<typeof insertRaciMatrixSchema>;

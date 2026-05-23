@@ -8,6 +8,8 @@ import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
 
+// sales_invoices: used with snake_case columns in finance-ar.repository.ts and finance-actions.repository.ts
+// Canonical salesInvoices uses camelCase — kept as local stub.
 export const sales_invoices = pgTable('sales_invoices', {
   id:             serial('id').primaryKey(),
   customer_id:    text('customer_id'),
@@ -24,6 +26,8 @@ export const sales_invoices = pgTable('sales_invoices', {
   updated_at:     timestamp('updated_at').defaultNow(),
 });
 
+// visitor_log: used with snake_case columns in reception.repository.ts
+// Canonical visitorLog uses camelCase — kept as local stub.
 export const visitor_log = pgTable('visitor_log', {
   id:               serial('id').primaryKey(),
   visitor_name:     text('visitor_name').notNull(),
@@ -41,6 +45,8 @@ export const visitor_log = pgTable('visitor_log', {
   status:           text('status').default('active'),
 });
 
+// enps_responses: used with snake_case columns in enps.repository.ts
+// Canonical enpsResponses uses camelCase — kept as local stub.
 export const enps_responses = pgTable('enps_responses', {
   id:          serial('id').primaryKey(),
   survey_id:   integer('survey_id').notNull(),
@@ -51,6 +57,8 @@ export const enps_responses = pgTable('enps_responses', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
+// skill_catalog: used with snake_case columns in skills-matrix.repository.ts
+// Canonical skillCatalog uses camelCase — kept as local stub.
 export const skill_catalog = pgTable('skill_catalog', {
   id:          serial('id').primaryKey(),
   code:        text('code').unique().notNull(),
@@ -61,6 +69,8 @@ export const skill_catalog = pgTable('skill_catalog', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
+// sd_contracts: used with snake_case columns in sd-contracts.controller.ts
+// Canonical sdContracts uses camelCase — kept as local stub.
 export const sd_contracts = pgTable('sd_contracts', {
   id:              serial('id').primaryKey(),
   contract_number: text('contract_number'),

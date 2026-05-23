@@ -158,4 +158,3 @@ export const qc_supplier_quality = pgTable('qc_supplier_quality', {
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
-

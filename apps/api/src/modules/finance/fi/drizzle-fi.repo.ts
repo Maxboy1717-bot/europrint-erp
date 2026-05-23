@@ -109,10 +109,10 @@ export class DrizzleFiRepository implements IFiRepository {
       const [revRow, expRow, unpaidRow] = await Promise.all([
         db.select({ total: sql<string>`COALESCE(SUM(${income_expense_transactions.amount}), 0)` })
           .from(income_expense_transactions)
-          .where(eq(income_expense_transactions.transaction_type, 'income')),
+          .where(eq(income_expense_transactions.transactionType, 'income')),
         db.select({ total: sql<string>`COALESCE(SUM(${income_expense_transactions.amount}), 0)` })
           .from(income_expense_transactions)
-          .where(eq(income_expense_transactions.transaction_type, 'expense')),
+          .where(eq(income_expense_transactions.transactionType, 'expense')),
         db.select({
           cnt: count(),
           amt: sql<string>`COALESCE(SUM(${income_expense_transactions.amount}), 0)`,
@@ -132,7 +132,7 @@ export class DrizzleFiRepository implements IFiRepository {
   async getRecentTransactions(limit: number): Promise<Result<Record<string, unknown>[]>> {
     try {
       const rows = await db.select().from(income_expense_transactions)
-        .orderBy(desc(income_expense_transactions.created_at))
+        .orderBy(desc(income_expense_transactions.createdAt))
         .limit(limit);
       return Ok(rows as Record<string, unknown>[]);
     } catch (e: unknown) { return Err((e as Error).message || 'Tranzaksiyalar topilmadi'); }

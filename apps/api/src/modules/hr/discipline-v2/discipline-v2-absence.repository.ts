@@ -22,12 +22,12 @@ export class DisciplineV2AbsenceRepository {
   async getLastAbsence(employeeId: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.select({
-        absence_date:          absence_tracking.absence_date,
-        consecutive_day_count: absence_tracking.consecutive_day_count,
+        absenceDate:         absence_tracking.absenceDate,
+        consecutiveDayCount: absence_tracking.consecutiveDayCount,
       })
         .from(absence_tracking)
-        .where(eq(absence_tracking.employee_id, employeeId))
-        .orderBy(sql`${absence_tracking.absence_date} DESC`)
+        .where(eq(absence_tracking.employeeId, employeeId))
+        .orderBy(sql`${absence_tracking.absenceDate} DESC`)
         .limit(1);
       return castTo<Row | null>((rows[0] ?? null));
       }, 'DB_ERROR');
@@ -54,8 +54,8 @@ export class DisciplineV2AbsenceRepository {
   }
 
   async expireOldDisciplineRecords(): Promise<void> {
-    await db.update(discipline_records).set({ is_expired: true }).where(
-      sql`${discipline_records.is_expired} = false AND ${discipline_records.issued_date} < NOW() - INTERVAL '6 months' AND ${discipline_records.status} = 'acknowledged'`,
+    await db.update(discipline_records).set({ isExpired: true }).where(
+      sql`${discipline_records.isExpired} = false AND ${discipline_records.issuedDate} < NOW() - INTERVAL '6 months' AND ${discipline_records.status} = 'acknowledged'`,
     );
   }
 
@@ -77,8 +77,8 @@ export class DisciplineV2AbsenceRepository {
   async acknowledgeViolation(id: number): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(discipline_records).set({
-        status:          'acknowledged',
-        acknowledged_at: _time.now(),
+        status:         'acknowledged',
+        acknowledgedAt: _time.now(),
       }).where(eq(discipline_records.id, id)).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
@@ -87,9 +87,9 @@ export class DisciplineV2AbsenceRepository {
   async approveViolation(id: number, approvedBy?: number): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(discipline_records).set({
-        status:      'approved',
-        approved_by: approvedBy ?? null,
-        approved_at: _time.now(),
+        status:     'approved',
+        approvedBy: approvedBy ?? null,
+        approvedAt: _time.now(),
       }).where(eq(discipline_records.id, id)).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
@@ -111,11 +111,11 @@ export class DisciplineV2AbsenceRepository {
   async excuseAbsence(absenceId: number, dto: { excuseReason: string; excuseDocumentUrl?: string; excusedBy?: number }): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(absence_tracking).set({
-        is_excused:          true,
-        excuse_reason:       dto.excuseReason,
-        excuse_document_url: dto.excuseDocumentUrl ?? null,
-        excused_by:          dto.excusedBy ?? null,
-        excused_at:          _time.now(),
+        isExcused:          true,
+        excuseReason:       dto.excuseReason,
+        excuseDocumentUrl:  dto.excuseDocumentUrl ?? null,
+        excusedBy:          dto.excusedBy ?? null,
+        excusedAt:          _time.now(),
       }).where(eq(absence_tracking.id, absenceId)).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');

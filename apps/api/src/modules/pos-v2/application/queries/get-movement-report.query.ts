@@ -96,19 +96,20 @@ export class GetEmployeeActivityHandler implements IQueryHandler<GetEmployeeActi
   }
 }
 
-export class GetLowStockQuery {
+/** Renamed from GetLowStockQuery to avoid CQRS class-name collision with wms/GetLowStockQuery */
+export class GetPosV2LowStockQuery {
   constructor(public readonly warehouseId?: string) {}
 }
 
-@QueryHandler(GetLowStockQuery)
+@QueryHandler(GetPosV2LowStockQuery)
 @Injectable()
-export class GetLowStockHandler implements IQueryHandler<GetLowStockQuery> {
-  private readonly logger = new Logger(GetLowStockHandler.name);
+export class GetPosV2LowStockHandler implements IQueryHandler<GetPosV2LowStockQuery> {
+  private readonly logger = new Logger(GetPosV2LowStockHandler.name);
 
   constructor(@Inject(POS_V2_REPO) private readonly repo: IPosV2Repo) {}
 
   async execute(
-    query: GetLowStockQuery,
+    query: GetPosV2LowStockQuery,
   ): Promise<
     Result<Array<{ stockItemId: string; name: string; sku: string; currentQty: number; minQty: number; location: string | null }>>
   > {

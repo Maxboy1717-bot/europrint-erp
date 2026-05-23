@@ -6,7 +6,14 @@
 import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
+// Canonical imports from lib/db (@workspace/db barrel via pp-schema → pp/pp-production)
+import {
+  routings as canonicalRoutings,
+  productionOrders as canonicalProductionOrders,
+  routingOperations as canonicalRoutingOperations,
+} from '@workspace/db';
 
+// TODO: boms not found in lib/db (only bom_headers/bom_items exist) — kept as local stub
 export const boms_int = pgTable('boms', {
   id:           serial('id').primaryKey(),
   product_name: text('product_name'),
@@ -17,44 +24,17 @@ export const boms_int = pgTable('boms', {
   created_at:   timestamp('created_at').defaultNow(),
 });
 
-export const routings_int = pgTable('routings', {
-  id:           serial('id').primaryKey(),
-  name:         text('name'),
-  is_active:    boolean('is_active').default(true),
-  created_by:   text('created_by'),
-  steps:        jsonb('steps').default([]),
-  work_centers: jsonb('work_centers').default([]),
-  created_at:   timestamp('created_at').defaultNow(),
-});
+// routings: re-exported from canonical definition in @workspace/db (pp/pp-production.ts)
+export const routings_int = canonicalRoutings;
 
-export const production_orders_int = pgTable('production_orders', {
-  id:              serial('id').primaryKey(),
-  sales_order_id:  integer('sales_order_id'),
-  status:          text('status').default('pending'),
-  bom_id:          integer('bom_id'),
-  routing_id:      integer('routing_id'),
-  scheduled_start: timestamp('scheduled_start'),
-  scheduled_end:   timestamp('scheduled_end'),
-  order_number:    text('order_number'),
-  product_name:    text('product_name'),
-  quantity:        integer('quantity'),
-  unit:            text('unit'),
-  created_by:      text('created_by'),
-  created_at:      timestamp('created_at').defaultNow(),
-  updated_at:      timestamp('updated_at').defaultNow(),
-});
+// production_orders: re-exported from canonical definition in @workspace/db (pp/pp-production.ts)
+export const production_orders_int = canonicalProductionOrders;
 
-export const routing_operations_int = pgTable('routing_operations', {
-  id:             serial('id').primaryKey(),
-  routing_id:     integer('routing_id'),
-  work_center_id: integer('work_center_id'),
-  name:           text('name'),
-  sequence:       integer('sequence').default(0),
-  created_at:     timestamp('created_at').defaultNow(),
-});
+// routing_operations: re-exported from canonical definition in @workspace/db (pp/pp-production.ts)
+export const routing_operations_int = canonicalRoutingOperations;
 
 // ─── WMS Extended Tables ──────────────────────────────────────────────────────
-
+// TODO: wms_warehouses not found in lib/db (only 'warehouses' exists) — kept as local stub
 export const wms_warehouses = pgTable('wms_warehouses', {
   id:         serial('id').primaryKey(),
   name:       text('name').notNull(),
@@ -63,6 +43,7 @@ export const wms_warehouses = pgTable('wms_warehouses', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
+// TODO: wms_transfers not found in lib/db — kept as local stub
 export const wms_transfers = pgTable('wms_transfers', {
   id:                serial('id').primaryKey(),
   from_warehouse_id: integer('from_warehouse_id'),
@@ -75,6 +56,7 @@ export const wms_transfers = pgTable('wms_transfers', {
   created_at:        timestamp('created_at').defaultNow(),
 });
 
+// TODO: wms_internal_requests not found in lib/db — kept as local stub
 export const wms_internal_requests = pgTable('wms_internal_requests', {
   id:           serial('id').primaryKey(),
   warehouse_id: integer('warehouse_id'),
@@ -86,6 +68,7 @@ export const wms_internal_requests = pgTable('wms_internal_requests', {
   created_at:   timestamp('created_at').defaultNow(),
 });
 
+// TODO: wms_inventory_counts not found in lib/db — kept as local stub
 export const wms_inventory_counts = pgTable('wms_inventory_counts', {
   id:           serial('id').primaryKey(),
   warehouse_id: integer('warehouse_id'),

@@ -79,6 +79,44 @@ export class ThreeWayMatchService {
     }
   }
 
+  /**
+   * Legacy compat: used by remaining/ThreeWayMatchController (GET /3way-match/results).
+   * Delegates to listVariances() — filters by poId when provided.
+   */
+  async getResults(poId: number | null, _limit: number): Promise<Result<unknown, AppError>> {
+    try {
+      const rows = await this.repo.listVariances() as Array<Record<string, unknown>>;
+      const data = poId != null
+        ? rows.filter(r => Number(r['movementId']) === poId || r['poId'] === poId)
+        : rows;
+      return Ok({ data });
+    } catch (e) {
+      this.logger.error(`[3WayMatch] getResults xato: ${String(e)}`);
+      return Err({ message: String(e), code: 'DB_ERROR' });
+    }
+  }
+
+  /**
+   * Legacy compat: used by remaining/ThreeWayMatchController (POST /3way-match/perform).
+   * Bridges old poId/grId/vendorInvoiceId payload to match().
+   */
+  async perform(body: Record<string, unknown>, userId: number): Promise<Result<unknown, AppError>> {
+    const { poId, grId, vendorInvoiceId, invoiceAmount } = body as {
+      poId?: number; grId?: number; vendorInvoiceId?: string; invoiceAmount?: number;
+    };
+    if (!poId || !grId || !vendorInvoiceId) {
+      return Err({ message: 'poId, grId, vendorInvoiceId talab qilinadi', code: 'BAD_REQUEST' });
+    }
+    return this.match({
+      movementId:    grId,
+      purchaseOrderNo: String(poId),
+      invoiceNo:     vendorInvoiceId,
+      poAmount:      undefined,
+      invoiceAmount: invoiceAmount != null ? Number(invoiceAmount) : undefined,
+      matchedBy:     userId,
+    });
+  }
+
   async autoMatchAll(): Promise<Result<{ processed: number }, AppError>> {
     try {
       const movs = await this.repo.findUnmatchedCompleted();

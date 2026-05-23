@@ -12,43 +12,14 @@ import { Admin, Position, admins, departments, positions, users } from "./core-s
 import { cameraZones, cameras } from "./iot-schema";
 import { Mentor, courses, progress, skills } from "./lms-schema";
 import { workCenters } from "./pp-schema";
-import { adaptationPrograms } from "./hr-personal";
+// adaptationRecords — canonical: adaptation.ts
+import { adaptationRecords as newEmployees } from "./adaptation";
+export { adaptationRecords, insertAdaptationRecordSchema } from "./adaptation";
+export type { AdaptationRecord, InsertAdaptationRecord } from "./adaptation";
 
-export const adaptationRecords = pgTable("adaptation_records", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  programId: varchar("program_id").references(() => adaptationPrograms.id, { onDelete: "set null" }),
-  mentorId: varchar("mentor_id").references(() => users.id, { onDelete: 'set null' }),
-  startDate: varchar("start_date", { length: 10 }).notNull(),
-  endDate: varchar("end_date", { length: 10 }),
-  status: varchar("status", { length: 20 }).notNull().default("active"),
-  progress: integer("progress").notNull().default(0),
-  tasksCompleted: integer("tasks_completed").notNull().default(0),
-  currentPhase: varchar("current_phase", { length: 50 }),
-  notes: text("notes"),
-  createdBy: varchar("created_by").references(() => admins.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-}, (t) => [
-  check("adaptation_records_v2_status_chk", sql`${t.status} IN ('active','completed','cancelled')`),
-  check("adaptation_records_v2_progress_chk", sql`${t.progress} >= 0 AND ${t.progress} <= 100`),
-  check("adaptation_records_v2_tasks_chk", sql`${t.tasksCompleted} >= 0`),
-]);
-
-export const newEmployees = adaptationRecords;
-
-export const insertAdaptationRecordSchema = createInsertSchema(adaptationRecords, {
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo'lishi kerak"),
-  status: z.enum(["active", "completed", "cancelled"]).default("active"),
-  progress: z.number().min(0).max(100),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-export const insertNewEmployeeSchema = insertAdaptationRecordSchema;
-
-export type AdaptationRecord = typeof adaptationRecords.$inferSelect;
-
-export type InsertAdaptationRecord = z.infer<typeof insertAdaptationRecordSchema>;
+// newEmployees alias kept for backward compatibility
+export { adaptationRecords as newEmployees } from "./adaptation";
+export { insertAdaptationRecordSchema as insertNewEmployeeSchema } from "./adaptation";
 
 
 // Adaptatsiya bo'yicha feedbacklar (1 hafta, 1 oy, 3 oy suhbatlari)

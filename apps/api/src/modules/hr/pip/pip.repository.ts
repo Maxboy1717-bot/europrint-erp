@@ -20,15 +20,15 @@ export class PipRepository {
   async createPip(dto: { employeeId: number; createdBy: number; supervisorId?: number; durationDays: number; startDate: string; endDate: string; goals: string; successCriteria?: string }): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(pip_plans).values({
-        employee_id:      dto.employeeId,
-        created_by:       dto.createdBy,
-        supervisor_id:    dto.supervisorId ?? null,
-        duration_days:    dto.durationDays,
-        start_date:       dto.startDate,
-        end_date:         dto.endDate,
-        goals:            dto.goals,
-        success_criteria: dto.successCriteria ?? null,
-        status:           'active',
+        employeeId:      dto.employeeId,
+        createdBy:       dto.createdBy,
+        supervisorId:    dto.supervisorId ?? null,
+        durationDays:    dto.durationDays,
+        startDate:       dto.startDate,
+        endDate:         dto.endDate,
+        goals:           dto.goals,
+        successCriteria: dto.successCriteria ?? null,
+        status:          'active',
       }).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
@@ -37,10 +37,10 @@ export class PipRepository {
   async addProgressUpdate(pipId: number, updatedBy: number, notes: string, status: string): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(pip_progress_updates).values({
-        pip_id:     pipId,
-        updated_by: updatedBy,
-        notes:      notes,
-        status:     status,
+        pipId:     pipId,
+        updatedBy: updatedBy,
+        notes:     notes,
+        status:    status,
       }).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
@@ -55,24 +55,24 @@ export class PipRepository {
 
   async markCompleted(pipId: number): Promise<void> {
     await db.update(pip_plans).set({
-      status:       'completed',
-      completed_at: _time.now(),
-      outcome:      'PASSED',
+      status:      'completed',
+      completedAt: _time.now(),
+      outcome:     'PASSED',
     }).where(eq(pip_plans.id, pipId));
   }
 
   async markFailed(pipId: number): Promise<void> {
     await db.update(pip_plans).set({
-      status:       'failed',
-      completed_at: _time.now(),
-      outcome:      'FAILED',
+      status:      'failed',
+      completedAt: _time.now(),
+      outcome:     'FAILED',
     }).where(eq(pip_plans.id, pipId));
   }
 
   async cancel(pipId: number): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(pip_plans)
-        .set({ status: 'cancelled', completed_at: _time.now() })
+        .set({ status: 'cancelled', completedAt: _time.now() })
         .where(eq(pip_plans.id, pipId))
         .returning();
       return castTo<Row>((rows[0] ?? {}));
@@ -82,7 +82,7 @@ export class PipRepository {
   async updateEndDate(pipId: number, newEndDate: string): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(pip_plans)
-        .set({ end_date: newEndDate })
+        .set({ endDate: newEndDate })
         .where(eq(pip_plans.id, pipId))
         .returning();
       return castTo<Row>((rows[0] ?? {}));
@@ -92,7 +92,7 @@ export class PipRepository {
   async acknowledge(pipId: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.update(pip_plans)
-        .set({ acknowledged_at: _time.now() })
+        .set({ acknowledgedAt: _time.now() })
         .where(eq(pip_plans.id, pipId))
         .returning();
       return castTo<Row | null>((rows[0] ?? null));
@@ -117,8 +117,8 @@ export class PipRepository {
     return safeCall(async () => {
       const rows = await db.select()
         .from(pip_progress_updates)
-        .where(eq(pip_progress_updates.pip_id, pipId))
-        .orderBy(pip_progress_updates.created_at);
+        .where(eq(pip_progress_updates.pipId, pipId))
+        .orderBy(pip_progress_updates.createdAt);
       return castTo<Row[]>(rows);
       }, 'DB_ERROR');
   }
@@ -167,13 +167,13 @@ export class PipRepository {
   async getOverduePips(today: string): Promise<Result<Row[]>> {
     return safeCall(async () => {
       const rows = await db.select({
-        id:          pip_plans.id,
-        employee_id: pip_plans.employee_id,
-        supervisor_id: pip_plans.supervisor_id,
-        end_date:    pip_plans.end_date,
+        id:           pip_plans.id,
+        employeeId:   pip_plans.employeeId,
+        supervisorId: pip_plans.supervisorId,
+        endDate:      pip_plans.endDate,
       })
         .from(pip_plans)
-        .where(sql`${pip_plans.status} = 'active' AND ${pip_plans.end_date}::date < ${today}::date`);
+        .where(sql`${pip_plans.status} = 'active' AND ${pip_plans.endDate}::date < ${today}::date`);
       return castTo<Row[]>(rows);
       }, 'DB_ERROR');
   }

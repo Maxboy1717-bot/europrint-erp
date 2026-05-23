@@ -8,7 +8,7 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
-import { ThreeWayMatchService } from './three-way-match.service';
+import { ThreeWayMatchService } from '../pos/application/services/three-way-match.service';
 import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { parsePagination } from '@common/pipes/parse-pagination.pipe';

@@ -4,36 +4,27 @@
  */
 
 import {
-  pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
+  pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date, varchar,
 } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
 import { employee_contracts as canonicalEmployeeContracts } from './schema-business-c-3';
+// NOTE: `import { sql } from 'drizzle-orm'` removed — no longer used after dedup.
 
 // ─── MES: Equipment & Machines ────────────────────────────────────────────────
+// [2026-05-22 dedup] equipment: re-exported from canonical definition in
+// lib/db (pp/pp-production.ts, in barrel via pp-schema.ts). Previous local
+// pgTable (8 cols) removed.
+export { equipment } from '@workspace/db/schema/pp-schema';
 
-export const equipment = pgTable('equipment', {
-  id:          serial('id').primaryKey(),
-  name:        text('name'),
-  type:        text('type'),
-  location:    text('location'),
-  status:      text('status').default('active'),
-  last_maintenance_at: timestamp('last_maintenance_at'),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
-
-export const machine_tasks = pgTable('machine_tasks', {
-  id:           serial('id').primaryKey(),
-  machine_id:   integer('machine_id'),
-  operator_id:  integer('operator_id'),
-  order_id:     integer('order_id'),
-  status:       text('status').default('pending'),
-  started_at:   timestamp('started_at'),
-  completed_at: timestamp('completed_at'),
-  created_at:   timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] machine_tasks: re-exported from canonical definition in
+// lib/db (pp/pp-papka.ts: machineTasks, in barrel via pp-schema.ts). Previous
+// local pgTable (8 cols) removed.
+export { machineTasks as machine_tasks } from '@workspace/db/schema/pp-schema';
 
 // ─── HR PIP & Discipline ───────────────────────────────────────────────────────
+// lib/db da bor lekin barrel da eksport yo'q yoki nomi farqli:
+// pipProgressUpdates → `pip_progress_updates` (boshqa jadval nomi)
+// disciplineRecords → `discipline_records` (boshqa jadval nomi)
+// Shuning uchun saqlab qolindi.
 
 export const pip_progress = pgTable('pip_progress', {
   id:          serial('id').primaryKey(),
@@ -57,15 +48,13 @@ export const disciplinary_actions = pgTable('disciplinary_actions', {
   updated_at:   timestamp('updated_at').defaultNow(),
 });
 
-export const employee_org_departments = pgTable('employee_org_departments', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id'),
-  department_id: integer('department_id'),
-  role:        text('role'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// Canonical: schema-misc-app-a.ts (user_id/org_department_id/is_primary/assigned_at).
+// All callers use the canonical snake-case shape — this duplicate had no column-level
+// callers (employee_id/department_id/role were unused). Shim to canon to remove drift.
+export { employeeOrgDepartments as employee_org_departments } from './schema-misc-app-a';
 
 // ─── Finance Extended Report Tables ───────────────────────────────────────────
+// lib/db da mavjud emas — saqlab qolindi.
 
 export const erp_daily_reports = pgTable('erp_daily_reports', {
   id:          serial('id').primaryKey(),
@@ -143,32 +132,14 @@ export const erp_employees = pgTable('erp_employees', {
 });
 
 // ─── LMS Extra ─────────────────────────────────────────────────────────────────
+// Canonical definitions live in `@workspace/db/schema/lms-extended`.
+// These local snake_case aliases are kept for backward-compatible imports only.
 
-export const lms_modules = pgTable('lms_modules', {
-  id:         text('id').primaryKey(),
-  course_id:  text('course_id'),
-  title:      text('title'),
-  sort_order: integer('sort_order').default(0),
-  created_at: timestamp('created_at').defaultNow(),
-});
+export { lmsModules as lms_modules } from '@workspace/db/schema/lms-extended';
+export { lmsExams as lms_exams } from '@workspace/db/schema/lms-extended';
+export { lmsExamAttempts as lms_exam_attempts } from '@workspace/db/schema/lms-extended';
 
-export const lms_exams = pgTable('lms_exams', {
-  id:         text('id').primaryKey(),
-  module_id:  text('module_id'),
-  title:      text('title'),
-  pass_score: integer('pass_score').default(70),
-  created_at: timestamp('created_at').defaultNow(),
-});
-
-export const lms_exam_attempts = pgTable('lms_exam_attempts', {
-  id:         text('id').primaryKey(),
-  exam_id:    text('exam_id'),
-  user_id:    text('user_id'),
-  score:      numeric('score', { precision: 5, scale: 2 }),
-  passed:     boolean('passed').default(false),
-  created_at: timestamp('created_at').defaultNow(),
-});
-
+// lib/db da mavjud emas — saqlab qolindi.
 export const lms_assignments = pgTable('lms_assignments', {
   id:            text('id').primaryKey(),
   user_id:       text('user_id'),
@@ -217,52 +188,40 @@ export const lms_tests_ext = pgTable('lms_tests_ext', {
 });
 
 // ─── HR Adaptation ─────────────────────────────────────────────────────────────
-
-export const adaptation_feedback = pgTable('adaptation_feedback', {
-  id:          serial('id').primaryKey(),
-  case_id:     integer('case_id'),
-  from_id:     integer('from_id'),
-  score:       integer('score'),
-  notes:       text('notes'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] adaptation_feedback: re-exported from canonical definition in
+// lib/db (hr-performance-core.ts: adaptationFeedback, in barrel via
+// hr-performance → hr-schema → index). Previous local pgTable (5 cols) removed.
+export { adaptationFeedback as adaptation_feedback } from '@workspace/db';
 
 // ─── KPI & Goals ───────────────────────────────────────────────────────────────
-
+// kpiDefinitions / kpiValues were removed from lib/db as orphans; local
+// definitions retained here so @shared/db consumers continue to work.
 export const kpi_definitions = pgTable('kpi_definitions', {
-  id:           serial('id').primaryKey(),
-  name:         text('name'),
-  description:  text('description'),
-  unit:         text('unit'),
-  target_value: numeric('target_value', { precision: 15, scale: 4 }),
-  department_id: integer('department_id'),
-  is_active:    boolean('is_active').default(true),
-  created_at:   timestamp('created_at').defaultNow(),
+  id:          serial('id').primaryKey(),
+  code:        varchar('code', { length: 50 }).notNull().unique(),
+  name:        text('name').notNull(),
+  description: text('description'),
+  unit:        varchar('unit', { length: 20 }),
+  isActive:    boolean('is_active').default(true),
+  createdAt:   timestamp('created_at').defaultNow().notNull(),
 });
 
 export const kpi_values = pgTable('kpi_values', {
-  id:            serial('id').primaryKey(),
-  kpi_id:        integer('kpi_id'),
-  employee_id:   integer('employee_id'),
-  actual_value:  numeric('actual_value', { precision: 15, scale: 4 }),
-  period:        text('period'),
-  recorded_at:   timestamp('recorded_at'),
-  created_at:    timestamp('created_at').defaultNow(),
+  id:              serial('id').primaryKey(),
+  kpiDefinitionId: integer('kpi_definition_id').references(() => kpi_definitions.id),
+  employeeId:      integer('employee_id'),
+  value:           numeric('value', { precision: 14, scale: 4 }),
+  period:          varchar('period', { length: 20 }),
+  recordedAt:      timestamp('recorded_at').defaultNow().notNull(),
+  createdAt:       timestamp('created_at').defaultNow().notNull(),
 });
 
-export const goals = pgTable('goals', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id'),
-  title:       text('title'),
-  description: text('description'),
-  due_date:    date('due_date'),
-  status:      text('status').default('in_progress'),
-  progress:    integer('progress').default(0),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
+// [2026-05-22 dedup] goals: re-exported from canonical definition in
+// lib/db (core/core-ai.ts: goals, in barrel via core-schema → index).
+export { goals } from '@workspace/db';
 
 // ─── Employee Benefits & Contracts ────────────────────────────────────────────
+// lib/db da mavjud emas — saqlab qolindi.
 
 export const employee_benefits = pgTable('employee_benefits', {
   id:          serial('id').primaryKey(),

@@ -20,14 +20,14 @@ export class ChatAdminRepository {
         id:           chatRooms.id,
         name:         chatRooms.name,
         type:         chatRooms.type,
-        created_at:   chatRooms.created_at,
-        is_archived:  sql<boolean>`COALESCE(${chatRooms.is_archived}, false)`,
+        created_at:   chatRooms.createdAt,
+        is_archived:  sql<boolean>`COALESCE(${chatRooms.isArchived}, false)`,
         member_count: sql<number>`CAST(COUNT(${chatMembers.id}) AS integer)`,
       })
         .from(chatRooms)
-        .leftJoin(chatMembers, eq(chatMembers.room_id, chatRooms.id))
+        .leftJoin(chatMembers, eq(chatMembers.roomId, chatRooms.id))
         .groupBy(chatRooms.id)
-        .orderBy(sql`${chatRooms.created_at} DESC`)
+        .orderBy(sql`${chatRooms.createdAt} DESC`)
         .limit(100);
       return Ok((Array.isArray(rows) ? rows : []).map((r) => ({
         id:          String(r.id),
@@ -43,15 +43,15 @@ export class ChatAdminRepository {
   async findRoomMembers(roomId: string): Promise<Result<AdminRoomMember[]>> {
     try {
       const rows = await db.select({
-        user_id:   chatMembers.user_id,
+        user_id:   chatMembers.userId,
         full_name: appUsers.full_name,
         role:      chatMembers.role,
-        joined_at: chatMembers.joined_at,
+        joined_at: chatMembers.joinedAt,
       })
         .from(chatMembers)
-        .innerJoin(appUsers, sql`${appUsers.id}::text = ${chatMembers.user_id}`)
-        .where(eq(chatMembers.room_id, roomId))
-        .orderBy(sql`${chatMembers.joined_at} DESC`);
+        .innerJoin(appUsers, sql`${appUsers.id}::text = ${chatMembers.userId}`)
+        .where(eq(chatMembers.roomId, roomId))
+        .orderBy(sql`${chatMembers.joinedAt} DESC`);
       return Ok((Array.isArray(rows) ? rows : []).map((r) => ({
         userId:   String(r.user_id),
         fullName: String(r.full_name ?? ''),
@@ -71,7 +71,7 @@ export class ChatAdminRepository {
 
   async setRoomArchived(roomId: string): Promise<Result<void>> {
     try {
-      await db.update(chatRooms).set({ is_archived: true })
+      await db.update(chatRooms).set({ isArchived: true })
         .where(eq(chatRooms.id, roomId));
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error).message); }
@@ -80,7 +80,7 @@ export class ChatAdminRepository {
   async deleteMember(roomId: string, userId: string): Promise<Result<void>> {
     try {
       await db.delete(chatMembers)
-        .where(and(eq(chatMembers.room_id, roomId), eq(chatMembers.user_id, userId)));
+        .where(and(eq(chatMembers.roomId, roomId), eq(chatMembers.userId, userId)));
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error).message); }
   }
@@ -88,7 +88,7 @@ export class ChatAdminRepository {
   async memberExists(roomId: string, userId: string): Promise<Result<boolean>> {
     try {
       const r = await db.select({ id: chatMembers.id }).from(chatMembers)
-        .where(and(eq(chatMembers.room_id, roomId), eq(chatMembers.user_id, userId))).limit(1);
+        .where(and(eq(chatMembers.roomId, roomId), eq(chatMembers.userId, userId))).limit(1);
       return Ok(r.length > 0);
     } catch (e: unknown) { return Err((e as Error).message); }
   }
@@ -96,7 +96,7 @@ export class ChatAdminRepository {
   async setMemberRole(roomId: string, userId: string, role: string): Promise<Result<void>> {
     try {
       await db.update(chatMembers).set({ role })
-        .where(and(eq(chatMembers.room_id, roomId), eq(chatMembers.user_id, userId)));
+        .where(and(eq(chatMembers.roomId, roomId), eq(chatMembers.userId, userId)));
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error).message); }
   }
@@ -106,18 +106,18 @@ export class ChatAdminRepository {
       const rows = await db.select({
         event_type:  sql<string>`'message'`,
         event_id:    chatMessages.id,
-        user_id:     chatMessages.sender_id,
+        user_id:     chatMessages.senderId,
         user_name:   appUsers.full_name,
-        room_id:     chatMessages.room_id,
+        room_id:     chatMessages.roomId,
         room_name:   chatRooms.name,
-        event_at:    chatMessages.created_at,
+        event_at:    chatMessages.createdAt,
         detail:      sql<string>`COALESCE(${chatMessages.content}, ${chatMessages.text}, '')`,
       })
         .from(chatMessages)
-        .leftJoin(appUsers, sql`${appUsers.id}::text = ${chatMessages.sender_id}`)
-        .leftJoin(chatRooms, eq(chatRooms.id, chatMessages.room_id))
-        .where(eq(chatMessages.is_deleted, false))
-        .orderBy(desc(chatMessages.created_at))
+        .leftJoin(appUsers, sql`${appUsers.id}::text = ${chatMessages.senderId}`)
+        .leftJoin(chatRooms, eq(chatRooms.id, chatMessages.roomId))
+        .where(eq(chatMessages.isDeleted, false))
+        .orderBy(desc(chatMessages.createdAt))
         .limit(limit);
       return Ok(rows);
     } catch (e: unknown) {

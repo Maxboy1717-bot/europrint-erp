@@ -24,6 +24,8 @@ export const owOrders = pgTable('ow_orders', {
   actualDeliveryAt:    timestamp('actual_delivery_at', { withTimezone: true }),
   tenantId:            uuid('tenant_id'),
   customerApproved:    boolean('customer_approved').notNull().default(false),
+  techCardConfirmedAt:   timestamp('tech_card_confirmed_at', { withTimezone: true }),
+  customerSignatureUrl:  text('customer_signature_url'),
   createdAt:           timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt:           timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
 }, (t) => [

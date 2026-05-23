@@ -21,7 +21,7 @@ import { Result, isErr } from '@common/result';
 import {
  GetMovementReportQuery,
  GetEmployeeActivityQuery,
- GetLowStockQuery,
+ GetPosV2LowStockQuery,
 } from '../application/queries/get-movement-report.query';
 import {
  MovementReportDtoSchema,
@@ -85,7 +85,7 @@ export class ReportsController {
  @CurrentUser() user: AuthenticatedUser,
  ): Promise<Record<string, unknown>> {
  const dto = parseSafe(LowStockReportDtoSchema, query, 'Invalid query parameters');
- const res = await this.queryBus.execute(new GetLowStockQuery(dto.warehouseId));
+ const res = await this.queryBus.execute(new GetPosV2LowStockQuery(dto.warehouseId));
  return unwrapOrThrow(res);
 }
 }

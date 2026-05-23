@@ -15,19 +15,19 @@ type PushSubscriptionInsert = typeof chatPushSubscriptions.$inferInsert;
 export class PushNotificationRepository {
   async insert(
     userId: string,
-    data: Omit<PushSubscriptionInsert, 'user_id' | 'is_active'>,
+    data: Omit<PushSubscriptionInsert, 'userId' | 'isActive'>,
   ): Promise<Result<{ id: string }, AppError>> {
     try {
       const inserted = await db.insert(chatPushSubscriptions).values({
-        user_id:     userId,
-        channel:     data.channel,
-        endpoint:    data.endpoint ?? null,
-        p256dh:      data.p256dh ?? null,
-        auth:        data.auth ?? null,
-        fcm_token:   data.fcm_token ?? null,
-        apns_token:  data.apns_token ?? null,
-        device_info: data.device_info ?? null,
-        is_active:   true,
+        userId:     userId,
+        channel:    data.channel,
+        endpoint:   data.endpoint ?? null,
+        p256dh:     data.p256dh ?? null,
+        auth:       data.auth ?? null,
+        fcmToken:   data.fcmToken ?? null,
+        apnsToken:  data.apnsToken ?? null,
+        deviceInfo: data.deviceInfo ?? null,
+        isActive:   true,
       }).returning({ id: chatPushSubscriptions.id });
 
       const row = (Array.isArray(inserted) ? inserted : [])[0];
@@ -41,8 +41,8 @@ export class PushNotificationRepository {
   async deactivateForUser(userId: string): Promise<Result<void, AppError>> {
     try {
       await db.update(chatPushSubscriptions)
-        .set({ is_active: false })
-        .where(eq(chatPushSubscriptions.user_id, userId));
+        .set({ isActive: false })
+        .where(eq(chatPushSubscriptions.userId, userId));
       return Ok(undefined);
     } catch (e) {
       return Err({ message: String(e), code: 'DB_ERROR' });
@@ -53,8 +53,8 @@ export class PushNotificationRepository {
     try {
       const rows = await db.select().from(chatPushSubscriptions).where(
         and(
-          eq(chatPushSubscriptions.user_id, userId),
-          eq(chatPushSubscriptions.is_active, true),
+          eq(chatPushSubscriptions.userId, userId),
+          eq(chatPushSubscriptions.isActive, true),
         ),
       );
       return Ok(Array.isArray(rows) ? rows : []);

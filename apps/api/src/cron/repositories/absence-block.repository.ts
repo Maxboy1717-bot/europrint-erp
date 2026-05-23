@@ -45,8 +45,8 @@ export class AbsenceBlockRepository {
     try {
       rows = (await db
         .select({
-          employee_id:           absence_tracking.employee_id,
-          consecutive_day_count: absence_tracking.consecutive_day_count,
+          employee_id:           absence_tracking.employeeId,
+          consecutive_day_count: absence_tracking.consecutiveDayCount,
           first_name:            hrEmployees.first_name,
           last_name:             hrEmployees.last_name,
           department_name:       hrDepartments.name,
@@ -55,19 +55,19 @@ export class AbsenceBlockRepository {
           telegram_chat_id:      hrEmployees.telegram_chat_id,
         })
         .from(absence_tracking)
-        .innerJoin(hrEmployees, eq(hrEmployees.id, absence_tracking.employee_id))
+        .innerJoin(hrEmployees, eq(hrEmployees.id, absence_tracking.employeeId))
         .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))
         .where(
           and(
-            sql`${absence_tracking.consecutive_day_count} >= ${minDays}`,
-            maxDays !== undefined ? sql`${absence_tracking.consecutive_day_count} < ${maxDays}` : undefined,
-            eq(absence_tracking.auto_blocked, false),
+            sql`${absence_tracking.consecutiveDayCount} >= ${minDays}`,
+            maxDays !== undefined ? sql`${absence_tracking.consecutiveDayCount} < ${maxDays}` : undefined,
+            eq(absence_tracking.autoBlocked, false),
             eq(hrEmployees.is_blocked, false),
             eq(hrEmployees.status, 'active'),
             isNull(hrEmployees.deleted_at),
-            sql`${absence_tracking.absence_date} = (
+            sql`${absence_tracking.absenceDate} = (
               SELECT MAX(at2.absence_date) FROM absence_tracking at2
-              WHERE at2.employee_id = ${absence_tracking.employee_id}
+              WHERE at2.employee_id = ${absence_tracking.employeeId}
             )`,
           ),
         )) as QRow[];
@@ -104,16 +104,16 @@ export class AbsenceBlockRepository {
   async deactivateExistingBlocks(employeeId: number): Promise<void> {
     await db
       .update(employee_blocks)
-      .set({ is_active: false })
-      .where(and(eq(employee_blocks.employee_id, employeeId), eq(employee_blocks.is_active, true)));
+      .set({ isActive: false })
+      .where(and(eq(employee_blocks.employeeId, employeeId), eq(employee_blocks.isActive, true)));
   }
 
   async insertEmployeeBlock(employeeId: number, reason: string): Promise<void> {
     await db.insert(employee_blocks).values({
-      employee_id: employeeId,
+      employeeId: employeeId,
       reason,
-      blocked_by: 0,
-      is_active: true,
+      blockedBy: 0,
+      isActive: true,
     });
   }
 
@@ -127,11 +127,11 @@ export class AbsenceBlockRepository {
   async markAbsenceAutoBlocked(employeeId: number): Promise<void> {
     await db
       .update(absence_tracking)
-      .set({ auto_blocked: true })
+      .set({ autoBlocked: true })
       .where(
         and(
-          eq(absence_tracking.employee_id, employeeId),
-          sql`${absence_tracking.absence_date} = (
+          eq(absence_tracking.employeeId, employeeId),
+          sql`${absence_tracking.absenceDate} = (
             SELECT MAX(at2.absence_date) FROM absence_tracking at2
             WHERE at2.employee_id = ${employeeId}
           )`,

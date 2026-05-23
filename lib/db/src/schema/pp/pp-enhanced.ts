@@ -566,21 +566,8 @@ export const assetMaintenanceRecords = pgTable("asset_maintenance_records", {
   check("asset_maint_status_chk", sql`${t.status} IN ('scheduled','in_progress','completed','cancelled')`),
 ]);
 
-export const assetDisposals = pgTable("asset_disposals", {
-  id: serial("id").primaryKey(),
-  assetId: integer("asset_id").notNull().references(() => assetInventory.id, { onDelete: "cascade" }),
-  disposalMethod: varchar("disposal_method", { length: 30 }).notNull().default("write_off"),
-  disposalDate: varchar("disposal_date", { length: 10 }).notNull(),
-  disposalValue: numericMoney("disposal_value").default(0),
-  bookValueAtDisposal: numericMoney("book_value_at_disposal").default(0),
-  gainLoss: numericMoney("gain_loss").default(0),
-  reason: text("reason"),
-  approvedBy: integer("approved_by"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  check("asset_disposals_method_chk", sql`${t.disposalMethod} IN ('write_off','sale','donation','scrap')`),
-]);
+// assetDisposals — canonical definition lives in ../admin-assets
+export { assetDisposals, insertAssetDisposalSchema, AssetDisposal, InsertAssetDisposal } from "../admin-assets";
 
 export const insertAssetMaintenanceSchema = createInsertSchema(assetMaintenanceRecords, {
   maintenanceType: z.enum(["preventive", "corrective", "predictive", "emergency"]).default("preventive"),
@@ -588,46 +575,14 @@ export const insertAssetMaintenanceSchema = createInsertSchema(assetMaintenanceR
   status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]).default("scheduled"),
 }).omit({ id: true, createdAt: true } as never);
 
-export const insertAssetDisposalSchema = createInsertSchema(assetDisposals, {
-  disposalMethod: z.enum(["write_off", "sale", "donation", "scrap"]).default("write_off"),
-  disposalDate: z.string().min(8, "Sana kerak"),
-  disposalValue: z.number().nonnegative().default(0),
-}).omit({ id: true, createdAt: true } as never);
-
 export type AssetMaintenanceRecord = typeof assetMaintenanceRecords.$inferSelect;
 export type InsertAssetMaintenance = z.infer<typeof insertAssetMaintenanceSchema>;
-export type AssetDisposal = typeof assetDisposals.$inferSelect;
-export type InsertAssetDisposal = z.infer<typeof insertAssetDisposalSchema>;
 
 // ============================================================
-// ASSET TRANSFERS (Asosiy vosita o'tkazish)
+// ASSET TRANSFERS — canonical definition lives in ../admin-assets
 // ============================================================
 
-export const assetTransfers = pgTable("asset_transfers", {
-  id: serial("id").primaryKey(),
-  assetId: integer("asset_id").notNull().references(() => assetInventory.id, { onDelete: "cascade" }),
-  fromDepartmentId: integer("from_department_id").references(() => departments.id, { onDelete: "set null" }),
-  toDepartmentId: integer("to_department_id").references(() => departments.id, { onDelete: "set null" }),
-  fromLocation: text("from_location"),
-  toLocation: text("to_location"),
-  transferDate: varchar("transfer_date", { length: 10 }).notNull(),
-  transferredBy: varchar("transferred_by"),
-  receivedBy: varchar("received_by"),
-  reason: text("reason"),
-  status: varchar("status", { length: 20 }).notNull().default("pending"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  check("asset_transfers_status_chk", sql`${t.status} IN ('pending','approved','completed','cancelled')`),
-]);
-
-export const insertAssetTransferSchema = createInsertSchema(assetTransfers, {
-  transferDate: z.string().min(8, "Sana kerak"),
-  status: z.enum(["pending", "approved", "completed", "cancelled"]).default("pending"),
-}).omit({ id: true, createdAt: true } as never);
-
-export type AssetTransfer = typeof assetTransfers.$inferSelect;
-export type InsertAssetTransfer = z.infer<typeof insertAssetTransferSchema>;
+export { assetTransfers, insertAssetTransferSchema, AssetTransfer, InsertAssetTransfer } from "../admin-assets";
 
 // ============================================================
 // ASSET INSURANCE (Asosiy vosita sug'urtasi)

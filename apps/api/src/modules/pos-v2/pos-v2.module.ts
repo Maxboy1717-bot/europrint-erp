@@ -26,7 +26,7 @@ import { GetBarcodeHandler } from './application/queries/get-barcode.query';
 import {
   GetMovementReportHandler,
   GetEmployeeActivityHandler,
-  GetLowStockHandler,
+  GetPosV2LowStockHandler,
 } from './application/queries/get-movement-report.query';
 
 // Controllers
@@ -50,7 +50,7 @@ const QueryHandlers = [
   GetBarcodeHandler,
   GetMovementReportHandler,
   GetEmployeeActivityHandler,
-  GetLowStockHandler,
+  GetPosV2LowStockHandler,
 ];
 
 const Controllers = [

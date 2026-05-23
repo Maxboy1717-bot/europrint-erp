@@ -43,7 +43,7 @@ export class IntegrationExtendedMroRepository {
 
   findFlatRequests(status?: string): Promise<Result<Row[]>> {
     return safeCall(() => {
-      const q = db.select().from(mro_requests).orderBy(sql`${mro_requests.created_at} DESC`).limit(MAX_QUERY_LIMIT);
+      const q = db.select().from(mro_requests).orderBy(sql`${mro_requests.createdAt} DESC`).limit(MAX_QUERY_LIMIT);
       if (status) return q.where(eq(mro_requests.status, status)) as Promise<Row[]>;
       return castTo<Promise<Row[]>>(q);
     });
@@ -52,11 +52,11 @@ export class IntegrationExtendedMroRepository {
   insertFlatRequest(itemId: string | number | null, requestedQuantity: number, reason: string | null, requestedBy: string | number | null, priority: string): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(mro_requests).values({
-        item_id: itemId != null ? Number(itemId) : undefined,
-        requested_quantity: String(requestedQuantity),
-        reason,
-        requested_by: requestedBy != null ? Number(requestedBy) : undefined,
-        priority,
+        requestNumber: `REQ-${Date.now()}`,
+        itemId: itemId != null ? String(itemId) : '',
+        requestedQuantity,
+        requestedBy: requestedBy != null ? String(requestedBy) : '',
+        purpose: reason ?? undefined,
         status: 'pending',
       }).returning();
       return (rows[0] ?? {}) as Row;
@@ -65,7 +65,7 @@ export class IntegrationExtendedMroRepository {
 
   findFlatItems(category?: string): Promise<Result<Row[]>> {
     return safeCall(() => {
-      const q = db.select().from(mro_items).orderBy(sql`${mro_items.created_at} DESC`).limit(MAX_QUERY_LIMIT);
+      const q = db.select().from(mro_items).orderBy(sql`${mro_items.createdAt} DESC`).limit(MAX_QUERY_LIMIT);
       if (category) return q.where(eq(mro_items.category, category)) as Promise<Row[]>;
       return castTo<Promise<Row[]>>(q);
     });
@@ -74,14 +74,13 @@ export class IntegrationExtendedMroRepository {
   insertFlatItem(name: string, category: string, unit: string, currentStock: number, minStock: number, unitCost: number, location: string | null, supplier: string | null): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(mro_items).values({
+        itemCode: `MRO-${Date.now()}`,
         name,
         category,
         unit,
-        current_stock: String(currentStock),
-        min_stock: String(minStock),
-        unit_cost: String(unitCost),
-        location,
-        supplier,
+        currentStock,
+        minStock,
+        unitCost,
       }).returning();
       return (rows[0] ?? {}) as Row;
     });
@@ -91,10 +90,10 @@ export class IntegrationExtendedMroRepository {
     return safeCall(async () => {
       const [totalItems, lowStock, pendingReqs, activeEq, totalVal] = await Promise.all([
         db.select({ count: sql<number>`COUNT(*)::int` }).from(mro_items),
-        db.select({ count: sql<number>`COUNT(*)::int` }).from(mro_items).where(sql`${mro_items.current_stock} <= ${mro_items.min_stock}`),
+        db.select({ count: sql<number>`COUNT(*)::int` }).from(mro_items).where(sql`${mro_items.currentStock} <= ${mro_items.minStock}`),
         db.select({ count: sql<number>`COUNT(*)::int` }).from(mro_requests).where(eq(mro_requests.status, 'pending')),
         db.select({ count: sql<number>`COUNT(*)::int` }).from(mro_equipment).where(eq(mro_equipment.status, 'active')),
-        db.select({ val: sql<string>`COALESCE(SUM(${mro_items.unit_cost} * ${mro_items.current_stock}), 0)` }).from(mro_items),
+        db.select({ val: sql<string>`COALESCE(SUM(${mro_items.unitCost} * ${mro_items.currentStock}), 0)` }).from(mro_items),
       ]);
       return {
         total_items: totalItems[0]?.count ?? 0,

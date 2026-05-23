@@ -23,64 +23,18 @@ export {
   mro_canteen_logs,
 } from './schema-business-a-2-mro';
 
-export const strategic_categories = pgTable('strategic_categories', {
-  id:          serial('id').primaryKey(),
-  name:        text('name').notNull(),
-  description: text('description'),
-  color:       varchar('color', { length: 20 }).default('#3B82F6'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// ─── Director: Strategic, OKR ─────────────────────────────────────────────────
+// strategicCategories, strategicTasks, strategicMilestones, okrObjectives, okrKeyResults
+// → all defined in lib/db (strategic-ext-schema.ts)
+export { strategicCategories  as strategic_categories }  from '@workspace/db';
+export { strategicTasks       as strategic_tasks }        from '@workspace/db';
+export { strategicMilestones  as strategic_milestones }   from '@workspace/db';
+export { okrObjectives        as okr_objectives }         from '@workspace/db';
+export { okrKeyResults        as okr_key_results }        from '@workspace/db';
 
-export const strategic_tasks = pgTable('strategic_tasks', {
-  id:           serial('id').primaryKey(),
-  title:        text('title').notNull(),
-  category_id:  integer('category_id'),
-  assignee_id:  integer('assigned_user_id'),
-  created_by:   integer('created_by'),
-  due_date:     varchar('target_date', { length: 10 }),
-  priority:     text('priority').default('medium'),
-  description:  text('description'),
-  status:       text('status').default('planned'),
-  progress:     integer('progress_percent').default(0),
-  created_at:   timestamp('created_at').defaultNow(),
-  updated_at:   timestamp('updated_at').defaultNow(),
-});
-
-export const strategic_milestones = pgTable('strategic_milestones', {
-  id:           serial('id').primaryKey(),
-  task_id:      integer('task_id').notNull(),
-  title:        text('title').notNull(),
-  due_date:     date('due_date'),
-  description:  text('description'),
-  status:       text('status').default('pending'),
-  updated_at:   timestamp('updated_at').defaultNow(),
-});
-
-export const okr_objectives = pgTable('okr_objectives', {
-  id:          serial('id').primaryKey(),
-  title:       text('title').notNull(),
-  type:        text('type').default('company'),
-  year:        integer('year'),
-  quarter:     text('quarter'),
-  description: text('description'),
-  owner_id:    integer('owner_id'),
-  status:      text('status').default('active'),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
-
-export const okr_key_results = pgTable('okr_key_results', {
-  id:            serial('id').primaryKey(),
-  objective_id:  integer('objective_id').notNull(),
-  title:         text('title').notNull(),
-  target_value:  numeric('target_value', { precision: 15, scale: 2 }),
-  current_value: numeric('current_value', { precision: 15, scale: 2 }),
-  unit:          text('unit'),
-  owner_id:      integer('owner_id'),
-  status:        text('status').default('active'),
-  created_at:    timestamp('created_at').defaultNow(),
-  updated_at:    timestamp('updated_at').defaultNow(),
-});
+// TODO: Move to lib/db/src/schema/
+// dokla — NOT yet in lib/db
+// rasporyazhenie — NOT yet in lib/db
 
 export const dokla = pgTable('dokla', {
   id:            serial('id').primaryKey(),
@@ -111,7 +65,13 @@ export const rasporyazhenie = pgTable('rasporyazhenie', {
   updated_at:   timestamp('updated_at').defaultNow(),
 });
 
-// ─── Core: Seven Functions & RACI ────────────────────────────────────────────
+// ─── Core: Seven Functions & RACI ─────────────────────────────────────────────
+// TODO: Move to lib/db/src/schema/
+// seven_functions — NOT yet in lib/db
+// seven_function_kpis — NOT yet in lib/db
+// raci_stages — NOT yet in lib/db
+// crisis_records — NOT yet in lib/db
+// risk_assessments — NOT yet in lib/db
 
 export const seven_functions = pgTable('seven_functions', {
   id:          serial('id').primaryKey(),
@@ -137,25 +97,9 @@ export const seven_function_kpis = pgTable('seven_function_kpis', {
   updated_at:     timestamp('updated_at').defaultNow(),
 });
 
-export const raci_tasks = pgTable('raci_tasks', {
-  id:             serial('id').primaryKey(),
-  title:          text('title').notNull(),
-  description:    text('description'),
-  responsible_id: integer('responsible_id'),
-  accountable_id: integer('accountable_id'),
-  created_by:     integer('created_by'),
-  deadline:       date('deadline'),
-  status:         text('status').default('pending'),
-  created_at:     timestamp('created_at').defaultNow(),
-  updated_at:     timestamp('updated_at').defaultNow(),
-});
-
-export const raci_assignments = pgTable('raci_assignments', {
-  id:          serial('id').primaryKey(),
-  task_id:     integer('task_id').notNull(),
-  employee_id: integer('employee_id').notNull(),
-  role:        text('role'),
-});
+// raciTasks, raciAssignments → lib/db (strategic-ext-schema.ts)
+export { raciTasks       as raci_tasks }       from '@workspace/db';
+export { raciAssignments as raci_assignments } from '@workspace/db';
 
 export const raci_stages = pgTable('raci_stages', {
   id:          serial('id').primaryKey(),

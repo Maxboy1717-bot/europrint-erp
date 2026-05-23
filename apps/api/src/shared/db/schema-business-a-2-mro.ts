@@ -8,7 +8,12 @@ import {
   pgTable, serial, text, integer, timestamp, numeric, date,
 } from 'drizzle-orm/pg-core';
 
-// ─── MRO (Maintenance, Repair & Operations) ──────────────────────────────────
+// ─── MRO (Maintenance, Repair & Operations) ───────────────────────────────────
+// TODO: Move to lib/db/src/schema/
+// mro_equipment — NOT yet in lib/db
+// mro_work_orders — NOT yet in lib/db
+// mro_pm_schedules — NOT yet in lib/db
+// mro_canteen_logs — NOT yet in lib/db
 
 export const mro_equipment = pgTable('mro_equipment', {
   id:                    serial('id').primaryKey(),
@@ -24,35 +29,9 @@ export const mro_equipment = pgTable('mro_equipment', {
   updated_at:            timestamp('updated_at').defaultNow(),
 });
 
-export const mro_items = pgTable('mro_items', {
-  id:            serial('id').primaryKey(),
-  name:          text('name').notNull(),
-  category:      text('category'),
-  unit:          text('unit'),
-  current_stock: numeric('current_stock', { precision: 15, scale: 3 }),
-  min_stock:     numeric('min_stock', { precision: 15, scale: 3 }),
-  unit_cost:     numeric('unit_cost', { precision: 12, scale: 2 }),
-  location:      text('location'),
-  supplier:      text('supplier'),
-  created_at:    timestamp('created_at').defaultNow(),
-  updated_at:    timestamp('updated_at').defaultNow(),
-});
-
-export const mro_requests = pgTable('mro_requests', {
-  id:                 serial('id').primaryKey(),
-  item_id:            integer('item_id'),
-  requested_quantity: numeric('requested_quantity', { precision: 15, scale: 3 }),
-  reason:             text('reason'),
-  requested_by:       integer('requested_by'),
-  priority:           text('priority').default('normal'),
-  status:             text('status').default('pending'),
-  approved_by:        integer('approved_by'),
-  approved_at:        timestamp('approved_at'),
-  fulfillment_date:   date('fulfillment_date'),
-  notes:              text('notes'),
-  created_at:         timestamp('created_at').defaultNow(),
-  updated_at:         timestamp('updated_at').defaultNow(),
-});
+// mroItems, mroRequests → lib/db (mm-mro.ts)
+export { mroItems    as mro_items }    from '@workspace/db';
+export { mroRequests as mro_requests } from '@workspace/db';
 
 export const mro_work_orders = pgTable('mro_work_orders', {
   id:            serial('id').primaryKey(),
@@ -70,34 +49,11 @@ export const mro_work_orders = pgTable('mro_work_orders', {
   updated_at:    timestamp('updated_at').defaultNow(),
 });
 
-// ─── MRO Facility Management ──────────────────────────────────────────────────
-
-export const mro_facilities = pgTable('mro_facilities', {
-  id:                   serial('id').primaryKey(),
-  facility_code:        text('facility_code').notNull(),
-  name:                 text('name').notNull(),
-  facility_type:        text('facility_type').default('office'), // office | production | warehouse | canteen | outdoor
-  total_area_sqm:       numeric('total_area_sqm', { precision: 10, scale: 2 }),
-  items_count:          integer('items_count').default(0),
-  responsible_employee: text('responsible_employee'),
-  status:               text('status').default('active'), // active | renovation | closed
-  created_at:           timestamp('created_at').defaultNow(),
-  updated_at:           timestamp('updated_at').defaultNow(),
-});
-
-export const mro_cleaning_schedules = pgTable('mro_cleaning_schedules', {
-  id:               serial('id').primaryKey(),
-  zone_name:        text('zone_name').notNull(),
-  task_type:        text('task_type').default('daily'), // daily | weekly | monthly | deep
-  frequency:        text('frequency'),
-  last_done_at:     timestamp('last_done_at'),
-  next_due_at:      timestamp('next_due_at').notNull(),
-  assigned_to_name: text('assigned_to_name'),
-  status:           text('status').default('pending'), // pending | in_progress | done | overdue
-  facility_id:      integer('facility_id'),
-  created_at:       timestamp('created_at').defaultNow(),
-  updated_at:       timestamp('updated_at').defaultNow(),
-});
+// ─── MRO Facility Management ───────────────────────────────────────────────────
+// mroFacilities, mroCleaningSchedules, mroUtilityReadings → lib/db (mm-logistics.ts)
+export { mroFacilities        as mro_facilities }         from '@workspace/db';
+export { mroCleaningSchedules as mro_cleaning_schedules } from '@workspace/db';
+export { mroUtilityReadings   as mro_utility_readings }   from '@workspace/db';
 
 export const mro_pm_schedules = pgTable('mro_pm_schedules', {
   id:                        serial('id').primaryKey(),
@@ -112,22 +68,6 @@ export const mro_pm_schedules = pgTable('mro_pm_schedules', {
   assigned_tech_name:        text('assigned_tech_name'),
   created_at:                timestamp('created_at').defaultNow(),
   updated_at:                timestamp('updated_at').defaultNow(),
-});
-
-export const mro_utility_readings = pgTable('mro_utility_readings', {
-  id:               serial('id').primaryKey(),
-  utility_type:     text('utility_type').notNull(), // electricity | water | gas | steam
-  meter_code:       text('meter_code').notNull(),
-  facility_name:    text('facility_name'),
-  current_reading:  numeric('current_reading', { precision: 15, scale: 3 }).notNull(),
-  previous_reading: numeric('previous_reading', { precision: 15, scale: 3 }).notNull(),
-  consumption:      numeric('consumption', { precision: 15, scale: 3 }).notNull(),
-  unit:             text('unit').default('kWh'),
-  unit_cost_uzs:    numeric('unit_cost_uzs', { precision: 12, scale: 2 }).default('0'),
-  total_cost_uzs:   numeric('total_cost_uzs', { precision: 15, scale: 2 }).default('0'),
-  reading_date:     date('reading_date').notNull(),
-  created_at:       timestamp('created_at').defaultNow(),
-  updated_at:       timestamp('updated_at').defaultNow(),
 });
 
 export const mro_canteen_logs = pgTable('mro_canteen_logs', {

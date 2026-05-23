@@ -27,7 +27,7 @@ export { GetBarcodeQuery } from './application/queries/get-barcode.query';
 export {
   GetMovementReportQuery,
   GetEmployeeActivityQuery,
-  GetLowStockQuery,
+  GetPosV2LowStockQuery,
 } from './application/queries/get-movement-report.query';
 
 // DTOs

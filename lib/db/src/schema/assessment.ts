@@ -31,21 +31,6 @@ export const employee360Assessments = pgTable("employee_360_assessments", {
   check("employee_360_assessments_avg_rating_chk", sql`${t.averageRating} IS NULL OR (${t.averageRating} >= 0 AND ${t.averageRating} <= 5)`),
 ]);
 
-export const employee360Responses = pgTable("employee_360_responses", {
-  id: serial("id").primaryKey(),
-  assessmentId: integer("assessment_id").references(() => employee360Assessments.id, { onDelete: "cascade" }).notNull(),
-  respondentId: integer("respondent_id").references(() => employees.id, { onDelete: "set null" }),
-  respondentType: varchar("respondent_type", { length: 20 }), // self, manager, peer, subordinate
-  questionCategory: varchar("question_category", { length: 50 }),
-  questionText: text("question_text"),
-  rating: decimal("rating", { precision: 3, scale: 1 }),
-  comments: text("comments"),
-  isAnonymous: boolean("is_anonymous").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (t) => [
-  check("employee_360_responses_type_chk", sql`${t.respondentType} IS NULL OR ${t.respondentType} IN ('self','manager','peer','subordinate')`),
-  check("employee_360_responses_rating_chk", sql`${t.rating} IS NULL OR (${t.rating} >= 0 AND ${t.rating} <= 5)`),
-]);
 
 export const employeeStrengthsWeaknesses = pgTable("employee_strengths_weaknesses", {
   id: serial("id").primaryKey(),
@@ -128,9 +113,6 @@ export const insertEmployee360AssessmentSchema = createInsertSchema(employee360A
 export type InsertEmployee360Assessment = z.infer<typeof insertEmployee360AssessmentSchema>;
 export type Employee360Assessment = typeof employee360Assessments.$inferSelect;
 
-export const insertEmployee360ResponseSchema = createInsertSchema(employee360Responses).omit({ id: true, createdAt: true } as never);
-export type InsertEmployee360Response = z.infer<typeof insertEmployee360ResponseSchema>;
-export type Employee360Response = typeof employee360Responses.$inferSelect;
 
 export const insertEmployeeStrengthsWeaknessesSchema = createInsertSchema(employeeStrengthsWeaknesses).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type InsertEmployeeStrengthsWeaknesses = z.infer<typeof insertEmployeeStrengthsWeaknessesSchema>;

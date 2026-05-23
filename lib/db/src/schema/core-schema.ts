@@ -5,11 +5,10 @@
 
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, real, index, check } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, real, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { courses } from "./lms-schema";
-import { orders, workCenters } from "./pp-schema";
 
 export * from "./core/core-users";
 export * from "./core/core-ai";
@@ -21,23 +20,6 @@ import { users, admins, departments, positions } from "./core/core-users";
 
 // ========== SETTINGS & SUPPORT ==========
 
-export const supportMessages = pgTable("support_messages", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  message: text("message").notNull(),
-  response: text("response"),
-  status: varchar("status", { length: 20 }).notNull().default("pending"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  respondedAt: timestamp("responded_at"),
-});
-
-export const insertSupportMessageSchema = createInsertSchema(supportMessages, {
-  message: z.string().min(1),
-  response: z.string().optional(),
-}).omit({ id: true, createdAt: true } as never);
-
-export type SupportMessage = typeof supportMessages.$inferSelect;
-export type InsertSupportMessage = z.infer<typeof insertSupportMessageSchema>;
 
 export const contactSettings = pgTable("contact_settings", {
   id: serial("id").primaryKey(),
@@ -116,26 +98,6 @@ export const calendarEvents = pgTable("calendar_events", {
   deletedBy: varchar("deleted_by"),
 });
 
-export const eventParticipants = pgTable("event_participants", {
-  id: serial("id").primaryKey(),
-  eventId: varchar("event_id").notNull().references(() => calendarEvents.id, { onDelete: "cascade" }),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  status: varchar("status", { length: 20 }).notNull().default("registered"),
-  registeredAt: timestamp("registered_at").notNull().defaultNow(),
-});
-
-export const roomBookings = pgTable("room_bookings", {
-  id: serial("id").primaryKey(),
-  roomId: varchar("room_id").notNull().references(() => meetingRooms.id, { onDelete: "cascade" }),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  title: text("title").notNull(),
-  description: text("description"),
-  date: varchar("date", { length: 10 }).notNull(),
-  startTime: varchar("start_time", { length: 8 }).notNull(),
-  endTime: varchar("end_time", { length: 8 }).notNull(),
-  status: varchar("status", { length: 20 }).notNull().default("confirmed"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
 
 export const reminders = pgTable("reminders", {
   id: serial("id").primaryKey(),
@@ -154,18 +116,12 @@ export const reminders = pgTable("reminders", {
 
 export const insertMeetingRoomSchema = createInsertSchema(meetingRooms).omit({ id: true, createdAt: true } as never);
 export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit({ id: true, createdAt: true } as never);
-export const insertEventParticipantSchema = createInsertSchema(eventParticipants).omit({ id: true, registeredAt: true } as never);
-export const insertRoomBookingSchema = createInsertSchema(roomBookings).omit({ id: true, createdAt: true } as never);
 export const insertReminderSchema = createInsertSchema(reminders).omit({ id: true, createdAt: true } as never);
 
 export type MeetingRoom = typeof meetingRooms.$inferSelect;
 export type InsertMeetingRoom = z.infer<typeof insertMeetingRoomSchema>;
 export type CalendarEvent = typeof calendarEvents.$inferSelect;
 export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;
-export type EventParticipant = typeof eventParticipants.$inferSelect;
-export type InsertEventParticipant = z.infer<typeof insertEventParticipantSchema>;
-export type RoomBooking = typeof roomBookings.$inferSelect;
-export type InsertRoomBooking = z.infer<typeof insertRoomBookingSchema>;
 export type Reminder = typeof reminders.$inferSelect;
 export type InsertReminder = z.infer<typeof insertReminderSchema>;
 
@@ -263,83 +219,7 @@ export type InsertApplicationResponse = z.infer<typeof insertApplicationResponse
 
 // ========== ANALYTICS & ROLES ==========
 
-export const kpiResults = pgTable("kpi_results", {
-  id: serial("id").primaryKey(),
-  kpiName: varchar("kpi_name", { length: 50 }).notNull(),
-  calculationDate: varchar("calculation_date", { length: 10 }).notNull(),
-  periodType: varchar("period_type", { length: 20 }).notNull(),
-  workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: 'set null' }),
-  departmentId: integer("department_id").references(() => departments.id, { onDelete: 'set null' }),
-  targetValue: numericMoney("target_value"),
-  actualValue: numericMoney("actual_value").notNull(),
-  variance: numericMoney("variance"),
-  variancePercent: numericMoney("variance_percent"),
-  status: varchar("status", { length: 20 }).notNull().default("normal"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  check("kpi_results_status_chk", sql`${t.status} IN ('below_target','normal','above_target')`),
-  check("kpi_results_period_type_chk", sql`${t.periodType} IN ('daily','weekly','monthly')`),
-]);
-
-export const insertKpiResultSchema = createInsertSchema(kpiResults, {
-  kpiName: z.string().min(1, "KPI nomi talab qilinadi"),
-  calculationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo'lishi kerak"),
-  periodType: z.enum(["daily", "weekly", "monthly"]),
-  actualValue: z.number(),
-  status: z.enum(["below_target", "normal", "above_target"]),
-}).omit({ id: true, createdAt: true } as never);
-
-export type KpiResult = typeof kpiResults.$inferSelect;
-export type InsertKpiResult = z.infer<typeof insertKpiResultSchema>;
-
-export const erpRoles = pgTable("erp_roles", {
-  id: serial("id").primaryKey(),
-  roleName: varchar("role_name", { length: 50 }).notNull().unique(),
-  roleNameRu: varchar("role_name_ru", { length: 50 }),
-  description: text("description"),
-  permissions: text("permissions").array(),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const insertErpRoleSchema = createInsertSchema(erpRoles, {
-  roleName: z.string().min(2, "Rol nomi kamida 2 ta belgidan iborat bo'lishi kerak"),
-}).omit({ id: true, createdAt: true } as never);
-
-export type ErpRole = typeof erpRoles.$inferSelect;
-export type InsertErpRole = z.infer<typeof insertErpRoleSchema>;
-
 // ========== DAILY REPORTS & COMPANY PLANS ==========
-
-export const dailyReports = pgTable("daily_reports", {
-  id: serial("id").primaryKey(),
-  reportDate: varchar("report_date", { length: 10 }).notNull(),
-  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
-  shift: varchar("shift", { length: 20 }),
-  workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: 'set null' }),
-  productionOrderId: varchar("production_order_id").references(() => orders.id, { onDelete: 'set null' }),
-  planQty: integer("plan_qty").notNull().default(0),
-  factQty: integer("fact_qty").notNull().default(0),
-  scrapQty: integer("scrap_qty").notNull().default(0),
-  downtimeMinutes: integer("downtime_minutes").notNull().default(0),
-  downtimeReasonCode: varchar("downtime_reason_code", { length: 50 }),
-  comment: text("comment"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by"),
-});
-
-export const insertDailyReportSchema = createInsertSchema(dailyReports, {
-  reportDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo'lishi kerak"),
-  planQty: z.number().int().nonnegative("Reja miqdori 0 yoki katta bo'lishi kerak"),
-  factQty: z.number().int().nonnegative("Fakt miqdori 0 yoki katta bo'lishi kerak"),
-  scrapQty: z.number().int().nonnegative("Brak miqdori 0 yoki katta bo'lishi kerak"),
-  downtimeMinutes: z.number().int().nonnegative("To'xtash vaqti 0 yoki katta bo'lishi kerak"),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-export type DailyReport = typeof dailyReports.$inferSelect;
-export type InsertDailyReport = z.infer<typeof insertDailyReportSchema>;
 
 export const companyGoals = pgTable("company_goals", {
   id: serial("id").primaryKey(),

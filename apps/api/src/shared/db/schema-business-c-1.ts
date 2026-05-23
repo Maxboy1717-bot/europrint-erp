@@ -8,6 +8,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 // ─── LMS Extended ─────────────────────────────────────────────────────────────
+// lms_tests / lms_questions: NOT in lib/db barrel — kept as local stubs.
 
 export const lms_tests = pgTable('lms_tests', {
   id:          serial('id').primaryKey(),
@@ -32,6 +33,7 @@ export const lms_questions = pgTable('lms_questions', {
 });
 
 // ─── AI Interview ─────────────────────────────────────────────────────────────
+// hr_interview_sessions: used with snake_case column access in ai-interview.cron.ts — kept as local stub.
 
 export const hr_interview_sessions = pgTable('hr_interview_sessions', {
   id:                           serial('id').primaryKey(),
@@ -65,6 +67,8 @@ export const hr_interview_sessions = pgTable('hr_interview_sessions', {
 });
 
 // ─── Gamification ─────────────────────────────────────────────────────────────
+// employee_badges / gamification_points / gamification_totals: used with snake_case
+// column access in gamification.repository.ts — kept as local stubs.
 
 export const employee_badges = pgTable('employee_badges', {
   id:          serial('id').primaryKey(),
@@ -100,6 +104,7 @@ export const gamification_totals = pgTable('gamification_totals', {
 });
 
 // ─── Position Folders & Permissions ──────────────────────────────────────────
+// position_folders: NOT in lib/db barrel — kept as local stub.
 
 export const position_folders = pgTable('position_folders', {
   id:            serial('id').primaryKey(),
@@ -116,6 +121,8 @@ export const position_folders = pgTable('position_folders', {
 });
 
 // ─── Papka orders ─────────────────────────────────────────────────────────────
+// papka_orders: used as messaging table (from_user_id/to_user_ids/subject/body/files).
+// Canonical papkaOrders in lib/db is the production order master (different schema) — kept as local stub.
 
 export const papka_orders = pgTable('papka_orders', {
   id:           serial('id').primaryKey(),
@@ -130,18 +137,14 @@ export const papka_orders = pgTable('papka_orders', {
 });
 
 // ─── Analytics & QC ─────────────────────────────────────────────────────────
-
-export const qc_root_causes = pgTable('qc_root_causes', {
-  id:          serial('id').primaryKey(),
-  code:        text('code').unique(),
-  name:        text('name'),
-  category:    text('category'),
-  description: text('description'),
-  is_active:   boolean('is_active').default(true),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// [dedup] qc_root_causes: no Drizzle column access anywhere (only in raw SQL migrations).
+// → re-exported from canonical qcRootCauses in @workspace/db (qc-schema → index).
+export { qcRootCauses as qc_root_causes } from '@workspace/db';
 
 // ─── HR: AI Interview v2 ──────────────────────────────────────────────────────
+// ai_report_categories / ai_report_definitions: only referenced in raw SQL migrations — kept as local stubs
+// because canonical uses camelCase and queries-sd.ts accesses ai_report_subscriptions.user_id (snake_case).
+// Note: ai_report_subscriptions.user_id used in queries-sd.ts — kept as local stub.
 
 export const ai_report_categories = pgTable('ai_report_categories', {
   id:          serial('id').primaryKey(),
@@ -174,6 +177,8 @@ export const ai_report_subscriptions = pgTable('ai_report_subscriptions', {
 });
 
 // ─── Assets ──────────────────────────────────────────────────────────────────
+// asset_items: queries-hr-assets.ts accesses it via asset_items_ext alias with snake_case columns
+// (serial_number, purchase_date, department_id etc.) — kept as local stub to avoid breakage.
 
 export const asset_items = pgTable('asset_items', {
   id:              serial('id').primaryKey(),
@@ -192,19 +197,14 @@ export const asset_items = pgTable('asset_items', {
 });
 
 // ─── Questionnaires ───────────────────────────────────────────────────────────
-
-export const questionnaire_questions = pgTable('questionnaire_questions', {
-  id:           serial('id').primaryKey(),
-  template_id:  integer('template_id'),
-  text:         text('text'),
-  type:         text('type').default('text'),
-  options:      jsonb('options'),
-  order_index:  integer('order_index').default(0),
-  is_required:  boolean('is_required').default(false),
-  created_at:   timestamp('created_at').defaultNow(),
-});
+// questionnaire_questions: used in queries-questionnaire.ts with .id column access.
+// Both stub and canonical share .id — but to keep safe, re-export from canonical
+// (queries-questionnaire.ts only uses .id which exists in both).
+// [2026-05-22 dedup] re-exported from canonical definition in @workspace/db/schema/recruitment.
+export { questionnaireQuestions as questionnaire_questions } from '@workspace/db/schema/recruitment';
 
 // ─── MES ─────────────────────────────────────────────────────────────────────
+// mes_downtime_reasons: NOT in lib/db barrel — kept as local stub.
 
 export const mes_downtime_reasons = pgTable('mes_downtime_reasons', {
   id:          serial('id').primaryKey(),
@@ -217,6 +217,8 @@ export const mes_downtime_reasons = pgTable('mes_downtime_reasons', {
 });
 
 // ─── Purchase Invoices ────────────────────────────────────────────────────────
+// purchase_invoices: used with snake_case columns (vendor_id, payment_status, due_date etc.)
+// in finance-ap.repository.ts and queries-mm-goods.ts — kept as local stub.
 
 export const purchase_invoices = pgTable('purchase_invoices', {
   id:             serial('id').primaryKey(),

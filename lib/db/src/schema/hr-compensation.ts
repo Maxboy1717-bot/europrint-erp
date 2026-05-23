@@ -3,42 +3,19 @@
  * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
  */
 
-import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index, check } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, serial, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { Admin, Position, admins, departments, positions, users } from "./core-schema";
-import { cameraZones, cameras } from "./iot-schema";
-import { Mentor, courses, progress, skills } from "./lms-schema";
-import { workCenters } from "./pp-schema";
+import { admins, users } from "./core-schema";
 import { certificates, employeePassports, employeeBankAccounts, employeeEmergencyContacts, employmentContracts, salaryHistory, cashAdvances, bonusPayments, employeeFines, overtimePayments, leaveRequests, sickLeaves, businessTrips, questionnaireTemplates, questionnaireQuestions, questionnaireResponses, jobTemplates, vacancies, candidates, interviews, insertQuestionnaireTemplateSchema, insertQuestionnaireQuestionSchema, insertQuestionnaireResponseSchema, insertJobTemplateSchema, insertVacancySchema, insertCandidateSchema, insertInterviewSchema } from "./hr-recruitment";
 import { positionRequiredCourses, disciplineRecords, attendance } from "./hr-personal-core";
 
-export const abcAnalysis = pgTable("abc_analysis", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
-  grade: varchar("grade", { length: 1 }).notNull().default("C"), // A, B, C
-  score: integer("score").notNull().default(3), // 5=A, 4=B, 3=C
-  performanceRate: integer("performance_rate").default(0), // 0-200% (100+ is A)
-  attendanceRate: integer("attendance_rate").default(0), // 0-100%
-  punctualityRate: integer("punctuality_rate").default(0), // 0-100% (kech qolmaslik)
-  disciplineScore: integer("discipline_score").default(0), // -10 to +10 (jarima va mukofotlar asosida)
-  courseCompletionRate: integer("course_completion_rate").default(0), // 0-100%
-  testPassRate: integer("test_pass_rate").default(0), // 0-100%
-  taskCompletionRate: integer("task_completion_rate").default(0), // 0-100% (topshiriqlar bajarish)
-  initiativeCount: integer("initiative_count").default(0), // Takliflar soni
-  loyaltyScore: integer("loyalty_score").default(0), // 0-100% (kompaniyaga sodiqlik)
-  benefits: jsonb("benefits"), // ["loan", "trip", "salary_increase", "bonus"]
-  notes: text("notes"), // Qo'shimcha izohlar
-  notesRu: text("notes_ru"),
-  lastCalculated: timestamp("last_calculated").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-}, (t) => [
-  check("abc_analysis_grade_chk", sql`${t.grade} IN ('A','B','C')`),
-  check("abc_analysis_score_chk", sql`${t.score} >= 1 AND ${t.score} <= 5`),
-  check("abc_analysis_rates_chk", sql`${t.attendanceRate} >= 0 AND ${t.attendanceRate} <= 200 AND ${t.punctualityRate} >= 0 AND ${t.punctualityRate} <= 100`),
-]);
+// Re-exports from canonical files
+export { abcAnalysis, insertAbcAnalysisSchema } from "./attendance";
+export type { AbcAnalysis, InsertAbcAnalysis } from "./attendance";
+export { employeeFiles, insertEmployeeFileSchema } from "./employees";
+export type { EmployeeFile, InsertEmployeeFile } from "./employees";
 
 
 // Position Required Courses schemas
@@ -75,44 +52,6 @@ export const insertAttendanceSchema = createInsertSchema(attendance).omit({
 export type Attendance = typeof attendance.$inferSelect;
 
 export type InsertAttendance = z.infer<typeof insertAttendanceSchema>;
-
-
-// ABC Analysis schemas
-export const insertAbcAnalysisSchema = createInsertSchema(abcAnalysis).omit({
-  id: true,
-  lastCalculated: true,
-  updatedAt: true,
-} as never);
-
-
-export type AbcAnalysis = typeof abcAnalysis.$inferSelect;
-
-export type InsertAbcAnalysis = z.infer<typeof insertAbcAnalysisSchema>;
-
-
-// Employee Files (Xodim fayllari - papkasi)
-export const employeeFiles = pgTable("employee_files", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'set null' }),
-  fileName: text("file_name").notNull(),
-  filePath: text("file_path").notNull(), // Object storage path
-  fileType: varchar("file_type", { length: 50 }), // PDF, DOCX, XLSX, JPG, etc.
-  fileSize: integer("file_size"), // bytes
-  description: text("description"), // Fayl haqida ma'lumot
-  uploadedBy: varchar("uploaded_by").references(() => admins.id, { onDelete: "set null" }), // Kim yukladi
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-
-export const insertEmployeeFileSchema = createInsertSchema(employeeFiles).omit({
-  id: true,
-  createdAt: true,
-} as never);
-
-
-export type EmployeeFile = typeof employeeFiles.$inferSelect;
-
-export type InsertEmployeeFile = z.infer<typeof insertEmployeeFileSchema>;
 
 
 // Employee Ideas/Suggestions (Xodim g'oyalari/takliflari)
@@ -179,50 +118,6 @@ export type InsertEmployeeIdea = z.infer<typeof insertEmployeeIdeaSchema>;
 
 
 // ==================== ADAPTATSINIYA BO'LIMI ====================
-
-// Adaptatsiya dasturlari (1 kun, 1 hafta, 1 oy, 3 oy rejalar)
-export const adaptationPrograms = pgTable("adaptation_programs", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(), // Dastur nomi (UZ)
-  titleRu: text("title_ru").notNull(), // Dastur nomi (RU)
-  description: text("description"), // Tavsif (UZ)
-  descriptionRu: text("description_ru"), // Tavsif (RU)
-  positionId: integer("position_id").references(() => positions.id, { onDelete: "set null" }), // Qaysi lavozim uchun (null = barcha lavozimlar)
-  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }), // Qaysi bo'lim uchun (null = barcha bo'limlar)
-  duration: integer("duration").notNull(), // Davomiyligi (kunlarda)
-  durationType: varchar("duration_type", { length: 20 }).notNull(), // day, week, month
-  tasks: jsonb("tasks").notNull(), // [{title, description, day, isCompleted}]
-  checkpoints: jsonb("checkpoints"), // [{day, title, description}] - muhim tekshirish nuqtalari
-  mentorRequired: boolean("mentor_required").notNull().default(true),
-  status: varchar("status", { length: 20 }).notNull().default("active"), // active, archived
-  createdBy: varchar("created_by").references(() => admins.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by"),
-}, (t) => [
-  check("adaptation_programs_v2_status_chk", sql`${t.status} IN ('active','archived')`),
-  check("adaptation_programs_v2_type_chk", sql`${t.durationType} IN ('day','week','month')`),
-  check("adaptation_programs_v2_duration_chk", sql`${t.duration} > 0`),
-]);
-
-
-export const insertAdaptationProgramSchema = createInsertSchema(adaptationPrograms, {
-  title: z.string().min(3, "Sarlavha kamida 3 ta belgidan iborat bo'lishi kerak"),
-  titleRu: z.string().min(3, "Sarlavha kamida 3 ta belgidan iborat bo'lishi kerak"),
-  duration: z.number().min(1, "Davomiylik kamida 1 kun bo'lishi kerak"),
-  durationType: z.enum(["day", "week", "month"]),
-  status: z.enum(["active", "archived"]).default("active"),
-}).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-} as never);
-
-
-export type AdaptationProgram = typeof adaptationPrograms.$inferSelect;
-
-export type InsertAdaptationProgram = z.infer<typeof insertAdaptationProgramSchema>;
-
-
-// Adaptatsiya yozuvlari (xodimning adaptatsiya jarayoni)
+// Re-export from canonical adaptation.ts
+export { adaptationPrograms, insertAdaptationProgramSchema } from "./adaptation";
+export type { AdaptationProgram, InsertAdaptationProgram } from "./adaptation";
