@@ -63,21 +63,20 @@ export class GamificationController {
   @ApiOperation({ summary: 'Get my badges' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('my/badges')
-  async getMyBadges(@Query('employeeId') employeeId?: string): Promise<unknown[]> {
-    const empId = employeeId ? parseInt(employeeId) : null;
-    return empId
-      ? this.svc.getEmployeeBadges(empId).then(r => (r.ok && Array.isArray(r.data) ? r.data : []))
-      : [];
+  async getMyBadges(@Query('employeeId') employeeId?: string) {
+    const empId = employeeId ? parseInt(employeeId, 10) : null;
+    if (!empId || isNaN(empId)) return [];
+    const r = await this.svc.getEmployeeBadges(empId);
+    return r.ok && Array.isArray(r.data) ? r.data : [];
   }
 
   @ApiOperation({ summary: 'Get my points' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('my/points')
-  getMyPoints(@Query('employeeId') employeeId?: string) {
-    const empId = employeeId ? parseInt(employeeId) : null;
-    return empId
-      ? this.svc.getEmployeePoints(empId)
-      : { totals: { total_points: 0, monthly_points: 0, quarterly_points: 0 }, history: [] as { id: number; points: number; event_type: string; description: string; created_at: string }[] };
+  async getMyPoints(@Query('employeeId') employeeId?: string) {
+    const empId = employeeId ? parseInt(employeeId, 10) : null;
+    if (!empId || isNaN(empId)) return { totals: { total_points: 0, monthly_points: 0, quarterly_points: 0 }, history: [] };
+    return this.svc.getEmployeePoints(empId);
   }
 
   @ApiOperation({ summary: 'Badge catalog' })

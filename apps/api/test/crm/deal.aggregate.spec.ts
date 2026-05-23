@@ -14,6 +14,12 @@ function status(value: 'qualification' | 'proposal' | 'negotiation' | 'won' | 'l
   return r.data;
 }
 
+function makeMoney(amount: number, currency: string): Money {
+  const r = Money.of(amount, currency);
+  if (!r.ok) throw new Error(`fixture: bad money ${amount} ${currency}`);
+  return r.data;
+}
+
 function makeDealProps(overrides: Partial<DealCreateProps> = {}): DealCreateProps {
   const f = dealFactory();
   return {
@@ -21,7 +27,7 @@ function makeDealProps(overrides: Partial<DealCreateProps> = {}): DealCreateProp
     companyId: f.companyId,
     dealNumber: `D-${f.id}`,
     status: status('qualification'),
-    totalAmount: Money.of(f.amount, f.currency),
+    totalAmount: makeMoney(f.amount, f.currency),
     currency: f.currency,
     assignedTo: 11,
     createdBy: f.createdBy,
@@ -104,7 +110,7 @@ describe('Deal aggregate', () => {
     });
 
     it('updates totalAmount when actualAmount is provided on close', () => {
-      const d = Deal.create(makeDealProps({ status: status('proposal'), totalAmount: Money.of(1_000, 'UZS') }));
+      const d = Deal.create(makeDealProps({ status: status('proposal'), totalAmount: makeMoney(1_000, 'UZS') }));
       const r = d.markAsWon(2_500_000);
       expect(r.ok).toBe(true);
       expect(d.getTotalAmount()).toBe(2_500_000);
@@ -173,12 +179,12 @@ describe('Deal aggregate', () => {
 
   describe('getTotalAmount()', () => {
     it('returns the amount stored in the Money value object', () => {
-      const d = Deal.create(makeDealProps({ totalAmount: Money.of(12_345_678, 'UZS') }));
+      const d = Deal.create(makeDealProps({ totalAmount: makeMoney(12_345_678, 'UZS') }));
       expect(d.getTotalAmount()).toBe(12_345_678);
     });
 
     it('reflects zero amount when initialised with Money.of(0)', () => {
-      const d = Deal.create(makeDealProps({ totalAmount: Money.of(0, 'UZS') }));
+      const d = Deal.create(makeDealProps({ totalAmount: makeMoney(0, 'UZS') }));
       expect(d.getTotalAmount()).toBe(0);
     });
   });

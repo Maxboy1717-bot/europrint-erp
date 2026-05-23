@@ -24,12 +24,13 @@ export class LeadsService {
       const rawPage  = Number(query.page);
       const rawLimit = Number(query.limit);
       const page  = Number.isFinite(rawPage)  && rawPage  > 0 ? Math.floor(rawPage)  : 1;
-      const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(Math.floor(rawLimit), 200) : 10;
-      const rowsR = await this.repo.findAll();
-      const rowsData = (rowsR.ok ? rowsR.data as Record<string, unknown>[] : []);
-      const total = rowsData.length;
-      const data = rowsData.slice((page - 1) * limit, page * limit).map((r: Record<string, unknown>) => this.mapRow(r));
-      return { data, total, page, limit };
+      const lim   = Math.min(200, Number.isFinite(rawLimit) && rawLimit > 0 ? Math.floor(rawLimit) : 10);
+      const totalR = await this.repo.count();
+      const total = totalR.ok ? totalR.data : 0;
+      const rowsR = await this.repo.findAll({ limit: lim, offset: (page - 1) * lim });
+      const rowsData = rowsR.ok && Array.isArray(rowsR.data) ? rowsR.data : [];
+      const data = rowsData.map((r: Record<string, unknown>) => this.mapRow(r));
+      return { data, total, page, limit: lim };
     });
   }
 

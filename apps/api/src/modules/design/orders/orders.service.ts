@@ -30,17 +30,17 @@ export class OrdersService {
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
-    const rawPage  = Number(query.page);
-    const rawLimit = Number(query.limit);
-    const page  = Number.isFinite(rawPage)  && rawPage  > 0 ? Math.floor(rawPage)  : 1;
-    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(Math.floor(rawLimit), 200) : 10;
-    const result = await this.designOrdersSvcRepo.findAll();
-    if (!result.ok) throw new InternalServerErrorException(result.error);
-    const orders = result.data;
-    const total = orders.length;
-    const data = (orders as Record<string, unknown>[]).slice((page - 1) * limit, page * limit).map((o) => ({ ...o, status: this.toApiStatus(String(o['status'] ?? '')) }));
-    return { data, total, page, limit };
-  
+      const rawPage  = Number(query.page);
+      const rawLimit = Number(query.limit);
+      const page  = Number.isFinite(rawPage)  && rawPage  > 0 ? Math.floor(rawPage)  : 1;
+      const lim   = Math.min(200, Number.isFinite(rawLimit) && rawLimit > 0 ? Math.floor(rawLimit) : 10);
+      const totalR = await this.designOrdersSvcRepo.count();
+      if (!totalR.ok) throw new InternalServerErrorException(totalR.error);
+      const total = totalR.data;
+      const result = await this.designOrdersSvcRepo.findAll({ limit: lim, offset: (page - 1) * lim });
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      const data = (result.data as Record<string, unknown>[]).map((o) => ({ ...o, status: this.toApiStatus(String(o['status'] ?? '')) }));
+      return { data, total, page, limit: lim };
     });}
 
   async findOne(id: number){
