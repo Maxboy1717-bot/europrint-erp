@@ -78,7 +78,6 @@ export class DisciplineV2AbsenceRepository {
     return safeCall(async () => {
       const rows = await db.update(discipline_records).set({
         status:         'acknowledged',
-        acknowledgedAt: _time.now(),
       }).where(eq(discipline_records.id, id)).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
@@ -88,8 +87,6 @@ export class DisciplineV2AbsenceRepository {
     return safeCall(async () => {
       const rows = await db.update(discipline_records).set({
         status:     'approved',
-        approvedBy: approvedBy ?? null,
-        approvedAt: _time.now(),
       }).where(eq(discipline_records.id, id)).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');

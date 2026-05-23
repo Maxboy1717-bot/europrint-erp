@@ -78,8 +78,8 @@ export class NotificationPreferencesRepository {
   async markAllReadByUserId(userId: number): Promise<Result<MarkAllReadResult>> {
     try {
       const result = await db.update(notificationsApp)
-        .set({ is_read: true, updated_at: _time.now() })
-        .where(and(eq(notificationsApp.user_id, userId), eq(notificationsApp.is_read, false)))
+        .set({ read: true })
+        .where(and(eq(notificationsApp.userId, userId), eq(notificationsApp.read, false)))
         .returning({ id: notificationsApp.id });
       return Ok({ updated: result.length });
     } catch (e: unknown) { return Err((e as Error).message); }

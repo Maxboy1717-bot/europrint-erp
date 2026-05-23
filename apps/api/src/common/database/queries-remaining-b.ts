@@ -45,16 +45,16 @@ export async function execSystemHealthCheck(): Promise<void> {
 
 export async function execPosInventoryCountMarkGlPosted(lineId: number): Promise<void> {
   await db.update(pos_inventory_count_lines)
-    .set({ gl_posted: true, updated_at: sql`NOW()` })
+    .set({ countedAt: sql`NOW()` })
     .where(eq(pos_inventory_count_lines.id, lineId));
 }
 
 export async function execPosBarcodeClearPrimary(materialCardId: number): Promise<void> {
   await db.update(inventory_barcode_assignments)
-    .set({ is_primary: false })
+    .set({ isPrimary: false })
     .where(and(
-      eq(inventory_barcode_assignments.material_card_id, materialCardId),
-      eq(inventory_barcode_assignments.is_primary, true),
+      eq(inventory_barcode_assignments.passportId, materialCardId),
+      eq(inventory_barcode_assignments.isPrimary, true),
     ));
 }
 
@@ -86,7 +86,7 @@ export async function execIotCameraDelete(id: number): Promise<void> {
 
 export async function execHrInterviewQuestionDeactivate(id: number): Promise<void> {
   await db.update(hr_interview_questions)
-    .set({ is_active: false })
+    .set({ isActive: false })
     .where(eq(hr_interview_questions.id, id));
 }
 
@@ -98,7 +98,7 @@ export async function execSalesOrderSetVip(orderId: number): Promise<void> {
 
 export async function execNotificationMarkRead(id: number): Promise<void> {
   await db.update(notificationsApp)
-    .set({ is_read: true })
+    .set({ read: true })
     .where(eq(notificationsApp.id, id));
 }
 
@@ -125,13 +125,13 @@ export async function execGamificationTotalsUpsert(employeeId: number, points: n
 
 export async function execAbsenceTrackingUpsert(employeeId: number, absenceDate: string, consecutiveCount: number): Promise<void> {
   await db.insert(absence_tracking).values({
-    employee_id: employeeId,
-    absence_date: absenceDate,
-    consecutive_day_count: consecutiveCount,
-    auto_blocked: consecutiveCount >= 3,
+    employeeId: employeeId,
+    absenceDate: absenceDate,
+    consecutiveDayCount: consecutiveCount,
+    autoBlocked: consecutiveCount >= 3,
   }).onConflictDoUpdate({
-    target: [absence_tracking.employee_id, absence_tracking.absence_date],
-    set: { consecutive_day_count: consecutiveCount },
+    target: [absence_tracking.employeeId, absence_tracking.absenceDate],
+    set: { consecutiveDayCount: consecutiveCount },
   });
 }
 
@@ -139,9 +139,9 @@ export async function execDailyReportMarkAbsent(today: string): Promise<void> {
   const operatorVariants = ['%mashina operator%', '%mashin operator%', '%machine operator%'];
 
   const existing = await db
-    .select({ employee_id: hr_daily_reports.employee_id })
+    .select({ employee_id: hr_daily_reports.employeeId })
     .from(hr_daily_reports)
-    .where(eq(hr_daily_reports.report_date, today));
+    .where(eq(hr_daily_reports.reportDate, today));
   const existingIds = new Set((Array.isArray(existing) ? existing : []).map(r => r.employee_id));
 
   const activeEmps = await db
@@ -175,11 +175,11 @@ export async function execDailyReportMarkAbsent(today: string): Promise<void> {
 
   for (const emp of toInsert) {
     await db.insert(hr_daily_reports).values({
-      employee_id: emp.id,
-      report_date: today,
-      tasks_completed: '',
+      employeeId: emp.id,
+      reportDate: today,
+      tasksCompleted: '',
       status: 'absent',
-      is_auto_absent: true,
+      isAutoAbsent: true,
     }).onConflictDoNothing();
   }
 }
@@ -209,13 +209,13 @@ export async function execHrBrandSettingsUpsert(jsonData: string): Promise<void>
 
 export async function execGlLineInsert(docId: number, lineNumber: number, line: Record<string, unknown>): Promise<void> {
   await db.insert(gl_lines).values({
-    gl_document_id: docId,
-    line_number: lineNumber,
-    account_id: (line.accountId || line.account_id || null) as number | null,
-    cost_center_id: (line.costCenterId || line.cost_center_id || null) as number | null,
-    profit_center_id: (line.profitCenterId || line.profit_center_id || null) as number | null,
-    debit_amount: String(Number(line.debitAmount || line.debit_amount) || 0),
-    credit_amount: String(Number(line.creditAmount || line.credit_amount) || 0),
+    glDocumentId: String(docId),
+    lineNumber: lineNumber,
+    accountId: String(line.accountId || line.account_id || ''),
+    costCenterId: (line.costCenterId || line.cost_center_id || null) as string | null,
+    profitCenterId: (line.profitCenterId || line.profit_center_id || null) as string | null,
+    debitAmount: Number(line.debitAmount || line.debit_amount) || 0,
+    creditAmount: Number(line.creditAmount || line.credit_amount) || 0,
     description: (line.description || null) as string | null,
   });
 }

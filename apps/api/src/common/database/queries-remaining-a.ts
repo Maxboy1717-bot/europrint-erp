@@ -54,11 +54,11 @@ export async function execIdealRasmTargetInsert(t: {
   unit: string; horizonYears: number; description: string;
 }): Promise<void> {
   await db.insert(ideal_rasm_targets).values({
-    target_name: t.targetName,
-    target_key: t.targetKey,
-    target_value: String(t.targetValue),
+    targetName: t.targetName,
+    targetKey: t.targetKey,
+    targetValue: String(t.targetValue),
     unit: t.unit,
-    horizon_years: t.horizonYears,
+    horizonYears: t.horizonYears,
     description: t.description,
   }).onConflictDoNothing();
 }
@@ -86,10 +86,10 @@ export async function execOrderStatusLogInsert(orderId: string, userId: number):
     .limit(1);
   if (order) {
     await db.insert(order_status_logs).values({
-      order_id: order.id,
-      from_status: order.status ?? null,
-      to_status: 'pending_technology',
-      changed_by: userId,
+      salesOrderId: String(order.id),
+      fromStatus: order.status ?? null,
+      toStatus: 'pending_technology',
+      changedBy: String(userId),
       notes: 'Dizayn tasdiqlandi',
     });
   }
@@ -99,13 +99,11 @@ export async function execPosDamageQcLinkInsert(
   damageMovementId: number, originalMovementId: number,
   materialCardId: number, damagedQty: number, damageDescription: string,
 ): Promise<void> {
+  void originalMovementId; void damageDescription;
   await db.insert(pos_damage_qc_links).values({
-    damage_movement_id: damageMovementId,
-    original_movement_id: originalMovementId,
-    material_card_id: materialCardId,
-    damaged_qty: String(damagedQty),
-    damage_description: damageDescription,
-    qc_status: 'PENDING',
+    posMovementId: damageMovementId,
+    materialCardId: materialCardId,
+    damagedQty: damagedQty,
   });
 }
 
@@ -114,21 +112,23 @@ export async function execPosBarcodePrintQueueInsert(
   printerIp: string | null, sentToPrinter: boolean,
 ): Promise<void> {
   await db.insert(pos_barcode_print_queue).values({
-    material_card_id: materialCardId,
-    pos_movement_id: movementId,
+    materialCardId: materialCardId,
+    posMovementId: movementId,
     copies: 1,
-    print_format: format,
-    printer_ip: printerIp,
-    trigger_type: 'AUTO',
+    printFormat: format,
+    printerIp: printerIp,
+    triggerType: 'AUTO',
     status: sentToPrinter ? 'DONE' : 'PENDING',
   });
 }
 
 export async function execEmployeeIssuanceLogInsert(userId: number, materialCardId: number): Promise<void> {
   await db.insert(employee_issuance_log).values({
-    user_id: userId,
-    material_card_id: materialCardId,
-    issued_at: new Date(),
+    userId: userId,
+    materialCardId: materialCardId,
+    warehouseId: 'default',
+    quantityIssued: 1,
+    issuedAt: new Date(),
   });
 }
 

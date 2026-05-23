@@ -202,7 +202,7 @@ export async function getWarehouseLotsRaw(): Promise<Record<string, unknown>[]> 
 
 export async function getWarehouseInternalRequestsRaw(): Promise<Record<string, unknown>[]> {
   try {
-    const rows = await db.select().from(internal_requests).orderBy(desc(internal_requests.created_at)).limit(100);
+    const rows = await db.select().from(internal_requests).orderBy(desc(internal_requests.createdAt)).limit(100);
     return rows as Record<string, unknown>[];
   } catch { return []; }
 }

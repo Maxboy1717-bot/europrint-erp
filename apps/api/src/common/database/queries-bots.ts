@@ -105,20 +105,20 @@ export async function execTelegramBotNotificationInsert(employeeId: number, mess
     .limit(1);
   if (userRow) {
     await db.insert(notificationsApp).values({
-      user_id: userRow.id,
+      userId: userRow.id,
       title: 'HR Bildirishnomasi',
       message,
       type: 'info',
-      is_read: false,
+      read: false,
     });
   }
 }
 
 export async function execEmployeeBlockInsert(employeeId: number): Promise<void> {
   await db.insert(employee_blocks).values({
-    employee_id: employeeId,
+    employeeId: employeeId,
     reason: 'Oxirgi ish kuni tugadi — avtomatik bloklash',
-    blocked_by: 1,
-    is_active: true,
+    blockedBy: 1,
+    isActive: true,
   }).onConflictDoNothing();
 }

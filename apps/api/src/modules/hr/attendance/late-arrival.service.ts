@@ -242,16 +242,15 @@ export class LateArrivalService {
   private async _applyLatenessPenalty(employeeId: number, minutesLate: number): Promise<void> {
     const today = this.time.formatDate(this.time.today());
     const r = await this.disciplineRepo.insert({
-      employee_id:     employeeId,
-      violation_type:  'LATE_ARRIVAL',
-      discipline_type: 'FINE',
-      violation_name:  `Kech kelganlik — ${minutesLate} daqiqa`,
-      description:     `Avtomatik jarima: ${minutesLate} daqiqa kech kelganlik, sababnomasi rad etildi`,
-      violation_date:  today,
-      issued_date:     today,
-      severity:        'low',
-      issued_by:       SYSTEM_USER_ID,
-      status:          'approved',
+      employeeId:     employeeId,
+      violationType:  'LATE_ARRIVAL',
+      disciplineType: 'FINE',
+      description:    `Avtomatik jarima: ${minutesLate} daqiqa kech kelganlik, sababnomasi rad etildi`,
+      violationDate:  today,
+      issuedDate:     today,
+      severity:       'low',
+      issuedBy:       SYSTEM_USER_ID,
+      status:         'approved',
     });
     if (!r.ok) this.logger.warn?.(`disciplineRepo.insert failed: ${r.error.message}`);
   }

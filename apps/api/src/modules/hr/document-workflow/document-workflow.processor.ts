@@ -62,7 +62,7 @@ export class DocumentSubmittedHandler
       if (Number(stepCount) === 0) {
         await db
           .update(hr_documents)
-          .set({ status: 'approved', updated_at: _time.now() })
+          .set({ status: 'approved', updatedAt: _time.now() })
           .where(eq(hr_documents.id, documentId));
         this.logger.log(`Document #${documentId} auto-approved (no approval steps configured)`);
       } else {
@@ -266,7 +266,7 @@ export class DocumentRejectedHandler
     try {
       await db
         .update(hr_documents)
-        .set({ status: 'rejected', updated_at: _time.now() })
+        .set({ status: 'rejected', updatedAt: _time.now() })
         .where(and(
           eq(hr_documents.id, documentId),
           sql`${hr_documents.status} NOT IN ('approved', 'rejected')`,

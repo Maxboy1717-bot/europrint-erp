@@ -43,20 +43,20 @@ export class HrCompatSafetyRepository implements IHrCompatSafetyRepo {
     return safeCall(async () => {
       const rows = await db.select({
         id:               hr_documents.id,
-        doc_number:       hr_documents.doc_number,
-        doc_type:         hr_documents.doc_type,
+        doc_number:       hr_documents.id,
+        doc_type:         hr_documents.documentType,
         title:            hr_documents.title,
         status:           hr_documents.status,
-        total_steps:      hr_documents.total_steps,
-        completed_steps:  hr_documents.completed_steps,
-        created_at:       hr_documents.created_at,
+        total_steps:      hr_documents.totalSteps,
+        completed_steps:  hr_documents.currentStep,
+        created_at:       hr_documents.createdAt,
       })
         .from(hr_documents)
         .where(sql`
-          (${docType ?? null}::text IS NULL OR ${hr_documents.doc_type} = ${docType ?? null}) AND
+          (${docType ?? null}::text IS NULL OR ${hr_documents.documentType} = ${docType ?? null}) AND
           (${status ?? null}::text IS NULL OR ${hr_documents.status} = ${status ?? null})
         `)
-        .orderBy(sql`${hr_documents.created_at} DESC`)
+        .orderBy(sql`${hr_documents.createdAt} DESC`)
         .limit(100);
       return castTo<Row[]>(rows);
       }, 'DB_ERROR');
@@ -78,7 +78,7 @@ export class HrCompatSafetyRepository implements IHrCompatSafetyRepo {
 
   async archiveDocument(id: number): Promise<void> {
     await db.update(hr_documents)
-      .set({ status: 'archived', updated_at: _time.now() })
+      .set({ status: 'archived', updatedAt: _time.now() })
       .where(sql`${hr_documents.id} = ${id} AND is_immutable = false`);
   }
 

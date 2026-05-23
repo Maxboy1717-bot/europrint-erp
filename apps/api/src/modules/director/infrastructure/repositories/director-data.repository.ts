@@ -192,9 +192,9 @@ export class DirectorDataRepository implements IDirectorDataRepo {
           total: sql<string>`COALESCE(SUM(CAST(amount AS DECIMAL)),0)`,
         }).from(invoicesTable).groupBy(invoicesTable.status),
         db.select({
-          type: accountsTable.account_type,
+          type: accountsTable.accountType,
           cnt: sql<string>`COUNT(*)`,
-        }).from(accountsTable).groupBy(accountsTable.account_type),
+        }).from(accountsTable).groupBy(accountsTable.accountType),
       ]);
       type InvRow = { status: string; cnt: string; total: string };
       const invoices: Record<string, { count: number; amount: number }> = {};

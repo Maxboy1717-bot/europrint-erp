@@ -47,7 +47,7 @@ export class DailyReportRepository {
   async updateReportStatus(reportId: number, newStatus: string): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.update(hr_daily_reports)
-        .set({ status: newStatus, updated_at: _time.now() })
+        .set({ status: newStatus, updatedAt: _time.now() })
         .where(eq(hr_daily_reports.id, reportId))
         .returning();
       return castTo<Row | null>((rows[0] ?? null));
@@ -56,11 +56,11 @@ export class DailyReportRepository {
 
   async insertAudit(reportId: number, hrUserId: number, previousStatus: string, newStatus: string, reason: string): Promise<void> {
     await db.insert(hr_daily_report_audit).values({
-      report_id:       reportId,
-      hr_user_id:      hrUserId,
-      previous_status: previousStatus,
-      new_status:      newStatus,
-      reason:          reason,
+      reportId:       reportId,
+      hrUserId:       hrUserId,
+      previousStatus: previousStatus,
+      newStatus:      newStatus,
+      reason:         reason,
     });
   }
 
@@ -82,8 +82,8 @@ export class DailyReportRepository {
     return safeCall(async () => {
       const rows = await db.select()
         .from(hr_daily_reports)
-        .where(eq(hr_daily_reports.employee_id, employeeId))
-        .orderBy(sql`${hr_daily_reports.report_date} DESC`)
+        .where(eq(hr_daily_reports.employeeId, employeeId))
+        .orderBy(sql`${hr_daily_reports.reportDate} DESC`)
         .limit(limit);
       return castTo<Row[]>(rows);
       }, 'DB_ERROR');

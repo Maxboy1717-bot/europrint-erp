@@ -43,8 +43,8 @@ export class EnpsCronRepository {
         questions,
         period: 'quarterly',
         status: 'active',
-        start_date: startDate,
-        end_date: endDate,
+        startDate: startDate,
+        endDate: endDate,
       }).returning({ id: enps_surveys.id });
       return rows[0]?.id ?? 0;
     } catch (e) {
