@@ -9,28 +9,32 @@ function fakeCfg(): AishaConfig {
   } as unknown as AishaConfig;
 }
 
+function fakeI18n() {
+  return { t: jest.fn().mockResolvedValue('forbidden') } as never;
+}
+
 describe('WakeConfigController', () => {
   it('returns access key + ppn URL', () => {
-    const ctrl = new WakeConfigController(fakeCfg());
+    const ctrl = new WakeConfigController(fakeCfg(), fakeI18n());
     const r = ctrl.config();
     expect(r.accessKey).toBe('pv');
     expect(r.ppnUrl).toBe('/aisha/assets/aisha.ppn');
   });
 
-  it('forbids non-director from setting sensitivity', () => {
-    const ctrl = new WakeConfigController(fakeCfg());
-    expect(() => ctrl.setSensitivity({ sensitivity: 0.5 }, { user: { userId: 2 } } as never))
-      .toThrow(ForbiddenException);
+  it('forbids non-director from setting sensitivity', async () => {
+    const ctrl = new WakeConfigController(fakeCfg(), fakeI18n());
+    await expect(ctrl.setSensitivity({ sensitivity: 0.5 }, { user: { userId: 2 } } as never))
+      .rejects.toThrow(ForbiddenException);
   });
 
-  it('allows director to set sensitivity', () => {
-    const ctrl = new WakeConfigController(fakeCfg());
-    const r = ctrl.setSensitivity({ sensitivity: 0.6 }, { user: { userId: 1 } } as never);
+  it('allows director to set sensitivity', async () => {
+    const ctrl = new WakeConfigController(fakeCfg(), fakeI18n());
+    const r = await ctrl.setSensitivity({ sensitivity: 0.6 }, { user: { userId: 1 } } as never);
     expect(r.sensitivity).toBe(0.6);
   });
 
-  it('rejects out-of-range sensitivity', () => {
-    const ctrl = new WakeConfigController(fakeCfg());
-    expect(() => ctrl.setSensitivity({ sensitivity: 1.5 }, { user: { userId: 1 } } as never)).toThrow();
+  it('rejects out-of-range sensitivity', async () => {
+    const ctrl = new WakeConfigController(fakeCfg(), fakeI18n());
+    await expect(ctrl.setSensitivity({ sensitivity: 1.5 }, { user: { userId: 1 } } as never)).rejects.toThrow();
   });
 });

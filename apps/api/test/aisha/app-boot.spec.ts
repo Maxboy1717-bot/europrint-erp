@@ -12,9 +12,16 @@ import { resolve } from 'node:path';
 describe('AppModule wiring', () => {
   it('imports AishaModule alongside DirectorModule', () => {
     const appModulePath = resolve(__dirname, '../../src/app.module.ts');
-    const src = readFileSync(appModulePath, 'utf-8');
+    const featureModulesPath = resolve(__dirname, '../../src/feature-modules.ts');
+    const appSrc = readFileSync(appModulePath, 'utf-8');
+    const featureSrc = readFileSync(featureModulesPath, 'utf-8');
 
-    expect(src).toMatch(/import\s*\{\s*AishaModule\s*\}\s*from\s*'\.\/modules\/aisha\/aisha\.module';/);
-    expect(src).toMatch(/AishaModule,/);
+    // AishaModule must appear in the @Module() imports array
+    expect(appSrc).toMatch(/AishaModule,/);
+
+    // AishaModule must be importable — either directly or via the feature-modules barrel
+    const importedDirectly = /import\s*\{[^}]*AishaModule[^}]*\}/.test(appSrc);
+    const reExportedViaBarrel = /AishaModule/.test(featureSrc);
+    expect(importedDirectly || reExportedViaBarrel).toBe(true);
   });
 });

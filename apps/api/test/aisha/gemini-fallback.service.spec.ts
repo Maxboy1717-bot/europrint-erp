@@ -3,6 +3,7 @@
  */
 
 import { GeminiFallbackService } from '../../src/modules/aisha/application/llm/gemini-fallback.service';
+import { GeminiAdapter } from '../../src/modules/aisha/infrastructure/external/gemini.adapter';
 import { AishaConfig } from '../../src/modules/aisha/config/aisha.config';
 
 function fakeCfg(): AishaConfig {
@@ -11,7 +12,7 @@ function fakeCfg(): AishaConfig {
 
 describe('GeminiFallbackService', () => {
   it('returns text on success', async () => {
-    const svc = new GeminiFallbackService(fakeCfg());
+    const svc = new GeminiFallbackService(new GeminiAdapter(fakeCfg()));
     svc.setSdkForTesting({
       getGenerativeModel: () => ({
         generateContent: () => Promise.resolve({ response: { text: () => 'ok' } }),
@@ -22,7 +23,7 @@ describe('GeminiFallbackService', () => {
   });
 
   it('returns Err when SDK throws', async () => {
-    const svc = new GeminiFallbackService(fakeCfg());
+    const svc = new GeminiFallbackService(new GeminiAdapter(fakeCfg()));
     svc.setSdkForTesting({
       getGenerativeModel: () => ({
         generateContent: () => Promise.reject(new Error('rate-limited')),
@@ -33,7 +34,7 @@ describe('GeminiFallbackService', () => {
   });
 
   it('propagates upstream error message', async () => {
-    const svc = new GeminiFallbackService(fakeCfg());
+    const svc = new GeminiFallbackService(new GeminiAdapter(fakeCfg()));
     svc.setSdkForTesting({
       getGenerativeModel: () => ({
         generateContent: () => Promise.reject(new Error('quota exceeded')),
