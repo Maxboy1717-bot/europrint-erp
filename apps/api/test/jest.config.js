@@ -68,7 +68,7 @@ module.exports = {
     '^@auth/decorators/(.*)$': '<rootDir>/src/modules/auth/infrastructure/decorators/$1',
     '^@auth/guards/(.*)$': '<rootDir>/src/modules/auth/infrastructure/guards/$1',
     '^@auth/(.*)$': '<rootDir>/src/modules/auth/$1',
-    // ESM uuid v14 fix — Jest can't import ESM by default (Task 3).
-    '^uuid$': require.resolve('uuid'),
+    // ESM uuid v14 fix — uuid@14 is pure ESM; map to CJS shim (Task 3).
+    '^uuid$': '<rootDir>/test/_setup/uuid-mock.js',
   },
 };

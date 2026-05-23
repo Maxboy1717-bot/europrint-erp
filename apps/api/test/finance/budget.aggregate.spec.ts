@@ -3,8 +3,8 @@
  * Unit tests for Budget aggregate — DRAFT → PENDING_APPROVAL → APPROVED → CLOSED
  * state machine, REJECTED branch, and variance accessors.
  */
-import { InternalServerErrorException } from '@nestjs/common';
 import { Budget, BudgetStatus, BudgetLine } from '../../src/modules/finance/domain/aggregates/budget.aggregate';
+import { DomainError } from '../../src/shared/domain/errors/domain-error';
 import { applicationFactory } from '../_fixtures/factories';
 
 function makeBudget(overrides: Partial<{
@@ -47,12 +47,12 @@ describe('Budget aggregate', () => {
 
     it('throws when called on PENDING_APPROVAL budget', () => {
       const b = makeBudget({ status: BudgetStatus.PENDING_APPROVAL });
-      expect(() => b.submitForApproval()).toThrow(InternalServerErrorException);
+      expect(() => b.submitForApproval()).toThrow(DomainError);
     });
 
     it('throws when called on APPROVED budget', () => {
       const b = makeBudget({ status: BudgetStatus.APPROVED });
-      expect(() => b.submitForApproval()).toThrow(InternalServerErrorException);
+      expect(() => b.submitForApproval()).toThrow(DomainError);
     });
   });
 
@@ -67,12 +67,12 @@ describe('Budget aggregate', () => {
 
     it('throws when approving a DRAFT budget', () => {
       const b = makeBudget({ status: BudgetStatus.DRAFT });
-      expect(() => b.approve('cfo-1')).toThrow(InternalServerErrorException);
+      expect(() => b.approve('cfo-1')).toThrow(DomainError);
     });
 
     it('throws when approving an already-APPROVED budget', () => {
       const b = makeBudget({ status: BudgetStatus.APPROVED });
-      expect(() => b.approve('cfo-1')).toThrow(InternalServerErrorException);
+      expect(() => b.approve('cfo-1')).toThrow(DomainError);
     });
   });
 
@@ -85,12 +85,12 @@ describe('Budget aggregate', () => {
 
     it('throws when rejecting a DRAFT budget', () => {
       const b = makeBudget({ status: BudgetStatus.DRAFT });
-      expect(() => b.reject()).toThrow(InternalServerErrorException);
+      expect(() => b.reject()).toThrow(DomainError);
     });
 
     it('throws when rejecting an APPROVED budget', () => {
       const b = makeBudget({ status: BudgetStatus.APPROVED });
-      expect(() => b.reject()).toThrow(InternalServerErrorException);
+      expect(() => b.reject()).toThrow(DomainError);
     });
   });
 
@@ -103,17 +103,17 @@ describe('Budget aggregate', () => {
 
     it('throws when closing a DRAFT budget', () => {
       const b = makeBudget({ status: BudgetStatus.DRAFT });
-      expect(() => b.close()).toThrow(InternalServerErrorException);
+      expect(() => b.close()).toThrow(DomainError);
     });
 
     it('throws when closing a PENDING_APPROVAL budget', () => {
       const b = makeBudget({ status: BudgetStatus.PENDING_APPROVAL });
-      expect(() => b.close()).toThrow(InternalServerErrorException);
+      expect(() => b.close()).toThrow(DomainError);
     });
 
     it('throws when closing an already-CLOSED budget', () => {
       const b = makeBudget({ status: BudgetStatus.CLOSED });
-      expect(() => b.close()).toThrow(InternalServerErrorException);
+      expect(() => b.close()).toThrow(DomainError);
     });
   });
 

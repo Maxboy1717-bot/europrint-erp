@@ -6,18 +6,33 @@
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { designOrders } from '@europrint/schemas';
-import { eq, and, isNull, desc } from 'drizzle-orm';
+import { eq, and, isNull, desc, count } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IDesignOrdersSvcRepository } from './i-design-orders-svc.repo';
 
 @Injectable()
 export class DrizzleDesignOrdersSvcRepository implements IDesignOrdersSvcRepository {
-  async findAll(): Promise<Result<object[]>> {
+  async findAll(opts?: { limit?: number; offset?: number }): Promise<Result<object[]>> {
     try {
-      const rows = await db.select().from(designOrders).where(isNull(designOrders.deletedAt)).orderBy(desc(designOrders.createdAt));
+      const lim = opts?.limit ?? 10;
+      const off = opts?.offset ?? 0;
+      const rows = await db.select().from(designOrders)
+        .where(isNull(designOrders.deletedAt))
+        .orderBy(desc(designOrders.createdAt))
+        .limit(lim)
+        .offset(off);
       return Ok(rows);
     } catch (e: unknown) {
       return Err((e as Error)?.message || 'Dizayn buyurtmalari topilmadi');
+    }
+  }
+
+  async count(): Promise<Result<number>> {
+    try {
+      const rows = await db.select({ total: count() }).from(designOrders).where(isNull(designOrders.deletedAt));
+      return Ok(Number(rows[0]?.total ?? 0));
+    } catch (e: unknown) {
+      return Err((e as Error)?.message || 'Count xatolik');
     }
   }
 

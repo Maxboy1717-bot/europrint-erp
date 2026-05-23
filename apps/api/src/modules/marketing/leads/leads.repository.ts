@@ -13,12 +13,29 @@ import { eq, and, isNull, desc, count } from 'drizzle-orm';
 
 @Injectable()
 export class LeadsRepository {
-  async findAll(): Promise<Result<Record<string, unknown>[]>> {
-  try {  
-      return Ok(await db.select().from(marketingLeads).where(isNull(marketingLeads.deletedAt)).orderBy(desc(marketingLeads.createdAt)));  } catch (_e) {
-    return Err(String(_e));
+  async findAll(opts?: { limit?: number; offset?: number }): Promise<Result<Record<string, unknown>[]>> {
+    try {
+      const lim = opts?.limit ?? 10;
+      const off = opts?.offset ?? 0;
+      return Ok(
+        await db.select().from(marketingLeads)
+          .where(isNull(marketingLeads.deletedAt))
+          .orderBy(desc(marketingLeads.createdAt))
+          .limit(lim)
+          .offset(off) as Record<string, unknown>[],
+      );
+    } catch (_e) {
+      return Err(String(_e));
+    }
   }
 
+  async count(): Promise<Result<number>> {
+    try {
+      const rows = await db.select({ total: count() }).from(marketingLeads).where(isNull(marketingLeads.deletedAt));
+      return Ok(Number(rows[0]?.total ?? 0));
+    } catch (_e) {
+      return Err(String(_e));
+    }
   }
 
   async findOne(id: number): Promise<Result<Record<string, unknown> | null>> {
