@@ -110,6 +110,23 @@ export class GlService {
   
     });}
 
+  async getTrialBalance(date?: string) {
+    return safeCall(async () => {
+      const result = await this.financeGlRepo.getTrialBalance(date);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
+  async getLedger(accountCode: string, page = 1, limit = 50) {
+    return safeCall(async () => {
+      const offset = (page - 1) * limit;
+      const result = await this.financeGlRepo.getLedger(accountCode, limit, offset);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
   /**
    * Returns the built-in chart of accounts seed rows. Codes come from
    * `domain/constants/gl-accounts.constants.ts` so the entire codebase

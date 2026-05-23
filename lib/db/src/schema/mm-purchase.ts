@@ -109,7 +109,7 @@ export type InsertGoodsReceipt = z.infer<typeof insertGoodsReceiptSchema>;
 export const goodsReceiptLines = pgTable("goods_receipt_lines", {
   id: serial("id").primaryKey(),
   receiptId: integer("receipt_id").notNull().references(() => goodsReceipts.id, { onDelete: "cascade" }),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
+  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
   orderedQuantity: numericMoney("ordered_quantity"),
   receivedQuantity: numericMoney("received_quantity").notNull(),
   acceptedQuantity: numericMoney("accepted_quantity"),

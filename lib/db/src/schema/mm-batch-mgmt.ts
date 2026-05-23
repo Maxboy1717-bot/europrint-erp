@@ -32,7 +32,7 @@ export const stockReservations = pgTable("stock_reservations", {
   id: serial("id").primaryKey(),
   reservationNumber: varchar("reservation_number", { length: 50 }).notNull().unique(),
   reservationDate: varchar("reservation_date", { length: 10 }).notNull(),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
+  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
   warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   orderId: varchar("order_id"),
   orderType: varchar("order_type", { length: 30 }),

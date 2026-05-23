@@ -24,7 +24,8 @@ export interface AbcAnalysis {
 }
 
 // ── Attendance Record ─────────────────────────────────────────────────────────
-export interface AttendanceRecord {
+/** Canonical camelCase attendance record. @see employee.ts for the snake_case variant. */
+export interface HrAttendanceRecord {
   id: string | number;
   userId?: string | number;
   employeeId?: string | number;

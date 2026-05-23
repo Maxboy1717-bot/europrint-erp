@@ -122,7 +122,7 @@ export type InsertMaterialCard = z.infer<typeof insertMaterialCardSchema>;
 // Min Stock Alerts (Kam qoldiq ogohlantirishlari)
 export const minStockAlerts = pgTable("min_stock_alerts", {
   id: serial("id").primaryKey(),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "cascade" }).notNull(),
+  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "cascade" }).notNull(),
   alertDate: varchar("alert_date", { length: 10 }).notNull(),
   alertType: varchar("alert_type", { length: 20 }).default("min_stock"), // min_stock | expiring | zero_stock | price_change | reorder
   currentStock: numericMoney("current_stock").notNull(),
@@ -156,7 +156,7 @@ export type MinStockAlert = typeof minStockAlerts.$inferSelect;
 export const consumptionSuggestions = pgTable("consumption_suggestions", {
   id: serial("id").primaryKey(),
   papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id, { onDelete: "cascade" }).notNull(),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "cascade" }).notNull(),
+  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "cascade" }).notNull(),
   formulaId: varchar("formula_id").references(() => formulaDefinitions.id, { onDelete: "set null" }),
   // Tavsiya
   suggestedQuantity: numericMoney("suggested_quantity").notNull(),
@@ -185,7 +185,7 @@ export type ConsumptionSuggestion = typeof consumptionSuggestions.$inferSelect;
 export const materialBatches = pgTable("material_batches", {
   id: serial("id").primaryKey(),
   batchNumber: varchar("batch_number", { length: 50 }).notNull(),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
+  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
   warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   binId: varchar("bin_id").references(() => warehouseBins.id, { onDelete: "set null" }),
   quantity: numericMoney("quantity").notNull(),

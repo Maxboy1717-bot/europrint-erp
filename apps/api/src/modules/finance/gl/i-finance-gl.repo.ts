@@ -11,5 +11,7 @@ export interface IFinanceGlRepository {
   findAccountById(id: number): Promise<Result<object | null>>;
   postDocument(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   seedAccounts(rows: Record<string, unknown>[]): Promise<Result<object[]>>;
+  getTrialBalance(date?: string): Promise<Result<{ debit: number; credit: number; balanced: boolean; date: string }>>;
+  getLedger(accountCode: string, limit?: number, offset?: number): Promise<Result<Row[]>>;
 }
 export const FINANCE_GL_REPO = 'IFinanceGlRepository';

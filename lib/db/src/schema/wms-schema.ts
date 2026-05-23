@@ -163,7 +163,7 @@ export type InsertStockTransfer = z.infer<typeof insertStockTransferSchema>;
 export const stockTransferLines = pgTable("stock_transfer_lines", {
   id: serial("id").primaryKey(),
   transferId: integer("transfer_id").notNull().references(() => stockTransfers.id, { onDelete: "cascade" }),
-  materialCardId: integer("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
+  materialCardId: integer("material_id").references(() => materialCards.id, { onDelete: "set null" }),
   productId: integer("product_id").references(() => products.id, { onDelete: "set null" }),
   itemType: varchar("item_type", { length: 20 }).notNull(), // material, product
   requestedQuantity: numericMoney("requested_quantity").notNull(),
@@ -231,7 +231,7 @@ export type InsertStockMove = z.infer<typeof insertStockMoveSchema>;
 // Warehouse Transactions (Ombor tranzaksiyalar)
 export const warehouseTransactions = pgTable("warehouse_transactions", {
   id: serial("id").primaryKey(),
-  materialCardId: integer("material_card_id").references(() => materialCards.id, { onDelete: "cascade" }).notNull(),
+  materialCardId: integer("material_id").references(() => materialCards.id, { onDelete: "cascade" }).notNull(),
   transactionDate: varchar("transaction_date", { length: 10 }).notNull(),
   transactionType: varchar("transaction_type", { length: 20 }).notNull(), // kirim, chiqim, return, adjustment
   quantity: numericMoney("quantity").notNull(),
@@ -276,7 +276,7 @@ export type InsertWarehouseTransaction = z.infer<typeof insertWarehouseTransacti
 export const warehouseStock = pgTable("warehouse_stock", {
   id: serial("id").primaryKey(),
   warehouseId: varchar("warehouse_id").notNull().references(() => warehouses.id, { onDelete: "cascade" }),
-  materialCardId: varchar("material_card_id").notNull().references(() => materialCards.id, { onDelete: "cascade" }),
+  materialCardId: varchar("material_id").notNull().references(() => materialCards.id, { onDelete: "cascade" }),
   quantity: numericMoney("quantity").notNull().default(0),
   reservedQuantity: numericMoney("reserved_quantity").notNull().default(0),
   availableQuantity: numericMoney("available_quantity").notNull().default(0),
@@ -437,7 +437,7 @@ export const pickingTasks = pgTable("picking_tasks", {
   taskType: varchar("task_type", { length: 20 }).notNull().default("PICK"),
   productionOrderId: varchar("production_order_id"),
   salesOrderId: varchar("sales_order_id"),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
+  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
   requiredQty: numericMoney("required_qty").notNull(),
   pickedQty: numericMoney("picked_qty").default(0),
   barcodesToPick: jsonb("barcodes_to_pick"),
@@ -477,7 +477,7 @@ export const cycleCountResults = pgTable("cycle_count_results", {
   id: serial("id").primaryKey(),
   taskId: varchar("task_id").references(() => pickingTasks.id, { onDelete: "set null" }),
   barcodeId: varchar("barcode_id").references(() => materialBarcodes.id, { onDelete: "set null" }),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
+  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
   binId: varchar("bin_id").references(() => warehouseBins.id, { onDelete: "set null" }),
   warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   systemQuantity: numericMoney("system_quantity").notNull(),

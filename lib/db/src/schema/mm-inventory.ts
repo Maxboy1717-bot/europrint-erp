@@ -225,7 +225,7 @@ export type InsertAiMaterialBatch = z.infer<typeof insertAiMaterialBatchSchema>;
 export const materialBarcodes = pgTable("material_barcodes", {
   id: serial("id").primaryKey(),
   barcodeId: varchar("barcode_id", { length: 100 }).notNull().unique(),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
+  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
   lotNumber: varchar("lot_number", { length: 50 }),
   quantity: numericMoney("quantity").notNull(),
   remainingQuantity: numericMoney("remaining_quantity").notNull(),

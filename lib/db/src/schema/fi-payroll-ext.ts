@@ -155,7 +155,7 @@ export type InsertPayrollAiRecommendation = z.infer<typeof insertPayrollAiRecomm
 export const stockLedger = pgTable("stock_ledger", {
   id: serial("id").primaryKey(),
   productMasterId: varchar("product_master_id").references(() => productMasters.id, { onDelete: "set null" }),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id, { onDelete: "set null" }),
+  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
   warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   batchNumber: varchar("batch_number", { length: 50 }),
   onHandQuantity: numericMoney("on_hand_quantity").notNull().default(0),
