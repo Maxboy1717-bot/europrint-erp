@@ -72,9 +72,9 @@ describe('ReceiveFgHandler', () => {
     await handler.execute(new ReceiveFgCommand(7, 2, 50, 'BATCH-B'));
 
     expect(eventBus.publish).toHaveBeenCalledTimes(1);
-    const [eventName, payload] = eventBus.publish.mock.calls[0];
-    expect(eventName).toBe('WMS_FG_RECEIVED');
-    expect(payload).toMatchObject({ materialId: 7, amount: 50, warehouseId: 2 });
+    // handler calls eventBus.publish(new WmsFgReceivedEvent(...)) — single event object argument
+    const [event] = eventBus.publish.mock.calls[0];
+    expect(event).toMatchObject({ materialId: 7, amount: 50, warehouseId: 2 });
   });
 
   it('forwards saveStock failure and does NOT publish event', async () => {

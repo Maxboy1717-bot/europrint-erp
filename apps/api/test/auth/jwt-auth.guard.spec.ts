@@ -16,6 +16,13 @@ function makeReflector(isPublic = false): Reflector {
   return { getAllAndOverride: jest.fn().mockReturnValue(isPublic) } as unknown as Reflector;
 }
 
+function makeI18n() {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as import('nestjs-i18n').I18nService;
+}
+
 function makeContext(headers: Record<string, string> = {}): ExecutionContext {
   const request: { headers: Record<string, string>; user?: unknown } = { headers };
   return {
@@ -37,19 +44,19 @@ function makeJwt(decoded?: Record<string, unknown>, shouldThrow?: Error): JwtSer
 
 describe('JwtAuthGuard', () => {
   it('passes when route is marked @Public()', async () => {
-    const guard = new JwtAuthGuard(makeReflector(true), makeJwt());
+    const guard = new JwtAuthGuard(makeReflector(true), makeJwt(), makeI18n());
     const ctx = makeContext({});
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
 
   it('throws UnauthorizedException when Authorization header is missing', async () => {
-    const guard = new JwtAuthGuard(makeReflector(false), makeJwt());
+    const guard = new JwtAuthGuard(makeReflector(false), makeJwt(), makeI18n());
     const ctx = makeContext({});
     await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
 
   it('throws UnauthorizedException for malformed Bearer header', async () => {
-    const guard = new JwtAuthGuard(makeReflector(false), makeJwt());
+    const guard = new JwtAuthGuard(makeReflector(false), makeJwt(), makeI18n());
     const ctx = makeContext({ authorization: 'NotBearer xyz' });
     // jwt.verify will receive 'xyz' (split by space[1]) and throw
     await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
@@ -59,6 +66,7 @@ describe('JwtAuthGuard', () => {
     const guard = new JwtAuthGuard(
       makeReflector(false),
       makeJwt(undefined, new Error('bad signature')),
+      makeI18n(),
     );
     const ctx = makeContext({ authorization: 'Bearer fake.token.value' });
     await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
@@ -68,6 +76,7 @@ describe('JwtAuthGuard', () => {
     const guard = new JwtAuthGuard(
       makeReflector(false),
       makeJwt({ username: 'alice' }), // no sub
+      makeI18n(),
     );
     const ctx = makeContext({ authorization: 'Bearer x.y.z' });
     await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
@@ -77,6 +86,7 @@ describe('JwtAuthGuard', () => {
     const guard = new JwtAuthGuard(
       makeReflector(false),
       makeJwt({ sub: 42, username: 'alice', role: 'hr', exp: Math.floor(Date.now() / 1000) + 3600 }),
+      makeI18n(),
     );
     const request: { headers: Record<string, string>; user?: { id: number; sub: number; username: string; role: string } } = {
       headers: { authorization: 'Bearer x.y.z' },
@@ -99,6 +109,7 @@ describe('JwtAuthGuard', () => {
     const guard = new JwtAuthGuard(
       makeReflector(false),
       makeJwt({ sub: 42, exp: Math.floor(Date.now() / 1000) - 60 }),
+      makeI18n(),
     );
     const ctx = makeContext({ authorization: 'Bearer x.y.z' });
     await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
@@ -111,6 +122,7 @@ describe('JwtAuthGuard', () => {
     const guard = new JwtAuthGuard(
       makeReflector(false),
       makeJwt({ sub: 42, jti: 'token-id-1', exp: Math.floor(Date.now() / 1000) + 3600 }),
+      makeI18n(),
     );
     const ctx = makeContext({ authorization: 'Bearer x.y.z' });
 
@@ -124,6 +136,7 @@ describe('JwtAuthGuard', () => {
     const guard = new JwtAuthGuard(
       makeReflector(false),
       makeJwt({ sub: 42, jti: 'token-id-2', exp: Math.floor(Date.now() / 1000) + 3600 }),
+      makeI18n(),
     );
     const ctx = makeContext({ authorization: 'Bearer x.y.z' });
 

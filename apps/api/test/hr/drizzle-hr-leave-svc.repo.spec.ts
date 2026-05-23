@@ -12,6 +12,15 @@ jest.mock('@shared/db', () => ({
   db: kit.db,
   runQuery: kit.runQuery,
   rawSql: kit.rawSql,
+  // Tables used by DrizzleHrLeaveSvcRepository
+  leaveRequests: {
+    id: 'id', deletedAt: 'deletedAt', userId: 'userId', status: 'status',
+    leaveType: 'leaveType', createdAt: 'createdAt',
+    $inferInsert: {},
+  },
+  users: { id: 'id' },
+  hr_leave_balances: { employeeId: 'employeeId', leaveType: 'leaveType', year: 'year' },
+  hrEmployees: { id: 'id' },
 }));
 
 jest.mock('@europrint/schemas', () => ({

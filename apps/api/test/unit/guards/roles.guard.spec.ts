@@ -13,6 +13,13 @@ interface RequestShape {
   user?: { role?: string };
 }
 
+function makeI18n() {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as import('nestjs-i18n').I18nService;
+}
+
 function buildContext(
   requiredRoles: string[] | undefined,
   user: RequestShape['user'],
@@ -30,51 +37,51 @@ function buildContext(
 }
 
 describe('RolesGuard', () => {
-  it('returns true when role matches a single required role', () => {
+  it('returns true when role matches a single required role', async () => {
     const { ctx, reflector } = buildContext(['director'], { role: 'director' });
-    const guard = new RolesGuard(reflector);
-    expect(guard.canActivate(ctx)).toBe(true);
+    const guard = new RolesGuard(reflector, makeI18n());
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
 
-  it('returns true when role matches one of multiple required roles', () => {
+  it('returns true when role matches one of multiple required roles', async () => {
     const { ctx, reflector } = buildContext(['cfo', 'director', 'hr'], { role: 'hr' });
-    const guard = new RolesGuard(reflector);
-    expect(guard.canActivate(ctx)).toBe(true);
+    const guard = new RolesGuard(reflector, makeI18n());
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
 
-  it('returns true when no @Roles decorator is applied', () => {
+  it('returns true when no @Roles decorator is applied', async () => {
     const { ctx, reflector } = buildContext(undefined, { role: 'employee' });
-    const guard = new RolesGuard(reflector);
-    expect(guard.canActivate(ctx)).toBe(true);
+    const guard = new RolesGuard(reflector, makeI18n());
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
 
-  it('returns true when user is admin regardless of required roles', () => {
+  it('returns true when user is admin regardless of required roles', async () => {
     const { ctx, reflector } = buildContext(['director', 'cfo'], { role: 'admin' });
-    const guard = new RolesGuard(reflector);
-    expect(guard.canActivate(ctx)).toBe(true);
+    const guard = new RolesGuard(reflector, makeI18n());
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
 
-  it('returns true when user is super_admin regardless of required roles', () => {
+  it('returns true when user is super_admin regardless of required roles', async () => {
     const { ctx, reflector } = buildContext(['hr'], { role: 'SUPER_ADMIN' });
-    const guard = new RolesGuard(reflector);
-    expect(guard.canActivate(ctx)).toBe(true);
+    const guard = new RolesGuard(reflector, makeI18n());
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
 
-  it('throws ForbiddenException when user role is not in required list', () => {
+  it('throws ForbiddenException when user role is not in required list', async () => {
     const { ctx, reflector } = buildContext(['director'], { role: 'employee' });
-    const guard = new RolesGuard(reflector);
-    expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
+    const guard = new RolesGuard(reflector, makeI18n());
+    await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
   });
 
-  it('throws ForbiddenException when user has no role property', () => {
+  it('throws ForbiddenException when user has no role property', async () => {
     const { ctx, reflector } = buildContext(['director'], {});
-    const guard = new RolesGuard(reflector);
-    expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
+    const guard = new RolesGuard(reflector, makeI18n());
+    await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
   });
 
-  it('matches case-insensitively when required is uppercase and user lowercase', () => {
+  it('matches case-insensitively when required is uppercase and user lowercase', async () => {
     const { ctx, reflector } = buildContext(['DIRECTOR', 'CFO'], { role: 'director' });
-    const guard = new RolesGuard(reflector);
-    expect(guard.canActivate(ctx)).toBe(true);
+    const guard = new RolesGuard(reflector, makeI18n());
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
 });

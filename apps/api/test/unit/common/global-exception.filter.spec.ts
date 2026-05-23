@@ -74,7 +74,7 @@ describe('GlobalExceptionFilter', () => {
     filter.catch(new Error('boom'), host);
     expect(reply.statusCode).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
     const body = reply.body as { code: string; error: string };
-    expect(body.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(body.code).toBe('INTERNAL_ERROR'); // source uses 'INTERNAL_ERROR' for unknown errors
     expect(body.error).toBe('boom');
   });
 

@@ -4,6 +4,7 @@
  * Unit tests for RejectLeaveHandler. IHrRepo mocked.
  */
 
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { RejectLeaveHandler } from '../../src/modules/hr/application/commands/reject-leave.handler';
 import { RejectLeaveCommand } from '../../src/modules/hr/application/commands/reject-leave.command';
 import { LeaveStatus, LeaveType } from '../../src/modules/hr/domain/aggregates/leave-request.aggregate';
@@ -40,11 +41,15 @@ function pendingRow(): HrRow {
   };
 }
 
+function makeBus(): jest.Mocked<EventEmitter2> {
+  return { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
+}
+
 describe('RejectLeaveHandler', () => {
   it('returns Err when leave id cannot be found', async () => {
     const repo = makeRepo();
     repo.findLeaveById.mockResolvedValue(Err('not found'));
-    const handler = new RejectLeaveHandler(repo);
+    const handler = new RejectLeaveHandler(repo, makeBus());
 
     const r = await handler.execute(new RejectLeaveCommand('x', 'mgr-1', 'no'));
 
@@ -54,7 +59,7 @@ describe('RejectLeaveHandler', () => {
   it('returns Err when row data is null', async () => {
     const repo = makeRepo();
     repo.findLeaveById.mockResolvedValue(Ok(null));
-    const handler = new RejectLeaveHandler(repo);
+    const handler = new RejectLeaveHandler(repo, makeBus());
 
     const r = await handler.execute(new RejectLeaveCommand('x', 'mgr-1', 'no'));
 
@@ -64,7 +69,7 @@ describe('RejectLeaveHandler', () => {
   it('rejects pending leave and records rejector + reason in the aggregate', async () => {
     const repo = makeRepo();
     repo.findLeaveById.mockResolvedValue(Ok(pendingRow()));
-    const handler = new RejectLeaveHandler(repo);
+    const handler = new RejectLeaveHandler(repo, makeBus());
 
     const r = await handler.execute(new RejectLeaveCommand('lv-1', 'mgr-1', 'Peak season'));
 
@@ -81,20 +86,21 @@ describe('RejectLeaveHandler', () => {
     const repo = makeRepo();
     repo.findLeaveById.mockResolvedValue(Ok(pendingRow()));
     repo.updateLeave.mockResolvedValue(Err('write fail'));
-    const handler = new RejectLeaveHandler(repo);
+    const handler = new RejectLeaveHandler(repo, makeBus());
 
     const r = await handler.execute(new RejectLeaveCommand('lv-1', 'mgr-1', 'busy'));
 
     expect(r.ok).toBe(false);
   });
 
-  it('throws when row is not in PENDING state (already rejected)', async () => {
+  it('returns Err when row is not in PENDING state (already rejected)', async () => {
     const row = pendingRow();
     row.status = LeaveStatus.REJECTED;
     const repo = makeRepo();
     repo.findLeaveById.mockResolvedValue(Ok(row));
-    const handler = new RejectLeaveHandler(repo);
+    const handler = new RejectLeaveHandler(repo, makeBus());
 
-    await expect(handler.execute(new RejectLeaveCommand('lv-1', 'mgr-1', 'x'))).rejects.toThrow();
+    const r = await handler.execute(new RejectLeaveCommand('lv-1', 'mgr-1', 'x'));
+    expect(r.ok).toBe(false);
   });
 });

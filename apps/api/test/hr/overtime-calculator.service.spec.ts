@@ -6,32 +6,30 @@
  * is exercised directly for the pure-math path.
  */
 
-jest.mock('@shared/db', () => {
-  // Chainable Drizzle builder stub — every method returns the same builder.
-  const builder: Record<string, jest.Mock> = {};
-  const chain = (): typeof builder => {
-    builder.select  ??= jest.fn(() => builder);
-    builder.from    ??= jest.fn(() => builder);
-    builder.where   ??= jest.fn(() => builder);
-    builder.orderBy ??= jest.fn(() => builder);
-    builder.limit   ??= jest.fn(() => builder);
-    return builder;
-  };
-  return {
-    __esModule: true,
-    runQuery: jest.fn(),
-    db: chain(),
-    overtime_policy: { isActive: 'isActive', effectiveFrom: 'effectiveFrom' },
-  };
-});
+jest.mock('@shared/db', () => ({
+  __esModule: true,
+  runQuery: jest.fn(),
+  db: {},
+  overtime_policy: { isActive: 'isActive', effectiveFrom: 'effectiveFrom' },
+}));
 
-// Mock the schema module that the service imports overtime_policy from
 jest.mock('@shared/db/schema-hr-overtime', () => ({
   overtime_policy: { isActive: 'isActive', effectiveFrom: 'effectiveFrom' },
 }), { virtual: true });
 
 import { OvertimeCalculatorService, type OvertimePolicy } from '../../src/modules/hr/domain/services/overtime-calculator.service';
-import { runQuery } from '@shared/db';
+import { Ok } from '../../src/common/result';
+
+// Minimal IHrRepo mock — only findActiveOvertimePolicy is needed
+function makeRepo(policyRows: object[] = []) {
+  return {
+    findActiveOvertimePolicy: jest.fn().mockResolvedValue(
+      policyRows.length === 0
+        ? Ok(null)
+        : Ok(policyRows[0]),
+    ),
+  } as unknown as Parameters<typeof OvertimeCalculatorService>[0];
+}
 
 const defaultPolicy: OvertimePolicy = {
   regularOvertimeHours: 2,
@@ -44,15 +42,16 @@ const defaultPolicy: OvertimePolicy = {
 };
 
 describe('OvertimeCalculatorService', () => {
-  const svc = new OvertimeCalculatorService();
+  let svc: OvertimeCalculatorService;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    svc = new OvertimeCalculatorService(makeRepo() as never);
   });
 
   describe('loadActivePolicy()', () => {
     it('returns NOT_FOUND when DB has no policy row', async () => {
-      (runQuery as jest.Mock).mockResolvedValueOnce([]);
+      svc = new OvertimeCalculatorService(makeRepo([]) as never);
 
       const r = await svc.loadActivePolicy();
 
@@ -61,17 +60,15 @@ describe('OvertimeCalculatorService', () => {
     });
 
     it('returns parsed policy from first DB row', async () => {
-      (runQuery as jest.Mock).mockResolvedValueOnce([{
+      svc = new OvertimeCalculatorService(makeRepo([{
         regularOvertimeHours: 2,
-        regularMultiplier: '1.5',
-        extendedMultiplier: '2.0',
-        weekendMultiplier: '2.0',
-        nightShiftBonus: '0.3',
+        regularMultiplier: 1.5,
+        extendedMultiplier: 2.0,
+        weekendMultiplier: 2.0,
+        nightShiftBonus: 0.3,
         nightShiftStartHour: 22,
         nightShiftEndHour: 6,
-        isActive: true,
-        effectiveFrom: '2025-01-01',
-      }]);
+      }]) as never);
 
       const r = await svc.loadActivePolicy();
 
