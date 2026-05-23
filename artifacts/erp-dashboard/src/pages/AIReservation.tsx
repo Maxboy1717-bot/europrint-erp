@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from "@/lib/i18n/tLabel";
 import {
   Brain,
   Package,
@@ -125,7 +126,7 @@ export default function AIReservation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-reservation/requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ai-reservation/dashboard"] });
-      toast({ title: "Rezervatsiya tasdiqlandi" });
+      toast({ title: tLabel('common.rezervatsiyaTasdiqlandi', "Rezervatsiya tasdiqlandi") });
     },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
@@ -354,7 +355,7 @@ export default function AIReservation() {
                         <TableCell className="text-right">{r.requiredQuantity}</TableCell>
                         <TableCell className="text-right">{r.allocatedQuantity}</TableCell>
                         <TableCell className="text-sm">
-                          {new Date(r.requiredDate).toLocaleDateString("uz-UZ")}
+                          {r.requiredDate ? new Date(r.requiredDate).toLocaleDateString("uz-UZ") : "—"}
                         </TableCell>
                         <TableCell className="text-right">
                           <span className={r.aiConfidence >= 80 ? "text-[var(--ep-green)] dark:text-green-400 font-semibold" : r.aiConfidence >= 60 ? "text-[var(--ep-yellow)] dark:text-yellow-400" : "text-[var(--ep-red)] dark:text-red-400"}>

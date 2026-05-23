@@ -107,11 +107,13 @@ export default function SDSalesPayments() {
   const markPaidMut = useMutation({
     mutationFn: (id: string) => apiRequest("PATCH", `/api/sd/payments/${id}/mark-paid`, {}),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/sd/payments"] }); toast({ title: "To'landi deb belgilandi" }); },
+    onError: () => toast({ title: "To'lovni belgilashda xatolik", variant: "destructive" }),
   });
 
   const advancePaymentMut = useMutation({
     mutationFn: (orderId: string) => apiRequest("POST", `/api/sd/orders/${orderId}/advance-payment`, { amount: 0 }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/sd/payments"] }); toast({ title: "Avans to'lovi qayd etildi" }); },
+    onError: () => toast({ title: "Avans to'lovida xatolik", variant: "destructive" }),
   });
 
   return (

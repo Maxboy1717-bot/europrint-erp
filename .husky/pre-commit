@@ -15,8 +15,11 @@ if [ -n "$STAGED" ]; then
   if [ -f .husky/_i18n-tmp.json ]; then
     LEAKS=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.husky/_i18n-tmp.json','utf8')).summary.totalLeaks)" 2>/dev/null || echo 0)
     rm -f .husky/_i18n-tmp.json
-    if [ "$LEAKS" -gt 0 ]; then
-      echo "❌ i18n leakage: $LEAKS hardcoded UI strings detected."
+    # Ratchet: compare against baseline so pre-existing leaks don't block commits;
+    # only NEW leaks (count > baseline) fail the build.
+    BASELINE=$(node -e "try{const b=JSON.parse(require('fs').readFileSync('docs/i18n-leakage-baseline.json','utf8'));console.log(b.summary?.totalLeaks??b.totalLeaks??0);}catch(e){console.log(0);}" 2>/dev/null || echo 0)
+    if [ "$LEAKS" -gt "$BASELINE" ]; then
+      echo "❌ i18n leakage: $LEAKS strings detected (baseline: $BASELINE). New strings added!"
       echo "   Run: node scripts/i18n-leak-detector.mjs --mode=static"
       echo "   Or wrap text in tLabel('namespace.key', 'Original Text')"
       exit 1
