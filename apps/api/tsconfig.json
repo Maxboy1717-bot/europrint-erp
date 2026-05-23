@@ -35,8 +35,8 @@
       "@auth/guards/*": ["src/modules/auth/infrastructure/guards/*"],
       "@auth/types/*": ["src/modules/auth/types/*"],
       "@workspace/math-utils": ["../../lib/math-utils/src/index.ts"],
-      "@workspace/db": ["../../lib/db/src/index.ts"],
-      "@workspace/db/*": ["../../lib/db/src/*"]
+      "@workspace/db": ["../../lib/db/dist/cjs/index"],
+      "@workspace/db/*": ["../../lib/db/dist/cjs/*"]
     },
     "incremental": true,
     "allowJs": true,

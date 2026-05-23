@@ -139,16 +139,8 @@ export { lmsModules as lms_modules } from '@workspace/db/schema/lms-extended';
 export { lmsExams as lms_exams } from '@workspace/db/schema/lms-extended';
 export { lmsExamAttempts as lms_exam_attempts } from '@workspace/db/schema/lms-extended';
 
-// lib/db da mavjud emas — saqlab qolindi.
-export const lms_assignments = pgTable('lms_assignments', {
-  id:            text('id').primaryKey(),
-  user_id:       text('user_id'),
-  course_id:     text('course_id'),
-  assigned_by:   text('assigned_by'),
-  due_date:      timestamp('due_date'),
-  status:        text('status').default('pending'),
-  created_at:    timestamp('created_at').defaultNow(),
-});
+// lms_assignments: duplicate of schema-compat-4.ts `assignments` export; 0 Drizzle consumers → removed.
+// Consumers use raw SQL INSERT INTO lms_assignments — unaffected by Drizzle object removal.
 
 export const lms_knowledge = pgTable('lms_knowledge', {
   id:          text('id').primaryKey(),

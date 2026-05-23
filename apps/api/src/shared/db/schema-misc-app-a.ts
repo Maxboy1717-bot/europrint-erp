@@ -75,19 +75,7 @@ export const hrEmployees = pgTable('employees', {
 export const hrPositions = canonicalPositions;
 export const hrDepartments = canonicalDepartments;
 
-export const shiftSchedules = pgTable('shift_schedules', {
-  id: serial('id').primaryKey(),
-  employee_id: integer('employee_id'),
-  shift_date: date('shift_date'),
-  shift_type: varchar('shift_type'),
-  start_time: varchar('start_time'),
-  end_time: varchar('end_time'),
-  status: varchar('status'),
-  notes: text('notes'),
-  created_at: timestamp('created_at'),
-  user_id: varchar('user_id'),
-  created_by: varchar('created_by'),
-});
+export { shiftSchedules } from '@workspace/db';
 
 export const leaveRequestsApp = pgTable('leave_requests', {
   id:               integer('id').primaryKey(),

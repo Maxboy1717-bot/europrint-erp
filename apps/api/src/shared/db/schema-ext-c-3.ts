@@ -84,20 +84,8 @@ export const dokla_ext = canonicalDokla;
 export const rasporyazhenie_ext = canonicalRasporyazhenie;
 
 // ─── Deficit & Monitoring ─────────────────────────────────────────────────────
-// lib/db da mavjud emas (mm_vendors, mm_materials, mm_goods_receipts,
-// mm_purchase_orders nomli jadvallar lib/db da yo'q) — saqlab qolindi.
-
-export const mm_vendors_ext2 = pgTable('mm_vendors', {
-  id:          serial('id').primaryKey(),
-  name:        text('name'),
-  tin:         text('tin'),
-  phone:       text('phone'),
-  email:       text('email'),
-  is_active:   boolean('is_active').default(true),
-  rating:      numeric('rating', { precision: 3, scale: 2 }),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
+// mm_materials_int: kept — schema-ext-a-2.ts re-exports it as mm_materials_ext.
+// mm_vendors_ext2 / mm_goods_receipts_int / mm_purchase_orders_ext: 0 consumers → removed.
 
 export const mm_materials_int = pgTable('mm_materials', {
   id:             serial('id').primaryKey(),
@@ -110,30 +98,6 @@ export const mm_materials_int = pgTable('mm_materials', {
   is_active:      boolean('is_active').default(true),
   created_at:     timestamp('created_at').defaultNow(),
   updated_at:     timestamp('updated_at').defaultNow(),
-});
-
-export const mm_goods_receipts_int = pgTable('mm_goods_receipts', {
-  id:                serial('id').primaryKey(),
-  purchase_order_id: integer('purchase_order_id'),
-  received_by:       integer('received_by'),
-  status:            text('status').default('draft'),
-  notes:             text('notes'),
-  received_at:       timestamp('received_at'),
-  completed_by:      integer('completed_by'),
-  completed_at:      timestamp('completed_at'),
-  created_at:        timestamp('created_at').defaultNow(),
-});
-
-export const mm_purchase_orders_ext = pgTable('mm_purchase_orders', {
-  id:               serial('id').primaryKey(),
-  reference_number: text('reference_number'),
-  vendor_id:        integer('vendor_id'),
-  status:           text('status').default('draft'),
-  total_amount:     numeric('total_amount', { precision: 15, scale: 2 }),
-  received_by:      integer('received_by'),
-  notes:            text('notes'),
-  created_at:       timestamp('created_at').defaultNow(),
-  updated_at:       timestamp('updated_at').defaultNow(),
 });
 
 // ─── Agent (AI) Interview ──────────────────────────────────────────────────────

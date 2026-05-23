@@ -56,10 +56,10 @@ export const pos_order_items = pgTable('pos_order_items', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
-// SHIM: canonical `pos_movements` lives in `@workspace/db` (pos-schema-v2).
-// Re-exported here under snake_case alias for legacy callers in this file. Do
-// NOT redefine — that would register two `pgTable('pos_movements', …)` in
-// Drizzle's table set.
+// SHIM: canonical pos_movements lives in @workspace/db (pos-schema-v2).
+// Re-exported here under snake_case alias for legacy callers. Do NOT add a
+// second pgTable definition — that would register two Drizzle table objects for
+// the same physical table.
 export { posMovements as pos_movements } from '@workspace/db';
 
 export const pos_printer_configs = pgTable('pos_printer_configs', {
