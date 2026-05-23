@@ -4,10 +4,10 @@
  */
 
 import { date } from 'drizzle-orm/pg-core';
-import { pgTable, uuid, text, boolean, decimal, integer, createId, ts, stub } from './schema-compat-helpers';
+import { pgTable, uuid, text, boolean, decimal, integer, createId, ts } from './schema-compat-helpers';
 
 
-export const hrFunnelHistory = stub(pgTable('hr_funnel_history', {
+export const hrFunnelHistory = pgTable('hr_funnel_history', {
   id: integer('id').primaryKey(),
   candidateId: integer('candidate_id'),
   funnelId: text('funnel_id'),
@@ -16,9 +16,9 @@ export const hrFunnelHistory = stub(pgTable('hr_funnel_history', {
   fromStage: text('from_stage'),
   notes: text('notes'),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const hrReferencesChecks = stub(pgTable('hr_references_checks', {
+export const hrReferencesChecks = pgTable('hr_references_checks', {
   id: integer('id').primaryKey(),
   funnelId: integer('funnel_id').notNull(),
   candidateId: integer('candidate_id').notNull(),
@@ -33,9 +33,9 @@ export const hrReferencesChecks = stub(pgTable('hr_references_checks', {
   checkedById: integer('checked_by_id'),
   checkedAt: ts('checked_at'),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const hrToolTestResults = stub(pgTable('hr_tool_test_results', {
+export const hrToolTestResults = pgTable('hr_tool_test_results', {
   id: integer('id').primaryKey(),
   candidateId: integer('candidate_id').notNull(),
   vacancyId: integer('vacancy_id'),
@@ -60,9 +60,9 @@ export const hrToolTestResults = stub(pgTable('hr_tool_test_results', {
   isValid: boolean('is_valid').notNull().default(true),
   invalidReason: text('invalid_reason'),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const hrOnboardingPlans = stub(pgTable('hr_onboarding_plans', {
+export const hrOnboardingPlans = pgTable('hr_onboarding_plans', {
   id: integer('id').primaryKey(),
   title: text('title').notNull(),
   tasks: text('tasks').default('[]'),
@@ -72,9 +72,9 @@ export const hrOnboardingPlans = stub(pgTable('hr_onboarding_plans', {
   departmentId: text('department_id'),
   positionId: integer('position_id'),
   createdById: integer('created_by_id'),
-}));
+});
 
-export const hrEmployeeOnboardings = stub(pgTable('hr_employee_onboardings', {
+export const hrEmployeeOnboardings = pgTable('hr_employee_onboardings', {
   id: integer('id').primaryKey(),
   employeeId: integer('employee_id').notNull(),
   planId: text('plan_id'),
@@ -91,9 +91,9 @@ export const hrEmployeeOnboardings = stub(pgTable('hr_employee_onboardings', {
   probationScore: decimal('probation_score', { precision: 5, scale: 2 }),
   probationNotes: text('probation_notes'),
   isProbationPassed: boolean('is_probation_passed'),
-}));
+});
 
-export const hrJobDescriptions = stub(pgTable('hr_job_descriptions', {
+export const hrJobDescriptions = pgTable('hr_job_descriptions', {
   id: integer('id').primaryKey(),
   positionId: integer('position_id'),
   version: integer('version').notNull().default(1),
@@ -104,9 +104,9 @@ export const hrJobDescriptions = stub(pgTable('hr_job_descriptions', {
   updatedAt: ts('updated_at').defaultNow(),
   isCurrentVersion: boolean('is_current_version').default(false),
   createdById: integer('created_by_id'),
-}));
+});
 
-export const hrJobOffers = stub(pgTable('hr_job_offers', {
+export const hrJobOffers = pgTable('hr_job_offers', {
   id: integer('id').primaryKey(),
   vacancyId: integer('vacancy_id'),
   candidateId: integer('candidate_id').notNull(),
@@ -127,9 +127,9 @@ export const hrJobOffers = stub(pgTable('hr_job_offers', {
   createdById: integer('created_by_id'),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
-}));
+});
 
-export const hrMotivationPlans = stub(pgTable('hr_motivation_plans', {
+export const hrMotivationPlans = pgTable('hr_motivation_plans', {
   id: integer('id').primaryKey(),
   employeeId: integer('employee_id').notNull(),
   title: text('title').notNull(),
@@ -139,9 +139,9 @@ export const hrMotivationPlans = stub(pgTable('hr_motivation_plans', {
   endDate: ts('end_date'),
   createdAt: ts('created_at').defaultNow(),
   isActive: boolean('is_active').default(true),
-}));
+});
 
-export const hrProductivityInterviews = stub(pgTable('hr_productivity_interviews', {
+export const hrProductivityInterviews = pgTable('hr_productivity_interviews', {
   id: integer('id').primaryKey(),
   candidateId: integer('candidate_id').notNull(),
   funnelId: integer('funnel_id'),
@@ -152,6 +152,6 @@ export const hrProductivityInterviews = stub(pgTable('hr_productivity_interviews
   finalNotes: text('final_notes'),
   conductedAt: ts('conducted_at').notNull().defaultNow(),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
 

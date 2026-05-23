@@ -4,9 +4,8 @@
  */
 
 import { pgTable, uuid, text, boolean, integer, jsonb, timestamp, index } from 'drizzle-orm/pg-core';
-import { stub } from './schema-compat-helpers';
 
-export const aiExamAttempts = stub(pgTable('lms_exam_attempts', {
+export const aiExamAttempts = pgTable('lms_exam_attempts', {
   id:           uuid('id').primaryKey().defaultRandom(),
   employeeId:   text('employee_id').notNull(),
   status:       text('status').notNull().default('assigned'),
@@ -18,9 +17,9 @@ export const aiExamAttempts = stub(pgTable('lms_exam_attempts', {
   submittedAt:  timestamp('submitted_at', { withTimezone: true }),
   analyzedAt:   timestamp('analyzed_at', { withTimezone: true }),
   createdAt:    timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('ai_exam_attempts_employee_idx').on(t.employeeId)]));
+}, (t) => [index('ai_exam_attempts_employee_idx').on(t.employeeId)]);
 
-export const aiInsights = stub(pgTable('ai_insights', {
+export const aiInsights = pgTable('ai_insights', {
   id:          uuid('id').primaryKey().defaultRandom(),
   userId:      integer('user_id'),
   module:      text('module').notNull(),
@@ -31,9 +30,9 @@ export const aiInsights = stub(pgTable('ai_insights', {
   isRead:      boolean('is_read').notNull().default(false),
   readAt:      timestamp('read_at', { withTimezone: true }),
   createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('ai_insights_user_idx').on(t.userId)]));
+}, (t) => [index('ai_insights_user_idx').on(t.userId)]);
 
-export const aiPlanningPlans = stub(pgTable('ai_planning_plans', {
+export const aiPlanningPlans = pgTable('ai_planning_plans', {
   id:                    uuid('id').primaryKey().defaultRandom(),
   planNumber:            text('plan_number').notNull(),
   planDate:              text('plan_date').notNull(),
@@ -49,9 +48,9 @@ export const aiPlanningPlans = stub(pgTable('ai_planning_plans', {
   optimizationMetrics:   jsonb('optimization_metrics').default({}),
   aiRecommendations:     jsonb('ai_recommendations').default([]),
   createdAt:             timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('ai_planning_plans_status_idx').on(t.status)]));
+}, (t) => [index('ai_planning_plans_status_idx').on(t.status)]);
 
-export const aiPlanningConfig = stub(pgTable('ai_planning_config', {
+export const aiPlanningConfig = pgTable('ai_planning_config', {
   id:                       uuid('id').primaryKey().defaultRandom(),
   autoApprovalThreshold:    integer('auto_approval_threshold').notNull().default(90),
   maxShiftHours:            integer('max_shift_hours').notNull().default(8),
@@ -59,9 +58,9 @@ export const aiPlanningConfig = stub(pgTable('ai_planning_config', {
   energyOptimizationWeight: integer('energy_optimization_weight').notNull().default(30),
   changeoverMinutes:        integer('changeover_minutes').notNull().default(15),
   updatedAt:                timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}));
+});
 
-export const aiReservationRequests = stub(pgTable('ai_reservation_requests', {
+export const aiReservationRequests = pgTable('ai_reservation_requests', {
   id:           uuid('id').primaryKey().defaultRandom(),
   materialType: text('material_type').notNull(),
   quantity:     integer('quantity').notNull(),
@@ -72,18 +71,18 @@ export const aiReservationRequests = stub(pgTable('ai_reservation_requests', {
   notes:        text('notes'),
   optimization: jsonb('optimization'),
   createdAt:    timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('ai_reservation_requests_status_idx').on(t.status)]));
+}, (t) => [index('ai_reservation_requests_status_idx').on(t.status)]);
 
-export const aiReservationBatches = stub(pgTable('ai_reservation_batches', {
+export const aiReservationBatches = pgTable('ai_reservation_batches', {
   id:           uuid('id').primaryKey().defaultRandom(),
   materialType: text('material_type').notNull(),
   items:        jsonb('items').default([]),
   scheduledAt:  timestamp('scheduled_at', { withTimezone: true }),
   status:       text('status').notNull().default('scheduled'),
   createdAt:    timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}));
+});
 
-export const aiHrInterviews = stub(pgTable('ai_hr_interviews', {
+export const aiHrInterviews = pgTable('ai_hr_interviews', {
   id:            uuid('id').primaryKey().defaultRandom(),
   candidateId:   text('candidate_id').notNull(),
   positionTitle: text('position_title').notNull(),
@@ -93,4 +92,4 @@ export const aiHrInterviews = stub(pgTable('ai_hr_interviews', {
   notes:         text('notes'),
   createdBy:     text('created_by'),
   createdAt:     timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('ai_hr_interviews_status_idx').on(t.status)]));
+}, (t) => [index('ai_hr_interviews_status_idx').on(t.status)]);

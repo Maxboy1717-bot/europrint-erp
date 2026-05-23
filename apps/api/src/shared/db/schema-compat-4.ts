@@ -3,11 +3,11 @@
  * @description Source module. See exports for details.
  */
 
-import { pgTable, uuid, text, boolean, decimal, integer, createId, ts, stub } from './schema-compat-helpers';
+import { pgTable, uuid, text, boolean, decimal, integer, createId, ts } from './schema-compat-helpers';
 import z from 'zod';
 
 
-export const logisticsRoutes = stub(pgTable('logistics_routes', {
+export const logisticsRoutes = pgTable('logistics_routes', {
   id: integer('id').primaryKey(),
   name: text('name').notNull(),
   fromLocation: text('from_location'),
@@ -16,7 +16,7 @@ export const logisticsRoutes = stub(pgTable('logistics_routes', {
   estimatedHours: decimal('estimated_hours', { precision: 5, scale: 2 }),
   isActive: boolean('is_active').default(true),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
 /**
  * @deprecated SCHEMA DISCREPANCY — this stub disagrees with two other definitions of `iot_sensors`:
@@ -36,7 +36,7 @@ export const logisticsRoutes = stub(pgTable('logistics_routes', {
  *   3. Remove this stub.
  *   4. Migrate sensors.repository.ts to the canonical schema.
  */
-export const iotSensors = stub(pgTable('iot_sensors', {
+export const iotSensors = pgTable('iot_sensors', {
   id: integer('id').primaryKey(),
   deviceCode: text('device_code').notNull().unique(),
   name: text('name').notNull(),
@@ -47,9 +47,9 @@ export const iotSensors = stub(pgTable('iot_sensors', {
   thresholds: text('thresholds').default('{}'),
   createdAt: ts('created_at').defaultNow(),
   isActive: boolean('is_active').default(true),
-}));
+});
 
-export const designLibraryItems = stub(pgTable('design_library_items', {
+export const designLibraryItems = pgTable('design_library_items', {
   id: integer('id').primaryKey(),
   name: text('name').notNull(),
   type: text('type').notNull(),
@@ -60,9 +60,9 @@ export const designLibraryItems = stub(pgTable('design_library_items', {
   createdBy: text('created_by'),
   createdAt: ts('created_at').defaultNow(),
   deletedAt: ts('deleted_at'),
-}));
+});
 
-export const hitlApprovals = stub(pgTable('hitl_approvals', {
+export const hitlApprovals = pgTable('hitl_approvals', {
   id: integer('id').primaryKey(),
   entityType: text('entity_type').notNull(),
   entityId: text('entity_id').notNull(),
@@ -72,9 +72,9 @@ export const hitlApprovals = stub(pgTable('hitl_approvals', {
   notes: text('notes'),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
-}));
+});
 
-export const customerOrders = stub(pgTable('customer_orders', {
+export const customerOrders = pgTable('customer_orders', {
   id: integer('id').primaryKey(),
   customerId: text('customer_id'),
   orderNumber: text('order_number').unique(),
@@ -89,9 +89,9 @@ export const customerOrders = stub(pgTable('customer_orders', {
   guestName: text('guest_name'),
   guestPhone: text('guest_phone'),
   paymentStatus: text('payment_status'),
-}));
+});
 
-export const customerAccounts = stub(pgTable('customer_accounts', {
+export const customerAccounts = pgTable('customer_accounts', {
   id: integer('id').primaryKey(),
   name: text('name').notNull(),
   email: text('email').unique(),
@@ -105,9 +105,9 @@ export const customerAccounts = stub(pgTable('customer_accounts', {
   isVerified: boolean('is_verified').default(false),
   passwordHash: text('password_hash'),
   verificationCode: text('verification_code'),
-}));
+});
 
-export const publicProducts = stub(pgTable('public_products', {
+export const publicProducts = pgTable('public_products', {
   id: integer('id').primaryKey(),
   name: text('name').notNull(),
   slug: text('slug').unique(),
@@ -121,9 +121,9 @@ export const publicProducts = stub(pgTable('public_products', {
   deletedAt: ts('deleted_at'),
   inStock: boolean('in_stock').default(true),
   isFeatured: boolean('is_featured').default(false),
-}));
+});
 
-export const websitePages = stub(pgTable('website_pages', {
+export const websitePages = pgTable('website_pages', {
   id: integer('id').primaryKey(),
   slug: text('slug').notNull().unique(),
   title: text('title').notNull(),
@@ -132,9 +132,9 @@ export const websitePages = stub(pgTable('website_pages', {
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   deletedAt: ts('deleted_at'),
-}));
+});
 
-export const portfolioItems = stub(pgTable('portfolio_items', {
+export const portfolioItems = pgTable('portfolio_items', {
   id: integer('id').primaryKey(),
   sortOrder: integer('sort_order').default(0),
   title: text('title').notNull(),
@@ -144,20 +144,20 @@ export const portfolioItems = stub(pgTable('portfolio_items', {
   isPublished: boolean('is_published').default(true),
   createdAt: ts('created_at').defaultNow(),
   deletedAt: ts('deleted_at'),
-}));
+});
 
 export { lmsModules as modules } from '@workspace/db';
 
-export const tests = stub(pgTable('lms_tests', {
+export const tests = pgTable('lms_tests', {
   id: integer('id').primaryKey(),
   moduleId: text('module_id'),
   courseId: integer('course_id'),
   title: text('title').notNull(),
   maxScore: integer('max_score').default(100),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const assignments = stub(pgTable('lms_assignments', {
+export const assignments = pgTable('lms_assignments', {
   id: integer('id').primaryKey(),
   enrollmentId: text('enrollment_id').notNull(),
   userId: integer('user_id'),
@@ -167,9 +167,9 @@ export const assignments = stub(pgTable('lms_assignments', {
   submittedAt: ts('submitted_at'),
   createdAt: ts('created_at').defaultNow(),
   courseId: integer('course_id'),
-}));
+});
 
-export const courses = stub(pgTable('courses', {
+export const courses = pgTable('courses', {
   id: integer('id').primaryKey(),
   title: text('title').notNull(),
   description: text('description'),
@@ -180,9 +180,9 @@ export const courses = stub(pgTable('courses', {
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   deletedAt: ts('deleted_at'),
-}));
+});
 
-export const mmDeliveries = stub(pgTable('mm_deliveries', {
+export const mmDeliveries = pgTable('mm_deliveries', {
   id: integer('id').primaryKey(),
   purchaseOrderId: text('purchase_order_id'),
   vendorId: text('vendor_id'),
@@ -191,9 +191,9 @@ export const mmDeliveries = stub(pgTable('mm_deliveries', {
   notes: text('notes'),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
-}));
+});
 
-export const sdOrders = stub(pgTable('sd_orders', {
+export const sdOrders = pgTable('sd_orders', {
   id: integer('id').primaryKey(),
   orderNumber: text('order_number').unique(),
   customerId: text('customer_id'),
@@ -202,9 +202,9 @@ export const sdOrders = stub(pgTable('sd_orders', {
   createdBy: text('created_by'),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
-}));
+});
 
-export const productionSessions = stub(pgTable('production_sessions', {
+export const productionSessions = pgTable('production_sessions', {
   id: integer('id').primaryKey(),
   productionOrderId: text('production_order_id'),
   sessionId: text('session_id'),
@@ -213,9 +213,9 @@ export const productionSessions = stub(pgTable('production_sessions', {
   startedAt: ts('started_at'),
   endedAt: ts('ended_at'),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const aiUsageLogs = stub(pgTable('ai_usage_logs', {
+export const aiUsageLogs = pgTable('ai_usage_logs', {
   id: integer('id').primaryKey(),
   userId: text('user_id'),
   module: text('module').notNull(),
@@ -226,9 +226,9 @@ export const aiUsageLogs = stub(pgTable('ai_usage_logs', {
   model: text('model'),
   status: text('status').notNull().default('success'),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const approvalRequests = stub(pgTable('approval_requests', {
+export const approvalRequests = pgTable('approval_requests', {
   id: integer('id').primaryKey(),
   documentType: text('document_type').notNull(),
   documentId: text('document_id').notNull(),
@@ -244,9 +244,9 @@ export const approvalRequests = stub(pgTable('approval_requests', {
   notes: text('notes'),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
-}));
+});
 
-export const designOrders = stub(pgTable('design_orders', {
+export const designOrders = pgTable('design_orders', {
   id: integer('id').primaryKey(),
   salesOrderId: text('sales_order_id'),
   title: text('title').notNull(),
@@ -259,9 +259,9 @@ export const designOrders = stub(pgTable('design_orders', {
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   deletedAt: ts('deleted_at'),
-}));
+});
 
-export const stockTransferLines = stub(pgTable('stock_transfer_lines', {
+export const stockTransferLines = pgTable('stock_transfer_lines', {
   id: integer('id').primaryKey(),
   transferId: text('transfer_id').notNull(),
   materialId: text('material_id').notNull(),
@@ -269,5 +269,5 @@ export const stockTransferLines = stub(pgTable('stock_transfer_lines', {
   unit: text('unit'),
   status: text('status').notNull().default('pending'),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 

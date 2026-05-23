@@ -4,9 +4,9 @@
  */
 
 import { date } from 'drizzle-orm/pg-core';
-import { pgTable, uuid, text, boolean, decimal, integer, varchar, createId, ts, stub } from './schema-compat-helpers';
+import { pgTable, uuid, text, boolean, decimal, integer, varchar, createId, ts } from './schema-compat-helpers';
 
-export const users = stub(pgTable('users', {
+export const users = pgTable('users', {
   id: integer('id').primaryKey(),
   email: text('email').notNull(),
   username: text('username').notNull(),
@@ -24,9 +24,9 @@ export const users = stub(pgTable('users', {
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   deletedAt: ts('deleted_at'),
-}));
+});
 
-export const crmLeads = stub(pgTable('crm_leads', {
+export const crmLeads = pgTable('crm_leads', {
   id:                 integer('id').primaryKey(),
   customer_id:        integer('customer_id'),
   manager_id:         integer('manager_id'),
@@ -40,9 +40,9 @@ export const crmLeads = stub(pgTable('crm_leads', {
   deleted_at:         ts('deleted_at'),
   created_at:         ts('created_at').defaultNow(),
   updated_at:         ts('updated_at').defaultNow(),
-}));
+});
 
-export const crmDeals = stub(pgTable('crm_deals', {
+export const crmDeals = pgTable('crm_deals', {
   id:              integer('id').primaryKey(),
   lead_id:         integer('lead_id'),
   company_id:      text('company_id'),
@@ -58,9 +58,9 @@ export const crmDeals = stub(pgTable('crm_deals', {
   deleted_at:      ts('deleted_at'),
   metadata:        text('metadata'),
   stage_id:        integer('stage_id'),
-}));
+});
 
-export const crmContacts = stub(pgTable('crm_contacts', {
+export const crmContacts = pgTable('crm_contacts', {
   id:         integer('id').primaryKey(),
   company_id: integer('company_id'),
   first_name: text('first_name'),
@@ -72,9 +72,9 @@ export const crmContacts = stub(pgTable('crm_contacts', {
   created_at: ts('created_at').defaultNow(),
   updated_at: ts('updated_at').defaultNow(),
   deleted_at: ts('deleted_at'),
-}));
+});
 
-export const crmCompanies = stub(pgTable('crm_companies', {
+export const crmCompanies = pgTable('crm_companies', {
   id:           integer('id').primaryKey(),
   title:        text('title').notNull(),
   status:       text('status').notNull().default('active'),
@@ -87,26 +87,26 @@ export const crmCompanies = stub(pgTable('crm_companies', {
   created_at:   ts('date_create').defaultNow(),
   deleted_at:   ts('deleted_at'),
   updated_at:   ts('date_modify').defaultNow(),
-}));
+});
 
-export const crmPipelines = stub(pgTable('crm_pipelines', {
+export const crmPipelines = pgTable('crm_pipelines', {
   id: integer('id').primaryKey(),
   name: text('name').notNull(),
   sort: integer('sort').default(0),
   isActive: boolean('is_active').default(true),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const crmStages = stub(pgTable('crm_stages', {
+export const crmStages = pgTable('crm_stages', {
   id: integer('id').primaryKey(),
   name: text('name').notNull(),
   categoryId: integer('category_id'),
   sort: integer('sort').default(0),
   probability: integer('probability').default(0),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const candidates = stub(pgTable('candidates', {
+export const candidates = pgTable('candidates', {
   id:          integer('id').primaryKey(),
   vacancy_id:  integer('vacancy_id'),
   first_name:  text('first_name'),
@@ -122,9 +122,9 @@ export const candidates = stub(pgTable('candidates', {
   created_at:  ts('created_at').defaultNow(),
   updated_at:  ts('updated_at').defaultNow(),
   deleted_at:  ts('deleted_at'),
-}));
+});
 
-export const vacancies = stub(pgTable('vacancies', {
+export const vacancies = pgTable('vacancies', {
   id: integer('id').primaryKey(),
   title: text('title').notNull(),
   department: text('department'),
@@ -136,9 +136,9 @@ export const vacancies = stub(pgTable('vacancies', {
   createdAt: ts('created_at').defaultNow(),
   closedAt: ts('closed_at'),
   description: text('description'),
-}));
+});
 
-export const hrCandidateFunnels = stub(pgTable('hr_candidate_funnels', {
+export const hrCandidateFunnels = pgTable('hr_candidate_funnels', {
   id: integer('id').primaryKey(),
   candidateId: integer('candidate_id').notNull(),
   vacancyId: integer('vacancy_id'),
@@ -158,4 +158,4 @@ export const hrCandidateFunnels = stub(pgTable('hr_candidate_funnels', {
   updatedAt: ts('updated_at').defaultNow(),
   hiredAt: ts('hired_at'),
   isQuickRejected: boolean('is_quick_rejected').default(false),
-}));
+});
