@@ -183,7 +183,7 @@ export const warehouseStock = stub(pgTable('warehouse_stock', {
   updatedAt: ts('updated_at').defaultNow(),
 }));
 
-export const materials = stub(pgTable('materials', {
+export const materials = pgTable('materials', {
   id: integer('id').primaryKey(),
   name: text('name').notNull(),
   code: text('code').unique(),
@@ -194,7 +194,7 @@ export const materials = stub(pgTable('materials', {
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   deletedAt: ts('deleted_at'),
-}));
+});
 
 export { posMovements } from '@workspace/db';
 
