@@ -132,7 +132,8 @@ export {
   qc_standards, qc_final_inspections, qc_in_process_inspections,
   // LMS Extended (new tables)
   lms_test_attempts, lms_certificates,
-  lms_modules, lms_exams, lms_exam_attempts,
+  lms_modules, lms_exams,
+  // lms_exam_attempts: aiExamAttempts in schema-ai.ts is the live canonical (uuid PK)
   lms_knowledge, lms_achievements, lms_user_achievements, lms_tests_ext,
   // MES Extended
   mes_maintenance_requests, mes_maintenance_tasks, mes_production_sessions, mes_shift_stats,

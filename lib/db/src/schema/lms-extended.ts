@@ -53,27 +53,9 @@ export const lmsLessons = pgTable('lms_lessons', {
   check("lms_lessons_content_type_chk", sql`${t.contentType} IN ('text','video','pdf','audio','quiz','assignment')`),
 ]);
 
-export const lmsExamAttempts = pgTable('lms_exam_attempts', {
-  id:          serial('id').primaryKey(),
-  examId:      integer('exam_id').notNull().references(() => lmsExams.id, { onDelete: 'cascade' }),
-  userId:      integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  startedAt:   timestamp('started_at').notNull().defaultNow(),
-  submittedAt: timestamp('submitted_at'),
-  score:       real('score'),
-  status:      varchar('status', { length: 20 }).notNull().default('in_progress'),
-  createdAt:   timestamp('created_at').notNull().defaultNow(),
-}, (t) => [
-  check("lms_exam_attempts_status_chk", sql`${t.status} IN ('in_progress','completed','failed','cancelled')`),
-]);
-
-export const lmsExamAnswers = pgTable('lms_exam_answers', {
-  id:             serial('id').primaryKey(),
-  attemptId:      integer('attempt_id').notNull().references(() => lmsExamAttempts.id, { onDelete: 'cascade' }),
-  questionId:     integer('question_id').notNull(),
-  selectedOption: integer('selected_option').notNull(),
-  isCorrect:      boolean('is_correct').notNull().default(false),
-  createdAt:      timestamp('created_at').notNull().defaultNow(),
-});
+// lmsExamAttempts + lmsExamAnswers: REMOVED — stale schema (serial PK + examId/userId FK).
+// Production table lms_exam_attempts uses uuid PK + employeeId + questions/answers JSONB
+// (see schema-ai.ts: aiExamAttempts). Zero consumers of these lib/db definitions.
 
 export const lmsCertificates = pgTable('lms_certificates', {
   id:        serial('id').primaryKey(),

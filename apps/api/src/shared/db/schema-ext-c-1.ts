@@ -137,7 +137,8 @@ export const erp_employees = pgTable('erp_employees', {
 
 export { lmsModules as lms_modules } from '@workspace/db/schema/lms-extended';
 export { lmsExams as lms_exams } from '@workspace/db/schema/lms-extended';
-export { lmsExamAttempts as lms_exam_attempts } from '@workspace/db/schema/lms-extended';
+// lms_exam_attempts: aiExamAttempts in schema-ai.ts is the live definition (uuid PK, employeeId,
+// questions/answers JSONB). The stale lib/db version (serial PK, examId FK) was removed.
 
 // lms_assignments: duplicate of schema-compat-4.ts `assignments` export; 0 Drizzle consumers → removed.
 // Consumers use raw SQL INSERT INTO lms_assignments — unaffected by Drizzle object removal.
