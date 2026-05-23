@@ -1,3 +1,4 @@
+#!/usr/bin/env sh
 # Conventional Commits formatini majburlaydi (Husky v9)
 # Misol: feat(hr): add onboarding wizard
 #        fix(api): handle null response in CRM companies
