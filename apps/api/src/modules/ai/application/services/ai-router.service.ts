@@ -120,7 +120,7 @@ export class AiRouterService {
       gemini: { spent: 0, requestCount: 0 },
       claude: { spent: 0, requestCount: 0 },
     };
-    let byProviderRows: Array<{ provider: string; spent: string; requestCount: number }> = [];
+    let byProviderRows: Array<{ provider: string | null; spent: string; requestCount: number }> = [];
     try {
       const db = this.drizzle.db;
       byProviderRows = await db

@@ -10,8 +10,9 @@ import { Ok, Err, Result } from '@common/result';
 import { ApprovalWorkflowRepo } from './repositories/approval-workflow.repo';
 
 // Inferred from ApprovalWorkflowRepo.findAll() success-path return shape.
+// id is number (serial integer PK) but kept as number|string for cross-module compat.
 type ApprovalRow = {
-  id: string;
+  id: number | string;
   documentType: string;
   documentId: string;
   documentNumber: string | null;

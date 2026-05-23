@@ -96,20 +96,6 @@ export const ishlabChiqarish = pgTable('rpt_ishlab_chiqarish', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
-export const ai_usage_logs = pgTable('ai_usage_logs', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  provider: text('provider').notNull(),
-  taskType: text('task_type').notNull(),
-  model: text('model').notNull(),
-  inputTokens: integer('input_tokens').notNull().default(0),
-  outputTokens: integer('output_tokens').notNull().default(0),
-  totalTokens: integer('total_tokens').notNull().default(0),
-  estimatedCost: decimal('estimated_cost', { precision: 12, scale: 6 }).notNull().default('0'),
-  userId: text('user_id'),
-  sessionId: text('session_id'),
-  requestSummary: text('request_summary'),
-  responseSummary: text('response_summary'),
-  latencyMs: integer('latency_ms'),
-  status: text('status').notNull().default('success'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+// ai_usage_logs: re-exported from schema-compat-4.ts (integer PK, matches DB migration).
+// The uuid PK version here was incorrect — DB migration shows integer PK.
+export { aiUsageLogs as ai_usage_logs } from './schema-compat-4';

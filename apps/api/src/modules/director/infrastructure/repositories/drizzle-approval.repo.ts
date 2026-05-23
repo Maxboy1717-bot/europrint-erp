@@ -28,7 +28,7 @@ export class DrizzleApprovalRepo implements IApprovalRepo {
 
   async findById(id: string): Promise<Result<ApprovalRequest>> {
     try {
-      const rows = await db.select().from(approvalRequests).where(eq(approvalRequests.id, id)).limit(1);
+      const rows = await db.select().from(approvalRequests).where(eq(approvalRequests.id, Number(id))).limit(1);
       if (rows.length === 0) return Err(`Tasdiqlash so'rovi topilmadi: ${id}`);
       return Ok(this.mapToAggregate(rows[0]));
     } catch (err) {
