@@ -1,50 +1,44 @@
 /**
  * test/wms/create-warehouse.handler.spec.ts
  *
- * Unit tests for CreateWarehouseHandler. The shared db client is mocked so the
- * handler can drive the insert path without touching Postgres.
+ * Unit tests for CreateWarehouseHandler. IWmsRepository is mocked via WMS_REPO token
+ * so the handler can exercise the create-warehouse use case without Postgres.
  */
-
-jest.mock('@shared/db', () => {
-  const insert = jest.fn().mockReturnValue({
-    values: jest.fn().mockResolvedValue(undefined),
-  });
-  return {
-    db: { insert },
-    warehouses: { __tableName: 'warehouses' },
-    runQuery: jest.fn().mockResolvedValue({ rows: [] }),
-  };
-});
 
 import { Test } from '@nestjs/testing';
 import { CreateWarehouseHandler } from '../../src/modules/wms/application/commands/create-warehouse.handler';
 import { CreateWarehouseCommand } from '../../src/modules/wms/application/commands/create-warehouse.command';
-import { db } from '@shared/db';
+import { WMS_REPO } from '../../src/modules/wms/domain/repositories/wms.repository';
+import { Ok } from '../../src/common/result';
 
-interface InsertedRow {
-  id: string;
-  name: string;
-  address: string;
-  is_free_storage: boolean;
-  free_storage_days: number;
-  monthly_rate: string | null;
-  created_at: Date;
-}
-
-function lastInsertedRow(): InsertedRow {
-  const insertFn = (db as unknown as { insert: jest.Mock }).insert;
-  const callIndex = insertFn.mock.calls.length - 1;
-  const valuesFn = insertFn.mock.results[callIndex].value.values as jest.Mock;
-  return valuesFn.mock.calls[0][0] as InsertedRow;
+function makeRepoMock() {
+  return {
+    createWarehouse: jest.fn().mockImplementation(async (input: unknown) => Ok(input)),
+    saveStock: jest.fn(),
+    getStock: jest.fn(),
+    getStockByMaterialAndWarehouse: jest.fn(),
+    getFefoStock: jest.fn(),
+    reserveMaterial: jest.fn(),
+    issueGoods: jest.fn(),
+    receiveFg: jest.fn(),
+    getAllStockByStatus: jest.fn(),
+    softDeleteStock: jest.fn(),
+    withTransaction: jest.fn().mockImplementation((cb: (tx: unknown) => Promise<unknown>) => cb(undefined)),
+  };
 }
 
 describe('CreateWarehouseHandler', () => {
   let handler: CreateWarehouseHandler;
+  let repo: ReturnType<typeof makeRepoMock>;
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    repo = makeRepoMock();
     const moduleRef = await Test.createTestingModule({
-      providers: [CreateWarehouseHandler],
+      providers: [
+        CreateWarehouseHandler,
+        { provide: WMS_REPO, useValue: repo },
+      ],
     }).compile();
     handler = moduleRef.get(CreateWarehouseHandler);
   });
@@ -65,7 +59,8 @@ describe('CreateWarehouseHandler', () => {
   it('defaults isFreeStorage to false and days to 30 when omitted', async () => {
     await handler.execute(new CreateWarehouseCommand('WH2', 'Addr 2'));
 
-    const row = lastInsertedRow();
+    expect(repo.createWarehouse).toHaveBeenCalledTimes(1);
+    const row = repo.createWarehouse.mock.calls[0][0];
     expect(row.is_free_storage).toBe(false);
     expect(row.free_storage_days).toBe(30);
     expect(row.monthly_rate).toBeNull();
@@ -76,24 +71,23 @@ describe('CreateWarehouseHandler', () => {
       new CreateWarehouseCommand('WH3', 'Addr 3', true, 14, 2500.5),
     );
 
-    const row = lastInsertedRow();
+    const row = repo.createWarehouse.mock.calls[0][0];
     expect(row.is_free_storage).toBe(true);
     expect(row.free_storage_days).toBe(14);
     expect(row.monthly_rate).toBe('2500.5');
   });
 
-  it('calls db.insert exactly once per execute', async () => {
+  it('calls repo.createWarehouse exactly once per execute', async () => {
     await handler.execute(new CreateWarehouseCommand('WH4', 'Addr 4'));
 
-    const insertFn = (db as unknown as { insert: jest.Mock }).insert;
-    expect(insertFn).toHaveBeenCalledTimes(1);
+    expect(repo.createWarehouse).toHaveBeenCalledTimes(1);
   });
 
   it('emits unique ids when invoked multiple times', async () => {
     await handler.execute(new CreateWarehouseCommand('A', 'A'));
-    const idA = lastInsertedRow().id;
+    const idA = repo.createWarehouse.mock.calls[0][0].id;
     await handler.execute(new CreateWarehouseCommand('B', 'B'));
-    const idB = lastInsertedRow().id;
+    const idB = repo.createWarehouse.mock.calls[1][0].id;
 
     expect(idA).not.toEqual(idB);
   });

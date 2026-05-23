@@ -10,7 +10,7 @@ import { EventBus } from '@nestjs/cqrs';
 import { RecordSensorReadingHandler } from '../../src/modules/iot/application/commands/record-sensor-reading.handler';
 import { RecordSensorReadingCommand } from '../../src/modules/iot/application/commands/record-sensor-reading.command';
 import { AnomalyDetectedEvent } from '../../src/modules/iot/domain/events';
-import { TelegramService } from '../../src/modules/notifications/domain/services/telegram.service';
+import { TELEGRAM_SENDER } from '../../src/modules/notifications/domain/ports/i-telegram-sender.port';
 
 interface TelegramMock {
   sendAlert: jest.Mock;
@@ -21,7 +21,7 @@ async function build(bus: EventBus, telegram: TelegramMock): Promise<RecordSenso
     providers: [
       RecordSensorReadingHandler,
       { provide: EventBus, useValue: bus },
-      { provide: TelegramService, useValue: telegram },
+      { provide: TELEGRAM_SENDER, useValue: telegram },
     ],
   }).compile();
   return module.get(RecordSensorReadingHandler);

@@ -4,6 +4,7 @@
  * Unit tests for CancelLeaveHandler. IHrRepo mocked.
  */
 
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CancelLeaveHandler } from '../../src/modules/hr/application/commands/cancel-leave.handler';
 import { CancelLeaveCommand } from '../../src/modules/hr/application/commands/cancel-leave.command';
 import { LeaveStatus, LeaveType } from '../../src/modules/hr/domain/aggregates/leave-request.aggregate';
@@ -54,11 +55,15 @@ function pendingRow(userId = 'user-1'): HrRow {
   };
 }
 
+function makeBus(): jest.Mocked<EventEmitter2> {
+  return { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
+}
+
 describe('CancelLeaveHandler', () => {
   it('returns Err when leave id is not found', async () => {
     const repo = makeRepo();
     repo.findLeaveById.mockResolvedValue(Err('missing'));
-    const handler = new CancelLeaveHandler(repo);
+    const handler = new CancelLeaveHandler(repo, makeBus());
 
     const r = await handler.execute(new CancelLeaveCommand('x', 'user-1'));
 
@@ -68,7 +73,7 @@ describe('CancelLeaveHandler', () => {
   it('returns Err when caller is neither owner nor HR/admin role', async () => {
     const repo = makeRepo();
     repo.findLeaveById.mockResolvedValue(Ok(pendingRow('user-1')));
-    const handler = new CancelLeaveHandler(repo);
+    const handler = new CancelLeaveHandler(repo, makeBus());
 
     const r = await handler.execute(new CancelLeaveCommand('lv-1', 'user-2'));
 
@@ -80,7 +85,7 @@ describe('CancelLeaveHandler', () => {
   it('cancels pending leave when owner requests it', async () => {
     const repo = makeRepo();
     repo.findLeaveById.mockResolvedValue(Ok(pendingRow('user-1')));
-    const handler = new CancelLeaveHandler(repo);
+    const handler = new CancelLeaveHandler(repo, makeBus());
 
     const r = await handler.execute(new CancelLeaveCommand('lv-1', 'user-1'));
 
@@ -92,7 +97,7 @@ describe('CancelLeaveHandler', () => {
   it('allows HR_MANAGER role to cancel another employee\'s leave', async () => {
     const repo = makeRepo();
     repo.findLeaveById.mockResolvedValue(Ok(pendingRow('user-99')));
-    const handler = new CancelLeaveHandler(repo);
+    const handler = new CancelLeaveHandler(repo, makeBus());
 
     const r = await handler.execute(new CancelLeaveCommand('lv-1', 'HR_MANAGER'));
 
@@ -104,7 +109,7 @@ describe('CancelLeaveHandler', () => {
     const repo = makeRepo();
     repo.findLeaveById.mockResolvedValue(Ok(pendingRow('user-1')));
     repo.updateLeave.mockResolvedValue(Err('write fail'));
-    const handler = new CancelLeaveHandler(repo);
+    const handler = new CancelLeaveHandler(repo, makeBus());
 
     const r = await handler.execute(new CancelLeaveCommand('lv-1', 'user-1'));
 

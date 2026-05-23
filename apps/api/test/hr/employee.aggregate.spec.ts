@@ -5,21 +5,27 @@
  */
 
 import { Employee, EmployeeProps } from '../../src/modules/hr/domain/aggregates/employee.aggregate';
+import { EmployeeId } from '../../src/modules/shared/domain/value-objects/employee-id.vo';
 import { SalaryCalculatedEvent } from '../../src/modules/hr/domain/events/salary-calculated.event';
 import { employeeFactory } from '../_fixtures/factories';
 
-function makeEmployee(overrides: Partial<EmployeeProps> = {}): Employee {
+function makeEmployee(overrides: Partial<EmployeeProps & { id: number }> = {}): Employee {
   const f = employeeFactory();
+  // EmployeeProps.id requires an EmployeeId VO — use fromRaw() for trusted values
+  const rawId = (overrides.id as number | EmployeeId | undefined);
+  const employeeId = rawId instanceof EmployeeId
+    ? rawId
+    : EmployeeId.fromRaw(typeof rawId === 'number' ? rawId : f.id);
   const base: EmployeeProps = {
-    id: f.id,
-    userId: f.userId,
-    departmentId: f.departmentId,
-    positionId: f.positionId,
-    employmentType: 'monthly',
-    baseSalary: 5_000_000,
-    status: 'active',
+    id: employeeId,
+    userId: overrides.userId ?? f.userId,
+    departmentId: overrides.departmentId ?? f.departmentId,
+    positionId: overrides.positionId ?? f.positionId,
+    employmentType: (overrides as EmployeeProps).employmentType ?? 'monthly',
+    baseSalary: overrides.baseSalary ?? 5_000_000,
+    status: overrides.status ?? 'active',
   };
-  return Employee.create({ ...base, ...overrides });
+  return Employee.create(base);
 }
 
 describe('Employee.create', () => {

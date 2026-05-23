@@ -13,6 +13,13 @@ function makeI18n() {
   } as unknown as import('nestjs-i18n').I18nService;
 }
 
+function makePasswordHasher() {
+  return {
+    hash: jest.fn().mockResolvedValue('$2b$10$hashed'),
+    compare: jest.fn().mockResolvedValue(true),
+  };
+}
+
 function makeUser(canChange: boolean) {
   return {
     changePassword: jest.fn().mockResolvedValue(canChange),
@@ -35,7 +42,7 @@ describe('ChangePasswordService', () => {
 
   it('returns NOT_FOUND when user is missing', async () => {
     const repo = makeRepo(null);
-    const handler = new ChangePasswordService(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makePasswordHasher() as never, makeI18n());
 
     const r = await handler.execute(cmd);
 
@@ -49,7 +56,7 @@ describe('ChangePasswordService', () => {
   it('returns VALIDATION on weak new password', async () => {
     const user = makeUser(true);
     const repo = makeRepo(user);
-    const handler = new ChangePasswordService(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makePasswordHasher() as never, makeI18n());
 
     const r = await handler.execute({ ...cmd, newPassword: '123' }); // too short
 
@@ -60,7 +67,7 @@ describe('ChangePasswordService', () => {
   it('returns VALIDATION when old password is wrong', async () => {
     const user = makeUser(false); // changePassword returns false
     const repo = makeRepo(user);
-    const handler = new ChangePasswordService(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makePasswordHasher() as never, makeI18n());
 
     const r = await handler.execute(cmd);
 
@@ -74,12 +81,12 @@ describe('ChangePasswordService', () => {
   it('succeeds and persists user on valid input', async () => {
     const user = makeUser(true);
     const repo = makeRepo(user);
-    const handler = new ChangePasswordService(repo as never, makeI18n());
+    const handler = new ChangePasswordService(repo as never, makePasswordHasher() as never, makeI18n());
 
     const r = await handler.execute(cmd);
 
     expect(r.ok).toBe(true);
-    expect(user.changePassword).toHaveBeenCalledWith(cmd.oldPassword, expect.any(Object));
+    expect(user.changePassword).toHaveBeenCalledWith(cmd.oldPassword, expect.any(Object), expect.any(Object));
     expect(repo.save).toHaveBeenCalledWith(user);
   });
 });

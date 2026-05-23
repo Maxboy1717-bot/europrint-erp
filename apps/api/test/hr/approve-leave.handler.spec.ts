@@ -123,13 +123,14 @@ describe('ApproveLeaveHandler', () => {
     }));
   });
 
-  it('throws when leave is not in PENDING state (already approved)', async () => {
+  it('returns Err when leave is not in PENDING state (already approved)', async () => {
     const row = pendingLeaveRow();
     row.status = LeaveStatus.APPROVED;
     const repo = makeRepo();
     repo.findLeaveById.mockResolvedValue(Ok(row));
     const handler = new ApproveLeaveHandler(repo, makeBus());
 
-    await expect(handler.execute(new ApproveLeaveCommand('id-1', 'mgr-1'))).rejects.toThrow();
+    const r = await handler.execute(new ApproveLeaveCommand('id-1', 'mgr-1'));
+    expect(r.ok).toBe(false);
   });
 });

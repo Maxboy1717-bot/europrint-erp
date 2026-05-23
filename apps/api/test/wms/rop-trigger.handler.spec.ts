@@ -10,7 +10,9 @@ jest.mock('@shared/db', () => ({
 }));
 
 import { Test } from '@nestjs/testing';
-import { RopTriggerHandler, StockLevelUpdatedPayload } from '../../src/modules/wms/infrastructure/event-handlers/rop-trigger.handler';
+import { CqrsModule } from '@nestjs/cqrs';
+import { RopTriggerHandler } from '../../src/modules/wms/infrastructure/event-handlers/rop-trigger.handler';
+import { StockUpdatedEvent } from '../../src/modules/wms/application/events/stock-updated.event';
 import { runQuery } from '@shared/db';
 
 const mockRun = runQuery as jest.MockedFunction<typeof runQuery>;
@@ -36,6 +38,7 @@ describe('RopTriggerHandler', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     const moduleRef = await Test.createTestingModule({
+      imports: [CqrsModule],
       providers: [RopTriggerHandler],
     }).compile();
     handler = moduleRef.get(RopTriggerHandler);
@@ -43,9 +46,9 @@ describe('RopTriggerHandler', () => {
 
   it('exits silently when no policy row exists for the material', async () => {
     mockRun.mockResolvedValueOnce({ rows: [] } as never);
-    const payload: StockLevelUpdatedPayload = { materialId: 100, newOnHand: 0 };
+    const event = new StockUpdatedEvent(100, 0);
 
-    await handler.handleStockLevelUpdated(payload);
+    await handler.handle(event);
 
     expect(mockRun).toHaveBeenCalledTimes(1);
   });
@@ -55,7 +58,7 @@ describe('RopTriggerHandler', () => {
       .mockResolvedValueOnce({ rows: [policy(50)] } as never)
       .mockResolvedValueOnce({ rows: [material(80)] } as never);
 
-    await handler.handleStockLevelUpdated({ materialId: 100, newOnHand: 80 });
+    await handler.handle(new StockUpdatedEvent(100, 80));
 
     expect(mockRun).toHaveBeenCalledTimes(2);
   });
@@ -66,7 +69,7 @@ describe('RopTriggerHandler', () => {
       .mockResolvedValueOnce({ rows: [material(30)] } as never)
       .mockResolvedValueOnce({ rows: [{ id: 999 }] } as never);
 
-    await handler.handleStockLevelUpdated({ materialId: 100, newOnHand: 30 });
+    await handler.handle(new StockUpdatedEvent(100, 30));
 
     // 3 reads (policy, material, dedup) and NO insert
     expect(mockRun).toHaveBeenCalledTimes(3);
@@ -80,7 +83,7 @@ describe('RopTriggerHandler', () => {
       .mockResolvedValueOnce({ rows: [{ eoq_qty: 150 }] } as never)
       .mockResolvedValueOnce({ rows: [] } as never);
 
-    await handler.handleStockLevelUpdated({ materialId: 100, newOnHand: 30 });
+    await handler.handle(new StockUpdatedEvent(100, 30));
 
     expect(mockRun).toHaveBeenCalledTimes(5);
   });
@@ -89,7 +92,7 @@ describe('RopTriggerHandler', () => {
     mockRun.mockRejectedValueOnce(new Error('db down'));
 
     await expect(
-      handler.handleStockLevelUpdated({ materialId: 100, newOnHand: 0 }),
+      handler.handle(new StockUpdatedEvent(100, 0)),
     ).resolves.toBeUndefined();
   });
 });

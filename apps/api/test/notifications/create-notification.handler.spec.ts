@@ -19,9 +19,9 @@ import {
 import { CreateNotificationCommand } from '../../src/modules/notifications/application/commands/create-notification.command';
 import { NOTIFICATION_REPO } from '../../src/modules/notifications/domain/repositories/i-notification.repo';
 import { Notification } from '../../src/modules/notifications/domain/aggregates/notification.aggregate';
-import { TelegramService } from '../../src/modules/notifications/domain/services/telegram.service';
-import { EmailNotificationService } from '../../src/modules/notifications/domain/services/email-notification.service';
-import { SmsService } from '../../src/modules/notifications/domain/services/sms.service';
+import { TELEGRAM_SENDER } from '../../src/modules/notifications/domain/ports/i-telegram-sender.port';
+import { EMAIL_SENDER } from '../../src/modules/notifications/domain/ports/i-email-sender.port';
+import { SMS_SENDER } from '../../src/modules/notifications/domain/ports/i-sms-sender.port';
 import { Ok, Err, AppErr } from '../../src/common/result';
 
 interface RepoMock {
@@ -55,9 +55,9 @@ describe('CreateNotificationHandler', () => {
       providers: [
         CreateNotificationHandler,
         { provide: NOTIFICATION_REPO, useValue: repo },
-        { provide: TelegramService, useValue: tg },
-        { provide: EmailNotificationService, useValue: email },
-        { provide: SmsService, useValue: sms },
+        { provide: TELEGRAM_SENDER, useValue: tg },
+        { provide: EMAIL_SENDER, useValue: email },
+        { provide: SMS_SENDER, useValue: sms },
       ],
     }).compile();
     handler = moduleRef.get(CreateNotificationHandler);
@@ -115,8 +115,9 @@ describe('CreateNotificationHandler', () => {
     await handler.execute(cmd);
 
     expect(sms.send).toHaveBeenCalledTimes(1);
-    const text = sms.send.mock.calls[0][1] as string;
-    expect(text.length).toBe(160);
+    // handler calls sms.send({ to, text }) — text is in the first arg object
+    const arg = sms.send.mock.calls[0][0] as { to: string; text: string };
+    expect(arg.text.length).toBe(160);
   });
 
   it('returns Ok even when Telegram delivery rejects (failure swallowed)', async () => {

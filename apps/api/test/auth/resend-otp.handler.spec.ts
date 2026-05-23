@@ -72,7 +72,7 @@ describe('ResendOtpService', () => {
     if (r.ok) {
       expect(r.data.sessionId).toBe('abc-123');
       expect(r.data.success).toBe(true);
-      expect(r.data.expiresIn).toBe(180);
+      expect(r.data.expiresIn).toBe(300); // OTP_TTL_MINUTES=5 → 300 seconds
     }
   });
 
