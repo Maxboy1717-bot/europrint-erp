@@ -72,74 +72,15 @@
 
 import { pgTable, serial, integer, bigint, smallint, text, varchar, char, boolean, timestamp, date, time, numeric, real, doublePrecision, jsonb, json, uuid, customType } from 'drizzle-orm/pg-core';
 
-export const agentAlerts = pgTable('agent_alerts', {
-  id: uuid('id').primaryKey(),
-  agentName: varchar('agent_name', { length: 60 }).notNull(),
-  severity: varchar('severity', { length: 20 }).notNull(),
-  title: varchar('title', { length: 300 }).notNull(),
-  message: text('message').notNull(),
-  targetUserId: integer('target_user_id'),
-  targetRole: varchar('target_role', { length: 40 }),
-  module: varchar('module', { length: 60 }),
-  relatedId: varchar('related_id', { length: 80 }),
-  isRead: boolean('is_read').notNull(),
-  readAt: timestamp('read_at'),
-  telegramSent: boolean('telegram_sent').notNull(),
-  telegramMessageId: varchar('telegram_message_id', { length: 50 }),
-  actionRequired: boolean('action_required').notNull(),
-  actions: jsonb('actions'),
-  createdAt: timestamp('created_at').notNull(),
-});
+// ── Promoted to lib/db (agent-schema.ts) — re-export canonical definitions ────
+export {
+  agentAlerts,
+  agentCronState,
+  agentModuleHealth,
+  agentModulesRegistry,
+  agentsAuditLog,
+} from '@workspace/db';
 
-export const agentCronState = pgTable('agent_cron_state', {
-  agentName: varchar('agent_name', { length: 60 }).notNull(),
-  lastRunAt: timestamp('last_run_at'),
-  nextRunAt: timestamp('next_run_at'),
-  lastSuccess: boolean('last_success'),
-  lastError: text('last_error'),
-  runCount: integer('run_count').notNull(),
-  updatedAt: timestamp('updated_at').notNull(),
-});
-
-export const agentModuleHealth = pgTable('agent_module_health', {
-  moduleName: varchar('module_name', { length: 60 }).notNull(),
-  healthScore: integer('health_score').notNull(),
-  errors_24h: integer('errors_24h').notNull(),
-  avgResponseMs: integer('avg_response_ms'),
-  lastError: text('last_error'),
-  lastCheckAt: timestamp('last_check_at').notNull(),
-  issuesSummary: jsonb('issues_summary'),
-  updatedAt: timestamp('updated_at').notNull(),
-});
-
-export const agentModulesRegistry = pgTable('agent_modules_registry', {
-  code: varchar('code', { length: 40 }).notNull(),
-  nameUz: varchar('name_uz', { length: 120 }).notNull(),
-  nameRu: varchar('name_ru', { length: 120 }),
-  icon: varchar('icon', { length: 20 }),
-  category: varchar('category', { length: 40 }),
-  ownerRole: varchar('owner_role', { length: 40 }),
-  isCritical: boolean('is_critical').notNull(),
-  sortOrder: integer('sort_order').notNull(),
-});
-
-export const agentsAuditLog = pgTable('agents_audit_log', {
-  id: uuid('id').primaryKey(),
-  agentName: varchar('agent_name', { length: 60 }).notNull(),
-  action: varchar('action', { length: 80 }).notNull(),
-  userId: integer('user_id'),
-  targetType: varchar('target_type', { length: 60 }),
-  targetId: varchar('target_id', { length: 80 }),
-  inputSummary: jsonb('input_summary'),
-  outputSummary: jsonb('output_summary'),
-  durationMs: integer('duration_ms'),
-  aiUsed: boolean('ai_used').notNull(),
-  aiTokens: integer('ai_tokens'),
-  aiCostUsd: numeric('ai_cost_usd', { precision: 10, scale: 6 }),
-  success: boolean('success').notNull(),
-  errorMessage: text('error_message'),
-  createdAt: timestamp('created_at').notNull(),
-});
 
 export const aiBehavioralScores = pgTable('ai_behavioral_scores', {
   id: integer('id').primaryKey(),
@@ -147,11 +88,15 @@ export const aiBehavioralScores = pgTable('ai_behavioral_scores', {
   sessionId: varchar('session_id', { length: 64 }).notNull(),
   frameTs: timestamp('frame_ts').notNull(),
   emotion: varchar('emotion', { length: 30 }),
-  emotionConfidence: numeric('emotion_confidence', { precision: 4, scale: 3 }),
-  postureScore: numeric('posture_score', { precision: 4, scale: 3 }),
-  attentionScore: numeric('attention_score', { precision: 4, scale: 3 }),
+  emotionConfidence: numeric('emotion_confidence', { precision: 4, scale: 3
+ }),
+  postureScore: numeric('posture_score', { precision: 4, scale: 3
+ }),
+  attentionScore: numeric('attention_score', { precision: 4, scale: 3
+ }),
   audioSentiment: varchar('audio_sentiment', { length: 20 }),
-  audioConfidence: numeric('audio_confidence', { precision: 4, scale: 3 }),
+  audioConfidence: numeric('audio_confidence', { precision: 4, scale: 3
+ }),
   notes: text('notes'),
   createdAt: timestamp('created_at').notNull(),
 });
@@ -192,7 +137,8 @@ export const boomerangNotifications = pgTable('boomerang_notifications', {
   id: integer('id').primaryKey(),
   vacancyId: integer('vacancy_id').notNull(),
   formerEmployeeId: integer('former_employee_id').notNull(),
-  matchScore: numeric('match_score', { precision: 3, scale: 2 }),
+  matchScore: numeric('match_score', { precision: 3, scale: 2
+ }),
   notifiedAt: timestamp('notified_at').notNull(),
 });
 
@@ -207,9 +153,12 @@ export const costStructure = pgTable('cost_structure', {
   id: uuid('id').primaryKey(),
   productName: varchar('product_name', { length: 255 }).notNull(),
   period: varchar('period', { length: 7 }).notNull(),
-  fixedCostUzs: numeric('fixed_cost_uzs', { precision: 18, scale: 4 }).notNull(),
-  variableCostUzs: numeric('variable_cost_uzs', { precision: 18, scale: 4 }).notNull(),
-  sellingPriceUzs: numeric('selling_price_uzs', { precision: 18, scale: 4 }).notNull(),
+  fixedCostUzs: numeric('fixed_cost_uzs', { precision: 18, scale: 4
+ }).notNull(),
+  variableCostUzs: numeric('variable_cost_uzs', { precision: 18, scale: 4
+ }).notNull(),
+  sellingPriceUzs: numeric('selling_price_uzs', { precision: 18, scale: 4
+ }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
   productId: integer('product_id'),
@@ -298,38 +247,11 @@ export const documentWorkflowRoutes = pgTable('document_workflow_routes', {
   updatedAt: timestamp('updated_at', { withTimezone: true }),
 });
 
-export const employeeBalances = pgTable('employee_balances', {
-  id: integer('id').primaryKey(),
-  userId: integer('user_id').notNull(),
-  materialId: integer('material_id').notNull(),
-  issuedQuantity: numeric('issued_quantity', { precision: 15, scale: 4 }).notNull(),
-  returnedQuantity: numeric('returned_quantity', { precision: 15, scale: 4 }).notNull(),
-  currentBalance: numeric('current_balance', { precision: 15, scale: 4 }),
-  totalValue: numeric('total_value', { precision: 15, scale: 2 }).notNull(),
-  status: varchar('status', { length: 20 }).notNull(),
-  lastMovementAt: timestamp('last_movement_at'),
-  createdAt: timestamp('created_at').notNull(),
-  updatedAt: timestamp('updated_at').notNull(),
-});
-
-export const employeeMonthlyCards = pgTable('employee_monthly_cards', {
-  id: integer('id').primaryKey(),
-  employeeId: integer('employee_id').notNull(),
-  periodYear: integer('period_year').notNull(),
-  periodMonth: integer('period_month').notNull(),
-  daysPresent: integer('days_present').notNull(),
-  daysLate: integer('days_late').notNull(),
-  daysAbsent: integer('days_absent').notNull(),
-  bonusUzs: numeric('bonus_uzs', { precision: 14, scale: 2 }).notNull(),
-  fineUzs: numeric('fine_uzs', { precision: 14, scale: 2 }).notNull(),
-  kpiScore: numeric('kpi_score', { precision: 5, scale: 2 }),
-  abcCategory: varchar('abc_category', { length: 10 }),
-  posBalance: numeric('pos_balance', { precision: 14, scale: 2 }).notNull(),
-  netSalaryUzs: numeric('net_salary_uzs', { precision: 14, scale: 2 }).notNull(),
-  summaryText: text('summary_text'),
-  pdfData: customType<{ data: Buffer }>({ dataType: () => 'bytea' })('pdf_data'),
-  generatedAt: timestamp('generated_at').notNull(),
-});
+// ── Promoted to lib/db (hr-goals.ts) — re-export canonical definitions ──────
+export {
+  employeeBalances,
+  employeeMonthlyCards,
+} from '@workspace/db';
 
 export const employeeReferrals = pgTable('employee_referrals', {
   id: integer('id').primaryKey(),
@@ -338,7 +260,8 @@ export const employeeReferrals = pgTable('employee_referrals', {
   candidateName: varchar('candidate_name', { length: 200 }),
   vacancyId: integer('vacancy_id'),
   status: varchar('status', { length: 20 }),
-  bonusAmount: numeric('bonus_amount', { precision: 12, scale: 2 }),
+  bonusAmount: numeric('bonus_amount', { precision: 12, scale: 2
+ }),
   bonusPaid: boolean('bonus_paid'),
   hiredAt: timestamp('hired_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }),
@@ -354,8 +277,10 @@ export const fiGlDocuments = pgTable('fi_gl_documents', {
   referenceId: varchar('reference_id'),
   description: text('description'),
   currency: varchar('currency', { length: 10 }),
-  totalDebit: numeric('total_debit', { precision: 18, scale: 4 }),
-  totalCredit: numeric('total_credit', { precision: 18, scale: 4 }),
+  totalDebit: numeric('total_debit', { precision: 18, scale: 4
+ }),
+  totalCredit: numeric('total_credit', { precision: 18, scale: 4
+ }),
   status: varchar('status', { length: 20 }),
   postedBy: integer('posted_by'),
   postedAt: timestamp('posted_at'),
@@ -374,7 +299,8 @@ export const financePayments = pgTable('finance_payments', {
   id: integer('id').primaryKey(),
   invoiceId: integer('invoice_id'),
   paymentDate: date('payment_date'),
-  amount: numeric('amount', { precision: 15, scale: 2 }),
+  amount: numeric('amount', { precision: 15, scale: 2
+ }),
   currency: varchar('currency', { length: 10 }),
   paymentMethod: varchar('payment_method', { length: 50 }),
   reference: varchar('reference', { length: 100 }),
@@ -386,17 +312,27 @@ export const financePayments = pgTable('finance_payments', {
 export const financialRatiosSnapshot = pgTable('financial_ratios_snapshot', {
   id: uuid('id').primaryKey(),
   period: varchar('period', { length: 7 }).notNull(),
-  currentRatio: numeric('current_ratio', { precision: 12, scale: 6 }),
-  quickRatio: numeric('quick_ratio', { precision: 12, scale: 6 }),
-  grossMarginPct: numeric('gross_margin_pct', { precision: 8, scale: 4 }),
-  netMarginPct: numeric('net_margin_pct', { precision: 8, scale: 4 }),
-  roa: numeric('roa', { precision: 8, scale: 4 }),
-  roe: numeric('roe', { precision: 8, scale: 4 }),
-  debtToEquity: numeric('debt_to_equity', { precision: 12, scale: 6 }),
-  altmanZ: numeric('altman_z', { precision: 12, scale: 6 }),
+  currentRatio: numeric('current_ratio', { precision: 12, scale: 6
+ }),
+  quickRatio: numeric('quick_ratio', { precision: 12, scale: 6
+ }),
+  grossMarginPct: numeric('gross_margin_pct', { precision: 8, scale: 4
+ }),
+  netMarginPct: numeric('net_margin_pct', { precision: 8, scale: 4
+ }),
+  roa: numeric('roa', { precision: 8, scale: 4
+ }),
+  roe: numeric('roe', { precision: 8, scale: 4
+ }),
+  debtToEquity: numeric('debt_to_equity', { precision: 12, scale: 6
+ }),
+  altmanZ: numeric('altman_z', { precision: 12, scale: 6
+ }),
   altmanZone: varchar('altman_zone', { length: 20 }),
-  revenue: numeric('revenue', { precision: 18, scale: 4 }),
-  netIncome: numeric('net_income', { precision: 18, scale: 4 }),
+  revenue: numeric('revenue', { precision: 18, scale: 4
+ }),
+  netIncome: numeric('net_income', { precision: 18, scale: 4
+ }),
   createdAt: timestamp('created_at', { withTimezone: true }),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
 });
@@ -408,7 +344,8 @@ export const fineRules = pgTable('fine_rules', {
   nameRu: varchar('name_ru', { length: 200 }),
   category: varchar('category', { length: 50 }).notNull(),
   severity: varchar('severity', { length: 20 }).notNull(),
-  fineAmount: numeric('fine_amount', { precision: 12, scale: 2 }),
+  fineAmount: numeric('fine_amount', { precision: 12, scale: 2
+ }),
   description: text('description'),
   escalationCount: integer('escalation_count'),
   escalationTo: varchar('escalation_to', { length: 20 }),
@@ -416,145 +353,17 @@ export const fineRules = pgTable('fine_rules', {
   createdAt: timestamp('created_at', { withTimezone: true }),
 });
 
-export const hrAiAttendance = pgTable('hr_ai_attendance', {
-  id: uuid('id').primaryKey(),
-  userId: integer('user_id').notNull(),
-  eventType: varchar('event_type', { length: 20 }).notNull(),
-  cameraId: varchar('camera_id', { length: 80 }),
-  location: varchar('location', { length: 200 }),
-  capturedAt: timestamp('captured_at').notNull(),
-  faceConfidence: numeric('face_confidence', { precision: 5, scale: 2 }),
-  snapshotUrl: varchar('snapshot_url', { length: 500 }),
-  createdAt: timestamp('created_at').notNull(),
-});
-
-export const hrEmployeeGoals = pgTable('hr_employee_goals', {
-  id: integer('id').primaryKey(),
-  employeeId: integer('employee_id').notNull(),
-  title: varchar('title', { length: 255 }).notNull(),
-  description: text('description'),
-  targetDate: date('target_date'),
-  targetValue: numeric('target_value', { precision: 10, scale: 2 }),
-  currentValue: numeric('current_value', { precision: 10, scale: 2 }),
-  progressPct: numeric('progress_pct', { precision: 5, scale: 2 }),
-  status: varchar('status', { length: 50 }),
-  createdBy: integer('created_by'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
-});
-
-export const hrEmployeeOneOnOnes = pgTable('hr_employee_one_on_ones', {
-  id: integer('id').primaryKey(),
-  employeeId: integer('employee_id').notNull(),
-  managerId: integer('manager_id'),
-  meetingDate: timestamp('meeting_date', { withTimezone: true }).notNull(),
-  topics: text('topics'),
-  actionItems: text('action_items'),
-  mood: smallint('mood'),
-  notes: text('notes'),
-  createdBy: integer('created_by'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
-});
-
-export const hrHealthAlerts = pgTable('hr_health_alerts', {
-  id: uuid('id').primaryKey(),
-  userId: integer('user_id').notNull(),
-  alertType: varchar('alert_type', { length: 40 }).notNull(),
-  severity: varchar('severity', { length: 10 }).notNull(),
-  aiConfidence: numeric('ai_confidence', { precision: 5, scale: 2 }),
-  details: jsonb('details'),
-  snapshotUrl: varchar('snapshot_url', { length: 500 }),
-  capturedAt: timestamp('captured_at').notNull(),
-  reviewedByUserId: integer('reviewed_by_user_id'),
-  reviewedAt: timestamp('reviewed_at'),
-  actionTaken: text('action_taken'),
-  createdAt: timestamp('created_at').notNull(),
-});
-
-export const hrLateArrivals = pgTable('hr_late_arrivals', {
-  id: uuid('id').primaryKey(),
-  userId: integer('user_id').notNull(),
-  arrivalAt: timestamp('arrival_at').notNull(),
-  expectedAt: timestamp('expected_at').notNull(),
-  minutesLate: integer('minutes_late').notNull(),
-  reason: text('reason'),
-  fineAmount: numeric('fine_amount', { precision: 12, scale: 2 }),
-  fineApproved: boolean('fine_approved').notNull(),
-  approvedByUserId: integer('approved_by_user_id'),
-  approvedAt: timestamp('approved_at'),
-  ccDocumentId: uuid('cc_document_id'),
-  createdAt: timestamp('created_at').notNull(),
-});
-
-export const hrOnboardingMilestones = pgTable('hr_onboarding_milestones', {
-  id: integer('id').primaryKey(),
-  processId: integer('process_id'),
-  milestoneType: varchar('milestone_type', { length: 20 }).notNull(),
-  targetDate: date('target_date').notNull(),
-  actualDate: date('actual_date'),
-  evaluationScores: jsonb('evaluation_scores'),
-  evaluationAverage: numeric('evaluation_average', { precision: 3, scale: 2 }),
-  evaluatorId: integer('evaluator_id'),
-  status: varchar('status', { length: 20 }),
-  feedback: text('feedback'),
-  createdAt: timestamp('created_at', { withTimezone: true }),
-});
-
-export const hrOnboardingProcesses = pgTable('hr_onboarding_processes', {
-  id: integer('id').primaryKey(),
-  employeeId: integer('employee_id'),
-  planId: integer('plan_id'),
-  adaptationProgramId: integer('adaptation_program_id'),
-  mentorId: integer('mentor_id'),
-  status: varchar('status', { length: 30 }),
-  startDate: date('start_date').notNull(),
-  expectedEndDate: date('expected_end_date'),
-  actualEndDate: date('actual_end_date'),
-  currentMilestone: varchar('current_milestone', { length: 20 }),
-  progressPercent: integer('progress_percent'),
-  weeklyEvaluations: jsonb('weekly_evaluations'),
-  checklist: jsonb('checklist'),
-  notes: text('notes'),
-  createdAt: timestamp('created_at', { withTimezone: true }),
-  updatedAt: timestamp('updated_at', { withTimezone: true }),
-});
-
-export const hrQuestionBank = pgTable('hr_question_bank', {
-  id: integer('id').primaryKey(),
-  orgFunctionId: integer('org_function_id'),
-  category: varchar('category', { length: 20 }).notNull(),
-  questionUz: text('question_uz').notNull(),
-  questionRu: text('question_ru'),
-  expectedKeywords: text('expected_keywords').array().notNull(),
-  difficulty: integer('difficulty').notNull(),
-  lang: varchar('lang', { length: 5 }).notNull(),
-  isActive: boolean('is_active').notNull(),
-  createdAt: timestamp('created_at').notNull(),
-  updatedAt: timestamp('updated_at').notNull(),
-});
-
-export const hrQuestionResponses = pgTable('hr_question_responses', {
-  id: integer('id').primaryKey(),
-  candidateId: integer('candidate_id').notNull(),
-  sessionId: varchar('session_id', { length: 64 }).notNull(),
-  questionId: integer('question_id').notNull(),
-  answer: text('answer').notNull(),
-  score: numeric('score', { precision: 4, scale: 2 }),
-  aiFeedback: text('ai_feedback'),
-  askedAt: timestamp('asked_at').notNull(),
-  answeredAt: timestamp('answered_at'),
-});
-
-export const hrUserBlocks = pgTable('hr_user_blocks', {
-  userId: integer('user_id').notNull(),
-  blockedAt: timestamp('blocked_at').notNull(),
-  reason: varchar('reason', { length: 200 }).notNull(),
-  blockedByUserId: integer('blocked_by_user_id'),
-  unblockedAt: timestamp('unblocked_at'),
-  unblockedByUserId: integer('unblocked_by_user_id'),
-  unblockDalolatnoma: text('unblock_dalolatnoma'),
-  isActive: boolean('is_active').notNull(),
-});
+// ── Promoted to lib/db (hr-goals.ts) — re-export canonical definitions ──────
+export {
+  hrAiAttendance,
+  hrEmployeeGoals,
+  hrEmployeeOneOnOnes,
+  hrHealthAlerts,
+  hrLateArrivals,
+  hrOnboardingMilestones,
+  hrOnboardingProcesses,
+  hrUserBlocks,
+} from '@workspace/db';
 
 export const hrV2DailyReports = pgTable('hr_v2_daily_reports', {
   id: integer('id').primaryKey(),
@@ -563,7 +372,8 @@ export const hrV2DailyReports = pgTable('hr_v2_daily_reports', {
   tasksCompleted: text('tasks_completed'),
   tasksPlanned: text('tasks_planned'),
   blockers: text('blockers'),
-  hoursWorked: numeric('hours_worked', { precision: 5, scale: 2 }),
+  hoursWorked: numeric('hours_worked', { precision: 5, scale: 2
+ }),
   status: varchar('status', { length: 30 }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
 });
@@ -756,8 +566,10 @@ export const lowStockAlerts = pgTable('low_stock_alerts', {
   id: integer('id').primaryKey(),
   materialId: integer('material_id').notNull(),
   warehouseId: integer('warehouse_id'),
-  currentStock: numeric('current_stock', { precision: 15, scale: 4 }).notNull(),
-  minStock: numeric('min_stock', { precision: 15, scale: 4 }).notNull(),
+  currentStock: numeric('current_stock', { precision: 15, scale: 4
+ }).notNull(),
+  minStock: numeric('min_stock', { precision: 15, scale: 4
+ }).notNull(),
   severity: varchar('severity', { length: 20 }).notNull(),
   isResolved: boolean('is_resolved').notNull(),
   notifiedTo: jsonb('notified_to'),
@@ -786,8 +598,10 @@ export const materialLotsView = pgTable('material_lots_view', {
   materialId: integer('material_id'),
   productId: integer('product_id'),
   warehouseId: integer('warehouse_id'),
-  quantity: numeric('quantity', { precision: 18, scale: 4 }),
-  availableQuantity: numeric('available_quantity', { precision: 18, scale: 4 }),
+  quantity: numeric('quantity', { precision: 18, scale: 4
+ }),
+  availableQuantity: numeric('available_quantity', { precision: 18, scale: 4
+ }),
   unit: varchar('unit', { length: 20 }),
   expiryDate: timestamp('expiry_date'),
   productionDate: timestamp('production_date'),
@@ -795,7 +609,8 @@ export const materialLotsView = pgTable('material_lots_view', {
   status: varchar('status', { length: 30 }),
   supplierId: integer('supplier_id'),
   supplierBatchNumber: varchar('supplier_batch_number', { length: 50 }),
-  costPerUnit: numeric('cost_per_unit', { precision: 18, scale: 4 }),
+  costPerUnit: numeric('cost_per_unit', { precision: 18, scale: 4
+ }),
   defectReason: varchar('defect_reason', { length: 100 }),
   quarantineReason: varchar('quarantine_reason', { length: 100 }),
   serialNumber: varchar('serial_number', { length: 100 }),
@@ -811,7 +626,8 @@ export const materialLotsView = pgTable('material_lots_view', {
 export const materialPriceHistory = pgTable('material_price_history', {
   id: integer('id').primaryKey(),
   materialId: integer('material_id').notNull(),
-  unitPrice: numeric('unit_price', { precision: 15, scale: 2 }).notNull(),
+  unitPrice: numeric('unit_price', { precision: 15, scale: 2
+ }).notNull(),
   currency: varchar('currency', { length: 3 }).notNull(),
   supplierName: text('supplier_name'),
   purchaseDate: date('purchase_date'),
@@ -824,14 +640,18 @@ export const materialSupplierRatings = pgTable('material_supplier_ratings', {
   supplierName: text('supplier_name').notNull(),
   materialId: integer('material_id'),
   totalOrders: integer('total_orders').notNull(),
-  totalQuantity: numeric('total_quantity', { precision: 15, scale: 4 }).notNull(),
-  totalAmount: numeric('total_amount', { precision: 15, scale: 2 }).notNull(),
+  totalQuantity: numeric('total_quantity', { precision: 15, scale: 4
+ }).notNull(),
+  totalAmount: numeric('total_amount', { precision: 15, scale: 2
+ }).notNull(),
   onTimeDeliveries: integer('on_time_deliveries').notNull(),
   lateDeliveries: integer('late_deliveries').notNull(),
   qcApproved: integer('qc_approved').notNull(),
   qcRejected: integer('qc_rejected').notNull(),
-  avgPrice: numeric('avg_price', { precision: 15, scale: 2 }),
-  rating: numeric('rating', { precision: 3, scale: 2 }),
+  avgPrice: numeric('avg_price', { precision: 15, scale: 2
+ }),
+  rating: numeric('rating', { precision: 3, scale: 2
+ }),
   lastOrderAt: timestamp('last_order_at'),
   updatedAt: timestamp('updated_at').notNull(),
 });
@@ -852,8 +672,10 @@ export const mesTelemetry = pgTable('mes_telemetry', {
   id: uuid('id').primaryKey(),
   machineId: text('machine_id').notNull(),
   metricType: varchar('metric_type', { length: 100 }),
-  metricValue: numeric('metric_value', { precision: 14, scale: 3 }),
-  value: numeric('value', { precision: 14, scale: 3 }),
+  metricValue: numeric('metric_value', { precision: 14, scale: 3
+ }),
+  value: numeric('value', { precision: 14, scale: 3
+ }),
   recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
 });
@@ -864,7 +686,8 @@ export const mmDriverExpenses = pgTable('mm_driver_expenses', {
   vehicleId: integer('vehicle_id'),
   orderId: integer('order_id'),
   expenseType: varchar('expense_type', { length: 50 }),
-  amount: numeric('amount', { precision: 18, scale: 4 }),
+  amount: numeric('amount', { precision: 18, scale: 4
+ }),
   currency: varchar('currency', { length: 5 }),
   receiptImageUrl: text('receipt_image_url'),
   ocrExtractedData: jsonb('ocr_extracted_data'),
@@ -894,7 +717,8 @@ export const operatorHourlyInvoices = pgTable('operator_hourly_invoices', {
   periodEnd: timestamp('period_end').notNull(),
   unitsProduced: integer('units_produced').notNull(),
   unitsDefective: integer('units_defective').notNull(),
-  hourlyRate: numeric('hourly_rate', { precision: 10, scale: 2 }).notNull(),
+  hourlyRate: numeric('hourly_rate', { precision: 10, scale: 2
+ }).notNull(),
   summaryText: text('summary_text'),
   pdfData: customType<{ data: Buffer }>({ dataType: () => 'bytea' })('pdf_data'),
   createdAt: timestamp('created_at').notNull(),
@@ -905,10 +729,13 @@ export const posGlPostings = pgTable('pos_gl_postings', {
   movementId: integer('movement_id'),
   debitAccount: varchar('debit_account', { length: 20 }).notNull(),
   creditAccount: varchar('credit_account', { length: 20 }).notNull(),
-  amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
+  amount: numeric('amount', { precision: 15, scale: 2
+ }).notNull(),
   currency: varchar('currency', { length: 3 }).notNull(),
-  exchangeRate: numeric('exchange_rate', { precision: 15, scale: 4 }).notNull(),
-  amountBase: numeric('amount_base', { precision: 15, scale: 2 }).notNull(),
+  exchangeRate: numeric('exchange_rate', { precision: 15, scale: 4
+ }).notNull(),
+  amountBase: numeric('amount_base', { precision: 15, scale: 2
+ }).notNull(),
   description: text('description'),
   postingDate: date('posting_date').notNull(),
   postedBy: varchar('posted_by', { length: 20 }),
@@ -926,9 +753,12 @@ export const posInventoryPassport = pgTable('pos_inventory_passport', {
   contractNumber: varchar('contract_number', { length: 100 }),
   waybillNumber: varchar('waybill_number', { length: 100 }),
   arrivalDate: date('arrival_date').notNull(),
-  quantity: numeric('quantity', { precision: 15, scale: 4 }).notNull(),
-  weightKg: numeric('weight_kg', { precision: 15, scale: 4 }),
-  volumeM3: numeric('volume_m3', { precision: 15, scale: 4 }),
+  quantity: numeric('quantity', { precision: 15, scale: 4
+ }).notNull(),
+  weightKg: numeric('weight_kg', { precision: 15, scale: 4
+ }),
+  volumeM3: numeric('volume_m3', { precision: 15, scale: 4
+ }),
   certificateNumber: varchar('certificate_number', { length: 100 }),
   quarantineStartedAt: timestamp('quarantine_started_at'),
   qcStartedAt: timestamp('qc_started_at'),
@@ -944,7 +774,8 @@ export const posMovementsLegacyView = pgTable('pos_movements_legacy_view', {
   movementTypeId: integer('movement_type_id'),
   status: varchar('status'),
   materialId: integer('material_id'),
-  quantity: numeric('quantity', { precision: 18, scale: 4 }),
+  quantity: numeric('quantity', { precision: 18, scale: 4
+ }),
   unit: varchar('unit', { length: 20 }),
   createdBy: integer('created_by'),
   createdAt: timestamp('created_at'),
@@ -979,12 +810,18 @@ export const posWarehouseStockView = pgTable('pos_warehouse_stock_view', {
   category: varchar('category', { length: 30 }),
   materialType: varchar('material_type', { length: 30 }),
   unitOfMeasure: varchar('unit_of_measure', { length: 20 }),
-  quantity: numeric('quantity', { precision: 18, scale: 4 }),
-  reservedQuantity: numeric('reserved_quantity', { precision: 18, scale: 4 }),
-  availableQuantity: numeric('available_quantity', { precision: 18, scale: 4 }),
-  minStock: numeric('min_stock', { precision: 18, scale: 4 }),
-  maxStock: numeric('max_stock', { precision: 18, scale: 4 }),
-  unitPrice: numeric('unit_price', { precision: 18, scale: 4 }),
+  quantity: numeric('quantity', { precision: 18, scale: 4
+ }),
+  reservedQuantity: numeric('reserved_quantity', { precision: 18, scale: 4
+ }),
+  availableQuantity: numeric('available_quantity', { precision: 18, scale: 4
+ }),
+  minStock: numeric('min_stock', { precision: 18, scale: 4
+ }),
+  maxStock: numeric('max_stock', { precision: 18, scale: 4
+ }),
+  unitPrice: numeric('unit_price', { precision: 18, scale: 4
+ }),
   currency: varchar('currency', { length: 10 }),
   stockStatus: text('stock_status'),
   lastUpdatedAt: timestamp('last_updated_at'),
@@ -1075,7 +912,8 @@ export const ppWorkCenters = pgTable('pp_work_centers', {
   isActive: boolean('is_active'),
   createdAt: timestamp('created_at'),
   deletedAt: timestamp('deleted_at'),
-  hoursPerDay: numeric('hours_per_day', { precision: 5, scale: 2 }),
+  hoursPerDay: numeric('hours_per_day', { precision: 5, scale: 2
+ }),
   department: text('department'),
   orgDepartmentId: integer('org_department_id'),
   costPerHour: numeric('cost_per_hour'),
@@ -1092,7 +930,8 @@ export const priceTier = pgTable('price_tier', {
   tierName: varchar('tier_name', { length: 50 }).notNull(),
   minQty: integer('min_qty').notNull(),
   maxQty: integer('max_qty'),
-  priceUzs: numeric('price_uzs', { precision: 18, scale: 4 }).notNull(),
+  priceUzs: numeric('price_uzs', { precision: 18, scale: 4
+ }).notNull(),
   validFrom: date('valid_from').notNull(),
   validTo: date('valid_to'),
   createdAt: timestamp('created_at', { withTimezone: true }),
@@ -1103,7 +942,8 @@ export const priceTier = pgTable('price_tier', {
 export const purchaseRequests = pgTable('purchase_requests', {
   id: uuid('id').primaryKey(),
   materialId: integer('material_id').notNull(),
-  qty: numeric('qty', { precision: 12, scale: 2 }).notNull(),
+  qty: numeric('qty', { precision: 12, scale: 2
+ }).notNull(),
   reason: text('reason'),
   requestedBy: varchar('requested_by', { length: 40 }),
   requestedByUserId: integer('requested_by_user_id'),
@@ -1111,7 +951,8 @@ export const purchaseRequests = pgTable('purchase_requests', {
   approvedAt: timestamp('approved_at'),
   status: varchar('status', { length: 20 }).notNull(),
   preferredSupplierId: integer('preferred_supplier_id'),
-  estimatedCost: numeric('estimated_cost', { precision: 14, scale: 2 }),
+  estimatedCost: numeric('estimated_cost', { precision: 14, scale: 2
+ }),
   currency: varchar('currency', { length: 10 }),
   notes: text('notes'),
   createdAt: timestamp('created_at').notNull(),
@@ -1121,10 +962,13 @@ export const purchaseRequests = pgTable('purchase_requests', {
 export const qcAiTrend = pgTable('qc_ai_trend', {
   id: integer('id').primaryKey(),
   period: varchar('period', { length: 20 }),
-  passRate: numeric('pass_rate', { precision: 8, scale: 4 }),
+  passRate: numeric('pass_rate', { precision: 8, scale: 4
+ }),
   defectCount: integer('defect_count'),
-  dpmo: numeric('dpmo', { precision: 18, scale: 4 }),
-  sigmaLevel: numeric('sigma_level', { precision: 8, scale: 4 }),
+  dpmo: numeric('dpmo', { precision: 18, scale: 4
+ }),
+  sigmaLevel: numeric('sigma_level', { precision: 8, scale: 4
+ }),
   totalInspections: integer('total_inspections'),
   trendDirection: varchar('trend_direction', { length: 20 }),
   aiInsight: text('ai_insight'),
@@ -1140,7 +984,8 @@ export const qcDefectsExtended = pgTable('qc_defects_extended', {
   severity: varchar('severity', { length: 20 }),
   status: varchar('status', { length: 50 }),
   resolution: varchar('resolution', { length: 50 }),
-  costImpact: numeric('cost_impact', { precision: 18, scale: 2 }),
+  costImpact: numeric('cost_impact', { precision: 18, scale: 2
+ }),
   reportedBy: integer('reported_by'),
   resolvedBy: integer('resolved_by'),
   resolvedAt: timestamp('resolved_at', { withTimezone: true }),
@@ -1151,7 +996,8 @@ export const qcDefectsExtended = pgTable('qc_defects_extended', {
 export const roomReferenceComparisons = pgTable('room_reference_comparisons', {
   id: integer('id').primaryKey(),
   roomId: integer('room_id').notNull(),
-  deviationScore: numeric('deviation_score', { precision: 4, scale: 3 }),
+  deviationScore: numeric('deviation_score', { precision: 4, scale: 3
+ }),
   issues: jsonb('issues'),
   notes: text('notes'),
   comparedAt: timestamp('compared_at').notNull(),
@@ -1171,7 +1017,8 @@ export const sapSalesOrders = pgTable('sap_sales_orders', {
   orderNumber: varchar('order_number', { length: 100 }),
   customerId: integer('customer_id'),
   status: varchar('status', { length: 50 }),
-  totalAmount: numeric('total_amount', { precision: 18, scale: 2 }),
+  totalAmount: numeric('total_amount', { precision: 18, scale: 2
+ }),
   currency: varchar('currency', { length: 10 }),
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
@@ -1219,13 +1066,17 @@ export const standardCost = pgTable('standard_cost', {
   id: uuid('id').primaryKey(),
   productName: varchar('product_name', { length: 255 }).notNull(),
   period: varchar('period', { length: 7 }).notNull(),
-  stdMaterialUzs: numeric('std_material_uzs', { precision: 18, scale: 4 }).notNull(),
-  stdLaborUzs: numeric('std_labor_uzs', { precision: 18, scale: 4 }).notNull(),
-  stdOverheadUzs: numeric('std_overhead_uzs', { precision: 18, scale: 4 }).notNull(),
+  stdMaterialUzs: numeric('std_material_uzs', { precision: 18, scale: 4
+ }).notNull(),
+  stdLaborUzs: numeric('std_labor_uzs', { precision: 18, scale: 4
+ }).notNull(),
+  stdOverheadUzs: numeric('std_overhead_uzs', { precision: 18, scale: 4
+ }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
   productId: integer('product_id'),
-  stdTotalUzs: numeric('std_total_uzs', { precision: 18, scale: 4 }),
+  stdTotalUzs: numeric('std_total_uzs', { precision: 18, scale: 4
+ }),
   createdBy: integer('created_by'),
 });
 
@@ -1235,13 +1086,20 @@ export const threeWayMatchLog = pgTable('three_way_match_log', {
   purchaseOrderNo: varchar('purchase_order_no', { length: 100 }),
   receiptNo: varchar('receipt_no', { length: 100 }),
   invoiceNo: varchar('invoice_no', { length: 100 }),
-  poQuantity: numeric('po_quantity', { precision: 15, scale: 4 }),
-  receivedQuantity: numeric('received_quantity', { precision: 15, scale: 4 }),
-  invoicedQuantity: numeric('invoiced_quantity', { precision: 15, scale: 4 }),
-  poAmount: numeric('po_amount', { precision: 15, scale: 2 }),
-  invoiceAmount: numeric('invoice_amount', { precision: 15, scale: 2 }),
-  qtyVariance: numeric('qty_variance', { precision: 15, scale: 4 }),
-  amountVariance: numeric('amount_variance', { precision: 15, scale: 2 }),
+  poQuantity: numeric('po_quantity', { precision: 15, scale: 4
+ }),
+  receivedQuantity: numeric('received_quantity', { precision: 15, scale: 4
+ }),
+  invoicedQuantity: numeric('invoiced_quantity', { precision: 15, scale: 4
+ }),
+  poAmount: numeric('po_amount', { precision: 15, scale: 2
+ }),
+  invoiceAmount: numeric('invoice_amount', { precision: 15, scale: 2
+ }),
+  qtyVariance: numeric('qty_variance', { precision: 15, scale: 4
+ }),
+  amountVariance: numeric('amount_variance', { precision: 15, scale: 2
+ }),
   matchStatus: varchar('match_status', { length: 20 }).notNull(),
   notes: text('notes'),
   matchedAt: timestamp('matched_at'),
@@ -1262,12 +1120,18 @@ export const units = pgTable('units', {
 export const varianceReport = pgTable('variance_report', {
   id: uuid('id').primaryKey(),
   orderId: integer('order_id'),
-  mpv: numeric('mpv', { precision: 18, scale: 4 }).notNull(),
-  mqv: numeric('mqv', { precision: 18, scale: 4 }).notNull(),
-  lrv: numeric('lrv', { precision: 18, scale: 4 }).notNull(),
-  lev: numeric('lev', { precision: 18, scale: 4 }).notNull(),
-  ov: numeric('ov', { precision: 18, scale: 4 }).notNull(),
-  totalVariance: numeric('total_variance', { precision: 18, scale: 4 }).notNull(),
+  mpv: numeric('mpv', { precision: 18, scale: 4
+ }).notNull(),
+  mqv: numeric('mqv', { precision: 18, scale: 4
+ }).notNull(),
+  lrv: numeric('lrv', { precision: 18, scale: 4
+ }).notNull(),
+  lev: numeric('lev', { precision: 18, scale: 4
+ }).notNull(),
+  ov: numeric('ov', { precision: 18, scale: 4
+ }).notNull(),
+  totalVariance: numeric('total_variance', { precision: 18, scale: 4
+ }).notNull(),
   calculatedAt: timestamp('calculated_at', { withTimezone: true }),
 });
 
@@ -1287,7 +1151,8 @@ export const warehouseKpiCache = pgTable('warehouse_kpi_cache', {
   id: integer('id').primaryKey(),
   warehouseId: integer('warehouse_id'),
   metricKey: varchar('metric_key', { length: 50 }).notNull(),
-  metricValue: numeric('metric_value', { precision: 15, scale: 4 }).notNull(),
+  metricValue: numeric('metric_value', { precision: 15, scale: 4
+ }).notNull(),
   metricUnit: varchar('metric_unit', { length: 20 }),
   calculatedAt: timestamp('calculated_at').notNull(),
   expiresAt: timestamp('expires_at'),
@@ -1296,8 +1161,10 @@ export const warehouseKpiCache = pgTable('warehouse_kpi_cache', {
 export const warehouseRollUsage = pgTable('warehouse_roll_usage', {
   id: uuid('id').primaryKey(),
   rollId: uuid('roll_id').notNull(),
-  usedWeightKg: numeric('used_weight_kg', { precision: 10, scale: 2 }).notNull(),
-  remainingWeightKg: numeric('remaining_weight_kg', { precision: 10, scale: 2 }).notNull(),
+  usedWeightKg: numeric('used_weight_kg', { precision: 10, scale: 2
+ }).notNull(),
+  remainingWeightKg: numeric('remaining_weight_kg', { precision: 10, scale: 2
+ }).notNull(),
   productionOrderId: varchar('production_order_id', { length: 80 }),
   usedByUserId: integer('used_by_user_id'),
   usedAt: timestamp('used_at').notNull(),
@@ -1309,8 +1176,10 @@ export const warehouseRolls = pgTable('warehouse_rolls', {
   articleCode: varchar('article_code', { length: 80 }).notNull(),
   supplierId: integer('supplier_id'),
   supplierName: varchar('supplier_name', { length: 200 }),
-  initialWeightKg: numeric('initial_weight_kg', { precision: 10, scale: 2 }).notNull(),
-  remainingWeightKg: numeric('remaining_weight_kg', { precision: 10, scale: 2 }).notNull(),
+  initialWeightKg: numeric('initial_weight_kg', { precision: 10, scale: 2
+ }).notNull(),
+  remainingWeightKg: numeric('remaining_weight_kg', { precision: 10, scale: 2
+ }).notNull(),
   warehouseId: varchar('warehouse_id', { length: 80 }),
   binLocation: varchar('bin_location', { length: 120 }),
   qrCodeUrl: varchar('qr_code_url', { length: 500 }),
@@ -1328,11 +1197,15 @@ export const wmsInventory = pgTable('wms_inventory', {
   id: integer('id').primaryKey(),
   warehouseId: integer('warehouse_id'),
   materialId: integer('material_id'),
-  quantity: numeric('quantity', { precision: 15, scale: 2 }),
-  reservedQuantity: numeric('reserved_quantity', { precision: 15, scale: 2 }),
-  availableQuantity: numeric('available_quantity', { precision: 15, scale: 2 }),
+  quantity: numeric('quantity', { precision: 15, scale: 2
+ }),
+  reservedQuantity: numeric('reserved_quantity', { precision: 15, scale: 2
+ }),
+  availableQuantity: numeric('available_quantity', { precision: 15, scale: 2
+ }),
   unit: varchar('unit', { length: 20 }),
-  reorderPoint: numeric('reorder_point', { precision: 15, scale: 2 }),
+  reorderPoint: numeric('reorder_point', { precision: 15, scale: 2
+ }),
   lastCountedAt: timestamp('last_counted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
