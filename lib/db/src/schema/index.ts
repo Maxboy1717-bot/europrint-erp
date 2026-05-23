@@ -76,3 +76,4 @@ export * from "./aisha-schema";
 export * from "./chat-schema";
 export * from "./hr-overtime-schema";
 export * from "./mes-schema";
+export * from "./agent-schema";
