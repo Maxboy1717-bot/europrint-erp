@@ -72,3 +72,7 @@ export type { AssetItem, InsertAssetItem, AssetMaintenance } from "./admin-asset
 export * from "./fi-financial-reports";
 export * from "./communication-center";
 export * from "./sd-customer-relations";
+export * from "./aisha-schema";
+export * from "./chat-schema";
+export * from "./hr-overtime-schema";
+export * from "./mes-schema";

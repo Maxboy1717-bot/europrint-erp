@@ -161,7 +161,7 @@ export const employee_assets = pgTable('employee_assets', {
 
 // ─── POS: Movements (legacy integer-based schema for data-retention) ──────────
 
-export const pos_movements_legacy = pgTable('pos_movements', {
+export const pos_movements_legacy = pgTable('pos_movements_legacy', {
   id:                      integer('id').primaryKey(),
   movement_number:         text('movement_number'),
   movement_type_id:        integer('movement_type_id'),

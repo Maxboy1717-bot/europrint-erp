@@ -26,7 +26,7 @@ export class StrategicRepository implements IStrategicRepo {
 
   async createCategory(name: string, description: string | null, color: string): Promise<Result<Row>> {
     return safeCall(async () => {
-      const rows = await db.insert(strategic_categories).values({ name, description, color }).returning();
+      const rows = await db.insert(strategic_categories).values({ name, description, color, code: name.toLowerCase().replace(/\s+/g, '-') }).returning();
       return (rows[0] ?? {}) as Row;
       }, 'DB_ERROR');
   }
@@ -50,29 +50,29 @@ export class StrategicRepository implements IStrategicRepo {
     return safeCall(async () => {
       const conds = [];
       if (status !== null)     conds.push(eq(strategic_tasks.status, status));
-      if (categoryId !== null) conds.push(eq(strategic_tasks.category_id, categoryId));
-      if (assigneeId !== null) conds.push(eq(strategic_tasks.assignee_id, assigneeId));
+      if (categoryId !== null) conds.push(eq(strategic_tasks.categoryId, String(categoryId)));
+      if (assigneeId !== null) conds.push(eq(strategic_tasks.assignedUserId, String(assigneeId)));
       const where = conds.length > 0 ? and(...conds) : undefined;
 
       return db.select({
         id:            strategic_tasks.id,
         title:         strategic_tasks.title,
-        category_id:   strategic_tasks.category_id,
-        assignee_id:   strategic_tasks.assignee_id,
-        due_date:      strategic_tasks.due_date,
+        category_id:   strategic_tasks.categoryId,
+        assignee_id:   strategic_tasks.assignedUserId,
+        due_date:      strategic_tasks.targetDate,
         priority:      strategic_tasks.priority,
         description:   strategic_tasks.description,
         status:        strategic_tasks.status,
-        progress:      strategic_tasks.progress,
-        created_at:    strategic_tasks.created_at,
-        updated_at:    strategic_tasks.updated_at,
+        progress:      strategic_tasks.progressPercent,
+        created_at:    strategic_tasks.createdAt,
+        updated_at:    strategic_tasks.updatedAt,
         category_name: strategic_categories.name,
-        assignee_name: sql<string>`COALESCE((SELECT u.first_name || ' ' || u.last_name FROM users u WHERE u.id = ${strategic_tasks.assignee_id}), '')`,
+        assignee_name: sql<string>`COALESCE((SELECT u.first_name || ' ' || u.last_name FROM users u WHERE u.id = ${strategic_tasks.assignedUserId}), '')`,
       })
         .from(strategic_tasks)
-        .leftJoin(strategic_categories, eq(strategic_categories.id, strategic_tasks.category_id))
+        .leftJoin(strategic_categories, eq(strategic_categories.id, strategic_tasks.categoryId))
         .where(where)
-        .orderBy(asc(strategic_tasks.due_date), desc(strategic_tasks.created_at))
+        .orderBy(asc(strategic_tasks.targetDate), desc(strategic_tasks.createdAt))
         .limit(lim)
         .offset(off).then(r => castTo<Row[]>(r));
       }, 'DB_ERROR');
@@ -83,19 +83,19 @@ export class StrategicRepository implements IStrategicRepo {
       return db.select({
         id:            strategic_tasks.id,
         title:         strategic_tasks.title,
-        category_id:   strategic_tasks.category_id,
-        assignee_id:   strategic_tasks.assignee_id,
-        due_date:      strategic_tasks.due_date,
+        category_id:   strategic_tasks.categoryId,
+        assignee_id:   strategic_tasks.assignedUserId,
+        due_date:      strategic_tasks.targetDate,
         priority:      strategic_tasks.priority,
         description:   strategic_tasks.description,
         status:        strategic_tasks.status,
-        progress:      strategic_tasks.progress,
-        created_at:    strategic_tasks.created_at,
+        progress:      strategic_tasks.progressPercent,
+        created_at:    strategic_tasks.createdAt,
         category_name: strategic_categories.name,
-        assignee_name: sql<string>`COALESCE((SELECT u.first_name || ' ' || u.last_name FROM users u WHERE u.id = ${strategic_tasks.assignee_id}), '')`,
+        assignee_name: sql<string>`COALESCE((SELECT u.first_name || ' ' || u.last_name FROM users u WHERE u.id = ${strategic_tasks.assignedUserId}), '')`,
       })
         .from(strategic_tasks)
-        .leftJoin(strategic_categories, eq(strategic_categories.id, strategic_tasks.category_id))
+        .leftJoin(strategic_categories, eq(strategic_categories.id, strategic_tasks.categoryId))
         .where(eq(strategic_tasks.id, id)).then(r => castTo<Row[]>(r));
       }, 'DB_ERROR');
   }
@@ -104,13 +104,13 @@ export class StrategicRepository implements IStrategicRepo {
     return safeCall(async () => {
       const rows = await db.insert(strategic_tasks).values({
         title,
-        category_id:  categoryId ?? undefined,
-        assignee_id:  assigneeId ?? undefined,
-        due_date:     dueDate ?? undefined,
+        taskNumber:      0,
+        categoryId:      categoryId ? String(categoryId) : undefined,
+        assignedUserId:  assigneeId ? String(assigneeId) : undefined,
+        targetDate:      dueDate ?? undefined,
         priority,
         description,
-        created_by:   createdBy,
-        status:       'pending',
+        status:          'planned',
       }).returning();
       return (rows[0] ?? {}) as Row;
       }, 'DB_ERROR');
@@ -119,14 +119,14 @@ export class StrategicRepository implements IStrategicRepo {
   async updateTask(id: number, title: string | null, status: string | null, assigneeId: number | null, dueDate: string | null, priority: string | null, description: string | null, progress: number | null): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(strategic_tasks).set({
-        title:       sql`COALESCE(${title}, ${strategic_tasks.title})`,
-        status:      sql`COALESCE(${status}, ${strategic_tasks.status})`,
-        assignee_id: sql`COALESCE(${assigneeId}::int, ${strategic_tasks.assignee_id})`,
-        due_date:    sql`COALESCE(${dueDate}::date, ${strategic_tasks.due_date})`,
-        priority:    sql`COALESCE(${priority}, ${strategic_tasks.priority})`,
-        description: sql`COALESCE(${description}, ${strategic_tasks.description})`,
-        progress:    sql`COALESCE(${progress}::int, ${strategic_tasks.progress})`,
-        updated_at:  _time.now(),
+        title:           sql`COALESCE(${title}, ${strategic_tasks.title})`,
+        status:          sql`COALESCE(${status}, ${strategic_tasks.status})`,
+        assignedUserId:  sql`COALESCE(${assigneeId}::text, ${strategic_tasks.assignedUserId})`,
+        targetDate:      sql`COALESCE(${dueDate}::varchar, ${strategic_tasks.targetDate})`,
+        priority:        sql`COALESCE(${priority}, ${strategic_tasks.priority})`,
+        description:     sql`COALESCE(${description}, ${strategic_tasks.description})`,
+        progressPercent: sql`COALESCE(${progress}::int, ${strategic_tasks.progressPercent})`,
+        updatedAt:       _time.now(),
       }).where(eq(strategic_tasks.id, id)).returning();
       return (rows[0] ?? { message: 'Yangilandi' }) as Row;
       }, 'DB_ERROR');
@@ -139,10 +139,9 @@ export class StrategicRepository implements IStrategicRepo {
   async createMilestone(taskId: number, title: string, dueDate: string | null, description: string | null): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(strategic_milestones).values({
-        task_id:     taskId,
+        taskId:      String(taskId),
         title,
-        due_date:    dueDate ?? undefined,
-        description,
+        targetDate:  dueDate ?? undefined,
         status:      'pending',
       }).returning();
       return (rows[0] ?? {}) as Row;
@@ -154,8 +153,7 @@ export class StrategicRepository implements IStrategicRepo {
       const rows = await db.update(strategic_milestones).set({
         title:      sql`COALESCE(${title}, ${strategic_milestones.title})`,
         status:     sql`COALESCE(${status}, ${strategic_milestones.status})`,
-        due_date:   sql`COALESCE(${dueDate}::date, ${strategic_milestones.due_date})`,
-        updated_at: _time.now(),
+        targetDate: sql`COALESCE(${dueDate}::varchar, ${strategic_milestones.targetDate})`,
       }).where(eq(strategic_milestones.id, id)).returning();
       return (rows[0] ?? { message: 'Yangilandi' }) as Row;
       }, 'DB_ERROR');
@@ -177,7 +175,7 @@ export class StrategicRepository implements IStrategicRepo {
         task_count: sql<number>`COUNT(${strategic_tasks.id})`,
       })
         .from(strategic_categories)
-        .leftJoin(strategic_tasks, eq(strategic_tasks.category_id, strategic_categories.id))
+        .leftJoin(strategic_tasks, eq(strategic_tasks.categoryId, strategic_categories.id))
         .groupBy(strategic_categories.id)
         .orderBy(strategic_categories.name).then(r => castTo<unknown[]>(r));
       }, 'DB_ERROR');

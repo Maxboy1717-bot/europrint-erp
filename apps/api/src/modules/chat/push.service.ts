@@ -45,9 +45,9 @@ export class PushService {
       endpoint:    input.endpoint ?? null,
       p256dh:      input.p256dh ?? null,
       auth:        input.auth ?? null,
-      fcm_token:   input.fcmToken ?? null,
-      apns_token:  input.apnsToken ?? null,
-      device_info: input.deviceInfo ?? null,
+      fcmToken:   input.fcmToken ?? null,
+      apnsToken:  input.apnsToken ?? null,
+      deviceInfo: input.deviceInfo ?? null,
     });
   }
 

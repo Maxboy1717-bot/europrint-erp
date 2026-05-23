@@ -22,13 +22,13 @@ export class DocumentWorkflowRepository {
   async insertDocument(dto: { employeeId: number; documentType: string; title: string; content?: Row; pdfUrl?: string; initiatedBy: number }): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.insert(hr_documents).values({
-        employee_id:   dto.employeeId,
-        doc_type:      dto.documentType,
-        title:         dto.title,
-        content:       dto.content ? dto.content : null,
-        pdf_url:       dto.pdfUrl ?? null,
-        status:        'pending',
-        initiated_by:  dto.initiatedBy,
+        employeeId:   dto.employeeId,
+        documentType: dto.documentType,
+        title:        dto.title,
+        content:      dto.content ? dto.content : null,
+        pdfUrl:       dto.pdfUrl ?? null,
+        status:       'pending',
+        initiatedBy:  dto.initiatedBy,
       }).returning();
       return castTo<Row | null>((rows[0] ?? null));
       }, 'DB_ERROR');
@@ -37,8 +37,8 @@ export class DocumentWorkflowRepository {
   async submitDocument(documentId: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.update(hr_documents).set({
-        status:     'submitted',
-        updated_at: _time.now(),
+        status:    'submitted',
+        updatedAt: _time.now(),
       })
         .where(sql`${hr_documents.id} = ${documentId} AND ${hr_documents.status} = 'pending'`)
         .returning();
@@ -58,33 +58,33 @@ export class DocumentWorkflowRepository {
 
   async insertDefaultApprovalStep(documentId: number): Promise<void> {
     await db.insert(document_approval_steps).values({
-      document_id: documentId,
-      step_number: 1,
-      status:      'pending',
+      documentId: documentId,
+      stepNumber: 1,
+      status:     'pending',
     });
-    await db.update(hr_documents).set({ total_steps: 1 }).where(eq(hr_documents.id, documentId));
+    await db.update(hr_documents).set({ totalSteps: 1 }).where(eq(hr_documents.id, documentId));
   }
 
   async insertApprovalStep(documentId: number, stepNumber: number, _approverRole: string, approverId: unknown): Promise<void> {
     await db.insert(document_approval_steps).values({
-      document_id: documentId,
-      step_number: stepNumber,
-      approver_id: approverId != null ? Number(approverId) : null,
-      status:      'pending',
+      documentId: documentId,
+      stepNumber: stepNumber,
+      approverId: approverId != null ? Number(approverId) : null,
+      status:     'pending',
     });
   }
 
   async updateDocumentTotalSteps(documentId: number, totalSteps: number): Promise<void> {
-    await db.update(hr_documents).set({ total_steps: totalSteps }).where(eq(hr_documents.id, documentId));
+    await db.update(hr_documents).set({ totalSteps: totalSteps }).where(eq(hr_documents.id, documentId));
   }
 
   async approveStep(stepId: number, approverId: number, comment?: string): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.update(document_approval_steps).set({
-        status:      'approved',
-        approved_at: _time.now(),
-        approver_id: approverId,
-        notes:       comment ?? null,
+        status:     'approved',
+        actionAt:   _time.now(),
+        approverId: approverId,
+        comment:    comment ?? null,
       }).where(eq(document_approval_steps.id, stepId)).returning();
       return castTo<Row | null>((rows[0] ?? null));
       }, 'DB_ERROR');
@@ -94,8 +94,8 @@ export class DocumentWorkflowRepository {
     return safeCall(async () => {
       const rows = await db.select()
         .from(document_approval_steps)
-        .where(sql`${document_approval_steps.document_id} = ${documentId} AND ${document_approval_steps.step_number} > ${stepNumber}`)
-        .orderBy(document_approval_steps.step_number)
+        .where(sql`${document_approval_steps.documentId} = ${documentId} AND ${document_approval_steps.stepNumber} > ${stepNumber}`)
+        .orderBy(document_approval_steps.stepNumber)
         .limit(1);
       return castTo<Row | null>((rows[0] ?? null));
       }, 'DB_ERROR');
@@ -104,8 +104,8 @@ export class DocumentWorkflowRepository {
   async fullyApproveDocument(documentId: unknown): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.update(hr_documents).set({
-        status:     'approved',
-        updated_at: _time.now(),
+        status:    'approved',
+        updatedAt: _time.now(),
       })
         .where(eq(hr_documents.id, Number(documentId)))
         .returning();
@@ -115,33 +115,33 @@ export class DocumentWorkflowRepository {
 
   async advanceDocumentStep(documentId: unknown, stepNumber: unknown): Promise<void> {
     await db.update(hr_documents).set({
-      completed_steps: Number(stepNumber),
-      updated_at:      _time.now(),
+      currentStep: Number(stepNumber),
+      updatedAt:   _time.now(),
     }).where(eq(hr_documents.id, Number(documentId)));
   }
 
   async rejectStep(stepId: number, rejectedById: number, reason: string): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.update(document_approval_steps).set({
-        status:      'rejected',
-        approved_at: _time.now(),
-        approver_id: rejectedById,
-        notes:       reason,
+        status:     'rejected',
+        actionAt:   _time.now(),
+        approverId: rejectedById,
+        comment:    reason,
       }).where(eq(document_approval_steps.id, stepId)).returning();
       return castTo<Row | null>((rows[0] ?? null));
       }, 'DB_ERROR');
   }
 
   async rejectDocument(documentId: unknown): Promise<void> {
-    await db.update(hr_documents).set({ status: 'rejected', updated_at: _time.now() }).where(eq(hr_documents.id, Number(documentId)));
+    await db.update(hr_documents).set({ status: 'rejected', updatedAt: _time.now() }).where(eq(hr_documents.id, Number(documentId)));
   }
 
   async unblockEmployee(employeeId: number, unblockedBy: number): Promise<void> {
     await db.update(employee_blocks).set({
-      is_active:    false,
-      unblocked_by: unblockedBy,
-      unblocked_at: _time.now(),
-    }).where(sql`${employee_blocks.employee_id} = ${employeeId} AND ${employee_blocks.is_active} = true`);
+      isActive:    false,
+      unblockedBy: unblockedBy,
+      unblockedAt: _time.now(),
+    }).where(sql`${employee_blocks.employeeId} = ${employeeId} AND ${employee_blocks.isActive} = true`);
     await db.update(hrEmployees).set({ is_blocked: false, blocked_reason: null }).where(eq(hrEmployees.id, employeeId));
   }
 
@@ -171,16 +171,15 @@ export class DocumentWorkflowRepository {
     return safeCall(async () => {
       const rows = await db.select({
         id:            hr_documents.id,
-        doc_number:    hr_documents.doc_number,
-        doc_type:      hr_documents.doc_type,
+        documentType:  hr_documents.documentType,
         title:         hr_documents.title,
         status:        hr_documents.status,
-        created_at:    hr_documents.created_at,
+        createdAt:     hr_documents.createdAt,
         employee_name: sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
       })
         .from(hr_documents)
-        .leftJoin(hrEmployees, eq(hrEmployees.id, hr_documents.employee_id))
-        .orderBy(sql`${hr_documents.created_at} DESC`)
+        .leftJoin(hrEmployees, eq(hrEmployees.id, hr_documents.employeeId))
+        .orderBy(sql`${hr_documents.createdAt} DESC`)
         .limit(limit);
       return castTo<Row[]>(rows);
       }, 'DB_ERROR');
@@ -197,27 +196,27 @@ export class DocumentWorkflowRepository {
     return safeCall(async () => {
       const rows = await db.select()
         .from(document_approval_steps)
-        .where(sql`${document_approval_steps.document_id} = ${documentId} AND ${document_approval_steps.status} = 'pending'`)
-        .orderBy(document_approval_steps.step_number)
+        .where(sql`${document_approval_steps.documentId} = ${documentId} AND ${document_approval_steps.status} = 'pending'`)
+        .orderBy(document_approval_steps.stepNumber)
         .limit(1);
       return castTo<Row | null>((rows[0] ?? null));
       }, 'DB_ERROR');
   }
 
   async finalizeDocument(documentId: number): Promise<void> {
-    await db.update(hr_documents).set({ status: 'approved', updated_at: _time.now() }).where(eq(hr_documents.id, documentId));
+    await db.update(hr_documents).set({ status: 'approved', updatedAt: _time.now() }).where(eq(hr_documents.id, documentId));
   }
 
   async findOverdueDocuments(): Promise<Result<Row[]>> {
     return safeCall(async () => {
       const rows = await db.select({
-        id:          hr_documents.id,
-        employee_id: hr_documents.employee_id,
-        title:       hr_documents.title,
-        created_at:  hr_documents.created_at,
+        id:         hr_documents.id,
+        employeeId: hr_documents.employeeId,
+        title:      hr_documents.title,
+        createdAt:  hr_documents.createdAt,
       })
         .from(hr_documents)
-        .where(sql`${hr_documents.status} IN ('pending', 'submitted') AND ${hr_documents.created_at} < NOW() - INTERVAL '48 hours'`);
+        .where(sql`${hr_documents.status} IN ('pending', 'submitted') AND ${hr_documents.createdAt} < NOW() - INTERVAL '48 hours'`);
       return castTo<Row[]>(rows);
       }, 'DB_ERROR');
   }

@@ -9,16 +9,12 @@ import {
 import { dokla as canonicalDokla, rasporyazhenie as canonicalRasporyazhenie } from './schema-business-a-2';
 import { enps_survey_responses as canonicalEnpsSurveyResponses } from './schema-business-a-1';
 
-export const warehouse_transactions = pgTable('warehouse_transactions', {
-  id:           serial('id').primaryKey(),
-  warehouse_id: integer('warehouse_id'),
-  item_id:      integer('item_id'),
-  type:         text('type'),
-  quantity:     numeric('quantity', { precision: 15, scale: 4 }),
-  reference_id: integer('reference_id'),
-  created_at:   timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] warehouse_transactions: re-exported from canonical definition
+// in @workspace/db/schema/wms-schema (warehouseTransactions, 13 cols, serial id, full constraints).
+// Previous local pgTable (7 cols, snake_case) removed. Only used via barrel re-export.
+export { warehouseTransactions as warehouse_transactions } from '@workspace/db/schema/wms-schema';
 
+// lib/db da mavjud emas — saqlab qolindi.
 export const warehouse_transfers = pgTable('warehouse_transfers', {
   id:                serial('id').primaryKey(),
   from_warehouse_id: integer('from_warehouse_id'),
@@ -29,15 +25,14 @@ export const warehouse_transfers = pgTable('warehouse_transfers', {
   created_at:        timestamp('created_at').defaultNow(),
 });
 
-export const internal_requests = pgTable('internal_requests', {
-  id:           serial('id').primaryKey(),
-  warehouse_id: integer('warehouse_id'),
-  item_id:      integer('item_id'),
-  quantity:     numeric('quantity', { precision: 15, scale: 4 }),
-  status:       text('status').default('pending'),
-  created_at:   timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] internal_requests: re-exported from canonical definition in
+// lib/db (wms-schema.ts: internalRequests, in barrel). Previous local pgTable
+// (5 cols) removed.
+export { internalRequests as internal_requests } from '@workspace/db';
 
+// lib/db da bor (mm-purchase.ts: goodsReceipts) lekin barrel da eksport yo'q
+// (mm-schema.ts faqat mm-procurement/materials/advanced/logistics/mro re-export
+// qiladi) — saqlab qolindi.
 export const goods_receipts = pgTable('goods_receipts', {
   id:                serial('id').primaryKey(),
   purchase_order_id: integer('purchase_order_id'),
@@ -50,34 +45,23 @@ export const goods_receipts = pgTable('goods_receipts', {
   created_at:        timestamp('created_at').defaultNow(),
 });
 
-export const inventory_counts = pgTable('inventory_counts', {
-  id:           serial('id').primaryKey(),
-  warehouse_id: integer('warehouse_id'),
-  status:       text('status').default('draft'),
-  counted_by:   integer('counted_by'),
-  created_at:   timestamp('created_at').defaultNow(),
-  updated_at:   timestamp('updated_at').defaultNow(),
-});
+// SHIM: re-export canonical inventoryCounts from mm-inventory.ts as `inventory_counts`.
+// Canon: @workspace/db/schema/mm-inventory (15 cols, serial id, full constraint set).
+// Previous duplicate pgTable definition (6 cols, snake_case fields) removed.
+export { inventoryCounts as inventory_counts } from '@workspace/db/schema/mm-inventory';
 
-export const stock_reservations = pgTable('stock_reservations', {
-  id:           serial('id').primaryKey(),
-  item_id:      integer('item_id'),
-  warehouse_id: integer('warehouse_id'),
-  quantity:     numeric('quantity', { precision: 15, scale: 4 }),
-  order_id:     integer('order_id'),
-  status:       text('status').default('reserved'),
-  expires_at:   timestamp('expires_at'),
-  created_at:   timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] stock_reservations: re-exported from canonical definition
+// in @workspace/db/schema/mm-batch-mgmt (stockReservations, 21 cols, serial id, full FK set).
+// Previous local pgTable (8 cols, snake_case) removed. Only used via barrel re-export.
+export { stockReservations as stock_reservations } from '@workspace/db/schema/mm-batch-mgmt';
 
-export const department_warehouse_map = pgTable('department_warehouse_map', {
-  id:            serial('id').primaryKey(),
-  department_id: integer('department_id'),
-  warehouse_id:  integer('warehouse_id'),
-  created_at:    timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] department_warehouse_map: re-exported from canonical definition in
+// lib/db (pos-schema-v2.ts: departmentWarehouseMap, in barrel). Previous local pgTable
+// (3 cols) removed.
+export { departmentWarehouseMap as department_warehouse_map } from '@workspace/db';
 
 // ─── Assessment & Gamification ────────────────────────────────────────────────
+// lib/db da mavjud emas — saqlab qolindi.
 
 export const assessment_skips = pgTable('assessment_skips', {
   id:          serial('id').primaryKey(),
@@ -87,16 +71,10 @@ export const assessment_skips = pgTable('assessment_skips', {
 });
 
 // ─── Weekly Plans ──────────────────────────────────────────────────────────────
-
-export const weekly_plans = pgTable('weekly_plans', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id'),
-  week_start:  date('week_start'),
-  status:      text('status').default('draft'),
-  items:       jsonb('items').default([]),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
+// [2026-05-22 dedup] weekly_plans: re-exported from canonical definition in
+// lib/db (weekly-plans-schema.ts: weeklyPlans, in barrel). Previous local pgTable
+// (7 cols) removed.
+export { weeklyPlans as weekly_plans } from '@workspace/db';
 
 // ─── Dokla & Rasporyazhenie ────────────────────────────────────────────────────
 // dokla: re-exported from canonical definition in schema-business-a-2.ts
@@ -106,6 +84,8 @@ export const dokla_ext = canonicalDokla;
 export const rasporyazhenie_ext = canonicalRasporyazhenie;
 
 // ─── Deficit & Monitoring ─────────────────────────────────────────────────────
+// lib/db da mavjud emas (mm_vendors, mm_materials, mm_goods_receipts,
+// mm_purchase_orders nomli jadvallar lib/db da yo'q) — saqlab qolindi.
 
 export const mm_vendors_ext2 = pgTable('mm_vendors', {
   id:          serial('id').primaryKey(),
@@ -157,17 +137,11 @@ export const mm_purchase_orders_ext = pgTable('mm_purchase_orders', {
 });
 
 // ─── Agent (AI) Interview ──────────────────────────────────────────────────────
-
-export const ai_interview_sessions = pgTable('ai_interview_sessions', {
-  id:             text('id').primaryKey(),
-  application_id: integer('application_id'),
-  status:         text('status').default('in_progress'),
-  score:          integer('score'),
-  transcript:     jsonb('transcript').default([]),
-  completed_at:   timestamp('completed_at'),
-  created_at:     timestamp('created_at').defaultNow(),
-  updated_at:     timestamp('updated_at').defaultNow(),
-});
+// [2026-05-22 dedup] ai_interview_sessions: re-exported from canonical definition
+// in lib/db (hr-performance-ext.ts: 14 cols, CHECK constraints on type/lang/status,
+// in barrel chain). Previous local pgTable (8 cols, text PK, minimal stub) removed.
+import { aiInterviewSessions as _aiis_canon } from '@workspace/db';
+export const ai_interview_sessions = _aiis_canon;
 
 // ─── Enps ──────────────────────────────────────────────────────────────────────
 // enps_survey_responses: re-exported from canonical definition in schema-business-a-1.ts

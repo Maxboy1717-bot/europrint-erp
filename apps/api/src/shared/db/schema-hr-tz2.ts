@@ -1,5 +1,5 @@
 /**
- * schema-hr-tz2.ts — HR TZ-2 Foundation tables for NestJS shared DB layer
+ * schema-hr-tz2.ts — HR Foundation tables for NestJS shared DB layer
  *
  * Mirrors the Drizzle schema defined in lib/db/src/schema/hr-tz2-schema.ts
  * but lives here so NestJS services can import from @shared/db.

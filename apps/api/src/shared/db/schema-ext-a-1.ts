@@ -7,9 +7,25 @@ import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date, unique,
 } from 'drizzle-orm/pg-core';
 import { kanbanCards as canonicalKanbanCards, kanbanColumns as canonicalKanbanColumns } from './schema-kanban';
+// Canonical imports from lib/db (@workspace/db barrel)
+import {
+  posDamageQcLinks as canonicalPosDamageQcLinks,
+  posBarcodePrintQueue as canonicalPosBarcodePrintQueue,
+  employeeIssuanceLog as canonicalEmployeeIssuanceLog,
+  posInventoryCountLines as canonicalPosInventoryCountLines,
+  inventoryBarcodeAssignments as canonicalInventoryBarcodeAssignments,
+  idealRasmTargets as canonicalIdealRasmTargets,
+  glLines as canonicalGlLines,
+  sdCustomerContacts as canonicalSdCustomerContacts,
+  sdCustomerDocuments as canonicalSdCustomerDocuments,
+  sdCustomerCompetitors as canonicalSdCustomerCompetitors,
+  hrInterviewQuestions as canonicalHrInterviewQuestions,
+  // sd-order-items → sd-core → sd-schema → barrel (export *)
+  orderStatusLogs as canonicalOrderStatusLogs,
+} from '@workspace/db';
 
 // ─── WMS: Stocks ──────────────────────────────────────────────────────────────
-
+// TODO: stocks not found in lib/db — kept as local stub
 export const stocks = pgTable('stocks', {
   id:                serial('id').primaryKey(),
   warehouse_id:      integer('warehouse_id'),
@@ -23,7 +39,7 @@ export const stocks = pgTable('stocks', {
 });
 
 // ─── POS: Current Stock ───────────────────────────────────────────────────────
-
+// TODO: current_stock not found in lib/db — kept as local stub
 export const current_stock = pgTable('current_stock', {
   id:               serial('id').primaryKey(),
   material_card_id: integer('material_card_id').notNull(),
@@ -33,99 +49,46 @@ export const current_stock = pgTable('current_stock', {
 });
 
 // ─── POS: Ideal Rasm Targets ──────────────────────────────────────────────────
-
-export const ideal_rasm_targets = pgTable('ideal_rasm_targets', {
-  id:            serial('id').primaryKey(),
-  target_name:   text('target_name'),
-  target_key:    text('target_key').unique(),
-  target_value:  numeric('target_value', { precision: 15, scale: 4 }),
-  unit:          text('unit'),
-  horizon_years: integer('horizon_years'),
-  description:   text('description'),
-  created_at:    timestamp('created_at').defaultNow(),
-  updated_at:    timestamp('updated_at').defaultNow(),
-});
+// ideal_rasm_targets: re-exported from canonical definition in @workspace/db (ideal-rasm-schema.ts)
+export const ideal_rasm_targets = canonicalIdealRasmTargets;
 
 // ─── Sales: Order Status Logs ─────────────────────────────────────────────────
-
-export const order_status_logs = pgTable('order_status_logs', {
-  id:          serial('id').primaryKey(),
-  order_id:    integer('order_id'),
-  from_status: text('from_status'),
-  to_status:   text('to_status'),
-  changed_by:  integer('changed_by'),
-  notes:       text('notes'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// order_status_logs: re-exported from canonical definition in @workspace/db
+// (sd-order-items.ts → sd-core.ts → sd-schema.ts → barrel export *)
+export const order_status_logs = canonicalOrderStatusLogs;
 
 // ─── POS: Damage QC Links ─────────────────────────────────────────────────────
-
-export const pos_damage_qc_links = pgTable('pos_damage_qc_links', {
-  id:                   serial('id').primaryKey(),
-  damage_movement_id:   integer('damage_movement_id'),
-  original_movement_id: integer('original_movement_id'),
-  material_card_id:     integer('material_card_id'),
-  damaged_qty:          numeric('damaged_qty', { precision: 15, scale: 4 }),
-  damage_description:   text('damage_description'),
-  qc_status:            text('qc_status').default('PENDING'),
-  created_at:           timestamp('created_at').defaultNow(),
-});
+// pos_damage_qc_links: re-exported from canonical definition in @workspace/db (pos-schema-v2.ts)
+export const pos_damage_qc_links = canonicalPosDamageQcLinks;
 
 // ─── POS: Barcode Print Queue ─────────────────────────────────────────────────
-
-export const pos_barcode_print_queue = pgTable('pos_barcode_print_queue', {
-  id:              serial('id').primaryKey(),
-  material_card_id: integer('material_card_id'),
-  pos_movement_id: integer('pos_movement_id'),
-  copies:          integer('copies').default(1),
-  print_format:    text('print_format'),
-  printer_ip:      text('printer_ip'),
-  trigger_type:    text('trigger_type').default('AUTO'),
-  status:          text('status').default('PENDING'),
-  created_at:      timestamp('created_at').defaultNow(),
-});
+// pos_barcode_print_queue: re-exported from canonical definition in @workspace/db (pos-schema-v2.ts)
+export const pos_barcode_print_queue = canonicalPosBarcodePrintQueue;
 
 // ─── HR: Employee Issuance Log ────────────────────────────────────────────────
-
-export const employee_issuance_log = pgTable('employee_issuance_log', {
-  id:              serial('id').primaryKey(),
-  user_id:         integer('user_id'),
-  material_card_id: integer('material_card_id'),
-  issued_at:       timestamp('issued_at').defaultNow(),
-});
+// employee_issuance_log: re-exported from canonical definition in @workspace/db (pos-schema-v2.ts)
+export const employee_issuance_log = canonicalEmployeeIssuanceLog;
 
 // ─── POS: Inventory Count Lines ───────────────────────────────────────────────
-
-export const pos_inventory_count_lines = pgTable('pos_inventory_count_lines', {
-  id:         serial('id').primaryKey(),
-  gl_posted:  boolean('gl_posted').default(false),
-  updated_at: timestamp('updated_at').defaultNow(),
-});
+// pos_inventory_count_lines: re-exported from canonical definition in @workspace/db (pos-schema-v2.ts)
+export const pos_inventory_count_lines = canonicalPosInventoryCountLines;
 
 // ─── POS: Inventory Barcode Assignments ──────────────────────────────────────
-
-export const inventory_barcode_assignments = pgTable('inventory_barcode_assignments', {
-  id:               serial('id').primaryKey(),
-  material_card_id: integer('material_card_id'),
-  is_primary:       boolean('is_primary').default(false),
-  created_at:       timestamp('created_at').defaultNow(),
-});
+// inventory_barcode_assignments: re-exported from canonical definition in @workspace/db (pos-schema.ts)
+export const inventory_barcode_assignments = canonicalInventoryBarcodeAssignments;
 
 // ─── LMS: Lessons & Certificates ─────────────────────────────────────────────
+// lessons: re-exported from canonical definition in @workspace/db (lms-schema.ts)
+export { lessons } from '@workspace/db';
 
-export const lessons = pgTable('lessons', {
-  id:         serial('id').primaryKey(),
-  title:      text('title'),
-  is_active:  boolean('is_active').default(true),
-  created_at: timestamp('created_at').defaultNow(),
-});
-
+// TODO: certificates not found in lib/db — kept as local stub
 export const certificates_table = pgTable('certificates', {
   id:         serial('id').primaryKey(),
   is_active:  boolean('is_active').default(true),
   updated_at: timestamp('updated_at').defaultNow(),
 });
 
+// TODO: courses not found in lib/db — kept as local stub
 export const courses_table = pgTable('courses', {
   id:         serial('id').primaryKey(),
   is_active:  boolean('is_active').default(true),
@@ -133,12 +96,10 @@ export const courses_table = pgTable('courses', {
 });
 
 // ─── HR: Interview Questions & Applications ───────────────────────────────────
+// hr_interview_questions: re-exported from canonical definition in @workspace/db (hr-v2-schema.ts)
+export const hr_interview_questions = canonicalHrInterviewQuestions;
 
-export const hr_interview_questions = pgTable('hr_interview_questions', {
-  id:        serial('id').primaryKey(),
-  is_active: boolean('is_active').default(true),
-});
-
+// TODO: hr_applications not found in lib/db — kept as local stub
 export const hr_applications = pgTable('hr_applications', {
   id:         serial('id').primaryKey(),
   status:     text('status').default('new'),
@@ -146,47 +107,20 @@ export const hr_applications = pgTable('hr_applications', {
 });
 
 // ─── Finance: GL Lines ────────────────────────────────────────────────────────
-
-export const gl_lines = pgTable('gl_lines', {
-  id:              serial('id').primaryKey(),
-  gl_document_id:  integer('gl_document_id'),
-  line_number:     integer('line_number'),
-  account_id:      integer('account_id'),
-  cost_center_id:  integer('cost_center_id'),
-  profit_center_id: integer('profit_center_id'),
-  debit_amount:    numeric('debit_amount', { precision: 15, scale: 2 }).default('0'),
-  credit_amount:   numeric('credit_amount', { precision: 15, scale: 2 }).default('0'),
-  description:     text('description'),
-  created_at:      timestamp('created_at').defaultNow(),
-});
+// gl_lines: re-exported from canonical definition in @workspace/db (fi-gl.ts → fi-schema.ts)
+export const gl_lines = canonicalGlLines;
 
 // ─── SD: Customer Sub-tables ──────────────────────────────────────────────────
+// sd_customer_contacts: re-exported from canonical definition in @workspace/db (sd-customer-relations.ts)
+export const sd_customer_contacts = canonicalSdCustomerContacts;
 
-export const sd_customer_contacts = pgTable('sd_customer_contacts', {
-  id:          serial('id').primaryKey(),
-  customer_id: integer('customer_id'),
-  name:        text('name'),
-  phone:       text('phone'),
-  email:       text('email'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// sd_customer_documents: re-exported from canonical definition in @workspace/db (sd-customer-relations.ts)
+export const sd_customer_documents = canonicalSdCustomerDocuments;
 
-export const sd_customer_documents = pgTable('sd_customer_documents', {
-  id:          serial('id').primaryKey(),
-  customer_id: integer('customer_id'),
-  title:       text('title'),
-  file_url:    text('file_url'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// sd_customer_competitors: re-exported from canonical definition in @workspace/db (sd-customer-relations.ts)
+export const sd_customer_competitors = canonicalSdCustomerCompetitors;
 
-export const sd_customer_competitors = pgTable('sd_customer_competitors', {
-  id:          serial('id').primaryKey(),
-  customer_id: integer('customer_id'),
-  name:        text('name'),
-  notes:       text('notes'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
-
+// TODO: sd_sales_orders not found in lib/db — kept as local stub
 export const sd_sales_orders = pgTable('sd_sales_orders', {
   id:             serial('id').primaryKey(),
   order_number:   text('order_number'),
@@ -205,6 +139,7 @@ export const sd_sales_orders = pgTable('sd_sales_orders', {
   version:        integer('version').default(0).notNull(),
 });
 
+// TODO: sd_advance_idempotency_keys not found in lib/db — kept as local stub
 export const sd_advance_idempotency_keys = pgTable('sd_advance_idempotency_keys', {
   id:               serial('id').primaryKey(),
   order_id:         integer('order_id').notNull(),
@@ -223,17 +158,13 @@ export const kanban_columns = canonicalKanbanColumns;
 export const kanban_cards = canonicalKanbanCards;
 
 // ─── Questionnaire: Templates ─────────────────────────────────────────────────
-
-export const questionnaire_templates = pgTable('questionnaire_templates', {
-  id:          serial('id').primaryKey(),
-  title:       text('title'),
-  description: text('description'),
-  is_active:   boolean('is_active').default(true),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] questionnaire_templates: re-exported from canonical definition
+// in @workspace/db schema/hr-architecture-additions.ts (export `questionnaireTemplates`).
+// Previous local pgTable removed (column coverage with canon ~38%).
+export { questionnaireTemplates as questionnaire_templates } from '@workspace/db/src/schema/hr-architecture-additions';
 
 // ─── HR: Bot Tables ───────────────────────────────────────────────────────────
-
+// TODO: recruitment_bot_attempts not found in lib/db — kept as local stub
 export const recruitment_bot_attempts = pgTable('recruitment_bot_attempts', {
   id:               serial('id').primaryKey(),
   telegram_chat_id: text('telegram_chat_id'),
@@ -242,6 +173,7 @@ export const recruitment_bot_attempts = pgTable('recruitment_bot_attempts', {
   last_attempt_at:  timestamp('last_attempt_at').defaultNow(),
 });
 
+// TODO: bot_candidates not found in lib/db — kept as local stub
 export const bot_candidates = pgTable('bot_candidates', {
   id:                serial('id').primaryKey(),
   full_name:         text('full_name'),
@@ -255,6 +187,7 @@ export const bot_candidates = pgTable('bot_candidates', {
   applied_at:        timestamp('applied_at').defaultNow(),
 });
 
+// TODO: hr_sick_reports not found in lib/db — kept as local stub
 export const hr_sick_reports = pgTable('hr_sick_reports', {
   id:               serial('id').primaryKey(),
   employee_id:      integer('employee_id'),
@@ -266,7 +199,7 @@ export const hr_sick_reports = pgTable('hr_sick_reports', {
 });
 
 // ─── Data Retention: Archive Tables ──────────────────────────────────────────
-
+// TODO: pos_movements_archive not found in lib/db — kept as local stub
 export const pos_movements_archive = pgTable('pos_movements_archive', {
   id:                      integer('id').primaryKey(),
   movement_number:         text('movement_number'),

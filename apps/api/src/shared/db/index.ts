@@ -149,8 +149,8 @@ export {
   hr_application_responses, hr_candidate_funnels,
   hr_capital_courses,
   adaptation_feedback,
-  // Finance Extended
-  budgets, budget_lines, advances,
+  // Finance Extended (budget_lines comes from export * from './schema' above)
+  budgets, advances,
   fp_cycles, payroll_entries, finance_invoices, finance_invoice_lines,
   // IoT Extended
   iot_sensor_readings, iot_alerts,

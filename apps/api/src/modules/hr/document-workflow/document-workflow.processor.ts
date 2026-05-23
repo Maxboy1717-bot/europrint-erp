@@ -57,7 +57,7 @@ export class DocumentSubmittedHandler
       const [{ stepCount }] = await db
         .select({ stepCount: count() })
         .from(document_approval_steps)
-        .where(eq(document_approval_steps.document_id, documentId));
+        .where(eq(document_approval_steps.documentId, documentId));
 
       if (Number(stepCount) === 0) {
         await db
@@ -67,13 +67,13 @@ export class DocumentSubmittedHandler
         this.logger.log(`Document #${documentId} auto-approved (no approval steps configured)`);
       } else {
         const [firstStep] = await db
-          .select({ id: document_approval_steps.id, approver_id: document_approval_steps.approver_id })
+          .select({ id: document_approval_steps.id, approverId: document_approval_steps.approverId })
           .from(document_approval_steps)
-          .where(eq(document_approval_steps.document_id, documentId))
-          .orderBy(asc(document_approval_steps.step_number))
+          .where(eq(document_approval_steps.documentId, documentId))
+          .orderBy(asc(document_approval_steps.stepNumber))
           .limit(1);
         if (firstStep) {
-          this.logger.log(`Document #${documentId} awaiting approval from approver #${firstStep.approver_id}`);
+          this.logger.log(`Document #${documentId} awaiting approval from approver #${firstStep.approverId}`);
         }
       }
     } catch (err) {
@@ -103,7 +103,7 @@ export class DocumentApprovedHandler
         .select({ pendingCount: count() })
         .from(document_approval_steps)
         .where(and(
-          eq(document_approval_steps.document_id, documentId),
+          eq(document_approval_steps.documentId, documentId),
           eq(document_approval_steps.status, 'pending'),
         ));
 
@@ -124,17 +124,17 @@ export class DocumentApprovedHandler
         .where(and(eq(hr_documents.id, documentId), eq(hr_documents.status, 'approved')))
         .limit(1);
       if (!doc) return;
-      const employeeId = doc.employee_id;
+      const employeeId = doc.employeeId;
       if (employeeId == null) {
-        this.logger.warn(`Hujjat #${documentId} da employee_id yo'q — ish haqi hodisalari o'tkazib yuborildi`);
+        this.logger.warn(`Hujjat #${documentId} da employeeId yo'q — ish haqi hodisalari o'tkazib yuborildi`);
         return;
       }
 
-      const meta = doc.metadata
-        ? (typeof doc.metadata === 'string' ? JSON.parse(doc.metadata as string) : doc.metadata) as Row
+      const meta = doc.content
+        ? (typeof doc.content === 'string' ? JSON.parse(doc.content as string) : doc.content) as Row
         : {} as Row;
 
-      if (doc.document_type === 'DISMISSAL_ORDER') {
+      if (doc.documentType === 'DISMISSAL_ORDER') {
         const dismissalType = String(meta?.dismissalType ?? meta?.dismissal_type ?? 'termination');
         const lastWorkingDay = (meta?.lastWorkingDay ?? meta?.last_working_day ?? null) as string | null;
 
@@ -151,7 +151,7 @@ export class DocumentApprovedHandler
 
         if (existingCases.length) {
           caseId = existingCases[0].id;
-          this.logger.log(`Offboarding case already exists for employee #${doc.employee_id}: case #${caseId}`);
+          this.logger.log(`Offboarding case already exists for employee #${doc.employeeId}: case #${caseId}`);
         } else {
           const [newCase] = await db
             .insert(offboarding_cases)
@@ -189,22 +189,22 @@ export class DocumentApprovedHandler
               .update(employees)
               .set({ status: 'offboarding' as 'terminated', updated_at: _time.now() })
               .where(and(
-                sql`id = ${doc.employee_id}`,
+                sql`id = ${doc.employeeId}`,
                 eq(employees.status, 'active'),
               ));
           } catch (statusErr) {
-            this.logger.warn(`[DISMISSAL_ORDER] Could not set employee #${doc.employee_id} status to offboarding: ${statusErr instanceof Error ? statusErr.message : String(statusErr)}`);
+            this.logger.warn(`[DISMISSAL_ORDER] Could not set employee #${doc.employeeId} status to offboarding: ${statusErr instanceof Error ? statusErr.message : String(statusErr)}`);
           }
 
           this.eventEmitter.emit(HrV2Events.OFFBOARDING_STARTED, {
-            caseId, employeeId: doc.employee_id, documentId, dismissalType, lastWorkingDay,
+            caseId, employeeId: doc.employeeId, documentId, dismissalType, lastWorkingDay,
           });
 
-          this.logger.log(`Offboarding case #${caseId} created for employee #${doc.employee_id}`);
+          this.logger.log(`Offboarding case #${caseId} created for employee #${doc.employeeId}`);
         }
       }
 
-      if (doc.document_type === 'ADVANCE_REQUEST') {
+      if (doc.documentType === 'ADVANCE_REQUEST') {
         const amount = Number(meta?.amount ?? meta?.advance_amount ?? 0);
         if (amount > 0) {
           await db
@@ -218,11 +218,11 @@ export class DocumentApprovedHandler
               approved_at: _time.now(),
             })
             .onConflictDoNothing();
-          this.logger.log(`Payroll advance created for employee #${doc.employee_id}: ${amount} UZS`);
+          this.logger.log(`Payroll advance created for employee #${doc.employeeId}: ${amount} UZS`);
         }
       }
 
-      if (doc.document_type === 'DISCIPLINE_NOTICE') {
+      if (doc.documentType === 'DISCIPLINE_NOTICE') {
         const fineAmount = Number(meta?.fine_amount ?? meta?.fineAmount ?? 0);
         const finePercent = Number(meta?.fine_percent ?? meta?.finePercent ?? 0);
         if (fineAmount > 0 || finePercent > 0) {
@@ -239,7 +239,7 @@ export class DocumentApprovedHandler
               deduction_month: castTo<string>(sql`DATE_TRUNC('month', CURRENT_DATE)`),
             })
             .onConflictDoNothing();
-          this.logger.log(`Payroll deduction created for employee #${doc.employee_id}: fine=${fineAmount} UZS (${finePercent}%)`);
+          this.logger.log(`Payroll deduction created for employee #${doc.employeeId}: fine=${fineAmount} UZS (${finePercent}%)`);
         }
       }
 

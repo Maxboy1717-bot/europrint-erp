@@ -98,15 +98,6 @@ export const abcAnalysis = pgTable("abc_analysis", {
   uniqueIndex("uq_abc_emp_period").on(table.employeeId, table.analysisPeriodStart),
 ]);
 
-export const faceEncodings = pgTable("face_encodings", {
-  id: varchar("id", { length: 36 }).primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull().unique(),
-  faceEncoding: text("face_encoding"),
-  encodingDate: timestamp("encoding_date"),
-  embeddingModel: varchar("embedding_model", { length: 50 }),
-  confidenceScore: decimal("confidence_score", { precision: 5, scale: 3 }),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
 
 export const insertAttendanceSchema = createInsertSchema(attendance).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type InsertAttendance = z.infer<typeof insertAttendanceSchema>;
@@ -124,6 +115,3 @@ export const insertAbcAnalysisSchema = createInsertSchema(abcAnalysis).omit({ id
 export type InsertAbcAnalysis = z.infer<typeof insertAbcAnalysisSchema>;
 export type AbcAnalysis = typeof abcAnalysis.$inferSelect;
 
-export const insertFaceEncodingSchema = createInsertSchema(faceEncodings).omit({ updatedAt: true } as never);
-export type InsertFaceEncoding = z.infer<typeof insertFaceEncodingSchema>;
-export type FaceEncoding = typeof faceEncodings.$inferSelect;

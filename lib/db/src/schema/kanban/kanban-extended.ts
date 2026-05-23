@@ -67,6 +67,31 @@ export type TaskChecklist = typeof taskChecklists.$inferSelect;
 export type InsertTaskChecklist = z.infer<typeof insertTaskChecklistSchema>;
 
 
+// Chek-list elementlari - Chek-list ichidagi alohida bandlar
+export const taskChecklistItems = pgTable("task_checklist_items", {
+  id: serial("id").primaryKey(),
+  checklistId: varchar("checklist_id").references(() => taskChecklists.id, { onDelete: 'cascade' }).notNull(),
+  title: text("title").notNull(),
+  completed: boolean("completed").notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+}, (t) => [
+  index("idx_task_checklist_items_checklist_id").on(t.checklistId),
+]);
+
+
+export const insertTaskChecklistItemSchema = createInsertSchema(taskChecklistItems, {
+  title: z.string().min(1, "Element nomi bo'sh bo'lmasligi kerak"),
+  sortOrder: z.number().int().nonnegative(),
+}).omit({ id: true, createdAt: true } as never);
+
+
+export type TaskChecklistItem = typeof taskChecklistItems.$inferSelect;
+
+export type InsertTaskChecklistItem = z.infer<typeof insertTaskChecklistItemSchema>;
+
+
 // Teglar - Kartalarni guruhlash uchun rangli teglar
 export const taskTags = pgTable("task_tags", {
   id: serial("id").primaryKey(),

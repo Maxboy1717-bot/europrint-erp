@@ -196,24 +196,6 @@ export const materials = stub(pgTable('materials', {
   deletedAt: ts('deleted_at'),
 }));
 
-export const posMovements = stub(pgTable('pos_movements', {
-  id: integer('id').primaryKey(),
-  movementTypeId: text('movement_type_id'),
-  warehouseId: text('warehouse_id'),
-  sourceWarehouseId: text('source_warehouse_id'),
-  destinationWarehouseId: text('destination_warehouse_id'),
-  status: text('status').notNull().default('draft'),
-  createdBy: text('created_by'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-}));
+export { posMovements } from '@workspace/db';
 
-export const posMovementTypes = stub(pgTable('pos_movement_types', {
-  id: integer('id').primaryKey(),
-  name: text('name').notNull(),
-  code: text('code').unique(),
-  direction: text('direction').notNull(),
-  isActive: boolean('is_active').default(true),
-  createdAt: ts('created_at').defaultNow(),
-}));
+export { posMovementTypes } from '@workspace/db';

@@ -117,15 +117,15 @@ export class DrizzleMaintenanceSvcRepository implements IMaintenanceSvcRepositor
 
   async findFacilities(): Promise<Result<Record<string, unknown>[]>> {
     try {
-      const rows = await db.select().from(mro_facilities).orderBy(desc(mro_facilities.created_at));
+      const rows = await db.select().from(mro_facilities).orderBy(desc(mro_facilities.createdAt));
       return Ok(rows.map((r) => ({
         id: r.id,
-        facilityCode: r.facility_code,
+        facilityCode: r.id,
         name: r.name,
-        facilityType: r.facility_type ?? 'office',
-        totalAreaSqm: r.total_area_sqm !== null ? Number(r.total_area_sqm) : null,
-        itemsCount: r.items_count ?? 0,
-        responsibleEmployee: r.responsible_employee ?? null,
+        facilityType: r.facilityType ?? 'office',
+        totalAreaSqm: r.areaM2 !== null ? Number(r.areaM2) : null,
+        itemsCount: r.capacity ?? 0,
+        responsibleEmployee: r.responsible ?? null,
         status: r.status ?? 'active',
       })));
     } catch (e: unknown) { return Err((e as Error)?.message || 'Binolar topilmadi'); }
@@ -133,15 +133,15 @@ export class DrizzleMaintenanceSvcRepository implements IMaintenanceSvcRepositor
 
   async findCleaningSchedules(): Promise<Result<Record<string, unknown>[]>> {
     try {
-      const rows = await db.select().from(mro_cleaning_schedules).orderBy(desc(mro_cleaning_schedules.next_due_at));
+      const rows = await db.select().from(mro_cleaning_schedules).orderBy(desc(mro_cleaning_schedules.nextCleaning));
       return Ok(rows.map((r) => ({
         id: r.id,
-        zoneName: r.zone_name,
-        taskType: r.task_type ?? 'daily',
+        zoneName: r.area,
+        taskType: r.frequency ?? 'daily',
         frequency: r.frequency ?? '',
-        lastDoneAt: r.last_done_at ? r.last_done_at.toISOString().split('T')[0] : null,
-        nextDueAt: r.next_due_at.toISOString().split('T')[0],
-        assignedToName: r.assigned_to_name ?? null,
+        lastDoneAt: r.lastCleaned ? r.lastCleaned.toISOString().split('T')[0] : null,
+        nextDueAt: r.nextCleaning ? r.nextCleaning.toISOString().split('T')[0] : null,
+        assignedToName: r.responsible ?? null,
         status: r.status ?? 'pending',
       })));
     } catch (e: unknown) { return Err((e as Error)?.message || 'Tozalash jadvali topilmadi'); }
@@ -167,19 +167,19 @@ export class DrizzleMaintenanceSvcRepository implements IMaintenanceSvcRepositor
 
   async findUtilityReadings(): Promise<Result<Record<string, unknown>[]>> {
     try {
-      const rows = await db.select().from(mro_utility_readings).orderBy(desc(mro_utility_readings.reading_date));
+      const rows = await db.select().from(mro_utility_readings).orderBy(desc(mro_utility_readings.readingDate));
       return Ok(rows.map((r) => ({
         id: r.id,
-        utilityType: r.utility_type,
-        meterCode: r.meter_code,
-        facilityName: r.facility_name ?? null,
-        currentReading: Number(r.current_reading),
-        previousReading: Number(r.previous_reading),
-        consumption: Number(r.consumption),
+        utilityType: r.utilityType,
+        meterCode: null,
+        facilityName: null,
+        currentReading: Number(r.todayValue),
+        previousReading: Number(r.yesterdayValue),
+        consumption: Number(r.monthTotal),
         unit: r.unit ?? 'kWh',
-        unitCostUzs: Number(r.unit_cost_uzs ?? 0),
-        totalCostUzs: Number(r.total_cost_uzs ?? 0),
-        readingDate: r.reading_date,
+        unitCostUzs: 0,
+        totalCostUzs: 0,
+        readingDate: r.readingDate,
       })));
     } catch (e: unknown) { return Err((e as Error)?.message || 'Hisoblagichlar topilmadi'); }
   }
@@ -214,21 +214,21 @@ export class DrizzleMaintenanceSvcRepository implements IMaintenanceSvcRepositor
         ? await db.select().from(mro_items).where(ilike(mro_items.name, `%${search}%`)).orderBy(mro_items.name)
         : await query;
       return Ok(rows.map((r) => {
-        const qty = Number(r.current_stock ?? 0);
-        const minStock = Number(r.min_stock ?? 0);
-        const unitCost = Number(r.unit_cost ?? 0);
+        const qty = Number(r.currentStock ?? 0);
+        const minStockVal = Number(r.minStock ?? 0);
+        const unitCost = Number(r.unitCost ?? 0);
         return {
           id: r.id,
           partCode: `MRO-${String(r.id).padStart(4, '0')}`,
           name: r.name,
           category: r.category ?? '',
           quantity: qty,
-          minStock,
+          minStock: minStockVal,
           unit: r.unit ?? 'dona',
           unitCost,
           totalValue: Math.round(qty * unitCost),
-          warehouseLocation: r.location ?? null,
-          isLow: qty <= minStock,
+          warehouseLocation: r.warehouseId ?? null,
+          isLow: qty <= minStockVal,
         };
       }));
     } catch (e: unknown) { return Err((e as Error)?.message || 'Ehtiyot qismlar topilmadi'); }

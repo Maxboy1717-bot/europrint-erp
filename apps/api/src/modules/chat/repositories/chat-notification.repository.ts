@@ -22,26 +22,26 @@ export class ChatNotificationRepository {
     const res = await safeCall(async () => {
       return db.select({
         id:          chatMessages.id,
-        room_id:     chatMessages.room_id,
+        room_id:     chatMessages.roomId,
         content:     chatMessages.content,
-        created_at:  chatMessages.created_at,
+        created_at:  chatMessages.createdAt,
         room_name:   chatRooms.name,
         sender_name: appUsers.full_name,
-        last_read_at: chatMembers.last_read_at,
+        last_read_at: chatMembers.lastReadAt,
       })
         .from(chatMessages)
         .innerJoin(chatMembers, and(
-          eq(chatMembers.room_id, chatMessages.room_id),
-          sql`${chatMembers.user_id}::int = ${userId}`,
+          eq(chatMembers.roomId, chatMessages.roomId),
+          sql`${chatMembers.userId}::int = ${userId}`,
         ))
-        .innerJoin(chatRooms, sql`${chatRooms.id} = ${chatMessages.room_id}`)
-        .innerJoin(appUsers, sql`${appUsers.id} = ${chatMessages.sender_id}::int`)
+        .innerJoin(chatRooms, sql`${chatRooms.id} = ${chatMessages.roomId}`)
+        .innerJoin(appUsers, sql`${appUsers.id} = ${chatMessages.senderId}::int`)
         .where(and(
-          sql`${chatMessages.sender_id}::int != ${userId}`,
-          eq(chatMessages.is_deleted, false),
-          sql`(${chatMembers.last_read_at} IS NULL OR ${chatMessages.created_at} > ${chatMembers.last_read_at})`,
+          sql`${chatMessages.senderId}::int != ${userId}`,
+          eq(chatMessages.isDeleted, false),
+          sql`(${chatMembers.lastReadAt} IS NULL OR ${chatMessages.createdAt} > ${chatMembers.lastReadAt})`,
         ))
-        .orderBy(sql`${chatMessages.created_at} DESC`)
+        .orderBy(sql`${chatMessages.createdAt} DESC`)
         .limit(50);
     });
     if (isErr(res)) return Err(res.error);
@@ -62,8 +62,8 @@ export class ChatNotificationRepository {
   async markAllReadForUser(userId: number): Promise<Result<{ updated: number }>> {
     try {
       const result = await db.update(chatMembers)
-        .set({ last_read_at: _time.now() })
-        .where(sql`${chatMembers.user_id}::int = ${userId}`)
+        .set({ lastReadAt: _time.now() })
+        .where(sql`${chatMembers.userId}::int = ${userId}`)
         .returning({ id: chatMembers.id });
       return Ok({ updated: result.length });
     } catch (e: unknown) { return Err((e as Error).message); }
@@ -71,7 +71,7 @@ export class ChatNotificationRepository {
 
   async findMessageRoomAndTime(messageId: string): Promise<Result<{ roomId: unknown; createdAt: string } | null>> {
     const res = await safeCall(async () =>
-      db.select({ room_id: chatMessages.room_id, created_at: chatMessages.created_at })
+      db.select({ room_id: chatMessages.roomId, created_at: chatMessages.createdAt })
         .from(chatMessages)
         .where(sql`${chatMessages.id}::text = ${messageId}`)
         .limit(1)
@@ -85,7 +85,7 @@ export class ChatNotificationRepository {
   async isMember(roomId: unknown, userId: number): Promise<Result<boolean>> {
     const res = await safeCall(async () =>
       db.select({ id: chatMembers.id }).from(chatMembers)
-        .where(and(sql`${chatMembers.room_id} = ${roomId}`, sql`${chatMembers.user_id}::int = ${userId}`))
+        .where(and(sql`${chatMembers.roomId} = ${roomId}`, sql`${chatMembers.userId}::int = ${userId}`))
         .limit(1)
     );
     if (isErr(res)) return Err(res.error);
@@ -95,8 +95,8 @@ export class ChatNotificationRepository {
   async markReadUpToTimestamp(roomId: unknown, userId: number, upToTimestamp: string): Promise<Result<void>> {
     try {
       await db.update(chatMembers).set({
-        last_read_at: sql`GREATEST(COALESCE(${chatMembers.last_read_at}, '1970-01-01'::timestamptz), ${upToTimestamp}::timestamptz)`,
-      }).where(and(sql`${chatMembers.room_id} = ${roomId}`, sql`${chatMembers.user_id}::int = ${userId}`));
+        lastReadAt: sql`GREATEST(COALESCE(${chatMembers.lastReadAt}, '1970-01-01'::timestamptz), ${upToTimestamp}::timestamptz)`,
+      }).where(and(sql`${chatMembers.roomId} = ${roomId}`, sql`${chatMembers.userId}::int = ${userId}`));
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error).message); }
   }
@@ -105,24 +105,24 @@ export class ChatNotificationRepository {
     const res = await safeCall(async () => {
       return db.select({
         id:          chatMessages.id,
-        room_id:     chatMessages.room_id,
+        room_id:     chatMessages.roomId,
         content:     chatMessages.content,
-        created_at:  chatMessages.created_at,
+        created_at:  chatMessages.createdAt,
         room_name:   chatRooms.name,
         sender_name: appUsers.full_name,
       })
         .from(chatMessages)
         .innerJoin(chatMembers, and(
-          eq(chatMembers.room_id, chatMessages.room_id),
-          sql`${chatMembers.user_id}::int = ${userId}`,
+          eq(chatMembers.roomId, chatMessages.roomId),
+          sql`${chatMembers.userId}::int = ${userId}`,
         ))
-        .innerJoin(chatRooms, sql`${chatRooms.id} = ${chatMessages.room_id}`)
-        .innerJoin(appUsers, sql`${appUsers.id} = ${chatMessages.sender_id}::int`)
+        .innerJoin(chatRooms, sql`${chatRooms.id} = ${chatMessages.roomId}`)
+        .innerJoin(appUsers, sql`${appUsers.id} = ${chatMessages.senderId}::int`)
         .where(and(
-          eq(chatMessages.is_deleted, false),
+          eq(chatMessages.isDeleted, false),
           sql`${chatMessages.content} ILIKE ${'%' + query.trim() + '%'}`,
         ))
-        .orderBy(sql`${chatMessages.created_at} DESC`)
+        .orderBy(sql`${chatMessages.createdAt} DESC`)
         .limit(30);
     });
     if (isErr(res)) return Err(res.error);
@@ -133,22 +133,22 @@ export class ChatNotificationRepository {
     const res = await safeCall(async () => {
       return db.select({
         id:          chatMessageTasks.id,
-        room_id:     chatMessageTasks.room_id,
-        message_id:  chatMessageTasks.message_id,
+        room_id:     chatMessageTasks.roomId,
+        message_id:  chatMessageTasks.messageId,
         title:       chatMessageTasks.title,
-        assigned_to: chatMessageTasks.assigned_to,
-        due_date:    chatMessageTasks.due_date,
+        assigned_to: chatMessageTasks.assignedTo,
+        due_date:    chatMessageTasks.dueDate,
         priority:    chatMessageTasks.priority,
         status:      chatMessageTasks.status,
-        created_at:  chatMessageTasks.created_at,
+        created_at:  chatMessageTasks.createdAt,
       })
         .from(chatMessageTasks)
-        .innerJoin(chatMessages, eq(chatMessages.id, chatMessageTasks.message_id))
+        .innerJoin(chatMessages, eq(chatMessages.id, chatMessageTasks.messageId))
         .innerJoin(chatMembers, and(
-          eq(chatMembers.room_id, chatMessages.room_id),
-          sql`${chatMembers.user_id}::int = ${userId}`,
+          eq(chatMembers.roomId, chatMessages.roomId),
+          sql`${chatMembers.userId}::int = ${userId}`,
         ))
-        .orderBy(sql`${chatMessageTasks.created_at} DESC`)
+        .orderBy(sql`${chatMessageTasks.createdAt} DESC`)
         .limit(50);
     });
     if (isErr(res)) return Ok([]);
@@ -169,7 +169,7 @@ export class ChatNotificationRepository {
   async checkMemberForRoom(callerId: number, roomId: string): Promise<Result<boolean>> {
     const res = await safeCall(async () =>
       db.select({ id: chatMembers.id }).from(chatMembers)
-        .where(and(eq(chatMembers.room_id, roomId), sql`${chatMembers.user_id}::int = ${callerId}`))
+        .where(and(eq(chatMembers.roomId, roomId), sql`${chatMembers.userId}::int = ${callerId}`))
         .limit(1)
     );
     if (isErr(res)) return Err(res.error);
@@ -179,7 +179,7 @@ export class ChatNotificationRepository {
   async messageInRoom(messageId: string, roomId: string): Promise<Result<boolean>> {
     const res = await safeCall(async () =>
       db.select({ id: chatMessages.id }).from(chatMessages)
-        .where(and(eq(chatMessages.id, messageId), eq(chatMessages.room_id, roomId)))
+        .where(and(eq(chatMessages.id, messageId), eq(chatMessages.roomId, roomId)))
         .limit(1)
     );
     if (isErr(res)) return Err(res.error);
@@ -189,10 +189,10 @@ export class ChatNotificationRepository {
   async insertTask(messageId: string, title: string, assignedTo: string | null, dueDate: string | null, priority: string): Promise<Result<Row>> {
     try {
       const rows = await db.insert(chatMessageTasks).values({
-        message_id:  messageId,
+        messageId:  messageId,
         title,
-        assigned_to: assignedTo ?? null,
-        due_date:    dueDate ?? null,
+        assignedTo: assignedTo ?? null,
+        dueDate:    dueDate ?? null,
         priority,
       }).returning();
       return Ok((rows[0] ?? {}) as Row);
@@ -215,14 +215,14 @@ export class ChatNotificationRepository {
     }
     try {
       const created = await db.insert(chatRooms).values({
-        name:       contextType + ':' + contextId,
-        type:       contextType,
-        created_by: String(userId),
+        name:      contextType + ':' + contextId,
+        type:      contextType,
+        createdBy: String(userId),
       }).returning({ id: chatRooms.id, name: chatRooms.name });
       const r = created[0];
       await db.insert(chatMembers).values({
-        room_id: String(r.id),
-        user_id: String(userId),
+        roomId: String(r.id),
+        userId: String(userId),
       }).onConflictDoNothing();
       return Ok({ roomId: String(r.id), roomName: String(r.name ?? '') });
     } catch (e: unknown) { return Err((e as Error).message); }

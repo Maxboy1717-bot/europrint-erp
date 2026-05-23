@@ -39,7 +39,7 @@ export class ChatRoomRepository {
           id: chatRooms.id,
           name: chatRooms.name,
           type: chatRooms.type,
-          created_at: chatRooms.created_at,
+          created_at: chatRooms.createdAt,
         })
         .from(chatRooms)
         .where(
@@ -59,7 +59,7 @@ export class ChatRoomRepository {
     return safeCall(async () => {
       const [row] = await db
         .insert(chatRooms)
-        .values({ type: 'DIRECT', created_by: userAStr })
+        .values({ type: 'DIRECT', createdBy: userAStr })
         .returning();
       return castTo<Record<string, unknown>>(row);
       }, 'DB_ERROR');
@@ -68,7 +68,7 @@ export class ChatRoomRepository {
   async insertMember(roomId: string, userId: string, role?: string): Promise<void> {
     await db
       .insert(chatMembers)
-      .values({ room_id: roomId, user_id: userId, ...(role ? { role } : {}) })
+      .values({ roomId: roomId, userId: userId, ...(role ? { role } : {}) })
       .onConflictDoNothing();
   }
 
@@ -79,14 +79,14 @@ export class ChatRoomRepository {
           id: chatRooms.id,
           name: chatRooms.name,
           type: chatRooms.type,
-          created_at: chatRooms.created_at,
+          created_at: chatRooms.createdAt,
         })
         .from(chatRooms)
         .where(
           and(
             eq(chatRooms.type, 'CONTEXT'),
-            eq(chatRooms.context_type, 'department'),
-            eq(chatRooms.context_id, departmentId),
+            eq(chatRooms.contextType, 'department'),
+            eq(chatRooms.contextId, departmentId),
           ),
         )
         .limit(1);
@@ -103,9 +103,9 @@ export class ChatRoomRepository {
         .values({
           name: departmentName,
           type: 'CONTEXT',
-          context_type: 'department',
-          context_id: departmentId,
-          created_by: createdBy,
+          contextType: 'department',
+          contextId: departmentId,
+          createdBy: createdBy,
         })
         .returning();
       return castTo<Record<string, unknown>>(row);
@@ -120,23 +120,23 @@ export class ChatRoomRepository {
         .select({
           id: chatRooms.id,
           name: chatRooms.name,
-          type: sql<string>`CASE WHEN ${chatRooms.type} = 'CONTEXT' AND ${chatRooms.context_type} = 'department' THEN 'department' ELSE LOWER(${chatRooms.type}) END`,
-          contextType: chatRooms.context_type,
-          contextId: chatRooms.context_id,
-          createdAt: chatRooms.created_at,
-          lastReadAt: chatMembers.last_read_at,
+          type: sql<string>`CASE WHEN ${chatRooms.type} = 'CONTEXT' AND ${chatRooms.contextType} = 'department' THEN 'department' ELSE LOWER(${chatRooms.type}) END`,
+          contextType: chatRooms.contextType,
+          contextId: chatRooms.contextId,
+          createdAt: chatRooms.createdAt,
+          lastReadAt: chatMembers.lastReadAt,
           memberRole: chatMembers.role,
-          unreadCount: sql<number>`COALESCE(${chatMembers.unread_count}, 0)`,
+          unreadCount: sql<number>`COALESCE(${chatMembers.unreadCount}, 0)`,
           lastMessage: sql<unknown>`(SELECT json_build_object('id', m.id, 'content', COALESCE(m.content, m.text), 'senderName', (u.first_name || ' ' || u.last_name), 'createdAt', m.created_at, 'messageType', LOWER(m.message_type)) FROM chat_messages m LEFT JOIN users u ON u.id = m.sender_id::int WHERE m.room_id = ${chatRooms.id} AND m.is_deleted = false ORDER BY m.created_at DESC LIMIT 1)`,
           displayName: sql<string>`CASE WHEN ${chatRooms.type} = 'DIRECT' THEN (SELECT (u.first_name || ' ' || u.last_name) FROM chat_members ocm LEFT JOIN users u ON u.id = ocm.user_id::int WHERE ocm.room_id = ${chatRooms.id} AND ocm.user_id != ${userIdStr} LIMIT 1) ELSE ${chatRooms.name} END`,
           avatarUrl: sql<string>`CASE WHEN ${chatRooms.type} = 'DIRECT' THEN (SELECT u.profile_image_url FROM chat_members ocm LEFT JOIN users u ON u.id = ocm.user_id::int WHERE ocm.room_id = ${chatRooms.id} AND ocm.user_id != ${userIdStr} LIMIT 1) ELSE NULL END`,
           otherUserId: sql<unknown>`CASE WHEN ${chatRooms.type} = 'DIRECT' THEN (SELECT u.id FROM chat_members ocm LEFT JOIN users u ON u.id = ocm.user_id::int WHERE ocm.room_id = ${chatRooms.id} AND ocm.user_id != ${userIdStr} LIMIT 1) ELSE NULL END`,
         })
         .from(chatRooms)
-        .innerJoin(chatMembers, and(eq(chatMembers.room_id, chatRooms.id), eq(chatMembers.user_id, userIdStr)))
+        .innerJoin(chatMembers, and(eq(chatMembers.roomId, chatRooms.id), eq(chatMembers.userId, userIdStr)))
         .orderBy(
           sql`(SELECT created_at FROM chat_messages WHERE room_id = ${chatRooms.id} AND is_deleted = false ORDER BY created_at DESC LIMIT 1) DESC NULLS LAST`,
-          sql`${chatRooms.created_at} DESC`,
+          sql`${chatRooms.createdAt} DESC`,
         );
       return castTo<Record<string, unknown>[]>(rows);
       }, 'DB_ERROR');
@@ -149,10 +149,10 @@ export class ChatRoomRepository {
           id: chatRooms.id,
           name: chatRooms.name,
           type: chatRooms.type,
-          contextType: chatRooms.context_type,
-          contextId: chatRooms.context_id,
-          createdBy: chatRooms.created_by,
-          createdAt: chatRooms.created_at,
+          contextType: chatRooms.contextType,
+          contextId: chatRooms.contextId,
+          createdBy: chatRooms.createdBy,
+          createdAt: chatRooms.createdAt,
         })
         .from(chatRooms)
         .where(eq(chatRooms.id, roomIdStr))
@@ -165,17 +165,17 @@ export class ChatRoomRepository {
     return safeCall(async () => {
       const rows = await db
         .select({
-          userId: chatMembers.user_id,
+          userId: chatMembers.userId,
           fullName: appUsers.full_name,
           avatarUrl: appUsers.profile_image_url,
           employeeId: appUsers.employee_id,
           role: chatMembers.role,
-          joinedAt: chatMembers.joined_at,
+          joinedAt: chatMembers.joinedAt,
         })
         .from(chatMembers)
-        .leftJoin(appUsers, sql`${appUsers.id} = ${chatMembers.user_id}::int`)
-        .where(eq(chatMembers.room_id, roomIdStr))
-        .orderBy(chatMembers.joined_at);
+        .leftJoin(appUsers, sql`${appUsers.id} = ${chatMembers.userId}::int`)
+        .where(eq(chatMembers.roomId, roomIdStr))
+        .orderBy(chatMembers.joinedAt);
       return castTo<Record<string, unknown>[]>(rows);
       }, 'DB_ERROR');
   }
@@ -184,7 +184,7 @@ export class ChatRoomRepository {
     return safeCall(async () => {
       const [row] = await db
         .insert(chatRooms)
-        .values({ name, type, created_by: createdByStr })
+        .values({ name, type, createdBy: createdByStr })
         .returning();
       return castTo<Record<string, unknown>>(row);
       }, 'DB_ERROR');
@@ -193,8 +193,8 @@ export class ChatRoomRepository {
   async updateRoomReadAt(roomIdStr: string, userIdStr: string): Promise<void> {
     await db
       .update(chatMembers)
-      .set({ last_read_at: sql`NOW()`, unread_count: 0 })
-      .where(and(eq(chatMembers.room_id, roomIdStr), eq(chatMembers.user_id, userIdStr)));
+      .set({ lastReadAt: sql`NOW()`, unreadCount: 0 })
+      .where(and(eq(chatMembers.roomId, roomIdStr), eq(chatMembers.userId, userIdStr)));
   }
 
   async checkMembership(roomId: string, userId: number): Promise<Result<boolean>> {
@@ -204,8 +204,8 @@ export class ChatRoomRepository {
         .from(chatMembers)
         .where(
           and(
-            eq(chatMembers.room_id, roomId),
-            sql`${chatMembers.user_id} = ${userId}::text`,
+            eq(chatMembers.roomId, roomId),
+            sql`${chatMembers.userId} = ${userId}::text`,
           ),
         )
         .limit(1);
@@ -216,9 +216,9 @@ export class ChatRoomRepository {
   async getTotalUnread(userIdStr: string): Promise<Result<number>> {
     return safeCall(async () => {
       const [row] = await db
-        .select({ total: sql<number>`COALESCE(SUM(COALESCE(${chatMembers.unread_count}, 0)), 0)::int` })
+        .select({ total: sql<number>`COALESCE(SUM(COALESCE(${chatMembers.unreadCount}, 0)), 0)::int` })
         .from(chatMembers)
-        .where(eq(chatMembers.user_id, userIdStr));
+        .where(eq(chatMembers.userId, userIdStr));
       return Number(row?.total ?? 0);
       }, 'DB_ERROR');
   }
@@ -231,8 +231,8 @@ export class ChatRoomRepository {
   async updateMemberMute(roomIdStr: string, userIdStr: string, muted: boolean): Promise<void> {
     await db
       .update(chatMembers)
-      .set({ is_muted: muted, muted_until: null })
-      .where(and(eq(chatMembers.room_id, roomIdStr), eq(chatMembers.user_id, userIdStr)));
+      .set({ isMuted: muted, mutedUntil: null })
+      .where(and(eq(chatMembers.roomId, roomIdStr), eq(chatMembers.userId, userIdStr)));
   }
 
   async findTodayBirthdays() { return this.users.findTodayBirthdays(); }

@@ -4,9 +4,10 @@
  */
 
 import {
-  pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, varchar, date,
+  pgTable, serial, text, integer, boolean, timestamp, numeric, varchar, date,
 } from 'drizzle-orm/pg-core';
-import { PRINTER_DEFAULT_PORT } from '@common/constants/app.constants';
+
+export { posPrinterConfig } from '@workspace/db';
 
 // ─── WMS Extended ────────────────────────────────────────────────────────────
 
@@ -211,19 +212,8 @@ export const mm_goods_issues = pgTable('mm_goods_issues', {
   created_at:   timestamp('created_at').defaultNow(),
 });
 
-// ─── POS: Printer Config ─────────────────────────────────────────────────────
-
-export const pos_printer_config = pgTable('pos_printer_config', {
-  id:           serial('id').primaryKey(),
-  name:         text('name').default('Printer'),
-  printer_ip:   text('printer_ip').notNull(),
-  printer_port: integer('printer_port').default(PRINTER_DEFAULT_PORT),
-  print_format: text('print_format').default('ZPL'),
-  notes:        text('notes'),
-  is_active:    boolean('is_active').default(true),
-  created_at:   timestamp('created_at').defaultNow(),
-  updated_at:   timestamp('updated_at').defaultNow(),
-});
+// ─── POS: Printer Config — re-exported from @workspace/db ───────────────────
+// (posPrinterConfig is declared at the top of this file)
 
 // ─── Offboarding ─────────────────────────────────────────────────────────────
 

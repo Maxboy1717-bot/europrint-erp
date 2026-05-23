@@ -29,7 +29,7 @@ export class OkrRepository implements IOkrRepo {
           (${quarter}::text IS NULL OR ${okr_objectives.quarter} = ${quarter}) AND
           (${status}::text IS NULL OR ${okr_objectives.status} = ${status})
         `)
-        .orderBy(desc(okr_objectives.created_at)).then(r => castTo<Row[]>(r));
+        .orderBy(desc(okr_objectives.createdAt)).then(r => castTo<Row[]>(r));
       }, 'DB_ERROR');
   }
 
@@ -42,7 +42,7 @@ export class OkrRepository implements IOkrRepo {
   async createObjective(title: string, type: string, year: number, quarter: string, description: string | null, ownerId: number): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(okr_objectives).values({
-        title, type, year, quarter, description, owner_id: ownerId, status: 'active',
+        title, type, year, quarter, description, ownerId, status: 'active',
       }).returning();
       return (rows[0] ?? {}) as Row;
       }, 'DB_ERROR');
@@ -54,7 +54,7 @@ export class OkrRepository implements IOkrRepo {
         title:       sql`COALESCE(${title}, ${okr_objectives.title})`,
         status:      sql`COALESCE(${status}, ${okr_objectives.status})`,
         description: sql`COALESCE(${description}, ${okr_objectives.description})`,
-        updated_at:  _time.now(),
+        updatedAt:   _time.now(),
       }).where(eq(okr_objectives.id, id)).returning();
       return (rows[0] ?? { message: 'Yangilandi' }) as Row;
       }, 'DB_ERROR');
@@ -68,28 +68,27 @@ export class OkrRepository implements IOkrRepo {
     return safeCall(async () => {
       return db.select({
         id:              okr_key_results.id,
-        objective_id:    okr_key_results.objective_id,
+        objective_id:    okr_key_results.objectiveId,
         title:           okr_key_results.title,
-        target_value:    okr_key_results.target_value,
-        current_value:   okr_key_results.current_value,
+        target_value:    okr_key_results.targetValue,
+        current_value:   okr_key_results.currentValue,
         unit:            okr_key_results.unit,
-        owner_id:        okr_key_results.owner_id,
         status:          okr_key_results.status,
-        created_at:      okr_key_results.created_at,
-        updated_at:      okr_key_results.updated_at,
+        created_at:      okr_key_results.createdAt,
+        updated_at:      okr_key_results.updatedAt,
         objective_title: okr_objectives.title,
       })
         .from(okr_key_results)
-        .leftJoin(okr_objectives, eq(okr_objectives.id, okr_key_results.objective_id))
-        .where(sql`(${objectiveId}::int IS NULL OR ${okr_key_results.objective_id} = ${objectiveId}::int)`)
-        .orderBy(desc(okr_key_results.created_at)).then(r => castTo<Row[]>(r));
+        .leftJoin(okr_objectives, eq(okr_objectives.id, okr_key_results.objectiveId))
+        .where(sql`(${objectiveId}::int IS NULL OR ${okr_key_results.objectiveId} = ${objectiveId}::int)`)
+        .orderBy(desc(okr_key_results.createdAt)).then(r => castTo<Row[]>(r));
       }, 'DB_ERROR');
   }
 
   async createKeyResult(objectiveId: number, title: string, targetValue: number, currentValue: number, unit: string, ownerId: number): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(okr_key_results).values({
-        objective_id: objectiveId, title, target_value: String(targetValue), current_value: String(currentValue), unit, owner_id: ownerId,
+        objectiveId, title, targetValue: String(targetValue), currentValue: String(currentValue), unit,
       }).returning();
       return (rows[0] ?? {}) as Row;
       }, 'DB_ERROR');
@@ -98,10 +97,10 @@ export class OkrRepository implements IOkrRepo {
   async updateKeyResult(id: number, currentValue: number | null, status: string | null, title: string | null): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(okr_key_results).set({
-        current_value: sql`COALESCE(${currentValue}::numeric, ${okr_key_results.current_value})`,
-        status:        sql`COALESCE(${status}, ${okr_key_results.status})`,
-        title:         sql`COALESCE(${title}, ${okr_key_results.title})`,
-        updated_at:    _time.now(),
+        currentValue: sql`COALESCE(${currentValue}::numeric, ${okr_key_results.currentValue})`,
+        status:       sql`COALESCE(${status}, ${okr_key_results.status})`,
+        title:        sql`COALESCE(${title}, ${okr_key_results.title})`,
+        updatedAt:    _time.now(),
       }).where(eq(okr_key_results.id, id)).returning();
       return (rows[0] ?? { message: 'Yangilandi' }) as Row;
       }, 'DB_ERROR');
@@ -121,7 +120,7 @@ export class OkrRepository implements IOkrRepo {
   async getDashboardKeyResults(): Promise<Result<KeyResultsDashboard>> {
     return safeCall(async () => {
       const r = await db.select({
-        avg_progress: sql<number>`ROUND(AVG(CASE WHEN ${okr_key_results.target_value} > 0 THEN (${okr_key_results.current_value}::float / ${okr_key_results.target_value} * 100) ELSE 0 END), 1)`,
+        avg_progress: sql<number>`ROUND(AVG(CASE WHEN ${okr_key_results.targetValue} > 0 THEN (${okr_key_results.currentValue}::float / ${okr_key_results.targetValue} * 100) ELSE 0 END), 1)`,
         total:        sql<number>`COUNT(*)`,
       }).from(okr_key_results);
       return r[0] ?? { avg_progress: 0, total: 0 };

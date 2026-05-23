@@ -594,29 +594,8 @@ export const insertShiftCalendarSchema = createInsertSchema(shiftCalendars, {
 export type ShiftCalendar = typeof shiftCalendars.$inferSelect;
 export type InsertShiftCalendar = z.infer<typeof insertShiftCalendarSchema>;
 
-// Shift Assignments
-export const shiftAssignments = pgTable("shift_assignments", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  date: varchar("date", { length: 10 }).notNull(),
-  shift: varchar("shift", { length: 5 }).notNull(),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-}, (t) => [
-  index("idx_shift_assignments_user_id").on(t.userId),
-  index("idx_shift_assignments_date").on(t.date),
-  index("idx_shift_assignments_created_at").on(t.createdAt),
-]);
-
-export const insertShiftAssignmentSchema = createInsertSchema(shiftAssignments, {
-  userId: z.string().min(1, "Xodim tanlash kerak"),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo'lishi kerak"),
-  shift: z.string().min(1, "Smena tanlash kerak"),
-}).omit({ id: true, createdAt: true } as never);
-
-export type ShiftAssignment = typeof shiftAssignments.$inferSelect;
-export type InsertShiftAssignment = z.infer<typeof insertShiftAssignmentSchema>;
+// Shift Assignments — canonical definition lives in ../shifts
+export { shiftAssignments, insertShiftAssignmentSchema, ShiftAssignment, InsertShiftAssignment } from "../shifts";
 
 // MRP Runs
 export const mrpRuns = pgTable("mrp_runs", {

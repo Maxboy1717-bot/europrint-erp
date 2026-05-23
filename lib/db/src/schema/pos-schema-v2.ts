@@ -349,7 +349,7 @@ export const productionMaterialAllocs = pgTable('production_material_allocs', {
 
 // ─── 9. STOCK_RESERVATIONS — AI bron tizimi ───────────────────────────────────
 
-export const posStockReservations = pgTable('stock_reservations', {
+export const posStockReservations = pgTable('pos_stock_reservations', {
   id:                 serial('id').primaryKey(),
   reservationNumber:  varchar('reservation_number', { length: 50 }).notNull().unique(),
   productionOrderId:  varchar('production_order_id', { length: 50 }).notNull(),

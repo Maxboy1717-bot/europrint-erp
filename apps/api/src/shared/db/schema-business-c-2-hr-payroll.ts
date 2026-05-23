@@ -9,6 +9,8 @@ import {
   pgTable, serial, text, integer, timestamp, numeric, date,
 } from 'drizzle-orm/pg-core';
 
+// salary_history: used with snake_case columns (base_salary) in finance-actions.repository.ts
+// Canonical salaryHistory uses camelCase — kept as local stub.
 export const salary_history = pgTable('salary_history', {
   id:                    serial('id').primaryKey(),
   employee_id:           integer('employee_id').notNull(),
@@ -22,6 +24,8 @@ export const salary_history = pgTable('salary_history', {
   updated_at:            timestamp('updated_at').defaultNow(),
 });
 
+// payroll_periods_hr: used with snake_case columns (period_name etc.) in drizzle-hr.repo.ts
+// Canonical payrollPeriods uses camelCase — kept as local stub.
 export const payroll_periods_hr = pgTable('payroll_periods', {
   id:                    serial('id').primaryKey(),
   period_name:           text('period_name'),
@@ -35,6 +39,8 @@ export const payroll_periods_hr = pgTable('payroll_periods', {
   updated_at:            timestamp('updated_at').defaultNow(),
 });
 
+// hr_attendance: used with snake_case columns (status) in drizzle-hr-leave.repo.ts
+// Canonical attendance uses camelCase — kept as local stub.
 export const hr_attendance = pgTable('attendance', {
   id:                   serial('id').primaryKey(),
   employee_id:          integer('employee_id'),
@@ -50,6 +56,7 @@ export const hr_attendance = pgTable('attendance', {
   updated_at:           timestamp('updated_at').defaultNow(),
 });
 
+// hr_360_feedback: NOT in lib/db barrel — kept as local stub.
 export const hr_360_feedback = pgTable('hr_360_feedback', {
   id:           serial('id').primaryKey(),
   employee_id:  integer('employee_id'),
@@ -61,6 +68,8 @@ export const hr_360_feedback = pgTable('hr_360_feedback', {
   recorded_at:  timestamp('recorded_at').defaultNow(),
 });
 
+// hr_health_checkups: used with snake_case columns in drizzle-hr.repo.ts
+// Canonical hrHealthCheckups uses camelCase — kept as local stub.
 export const hr_health_checkups = pgTable('hr_health_checkups', {
   id:                serial('id').primaryKey(),
   department_id:     integer('department_id'),
@@ -73,6 +82,8 @@ export const hr_health_checkups = pgTable('hr_health_checkups', {
   updated_at:        timestamp('updated_at').defaultNow(),
 });
 
+// hr_conflict_reports: used with snake_case columns in hr-compat-a.repository.ts
+// Canonical hrConflictReports uses camelCase — kept as local stub.
 export const hr_conflict_reports = pgTable('hr_conflict_reports', {
   id:          serial('id').primaryKey(),
   party1:      text('party1'),
@@ -84,6 +95,8 @@ export const hr_conflict_reports = pgTable('hr_conflict_reports', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
+// employee_360_assessments: used with snake_case columns in hr-employees-ext.repository.ts
+// Canonical employee360Assessments uses camelCase — kept as local stub.
 export const employee_360_assessments = pgTable('employee_360_assessments', {
   id:                    serial('id').primaryKey(),
   employee_id:           integer('employee_id'),

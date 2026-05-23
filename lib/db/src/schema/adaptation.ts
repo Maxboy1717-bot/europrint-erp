@@ -47,22 +47,6 @@ export const adaptationRecords = pgTable("adaptation_records", {
   check("adaptation_records_progress_chk", sql`${t.progressPercent} IS NULL OR (${t.progressPercent} >= 0 AND ${t.progressPercent} <= 100)`),
 ]);
 
-export const adaptationMilestones = pgTable("adaptation_milestones", {
-  id: serial("id").primaryKey(),
-  recordId: integer("record_id").references(() => adaptationRecords.id, { onDelete: "cascade" }).notNull(),
-  milestoneNumber: integer("milestone_number").notNull(),
-  milestoneTitle: varchar("milestone_title", { length: 200 }),
-  description: text("description"),
-  dueDate: date("due_date"),
-  completedDate: date("completed_date"),
-  status: varchar("status", { length: 20 }).default("pending"),
-  verifiedBy: integer("verified_by"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (t) => [
-  check("adaptation_milestones_status_chk", sql`${t.status} IN ('pending','in_progress','completed','skipped')`),
-]);
-
 export const insertAdaptationProgramSchema = createInsertSchema(adaptationPrograms).omit({ id: true, createdAt: true } as never);
 export type InsertAdaptationProgram = z.infer<typeof insertAdaptationProgramSchema>;
 export type AdaptationProgram = typeof adaptationPrograms.$inferSelect;
@@ -71,6 +55,3 @@ export const insertAdaptationRecordSchema = createInsertSchema(adaptationRecords
 export type InsertAdaptationRecord = z.infer<typeof insertAdaptationRecordSchema>;
 export type AdaptationRecord = typeof adaptationRecords.$inferSelect;
 
-export const insertAdaptationMilestoneSchema = createInsertSchema(adaptationMilestones).omit({ id: true, createdAt: true } as never);
-export type InsertAdaptationMilestone = z.infer<typeof insertAdaptationMilestoneSchema>;
-export type AdaptationMilestone = typeof adaptationMilestones.$inferSelect;

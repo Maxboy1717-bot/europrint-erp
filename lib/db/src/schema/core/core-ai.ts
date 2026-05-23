@@ -73,22 +73,6 @@ export const insertBenchmarkSchema = createInsertSchema(benchmarks, {
 export type Benchmark = typeof benchmarks.$inferSelect;
 export type InsertBenchmark = z.infer<typeof insertBenchmarkSchema>;
 
-export const savedFilters = pgTable("saved_filters", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  filterData: jsonb("filter_data").notNull(),
-  isPublic: boolean("is_public").notNull().default(false),
-  createdBy: varchar("created_by").references(() => admins.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const insertSavedFilterSchema = createInsertSchema(savedFilters, {
-  name: z.string().min(3, "Nomi kamida 3 ta belgidan iborat bo'lishi kerak"),
-}).omit({ id: true, createdAt: true } as never);
-
-export type SavedFilter = typeof savedFilters.$inferSelect;
-export type InsertSavedFilter = z.infer<typeof insertSavedFilterSchema>;
 
 export const aiInsights = pgTable("ai_insights", {
   id: serial("id").primaryKey(),
@@ -117,71 +101,3 @@ export type InsertAiInsight = z.infer<typeof insertAiInsightSchema>;
 
 export type NewEmployee = AdaptationRecord;
 export type InsertNewEmployee = InsertAdaptationRecord;
-
-export const welcomeEvents = pgTable("welcome_events", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  titleRu: text("title_ru").notNull(),
-  description: text("description"),
-  descriptionRu: text("description_ru"),
-  eventDate: varchar("event_date", { length: 10 }).notNull(),
-  eventTime: varchar("event_time", { length: 5 }),
-  location: text("location"),
-  participants: text("participants").array(),
-  agenda: jsonb("agenda"),
-  organizerId: varchar("organizer_id").references(() => admins.id, { onDelete: "set null" }),
-  status: varchar("status", { length: 20 }).notNull().default("planned"),
-  attendanceCount: integer("attendance_count").notNull().default(0),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-}, (t) => [
-  check("welcome_events_status_chk", sql`${t.status} IN ('planned','in_progress','completed','cancelled')`),
-]);
-
-export const insertWelcomeEventSchema = createInsertSchema(welcomeEvents, {
-  title: z.string().min(3, "Sarlavha kamida 3 ta belgidan iborat bo'lishi kerak"),
-  titleRu: z.string().min(3, "Sarlavha kamida 3 ta belgidan iborat bo'lishi kerak"),
-  eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo'lishi kerak"),
-  eventTime: z.string().regex(/^\d{2}:\d{2}$/, "Vaqt HH:MM formatida bo'lishi kerak").optional(),
-  status: z.enum(["planned", "in_progress", "completed", "cancelled"]).default("planned"),
-}).omit({ id: true, createdAt: true, updatedAt: true, attendanceCount: true } as never);
-
-export type WelcomeEvent = typeof welcomeEvents.$inferSelect;
-export type InsertWelcomeEvent = z.infer<typeof insertWelcomeEventSchema>;
-
-export const knowledgeBase = pgTable("knowledge_base", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  titleRu: text("title_ru").notNull(),
-  category: varchar("category", { length: 50 }).notNull(),
-  content: text("content"),
-  contentRu: text("content_ru"),
-  fileUrl: text("file_url"),
-  fileType: varchar("file_type", { length: 20 }),
-  fileContent: text("file_content"),
-  tags: text("tags").array(),
-  isActive: boolean("is_active").notNull().default(true),
-  order: integer("order").notNull().default(0),
-  createdBy: varchar("created_by").references(() => admins.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-}, (t) => [
-  check("knowledge_base_category_chk", sql`${t.category} IN ('about_company','products','services','policies','procedures','faq','history','team','other')`),
-  check("knowledge_base_file_type_chk", sql`${t.fileType} IS NULL OR ${t.fileType} IN ('pdf','docx','txt')`),
-]);
-
-export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBase, {
-  title: z.string().min(3, "Sarlavha kamida 3 ta belgidan iborat bo'lishi kerak"),
-  titleRu: z.string().min(3, "Sarlavha kamida 3 ta belgidan iborat bo'lishi kerak"),
-  content: z.string().min(10, "Ma'lumot kamida 10 ta belgidan iborat bo'lishi kerak").optional(),
-  contentRu: z.string().min(10, "Ma'lumot kamida 10 ta belgidan iborat bo'lishi kerak").optional(),
-  category: z.enum(["about_company", "products", "services", "policies", "procedures", "faq", "history", "team", "other"]),
-  fileUrl: z.string().url().optional(),
-  fileType: z.enum(["pdf", "docx", "txt"]).optional(),
-  fileContent: z.string().optional(),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
-export type InsertKnowledgeBase = z.infer<typeof insertKnowledgeBaseSchema>;
