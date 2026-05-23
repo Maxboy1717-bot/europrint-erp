@@ -3,7 +3,7 @@
  * @description Source module. See exports for details.
  */
 
-import { pgTable, text, decimal, integer, ts, stub, serial, varchar } from './schema-compat-helpers';
+import { pgTable, text, decimal, integer, ts, serial, varchar } from './schema-compat-helpers';
 import { numeric } from 'drizzle-orm/pg-core';
 
 export const customer_payments = pgTable('customer_payments', {
@@ -39,7 +39,7 @@ export const wms_stock = pgTable('wms_stock', {
   deleted_by: integer('deleted_by'),
 });
 
-export const salaryHistory = stub(pgTable('salary_history', {
+export const salaryHistory = pgTable('salary_history', {
   id: integer('id').primaryKey(),
   userId: integer('user_id'),
   employeeId: integer('employee_id').notNull(),
@@ -50,4 +50,4 @@ export const salaryHistory = stub(pgTable('salary_history', {
   createdBy: text('created_by'),
   createdAt: ts('created_at').defaultNow(),
   changeType: text('change_type'),
-}));
+});

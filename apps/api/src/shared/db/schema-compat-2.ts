@@ -3,7 +3,7 @@
  * @description Source module. See exports for details.
  */
 
-import { pgTable, uuid, varchar, text, boolean, decimal, integer, createId, ts, stub } from './schema-compat-helpers';
+import { pgTable, uuid, varchar, text, boolean, decimal, integer, createId, ts } from './schema-compat-helpers';
 import { budgets as canonicalBudgets } from './schema-finance-budgets';
 import { accounts as canonicalAccounts } from './schema-ext-b-1';
 import { departments as canonicalDepartments, positions as canonicalPositions } from './schema-hr-lms';
@@ -15,7 +15,7 @@ import { purchase_orders as canonicalPurchaseOrders } from './schema-wms';
 // payroll_periods: re-exported from canonical definition in schema-business-c-2-hr-payroll.ts
 export const payrollPeriods = canonicalPayrollPeriods;
 
-export const payrollRows = stub(pgTable('payroll_rows', {
+export const payrollRows = pgTable('payroll_rows', {
   id: integer('id').primaryKey(),
   periodId: integer('period_id').notNull(),
   employeeId: text('employee_id').notNull(),
@@ -25,9 +25,9 @@ export const payrollRows = stub(pgTable('payroll_rows', {
   netPay: decimal('net_pay', { precision: 18, scale: 2 }),
   status: text('status').notNull().default('draft'),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const attendance = stub(pgTable('attendance', {
+export const attendance = pgTable('attendance', {
   id: integer('id').primaryKey(),
   employeeId: text('employee_id').notNull(),
   userId: integer('user_id'),
@@ -37,9 +37,9 @@ export const attendance = stub(pgTable('attendance', {
   status: text('status').notNull().default('present'),
   notes: text('notes'),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const leaveRequests = stub(pgTable('leave_requests', {
+export const leaveRequests = pgTable('leave_requests', {
   id: integer('id').primaryKey(),
   userId: integer('user_id'),
   employeeId: text('employee_id').notNull(),
@@ -53,26 +53,26 @@ export const leaveRequests = stub(pgTable('leave_requests', {
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   deletedAt: ts('deleted_at'),
-}));
+});
 
 // departments / positions: re-exported from canonical schema-hr-lms.ts
 export const departments = canonicalDepartments;
 export const positions = canonicalPositions;
 
-export const positionPermissions = stub(pgTable('position_permissions', {
+export const positionPermissions = pgTable('position_permissions', {
   id: integer('id').primaryKey(),
   positionId: integer('position_id').notNull(),
   moduleCode: varchar('module_code', { length: 50 }).notNull(),
   accessLevel: varchar('access_level', { length: 20 }).notNull(),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
 // budgets: re-exported from canonical definition in schema-finance-budgets.ts
 // (the legacy shim columns are kept absent — consumers should reference the
 // canonical UUID/fiscalYear/department schema).
 export const budgets = canonicalBudgets;
 
-export const glDocuments = stub(pgTable('gl_documents', {
+export const glDocuments = pgTable('gl_documents', {
   id: integer('id').primaryKey(),
   documentNumber: text('document_number').unique(),
   documentType: text('document_type').notNull(),
@@ -86,7 +86,7 @@ export const glDocuments = stub(pgTable('gl_documents', {
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   deletedAt: ts('deleted_at'),
-}));
+});
 
 // accounts: re-exported from canonical definition in schema-ext-b-1.ts
 export const accounts = canonicalAccounts;
@@ -94,7 +94,7 @@ export const accounts = canonicalAccounts;
 // sales_invoices: re-exported from canonical definition in schema-business-c-2-misc.ts
 export const salesInvoices = canonicalSalesInvoices;
 
-export const documentSequences = stub(pgTable('document_sequences', {
+export const documentSequences = pgTable('document_sequences', {
   id: integer('id').primaryKey(),
   documentType: text('document_type').notNull().unique(),
   prefix: text('prefix'),
@@ -103,9 +103,9 @@ export const documentSequences = stub(pgTable('document_sequences', {
   updatedAt: ts('updated_at').defaultNow(),
   month: integer('month'),
   year: integer('year'),
-}));
+});
 
-export const salesOrders = stub(pgTable('sales_orders', {
+export const salesOrders = pgTable('sales_orders', {
   id:             integer('id').primaryKey(),
   documentNumber: text('document_number').unique(),
   documentType:   text('document_type'),
@@ -122,7 +122,7 @@ export const salesOrders = stub(pgTable('sales_orders', {
   createdAt:      ts('created_at').defaultNow(),
   updatedAt:      ts('updated_at').defaultNow(),
   deletedAt:      ts('deleted_at'),
-}));
+});
 
 // sd_leads: re-exported from canonical definition in schema-ext-b-2.ts
 export const sdLeads = canonicalSdLeads;
@@ -130,7 +130,7 @@ export const sdLeads = canonicalSdLeads;
 // purchase_orders: re-exported from canonical definition in schema-wms.ts
 export const purchaseOrders = canonicalPurchaseOrders;
 
-export const purchaseOrderItems = stub(pgTable('purchase_order_items', {
+export const purchaseOrderItems = pgTable('purchase_order_items', {
   id: integer('id').primaryKey(),
   purchaseOrderId: text('purchase_order_id').notNull(),
   materialId: text('material_id'),
@@ -140,9 +140,9 @@ export const purchaseOrderItems = stub(pgTable('purchase_order_items', {
   unitPrice: decimal('unit_price', { precision: 18, scale: 2 }),
   totalPrice: decimal('total_price', { precision: 18, scale: 2 }),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const vendors = stub(pgTable('vendors', {
+export const vendors = pgTable('vendors', {
   id: integer('id').primaryKey(),
   name: text('name').notNull(),
   code: text('code').unique(),
@@ -152,9 +152,9 @@ export const vendors = stub(pgTable('vendors', {
   isActive: boolean('is_active').default(true),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
-}));
+});
 
-export const warehouses = stub(pgTable('warehouses', {
+export const warehouses = pgTable('warehouses', {
   id: integer('id').primaryKey(),
   name: text('name').notNull(),
   code: text('code').unique(),
@@ -162,18 +162,18 @@ export const warehouses = stub(pgTable('warehouses', {
   type: text('type').default('main'),
   isActive: boolean('is_active').default(true),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const warehouseZones = stub(pgTable('warehouse_zones', {
+export const warehouseZones = pgTable('warehouse_zones', {
   id: integer('id').primaryKey(),
   warehouseId: integer('warehouse_id').notNull(),
   name: text('name').notNull(),
   code: text('code'),
   type: text('type'),
   createdAt: ts('created_at').defaultNow(),
-}));
+});
 
-export const warehouseStock = stub(pgTable('warehouse_stock', {
+export const warehouseStock = pgTable('warehouse_stock', {
   id: integer('id').primaryKey(),
   warehouseId: integer('warehouse_id').notNull(),
   materialId: text('material_id').notNull(),
@@ -181,7 +181,7 @@ export const warehouseStock = stub(pgTable('warehouse_stock', {
   reservedQuantity: decimal('reserved_quantity', { precision: 15, scale: 4 }).default('0'),
   unit: text('unit'),
   updatedAt: ts('updated_at').defaultNow(),
-}));
+});
 
 export const materials = pgTable('materials', {
   id: integer('id').primaryKey(),

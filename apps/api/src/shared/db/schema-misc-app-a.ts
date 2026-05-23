@@ -15,9 +15,8 @@ const pgVector = (name: string, dim: number) =>
     fromDriver: (val: string) => val.slice(1, -1).split(',').map((s) => Number(s.trim())),
   })(name);
 
-const stub = <T extends object>(t: T): T => t;
 
-export const appUsers = stub(pgTable('users', {
+export const appUsers = pgTable('users', {
   id: integer('id').primaryKey(),
   username: varchar('username'),
   email: varchar('email'),
@@ -33,9 +32,9 @@ export const appUsers = stub(pgTable('users', {
   employee_id: integer('employee_id'),
   birth_date: timestamp('birth_date'),
   deleted_at: timestamp('deleted_at'),
-}));
+});
 
-export const hrEmployees = stub(pgTable('employees', {
+export const hrEmployees = pgTable('employees', {
   id:                integer('id').primaryKey(),
   user_id:           integer('user_id'),
   employee_code:     varchar('employee_code'),
@@ -67,7 +66,7 @@ export const hrEmployees = stub(pgTable('employees', {
   created_at:                  timestamp('created_at'),
   updated_at:                  timestamp('updated_at'),
   deleted_at:                  timestamp('deleted_at'),
-}));
+});
 
 // hrPositions / hrDepartments: re-exported from canonical schema-hr-lms.ts.
 // Legacy snake_case columns (parent_id, manager_id, is_active) are not present
@@ -76,7 +75,7 @@ export const hrEmployees = stub(pgTable('employees', {
 export const hrPositions = canonicalPositions;
 export const hrDepartments = canonicalDepartments;
 
-export const shiftSchedules = stub(pgTable('shift_schedules', {
+export const shiftSchedules = pgTable('shift_schedules', {
   id: serial('id').primaryKey(),
   employee_id: integer('employee_id'),
   shift_date: date('shift_date'),
@@ -88,9 +87,9 @@ export const shiftSchedules = stub(pgTable('shift_schedules', {
   created_at: timestamp('created_at'),
   user_id: varchar('user_id'),
   created_by: varchar('created_by'),
-}));
+});
 
-export const leaveRequestsApp = stub(pgTable('leave_requests', {
+export const leaveRequestsApp = pgTable('leave_requests', {
   id:               integer('id').primaryKey(),
   employee_id:      integer('employee_id'),
   leave_type:       varchar('leave_type'),
@@ -111,9 +110,9 @@ export const leaveRequestsApp = stub(pgTable('leave_requests', {
   created_at:       timestamp('created_at'),
   updated_at:       timestamp('updated_at'),
   deleted_at:       timestamp('deleted_at'),
-}));
+});
 
-export const orgDepartments = stub(pgTable('org_departments', {
+export const orgDepartments = pgTable('org_departments', {
   id: serial('id').primaryKey(),
   name: text('name'),
   name_ru: text('name_ru'),
@@ -129,14 +128,14 @@ export const orgDepartments = stub(pgTable('org_departments', {
   tskp: text('tskp'),
   tskp_ru: text('tskp_ru'),
   node_type: varchar('node_type'),
-}));
+});
 
-export const employeeOrgDepartments = stub(pgTable('employee_org_departments', {
+export const employeeOrgDepartments = pgTable('employee_org_departments', {
   id: serial('id').primaryKey(),
   user_id: integer('user_id'),
   org_department_id: integer('org_department_id'),
   is_primary: boolean('is_primary'),
   assigned_at: timestamp('assigned_at'),
-}));
+});
 
 export { chatMessages, chatMembers, chatRooms } from './schema-chat';
