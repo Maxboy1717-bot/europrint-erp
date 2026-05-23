@@ -10,9 +10,10 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { db } from '@shared/db';
 import {
-  cashTransactions, warehouseTransactions, customerPayments, invoicePayments,
+  cashTransactions, warehouseTransactions, invoicePayments,
   accounts, entries,
 } from '@europrint/schemas';
+import { customer_payments as customerPayments } from '@shared/db/schema-compat-5';
 import { sql, count, and, eq } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { MS_PER_DAY } from '@common/constants/app.constants';
@@ -90,7 +91,7 @@ export async function queryReceivables(date: string | undefined, overdueThreshol
     const targetDate = date ?? _time.now().toISOString().slice(0, 10);
     const rows = await db.select({
       total: sql<number>`COALESCE(SUM(${customerPayments.amount}::numeric), 0)`,
-      overdueCount: sql<number>`COUNT(CASE WHEN ${customerPayments.paymentDate} < ${targetDate}::date - (${overdueThreshold} * INTERVAL '1 day') THEN 1 END)`,
+      overdueCount: sql<number>`COUNT(CASE WHEN ${customerPayments.payment_date} < ${targetDate}::date - (${overdueThreshold} * INTERVAL '1 day') THEN 1 END)`,
     }).from(customerPayments);
 
     const total = Number(rows[0]?.total ?? 0);

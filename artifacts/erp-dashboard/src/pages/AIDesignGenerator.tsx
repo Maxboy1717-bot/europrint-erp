@@ -50,15 +50,15 @@ export default function AIDesignGenerator() {
     onSuccess: (data) => {
       setGeneratedDesigns(data.designs || []);
       queryClient.invalidateQueries({ queryKey: ["/api/design/orders"] });
-      toast({ title: "Dizaynlar yaratildi!", description: `${data.designs?.length || 0} ta AI dizayn ${data.generationTime || 0}s ichida yaratildi` });
+      toast({ title: tLabel('common.dizaynlarYaratildi', "Dizaynlar yaratildi!"), description: tLabel('common.dataDesignsLength0TaAiDizaynDataGenerati', "${data.designs?.length || 0} ta AI dizayn ${data.generationTime || 0}s ichida yaratildi") });
     },
-    onError: () => toast({ title: "Xatolik", description: "Dizayn yaratishda xatolik", variant: "destructive" }),
+    onError: () => toast({ title: "Xatolik", description: tLabel('common.dizaynYaratishdaXatolik', "Dizayn yaratishda xatolik"), variant: "destructive" }),
   });
 
   const statusMutation = useMutation({
     mutationFn: async ({ orderId, newStatus }: { orderId: string; newStatus: string }) =>
       apiRequest("PATCH", `/api/design/orders/${orderId}/status`, { newStatus }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/design/orders"] }); toast({ title: "Holat yangilandi!" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/design/orders"] }); toast({ title: tLabel('common.holatYangilandi', "Holat yangilandi!") }); },
     onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
   });
 
@@ -66,7 +66,7 @@ export default function AIDesignGenerator() {
   const selectedOrder = (Array.isArray(orders) ? orders : []).find((o) => o.order.id === selectedOrderId);
 
   const handleGenerate = () => {
-    if (!selectedOrderId) { toast({ title: "Buyurtmani tanlang", variant: "destructive" }); return; }
+    if (!selectedOrderId) { toast({ title: tLabel('common.buyurtmaniTanlang', "Buyurtmani tanlang"), variant: "destructive" }); return; }
     generateMutation.mutate({ orderId: selectedOrderId, customPrompt, count });
   };
 
@@ -91,10 +91,10 @@ export default function AIDesignGenerator() {
       const failedCount = (Array.isArray(checks) ? checks : []).filter((c) => c.status === "failed").length;
       toast({
         title: failedCount === 0 ? "Tekshiruv o'tdi!" : `${failedCount} ta muammo topildi`,
-        description: `Umumiy ball: ${result.overallScore?.toFixed(0) || 0}%`,
+        description: tLabel('common.umumiyBallResultOverallscoreTofixed00', "Umumiy ball: ${result.overallScore?.toFixed(0) || 0}%"),
         variant: failedCount > 2 ? "destructive" : "default",
       });
-    } catch { toast({ title: "Tekshiruv xatoligi", variant: "destructive" }); }
+    } catch { toast({ title: tLabel('common.tekshiruvXatoligi', "Tekshiruv xatoligi"), variant: "destructive" }); }
     finally { setVerifyingDesignId(null); }
   };
 
@@ -103,23 +103,23 @@ export default function AIDesignGenerator() {
       type MockupResponse = { mockupUrl: string };
       const result = await apiRequest<MockupResponse>("POST", `/api/design/${design.id}/mockup`, { productType: selectedOrder?.order?.productType || "quti" });
       setMockupMap((prev) => ({ ...prev, [design.id]: result.mockupUrl }));
-      toast({ title: "3D Mockup yaratildi!" });
-    } catch { toast({ title: "Mockup xatoligi", variant: "destructive" }); }
+      toast({ title: tLabel('common.lbl3dMockupYaratildi', "3D Mockup yaratildi!") });
+    } catch { toast({ title: tLabel('common.mockupXatoligi', "Mockup xatoligi"), variant: "destructive" }); }
   };
 
   const handleApprove = async (designId: string, orderId: string) => {
     try {
       await apiRequest("POST", `/api/design/${designId}/approve`, {});
       await statusMutation.mutateAsync({ orderId, newStatus: "approved" });
-      toast({ title: "Dizayn tasdiqlandi!", description: "Texnolog moduliga o'tkazildi" });
+      toast({ title: tLabel('common.dizaynTasdiqlandi', "Dizayn tasdiqlandi!"), description: "Texnolog moduliga o'tkazildi" });
       queryClient.invalidateQueries({ queryKey: ["/api/design/orders"] });
-    } catch { toast({ title: "Tasdiqlash xatoligi", variant: "destructive" }); }
+    } catch { toast({ title: tLabel('common.tasdiqlashXatoligi', "Tasdiqlash xatoligi"), variant: "destructive" }); }
   };
 
   const handleReject = async (designId: string) => {
     try {
       await apiRequest("POST", `/api/design/${designId}/reject`, { reason: "Mijoz tomonidan rad etildi" });
-      toast({ title: "Dizayn rad etildi" });
+      toast({ title: tLabel('common.dizaynRadEtildi', "Dizayn rad etildi") });
       queryClient.invalidateQueries({ queryKey: ["/api/design/orders"] });
     } catch { toast({ title: "Xatolik", variant: "destructive" }); }
   };

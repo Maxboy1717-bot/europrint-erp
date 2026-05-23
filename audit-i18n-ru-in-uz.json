@@ -1,0 +1,567 @@
+[
+  {
+    "ns": "common",
+    "key": "language.ru",
+    "value": "Русский"
+  },
+  {
+    "ns": "common",
+    "key": "titleRussian",
+    "value": "Sarlavha (Русский)"
+  },
+  {
+    "ns": "common",
+    "key": "titleRussianPlaceholder",
+    "value": "Учебное занятие"
+  },
+  {
+    "ns": "common",
+    "key": "descriptionRussian",
+    "value": "Tavsif (Русский)"
+  },
+  {
+    "ns": "common",
+    "key": "vacationApplicationPlaceholder",
+    "value": "Например: Заявление на отпуск"
+  },
+  {
+    "ns": "common",
+    "key": "safetyTestPlaceholder",
+    "value": "Тест по технике безопасности"
+  },
+  {
+    "ns": "common",
+    "key": "untitled",
+    "value": "безопасность"
+  },
+  {
+    "ns": "common",
+    "key": "dizaynTexnologSifatNazoratiMoliya",
+    "value": "Dizayn → Texnolog → Sifat nazorati → Moliya / Дизайн → Технолог → Контроль качества → Финансы"
+  },
+  {
+    "ns": "common",
+    "key": "sifatSertifikati",
+    "value": "SIFAT SERTIFIKATI / СЕРТИФИКАТ КАЧЕСТВА"
+  },
+  {
+    "ns": "common",
+    "key": "lclPastkiChegar",
+    "value": "LCL (Pastki chegarа)"
+  },
+  {
+    "ns": "common",
+    "key": "uclYuqoriChegar",
+    "value": "UCL (Yuqori chegarа)"
+  },
+  {
+    "ns": "common",
+    "key": "python2",
+    "value": "Языки программирования Python..."
+  },
+  {
+    "ns": "common",
+    "key": "python",
+    "value": "Программирование Python"
+  },
+  {
+    "ns": "common",
+    "key": "ru",
+    "value": "ЦКП (RU)..."
+  },
+  {
+    "ns": "common",
+    "key": "qyam",
+    "value": "QYaM / ЦКП"
+  },
+  {
+    "ns": "common",
+    "key": "xizmatSafariK",
+    "value": "Xizmat safari (K командировка)"
+  },
+  {
+    "ns": "common",
+    "key": "untitled2",
+    "value": "производства"
+  },
+  {
+    "ns": "common",
+    "key": "LanguageSwitcher.tsx.untitled",
+    "value": "Русский"
+  },
+  {
+    "ns": "common",
+    "key": "order-constants.l",
+    "value": "Лоток"
+  },
+  {
+    "ns": "coordination",
+    "key": "founderCouncil",
+    "value": "Asoschilar Kengashi (Совет Учредителей)"
+  },
+  {
+    "ns": "coordination",
+    "key": "executiveCouncil",
+    "value": "Ijroiya Kengashi (Исполнительный Совет)"
+  },
+  {
+    "ns": "coordination",
+    "key": "recommendationCouncil",
+    "value": "Рекомендательный Совет (Рек.Совет)"
+  },
+  {
+    "ns": "coordination",
+    "key": "recommendationCommittee",
+    "value": "Рекомендательный Комитет"
+  },
+  {
+    "ns": "coordination",
+    "key": "dokla",
+    "value": "Доклад — rasmiy yuqoriga hisobot"
+  },
+  {
+    "ns": "coordination",
+    "key": "rasporyazhenie",
+    "value": "Распоряжение — rasmiy pastga ko'rsatma"
+  },
+  {
+    "ns": "coordination",
+    "key": "createDokla",
+    "value": "Доклад yozish"
+  },
+  {
+    "ns": "coordination",
+    "key": "createRasporyazhenie",
+    "value": "Распоряжение berish"
+  },
+  {
+    "ns": "coordination",
+    "key": "recommendationCouncilPurpose",
+    "value": "ЗВС arizalarini ko'rib chiqish va tasdiqlash"
+  },
+  {
+    "ns": "coordination",
+    "key": "doklaSend",
+    "value": "Доклад yuborish"
+  },
+  {
+    "ns": "coordination",
+    "key": "rasporyazhenieSend",
+    "value": "Распоряжение chiqarish"
+  },
+  {
+    "ns": "coordination",
+    "key": "basketIncoming",
+    "value": "Kiruvchi (Входящий)"
+  },
+  {
+    "ns": "coordination",
+    "key": "basketPending",
+    "value": "Kutilmoqda (В ожидании)"
+  },
+  {
+    "ns": "coordination",
+    "key": "basketOutgoing",
+    "value": "Chiquvchi (Исходящий)"
+  },
+  {
+    "ns": "director",
+    "key": "executionDiary",
+    "value": "Bajarish kundaligi (Дневник выполнения)"
+  },
+  {
+    "ns": "finance",
+    "key": "aiRecommendations",
+    "value": "AI tavsiялari"
+  },
+  {
+    "ns": "finance",
+    "key": "zvs",
+    "value": "Pul ajratish ariza (ЗВС)"
+  },
+  {
+    "ns": "finance",
+    "key": "zno",
+    "value": "Majburiyat ariza (ЗНО)"
+  },
+  {
+    "ns": "finance",
+    "key": "createZvs",
+    "value": "ЗВС yaratish"
+  },
+  {
+    "ns": "finance",
+    "key": "zvsNumber",
+    "value": "ЗВС raqami"
+  },
+  {
+    "ns": "finance",
+    "key": "zvsDate",
+    "value": "ЗВС sanasi"
+  },
+  {
+    "ns": "finance",
+    "key": "zvsStatus",
+    "value": "ЗВС holati"
+  },
+  {
+    "ns": "finance",
+    "key": "zvsPending",
+    "value": "ЗВС ko'rib chiqilmoqda"
+  },
+  {
+    "ns": "finance",
+    "key": "zvsApproved",
+    "value": "ЗВС tasdiqlandi"
+  },
+  {
+    "ns": "finance",
+    "key": "zvsRejected",
+    "value": "ЗВС rad etildi"
+  },
+  {
+    "ns": "finance",
+    "key": "zvsSentAt",
+    "value": "ЗВС yuborildi: Seshanba"
+  },
+  {
+    "ns": "finance",
+    "key": "fpCycle",
+    "value": "Moliyaviy rejalashtirish tsikli (ФП)"
+  },
+  {
+    "ns": "finance",
+    "key": "fpDay",
+    "value": "ФП kuni — Chorshanba"
+  },
+  {
+    "ns": "finance",
+    "key": "zvsDeadlineDay",
+    "value": "ЗВС topshirish muddati: Seshanba 09:00"
+  },
+  {
+    "ns": "finance",
+    "key": "approvalLevel2",
+    "value": "2-daraja: ≤ 5 000 000 so'm — Рек.Совет"
+  },
+  {
+    "ns": "finance",
+    "key": "account1Main",
+    "value": "Счет №1 — Asosiy hisob"
+  },
+  {
+    "ns": "finance",
+    "key": "accountTax",
+    "value": "Единый налог — Soliq hisobi"
+  },
+  {
+    "ns": "finance",
+    "key": "accountHead",
+    "value": "Главный счет — Bosh hisob"
+  },
+  {
+    "ns": "finance",
+    "key": "accountWorkingCapital",
+    "value": "Оборотных средств — Aylanma mablag'"
+  },
+  {
+    "ns": "finance",
+    "key": "zvsApprovalQueue",
+    "value": "ЗВС tasdiqlash navbati"
+  },
+  {
+    "ns": "finance",
+    "key": "weeklyFinancePlan",
+    "value": "Haftalik moliyaviy reja (ФП №1)"
+  },
+  {
+    "ns": "hr",
+    "key": "positionFolder",
+    "value": "Lavozim Papkasi (Должностная Папка)"
+  },
+  {
+    "ns": "hr",
+    "key": "departments.nameRuPlaceholder",
+    "value": "Название отдела"
+  },
+  {
+    "ns": "hr",
+    "key": "reasonRuPlaceholder",
+    "value": "Причина и подробности..."
+  },
+  {
+    "ns": "kanban",
+    "key": "threeBasketsSystem",
+    "value": "3-Savat hujjat tizimi (Система 3-х корзин)"
+  },
+  {
+    "ns": "kanban",
+    "key": "personalProgram",
+    "value": "Shaxsiy dastur (Персональная программа)"
+  },
+  {
+    "ns": "lms",
+    "key": "courseTitleRuPlaceholder",
+    "value": "Основы работы на печатных машинах"
+  },
+  {
+    "ns": "lms",
+    "key": "questionRuPlaceholder",
+    "value": "Введите вопрос..."
+  },
+  {
+    "ns": "lms",
+    "key": "optionRu",
+    "value": "Вариант"
+  },
+  {
+    "ns": "lms",
+    "key": "moduleNameRuPlaceholder",
+    "value": "Модуль 1: Основы"
+  },
+  {
+    "ns": "lms",
+    "key": "descriptionRuPlaceholder",
+    "value": "Краткое описание модуля..."
+  },
+  {
+    "ns": "production",
+    "key": "mro.machine",
+    "value": "Mashina/Uskunа"
+  },
+  {
+    "ns": "settings",
+    "key": "k9001800",
+    "value": "9:00 - 18:00 (Понедельник - Пятница)"
+  },
+  {
+    "ns": "settings",
+    "key": "untitled",
+    "value": "Русский"
+  },
+  {
+    "ns": "warehouse",
+    "key": "hub.openWithLayers",
+    "value": "Открыть ({n} приоритетных слоёв)"
+  },
+  {
+    "ns": "warehouse",
+    "key": "hub.newReceipt",
+    "value": "Новая приёмка"
+  },
+  {
+    "ns": "warehouse",
+    "key": "Asosiy xom ashyo ombori — ishlab chiqarish uchun barcha materiallar shu yerda saqlanadi. Yetkazib beruvchilardan keladigan materiallar birinchi bu omborga qabul qilinadi.",
+    "value": "Главный склад сырья — здесь хранятся все материалы для производства. Материалы от поставщиков сначала поступают на этот склад."
+  },
+  {
+    "ns": "warehouse",
+    "key": "Rulon materiallari ombori — qog'oz, plyonka, vinillar rulonlarda saqlanadi. Har bir rulonning kengligi, uzunligi va og'irligi kuzatiladi.",
+    "value": "Склад рулонных материалов — бумага, плёнка, винил хранятся в рулонах. Для каждого рулона отслеживаются ширина, длина и вес."
+  },
+  {
+    "ns": "warehouse",
+    "key": "Tayyor mahsulot ombori — ishlab chiqarish tugagan buyumlar jo'natishga tayyor holda saqlanadi. Buyurtmachi kutayotgan mahsulotlar shu yerda.",
+    "value": "Склад готовой продукции — изделия после производства хранятся готовыми к отгрузке. Здесь продукция, ожидающая клиента."
+  },
+  {
+    "ns": "warehouse",
+    "key": "Yarim tayyor mahsulot ombori — ishlab chiqarish jarayonidagi materiallar. Bir sexdan ikkinchisiga o'tayotgan yarim tayyor buyumlar shu yerda.",
+    "value": "Склад полуфабрикатов — материалы в процессе производства. Здесь полуфабрикаты, перемещающиеся из цеха в цех."
+  },
+  {
+    "ns": "warehouse",
+    "key": "Brak ombori — yaroqsiz va nuqsonli materiallar ajratib saqlanadi. Utilizatsiya yoki qayta ishlash uchun kutayotgan buyumlar.",
+    "value": "Склад брака — негодные и дефектные материалы хранятся отдельно. Изделия, ожидающие утилизации или переработки."
+  },
+  {
+    "ns": "warehouse",
+    "key": "Karantin ombori — sifat nazorati tekshiruvidan o'tayotgan materiallar vaqtincha shu yerda saqlanadi. QC qaroriga qarab chiqariladi yoki brakka o'tkaziladi.",
+    "value": "Карантинный склад — материалы на проверке QC временно хранятся здесь. По решению QC выпускаются или передаются в брак."
+  },
+  {
+    "ns": "warehouse",
+    "key": "Asbob-uskuna ombori — ishlab chiqarish uskunalari, ehtiyot qismlar, o'lchov asboblari. Har bir asbobning holati va kalibratsiya muddati kuzatiladi.",
+    "value": "Склад инструментов и оборудования — производственное оборудование, запчасти, измерительные приборы. Отслеживается состояние и срок калибровки каждого инструмента."
+  },
+  {
+    "ns": "warehouse",
+    "key": "Xo'jalik materiallari ombori — tozalash vositalari, ofis mollari, yordamchi materiallar. Kundalik sarflanadigan narsalar boshqariladi.",
+    "value": "Склад хозтоваров — чистящие средства, офисные принадлежности, вспомогательные материалы. Управление ежедневно расходуемыми товарами."
+  },
+  {
+    "ns": "warehouse",
+    "key": "MRO (Maintenance, Repair, Operations) ombori — uskunalarni ta'mirlash va texnik xizmat ko'rsatish uchun ehtiyot qismlar va materiallar.",
+    "value": "Склад MRO (Обслуживание, Ремонт, Эксплуатация) — запчасти и материалы для ремонта и техобслуживания оборудования."
+  },
+  {
+    "ns": "warehouse",
+    "key": "Umumiy ombor — barcha turdagi materiallar saqlanadi.",
+    "value": "Общий склад — хранятся все виды материалов."
+  },
+  {
+    "ns": "warehouse",
+    "key": "Min. darajadan past",
+    "value": "Ниже мин. уровня"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.purchaseOrdersTitle",
+    "value": "Заказы на закупку"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.purchaseOrdersSubtitle",
+    "value": "Управление заказами на закупку"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.poListTitle",
+    "value": "Список заказов на закупку"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.poNumber",
+    "value": "№ ЗнЗ"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.vendor",
+    "value": "Поставщик"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.date",
+    "value": "Дата"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.amount",
+    "value": "Сумма"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.status",
+    "value": "Статус"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.actions",
+    "value": "Действия"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.statusDraft",
+    "value": "Черновик"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.statusSent",
+    "value": "Отправлено"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.statusConfirmed",
+    "value": "Подтверждено"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.statusReceived",
+    "value": "Принято"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.statusCancelled",
+    "value": "Отменено"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.toastCreated",
+    "value": "Заказ на закупку создан"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.toastDeleted",
+    "value": "Заказ на закупку удалён"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.errorLoadTitle",
+    "value": "Заказы не загружены"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.errorLoadMessage",
+    "value": "Ошибка соединения с сервером."
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.emptyTitle",
+    "value": "Заказы не найдены"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.emptyDescription",
+    "value": "Создайте новый заказ на закупку."
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.viewTitle",
+    "value": "Детали заказа"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.orderDate",
+    "value": "Дата заказа"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.deliveryDate",
+    "value": "Дата доставки"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.totalAmount",
+    "value": "Общая сумма"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.orderItems",
+    "value": "Элементы заказа"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.rawMaterial",
+    "value": "Сырьё"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.quantity",
+    "value": "Кол-во"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.unit",
+    "value": "Ед."
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.price",
+    "value": "Цена"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.total",
+    "value": "Итого"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.confirmDeleteTitle",
+    "value": "Удалить заказ на закупку"
+  },
+  {
+    "ns": "warehouse",
+    "key": "mm.confirmDeleteDesc",
+    "value": "Подтверждаете удаление этого заказа? Это действие нельзя отменить."
+  }
+]

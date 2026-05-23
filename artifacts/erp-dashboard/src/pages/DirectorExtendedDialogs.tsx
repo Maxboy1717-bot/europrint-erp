@@ -10,39 +10,13 @@ import { TabsContent } from "@/components/ui/tabs";
 import {
   AlertTriangle, Brain, Download, Factory,
   Package, ShieldAlert, Users, Zap,
-  type LucideIcon,
 } from "lucide-react";
 import type { AiSummaryData, DirectorDashboard } from "./DirectorExtendedTypes";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { StatCard } from "@/components/shared/StatCard";
 
-export function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  color,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string | number;
-  sub?: string;
-  color?: string;
-}) {
-  const { t } = useTranslation("common");
-  return (
-    <div className="bg-card rounded-lg p-5">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Icon className={`h-4 w-4 ${color || "text-primary"}`} />
-        </div>
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-      </div>
-      <div className="text-4xl font-bold tracking-tight text-foreground">{value}</div>
-      {sub && <div className="text-xs text-muted-foreground mt-2">{sub}</div>}
-    </div>
-  );
-}
+export { StatCard, type StatCardProps } from "@/components/shared/StatCard";
 
 export function AiSummaryTab({
   dashboardData,

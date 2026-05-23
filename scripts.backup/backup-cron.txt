@@ -1,0 +1,126 @@
+EuroPrint ERP — Backup Automation Configuration
+================================================
+
+This file documents how to schedule the PostgreSQL backup script on the
+production Linux server. Two approaches are supported: classic cron (simpler)
+and systemd timer (recommended for modern Linux distros).
+
+------------------------------------------------------------------------
+1) CRON (Asia/Tashkent timezone, daily at 02:00)
+------------------------------------------------------------------------
+
+Edit the crontab of the `postgres` (or `europrint`) system user:
+
+    sudo -u europrint crontab -e
+
+Add the following line. NOTE: cron uses the system timezone — verify with
+`timedatectl` that the server is set to Asia/Tashkent (UTC+5). If it's UTC,
+schedule for 21:00 UTC instead, which equals 02:00 Tashkent.
+
+    # m h  dom mon dow   command
+    0 2 * * *  DATABASE_URL="postgresql://europrint:STRONG_PASS@127.0.0.1:5432/europrint" \
+               BACKUP_DIR="/var/backups/europrint" \
+               BACKUP_RETENTION_DAYS=30 \
+               /opt/europrint/scripts/backup.sh \
+               >> /var/log/europrint/backup.log 2>&1
+
+Schedule explanation:
+  0 2 * * *   = every day at 02:00:00 server local time
+              = 02:00 Tashkent if server TZ is Asia/Tashkent
+
+Optional: hourly integrity verification of the latest backup:
+
+    15 2 * * *  /opt/europrint/scripts/verify-backup.sh \
+                "$(ls -t /var/backups/europrint/europrint_*.sql.gz | head -1)" \
+                >> /var/log/europrint/verify.log 2>&1
+
+------------------------------------------------------------------------
+2) SYSTEMD TIMER (recommended for production)
+------------------------------------------------------------------------
+
+Systemd timers are more robust than cron: they survive reboots, support
+randomized delays, and integrate with journalctl for logging.
+
+--- /etc/systemd/system/europrint-backup.service ---
+
+    [Unit]
+    Description=EuroPrint PostgreSQL daily backup
+    After=network-online.target postgresql.service
+    Wants=network-online.target
+
+    [Service]
+    Type=oneshot
+    User=europrint
+    Group=europrint
+    EnvironmentFile=/etc/europrint/backup.env
+    ExecStart=/opt/europrint/scripts/backup.sh
+    ExecStartPost=/opt/europrint/scripts/verify-backup.sh \
+        /var/backups/europrint/europrint_latest.sql.gz
+    StandardOutput=journal
+    StandardError=journal
+    # Hardening
+    NoNewPrivileges=yes
+    PrivateTmp=yes
+    ProtectSystem=strict
+    ReadWritePaths=/var/backups/europrint /var/log/europrint
+
+--- /etc/systemd/system/europrint-backup.timer ---
+
+    [Unit]
+    Description=EuroPrint PostgreSQL daily backup timer
+
+    [Timer]
+    # 02:00 Asia/Tashkent every day
+    OnCalendar=*-*-* 02:00:00 Asia/Tashkent
+    # If the system was down at the trigger time, run on next boot
+    Persistent=true
+    # Add small random delay (0-5 min) to avoid thundering herd in fleet
+    RandomizedDelaySec=5min
+    Unit=europrint-backup.service
+
+    [Install]
+    WantedBy=timers.target
+
+--- /etc/europrint/backup.env ---  (mode 0600, owner europrint:europrint)
+
+    DATABASE_URL=postgresql://europrint:STRONG_PASS@127.0.0.1:5432/europrint
+    BACKUP_DIR=/var/backups/europrint
+    BACKUP_RETENTION_DAYS=30
+
+Enable and start:
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now europrint-backup.timer
+    sudo systemctl list-timers europrint-backup.timer
+
+Inspect logs:
+
+    journalctl -u europrint-backup.service -n 50 --no-pager
+    journalctl -u europrint-backup.timer  -n 20 --no-pager
+
+Manual trigger (for testing):
+
+    sudo systemctl start europrint-backup.service
+
+------------------------------------------------------------------------
+3) OFF-SITE REPLICATION (post-backup hook)
+------------------------------------------------------------------------
+
+Add this to the systemd service (ExecStartPost=) or as a separate cron job
+to ship backups off-site (S3/Backblaze B2/rsync) — see
+docs/deployment/backup-restore.md for details.
+
+    # rclone to Backblaze B2 (configure via `rclone config` first)
+    /usr/bin/rclone copy /var/backups/europrint b2:europrint-backups/ \
+        --include "europrint_*.sql.gz" \
+        --transfers 2 \
+        --log-file=/var/log/europrint/rclone.log
+
+------------------------------------------------------------------------
+4) MONITORING & ALERTING
+------------------------------------------------------------------------
+
+  - Healthcheck ping after success:
+        curl -fsS -m 10 --retry 3 https://hc-ping.com/<UUID>
+  - Slack/Telegram alert on failure (use OnFailure= directive in systemd unit)
+  - Grafana dashboard: monitor latest backup age via filesystem exporter

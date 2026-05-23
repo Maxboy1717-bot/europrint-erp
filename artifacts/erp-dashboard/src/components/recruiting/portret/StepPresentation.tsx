@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { PortretData } from "./types";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 interface StepPresentationProps {
   portret: PortretData;
@@ -77,7 +78,7 @@ export function StepPresentation({ portret, onChangePresentation }: StepPresenta
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="yes">Ha</SelectItem>
+                <SelectItem value="yes">{tLabel("common.StepPresentation.tsx.ha", "Ha")}</SelectItem>
                 <SelectItem value="no">{t("no")}</SelectItem>
                 <SelectItem value="rare">{t("kamdanKam")}</SelectItem>
               </SelectContent>

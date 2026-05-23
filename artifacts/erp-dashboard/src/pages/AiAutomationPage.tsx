@@ -16,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import { EPErrorState, EPStatusPill, EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from "@/lib/i18n/tLabel";
 interface AutomationStatus {
   todayAiOperations?: number;
   pendingLeadScores?: number;
@@ -57,10 +58,10 @@ export default function AiAutomationPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai/automation/status"] });
-      toast({ title: "AI ishlar ishga tushirildi", description: "Barcha pending joblar navbatga qo'yildi" });
+      toast({ title: tLabel('common.aiIshlarIshgaTushirildi', "AI ishlar ishga tushirildi"), description: "Barcha pending joblar navbatga qo'yildi" });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "AI ishlarni ishga tushirishda xatolik", variant: "destructive" });
+      toast({ title: "Xatolik", description: tLabel('common.aiIshlarniIshgaTushirishdaXatolik', "AI ishlarni ishga tushirishda xatolik"), variant: "destructive" });
     },
   });
 

@@ -19,6 +19,7 @@ import { InterviewDetailView, AddQuestionForm, QuestionBankList, CreateInterview
 import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from "@/lib/i18n/tLabel";
 export default function AIInterviewPage() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -86,7 +87,7 @@ export default function AIInterviewPage() {
     mutationFn: (newInterview: InterviewFormData) =>
       apiRequest("POST", "/api/ai-hr/interviews", newInterview),
     onSuccess: () => {
-      toast({ title: "Muvaffaqiyat", description: "Yangi intervyu muvaffaqiyatli yaratildi" });
+      toast({ title: "Muvaffaqiyat", description: tLabel('common.yangiIntervyuMuvaffaqiyatliYaratildi', "Yangi intervyu muvaffaqiyatli yaratildi") });
       setShowCreateForm(false);
       interviewForm.reset();
       queryClient.invalidateQueries({ queryKey: ["/api/ai-hr/interviews"] });

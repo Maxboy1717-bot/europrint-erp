@@ -23,6 +23,7 @@ import {
 import { TaskExecutionPanel } from "./HRAIDashboardDialogs";
 import { EPErrorState, EPPageHeader, EPStatusPill } from "@/components/ep";
 
+import { tLabel } from "@/lib/i18n/tLabel";
 export default function HRAIDashboard() {
   const { t } = useTranslation("hr");
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
@@ -73,7 +74,7 @@ export default function HRAIDashboard() {
       setTaskResult(JSON.stringify(result, null, 2));
       queryClient.invalidateQueries({ queryKey: ["/api/ai-hr/dashboard"] });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Xatolik yuz berdi";
+      const message = err instanceof Error ? err.message : tLabel('hr.xatolikYuzBerdi', "Xatolik yuz berdi");
       setTaskResult(message);
     } finally {
       setIsSubmitting(false);
@@ -124,10 +125,10 @@ export default function HRAIDashboard() {
   }
 
   const statCards = [
-    { icon: <Cpu className="h-8 w-8 text-[var(--ep-blue)]" />, label: "Jami AI vazifalar", value: dashboard?.totalAiTasks || 0 },
-    { icon: <Users className="h-8 w-8 text-[var(--ep-green)]" />, label: "Yakunlangan intervyular", value: dashboard?.completedInterviews || 0 },
-    { icon: <DollarSign className="h-8 w-8 text-[var(--ep-primary)]" />, label: "Umumiy xarajat", value: `$${(dashboard?.totalCost || 0).toFixed(2)}` },
-    { icon: <Zap className="h-8 w-8 text-[var(--ep-purple)]" />, label: "Faol provayderlar", value: activeProviderCount },
+    { icon: <Cpu className="h-8 w-8 text-[var(--ep-blue)]" />, label: tLabel('hr.jamiAiVazifalar', "Jami AI vazifalar"), value: dashboard?.totalAiTasks || 0 },
+    { icon: <Users className="h-8 w-8 text-[var(--ep-green)]" />, label: tLabel('hr.yakunlanganIntervyular', "Yakunlangan intervyular"), value: dashboard?.completedInterviews || 0 },
+    { icon: <DollarSign className="h-8 w-8 text-[var(--ep-primary)]" />, label: tLabel('hr.umumiyXarajat', "Umumiy xarajat"), value: `$${(dashboard?.totalCost || 0).toFixed(2)}` },
+    { icon: <Zap className="h-8 w-8 text-[var(--ep-purple)]" />, label: tLabel('hr.faolProvayderlar', "Faol provayderlar"), value: activeProviderCount },
   ];
 
   return (

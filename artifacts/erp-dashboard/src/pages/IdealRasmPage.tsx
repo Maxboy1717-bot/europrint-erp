@@ -19,11 +19,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
-import { useTranslation } from '@/lib/i18n';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, Radar,
   ResponsiveContainer, Tooltip,
 } from "recharts";
+import { useTranslation } from '@/lib/i18n';
 
 interface IdealRasmTarget {
   id: number;
@@ -329,9 +329,9 @@ export default function IdealRasmPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4">
               {([
                 { label: "Maqsadlar", value: targets.length, sub: "ta" },
-                { label: "≥80% Bajarilgan", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct >= 80).length, sub: "ta", color: "text-[var(--ep-green)]" },
-                { label: "60-80% Oralig'i", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct >= 60 && t.achievementPct < 80).length, sub: "ta", color: "text-[var(--ep-yellow)]" },
-                { label: "<60% Past", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct < 60).length, sub: "ta", color: "text-[var(--ep-red)]" },
+                { label: "≥ 80% bajarilgan", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct >= 80).length, sub: "ta", color: "text-[var(--ep-green)]" },
+                { label: "60-80% oralig'i", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct >= 60 && t.achievementPct < 80).length, sub: "ta", color: "text-[var(--ep-yellow)]" },
+                { label: "< 60% past", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct < 60).length, sub: "ta", color: "text-[var(--ep-red)]" },
               ]).map((item, i) => (
                 <div key={`k-${i}`} className="text-center rounded-xl bg-muted/30 p-4">
                   <p className={cn("text-2xl font-bold", item.color ?? "text-foreground")}>

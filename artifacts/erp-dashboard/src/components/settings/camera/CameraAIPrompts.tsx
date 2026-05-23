@@ -120,7 +120,7 @@ export function CameraAIPrompts() {
                         disabled={!isEditing}
                         data-testid={`switch-ai-enabled-${cam.id}`}
                       />
-                      <Label className="text-sm">AI tahlil yoqilgan</Label>
+                      <Label className="text-sm">{tLabel("common.CameraAIPrompts.tsx.aiTahlilYoqilgan", "AI tahlil yoqilgan")}</Label>
                     </div>
                     <div className="flex items-center gap-2">
                       <Label className="text-sm">{t("sezgirlik")}</Label>

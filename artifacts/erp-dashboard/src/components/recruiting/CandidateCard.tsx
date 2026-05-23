@@ -25,6 +25,7 @@ import {
 import type { PipelineEntry, Vacancy, AIInterviewSession } from "@/components/recruiting/types";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface CandidateCardProps {
   entry: PipelineEntry;
   stage: typeof STAGES[0];
@@ -267,8 +268,8 @@ export function CandidateCard({entry, stage, aiSessions, vacancyMap,
         onOpenChange={(open) => { if (!open) setConfirmRejectId(null); }}
         title={t("nomzodniRadEtish")}
         description={`"${entry.candidate_name}" nomzodini rad etishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi.`}
-        confirmText="Rad etish"
-        cancelText="Bekor qilish"
+        confirmText={tLabel("common.CandidateCard.tsx.radEtish", "Rad etish")}
+        cancelText={tLabel("common.CandidateCard.tsx.bekorQilish", "Bekor qilish")}
         variant="destructive"
         onConfirm={() => { if (confirmRejectId !== null) rejectMutation.mutate(confirmRejectId); }}
       />

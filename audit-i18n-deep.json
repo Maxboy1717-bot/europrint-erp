@@ -1,0 +1,5230 @@
+{
+  "keyEqValue": [
+    {
+      "ns": "admin",
+      "key": "api",
+      "value": "API",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "aisha",
+      "value": "AIsha",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "yollash",
+      "value": "Yollash",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "id",
+      "value": "ID",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "SOS",
+      "value": "Sos",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "whatsapp",
+      "value": "WhatsApp",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "telegram",
+      "value": "Telegram",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "TO",
+      "value": "To",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "bom",
+      "value": "Bom",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "pin",
+      "value": "Pin",
+      "lang": "uz"
+    },
+    {
+      "ns": "design",
+      "key": "cmyk",
+      "value": "CMYK",
+      "lang": "uz"
+    },
+    {
+      "ns": "design",
+      "key": "rgb",
+      "value": "RGB",
+      "lang": "uz"
+    },
+    {
+      "ns": "design",
+      "key": "pdf",
+      "value": "PDF",
+      "lang": "uz"
+    },
+    {
+      "ns": "director",
+      "key": "ebitda",
+      "value": "EBITDA",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "topilmadi",
+      "value": "Topilmadi",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "maxfiy",
+      "value": "Maxfiy",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "kasalxonada",
+      "value": "Kasalxonada",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "europrint",
+      "value": "Europrint",
+      "lang": "uz"
+    },
+    {
+      "ns": "iot",
+      "key": "mqtt",
+      "value": "MQTT",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "roi",
+      "value": "ROI",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "oee",
+      "value": "OEE",
+      "lang": "uz"
+    },
+    {
+      "ns": "navigation",
+      "key": "chatbot",
+      "value": "Chatbot",
+      "lang": "uz"
+    },
+    {
+      "ns": "navigation",
+      "key": "kanban",
+      "value": "Kanban",
+      "lang": "uz"
+    },
+    {
+      "ns": "navigation",
+      "key": "crm",
+      "value": "CRM",
+      "lang": "uz"
+    },
+    {
+      "ns": "navigation",
+      "key": "menyu",
+      "value": "Menyu",
+      "lang": "uz"
+    },
+    {
+      "ns": "navigation",
+      "key": "euro",
+      "value": "Euro",
+      "lang": "uz"
+    },
+    {
+      "ns": "navigation",
+      "key": "modullar",
+      "value": "Modullar",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "oee",
+      "value": "OEE",
+      "lang": "uz"
+    },
+    {
+      "ns": "security",
+      "key": "totp",
+      "value": "TOTP",
+      "lang": "uz"
+    },
+    {
+      "ns": "security",
+      "key": "gdpr",
+      "value": "GDPR",
+      "lang": "uz"
+    },
+    {
+      "ns": "admin",
+      "key": "api",
+      "value": "API",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "id",
+      "value": "ID",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "SOS",
+      "value": "SOS",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "whatsapp",
+      "value": "WhatsApp",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "telegram",
+      "value": "Telegram",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "europrint",
+      "value": "EuroPrint",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "instagram",
+      "value": "Instagram",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "facebook",
+      "value": "Facebook",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "linkedin",
+      "value": "LinkedIn",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "excel",
+      "value": "Excel",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "gemini",
+      "value": "Gemini",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "openai",
+      "value": "OpenAI",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "openstreetmap",
+      "value": "OpenStreetMap",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "O",
+      "value": "O",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "eur",
+      "value": "EUR",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "usd",
+      "value": "USD",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "uzs",
+      "value": "UZS",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "x42",
+      "value": "x42",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "—",
+      "value": "—",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "bom",
+      "value": "BOM",
+      "lang": "ru"
+    },
+    {
+      "ns": "design",
+      "key": "cmyk",
+      "value": "CMYK",
+      "lang": "ru"
+    },
+    {
+      "ns": "design",
+      "key": "rgb",
+      "value": "RGB",
+      "lang": "ru"
+    },
+    {
+      "ns": "design",
+      "key": "pantone",
+      "value": "Pantone",
+      "lang": "ru"
+    },
+    {
+      "ns": "design",
+      "key": "pdf",
+      "value": "PDF",
+      "lang": "ru"
+    },
+    {
+      "ns": "design",
+      "key": "eps",
+      "value": "EPS",
+      "lang": "ru"
+    },
+    {
+      "ns": "design",
+      "key": "tiff",
+      "value": "TIFF",
+      "lang": "ru"
+    },
+    {
+      "ns": "director",
+      "key": "ebitda",
+      "value": "EBITDA",
+      "lang": "ru"
+    },
+    {
+      "ns": "finance",
+      "key": "excel",
+      "value": "Excel",
+      "lang": "ru"
+    },
+    {
+      "ns": "hr",
+      "key": "topilmadi",
+      "value": "Topilmadi",
+      "lang": "ru"
+    },
+    {
+      "ns": "hr",
+      "key": "maxfiy",
+      "value": "Maxfiy",
+      "lang": "ru"
+    },
+    {
+      "ns": "hr",
+      "key": "kasalxonada",
+      "value": "Kasalxonada",
+      "lang": "ru"
+    },
+    {
+      "ns": "hr",
+      "key": "europrint",
+      "value": "Europrint",
+      "lang": "ru"
+    },
+    {
+      "ns": "iot",
+      "key": "mqtt",
+      "value": "MQTT",
+      "lang": "ru"
+    },
+    {
+      "ns": "iot",
+      "key": "modbus",
+      "value": "Modbus",
+      "lang": "ru"
+    },
+    {
+      "ns": "iot",
+      "key": "http",
+      "value": "HTTP",
+      "lang": "ru"
+    },
+    {
+      "ns": "marketing",
+      "key": "roi",
+      "value": "ROI",
+      "lang": "ru"
+    },
+    {
+      "ns": "marketing",
+      "key": "seo",
+      "value": "SEO",
+      "lang": "ru"
+    },
+    {
+      "ns": "mro",
+      "key": "oee",
+      "value": "OEE",
+      "lang": "ru"
+    },
+    {
+      "ns": "navigation",
+      "key": "crm",
+      "value": "CRM",
+      "lang": "ru"
+    },
+    {
+      "ns": "navigation",
+      "key": "euro",
+      "value": "Euro",
+      "lang": "ru"
+    },
+    {
+      "ns": "production",
+      "key": "oee",
+      "value": "OEE",
+      "lang": "ru"
+    },
+    {
+      "ns": "security",
+      "key": "totp",
+      "value": "TOTP",
+      "lang": "ru"
+    },
+    {
+      "ns": "security",
+      "key": "gdpr",
+      "value": "GDPR",
+      "lang": "ru"
+    }
+  ],
+  "englishWord": [
+    {
+      "ns": "common",
+      "key": "creditLimitOk",
+      "value": "Кредитный лимит OK",
+      "match": "OK",
+      "lang": "ru"
+    },
+    {
+      "ns": "common",
+      "key": "debtStatusOk",
+      "value": "Статус задолженности OK",
+      "match": "OK",
+      "lang": "ru"
+    }
+  ],
+  "uzEqRu": [
+    {
+      "ns": "admin",
+      "key": "api",
+      "value": "API"
+    },
+    {
+      "ns": "common",
+      "key": "id",
+      "value": "ID"
+    },
+    {
+      "ns": "common",
+      "key": "hrEmail",
+      "value": "HR email"
+    },
+    {
+      "ns": "common",
+      "key": "socialApi",
+      "value": "Social API"
+    },
+    {
+      "ns": "common",
+      "key": "geminiVision",
+      "value": "Gemini Vision"
+    },
+    {
+      "ns": "common",
+      "key": "whatsapp",
+      "value": "WhatsApp"
+    },
+    {
+      "ns": "common",
+      "key": "telegram",
+      "value": "Telegram"
+    },
+    {
+      "ns": "common",
+      "key": "europrintErp",
+      "value": "EuroPrint ERP"
+    },
+    {
+      "ns": "common",
+      "key": "telegramId",
+      "value": "Telegram ID"
+    },
+    {
+      "ns": "common",
+      "key": "europrint1",
+      "value": "EuroPrint"
+    },
+    {
+      "ns": "common",
+      "key": "europrintHr",
+      "value": "EuroPrint HR"
+    },
+    {
+      "ns": "common",
+      "key": "europrintPaper",
+      "value": "EuroPrint Paper..."
+    },
+    {
+      "ns": "common",
+      "key": "interBold",
+      "value": "Inter Bold"
+    },
+    {
+      "ns": "common",
+      "key": "interRegular",
+      "value": "Inter Regular"
+    },
+    {
+      "ns": "common",
+      "key": "abcCompany",
+      "value": "ABC Company"
+    },
+    {
+      "ns": "common",
+      "key": "aiPredictiveEngine",
+      "value": "AI Predictive Engine"
+    },
+    {
+      "ns": "common",
+      "key": "apiKey",
+      "value": "API Key"
+    },
+    {
+      "ns": "common",
+      "key": "apiSecret",
+      "value": "API Secret"
+    },
+    {
+      "ns": "common",
+      "key": "webhookSecret",
+      "value": "Webhook Secret"
+    },
+    {
+      "ns": "common",
+      "key": "qcExtended",
+      "value": "QC Extended"
+    },
+    {
+      "ns": "common",
+      "key": "hrCapital9",
+      "value": "HR Capital №9"
+    },
+    {
+      "ns": "common",
+      "key": "zavodLlc",
+      "value": "Zavod LLC"
+    },
+    {
+      "ns": "common",
+      "key": "gpt4oMini",
+      "value": "GPT-4o Mini"
+    },
+    {
+      "ns": "common",
+      "key": "alfaTexLlc",
+      "value": "Alfa-Tex LLC"
+    },
+    {
+      "ns": "common",
+      "key": "kr20PercentLabel",
+      "value": "KR-20 %"
+    },
+    {
+      "ns": "common",
+      "key": "oeeBreakdown",
+      "value": "OEE breakdown"
+    },
+    {
+      "ns": "common",
+      "key": "aiCrm2",
+      "value": "AI CRM"
+    },
+    {
+      "ns": "common",
+      "key": "aiCrm",
+      "value": "AI CRM"
+    },
+    {
+      "ns": "common",
+      "key": "ai",
+      "value": "🤖 AI"
+    },
+    {
+      "ns": "common",
+      "key": "batXxxxxxxxXxxx",
+      "value": "BAT-XXXXXXXX-XXXX"
+    },
+    {
+      "ns": "common",
+      "key": "emailExampleCom",
+      "value": "email@example.com"
+    },
+    {
+      "ns": "common",
+      "key": "xodimEuroprintUz",
+      "value": "xodim@europrint.uz"
+    },
+    {
+      "ns": "common",
+      "key": "passportPdf",
+      "value": "passport.pdf"
+    },
+    {
+      "ns": "common",
+      "key": "toolTest",
+      "value": "TOOL TEST"
+    },
+    {
+      "ns": "common",
+      "key": "k405556N709280E",
+      "value": "40.5556°N, 70.9280°E"
+    },
+    {
+      "ns": "common",
+      "key": "europrintQuti",
+      "value": "#europrint, #quti"
+    },
+    {
+      "ns": "common",
+      "key": "brandColor",
+      "value": "brand_color"
+    },
+    {
+      "ns": "common",
+      "key": "metaInstagramFacebook",
+      "value": "Meta (Instagram/Facebook)"
+    },
+    {
+      "ns": "common",
+      "key": "suppliersEuroprintUz",
+      "value": "suppliers.europrint.uz"
+    },
+    {
+      "ns": "common",
+      "key": "europrintCheckBot",
+      "value": "@europrint_check_bot"
+    },
+    {
+      "ns": "common",
+      "key": "sigma",
+      "value": "Sigma (σ)"
+    },
+    {
+      "ns": "common",
+      "key": "zavodUz",
+      "value": "zavod.uz"
+    },
+    {
+      "ns": "common",
+      "key": "cas",
+      "value": "CAS №"
+    },
+    {
+      "ns": "common",
+      "key": "python2",
+      "value": "Языки программирования Python..."
+    },
+    {
+      "ns": "common",
+      "key": "python",
+      "value": "Программирование Python"
+    },
+    {
+      "ns": "common",
+      "key": "ru",
+      "value": "ЦКП (RU)..."
+    },
+    {
+      "ns": "common",
+      "key": "samarkandEuroprintUz",
+      "value": "samarkand.europrint.uz"
+    },
+    {
+      "ns": "common",
+      "key": "returnedForFix",
+      "value": "returned_for_fix"
+    },
+    {
+      "ns": "common",
+      "key": "aiPp",
+      "value": "AI PP:"
+    },
+    {
+      "ns": "common",
+      "key": "grId",
+      "value": "GR ID *"
+    },
+    {
+      "ns": "common",
+      "key": "poId",
+      "value": "PO ID *"
+    },
+    {
+      "ns": "common",
+      "key": "posSyncEvents",
+      "value": "pos_sync_events"
+    },
+    {
+      "ns": "common",
+      "key": "rmMain",
+      "value": "RM-MAIN"
+    },
+    {
+      "ns": "common",
+      "key": "ppe",
+      "value": "PPE %"
+    },
+    {
+      "ns": "common",
+      "key": "jpegPng",
+      "value": "JPEG / PNG"
+    },
+    {
+      "ns": "common",
+      "key": "tashkiliyTuzilma2",
+      "value": "Tashkiliy Tuzilma"
+    },
+    {
+      "ns": "common",
+      "key": "hrCapital7BosqichMetodologiyasiVakansiya",
+      "value": "HR Capital 7-bosqich metodologiyasi · Vakansiya muddatiga asoslangan"
+    },
+    {
+      "ns": "common",
+      "key": "safariSayohat",
+      "value": "✈️ Safari/Sayohat"
+    },
+    {
+      "ns": "common",
+      "key": "k5VaqtidaKelishKechQolmaslik",
+      "value": "5. Vaqtida kelish (kech qolmaslik)"
+    },
+    {
+      "ns": "common",
+      "key": "k3IntizomQoidalargaRioyaQilish",
+      "value": "3. Intizom (qoidalarga rioya qilish)"
+    },
+    {
+      "ns": "common",
+      "key": "ertaKetishDaqiqa",
+      "value": "Erta ketish (daqiqa)"
+    },
+    {
+      "ns": "common",
+      "key": "kechikishDaqiqa",
+      "value": "Kechikish (daqiqa)"
+    },
+    {
+      "ns": "common",
+      "key": "ketishVaqtiHhMm",
+      "value": "Ketish vaqti (HH:MM)"
+    },
+    {
+      "ns": "common",
+      "key": "kelishVaqtiHhMm",
+      "value": "Kelish vaqti (HH:MM)"
+    },
+    {
+      "ns": "common",
+      "key": "aiTayyorlaganMatn",
+      "value": "AI tayyorlagan matn"
+    },
+    {
+      "ns": "common",
+      "key": "sababniTanlangIxtiyoriy",
+      "value": "— sababni tanlang (ixtiyoriy)"
+    },
+    {
+      "ns": "common",
+      "key": "avatarEmoji",
+      "value": "Avatar (emoji)"
+    },
+    {
+      "ns": "common",
+      "key": "kimgaMasalanUserExampleCom",
+      "value": "Kimga (masalan: user@example.com)"
+    },
+    {
+      "ns": "common",
+      "key": "smsMatni",
+      "value": "SMS matni..."
+    },
+    {
+      "ns": "common",
+      "key": "httpsExampleCom",
+      "value": "https://example.com"
+    },
+    {
+      "ns": "common",
+      "key": "infoCompanyCom",
+      "value": "info@company.com"
+    },
+    {
+      "ns": "common",
+      "key": "exampleEmailCom",
+      "value": "example@email.com"
+    },
+    {
+      "ns": "common",
+      "key": "utmParametrlari",
+      "value": "UTM parametrlari"
+    },
+    {
+      "ns": "common",
+      "key": "exampleMailCom",
+      "value": "example@mail.com"
+    },
+    {
+      "ns": "common",
+      "key": "idRaqam",
+      "value": "ID raqam"
+    },
+    {
+      "ns": "common",
+      "key": "oylikAylanmaTiraj",
+      "value": "Oylik aylanma (tiraj)"
+    },
+    {
+      "ns": "common",
+      "key": "omborIchkiIjara015Oy",
+      "value": "Ombor Ichki Ijara (0.15%/oy)"
+    },
+    {
+      "ns": "common",
+      "key": "rahbarVaAsosiyMaosh",
+      "value": "Rahbar va asosiy maosh"
+    },
+    {
+      "ns": "common",
+      "key": "kreditorlikAp",
+      "value": "Kreditorlik (AP)"
+    },
+    {
+      "ns": "common",
+      "key": "debitorlikAr",
+      "value": "Debitorlik (AR)"
+    },
+    {
+      "ns": "common",
+      "key": "sotilganMahsulotTannarxiCogs",
+      "value": "Sotilgan mahsulot tannarxi (COGS)"
+    },
+    {
+      "ns": "common",
+      "key": "oeeUmumiySamaradorlik",
+      "value": "OEE (Umumiy samaradorlik)"
+    },
+    {
+      "ns": "common",
+      "key": "gsdNatijalariHaliKiritilmagan",
+      "value": "GSD natijalari hali kiritilmagan"
+    },
+    {
+      "ns": "common",
+      "key": "mentorIxtiyoriy",
+      "value": "Mentor (ixtiyoriy)"
+    },
+    {
+      "ns": "common",
+      "key": "sifatniBoshqarishTizimiHujjatlariIso9001",
+      "value": "Sifatni boshqarish tizimi hujjatlari (ISO 9001:2015)"
+    },
+    {
+      "ns": "common",
+      "key": "muddatKunlarda",
+      "value": "Muddat (kunlarda)"
+    },
+    {
+      "ns": "common",
+      "key": "sifatDinamikasiOxirgi7Kun",
+      "value": "Sifat Dinamikasi (Oxirgi 7 kun)"
+    },
+    {
+      "ns": "common",
+      "key": "sifatBali0100",
+      "value": "Sifat bali (0-100)"
+    },
+    {
+      "ns": "common",
+      "key": "qaytaIshlashDona",
+      "value": "Qayta ishlash (dona)"
+    },
+    {
+      "ns": "common",
+      "key": "nosifatDona",
+      "value": "Nosifat (dona)"
+    },
+    {
+      "ns": "common",
+      "key": "ishlabChiqDona",
+      "value": "Ishlab chiq. (dona) *"
+    },
+    {
+      "ns": "common",
+      "key": "davomiylikMin",
+      "value": "Davomiylik (min)"
+    },
+    {
+      "ns": "common",
+      "key": "k1Dona",
+      "value": "1 dona:"
+    },
+    {
+      "ns": "common",
+      "key": "qalinlikMm",
+      "value": "Qalinlik (mm)"
+    },
+    {
+      "ns": "common",
+      "key": "yillikTrendMlnUzs",
+      "value": "Yillik trend (mln UZS)"
+    },
+    {
+      "ns": "common",
+      "key": "oylikTrendMlnUzs",
+      "value": "Oylik trend (mln UZS)"
+    },
+    {
+      "ns": "common",
+      "key": "aiTahlilYoqilgan",
+      "value": "AI tahlil yoqilgan"
+    },
+    {
+      "ns": "common",
+      "key": "inps5",
+      "value": "INPS (5%):"
+    },
+    {
+      "ns": "common",
+      "key": "ishBeruvchiPensiya12",
+      "value": "Ish beruvchi pensiya (12%):"
+    },
+    {
+      "ns": "common",
+      "key": "sifatQuality",
+      "value": "Sifat (Quality)"
+    },
+    {
+      "ns": "common",
+      "key": "unumdorlikPerformance",
+      "value": "Unumdorlik (Performance)"
+    },
+    {
+      "ns": "common",
+      "key": "mavjudlikAvailability",
+      "value": "Mavjudlik (Availability)"
+    },
+    {
+      "ns": "common",
+      "key": "oee",
+      "value": "OEE (%)"
+    },
+    {
+      "ns": "common",
+      "key": "xavfOstidagi2Kun",
+      "value": "Xavf ostidagi (2 kun)"
+    },
+    {
+      "ns": "common",
+      "key": "crmGigiyenaMuammolari",
+      "value": "CRM gigiyena muammolari"
+    },
+    {
+      "ns": "common",
+      "key": "oeeSamaradorlik",
+      "value": "OEE (Samaradorlik)"
+    },
+    {
+      "ns": "common",
+      "key": "qcInspektori",
+      "value": "QC inspektori"
+    },
+    {
+      "ns": "common",
+      "key": "oddiyC",
+      "value": "Oddiy (C)"
+    },
+    {
+      "ns": "common",
+      "key": "doimiyB",
+      "value": "Doimiy (B)"
+    },
+    {
+      "ns": "common",
+      "key": "vipA",
+      "value": "VIP (A)"
+    },
+    {
+      "ns": "common",
+      "key": "binJoy",
+      "value": "Bin (joy)"
+    },
+    {
+      "ns": "common",
+      "key": "ltv24OylikPrognoz",
+      "value": "LTV (24 oylik prognoz)"
+    },
+    {
+      "ns": "common",
+      "key": "xizmatOy",
+      "value": "Xizmat/oy"
+    },
+    {
+      "ns": "common",
+      "key": "ltv24OyPrognoz",
+      "value": "LTV (24 oy prognoz)"
+    },
+    {
+      "ns": "common",
+      "key": "ltvHozirgi",
+      "value": "LTV (hozirgi)"
+    },
+    {
+      "ns": "common",
+      "key": "k30KunChiqim",
+      "value": "30 kun chiqim"
+    },
+    {
+      "ns": "common",
+      "key": "k30KunKirim",
+      "value": "30 kun kirim"
+    },
+    {
+      "ns": "common",
+      "key": "fifoMuvofiqlik",
+      "value": "FIFO muvofiqlik"
+    },
+    {
+      "ns": "common",
+      "key": "k60KunIchidaTugaydi",
+      "value": "60 kun ichida tugaydi"
+    },
+    {
+      "ns": "common",
+      "key": "k30KunIchidaTugaydi",
+      "value": "30 kun ichida tugaydi"
+    },
+    {
+      "ns": "design",
+      "key": "cmyk",
+      "value": "CMYK"
+    },
+    {
+      "ns": "design",
+      "key": "rgb",
+      "value": "RGB"
+    },
+    {
+      "ns": "design",
+      "key": "pdf",
+      "value": "PDF"
+    },
+    {
+      "ns": "design",
+      "key": "ai",
+      "value": "Adobe Illustrator"
+    },
+    {
+      "ns": "design",
+      "key": "psd",
+      "value": "Photoshop"
+    },
+    {
+      "ns": "design",
+      "key": "indd",
+      "value": "InDesign"
+    },
+    {
+      "ns": "director",
+      "key": "ebitda",
+      "value": "EBITDA"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.altman.title",
+      "value": "Altman Z-Score"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.altman.de",
+      "value": "D/E"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.mSuffix",
+      "value": "M"
+    },
+    {
+      "ns": "finance",
+      "key": "jshd12",
+      "value": "JSHD (12%):"
+    },
+    {
+      "ns": "finance",
+      "key": "inps12",
+      "value": "INPS (12%):"
+    },
+    {
+      "ns": "finance",
+      "key": "tanlangIxtiyoriy",
+      "value": "Tanlang (ixtiyoriy)"
+    },
+    {
+      "ns": "finance",
+      "key": "umumiy",
+      "value": "UMUMIY:"
+    },
+    {
+      "ns": "hr",
+      "key": "jshd12",
+      "value": "JSHD (12%):"
+    },
+    {
+      "ns": "hr",
+      "key": "inps12",
+      "value": "INPS (12%):"
+    },
+    {
+      "ns": "hr",
+      "key": "darajaniTanlangIxtiyoriy",
+      "value": "Darajani tanlang (ixtiyoriy)"
+    },
+    {
+      "ns": "hr",
+      "key": "vysotskiyDarajasi",
+      "value": "Vysotskiy darajasi"
+    },
+    {
+      "ns": "hr",
+      "key": "asosiyMaosh",
+      "value": "Asosiy maosh"
+    },
+    {
+      "ns": "hr",
+      "key": "bevositaRahbar",
+      "value": "Bevosita rahbar"
+    },
+    {
+      "ns": "hr",
+      "key": "topilmadi",
+      "value": "Topilmadi"
+    },
+    {
+      "ns": "hr",
+      "key": "rahbarniTozalash",
+      "value": "Rahbarni tozalash"
+    },
+    {
+      "ns": "hr",
+      "key": "qidiruvniTozalash",
+      "value": "Qidiruvni tozalash"
+    },
+    {
+      "ns": "hr",
+      "key": "maoshTarixi",
+      "value": "Maosh tarixi"
+    },
+    {
+      "ns": "hr",
+      "key": "maxfiy",
+      "value": "Maxfiy"
+    },
+    {
+      "ns": "hr",
+      "key": "kasalxonada",
+      "value": "Kasalxonada"
+    },
+    {
+      "ns": "hr",
+      "key": "europrint",
+      "value": "Europrint"
+    },
+    {
+      "ns": "iot",
+      "key": "mqtt",
+      "value": "MQTT"
+    },
+    {
+      "ns": "iot",
+      "key": "opcua",
+      "value": "OPC-UA"
+    },
+    {
+      "ns": "marketing",
+      "key": "roi",
+      "value": "ROI"
+    },
+    {
+      "ns": "marketing",
+      "key": "analytics.roi",
+      "value": "ROI"
+    },
+    {
+      "ns": "mro",
+      "key": "oee",
+      "value": "OEE"
+    },
+    {
+      "ns": "navigation",
+      "key": "crm",
+      "value": "CRM"
+    },
+    {
+      "ns": "navigation",
+      "key": "hrAlumni",
+      "value": "Alumni"
+    },
+    {
+      "ns": "navigation",
+      "key": "euro",
+      "value": "Euro"
+    },
+    {
+      "ns": "notifications",
+      "key": "typeHr",
+      "value": "HR"
+    },
+    {
+      "ns": "print",
+      "key": "tacLabel",
+      "value": "TAC"
+    },
+    {
+      "ns": "production",
+      "key": "oee",
+      "value": "OEE"
+    },
+    {
+      "ns": "security",
+      "key": "totp",
+      "value": "TOTP"
+    },
+    {
+      "ns": "security",
+      "key": "ssl",
+      "value": "SSL/TLS"
+    },
+    {
+      "ns": "security",
+      "key": "gdpr",
+      "value": "GDPR"
+    },
+    {
+      "ns": "settings",
+      "key": "wwwEuroprintUz",
+      "value": "www.europrint.uz"
+    },
+    {
+      "ns": "settings",
+      "key": "infoEuroprintUz",
+      "value": "info@europrint.uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "inventory.sku",
+      "value": "SKU"
+    },
+    {
+      "ns": "warehouse",
+      "key": "hub.openWithLayers",
+      "value": "Открыть ({n} приоритетных слоёв)"
+    },
+    {
+      "ns": "warehouse",
+      "key": "hub.posSync",
+      "value": "POS Sync"
+    },
+    {
+      "ns": "warehouse",
+      "key": "Karantin ombori — sifat nazorati tekshiruvidan o'tayotgan materiallar vaqtincha shu yerda saqlanadi. QC qaroriga qarab chiqariladi yoki brakka o'tkaziladi.",
+      "value": "Карантинный склад — материалы на проверке QC временно хранятся здесь. По решению QC выпускаются или передаются в брак."
+    },
+    {
+      "ns": "warehouse",
+      "key": "MRO (Maintenance, Repair, Operations) ombori — uskunalarni ta'mirlash va texnik xizmat ko'rsatish uchun ehtiyot qismlar va materiallar.",
+      "value": "Склад MRO (Обслуживание, Ремонт, Эксплуатация) — запчасти и материалы для ремонта и техобслуживания оборудования."
+    },
+    {
+      "ns": "warehouse",
+      "key": "WarehouseIntegrations.ppMmFi",
+      "value": "PP, MM, FI"
+    },
+    {
+      "ns": "warehouse",
+      "key": "WarehouseIntegrations.pp",
+      "value": "PP"
+    },
+    {
+      "ns": "warehouse",
+      "key": "WarehouseIntegrations.mm",
+      "value": "MM"
+    },
+    {
+      "ns": "warehouse",
+      "key": "WarehouseIntegrations.fi",
+      "value": "FI"
+    },
+    {
+      "ns": "wms",
+      "key": "col_rop",
+      "value": "ROP"
+    }
+  ],
+  "uzMissingInRu": [],
+  "ruMissingInUz": [],
+  "emptyValue": [],
+  "punctOnlyKey": [
+    {
+      "ns": "admin",
+      "key": "validate.valid",
+      "lang": "uz"
+    },
+    {
+      "ns": "admin",
+      "key": "validate.invalid",
+      "lang": "uz"
+    },
+    {
+      "ns": "admin",
+      "key": "validate.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "admin",
+      "key": "validate.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "admin",
+      "key": "validate.stir",
+      "lang": "uz"
+    },
+    {
+      "ns": "admin",
+      "key": "validate.check",
+      "lang": "uz"
+    },
+    {
+      "ns": "admin",
+      "key": "validate.card",
+      "lang": "uz"
+    },
+    {
+      "ns": "ai",
+      "key": "bottleneck.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "ai",
+      "key": "bottleneck.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "ai",
+      "key": "bottleneck.critical",
+      "lang": "uz"
+    },
+    {
+      "ns": "ai",
+      "key": "bottleneck.overloaded",
+      "lang": "uz"
+    },
+    {
+      "ns": "ai",
+      "key": "bottleneck.queue",
+      "lang": "uz"
+    },
+    {
+      "ns": "ai",
+      "key": "bottleneck.list",
+      "lang": "uz"
+    },
+    {
+      "ns": "ai",
+      "key": "bottleneck.empty",
+      "lang": "uz"
+    },
+    {
+      "ns": "ai",
+      "key": "agents.triggered",
+      "lang": "uz"
+    },
+    {
+      "ns": "ai",
+      "key": "agents.trigger",
+      "lang": "uz"
+    },
+    {
+      "ns": "ai",
+      "key": "agents.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "ai",
+      "key": "agents.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "ai",
+      "key": "agents.empty",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "status.idle",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "status.listening",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "status.thinking",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "status.speaking",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "status.muted",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "status.error",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "status.offline",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "panel.history",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "panel.expand",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "panel.collapse",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "panel.mute",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "panel.unmute",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "transparency.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "transparency.sources",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "transparency.camera",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "transparency.citations",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "transparency.confidence",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "transparency.freshness.live",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "transparency.freshness.cached",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "transparency.freshness.stale",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "approval.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "approval.approve",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "approval.reject",
+      "lang": "uz"
+    },
+    {
+      "ns": "aisha",
+      "key": "approval.expired",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "login.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "login.subtitle",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "login.email",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "login.password",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "login.submit",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "login.loading",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "login.success",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "login.error.invalid",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "login.error.locked",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "logout.success",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "logout.confirm",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "register.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "register.email",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "register.password",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "register.submit",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "register.success",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "password.reset.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "password.reset.email",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "password.reset.submit",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "password.reset.success",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "password.reset.error",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "password.change.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "password.change.current",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "password.change.new",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "password.change.confirm",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "password.change.submit",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "password.change.success",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "token.expired",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "token.invalid",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "role.director",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "role.accountant",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "role.operator",
+      "lang": "uz"
+    },
+    {
+      "ns": "auth",
+      "key": "role.auditor",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "language.uz",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "language.ru",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "table.of",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "pagination.first",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "pagination.last",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "confirm.delete",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "confirm.delete.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "confirm.approve",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "success.saved",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "success.deleted",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "success.updated",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "success.approved",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "success.sent",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "error.generic",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "error.network",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "error.unauthorized",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "error.forbidden",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "progress.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "progress.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "progress.overall",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "progress.active",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "progress.completed",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "progress.blocked",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "progress.stages",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "Barcha 4 mezon baholanishi kerak",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "Barcha 4 mezonni baholang (1-5 yulduz)",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "Masalan: 001",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "Parol kamida 4 belgi bo",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "Smena baholash (1-5 yulduz)",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "SDCustomers.yangi",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "SDCustomers.nofaol",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": ".qongiroq",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": ".orta",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "order-constants.quti",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "order-constants.l",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "order-constants.qogoz",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "order-constants.yangi",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "order-constants.00Rangsiz",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "translations.untitled",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "QCDashboard.otdi",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "QCDashboard.muvaffaqiyatsiz",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "QCDashboard.kutilmoqda",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "QCModule.normalar",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "QCModule.reklamatsiyalar",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "MMExtended.haydovchilar",
+      "lang": "uz"
+    },
+    {
+      "ns": "common",
+      "key": "common.xatolik",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "lead.list",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "lead.add",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "lead.name",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "lead.source",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "lead.status",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "lead.status.new",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "lead.status.qualified",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "lead.status.converted",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "lead.status.lost",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "lead.assign",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "deal.list",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "deal.add",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "deal.name",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "deal.value",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "deal.stage",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "deal.stage.prospecting",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "deal.stage.proposal",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "deal.stage.negotiation",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "deal.stage.won",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "deal.stage.lost",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "deal.won.event",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "contact.list",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "contact.add",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "contact.name",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "contact.company",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "contact.phone",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "contact.email",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "company.list",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "company.add",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "activity.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "activity.call",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "activity.email",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "activity.meeting",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "proposal.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "proposal.create",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "proposal.send",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "invoice.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "invoice.create",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "pipeline.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "calendar.today",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "source.call",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "source.webform",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "source.web",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "source.inbound",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "source.partner",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "source.other",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "currency.uzs",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "currency.usd",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "currency.eur",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "currency.rub",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.yaratilganda",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.yoqotildi",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.yangi",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.buyurtma",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.yetkazish",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.korildi",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.tolandi",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.lidlar",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.bitimlar",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.kontaktlar",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.kompaniyalar",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.takliflar",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.fakturalar",
+      "lang": "uz"
+    },
+    {
+      "ns": "crm",
+      "key": "crm-.robotlar",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "stats.employees",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "stats.revenue",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "stats.orders",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "stats.inventory",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "stats.production",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "chart.monthly",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "chart.weekly",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "notifications.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "notifications.unread",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "director.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "director.hitl",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "director.approve",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "director.reject",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "auditor.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "dashboard",
+      "key": "accountant.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.entry",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.post",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.account",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.debit",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.credit",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.balance",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.period",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.reference",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.posted",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.draft",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.accounts.cash",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.accounts.bank",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.accounts.ar",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.accounts.payable",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.accounts.revenue",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "gl.accounts.expense",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ap.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ap.invoice",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ap.vendor",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ap.approve",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ap.pay",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ap.status.pending",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ap.status.approved",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ap.status.paid",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ap.status.overdue",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ar.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ar.customer",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ar.invoice",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ar.outstanding",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "ar.receipt",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "budget.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "budget.plan",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "budget.actual",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "budget.variance",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "budget.department",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "budget.category",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "budget.period",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "budget.approved",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "budget.remaining",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "budget.exceeded",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "budget.alert",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "analytics.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "analytics.revenue",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "analytics.expense",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "analytics.profit",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "analytics.cashflow",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "analytics.period",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "analytics.compare",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "currency.uzs",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "currency.usd",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "currency.eur",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "currency.rub",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "tax.vat",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "tax.income",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "tax.social",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "advance.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "advance.request",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "advance.approve",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "advance.amount",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "advance.purpose",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "advance.approved",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "advance.rejected",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.subtitle",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.placeholder",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.analyze",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.order",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.composition",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.normal",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.chart",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.labeling",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.empty",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.mpv",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.mqv",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.lrv",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.lev",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "variance.ov",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.altman.safe",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.altman.distress",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.baseline",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.optimistic",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.base",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.pessimistic",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.risk.critical",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.risk.high",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.risk.medium",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.risk.low",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.risk.stable",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.risk.improving",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.risk.declining",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.risk.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.risk.cash",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.risk.days",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.altman.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.altman.roa",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.altman.de",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.opening",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.weeks",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.scenario.base",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.scenario.optimistic",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.scenario.pessimistic",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.inflow",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.outflow",
+      "lang": "uz"
+    },
+    {
+      "ns": "finance",
+      "key": "cfo.cashflow.cumulative",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.list",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.add",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.edit",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.delete",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.profile",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.gender",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.gender.male",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.gender.female",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.phone",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.email",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.address",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.department",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.position",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.salary",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.status",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.status.active",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.status.inactive",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "employee.status.terminated",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "attendance.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "attendance.date",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "attendance.time",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "attendance.status",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "attendance.status.present",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "attendance.status.absent",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "attendance.status.late",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "attendance.summary",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "payroll.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "payroll.calculate",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "payroll.period",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "payroll.bonus",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "payroll.deduction",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "payroll.tax",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "payroll.status.calculated",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "payroll.status.approved",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "payroll.status.paid",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.request",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.type",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.type.annual",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.type.sick",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.type.unpaid",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.type.maternity",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.days",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.reason",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.approve",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.reject",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.balance",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "leave.remaining",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "kpi.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "kpi.score",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "kpi.target",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "kpi.actual",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "kpi.achievement",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "kpi.period",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "salary.review",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "salary.current",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "salary.proposed",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "salary.reason",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "department.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "department.name",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "department.head",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "department.headcount",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "position.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "position.name",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "position.level",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "position.grade",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "recruitment.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "recruitment.vacancy",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "recruitment.applicant",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "recruitment.interview",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "recruitment.offer",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "discipline.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "discipline.violation",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "discipline.warning",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "discipline.action",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "kpi.employees",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "kpi.warnings",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "kpi.rewards",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "operator.submitted",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "common.all",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "birthdays.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "birthdays.today",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "birthdays.in7Days",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "birthdays.empty",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "milestones.empty",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "performers.employee",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "performers.grade",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "performers.score",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "alerts.empty",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "tabs.overview",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "tabs.performers",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "tabs.alerts",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "tabs.risk",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "tabs.turnover",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "tabs.discipline",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "tabs.safety",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "tabs.v2",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "departments.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "departments.subtitle",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "departments.active",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "departments.inactive",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "departments.levels",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "departments.code",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "departments.level",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "departments.status",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "departments.actions",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "departments.saving",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "skills.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "skills.subtitle",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "skills.name",
+      "lang": "uz"
+    },
+    {
+      "ns": "hr",
+      "key": "skills.category",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "course.list",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "course.add",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "course.edit",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "course.delete",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "course.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "course.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "course.duration",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "course.instructor",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "course.category",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "course.status.active",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "course.status.draft",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "course.status.archived",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "enrollment.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "enrollment.enroll",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "enrollment.employee",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "enrollment.course",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "enrollment.status.enrolled",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "enrollment.status.completed",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "enrollment.status.failed",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "enrollment.progress",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "certificate.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "certificate.issue",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "certificate.revoke",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "certificate.status.valid",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "certificate.status.expired",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "certificate.status.revoked",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "certificate.expiry.warning",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "assessment.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "assessment.score",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "assessment.passing",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "assessment.passed",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "assessment.failed",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "skill.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "skill.matrix",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "skill.name",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "skill.level",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "skill.level.beginner",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "skill.level.intermediate",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "skill.level.advanced",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "skill.level.expert",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "mentorship.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "mentorship.mentor",
+      "lang": "uz"
+    },
+    {
+      "ns": "lms",
+      "key": "mentorship.mentee",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "campaign.create",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "campaign.name",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "campaign.status.active",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "campaign.status.paused",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "campaign.status.completed",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "campaign.status.draft",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "analytics.roi",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "analytics.conversion",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "analytics.traffic",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "analytics.visitors",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "budget.spent",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "budget.remaining",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "report.generate",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "report.success",
+      "lang": "uz"
+    },
+    {
+      "ns": "marketing",
+      "key": "report.error",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "canteen.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "canteen.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "canteen.consumption",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "cleaning.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "cleaning.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "cleaning.total",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "cleaning.today",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "cleaning.overdue",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "cleaning.done",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "cleaning.list",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "cleaning.empty",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "facility.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "facility.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "facility.total",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "facility.active",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "facility.list",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "facility.empty",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "pm.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "pm.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "pm.total",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "pm.overdue",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "pm.completed",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "pm.schedules",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "pm.empty",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.electricity",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.water",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.gas",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.readings",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.empty",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.type",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.meter",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.facility",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.previous",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.current",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.consumption",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.cost",
+      "lang": "uz"
+    },
+    {
+      "ns": "mro",
+      "key": "utility.date",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.order",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.create",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.release",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.pause",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.resume",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.complete",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.quantity",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.material",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.resource",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.status.planned",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.status.released",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.status.paused",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.status.completed",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "pp.status.cancelled",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mes.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mes.operation",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mes.operator",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mes.certificate.check",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mes.certificate.required",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mes.defect",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mes.efficiency",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mes.oee",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mes.status.open",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mes.status.started",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mes.status.completed",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mes.hr360",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "qc.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "qc.inspection",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "qc.result",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "qc.passed",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "qc.failed",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "qc.sample",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "qc.defect",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "qc.inspector",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "qc.passed.event",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mro.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mro.machine",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mro.maintenance",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mro.stop",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mro.stop.reason",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mro.stop.event",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mro.resume",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mro.schedule",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mro.status.running",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mro.status.stopped",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mro.status.maintenance",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mm.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mm.requisition",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mm.purchase",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mm.supplier",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mm.receive",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "mm.issue",
+      "lang": "uz"
+    },
+    {
+      "ns": "production",
+      "key": "helpers.jarayonda",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.home",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.catalog",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.products",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.services",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.portfolio",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.about",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.contact",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.order",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.login",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.profile",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.connect",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.navigation",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "nav.subscribe",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "hero.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "hero.subtitle",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "hero.cta",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "hero.catalog",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "products.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "products.all",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "products.boxes",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "products.packaging",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "products.custom",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "calc.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "calc.size",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "calc.length",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "calc.width",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "calc.height",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "calc.quantity",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "calc.material",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "calc.calculate",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "calc.price",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "calc.order",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "contact.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "contact.address",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "contact.phone",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "contact.email",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "contact.hours",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "contact.info",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "contact.subtitle",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "contact.form.name",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "contact.form.phone",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "contact.form.email",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "contact.form.message",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "contact.form.send",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "footer.rights",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "footer.privacy",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "footer.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "common.loading",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "common.error",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "common.search",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "common.filter",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "common.sort",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "common.price",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "common.all",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "services.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "services.production",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "services.design",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "services.delivery",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "services.subtitle",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "about.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "about.history",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "about.mission",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "about.team",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "about.advantages",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "portfolio.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "portfolio.clients",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "portfolio.partners",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "portfolio.news",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.company",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.submit",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.success",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.received",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.subtitle",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.name",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.phone",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.email",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.quantity",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.submitting",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "order.select",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "login.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "login.email",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "login.password",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "login.submit",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "profile.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "profile.orders",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "categories.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "categories.coffee",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "categories.icecream",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "categories.drinks",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "categories.food",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "process.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "process.step1",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "process.step2",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "process.step3",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "process.step4",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "news.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "cta.ready",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "cta.contact",
+      "lang": "uz"
+    },
+    {
+      "ns": "public",
+      "key": "catalog.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "certs.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "certs.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "certs.total",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "certs.valid",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "certs.expired",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "certs.list",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "certs.empty",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "certs.parameters",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "reclamations.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "reclamations.description",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "reclamations.new",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "reclamations.resolved",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "reclamations.list",
+      "lang": "uz"
+    },
+    {
+      "ns": "qc",
+      "key": "reclamations.empty",
+      "lang": "uz"
+    },
+    {
+      "ns": "sd",
+      "key": "status.draft",
+      "lang": "uz"
+    },
+    {
+      "ns": "sd",
+      "key": "status.confirmed",
+      "lang": "uz"
+    },
+    {
+      "ns": "sd",
+      "key": "status.processing",
+      "lang": "uz"
+    },
+    {
+      "ns": "sd",
+      "key": "status.shipped",
+      "lang": "uz"
+    },
+    {
+      "ns": "sd",
+      "key": "status.delivered",
+      "lang": "uz"
+    },
+    {
+      "ns": "sd",
+      "key": "status.cancelled",
+      "lang": "uz"
+    },
+    {
+      "ns": "sd",
+      "key": "status.returned",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "language.current",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "language.change",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "theme.light",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "theme.dark",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "theme.auto",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "users.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "users.add",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "users.role",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "users.permission",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "users.active",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "users.inactive",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "audit.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "audit.action",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "audit.user",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "audit.timestamp",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "audit.ip",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "backup.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "backup.create",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "backup.restore",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "backup.schedule",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "telegram.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "settings",
+      "key": "telegram.token",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "inventory.adjust",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "inventory.item",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "inventory.sku",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "inventory.quantity",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "inventory.unit",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "inventory.location",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "movement.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "movement.in",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "movement.out",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "movement.type",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "movement.type.receipt",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "movement.type.issue",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "movement.type.transfer",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "movement.type.adjustment",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "movement.date",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "movement.reference",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "movement.from",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "movement.to",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "receipt.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "receipt.supplier",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "receipt.items",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "receipt.confirm",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "location.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "location.zone",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "location.aisle",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "location.shelf",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "location.bin",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "location.capacity",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "fg.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "fg.receive",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "fg.dispatch",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "fg.stock",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "rental.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "rental.invoice",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "sd.title",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "sd.order",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "sd.create",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "sd.confirm",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "sd.deal",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "sd.deal.won",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "sd.delivery",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "sd.delivery.complete",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "sd.customer",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "Asosiy xom ashyo ombori — ishlab chiqarish uchun barcha materiallar shu yerda saqlanadi. Yetkazib beruvchilardan keladigan materiallar birinchi bu omborga qabul qilinadi.",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "Rulon materiallari ombori — qog'oz, plyonka, vinillar rulonlarda saqlanadi. Har bir rulonning kengligi, uzunligi va og'irligi kuzatiladi.",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "Tayyor mahsulot ombori — ishlab chiqarish tugagan buyumlar jo'natishga tayyor holda saqlanadi. Buyurtmachi kutayotgan mahsulotlar shu yerda.",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "Yarim tayyor mahsulot ombori — ishlab chiqarish jarayonidagi materiallar. Bir sexdan ikkinchisiga o'tayotgan yarim tayyor buyumlar shu yerda.",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "Brak ombori — yaroqsiz va nuqsonli materiallar ajratib saqlanadi. Utilizatsiya yoki qayta ishlash uchun kutayotgan buyumlar.",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "Karantin ombori — sifat nazorati tekshiruvidan o'tayotgan materiallar vaqtincha shu yerda saqlanadi. QC qaroriga qarab chiqariladi yoki brakka o'tkaziladi.",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "Asbob-uskuna ombori — ishlab chiqarish uskunalari, ehtiyot qismlar, o'lchov asboblari. Har bir asbobning holati va kalibratsiya muddati kuzatiladi.",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "Xo'jalik materiallari ombori — tozalash vositalari, ofis mollari, yordamchi materiallar. Kundalik sarflanadigan narsalar boshqariladi.",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "MRO (Maintenance, Repair, Operations) ombori — uskunalarni ta'mirlash va texnik xizmat ko'rsatish uchun ehtiyot qismlar va materiallar.",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "Umumiy ombor — barcha turdagi materiallar saqlanadi.",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "Min. darajadan past",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "mm.vendor",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "mm.date",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "mm.amount",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "mm.status",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "mm.actions",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "mm.quantity",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "mm.unit",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "mm.price",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "mm.total",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "translations.ai",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "translations.untitled",
+      "lang": "uz"
+    },
+    {
+      "ns": "warehouse",
+      "key": "WMSExtended.kochirish",
+      "lang": "uz"
+    }
+  ]
+}

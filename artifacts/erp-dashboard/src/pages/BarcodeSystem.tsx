@@ -21,6 +21,7 @@ import { BatchesTabContent } from "./BarcodeSystemSections";
 import type { BatchFormState } from "./BarcodeSystemTypes";
 import { DEFAULT_BATCH_FORM } from "./BarcodeSystemTypes";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { tLabel } from "@/lib/i18n/tLabel";
 const escHtml = (v: unknown): string =>
   String(v ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -135,7 +136,7 @@ export default function BarcodeSystem() {
 
   const getEntityOptions = () => {
     switch (generateType) {
-      case "material": return (Array.isArray(materials) ? materials : []).map(m => ({ id: m.id, label: `${m.kod} - ${m.xomAshyo}` }));
+      case "material": return (Array.isArray(materials) ? materials : []).map(m => ({ id: m.id, label: tLabel('common.mKodMXomashyo', "${m.kod} - ${m.xomAshyo}") }));
       case "batch":    return (Array.isArray(batches)   ? batches   : []).map(b => ({ id: b.id, label: `${b.batchNumber} - ${b.materialName || "N/A"}` }));
       default:         return [];
     }

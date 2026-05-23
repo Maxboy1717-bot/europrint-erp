@@ -101,7 +101,7 @@ export interface FormData {
   selectedBomId: string;
 }
 
-export type Language = "uz" | "ru";
+export type Language = "uz" | "uz-cyr" | "ru";
 
 export interface Translation {
   title: string;

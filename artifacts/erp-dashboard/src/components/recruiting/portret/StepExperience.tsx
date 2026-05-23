@@ -12,6 +12,7 @@ import { PortretData } from "./types";
 import { WORKER_TYPE_META } from "@/lib/workerType";
 import type { WorkerType } from "@/lib/workerType";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 interface StepExperienceProps {
   portret: PortretData;
@@ -47,7 +48,7 @@ export function StepExperience({ portret, onChange }: StepExperienceProps) {
               variant={portret.experience_required ? "default" : "outline"}
               size="sm" className="h-7 text-xs"
               onClick={() => p("experience_required")(true)}
-            >Ha</Button>
+            >{tLabel("common.StepExperience.tsx.ha", "Ha")}</Button>
             <Button
               variant={!portret.experience_required ? "default" : "outline"}
               size="sm" className="h-7 text-xs"

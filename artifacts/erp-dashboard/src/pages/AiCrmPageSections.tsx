@@ -15,6 +15,7 @@ import type { Deal, Contact, AiScore } from "./AiCrmPageTypes";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from "@/lib/i18n/tLabel";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 export const getScoreColor = (score?: number) => {
   if (!score) return "text-muted-foreground";
@@ -26,9 +27,9 @@ export const getScoreColor = (score?: number) => {
 export const getChurnBadge = (risk?: string) => {
   if (!risk) return null;
   const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
-    low:    { variant: "default",     label: "Past xavf" },
+    low:    { variant: "default",     label: tLabel('common.pastXavf', "Past xavf") },
     medium: { variant: "secondary",   label: "O'rtacha xavf" },
-    high:   { variant: "destructive", label: "Yuqori xavf" },
+    high:   { variant: "destructive", label: tLabel('common.yuqoriXavf', "Yuqori xavf") },
   };
   const config = variants[risk.toLowerCase()] || { variant: "outline" as const, label: risk };
   return <Badge variant={config.variant}>{config.label}</Badge>;

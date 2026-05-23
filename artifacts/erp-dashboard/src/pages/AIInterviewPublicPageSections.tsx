@@ -11,6 +11,7 @@ import type { SessionInfo, Language } from "./AIInterviewPublicPageTypes";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from "@/lib/i18n/tLabel";
 interface TFn {
   (key: string): string;
 }

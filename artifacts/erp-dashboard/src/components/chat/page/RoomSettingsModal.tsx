@@ -22,6 +22,7 @@ import { Bell, BellOff, Archive, ChevronDown } from "lucide-react";
 import { ChatRoom, useChatStore } from "@/store/chatStore";
 import { apiRequest } from '@/lib/queryClient';
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 const EMOJI_PRESETS = ["💬", "📢", "🚀", "🎯", "💡", "🔥", "⚡", "🌟", "📋", "🏢", "👥", "🎨", "📊", "🔧", "🌐"];
 
@@ -234,8 +235,8 @@ export function RoomSettingsModal({ room, onClose }: Props) {
       onOpenChange={(open) => { if (!open) setConfirmArchive(false); }}
       title={t("xonaniArxivlash")}
       description={t("xonaniArxivlashniTasdiqlaysizmiSidebarDan")}
-      confirmText="Arxivlash"
-      cancelText="Bekor qilish"
+      confirmText={tLabel("common.RoomSettingsModal.tsx.arxivlash", "Arxivlash")}
+      cancelText={tLabel("common.RoomSettingsModal.tsx.bekorQilish", "Bekor qilish")}
       variant="destructive"
       onConfirm={() => archiveMutation.mutate()}
     />

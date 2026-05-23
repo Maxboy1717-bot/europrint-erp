@@ -15,6 +15,7 @@ import { MessageSquare, Search } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from "@/lib/i18n/tLabel";
 interface ApplicationResponse {
   id: string | number;
   application_id?: string | number;
@@ -48,7 +49,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
   sent:    { label: "Yuborildi",  variant: "default"   },
   draft:   { label: "Qoralama",   variant: "outline"   },
   read:    { label: "O'qildi",    variant: "secondary" },
-  replied: { label: "Javob berildi", variant: "default" },
+  replied: { label: tLabel('common.javobBerildi', "Javob berildi"), variant: "default" },
 };
 
 export default function ApplicationResponsesPage() {
