@@ -86,7 +86,7 @@ describe('CreateDealHandler', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.error.code).toBe('VALIDATION');
-      expect(r.error.message).toMatch(/invalid deal amount/i);
+      expect(r.error.message).toMatch(/money amount cannot be negative/i);
     }
     expect(repo.save).not.toHaveBeenCalled();
   });

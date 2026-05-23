@@ -8,7 +8,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { CrmAiService } from '../../src/modules/crm/application/crm-ai.service';
-import { CrmAiRepository } from '../../src/modules/crm/application/crm-ai.repository';
+import { CRM_AI_REPO } from '../../src/modules/crm/domain/repositories/i-crm-ai.repo';
 import { Ok, Err, AppErr } from '../../src/common/result';
 import { CRM_LARGE_DEAL_THRESHOLD } from '../../src/common/constants/app.constants';
 
@@ -47,7 +47,7 @@ describe('CrmAiService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CrmAiService,
-        { provide: CrmAiRepository, useValue: repo },
+        { provide: CRM_AI_REPO, useValue: repo },
       ],
     }).compile();
     svc = module.get(CrmAiService);

@@ -5,7 +5,7 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { InternalServerErrorException } from '@nestjs/common';
+
 import { GetPaymentsHandler } from '../../src/modules/finance/application/queries/get-payments.handler';
 import { GetPaymentsQuery } from '../../src/modules/finance/application/queries/get-payments.query';
 import {
@@ -60,27 +60,28 @@ describe('GetPaymentsHandler', () => {
 
     const result = await handler.execute(new GetPaymentsQuery({}));
 
-    expect(result.items).toHaveLength(2);
-    expect(result.page).toBe(1);
-    expect(result.limit).toBe(10);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.items).toHaveLength(2);
+      expect(result.data.page).toBe(1);
+      expect(result.data.limit).toBe(10);
+    }
   });
 
-  it('throws InternalServerErrorException when repository rejects', async () => {
+  it('returns Err when repository rejects', async () => {
     const repo = makeRepo(new Error('explode'));
     const handler = await buildHandler(repo);
 
-    await expect(handler.execute(new GetPaymentsQuery({}))).rejects.toBeInstanceOf(
-      InternalServerErrorException,
-    );
+    const r = await handler.execute(new GetPaymentsQuery({}));
+    expect(r.ok).toBe(false);
   });
 
-  it('throws InternalServerErrorException when repository returns Err', async () => {
+  it('returns Err when repository returns Err', async () => {
     const repo = makeRepo(Err(AppErr('DB_ERROR', 'down')));
     const handler = await buildHandler(repo);
 
-    await expect(handler.execute(new GetPaymentsQuery({}))).rejects.toBeInstanceOf(
-      InternalServerErrorException,
-    );
+    const r = await handler.execute(new GetPaymentsQuery({}));
+    expect(r.ok).toBe(false);
   });
 
   it('honours pagination overrides from query filters', async () => {
@@ -91,8 +92,11 @@ describe('GetPaymentsHandler', () => {
       new GetPaymentsQuery({ invoiceId: '501', page: 5, limit: 100 }),
     );
 
-    expect(result.page).toBe(5);
-    expect(result.limit).toBe(100);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.page).toBe(5);
+      expect(result.data.limit).toBe(100);
+    }
   });
 
   it('forwards filters object to repository.findPayments', async () => {

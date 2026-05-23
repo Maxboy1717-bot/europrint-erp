@@ -7,7 +7,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { CrmAutoLeadService } from '../../src/modules/crm/application/crm-auto-lead.service';
-import { CrmAutoLeadRepository } from '../../src/modules/crm/application/crm-auto-lead.repository';
+import { CRM_AUTO_LEAD_REPO } from '../../src/modules/crm/domain/repositories/i-crm-auto-lead.repo';
 import { Ok } from '../../src/common/result';
 
 type RepoMock = {
@@ -45,7 +45,7 @@ describe('CrmAutoLeadService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CrmAutoLeadService,
-        { provide: CrmAutoLeadRepository, useValue: repo },
+        { provide: CRM_AUTO_LEAD_REPO, useValue: repo },
       ],
     }).compile();
     svc = module.get(CrmAutoLeadService);
