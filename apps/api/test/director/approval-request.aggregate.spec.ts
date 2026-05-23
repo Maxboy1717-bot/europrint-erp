@@ -3,8 +3,9 @@
  * Unit tests for ApprovalRequest aggregate — HITL approve/reject lifecycle
  * and HITL threshold check.
  */
-import { InternalServerErrorException } from '@nestjs/common';
+
 import { ApprovalRequest } from '../../src/modules/director/domain/aggregates/approval-request.aggregate';
+import { DomainError } from '../../src/shared/domain/errors/domain-error';
 import {
   HitlDocumentType,
   ApprovalStatus,
@@ -50,12 +51,12 @@ describe('ApprovalRequest aggregate', () => {
 
     it('throws when approving an already-APPROVED request', () => {
       const r = makeRequest({ status: ApprovalStatus.APPROVED });
-      expect(() => r.approve('user-1')).toThrow(InternalServerErrorException);
+      expect(() => r.approve('user-1')).toThrow(DomainError);
     });
 
     it('throws when approving a REJECTED request', () => {
       const r = makeRequest({ status: ApprovalStatus.REJECTED });
-      expect(() => r.approve('user-1')).toThrow(InternalServerErrorException);
+      expect(() => r.approve('user-1')).toThrow(DomainError);
     });
 
     it('refreshes updatedAt on approval', () => {
@@ -78,24 +79,24 @@ describe('ApprovalRequest aggregate', () => {
 
     it('throws when reason is empty string', () => {
       const r = makeRequest({ status: ApprovalStatus.PENDING });
-      expect(() => r.reject('user-7', '')).toThrow(InternalServerErrorException);
+      expect(() => r.reject('user-7', '')).toThrow(DomainError);
     });
 
     it('throws when reason is shorter than 5 characters', () => {
       const r = makeRequest({ status: ApprovalStatus.PENDING });
-      expect(() => r.reject('user-7', 'no')).toThrow(InternalServerErrorException);
+      expect(() => r.reject('user-7', 'no')).toThrow(DomainError);
     });
 
     it('throws when rejecting an already-APPROVED request', () => {
       const r = makeRequest({ status: ApprovalStatus.APPROVED });
       expect(() => r.reject('user-1', 'valid reason here'))
-        .toThrow(InternalServerErrorException);
+        .toThrow(DomainError);
     });
 
     it('throws when rejecting an already-REJECTED request', () => {
       const r = makeRequest({ status: ApprovalStatus.REJECTED });
       expect(() => r.reject('user-1', 'valid reason here'))
-        .toThrow(InternalServerErrorException);
+        .toThrow(DomainError);
     });
   });
 
