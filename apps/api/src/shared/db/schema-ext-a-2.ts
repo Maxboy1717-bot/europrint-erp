@@ -13,6 +13,7 @@ import { absence_tracking as canonicalAbsenceTracking } from './schema-business-
 import { asset_items as canonicalAssetItems, gamification_totals as canonicalGamificationTotals, papka_orders as canonicalPapkaOrders } from './schema-business-c-1';
 import { hr_brand_settings as canonicalHrBrandSettings } from './schema-business-c-2-hr-safety';
 import { mm_vendors as canonicalMmVendors } from './schema-misc-qc';
+import { mm_materials_int as canonicalMmMaterials } from './schema-ext-c-3';
 
 export const hr_documents_archive = pgTable('hr_documents_archive', {
   id:            integer('id').primaryKey(),
@@ -65,12 +66,8 @@ export const mm_purchase_order_items = pgTable('mm_purchase_order_items', {
   created_at:        timestamp('created_at').defaultNow(),
 });
 
-export const mm_materials_ext = pgTable('mm_materials', {
-  id:              serial('id').primaryKey(),
-  name:            text('name'),
-  unit_of_measure: text('unit_of_measure'),
-  created_at:      timestamp('created_at').defaultNow(),
-});
+// mm_materials: canonical in schema-ext-c-3 (10 cols). Re-export under legacy name.
+export const mm_materials_ext = canonicalMmMaterials;
 
 // mm_vendors: re-exported from canonical definition in schema-misc-qc.ts
 export const mm_vendors_ext = canonicalMmVendors;
