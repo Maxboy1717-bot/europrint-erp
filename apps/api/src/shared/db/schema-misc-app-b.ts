@@ -19,15 +19,9 @@ export const hrAttendance = pgTable('attendance', {
   created_at: timestamp('created_at'),
 });
 
-export const lmsTestAttempts = pgTable('lms_test_attempts', {
-  id: integer('id').primaryKey(),
-  user_id: integer('user_id'),
-  test_id: integer('test_id'),
-  score: integer('score'),
-  passed: boolean('passed'),
-  duration_seconds: integer('duration_seconds'),
-  created_at: timestamp('created_at'),
-});
+// lmsTestAttempts: redirect to canonical schema-ext-b-1.ts (superset columns: + course_id).
+// Consumers only access id/test_id/score/passed via raw sql templates — type-safe.
+export { lms_test_attempts as lmsTestAttempts } from './schema-ext-b-1';
 
 export const lmsSessions = pgTable('lms_sessions', {
   id: integer('id').primaryKey(),
@@ -123,11 +117,8 @@ export const userSkills = pgTable('user_skills', {
   created_at: timestamp('created_at'),
 });
 
-export const productionOrders = pgTable('production_orders', {
-  id: integer('id').primaryKey(),
-  status: varchar('status'),
-  created_at: timestamp('created_at'),
-});
+// productionOrders: 3-col stub removed — barrel uses full 14-col version from schema-compat-3.ts.
+// Consumers only need .status/.id which exist in the canonical version.
 
 export const invoicesTable = pgTable('invoices', {
   id: integer('id').primaryKey(),
