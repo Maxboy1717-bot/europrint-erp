@@ -6,6 +6,9 @@
 import { type LucideIcon, TrendingUp, Globe, GitBranch, Scale, HeartPulse } from "lucide-react";
 
 import { tLabel } from '@/lib/i18n/tLabel';
+import { MARKETING_RISK_COLORS } from '@/constants/status';
+/** @deprecated Use MARKETING_RISK_COLORS from '@/constants/status' directly */
+export { MARKETING_RISK_COLORS as RISK_COLORS };
 export interface ChurnCustomer {
   id: number;
   name: string;
@@ -69,12 +72,7 @@ export interface SeoKeyword {
   trend: "up" | "down" | "stable";
 }
 
-export const RISK_COLORS: Record<string, string> = {
-  critical: "bg-red-100 text-[var(--ep-red)]",
-  high: "bg-orange-100 text-[var(--ep-primary)]",
-  medium: "bg-yellow-100 text-[var(--ep-yellow)]",
-  low: "bg-green-100 text-[var(--ep-green)]",
-};
+// RISK_COLORS re-exported above from '@/constants/status' as MARKETING_RISK_COLORS
 
 export const routeTabMap: Record<string, string> = {
   "/marketing/analytics": "roi",

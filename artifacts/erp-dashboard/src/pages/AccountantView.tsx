@@ -27,6 +27,7 @@ import { AuditConsole } from "./accountant/AuditConsole";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from "@/lib/i18n/tLabel";
 interface RoleDashboardWidget {
   id: string;
   widgetCode: string;
@@ -91,7 +92,7 @@ export default function AccountantView() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast({ title: "CSV eksport", description: "Audit loglar CSV formatda yuklandi" });
+    toast({ title: tLabel('common.csvEksport', "CSV eksport"), description: tLabel('common.auditLoglarCsvFormatdaYuklandi', "Audit loglar CSV formatda yuklandi") });
   };
 
   const handleExportExcel = () => {
@@ -102,12 +103,12 @@ export default function AccountantView() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast({ title: "Excel eksport", description: "Audit loglar Excel formatda yuklandi" });
+    toast({ title: tLabel('common.excelEksport', "Excel eksport"), description: tLabel('common.auditLoglarExcelFormatdaYuklandi', "Audit loglar Excel formatda yuklandi") });
   };
 
   const handleExportPDF = () => {
     window.print();
-    toast({ title: "PDF hisobot", description: "PDF hisobot tayyorlanmoqda" });
+    toast({ title: tLabel('common.pdfHisobot2', "PDF hisobot"), description: tLabel('common.pdfHisobotTayyorlanmoqda', "PDF hisobot tayyorlanmoqda") });
   };
 
   const { data: widgets = [], isError, error, refetch} = useQuery<RoleDashboardWidget[]>({
@@ -146,7 +147,7 @@ export default function AccountantView() {
       />
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none gap-2" onClick={() => { window.print(); toast({ title: "Hisobot", description: "Hisobot tayyorlanmoqda" }); }} data-testid="button-report">
+          <Button variant="outline" className="bg-muted/60 text-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted border-none gap-2" onClick={() => { window.print(); toast({ title: "Hisobot", description: tLabel('common.hisobotTayyorlanmoqda', "Hisobot tayyorlanmoqda") }); }} data-testid="button-report">
             <FileText className="h-4 w-4" />
             {t("report")}
           </Button>

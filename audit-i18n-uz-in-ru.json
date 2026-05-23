@@ -1,0 +1,42 @@
+[
+  {
+    "ns": "common",
+    "key": "geminiVision",
+    "value": "Gemini Vision"
+  },
+  {
+    "ns": "common",
+    "key": "gpt4oGemini25",
+    "value": "Создайте профессиональные дизайны с GPT-4o + Gemini 2.5 Flash"
+  },
+  {
+    "ns": "common",
+    "key": "geminiAiFunksiyalariUchun",
+    "value": "— для функций Gemini AI"
+  },
+  {
+    "ns": "common",
+    "key": "gpt4oMini",
+    "value": "GPT-4o Mini"
+  },
+  {
+    "ns": "common",
+    "key": "hmacSha256ImzoKaliti",
+    "value": "Ключ подписи HMAC SHA-256"
+  },
+  {
+    "ns": "common",
+    "key": "qaysiDasturlarniBilishiShartExcel1c",
+    "value": "Какие программы должен знать? (Excel, 1C, Photoshop, Python...)"
+  },
+  {
+    "ns": "common",
+    "key": "masalanExcelVlookup1cInglizTili",
+    "value": "Например: Excel (VLOOKUP), 1C, Английский (B2), Photoshop..."
+  },
+  {
+    "ns": "settings",
+    "key": "gpt4oMini",
+    "value": "GPT-4o Mini"
+  }
+]

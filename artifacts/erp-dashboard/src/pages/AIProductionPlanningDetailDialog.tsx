@@ -15,6 +15,7 @@ import { StatusBadge } from "./AIProductionPlanningSections";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from "@/lib/i18n/tLabel";
 // ─── Decisions List ───────────────────────────────────────────────────────────
 function DecisionsList({ decisions, onAccept, isPending }: {
   decisions: AiDecision[] | undefined;
@@ -91,9 +92,9 @@ export function PlanDetailDialog({
   if (!plan) return null;
 
   const metaStats = [
-    { label: "Ishonch",      value: `${plan.confidenceScore}%`,        color: getConfidenceColor(plan.confidenceScore) },
+    { label: tLabel('common.confidence', "Ishonch"),      value: `${plan.confidenceScore}%`,        color: getConfidenceColor(plan.confidenceScore) },
     { label: "Buyurtmalar",  value: String(plan.totalOrders ?? 0),     color: "" },
-    { label: "Mashina soat", value: String(plan.totalMachineHours ?? 0), color: "" },
+    { label: tLabel('common.mashinaSoat', "Mashina soat"), value: String(plan.totalMachineHours ?? 0), color: "" },
     { label: "Bajarilish",   value: plan.estimatedCompletion ?? "-",   color: "" },
   ];
 

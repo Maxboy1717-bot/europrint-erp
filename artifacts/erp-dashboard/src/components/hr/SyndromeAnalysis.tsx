@@ -7,6 +7,7 @@ import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 export interface ToolTestResults {
   A?: number;
@@ -184,7 +185,7 @@ export function SyndromeAnalysis({ toolTestResults, compact = false }: SyndromeA
   if (!toolTestResults || Object.keys(toolTestResults).length === 0) {
     return (
       <div className="text-xs text-muted-foreground italic py-2">
-        TOOL TEST natijalari mavjud emas
+        {tLabel("common.SyndromeAnalysis.tsx.toolTestNatijalariMavjudEmas", "TOOL TEST natijalari mavjud emas")}
       </div>
     );
   }

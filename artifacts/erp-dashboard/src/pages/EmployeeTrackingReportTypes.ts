@@ -7,7 +7,7 @@ import { tLabel } from '@/lib/i18n/tLabel';
 
 // ── Language ──────────────────────────────────────────────────────────────────
 
-export type Language = "uz" | "ru";
+export type Language = "uz" | "uz-cyr" | "ru";
 
 // ── Domain interfaces ─────────────────────────────────────────────────────────
 
@@ -89,6 +89,47 @@ export const translations = {
     zoneDistribution: "Zona taqsimoti",
     timeTracking: "Vaqt kuzatuvi",
     productivity: "Samaradorlik",
+  },
+  'uz-cyr': {
+    title: tLabel('common.EmployeeTrackingReport.xodimlarKuzatuviHisoboti', "Ходимлар Кузатуви Ҳисоботи"),
+    subtitle: "Зона ва вақт статистикаси",
+    dailyAttendance: "Кунлик Давомад",
+    weeklyStats: "Ҳафталик Статистика",
+    zoneActivity: "Зона Фаоллиги",
+    employeeDetails: "Ходим Маълумотлари",
+    selectDate: "Санани танланг",
+    selectEmployee: "Ходимни танланг",
+    allEmployees: "Барча ходимлар",
+    employee: "Ходим",
+    firstSeen: "Биринчи кўрилган",
+    lastSeen: "Охирги кўрилган",
+    totalTime: "Жами вақт",
+    workZone: "Иш зонаси",
+    restZone: "Дам олиш",
+    detections: "Аниқлашлар",
+    status: "Ҳолат",
+    present: "Келган",
+    absent: "Келмаган",
+    late: "Кечиккан",
+    zone: "Зона",
+    entryTime: "Кириш",
+    exitTime: "Чиқиш",
+    duration: "Давомийлик",
+    visits: "Ташрифлар",
+    hours: "соат",
+    minutes: "дақиқа",
+    noData: "Маълумот топилмади",
+    loading: "Юкланмоқда...",
+    today: "Бугун",
+    thisWeek: "Бу ҳафта",
+    thisMonth: "Бу ой",
+    avgTimePerDay: "Кунлик ўртача вақт",
+    mostActiveZone: "Енг фаол зона",
+    totalDetections: "Жами аниқлашлар",
+    presentEmployees: "Келган ходимлар",
+    zoneDistribution: "Зона тақсимоти",
+    timeTracking: "Вақт кузатуви",
+    productivity: "Самарадорлик",
   },
   ru: {
     title: tLabel('common.EmployeeTrackingReport.untitled', "Отчёт по Отслеживанию Сотрудников"),

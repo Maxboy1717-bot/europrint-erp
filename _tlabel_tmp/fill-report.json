@@ -1,0 +1,604 @@
+{
+  "totalCalls": 738,
+  "uniqueKeys": 668,
+  "namespacesProcessed": [
+    {
+      "ns": "common",
+      "uniqueKeys": 424,
+      "addedUz": 424,
+      "addedUzCyr": 396,
+      "addedRu": 399,
+      "parentConflicts": 0
+    },
+    {
+      "ns": "hr",
+      "uniqueKeys": 59,
+      "addedUz": 53,
+      "addedUzCyr": 48,
+      "addedRu": 53,
+      "parentConflicts": 18
+    },
+    {
+      "ns": "production",
+      "uniqueKeys": 29,
+      "addedUz": 29,
+      "addedUzCyr": 29,
+      "addedRu": 29,
+      "parentConflicts": 0
+    },
+    {
+      "ns": "warehouse",
+      "uniqueKeys": 72,
+      "addedUz": 72,
+      "addedUzCyr": 72,
+      "addedRu": 66,
+      "parentConflicts": 0
+    },
+    {
+      "ns": "crm",
+      "uniqueKeys": 49,
+      "addedUz": 43,
+      "addedUzCyr": 43,
+      "addedRu": 43,
+      "parentConflicts": 18
+    },
+    {
+      "ns": "kanban",
+      "uniqueKeys": 35,
+      "addedUz": 35,
+      "addedUzCyr": 35,
+      "addedRu": 33,
+      "parentConflicts": 0
+    }
+  ],
+  "addedUz": 656,
+  "addedUzCyr": 623,
+  "addedRu": 656,
+  "yandexCalls": 15,
+  "yandexErrors": [],
+  "glossaryLiterals": 33,
+  "parentConflicts": [
+    {
+      "ns": "hr",
+      "path": "grade.a",
+      "reason": "parent 'grade' is a non-object leaf",
+      "existingValue": "Daraja"
+    },
+    {
+      "ns": "hr",
+      "path": "grade.a",
+      "reason": "parent 'grade' is a non-object leaf",
+      "existingValue": "Даража"
+    },
+    {
+      "ns": "hr",
+      "path": "grade.b",
+      "reason": "parent 'grade' is a non-object leaf",
+      "existingValue": "Daraja"
+    },
+    {
+      "ns": "hr",
+      "path": "grade.b",
+      "reason": "parent 'grade' is a non-object leaf",
+      "existingValue": "Даража"
+    },
+    {
+      "ns": "hr",
+      "path": "grade.c",
+      "reason": "parent 'grade' is a non-object leaf",
+      "existingValue": "Daraja"
+    },
+    {
+      "ns": "hr",
+      "path": "grade.c",
+      "reason": "parent 'grade' is a non-object leaf",
+      "existingValue": "Даража"
+    },
+    {
+      "ns": "hr",
+      "path": "grade.d",
+      "reason": "parent 'grade' is a non-object leaf",
+      "existingValue": "Daraja"
+    },
+    {
+      "ns": "hr",
+      "path": "grade.d",
+      "reason": "parent 'grade' is a non-object leaf",
+      "existingValue": "Даража"
+    },
+    {
+      "ns": "hr",
+      "path": "manager.select_label",
+      "reason": "parent 'manager' is a non-object leaf",
+      "existingValue": "Boshqaruvchi"
+    },
+    {
+      "ns": "hr",
+      "path": "manager.select_label",
+      "reason": "parent 'manager' is a non-object leaf",
+      "existingValue": "Бошқарувчи"
+    },
+    {
+      "ns": "hr",
+      "path": "manager.search_placeholder",
+      "reason": "parent 'manager' is a non-object leaf",
+      "existingValue": "Boshqaruvchi"
+    },
+    {
+      "ns": "hr",
+      "path": "manager.search_placeholder",
+      "reason": "parent 'manager' is a non-object leaf",
+      "existingValue": "Бошқарувчи"
+    },
+    {
+      "ns": "hr",
+      "path": "grade.a",
+      "reason": "parent 'grade' is a non-object leaf",
+      "existingValue": "Уровень"
+    },
+    {
+      "ns": "hr",
+      "path": "grade.b",
+      "reason": "parent 'grade' is a non-object leaf",
+      "existingValue": "Уровень"
+    },
+    {
+      "ns": "hr",
+      "path": "grade.c",
+      "reason": "parent 'grade' is a non-object leaf",
+      "existingValue": "Уровень"
+    },
+    {
+      "ns": "hr",
+      "path": "grade.d",
+      "reason": "parent 'grade' is a non-object leaf",
+      "existingValue": "Уровень"
+    },
+    {
+      "ns": "hr",
+      "path": "manager.select_label",
+      "reason": "parent 'manager' is a non-object leaf",
+      "existingValue": "Руководитель"
+    },
+    {
+      "ns": "hr",
+      "path": "manager.search_placeholder",
+      "reason": "parent 'manager' is a non-object leaf",
+      "existingValue": "Руководитель"
+    },
+    {
+      "ns": "crm",
+      "path": "source.call",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Manba"
+    },
+    {
+      "ns": "crm",
+      "path": "source.call",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Манба"
+    },
+    {
+      "ns": "crm",
+      "path": "source.webform",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Manba"
+    },
+    {
+      "ns": "crm",
+      "path": "source.webform",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Манба"
+    },
+    {
+      "ns": "crm",
+      "path": "source.web",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Manba"
+    },
+    {
+      "ns": "crm",
+      "path": "source.web",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Манба"
+    },
+    {
+      "ns": "crm",
+      "path": "source.inbound",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Manba"
+    },
+    {
+      "ns": "crm",
+      "path": "source.inbound",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Манба"
+    },
+    {
+      "ns": "crm",
+      "path": "source.partner",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Manba"
+    },
+    {
+      "ns": "crm",
+      "path": "source.partner",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Манба"
+    },
+    {
+      "ns": "crm",
+      "path": "source.other",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Manba"
+    },
+    {
+      "ns": "crm",
+      "path": "source.other",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Манба"
+    },
+    {
+      "ns": "crm",
+      "path": "source.call",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Источник"
+    },
+    {
+      "ns": "crm",
+      "path": "source.webform",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Источник"
+    },
+    {
+      "ns": "crm",
+      "path": "source.web",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Источник"
+    },
+    {
+      "ns": "crm",
+      "path": "source.inbound",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Источник"
+    },
+    {
+      "ns": "crm",
+      "path": "source.partner",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Источник"
+    },
+    {
+      "ns": "crm",
+      "path": "source.other",
+      "reason": "parent 'source' is a non-object leaf",
+      "existingValue": "Источник"
+    }
+  ],
+  "fallbackConflicts": [
+    {
+      "ns": "common",
+      "path": "CallTimelineItem.tsx.untitled",
+      "first": "Отвечен",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/CallTimelineItem.tsx:44",
+      "other": "Пропущен",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/CallTimelineItem.tsx:45"
+    },
+    {
+      "ns": "common",
+      "path": "CallTimelineItem.tsx.untitled",
+      "first": "Отвечен",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/CallTimelineItem.tsx:44",
+      "other": "Занято",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/CallTimelineItem.tsx:46"
+    },
+    {
+      "ns": "common",
+      "path": "CallTimelineItem.tsx.untitled",
+      "first": "Отвечен",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/CallTimelineItem.tsx:44",
+      "other": "Голосовая почта",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/CallTimelineItem.tsx:47"
+    },
+    {
+      "ns": "common",
+      "path": "MeetingCard.tsx.untitled",
+      "first": "Запланирована",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/MeetingCard.tsx:54",
+      "other": "Состоялась",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/MeetingCard.tsx:55"
+    },
+    {
+      "ns": "common",
+      "path": "MeetingCard.tsx.untitled",
+      "first": "Запланирована",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/MeetingCard.tsx:54",
+      "other": "Отменена",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/MeetingCard.tsx:56"
+    },
+    {
+      "ns": "common",
+      "path": "MeetingCard.tsx.untitled",
+      "first": "Запланирована",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/MeetingCard.tsx:54",
+      "other": "Ожидает подтверждения",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/MeetingCard.tsx:57"
+    },
+    {
+      "ns": "common",
+      "path": "WatcherSelector.untitled",
+      "first": "Наблюдатели",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/WatcherSelector.tsx:71",
+      "other": "Поиск сотрудников...",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/crm/WatcherSelector.tsx:116"
+    },
+    {
+      "ns": "warehouse",
+      "path": ".untitled",
+      "first": "Складские Отчёты",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:113",
+      "other": "Отчёты по остаткам, оборачиваемости и анализу",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:114"
+    },
+    {
+      "ns": "warehouse",
+      "path": ".untitled",
+      "first": "Складские Отчёты",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:113",
+      "other": "Отчёт по остаткам",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:123"
+    },
+    {
+      "ns": "warehouse",
+      "path": ".untitled",
+      "first": "Складские Отчёты",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:113",
+      "other": "Отчёт по оборачиваемости",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:142"
+    },
+    {
+      "ns": "warehouse",
+      "path": ".untitled",
+      "first": "Складские Отчёты",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:113",
+      "other": "Отчёт по старению",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:171"
+    },
+    {
+      "ns": "warehouse",
+      "path": ".untitled",
+      "first": "Складские Отчёты",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:113",
+      "other": "Контроль сроков",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:187"
+    },
+    {
+      "ns": "warehouse",
+      "path": ".untitled",
+      "first": "Складские Отчёты",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:113",
+      "other": "Отчёты по остаткам, оборачиваемости и анализу",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types.ts:321"
+    },
+    {
+      "ns": "warehouse",
+      "path": ".untitled",
+      "first": "Складские Отчёты",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:113",
+      "other": "Отчёт по остаткам",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types.ts:330"
+    },
+    {
+      "ns": "warehouse",
+      "path": ".untitled",
+      "first": "Складские Отчёты",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:113",
+      "other": "Отчёт по оборачиваемости",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types.ts:349"
+    },
+    {
+      "ns": "warehouse",
+      "path": ".untitled",
+      "first": "Складские Отчёты",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:113",
+      "other": "Отчёт по старению",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types.ts:378"
+    },
+    {
+      "ns": "warehouse",
+      "path": ".untitled",
+      "first": "Складские Отчёты",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types-translations.ts:113",
+      "other": "Контроль сроков",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reports/types.ts:394"
+    },
+    {
+      "ns": "warehouse",
+      "path": "translations.ai",
+      "first": "AI Резерв Материалов",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reservation/translations.ts:98",
+      "other": "AI Запрос на Резерв",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reservation/translations.ts:108"
+    },
+    {
+      "ns": "warehouse",
+      "path": "translations.ai",
+      "first": "AI Резерв Материалов",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reservation/translations.ts:98",
+      "other": "AI Рекомендация",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reservation/translations.ts:120"
+    },
+    {
+      "ns": "warehouse",
+      "path": "translations.untitled",
+      "first": "Партии Материалов",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reservation/translations.ts:135",
+      "other": "История Запросов Резервирования",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/wms/reservation/translations.ts:152"
+    },
+    {
+      "ns": "common",
+      "path": "barcode-.untitled",
+      "first": "Система Штрих-кодов",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/barcode/barcode-types.ts:175",
+      "other": "Партии, генерация штрих-кодов и сканер",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/barcode/barcode-types.ts:176"
+    },
+    {
+      "ns": "common",
+      "path": "camera-heatmap-.untitled",
+      "first": "Тепловая карта",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/camera-heatmap-types.ts:176",
+      "other": "Визуализация активности на производстве",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/camera-heatmap-types.ts:177"
+    },
+    {
+      "ns": "common",
+      "path": "EmployeeTrackingReport.untitled",
+      "first": "Отчёт по Отслеживанию Сотрудников",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/EmployeeTrackingReportTypes.ts:95",
+      "other": "Статистика зон и времени",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/EmployeeTrackingReportTypes.ts:96"
+    },
+    {
+      "ns": "kanban",
+      "path": "kanban-.untitled",
+      "first": "Потоки",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:53",
+      "other": "Название",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:53"
+    },
+    {
+      "ns": "kanban",
+      "path": "kanban-.untitled",
+      "first": "Потоки",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:53",
+      "other": "Распределение ресурсов",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:54"
+    },
+    {
+      "ns": "kanban",
+      "path": "kanban-.untitled",
+      "first": "Потоки",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:53",
+      "other": "Заголовок",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:61"
+    },
+    {
+      "ns": "kanban",
+      "path": "kanban-.untitled",
+      "first": "Потоки",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:53",
+      "other": "Описание",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:61"
+    },
+    {
+      "ns": "kanban",
+      "path": "kanban-.untitled",
+      "first": "Потоки",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:53",
+      "other": "Уведомления",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:64"
+    },
+    {
+      "ns": "kanban",
+      "path": "kanban-.untitled",
+      "first": "Потоки",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:53",
+      "other": "Роботы автоматизации",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:65"
+    },
+    {
+      "ns": "kanban",
+      "path": "kanban-.untitled",
+      "first": "Потоки",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:53",
+      "other": "Шаблоны",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:66"
+    },
+    {
+      "ns": "kanban",
+      "path": "kanban-.untitled",
+      "first": "Потоки",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:53",
+      "other": "Название шаблона",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:66"
+    },
+    {
+      "ns": "kanban",
+      "path": "kanban-.untitled",
+      "first": "Потоки",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:53",
+      "other": "Напишите сообщение... @ для упоминания",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/kanban/kanban-types.ts:69"
+    },
+    {
+      "ns": "common",
+      "path": "ReportsHub.untitled",
+      "first": "Центр отчётов",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/ReportsHubTypes.ts:103",
+      "other": "Название",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/ReportsHubTypes.ts:119"
+    },
+    {
+      "ns": "warehouse",
+      "path": "warehouse-.untitled",
+      "first": "Каталог Складов",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/warehouse/warehouse-types.ts:197",
+      "other": "Управление складами, зонами, ячейками и перемещениями",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/warehouse/warehouse-types.ts:198"
+    },
+    {
+      "ns": "warehouse",
+      "path": "warehouse-.untitled",
+      "first": "Каталог Складов",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/warehouse/warehouse-types.ts:197",
+      "other": "Название",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/warehouse/warehouse-types.ts:210"
+    },
+    {
+      "ns": "warehouse",
+      "path": "WarehouseIntegrations.untitled",
+      "first": "Интеграции Склада",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/WarehouseIntegrationsTypes.ts:105",
+      "other": "Управление материалами для заказов",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/WarehouseIntegrationsTypes.ts:111"
+    },
+    {
+      "ns": "warehouse",
+      "path": "WarehouseIntegrations.untitled",
+      "first": "Интеграции Склада",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/WarehouseIntegrationsTypes.ts:105",
+      "other": "Заказы на закупку и повторные заказы",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/WarehouseIntegrationsTypes.ts:121"
+    },
+    {
+      "ns": "warehouse",
+      "path": "WarehouseIntegrations.untitled",
+      "first": "Интеграции Склада",
+      "firstAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/WarehouseIntegrationsTypes.ts:105",
+      "other": "Оценка склада и бухгалтерия",
+      "otherAt": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/pages/WarehouseIntegrationsTypes.ts:135"
+    }
+  ],
+  "samples": [
+    {
+      "key": "common.AdvancedFilters.tavsifIxtiyoriy",
+      "file": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/AdvancedFilters.tsx",
+      "line": 415,
+      "uzFallback": "Tavsif (ixtiyoriy)"
+    },
+    {
+      "key": "common.EmployeeDetailDialog.kunlikFaollikSonggi7Kun",
+      "file": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/camera/EmployeeDetailDialog.tsx",
+      "line": 263,
+      "uzFallback": "Kunlik Faollik (So'nggi 7 kun)"
+    },
+    {
+      "key": "common.EmployeeDetailDialog.jamiHodisalar",
+      "file": "C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/artifacts/erp-dashboard/src/components/camera/EmployeeDetailDialog.tsx",
+      "line": 273,
+      "uzFallback": "Jami hodisalar"
+    }
+  ]
+}

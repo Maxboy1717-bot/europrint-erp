@@ -25,6 +25,7 @@ import {
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 export function CameraTriggerRules() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -116,8 +117,7 @@ export function CameraTriggerRules() {
             Per-kamera Trigger Qoidalari (TZ-18)
           </CardTitle>
           <CardDescription>
-            Har bir kamera uchun aniqlash turi → modul alerti → harakatni sozlang.
-            Bu qoidalar AI kamera tahlili natijalariga asoslanib avtomatik alertlar yaratadi.
+            {tLabel("common.CameraTriggerRules.tsx.harBirKameraUchunAniqlashTuri", "Har bir kamera uchun aniqlash turi → modul alerti → harakatni sozlang.\r\n            Bu qoidalar AI kamera tahlili natijalariga asoslanib avtomatik alertlar yaratadi.")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

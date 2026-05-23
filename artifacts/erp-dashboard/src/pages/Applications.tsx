@@ -23,6 +23,7 @@ import { TemplatesTable, ResponsesTable } from "./ApplicationsTable";
 import { ReviewDialog } from "./ApplicationsDialogs";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from "@/lib/i18n/tLabel";
 export default function Applications() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -85,12 +86,12 @@ export default function Applications() {
   // Mutations
   const createApplicationMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      if (!userId) throw new Error("Autentifikatsiya talab qilinadi");
+      if (!userId) throw new Error(tLabel('common.autentifikatsiyaTalabQilinadi', "Autentifikatsiya talab qilinadi"));
       return apiRequest("POST", "/api/applications", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/applications"] });
-      toast({ title: "Ariza shablon yaratildi", description: "Xodimlar endi arizani to'ldirishlari mumkin" });
+      toast({ title: tLabel('common.arizaShablonYaratildi', "Ariza shablon yaratildi"), description: "Xodimlar endi arizani to'ldirishlari mumkin" });
       resetForm();
     },
     onError: (error: Error) => {
@@ -100,7 +101,7 @@ export default function Applications() {
 
   const deleteApplicationMutation = useMutation({
     mutationFn: async (id: string) => {
-      if (!userId) throw new Error("Autentifikatsiya talab qilinadi");
+      if (!userId) throw new Error(tLabel('common.autentifikatsiyaTalabQilinadi', "Autentifikatsiya talab qilinadi"));
       return apiRequest("DELETE", `/api/applications/${id}`);
     },
     onSuccess: () => {
@@ -114,12 +115,12 @@ export default function Applications() {
 
   const updateResponseMutation = useMutation({
     mutationFn: async ({ id, status, notes, response, assignedTo: at }: UpdateResponsePayload) => {
-      if (!userId) throw new Error("Autentifikatsiya talab qilinadi");
+      if (!userId) throw new Error(tLabel('common.autentifikatsiyaTalabQilinadi', "Autentifikatsiya talab qilinadi"));
       return apiRequest("PATCH", `/api/application-responses/${id}`, { status, notes, response, assignedTo: at, reviewedBy: userId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/application-responses"] });
-      toast({ title: "Ariza yangilandi" });
+      toast({ title: tLabel('common.arizaYangilandi', "Ariza yangilandi") });
       setReviewDialogOpen(false);
       setSelectedResponse(null);
       setReviewNotes("");
@@ -151,7 +152,7 @@ export default function Applications() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) { toast({ title: "Xatolik", description: "Autentifikatsiya talab qilinadi", variant: "destructive" }); return; }
+    if (!userId) { toast({ title: "Xatolik", description: tLabel('common.autentifikatsiyaTalabQilinadi', "Autentifikatsiya talab qilinadi"), variant: "destructive" }); return; }
     const result = applicationSchema.safeParse({ title, questions });
     if (!result.success) {
       const msg = result.error.errors.map((err) => err.message).join(", ");

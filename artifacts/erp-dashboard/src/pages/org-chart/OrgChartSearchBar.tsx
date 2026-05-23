@@ -9,6 +9,7 @@ import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { tLabel } from "@/lib/i18n/tLabel";
+import { useTranslation } from '@/lib/i18n';
 
 interface Props {
   value: string;
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function OrgChartSearchBar({ value, onChange, matchCount }: Props) {
+  const { t } = useTranslation("common");
   const hasQuery = value.trim().length > 0;
   return (
     <div className="flex items-center gap-2 mb-4" data-testid="orgchart-search-wrapper">
@@ -49,7 +51,7 @@ export function OrgChartSearchBar({ value, onChange, matchCount }: Props) {
             size="icon"
             onClick={() => onChange('')}
             data-testid="orgchart-search-clear"
-            aria-label="Qidiruvni tozalash"
+            aria-label={t("qidiruvniTozalash")}
           >
             <X className="h-4 w-4" />
           </Button>

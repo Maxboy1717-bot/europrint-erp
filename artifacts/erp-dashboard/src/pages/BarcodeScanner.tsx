@@ -19,6 +19,7 @@ import { Scan, Package, CheckCircle2, AlertCircle, RotateCcw } from "lucide-reac
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from "@/lib/i18n/tLabel";
 interface ScanResult {
   material?: {
     id: string | number;
@@ -34,7 +35,7 @@ interface ScanResult {
 }
 
 const ACTIONS = [
-  { value: "RECEIVE", label: "Qabul qilish" },
+  { value: "RECEIVE", label: tLabel('common.receive', "Qabul qilish") },
   { value: "ISSUE", label: "Chiqarish" },
   { value: "LOOKUP", label: "Qidirish" },
   { value: "TRANSFER", label: "O'tkazish" },
@@ -80,8 +81,8 @@ export default function BarcodeScanner() {
     },
     onError: () => {
       toast({
-        title: "Kod topilmadi",
-        description: "Iltimos, kodni tekshiring",
+        title: tLabel('common.kodTopilmadi', "Kod topilmadi"),
+        description: tLabel('common.iltimosKodniTekshiring', "Iltimos, kodni tekshiring"),
         variant: "destructive",
       });
     },

@@ -13,14 +13,14 @@ import {
 } from "@/components/ui/tooltip";
 import { usePermission } from "@/hooks/usePermission";
 import type { Permission } from "@/lib/permissions";
+import { tLabel } from '@/lib/i18n/tLabel';
 
 /**
  * PermissionButton — ruxsat (permission) bilan birlashtirilgan tugma.
  *
  * Foydalanish:
  *   <PermissionButton permission="employee.delete" onClick={...}>
- *     O'chirish
- *   </PermissionButton>
+ {tLabel("common.PermissionButton.tsx.ochirish", "*     O'chirish\r\n *")}   </PermissionButton>
  *
  * - Foydalanuvchida ruxsat bo'lmasa: tugma `disabled`, hover'da Tooltip ko'rsatadi.
  * - Tooltip+disabled birga ishlaydi (pointer-events:none ni hal qiladi).

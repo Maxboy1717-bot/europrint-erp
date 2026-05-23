@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, RotateCcw } from "lucide-react";
 import { PosTransaction } from "./types";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { tLabel } from '@/lib/i18n/tLabel';
 
 interface TransactionHistoryProps {
   transactions: PosTransaction[];
@@ -110,8 +111,8 @@ export function TransactionHistory({
       onOpenChange={(open) => { if (!open) setConfirmRefundId(null); }}
       title={t("tranzaksiyaniQaytarish")}
       description={t("ushbuTranzaksiyaniQaytarishniTasdiqlaysizmi")}
-      confirmText="Qaytarish"
-      cancelText="Bekor qilish"
+      confirmText={tLabel("common.TransactionHistory.tsx.qaytarish", "Qaytarish")}
+      cancelText={tLabel("common.TransactionHistory.tsx.bekorQilish", "Bekor qilish")}
       variant="destructive"
       onConfirm={() => { if (confirmRefundId !== null) refundMutation.mutate(confirmRefundId); }}
     />

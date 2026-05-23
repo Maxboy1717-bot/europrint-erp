@@ -18,6 +18,7 @@ import { CreateWorkflowDialog, ActionWorkflowDialog } from "./ApprovalWorkflowPa
 import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from "@/lib/i18n/tLabel";
 export default function ApprovalWorkflowPage() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -69,7 +70,7 @@ export default function ApprovalWorkflowPage() {
       setReason("");
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Tasdiqlashda xatolik", variant: "destructive" });
+      toast({ title: "Xatolik", description: tLabel('common.tasdiqlashdaXatolik', "Tasdiqlashda xatolik"), variant: "destructive" });
     },
   });
 
@@ -79,12 +80,12 @@ export default function ApprovalWorkflowPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/approval-workflow"] });
-      toast({ title: "Rad etildi" });
+      toast({ title: tLabel('common.radEtildi', "Rad etildi") });
       setActionDialog(null);
       setReason("");
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Rad etishda xatolik", variant: "destructive" });
+      toast({ title: "Xatolik", description: tLabel('common.radEtishdaXatolik', "Rad etishda xatolik"), variant: "destructive" });
     },
   });
 
@@ -100,7 +101,7 @@ export default function ApprovalWorkflowPage() {
     if (actionDialog.type === "approve") {
       approveMutation.mutate({ id: actionDialog.id });
     } else {
-      if (!reason.trim()) { toast({ title: "Sabab kiriting", variant: "destructive" }); return; }
+      if (!reason.trim()) { toast({ title: tLabel('common.sababKiriting2', "Sabab kiriting"), variant: "destructive" }); return; }
       rejectMutation.mutate({ id: actionDialog.id, reason });
     }
   };

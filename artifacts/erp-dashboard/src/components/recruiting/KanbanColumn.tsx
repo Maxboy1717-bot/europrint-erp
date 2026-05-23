@@ -4,6 +4,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { Badge } from "@/components/ui/badge";
 import type { FunnelStage } from "@/components/recruiting/types";
 import { getPhaseForStage } from "@/components/recruiting/helpers";
+import { tLabel } from '@/lib/i18n/tLabel';
 
 export interface KanbanColumnProps {
   stage: { key: FunnelStage; label: string; accent: string };
@@ -74,7 +75,7 @@ export function KanbanColumn({
         >
           {isLoading && (
             <div className="text-xs text-muted-foreground text-center py-4">
-              Yuklanmoqda...
+              {tLabel("common.KanbanColumn.tsx.yuklanmoqda", "Yuklanmoqda...")}
             </div>
           )}
           {children}
@@ -83,7 +84,7 @@ export function KanbanColumn({
               data-testid={`column-empty-${stage.key}`}
               className="text-xs text-muted-foreground text-center py-4 opacity-50"
             >
-              Bo'sh
+              {tLabel("common.KanbanColumn.tsx.bosh", "Bo'sh")}
             </div>
           )}
         </SortableContext>

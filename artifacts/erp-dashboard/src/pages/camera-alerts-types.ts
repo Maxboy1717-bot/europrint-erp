@@ -20,7 +20,7 @@ export interface CameraAlert {
   createdAt: string;
 }
 
-export type Language = "uz" | "ru";
+export type Language = "uz" | "uz-cyr" | "ru";
 
 export const alertTypeIcons: Record<string, typeof Shield> = {
   safety: Shield,
@@ -30,12 +30,12 @@ export const alertTypeIcons: Record<string, typeof Shield> = {
   system: AlertTriangle,
 };
 
-export const alertTypeLabels: Record<string, { uz: string; ru: string }> = {
-  safety: { uz: "Xavfsizlik", ru: "Безопасность" },
-  quality: { uz: "Sifat", ru: "Качество" },
-  machine: { uz: "Mashina", ru: "Машина" },
-  productivity: { uz: "Samaradorlik", ru: "Производительность" },
-  system: { uz: "Tizim", ru: "Система" },
+export const alertTypeLabels: Record<string, { uz: string; 'uz-cyr': string; ru: string }> = {
+  safety: { uz: "Xavfsizlik", 'uz-cyr': "Хавфсизлик", ru: "Безопасность" },
+  quality: { uz: "Sifat", 'uz-cyr': "Сифат", ru: "Качество" },
+  machine: { uz: "Mashina", 'uz-cyr': "Машина", ru: "Машина" },
+  productivity: { uz: "Samaradorlik", 'uz-cyr': "Самарадорлик", ru: "Производительность" },
+  system: { uz: "Tizim", 'uz-cyr': "Тизим", ru: "Система" },
 };
 
 export const severityColors: Record<string, string> = {
@@ -45,11 +45,11 @@ export const severityColors: Record<string, string> = {
   critical: "bg-red-100 text-red-800",
 };
 
-export const severityLabels: Record<string, { uz: string; ru: string }> = {
-  low: { uz: "Past", ru: "Низкий" },
-  medium: { uz: "O'rta", ru: "Средний" },
-  high: { uz: "Yuqori", ru: "Высокий" },
-  critical: { uz: "Kritik", ru: "Критический" },
+export const severityLabels: Record<string, { uz: string; 'uz-cyr': string; ru: string }> = {
+  low: { uz: "Past", 'uz-cyr': "Паст", ru: "Низкий" },
+  medium: { uz: "O'rta", 'uz-cyr': "Ўрта", ru: "Средний" },
+  high: { uz: "Yuqori", 'uz-cyr': "Юқори", ru: "Высокий" },
+  critical: { uz: "Kritik", 'uz-cyr': "Критик", ru: "Критический" },
 };
 
 export interface AlertTranslations {

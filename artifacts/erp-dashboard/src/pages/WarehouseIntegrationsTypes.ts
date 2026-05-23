@@ -44,7 +44,7 @@ export interface StockValuation {
   byCategory: Record<string, { totalValue: number; itemCount: number }>;
 }
 
-export type Lang = "uz" | "ru";
+export type Lang = "uz" | "uz-cyr" | "ru";
 
 // ─── Translation constants ────────────────────────────────────────────────────
 
@@ -98,6 +98,57 @@ export const translations = {
       ordered: "Buyurtma qilingan",
       approved: "Tasdiqlangan",
       received: "Qabul qilingan",
+    },
+  },
+  'uz-cyr': {
+    title: "Омбор Интегратсиялари",
+    subtitle: tLabel('warehouse.WarehouseIntegrations.ppMmVaFiModullari', "ПП, ММ ва ФИ модуллари билан боғланиш"),
+    languageToggle: "Тилни алмаштириш",
+    refresh: "Янгилаш",
+    pp: {
+      title: tLabel('warehouse.WarehouseIntegrations.ppIshlabChiqarish', "ПП - Ишлаб Чиқариш"),
+      description: tLabel('warehouse.WarehouseIntegrations.buyurtmalarUchunMateriallarBoshqaruvi', "Буюртмалар учун материаллар бошқаруви"),
+      ordersNeedingMaterials: "Материал талаб қилувчи буюртмалар",
+      reserveMaterials: "Материалларни захиралаш",
+      issueMaterials: "Ишлаб чиқаришга бериш",
+      receiveGoods: "Тайёр маҳсулот қабул қилиш",
+      noOrders: "Ҳозирча материал талаб қилувчи буюртмалар ёъқ",
+      viewDetails: "Батафсил кўриш",
+    },
+    mm: {
+      title: "ММ - Таминот",
+      description: tLabel('warehouse.WarehouseIntegrations.xaridBuyurtmalariVaQaytaBuyurtma', "Харид буюртмалари ва қайта буюртма"),
+      pendingDeliveries: "Кутилаётган йетказиб беришлар",
+      reorderSuggestions: "Қайта буюртма тавсиялари",
+      lowStockAlerts: "Кам қолдиқ огоҳлантиришлари",
+      receiveFromPO: "ПОдан қабул қилиш",
+      createPO: "Янги ПО яратиш",
+      noPending: "Кутилаётган йетказиб беришлар ёъқ",
+      noSuggestions: "Қайта буюртма тавсиялари ёъқ",
+      critical: "Критик",
+      high: "Юқори",
+      medium: "Ўртача",
+    },
+    fi: {
+      title: "ФИ - Молия",
+      description: tLabel('warehouse.WarehouseIntegrations.omborQiymatiVaBuxgalteriya', "Омбор қиймати ва бухгалтерия"),
+      stockValuation: "Захира баҳолаш",
+      totalValue: "Жами қиймат",
+      postMovements: "ГЛ га киритиш",
+      inventoryVariance: "Инвентаризатсия фарқлари",
+      recentPostings: "Сўнгги ГЛ ёзувлари",
+      postAll: "Ҳаммасини киритиш",
+      valuationMethod: "Баҳолаш усули",
+      weightedAvg: "Ўртача оғирлик",
+      fifo: "ФИФО",
+    },
+    status: {
+      success: "Муваффақиятли",
+      error: "Хатолик",
+      pending: "Кутилмоқда",
+      ordered: "Буюртма қилинган",
+      approved: "Тасдиқланган",
+      received: "Қабул қилинган",
     },
   },
   ru: {

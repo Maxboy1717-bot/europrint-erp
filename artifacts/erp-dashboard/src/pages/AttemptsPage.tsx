@@ -14,6 +14,7 @@ import { ClipboardList, Trophy } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from "@/lib/i18n/tLabel";
 interface Attempt {
   id: string | number;
   test_id?: string | number;
@@ -44,7 +45,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
   completed:   { label: "Tugallandi", variant: "default"    },
   failed:      { label: "Muvaffaqiyatsiz", variant: "destructive" },
   passed:      { label: "O'tdi",      variant: "default"    },
-  abandoned:   { label: "Tark etildi", variant: "outline"  },
+  abandoned:   { label: tLabel('common.tarkEtildi', "Tark etildi"), variant: "outline"  },
 };
 
 export default function AttemptsPage() {

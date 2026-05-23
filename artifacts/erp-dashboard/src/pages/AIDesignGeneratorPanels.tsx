@@ -17,6 +17,7 @@ import {
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from "@/lib/i18n/tLabel";
 // ─── Status zanjiri komponenti ────────────────────────────────────────────────
 export function StatusChain({ current }: { current: string }) {
   const { t } = useTranslation("common");
@@ -145,9 +146,9 @@ export function ToolingTab() {
     try {
       const result = await apiRequest<Record<string, unknown>>("GET", `/api/design/tooling/${id}/wear-forecast`);
       setForecastData(result);
-      toast({ title: "Eskirish prognozi hisoblandi!" });
+      toast({ title: tLabel('common.eskirishPrognoziHisoblandi', "Eskirish prognozi hisoblandi!") });
     } catch {
-      toast({ title: "Prognoz xatoligi", variant: "destructive" });
+      toast({ title: tLabel('common.prognozXatoligi', "Prognoz xatoligi"), variant: "destructive" });
     } finally {
       setForecastLoading(false);
     }
@@ -248,7 +249,7 @@ export function ToolingTab() {
                     {forecastLoading && forecastId === tool.id ? (
                       <><EPLoader size={12} className="mr-1" />{t("hisoblanmoqda")}</>
                     ) : (
-                      <><AlertCircle className="h-3 w-3 mr-1" />Eskirish Prognozi (AI)</>
+                      <><AlertCircle className="h-3 w-3 mr-1" />{tLabel('common.eskirishPrognoziAi', "Eskirish Prognozi (AI)")}</>
                     )}
                   </Button>
                 </CardContent>

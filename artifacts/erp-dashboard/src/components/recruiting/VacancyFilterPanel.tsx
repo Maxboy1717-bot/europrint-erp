@@ -152,7 +152,7 @@ export function VacancyFilterPanel({
                           }}
                           data-testid={`button-channels-${v.id}`}
                         >
-                          <Globe className="w-2.5 h-2.5" />Kanallar
+                          <Globe className="w-2.5 h-2.5" />{tLabel("common.VacancyFilterPanel.tsx.kanallar", "Kanallar")}
                         </Button>
                         <Button
                           size="sm"
@@ -190,7 +190,7 @@ export function VacancyFilterPanel({
             Filtr: {safeVacancies.find(v => String(v.id) === filterVacancy)?.title}
           </Badge>
           <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setFilterVacancy("all")}>
-            × Tozalash
+            {tLabel("common.VacancyFilterPanel.tsx.tozalash", "× Tozalash")}
           </Button>
         </div>
       )}

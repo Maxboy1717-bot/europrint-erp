@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { AnalyticsStats } from "./analytics/analytics-types";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from "@/lib/i18n/tLabel";
 interface KpiBarProps {
   stats: AnalyticsStats | undefined;
   statsLoading: boolean;
@@ -34,7 +35,7 @@ export function AnalyticsKpiBar({ stats, statsLoading }: KpiBarProps) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4  md:divide-y-0 divide-x-0 md:divide-x  dark:divide-slate-800">
           {([
-            { label: "Jami Xodimlar", value: stats?.totalUsers || 0, desc: "Aktiv foydalanuvchilar", icon: Users, accent: "text-[var(--ep-blue)]", testId: "stat-card-users" },
+            { label: tLabel('common.jamiXodimlar', "Jami Xodimlar"), value: stats?.totalUsers || 0, desc: "Aktiv foydalanuvchilar", icon: Users, accent: "text-[var(--ep-blue)]", testId: "stat-card-users" },
             { label: "Kurslar", value: stats?.totalCourses || 0, desc: "Ta'lim resurslari", icon: BookOpen, accent: "text-[var(--ep-purple)]", testId: "stat-card-courses" },
             { label: "Testlar", value: stats?.totalTests || 0, desc: "Baholash tizimi", icon: Award, accent: "text-[var(--ep-green)]", testId: "stat-card-tests" },
             { label: "O'rtacha Ball", value: `${(stats?.avgTestScore || 0).toFixed(1)}%`, desc: "Test natijalari", icon: TrendingUp, accent: "text-[var(--ep-yellow)]", testId: "stat-card-avg" },

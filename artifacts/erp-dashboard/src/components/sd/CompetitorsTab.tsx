@@ -22,6 +22,7 @@ import { z } from "zod";
 import { Target, BarChart2, Trophy, Plus, Trash2, Swords } from "lucide-react";
 import { KpiCard } from "./helpers";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 export function CompetitorsTab({ customerId, competitors }: { customerId: number; competitors: SdCompetitorsData }) {
   const { t } = useTranslation("common");
@@ -171,8 +172,8 @@ export function CompetitorsTab({ customerId, competitors }: { customerId: number
         onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
         title={t("raqobatchiMalumotiniOchirish")}
         description={t("ushbuRaqobatchiYozuviniOchirishniTasdiqlaysizmi")}
-        confirmText="O'chirish"
-        cancelText="Bekor qilish"
+        confirmText={tLabel("common.CompetitorsTab.tsx.ochirish", "O'chirish")}
+        cancelText={tLabel("common.CompetitorsTab.tsx.bekorQilish", "Bekor qilish")}
         variant="destructive"
         onConfirm={() => { if (confirmDeleteId !== null) deleteMutation.mutate(confirmDeleteId); }}
       />

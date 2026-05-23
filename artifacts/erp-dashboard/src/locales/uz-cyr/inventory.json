@@ -1,0 +1,14 @@
+{
+  "newPlan": "Янги режа",
+  "scheduledFor": "Режалаштирилди",
+  "title": "Сарлавҳа",
+  "plans": "Режалар",
+  "activeCount": "Фаол санаш",
+  "variances": "Фарқлар рўйхати",
+  "planNo": "План Йўқ",
+  "systemQty": "Тизим миқдори",
+  "actualQty": "Ҳақиқий миқдор",
+  "difference": "Фарқ миқдори",
+  "shortage": "Камомад",
+  "surplus": "Ортиқча"
+}

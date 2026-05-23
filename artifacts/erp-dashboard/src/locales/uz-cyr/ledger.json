@@ -1,0 +1,13 @@
+{
+  "title": "Сарлавҳа",
+  "getPdf": "PDF олиш",
+  "totalItems": "Жами элементлар",
+  "totalValue": "Жами Валуе",
+  "expiringSoon": "Муддати тугаётган",
+  "history": "Тарих",
+  "issuedDate": "Иссуед Сана",
+  "returnDeadline": "Қайтариш муддати",
+  "returnItem": "Қайтариладиган элемент",
+  "returnQty": "Қайтариш миқдори",
+  "returnReason": "Қайтариш сабаби"
+}

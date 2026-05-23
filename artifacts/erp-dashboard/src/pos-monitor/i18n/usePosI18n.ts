@@ -5,12 +5,17 @@
 
 import { useState, useCallback, useEffect } from "react";
 import uz from "./uz.json";
+import uzCyr from "./uz-cyr.json";
 import ru from "./ru.json";
 
-type Lang = "uz" | "ru";
+type Lang = "uz" | "uz-cyr" | "ru";
 type DeepRecord = { [key: string]: string | string[] | DeepRecord };
 
-const TRANSLATIONS: Record<Lang, DeepRecord> = { uz: uz as unknown as DeepRecord, ru: ru as unknown as DeepRecord };
+const TRANSLATIONS: Record<Lang, DeepRecord> = {
+  uz: uz as unknown as DeepRecord,
+  'uz-cyr': uzCyr as unknown as DeepRecord,
+  ru: ru as unknown as DeepRecord,
+};
 
 function getNestedValue(obj: DeepRecord, path: string): string {
   const parts = path.split(".");
@@ -36,7 +41,7 @@ export function setGlobalLang(lang: Lang): void {
 export function getGlobalLang(): Lang {
   try {
     const stored = localStorage.getItem("pos_lang") as Lang;
-    if (stored === "uz" || stored === "ru") { _lang = stored; }
+    if (stored === "uz" || stored === "uz-cyr" || stored === "ru") { _lang = stored; }
   } catch { /* noop */ }
   return _lang;
 }
@@ -51,7 +56,8 @@ export function usePosI18n() {
   }, []);
 
   const toggleLang = useCallback(() => {
-    const next: Lang = lang === "uz" ? "ru" : "uz";
+    // 3-way cycle: uz → uz-cyr → ru → uz
+    const next: Lang = lang === "uz" ? "uz-cyr" : lang === "uz-cyr" ? "ru" : "uz";
     setGlobalLang(next);
   }, [lang]);
 

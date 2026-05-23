@@ -4,6 +4,9 @@
  */
 import { Phone, Mail, MessageCircle, Globe, UserCheck, HelpCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { MARKETING_RISK_COLORS } from '@/constants/status';
+/** @deprecated Use MARKETING_RISK_COLORS from '@/constants/status' directly */
+export { MARKETING_RISK_COLORS as RISK_COLORS };
 
 export type Segment = {
   segment: string;
@@ -81,12 +84,7 @@ export const RISK_LABELS: Record<string, string> = {
   critical: "Kritik", high: "Yuqori", medium: "O'rta", low: "Past",
 };
 
-export const RISK_COLORS: Record<string, string> = {
-  critical: "bg-red-100 text-[var(--ep-red)]",
-  high: "bg-orange-100 text-[var(--ep-primary)]",
-  medium: "bg-yellow-100 text-[var(--ep-yellow)]",
-  low: "bg-green-100 text-[var(--ep-green)]",
-};
+// RISK_COLORS re-exported above from '@/constants/status' as MARKETING_RISK_COLORS
 
 export const CHANNEL_ICONS: Record<string, LucideIcon> = {
   phone: Phone,

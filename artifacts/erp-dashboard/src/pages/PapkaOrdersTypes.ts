@@ -23,7 +23,7 @@ export const formSchema = z.object({
 
 export type FormData = z.infer<typeof formSchema>;
 
-export type Lang = "uz" | "ru";
+export type Lang = "uz" | "uz-cyr" | "ru";
 
 export const STATUS_CONFIG: Record<string, { label: string; labelRu: string; className: string }> = {
   new: { label: tLabel('common.PapkaOrders.yangi', "Yangi"), labelRu: "Новый", className: "bg-primary/10 text-primary" },
@@ -63,6 +63,36 @@ export const TRANSLATIONS = {
     totalOrders: "Jami Buyurtmalar",
     activeOrders: "Faol Buyurtmalar",
     completedOrders: "Bajarilgan",
+  },
+  'uz-cyr': {
+    title: "Папка Буюртмалари",
+    addOrder: "Янги Буюртма",
+    search: "Қидириш...",
+    status: "Ҳолати",
+    all: "Ҳаммаси",
+    new: "Янги",
+    planning: "Режалаштириш",
+    production: "Ишлаб чиқариш",
+    completed: "Бажарилди",
+    cancelled: "Бекор қилинди",
+    papkaNo: "Папка №",
+    product: "Маҳсулот",
+    client: "Мижоз",
+    tiraj: "Тираж",
+    orderDate: "Буюртма санаси",
+    deadline: "Тайёр бўлиш",
+    actions: "Амаллар",
+    noOrders: "Буюртмалар топилмади",
+    createOrder: "Янги Буюртма",
+    editOrder: "Буюртмани Таҳрирлаш",
+    save: "Сақлаш",
+    cancel: "Бекор қилиш",
+    notes: "Изоҳлар",
+    productType: "Маҳсулот тури",
+    format: "Формат (А х Б)",
+    totalOrders: "Жами Буюртмалар",
+    activeOrders: "Фаол Буюртмалар",
+    completedOrders: "Бажарилган",
   },
   ru: {
     title: tLabel('common.PapkaOrders.untitled', "Заказы Папок"),

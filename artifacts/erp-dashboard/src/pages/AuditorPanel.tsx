@@ -25,6 +25,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { EPErrorState, EPPageHeader, EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from "@/lib/i18n/tLabel";
 interface AuditorDashboard {
   deletedRecords: number;
   overrides: number;
@@ -71,10 +72,10 @@ export default function AuditorPanel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/europrint-control/deleted-records"] });
       queryClient.invalidateQueries({ queryKey: ["/api/europrint-control/auditor-dashboard"] });
-      toast({ title: "Tiklandi", description: "Yozuv muvaffaqiyatli tiklandi" });
+      toast({ title: "Tiklandi", description: tLabel('common.yozuvMuvaffaqiyatliTiklandi', "Yozuv muvaffaqiyatli tiklandi") });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Yozuvni tiklashda xatolik yuz berdi", variant: "destructive" });
+      toast({ title: "Xatolik", description: tLabel('common.yozuvniTiklashdaXatolikYuzBerdi', "Yozuvni tiklashda xatolik yuz berdi"), variant: "destructive" });
     },
   });
 
@@ -92,7 +93,7 @@ export default function AuditorPanel() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast({ title: "Hisobot yuklandi", description: "Audit hisoboti CSV formatda yuklandi" });
+    toast({ title: tLabel('common.hisobotYuklandi', "Hisobot yuklandi"), description: tLabel('common.auditHisobotiCsvFormatdaYuklandi', "Audit hisoboti CSV formatda yuklandi") });
   };
 
   const { data: dashboard, isLoading: dashboardLoading, isError, error, refetch} = useQuery<AuditorDashboard>({
@@ -133,21 +134,21 @@ export default function AuditorPanel() {
       bgColor: "bg-orange-500/10"
     },
     {
-      title: "Status Qaytarishlar",
+      title: tLabel('common.statusQaytarishlar', "Status Qaytarishlar"),
       value: dashboard?.reversals || 0,
       icon: RotateCcw,
       color: "text-[var(--ep-purple)]",
       bgColor: "bg-purple-500/10"
     },
     {
-      title: "Tekshirish Qoidalari",
+      title: tLabel('common.tekshirishQoidalari', "Tekshirish Qoidalari"),
       value: validationSummary?.totalRules || 0,
       icon: CheckCircle,
       color: "text-[var(--ep-green)]",
       bgColor: "bg-green-500/10"
     },
     {
-      title: "Admin Menyular",
+      title: tLabel('common.adminMenyular', "Admin Menyular"),
       value: Array.isArray(roleMenus) ? roleMenus.length : 0,
       icon: Shield,
       color: "text-[var(--ep-blue)]",
@@ -174,7 +175,7 @@ export default function AuditorPanel() {
             <Download className="h-4 w-4" />
             {t("hisobotYuklabOlish")}
           </Button>
-          <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" onClick={() => { refetch(); toast({ title: "Tekshirish boshlandi", description: "Barcha qoidalar bo'yicha tekshiruv amalga oshirilmoqda" }); }} data-testid="button-start-audit">
+          <Button className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2" onClick={() => { refetch(); toast({ title: tLabel('common.tekshirishBoshlandi', "Tekshirish boshlandi"), description: "Barcha qoidalar bo'yicha tekshiruv amalga oshirilmoqda" }); }} data-testid="button-start-audit">
             <FileSearch className="h-4 w-4" />
             {t("tekshirishBoshlash")}
           </Button>

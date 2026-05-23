@@ -1,0 +1,17 @@
+{
+  "targetWarehouse": "Мақсадли омбор",
+  "priority": "Муҳимлик",
+  "needDate": "Керакли сана",
+  "lines": "Қаторлар сони",
+  "addLine": "Қўшиш Лине",
+  "notePlaceholder": "Изоҳ Плакеҳолдер",
+  "submit": "Юбориш",
+  "newRequest": "Янги сўров",
+  "title": "Сарлавҳа",
+  "myRequests": "Менинг сўровларим",
+  "toApprove": "То Тасдиқлаш",
+  "toFulfill": "Бажариш керак",
+  "approve": "Тасдиқлаш",
+  "reject": "Рад этиш",
+  "fulfill": "Бажариш"
+}

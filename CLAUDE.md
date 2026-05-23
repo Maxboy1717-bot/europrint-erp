@@ -3,6 +3,14 @@
 > Bu fayl Claude Code terminaliga loyihaning arxitekturasi, qoidalari va hozirgi holati
 > haqida to'liq ma'lumot beradi. Har bir vazifani boshlashdan oldin bu faylni o'qing.
 
+> 🛡️ **Dedup / refactor / agent sessiyasidan oldin majburiy o'qish:**
+> [`docs/dedup-safety-rules.md`](docs/dedup-safety-rules.md) — 15 ta xavfsizlik qoidasi
+> (cyclic shim taqiq, tsconfig `dist/cjs/`, nest watch tree-kill bug, PWA SW NetworkOnly,
+> agent overlap, smoke test, va boshqalar). 3 ta oltin qoida:
+> 1. Har o'zgarishdan keyin backend boot tekshirish
+> 2. `git commit` har bosqichda — `git stash` ishlatmaslik
+> 3. Drizzle schema'larda cyclic shim YO'Q — faqat bir tomonli re-export
+
 ---
 
 ## Loyiha Haqida
@@ -639,6 +647,14 @@ Quyidagi routelar hali `StubPage.tsx` ko'rsatadi — real sahifaga almashtirilis
 | `reviewer-missing-endpoints.sh` | API endpoints | ✅ PASS |
 | `reviewer-slice-safety.sh` | Redux slices | ✅ PASS |
 | `reviewer-security.sh` | Xavfsizlik | ✅ PASS |
+
+---
+
+## Sessiya Tarixi
+
+| Sana | Sessiya | Natija |
+|------|---------|--------|
+| 2026-05-22 | 20-agent 2-to'lqin duplikat tozalash va to'liq verifikatsiya | lib/db build PASS; BE tsc 0; FE tsc 0 (2 xato tuzatildi: api-state.tsx default param, AdvancedFiltersDialogs.tsx Course.id cast); Orphan §1=354, §2=427; shared/db pgTable=671; FE canonical types/constants/shared mavjud |
 
 ---
 

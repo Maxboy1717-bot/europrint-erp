@@ -18,6 +18,7 @@ import {
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from "@/lib/i18n/tLabel";
 // ─── Main Page Component ──────────────────────────────────────────────────────
 export default function AIProductionPlanning() {
   const { t } = useTranslation("common");
@@ -66,7 +67,7 @@ export default function AIProductionPlanning() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/plans"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/dashboard"] });
-      toast({ title: "AI Reja yaratildi", description: "Yangi reja muvaffaqiyatli yaratildi" });
+      toast({ title: tLabel('common.aiRejaYaratildi', "AI Reja yaratildi"), description: tLabel('common.yangiRejaMuvaffaqiyatliYaratildi', "Yangi reja muvaffaqiyatli yaratildi") });
     },
     onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
   });
@@ -78,7 +79,7 @@ export default function AIProductionPlanning() {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/plans"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/dashboard"] });
       setShowDetail(false); setShowOverride(false);
-      toast({ title: "Tasdiqlandi", description: "Reja tasdiqlandi va Telegram yuborildi" });
+      toast({ title: "Tasdiqlandi", description: tLabel('common.rejaTasdiqlandiVaTelegramYuborildi', "Reja tasdiqlandi va Telegram yuborildi") });
     },
   });
 
@@ -88,7 +89,7 @@ export default function AIProductionPlanning() {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/plans"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/dashboard"] });
       setShowDetail(false);
-      toast({ title: "Rad etildi" });
+      toast({ title: tLabel('common.radEtildi', "Rad etildi") });
     },
   });
 
@@ -98,7 +99,7 @@ export default function AIProductionPlanning() {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/plans"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/dashboard"] });
       setShowDetail(false);
-      toast({ title: "Bajarilmoqda", description: "Machine tasks yaratildi va Telegram yuborildi" });
+      toast({ title: "Bajarilmoqda", description: tLabel('common.machineTasksYaratildiVaTelegramYuborildi', "Machine tasks yaratildi va Telegram yuborildi") });
     },
   });
 
@@ -106,7 +107,7 @@ export default function AIProductionPlanning() {
     mutationFn: (id: string) => apiRequest("POST", `/api/ai-planning/decisions/${id}/accept`),
     onSuccess: () => {
       if (selectedPlan) queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/plans", selectedPlan.id] });
-      toast({ title: "Qaror qabul qilindi" });
+      toast({ title: tLabel('common.qarorQabulQilindi', "Qaror qabul qilindi") });
     },
   });
 
@@ -116,7 +117,7 @@ export default function AIProductionPlanning() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/plans"] });
       setShowReschedule(false); setRescheduleReason("");
-      toast({ title: "Qayta rejalashtirildi", description: "Barcha buyurtmalar 2 soat kechiktirildi" });
+      toast({ title: tLabel('common.qaytaRejalashtirildi', "Qayta rejalashtirildi"), description: tLabel('common.barchaBuyurtmalar2SoatKechiktirildi', "Barcha buyurtmalar 2 soat kechiktirildi") });
     },
     onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
   });
@@ -136,7 +137,7 @@ export default function AIProductionPlanning() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-planning/config"] });
       setShowConfig(false);
-      toast({ title: "Sozlamalar saqlandi" });
+      toast({ title: tLabel('common.sozlamalarSaqlandi', "Sozlamalar saqlandi") });
     },
   });
 
@@ -151,10 +152,10 @@ export default function AIProductionPlanning() {
   };
 
   const stats = [
-    { label: "Faol rejalar",              value: dashboard?.activePlans ?? 0,           icon: Zap },
+    { label: tLabel('common.faolRejalar', "Faol rejalar"),              value: dashboard?.activePlans ?? 0,           icon: Zap },
     { label: "O'rtacha ishonch",           value: `${dashboard?.avgConfidence ?? 0}%`,   icon: Target },
-    { label: "Avto-tasdiqlangan",          value: `${dashboard?.autoApprovedPct ?? 0}%`, icon: ShieldCheck },
-    { label: "Rejalashtirilgan buyurtmalar", value: dashboard?.totalOrdersScheduled ?? 0, icon: BarChart3 },
+    { label: tLabel('common.avtoTasdiqlangan', "Avto-tasdiqlangan"),          value: `${dashboard?.autoApprovedPct ?? 0}%`, icon: ShieldCheck },
+    { label: tLabel('common.rejalashtirilganBuyurtmalar', "Rejalashtirilgan buyurtmalar"), value: dashboard?.totalOrdersScheduled ?? 0, icon: BarChart3 },
   ];
 
   if (isError) return <EPErrorState onRetry={refetch}  error={error} />;

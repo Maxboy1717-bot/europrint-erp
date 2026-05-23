@@ -1,0 +1,4430 @@
+[
+  [
+    "uz",
+    "admin",
+    "dashboard",
+    "Admin paneli"
+  ],
+  [
+    "uz",
+    "admin",
+    "validate.cardLabel",
+    "Card Yorliq"
+  ],
+  [
+    "uz",
+    "ai",
+    "askQuestion",
+    "Savol bering..."
+  ],
+  [
+    "uz",
+    "ai",
+    "forecastDesc",
+    "Croston/TSB sporadic demand · Ensemble (EMA+HW+Croston)"
+  ],
+  [
+    "uz",
+    "ai",
+    "seasonLength",
+    "Mavsum uzunligi (s)"
+  ],
+  [
+    "uz",
+    "ai",
+    "ci95Upper",
+    "95% CI yuqori"
+  ],
+  [
+    "uz",
+    "ai",
+    "ci95Lower",
+    "95% CI quyi"
+  ],
+  [
+    "uz",
+    "ai",
+    "ci80Upper",
+    "80% CI yuqori"
+  ],
+  [
+    "uz",
+    "ai",
+    "ci80Lower",
+    "80% CI quyi"
+  ],
+  [
+    "uz",
+    "ai",
+    "agentVisionQc",
+    "Vision QC"
+  ],
+  [
+    "uz",
+    "ai",
+    "demandForecast.next1m",
+    "Next 1m"
+  ],
+  [
+    "uz",
+    "ai",
+    "demandForecast.next3m",
+    "Next 3m"
+  ],
+  [
+    "uz",
+    "ai",
+    "demandForecast.avgConfidence",
+    "avg Confidence"
+  ],
+  [
+    "uz",
+    "aisha",
+    "listen",
+    "Gapiring"
+  ],
+  [
+    "uz",
+    "aisha",
+    "approval.voiceYes",
+    "\"Ha\" deb tasdiqlang"
+  ],
+  [
+    "uz",
+    "auth",
+    "sessionExpired",
+    "Sessiya tugadi, qayta kiring"
+  ],
+  [
+    "uz",
+    "auth",
+    "enterEmail",
+    "Email kiriting"
+  ],
+  [
+    "uz",
+    "auth",
+    "token.expired",
+    "Sessiya muddati tugadi. Qayta kiring."
+  ],
+  [
+    "uz",
+    "common",
+    "exportToExcel",
+    "Excel ga eksport"
+  ],
+  [
+    "uz",
+    "common",
+    "tip4",
+    "Ovozli javob bering"
+  ],
+  [
+    "uz",
+    "common",
+    "k1Step",
+    "1 && step"
+  ],
+  [
+    "uz",
+    "common",
+    "sidebar",
+    "Yon panel"
+  ],
+  [
+    "uz",
+    "common",
+    "usersProducts",
+    "users, products..."
+  ],
+  [
+    "uz",
+    "common",
+    "k100AuditQamrovi",
+    "100% audit qamrovi"
+  ],
+  [
+    "uz",
+    "common",
+    "k404DeadButton",
+    "404, dead button"
+  ],
+  [
+    "uz",
+    "common",
+    "customer001",
+    "customer-001"
+  ],
+  [
+    "uz",
+    "common",
+    "invoiceContract",
+    "invoice, contract..."
+  ],
+  [
+    "uz",
+    "common",
+    "newInProgressC0",
+    "NEW, IN_PROGRESS, C0:NEW..."
+  ],
+  [
+    "uz",
+    "common",
+    "statusTitleBudget",
+    "status, title, budget..."
+  ],
+  [
+    "uz",
+    "common",
+    "marketingFunnel",
+    "Marketing voronkasi"
+  ],
+  [
+    "uz",
+    "common",
+    "mediaOav",
+    "Media / OAV"
+  ],
+  [
+    "uz",
+    "common",
+    "prMedia",
+    "PR & Media"
+  ],
+  [
+    "uz",
+    "common",
+    "vendorKodi",
+    "Vendor kodi *"
+  ],
+  [
+    "uz",
+    "common",
+    "k10SubNavigation",
+    "10. Pastki navigatsiya"
+  ],
+  [
+    "uz",
+    "common",
+    "k6CardWithHeader",
+    "6. Sarlavhali karta"
+  ],
+  [
+    "uz",
+    "common",
+    "mrpRun202401",
+    "MRP Run - 2024-01"
+  ],
+  [
+    "uz",
+    "common",
+    "k1BilimDarajasi",
+    "1. Bilim darajasi"
+  ],
+  [
+    "uz",
+    "common",
+    "moliyaviyYordam",
+    "🎁 Moliyaviy yordam"
+  ],
+  [
+    "uz",
+    "common",
+    "savolTuri",
+    "Savol turi *"
+  ],
+  [
+    "uz",
+    "common",
+    "texnikaXavfsizligiTesti",
+    "Texnika xavfsizligi testi"
+  ],
+  [
+    "uz",
+    "common",
+    "tugashSanasi",
+    "⏰ Tugash sanasi"
+  ],
+  [
+    "uz",
+    "common",
+    "xabarYozing",
+    "Xabar yozing..."
+  ],
+  [
+    "uz",
+    "common",
+    "masalanMarketingJamoasi",
+    "Masalan: Marketing jamoasi"
+  ],
+  [
+    "uz",
+    "common",
+    "xonaQidiring",
+    "Xona qidiring..."
+  ],
+  [
+    "uz",
+    "common",
+    "savolKiriting",
+    "Savol kiriting..."
+  ],
+  [
+    "uz",
+    "common",
+    "izohYozing",
+    "Izoh yozing..."
+  ],
+  [
+    "uz",
+    "common",
+    "masalanDirektorBuxgalter",
+    "masalan: Direktor, Buxgalter"
+  ],
+  [
+    "uz",
+    "common",
+    "masalanOffsetBosmaA3Format",
+    "Masalan: offset bosma, A3 format, 1000 dona"
+  ],
+  [
+    "uz",
+    "common",
+    "strategikSavolYozing",
+    "Strategik savol yozing..."
+  ],
+  [
+    "uz",
+    "common",
+    "kompaniyaHolatiYuklanmadi",
+    "Kompaniya holati yuklanmadi"
+  ],
+  [
+    "uz",
+    "common",
+    "idealVsHaqiqat",
+    "Ideal vs Haqiqat"
+  ],
+  [
+    "uz",
+    "common",
+    "reyting",
+    "Reyting bali"
+  ],
+  [
+    "uz",
+    "common",
+    "boshDaftarHujjatlari",
+    "Bosh Daftar Hujjatlari"
+  ],
+  [
+    "uz",
+    "common",
+    "quickRatio",
+    "Quick Ratio"
+  ],
+  [
+    "uz",
+    "common",
+    "debtToEquity",
+    "Debt to Equity"
+  ],
+  [
+    "uz",
+    "common",
+    "debtToAssets",
+    "Debt to Assets"
+  ],
+  [
+    "uz",
+    "common",
+    "faolOffboardingJarayonlari",
+    "Faol Offboarding Jarayonlari"
+  ],
+  [
+    "uz",
+    "common",
+    "jpegPngWebp",
+    "JPEG, PNG, WebP"
+  ],
+  [
+    "uz",
+    "common",
+    "masalanMarketingMenejer",
+    "Masalan: Marketing menejer"
+  ],
+  [
+    "uz",
+    "common",
+    "tizimTavsiyaBersin",
+    "Tizim tavsiya bersin"
+  ],
+  [
+    "uz",
+    "common",
+    "masalanMarketingMenejeri",
+    "masalan: Marketing menejeri"
+  ],
+  [
+    "uz",
+    "common",
+    "blokALavozimTahlili",
+    "Blok A: Lavozim tahlili"
+  ],
+  [
+    "uz",
+    "common",
+    "blokDToolTestTalablari",
+    "Blok D: TOOL TEST Talablari"
+  ],
+  [
+    "uz",
+    "common",
+    "blokETajribaBilim",
+    "Blok E: Tajriba & Bilim"
+  ],
+  [
+    "uz",
+    "common",
+    "k5XizmatSafari",
+    "5. Xizmat safari"
+  ],
+  [
+    "uz",
+    "common",
+    "k6SinovMuddati",
+    "6. Sinov muddati"
+  ],
+  [
+    "uz",
+    "common",
+    "k9AsosiyMaosh",
+    "9. Asosiy maosh"
+  ],
+  [
+    "uz",
+    "common",
+    "noutbukCrmMaxsusKiyim",
+    "Noutbuk, CRM, maxsus kiyim..."
+  ],
+  [
+    "uz",
+    "common",
+    "sinovDavriKuzatuvi",
+    "Sinov Davri Kuzatuvi"
+  ],
+  [
+    "uz",
+    "common",
+    "k2Yomon",
+    "2 — 😐 Yomon"
+  ],
+  [
+    "uz",
+    "common",
+    "testNatijalariTendensiyasi",
+    "Test natijalari tendensiyasi"
+  ],
+  [
+    "uz",
+    "common",
+    "kursKodi",
+    "Kurs kodi *"
+  ],
+  [
+    "uz",
+    "common",
+    "yutuqlariMukofotlariSertifikatlari",
+    "Yutuqlari, mukofotlari, sertifikatlari..."
+  ],
+  [
+    "uz",
+    "common",
+    "scanBarcodeToAddProducts",
+    "Scan barcode to add products"
+  ],
+  [
+    "uz",
+    "common",
+    "topDefektTurlari",
+    "Top Defekt Turlari"
+  ],
+  [
+    "uz",
+    "common",
+    "cvMezonlari52",
+    "CV Mezonlari №52"
+  ],
+  [
+    "uz",
+    "common",
+    "rekruterIzohiYozing",
+    "Rekruter izohi yozing..."
+  ],
+  [
+    "uz",
+    "common",
+    "blokDToolTestTalablari1",
+    "Blok D: TOOL TEST talablari"
+  ],
+  [
+    "uz",
+    "common",
+    "segment",
+    "Segment turi"
+  ],
+  [
+    "uz",
+    "common",
+    "leedFunnelTahlili",
+    "Leed funnel tahlili"
+  ],
+  [
+    "uz",
+    "common",
+    "kreditLimitiHolati",
+    "Kredit limiti holati"
+  ],
+  [
+    "uz",
+    "common",
+    "displaysTheMobileSidebar",
+    "Displays the mobile sidebar."
+  ],
+  [
+    "uz",
+    "common",
+    "toggleSidebar3",
+    "Toggle Sidebar"
+  ],
+  [
+    "uz",
+    "common",
+    "barcodeLabel",
+    "🏷️ Barcode Label"
+  ],
+  [
+    "uz",
+    "common",
+    "hozirgiZaxiraDavri",
+    "Hozirgi zaxira davri"
+  ],
+  [
+    "uz",
+    "common",
+    "aktivKodi",
+    "Aktiv kodi *"
+  ],
+  [
+    "uz",
+    "common",
+    "aktivTuri",
+    "Aktiv turi *"
+  ],
+  [
+    "uz",
+    "common",
+    "hisoblashTuri",
+    "Hisoblash turi *"
+  ],
+  [
+    "uz",
+    "common",
+    "auditConsole100Qamrovli",
+    "AUDIT CONSOLE — 100% Qamrovli"
+  ],
+  [
+    "uz",
+    "common",
+    "auditYozuvTafsilotlari",
+    "Audit Yozuv Tafsilotlari"
+  ],
+  [
+    "uz",
+    "common",
+    "action1",
+    "Action:"
+  ],
+  [
+    "uz",
+    "common",
+    "entity",
+    "Entity:"
+  ],
+  [
+    "uz",
+    "common",
+    "actionTuri",
+    "Action turi"
+  ],
+  [
+    "uz",
+    "common",
+    "entityTuri",
+    "Entity turi"
+  ],
+  [
+    "uz",
+    "common",
+    "orderInvoicePayment",
+    "Order → Invoice → Payment → ..."
+  ],
+  [
+    "uz",
+    "common",
+    "k11TizimPasporti",
+    "1.1 Tizim pasporti"
+  ],
+  [
+    "uz",
+    "common",
+    "k12FrontendBackendMosligi",
+    "1.2 Frontend ↔ Backend mosligi"
+  ],
+  [
+    "uz",
+    "common",
+    "muammoTavsifi",
+    "• Muammo tavsifi"
+  ],
+  [
+    "uz",
+    "common",
+    "k33PeriodClose",
+    "3.3 Period close"
+  ],
+  [
+    "uz",
+    "common",
+    "kengQamrovliDastur",
+    "Keng qamrovli dastur"
+  ],
+  [
+    "uz",
+    "common",
+    "welcomeDayTadbirlari",
+    "Welcome Day tadbirlari"
+  ],
+  [
+    "uz",
+    "common",
+    "masalanKonferensiyaZali3Qavat",
+    "Masalan: Konferensiya zali, 3-qavat"
+  ],
+  [
+    "uz",
+    "common",
+    "direktorBrifing",
+    "Direktor brifing"
+  ],
+  [
+    "uz",
+    "common",
+    "brakTrendKarantinAiDefekt",
+    "Brak trend + karantin + AI defekt aniqlash"
+  ],
+  [
+    "uz",
+    "common",
+    "leadSkoring",
+    "Lead Skoring"
+  ],
+  [
+    "uz",
+    "common",
+    "aiLeadSkoring",
+    "AI Lead Skoring"
+  ],
+  [
+    "uz",
+    "common",
+    "revisionTarixi",
+    "Revision tarixi"
+  ],
+  [
+    "uz",
+    "common",
+    "revisionTarixi1",
+    "Revision Tarixi"
+  ],
+  [
+    "uz",
+    "common",
+    "fraudBaholashNatijasi",
+    "Fraud Baholash Natijasi"
+  ],
+  [
+    "uz",
+    "common",
+    "naqdBankKarta",
+    "Naqd, bank, karta..."
+  ],
+  [
+    "uz",
+    "common",
+    "byudjetFarqiTahlili",
+    "Byudjet Farqi Tahlili"
+  ],
+  [
+    "uz",
+    "common",
+    "nomzodIdKiriting",
+    "Nomzod ID kiriting"
+  ],
+  [
+    "uz",
+    "common",
+    "qaytaRejalashSababi",
+    "Qayta rejalash sababi..."
+  ],
+  [
+    "uz",
+    "common",
+    "oddiyTestImtihonlari",
+    "Oddiy Test Imtihonlari"
+  ],
+  [
+    "uz",
+    "common",
+    "discriminatsiyaIndeksi",
+    "🎯 Discriminatsiya Indeksi"
+  ],
+  [
+    "uz",
+    "common",
+    "sessionStatistikasi",
+    "⏱️ Session Statistikasi"
+  ],
+  [
+    "uz",
+    "common",
+    "engYuqoriBall",
+    "Eng Yuqori Ball"
+  ],
+  [
+    "uz",
+    "common",
+    "ballTaqsimoti",
+    "📊 Ball Taqsimoti"
+  ],
+  [
+    "uz",
+    "common",
+    "testNatijalari",
+    "📊 Test Natijalari"
+  ],
+  [
+    "uz",
+    "common",
+    "savolTuriTaqsimoti",
+    "❓ Savol Turi Taqsimoti"
+  ],
+  [
+    "uz",
+    "common",
+    "performanceMatrix",
+    "🎯 Performance Matrix"
+  ],
+  [
+    "uz",
+    "common",
+    "kalendarTadbirlariStatistikasi",
+    "Kalendar tadbirlari statistikasi"
+  ],
+  [
+    "uz",
+    "common",
+    "statistikaAnalitika",
+    "Statistika & Analitika"
+  ],
+  [
+    "uz",
+    "common",
+    "leaderboard",
+    "Reyting jadvali"
+  ],
+  [
+    "uz",
+    "common",
+    "action2",
+    "Action"
+  ],
+  [
+    "uz",
+    "common",
+    "auditYozuvTafsiloti",
+    "Audit yozuv tafsiloti"
+  ],
+  [
+    "uz",
+    "common",
+    "zplZebraZplIi",
+    "ZPL — Zebra ZPL II"
+  ],
+  [
+    "uz",
+    "common",
+    "eplEltronEpl2",
+    "EPL — Eltron EPL2"
+  ],
+  [
+    "uz",
+    "common",
+    "kameraAiMonitoring",
+    "Kamera AI Monitoring"
+  ],
+  [
+    "uz",
+    "common",
+    "jonliKameraMonitoring",
+    "Jonli Kamera Monitoring"
+  ],
+  [
+    "uz",
+    "common",
+    "izohYozing1",
+    "Izoh yozing…"
+  ],
+  [
+    "uz",
+    "common",
+    "suhbatBallXulosasi",
+    "Suhbat Ball Xulosasi"
+  ],
+  [
+    "uz",
+    "common",
+    "toolTestAJNatijalari",
+    "TOOL TEST A-J Natijalari"
+  ],
+  [
+    "uz",
+    "common",
+    "ismFamilya1",
+    "Ism familya *"
+  ],
+  [
+    "uz",
+    "common",
+    "arEclStavkalari",
+    "AR ECL Stavkalari"
+  ],
+  [
+    "uz",
+    "common",
+    "forFetchFailures",
+    "for fetch failures,"
+  ],
+  [
+    "uz",
+    "common",
+    "varianceTahlili",
+    "Variance Tahlili"
+  ],
+  [
+    "uz",
+    "common",
+    "tieredPricing",
+    "Tiered Pricing"
+  ],
+  [
+    "uz",
+    "common",
+    "moliyaviyRiskTahlili",
+    "Moliyaviy Risk Tahlili"
+  ],
+  [
+    "uz",
+    "common",
+    "scoring20",
+    "Scoring 2.0"
+  ],
+  [
+    "uz",
+    "common",
+    "leadScoring20",
+    "Lead Scoring 2.0"
+  ],
+  [
+    "uz",
+    "common",
+    "obyektTuri",
+    "Obyekt turi *"
+  ],
+  [
+    "uz",
+    "common",
+    "triggerTuri",
+    "Trigger turi *"
+  ],
+  [
+    "uz",
+    "common",
+    "harakatTuri",
+    "Harakat turi *"
+  ],
+  [
+    "uz",
+    "common",
+    "k3dQutiVizualizatsiya",
+    "3D Quti Vizualizatsiya"
+  ],
+  [
+    "uz",
+    "common",
+    "dizaynXarajatKalkulyatori",
+    "Dizayn xarajat kalkulyatori"
+  ],
+  [
+    "uz",
+    "common",
+    "dizaynAssetKutubxonasi",
+    "Dizayn asset kutubxonasi"
+  ],
+  [
+    "uz",
+    "common",
+    "europrintErpDirektorPanelV3",
+    "Europrint ERP — Direktor Panel v3.0"
+  ],
+  [
+    "uz",
+    "common",
+    "eskalatsiyaQilindi",
+    "🚨 Eskalatsiya qilindi"
+  ],
+  [
+    "uz",
+    "common",
+    "versiyaTarixi",
+    "📜 Versiya tarixi"
+  ],
+  [
+    "uz",
+    "common",
+    "masalanHrMenejerDirektorBosh",
+    "Masalan: HR Menejer, Direktor, Bosh buxgalter"
+  ],
+  [
+    "uz",
+    "common",
+    "masalanTexnikMutaxassis",
+    "Masalan: Texnik mutaxassis"
+  ],
+  [
+    "uz",
+    "common",
+    "macbookPro14Inch",
+    "MacBook Pro 14 inch"
+  ],
+  [
+    "uz",
+    "common",
+    "pdfWordExcelRasmMax",
+    "PDF, Word, Excel, rasm — max 15 MB"
+  ],
+  [
+    "uz",
+    "common",
+    "masalanPasportNusxasi",
+    "Masalan: Pasport nusxasi"
+  ],
+  [
+    "uz",
+    "common",
+    "onboardingHolati",
+    "Onboarding holati"
+  ],
+  [
+    "uz",
+    "common",
+    "recruitingKanali",
+    "Recruiting kanali"
+  ],
+  [
+    "uz",
+    "common",
+    "offboardingHolati",
+    "Offboarding holati"
+  ],
+  [
+    "uz",
+    "common",
+    "masalanDiscDTuri",
+    "Masalan: DISC — D turi"
+  ],
+  [
+    "uz",
+    "common",
+    "toolTestNatijasi",
+    "Tool Test natijasi"
+  ],
+  [
+    "uz",
+    "common",
+    "hrCapitalTestTarixi",
+    "HR Capital Test Tarixi"
+  ],
+  [
+    "uz",
+    "common",
+    "dastgohOperatoriProfili",
+    "Dastgoh Operatori Profili"
+  ],
+  [
+    "uz",
+    "common",
+    "rolAsosidagiTizimRuxsatlari",
+    "Rol asosidagi tizim ruxsatlari"
+  ],
+  [
+    "uz",
+    "common",
+    "punchIn1000Am",
+    "Punch In: 10:00 AM"
+  ],
+  [
+    "uz",
+    "common",
+    "samarali8s36d",
+    "Samarali: 8s 36d"
+  ],
+  [
+    "uz",
+    "common",
+    "asloTavsiyaEtmayman",
+    "Aslo tavsiya etmayman"
+  ],
+  [
+    "uz",
+    "common",
+    "albattaTavsiyaQilaman",
+    "Albatta tavsiya qilaman"
+  ],
+  [
+    "uz",
+    "common",
+    "masalanPrinterFrezer",
+    "Masalan: Printer, Frezer"
+  ],
+  [
+    "uz",
+    "common",
+    "masalanSexh1ZalB",
+    "Masalan: Sexh 1, Zal B"
+  ],
+  [
+    "uz",
+    "common",
+    "soliqMuddatlariKalendari",
+    "Soliq Muddatlari Kalendari"
+  ],
+  [
+    "uz",
+    "common",
+    "aiMoliyaviyRiskTahlili",
+    "AI Moliyaviy Risk Tahlili"
+  ],
+  [
+    "uz",
+    "common",
+    "reyting1",
+    "🏆 Reyting"
+  ],
+  [
+    "uz",
+    "common",
+    "badgeKatalog",
+    "🎖️ Badge Katalog"
+  ],
+  [
+    "uz",
+    "common",
+    "avtomatikBuxgalteriyaYozuvlariMonitoring",
+    "Avtomatik buxgalteriya yozuvlari monitoring"
+  ],
+  [
+    "uz",
+    "common",
+    "xabarQoldiring",
+    "Xabar qoldiring..."
+  ],
+  [
+    "uz",
+    "common",
+    "muammoTuri1",
+    "Muammo turi *"
+  ],
+  [
+    "uz",
+    "common",
+    "macbookPro14",
+    "MacBook Pro 14"
+  ],
+  [
+    "uz",
+    "common",
+    "testTuri",
+    "Test turi *"
+  ],
+  [
+    "uz",
+    "common",
+    "iqTestDarajalari",
+    "IQ Test darajalari"
+  ],
+  [
+    "uz",
+    "common",
+    "testTurlariMaqsadi",
+    "Test turlari maqsadi"
+  ],
+  [
+    "uz",
+    "common",
+    "intellektualDarajaMantiqiyFikrlashQobiliyati",
+    "— Intellektual daraja, mantiqiy fikrlash qobiliyati"
+  ],
+  [
+    "uz",
+    "common",
+    "hrLmsIntegratsiya",
+    "HR ↔ LMS Integratsiya"
+  ],
+  [
+    "uz",
+    "common",
+    "k2Yomon1",
+    "2 — Yomon"
+  ],
+  [
+    "uz",
+    "common",
+    "hrOnboarding",
+    "HR — Onboarding"
+  ],
+  [
+    "uz",
+    "common",
+    "lavozimPapkasiOnboardingMateriallari",
+    "Lavozim Papkasi — Onboarding Materiallari"
+  ],
+  [
+    "uz",
+    "common",
+    "yuqoriPotentsialPastPotentsial",
+    "↑ Yuqori potentsial | Past potentsial ↓"
+  ],
+  [
+    "uz",
+    "common",
+    "znoNaqdPulArizalari",
+    "ZNO — Naqd Pul Arizalari"
+  ],
+  [
+    "uz",
+    "common",
+    "naqdPulMaqsadi",
+    "Naqd pul maqsadi..."
+  ],
+  [
+    "uz",
+    "common",
+    "referansRasmYuklash",
+    "Referans rasm yuklash"
+  ],
+  [
+    "uz",
+    "common",
+    "iotSensorMonitoring",
+    "IoT + Sensor Monitoring"
+  ],
+  [
+    "uz",
+    "common",
+    "digitalTwinVirtualZavod",
+    "Digital Twin — Virtual Zavod"
+  ],
+  [
+    "uz",
+    "common",
+    "k3dDigitalTwinVizualizatsiya",
+    "3D Digital Twin Vizualizatsiya"
+  ],
+  [
+    "uz",
+    "common",
+    "otaVazifaTanlang",
+    "Ota vazifa tanlang"
+  ],
+  [
+    "uz",
+    "common",
+    "bajarildiDebBelgilash",
+    "Bajarildi deb belgilash"
+  ],
+  [
+    "uz",
+    "common",
+    "skillsGapTahlili",
+    "Skills Gap Tahlili"
+  ],
+  [
+    "uz",
+    "common",
+    "yaqinTaMuddati",
+    "Yaqin TA muddati!"
+  ],
+  [
+    "uz",
+    "common",
+    "gpsMonitoring",
+    "GPS Monitoring"
+  ],
+  [
+    "uz",
+    "common",
+    "vendorFakturalari3WayMatch",
+    "Vendor Fakturalari — 3-Way Match"
+  ],
+  [
+    "uz",
+    "common",
+    "texnikXizmatTarixi",
+    "Texnik Xizmat Tarixi"
+  ],
+  [
+    "uz",
+    "common",
+    "marketingByudjeti",
+    "Marketing Byudjeti"
+  ],
+  [
+    "uz",
+    "common",
+    "marketingTaqvim",
+    "Marketing Taqvim"
+  ],
+  [
+    "uz",
+    "common",
+    "marketingKontent",
+    "Marketing Kontent"
+  ],
+  [
+    "uz",
+    "common",
+    "engYuqoriXavf",
+    "Eng yuqori xavf:"
+  ],
+  [
+    "uz",
+    "common",
+    "leadManbaKanallari",
+    "Lead Manba Kanallari"
+  ],
+  [
+    "uz",
+    "common",
+    "gazetaTvOnline",
+    "Gazeta, TV, Online..."
+  ],
+  [
+    "uz",
+    "common",
+    "telegramWebhookSozlamasi",
+    "Telegram Webhook Sozlamasi"
+  ],
+  [
+    "uz",
+    "common",
+    "webSaytCms",
+    "Web sayt CMS"
+  ],
+  [
+    "uz",
+    "common",
+    "qadoqlashQutiGofra",
+    "qadoqlash, quti, gofra"
+  ],
+  [
+    "uz",
+    "common",
+    "hozirgiZaxiraQiymati",
+    "Hozirgi zaxira qiymati"
+  ],
+  [
+    "uz",
+    "common",
+    "minBrak",
+    "Min. brak %"
+  ],
+  [
+    "uz",
+    "common",
+    "barcodeKiriting",
+    "Barcode kiriting..."
+  ],
+  [
+    "uz",
+    "common",
+    "gpsRealTimeMonitoring",
+    "GPS Real-time Monitoring"
+  ],
+  [
+    "uz",
+    "common",
+    "k4JobTags",
+    "4. Job Tags"
+  ],
+  [
+    "uz",
+    "common",
+    "k7SpecialGradientCards",
+    "7. Special Gradient Cards"
+  ],
+  [
+    "uz",
+    "common",
+    "k8PerformanceHighlight",
+    "8. Performance Highlight"
+  ],
+  [
+    "uz",
+    "common",
+    "k9PillButtons",
+    "9. Pill Buttons"
+  ],
+  [
+    "uz",
+    "common",
+    "k11BrandColorPalette",
+    "11. Brand Color Palette"
+  ],
+  [
+    "uz",
+    "common",
+    "profilaktikTexnikXizmat",
+    "Profilaktik Texnik Xizmat"
+  ],
+  [
+    "uz",
+    "common",
+    "ofisInventarNazorati",
+    "Ofis Inventar Nazorati"
+  ],
+  [
+    "uz",
+    "common",
+    "tozalashXizmatiJadvali",
+    "Tozalash Xizmati Jadvali"
+  ],
+  [
+    "uz",
+    "common",
+    "element",
+    "Element turi"
+  ],
+  [
+    "uz",
+    "common",
+    "suring",
+    "Suring turi"
+  ],
+  [
+    "uz",
+    "common",
+    "posWarehouse",
+    "POS — Warehouse"
+  ],
+  [
+    "uz",
+    "common",
+    "movementTuri",
+    "Movement turi"
+  ],
+  [
+    "uz",
+    "common",
+    "muhitAtmosferaRahbarUslubi",
+    "Muhit, atmosfera, rahbar uslubi..."
+  ],
+  [
+    "uz",
+    "common",
+    "jamoadagiQiyinVaziyatMisoli",
+    "Jamoadagi qiyin vaziyat misoli?"
+  ],
+  [
+    "uz",
+    "common",
+    "gofrokartonBFlT",
+    "Gofrokarton B flüt"
+  ],
+  [
+    "uz",
+    "common",
+    "previousPassrateUpLatestPassrate",
+    "previous.passRate ? \"up\" : latest.passRate"
+  ],
+  [
+    "uz",
+    "common",
+    "testIdKiriting",
+    "Test ID kiriting"
+  ],
+  [
+    "uz",
+    "common",
+    "badgeHaqiqiy",
+    "✅ Badge Haqiqiy"
+  ],
+  [
+    "uz",
+    "common",
+    "k60KonversiyaQoidasiArizaTelefon",
+    "60% Konversiya Qoidasi: Ariza → Telefon suhbat → Asosiy suhbat"
+  ],
+  [
+    "uz",
+    "common",
+    "boomerangHire",
+    "🔄 Boomerang Hire"
+  ],
+  [
+    "uz",
+    "common",
+    "routingKonfiguratsiyasi",
+    "Routing Konfiguratsiyasi"
+  ],
+  [
+    "uz",
+    "common",
+    "tenantTarifHolati",
+    "Tenant Tarif Holati"
+  ],
+  [
+    "uz",
+    "common",
+    "tizimXatolariLogi",
+    "Tizim Xatolari Logi"
+  ],
+  [
+    "uz",
+    "common",
+    "imzolandiDebBelgilash",
+    "Imzolandi deb belgilash"
+  ],
+  [
+    "uz",
+    "common",
+    "leadFunnelTahlili",
+    "Lead funnel tahlili"
+  ],
+  [
+    "uz",
+    "common",
+    "eurEvro",
+    "EUR - Evro"
+  ],
+  [
+    "uz",
+    "common",
+    "hodisaTuri1",
+    "Hodisa turi *"
+  ],
+  [
+    "uz",
+    "common",
+    "hodisaQaydEt",
+    "Hodisa Qayd Et"
+  ],
+  [
+    "uz",
+    "common",
+    "k7TaAsosiyFunksiyaVysotskiy",
+    "7 ta Asosiy Funksiya - Vysotskiy Modeli"
+  ],
+  [
+    "uz",
+    "common",
+    "k2Oddiy",
+    "2 - Oddiy"
+  ],
+  [
+    "uz",
+    "common",
+    "k4Yuqori",
+    "4 - Yuqori"
+  ],
+  [
+    "uz",
+    "common",
+    "k5Mutaxassis",
+    "5 - Mutaxassis"
+  ],
+  [
+    "uz",
+    "common",
+    "pythonDasturlashTillari",
+    "Python dasturlash tillari..."
+  ],
+  [
+    "uz",
+    "common",
+    "masalanQ1Q2",
+    "Masalan: Q1, Q2"
+  ],
+  [
+    "uz",
+    "common",
+    "superAdminPanel",
+    "Super Admin Panel"
+  ],
+  [
+    "uz",
+    "common",
+    "tizimMonitoring",
+    "Tizim monitoring"
+  ],
+  [
+    "uz",
+    "common",
+    "texnologikKartaTayyorlandi",
+    "Texnologik karta tayyorlandi"
+  ],
+  [
+    "uz",
+    "common",
+    "stanoqTanlashWizard",
+    "Stanoq Tanlash Wizard"
+  ],
+  [
+    "uz",
+    "common",
+    "aiDemandForecasting",
+    "AI Demand Forecasting"
+  ],
+  [
+    "uz",
+    "common",
+    "artikelKodi",
+    "Artikel kodi *"
+  ],
+  [
+    "uz",
+    "common",
+    "tizimAuditJurnali",
+    "Tizim audit jurnali"
+  ],
+  [
+    "uz",
+    "common",
+    "brakSabablariKlassifikatsiyasi",
+    "Brak sabablari klassifikatsiyasi"
+  ],
+  [
+    "uz",
+    "common",
+    "manzilOmbori",
+    "Manzil ombori *"
+  ],
+  [
+    "uz",
+    "common",
+    "eurYevro",
+    "EUR — Yevro"
+  ],
+  [
+    "uz",
+    "common",
+    "movementTanlang",
+    "Movement tanlang"
+  ],
+  [
+    "uz",
+    "common",
+    "statusApprovedCompleted",
+    "Status: APPROVED → COMPLETED"
+  ],
+  [
+    "uz",
+    "common",
+    "exportJson",
+    "📥 Export JSON"
+  ],
+  [
+    "uz",
+    "common",
+    "barcodeYozing",
+    "Barcode yozing..."
+  ],
+  [
+    "uz",
+    "common",
+    "manbaOmbori",
+    "Manba ombori *"
+  ],
+  [
+    "uz",
+    "common",
+    "zararTavsifi",
+    "Zarar tavsifi *"
+  ],
+  [
+    "uz",
+    "common",
+    "serverVersiyasi",
+    "🌐 Server versiyasi"
+  ],
+  [
+    "uz",
+    "common",
+    "grnGoodsReceiptNotes",
+    "GRN — Goods Receipt Notes"
+  ],
+  [
+    "uz",
+    "common",
+    "posMonitorV20Europrint",
+    "POS Monitor v2.0 · EuroPrint ERP"
+  ],
+  [
+    "uz",
+    "common",
+    "k360Profil",
+    "🔭 360° Profil"
+  ],
+  [
+    "uz",
+    "common",
+    "glPosting",
+    "📊 GL Posting"
+  ],
+  [
+    "uz",
+    "common",
+    "bosqich3InventarPasporti",
+    "Bosqich 3: Inventar pasporti"
+  ],
+  [
+    "uz",
+    "common",
+    "kirim1",
+    "📥 + Kirim"
+  ],
+  [
+    "uz",
+    "common",
+    "Brak qayd etildi",
+    "Brak qayd etildi"
+  ],
+  [
+    "uz",
+    "common",
+    "Internet aloqasi yo",
+    "Internet aloqasi yo"
+  ],
+  [
+    "uz",
+    "common",
+    "Raqamli imzo (majburiy)",
+    "Raqamli imzo (majburiy)"
+  ],
+  [
+    "uz",
+    "common",
+    "Raqamli imzo majburiy",
+    "Raqamli imzo majburiy"
+  ],
+  [
+    "uz",
+    "common",
+    "SOS xabari yuborildi!",
+    "Sos xabari yuborildi!"
+  ],
+  [
+    "uz",
+    "common",
+    "Xabar kiriting",
+    "Xabar kiriting"
+  ],
+  [
+    "uz",
+    "common",
+    "accountNumber",
+    "Account number"
+  ],
+  [
+    "uz",
+    "common",
+    "activeAlertsDesc",
+    "Active alerts desc"
+  ],
+  [
+    "uz",
+    "common",
+    "activitySubject",
+    "Activity subject"
+  ],
+  [
+    "uz",
+    "common",
+    "addCapacity",
+    "Add capacity"
+  ],
+  [
+    "uz",
+    "common",
+    "addOperation",
+    "Add operation"
+  ],
+  [
+    "uz",
+    "common",
+    "admin1",
+    "Admin 1"
+  ],
+  [
+    "uz",
+    "common",
+    "adminOnly",
+    "Admin only"
+  ],
+  [
+    "uz",
+    "common",
+    "allGood",
+    "All good"
+  ],
+  [
+    "uz",
+    "common",
+    "all_above_rop",
+    "All above rop"
+  ],
+  [
+    "uz",
+    "common",
+    "analyzingSensors",
+    "Analyzing sensors"
+  ],
+  [
+    "uz",
+    "common",
+    "anonymousHROnly",
+    "Anonymous hronly"
+  ],
+  [
+    "uz",
+    "common",
+    "attendanceLoading",
+    "Attendance loading"
+  ],
+  [
+    "uz",
+    "common",
+    "attestationDate",
+    "Attestation date"
+  ],
+  [
+    "uz",
+    "common",
+    "autoRateLabel",
+    "Auto rate label"
+  ],
+  [
+    "uz",
+    "common",
+    "availableHours",
+    "Available hours"
+  ],
+  [
+    "uz",
+    "common",
+    "avgConfLabel",
+    "Avg conf label"
+  ],
+  [
+    "uz",
+    "common",
+    "avgConfidenceStat",
+    "Avg confidence stat"
+  ],
+  [
+    "uz",
+    "common",
+    "avgLatencyLabel",
+    "Avg latency label"
+  ],
+  [
+    "uz",
+    "common",
+    "bankDetails",
+    "Bank details"
+  ],
+  [
+    "uz",
+    "common",
+    "bankName",
+    "Bank name"
+  ],
+  [
+    "uz",
+    "common",
+    "birthDate",
+    "Birth date"
+  ],
+  [
+    "uz",
+    "common",
+    "blockedForHuman",
+    "Blocked for human"
+  ],
+  [
+    "uz",
+    "common",
+    "bottlenecksHighLoad",
+    "Bottlenecks high load"
+  ],
+  [
+    "uz",
+    "common",
+    "capacityLoadComparison",
+    "Capacity load comparison"
+  ],
+  [
+    "uz",
+    "common",
+    "cardHolder",
+    "Card holder"
+  ],
+  [
+    "uz",
+    "common",
+    "cardNumber",
+    "Card number"
+  ],
+  [
+    "uz",
+    "common",
+    "ckpAndAttestation",
+    "Ckp and attestation"
+  ],
+  [
+    "uz",
+    "common",
+    "col_avg_balance",
+    "Col avg balance"
+  ],
+  [
+    "uz",
+    "common",
+    "col_current_stock",
+    "Col current stock"
+  ],
+  [
+    "uz",
+    "common",
+    "col_days_idle",
+    "Col days idle"
+  ],
+  [
+    "uz",
+    "common",
+    "col_last_movement",
+    "Col last movement"
+  ],
+  [
+    "uz",
+    "common",
+    "col_status",
+    "Col status"
+  ],
+  [
+    "uz",
+    "common",
+    "commentOptional",
+    "Comment optional"
+  ],
+  [
+    "uz",
+    "common",
+    "completedActivities",
+    "Completed activities"
+  ],
+  [
+    "uz",
+    "common",
+    "completedLabel",
+    "Completed label"
+  ],
+  [
+    "uz",
+    "common",
+    "contactName",
+    "Contact name"
+  ],
+  [
+    "uz",
+    "common",
+    "contractNumber",
+    "Contract number"
+  ],
+  [
+    "uz",
+    "common",
+    "countItems",
+    "Count items"
+  ],
+  [
+    "uz",
+    "common",
+    "createActivity",
+    "Create activity"
+  ],
+  [
+    "uz",
+    "common",
+    "createDocument",
+    "Create document"
+  ],
+  [
+    "uz",
+    "common",
+    "createFirstDoc",
+    "Create first doc"
+  ],
+  [
+    "uz",
+    "common",
+    "createNewRouting",
+    "Create new routing"
+  ],
+  [
+    "uz",
+    "common",
+    "creatingDoc",
+    "Creating doc"
+  ],
+  [
+    "uz",
+    "common",
+    "criticalWorkCenters",
+    "Critical work centers"
+  ],
+  [
+    "uz",
+    "common",
+    "customerName",
+    "Customer name"
+  ],
+  [
+    "uz",
+    "common",
+    "dead_stock_count",
+    "Dead stock count"
+  ],
+  [
+    "uz",
+    "common",
+    "dead_stock_title",
+    "Dead stock title"
+  ],
+  [
+    "uz",
+    "common",
+    "defineCapacity",
+    "Define capacity"
+  ],
+  [
+    "uz",
+    "common",
+    "deleteRouting",
+    "Delete routing"
+  ],
+  [
+    "uz",
+    "common",
+    "deliveryStatus",
+    "Delivery status"
+  ],
+  [
+    "uz",
+    "common",
+    "docContentPlaceholder",
+    "Doc content placeholder"
+  ],
+  [
+    "uz",
+    "common",
+    "docTitleLabel",
+    "Doc title label"
+  ],
+  [
+    "uz",
+    "common",
+    "documentContent",
+    "Document content"
+  ],
+  [
+    "uz",
+    "common",
+    "documentNumber",
+    "Document number"
+  ],
+  [
+    "uz",
+    "common",
+    "documentTitle",
+    "Document title"
+  ],
+  [
+    "uz",
+    "common",
+    "documentType",
+    "Document type"
+  ],
+  [
+    "uz",
+    "common",
+    "dueDate",
+    "Due date"
+  ],
+  [
+    "uz",
+    "common",
+    "effectiveDate",
+    "Effective date"
+  ],
+  [
+    "uz",
+    "common",
+    "employeeDetails",
+    "Employee details"
+  ],
+  [
+    "uz",
+    "common",
+    "employmentContracts",
+    "Employment contracts"
+  ],
+  [
+    "uz",
+    "common",
+    "endTime",
+    "End time"
+  ],
+  [
+    "uz",
+    "common",
+    "expiryDate",
+    "Expiry date"
+  ],
+  [
+    "uz",
+    "common",
+    "fullName",
+    "Full name"
+  ],
+  [
+    "uz",
+    "common",
+    "healthMonitoring",
+    "Health monitoring"
+  ],
+  [
+    "uz",
+    "common",
+    "healthNoAccess",
+    "Health no access"
+  ],
+  [
+    "uz",
+    "common",
+    "hireDate",
+    "Hire date"
+  ],
+  [
+    "uz",
+    "common",
+    "housingType",
+    "Housing type"
+  ],
+  [
+    "uz",
+    "common",
+    "hrPanel",
+    "Hr panel"
+  ],
+  [
+    "uz",
+    "common",
+    "humanOverrideLabel",
+    "Human override label"
+  ],
+  [
+    "uz",
+    "common",
+    "immutableDoc",
+    "Immutable doc"
+  ],
+  [
+    "uz",
+    "common",
+    "issuedDate",
+    "Issued date"
+  ],
+  [
+    "uz",
+    "common",
+    "laborTimeLabel",
+    "Labor time label"
+  ],
+  [
+    "uz",
+    "common",
+    "loadAnalysisDesc",
+    "Load analysis desc"
+  ],
+  [
+    "uz",
+    "common",
+    "maritalStatus",
+    "Marital status"
+  ],
+  [
+    "uz",
+    "common",
+    "netCashFlow",
+    "Net cash flow"
+  ],
+  [
+    "uz",
+    "common",
+    "newContract",
+    "New contract"
+  ],
+  [
+    "uz",
+    "common",
+    "newOperationDesc",
+    "New operation desc"
+  ],
+  [
+    "uz",
+    "common",
+    "newPosition",
+    "New position"
+  ],
+  [
+    "uz",
+    "common",
+    "newSalary",
+    "New salary"
+  ],
+  [
+    "uz",
+    "common",
+    "noActiveAlerts",
+    "No active alerts"
+  ],
+  [
+    "uz",
+    "common",
+    "noActiveSensors",
+    "No active sensors"
+  ],
+  [
+    "uz",
+    "common",
+    "noAttendanceEvents",
+    "No attendance events"
+  ],
+  [
+    "uz",
+    "common",
+    "noBlockedDecisions",
+    "No blocked decisions"
+  ],
+  [
+    "uz",
+    "common",
+    "noBottlenecksFound",
+    "No bottlenecks found"
+  ],
+  [
+    "uz",
+    "common",
+    "noCapacityData",
+    "No capacity data"
+  ],
+  [
+    "uz",
+    "common",
+    "noCapacityDataDesc",
+    "No capacity data desc"
+  ],
+  [
+    "uz",
+    "common",
+    "noCapacityEntries",
+    "No capacity entries"
+  ],
+  [
+    "uz",
+    "common",
+    "noCapacityEntriesDesc",
+    "No capacity entries desc"
+  ],
+  [
+    "uz",
+    "common",
+    "noCompletedActivities",
+    "No completed activities"
+  ],
+  [
+    "uz",
+    "common",
+    "noDecisionsForAgent",
+    "No decisions for agent"
+  ],
+  [
+    "uz",
+    "common",
+    "noIncorrectDecisions",
+    "No incorrect decisions"
+  ],
+  [
+    "uz",
+    "common",
+    "noPendingDocs",
+    "No pending docs"
+  ],
+  [
+    "uz",
+    "common",
+    "noRoomInspections",
+    "No room inspections"
+  ],
+  [
+    "uz",
+    "common",
+    "noSensorData",
+    "No sensor data"
+  ],
+  [
+    "uz",
+    "common",
+    "no_dead_stock",
+    "No dead stock"
+  ],
+  [
+    "uz",
+    "common",
+    "onlyIncorrectLabel",
+    "Only incorrect label"
+  ],
+  [
+    "uz",
+    "common",
+    "operationName",
+    "Operation name"
+  ],
+  [
+    "uz",
+    "common",
+    "operationNumber",
+    "Operation number"
+  ],
+  [
+    "uz",
+    "common",
+    "operationSequence",
+    "Operation sequence"
+  ],
+  [
+    "uz",
+    "common",
+    "overriddenCount",
+    "Overridden count"
+  ],
+  [
+    "uz",
+    "common",
+    "partTime",
+    "Part time"
+  ],
+  [
+    "uz",
+    "common",
+    "passportNumber",
+    "Passport number"
+  ],
+  [
+    "uz",
+    "common",
+    "passportSeries",
+    "Passport series"
+  ],
+  [
+    "uz",
+    "common",
+    "pendingLabel",
+    "Pending label"
+  ],
+  [
+    "uz",
+    "common",
+    "predictiveMaintenance",
+    "Predictive maintenance"
+  ],
+  [
+    "uz",
+    "common",
+    "previousPosition",
+    "Previous position"
+  ],
+  [
+    "uz",
+    "common",
+    "previousSalary",
+    "Previous salary"
+  ],
+  [
+    "uz",
+    "common",
+    "probationEnd",
+    "Probation end"
+  ],
+  [
+    "uz",
+    "common",
+    "readingValue",
+    "Reading value"
+  ],
+  [
+    "uz",
+    "common",
+    "realTimeAttendance",
+    "Real time attendance"
+  ],
+  [
+    "uz",
+    "common",
+    "rejectionReason",
+    "Rejection reason"
+  ],
+  [
+    "uz",
+    "common",
+    "roomInspectionLoading",
+    "Room inspection loading"
+  ],
+  [
+    "uz",
+    "common",
+    "roomStatusInspection",
+    "Room status inspection"
+  ],
+  [
+    "uz",
+    "common",
+    "rop_alerts_count",
+    "Rop alerts count"
+  ],
+  [
+    "uz",
+    "common",
+    "rop_alerts_title",
+    "Rop alerts title"
+  ],
+  [
+    "uz",
+    "common",
+    "routingForProduct",
+    "Routing for product"
+  ],
+  [
+    "uz",
+    "common",
+    "routingNumberLabel",
+    "Routing number label"
+  ],
+  [
+    "uz",
+    "common",
+    "selectSensor",
+    "Select sensor"
+  ],
+  [
+    "uz",
+    "common",
+    "selectSensorPrompt",
+    "Select sensor prompt"
+  ],
+  [
+    "uz",
+    "common",
+    "sequenceLabel",
+    "Sequence label"
+  ],
+  [
+    "uz",
+    "common",
+    "setupTimeLabel",
+    "Setup time label"
+  ],
+  [
+    "uz",
+    "common",
+    "staffCount",
+    "Staff count"
+  ],
+  [
+    "uz",
+    "common",
+    "startTime",
+    "Start time"
+  ],
+  [
+    "uz",
+    "common",
+    "statusAbsent",
+    "Status absent"
+  ],
+  [
+    "uz",
+    "common",
+    "statusAtWorkplace",
+    "Status at workplace"
+  ],
+  [
+    "uz",
+    "common",
+    "statusIn",
+    "Status in"
+  ],
+  [
+    "uz",
+    "common",
+    "statusOnPremises",
+    "Status on premises"
+  ],
+  [
+    "uz",
+    "common",
+    "statusOut",
+    "Status out"
+  ],
+  [
+    "uz",
+    "common",
+    "status_ordered",
+    "Status ordered"
+  ],
+  [
+    "uz",
+    "common",
+    "status_requisition_creating",
+    "Status requisition creating"
+  ],
+  [
+    "uz",
+    "common",
+    "totalCostLabel",
+    "Total cost label"
+  ],
+  [
+    "uz",
+    "common",
+    "totalDays",
+    "Total days"
+  ],
+  [
+    "uz",
+    "common",
+    "totalDecisions",
+    "Total decisions"
+  ],
+  [
+    "uz",
+    "common",
+    "totalDecisionsLabel",
+    "Total decisions label"
+  ],
+  [
+    "uz",
+    "common",
+    "totalWorkCenters",
+    "Total work centers"
+  ],
+  [
+    "uz",
+    "common",
+    "urgentPriority",
+    "Urgent priority"
+  ],
+  [
+    "uz",
+    "common",
+    "utilizationTarget",
+    "Utilization target"
+  ],
+  [
+    "uz",
+    "common",
+    "viewPhoto",
+    "View photo"
+  ],
+  [
+    "uz",
+    "common",
+    "fillForm",
+    "Fill form"
+  ],
+  [
+    "uz",
+    "common",
+    "roleManagement",
+    "Role management"
+  ],
+  [
+    "uz",
+    "common",
+    "historySeries",
+    "History series"
+  ],
+  [
+    "uz",
+    "common",
+    "imposition",
+    "Imposition rejasi"
+  ],
+  [
+    "uz",
+    "common",
+    "frequencyAxis",
+    "Frequency axis"
+  ],
+  [
+    "uz",
+    "common",
+    "totalArea",
+    "Total area"
+  ],
+  [
+    "uz",
+    "common",
+    "rfmScatterTitle",
+    "Rfm scatter title"
+  ],
+  [
+    "uz",
+    "common",
+    "cohortNoData",
+    "Cohort no data"
+  ],
+  [
+    "uz",
+    "common",
+    "revenueBasedBadge",
+    "Revenue based badge"
+  ],
+  [
+    "uz",
+    "common",
+    "avgCycleDays",
+    "Avg cycle days"
+  ],
+  [
+    "uz",
+    "common",
+    "inkCoverageDesc",
+    "Ink coverage desc"
+  ],
+  [
+    "uz",
+    "common",
+    "countRetention",
+    "Count retention"
+  ],
+  [
+    "uz",
+    "common",
+    "revenueRetention",
+    "Revenue retention"
+  ],
+  [
+    "uz",
+    "common",
+    "stagesByCount",
+    "Stages by count"
+  ],
+  [
+    "uz",
+    "common",
+    "rfmSampleReady",
+    "Rfm sample ready"
+  ],
+  [
+    "uz",
+    "common",
+    "statusLabel",
+    "Status label"
+  ],
+  [
+    "uz",
+    "common",
+    "cohortCount",
+    "Cohort count"
+  ],
+  [
+    "uz",
+    "common",
+    "avgDemandSize",
+    "Avg demand size"
+  ],
+  [
+    "uz",
+    "common",
+    "clickToCalculate",
+    "Click to calculate"
+  ],
+  [
+    "uz",
+    "common",
+    "createBom",
+    "Create bom"
+  ],
+  [
+    "uz",
+    "common",
+    "paperTypeLabel",
+    "Paper type label"
+  ],
+  [
+    "uz",
+    "common",
+    "winRateGauge",
+    "Win rate gauge"
+  ],
+  [
+    "uz",
+    "common",
+    "tacTotal",
+    "Tac total"
+  ],
+  [
+    "uz",
+    "common",
+    "recencyAxis",
+    "Recency axis"
+  ],
+  [
+    "uz",
+    "common",
+    "bomExplosion",
+    "Bom explosion"
+  ],
+  [
+    "uz",
+    "common",
+    "totalInk",
+    "Total ink"
+  ],
+  [
+    "uz",
+    "common",
+    "productName",
+    "Product name"
+  ],
+  [
+    "uz",
+    "common",
+    "retentionMatrix",
+    "Retention matrix"
+  ],
+  [
+    "uz",
+    "common",
+    "addProduct",
+    "Add product"
+  ],
+  [
+    "uz",
+    "common",
+    "orderNumber",
+    "Order number"
+  ],
+  [
+    "uz",
+    "common",
+    "cmykInput",
+    "Cmyk input"
+  ],
+  [
+    "uz",
+    "common",
+    "impositionDesc",
+    "Imposition desc"
+  ],
+  [
+    "uz",
+    "common",
+    "utilizationLabel",
+    "Utilization label"
+  ],
+  [
+    "uz",
+    "common",
+    "demandProbability",
+    "Demand probability"
+  ],
+  [
+    "uz",
+    "common",
+    "retentionMode",
+    "Retention mode"
+  ],
+  [
+    "uz",
+    "common",
+    "avgM1Retention",
+    "Avg m 1retention"
+  ],
+  [
+    "uz",
+    "common",
+    "tacExceedMessage",
+    "Tac exceed message"
+  ],
+  [
+    "uz",
+    "common",
+    "utilizationGood",
+    "Utilization good"
+  ],
+  [
+    "uz",
+    "common",
+    "velocityPerDay",
+    "Velocity per day"
+  ],
+  [
+    "uz",
+    "common",
+    "avgDealSize",
+    "Avg deal size"
+  ],
+  [
+    "uz",
+    "common",
+    "revenuePercent",
+    "Revenue percent"
+  ],
+  [
+    "uz",
+    "common",
+    "utilizationNeedsWork",
+    "Utilization needs work"
+  ],
+  [
+    "uz",
+    "common",
+    "winRate1",
+    "Win rate 1"
+  ],
+  [
+    "uz",
+    "common",
+    "techCardApproved",
+    "Texnologik karta tasdiqlandi"
+  ],
+  [
+    "uz",
+    "common",
+    "creditLimitOk",
+    "Kredit limiti OK"
+  ],
+  [
+    "uz",
+    "common",
+    "debtStatusOk",
+    "Qarz holati OK"
+  ],
+  [
+    "uz",
+    "common",
+    "questionDifficultyPValue",
+    "Savol qiyinligi (p-value)"
+  ],
+  [
+    "uz",
+    "common",
+    "questionDiscriminationAbility",
+    "Savol farqlash qobiliyati (top 27% vs bottom 27%)"
+  ],
+  [
+    "uz",
+    "common",
+    "frontendBackendDbRatio",
+    "Frontend / Backend / DB nisbatlari"
+  ],
+  [
+    "uz",
+    "common",
+    "recruiterConclusionFreeText",
+    "Rekruter xulosasi (erkin matn)"
+  ],
+  [
+    "uz",
+    "common",
+    "riskFactorsToolTest",
+    "Xavf omillari (TOOL TEST tahlili)"
+  ],
+  [
+    "uz",
+    "common",
+    "motivationOnlyMoney",
+    "Motivatsiya: faqat moddiy manfaat (Pul)"
+  ],
+  [
+    "uz",
+    "common",
+    "endDateOptional",
+    "Tugash sanasi (ixtiyoriy)"
+  ],
+  [
+    "uz",
+    "common",
+    "endTimeOptional",
+    "Tugash vaqti (ixtiyoriy)"
+  ],
+  [
+    "uz",
+    "common",
+    "k14TaAiAgent",
+    "14 ta AI agent"
+  ],
+  [
+    "uz",
+    "common",
+    "k20ModulHolati",
+    "20 modul holati"
+  ],
+  [
+    "uz",
+    "common",
+    "aiVisionDefektAniqlash",
+    "AI Vision (defekt aniqlash)"
+  ],
+  [
+    "uz",
+    "common",
+    "maxsusPromptIxtiyoriy",
+    "Maxsus Prompt (ixtiyoriy)"
+  ],
+  [
+    "uz",
+    "common",
+    "savolRusIxtiyoriy",
+    "Savol (Rus) — ixtiyoriy"
+  ],
+  [
+    "uz",
+    "common",
+    "masalanGofrokartonPpLenta",
+    "masalan: gofrokarton, PP lenta..."
+  ],
+  [
+    "uz",
+    "common",
+    "overrideSababiMajburiy",
+    "Override sababi (majburiy)"
+  ],
+  [
+    "uz",
+    "common",
+    "previewPdfPrinter",
+    "Preview / PDF printer"
+  ],
+  [
+    "uz",
+    "common",
+    "barcodeQrKod",
+    "Barcode / QR kod"
+  ],
+  [
+    "uz",
+    "common",
+    "f302150100100Mm",
+    "F302: 150×100×100 mm"
+  ],
+  [
+    "uz",
+    "common",
+    "f201300200150Mm",
+    "F201: 300×200×150 mm"
+  ],
+  [
+    "uz",
+    "common",
+    "k1TaFaol",
+    "1 ta faol"
+  ],
+  [
+    "uz",
+    "common",
+    "toolTestNatijasiAJ",
+    "Tool Test natijasi (A-J)"
+  ],
+  [
+    "uz",
+    "common",
+    "sofMaoshTaxminiy",
+    "Sof maosh (taxminiy)"
+  ],
+  [
+    "uz",
+    "common",
+    "haTavsiyaQilaman",
+    "Ha, tavsiya qilaman"
+  ],
+  [
+    "uz",
+    "common",
+    "bahoTanlang15",
+    "Baho tanlang (1-5)"
+  ],
+  [
+    "uz",
+    "common",
+    "sexZona",
+    "Sex / Zona"
+  ],
+  [
+    "uz",
+    "common",
+    "k0835Am1May2026",
+    "08:35 AM, 1 may 2026"
+  ],
+  [
+    "uz",
+    "common",
+    "moliyaviyIzohIxtiyoriy",
+    "Moliyaviy izoh (ixtiyoriy)"
+  ],
+  [
+    "uz",
+    "common",
+    "reyting15",
+    "Reyting (1–5)"
+  ],
+  [
+    "uz",
+    "common",
+    "kanbanFunnelIdIxtiyoriy",
+    "Kanban Funnel ID (ixtiyoriy)"
+  ],
+  [
+    "uz",
+    "common",
+    "motivatsionXatIxtiyoriy",
+    "Motivatsion xat (ixtiyoriy)"
+  ],
+  [
+    "uz",
+    "common",
+    "europrintPrintBosma",
+    "europrint, print, bosma"
+  ],
+  [
+    "uz",
+    "common",
+    "telegramXabariIxtiyoriy",
+    "Telegram xabari (ixtiyoriy)"
+  ],
+  [
+    "uz",
+    "common",
+    "manTgs18400",
+    "MAN TGS 18.400"
+  ],
+  [
+    "uz",
+    "common",
+    "k01A123Aa",
+    "01 A 123 AA"
+  ],
+  [
+    "uz",
+    "common",
+    "aBTestNatijalari",
+    "A/B Test natijalari"
+  ],
+  [
+    "uz",
+    "common",
+    "pageBotId",
+    "Page/Bot ID"
+  ],
+  [
+    "uz",
+    "common",
+    "gpsTracking",
+    "GPS tracking"
+  ],
+  [
+    "uz",
+    "common",
+    "qarzPoSumma",
+    "Qarz (PO summa)"
+  ],
+  [
+    "uz",
+    "common",
+    "k2KpiCards8Rang",
+    "2. KPI Cards (8 rang)"
+  ],
+  [
+    "uz",
+    "common",
+    "demoStyleGuide",
+    "Demo / Style Guide"
+  ],
+  [
+    "uz",
+    "common",
+    "ppeForma",
+    "PPE / Forma"
+  ],
+  [
+    "uz",
+    "common",
+    "isrofXarajatiUzs",
+    "Isrof Xarajati (UZS)"
+  ],
+  [
+    "uz",
+    "common",
+    "energiyaXarajatiUzs",
+    "Energiya Xarajati (UZS)"
+  ],
+  [
+    "uz",
+    "common",
+    "ustamaXarajatUzs",
+    "Ustama Xarajat (UZS)"
+  ],
+  [
+    "uz",
+    "common",
+    "mehnatXarajatiUzs",
+    "Mehnat Xarajati (UZS)"
+  ],
+  [
+    "uz",
+    "common",
+    "baho15Yulduz",
+    "Baho (1-5 yulduz)"
+  ],
+  [
+    "uz",
+    "common",
+    "ean13QrBarcode",
+    "EAN-13 / QR barcode"
+  ],
+  [
+    "uz",
+    "common",
+    "k4SavolOqimDaraja",
+    "4 savol + oqim + daraja"
+  ],
+  [
+    "uz",
+    "common",
+    "yakuniyIzohIxtiyoriy",
+    "Yakuniy izoh (ixtiyoriy):"
+  ],
+  [
+    "uz",
+    "common",
+    "toolTestNatijalariAJ",
+    "TOOL TEST natijalari (A-J):"
+  ],
+  [
+    "uz",
+    "common",
+    "brakSabablariTop10",
+    "Brak sabablari (Top 10)"
+  ],
+  [
+    "uz",
+    "common",
+    "cpQobiliyatIndeksi",
+    "Cp (Qobiliyat indeksi)"
+  ],
+  [
+    "uz",
+    "common",
+    "inspeksiyaIzohiIxtiyoriy",
+    "Inspeksiya izohi (ixtiyoriy)"
+  ],
+  [
+    "uz",
+    "common",
+    "k5TaSavol4",
+    "5 ta savol"
+  ],
+  [
+    "uz",
+    "common",
+    "k5TaSavol3",
+    "5 ta savol"
+  ],
+  [
+    "uz",
+    "common",
+    "k5TaSavol2",
+    "5 ta savol"
+  ],
+  [
+    "uz",
+    "common",
+    "k5TaSavol",
+    "5 ta savol"
+  ],
+  [
+    "uz",
+    "common",
+    "badgeKodiMasalanA1b2c3d4",
+    "Badge kodi (masalan: A1B2C3D4)"
+  ],
+  [
+    "uz",
+    "common",
+    "adminZavodUz",
+    "admin@zavod.uz"
+  ],
+  [
+    "uz",
+    "common",
+    "kompaniyaIsm",
+    "Kompaniya / Ism *"
+  ],
+  [
+    "uz",
+    "common",
+    "qqsStavkasi",
+    "QQS stavkasi (%)"
+  ],
+  [
+    "uz",
+    "common",
+    "adminCompanyUz",
+    "admin@company.uz"
+  ],
+  [
+    "uz",
+    "common",
+    "texnikIzohIxtiyoriy",
+    "Texnik izoh (ixtiyoriy)"
+  ],
+  [
+    "uz",
+    "common",
+    "bomRouting",
+    "BOM/Routing"
+  ],
+  [
+    "uz",
+    "common",
+    "oeeMonitorRealTime",
+    "OEE Monitor (Real-time)"
+  ],
+  [
+    "uz",
+    "common",
+    "usernameMin3Belgi",
+    "username (min 3 belgi)"
+  ],
+  [
+    "uz",
+    "common",
+    "hozirSinxronlashTugmasiManualSignalYuboradi",
+    "\"Hozir sinxronlash\" tugmasi manual signal yuboradi"
+  ],
+  [
+    "uz",
+    "common",
+    "partiyaAvto",
+    "Partiya № (avto)"
+  ],
+  [
+    "uz",
+    "common",
+    "usdAqshDollari",
+    "USD — AQSh dollari"
+  ],
+  [
+    "uz",
+    "common",
+    "glPostingAvtomatikYaratiladi",
+    "GL posting avtomatik yaratiladi"
+  ],
+  [
+    "uz",
+    "common",
+    "brakNuqsonli",
+    "Brak / Nuqsonli"
+  ],
+  [
+    "uz",
+    "common",
+    "jpgPngMaks5mb",
+    "JPG, PNG (maks. 5MB)"
+  ],
+  [
+    "uz",
+    "common",
+    "dalilFotosiIxtiyoriy",
+    "Dalil fotosi (ixtiyoriy)"
+  ],
+  [
+    "uz",
+    "common",
+    "maoshAsosiyUzs",
+    "Maosh (asosiy, UZS)"
+  ],
+  [
+    "uz",
+    "common",
+    "maoshSinovMuddatiUzs",
+    "Maosh (sinov muddati, UZS)"
+  ],
+  [
+    "uz",
+    "common",
+    "qyamAsosiyVazifasiMaks32Belgi",
+    "QYaM (asosiy vazifasi, maks 32 belgi)"
+  ],
+  [
+    "uz",
+    "common",
+    "asosiyVazifasiQyam",
+    "Asosiy vazifasi (QYaM)..."
+  ],
+  [
+    "uz",
+    "common",
+    "testLmsKurs",
+    "Test / LMS kurs"
+  ],
+  [
+    "uz",
+    "common",
+    "k7YoshMax",
+    "7. Yosh (max)"
+  ],
+  [
+    "uz",
+    "common",
+    "k6YoshMin",
+    "6. Yosh (min)"
+  ],
+  [
+    "uz",
+    "common",
+    "k3TaSavol",
+    "3 ta savol"
+  ],
+  [
+    "uz",
+    "common",
+    "takrorlashMin",
+    "Takrorlash (min %)"
+  ],
+  [
+    "uz",
+    "common",
+    "k14XavfliNomzodTavsifiXavfGuruhlari",
+    "14. Xavfli nomzod tavsifi (Xavf guruhlari)"
+  ],
+  [
+    "uz",
+    "common",
+    "ijtimoiyPaketTanlash",
+    "Ijtimoiy paket (tanlash)"
+  ],
+  [
+    "uz",
+    "common",
+    "k15IjtimoiyPaketSotsialPaket",
+    "15. Ijtimoiy paket (sotsial paket)"
+  ],
+  [
+    "uz",
+    "common",
+    "k8SinovMaoshMax",
+    "8. Sinov maosh (max)"
+  ],
+  [
+    "uz",
+    "common",
+    "k7SinovMaoshMin",
+    "7. Sinov maosh (min)"
+  ],
+  [
+    "uz",
+    "common",
+    "k1KompaniyaTaqdimotiQisqa",
+    "1. Kompaniya taqdimoti (qisqa)"
+  ],
+  [
+    "uz",
+    "common",
+    "intizomHodisalariIxtiyoriy",
+    "Intizom hodisalari (ixtiyoriy)"
+  ],
+  [
+    "uz",
+    "common",
+    "nastavnikMentorIzohi",
+    "Nastavnik / mentor izohi..."
+  ],
+  [
+    "uz",
+    "common",
+    "kayfiyat15",
+    "Kayfiyat (1-5) *"
+  ],
+  [
+    "uz",
+    "common",
+    "baholashMezonlari110",
+    "Baholash mezonlari (1–10)"
+  ],
+  [
+    "uz",
+    "common",
+    "nastavnikMentor",
+    "Nastavnik / Mentor"
+  ],
+  [
+    "uz",
+    "common",
+    "magistrPhd",
+    "Magistr / PhD"
+  ],
+  [
+    "uz",
+    "common",
+    "ipYakkaTartibdagiTadbirkor",
+    "IP / Yakka tartibdagi tadbirkor"
+  ],
+  [
+    "uz",
+    "common",
+    "lotPartiya",
+    "Lot / Partiya"
+  ],
+  [
+    "uz",
+    "common",
+    "tugashSanasiTaxmin",
+    "Tugash sanasi (taxmin)"
+  ],
+  [
+    "uz",
+    "common",
+    "formatBMm",
+    "Format B (mm)"
+  ],
+  [
+    "uz",
+    "common",
+    "formatAMm",
+    "Format A (mm)"
+  ],
+  [
+    "uz",
+    "common",
+    "cPastPrioritet",
+    "C (Past prioritet)"
+  ],
+  [
+    "uz",
+    "common",
+    "aYuqoriPrioritet",
+    "A (Yuqori prioritet)"
+  ],
+  [
+    "uz",
+    "common",
+    "abcSegment",
+    "ABC segment"
+  ],
+  [
+    "uz",
+    "common",
+    "zaxiraTugashSanasiTaxmin",
+    "Zaxira tugash sanasi (taxmin)"
+  ],
+  [
+    "uz",
+    "common",
+    "mukofotBonusTayinlash",
+    "Mukofot (Bonus) tayinlash"
+  ],
+  [
+    "uz",
+    "common",
+    "masalan52090018",
+    "Masalan: 5/2, 09:00-18:00"
+  ],
+  [
+    "uz",
+    "common",
+    "soatbayStavkaUzs",
+    "Soatbay stavka (UZS)"
+  ],
+  [
+    "uz",
+    "common",
+    "DesignExtended.dizaynXarajatKalkulyatori",
+    "Dizayn xarajat kalkulyatori"
+  ],
+  [
+    "uz",
+    "crm",
+    "leadToConversion",
+    "Lead → Bitim konversiyasi"
+  ],
+  [
+    "uz",
+    "crm",
+    "newLabel",
+    "New label"
+  ],
+  [
+    "uz",
+    "crm",
+    "activeLabel",
+    "Active label"
+  ],
+  [
+    "uz",
+    "crm",
+    "inProgressLabel",
+    "In progress label"
+  ],
+  [
+    "uz",
+    "crm",
+    "dealCount",
+    "Deal count"
+  ],
+  [
+    "uz",
+    "crm",
+    "dealsCount",
+    "Deals count"
+  ],
+  [
+    "uz",
+    "crm",
+    "maxPeriod",
+    "Maksimal kuzatuv davri"
+  ],
+  [
+    "uz",
+    "crm",
+    "rfmDesc",
+    "TZ-41: K-Means++ (k=6) · Recency · Frequency · Monetary"
+  ],
+  [
+    "uz",
+    "crm",
+    "retentionMatrix",
+    "Retention Matrisa"
+  ],
+  [
+    "uz",
+    "crm",
+    "rfmScatterTitle",
+    "RFM Scatter Plot (R vs F, hajm = M)"
+  ],
+  [
+    "uz",
+    "crm",
+    "currency.eur",
+    "EUR — Yevro"
+  ],
+  [
+    "uz",
+    "crm",
+    "currency.rub",
+    "RUB — Rubl"
+  ],
+  [
+    "uz",
+    "dashboard",
+    "todayAmount",
+    "today Amount"
+  ],
+  [
+    "uz",
+    "dashboard",
+    "awaitingApproval",
+    "awaiting Approval"
+  ],
+  [
+    "uz",
+    "dashboard",
+    "lowStockAlerts",
+    "low Stock Alerts"
+  ],
+  [
+    "uz",
+    "dashboard",
+    "recentFeed",
+    "recent Feed"
+  ],
+  [
+    "uz",
+    "director",
+    "dashboard",
+    "Bosh panel"
+  ],
+  [
+    "uz",
+    "director",
+    "worstCase",
+    "Eng yomon stsenariy"
+  ],
+  [
+    "uz",
+    "director",
+    "idealVsActual",
+    "Ideal vs Haqiqat"
+  ],
+  [
+    "uz",
+    "errors",
+    "tokenExpired",
+    "Token muddati tugadi"
+  ],
+  [
+    "uz",
+    "finance",
+    "cfoStrategicPanel",
+    "Moliya direktori strategik paneli"
+  ],
+  [
+    "uz",
+    "finance",
+    "gl.title",
+    "Bosh kitob (GL)"
+  ],
+  [
+    "uz",
+    "finance",
+    "gl.accounts.cash",
+    "1000 — Kassa"
+  ],
+  [
+    "uz",
+    "finance",
+    "gl.accounts.bank",
+    "1040 — Bank"
+  ],
+  [
+    "uz",
+    "finance",
+    "gl.accounts.revenue",
+    "4000 — Daromad"
+  ],
+  [
+    "uz",
+    "finance",
+    "gl.accounts.expense",
+    "5100 — Xarajat"
+  ],
+  [
+    "uz",
+    "finance",
+    "contributionMarginPerUnit",
+    "Contribution Margin/dona"
+  ],
+  [
+    "uz",
+    "finance",
+    "operatingLeverage",
+    "Operating Leverage"
+  ],
+  [
+    "uz",
+    "finance",
+    "variance.title",
+    "Variance tahlili"
+  ],
+  [
+    "uz",
+    "finance",
+    "variance.subtitle",
+    "5 komponentli xarajat variansasi: MPV · MQV · LRV · LEV · OV"
+  ],
+  [
+    "uz",
+    "finance",
+    "variance.composition",
+    "Variance tarkibi"
+  ],
+  [
+    "uz",
+    "finance",
+    "variance.chart",
+    "Variance diagrammasi"
+  ],
+  [
+    "uz",
+    "finance",
+    "variance.labeling",
+    "Labelling xulosasi"
+  ],
+  [
+    "uz",
+    "finance",
+    "variance.emptyNote",
+    "MPV · MQV · LRV · LEV · OV (CIMA standartlari)"
+  ],
+  [
+    "uz",
+    "finance",
+    "variance.lrv",
+    "LRV (mehnat stavka)"
+  ],
+  [
+    "uz",
+    "finance",
+    "variance.lev",
+    "LEV (mehnat sarf)"
+  ],
+  [
+    "uz",
+    "finance",
+    "cfo.cashflow.baseline",
+    "Bazaviy stsenariy · Kumulyativ"
+  ],
+  [
+    "uz",
+    "finance",
+    "productPlaceholder",
+    "Masalan: Offset A4"
+  ],
+  [
+    "uz",
+    "finance",
+    "budgetManagement",
+    "Byudjet Management"
+  ],
+  [
+    "uz",
+    "finance",
+    "periodClosing",
+    "period Closing"
+  ],
+  [
+    "uz",
+    "finance",
+    "currentRatio",
+    "Current Ratio"
+  ],
+  [
+    "uz",
+    "finance",
+    "cfoPanel",
+    "CFO Panel"
+  ],
+  [
+    "uz",
+    "finance",
+    "aiRuleBased",
+    "Ai rule based"
+  ],
+  [
+    "uz",
+    "finance",
+    "close2",
+    "Close 2"
+  ],
+  [
+    "uz",
+    "finance",
+    "customerName",
+    "Customer name"
+  ],
+  [
+    "uz",
+    "finance",
+    "endDate",
+    "End date"
+  ],
+  [
+    "uz",
+    "finance",
+    "forFetchFailures",
+    "For fetch failures"
+  ],
+  [
+    "uz",
+    "finance",
+    "moliyaviyRiskTahlili",
+    "Moliyaviy risk tahlili"
+  ],
+  [
+    "uz",
+    "finance",
+    "offsetA4",
+    "Offset a 4"
+  ],
+  [
+    "uz",
+    "finance",
+    "scanBarcodeToAddProducts",
+    "Scan barcode to add products"
+  ],
+  [
+    "uz",
+    "finance",
+    "startDate",
+    "Start date"
+  ],
+  [
+    "uz",
+    "finance",
+    "tieredPricing",
+    "Tiered pricing"
+  ],
+  [
+    "uz",
+    "finance",
+    "variance",
+    "Variance"
+  ],
+  [
+    "uz",
+    "finance",
+    "varianceTahlili",
+    "Variance tahlili"
+  ],
+  [
+    "uz",
+    "finance",
+    "cvpBepTahlili",
+    "CVP · BEP tahlili"
+  ],
+  [
+    "uz",
+    "finance",
+    "mpvMqvLrvLevOv",
+    "MPV · MQV · LRV · LEV · OV"
+  ],
+  [
+    "uz",
+    "hr",
+    "attendance.checkIn.action",
+    "Keldi deb belgilash"
+  ],
+  [
+    "uz",
+    "hr",
+    "attendance.checkOut.action",
+    "Ketdi deb belgilash"
+  ],
+  [
+    "uz",
+    "hr",
+    "hrPanel",
+    "HR Panel"
+  ],
+  [
+    "uz",
+    "hr",
+    "hrV2.ratingLeader",
+    "Reyting lideri"
+  ],
+  [
+    "uz",
+    "hr",
+    "operator.todayReports",
+    "Bugun operator hisobotlari"
+  ],
+  [
+    "uz",
+    "hr",
+    "safety.ppeCompliance",
+    "PPE Compliance"
+  ],
+  [
+    "uz",
+    "hr",
+    "excelImport",
+    "Excel import"
+  ],
+  [
+    "uz",
+    "hr",
+    "close2",
+    "Close 2"
+  ],
+  [
+    "uz",
+    "hr",
+    "hrAiAvtomatizatsiya",
+    "Hr ai avtomatizatsiya"
+  ],
+  [
+    "uz",
+    "hr",
+    "hrCapitalOquvKurslari",
+    "Hr capital oquv kurslari"
+  ],
+  [
+    "uz",
+    "hr",
+    "k7TaAsosiyFunksiyaVysotskiy",
+    "K 7ta asosiy funksiya vysotskiy"
+  ],
+  [
+    "uz",
+    "hr",
+    "kpiLarRoyxati",
+    "Kpi lar royxati"
+  ],
+  [
+    "uz",
+    "hr",
+    "selectHrAdmin",
+    "HR/Admin tanlang"
+  ],
+  [
+    "uz",
+    "inventory",
+    "activeCount",
+    "active Count"
+  ],
+  [
+    "uz",
+    "iot",
+    "title",
+    "IoT monitoring"
+  ],
+  [
+    "uz",
+    "iot",
+    "maintenanceSchedule",
+    "Texnik xizmat jadvali"
+  ],
+  [
+    "uz",
+    "iot",
+    "anonymousHROnly",
+    "Anonim • Faqat HR"
+  ],
+  [
+    "uz",
+    "iot",
+    "staffCount",
+    "Staff count"
+  ],
+  [
+    "uz",
+    "iot",
+    "abbreviationCrit",
+    "Abbreviation crit"
+  ],
+  [
+    "uz",
+    "iot",
+    "abbreviationHigh",
+    "Abbreviation high"
+  ],
+  [
+    "uz",
+    "iot",
+    "abbreviationMed",
+    "Abbreviation med"
+  ],
+  [
+    "uz",
+    "iot",
+    "tabMaintenance",
+    "Tab maintenance"
+  ],
+  [
+    "uz",
+    "ledger",
+    "expiringSoon",
+    "expiring Soon"
+  ],
+  [
+    "uz",
+    "lms",
+    "enrollment.progress",
+    "Taraqqiyot: {percent}%"
+  ],
+  [
+    "uz",
+    "lms",
+    "endDateOptional",
+    "Tugash sanasi (ixtiyoriy)"
+  ],
+  [
+    "uz",
+    "lms",
+    "courseCreatedSuccessfully",
+    "Kurs muvaffaqiyatli yaratildi"
+  ],
+  [
+    "uz",
+    "lms",
+    "answerOptionsRu",
+    "Javob variantlari (Rus)"
+  ],
+  [
+    "uz",
+    "lms",
+    "moduleCreatedSuccessfully",
+    "Modul muvaffaqiyatli yaratildi"
+  ],
+  [
+    "uz",
+    "logistics",
+    "vehicleType",
+    "Transport vositasi turi"
+  ],
+  [
+    "uz",
+    "logistics",
+    "importDuty",
+    "Import boji"
+  ],
+  [
+    "uz",
+    "logistics",
+    "crossDocking",
+    "Kroos-doking"
+  ],
+  [
+    "uz",
+    "marketing",
+    "dashboard",
+    "Marketing paneli"
+  ],
+  [
+    "uz",
+    "marketing",
+    "emailMarketing",
+    "Email marketing"
+  ],
+  [
+    "uz",
+    "mro",
+    "maintenancePlan",
+    "Texnik xizmat rejasi"
+  ],
+  [
+    "uz",
+    "mro",
+    "maintenanceSchedule",
+    "Texnik xizmat jadvali"
+  ],
+  [
+    "uz",
+    "mro",
+    "maintenanceInterval",
+    "Texnik xizmat intervali"
+  ],
+  [
+    "uz",
+    "mro",
+    "usefulLife",
+    "Foydali xizmat muddati"
+  ],
+  [
+    "uz",
+    "mro",
+    "unitCount",
+    "Unit count"
+  ],
+  [
+    "uz",
+    "mro",
+    "labelAssetCode",
+    "Aktiv kodi *"
+  ],
+  [
+    "uz",
+    "mro",
+    "locationPlaceholder",
+    "Masalan: 2-qavat, omborxona"
+  ],
+  [
+    "uz",
+    "mro",
+    "yearUnit",
+    "Year unit"
+  ],
+  [
+    "uz",
+    "mro",
+    "fromLocationPlaceholder",
+    "Masalan: 2-qavat, xona 201"
+  ],
+  [
+    "uz",
+    "mro",
+    "toLocationPlaceholder",
+    "Masalan: 3-qavat, xona 305"
+  ],
+  [
+    "uz",
+    "mro",
+    "labelPremiumAmount",
+    "Mukofot miqdori (UZS)"
+  ],
+  [
+    "uz",
+    "mro",
+    "labelEndDate",
+    "Tugash sanasi *"
+  ],
+  [
+    "uz",
+    "mro",
+    "labelCoverageAmount",
+    "Qamrov miqdori (UZS)"
+  ],
+  [
+    "uz",
+    "mro",
+    "canteen.costToday",
+    "cost Today"
+  ],
+  [
+    "uz",
+    "mro",
+    "canteen.costPerMeal",
+    "cost Per Meal"
+  ],
+  [
+    "uz",
+    "navigation",
+    "marketingAnalytics",
+    "Marketing analitikasi"
+  ],
+  [
+    "uz",
+    "navigation",
+    "auditorPanel",
+    "Auditor Panel"
+  ],
+  [
+    "uz",
+    "navigation",
+    "hrSectionRecruiting",
+    "REKRUTING"
+  ],
+  [
+    "uz",
+    "navigation",
+    "hrSectionOnboarding",
+    "ONBOARDING"
+  ],
+  [
+    "uz",
+    "navigation",
+    "hrSectionOffboarding",
+    "OFFBOARDING"
+  ],
+  [
+    "uz",
+    "navigation",
+    "hrRecruitingFunnel",
+    "Rekruting Voronka"
+  ],
+  [
+    "uz",
+    "navigation",
+    "hrOnboarding",
+    "Onboarding"
+  ],
+  [
+    "uz",
+    "navigation",
+    "hrOffboarding",
+    "Offboarding"
+  ],
+  [
+    "uz",
+    "navigation",
+    "hrReception",
+    "Reception"
+  ],
+  [
+    "uz",
+    "pos",
+    "cashCount",
+    "Naqd pul hisobi"
+  ],
+  [
+    "uz",
+    "print",
+    "sheetHeight",
+    "Varaq balandligi (mm)"
+  ],
+  [
+    "uz",
+    "production",
+    "totalLabel",
+    "Total label"
+  ],
+  [
+    "uz",
+    "production",
+    "waitingLabel",
+    "Waiting label"
+  ],
+  [
+    "uz",
+    "production",
+    "maintenanceCategory",
+    "Texnik xizmat (Maintenance)"
+  ],
+  [
+    "uz",
+    "production",
+    "workCenterLoadChart",
+    "Work Center Yuklama Grafigi"
+  ],
+  [
+    "uz",
+    "production",
+    "criticalWorkCenters",
+    "Critical Work Centers"
+  ],
+  [
+    "uz",
+    "production",
+    "availableHours",
+    "Available Hours"
+  ],
+  [
+    "uz",
+    "production",
+    "sequenceLabel",
+    "Sequence"
+  ],
+  [
+    "uz",
+    "production",
+    "setupTimeLabel",
+    "Sozlash vaqti (soat)"
+  ],
+  [
+    "uz",
+    "production",
+    "machineTimeLabel",
+    "Dastgoh vaqti (soat)"
+  ],
+  [
+    "uz",
+    "production",
+    "laborTimeLabel",
+    "Mehnat vaqti (soat)"
+  ],
+  [
+    "uz",
+    "production",
+    "mro.schedule",
+    "Texnik xizmat jadvali"
+  ],
+  [
+    "uz",
+    "production",
+    "crp_title",
+    "CRP — Quvvat Talablari Rejasi"
+  ],
+  [
+    "uz",
+    "production",
+    "crp_loadError",
+    "CRP yuklay olmadim"
+  ],
+  [
+    "uz",
+    "production",
+    "mrp_lotSizingMethod",
+    "Lot-Sizing usuli"
+  ],
+  [
+    "uz",
+    "production",
+    "routingKonfiguratsiyasi",
+    "Routing konfiguratsiyasi"
+  ],
+  [
+    "uz",
+    "production",
+    "statusNormal",
+    "Status normal"
+  ],
+  [
+    "uz",
+    "qc",
+    "certs.expiringSoon",
+    "expiring Soon"
+  ],
+  [
+    "uz",
+    "qc",
+    "supplierQc.avgPassRate",
+    "avg Pass Rate"
+  ],
+  [
+    "uz",
+    "qc",
+    "defectRecorded",
+    "Brak qayd etildi"
+  ],
+  [
+    "uz",
+    "quarantine",
+    "hoursInQuarantine",
+    "Hours In Karantin"
+  ],
+  [
+    "uz",
+    "quarantine",
+    "qcDecision",
+    "qc Decision"
+  ],
+  [
+    "uz",
+    "requests",
+    "newRequest",
+    "new Request"
+  ],
+  [
+    "uz",
+    "settings",
+    "backupSettings",
+    "Zaxira nusxa sozlamalari"
+  ],
+  [
+    "uz",
+    "settings",
+    "backup.schedule",
+    "Avtomatik zaxira jadvali"
+  ],
+  [
+    "uz",
+    "settings",
+    "soliqMoliya",
+    "Soliq / Moliya"
+  ],
+  [
+    "uz",
+    "warehouse",
+    "stockValueTrend",
+    "Zaxira Qiymati Dinamikasi"
+  ],
+  [
+    "uz",
+    "warehouse",
+    "posSync.syncAll",
+    "sync All"
+  ],
+  [
+    "uz",
+    "warehouse",
+    "product001",
+    "product-001"
+  ],
+  [
+    "uz",
+    "warehouse",
+    "Karantin / QC",
+    "Karantin / qc"
+  ],
+  [
+    "uz",
+    "warehouse",
+    "MRO Ehtiyot Qism",
+    "Mro ehtiyot qism"
+  ],
+  [
+    "uz",
+    "warehouse",
+    "Ehtiyot qism turlari",
+    "Ehtiyot qism turlari"
+  ],
+  [
+    "uz",
+    "warehouse",
+    "Min/Max zaxira darajasi",
+    "Min/max zaxira darajasi"
+  ],
+  [
+    "uz",
+    "warehouse",
+    "Lead time monitoring",
+    "Lead time monitoring"
+  ],
+  [
+    "uz",
+    "warehouse",
+    "Rulon barcode tracking",
+    "Rulon barcode tracking"
+  ],
+  [
+    "uz",
+    "warehouse",
+    "Batch tracking",
+    "Batch tracking"
+  ],
+  [
+    "uz",
+    "warehouse",
+    "Brak sabablari tahlili",
+    "Brak sabablari tahlili"
+  ],
+  [
+    "uz",
+    "wms",
+    "turnover_title",
+    "Inventar Aylanmasi (DIO tahlili)"
+  ],
+  [
+    "ru",
+    "common",
+    "jpegPngWebp",
+    "JPEG, PNG, WebP"
+  ],
+  [
+    "ru",
+    "common",
+    "zplZebraZplIi",
+    "ZPL — Zebra ZPL II"
+  ],
+  [
+    "ru",
+    "common",
+    "eplEltronEpl2",
+    "EPL — Eltron EPL2"
+  ],
+  [
+    "ru",
+    "common",
+    "macbookPro14",
+    "MacBook Pro 14"
+  ],
+  [
+    "ru",
+    "common",
+    "previousPassrateUpLatestPassrate",
+    "previous.passRate ? \"up\" : latest.passRate"
+  ],
+  [
+    "ru",
+    "common",
+    "europrintPrintBosma",
+    "europrint, print, bosma"
+  ],
+  [
+    "ru",
+    "common",
+    "manTgs18400",
+    "MAN TGS 18.400"
+  ],
+  [
+    "ru",
+    "common",
+    "k01A123Aa",
+    "01 A 123 AA"
+  ],
+  [
+    "ru",
+    "common",
+    "pageBotId",
+    "Page/Bot ID"
+  ],
+  [
+    "ru",
+    "common",
+    "gpsTracking",
+    "GPS tracking"
+  ],
+  [
+    "ru",
+    "common",
+    "adminZavodUz",
+    "admin@zavod.uz"
+  ],
+  [
+    "ru",
+    "common",
+    "adminCompanyUz",
+    "admin@company.uz"
+  ],
+  [
+    "ru",
+    "common",
+    "bomRouting",
+    "BOM/Routing"
+  ],
+  [
+    "ru",
+    "common",
+    "oeeMonitorRealTime",
+    "OEE Monitor (Real-time)"
+  ],
+  [
+    "ru",
+    "finance",
+    "mpvMqvLrvLevOv",
+    "MPV · MQV · LRV · LEV · OV"
+  ],
+  [
+    "ru",
+    "navigation",
+    "hrSectionOnboarding",
+    "ONBOARDING"
+  ],
+  [
+    "ru",
+    "navigation",
+    "hrSectionOffboarding",
+    "OFFBOARDING"
+  ],
+  [
+    "ru",
+    "navigation",
+    "hrOnboarding",
+    "Onboarding"
+  ],
+  [
+    "ru",
+    "navigation",
+    "hrOffboarding",
+    "Offboarding"
+  ],
+  [
+    "ru",
+    "navigation",
+    "hrReception",
+    "Reception"
+  ]
+]

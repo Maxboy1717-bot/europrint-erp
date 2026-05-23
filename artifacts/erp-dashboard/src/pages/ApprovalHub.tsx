@@ -18,6 +18,7 @@ import { CheckCircle2, XCircle, Clock, ClipboardList } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from "@/lib/i18n/tLabel";
 interface ApprovalItem {
   id: string | number;
   type: string;
@@ -65,7 +66,7 @@ export default function ApprovalHub() {
       toast({ title: "Tasdiqlandi" });
     },
     onError: () =>
-      toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+      toast({ title: tLabel('common.errorOccurred', "Xatolik yuz berdi"), variant: "destructive" }),
   });
 
   const rejectMutation = useMutation({
@@ -75,10 +76,10 @@ export default function ApprovalHub() {
       queryClient.invalidateQueries({
         queryKey: ["/api/approval-workflow/dashboard"],
       });
-      toast({ title: "Rad etildi" });
+      toast({ title: tLabel('common.radEtildi', "Rad etildi") });
     },
     onError: () =>
-      toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+      toast({ title: tLabel('common.errorOccurred', "Xatolik yuz berdi"), variant: "destructive" }),
   });
 
   const pending = (approvals as ApprovalItem[]).filter(
@@ -245,13 +246,13 @@ export default function ApprovalHub() {
               color: "text-[var(--ep-primary)]",
             },
             {
-              label: "Tasdiqlangan",
+              label: tLabel('common.approved', "Tasdiqlangan"),
               value: approved.length,
               icon: CheckCircle2,
               color: "text-[var(--ep-green)]",
             },
             {
-              label: "Rad etilgan",
+              label: tLabel('common.rejected', "Rad etilgan"),
               value: rejected.length,
               icon: XCircle,
               color: "text-[var(--ep-red)]",

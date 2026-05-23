@@ -21,6 +21,8 @@ import {
   getPhaseForStage,
 } from "./helpers-constants";
 
+export { StatCard, type StatCardProps } from "@/components/shared/StatCard";
+
 export function DeadlineBadge({
   daysRemaining,
   deadlinePercent,
@@ -40,30 +42,6 @@ export function DeadlineBadge({
       <Clock className="w-2.5 h-2.5" />
       {daysRemaining}k qoldi
     </span>
-  );
-}
-
-export function StatCard({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: number | string;
-  color?: string;
-}) {
-  return (
-    <div className="bg-muted/40 rounded-xl p-4 flex items-center gap-3 min-w-[130px]">
-      <div className={`p-2 rounded-lg ${color ?? "bg-primary/10"}`}>
-        <Icon className={`w-5 h-5 ${color ? "text-white" : "text-primary"}`} />
-      </div>
-      <div>
-        <div className="text-xl font-bold text-foreground">{value}</div>
-        <div className="text-xs text-muted-foreground">{label}</div>
-      </div>
-    </div>
   );
 }
 

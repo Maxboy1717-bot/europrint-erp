@@ -145,15 +145,9 @@ export const warehouseTransactions = pgTable('warehouse_transactions', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
-export const customerPayments = pgTable('customer_payments', {
-  id: integer('id').primaryKey(),
-  customerId: integer('customer_id'),
-  amount: decimal('amount', { precision: 18, scale: 2 }).notNull(),
-  paymentDate: timestamp('payment_date', { withTimezone: true }),
-  status: text('status').default('pending'),
-  currency: text('currency').default('UZS'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+// customerPayments: re-exported from schema-compat-5.ts (serial PK, 17 cols, matches DB migration).
+// The 7-col integer PK version here was incorrect — consumers updated to use snake_case property names.
+export { customer_payments as customerPayments } from './schema-compat-5';
 
 export const invoicePayments = pgTable('invoice_payments', {
   id: integer('id').primaryKey(),
