@@ -2,25 +2,20 @@
  * test/finance/cashflow-forecast.service.spec.ts
  *
  * Unit tests for CashflowForecastService — 13-week 3-scenario cashflow model.
- * Mocks @shared/db.runQuery + CfoConfigService.
+ * Mocks IFinanceRepo and CfoConfigService.
  */
-
-jest.mock('@shared/db', () => {
-  const arr: Record<string, unknown>[] = [];
-  return {
-    __esModule: true,
-    runQuery: jest.fn().mockResolvedValue(Object.assign(arr, { rows: arr })),
-  };
-});
 
 import { CashflowForecastService } from '../../src/modules/finance/domain/services/cashflow-forecast.service';
 import { CfoConfigService } from '../../src/modules/finance/domain/services/cfo-config.service';
-import { runQuery } from '@shared/db';
+import type { CashflowWeekRaw } from '../../src/modules/finance/domain/repositories/i-finance.repo';
 import { Ok } from '../../src/common/result';
 
-function rowsResult(rows: Record<string, unknown>[]) {
-  const arr = [...rows];
-  return Object.assign(arr, { rows: [...rows] });
+const EMPTY_WEEK: CashflowWeekRaw = { arCol: 0, soInflow: 0, apOut: 0, payrollOut: 0 };
+
+function makeRepo() {
+  return {
+    fetchCashflowWeek: jest.fn().mockResolvedValue(EMPTY_WEEK),
+  };
 }
 
 function makeCfoConfig(opening = 100_000_000, minCash = 50_000_000): CfoConfigService {
@@ -40,16 +35,16 @@ function makeCfoConfig(opening = 100_000_000, minCash = 50_000_000): CfoConfigSe
   } as unknown as CfoConfigService;
 }
 
-describe('CashflowForecastService', () => {
-  beforeEach(() => {
-    (runQuery as jest.Mock).mockReset();
-    // Default: every loadWeeklyData query returns empty rows
-    (runQuery as jest.Mock).mockResolvedValue(rowsResult([]));
-  });
+function buildSvc(cfo?: CfoConfigService): { svc: CashflowForecastService; repo: ReturnType<typeof makeRepo> } {
+  const repo = makeRepo();
+  const svc = new CashflowForecastService(cfo ?? makeCfoConfig(), repo as never);
+  return { svc, repo };
+}
 
+describe('CashflowForecastService', () => {
   describe('forecastWeeks()', () => {
     it('returns 3 scenarios: base / optimistic / pessimistic', async () => {
-      const svc = new CashflowForecastService(makeCfoConfig());
+      const { svc } = buildSvc();
 
       const r = await svc.forecastWeeks(4);
 
@@ -62,7 +57,7 @@ describe('CashflowForecastService', () => {
     });
 
     it('every scenario has the requested number of weeks', async () => {
-      const svc = new CashflowForecastService(makeCfoConfig());
+      const { svc } = buildSvc();
 
       const r = await svc.forecastWeeks(5);
 
@@ -75,7 +70,7 @@ describe('CashflowForecastService', () => {
     });
 
     it('uses default 13 weeks when no argument given', async () => {
-      const svc = new CashflowForecastService(makeCfoConfig());
+      const { svc } = buildSvc();
 
       const r = await svc.forecastWeeks();
 
@@ -87,7 +82,7 @@ describe('CashflowForecastService', () => {
     });
 
     it('opening balance is echoed in the output', async () => {
-      const svc = new CashflowForecastService(makeCfoConfig(75_000_000));
+      const { svc } = buildSvc(makeCfoConfig(75_000_000));
 
       const r = await svc.forecastWeeks(2);
 
@@ -98,16 +93,11 @@ describe('CashflowForecastService', () => {
     });
 
     it('optimistic scenario has higher inflows than pessimistic (1.2 vs 0.8 multiplier)', async () => {
-      // Provide one week with AR inflow
-      (runQuery as jest.Mock).mockReset();
-      (runQuery as jest.Mock)
-        // Each week generates 4 sub-queries (AR, SO, AP, payroll). For 1 week, 4 calls
-        .mockResolvedValueOnce(rowsResult([{ ar_col: 10_000_000 }])) // AR week 1
-        .mockResolvedValueOnce(rowsResult([{ so_total: 5_000_000 }])) // SO week 1
-        .mockResolvedValueOnce(rowsResult([{ ap_out: 0 }]))           // AP week 1
-        .mockResolvedValueOnce(rowsResult([{ payroll_out: 0 }]));     // payroll week 1
-
-      const svc = new CashflowForecastService(makeCfoConfig());
+      const { svc, repo } = buildSvc();
+      // 1 week with real AR + SO inflow
+      repo.fetchCashflowWeek.mockResolvedValueOnce({
+        arCol: 10_000_000, soInflow: 5_000_000, apOut: 0, payrollOut: 0,
+      });
 
       const r = await svc.forecastWeeks(1);
 
@@ -119,10 +109,8 @@ describe('CashflowForecastService', () => {
       }
     });
 
-    it('returns failure when getMap config fails (then internal catch fires later)', async () => {
-      // Even if config returns Err, the service is designed to use default ECL rates
-      // when eclMap.ok is false — so the call still succeeds.
-      const svc = new CashflowForecastService(makeCfoConfig());
+    it('returns success even when getMap config returns Err (service uses default ECL rates)', async () => {
+      const { svc } = buildSvc();
 
       const r = await svc.forecastWeeks(2);
 
@@ -130,7 +118,7 @@ describe('CashflowForecastService', () => {
     });
 
     it('status field is one of OK / WARNING / CRITICAL', async () => {
-      const svc = new CashflowForecastService(makeCfoConfig());
+      const { svc } = buildSvc();
 
       const r = await svc.forecastWeeks(3);
 
@@ -149,7 +137,7 @@ describe('CashflowForecastService', () => {
         getNumber: jest.fn().mockRejectedValue(new Error('config table missing')),
         getMap: jest.fn().mockResolvedValue(Ok(new Map())),
       } as unknown as CfoConfigService;
-      const svc = new CashflowForecastService(cfo);
+      const { svc } = buildSvc(cfo);
 
       const r = await svc.forecastWeeks(2);
 

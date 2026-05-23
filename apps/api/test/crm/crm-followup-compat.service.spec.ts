@@ -7,7 +7,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { CrmFollowupCompatService } from '../../src/modules/crm/application/crm-followup-compat.service';
-import { CrmFollowupCompatRepository } from '../../src/modules/crm/application/crm-followup-compat.repository';
+import { CRM_FOLLOWUP_COMPAT_REPO } from '../../src/modules/crm/domain/repositories/i-crm-followup-compat.repo';
 
 type RepoMock = {
   list: jest.Mock;
@@ -36,7 +36,7 @@ describe('CrmFollowupCompatService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CrmFollowupCompatService,
-        { provide: CrmFollowupCompatRepository, useValue: repo },
+        { provide: CRM_FOLLOWUP_COMPAT_REPO, useValue: repo },
       ],
     }).compile();
     svc = module.get(CrmFollowupCompatService);

@@ -5,7 +5,7 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { InternalServerErrorException } from '@nestjs/common';
+
 import { GetInvoicesHandler } from '../../src/modules/finance/application/queries/get-invoices.handler';
 import { GetInvoicesQuery } from '../../src/modules/finance/application/queries/get-invoices.query';
 import {
@@ -60,27 +60,28 @@ describe('GetInvoicesHandler (finance)', () => {
 
     const result = await handler.execute(new GetInvoicesQuery({}));
 
-    expect(result.items).toHaveLength(1);
-    expect(result.page).toBe(1);
-    expect(result.limit).toBe(10);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.items).toHaveLength(1);
+      expect(result.data.page).toBe(1);
+      expect(result.data.limit).toBe(10);
+    }
   });
 
-  it('throws InternalServerErrorException when repository rejects', async () => {
+  it('returns Err when repository rejects', async () => {
     const repo = makeRepo(new Error('boom'));
     const handler = await buildHandler(repo);
 
-    await expect(handler.execute(new GetInvoicesQuery({}))).rejects.toBeInstanceOf(
-      InternalServerErrorException,
-    );
+    const r = await handler.execute(new GetInvoicesQuery({}));
+    expect(r.ok).toBe(false);
   });
 
-  it('throws InternalServerErrorException when repository returns Err', async () => {
+  it('returns Err when repository returns Err', async () => {
     const repo = makeRepo(Err(AppErr('DB_ERROR', 'down')));
     const handler = await buildHandler(repo);
 
-    await expect(handler.execute(new GetInvoicesQuery({}))).rejects.toBeInstanceOf(
-      InternalServerErrorException,
-    );
+    const r = await handler.execute(new GetInvoicesQuery({}));
+    expect(r.ok).toBe(false);
   });
 
   it('passes filter object to repository.findInvoices', async () => {
@@ -99,6 +100,7 @@ describe('GetInvoicesHandler (finance)', () => {
 
     const result = await handler.execute(new GetInvoicesQuery({ page: 1, limit: 10 }));
 
-    expect(result.total).toBe(42);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.total).toBe(42);
   });
 });

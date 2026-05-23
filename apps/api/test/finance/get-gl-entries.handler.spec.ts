@@ -5,7 +5,7 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { InternalServerErrorException } from '@nestjs/common';
+
 import { GetGlEntriesHandler } from '../../src/modules/finance/application/queries/get-gl-entries.handler';
 import { GetGlEntriesQuery } from '../../src/modules/finance/application/queries/get-gl-entries.query';
 import {
@@ -60,10 +60,13 @@ describe('GetGlEntriesHandler', () => {
 
     const result = await handler.execute(new GetGlEntriesQuery({}));
 
-    expect(result.items).toEqual([{ id: 'g1' }]);
-    expect(result.page).toBe(1);
-    expect(result.limit).toBe(10);
-    expect(result.total).toBe(1);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.items).toEqual([{ id: 'g1' }]);
+      expect(result.data.page).toBe(1);
+      expect(result.data.limit).toBe(10);
+      expect(result.data.total).toBe(1);
+    }
   });
 
   it('honours filter overrides for page and limit', async () => {
@@ -72,26 +75,27 @@ describe('GetGlEntriesHandler', () => {
 
     const result = await handler.execute(new GetGlEntriesQuery({ page: 4, limit: 25 }));
 
-    expect(result.page).toBe(4);
-    expect(result.limit).toBe(25);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.page).toBe(4);
+      expect(result.data.limit).toBe(25);
+    }
   });
 
-  it('throws InternalServerErrorException when repository rejects', async () => {
+  it('returns Err when repository rejects', async () => {
     const repo = makeRepo(new Error('boom'));
     const handler = await buildHandler(repo);
 
-    await expect(handler.execute(new GetGlEntriesQuery({}))).rejects.toBeInstanceOf(
-      InternalServerErrorException,
-    );
+    const r = await handler.execute(new GetGlEntriesQuery({}));
+    expect(r.ok).toBe(false);
   });
 
-  it('throws InternalServerErrorException when repository returns Err', async () => {
+  it('returns Err when repository returns Err', async () => {
     const repo = makeRepo(Err(AppErr('DB_ERROR', 'connection lost')));
     const handler = await buildHandler(repo);
 
-    await expect(handler.execute(new GetGlEntriesQuery({}))).rejects.toBeInstanceOf(
-      InternalServerErrorException,
-    );
+    const r = await handler.execute(new GetGlEntriesQuery({}));
+    expect(r.ok).toBe(false);
   });
 
   it('forwards filters object to repository.findGlEntries', async () => {

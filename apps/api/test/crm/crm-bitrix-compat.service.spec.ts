@@ -7,7 +7,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { CrmBitrixCompatService } from '../../src/modules/crm/application/crm-bitrix-compat.service';
-import { CrmBitrixCompatRepository } from '../../src/modules/crm/application/crm-bitrix-compat.repository';
+import { CRM_BITRIX_COMPAT_REPO } from '../../src/modules/crm/domain/repositories/i-crm-bitrix-compat.repo';
 import { Ok, Err, AppErr } from '../../src/common/result';
 
 type RepoMock = {
@@ -47,7 +47,7 @@ describe('CrmBitrixCompatService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CrmBitrixCompatService,
-        { provide: CrmBitrixCompatRepository, useValue: repo },
+        { provide: CRM_BITRIX_COMPAT_REPO, useValue: repo },
       ],
     }).compile();
     svc = module.get(CrmBitrixCompatService);

@@ -7,7 +7,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { CrmExtrasService } from '../../src/modules/crm/application/crm-extras.service';
-import { CrmExtrasRepository } from '../../src/modules/crm/application/crm-extras.repository';
+import { CRM_EXTRAS_REPO } from '../../src/modules/crm/domain/repositories/i-crm-extras.repo';
 import { Ok } from '../../src/common/result';
 
 type RepoMock = {
@@ -51,7 +51,7 @@ describe('CrmExtrasService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CrmExtrasService,
-        { provide: CrmExtrasRepository, useValue: repo },
+        { provide: CRM_EXTRAS_REPO, useValue: repo },
       ],
     }).compile();
     svc = module.get(CrmExtrasService);

@@ -7,7 +7,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { CrmCustomFieldsService } from '../../src/modules/crm/application/crm-custom-fields.service';
-import { CrmCustomFieldsRepository } from '../../src/modules/crm/application/crm-custom-fields.repository';
+import { CRM_CUSTOM_FIELDS_REPO } from '../../src/modules/crm/domain/repositories/i-crm-custom-fields.repo';
 import { Ok, Err, AppErr } from '../../src/common/result';
 
 type RepoMock = {
@@ -37,7 +37,7 @@ describe('CrmCustomFieldsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CrmCustomFieldsService,
-        { provide: CrmCustomFieldsRepository, useValue: repo },
+        { provide: CRM_CUSTOM_FIELDS_REPO, useValue: repo },
       ],
     }).compile();
     svc = module.get(CrmCustomFieldsService);

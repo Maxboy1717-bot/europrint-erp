@@ -7,7 +7,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventBus } from '@nestjs/cqrs';
-import { BadRequestException } from '@nestjs/common';
+
 import { MarkDealWonHandler, MarkDealWonCommand } from '../../src/modules/crm/application/commands/mark-deal-won.handler';
 import { Deal } from '../../src/modules/crm/domain/aggregates/deal.aggregate';
 import { DealStatus } from '../../src/modules/crm/domain/value-objects/deal-status.vo';
@@ -45,12 +45,14 @@ function makeDeal(status: 'qualification' | 'proposal' | 'negotiation' | 'won' |
   const f = dealFactory();
   const s = DealStatus.create(status);
   if (!s.ok) throw new Error('bad status');
+  const moneyR = Money.of(f.amount, 'UZS');
+  if (!moneyR.ok) throw new Error('bad amount');
   return Deal.create({
     leadId: f.leadId,
     companyId: f.companyId,
     dealNumber: `D-${f.id}`,
     status: s.data,
-    totalAmount: Money.of(f.amount, 'UZS'),
+    totalAmount: moneyR.data,
     currency: 'UZS',
     assignedTo: 3,
     createdBy: 1,
@@ -78,17 +80,21 @@ describe('MarkDealWonHandler', () => {
     publishSpy = jest.spyOn(eventBus, 'publish');
   });
 
-  it('throws BadRequestException when deal does not exist', async () => {
+  it('returns NOT_FOUND when deal does not exist', async () => {
     repo.findById.mockResolvedValue(Ok(null));
 
-    await expect(handler.execute(new MarkDealWonCommand(123))).rejects.toBeInstanceOf(BadRequestException);
+    const r = await handler.execute(new MarkDealWonCommand(123));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('NOT_FOUND');
     expect(publishSpy).not.toHaveBeenCalled();
   });
 
-  it('throws BadRequestException when deal cannot transition to won', async () => {
+  it('returns VALIDATION when deal cannot transition to won', async () => {
     repo.findById.mockResolvedValue(Ok(makeDeal('qualification')));
 
-    await expect(handler.execute(new MarkDealWonCommand(1))).rejects.toBeInstanceOf(BadRequestException);
+    const r = await handler.execute(new MarkDealWonCommand(1));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('VALIDATION');
   });
 
   it('returns Err when repo.update fails after status transition', async () => {
