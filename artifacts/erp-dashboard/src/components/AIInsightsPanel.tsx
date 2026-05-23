@@ -238,13 +238,13 @@ export function AIInsightsPanel({ context, metrics }: AIInsightsPanelProps) {
                       ) : null}
 
                       <div className="text-xs text-muted-foreground">
-                        {new Date(insight.createdAt).toLocaleDateString("uz", {
+                        {insight.createdAt ? new Date(insight.createdAt).toLocaleDateString("uz", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
                           hour: "2-digit",
                           minute: "2-digit",
-                        })}
+                        }) : "—"}
                       </div>
                     </div>
                   </div>
