@@ -40,21 +40,6 @@ export const budget_lines = pgTable('budget_lines', {
   actualAmount: decimal('actual_amount', { precision: 18, scale: 2 }).notNull().default('0'),
 });
 
-export const approval_requests = pgTable('approval_requests', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  documentType: text('document_type').notNull(),
-  documentId: text('document_id').notNull(),
-  documentNumber: text('document_number'),
-  amount: decimal('amount', { precision: 18, scale: 2 }).notNull().default('0'),
-  currency: text('currency').notNull().default('UZS'),
-  status: text('status').notNull().default('pending'),
-  requestedBy: text('requested_by').notNull(),
-  approvedBy: text('approved_by'),
-  approvedAt: timestamp('approved_at', { withTimezone: true }),
-  rejectedBy: text('rejected_by'),
-  rejectedAt: timestamp('rejected_at', { withTimezone: true }),
-  rejectionReason: text('rejection_reason'),
-  notes: text('notes'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+// approval_requests: re-exported from schema-compat-4.ts (integer PK, matches DB migration).
+// The uuid PK version here was incorrect — DB migration shows integer PK.
+export { approvalRequests as approval_requests } from './schema-compat-4';

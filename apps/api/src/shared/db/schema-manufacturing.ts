@@ -11,6 +11,7 @@ import {
   timestamp,
   decimal,
   integer,
+  serial,
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
@@ -146,15 +147,17 @@ export const work_centers = pgTable('work_centers', {
 // ============================================================================
 
 export const downtime_events = pgTable('downtime_events', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  sessionId: uuid('session_id').notNull(),
-  workCenterId: uuid('work_center_id'),
-  eventType: text('event_type').notNull().default('unplanned'),
-  reasonCode: text('reason_code').notNull(),
-  startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+  id: serial('id').primaryKey(),                                           // DB: serial (auto-increment), id excluded from insert type
+  sessionId: text('session_id'),                                           // DB: session_id text
+  workCenterId: text('work_center_id').notNull(),                          // DB: work_center_id text NOT NULL
+  reasonCodeId: text('reason_code_id'),                                    // DB: reason_code_id text
+  reasonCode: text('reason_code'),                                         // used by drizzle-downtime.repo
+  eventType: text('event_type'),                                           // used by drizzle-downtime.repo
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
   endedAt: timestamp('ended_at', { withTimezone: true }),
-  durationMinutes: integer('duration_minutes'),
-  reportedBy: text('reported_by').notNull(),
+  durationMin: decimal('duration_min', { precision: 8, scale: 2 }),        // DB: duration_min numeric
+  durationMinutes: integer('duration_minutes'),                            // drift-added column
+  reportedBy: text('reported_by'),                                         // used by drizzle-downtime.repo
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });

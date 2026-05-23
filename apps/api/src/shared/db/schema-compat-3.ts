@@ -4,7 +4,7 @@
  */
 
 import { pgTable, uuid, text, boolean, decimal, integer, createId, ts } from './schema-compat-helpers';
-import { work_centers as canonicalWorkCenters } from './schema-manufacturing';
+import { work_centers as canonicalWorkCenters, downtime_events as canonicalDowntimeEvents } from './schema-manufacturing';
 import { routings as canonicalRoutings } from './schema-manufacturing';
 
 export const mroInventory = pgTable('mro_inventory', {
@@ -75,17 +75,9 @@ export const bomItems = pgTable('bom_items', {
 // work_centers: re-exported from canonical definition in schema-manufacturing.ts
 export const workCenters = canonicalWorkCenters;
 
-export const downtimeEvents = pgTable('downtime_events', {
-  id: integer('id').primaryKey(),
-  sessionId: text('session_id'),
-  workCenterId: text('work_center_id').notNull(),
-  reasonCodeId: text('reason_code_id'),
-  startedAt: ts('started_at').notNull(),
-  endedAt: ts('ended_at'),
-  durationMin: decimal('duration_min', { precision: 8, scale: 2 }),
-  notes: text('notes'),
-  createdAt: ts('created_at').defaultNow(),
-});
+// downtimeEvents: re-exported from schema-manufacturing (integer PK, matches DB migration).
+// The 9-col stub here was redundant — schema-manufacturing is now the canonical definition.
+export const downtimeEvents = canonicalDowntimeEvents;
 
 export const downtimeReasonCodes = pgTable('downtime_reason_codes', {
   id: integer('id').primaryKey(),

@@ -14,6 +14,7 @@ import { asset_items as canonicalAssetItems, gamification_totals as canonicalGam
 import { hr_brand_settings as canonicalHrBrandSettings } from './schema-business-c-2-hr-safety';
 import { mm_vendors as canonicalMmVendors } from './schema-misc-qc';
 import { mm_materials_int as canonicalMmMaterials } from './schema-ext-c-3';
+import { employee_assets as canonicalEmployeeAssets } from './schema-misc';
 
 export const hr_documents_archive = pgTable('hr_documents_archive', {
   id:            integer('id').primaryKey(),
@@ -142,18 +143,9 @@ export const mm_purchase_requisition_items = canonicalMmPurchaseRequisitionItems
 export const asset_items_ext = canonicalAssetItems;
 
 // ─── Employee Assets (bridge) ─────────────────────────────────────────────────
-
-export const employee_assets = pgTable('employee_assets', {
-  id:                  serial('id').primaryKey(),
-  asset_id:            text('asset_id'),
-  employee_id:         text('employee_id'),
-  assigned_date:       date('assigned_date'),
-  return_date:         date('return_date'),
-  condition_on_assign: text('condition_on_assign'),
-  condition_on_return: text('condition_on_return'),
-  notes:               text('notes'),
-  created_at:          timestamp('created_at').defaultNow(),
-});
+// employee_assets: re-exported from schema-misc.ts (uuid PK, matches DB DDL in ddl-migrations.ts).
+// The serial PK version here was incorrect — actual DB uses gen_random_uuid()::text for id.
+export const employee_assets = canonicalEmployeeAssets;
 
 
 // ─── POS: Movements (legacy integer-based schema for data-retention) ──────────

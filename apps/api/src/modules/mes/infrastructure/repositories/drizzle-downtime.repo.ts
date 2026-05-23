@@ -35,7 +35,7 @@ export class DrizzleDowntimeRepository {
 
   async findById(id: string): Promise<Result<DowntimeEvent>> {
     try {
-      const [row] = await db.select().from(downtimeEvents).where(eq(downtimeEvents.id, id)).limit(1);
+      const [row] = await db.select().from(downtimeEvents).where(eq(downtimeEvents.id, Number(id))).limit(1);
 
       if (!row) {
         return Err('Downtime event topilmadi');
@@ -103,8 +103,8 @@ export class DrizzleDowntimeRepository {
 
   async save(event: DowntimeEvent): Promise<Result<DowntimeEvent>> {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await db.insert(downtimeEvents).values({
-        id: event.id,
         sessionId: event.sessionId,
         workCenterId: event.workCenterId,
         eventType: event.eventType,
@@ -115,7 +115,7 @@ export class DrizzleDowntimeRepository {
         reportedBy: event.reportedBy,
         notes: event.notes,
         createdAt: event.createdAt,
-      });
+      } as any);
 
       return Ok(event);
     } catch (error: unknown) {
@@ -126,7 +126,7 @@ export class DrizzleDowntimeRepository {
 
   async endDowntime(id: string, endedAt: Date): Promise<Result<DowntimeEvent>> {
     try {
-      const [row] = await db.select().from(downtimeEvents).where(eq(downtimeEvents.id, id)).limit(1);
+      const [row] = await db.select().from(downtimeEvents).where(eq(downtimeEvents.id, Number(id))).limit(1);
 
       if (!row) {
         return Err('Downtime event topilmadi');
@@ -143,7 +143,7 @@ export class DrizzleDowntimeRepository {
           endedAt,
           durationMinutes,
         })
-        .where(eq(downtimeEvents.id, id));
+        .where(eq(downtimeEvents.id, Number(id)));
 
       const updated = new DowntimeEvent(
         String(rowData.id ?? ''),

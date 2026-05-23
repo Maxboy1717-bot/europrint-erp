@@ -3,7 +3,7 @@
  * @description Source module. See exports for details.
  */
 
-import { pgTable, uuid, text, boolean, decimal, integer, createId, ts } from './schema-compat-helpers';
+import { pgTable, uuid, text, boolean, decimal, integer, serial, createId, ts } from './schema-compat-helpers';
 import z from 'zod';
 
 
@@ -216,20 +216,28 @@ export const productionSessions = pgTable('production_sessions', {
 });
 
 export const aiUsageLogs = pgTable('ai_usage_logs', {
-  id: integer('id').primaryKey(),
+  id: serial('id').primaryKey(),                                     // serial = auto-increment, id excluded from insert type
   userId: text('user_id'),
-  module: text('module').notNull(),
-  action: text('action').notNull(),
+  module: text('module').notNull().default('system'),
+  action: text('action').notNull().default('unknown'),
   inputTokens: integer('input_tokens').default(0),
   outputTokens: integer('output_tokens').default(0),
+  totalTokens: integer('total_tokens').default(0),                    // drift-added: sum of input+output
   cost: decimal('cost', { precision: 10, scale: 6 }).default('0'),
   model: text('model'),
+  provider: text('provider'),                                         // used by ai-router module
+  taskType: text('task_type'),                                        // used by ai-router module
+  estimatedCost: decimal('estimated_cost', { precision: 12, scale: 6 }).default('0'),  // ai-router
+  sessionId: text('session_id'),                                      // drift-added: ai-router session
+  requestSummary: text('request_summary'),                            // drift-added: ai-router
+  responseSummary: text('response_summary'),                          // drift-added: ai-router
+  latencyMs: integer('latency_ms').default(0),                        // drift-added: ai-router
   status: text('status').notNull().default('success'),
   createdAt: ts('created_at').defaultNow(),
 });
 
 export const approvalRequests = pgTable('approval_requests', {
-  id: integer('id').primaryKey(),
+  id: serial('id').primaryKey(),                                     // serial = auto-increment
   documentType: text('document_type').notNull(),
   documentId: text('document_id').notNull(),
   documentNumber: text('document_number'),
@@ -241,6 +249,7 @@ export const approvalRequests = pgTable('approval_requests', {
   approvedAt: ts('approved_at'),
   rejectedBy: text('rejected_by'),
   rejectedAt: ts('rejected_at'),
+  rejectionReason: text('rejection_reason'),  // drift-added column; used by approval-workflow.repo
   notes: text('notes'),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),

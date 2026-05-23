@@ -41,7 +41,7 @@ export class ApprovalWorkflowRepo {
   }
 
   async findById(id: string) {
-    const r = await safeCall(() => db.select().from(approval_requests).where(eq(approval_requests.id, id)), 'DB_ERROR');
+    const r = await safeCall(() => db.select().from(approval_requests).where(eq(approval_requests.id, Number(id))), 'DB_ERROR');
     if (!r.ok) return Err(r.error);
     const row = r.data[0];
     if (!row) return Err(AppErr('NOT_FOUND', `Approval request ${id} not found`));
@@ -73,7 +73,7 @@ export class ApprovalWorkflowRepo {
       approvedAt: update.approvedAt,
       notes:      update.notes,
       updatedAt:  update.updatedAt,
-    }).where(and(eq(approval_requests.id, id), eq(approval_requests.status, 'pending'))).returning(), 'DB_ERROR');
+    }).where(and(eq(approval_requests.id, Number(id)), eq(approval_requests.status, 'pending'))).returning(), 'DB_ERROR');
   }
 
   reject(id: string, update: RejectUpdate) {
@@ -83,6 +83,6 @@ export class ApprovalWorkflowRepo {
       rejectedAt:      update.rejectedAt,
       rejectionReason: update.rejectionReason,
       updatedAt:       update.updatedAt,
-    }).where(and(eq(approval_requests.id, id), eq(approval_requests.status, 'pending'))).returning(), 'DB_ERROR');
+    }).where(and(eq(approval_requests.id, Number(id)), eq(approval_requests.status, 'pending'))).returning(), 'DB_ERROR');
   }
 }
