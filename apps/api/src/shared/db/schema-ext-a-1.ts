@@ -161,7 +161,7 @@ export const kanban_cards = canonicalKanbanCards;
 // [2026-05-22 dedup] questionnaire_templates: re-exported from canonical definition
 // in @workspace/db schema/hr-architecture-additions.ts (export `questionnaireTemplates`).
 // Previous local pgTable removed (column coverage with canon ~38%).
-export { questionnaireTemplates as questionnaire_templates } from '@workspace/db/src/schema/hr-architecture-additions';
+export { questionnaireTemplates as questionnaire_templates } from '@workspace/db/schema/hr-architecture-additions';
 
 // ─── HR: Bot Tables ───────────────────────────────────────────────────────────
 // TODO: recruitment_bot_attempts not found in lib/db — kept as local stub
