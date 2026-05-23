@@ -10,7 +10,8 @@ import {
   RequestStatus,
   RequestLine,
 } from '../../src/modules/pos-v2/domain/aggregates/transfer-request.aggregate';
-import { InternalServerErrorException } from '@nestjs/common';
+import { DomainError } from '../../src/shared/domain/errors/domain-error';
+
 import { stockFactory } from '../_fixtures/factories';
 
 function makeLine(overrides: Partial<RequestLine> = {}): RequestLine {
@@ -64,14 +65,14 @@ describe('TransferRequest aggregate', () => {
       expect(r.updatedAt.getTime()).toBeGreaterThanOrEqual(before);
     });
 
-    it('throws InternalServerErrorException when approve is called on APPROVED', () => {
+    it('throws DomainError when approve is called on APPROVED', () => {
       const r = makeRequest(RequestStatus.APPROVED);
-      expect(() => r.approve('u')).toThrow(InternalServerErrorException);
+      expect(() => r.approve('u')).toThrow(DomainError);
     });
 
-    it('throws InternalServerErrorException when approve is called on REJECTED', () => {
+    it('throws DomainError when approve is called on REJECTED', () => {
       const r = makeRequest(RequestStatus.REJECTED);
-      expect(() => r.approve('u')).toThrow(InternalServerErrorException);
+      expect(() => r.approve('u')).toThrow(DomainError);
     });
   });
 
@@ -122,14 +123,14 @@ describe('TransferRequest aggregate', () => {
       expect(r.status).toBe(RequestStatus.REJECTED);
     });
 
-    it('throws InternalServerErrorException when reject is called on IN_TRANSIT', () => {
+    it('throws DomainError when reject is called on IN_TRANSIT', () => {
       const r = makeRequest(RequestStatus.IN_TRANSIT);
-      expect(() => r.reject()).toThrow(InternalServerErrorException);
+      expect(() => r.reject()).toThrow(DomainError);
     });
 
-    it('throws InternalServerErrorException when reject is called on COMPLETED', () => {
+    it('throws DomainError when reject is called on COMPLETED', () => {
       const r = makeRequest(RequestStatus.COMPLETED);
-      expect(() => r.reject()).toThrow(InternalServerErrorException);
+      expect(() => r.reject()).toThrow(DomainError);
     });
   });
 });

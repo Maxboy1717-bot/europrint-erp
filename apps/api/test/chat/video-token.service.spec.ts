@@ -30,9 +30,12 @@ describe('VideoTokenService', () => {
     expect(typeof result.embedUrl).toBe('string');
   });
 
-  it('generate produces a null token when JaaS credentials are absent', () => {
+  it('generate produces a self-hosted JWT when JaaS credentials are absent', () => {
+    // No JITSI_URL → defaults to meet.jit.si (self-hosted, not JaaS)
+    // signSelfHosted() still generates a HS256 JWT, so token is a string.
     const svc = new VideoTokenService(makeConfig() as never);
     const result = svc.generate({ id: 'u1' }, 'room-x');
-    expect(result.token).toBeNull();
+    expect(typeof result.token).toBe('string');
+    expect(result.token).not.toBeNull();
   });
 });
