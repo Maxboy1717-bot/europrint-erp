@@ -4,7 +4,6 @@
  */
 
 import { pgTable, uuid, text, varchar, boolean, integer, jsonb, timestamp, index, serial } from 'drizzle-orm/pg-core';
-import { stub } from './schema-compat-helpers';
 
 // ── Kanban Boards / Columns / Cards (canonical) ───────────────────────────────
 // Moved here from apps/api/src/modules/kanban/infrastructure/kanban-tables.ts
@@ -45,7 +44,7 @@ export const kanbanCards = pgTable('kanban_cards', {
   deleted_at:   timestamp('deleted_at'),
 });
 
-export const kanbanFlows = stub(pgTable('kanban_flows', {
+export const kanbanFlows = pgTable('kanban_flows', {
   id:          uuid('id').primaryKey().defaultRandom(),
   boardId:     text('board_id'),
   name:        text('name').notNull(),
@@ -54,9 +53,9 @@ export const kanbanFlows = stub(pgTable('kanban_flows', {
   config:      jsonb('config').default({}),
   createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_flows_board_idx').on(t.boardId)]));
+}, (t) => [index('kanban_flows_board_idx').on(t.boardId)]);
 
-export const kanbanRobots = stub(pgTable('kanban_robots', {
+export const kanbanRobots = pgTable('kanban_robots', {
   id:          uuid('id').primaryKey().defaultRandom(),
   boardId:     text('board_id'),
   name:        text('name').notNull(),
@@ -64,17 +63,18 @@ export const kanbanRobots = stub(pgTable('kanban_robots', {
   actions:     jsonb('actions').default([]),
   isActive:    boolean('is_active').notNull().default(true),
   createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_robots_board_idx').on(t.boardId)]));
+}, (t) => [index('kanban_robots_board_idx').on(t.boardId)]);
 
-export const kanbanChecklists = stub(pgTable('kanban_checklists', {
+// ── Kanban Extended Tables ────────────────────────────────────────────────────
+export const kanbanChecklists = pgTable('kanban_checklists', {
   id:        uuid('id').primaryKey().defaultRandom(),
   cardId:    text('card_id').notNull(),
   title:     text('title').notNull(),
   position:  integer('position').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_checklists_card_idx').on(t.cardId)]));
+}, (t) => [index('kanban_checklists_card_idx').on(t.cardId)]);
 
-export const kanbanChecklistItems = stub(pgTable('kanban_checklist_items', {
+export const kanbanChecklistItems = pgTable('kanban_checklist_items', {
   id:           uuid('id').primaryKey().defaultRandom(),
   checklistId:  text('checklist_id').notNull(),
   title:        text('title').notNull(),
@@ -83,38 +83,38 @@ export const kanbanChecklistItems = stub(pgTable('kanban_checklist_items', {
   dueDate:      text('due_date'),
   position:     integer('position').notNull().default(0),
   createdAt:    timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_checklist_items_checklist_idx').on(t.checklistId)]));
+}, (t) => [index('kanban_checklist_items_checklist_idx').on(t.checklistId)]);
 
-export const kanbanCardComments = stub(pgTable('kanban_card_comments', {
+export const kanbanCardComments = pgTable('kanban_card_comments', {
   id:        uuid('id').primaryKey().defaultRandom(),
   cardId:    text('card_id').notNull(),
   userId:    integer('user_id').notNull(),
   content:   text('content').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_card_comments_card_idx').on(t.cardId)]));
+}, (t) => [index('kanban_card_comments_card_idx').on(t.cardId)]);
 
-export const kanbanCardWatchers = stub(pgTable('kanban_card_watchers', {
+export const kanbanCardWatchers = pgTable('kanban_card_watchers', {
   id:        uuid('id').primaryKey().defaultRandom(),
   cardId:    text('card_id').notNull(),
   userId:    integer('user_id').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}));
+});
 
 // ── Bildirishnomalar ──────────────────────────────────────────────────────────
-export const kanbanNotifications = stub(pgTable('kanban_notifications', {
+export const kanbanNotifications = pgTable('kanban_notifications', {
   id:        uuid('id').primaryKey().defaultRandom(),
   userId:    integer('user_id').notNull(),
   cardId:    text('card_id'),
   boardId:   text('board_id'),
-  type:      text('type').notNull().default('task_assigned'), // task_assigned, deadline_reminder, comment_added, status_changed
+  type:      text('type').notNull().default('task_assigned'),
   title:     text('title').notNull(),
   message:   text('message'),
   isRead:    boolean('is_read').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_notif_user_idx').on(t.userId), index('kanban_notif_read_idx').on(t.isRead)]));
+}, (t) => [index('kanban_notif_user_idx').on(t.userId), index('kanban_notif_read_idx').on(t.isRead)]);
 
 // ── Shablonlar ────────────────────────────────────────────────────────────────
-export const kanbanTemplates = stub(pgTable('kanban_templates', {
+export const kanbanTemplates = pgTable('kanban_templates', {
   id:             uuid('id').primaryKey().defaultRandom(),
   name:           text('name').notNull(),
   description:    text('description'),
@@ -126,10 +126,10 @@ export const kanbanTemplates = stub(pgTable('kanban_templates', {
   createdAt:      timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt:      timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt:      timestamp('deleted_at', { withTimezone: true }),
-}, (t) => [index('kanban_templates_board_idx').on(t.boardId)]));
+}, (t) => [index('kanban_templates_board_idx').on(t.boardId)]);
 
 // ── Vaqt kuzatuvi ─────────────────────────────────────────────────────────────
-export const kanbanTimeTracks = stub(pgTable('kanban_time_tracks', {
+export const kanbanTimeTracks = pgTable('kanban_time_tracks', {
   id:              uuid('id').primaryKey().defaultRandom(),
   cardId:          text('card_id').notNull(),
   userId:          integer('user_id').notNull(),
@@ -140,35 +140,35 @@ export const kanbanTimeTracks = stub(pgTable('kanban_time_tracks', {
   isRunning:       boolean('is_running').notNull().default(false),
   description:     text('description'),
   createdAt:       timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_time_card_idx').on(t.cardId), index('kanban_time_user_idx').on(t.userId)]));
+}, (t) => [index('kanban_time_card_idx').on(t.cardId), index('kanban_time_user_idx').on(t.userId)]);
 
 // ── Teglar ────────────────────────────────────────────────────────────────────
-export const kanbanTags = stub(pgTable('kanban_tags', {
+export const kanbanTags = pgTable('kanban_tags', {
   id:        uuid('id').primaryKey().defaultRandom(),
   name:      text('name').notNull(),
   color:     text('color').notNull().default('#3b82f6'),
   boardId:   text('board_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_tags_board_idx').on(t.boardId)]));
+}, (t) => [index('kanban_tags_board_idx').on(t.boardId)]);
 
-export const kanbanCardTags = stub(pgTable('kanban_card_tags', {
+export const kanbanCardTags = pgTable('kanban_card_tags', {
   id:        serial('id').primaryKey(),
   cardId:    text('card_id').notNull(),
   tagId:     text('tag_id').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_card_tags_card_idx').on(t.cardId)]));
+}, (t) => [index('kanban_card_tags_card_idx').on(t.cardId)]);
 
 // ── Natijalar ─────────────────────────────────────────────────────────────────
-export const kanbanResults = stub(pgTable('kanban_results', {
+export const kanbanResults = pgTable('kanban_results', {
   id:          uuid('id').primaryKey().defaultRandom(),
   cardId:      text('card_id').notNull(),
   description: text('description'),
   createdById: integer('created_by_id').notNull(),
   createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_results_card_idx').on(t.cardId)]));
+}, (t) => [index('kanban_results_card_idx').on(t.cardId)]);
 
-export const kanbanResultFiles = stub(pgTable('kanban_result_files', {
+export const kanbanResultFiles = pgTable('kanban_result_files', {
   id:        uuid('id').primaryKey().defaultRandom(),
   resultId:  text('result_id').notNull(),
   fileName:  text('file_name').notNull(),
@@ -176,25 +176,25 @@ export const kanbanResultFiles = stub(pgTable('kanban_result_files', {
   fileSize:  integer('file_size'),
   mimeType:  text('mime_type'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_result_files_result_idx').on(t.resultId)]));
+}, (t) => [index('kanban_result_files_result_idx').on(t.resultId)]);
 
 // ── Kuzatuvchilar va hamijrochilar ────────────────────────────────────────────
-export const kanbanObservers = stub(pgTable('kanban_observers', {
+export const kanbanObservers = pgTable('kanban_observers', {
   id:        uuid('id').primaryKey().defaultRandom(),
   cardId:    text('card_id').notNull(),
   userId:    integer('user_id').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_observers_card_idx').on(t.cardId)]));
+}, (t) => [index('kanban_observers_card_idx').on(t.cardId)]);
 
-export const kanbanCoExecutors = stub(pgTable('kanban_co_executors', {
+export const kanbanCoExecutors = pgTable('kanban_co_executors', {
   id:        uuid('id').primaryKey().defaultRandom(),
   cardId:    text('card_id').notNull(),
   userId:    integer('user_id').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('kanban_co_exec_card_idx').on(t.cardId)]));
+}, (t) => [index('kanban_co_exec_card_idx').on(t.cardId)]);
 
 // ── Fayl birikmalari ──────────────────────────────────────────────────────────
-export const kanbanFiles = stub(pgTable('kanban_files', {
+export const kanbanFiles = pgTable('kanban_files', {
   id:           uuid('id').primaryKey().defaultRandom(),
   cardId:       text('card_id').notNull(),
   fileName:     text('file_name').notNull(),
@@ -204,4 +204,4 @@ export const kanbanFiles = stub(pgTable('kanban_files', {
   uploadedById: integer('uploaded_by_id'),
   createdAt:    timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt:    timestamp('deleted_at', { withTimezone: true }),
-}, (t) => [index('kanban_files_card_idx').on(t.cardId)]));
+}, (t) => [index('kanban_files_card_idx').on(t.cardId)]);
