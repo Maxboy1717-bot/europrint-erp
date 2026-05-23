@@ -219,14 +219,13 @@ export class DirectorDataRepository implements IDirectorDataRepo {
         severity: systemAlerts.severity,
         title: systemAlerts.title,
         message: systemAlerts.message,
-        module: systemAlerts.module,
-        created_at: sql<string>`${systemAlerts.created_at}::text`,
+        created_at: sql<string>`${systemAlerts.createdAt}::text`,
       }).from(systemAlerts)
-        .where(sql`${systemAlerts.resolved_at} IS NULL`)
-        .orderBy(sql`${systemAlerts.created_at} DESC`)
+        .where(sql`${systemAlerts.resolvedAt} IS NULL`)
+        .orderBy(sql`${systemAlerts.createdAt} DESC`)
         .limit(50);
-      type AR = { id: string; severity: string; title: string; message: string; module: string; created_at: string };
-      const alerts = ((rows ?? []) as AR[]).map(a => ({ id: a.id, severity: a.severity ?? 'info', title: a.title ?? '', message: a.message ?? '', module: a.module ?? '', createdAt: a.created_at ?? '' }));
+      type AR = { id: string; severity: string; title: string; message: string; created_at: string };
+      const alerts = ((rows ?? []) as AR[]).map(a => ({ id: a.id, severity: a.severity ?? 'info', title: a.title ?? '', message: a.message ?? '', module: '', createdAt: a.created_at ?? '' }));
       return { alerts, count: alerts.length };
     }, 'DB_ERROR');
   }

@@ -140,15 +140,7 @@ export const invoicesTable = pgTable('invoices', {
 // accountsTable: re-exported from canonical accounts definition in schema-ext-b-1.ts
 export const accountsTable = canonicalAccounts;
 
-export const systemAlerts = pgTable('system_alerts', {
-  id: integer('id').primaryKey(),
-  severity: varchar('severity'),
-  title: text('title'),
-  message: text('message'),
-  module: varchar('module'),
-  created_at: timestamp('created_at'),
-  resolved_at: timestamp('resolved_at'),
-});
+export { systemAlerts } from '@workspace/db';
 
 export const iotAlerts = pgTable('iot_alerts', {
   id: integer('id').primaryKey(),

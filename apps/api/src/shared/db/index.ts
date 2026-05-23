@@ -117,7 +117,7 @@ export {
   wms_warehouses, wms_transfers, wms_internal_requests, wms_inventory_counts,
   // MM Extended
   mm_goods_receipt_lines, mm_purchase_orders_int,
-  mm_materials_int, mm_goods_receipts_int, mm_purchase_orders_ext, mm_vendors_ext2,
+  mm_materials_int,
   // Finance Core (new tables not in other schemas)
   income_expense_transactions, stock_moves, raw_materials,
   expense_reports, fi_invoices,
@@ -134,7 +134,6 @@ export {
   lms_test_attempts, lms_certificates,
   lms_modules, lms_exams, lms_exam_attempts,
   lms_knowledge, lms_achievements, lms_user_achievements, lms_tests_ext,
-  lms_assignments,
   // MES Extended
   mes_maintenance_requests, mes_maintenance_tasks, mes_production_sessions, mes_shift_stats,
   equipment, machine_tasks,

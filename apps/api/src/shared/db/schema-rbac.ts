@@ -8,19 +8,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
-export const rbacPositions = pgTable('positions', {
-  id: serial('id').primaryKey(),
-  code: varchar('code', { length: 50 }).notNull().unique(),
-  nameUz: varchar('name_uz', { length: 150 }).notNull(),
-  nameRu: varchar('name_ru', { length: 150 }),
-  departmentId: integer('department_id'),
-  level: integer('level').default(1),
-  rbacTier: varchar('rbac_tier', { length: 20 }).notNull().default('standard'),
-  isManagement: boolean('is_management').default(false).notNull(),
-  isActive: boolean('is_active').default(true).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+// rbacPositions (pgTable 'positions'): duplicate of schema-hr-lms.ts canonical; 0 consumers → removed.
 
 export const positionPermissions = pgTable(
   'position_permissions',
