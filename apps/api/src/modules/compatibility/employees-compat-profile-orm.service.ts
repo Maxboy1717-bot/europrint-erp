@@ -99,8 +99,8 @@ export class EmployeesCompatProfileOrmService {
     return safeCall(async () => {
       const rows = await db.select()
         .from(employee_inventory_ledger)
-        .where(eq(employee_inventory_ledger.employee_id, si(id)))
-        .orderBy(desc(employee_inventory_ledger.created_at))
+        .where(eq(employee_inventory_ledger.userId, si(id)))
+        .orderBy(desc(employee_inventory_ledger.createdAt))
         .limit(50);
       return rows as Row[];
     });
@@ -110,8 +110,8 @@ export class EmployeesCompatProfileOrmService {
     return safeCall(async () => {
       const rows = await db.select()
         .from(employee_files)
-        .where(eq(employee_files.employee_id, si(id)))
-        .orderBy(desc(employee_files.created_at))
+        .where(eq(employee_files.employeeId, si(id)))
+        .orderBy(desc(employee_files.uploadDate))
         .limit(50);
       return rows as Row[];
     });
@@ -138,10 +138,11 @@ export class EmployeesCompatProfileOrmService {
     return safeCall(async () => {
       const [item] = await db.insert(employee_inventory_ledger)
         .values({
-          employee_id: si(employeeId),
-          item_id:     body['item_id'] != null ? Number(body['item_id']) : (body['itemId'] != null ? Number(body['itemId']) : undefined),
-          quantity:    String(body['quantity'] ?? 1),
-          type:        String(body['type'] ?? 'issue'),
+          userId:        si(employeeId),
+          materialCardId: body['item_id'] != null ? Number(body['item_id']) : (body['itemId'] != null ? Number(body['itemId']) : 0),
+          warehouseId:   String(body['warehouse_id'] ?? body['warehouseId'] ?? ''),
+          quantity:      Number(body['quantity'] ?? 1),
+          entryType:     String(body['type'] ?? body['entryType'] ?? 'out'),
         })
         .returning();
       if (!item) throw new InternalServerErrorException('Corporate inventory creation failed');
@@ -152,10 +153,10 @@ export class EmployeesCompatProfileOrmService {
   async patchCorporateInventoryReturn(employeeId: string, itemId: string): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
       const rows = await db.update(employee_inventory_ledger)
-        .set({ type: 'return' })
+        .set({ entryType: 'return' })
         .where(and(
           eq(employee_inventory_ledger.id, si(itemId)),
-          eq(employee_inventory_ledger.employee_id, si(employeeId)),
+          eq(employee_inventory_ledger.userId, si(employeeId)),
         ))
         .returning();
       return (rows[0] as Row | undefined) ?? { id: itemId, type: 'return' };
@@ -165,10 +166,10 @@ export class EmployeesCompatProfileOrmService {
   async patchCorporateInventorySign(employeeId: string, itemId: string): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
       const rows = await db.update(employee_inventory_ledger)
-        .set({ type: 'signed' })
+        .set({ entryType: 'signed' })
         .where(and(
           eq(employee_inventory_ledger.id, si(itemId)),
-          eq(employee_inventory_ledger.employee_id, si(employeeId)),
+          eq(employee_inventory_ledger.userId, si(employeeId)),
         ))
         .returning();
       return (rows[0] as Row | undefined) ?? { id: itemId, type: 'signed' };

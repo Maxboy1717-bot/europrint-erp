@@ -145,7 +145,7 @@ export class DisciplineV2Repository {
   async acknowledgeViolation(id: number): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(discipline_records)
-        .set({ status: 'acknowledged', acknowledgedAt: _time.now() })
+        .set({ status: 'acknowledged' })
         .where(eq(discipline_records.id, id))
         .returning();
       return castTo<Row>(rows[0] ?? {});
@@ -155,7 +155,7 @@ export class DisciplineV2Repository {
   async approveViolation(id: number, approvedBy?: number): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(discipline_records)
-        .set({ status: 'approved', approvedBy: approvedBy ?? null })
+        .set({ status: 'approved' })
         .where(eq(discipline_records.id, id))
         .returning();
       return castTo<Row>(rows[0] ?? {});

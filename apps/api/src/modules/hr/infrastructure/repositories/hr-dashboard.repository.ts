@@ -159,7 +159,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
       const rows = await db.select()
         .from(pip_plans)
         .where(sql`${pip_plans.status} = 'active'`)
-        .orderBy(sql`${pip_plans.created_at} DESC`)
+        .orderBy(sql`${pip_plans.createdAt} DESC`)
         .limit(50);
       return castTo<unknown[]>(rows);
       }, 'DB_ERROR');
@@ -170,7 +170,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
       const rows = await db.select()
         .from(enps_surveys)
         .where(sql`${enps_surveys.status} = 'active'`)
-        .orderBy(sql`${enps_surveys.created_at} DESC`)
+        .orderBy(sql`${enps_surveys.createdAt} DESC`)
         .limit(20);
       return castTo<unknown[]>(rows);
       }, 'DB_ERROR');
@@ -191,10 +191,10 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         total:    sql<number>`COUNT(*)`,
         approved: sql<number>`COUNT(*) FILTER (WHERE ${hr_daily_reports.status} = 'approved')`,
         pending:  sql<number>`COUNT(*) FILTER (WHERE ${hr_daily_reports.status} = 'pending')`,
-        today:    sql<number>`COUNT(*) FILTER (WHERE ${hr_daily_reports.created_at}::date = CURRENT_DATE)`,
+        today:    sql<number>`COUNT(*) FILTER (WHERE ${hr_daily_reports.createdAt}::date = CURRENT_DATE)`,
       })
         .from(hr_daily_reports)
-        .where(sql`${hr_daily_reports.created_at} >= NOW() - INTERVAL '30 days'`);
+        .where(sql`${hr_daily_reports.createdAt} >= NOW() - INTERVAL '30 days'`);
       return r[0] ?? { total: 0, approved: 0, pending: 0, today: 0 };
       }, 'DB_ERROR');
   }
@@ -278,11 +278,11 @@ export class HrDashboardRepository implements IHrDashboardRepo {
       const rows = await db
         .insert(hr_daily_reports)
         .values({
-          employee_id,
-          report_date:     dto.report_date,
-          tasks_completed: dto.tasks_completed ?? null,
+          employeeId:      employee_id,
+          reportDate:      dto.report_date,
+          tasksCompleted:  dto.tasks_completed ?? null,
           status:          'submitted',
-          submitted_at:    sql`NOW()`,
+          submittedAt:     sql`NOW()`,
         })
         .returning();
       return castTo<Row>(rows[0] ?? {});

@@ -14,19 +14,17 @@ export async function execSavePo(
   routingId: number | null, plannedStart: unknown, plannedEnd: unknown,
   createdBy: string | null = null,
 ): Promise<number> {
+  type PoInsert = typeof production_orders_int.$inferInsert;
   const rows = await db.insert(production_orders_int).values({
-    sales_order_id: soId,
     status,
-    bom_id: bomId,
-    routing_id: routingId,
-    scheduled_start: plannedStart as Date | null,
-    scheduled_end: plannedEnd as Date | null,
-    order_number: `PO-${Date.now()}`,
-    product_name: 'Production Order',
-    quantity: 1,
-    unit: 'pcs',
-    created_by: createdBy,
-  }).returning({ id: production_orders_int.id });
+    bomId: bomId,
+    routingId: routingId,
+    plannedStartDate: plannedStart != null ? String(plannedStart) : undefined,
+    plannedEndDate: plannedEnd != null ? String(plannedEnd) : undefined,
+    orderNumber: `PO-${Date.now()}`,
+    plannedQuantity: 1,
+    createdBy: createdBy != null ? Number(createdBy) : undefined,
+  } as PoInsert).returning({ id: production_orders_int.id });
   return rows[0]?.id ?? 0;
 }
 
@@ -65,13 +63,13 @@ export async function queryBomByProduct(productId: number): Promise<DbRow | null
 }
 
 export async function execSaveRouting(productId: number, name: string, version: number, createdBy: string | null = null): Promise<number> {
+  type RoutingInsert = typeof routings_int.$inferInsert;
   const rows = await db.insert(routings_int).values({
-    name,
-    is_active: true,
-    created_by: createdBy,
-    steps: [],
-    work_centers: [],
-  }).onConflictDoNothing().returning({ id: routings_int.id });
+    routingNumber: name,
+    productId: productId,
+    version,
+    createdBy: createdBy != null ? Number(createdBy) : undefined,
+  } as RoutingInsert).onConflictDoNothing().returning({ id: routings_int.id });
   void productId; void version;
   return rows[0]?.id ?? 0;
 }
@@ -83,8 +81,8 @@ export async function queryRouting(id: number): Promise<DbRow | null> {
 
 export async function queryRoutingByProduct(productId: number): Promise<DbRow | null> {
   const rows = await db.select().from(routings_int)
-    .where(eq(routings_int.name, String(productId)))
-    .orderBy(sql`${routings_int.created_at} DESC`)
+    .where(eq(routings_int.routingNumber, String(productId)))
+    .orderBy(sql`${routings_int.createdAt} DESC`)
     .limit(1);
   return (rows[0] ?? null) as DbRow | null;
 }
@@ -97,12 +95,12 @@ export async function execUnlockPlanning(orderId: number): Promise<void> {
 
 export async function queryProductionPlan(startDate: Date, endDate: Date): Promise<DbRow[]> {
   const rows = await db.select().from(production_orders_int)
-    .where(and(gte(production_orders_int.scheduled_start, startDate), lte(production_orders_int.scheduled_start, endDate)));
+    .where(and(gte(production_orders_int.plannedStartDate, String(startDate)), lte(production_orders_int.plannedStartDate, String(endDate))));
   return rows as DbRow[];
 }
 
 export async function queryMachineLoad(workCenterId: number): Promise<DbRow[]> {
   const rows = await db.select().from(routing_operations_int)
-    .where(eq(routing_operations_int.work_center_id, workCenterId));
+    .where(eq(routing_operations_int.workCenterId, workCenterId));
   return rows as DbRow[];
 }

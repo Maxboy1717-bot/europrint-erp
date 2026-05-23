@@ -36,7 +36,7 @@ export class ReportBotDataRepository {
     return safeCall(async () => {
       const r = await db.select({ v: sql<number>`1` })
         .from(hr_daily_reports)
-        .where(sql`${hr_daily_reports.employee_id} = ${employeeId} AND ${hr_daily_reports.report_date}::date = ${today}::date`)
+        .where(sql`${hr_daily_reports.employeeId} = ${employeeId} AND ${hr_daily_reports.reportDate}::date = ${today}::date`)
         .limit(1);
       return r.length > 0;
       }, 'DB_ERROR');

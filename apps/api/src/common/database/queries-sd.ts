@@ -21,17 +21,17 @@ export async function execSdCustomerSoftDelete(cid: number): Promise<void> {
 
 export async function execSdContactDelete(kid: number, cid: number): Promise<void> {
   await db.delete(sd_customer_contacts)
-    .where(and(eq(sd_customer_contacts.id, kid), eq(sd_customer_contacts.customer_id, cid)));
+    .where(and(eq(sd_customer_contacts.id, kid), eq(sd_customer_contacts.customerId, cid)));
 }
 
 export async function execSdDocumentDelete(did: number, cid: number): Promise<void> {
   await db.delete(sd_customer_documents)
-    .where(and(eq(sd_customer_documents.id, did), eq(sd_customer_documents.customer_id, cid)));
+    .where(and(eq(sd_customer_documents.id, did), eq(sd_customer_documents.customerId, cid)));
 }
 
 export async function execSdCompetitorDelete(competitorId: number, customerId: number): Promise<void> {
   await db.delete(sd_customer_competitors)
-    .where(and(eq(sd_customer_competitors.id, competitorId), eq(sd_customer_competitors.customer_id, customerId)));
+    .where(and(eq(sd_customer_competitors.id, competitorId), eq(sd_customer_competitors.customerId, customerId)));
 }
 
 export async function execSdLeadDelete(lid: number): Promise<void> {
@@ -40,7 +40,7 @@ export async function execSdLeadDelete(lid: number): Promise<void> {
 
 export async function execSdLeadConvert(lid: number): Promise<void> {
   await db.update(sdLeads)
-    .set({ status: 'converted', updated_at: sql`NOW()` })
+    .set({ status: 'converted', updatedAt: sql`NOW()` })
     .where(eq(sdLeads.id, lid));
 }
 

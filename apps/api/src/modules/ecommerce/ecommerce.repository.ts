@@ -149,10 +149,10 @@ export class EcommerceRepository {
 
   async insertLeadAsync(firstName: string, lastName: string, phone: string, loggerRef: { error: (msg: string, ctx: unknown) => void }) : Promise<Result<void>>{
     return safeCall(async () => {
-      // sd_leads canonical schema has `full_name` (text), `phone`, `status` — no separate first/last name columns.
+      // sd_leads canonical schema: contactName (text), contactPhone (varchar), status.
       db.insert(sdLeads).values({
-        full_name: `${firstName} ${lastName}`.trim(),
-        phone,
+        contactName: `${firstName} ${lastName}`.trim(),
+        contactPhone: phone,
         status: 'new',
       }).catch((e: Error) => loggerRef.error('CRM lead creation failed', { error: (e as Error).message }));
       }, 'DB_ERROR');

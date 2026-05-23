@@ -200,22 +200,22 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
       const eid = employeeId ? parseInt(employeeId, 10) : 0;
       const rows = await db.select({
         id:             discipline_records.id,
-        employee_id:    discipline_records.employee_id,
-        violation_type: discipline_records.violation_type,
+        employee_id:    discipline_records.employeeId,
+        violation_type: discipline_records.violationType,
         severity:       discipline_records.severity,
         status:         discipline_records.status,
-        violation_date: discipline_records.violation_date,
-        fine_amount:    discipline_records.fine_amount,
-        created_at:     discipline_records.created_at,
+        violation_date: discipline_records.violationDate,
+        fine_amount:    discipline_records.fineAmount,
+        created_at:     discipline_records.createdAt,
         employee_name:  sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
       })
         .from(discipline_records)
-        .innerJoin(hrEmployees, eq(hrEmployees.id, discipline_records.employee_id))
+        .innerJoin(hrEmployees, eq(hrEmployees.id, discipline_records.employeeId))
         .where(sql`
-          ${discipline_records.deleted_at} IS NULL AND ${discipline_records.is_soft_deleted} = false AND
-          (${eid > 0 ? eid : null}::int IS NULL OR ${discipline_records.employee_id} = ${eid > 0 ? eid : null})
+          ${discipline_records.isSoftDeleted} = false AND
+          (${eid > 0 ? eid : null}::int IS NULL OR ${discipline_records.employeeId} = ${eid > 0 ? eid : null})
         `)
-        .orderBy(sql`${discipline_records.created_at} DESC`)
+        .orderBy(sql`${discipline_records.createdAt} DESC`)
         .limit(50);
       return Ok(castTo<HrRow[]>(rows));
     } catch (error: unknown) {

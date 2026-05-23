@@ -126,11 +126,11 @@ export class HrCompatARepository implements IHrCompatARepo {
   async createEmployeeSkill(employeeId: unknown, skillName: unknown, proficiencyLevel: unknown, proficiencyScore: unknown, certifiedDate: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(employee_skills).values({
-        employee_id:       (employeeId ?? null) as number,
-        skill_name:        (skillName ?? '') as string,
-        proficiency_level: (proficiencyLevel ?? 'beginner') as string,
-        proficiency_score: proficiencyScore != null ? String(proficiencyScore) : null,
-        certified_date:    (certifiedDate ?? null) as string,
+        employeeId:       (employeeId ?? null) as number,
+        skillName:        (skillName ?? '') as string,
+        proficiencyLevel: (proficiencyLevel ?? 'beginner') as string,
+        proficiencyScore: proficiencyScore != null ? String(proficiencyScore) : null,
+        certifiedDate:    (certifiedDate ?? null) as string,
       }).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
@@ -140,18 +140,18 @@ export class HrCompatARepository implements IHrCompatARepo {
     return safeCall(async () => {
       const rows = await db.select({
         id:               employee_skills.id,
-        employee_id:      employee_skills.employee_id,
-        skill_name:       employee_skills.skill_name,
-        proficiency_level: employee_skills.proficiency_level,
-        proficiency_score: employee_skills.proficiency_score,
-        certified_date:   employee_skills.certified_date,
-        expiry_date:      employee_skills.expiry_date,
+        employee_id:      employee_skills.employeeId,
+        skill_name:       employee_skills.skillName,
+        proficiency_level: employee_skills.proficiencyLevel,
+        proficiency_score: employee_skills.proficiencyScore,
+        certified_date:   employee_skills.certifiedDate,
+        expiry_date:      employee_skills.expiryDate,
         notes:            employee_skills.notes,
-        created_at:       employee_skills.created_at,
+        created_at:       employee_skills.createdAt,
       })
         .from(employee_skills)
-        .where(eq(employee_skills.employee_id, employeeId))
-        .orderBy(sql`${employee_skills.proficiency_score} DESC`)
+        .where(eq(employee_skills.employeeId, employeeId))
+        .orderBy(sql`${employee_skills.proficiencyScore} DESC`)
         .limit(50);
       return castTo<Row[]>(rows);
       }, 'DB_ERROR');
@@ -211,14 +211,14 @@ export class HrCompatARepository implements IHrCompatARepo {
   async createDisciplineRecord(employeeId: unknown, violationType: unknown, disciplineType: unknown, severity: unknown, violationDate: unknown, description: unknown, fineAmount: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(discipline_records).values({
-        employee_id:    (employeeId ?? null) as number,
-        violation_type: (violationType ?? null) as string,
-        discipline_type: (disciplineType ?? null) as string,
+        employeeId:    (employeeId ?? null) as number,
+        violationType: (violationType ?? null) as string,
+        disciplineType: (disciplineType ?? null) as string,
         severity:       (severity ?? 'minor') as string,
-        violation_date: (violationDate ?? null) as string,
-        issued_date:    sql`NOW()::date`,
+        violationDate: (violationDate ?? null) as string,
+        issuedDate:    sql`NOW()::date`,
         description:    (description ?? null) as string,
-        fine_amount:    fineAmount != null ? String(fineAmount) : null,
+        fineAmount:    fineAmount != null ? String(fineAmount) : null,
         status:         'issued',
       }).returning();
       return castTo<Row>((rows[0] ?? {}));

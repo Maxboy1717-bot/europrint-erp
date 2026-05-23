@@ -23,9 +23,9 @@ export class DailyReportCron {
       const today = _time.now().toISOString().split('T')[0]
 
       const alreadyReported = await db
-        .select({ employee_id: hr_daily_reports.employee_id })
+        .select({ employee_id: hr_daily_reports.employeeId })
         .from(hr_daily_reports)
-        .where(eq(hr_daily_reports.report_date, today))
+        .where(eq(hr_daily_reports.reportDate, today))
       const reportedIds = (Array.isArray(alreadyReported) ? alreadyReported : []).map(r => r.employee_id)
 
       const baseQuery = db
@@ -52,11 +52,11 @@ export class DailyReportCron {
 
       await db.insert(hr_daily_reports).values(
         (Array.isArray(activeEmps) ? activeEmps : []).map(e => ({
-          employee_id: e.id,
-          report_date: today,
-          tasks_completed: '',
+          employeeId: e.id,
+          reportDate: today,
+          tasksCompleted: '',
           status: 'absent',
-          is_auto_absent: true,
+          isAutoAbsent: true,
         })),
       ).onConflictDoNothing()
 

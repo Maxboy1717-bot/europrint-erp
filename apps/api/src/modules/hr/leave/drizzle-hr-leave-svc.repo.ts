@@ -98,8 +98,8 @@ export class DrizzleHrLeaveSvcRepository implements IHrLeaveSvcRepository {
         .select()
         .from(hr_leave_balances)
         .where(and(
-          eq(hr_leave_balances.employee_id, employeeId),
-          eq(hr_leave_balances.leave_type, leaveType),
+          eq(hr_leave_balances.employeeId, employeeId),
+          eq(hr_leave_balances.leaveType, leaveType),
           eq(hr_leave_balances.year, year),
         ))
         .limit(1);
@@ -115,8 +115,8 @@ export class DrizzleHrLeaveSvcRepository implements IHrLeaveSvcRepository {
         .select({ id: hr_leave_balances.id })
         .from(hr_leave_balances)
         .where(and(
-          eq(hr_leave_balances.employee_id, input.employeeId),
-          eq(hr_leave_balances.leave_type, input.leaveType),
+          eq(hr_leave_balances.employeeId, input.employeeId),
+          eq(hr_leave_balances.leaveType, input.leaveType),
           eq(hr_leave_balances.year, input.year),
         ))
         .limit(1);
@@ -126,10 +126,10 @@ export class DrizzleHrLeaveSvcRepository implements IHrLeaveSvcRepository {
         const updated = await db
           .update(hr_leave_balances)
           .set({
-            total_days:     Math.round(input.total_days),
-            used_days:      Math.round(input.used_days),
-            remaining_days: Math.round(input.remaining_days),
-            updated_at:     sql`now()`,
+            totalDays:     Math.round(input.total_days),
+            usedDays:      Math.round(input.used_days),
+            remainingDays: Math.round(input.remaining_days),
+            updatedAt:     sql`now()`,
           })
           .where(eq(hr_leave_balances.id, existingId))
           .returning();
@@ -139,12 +139,12 @@ export class DrizzleHrLeaveSvcRepository implements IHrLeaveSvcRepository {
       const inserted = await db
         .insert(hr_leave_balances)
         .values({
-          employee_id:    input.employeeId,
-          leave_type:     input.leaveType,
+          employeeId:    input.employeeId,
+          leaveType:     input.leaveType,
           year:           input.year,
-          total_days:     Math.round(input.total_days),
-          used_days:      Math.round(input.used_days),
-          remaining_days: Math.round(input.remaining_days),
+          totalDays:     Math.round(input.total_days),
+          usedDays:      Math.round(input.used_days),
+          remainingDays: Math.round(input.remaining_days),
         })
         .returning();
       return Ok(((Array.isArray(inserted) ? inserted[0] : {}) ?? {}) as Row);

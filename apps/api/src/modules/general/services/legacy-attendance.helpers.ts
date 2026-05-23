@@ -40,7 +40,7 @@ export async function findAdminByIdRaw(id: number | string): Promise<Record<stri
 
 export async function getFaceEmbeddingsRaw(): Promise<Record<string, unknown>[]> {
   try {
-    const rows = await db.select().from(face_embeddings).orderBy(desc(face_embeddings.created_at)).limit(100);
+    const rows = await db.select().from(face_embeddings).orderBy(desc(face_embeddings.createdAt)).limit(100);
     return rows as Record<string, unknown>[];
   } catch { return []; }
 }
@@ -55,7 +55,7 @@ export async function deleteFaceEmbeddingRaw(id: string): Promise<void> {
 
 export async function getAttendanceRaw(): Promise<Record<string, unknown>[]> {
   try {
-    const rows = await db.select().from(attendance_records).orderBy(desc(attendance_records.check_in)).limit(200);
+    const rows = await db.select().from(attendance_records).orderBy(desc(attendance_records.eventTime)).limit(200);
     return rows as Record<string, unknown>[];
   } catch { return []; }
 }
@@ -63,8 +63,8 @@ export async function getAttendanceRaw(): Promise<Record<string, unknown>[]> {
 export async function getMyAttendanceRaw(empId?: string): Promise<Record<string, unknown>[]> {
   try {
     const base = db.select().from(attendance_records).$dynamic();
-    const filtered = empId ? base.where(eq(attendance_records.employee_id, parseInt(empId, 10))) : base;
-    const rows = await filtered.orderBy(desc(attendance_records.check_in)).limit(50);
+    const filtered = empId ? base.where(eq(attendance_records.employeeId, parseInt(empId, 10))) : base;
+    const rows = await filtered.orderBy(desc(attendance_records.eventTime)).limit(50);
     return rows as Record<string, unknown>[];
   } catch { return []; }
 }
@@ -115,14 +115,14 @@ export async function getDisciplineUserRaw(empId?: string): Promise<Record<strin
     const rows = await db
       .select({
         id: discipline_records.id,
-        catalog_code: discipline_records.catalog_code,
-        issued_date: discipline_records.issued_date,
+        catalog_code: discipline_records.catalogCode,
+        issued_date: discipline_records.issuedDate,
         status: discipline_records.status,
         description: discipline_records.description,
       })
       .from(discipline_records)
-      .where(eq(discipline_records.employee_id, empIdInt))
-      .orderBy(desc(discipline_records.issued_date))
+      .where(eq(discipline_records.employeeId, empIdInt))
+      .orderBy(desc(discipline_records.issuedDate))
       .limit(50);
     return rows as Record<string, unknown>[];
   } catch { return []; }

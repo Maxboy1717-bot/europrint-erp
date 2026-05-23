@@ -23,7 +23,7 @@ type Row = Record<string, unknown>;
 export class TelegramBotsEmployeesRepo {
   async insertFallbackNotification(message: string): Promise<void> {
     await db.insert(notificationsApp).values({
-      user_id: 1, title: 'Telegram Bildirishnoma', message, type: 'telegram', is_read: false,
+      userId: 1, title: 'Telegram Bildirishnoma', message, type: 'telegram', read: false,
     }).onConflictDoNothing();
   }
 

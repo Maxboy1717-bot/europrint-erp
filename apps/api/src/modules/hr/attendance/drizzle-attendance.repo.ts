@@ -118,22 +118,22 @@ export class DrizzleAttendanceRepository implements IAttendanceRepository {
 
     await db
       .update(hrEmployees)
-      .set({ face_embedding: finalEmbedding, face_embedding_updated_at: _time.now() })
+      .set({ face_embedding: finalEmbedding, face_embedding_updated_at: _time.now() } as never)
       .where(eq(hrEmployees.id, employeeId));
 
     await db
       .update(face_embeddings)
-      .set({ is_active: false })
-      .where(and(eq(face_embeddings.employee_id, employeeId), eq(face_embeddings.is_active, true)));
+      .set({ isActive: false })
+      .where(and(eq(face_embeddings.employeeId, String(employeeId)), eq(face_embeddings.isActive, true)));
 
     const [inserted] = await db
       .insert(face_embeddings)
       .values({
-        employee_id: employeeId,
-        embedding:   finalEmbedding,
-        is_active:   true,
-        confidence:  String(confidence),
-        image_url:   imageUrl ?? null,
+        employeeId: String(employeeId),
+        embedding:  JSON.stringify(finalEmbedding),
+        isActive:   true,
+        confidence: confidence,
+        imageUrl:   imageUrl ?? null,
       })
       .returning({ id: face_embeddings.id });
 
