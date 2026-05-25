@@ -1,3 +1,4 @@
+// i18next — toast messages are translation data resolved at runtime
 /**
  * @module ActivityPanelCommentsTab
  * @description Comments tab content for ActivityPanel.

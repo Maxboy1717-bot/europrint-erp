@@ -1,3 +1,4 @@
+// i18next — status labels are translation data resolved at runtime
 /**
  * @module ScannerStatus
  * @description Top-bar widget showing hardware scanner status (connect/disconnect).

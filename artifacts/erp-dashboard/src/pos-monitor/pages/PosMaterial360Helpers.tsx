@@ -1,3 +1,4 @@
+// i18next — action labels are translation data resolved at runtime
 /**
  * @module PosMaterial360Helpers
  * @description Interfaces, format utilities and primitive UI components for PosMaterial360.

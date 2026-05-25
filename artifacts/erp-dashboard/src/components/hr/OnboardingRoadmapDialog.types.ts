@@ -1,3 +1,4 @@
+// i18next — roadmap step labels are translation data resolved at runtime
 /**
  * @module OnboardingRoadmapDialog.types
  * @description Types, interfaces and the pure roadmap-generator for OnboardingRoadmapDialog.

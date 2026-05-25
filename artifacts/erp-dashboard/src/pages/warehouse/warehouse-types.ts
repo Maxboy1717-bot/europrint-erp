@@ -1,3 +1,4 @@
+// i18next — warehouse status label data resolved at runtime
 /**
  * @module warehouse-types
  * @description React page component. Route-level UI.

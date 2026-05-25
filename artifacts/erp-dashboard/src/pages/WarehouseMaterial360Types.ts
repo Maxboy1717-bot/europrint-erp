@@ -1,3 +1,4 @@
+// i18next — action labels are translation data resolved at runtime
 /**
  * @module WarehouseMaterial360Types
  * @description Types, constants, and format helpers for WarehouseMaterial360.

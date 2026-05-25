@@ -1,3 +1,4 @@
+// i18next — WMS report type labels are translation data
 
 import { tLabel } from '@/lib/i18n/tLabel';
 /**

@@ -4,7 +4,7 @@
  *
  * Usage:
  *   import { PosKpiCard } from '@/pos-monitor/components/PosKpiCard';
- *   <PosKpiCard icon="📦" label="JAMI" value="142" />
+ *   <PosKpiCard icon="📦" label="Total" value="142" />
  */
 
 export interface PosKpiCardProps {

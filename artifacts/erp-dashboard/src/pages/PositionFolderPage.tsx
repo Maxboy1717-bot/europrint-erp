@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 interface FolderContent {
   id: number;
@@ -126,7 +127,7 @@ export default function PositionFolderPage() {
             <h3 className="text-lg font-semibold mb-4">{editing.id ? 'Tahrirlash' : 'Yangi material'}</h3>
             <div className="space-y-3">
               <div>
-                <label className="text-xs">Turi</label>
+                <label className="text-xs">{tLabel('common.type', 'Turi')}</label>
                 <select className="w-full border rounded p-2" value={editing.content_type ?? 'document'}
                   onChange={(e) => setEditing({ ...editing, content_type: e.target.value as FolderContent['content_type'] })}>
                   {CONTENT_TYPES.map(c => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}

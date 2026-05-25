@@ -1,3 +1,4 @@
+// i18next — integration type label data resolved at runtime
 
 import { tLabel } from '@/lib/i18n/tLabel';
 /**

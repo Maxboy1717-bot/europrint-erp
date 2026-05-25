@@ -78,8 +78,8 @@ export function EditPersonalInfoDialog({ open, onOpenChange, form, onChange, onS
   return (
     <DialogShell
       open={open} onOpenChange={onOpenChange} onSave={onSave} isPending={isPending}
-      title="Shaxsiy ma'lumotlarni tahrirlash"
-      description="To'liq ism, tug'ilgan sana, jins va yosh"
+      title={tLabel('hr.editPersonalTitle', "Shaxsiy ma'lumotlarni tahrirlash")}
+      description={tLabel('hr.editPersonalDesc', "To'liq ism, tug'ilgan sana, jins va yosh")}
     >
       <div>
         <Label htmlFor="pi-fullName">{tLabel('common.empCardFullName', "To'liq F.I.SH")}</Label>
@@ -132,15 +132,15 @@ export function EditContactInfoDialog({ open, onOpenChange, form, onChange, onSa
   return (
     <DialogShell
       open={open} onOpenChange={onOpenChange} onSave={onSave} isPending={isPending}
-      title="Aloqa ma'lumotlarini tahrirlash"
-      description="Telefon, manzil, tuman, Telegram"
+      title={tLabel('hr.editContactTitle', "Aloqa ma'lumotlarini tahrirlash")}
+      description={tLabel('hr.editContactDesc', "Telefon, manzil, tuman, Telegram")}
     >
       <div>
         <Label htmlFor="ci-phone">Telefon</Label>
         <Input id="ci-phone" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+998..." />
       </div>
       <div>
-        <Label htmlFor="ci-address">Manzil</Label>
+        <Label htmlFor="ci-address">{tLabel('common.address', 'Manzil')}</Label>
         <Input id="ci-address" value={form.address} onChange={(e) => set("address", e.target.value)} />
       </div>
       <div>
@@ -178,8 +178,8 @@ export function EditWorkConditionsDialog({ open, onOpenChange, form, onChange, o
   return (
     <DialogShell
       open={open} onOpenChange={onOpenChange} onSave={onSave} isPending={isPending}
-      title="Ish shartlarini tahrirlash"
-      description="Ish haqi turi, smena, sex/hudud, attestatsiya sanasi"
+      title={tLabel('hr.editWorkCondTitle', "Ish shartlarini tahrirlash")}
+      description={tLabel('hr.editWorkCondDesc', "Ish haqi turi, smena, sex/hudud, attestatsiya sanasi")}
     >
       <div>
         <Label>{tLabel('common.empCardSalaryType', 'Ish haqi turi')}</Label>
@@ -194,7 +194,7 @@ export function EditWorkConditionsDialog({ open, onOpenChange, form, onChange, o
         </Select>
       </div>
       <div>
-        <Label>Smena</Label>
+        <Label>{tLabel('common.shift', 'Smena')}</Label>
         <Select value={form.shift} onValueChange={(v) => set("shift", v)}>
           <SelectTrigger><SelectValue placeholder="Tanlang..." /></SelectTrigger>
           <SelectContent>
@@ -244,8 +244,8 @@ export function EditFamilyInfoDialog({ open, onOpenChange, form, onChange, onSav
   return (
     <DialogShell
       open={open} onOpenChange={onOpenChange} onSave={onSave} isPending={isPending}
-      title="Oila ma'lumotlarini tahrirlash"
-      description="Oilaviy holat, farzandlar, uy-joy ma'lumotlari"
+      title={tLabel('hr.editFamilyTitle', "Oila ma'lumotlarini tahrirlash")}
+      description={tLabel('hr.editFamilyDesc', "Oilaviy holat, farzandlar, uy-joy ma'lumotlari")}
     >
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -299,7 +299,7 @@ export function EditFamilyInfoDialog({ open, onOpenChange, form, onChange, onSav
       </div>
       <div>
         <Label htmlFor="fi-members">{tLabel('common.empCardLivesWith', 'Kimlar bilan yashaydi')}</Label>
-        <Input id="fi-members" value={form.householdMembers} onChange={(e) => set("householdMembers", e.target.value)} placeholder="masalan: Turmush o'rtog'i, 2 ta farzand" />
+        <Input id="fi-members" value={form.householdMembers} onChange={(e) => set("householdMembers", e.target.value)} placeholder={tLabel('hr.editFamilyMembersPlaceholder', "masalan: Turmush o'rtog'i, 2 ta farzand")} />
       </div>
     </DialogShell>
   );

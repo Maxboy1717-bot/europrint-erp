@@ -1,3 +1,4 @@
+// i18next — employee tracking label data resolved at runtime
 
 import { tLabel } from '@/lib/i18n/tLabel';
 /**

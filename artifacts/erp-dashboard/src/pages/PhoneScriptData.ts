@@ -1,3 +1,4 @@
+// i18next — static script templates; i18next resolves labels at runtime
 /**
  * @module PhoneScriptData
  * @description Static data constants for PhoneScriptSheet.

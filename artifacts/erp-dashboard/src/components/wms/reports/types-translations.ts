@@ -1,3 +1,4 @@
+// i18next — Cyrillic (UZ-CYR) label data for WMS reports
 /**
  * @module types-translations
  * @description WMS report i18n translations and UI color constants.

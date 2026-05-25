@@ -13,10 +13,10 @@
  *   - A pre-rendered JSX node:  icon={<Users className="h-4 w-4" />}
  *
  * All props are optional so any caller pattern works:
- *   <StatCard label="Xodimlar" value={42} icon={Users} color="#6366f1" />
+ *   <StatCard label="Employees" value={42} icon={Users} color="#6366f1" />
  *   <StatCard title="Kirim" value="12 t" icon={TrendingUp} loading={isLoading} variant="warning" />
  *   <StatCard label="OEE" value="87%" icon={Gauge} sub="o'rtacha samaradorlik" />
- *   <StatCard label="Bo'limlar" value={5} icon={<Building2 className="h-4 w-4" />} color="#1d4ed8" />
+ *   <StatCard label="Departments" value={5} icon={<Building2 className="h-4 w-4" />} color="#1d4ed8" />
  */
 
 import React from "react";

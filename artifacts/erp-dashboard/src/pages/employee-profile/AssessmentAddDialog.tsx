@@ -1,3 +1,4 @@
+// i18next — reviewer type labels are translation data resolved at runtime
 /**
  * @module AssessmentAddDialog
  * @description Add-assessment dialog, StarRating helper, and REVIEWER_TYPES

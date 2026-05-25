@@ -71,21 +71,7 @@ export function useCurrentUser() {
   return userId;
 }
 
-export function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
+export { useDebounce } from '@/hooks/useDebounce';
 
 export function getActiveFilterCount(filters: AdvancedFilters): number {
   let count = 0;

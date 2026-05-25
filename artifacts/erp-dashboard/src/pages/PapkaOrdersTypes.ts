@@ -1,3 +1,4 @@
+// i18next — order type label data resolved at runtime
 /**
  * @module PapkaOrdersTypes
  * @description Types, constants and i18n strings for PapkaOrders.

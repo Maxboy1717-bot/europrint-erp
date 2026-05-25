@@ -1,3 +1,4 @@
+// i18next — notification type labels are translation data
 /**
  * @module NotificationBell.types
  * @description Types and constants for the NotificationBell component.

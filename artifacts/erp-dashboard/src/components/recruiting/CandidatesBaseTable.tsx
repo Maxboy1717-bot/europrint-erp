@@ -95,7 +95,7 @@ export function CandidatesBaseTable({ entries, vacancyMap, onRestore, onReport, 
               <th className="text-left px-3 py-2 font-semibold">Aloqa</th>
               <th className="text-left px-3 py-2 font-semibold">Vakansiya</th>
               <th className="text-left px-3 py-2 font-semibold">{tLabel("common.CandidatesBaseTable.tsx.holat", "Holat")}</th>
-              <th className="text-left px-3 py-2 font-semibold">Manba</th>
+              <th className="text-left px-3 py-2 font-semibold">{tLabel('common.source', 'Manba')}</th>
               <th className="text-right px-3 py-2 font-semibold">{tLabel("common.CandidatesBaseTable.tsx.amallar", "Amallar")}</th>
             </tr>
           </thead>
