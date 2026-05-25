@@ -13,7 +13,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { Result, safeCall } from '@common/result';
-import { sql } from 'drizzle-orm';
+import { sql, SQL } from 'drizzle-orm';
 import { db } from '@shared/db';
 import type { IAishaTool, ToolResult } from '../../domain/tool.interface';
 import { provSource, provResult, rowsOf } from './_helpers';
@@ -53,15 +53,13 @@ export class GenerateKpiReportTool implements IAishaTool {
 
     return safeCall<ToolResult<KpiReport>>(async () => {
       const start = Date.now();
-      const where = this.periodWhere(period);
-      // NOTE: P3-30 — `where` is a switch-bounded period filter from the private `periodWhere()` helper below (exhaustive over Period = 'today'|'week'|'month'); no user-supplied SQL.
-      const rev    = rowsOf<{ s: number }>(await db.execute(sql`SELECT COALESCE(SUM(total),0)::float AS s FROM sales_orders WHERE ${sql.raw(where)}`))[0]?.s ?? 0;
-      // NOTE: P3-30 — `where` is a switch-bounded period filter from the private `periodWhere()` helper below (exhaustive over Period = 'today'|'week'|'month'); no user-supplied SQL.
-      const units  = rowsOf<{ s: number }>(await db.execute(sql`SELECT COALESCE(SUM(qty_produced),0)::int AS s FROM production_orders WHERE ${sql.raw(where)}`))[0]?.s ?? 0;
-      // NOTE: P3-30 — `where` is a switch-bounded period filter from the private `periodWhere()` helper below; `.replace('created_at','date')` rewrites the literal column for the hr_attendance schema; no user-supplied SQL.
-      const atten  = rowsOf<{ p: number }>(await db.execute(sql`SELECT (SUM(CASE WHEN status='present' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*),0) * 100) AS p FROM hr_attendance WHERE ${sql.raw(where.replace('created_at','date'))}`))[0]?.p ?? 0;
-      // NOTE: P3-30 — `where` is a switch-bounded period filter from the private `periodWhere()` helper below; `.replace('created_at','inspected_at')` rewrites the literal column for the qc_inspections schema; no user-supplied SQL.
-      const defect = rowsOf<{ p: number }>(await db.execute(sql`SELECT (SUM(CASE WHEN result='reject' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*),0) * 100) AS p FROM qc_inspections WHERE ${sql.raw(where.replace('created_at','inspected_at'))}`))[0]?.p ?? 0;
+      const where         = this.periodWhere(period, 'created_at');
+      const whereDate     = this.periodWhere(period, 'date');
+      const whereInspect  = this.periodWhere(period, 'inspected_at');
+      const rev    = rowsOf<{ s: number }>(await db.execute(sql`SELECT COALESCE(SUM(total),0)::float AS s FROM sales_orders WHERE ${where}`))[0]?.s ?? 0;
+      const units  = rowsOf<{ s: number }>(await db.execute(sql`SELECT COALESCE(SUM(qty_produced),0)::int AS s FROM production_orders WHERE ${where}`))[0]?.s ?? 0;
+      const atten  = rowsOf<{ p: number }>(await db.execute(sql`SELECT (SUM(CASE WHEN status='present' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*),0) * 100) AS p FROM hr_attendance WHERE ${whereDate}`))[0]?.p ?? 0;
+      const defect = rowsOf<{ p: number }>(await db.execute(sql`SELECT (SUM(CASE WHEN result='reject' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*),0) * 100) AS p FROM qc_inspections WHERE ${whereInspect}`))[0]?.p ?? 0;
 
       const reportId = `kpi-${period}-${Date.now()}`;
       return provResult<KpiReport>({
@@ -80,11 +78,24 @@ export class GenerateKpiReportTool implements IAishaTool {
     });
   }
 
-  private periodWhere(p: Period): string {
+  private periodWhere(p: Period, col: 'created_at' | 'date' | 'inspected_at' = 'created_at'): SQL {
+    // Returns a parameterised SQL fragment — no sql.raw() needed.
     switch (p) {
-      case 'today': return `created_at::date = CURRENT_DATE`;
-      case 'week':  return `created_at >= NOW() - INTERVAL '7 days'`;
-      case 'month': return `created_at >= NOW() - INTERVAL '30 days'`;
+      case 'today': return col === 'date'
+        ? sql`date::date = CURRENT_DATE`
+        : col === 'inspected_at'
+          ? sql`inspected_at::date = CURRENT_DATE`
+          : sql`created_at::date = CURRENT_DATE`;
+      case 'week':  return col === 'date'
+        ? sql`date >= NOW() - INTERVAL '7 days'`
+        : col === 'inspected_at'
+          ? sql`inspected_at >= NOW() - INTERVAL '7 days'`
+          : sql`created_at >= NOW() - INTERVAL '7 days'`;
+      case 'month': return col === 'date'
+        ? sql`date >= NOW() - INTERVAL '30 days'`
+        : col === 'inspected_at'
+          ? sql`inspected_at >= NOW() - INTERVAL '30 days'`
+          : sql`created_at >= NOW() - INTERVAL '30 days'`;
     }
   }
 }
