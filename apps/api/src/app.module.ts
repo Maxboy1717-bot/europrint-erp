@@ -1,3 +1,10 @@
+/**
+ * @module app.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports
+ *   for this feature slice. Feature-module imports were extracted to
+ *   `feature-modules.ts` to keep this file under the 300-line cap (Rule 16).
+ */
+
 import { Module, Logger } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
@@ -6,6 +13,13 @@ import { FastifyThrottlerGuard } from './common/guards/fastify-throttler.guard';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from 'nestjs-pino';
+import {
+  I18nModule,
+  AcceptLanguageResolver,
+  HeaderResolver,
+  QueryResolver,
+} from 'nestjs-i18n';
+import * as path from 'path';
 
 // Sprint 3 startup migration
 import { Sprint3MigrationService } from './modules/common/services/sprint3-migration.service';
@@ -13,6 +27,7 @@ import { Sprint3MigrationService } from './modules/common/services/sprint3-migra
 // Common
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { ResultUnwrapInterceptor } from './common/interceptors/result-unwrap.interceptor';
+import { TenantContextInterceptor } from './shared/db/tenant-context.interceptor';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { SodGuard } from './common/guards/sod.guard';
@@ -23,85 +38,22 @@ import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
 import redisConfig from './config/redis.config';
 
-// Infrastructure
-import { DatabaseModule } from './infrastructure/database/database.module';
-import { RedisModule } from './infrastructure/redis/redis.module';
-
-// Sprint 5 — Infratuzilma (TZ-59 Cache, TZ-60 BullMQ)
-import { CacheModule } from './common/cache/cache.module';
-import { QueueModule } from './modules/queue/queue.module';
-
-// Core modules (24 ta — to'liq NestJS)
-import { AuthModule } from './modules/auth/auth.module';
-import { AdminModule } from './modules/admin/admin.module';
-import { CrmModule } from './modules/crm/crm.module';
-import { SdModule } from './modules/sd/sd.module';
-import { PpModule } from './modules/pp/pp.module';
-import { MesModule } from './modules/mes/mes.module';
-import { WmsModule } from './modules/wms/wms.module';
-import { QcModule } from './modules/qc/qc.module';
-import { HrModule } from './modules/hr/hr.module';
-import { LmsModule } from './modules/lms/lms.module';
-import { FinanceModule } from './modules/finance/finance.module';
-import { MmModule } from './modules/mm/mm.module';
-import { LogisticsModule } from './modules/logistics/logistics.module';
-import { NotificationsModule } from './modules/notifications/notifications.module';
-import { IotModule } from './modules/iot/iot.module';
-import { DesignModule } from './modules/design/design.module';
-import { MarketingModule } from './modules/marketing/marketing.module';
-import { MroModule } from './modules/mro/mro.module';
-import { SecurityModule } from './modules/security/security.module';
-import { KanbanModule } from './modules/kanban/kanban.module';
-import { AiModule } from './modules/ai/ai.module';
-import { AiAgentsModule } from './modules/ai-agents/ai-agents.module';
-import { BotGatewayModule } from './modules/bot-gateway/bot-gateway.module';
-import { DirectorModule } from './modules/director/director.module';
-import { PosModule } from './modules/pos/pos.module';
-import { PosV2Module } from './modules/pos-v2/pos-v2.module';
-import { CoreModule } from './modules/core/core.module';
-import { OrgStructureModule } from './modules/org-structure/org-structure.module';
-import { ChatModule } from './modules/chat/chat.module';
-
-// Ecommerce & Website (Express dan ko'chirildi — NestJS native)
-import { EcommerceModule } from './modules/ecommerce/ecommerce.module';
-import { WebsiteModule } from './modules/website/website.module';
-
-// Legacy & Compatibility (minimallashtirilgan — asosiy route'lar ko'chirildi)
-import { LegacyModule } from './modules/legacy/legacy.module';
-import { CompatibilityModule } from './modules/compatibility/compatibility.module';
-
-// Cron + Telegram
-import { CronModule } from './cron/cron.module';
-import { TelegramModule } from './telegram/telegram.module';
-
-// Remaining routes (to'liq NestJS — Express o'chirildi)
-import { RemainingModule } from './modules/remaining/remaining.module';
-import { IntegrationModule } from './modules/integration/integration.module';
-
-// New modules (CRM/SD extensions)
-import { SalesModule } from './modules/sales/sales.module';
-import { ApplicationsModule } from './modules/applications/applications.module';
-import { SapModule } from './modules/sap/sap.module';
-
-// PP / MES / Production extensions
-import { ProductionModule } from './modules/production/production.module';
-import { ErpModule } from './modules/erp/erp.module';
-
-// Analytics & Export
-import { AnalyticsModule } from './modules/analytics/analytics.module';
-import { ExportModule } from './modules/export/export.module';
-
-// Design / Technology / HR Assets (Task #262)
-import { TechnologyModule } from './modules/technology/technology.module';
-import { HrAssetsModule } from './modules/hr-assets/hr-assets.module';
-
-// Faza 7 — New endpoint modules
-import { AdaptationModule } from './modules/adaptation/adaptation.module';
-import { CameraModule } from './modules/camera/camera.module';
-import { Feedback360Module } from './modules/feedback-360/feedback-360.module';
-
-// Sprint 4 — Order-to-Cash Workflow
-import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.module';
+// Feature modules — extracted to keep this file under 300 lines (Rule 16).
+import {
+  DatabaseModule, RedisModule,
+  CacheModule, QueueModule,
+  AuthModule, AdminModule, CrmModule, SdModule, PpModule, MesModule,
+  WmsModule, QcModule, HrModule, LmsModule, FinanceModule, MmModule,
+  LogisticsModule, NotificationsModule, IotModule, DesignModule,
+  MarketingModule, MroModule, SecurityModule, KanbanModule, AiModule,
+  AiAgentsModule, BotGatewayModule, DirectorModule, AishaModule,
+  CommunicationCenterModule, AgentsModule, PosModule, PosV2Module,
+  CoreModule, OrgStructureModule, ChatModule, StorageModule,
+  EcommerceModule, LegacyModule, CompatibilityModule,
+  CronModule, TelegramModule, RemainingModule, IntegrationModule,
+  ErpModule, ExportModule, OrderWorkflowModule,
+  SharedEventsModule, OutboxModule,
+} from './feature-modules';
 
 @Module({
   imports: [
@@ -112,21 +64,22 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
     }),
 
     // ── Throttler: §6 Rate Limiting ──────────────────────────────────────────
-    // Two named profiles: 'default' (100/min) for general routes,
-    // 'auth' (5/min) for /auth/* — enforced globally by FastifyThrottlerGuard
+    // To'rt nomli profil — FastifyThrottlerGuard global enforcement orqali:
+    //   default  — umumiy endpointlar     (100/daq)
+    //   auth     — /auth/* (brute-force)  (5/daq)
+    //   ai       — LLM (qimmat operatsiya)(20/daq) — Claude/OpenAI cost cheklash
+    //   report   — og'ir hisobotlar       (10/daq)
+    //   export   — PDF/Excel eksport      (5/daq)
     ThrottlerModule.forRoot([
-      { name: 'default', ttl: 60_000, limit: 100 },
-      { name: 'auth',    ttl: 60_000, limit: 5 },
+      { name: 'default', ttl: 60_000, limit: parseInt(process.env.THROTTLE_DEFAULT_LIMIT ?? '100', 10) },
+      { name: 'auth',    ttl: 60_000, limit: parseInt(process.env.THROTTLE_AUTH_LIMIT ?? '5', 10) },
+      { name: 'ai',      ttl: 60_000, limit: parseInt(process.env.THROTTLE_AI_LIMIT ?? '20', 10) },
+      { name: 'report',  ttl: 60_000, limit: parseInt(process.env.THROTTLE_REPORT_LIMIT ?? '10', 10) },
+      { name: 'export',  ttl: 60_000, limit: parseInt(process.env.THROTTLE_EXPORT_LIMIT ?? '5', 10) },
     ]),
 
     // ── Event-Driven (§10 — 20 trigger) ─────────────────────────────────────
-    EventEmitterModule.forRoot({
-      wildcard: false,
-      delimiter: '.',
-      maxListeners: 50,
-      verboseMemoryLeak: true,
-      ignoreErrors: false,
-    }),
+    EventEmitterModule.forRoot(),
 
     // ── Cron jobs (§22) ──────────────────────────────────────────────────────
     ScheduleModule.forRoot(),
@@ -137,6 +90,28 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
         level: process.env.LOG_LEVEL || 'info',
         transport: process.env.NODE_ENV !== 'production' ? { target: 'pino-pretty' } : undefined,
       },
+    }),
+
+    // ── i18n: lokalizatsiya (Backend Task Group 3) ───────────────────────────
+    // Frontend Accept-Language: uz/ru sarlavhasini yuboradi. nestjs-i18n
+    // resolveri tilni aniqlaydi va I18nService.t(key) lokalizatsiyalangan
+    // matn qaytaradi. Fallback til — uz.
+    // Resolvers tartibi (yuqori prioritet birinchi): ?lang=ru → x-lang header
+    // → accept-language header.
+    I18nModule.forRoot({
+      fallbackLanguage: 'uz',
+      loaderOptions: {
+        path: path.join(__dirname, '/i18n/'),
+        watch: process.env.NODE_ENV !== 'production',
+      },
+      resolvers: [
+        { use: QueryResolver, options: ['lang'] },
+        // HeaderResolver only for custom 'x-lang' header — 'accept-language' is
+        // handled by AcceptLanguageResolver (supports RFC4647 quality values).
+        new HeaderResolver(['x-lang']),
+        AcceptLanguageResolver,
+      ],
+      typesOutputPath: path.join(__dirname, '../src/generated/i18n.generated.ts'),
     }),
 
     // ── Infrastructure ────────────────────────────────────────────────────────
@@ -172,17 +147,20 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
     AiAgentsModule,
     BotGatewayModule,
     DirectorModule,
+    AishaModule,
+    CommunicationCenterModule,
+    AgentsModule,
     PosModule,
     PosV2Module,
     CoreModule,
     OrgStructureModule,
     ChatModule,
+    StorageModule,
 
     // ── Ecommerce & Website (NestJS native — Express dan ko'chirildi) ──────────
     EcommerceModule,
-    WebsiteModule,
 
-    // ── Legacy & Compatibility (minimallashtirilgan — saqlanadi chunki funksiya yo'qolmasligi shart) ──
+    // ── Legacy & Compatibility (minimallashtirilgan) ────────────────────────────
     CompatibilityModule,
     LegacyModule,
 
@@ -194,30 +172,20 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
     RemainingModule,
     IntegrationModule,
 
-    // ── CRM/SD Extensions ────────────────────────────────────────────────────
-    SalesModule,
-    ApplicationsModule,
-    SapModule,
-
     // ── PP / MES / Production Extensions ─────────────────────────────────────
-    ProductionModule,
     ErpModule,
 
     // ── Analytics & Export ────────────────────────────────────────────────────
-    AnalyticsModule,
     ExportModule,
-
-    // ── Design / Technology / HR Assets (Task #262) ───────────────────────────
-    TechnologyModule,
-    HrAssetsModule,
-
-    // ── Faza 7 — New endpoint modules ─────────────────────────────────────────
-    AdaptationModule,
-    CameraModule,
-    Feedback360Module,
 
     // ── Sprint 4 — Order-to-Cash Workflow ─────────────────────────────────────
     OrderWorkflowModule,
+
+    // ── PA0 event bridge (CQRS → EventEmitter2, Triggers 2/7/14/15/20) ────────
+    SharedEventsModule,
+
+    // ── PA0-6 outbox pattern (persisted domain events + scheduled publisher) ─
+    OutboxModule,
   ],
 
   providers: [
@@ -228,11 +196,18 @@ import { OrderWorkflowModule } from './modules/order-workflow/order-workflow.mod
     { provide: APP_GUARD, useClass: SodGuard },
     { provide: APP_GUARD, useClass: PermissionGuard },
 
-    // ── Sprint 3 startup migration (ensures rfm_clusters, churn_model_params, imposition_layouts) ──
+    // ── Sprint 3 startup migration ─────────────────────────────────────────
+    // Ensures rfm_clusters, churn_model_params, imposition_layouts.
     Sprint3MigrationService,
 
     // ── Global Interceptors (tartib muhim: Audit → ResultUnwrap) ─────────────
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
+    // TenantContextInterceptor: Phase 2 / Task 2.1 — wraps each request in
+    // an AsyncLocalStorage tenant scope read from JWT. Must run AFTER the
+    // guards (so request.user is populated) but BEFORE any business logic
+    // that calls getTenantId(). Order is determined by registration order
+    // among APP_INTERCEPTOR providers.
+    { provide: APP_INTERCEPTOR, useClass: TenantContextInterceptor },
     // ResultUnwrapInterceptor: controller Result<T> qaytarsa avtomatik unwrap
     // qiladi. isSuccess=true → value qaytaradi; isFailure → 500 tashlaydi.
     { provide: APP_INTERCEPTOR, useClass: ResultUnwrapInterceptor },

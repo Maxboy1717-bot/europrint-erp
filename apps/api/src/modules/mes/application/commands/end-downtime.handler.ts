@@ -1,3 +1,8 @@
+/**
+ * @module end-downtime.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
@@ -5,6 +10,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/result';
 import { DowntimeEvent } from '../../domain/aggregates/downtime-event.aggregate';
 import { DrizzleDowntimeRepository } from '../../infrastructure/repositories/drizzle-downtime.repo';
+import { DOWNTIME_REPO } from '../../domain/repositories/mes.repository';
 import { EndDowntimeCommand } from './end-downtime.command';
 
 @Injectable()
@@ -13,7 +19,7 @@ export class EndDowntimeHandler implements ICommandHandler<EndDowntimeCommand> {
   private readonly logger = new Logger(EndDowntimeHandler.name);
 
   constructor(
-    @Inject('IDowntimeRepository')
+    @Inject(DOWNTIME_REPO)
     private readonly downtimeRepo: DrizzleDowntimeRepository,
   ) {}
 

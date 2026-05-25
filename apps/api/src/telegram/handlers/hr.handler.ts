@@ -1,6 +1,12 @@
+/**
+ * @module hr.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common'
+import { I18nService } from 'nestjs-i18n'
 import { TelegramService } from '../telegram.service'
 
 interface AttendanceAlert {
@@ -34,19 +40,20 @@ interface SalaryReminder {
 export class HrHandler {
   private readonly logger = new Logger(HrHandler.name)
 
-  constructor(private telegramService: TelegramService) {}
+  constructor(
+    private telegramService: TelegramService,
+    private readonly i18n: I18nService,
+  ) {}
 
   async onAttendanceMissing(alert: AttendanceAlert): Promise<void> {
     try {
-      const text = `
-❌ <b>Xodim Kelmadi</b>
-
-👤 <b>Ism:</b> ${alert.employee_name}
-🆔 <b>ID:</b> <code>${alert.employee_id}</code>
-📅 <b>Bugun:</b> ${_time.now().toLocaleDateString('uz-UZ')}
-
-Tezda bog'lanib olish kerak.
-      `
+      const text = await this.i18n.t('telegram.hr.attendanceMissing', {
+        args: {
+          employeeName: alert.employee_name,
+          employeeId: alert.employee_id,
+          today: _time.now().toLocaleDateString('uz-UZ'),
+        },
+      })
       await this.telegramService.sendMessage(alert.hr_manager_chat_id, text)
       this.logger.log(`Attendance alert sent: ${alert.employee_id}`)
     } catch (err) {
@@ -56,15 +63,13 @@ Tezda bog'lanib olish kerak.
 
   async onLeaveApproved(leave: LeaveApproval): Promise<void> {
     try {
-      const text = `
-✅ <b>Ta'til Tasdiqlandi!</b>
-
-📅 <b>Boshlanishi:</b> ${leave.start_date}
-📅 <b>Tugatilishi:</b> ${leave.end_date}
-📊 <b>Kunlar:</b> ${leave.days} kun
-
-Safrdan lazzat oling!
-      `
+      const text = await this.i18n.t('telegram.hr.leaveApproved', {
+        args: {
+          startDate: leave.start_date,
+          endDate: leave.end_date,
+          days: leave.days,
+        },
+      })
       await this.telegramService.sendMessage(leave.employee_chat_id, text)
       this.logger.log(`Leave approved notified: ${leave.employee_id}`)
     } catch (err) {
@@ -74,13 +79,9 @@ Safrdan lazzat oling!
 
   async onBirthdayNotification(bday: BirthdayNotification): Promise<void> {
     try {
-      const text = `
-🎉 <b>Tug'ilgan Kun Tabriklaymiz!</b>
-
-🎂 Siz bugun ${bday.employee_name} ning tug'ilgan kuniga yetdingiz!
-
-Ko'p yoshli, baxt va samarali bo'ling!
-      `
+      const text = await this.i18n.t('telegram.hr.birthday', {
+        args: { employeeName: bday.employee_name },
+      })
       await this.telegramService.sendMessage(bday.employee_chat_id, text)
       await this.telegramService.sendMessage(bday.manager_chat_id, text)
       this.logger.log(`Birthday notification sent: ${bday.employee_id}`)
@@ -91,15 +92,12 @@ Ko'p yoshli, baxt va samarali bo'ling!
 
   async onSalaryReminder(reminder: SalaryReminder): Promise<void> {
     try {
-      const text = `
-💰 <b>Maosh To'lash Eslatmasi</b>
-
-👥 <b>Xodimlar Soni:</b> ${reminder.total_employees} ta
-📅 <b>To'lash Muddati:</b> 28-kun (bugun: 28)
-
-Maosh hisob-kitobini tekshiring va to'lovni tasdiqlang.
-HR Portal: ${process.env.HR_PORTAL_URL}
-      `
+      const text = await this.i18n.t('telegram.hr.salaryReminder', {
+        args: {
+          totalEmployees: reminder.total_employees,
+          portalUrl: process.env.HR_PORTAL_URL ?? '',
+        },
+      })
       await this.telegramService.sendMessage(reminder.hr_manager_chat_id, text)
       this.logger.log('Salary reminder sent')
     } catch (err) {

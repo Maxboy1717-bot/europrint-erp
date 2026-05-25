@@ -1,3 +1,8 @@
+/**
+ * @module calculate-payroll.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Result, Err } from '@common/result';
@@ -5,6 +10,11 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { HR_REPO, IHrRepo } from '../../domain/repositories/i-hr.repo';
+import { EmployeeId } from '@shared/domain/value-objects/employee-id.vo';
+import {
+  findUserIdByEmployee,
+  hasAnyOrgAssignment,
+} from '../../../compatibility/employees-org-assignment.helper';
 
 // O'zbekiston mehnat qonuni (2024)
 const INPS_RATE   = 0.08;   // 8%  — xodimdan ushlab qolinadi
@@ -31,6 +41,31 @@ export class CalculatePayrollHandler implements ICommandHandler<CalculatePayroll
 
   async execute(command: CalculatePayrollCommand): Promise<Result<Record<string, unknown>>> {
       this.logger.debug(`Calculating payroll for employee ${command.employeeId}, period: ${command.period}`);
+
+      // VO validation at the handler boundary — rejects zero/negative ids
+      // (and stringly-typed ids if the DTO leaks through) before any DB hit.
+      const empIdR = EmployeeId.create(command.employeeId);
+      if (!empIdR.ok) {
+        return Err({ code: 'VALIDATION', message: empIdR.error.message });
+      }
+      const employeeIdValue = empIdR.data.value;
+
+      // Biznes qoida: xodim org-structure'da biriktirilgan bo'lishi shart.
+      // Aks holda — oylik bazaga kiritilmaydi (lavozim/funksiya yo'q).
+      const userId = await findUserIdByEmployee(employeeIdValue);
+      if (userId === null) {
+        return Err({
+          code: 'BAD_REQUEST',
+          message: `Xodim ID=${command.employeeId} uchun user yaratilmagan — oylik kiritilmaydi`,
+        });
+      }
+      const isAssigned = await hasAnyOrgAssignment(userId);
+      if (!isAssigned) {
+        return Err({
+          code: 'BAD_REQUEST',
+          message: `Xodim ID=${command.employeeId} tashkiliy tuzilmaga biriktirilmagan — oylik kiritilmaydi. Avval xodim org-structure'da bo'limga assign qilinishi kerak.`,
+        });
+      }
 
       // INPS/JSHD hisob-kitobi
       const dailyRate = command.baseSalary / 22;

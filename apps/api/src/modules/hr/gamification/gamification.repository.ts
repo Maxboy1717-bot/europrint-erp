@@ -1,3 +1,8 @@
+/**
+ * @module gamification.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db , runQuery } from '@shared/db';
@@ -41,7 +46,7 @@ export class GamificationRepository {
 
   async getBadgeCatalogEntry(badgeCode: string): Promise<Result<Row | null>> {
     return safeCall(async () => {
-      const rows = await db.select({ point_value: badge_catalog.point_value })
+      const rows = await db.select({ point_value: badge_catalog.pointValue })
         .from(badge_catalog)
         .where(eq(badge_catalog.code, badgeCode))
         .limit(1);
@@ -106,10 +111,10 @@ export class GamificationRepository {
         awarded_at:  employee_badges.awarded_at,
         reason:      employee_badges.reason,
         name:        badge_catalog.name,
-        name_ru:     badge_catalog.name_ru,
+        name_ru:     badge_catalog.nameRu,
         icon:        badge_catalog.icon,
         description: badge_catalog.description,
-        point_value: badge_catalog.point_value,
+        point_value: badge_catalog.pointValue,
       })
         .from(employee_badges)
         .innerJoin(badge_catalog, eq(badge_catalog.id, employee_badges.badge_id))

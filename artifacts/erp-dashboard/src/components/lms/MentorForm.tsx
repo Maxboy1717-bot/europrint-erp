@@ -1,4 +1,9 @@
-import { Loader2, Users, Plus } from "lucide-react";
+/**
+ * @module MentorForm
+ * @description React UI component.
+ */
+
+import { Users, Plus } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,6 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface MentorData {
   name: string;
   bio: string;
@@ -53,6 +61,7 @@ export function MentorForm({
   createMentorPending,
   employees
 }: MentorFormProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -67,12 +76,12 @@ export function MentorForm({
           {showMentorForm ? (
             <>
               <Users className="w-4 h-4 mr-2" />
-              Mavjud mentorlarni tanlash
+              {t("mavjudMentorlarniTanlash")}
             </>
           ) : (
             <>
               <Plus className="w-4 h-4 mr-2" />
-              Yangi mentor qo'shish
+              {t("yangiMentorQoshish")}
             </>
           )}
         </Button>
@@ -81,11 +90,11 @@ export function MentorForm({
       {!showMentorForm ? (
         <div className="space-y-2">
           <Select value={mentorId || "none"} onValueChange={(value) => setMentorId(value === "none" ? "" : value)}>
-            <SelectTrigger data-testid="select-mentor">
-              <SelectValue placeholder="Mentorni tanlang" />
+            <SelectTrigger data-testid="select-mentor" className="h-9">
+              <SelectValue placeholder={t("mentorniTanlang")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Mentorsiz</SelectItem>
+              <SelectItem value="none">{t("mentorsiz")}</SelectItem>
               {(Array.isArray(mentors) ? mentors : []).map(mentor => (
                 <SelectItem key={mentor.id} value={mentor.id}>
                   {mentor.name} {mentor.source && `(${mentor.source})`}
@@ -96,11 +105,11 @@ export function MentorForm({
         </div>
       ) : (
         <Card className="p-4 space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="mentorName">Mentor ismi *</Label>
+          <div className="space-y-1">
+          <Label htmlFor="mentorName">{t("mentorIsmi1")}</Label>
             <Input
               id="mentorName"
-              placeholder="Ismi Familiyasi"
+              placeholder={t("ismiFamiliyasi")}
               value={mentorData.name}
               onChange={(e) => setMentorData({ ...mentorData, name: e.target.value })}
               required={showMentorForm}
@@ -108,11 +117,11 @@ export function MentorForm({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="mentorBio">Kim (qisqacha ma'lumot)</Label>
+          <div className="space-y-1">
+          <Label htmlFor="mentorBio">{tLabel('common.MentorForm.kimQisqachaMalumot', "Kim (qisqacha ma'lumot)")}</Label>
             <Textarea
               id="mentorBio"
-              placeholder="Mentor haqida qisqacha ma'lumot, kasbi, unvoni..."
+              placeholder={t("mentorHaqidaQisqachaMalumotKasbi")}
               value={mentorData.bio}
               onChange={(e) => setMentorData({ ...mentorData, bio: e.target.value })}
               rows={2}
@@ -120,23 +129,23 @@ export function MentorForm({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="mentorSource">Qayerdan</Label>
+          <div className="space-y-1">
+          <Label htmlFor="mentorSource">{t("qayerdan")}</Label>
             <Input
               id="mentorSource"
-              placeholder="Kompaniya, universitet, tashkilot nomi..."
+              placeholder={t("kompaniyaUniversitetTashkilotNomi")}
               value={mentorData.source}
               onChange={(e) => setMentorData({ ...mentorData, source: e.target.value })}
               data-testid="input-mentor-source"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="mentorExperience">Tajriba</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="mentorExperience">{t("tajriba")}</Label>
               <Textarea
                 id="mentorExperience"
-                placeholder="Tajribasi, yillar, loyihalar..."
+                placeholder={t("tajribasiYillarLoyihalar")}
                 value={mentorData.experience}
                 onChange={(e) => setMentorData({ ...mentorData, experience: e.target.value })}
                 rows={2}
@@ -144,11 +153,11 @@ export function MentorForm({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="mentorExpertise">Mutaxassislik</Label>
+            <div className="space-y-1">
+          <Label htmlFor="mentorExpertise">{t("mutaxassislik")}</Label>
               <Textarea
                 id="mentorExpertise"
-                placeholder="Mutaxassislik sohalari..."
+                placeholder={t("mutaxassislikSohalari")}
                 value={mentorData.expertise}
                 onChange={(e) => setMentorData({ ...mentorData, expertise: e.target.value })}
                 rows={2}
@@ -157,11 +166,11 @@ export function MentorForm({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="mentorAchievements">Yutuqlar</Label>
+          <div className="space-y-1">
+          <Label htmlFor="mentorAchievements">{t("yutuqlar")}</Label>
             <Textarea
               id="mentorAchievements"
-              placeholder="Yutuqlari, mukofotlari, sertifikatlari..."
+              placeholder={t("yutuqlariMukofotlariSertifikatlari")}
               value={mentorData.achievements}
               onChange={(e) => setMentorData({ ...mentorData, achievements: e.target.value })}
               rows={2}
@@ -169,14 +178,14 @@ export function MentorForm({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="mentorEmployee">Bizning xodimimizmi?</Label>
+          <div className="space-y-1">
+          <Label htmlFor="mentorEmployee">{t("bizningXodimimizmi")}</Label>
             <Select value={mentorData.userId || "none"} onValueChange={(value) => setMentorData({ ...mentorData, userId: value === "none" ? "" : value })}>
-              <SelectTrigger data-testid="select-mentor-employee">
-                <SelectValue placeholder="Xodimni tanlang" />
+              <SelectTrigger data-testid="select-mentor-employee" className="h-9">
+                <SelectValue placeholder={t("xodimniTanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Yo'q, tashqi mentor</SelectItem>
+                <SelectItem value="none">{t("yoqTashqiMentor")}</SelectItem>
                 {(Array.isArray(employees) ? employees : []).map(emp => (
                   <SelectItem key={emp.id} value={emp.id}>
                     {emp.fullName} ({emp.employeeId})
@@ -194,7 +203,7 @@ export function MentorForm({
             className="w-full"
             data-testid="button-save-mentor"
           >
-            {createMentorPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {createMentorPending && <EPLoader className="w-4 h-4 mr-2" />}
             Mentorni saqlash va tanlash
           </Button>
         </Card>

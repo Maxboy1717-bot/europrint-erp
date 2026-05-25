@@ -1,9 +1,15 @@
+/**
+ * @module calendar-events.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { calendarEvents } from '@shared/db/europrint-compat';
 import { eq, gte, desc } from 'drizzle-orm';
+import { Ok, Err, safeCall, AppErr } from '@common/result';
 
 type EventInsert = {
   title: string;
@@ -25,23 +31,26 @@ type EventUpdate = Partial<Omit<EventInsert, 'startDate' | 'endDate'>> & {
 
 @Injectable()
 export class CalendarEventsRepo {
-  async findAll() {
-    return db.select().from(calendarEvents).orderBy(desc(calendarEvents.startDate));
+  findAll() {
+    return safeCall(() => db.select().from(calendarEvents).orderBy(desc(calendarEvents.startDate)), 'DB_ERROR');
   }
 
-  async findUpcoming() {
-    return db.select().from(calendarEvents)
+  findUpcoming() {
+    return safeCall(() => db.select().from(calendarEvents)
       .where(gte(calendarEvents.startDate, _time.now()))
-      .orderBy(calendarEvents.startDate);
+      .orderBy(calendarEvents.startDate), 'DB_ERROR');
   }
 
   async findById(id: string) {
-    const rows = await db.select().from(calendarEvents).where(eq(calendarEvents.id, id));
-    return rows[0] ?? null;
+    const r = await safeCall(() => db.select().from(calendarEvents).where(eq(calendarEvents.id, id)), 'DB_ERROR');
+    if (!r.ok) return Err(r.error);
+    const row = r.data[0];
+    if (!row) return Err(AppErr('NOT_FOUND', `Calendar event ${id} not found`));
+    return Ok(row);
   }
 
-  async insert(data: EventInsert) {
-    return db.insert(calendarEvents).values({
+  insert(data: EventInsert) {
+    return safeCall(() => db.insert(calendarEvents).values({
       title:       data.title,
       description: data.description ?? null,
       startDate:   data.startDate,
@@ -51,11 +60,11 @@ export class CalendarEventsRepo {
       location:    data.location ?? null,
       attendees:   data.attendees,
       createdBy:   data.createdBy ?? null,
-    }).returning();
+    }).returning(), 'DB_ERROR');
   }
 
-  async update(id: string, data: EventUpdate) {
-    return db.update(calendarEvents).set({
+  update(id: string, data: EventUpdate) {
+    return safeCall(() => db.update(calendarEvents).set({
       title:       data.title,
       description: data.description,
       startDate:   data.startDate,
@@ -65,10 +74,10 @@ export class CalendarEventsRepo {
       location:    data.location,
       attendees:   data.attendees,
       updatedAt:   data.updatedAt,
-    }).where(eq(calendarEvents.id, id)).returning();
+    }).where(eq(calendarEvents.id, id)).returning(), 'DB_ERROR');
   }
 
-  async delete(id: string) {
-    return db.delete(calendarEvents).where(eq(calendarEvents.id, id)).returning();
+  delete(id: string) {
+    return safeCall(() => db.delete(calendarEvents).where(eq(calendarEvents.id, id)).returning(), 'DB_ERROR');
   }
 }

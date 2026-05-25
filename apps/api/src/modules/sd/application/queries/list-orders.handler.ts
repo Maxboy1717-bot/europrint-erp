@@ -1,7 +1,12 @@
+/**
+ * @module list-orders.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { AppErr, Err, Ok, Result } from '@common/result';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
-import { ISalesOrderRepository } from '../../domain/repositories/i-sales-order.repo';
+import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 import { SalesOrder } from '../../domain/aggregates/sales-order.aggregate';
 
 interface PaginatedOrders {
@@ -23,7 +28,7 @@ export class ListOrdersHandler implements IQueryHandler<ListOrdersQuery> {
   private readonly logger = new Logger(ListOrdersHandler.name);
 
   constructor(
-    @Inject('ISalesOrderRepository') private readonly orderRepo: ISalesOrderRepository,
+    @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
   ) {}
 
   async execute(query: ListOrdersQuery): Promise<Result<PaginatedOrders>> {
@@ -35,8 +40,7 @@ export class ListOrdersHandler implements IQueryHandler<ListOrdersQuery> {
     } else if (query.companyId) {
       result = await this.orderRepo.findByCompanyId(query.companyId, query.limit, query.offset);
     } else {
-      const pendingResult = await this.orderRepo.findPendingAdvanceOrders(query.limit, query.offset);
-      result = pendingResult.ok ? pendingResult : { ok: true as const, data: [] };
+      result = await this.orderRepo.findAll(query.limit, query.offset);
     }
 
     if (!result.ok) {

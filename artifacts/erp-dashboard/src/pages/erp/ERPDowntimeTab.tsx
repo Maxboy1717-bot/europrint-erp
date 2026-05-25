@@ -1,3 +1,8 @@
+/**
+ * @module ERPDowntimeTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -20,6 +25,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { DowntimeLog, InsertDowntimeLog, WorkCenter } from "@shared/schema";
 import { insertDowntimeLogSchema } from "@shared/schema";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 type DowntimeLogWithJoins = DowntimeLog & { workCenterName?: string };
 
 export function ERPDowntimeTab() {
@@ -52,7 +58,7 @@ export function ERPDowntimeTab() {
   const save = useMutation({
     mutationFn: async (data: InsertDowntimeLog) => {
       if (editingLog) {
-        await apiRequest("PATCH", `/api/erp/downtime-logs/${editingLog.id}`, data);
+        await apiRequest("PUT", `/api/erp/downtime-logs/${editingLog.id}`, data);
       } else {
         await apiRequest("POST", "/api/erp/downtime-logs", data);
       }
@@ -122,19 +128,19 @@ export function ERPDowntimeTab() {
               {t('addDowntime')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
             <DialogHeader>
-              <DialogTitle>{editingLog ? t('editDowntime') : t('newDowntime')}</DialogTitle>
+              <DialogTitle className="text-[18px] font-semibold">{editingLog ? t('editDowntime') : t('newDowntime')}</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit((data) => save.mutate(data))} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField control={form.control} name="workCenterId" render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('workCenter')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value ?? ""}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-downtime-work-center">
+                          <SelectTrigger data-testid="select-downtime-work-center" className="h-9">
                             <SelectValue placeholder={tCommon('select')} />
                           </SelectTrigger>
                         </FormControl>
@@ -155,20 +161,20 @@ export function ERPDowntimeTab() {
                     </FormItem>
                   )} />
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormField control={form.control} name="shift" render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('shift')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-downtime-shift">
+                          <SelectTrigger data-testid="select-downtime-shift" className="h-9">
                             <SelectValue placeholder={tCommon('select')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="1-smena">1-smena</SelectItem>
-                          <SelectItem value="2-smena">2-smena</SelectItem>
-                          <SelectItem value="3-smena">3-smena</SelectItem>
+                          <SelectItem value="1-smena">{tLabel('erp.ERPDowntimeTab.1Smena', "1-smena")}</SelectItem>
+                          <SelectItem value="2-smena">{tLabel('erp.ERPDowntimeTab.2Smena', "2-smena")}</SelectItem>
+                          <SelectItem value="3-smena">{tLabel('erp.ERPDowntimeTab.3Smena', "3-smena")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -189,7 +195,7 @@ export function ERPDowntimeTab() {
                     </FormItem>
                   )} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField control={form.control} name="durationMinutes" render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('durationMinutes')}</FormLabel>
@@ -204,7 +210,7 @@ export function ERPDowntimeTab() {
                       <FormLabel>{tCommon('category')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-downtime-category">
+                          <SelectTrigger data-testid="select-downtime-category" className="h-9">
                             <SelectValue placeholder={tCommon('select')} />
                           </SelectTrigger>
                         </FormControl>
@@ -246,8 +252,8 @@ export function ERPDowntimeTab() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <Table>
-            <TableHeader>
+          <div className="ep-table-scroll"><Table>
+            <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
                 <TableHead>{tCommon('date')}</TableHead>
                 <TableHead>{t('workCenter')}</TableHead>
@@ -261,24 +267,24 @@ export function ERPDowntimeTab() {
             </TableHeader>
             <TableBody>
               {([1, 2, 3, 4, 5]).map((i) => (
-                <TableRow key={`k-${i}`}>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
+                  <TableCell><Skeleton className="h-4 w-20 rounded-lg" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24 rounded-lg" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16 rounded-lg" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24 rounded-lg" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32 rounded-lg" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto rounded-lg" /></TableCell>
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         ) : downtimeLogs.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">{t('noDataYet')}</div>
+          <div className="text-center py-8 text-[13px] text-muted-foreground">{t('noDataYet')}</div>
         ) : (
-          <Table>
-            <TableHeader>
+          <div className="ep-table-scroll"><Table>
+            <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
                 <TableHead>{tCommon('date')}</TableHead>
                 <TableHead>{t('workCenter')}</TableHead>
@@ -292,7 +298,7 @@ export function ERPDowntimeTab() {
             </TableHeader>
             <TableBody>
               {(Array.isArray(downtimeLogs) ? downtimeLogs : []).map((log) => (
-                <TableRow key={log.id} data-testid={`row-downtime-${log.id}`}>
+                <TableRow key={log.id} data-testid={`row-downtime-${log.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{log.downtimeDate}</TableCell>
                   <TableCell>{log.workCenterName || "—"}</TableCell>
                   <TableCell>{log.shift || "—"}</TableCell>
@@ -327,7 +333,7 @@ export function ERPDowntimeTab() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         )}
       </CardContent>
     </Card>
@@ -335,8 +341,8 @@ export function ERPDowntimeTab() {
     <ConfirmDialog
       open={confirmDeleteId !== null}
       onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-      title="Nosozlik yozuvini o'chirish"
-      description="Ushbu nosozlik yozuvini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+      title={t("nosozlikYozuviniOchirish")}
+      description={t("ushbuNosozlikYozuviniOchirishniTasdiqlaysizmi")}
       confirmText="O'chirish"
       cancelText="Bekor qilish"
       variant="destructive"

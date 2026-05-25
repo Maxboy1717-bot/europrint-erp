@@ -1,15 +1,22 @@
+/**
+ * @module DirectMessageModal
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2 } from "lucide-react";
+import { Search } from "lucide-react";
 import { useEmployeeSearch } from "@/hooks/chat/useRooms";
 import { ChatAvatar } from "./ChatAvatar";
 import { useChatSocket } from "@/hooks/chat/useChatSocket";
 import { useAuth } from "@/hooks/useAuth";
 import { getChatApiBase } from "@/lib/apiBase";
 import { useChatStore, ChatRoom } from "@/store/chatStore";
-import { getAuthHeaders } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface Employee {
   id: number;
   fullName: string;
@@ -24,6 +31,7 @@ interface Props {
 }
 
 export function DirectMessageModal({ open, onClose }: Props) {
+  const { t } = useTranslation("common");
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState<number | null>(null);
@@ -38,33 +46,30 @@ export function DirectMessageModal({ open, onClose }: Props) {
       startDirect(emp.id);
 
       // Also call REST API as reliable fallback
-      const res = await fetch(`${getChatApiBase()}/rooms/direct`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ targetUserId: emp.id }),
-      });
+      const data = await apiRequest<Record<string, unknown>>(
+        'POST',
+        `${getChatApiBase()}/rooms/direct`,
+        { targetUserId: emp.id },
+      );
 
-      if (res.ok) {
-        const data = await res.json() as Record<string, unknown>;
-        const room: ChatRoom = {
-          id: String(data.id),
-          name: String(data.name || emp.fullName),
-          displayName: String(data.displayName || data.name || emp.fullName),
-          type: "direct",
-          avatarUrl: (data.avatarUrl as string) || emp.avatarUrl,
-          unreadCount: Number(data.unreadCount) || 0,
-          createdAt: String(data.createdAt || new Date().toISOString()),
-          memberRole: "MEMBER",
-        };
+      const room: ChatRoom = {
+        id: String(data.id),
+        name: String(data.name || emp.fullName),
+        displayName: String(data.displayName || data.name || emp.fullName),
+        type: "direct",
+        avatarUrl: (data.avatarUrl as string) || emp.avatarUrl,
+        unreadCount: Number(data.unreadCount) || 0,
+        createdAt: String(data.createdAt || new Date().toISOString()),
+        memberRole: "MEMBER",
+      };
 
-        const st = useChatStore.getState();
-        const exists = st.rooms?.some((r) => r.id === room.id);
-        if (!exists) {
-          st.setRooms([room, ...st.rooms]);
-        }
-        st.setActiveRoomId(room.id);
-        joinRoom(room.id);
+      const st = useChatStore.getState();
+      const exists = st.rooms?.some((r) => r.id === room.id);
+      if (!exists) {
+        st.setRooms([room, ...st.rooms]);
       }
+      st.setActiveRoomId(room.id);
+      joinRoom(room.id);
     } catch {
       // Silently ignore — socket event may still deliver the room
     } finally {
@@ -83,9 +88,9 @@ export function DirectMessageModal({ open, onClose }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm p-6">
         <DialogHeader>
-          <DialogTitle>Yangi Direct Xabar</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiDirectXabar")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -94,7 +99,7 @@ export function DirectMessageModal({ open, onClose }: Props) {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Xodimni qidirish..."
+              placeholder={t("xodimniQidirish")}
               className="pl-8 h-9 text-sm"
               autoFocus
             />
@@ -109,7 +114,7 @@ export function DirectMessageModal({ open, onClose }: Props) {
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/60 text-left transition-colors disabled:opacity-60"
               >
                 {loading === emp.id ? (
-                  <Loader2 className="w-9 h-9 animate-spin text-muted-foreground flex-shrink-0" />
+                  <EPLoader tone="muted" className="w-9 h-9 flex-shrink-0" />
                 ) : (
                   <ChatAvatar name={emp.fullName} url={emp.avatarUrl} size={36} />
                 )}

@@ -1,3 +1,8 @@
+/**
+ * @module ai-interview-v2.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { AiInterviewV2Service } from './ai-interview-v2.service';
 import { AiInterviewV2Repository } from './ai-interview-v2.repository';

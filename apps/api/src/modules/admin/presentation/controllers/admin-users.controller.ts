@@ -1,26 +1,35 @@
+/**
+ * @module admin-users.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertOk, unwrapOrThrow } from '@common/http-result';
 import { assertValidated } from '@common/assertions';
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, InternalServerErrorException, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { I18nService } from 'nestjs-i18n';
 
 import { RolesGuard } from '../../infrastructure/guards/roles.guard';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '../../infrastructure/decorators/roles.decorator';
 import { AuditInterceptor } from '../../infrastructure/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { isErr } from '@common/result';
 
-import { CreateUserHandler } from '../../application/commands/create-user.handler';
-import { UpdateUserRoleHandler } from '../../application/commands/update-user-role.handler';
-import { ListUsersHandler } from '../../application/queries/list-users.handler';
+import { CreateUserService } from '../../application/services/create-user.service';
+import { UpdateUserRoleService } from '../../application/services/update-user-role.service';
+import { ListUsersService } from '../../application/services/list-users.service';
 
 import { CreateUserDto, CreateUserSchema } from '../dto/create-user.dto';
 import { UserRole } from '../../domain/aggregates/user.aggregate';
 import { AuthenticatedUser } from '@auth/types';
+import { IUserRepo } from '../../domain/repositories/i-user.repo';
+import { USER_REPO } from '../../admin.tokens';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('admin/users')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @ApiBearerAuth()
 @ApiTags('Admin - Users')
@@ -28,9 +37,11 @@ export class AdminUsersController {
   private readonly logger = new Logger(AdminUsersController.name);
 
   constructor(
-    private readonly createUserHandler: CreateUserHandler,
-    private readonly updateUserRoleHandler: UpdateUserRoleHandler,
-    private readonly listUsersHandler: ListUsersHandler,
+    private readonly createUserHandler: CreateUserService,
+    private readonly updateUserRoleHandler: UpdateUserRoleService,
+    private readonly listUsersHandler: ListUsersService,
+    @Inject(USER_REPO) private readonly userRepo: IUserRepo,
+    private readonly i18n: I18nService,
   ) {}
 
   @Post()
@@ -69,7 +80,7 @@ export class AdminUsersController {
     const result = await this.listUsersHandler.execute({ filters: { page, limit, role, departmentId, isActive } });
     const paged = unwrapOrThrow(result);
     return {
-      users: (paged?.data ?? []).map(u => ({
+      users: (Array.isArray(paged?.data) ? paged?.data : []).map(u => ({
         id:       u.getId(),
         username: u.getUsername(),
         email:    u.getEmail(),
@@ -99,8 +110,13 @@ export class AdminUsersController {
   @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Foydalanuvchini o'chirish" })
-  deleteUser(@Param('id', ParseIntPipe) userId: number, @CurrentUser() user: AuthenticatedUser) {
+  async deleteUser(@Param('id', ParseIntPipe) userId: number, @CurrentUser() user: AuthenticatedUser) {
     assertValidated(userId !== user.id, 'Cannot delete your own account');
-    return { message: 'User deleted successfully' };
+    try {
+      await this.userRepo.softDelete(userId);
+    } catch {
+      throw new InternalServerErrorException(await this.i18n.t('errors.deleteFailed'));
+    }
+    return { message: await this.i18n.t('messages.userDeleted'), code: 'USER_DELETED' };
   }
 }

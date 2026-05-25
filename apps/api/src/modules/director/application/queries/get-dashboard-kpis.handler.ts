@@ -1,16 +1,21 @@
+/**
+ * @module get-dashboard-kpis.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { Ok, Result, safeCall } from '@common/result';
 import { GetDashboardKpisQuery } from './get-dashboard-kpis.query';
 import { APPROVAL_REPO, IApprovalRepo } from '../../domain/repositories/i-approval.repo';
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 

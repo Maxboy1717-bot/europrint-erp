@@ -1,3 +1,8 @@
+/**
+ * @module Partners
+ * @description Source module. See exports for details.
+ */
+
 import { Link } from "wouter";
 import { ArrowRight, Star, Zap, UserCheck, CreditCard, ShoppingCart, Building2, Tv, Plane, Radio, Monitor, ShoppingBag, Droplets } from "lucide-react";
 import { Button } from "@/components/ui/button";

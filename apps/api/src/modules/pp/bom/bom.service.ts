@@ -1,3 +1,8 @@
+/**
+ * @module bom.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
 import { IPpBomRepository, PP_BOM_REPO } from './i-pp-bom.repo';
 import { safeCall, Result, AppError } from '@common/result';

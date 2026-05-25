@@ -1,3 +1,8 @@
+/**
+ * @module queries-hr-assets
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import { asset_items_ext, employee_assets } from '@shared/db';
 import { hrEmployees } from '@shared/db';
@@ -19,9 +24,9 @@ export async function queryAllAssets(
     category:               asset_items_ext.category,
     status:                 asset_items_ext.status,
     purchase_date:          sql<string>`${asset_items_ext.purchase_date}::text`,
-    value:                  sql<number>`COALESCE(${asset_items_ext.purchase_value}::numeric, 0)`,
+    value:                  sql<number>`COALESCE(${asset_items_ext.purchase_price}::numeric, 0)`,
     department_id:          sql<string>`${asset_items_ext.department_id}::text`,
-    notes:                  asset_items_ext.notes,
+    notes:                  sql<string | null>`NULL`,
     created_at:             sql<string>`${asset_items_ext.created_at}::text`,
     assigned_to:            asset_items_ext.assigned_to,
     assigned_employee_name: sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
@@ -52,9 +57,9 @@ export async function queryAssetById(id: string): Promise<Row | null> {
     category:               asset_items_ext.category,
     status:                 asset_items_ext.status,
     purchase_date:          sql<string>`${asset_items_ext.purchase_date}::text`,
-    value:                  sql<number>`COALESCE(${asset_items_ext.purchase_value}::numeric, 0)`,
+    value:                  sql<number>`COALESCE(${asset_items_ext.purchase_price}::numeric, 0)`,
     department_id:          sql<string>`${asset_items_ext.department_id}::text`,
-    notes:                  asset_items_ext.notes,
+    notes:                  sql<string | null>`NULL`,
     created_at:             sql<string>`${asset_items_ext.created_at}::text`,
     assigned_to:            asset_items_ext.assigned_to,
     assigned_employee_name: sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
@@ -80,7 +85,7 @@ export async function queryAssetById(id: string): Promise<Row | null> {
     .groupBy(
       asset_items_ext.id, asset_items_ext.serial_number, asset_items_ext.name,
       asset_items_ext.category, asset_items_ext.status, asset_items_ext.purchase_date,
-      asset_items_ext.purchase_value, asset_items_ext.department_id, asset_items_ext.notes,
+      asset_items_ext.purchase_price, asset_items_ext.department_id,
       asset_items_ext.created_at, asset_items_ext.assigned_to,
       hrEmployees.first_name, hrEmployees.last_name,
       employee_assets.assigned_date,
@@ -93,14 +98,14 @@ export async function execCreateAsset(data: {
   name: string; serial_number?: string; category: string; status: string;
   purchase_date?: string | null; value?: number; notes?: string;
 }): Promise<{ id: string }> {
+  // NOTE: canonical asset_items has no `notes` column — drop the field on insert.
   const rows = await db.insert(asset_items_ext).values({
     name: data.name,
     serial_number: data.serial_number ?? null,
     category: data.category,
     status: data.status,
     purchase_date: data.purchase_date ?? null,
-    purchase_value: String(data.value ?? 0),
-    notes: data.notes ?? null,
+    purchase_price: String(data.value ?? 0),
   }).returning({ id: asset_items_ext.id });
   return { id: String(rows[0]?.id ?? '') };
 }
@@ -109,14 +114,14 @@ export async function execUpdateAsset(
   id: string,
   data: Partial<{ name: string; serial_number: string; category: string; status: string; purchase_date: string | null; value: number; notes: string }>,
 ): Promise<void> {
+  // NOTE: canonical asset_items has no `notes` column — ignore data.notes on update.
   await db.update(asset_items_ext)
     .set({
       name:           sql`COALESCE(${data.name ?? null}, ${asset_items_ext.name})`,
       serial_number:  sql`COALESCE(${data.serial_number ?? null}, ${asset_items_ext.serial_number})`,
       category:       sql`COALESCE(${data.category ?? null}, ${asset_items_ext.category})`,
       status:         sql`COALESCE(${data.status ?? null}, ${asset_items_ext.status})`,
-      purchase_value: sql`COALESCE(${data.value != null ? String(data.value) : null}::numeric, ${asset_items_ext.purchase_value})`,
-      notes:          sql`COALESCE(${data.notes ?? null}, ${asset_items_ext.notes})`,
+      purchase_price: sql`COALESCE(${data.value != null ? String(data.value) : null}::numeric, ${asset_items_ext.purchase_price})`,
       updated_at:     sql`NOW()`,
     })
     .where(eq(sql`${asset_items_ext.id}::text`, id));
@@ -134,9 +139,9 @@ export async function queryAssetsByEmployee(employeeId: string): Promise<Row[]> 
     category:               asset_items_ext.category,
     status:                 asset_items_ext.status,
     purchase_date:          sql<string>`${asset_items_ext.purchase_date}::text`,
-    value:                  sql<number>`COALESCE(${asset_items_ext.purchase_value}::numeric, 0)`,
+    value:                  sql<number>`COALESCE(${asset_items_ext.purchase_price}::numeric, 0)`,
     department_id:          sql<string>`${asset_items_ext.department_id}::text`,
-    notes:                  asset_items_ext.notes,
+    notes:                  sql<string | null>`NULL`,
     created_at:             sql<string>`${asset_items_ext.created_at}::text`,
     assigned_to:            asset_items_ext.assigned_to,
     assigned_employee_name: sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
@@ -194,7 +199,10 @@ export async function execReportAssetIssue(
   assetId: string,
   data: { report_type: string; description: string },
 ): Promise<void> {
+  // NOTE: canonical asset_items has no notes column — write description to the
+  // status field via raw SQL or drop it. Preserving status only here.
   await db.update(asset_items_ext)
-    .set({ status: data.report_type, notes: data.description, updated_at: sql`NOW()` })
+    .set({ status: data.report_type, updated_at: sql`NOW()` })
     .where(eq(sql`${asset_items_ext.id}::text`, assetId));
+  void data.description;
 }

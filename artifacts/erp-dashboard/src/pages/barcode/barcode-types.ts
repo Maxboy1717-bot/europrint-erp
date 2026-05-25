@@ -1,5 +1,11 @@
+/**
+ * @module barcode-types
+ * @description React page component. Route-level UI.
+ */
+
 import { z } from "zod";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface BatchData {
   id: string;
   batchNumber: string;
@@ -76,7 +82,7 @@ export interface PrintData {
 export const translations = {
   uz: {
     title: "Shtrix-kod Tizimi",
-    subtitle: "Partiyalar, shtrix-kod yaratish va skaner",
+    subtitle: tLabel('common.barcode-.partiyalarShtrixKodYaratishVa', "Partiyalar, shtrix-kod yaratish va skaner"),
     batches: "Partiyalar",
     generate: "Shtrix-kod yaratish",
     scanner: "Skaner",
@@ -169,8 +175,8 @@ export const translations = {
     settings: "Sozlamalar",
   },
   ru: {
-    title: "Система Штрих-кодов",
-    subtitle: "Партии, генерация штрих-кодов и сканер",
+    title: tLabel('common.barcode-.untitled', "Система Штрих-кодов"),
+    subtitle: tLabel('common.barcode-.untitled', "Партии, генерация штрих-кодов и сканер"),
     batches: "Партии",
     generate: "Генерация штрих-кода",
     scanner: "Сканер",
@@ -281,7 +287,7 @@ export const batchFormSchema = z.object({
 
 export const STATUS_COLORS: Record<string, string> = {
   active: "bg-green-500/20 text-green-400 border-green-500/40",
-  depleted: "bg-gray-500/20 text-on-surface-variant border-gray-500/40",
+  depleted: "bg-gray-500/20 text-muted-foreground border-gray-500/40",
   blocked: "bg-red-500/20 text-red-400 border-red-500/40",
   expired: "bg-orange-500/20 text-orange-400 border-orange-500/40",
 };

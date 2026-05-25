@@ -6,9 +6,11 @@
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, X, CheckCheck, ArrowRight, AlertCircle, Package, GraduationCap, Info } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type NotifType = "error" | "warning" | "success" | "info";
@@ -105,6 +107,7 @@ interface NotifItemProps {
 }
 
 function NotifItem({ notif, onMarkRead, onDismiss }: NotifItemProps) {
+  const { t } = useTranslation("common");
   const cfg = TYPE_CONFIG[notif.type];
   const Icon = cfg.icon;
 
@@ -122,7 +125,7 @@ function NotifItem({ notif, onMarkRead, onDismiss }: NotifItemProps) {
       {!notif.read && (
         <span
           className="absolute left-2 top-[18px] w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0"
-          aria-label="O'qilmagan"
+          aria-label={t("oqilmagan")}
         />
       )}
 
@@ -166,7 +169,7 @@ function NotifItem({ notif, onMarkRead, onDismiss }: NotifItemProps) {
           <button
             type="button"
             onClick={() => onMarkRead?.(notif.id)}
-            aria-label="O'qildi deb belgilash"
+            aria-label={t("oqildiDebBelgilash")}
             className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
           >
             <CheckCheck className="w-3 h-3" />
@@ -175,7 +178,7 @@ function NotifItem({ notif, onMarkRead, onDismiss }: NotifItemProps) {
         <button
           type="button"
           onClick={() => onDismiss?.(notif.id)}
-          aria-label="O'chirish"
+          aria-label={t("delete")}
           className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-[hsl(var(--error))] hover:bg-[hsl(var(--error))]/10 transition-colors"
         >
           <X className="w-3 h-3" />
@@ -195,6 +198,7 @@ export function NotificationBell({
   onDismiss,
   maxVisible = 5,
 }: NotificationBellProps) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [localNotifs, setLocalNotifs] = useState<Notification[]>(
     propNotifications ?? DEMO_NOTIFICATIONS
@@ -208,7 +212,7 @@ export function NotificationBell({
     onMarkRead?.(id);
     if (!propNotifications) {
       setLocalNotifs((prev) =>
-        (prev ?? []).map((n) => (n.id === id ? { ...n, read: true } : n))
+        (Array.isArray(prev) ? prev : []).map((n) => (n.id === id ? { ...n, read: true } : n))
       );
     }
   }, [onMarkRead, propNotifications]);
@@ -216,14 +220,14 @@ export function NotificationBell({
   const handleMarkAllRead = useCallback(() => {
     onMarkAllRead?.();
     if (!propNotifications) {
-      setLocalNotifs((prev) => (prev ?? []).map((n) => ({ ...n, read: true })));
+      setLocalNotifs((prev) => (Array.isArray(prev) ? prev : []).map((n) => ({ ...n, read: true })));
     }
   }, [onMarkAllRead, propNotifications]);
 
   const handleDismiss = useCallback((id: string | number) => {
     onDismiss?.(id);
     if (!propNotifications) {
-      setLocalNotifs((prev) => (prev ?? []).filter((n) => n.id !== id));
+      setLocalNotifs((prev) => (Array.isArray(prev) ? prev : []).filter((n) => n.id !== id));
     }
   }, [onDismiss, propNotifications]);
 
@@ -274,7 +278,7 @@ export function NotificationBell({
           {/* Panel */}
           <div
             role="dialog"
-            aria-label="Bildirishnomalar paneli"
+            aria-label={t("bildirishnomalarPaneli")}
             aria-modal="true"
             className={cn(
               "absolute right-0 top-11 z-40 w-80 sm:w-96",
@@ -287,7 +291,7 @@ export function NotificationBell({
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-semibold text-foreground">
-                  Bildirishnomalar
+                  {t("notifications")}
                 </h2>
                 {unreadCount > 0 && (
                   <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
@@ -301,16 +305,16 @@ export function NotificationBell({
                     type="button"
                     onClick={handleMarkAllRead}
                     className="flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-md hover:bg-primary/5"
-                    aria-label="Barchasini o'qildi deb belgilash"
+                    aria-label={t("barchasiniOqildiDebBelgilash")}
                   >
                     <CheckCheck className="w-3 h-3" aria-hidden="true" />
-                    Barchasi o'qildi
+                    {t("barchasiOqildi")}
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  aria-label="Yopish"
+                  aria-label={t("close2")}
                   className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                   <X className="w-3.5 h-3.5" aria-hidden="true" />
@@ -324,8 +328,8 @@ export function NotificationBell({
                 <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
                   <Bell className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
                 </div>
-                <p className="text-sm font-medium text-foreground mb-1">Yangi bildirishnoma yo'q</p>
-                <p className="text-xs text-muted-foreground">Barcha bildirishnomalar o'qildi</p>
+                <p className="text-sm font-medium text-foreground mb-1">{t("yangiBildirishnomaYoq")}</p>
+                <p className="text-xs text-muted-foreground">{t("barchaBildirishnomalarOqildi")}</p>
               </div>
             ) : (
               <div
@@ -349,13 +353,13 @@ export function NotificationBell({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full h-8 text-xs text-primary hover:text-primary hover:bg-primary/5 gap-1"
+                  className="w-full h-9 text-xs text-primary hover:text-primary hover:bg-primary/5 gap-1"
                   onClick={() => {
                     setOpen(false);
                     onViewAll?.();
                   }}
                 >
-                  Barchasini ko'rish
+                  {t("seeAll")}
                   <ArrowRight className="w-3 h-3" aria-hidden="true" />
                 </Button>
               </div>
@@ -379,13 +383,15 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({
-  title = "EuroPrint ERP",
+  title,
   notifications,
   userName,
   userAvatar,
   onMenuToggle,
   onViewAllNotifications,
 }: AppHeaderProps) {
+  const { t } = useTranslation("common");
+  const resolvedTitle = title ?? t("europrintErp");
   const initials = userName
     ?.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
     ?? "EP";
@@ -401,7 +407,7 @@ export function AppHeader({
           <button
             type="button"
             onClick={onMenuToggle}
-            aria-label="Menyuni ochish/yopish"
+            aria-label={tLabel('common.NotificationBell.menyuniOchishYopish', "Menyuni ochish/yopish")}
             className="w-9 h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors md:hidden"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -409,7 +415,7 @@ export function AppHeader({
             </svg>
           </button>
         )}
-        <span className="text-sm font-semibold text-foreground">{title}</span>
+        <span className="text-sm font-semibold text-foreground">{resolvedTitle}</span>
       </div>
 
       {/* Right: bell + avatar */}
@@ -427,7 +433,7 @@ export function AppHeader({
         >
           <Avatar className="w-7 h-7">
             {userAvatar && (
-              <img src={userAvatar} alt={userName ?? "Foydalanuvchi"} className="rounded-full" />
+              <AvatarImage src={userAvatar} alt={userName ?? "Foydalanuvchi"} />
             )}
             <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
               {initials}

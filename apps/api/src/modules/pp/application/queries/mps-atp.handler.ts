@@ -1,3 +1,8 @@
+/**
+ * @module mps-atp.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum } from '@common/math/math-utils';

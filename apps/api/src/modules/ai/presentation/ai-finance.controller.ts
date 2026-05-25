@@ -1,8 +1,15 @@
+/**
+ * @module ai-finance.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { TashkentTimeService } from '@common/time';
+const _time = new TashkentTimeService();
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {Controller, Post, Get, Body, UseGuards, Query, Logger, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../../common/types/user.types';
 import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -16,10 +23,40 @@ import {
   AiFinanceFraudRiskDtoSchema, AiFinanceFraudRiskDto,
 } from './dto/ai-finance.dto';
 import { unwrapOrInternal } from '@common/http-result';
+import { isErr } from '@common/result';
+
+interface AiFinanceAnomalyData {
+  hasAnomalies?: boolean;
+  anomalies?: Array<{ description: string; severity: string; amount?: number }>;
+  overallRiskScore?: number;
+  recommendation?: string;
+}
+
+// AiFinanceInsight shape expected by DailyKPIDashboard
+interface AiFinanceInsight {
+  id: string;
+  insightType: string;
+  segment: string;
+  insightDate: string;
+  confidence?: number;
+  priority: string;
+  title: string;
+  description: string;
+  impact?: string;
+  recommendation?: string;
+  actionRequired: boolean;
+  actionTaken: boolean;
+}
+
+const SEVERITY_TO_PRIORITY: Record<string, string> = {
+  HIGH:   'high',
+  MEDIUM: 'medium',
+  LOW:    'low',
+};
 
 @ApiTags('AI — Finance')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@AiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('ai/finance')
 export class AiFinanceController {
@@ -36,6 +73,70 @@ export class AiFinanceController {
   @ApiQuery({ name: 'days', required: false, type: Number, description: 'Tahlil davri (kun), default: 30' })
   async detectAnomalies(@Query('days') days: string, @CurrentUser() user: AuthenticatedUser) {
     return unwrapOrInternal(await this.financeAi.detectAnomalies(days ? +days : 30, user.id));
+  }
+
+  @Get('insights')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'accountant', 'cfo', 'director', 'manager')
+  @ApiOperation({ summary: 'AI moliya insightlari (DailyKPI dashboard uchun)' })
+  async getInsights(@CurrentUser() user: AuthenticatedUser): Promise<{ insights: AiFinanceInsight[]; generatedAt: string }> {
+    const today = _time.now().toISOString().slice(0, 10);
+    const result = await this.financeAi.detectAnomalies(30, user.id);
+    if (isErr(result)) {
+      return { insights: [], generatedAt: _time.now().toISOString() };
+    }
+    const anomalyData = result.data as AiFinanceAnomalyData;
+    const insights = this.buildInsightsFromAnomalies(anomalyData, today);
+    return { insights, generatedAt: _time.now().toISOString() };
+  }
+
+  private buildInsightsFromAnomalies(anomalyData: AiFinanceAnomalyData, today: string): AiFinanceInsight[] {
+    const insights: AiFinanceInsight[] = [];
+    const anomalies = anomalyData.anomalies ?? [];
+    for (const a of anomalies.slice(0, 5)) {
+      insights.push(this.buildAnomalyInsight(a, anomalyData, today, insights.length));
+    }
+    if (anomalies.length === 0 && (anomalyData.overallRiskScore ?? 0) > 0) {
+      insights.push(this.buildStableRiskInsight(anomalyData, today));
+    }
+    return insights;
+  }
+
+  private buildAnomalyInsight(
+    a: { description: string; severity: string; amount?: number },
+    anomalyData: AiFinanceAnomalyData,
+    today: string,
+    index: number,
+  ): AiFinanceInsight {
+    return {
+      id: `anomaly-${index}`,
+      insightType: 'anomaly',
+      segment: 'moliya',
+      insightDate: today,
+      confidence: anomalyData.overallRiskScore ?? 75,
+      priority: SEVERITY_TO_PRIORITY[a.severity] ?? 'medium',
+      title: 'Anomaliya aniqlandi',
+      description: a.description,
+      impact: a.amount != null ? `Miqdor: ${a.amount.toLocaleString()} UZS` : undefined,
+      recommendation: anomalyData.recommendation,
+      actionRequired: a.severity === 'HIGH',
+      actionTaken: false,
+    };
+  }
+
+  private buildStableRiskInsight(anomalyData: AiFinanceAnomalyData, today: string): AiFinanceInsight {
+    return {
+      id: 'risk-overview',
+      insightType: 'forecast',
+      segment: 'moliya',
+      insightDate: today,
+      confidence: 100 - (anomalyData.overallRiskScore ?? 0),
+      priority: 'low',
+      title: 'Moliyaviy holat barqaror',
+      description: anomalyData.recommendation ?? 'So\'nggi 30 kunda muhim anomaliyalar aniqlanmadi.',
+      actionRequired: false,
+      actionTaken: false,
+    };
   }
 
   @Post('cashflow-forecast')

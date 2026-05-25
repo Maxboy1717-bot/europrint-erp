@@ -7,11 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Printer, Droplets, Loader2, AlertTriangle, CheckCircle } from "lucide-react";
+import { Printer, Droplets, AlertTriangle, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
 
+import { EPLoader } from "@/components/ep";
 interface InkResult {
   tac: number;
   tacMax: number;
@@ -63,9 +64,9 @@ export default function InkCoverageCalculator() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center gap-3">
-        <Printer className="w-7 h-7 text-blue-600" />
+        <Printer className="w-7 h-7 text-[var(--ep-blue)]" />
         <div>
           <h1 className="text-2xl font-bold">{t('inkCoverage')}</h1>
           <p className="text-muted-foreground text-sm">{t('inkCoverageDesc')}</p>
@@ -110,7 +111,7 @@ export default function InkCoverageCalculator() {
               <Progress value={tacPct} className="h-3" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>{t('sheets')}</Label>
                 <Input type="number" min={1} value={sheets} onChange={e => setSheets(Number(e.target.value))} />
@@ -132,7 +133,7 @@ export default function InkCoverageCalculator() {
             </div>
 
             <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || tac > tacMax} className="w-full">
-              {mutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Droplets className="w-4 h-4 mr-2" />}
+              {mutation.isPending ? <EPLoader className="w-4 h-4 mr-2" /> : <Droplets className="w-4 h-4 mr-2" />}
               {mutation.isPending ? t('calculating') : t('calculate')}
             </Button>
             {tac > tacMax && (
@@ -146,7 +147,7 @@ export default function InkCoverageCalculator() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              {result ? (result.tacWithinLimit ? <CheckCircle className="w-4 h-4 text-green-600" /> : <AlertTriangle className="w-4 h-4 text-red-600" />) : null}
+              {result ? (result.tacWithinLimit ? <CheckCircle className="w-4 h-4 text-[var(--ep-green)]" /> : <AlertTriangle className="w-4 h-4 text-[var(--ep-red)]" />) : null}
               {t('result')}
             </CardTitle>
           </CardHeader>
@@ -157,7 +158,7 @@ export default function InkCoverageCalculator() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="bg-muted rounded-lg p-3">
                     <p className="text-xs text-muted-foreground">TAC</p>
                     <p className="text-2xl font-bold">{result.tac}%</p>
@@ -183,11 +184,11 @@ export default function InkCoverageCalculator() {
                   ))}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground border-t pt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground border-t pt-3">
                   <span>{t('sheetsLabel')}: {sheets.toLocaleString()}</span>
                   <span>{t('areaLabel')}: {sheetAreaM2} m²</span>
                   <span>{t('paperTypeLabel')}: {paperType}</span>
-                  <span>{t('statusLabel')}: <span className={result.tacWithinLimit ? "text-green-600" : "text-red-600"}>{result.tacWithinLimit ? `✓ ${t('withinNorm')}` : `✗ ${t('exceedsNorm')}`}</span></span>
+                  <span>{t('statusLabel')}: <span className={result.tacWithinLimit ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}>{result.tacWithinLimit ? `✓ ${t('withinNorm')}` : `✗ ${t('exceedsNorm')}`}</span></span>
                 </div>
               </div>
             )}

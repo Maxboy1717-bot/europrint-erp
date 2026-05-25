@@ -54,5 +54,17 @@
   "director.approve": "Tasdiqlash",
   "director.reject": "Rad etish",
   "auditor.title": "Auditor paneli",
-  "accountant.title": "Buxgalter ko'rinishi"
+  "accountant.title": "Buxgalter ko'rinishi",
+  "scan": "Skanerlash",
+  "inward": "Kirim",
+  "outward": "Chiqim",
+  "transfer": "Ko'chirish",
+  "request": "So'rov",
+  "todayMovements": "Today Harakatlar",
+  "todayAmount": "today Amount",
+  "awaitingApproval": "awaiting Approval",
+  "lowStockAlerts": "low Stock Alerts",
+  "recentFeed": "recent Feed",
+  "warehouseMap": "Ombor Map",
+  "myTasks": "my Tasks"
 }

@@ -1,3 +1,8 @@
+/**
+ * @module WizardStepper
+ * @description React UI component.
+ */
+
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Step } from "./types";
@@ -20,8 +25,8 @@ export function WizardStepper({ steps, currentStep }: WizardStepperProps) {
               className={cn(
                 "flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300",
                 isCompleted && "bg-primary border-primary text-white shadow-primary/20",
-                isCurrent && "border-primary text-primary bg-surface-container-high",
-                !isCompleted && !isCurrent && "border-outline-variant text-on-surface-variant bg-surface-container-low"
+                isCurrent && "border-primary text-primary bg-muted",
+                !isCompleted && !isCurrent && "border-border text-muted-foreground bg-muted/40"
               )}
               data-testid={`step-indicator-${step.id}`}
             >

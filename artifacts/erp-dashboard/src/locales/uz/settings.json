@@ -61,5 +61,17 @@
   "backup.schedule": "Avtomatik zaxira jadvali",
   "telegram.title": "Telegram bot",
   "telegram.token": "Bot tokeni",
-  "telegram.chatId": "Chat ID"
+  "telegram.chatId": "Chat ID",
+  "website": "Veb-sayt",
+  "gpt4oMini": "Gpt 4o mini",
+  "gptModel": "Gpt model",
+  "ozbek": "O'zbek tilida",
+  "prompt": "Soʻrov matni",
+  "toshkentShaharYashnobodTumani": "Toshkent shahar yashnobod tumani",
+  "soliqMoliya": "Soliq / Moliya",
+  "k9001800": "9:00 - 18:00 (Понедельник - Пятница)",
+  "k9001800DushanbaJuma": "9:00 - 18:00 (Dushanba - Juma)",
+  "untitled": "Русский",
+  "wwwEuroprintUz": "www.europrint.uz",
+  "infoEuroprintUz": "info@europrint.uz"
 }

@@ -1,3 +1,8 @@
+/**
+ * @module OEEGauge
+ * @description React UI component.
+ */
+
 import { cn } from "@/lib/utils";
 
 interface OEEGaugeProps {
@@ -23,10 +28,10 @@ export function OEEGauge({
     clamped >= 85 ? "#22c55e" : clamped >= 65 ? "#f59e0b" : "#ef4444";
   const textColor =
     clamped >= 85
-      ? "text-green-500"
+      ? "text-[var(--ep-green)]"
       : clamped >= 65
-      ? "text-yellow-500"
-      : "text-red-500";
+      ? "text-[var(--ep-yellow)]"
+      : "text-[var(--ep-red)]";
 
   const label =
     clamped >= 85 ? "Yaxshi" : clamped >= 65 ? "O'rta" : "Past";

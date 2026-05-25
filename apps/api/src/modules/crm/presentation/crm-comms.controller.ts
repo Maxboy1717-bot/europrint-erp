@@ -1,3 +1,8 @@
+/**
+ * @module crm-comms.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { assertRequired } from '@common/assertions';
@@ -14,8 +19,9 @@ import {  BadRequestException,
   InternalServerErrorException,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CrmCommsService } from '../application/crm-comms.service';
@@ -28,8 +34,9 @@ import {
 
 const CRM_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'crm_manager'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Crm Comms')
 @Controller('crm')
 @UseGuards(RolesGuard)
 @Roles(...CRM_ROLES)
@@ -38,6 +45,9 @@ export class CrmCommsController {
 
   constructor(private readonly svc: CrmCommsService) {}
 
+  @ApiOperation({ summary: 'Send email' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('email/send')
   @UsePipes(new ZodValidationPipe(SendEmailDtoSchema))
   async sendEmail(@Body() body: SendEmailDto) {
@@ -46,6 +56,9 @@ export class CrmCommsController {
     return unwrapOrThrow(await this.svc.sendEmail(body.to, body.subject, body.body ?? '', body.lead_id ?? null, body.deal_id ?? null));
   }
 
+  @ApiOperation({ summary: 'Schedule meeting' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('meetings/schedule')
   @UsePipes(new ZodValidationPipe(ScheduleMeetingDtoSchema))
   async scheduleMeeting(@Body() body: ScheduleMeetingDto) {
@@ -61,6 +74,9 @@ export class CrmCommsController {
     return _rScheduleMeeting.data;
   }
 
+  @ApiOperation({ summary: 'Send sms' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('sms/send')
   @UsePipes(new ZodValidationPipe(SendSmsDtoSchema))
   async sendSms(@Body() body: SendSmsDto) {
@@ -69,6 +85,9 @@ export class CrmCommsController {
     return unwrapOrThrow(await this.svc.sendSms(body.phone, body.message, body.lead_id ?? null));
   }
 
+  @ApiOperation({ summary: 'Send whatsapp' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('whatsapp/send')
   @UsePipes(new ZodValidationPipe(SendWhatsappDtoSchema))
   async sendWhatsapp(@Body() body: SendWhatsappDto) {

@@ -1,3 +1,8 @@
+/**
+ * @module IncomeExpense
+ * @description React page component. Route-level UI.
+ */
+
 import { useIncomeExpense } from "@/components/finance/income-expense/useIncomeExpense";
 import { useTranslation } from "@/lib/i18n";
 import {
@@ -11,18 +16,17 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Wallet, Plus, FolderTree, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
-
 import { CategoryTree } from "@/components/finance/income-expense/CategoryTree";
 import { SummaryCards } from "@/components/finance/income-expense/SummaryCards";
 import { TransactionDialog } from "@/components/finance/income-expense/TransactionDialog";
 import { CategoryDialog } from "@/components/finance/income-expense/CategoryDialog";
 import { TransactionFilters } from "@/components/finance/income-expense/TransactionFilters";
 import { TransactionTable } from "@/components/finance/income-expense/TransactionTable";
+import { EPErrorState } from "@/components/ep";
 
 export default function IncomeExpense() {
   const { t } = useTranslation("finance");
-  const { t: tCommon } = useTranslation("common");
+  const { t: tCommon } = useTranslation('common');
   
   const {
     activeTab,
@@ -55,13 +59,13 @@ export default function IncomeExpense() {
   } = useIncomeExpense();
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch} />;
   }
 
   return (
-    <div className="min-h-screen bg-background" data-testid="income-expense-page">
-      <div className="border-b bg-gradient-to-r from-indigo-600 to-indigo-500 text-white">
-        <div className="container mx-auto px-4 py-4">
+    <div data-testid="income-expense-page">
+      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
+        <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <Wallet className="h-8 w-8" />
@@ -69,7 +73,7 @@ export default function IncomeExpense() {
                 <h1 className="text-2xl font-bold">
                   {t("inflow")} / {t("outflow")}
                 </h1>
-                <p className="text-indigo-100 text-sm">{t("incomeExpense")}</p>
+                <p className="text-white/75 text-sm">{t("incomeExpense")}</p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -86,7 +90,7 @@ export default function IncomeExpense() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      <div className="space-y-6 pt-6">
         <SummaryCards summary={summary} loading={summaryLoading} />
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -104,7 +108,7 @@ export default function IncomeExpense() {
               <CardHeader>
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div>
-                    <CardTitle className="text-lg">{t("incomeExpense")}</CardTitle>
+                    <CardTitle className="text-[14px] font-semibold">{t("incomeExpense")}</CardTitle>
                     <CardDescription>{t("transactions")}</CardDescription>
                   </div>
                 </div>
@@ -119,7 +123,7 @@ export default function IncomeExpense() {
                 {transactionsLoading ? (
                   <div className="space-y-2">
                     {([...Array(5)]).map((_, i) => (
-                      <Skeleton key={`k-${i}`} className="h-12 w-full" />
+                      <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />
                     ))}
                   </div>
                 ) : (
@@ -152,8 +156,8 @@ export default function IncomeExpense() {
               <Card data-testid="card-income-categories">
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <ArrowUpCircle className="h-5 w-5 text-green-500" />
-                    <CardTitle className="text-lg">
+                    <ArrowUpCircle className="h-4 w-4 text-[var(--ep-green)]" />
+                    <CardTitle className="text-[14px] font-semibold">
                       {t("inflow")} - {t("category")}
                     </CardTitle>
                   </div>
@@ -163,11 +167,11 @@ export default function IncomeExpense() {
                   {categoriesLoading ? (
                     <div className="space-y-2">
                       {([...Array(3)]).map((_, i) => (
-                        <Skeleton key={`k-${i}`} className="h-10 w-full" />
+                        <Skeleton key={`k-${i}`} className="h-10 w-full rounded-lg" />
                       ))}
                     </div>
                   ) : incomeCategories.length === 0 ? (
-                    <div className="text-center py-6 text-muted-foreground">
+                    <div className="text-center py-6 text-[13px] text-muted-foreground">
                       <FolderTree className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">{tCommon("noData")}</p>
                     </div>
@@ -184,8 +188,8 @@ export default function IncomeExpense() {
               <Card data-testid="card-expense-categories">
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <ArrowDownCircle className="h-5 w-5 text-red-500" />
-                    <CardTitle className="text-lg">
+                    <ArrowDownCircle className="h-5 w-5 text-[var(--ep-red)]" />
+                    <CardTitle className="text-[14px] font-semibold">
                       {t("outflow")} - {t("category")}
                     </CardTitle>
                   </div>
@@ -195,11 +199,11 @@ export default function IncomeExpense() {
                   {categoriesLoading ? (
                     <div className="space-y-2">
                       {([...Array(3)]).map((_, i) => (
-                        <Skeleton key={`k-${i}`} className="h-10 w-full" />
+                        <Skeleton key={`k-${i}`} className="h-10 w-full rounded-lg" />
                       ))}
                     </div>
                   ) : expenseCategories.length === 0 ? (
-                    <div className="text-center py-6 text-muted-foreground">
+                    <div className="text-center py-6 text-[13px] text-muted-foreground">
                       <FolderTree className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">{tCommon("noData")}</p>
                     </div>

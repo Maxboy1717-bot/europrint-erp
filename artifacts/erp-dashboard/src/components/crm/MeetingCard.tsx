@@ -1,3 +1,8 @@
+/**
+ * @module MeetingCard
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface Attendee {
   id: string;
   name: string;
@@ -45,10 +51,10 @@ const STATUS_CONFIG: Record<
   Meeting["status"],
   { label: string; variant: "info" | "success" | "error" | "warning" }
 > = {
-  scheduled: { label: "Запланирована", variant: "info" },
-  completed: { label: "Состоялась", variant: "success" },
-  cancelled: { label: "Отменена", variant: "error" },
-  pending: { label: "Ожидает подтверждения", variant: "warning" },
+  scheduled: { label: tLabel('common.MeetingCard.tsx.untitled', "Запланирована"), variant: "info" },
+  completed: { label: tLabel('common.MeetingCard.tsx.untitled', "Состоялась"), variant: "success" },
+  cancelled: { label: tLabel('common.MeetingCard.tsx.untitled', "Отменена"), variant: "error" },
+  pending: { label: tLabel('common.MeetingCard.tsx.untitled', "Ожидает подтверждения"), variant: "warning" },
 };
 
 const MEETING_TYPE_LABELS: Record<string, string> = {
@@ -76,7 +82,7 @@ export function MeetingCard({
           <div
             className={cn(
               "p-3 rounded-lg shrink-0",
-              "bg-blue-500/10 text-blue-500"
+              "bg-blue-500/10 text-[var(--ep-blue)]"
             )}
           >
             <Calendar className="h-5 w-5" />
@@ -132,7 +138,7 @@ export function MeetingCard({
                         key={attendee.id}
                         className="h-6 w-6 border-2 border-background"
                       >
-                        <AvatarFallback className="text-[10px] bg-purple-500 text-white">
+                        <AvatarFallback className="text-[10px] bg-[var(--ep-purple)] text-white">
                           {attendee.name
                             .split(" ")
                             .map((n) => n[0])
@@ -161,7 +167,7 @@ export function MeetingCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-green-600 border-green-500/40 hover:bg-green-500/10"
+                    className="text-[var(--ep-green)] border-green-500/40 hover:bg-[var(--ep-green)]/90/10"
                     onClick={() => onMarkCompleted?.(meeting.id)}
                     data-testid="button-mark-completed"
                   >
@@ -172,7 +178,7 @@ export function MeetingCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-red-600 border-red-500/40 hover:bg-red-500/10"
+                    className="text-[var(--ep-red)] border-red-500/40 hover:bg-[var(--ep-red)]/90/10"
                     onClick={() => onMarkCancelled?.(meeting.id)}
                     data-testid="button-mark-cancelled"
                   >

@@ -1,3 +1,8 @@
+/**
+ * @module PrinterSettingsTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +21,7 @@ import { Printer, Plus, CheckCircle, XCircle, Wifi } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { translations } from "./barcode-types";
+import { EPStatusPill } from "@/components/ep";
 
 type TranslationType = typeof translations.uz;
 
@@ -31,7 +37,7 @@ interface PrinterConfig {
 
 interface PrinterSettingsTabProps {
   lang: "uz" | "ru";
-  t: TranslationType;
+  t: TranslationType & ((key: string) => string);
 }
 
 export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
@@ -51,28 +57,23 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
   const { data: configData, refetch } = useQuery<{ configs: PrinterConfig[]; active: PrinterConfig | null }>({
     queryKey: ["/api/warehouse/printer-config"],
     queryFn: async () => {
-      const res = await fetch("/api/warehouse/printer-config", { credentials: "include" });
-      if (!res.ok) return { configs: [], active: null };
-      return res.json();
+      try {
+        return await apiRequest('GET', "/api/warehouse/printer-config");
+      } catch {
+        return { configs: [], active: null };
+      }
     },
   });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/warehouse/printer-config", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      return await apiRequest('POST', "/api/warehouse/printer-config", {
           name: form.name || "Printer",
           printerIp: form.printerIp,
           printerPort: form.printerPort,
           printFormat: form.printFormat,
           notes: form.notes,
-        }),
-      });
-      if (!res.ok) throw new Error("Saqlab bo'lmadi");
-      return res.json();
+        });
     },
     onSuccess: () => {
       toast({ title: lang === "uz" ? "Printer saqlandi" : "Принтер сохранён" });
@@ -86,14 +87,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
 
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      const res = await fetch(`/api/warehouse/printer-config/${id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive }),
-      });
-      if (!res.ok) throw new Error("Yangilab bo'lmadi");
-      return res.json();
+      return await apiRequest('PATCH', `/api/warehouse/printer-config/${id}`, { isActive });
     },
     onSuccess: () => { refetch(); },
   });
@@ -102,11 +96,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
     setTestingId(config.id);
     setTestResult(null);
     try {
-      const res = await fetch(`/api/v2/pos/printer-config/${config.id}/test`, {
-        method: "POST",
-        credentials: "include",
-      });
-      const data = await res.json();
+      const data = (await apiRequest('POST', `/api/v2/pos/printer-config/${config.id}/test`)) as Record<string, any>;
       setTestResult({ id: config.id, success: data.success, message: data.message });
     } catch {
       setTestResult({ id: config.id, success: false, message: lang === "uz" ? "Ulanib bo'lmadi" : "Не удалось подключиться" });
@@ -129,7 +119,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-3 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
               <div>
                 <p className="text-muted-foreground text-xs">{t.printerIp}</p>
                 <p className="font-mono font-bold">{active.printerIp}</p>
@@ -155,9 +145,9 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{t.printerName}</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label>{t.printerName}</Label>
               <Input
                 value={form.name}
                 onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
@@ -165,8 +155,8 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
                 data-testid="input-printer-name"
               />
             </div>
-            <div className="space-y-2">
-              <Label>{t.printerIp}</Label>
+            <div className="space-y-1">
+          <Label>{t.printerIp}</Label>
               <Input
                 value={form.printerIp}
                 onChange={(e) => setForm(f => ({ ...f, printerIp: e.target.value }))}
@@ -174,8 +164,8 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
                 data-testid="input-printer-ip"
               />
             </div>
-            <div className="space-y-2">
-              <Label>{t.printerPort}</Label>
+            <div className="space-y-1">
+          <Label>{t.printerPort}</Label>
               <Input
                 type="number"
                 value={form.printerPort}
@@ -184,15 +174,15 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
                 data-testid="input-printer-port"
               />
             </div>
-            <div className="space-y-2">
-              <Label>{t.printerFormat}</Label>
+            <div className="space-y-1">
+          <Label>{t.printerFormat}</Label>
               <Select value={form.printFormat} onValueChange={(v) => setForm(f => ({ ...f, printFormat: v }))}>
-                <SelectTrigger data-testid="select-printer-format">
+                <SelectTrigger data-testid="select-printer-format" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ZPL">ZPL — Zebra ZPL II</SelectItem>
-                  <SelectItem value="EPL">EPL — Eltron EPL2</SelectItem>
+                  <SelectItem value="ZPL">{t("zplZebraZplIi")}</SelectItem>
+                  <SelectItem value="EPL">{t("eplEltronEpl2")}</SelectItem>
                   <SelectItem value="PDF">PDF</SelectItem>
                 </SelectContent>
               </Select>
@@ -222,7 +212,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
               <div
                 key={cfg.id}
                 className={`p-3 rounded-lg border text-sm flex items-center justify-between gap-3 ${
-                  cfg.isActive ? "border-primary/30 bg-primary/5" : "border-border/30 bg-surface-container"
+                  cfg.isActive ? "border-primary/30 bg-primary/5" : "border-border/30 bg-muted/60"
                 }`}
               >
                 <div className="flex-1 min-w-0">
@@ -230,9 +220,9 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
                     <span className="font-semibold truncate">{cfg.name}</span>
                     <Badge variant="outline" className="text-xs">{cfg.printFormat}</Badge>
                     {cfg.isActive && (
-                      <Badge className="bg-green-500/20 text-green-400 text-xs">
+                      <EPStatusPill tone="success">
                         {lang === "uz" ? "Aktiv" : "Активен"}
-                      </Badge>
+                      </EPStatusPill>
                     )}
                   </div>
                   <span className="font-mono text-xs text-muted-foreground">

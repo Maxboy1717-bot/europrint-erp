@@ -1,3 +1,8 @@
+/**
+ * @module CountDetailHeader
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -98,7 +103,7 @@ export function CountDetailHeader({
 
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">{t.table.warehouse}</p>
               <p className="font-medium">{countDetail.warehouseName || "-"}</p>

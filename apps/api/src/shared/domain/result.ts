@@ -1,4 +1,9 @@
-import { InternalServerErrorException } from '@nestjs/common';
+/**
+ * @module result
+ * @description Source module. See exports for details.
+ */
+
+import { DomainError } from './errors/domain-error';
 export class Result<T = void> {
   public readonly isSuccess: boolean;
   public readonly isFailure: boolean;
@@ -21,7 +26,7 @@ export class Result<T = void> {
   }
 
   static combine(results: Result[]): Result {
-    const failed = (results ?? []).find((result) => !result.isSuccess);
+    const failed = (Array.isArray(results) ? results : []).find((result) => !result.isSuccess);
     if (failed) {
       return Result.fail(String(failed.error ?? 'Unknown error'));
     }
@@ -34,7 +39,8 @@ export class Result<T = void> {
 
   getValue(): T {
     if (!this.value) {
-      throw new InternalServerErrorException('Cannot get value from a failed result');
+      // INVALID_STATE: caller invoked getValue() on a failed/empty Result — programming error.
+      throw new DomainError('INVALID_STATE', 'Cannot get value from a failed result');
     }
     return this.value;
   }

@@ -1,23 +1,38 @@
+/**
+ * @module adaptation-compat.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   adaptation module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
+ */
 import { Controller, Get, Post, Put, Delete, Param, Query, Body, HttpCode, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { AdaptationCompatService } from './adaptation-compat.service';
 import { AdaptationBodyDto } from './dto/hr.dto';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  NewEmployeeAclTranslator,
+  type LegacyNewEmployeeRow,
+  type NewEmployeeDto,
+} from './acl/new-employee-acl';
 
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Roles(...HR_ROLES)
 // NOTE: GET /adaptation/programs is served by AdaptationController (adaptation module).
 // This compat controller owns write operations (create/update/remove) and other read sub-routes
 // on the /adaptation base path. Do not add GET 'programs' here to avoid duplicate route errors.
-@Controller('adaptation')
+@Controller('legacy/adaptation')
 export class AdaptationCompatController {
+  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
+  private readonly newEmployeeAcl = new NewEmployeeAclTranslator();
+
   constructor(private readonly svc: AdaptationCompatService) {}
 
   @Post('programs')
@@ -44,6 +59,24 @@ export class AdaptationCompatController {
   @Get('new-employees')
   async getNewEmployees(@Query('limit') limit?: string, @Query('offset') offset?: string) {
     return unwrapOrInternal(await this.svc.getNewEmployees(limit ?? '50', offset ?? '0'));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of new-employees (adaptation records).
+   * New BC-3 (HR / People — Adaptation) consumers should target this route;
+   * `/new-employees` stays for backwards-compat.
+   */
+  @Get('new-employees/v2')
+  async getNewEmployeesV2(
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ): Promise<NewEmployeeDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getNewEmployees(limit ?? '50', offset ?? '0')) as unknown as LegacyNewEmployeeRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.newEmployeeAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: NewEmployeeDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Get('feedback')

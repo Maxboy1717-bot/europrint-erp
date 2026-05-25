@@ -1,7 +1,13 @@
+/**
+ * @module finance-advance.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Post, Get, Body, Query, UseGuards, UseInterceptors, Logger, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -19,7 +25,8 @@ enum Role {
   DIRECTOR = 'DIRECTOR',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Finance Advance')
 @Controller('finance/advances')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -33,6 +40,8 @@ export class FinanceAdvanceController {
     private readonly advanceSvc: FinanceActionsService,
   ) {}
 
+  @ApiOperation({ summary: 'List advances' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.FINANCE_OFFICER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async listAdvances(@Query('page') page?: string, @Query('limit') limit?: string) {
@@ -44,6 +53,9 @@ export class FinanceAdvanceController {
     return { data: payload };
   }
 
+  @ApiOperation({ summary: 'Request advance' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('request')
   @Roles(Role.FINANCE_OFFICER, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinanceRequestAdvanceSchema))
@@ -54,6 +66,9 @@ export class FinanceAdvanceController {
     return { status: unwrapOrThrow(result).status };
   }
 
+  @ApiOperation({ summary: 'Override advance' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('override')
   @Roles(Role.DIRECTOR, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinanceOverrideAdvanceSchema))
@@ -64,6 +79,8 @@ export class FinanceAdvanceController {
     return { status: unwrapOrThrow(result).status };
   }
 
+  @ApiOperation({ summary: 'Get pending advances' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('pending')
   @Roles(Role.DIRECTOR, Role.SUPER_ADMIN)
   async getPendingAdvances() {

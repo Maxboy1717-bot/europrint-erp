@@ -1,3 +1,8 @@
+/**
+ * @module territory-log.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import {
@@ -149,7 +154,7 @@ export class TerritoryLogRepository {
         .orderBy(desc(hr_tz2_territory_logs.ts))
         .limit(500);
 
-      return (rows ?? []).map((r) => ({
+      return (Array.isArray(rows) ? rows : []).map((r) => ({
         id:              r.id,
         employee_id:     r.employee_id ?? null,
         employee_name:   r.employee_name ?? null,

@@ -1,48 +1,42 @@
-import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { assertInternal } from '@common/assertions';
-import {
-  Controller,
-  Post,
-  Body,
-  Logger, UseInterceptors, UsePipes,
-} from '@nestjs/common';
+/**
+ * @module admin-auth.controller
+ * @description Legacy admin JWT refresh endpoint.
+ * Uses JWT_REFRESH_SECRET (not the access-token secret) to verify the refresh token.
+ */
+
+import { Controller, Post, Body, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
-import { ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
-import { Public } from '@common/decorators/public.decorator';
+import { ConfigService } from '@nestjs/config';
 import { LegacyService } from '../services/legacy.service';
-import { LegacyRefreshTokenSchema, LegacyRefreshTokenDto } from '../dto/legacy.dto';
 
-@ApiTags('Admin Auth (Legacy)')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
-@UseInterceptors(AuditInterceptor)
-@Controller()
+@Controller('admin/auth')
 export class AdminAuthController {
-  private readonly logger = new Logger(AdminAuthController.name);
-
   constructor(
-    private readonly db: LegacyService,
+    private readonly legacySvc: LegacyService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
-  @Public()
-  @Post('auth/refresh')
-  @UsePipes(new ZodValidationPipe(LegacyRefreshTokenSchema))
-  async refreshToken(@Body() body: LegacyRefreshTokenDto) {
-    const decoded = this.jwtService.verify(body.refreshToken) as Record<string, unknown>;
-    const admin = await this.db.findAdminById(decoded['id'] as string | number);
-    assertInternal(admin, 'Admin topilmadi');
+  @Post('refresh')
+  async refreshToken(@Body() body: { refreshToken: string }) {
+    const refreshSecret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
+    const payload = this.jwtService.verify(body.refreshToken, { secret: refreshSecret }) as {
+      id: number;
+      username?: string;
+      role?: string;
+      name?: string;
+    };
+    const admin = await this.legacySvc.findAdminById(payload.id);
+    if (!admin) throw new InternalServerErrorException('Admin topilmadi');
 
-    const accessToken = this.jwtService.sign(
-      {
-        id:       admin['id'],
-        username: String(admin['username'] ?? ''),
-        role:     String(admin['role'] ?? 'admin'),
-        name:     String(admin['name'] ?? admin['username'] ?? ''),
-      },
-      { expiresIn: '24h' },
-    );
+    const adminRow = admin as { id: number; username: string; role?: string; name?: string };
+    const claims = {
+      id: adminRow.id,
+      username: adminRow.username,
+      role: adminRow.role ?? 'admin',
+      name: adminRow.name ?? adminRow.username,
+    };
+    const accessToken = this.jwtService.sign(claims, { expiresIn: '24h' });
     return { accessToken };
   }
 }

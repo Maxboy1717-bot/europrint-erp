@@ -1,3 +1,8 @@
+/**
+ * @module index
+ * @description Barrel re-export file. Surfaces the public API of this folder.
+ */
+
 export { PosV2Module } from './pos-v2.module';
 
 // Aggregates
@@ -22,7 +27,7 @@ export { GetBarcodeQuery } from './application/queries/get-barcode.query';
 export {
   GetMovementReportQuery,
   GetEmployeeActivityQuery,
-  GetLowStockQuery,
+  GetPosV2LowStockQuery,
 } from './application/queries/get-movement-report.query';
 
 // DTOs

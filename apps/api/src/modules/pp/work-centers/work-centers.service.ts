@@ -1,3 +1,8 @@
+/**
+ * @module work-centers.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
 import { IPpWorkCentersRepository, PP_WORK_CENTERS_REPO } from './i-pp-work-centers.repo';
 import { safeCall, Result, AppError } from '@common/result';

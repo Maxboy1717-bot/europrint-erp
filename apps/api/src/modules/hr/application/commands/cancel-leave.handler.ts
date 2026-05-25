@@ -1,5 +1,11 @@
+/**
+ * @module cancel-leave.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result, Err , Ok } from '@common/types/result.type';
 import { CancelLeaveCommand } from './cancel-leave.command';
 import { LeaveRequest } from '../../domain/aggregates/leave-request.aggregate';
@@ -10,7 +16,10 @@ import { IHrRepo } from '../../domain/repositories/i-hr.repo';
 export class CancelLeaveHandler implements ICommandHandler<CancelLeaveCommand> {
   private readonly logger = new Logger(CancelLeaveHandler.name);
 
-  constructor(@Inject(HR_REPO) private readonly repo: IHrRepo) {}
+  constructor(
+    @Inject(HR_REPO) private readonly repo: IHrRepo,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   async execute(command: CancelLeaveCommand): Promise<Result<LeaveRequest>> {
       this.logger.log(`Cancelling leave request: ${command.leaveId}`);
@@ -51,7 +60,10 @@ export class CancelLeaveHandler implements ICommandHandler<CancelLeaveCommand> {
         leaveData['updatedAt'] as Date,
       );
 
-      leaveRequest.cancel();
+      const cancelResult = leaveRequest.cancel();
+      if (!cancelResult.ok) {
+        return Err(cancelResult.error);
+      }
 
       const updateResult = await this.repo.updateLeave(command.leaveId, {
         status: leaveRequest.status,
@@ -61,6 +73,11 @@ export class CancelLeaveHandler implements ICommandHandler<CancelLeaveCommand> {
       if (!updateResult.ok) {
         return Err(`Failed to update leave request: ${updateResult.error}`);
       }
+
+      for (const ev of leaveRequest.getDomainEvents()) {
+        this.eventEmitter.emit(ev.eventName, ev);
+      }
+      leaveRequest.clearDomainEvents();
 
       return Ok(leaveRequest);
   }

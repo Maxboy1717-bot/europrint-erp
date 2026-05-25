@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+/**
+ * @module purchase.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IPurchaseSvcRepository, PURCHASE_SVC_REPO } from './i-purchase-svc.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -34,7 +40,10 @@ const PO_STATUS_MACHINE: Record<string, string[]> = {
 export class PurchaseService {
   private readonly logger = new Logger(PurchaseService.name);
 
-  constructor(@Inject(PURCHASE_SVC_REPO) private readonly purchaseSvcRepo: IPurchaseSvcRepository) {}
+  constructor(
+    @Inject(PURCHASE_SVC_REPO) private readonly purchaseSvcRepo: IPurchaseSvcRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   toApiStatus(dbStatus: string): string { return DB_TO_API_STATUS[dbStatus] || dbStatus; }
   toDbStatus(apiStatus: string): string { return API_TO_DB_STATUS[apiStatus] || apiStatus; }
@@ -56,15 +65,16 @@ export class PurchaseService {
     });}
 
   async getOrderById(id: number){
+    const notFoundMsg = await this.i18n.t('errors.notFound');
     return safeCall(async () => {
     const findResult = await this.purchaseSvcRepo.findById(id);
     if (!findResult.ok) throw new InternalServerErrorException(findResult.error);
-    if (!findResult.data) throw new NotFoundException(`PO #${id} topilmadi`);
+    if (!findResult.data) throw new NotFoundException(notFoundMsg);
     const row = findResult.data as Record<string, unknown>;
     const itemsResult = await this.purchaseSvcRepo.findItemsByOrderId(id);
     if (!itemsResult.ok) throw new InternalServerErrorException(itemsResult.error);
     return { ...row, status: this.toApiStatus(String(row['status'] ?? '')), items: itemsResult.data };
-  
+
     });}
 
   async createOrder(dto: Record<string, unknown>){
@@ -76,10 +86,11 @@ export class PurchaseService {
     });}
 
   async updateStatus(id: number, apiStatus: string){
+    const notFoundMsg = await this.i18n.t('errors.notFound');
     return safeCall(async () => {
     const findResult = await this.purchaseSvcRepo.findById(id);
     if (!findResult.ok) throw new InternalServerErrorException(findResult.error);
-    if (!findResult.data) throw new NotFoundException(`PO #${id} topilmadi`);
+    if (!findResult.data) throw new NotFoundException(notFoundMsg);
     const row = findResult.data as Record<string, unknown>;
     const currentDb = String(row['status'] ?? '');
     const newDb = this.toDbStatus(apiStatus);
@@ -90,6 +101,6 @@ export class PurchaseService {
     const updateResult = await this.purchaseSvcRepo.updateStatus(id, newDb);
     if (!updateResult.ok) throw new InternalServerErrorException(updateResult.error);
     return { ...(updateResult.data as Record<string, unknown>), status: this.toApiStatus(newDb) };
-  
+
     });}
 }

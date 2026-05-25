@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import type { DragStartEvent, DragEndEvent, SensorDescriptor, PointerSensorOptions } from '@dnd-kit/core';
 import type { Dispatch, SetStateAction } from 'react';
 import { 
@@ -87,7 +92,7 @@ export interface KanbanViewProps {
   activeEntity: EntityType;
   stageValues: Record<string, number>;
   onItemClick: (id: number) => void;
-  onAddTask: (id: number) => void;
+  onAddTask: (id: string | number) => void;
   onQuickAdd: (stageId: string) => void;
   sensors: SensorDescriptor<PointerSensorOptions>[];
   handleDragStart: (event: DragStartEvent) => void;

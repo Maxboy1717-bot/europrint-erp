@@ -1,8 +1,14 @@
+/**
+ * @module PickingPanel
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Truck, ScanBarcode } from "lucide-react";
 import { PickingTask } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface PickingProps {
   count: number;
@@ -12,6 +18,7 @@ interface PickingProps {
 }
 
 export function PickingPanel({ count, tasks, onPick, isPending }: PickingProps) {
+  const { t } = useTranslation("common");
   const pendingTasks = (Array.isArray(tasks) ? tasks : []).filter(t => t.status === "pending");
 
   return (
@@ -26,7 +33,7 @@ export function PickingPanel({ count, tasks, onPick, isPending }: PickingProps) 
       <CardContent>
         {pendingTasks.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Kutayotgan picking topshiriq yo'q
+            {t("kutayotganPickingTopshiriqYoq")}
           </p>
         ) : (
           <div className="space-y-2">
@@ -45,7 +52,7 @@ export function PickingPanel({ count, tasks, onPick, isPending }: PickingProps) 
                   data-testid={`button-pick-${task.id}`}
                 >
                   <ScanBarcode className="h-3 w-3 mr-1" />
-                  Tanlash
+                  {t("select")}
                 </Button>
               </div>
             ))}

@@ -1,3 +1,8 @@
+/**
+ * @module ForecastAnalytics
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,11 +15,12 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, Area, AreaChart, ReferenceLine,
 } from "recharts";
-import { Brain, TrendingUp, Loader2, AlertCircle, AlertTriangle } from "lucide-react";
+import { Brain, TrendingUp, AlertCircle, AlertTriangle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
+import { EPLoader } from "@/components/ep";
 type ForecastModel = "ema" | "hw" | "croston" | "ensemble";
 
 interface EmaResult {
@@ -85,6 +91,15 @@ export default function ForecastAnalytics() {
   const [rawSeries, setRawSeries] = useState(SAMPLE_SPORADIC.join(", "));
   const [result, setResult]     = useState<AnyResult>(null);
 
+  const refreshForecastMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/forecasts/run", {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/forecasts"] });
+      toast({ title: "Prognoz yangilandi", description: "Barcha prognozlar muvaffaqiyatli yangilandi." });
+    },
+    onError: (e: Error) => toast({ title: t('error'), description: e.message, variant: "destructive" }),
+  });
+
   const mutation = useMutation({
     mutationFn: async () => {
       const series = rawSeries.split(/[\s,]+/).map(Number).filter(Number.isFinite);
@@ -109,12 +124,12 @@ export default function ForecastAnalytics() {
   const buildChartData = () => {
     const base = series.map((v, i) => ({ period: `T${i + 1}`, actual: v }));
     if (!result) return base;
-    const r = result as Record<string, unknown>;
+    const r = result as unknown as Record<string, unknown>;
     const predicted = (r.predicted as number[] | undefined) ?? [];
     const fitted = (r.fitted as number[] | undefined) ?? [];
 
     if (fitted.length) {
-      fitted.forEach((v, i) => { (base[i] as Record<string, number>)["fitted"] = Math.round(v * 100) / 100; });
+      fitted.forEach((v, i) => { (base[i] as unknown as Record<string, number>)["fitted"] = Math.round(v * 100) / 100; });
     }
     predicted.forEach((v, j) => {
       const point: Record<string, string | number> = { period: `T${series.length + j + 1}`, predicted: Math.round(v * 100) / 100 };
@@ -134,17 +149,31 @@ export default function ForecastAnalytics() {
   const ensResult = model === "ensemble" && result ? result as EnsembleResult : null;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Brain className="w-7 h-7 text-purple-600" />
-        <div>
-          <h1 className="text-2xl font-bold">{t('forecastAnalytics')}</h1>
-          <p className="text-muted-foreground text-sm">{t('forecastDesc')}</p>
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Brain className="w-7 h-7 text-[var(--ep-purple)]" />
+          <div>
+            <h1 className="text-2xl font-bold">{t('forecastAnalytics')}</h1>
+            <p className="text-muted-foreground text-sm">{t('forecastDesc')}</p>
+          </div>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refreshForecastMutation.mutate()}
+          disabled={refreshForecastMutation.isPending}
+          data-testid="button-refresh-forecast"
+        >
+          {refreshForecastMutation.isPending
+            ? <EPLoader className="w-4 h-4 mr-2" />
+            : <RefreshCw className="w-4 h-4 mr-2" />}
+          Prognoz yangilash
+        </Button>
       </div>
 
       {ensResult?.hitlRequired && (
-        <div className="flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 p-3 text-orange-700">
+        <div className="flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 p-3 text-[var(--ep-primary)]">
           <AlertTriangle className="w-5 h-5 flex-shrink-0" />
           <span className="text-sm font-medium">{t('hitlWarning')}: {ensResult.hitlReason}</span>
           <Badge className="ml-auto text-xs bg-orange-200 text-orange-800">
@@ -197,7 +226,7 @@ export default function ForecastAnalytics() {
               </div>
             </div>
             <Button onClick={() => mutation.mutate()} disabled={mutation.isPending} className="w-full">
-              {mutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <TrendingUp className="w-4 h-4 mr-2" />}
+              {mutation.isPending ? <EPLoader className="w-4 h-4 mr-2" /> : <TrendingUp className="w-4 h-4 mr-2" />}
               {t('calculate')}
             </Button>
           </CardContent>
@@ -205,11 +234,11 @@ export default function ForecastAnalytics() {
 
         <div className="lg:col-span-2 space-y-4">
           {result && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {model === "ema" && result && (
                 <>
                   <Card className="p-3">
-                    <p className="text-xs text-muted-foreground">Alpha</p>
+                    <p className="text-xs text-muted-foreground">{t("alpha")}</p>
                     <p className="text-xl font-bold">{((result as EmaResult).alpha ?? 0).toFixed(3)}</p>
                   </Card>
                   <Card className="p-3">
@@ -258,12 +287,12 @@ export default function ForecastAnalytics() {
                     <Card key={name} className="p-3">
                       <p className="text-xs text-muted-foreground">{name.toUpperCase()} {t('modelWeight')}</p>
                       <p className="text-xl font-bold">{(w * 100).toFixed(1)}%</p>
-                      <p className="text-xs text-orange-500">MAPE: {((ensResult.modelMapes as Record<string, number>)[name] ?? 0).toFixed(1)}%</p>
+                      <p className="text-xs text-[var(--ep-primary)]">MAPE: {((ensResult.modelMapes as Record<string, number>)[name] ?? 0).toFixed(1)}%</p>
                     </Card>
                   ))}
                   <Card className="p-3 col-span-2">
                     <p className="text-xs text-muted-foreground">{t('confidence')}</p>
-                    <p className={`text-xl font-bold ${ensResult.confidence < 0.70 ? 'text-orange-500' : 'text-green-600'}`}>
+                    <p className={`text-xl font-bold ${ensResult.confidence < 0.70 ? 'text-[var(--ep-primary)]' : 'text-[var(--ep-green)]'}`}>
                       {(ensResult.confidence * 100).toFixed(1)}%
                     </p>
                   </Card>

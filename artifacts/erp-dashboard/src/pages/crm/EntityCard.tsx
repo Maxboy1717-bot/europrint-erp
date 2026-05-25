@@ -1,276 +1,230 @@
+/**
+ * @module EntityCard
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/format";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Plus,
-  Phone,
-  Mail,
-  Building2,
-  DollarSign,
-  FileText,
-  Receipt,
-  Bell,
-  Target,
-  AlertTriangle,
-} from "lucide-react";
 import { format } from "date-fns";
 import { uz } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import type {
-  EntityCardProps,
-  QuickScore,
-  Lead,
-  Deal,
-  Contact,
-  Company,
-  Proposal,
-  Invoice,
-  EntityData,
-} from "./crm-types";
 
-export function EntityCard({ entity, entityType, isDragging = false, onClick, onAddTask }: EntityCardProps) {
+import {
+  hexToRgba, SHADOW_IDLE, SHADOW_HOVER, SHADOW_DRAGGING,
+} from "./EntityCardTypes";
+import type { EntityCardProps, QuickScore, Lead, Deal, Contact, Proposal, Invoice, EntityData } from "./EntityCardTypes";
+import {
+  TopBar, PriorityRow, AmountBadge, ContactRow,
+  ProgressBar, AiScoreRow, AvatarFooter, CompanyRow,
+} from "./EntityCardSections";
+
+export function EntityCard({
+  entity,
+  entityType,
+  isDragging = false,
+  onClick,
+  onAddTask,
+  stageColor = "#A0AEC0",
+  stageIndex = 0,
+  totalStages = 7,
+}: EntityCardProps) {
   const [quickScore, setQuickScore] = useState<QuickScore | null>(null);
   const [isLoadingScore, setIsLoadingScore] = useState(false);
 
   const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
+    attributes, listeners, setNodeRef,
+    transform, transition,
     isDragging: isSortableDragging,
   } = useSortable({ id: entity.id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
+  const style = { transform: CSS.Transform.toString(transform), transition };
   const isActuallyDragging = isDragging || isSortableDragging;
 
   useEffect(() => {
     if ((entityType === "leads" || entityType === "deals") && !quickScore && !isLoadingScore) {
       setIsLoadingScore(true);
-      const entityTypeParam = entityType === "leads" ? "lead" : "deal";
-      apiRequest("GET", `/api/crm/ai/quick-score/${entityTypeParam}/${entity.id}`)
-        .then(data => {
-          setQuickScore(data);
-        })
-        .catch(() => {
-          setQuickScore({ score: 50, churnRisk: "medium", hasIssues: false });
-        })
+      const param = entityType === "leads" ? "lead" : "deal";
+      apiRequest<QuickScore>("GET", `/api/crm/ai/quick-score/${param}/${entity.id}`)
+        .then((d) => setQuickScore(d))
+        .catch(() => setQuickScore({ score: 50, churnRisk: "medium", hasIssues: false }))
         .finally(() => setIsLoadingScore(false));
     }
   }, [entityType, entity.id, quickScore, isLoadingScore]);
 
-  const getScoreColor = (score: number) => {
-    if (score >= 70) return "bg-green-500 text-white";
-    if (score >= 40) return "bg-yellow-500 text-white";
-    return "bg-red-500 text-white";
-  };
+  // ── Ma'lumot extraction ──────────────────────────────────────────────────────
 
-  const getChurnRiskColor = (risk: string) => {
-    if (risk === "low") return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-    if (risk === "medium") return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
-    return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
-  };
-
-  const getChurnRiskLabel = (risk: string) => {
-    if (risk === "low") return "Xavfsiz";
-    if (risk === "medium") return "Kuzatuv";
-    return "Xavfli";
-  };
-
-  const getTitle = () => {
-    if (entityType === "leads") return (entity as Lead).title;
-    if (entityType === "deals") return (entity as Deal).title;
+  const getTitle = (): string => {
+    if (entityType === "leads")    return (entity as Lead).title ?? "";
+    if (entityType === "deals")    return (entity as Deal).title ?? "";
     if (entityType === "contacts") {
       const c = entity as Contact;
-      return ([c.lastName, c.name, c.secondName]).filter(Boolean).join(" ") || "Nomsiz kontakt";
+      return [c.lastName, c.name, c.secondName].filter(Boolean).join(" ") || "Nomsiz kontakt";
     }
-    if (entityType === "proposals") return (entity as Proposal).title;
-    if (entityType === "invoices") return (entity as Invoice).title;
-    return (entity as Company).title;
+    if (entityType === "proposals") return (entity as Proposal).title ?? "";
+    if (entityType === "invoices")  return (entity as Invoice).title ?? "";
+    return (entity as { title?: string }).title ?? "";
   };
 
-  const getPhone = () => {
+  const getPersonName = (): string => {
+    const raw = entity as unknown as Record<string, unknown>;
+    return (raw["contact_name"] as string) ?? (raw["assignedByName"] as string) ?? getTitle();
+  };
+
+  const getCompany = (): string | null => {
+    if (entityType === "leads")    return (entity as Lead).companyTitle ?? null;
+    if (entityType === "contacts") return (entity as Contact).companyTitle ?? null;
+    const raw = entity as unknown as Record<string, unknown>;
+    return (raw["companyTitle"] as string) ?? null;
+  };
+
+  const getPhone = (): string | null => {
     if ("phones" in entity && entity.phones?.[0]) return entity.phones[0].value;
-    return null;
+    const raw = entity as unknown as Record<string, unknown>;
+    return (raw["contact_phone"] as string) ?? null;
   };
 
-  const getEmail = () => {
+  const getEmail = (): string | null => {
     if ("emails" in entity && entity.emails?.[0]) return entity.emails[0].value;
-    return null;
+    const raw = entity as unknown as Record<string, unknown>;
+    return (raw["contact_email"] as string) ?? null;
   };
 
-  const getCompanyTitle = () => {
-    if (entityType === "leads") return (entity as Lead).companyTitle;
-    if (entityType === "deals") return null;
-    if (entityType === "contacts") return null;
-    return null;
-  };
-
-  const getSource = () => {
+  const getAmount = (): number | null => {
     if (entityType === "leads") {
       const lead = entity as Lead;
-      const sources: Record<string, string> = {
-        CALL: "Qo'ng'iroq",
-        WEBFORM: "Sayt",
-        EMAIL: "Email", 
-        SOCIAL: "Ijtimoiy",
-        RECOMMENDATION: "Tavsiya",
-        PARTNER: "Hamkor",
-        EXHIBITION: "Ko'rgazma",
-      };
-      return lead.sourceId ? sources[lead.sourceId] || lead.sourceId : null;
+      const raw  = entity as unknown as Record<string, unknown>;
+      const opp  =
+        lead.opportunity ??
+        (raw["opportunityAmount"] as number | undefined) ??
+        (raw["budget"] as number | undefined) ??
+        null;
+      return opp && opp > 0 ? opp : null;
     }
+    if (entityType === "deals")     return (entity as Deal).opportunity ?? null;
+    if (entityType === "proposals") return (entity as Proposal).totalAmount ?? null;
+    if (entityType === "invoices")  return (entity as Invoice).totalAmount ?? null;
     return null;
   };
 
-  const getInitials = () => {
-    const title = getTitle();
-    return title.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  const getCurrency = (): string => {
+    if (entityType === "deals") return (entity as Deal).currencyId ?? "UZS";
+    if (entityType === "leads") return ((entity as unknown as Record<string, unknown>)["currencyId"] as string) ?? "UZS";
+    return (entity as Proposal | Invoice).currency ?? "UZS";
   };
 
-  const phone = getPhone();
-  const email = getEmail();
-  const companyTitle = getCompanyTitle();
-  const source = getSource();
+  const getDate = (): string => {
+    const raw = entity as EntityData;
+    const d   = raw.dateCreate ?? (raw as unknown as Record<string, unknown>)["createdAt"] as string;
+    if (!d) return "—";
+    const dt = new Date(d);
+    return isNaN(dt.getTime()) ? "—" : format(dt, "d.MM.yy", { locale: uz });
+  };
+
+  const getSource = (): string | null => {
+    const raw = entity as unknown as Record<string, unknown>;
+    return (raw["sourceId"] as string) ?? (raw["source"] as string) ?? null;
+  };
+
+  const getPriority = (): string | null => {
+    const raw = entity as unknown as Record<string, unknown>;
+    return (raw["priority"] as string) ?? null;
+  };
+
+  const getInitials = (): string => {
+    const name = getPersonName() || getTitle() || "?";
+    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  const phone      = getPhone();
+  const email      = getEmail();
+  const amount     = getAmount();
+  const title      = getTitle();
+  const personName = getPersonName();
+  const avatarBg   = hexToRgba(stageColor, 0.18);
+  const progressPct = Math.round(((stageIndex + 1) / Math.max(totalStages, 1)) * 100);
 
   return (
-    <Card
+    <motion.div
       ref={setNodeRef}
-      style={style}
+      initial={{ opacity: 0, y: 12, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.92, transition: { duration: 0.15 } }}
+      transition={{ duration: 0.22, ease: [0.25, 0.1, 0.25, 1] }}
+      whileHover={
+        !isActuallyDragging
+          ? { y: -2, boxShadow: SHADOW_HOVER, transition: { duration: 0.18 } }
+          : {}
+      }
       {...attributes}
       {...listeners}
       onClick={() => !isActuallyDragging && onClick?.(entity.id)}
       className={cn(
-        "cursor-grab active:cursor-grabbing bg-card hover-elevate group relative",
-        isActuallyDragging && "opacity-50 rotate-2"
+        "relative rounded-[16px] cursor-grab active:cursor-grabbing",
+        "transition-colors duration-150 group select-none overflow-hidden",
       )}
+      style={{
+        ...style,
+        background: "#FFFFFF",
+        boxShadow: isActuallyDragging ? SHADOW_DRAGGING : SHADOW_IDLE,
+        transform: isActuallyDragging ? "rotate(3deg) scale(1.03)" : undefined,
+        opacity: isActuallyDragging ? 0.9 : 1,
+        padding: "13px 13px 11px",
+      }}
       data-testid={`card-${entityType}-${entity.id}`}
     >
-      <CardContent className="p-3 space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            {(phone || email) && (
-              <div className="flex items-center gap-1">
-                {phone && <Phone className="h-3.5 w-3.5 text-blue-500" />}
-                {email && <Mail className="h-3.5 w-3.5 text-green-500" />}
-              </div>
-            )}
-            <h4 className="font-medium text-sm truncate">{getTitle()}</h4>
-          </div>
-          <Avatar className="h-7 w-7 shrink-0">
-            <AvatarFallback className="text-xs bg-primary/10">{getInitials()}</AvatarFallback>
-          </Avatar>
-        </div>
+      <TopBar
+        stageColor={stageColor}
+        source={getSource()}
+        entityId={entity.id}
+        onAddTask={onAddTask}
+      />
 
-        {entityType === "deals" && (
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-3.5 w-3.5 text-green-600" />
-            <span className="font-bold text-sm text-green-600">
-              {formatCurrency((entity as Deal).opportunity, (entity as Deal).currencyId)}
-            </span>
-          </div>
+      <div className="pt-1">
+        <PriorityRow priority={getPriority()} />
+
+        <h4
+          className="font-semibold leading-snug line-clamp-2 pr-8 mb-1.5"
+          style={{ fontSize: 13.5, color: "#2D3748" }}
+        >
+          {title || "—"}
+        </h4>
+
+        <CompanyRow company={getCompany()} />
+
+        {amount !== null && (
+          <AmountBadge
+            amount={amount}
+            currency={getCurrency()}
+            stageColor={stageColor}
+            formatCurrency={formatCurrency}
+          />
         )}
 
-        {entityType === "proposals" && (
-          <div className="flex items-center gap-2">
-            <FileText className="h-3.5 w-3.5 text-purple-600" />
-            <span className="font-bold text-sm text-purple-600">
-              {formatCurrency((entity as Proposal).totalAmount, (entity as Proposal).currency)}
-            </span>
-          </div>
+        <ContactRow phone={phone} email={email} />
+
+        <ProgressBar progressPct={progressPct} stageColor={stageColor} />
+
+        {quickScore && (
+          <AiScoreRow quickScore={quickScore} entityId={entity.id} />
         )}
 
-        {entityType === "invoices" && (
-          <div className="flex items-center gap-2">
-            <Receipt className="h-3.5 w-3.5 text-amber-600" />
-            <span className="font-bold text-sm text-amber-600">
-              {formatCurrency((entity as Invoice).totalAmount, (entity as Invoice).currency)}
-            </span>
-          </div>
-        )}
+        <div
+          className="my-2"
+          style={{ height: 1, background: "rgba(0,0,0,0.05)", borderRadius: 1 }}
+        />
 
-        {companyTitle && (
-          <div className="flex items-center gap-1.5">
-            <Building2 className="h-3 w-3 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground truncate">{companyTitle}</span>
-          </div>
-        )}
-
-        {phone && (
-          <div className="flex items-center gap-1.5">
-            <Phone className="h-3 w-3 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground truncate">{phone}</span>
-          </div>
-        )}
-
-        {email && (
-          <div className="flex items-center gap-1.5">
-            <Mail className="h-3 w-3 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground truncate">{email}</span>
-          </div>
-        )}
-
-        {/* AI Indicators Row */}
-        {(entityType === "leads" || entityType === "deals") && quickScore && (
-          <div className="flex items-center gap-1.5 pt-1">
-            <Badge 
-              className={cn("text-[10px] h-4 px-1.5 font-bold", getScoreColor(quickScore.score))}
-              data-testid={`badge-ai-score-${entity.id}`}
-            >
-              <Target className="h-2.5 w-2.5 mr-0.5" />
-              {quickScore.score}
-            </Badge>
-            <Badge 
-              className={cn("text-[10px] h-4 px-1.5", getChurnRiskColor(quickScore.churnRisk))}
-              data-testid={`badge-churn-risk-${entity.id}`}
-            >
-              {quickScore.churnRisk === "high" && <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />}
-              {getChurnRiskLabel(quickScore.churnRisk)}
-            </Badge>
-            {quickScore.hasIssues && (
-              <Badge variant="outline" className="text-[10px] h-4 px-1 text-orange-500 border-orange-300">
-                <Bell className="h-2.5 w-2.5" />
-              </Badge>
-            )}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between pt-1 flex-wrap gap-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              {format(new Date((entity as EntityData).dateCreate), "dd MMM", { locale: uz })}
-            </span>
-            {source && (
-              <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
-                {source}
-              </Badge>
-            )}
-          </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-6 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddTask?.(entity.id);
-            }}
-            data-testid={`button-add-task-${entity.id}`}
-          >
-            <Plus className="h-3 w-3 mr-1" />
-            Ish
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        <AvatarFooter
+          initials={getInitials()}
+          personName={personName}
+          dateStr={getDate()}
+          avatarBg={avatarBg}
+          stageColor={stageColor}
+        />
+      </div>
+    </motion.div>
   );
 }

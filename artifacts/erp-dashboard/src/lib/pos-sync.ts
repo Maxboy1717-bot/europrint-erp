@@ -1,3 +1,8 @@
+/**
+ * @module pos-sync
+ * @description Frontend utility / library module.
+ */
+
 import { apiRequest } from "./queryClient";
 import {
   posDb,
@@ -10,7 +15,7 @@ import {
 
 export type SyncStatus = "idle" | "syncing" | "error" | "success";
 
-let syncInProgress = false;
+let syncQueue: Promise<{ synced: number; failed: number; conflicts: number }> | null = null;
 let syncListeners: Array<(status: SyncStatus, pendingCount: number) => void> = [];
 
 export function onSyncStatusChange(cb: (status: SyncStatus, pendingCount: number) => void) {
@@ -29,9 +34,12 @@ export async function syncPendingSales(): Promise<{
   failed: number;
   conflicts: number;
 }> {
-  if (syncInProgress) return { synced: 0, failed: 0, conflicts: 0 };
-  syncInProgress = true;
+  if (syncQueue) return syncQueue;
+  syncQueue = _runSync().finally(() => { syncQueue = null; });
+  return syncQueue;
+}
 
+async function _runSync(): Promise<{ synced: number; failed: number; conflicts: number }> {
   const pendingCount = await getAllPendingCount();
   notifyListeners("syncing", pendingCount);
 
@@ -73,7 +81,6 @@ export async function syncPendingSales(): Promise<{
       }
     }
   } finally {
-    syncInProgress = false;
     const remaining = await getAllPendingCount();
     notifyListeners(
       failed > 0 && synced === 0 ? "error" : "success",

@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module hr-dashboard.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { HrDashboardRepository } from './hr-dashboard.repository';
+import { HR_DASHBOARD_REPO, type IHrDashboardRepo } from '../domain/repositories/i-hr-dashboard.repo';
 
 @Injectable()
 export class HrDashboardService {
-  constructor(private readonly repo: HrDashboardRepository) {}
+  constructor(@Inject(HR_DASHBOARD_REPO) private readonly repo: IHrDashboardRepo) {}
 
   async getBirthdaysToday(): Promise<Result<object, AppError>> {
     return this.repo.getBirthdaysToday();
@@ -56,5 +61,13 @@ export class HrDashboardService {
 
   async getShiftsToday(today: string) {
     return this.repo.getShiftsToday(today);
+  }
+
+  async getAlumni() {
+    return this.repo.getAlumni();
+  }
+
+  async createDailyReport(dto: { user_id: number; report_date: string; tasks_completed?: string }) {
+    return this.repo.createDailyReport(dto);
   }
 }

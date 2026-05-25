@@ -1,3 +1,8 @@
+/**
+ * @module Blog
+ * @description Source module. See exports for details.
+ */
+
 import { Link } from "wouter";
 import { Calendar, Clock, ArrowRight, TrendingUp, Leaf, BookOpen, Palette, Award, BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { z } from "zod";
 
 export interface GoodsReceipt {
@@ -94,14 +99,14 @@ export const goodsReceiptLineSchema = z.object({
 });
 
 export const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-gray-500/20 text-on-surface-variant border-gray-500/40",
+  draft: "bg-gray-500/20 text-muted-foreground border-gray-500/40",
   pending_qc: "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
   qc_passed: "bg-green-500/20 text-green-400 border-green-500/40",
   qc_failed: "bg-red-500/20 text-red-400 border-red-500/40",
   received: "bg-blue-500/20 text-blue-400 border-blue-500/40",
-  cancelled: "bg-gray-500/20 text-on-surface-variant border-gray-500/40",
+  cancelled: "bg-gray-500/20 text-muted-foreground border-gray-500/40",
   pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
   passed: "bg-green-500/20 text-green-400 border-green-500/40",
   failed: "bg-red-500/20 text-red-400 border-red-500/40",
-  not_required: "bg-gray-500/20 text-on-surface-variant border-gray-500/40",
+  not_required: "bg-gray-500/20 text-muted-foreground border-gray-500/40",
 };

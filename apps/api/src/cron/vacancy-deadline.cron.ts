@@ -1,3 +1,8 @@
+/**
+ * @module vacancy-deadline.cron
+ * @description Scheduled cron job. @nestjs/schedule registered task.
+ */
+
 import { Injectable, Logger, Optional } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import { db, vacancies, hrDepartments, hrEmployees } from '@shared/db'
@@ -14,13 +19,13 @@ export class VacancyDeadlineCron {
   async remindUpcomingDeadlines(): Promise<void> {
     const jobName = 'VacancyDeadlineCron'
     try {
-      const rows = await db
+      const rowsRaw = await db
         .select({
           id: vacancies.id,
           title: vacancies.title,
           closing_date: vacancies.closing_date,
           department_id: vacancies.department_id,
-          manager_id: hrDepartments.manager_id,
+          manager_id: hrDepartments.headId,
         })
         .from(vacancies)
         .leftJoin(hrDepartments, eq(hrDepartments.id, vacancies.department_id))
@@ -31,8 +36,13 @@ export class VacancyDeadlineCron {
             sql`${vacancies.closing_date}::date = CURRENT_DATE + INTERVAL '3 days'`,
           ),
         )
+      // Normalize manager_id from text (canonical headId) to number for downstream lookup.
+      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map(r => ({
+        ...r,
+        manager_id: r.manager_id != null ? Number(r.manager_id) : null,
+      }))
 
-      const managerIds = [...new Set((rows ?? []).map(r => r.manager_id).filter(Boolean) as number[])]
+      const managerIds = [...new Set(rows.map(r => r.manager_id).filter((id): id is number => id != null && Number.isFinite(id)))]
       const managerMap = new Map<number, { telegram_chat_id: string | null; first_name: string | null }>()
       if (managerIds.length > 0) {
         const mgrRows = await db

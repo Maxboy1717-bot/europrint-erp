@@ -1,9 +1,16 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+/**
+ * @module approvals.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Injectable, NotFoundException, BadRequestException, Logger, Optional } from '@nestjs/common';
+import { EventBus } from '@nestjs/cqrs';
 import { approvalRequests } from '@europrint/schemas';
-import { ERP_EVENTS } from '@/events/erp-events';
 import { safeCall, Result, AppError } from '@common/result';
 import { ApprovalsRepository } from './approvals.repository';
+import { ApprovalRequestedEvent } from '../domain/events/approval-requested.event';
+import { ApprovalApprovedEvent } from '../domain/events/approval-approved.event';
+import { ApprovalRejectedEvent } from '../domain/events/approval-rejected.event';
 
 export const HITL_THRESHOLDS = {
   PURCHASE_ORDER_HIGH_VALUE: 50_000_000,
@@ -28,7 +35,7 @@ export class ApprovalsService {
   private readonly logger = new Logger(ApprovalsService.name);
   constructor(
     private readonly repo: ApprovalsRepository,
-    private eventEmitter?: EventEmitter2,
+    @Optional() private readonly eventBus?: EventBus,
   ) {}
 
   async createApprovalRequest(dto: Record<string, unknown>): Promise<Result<object, AppError>> {
@@ -46,11 +53,15 @@ export class ApprovalsService {
       const record = await this.repo.create({ ...dto, status: 'pending' } as typeof approvalRequests.$inferInsert);
       const approverRoles = APPROVER_ROLES[String(dto['documentType'])] || ['manager'];
 
-      if (this.eventEmitter) {
-        this.eventEmitter.emit(ERP_EVENTS.APPROVAL_REQUESTED, { approvalRequestId: (record.data as Record<string, unknown>)['id'], ...(record.data as Record<string, unknown>), ...dto });
+      const approvalRequestId = (record.data as Record<string, unknown>)['id'] as number | string;
+      if (this.eventBus) {
+        await this.eventBus.publish(new ApprovalRequestedEvent(
+          approvalRequestId,
+          { ...(record.data as Record<string, unknown>), ...dto },
+        ));
       }
 
-      return { approvalRequestId: (record.data as Record<string, unknown>)['id'], isNew: true, approverRoles, ...(record.data as Record<string, unknown>), ...dto };
+      return { approvalRequestId, isNew: true, approverRoles, ...(record.data as Record<string, unknown>), ...dto };
     });
   }
 
@@ -63,8 +74,8 @@ export class ApprovalsService {
 
       const result = await this.repo.approve(id, approvedBy, notes);
 
-      if (this.eventEmitter) {
-        this.eventEmitter.emit(ERP_EVENTS.APPROVAL_APPROVED, { approvalRequestId: id, ...result });
+      if (this.eventBus) {
+        await this.eventBus.publish(new ApprovalApprovedEvent(id, { ...result }));
       }
 
       return result;
@@ -80,8 +91,8 @@ export class ApprovalsService {
 
       const result = await this.repo.reject(id, reason);
 
-      if (this.eventEmitter) {
-        this.eventEmitter.emit(ERP_EVENTS.APPROVAL_REJECTED, { approvalRequestId: id, ...result });
+      if (this.eventBus) {
+        await this.eventBus.publish(new ApprovalRejectedEvent(id, { ...result }));
       }
 
       return result;

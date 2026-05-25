@@ -117,10 +117,10 @@ export class VrpService {
 
     try {
     const safeDeliveries = Array.isArray(deliveries) ? deliveries : [];
-    const deliveryMap = new Map<string, Delivery>((safeDeliveries ?? []).map(d => [d.id, d]));
+    const deliveryMap = new Map<string, Delivery>((Array.isArray(safeDeliveries) ? safeDeliveries : []).map(d => [d.id, d]));
 
     const d0 = new Map<string, number>(
-      (safeDeliveries ?? []).map(d => [d.id, this.distBetween(depot, d)]),
+      (Array.isArray(safeDeliveries) ? safeDeliveries : []).map(d => [d.id, this.distBetween(depot, d)]),
     );
 
     const savings: { i: string; j: string; saving: number }[] = [];

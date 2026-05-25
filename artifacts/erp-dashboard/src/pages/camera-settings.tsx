@@ -1,3 +1,8 @@
+/**
+ * @module camera-settings
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -5,20 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { 
-  Settings, 
-  Sliders, 
-  Bell, 
-  AlertTriangle, 
-  ArrowLeft,
-  Bot,
-  Zap,
-  Save,
-  Loader2
-} from "lucide-react";
+import { Settings, Sliders, Bell, AlertTriangle, ArrowLeft, Bot, Zap, Save } from "lucide-react";
 import { Link } from "wouter";
-import { ErrorState } from "@/components/ui/error-state";
-
 // Sub-components
 import { CameraTriggerRules } from "@/components/settings/camera/CameraTriggerRules";
 import { CameraAIPrompts } from "@/components/settings/camera/CameraAIPrompts";
@@ -27,6 +20,7 @@ import { AlertsSettingsTab } from "@/components/settings/camera/AlertsSettingsTa
 import { TelegramSettingsTab } from "@/components/settings/camera/TelegramSettingsTab";
 import { PenaltySettingsTab } from "@/components/settings/camera/PenaltySettingsTab";
 import { CameraSettingsData } from "@/components/settings/camera/types";
+import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 
 export default function CameraSettings() {
   const { toast } = useToast();
@@ -48,7 +42,7 @@ export default function CameraSettings() {
   const [autoPenalty, setAutoPenalty] = useState(true);
   const [penaltyAmount, setPenaltyAmount] = useState(50000);
 
-  const { data: settings, isLoading, isError, refetch} = useQuery<CameraSettingsData>({
+  const { data: settings, isLoading, isError, error, refetch} = useQuery<CameraSettingsData>({
     queryKey: ["/api/camera-settings"]
   });
 
@@ -133,39 +127,40 @@ export default function CameraSettings() {
   };
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-10 w-64" />
+      <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+        <Skeleton className="h-10 w-64 rounded-lg" />
         <div className="space-y-4">
-          {([...Array(4)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-32" />)}
+          {([...Array(4)]).map((_, i) => <Skeleton key={`k-${i}`} className="h-32 rounded-lg" />)}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6 bg-surface min-h-screen">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Link href="/camera-dashboard">
-              <Button variant="ghost" size="sm" className="rounded-lg text-on-surface-variant hover:bg-surface-container-low" data-testid="button-back">
+              <Button variant="ghost" size="sm" className="rounded-lg text-muted-foreground hover:bg-muted/40" data-testid="button-back">
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 {t.back}
               </Button>
             </Link>
           </div>
-          <h1 className="text-4xl font-light tracking-tight text-on-surface">
-            Kamera <span className="font-bold text-primary">Sozlamalari</span>
-          </h1>
-          <p className="text-on-surface-variant">{t.subtitle}</p>
+          <EPPageHeader
+        breadcrumb={<><b className="text-foreground">{t.title}</b></>}
+        title={t.title}
+        subtitle={t.subtitle}
+      />
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex rounded-lg border border-outline-variant overflow-hidden">
+          <div className="flex rounded-lg border border-border overflow-hidden">
             <Button 
               variant={language === "uz" ? "default" : "ghost"} 
               size="sm"
@@ -191,35 +186,35 @@ export default function CameraSettings() {
             className="rounded-lg shadow-sm"
             data-testid="button-save-main"
           >
-            {saveMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+            {saveMutation.isPending ? <EPLoader className="mr-2" /> : <Save className="h-4 w-4 mr-2" />}
             {t.save}
           </Button>
         </div>
       </div>
 
       <Tabs defaultValue="ai" className="space-y-6">
-        <TabsList className="bg-surface-container-low p-1 rounded-lg grid grid-cols-6 w-full">
-          <TabsTrigger value="ai" className="rounded-md data-[state=active]:bg-surface data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-ai">
+        <TabsList className="bg-muted/40 p-1 rounded-lg grid grid-cols-2 lg:grid-cols-6 w-full">
+          <TabsTrigger value="ai" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-ai">
             <Sliders className="h-4 w-4 mr-2" />
             {t.aiSettings}
           </TabsTrigger>
-          <TabsTrigger value="prompts" className="rounded-md data-[state=active]:bg-surface data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-prompts">
+          <TabsTrigger value="prompts" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-prompts">
             <Bot className="h-4 w-4 mr-2" />
-            AI Promptlar
+            {language === "uz" ? "AI Promptlar" : "AI Промпты"}
           </TabsTrigger>
-          <TabsTrigger value="triggers" className="rounded-md data-[state=active]:bg-surface data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-triggers">
+          <TabsTrigger value="triggers" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-triggers">
             <Zap className="h-4 w-4 mr-2" />
-            Trigger Qoidalar
+            {language === "uz" ? "Trigger qoidalar" : "Триггеры"}
           </TabsTrigger>
-          <TabsTrigger value="alerts" className="rounded-md data-[state=active]:bg-surface data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-alerts">
+          <TabsTrigger value="alerts" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-alerts">
             <Bell className="h-4 w-4 mr-2" />
             {t.alertSettings}
           </TabsTrigger>
-          <TabsTrigger value="telegram" className="rounded-md data-[state=active]:bg-surface data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-telegram">
+          <TabsTrigger value="telegram" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-telegram">
             <Bot className="h-4 w-4 mr-2" />
             {t.telegramSettings}
           </TabsTrigger>
-          <TabsTrigger value="penalty" className="rounded-md data-[state=active]:bg-surface data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-penalty">
+          <TabsTrigger value="penalty" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm" data-testid="tab-penalty">
             <AlertTriangle className="h-4 w-4 mr-2" />
             {t.penaltySettings}
           </TabsTrigger>

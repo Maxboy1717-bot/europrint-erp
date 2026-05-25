@@ -1,3 +1,8 @@
+/**
+ * @module profile-types
+ * @description React page component. Route-level UI.
+ */
+
 export interface Employee {
   id: string | number;
   fullName: string;

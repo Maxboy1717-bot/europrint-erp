@@ -1,9 +1,15 @@
+/**
+ * @module StorageTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock, CheckCircle } from "lucide-react";
 import { fmtQty, fmtDate } from "@/components/wms/helpers";
 import { KpiCard } from "@/components/wms/tabs/KpiCard";
 import type { StorageData, MaterialBasic } from "@/components/wms/wms-types";
+import { useTranslation } from '@/lib/i18n';
 
 interface StorageTabProps {
   storage: StorageData | null | undefined;
@@ -11,18 +17,19 @@ interface StorageTabProps {
 }
 
 export function StorageTab({ storage, basic }: StorageTabProps) {
-  if (!storage) return <div className="text-muted-foreground text-sm py-8 text-center">Saqlash ma'lumotlari yo'q</div>;
+  const { t } = useTranslation("common");
+  if (!storage) return <div className="text-muted-foreground text-sm py-8 text-center">{t("saqlashMalumotlariYoq")}</div>;
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <KpiCard icon={AlertTriangle} label="30 kun ichida tugaydi" value={String(storage.count30Days || 0)} color={(storage.count30Days || 0) > 0 ? "text-destructive" : "text-green-600"} />
-        <KpiCard icon={Clock} label="60 kun ichida tugaydi" value={String(storage.count60Days || 0)} color={(storage.count60Days || 0) > 0 ? "text-yellow-600" : "text-green-600"} />
-        <KpiCard icon={CheckCircle} label="FIFO muvofiqlik" value={storage.fifoCompliance ? "Ha" : "Yo'q"} color={storage.fifoCompliance ? "text-green-600" : "text-destructive"} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <KpiCard icon={AlertTriangle} label="30 kun ichida tugaydi" value={String(storage.count30Days || 0)} color={(storage.count30Days || 0) > 0 ? "text-destructive" : "text-[var(--ep-green)]"} />
+        <KpiCard icon={Clock} label="60 kun ichida tugaydi" value={String(storage.count60Days || 0)} color={(storage.count60Days || 0) > 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"} />
+        <KpiCard icon={CheckCircle} label="FIFO muvofiqlik" value={storage.fifoCompliance ? "Ha" : "Yo'q"} color={storage.fifoCompliance ? "text-[var(--ep-green)]" : "text-destructive"} />
       </div>
       {(storage.expiringBatches?.length ?? 0) > 0 ? (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Muddati yaqin partiyalar</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{t("muddatiYaqinPartiyalar")}</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -52,8 +59,8 @@ export function StorageTab({ storage, basic }: StorageTabProps) {
         </Card>
       ) : (
         <Card><CardContent className="py-8 text-center">
-          <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Muddati yaqin partiyalar yo'q</p>
+          <CheckCircle className="h-8 w-8 text-[var(--ep-green)] mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">{t("muddatiYaqinPartiyalarYoq")}</p>
         </CardContent></Card>
       )}
     </div>

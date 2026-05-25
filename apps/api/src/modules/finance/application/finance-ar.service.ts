@@ -1,13 +1,18 @@
+/**
+ * @module finance-ar.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { FinanceArRepository, ArBucket } from './finance-ar.repository';
+import { FINANCE_AR_REPO, type IFinanceArRepo, type ArBucket } from '../domain/repositories/i-finance-ar.repo';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
 @Injectable()
 export class FinanceArService {
-  constructor(private readonly repo: FinanceArRepository) {}
+  constructor(@Inject(FINANCE_AR_REPO) private readonly repo: IFinanceArRepo) {}
 
   async getAgingBuckets(): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -47,10 +52,8 @@ export class FinanceArService {
         else buckets[key].over_120 += amount;
         buckets[key].total_outstanding += amount;
       }
-      await this.repo.clearArAgingBuckets();
-      for (const b of Object.values(buckets)) {
-        await this.repo.insertArAgingBucket(b);
-      }
+      // Atomic: clear + reinsert in one transaction (was: delete + N inserts, partial-failure risk)
+      await this.repo.replaceArAgingBuckets(Object.values(buckets));
       return Object.keys(buckets).length;
     });
   }

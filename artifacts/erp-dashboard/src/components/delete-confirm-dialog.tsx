@@ -1,3 +1,8 @@
+/**
+ * @module delete-confirm-dialog
+ * @description React UI component.
+ */
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface DeleteConfirmDialogProps {
   title?: string;
@@ -24,15 +30,19 @@ interface DeleteConfirmDialogProps {
 }
 
 export function DeleteConfirmDialog({
-  title = "O'chirishni tasdiqlaysizmi?",
-  description = "Bu amalni qaytarib bo'lmaydi. Ma'lumot butunlay o'chiriladi.",
+  title,
+  description,
   onConfirm,
   isPending = false,
   trigger,
   children,
   variant = "icon",
-  buttonText = "O'chirish",
+  buttonText,
 }: DeleteConfirmDialogProps) {
+  const { t } = useTranslation("common");
+  const resolvedTitle = title ?? t("confirm.delete");
+  const resolvedDescription = description ?? t("buAmalniQaytaribBolmaydiMalumot");
+  const resolvedButtonText = buttonText ?? t("delete");
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -51,20 +61,20 @@ export function DeleteConfirmDialog({
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle data-testid="text-delete-title">{title}</AlertDialogTitle>
+          <AlertDialogTitle data-testid="text-delete-title">{resolvedTitle}</AlertDialogTitle>
           <AlertDialogDescription data-testid="text-delete-description">
-            {description}
+            {resolvedDescription}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel data-testid="button-delete-cancel">Bekor qilish</AlertDialogCancel>
+          <AlertDialogCancel data-testid="button-delete-cancel">{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isPending}
             className="bg-destructive text-destructive-foreground hover-elevate"
             data-testid="button-delete-confirm"
           >
-            {isPending ? "O'chirilmoqda..." : "Ha, o'chirish"}
+            {isPending ? t("ochirilmoqda") : resolvedButtonText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

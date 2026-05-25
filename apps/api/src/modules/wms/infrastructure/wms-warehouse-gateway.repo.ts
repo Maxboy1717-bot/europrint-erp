@@ -1,3 +1,18 @@
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   nested scalar subqueries in SELECT for multi-source KPI rollup (active
+ *   warehouses, total stock qty, total stock value, low-stock alerts, today's
+ *   movements in one round-trip), COUNT(*) FILTER (WHERE ...) aggregate-filter
+ *   tallies for goods-receipt status breakdown, conditional ${param ?? null}::int
+ *   IS NULL OR column = ${param} optional-filter pattern, and INSERT ...
+ *   ON CONFLICT DO NOTHING for pos_sync_events idempotency.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
+ * @module wms-warehouse-gateway.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -79,13 +94,20 @@ export class WmsWarehouseGatewayRepo {
   async createTransfer(body: Row, userId: number | null): Promise<Row> {
     const fromWh = parseInt(String(body.fromWarehouseId ?? body.from_warehouse_id ?? 0), 10);
     const toWh = parseInt(String(body.toWarehouseId ?? body.to_warehouse_id ?? 0), 10);
-    const matId = parseInt(String(body.materialId ?? body.material_id ?? 0), 10);
+    const transferNum = `TRF-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+    const transferDate = new Date().toISOString().split('T')[0];
     const rows = await runQuery<Row>(sql`
-      INSERT INTO wms_transfers (from_warehouse_id, to_warehouse_id, material_id, quantity, requested_by, notes, status)
-      VALUES (${fromWh}, ${toWh}, ${matId}, ${body.quantity ?? 0}, ${userId}, ${body.notes ?? null}, 'pending')
-      RETURNING *
+      INSERT INTO stock_transfers (transfer_number, transfer_date, from_warehouse_id, to_warehouse_id,
+        status, total_items, total_value, requested_by, notes, requested_at, created_at)
+      VALUES (${transferNum}, ${transferDate}, ${fromWh}, ${toWh},
+        'pending', ${body.items ? parseInt(String(body.items),10) : 1},
+        ${body.totalValue ? Number(body.totalValue) : 0},
+        ${userId}, ${body.notes ?? null}, NOW(), NOW())
+      RETURNING id::text AS id, transfer_number AS "transferNumber", transfer_date AS "transferDate",
+                from_warehouse_id AS "fromWarehouseId", to_warehouse_id AS "toWarehouseId",
+                status, created_at AS "createdAt"
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async getInternalRequests(status?: string): Promise<Row[]> {
@@ -108,7 +130,7 @@ export class WmsWarehouseGatewayRepo {
       VALUES (${whId}, ${matId}, ${body.quantity ?? 0}, ${userId}, ${body.notes ?? null}, 'pending')
       RETURNING *
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async getGoodsReceipts(status?: string): Promise<Row[]> {
@@ -129,7 +151,7 @@ export class WmsWarehouseGatewayRepo {
       VALUES (${body.purchaseOrderId ?? body.purchase_order_id ?? null}, ${userId}, 'draft', ${body.notes ?? null}, NOW())
       RETURNING *
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async getGoodsReceiptStats(): Promise<Row> {
@@ -157,7 +179,7 @@ export class WmsWarehouseGatewayRepo {
       UPDATE mm_goods_receipt_lines SET qc_status = ${passed ? 'passed' : 'failed'}, qc_notes = ${notes}, qc_by = ${userId}, qc_at = NOW()
       WHERE id = ${lineId} RETURNING *
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async completeGoodsReceipt(receiptId: number, userId: number | null): Promise<Row> {
@@ -165,7 +187,7 @@ export class WmsWarehouseGatewayRepo {
       UPDATE mm_goods_receipts SET status = 'completed', completed_by = ${userId}, completed_at = NOW()
       WHERE id = ${receiptId} RETURNING *
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async getLowStock(): Promise<Row[]> {
@@ -188,5 +210,13 @@ export class WmsWarehouseGatewayRepo {
       WHERE b.batch_number = ${barcode} OR m.barcode = ${barcode} OR m.sku = ${barcode} LIMIT 1
     `);
     return (rows.rows[0] ?? { found: false, barcode }) as Row;
+  }
+
+  async logPosSyncEvent(warehouseId: number | null, userId: number | null): Promise<void> {
+    await runQuery(sql`
+      INSERT INTO pos_sync_events (warehouse_id, event_type, triggered_by, created_at)
+      VALUES (${warehouseId}, 'WAREHOUSE_SYNC', ${userId}, NOW())
+      ON CONFLICT DO NOTHING
+    `).catch(() => null);
   }
 }

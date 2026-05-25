@@ -1,3 +1,8 @@
+/**
+ * @module rop.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { Ok, Err, Result, AppError } from '@common/result';

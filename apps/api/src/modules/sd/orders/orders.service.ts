@@ -1,4 +1,10 @@
+/**
+ * @module orders.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ISdOrdersRepository, SD_ORDERS_REPO } from './i-sd-orders.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -6,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
 
-  constructor(@Inject(SD_ORDERS_REPO) private readonly sdOrdersRepo: ISdOrdersRepository) {}
+  constructor(
+    @Inject(SD_ORDERS_REPO) private readonly sdOrdersRepo: ISdOrdersRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -19,7 +28,7 @@ export class OrdersService {
   async findOne(id: number) {
     const result = await this.sdOrdersRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Buyurtma #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.orderNotFound'));
     return result.data;
   }
 
@@ -59,12 +68,14 @@ export class OrdersService {
     });}
 
   async cancel(id: number){
+    const alreadyCancelledMsg = await this.i18n.t('errors.orderAlreadyCancelled');
+    const cancelledMsg = await this.i18n.t('messages.orderCancelled');
     return safeCall(async () => {
     const order = await this.findOne(id);
-    if (order.status === 'cancelled' || order.overallStatus === 'CANCELLED') throw new BadRequestException('Buyurtma allaqachon bekor qilingan');
+    if (order.status === 'cancelled' || order.overallStatus === 'CANCELLED') throw new BadRequestException(alreadyCancelledMsg);
     const result = await this.sdOrdersRepo.cancel(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    return { message: 'Buyurtma bekor qilindi' };
-  
+    return { message: cancelledMsg, code: 'ORDER_CANCELLED' };
+
     });}
 }

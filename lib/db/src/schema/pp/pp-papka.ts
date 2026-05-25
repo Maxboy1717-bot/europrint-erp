@@ -1,6 +1,11 @@
+/**
+ * @module pp-papka
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "../numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "../core-schema";
@@ -30,21 +35,23 @@ export const papkaOrders = pgTable("papka_orders", {
   materialTaminot: text("material_taminot"),
   dizayner: text("dizayner"),
   marketolog: text("marketolog"),
-  bomId: varchar("bom_id").references(() => bomHeaders.id),
-  productId: varchar("product_id").references(() => products.id),
-  routingId: varchar("routing_id").references(() => routings.id),
+  bomId: varchar("bom_id").references(() => bomHeaders.id, { onDelete: "set null" }),
+  productId: varchar("product_id").references(() => products.id, { onDelete: "set null" }),
+  routingId: varchar("routing_id").references(() => routings.id, { onDelete: "set null" }),
   materialRequirements: jsonb("material_requirements"),
   stockCheckResult: jsonb("stock_check_result"),
   estimatedProductionTime: numericMoney("estimated_production_time"),
   notes: text("notes"),
   texnologikKarta: jsonb("texnologik_karta"),
   excelSourceBatchId: varchar("excel_source_batch_id"),
-  salesOrderId: varchar("sales_order_id", { length: 36 }).references(() => salesOrders.id),
-  createdBy: integer("created_by").references(() => users.id),
+  salesOrderId: varchar("sales_order_id", { length: 36 }).references(() => salesOrders.id, { onDelete: "set null" }),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("papka_orders_status_chk", sql`${t.status} IN ('draft','pending_design','pending_tech','pending_qc','approved','ready_for_planning','planned','production','qc_final','completed','cancelled')`),
+]);
 
 export const insertPapkaOrderSchema = createInsertSchema(papkaOrders, {
   papkaNo: z.string().min(1, "Papka № kerak"),
@@ -74,7 +81,10 @@ export const excelImportBatches = pgTable("excel_import_batches", {
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("excel_import_batches_source_type_chk", sql`${t.sourceType} IN ('plan_2019','plan_2018','sm72_fact','warehouse','machine_task','raw_material')`),
+  check("excel_import_batches_status_chk", sql`${t.status} IN ('uploaded','parsing','validating','importing','completed','failed')`),
+]);
 
 export const insertExcelImportBatchSchema = createInsertSchema(excelImportBatches, {
   fileName: z.string().min(1, "Fayl nomi kerak"),
@@ -156,9 +166,9 @@ export type InsertFormulaDefinition = z.infer<typeof insertFormulaDefinitionSche
 // Formula Calculations
 export const formulaCalculations = pgTable("formula_calculations", {
   id: serial("id").primaryKey(),
-  formulaId: varchar("formula_id").references(() => formulaDefinitions.id).notNull(),
-  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id),
-  excelImportRowId: varchar("excel_import_row_id").references(() => excelImportRows.id),
+  formulaId: varchar("formula_id").references(() => formulaDefinitions.id, { onDelete: "cascade" }).notNull(),
+  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
+  excelImportRowId: varchar("excel_import_row_id").references(() => excelImportRows.id, { onDelete: "set null" }),
   inputValues: jsonb("input_values").notNull(),
   calculatedResult: numericMoney("calculated_result"),
   excelResult: numericMoney("excel_result"),
@@ -174,12 +184,12 @@ export type FormulaCalculation = typeof formulaCalculations.$inferSelect;
 // Planning Operations
 export const planningOperations = pgTable("planning_operations", {
   id: serial("id").primaryKey(),
-  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id).notNull(),
+  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id, { onDelete: "cascade" }).notNull(),
   operationCode: varchar("operation_code", { length: 30 }).notNull(),
   operationName: text("operation_name").notNull(),
   operationNameRu: text("operation_name_ru"),
   sequence: integer("sequence").notNull(),
-  equipmentId: integer("equipment_id").references(() => equipment.id),
+  equipmentId: integer("equipment_id").references(() => equipment.id, { onDelete: "set null" }),
   machineCode: varchar("machine_code", { length: 30 }),
   shift: varchar("shift", { length: 10 }),
   plannedDate: varchar("planned_date", { length: 10 }),
@@ -195,9 +205,11 @@ export const planningOperations = pgTable("planning_operations", {
   status: varchar("status", { length: 20 }).notNull().default("planned"),
   completionPercent: numericMoney("completion_percent").default(0),
   notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("planning_operations_status_chk", sql`${t.status} IN ('planned','in_progress','completed','cancelled')`),
+]);
 
 export const insertPlanningOperationSchema = createInsertSchema(planningOperations, {
   operationCode: z.string().min(1, "Operatsiya kodi kerak"),
@@ -212,9 +224,9 @@ export type InsertPlanningOperation = z.infer<typeof insertPlanningOperationSche
 // Production Facts (SM72 fakt hisobot)
 export const productionFacts = pgTable("production_facts", {
   id: serial("id").primaryKey(),
-  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id),
+  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
   papkaNo: varchar("papka_no", { length: 50 }).notNull(),
-  planningOperationId: varchar("planning_operation_id").references(() => planningOperations.id),
+  planningOperationId: varchar("planning_operation_id").references(() => planningOperations.id, { onDelete: "set null" }),
   sana: varchar("sana", { length: 10 }).notNull(),
   buyurtmaNomi: text("buyurtma_nomi"),
   bajarilganListSoni: integer("bajarilgan_list_soni").notNull(),
@@ -230,7 +242,7 @@ export const productionFacts = pgTable("production_facts", {
   variance: integer("variance"),
   variancePercent: numericMoney("variance_percent"),
   brakPercent: numericMoney("brak_percent"),
-  excelImportRowId: varchar("excel_import_row_id").references(() => excelImportRows.id),
+  excelImportRowId: varchar("excel_import_row_id").references(() => excelImportRows.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -251,25 +263,28 @@ export const machineTasks = pgTable("machine_tasks", {
   titleRu: text("title_ru"),
   priority: varchar("priority", { length: 20 }).notNull().default("normal"),
   responsiblePerson: text("responsible_person"),
-  responsibleUserId: integer("responsible_user_id").references(() => users.id),
+  responsibleUserId: integer("responsible_user_id").references(() => users.id, { onDelete: "set null" }),
   dueDate: varchar("due_date", { length: 10 }),
   completedDate: varchar("completed_date", { length: 10 }),
   instructions: text("instructions"),
   instructionsRu: text("instructions_ru"),
-  equipmentId: varchar("equipment_id").references(() => equipment.id),
-  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id),
-  routingOperationId: varchar("routing_operation_id").references(() => routingOperations.id),
-  workCenterId: varchar("work_center_id").references(() => workCenters.id),
+  equipmentId: varchar("equipment_id").references(() => equipment.id, { onDelete: "set null" }),
+  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
+  routingOperationId: varchar("routing_operation_id").references(() => routingOperations.id, { onDelete: "set null" }),
+  workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   plannedQuantity: numericMoney("planned_quantity"),
   completedQuantity: numericMoney("completed_quantity").default(0),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   completionPercent: numericMoney("completion_percent").default(0),
-  excelImportRowId: varchar("excel_import_row_id").references(() => excelImportRows.id),
+  excelImportRowId: varchar("excel_import_row_id").references(() => excelImportRows.id, { onDelete: "set null" }),
   notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
-});
+}, (t) => [
+  check("machine_tasks_priority_chk", sql`${t.priority} IN ('low','normal','high','urgent')`),
+  check("machine_tasks_status_chk", sql`${t.status} IN ('pending','in_progress','completed','cancelled')`),
+]);
 
 export const insertMachineTaskSchema = createInsertSchema(machineTasks, {
   title: z.string().min(1, "Vazifa nomi kerak"),

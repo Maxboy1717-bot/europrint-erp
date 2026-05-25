@@ -1,12 +1,19 @@
+﻿/**
+ * @module enps.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { Controller, UseGuards, Get, Post, Patch, Body, Param, ParseIntPipe, Logger, UseInterceptors } from '@nestjs/common';
+import { Controller, UseGuards, Get, HttpException, HttpStatus, Post, Patch, Body, Param, ParseIntPipe, Logger, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 import { EnpsService } from './enps.service';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { unwrapOrInternal } from '@common/http-result';
+import { notImplemented } from '@common/exceptions/not-implemented';
 
 const CreateSurveySchema = z.object({
   title:       z.string().min(1),
@@ -28,19 +35,26 @@ const SubmitResponseSchema = z.object({
 class SubmitResponseDto extends createZodDto(SubmitResponseSchema) {}
 
 @Roles('admin', 'manager', 'supervisor', 'employee', 'hr_manager')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
+@ApiTags('Enps')
+@ApiBearerAuth()
 @Controller('hr-v2/enps')
 export class EnpsController {
   private readonly logger = new Logger(EnpsController.name);
   constructor(private readonly svc: EnpsService) {}
 
+  @ApiOperation({ summary: 'List' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async list() {
     return unwrapOrInternal(await this.svc.listSurveys());
   }
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   async create(@Body() body: CreateSurveyDto) {
     return unwrapOrInternal(await this.svc.createSurvey({
@@ -53,21 +67,35 @@ export class EnpsController {
     }));
   }
 
+  @ApiOperation({ summary: 'Launch' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/launch')
   async launch(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.launchSurvey(id));
   }
 
+  @ApiOperation({ summary: 'Close' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/close')
   async close(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.closeSurvey(id));
   }
 
+  @ApiOperation({ summary: 'Results' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/results')
   async results(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.getSurveyResults(id));
   }
 
+  @ApiOperation({ summary: 'Respond' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('respond')
   async respond(@Body() body: SubmitResponseDto) {
     return unwrapOrInternal(await this.svc.submitResponse({
@@ -79,6 +107,13 @@ export class EnpsController {
     }));
   }
 
+  // P3-26: aggregated eNPS results not yet wired; return 501 so the survey
+  // dashboard shows an honest "coming soon" instead of a zero score.
+  @ApiOperation({ summary: 'Get enps results' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('results')
-  async getEnpsResults() { return { data: [], score: 0 }; }
+  async getEnpsResults() {
+    return notImplemented('GET /enps/results');
+  }
 }

@@ -1,3 +1,8 @@
+/**
+ * @module ItemEntryDialog
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,11 +56,11 @@ export function ItemEntryDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-xl p-6">
         <DialogHeader>
-          <DialogTitle>{t.addLine}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t.addLine}</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-4 py-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
           <div className="grid gap-2 col-span-2">
             <Label>{t.material}</Label>
             <Select
@@ -69,7 +74,7 @@ export function ItemEntryDialog({
                 });
               }}
             >
-              <SelectTrigger data-testid="select-material">
+              <SelectTrigger data-testid="select-material" className="h-9">
                 <SelectValue placeholder={t.selectMaterial} />
               </SelectTrigger>
               <SelectContent>
@@ -135,7 +140,7 @@ export function ItemEntryDialog({
               value={lineFormData.binId}
               onValueChange={(val) => setLineFormData({ ...lineFormData, binId: val })}
             >
-              <SelectTrigger data-testid="select-bin">
+              <SelectTrigger data-testid="select-bin" className="h-9">
                 <SelectValue placeholder={t.bin} />
               </SelectTrigger>
               <SelectContent>

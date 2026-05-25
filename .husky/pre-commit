@@ -1,8 +1,28 @@
+#!/usr/bin/env sh
 # EuroPrint - pre-commit hook (Husky v9)
-# Hozirda passive: ESLint/Prettier o'rnatilgach kuchaytiramiz.
-# Typecheck va testlar CI'da ishlaydi (.github/workflows/ci.yml).
+# Staged fayllar uchun ESLint + Prettier ishlatadi (lint-staged orqali).
+# Typecheck va testlar CI'da ishlaydi.
 
-echo ""
-echo "==> Pre-commit (passive — full checks CI'da)"
-echo "OK: Pre-commit o'tdi. Typecheck/lint/test CI'da ishlaydi."
-exit 0
+pnpm lint-staged || exit 1
+
+# i18n leakage quick-scan. Blocks the commit if any new hardcoded UI string
+# slips into a tracked source file. Fix by wrapping the string in
+# `tLabel('namespace.key', 'Original Text')` or by running the bulk
+# converters (fix-types-i18n.mjs / fix-jsx-and-props.mjs).
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E "artifacts/erp-dashboard/src/.*\.(tsx|ts)$" | grep -v "\.spec\.\|\.test\." || true)
+if [ -n "$STAGED" ]; then
+  node scripts/i18n-leak-detector.mjs --mode=static --out=.husky/_i18n-tmp.json >/dev/null 2>&1 || true
+  if [ -f .husky/_i18n-tmp.json ]; then
+    LEAKS=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.husky/_i18n-tmp.json','utf8')).summary.totalLeaks)" 2>/dev/null || echo 0)
+    rm -f .husky/_i18n-tmp.json
+    # Ratchet: compare against baseline so pre-existing leaks don't block commits;
+    # only NEW leaks (count > baseline) fail the build.
+    BASELINE=$(node -e "try{const b=JSON.parse(require('fs').readFileSync('docs/i18n-leakage-baseline.json','utf8'));console.log(b.summary?.totalLeaks??b.totalLeaks??0);}catch(e){console.log(0);}" 2>/dev/null || echo 0)
+    if [ "$LEAKS" -gt "$BASELINE" ]; then
+      echo "❌ i18n leakage: $LEAKS strings detected (baseline: $BASELINE). New strings added!"
+      echo "   Run: node scripts/i18n-leak-detector.mjs --mode=static"
+      echo "   Or wrap text in tLabel('namespace.key', 'Original Text')"
+      exit 1
+    fi
+  fi
+fi

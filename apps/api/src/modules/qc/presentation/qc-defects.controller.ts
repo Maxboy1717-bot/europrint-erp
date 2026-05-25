@@ -1,7 +1,14 @@
+/**
+ * @module qc-defects.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertOk, unwrapOrNotFoundDefined } from '@common/http-result';
 import { Body, Controller, Delete, Get, HttpStatus, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors , BadRequestException, NotFoundException} from '@nestjs/common';
+import { notImplemented } from '@common/exceptions/not-implemented';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -12,6 +19,22 @@ import { GetDefectsQuery } from '../application/queries/get-defects.query';
 import { DefectStatus } from '../domain/aggregates/defect.aggregate';
 import { ReportDefectDtoSchema, ResolveDefectDtoSchema, GetDefectsDtoSchema } from './dto/defect.dto';
 import { DefectSeverity } from '../domain/aggregates/defect.aggregate';
+import { z } from 'zod';
+
+const QcApprovalSchema = z.object({
+  notes: z.string().max(2000).optional(),
+  approvedBy: z.union([z.string(), z.number()]).optional(),
+}).passthrough();
+
+const QcRejectionSchema = z.object({
+  reason: z.string().max(2000).optional(),
+  rejectedBy: z.union([z.string(), z.number()]).optional(),
+}).passthrough();
+
+const InspectorSubmitSchema = z.object({
+  results: z.array(z.record(z.unknown())).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
 
 enum Role {
   QC_MANAGER = 'qc_manager',
@@ -19,7 +42,8 @@ enum Role {
   SUPER_ADMIN = 'super_admin',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Qc Defects')
 @Controller('qc')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -28,6 +52,8 @@ export class QcDefectsController {
 
   constructor(private readonly commandBus: CommandBus, private readonly queryBus: QueryBus) {}
 
+  @ApiOperation({ summary: 'Get defects' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('defects')
   async getDefects(@Query() queryParams: Record<string, unknown>) {
 
@@ -39,6 +65,8 @@ export class QcDefectsController {
     
   }
 
+  @ApiOperation({ summary: 'Get defect stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('defects/stats')
   @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async getDefectStats() {
@@ -49,6 +77,9 @@ export class QcDefectsController {
     
   }
 
+  @ApiOperation({ summary: 'Get defect by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('defects/:id')
   async getDefectById(@Param('id') id: string) {
 
@@ -57,9 +88,12 @@ export class QcDefectsController {
     
   }
 
+  @ApiOperation({ summary: 'Report defect' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('defects')
   @Roles(Role.QC_MANAGER, Role.PRODUCTION_MANAGER)
-  async reportDefect(@Body() body: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+  async reportDefect(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
 
       const parsed = ReportDefectDtoSchema.parse(body);
       const cmd = new ReportDefectCommand(parsed.inspectionId ?? null, parsed.productionOrderId ?? null, parsed.workCenterId ?? null, parsed.defectCode ?? '', parsed.description ?? '', parsed.severity as DefectSeverity, parsed.quantity ?? 0, parsed.unit ?? '', String(user.id ?? user.userId ?? 'system-user'));
@@ -70,9 +104,13 @@ export class QcDefectsController {
     
   }
 
+  @ApiOperation({ summary: 'Resolve defect' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('defects/:id/resolve')
   @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
-  async resolveDefect(@Param('id') id: string, @Body() body: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+  async resolveDefect(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
 
       const parsed = ResolveDefectDtoSchema.parse(body);
       const cmd = new ResolveDefectCommand(id, String(user?.id ?? user?.userId ?? 'system-user'), parsed.resolution);
@@ -83,21 +121,99 @@ export class QcDefectsController {
     
   }
 
+  @ApiOperation({ summary: 'Get braks cost impact' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('braks/cost-impact')
-  async getBraksCostImpact() { return { data: [], totalCost: 0 }; }
+  async getBraksCostImpact() {
+    return notImplemented('GET /qc/braks/cost-impact');
+  }
 
+  @ApiOperation({ summary: 'Get pending qc' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('pending/qc')
-  async getPendingQc() { return { data: [], total: 0 }; }
+  async getPendingQc() {
+    return notImplemented('GET /qc/pending/qc');
+  }
 
+  @ApiOperation({ summary: 'Approve finance' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('approve/finance/:orderId')
-  async approveFinance(@Param('orderId') orderId: string, @Body() body: Record<string, unknown>) { return { orderId, approved: true }; }
+  async approveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
+    QcApprovalSchema.parse(body ?? {});
+    return { orderId, approved: true };
+  }
 
+  @ApiOperation({ summary: 'Post approve finance' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post('approve/finance/:orderId')
+  async postApproveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
+    QcApprovalSchema.parse(body ?? {});
+    return { orderId, approved: true };
+  }
+
+  @ApiOperation({ summary: 'Approve qc' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('approve/qc/:orderId')
-  async approveQc(@Param('orderId') orderId: string, @Body() body: Record<string, unknown>) { return { orderId, approved: true }; }
+  async approveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
+    QcApprovalSchema.parse(body ?? {});
+    return { orderId, approved: true };
+  }
 
+  @ApiOperation({ summary: 'Post approve qc' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post('approve/qc/:orderId')
+  async postApproveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
+    QcApprovalSchema.parse(body ?? {});
+    return { orderId, approved: true };
+  }
+
+  @ApiOperation({ summary: 'Reject order' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('reject/:orderId')
-  async rejectOrder(@Param('orderId') orderId: string, @Body() body: Record<string, unknown>) { return { orderId, rejected: true }; }
+  async rejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
+    QcRejectionSchema.parse(body ?? {});
+    return { orderId, rejected: true };
+  }
 
+  @ApiOperation({ summary: 'Post reject order' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post('reject/:orderId')
+  async postRejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
+    QcRejectionSchema.parse(body ?? {});
+    return { orderId, rejected: true };
+  }
+
+  @ApiOperation({ summary: 'Inspector submit' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('inspector-submit/:orderId')
-  async inspectorSubmit(@Param('orderId') orderId: string, @Body() body: Record<string, unknown>) { return { orderId, submitted: true }; }
+  async inspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
+    InspectorSubmitSchema.parse(body ?? {});
+    return { orderId, submitted: true };
+  }
+
+  @ApiOperation({ summary: 'Post inspector submit' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post('inspector-submit/:orderId')
+  async postInspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
+    InspectorSubmitSchema.parse(body ?? {});
+    return { orderId, submitted: true };
+  }
 }

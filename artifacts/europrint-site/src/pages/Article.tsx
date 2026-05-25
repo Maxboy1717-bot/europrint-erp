@@ -1,3 +1,8 @@
+/**
+ * @module Article
+ * @description Source module. See exports for details.
+ */
+
 import { useRoute, Link } from "wouter";
 import { Calendar, Clock, ArrowLeft, Share2, TrendingUp, Leaf, BookOpen, Palette, Award, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";

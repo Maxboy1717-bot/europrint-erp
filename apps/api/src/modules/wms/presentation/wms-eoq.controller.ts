@@ -1,8 +1,14 @@
+/**
+ * @module wms-eoq.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Controller, Post, Body, HttpCode,
   UseGuards, UseInterceptors,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { PermissionGuard } from '@common/guards/permission.guard';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
@@ -25,13 +31,18 @@ const EoqCalculateSchema = z.object({
   packSize: z.number().positive().optional(),
 });
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, PermissionGuard)
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Wms Eoq')
+@ApiBearerAuth()
 @Controller('wms/eoq')
 export class WmsEoqController {
   constructor(private readonly svc: WmsEoqService) {}
 
+  @ApiOperation({ summary: 'Calculate eoq' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('calculate')
   @HttpCode(200)
   @RequirePermission('wms:WRITE')
@@ -40,6 +51,9 @@ export class WmsEoqController {
     return unwrapOrThrow(await Promise.resolve(this.svc.calculateWithTiers(input)));
   }
 
+  @ApiOperation({ summary: 'Recalculate all' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('recalculate-all')
   @HttpCode(202)
   @RequirePermission('wms:WRITE')

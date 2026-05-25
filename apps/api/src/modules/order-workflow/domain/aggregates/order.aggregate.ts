@@ -1,5 +1,11 @@
+/**
+ * @module order.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { Result, Ok, Err, AppErr } from '@common/types/result.type';
 import { OrderStatusVo, OrderStatusCode } from '../value-objects/order-status.vo';
+import type { IOrderHeader, OrderKind } from '@shared/domain/contracts/i-order-header';
 
 export interface OrderProps {
   id: string;
@@ -26,7 +32,7 @@ export interface CreateOrderProps {
   tenantId?: string | null;
 }
 
-export class OrderAggregate {
+export class OrderAggregate implements IOrderHeader {
   private readonly domainEvents: unknown[] = [];
 
   private constructor(private readonly props: OrderProps) {}
@@ -106,4 +112,12 @@ export class OrderAggregate {
       updatedAt:            this.props.updatedAt,
     };
   }
+
+  // --- IOrderHeader marker (cross-context "an order" shape) ---
+  get id(): string { return this.props.id; }
+  get orderNumber(): string { return this.props.orderNumber; }
+  get status(): string { return this.props.status.getValue(); }
+  get createdAt(): Date { return this.props.createdAt; }
+  get updatedAt(): Date { return this.props.updatedAt; }
+  get kind(): OrderKind { return 'workflow'; }
 }

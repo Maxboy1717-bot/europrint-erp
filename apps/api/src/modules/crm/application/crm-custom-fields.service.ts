@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module crm-custom-fields.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Injectable, Inject } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { CrmCustomFieldsRepository } from './crm-custom-fields.repository';
+import { CRM_CUSTOM_FIELDS_REPO, type ICrmCustomFieldsRepo } from '../domain/repositories/i-crm-custom-fields.repo';
 
 @Injectable()
 export class CrmCustomFieldsService {
-  constructor(private readonly repo: CrmCustomFieldsRepository) {}
+  constructor(@Inject(CRM_CUSTOM_FIELDS_REPO) private readonly repo: ICrmCustomFieldsRepo) {}
 
   async list(entityType: string | null): Promise<Result<object, AppError>> {
     return this.repo.list(entityType);

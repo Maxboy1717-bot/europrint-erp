@@ -1,3 +1,8 @@
+/**
+ * @module lms-tests.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
@@ -12,7 +17,7 @@ import {
   UseInterceptors
 } from '@nestjs/common';
 import { unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -26,7 +31,7 @@ import {
   CreateAssignmentSchema, CreateAssignmentDto
 } from './dto/lms-tests.dto';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('tests')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -74,7 +79,7 @@ export class LmsTestsController {
   }
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('questions')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -122,7 +127,7 @@ export class LmsQuestionsController {
   }
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('assignments')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)

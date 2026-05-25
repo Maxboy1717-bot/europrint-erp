@@ -1,3 +1,8 @@
+/**
+ * @module ai-interview-v2.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -113,6 +118,33 @@ export class AiInterviewV2Service {
     return this.repo.cancelSession(sessionId, reason);
   }
 
+  /**
+   * Public token-based submit — packages the raw candidate answers into the
+   * service-internal result shape (transcript, ai summary, default
+   * recommendation) so the controller only forwards `{ token, answers }`.
+   * Rule 6: keeps array-iteration and template-string assembly out of
+   * the HTTP layer.
+   */
+  async submitPublicAnswers(token: string, answers: readonly string[]) {
+    return safeCall(async () => {
+      const validationResult = await this.validateToken(token);
+      if (!validationResult.ok) throw new Error(validationResult.error.message);
+      const validation = validationResult.data;
+      if (!validation?.valid) throw new Error('Validation failed');
+      const sessionId = validation.session_id ?? 0;
+      const safeAnswers = Array.isArray(answers) ? answers : [];
+      const transcript = safeAnswers.map((a, i) => `Q${i + 1}: ${a}`).join('\n');
+      const aiSummary = `Submitted ${safeAnswers.length} answers`;
+      const r = await this.completeSession(sessionId, {
+        aiSummary,
+        transcript,
+        recommendation: 'CONSIDER',
+      });
+      if (!r.ok) throw new Error(r.error.message);
+      return { submitted: true };
+    });
+  }
+
   async getQuestionsForJob(jobTitle?: string, language: string = 'uz') {
     return aiInterviewGetQuestionsForJob(jobTitle, language);
   }
@@ -159,7 +191,7 @@ export class AiInterviewV2Service {
       const rowsResult = await this.repo.listSessions();
       if (!rowsResult.ok) throw new Error(rowsResult.error.message);
       const rows = rowsResult.data as Array<Record<string, unknown>>;
-      return status ? (rows ?? []).filter(row => row['status'] === status) : rows;
+      return status ? (Array.isArray(rows) ? rows : []).filter(row => row['status'] === status) : rows;
     });
     if (!r.ok) { this.logger.warn(`listSessions: ${r.error.message}`); return Ok([]); }
     return r;

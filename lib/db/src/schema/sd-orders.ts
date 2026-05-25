@@ -1,6 +1,11 @@
+/**
+ * @module sd-orders
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -13,29 +18,43 @@ import { Order, Product, orders, productionOrders, products } from "./pp-schema"
 // Sales Invoices (sotuv hujjatlari)
 export const salesInvoices = pgTable("sales_invoices", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column. DEFAULT 1 is intentional — every row backfilled to
+  // tenant 1 on migration; future writers MUST set this from TenantContext.
+  tenantId: integer("tenant_id").notNull().default(1),
   invoiceNumber: varchar("invoice_number", { length: 50 }).notNull().unique(),
   invoiceDate: varchar("invoice_date", { length: 10 }).notNull(), // YYYY-MM-DD
   customerName: text("customer_name").notNull(),
-  customerId: integer("customer_id").references(() => crmCompanies.id),
-  orderId: varchar("order_id").references(() => orders.id),
+  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: "set null" }),
+  orderId: varchar("order_id").references(() => orders.id, { onDelete: "set null" }),
   netValue: numericMoney("net_value").notNull().default(0), // Sof summa (QQS dan oldin)
   taxAmount: numericMoney("tax_amount").notNull().default(0), // QQS summasi
   totalAmount: numericMoney("total_amount").notNull(),
   paidAmount: numericMoney("paid_amount").notNull().default(0),
   paymentStatus: varchar("payment_status", { length: 20 }).notNull().default("unpaid"), // unpaid, partial, paid
   status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, posted
-  glDocumentId: varchar("gl_document_id").references(() => glDocuments.id), // Bog'liq GL hujjat
+  glDocumentId: varchar("gl_document_id").references(() => glDocuments.id, { onDelete: "set null" }), // Bog'liq GL hujjat
   dueDate: varchar("due_date", { length: 10 }), // YYYY-MM-DD
   notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
+  check("sales_invoices_payment_status_chk", sql`${t.paymentStatus} IN ('unpaid','partial','paid')`),
+  check("sales_invoices_status_chk", sql`${t.status} IN ('draft','posted','cancelled')`),
+  check("sales_invoices_net_value_chk", sql`${t.netValue} >= 0`),
+  check("sales_invoices_tax_amount_chk", sql`${t.taxAmount} >= 0`),
+  check("sales_invoices_total_amount_chk", sql`${t.totalAmount} >= 0`),
+  check("sales_invoices_paid_amount_chk", sql`${t.paidAmount} >= 0`),
   index("idx_sales_invoices_customer_id").on(t.customerId),
   index("idx_sales_invoices_payment_status").on(t.paymentStatus),
   index("idx_sales_invoices_status").on(t.status),
   index("idx_sales_invoices_created_at").on(t.createdAt),
+  index("idx_sales_invoices_tenant_id").on(t.tenantId),
+  index("idx_sales_invoices_order_id").on(t.orderId),
+  index("idx_sales_invoices_created_by").on(t.createdBy),
+  index("idx_sales_invoices_deleted_at").on(t.deletedAt),
+  index("idx_sales_invoices_due_date").on(t.dueDate),
 ]);
 
 
@@ -69,6 +88,9 @@ export type InsertSalesInvoice = z.infer<typeof insertSalesInvoiceSchema>;
 // Sales Orders (Savdo buyurtmalari) - MARKAZIY HUJJAT
 export const salesOrders = pgTable("sales_orders", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column. DEFAULT 1 is intentional — every row backfilled to
+  // tenant 1 on migration; future writers MUST set this from TenantContext.
+  tenantId: integer("tenant_id").notNull().default(1),
   documentNumber: varchar("document_number", { length: 50 }).notNull().unique(), // SO-4500012345
   documentType: varchar("document_type", { length: 10 }).notNull().default("OR"), // OR (Order), TA (Contract), CR (Credit Memo)
   
@@ -165,9 +187,21 @@ export const salesOrders = pgTable("sales_orders", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 }, (t) => [
+  check("sales_orders_overall_status_chk", sql`${t.overallStatus} IN ('IN_PROCESS','COMPLETED','CANCELLED')`),
+  check("sales_orders_delivery_status_chk", sql`${t.deliveryStatus} IN ('NOT_DELIVERED','PARTIALLY','FULLY')`),
+  check("sales_orders_billing_status_chk", sql`${t.billingStatus} IN ('NOT_BILLED','PARTIALLY','FULLY')`),
+  check("sales_orders_net_value_chk", sql`${t.netValue} >= 0`),
+  check("sales_orders_tax_amount_chk", sql`${t.taxAmount} >= 0`),
+  check("sales_orders_total_value_chk", sql`${t.totalValue} >= 0`),
   index("idx_sales_orders_status").on(t.overallStatus),
   index("idx_sales_orders_customer_id").on(t.customerId),
   index("idx_sales_orders_master_status").on(t.masterStatus),
   index("idx_sales_orders_created_at").on(t.createdAt),
+  index("idx_sales_orders_tenant_id").on(t.tenantId),
+  index("idx_sales_orders_delivery_status").on(t.deliveryStatus),
+  index("idx_sales_orders_billing_status").on(t.billingStatus),
+  index("idx_sales_orders_deleted_at").on(t.deletedAt),
+  check("sales_orders_master_status_chk", sql`${t.masterStatus} IN ('draft','incomplete','pending_design','pending_sample_lab','pending_manager_completion','pending_technology','pending_advance','ready_for_planning','planned','released_to_production','in_production','pending_qc_final','qc_failed','rework','ready_for_fg_warehouse','in_fg_warehouse','delivery_planned','in_delivery','delivered','partially_paid','fully_paid','closed','cancelled')`),
+  check("sales_orders_advance_status_chk", sql`${t.advanceStatus} IN ('no_advance','partial_advance','advance_completed','balance_pending','overdue','paid','closed')`),
 ]);
 

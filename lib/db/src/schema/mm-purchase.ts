@@ -1,6 +1,11 @@
+/**
+ * @module mm-purchase
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, pgSequence, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, pgSequence, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -27,12 +32,15 @@ export type InsertPurchaseOrder = z.infer<typeof insertPurchaseOrderSchema>;
 export const purchaseOrderItems = pgTable("purchase_order_items", {
   id: serial("id").primaryKey(),
   poId: integer("po_id").references(() => purchaseOrders.id, { onDelete: "cascade" }).notNull(),
-  rawMaterialId: integer("raw_material_id").references(() => rawMaterials.id).notNull(),
+  rawMaterialId: integer("raw_material_id").references(() => rawMaterials.id, { onDelete: "cascade" }).notNull(),
   quantity: numericMoney("quantity").notNull(),
   unit: varchar("unit", { length: 20 }).notNull(), // kg, m, pcs, etc.
   unitPrice: numericMoney("unit_price").notNull(),
   totalPrice: numericMoney("total_price").notNull(),
 }, (t) => [
+  check("purchase_order_items_quantity_chk", sql`${t.quantity} > 0`),
+  check("purchase_order_items_unit_price_chk", sql`${t.unitPrice} >= 0`),
+  check("purchase_order_items_total_price_chk", sql`${t.totalPrice} >= 0`),
   index("idx_purchase_order_items_po_id").on(t.poId),
   index("idx_purchase_order_items_raw_material_id").on(t.rawMaterialId),
 ]);
@@ -58,23 +66,25 @@ export const goodsReceipts = pgTable("goods_receipts", {
   id: serial("id").primaryKey(),
   receiptNumber: varchar("receipt_number", { length: 50 }).notNull().unique(),
   receiptDate: varchar("receipt_date", { length: 10 }).notNull(),
-  supplierId: varchar("supplier_id").references(() => vendors.id),
+  supplierId: varchar("supplier_id").references(() => vendors.id, { onDelete: "set null" }),
   supplierName: text("supplier_name"),
-  warehouseId: varchar("warehouse_id").references(() => warehouses.id),
-  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id),
+  warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
+  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id, { onDelete: "set null" }),
   status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, pending_qc, qc_passed, qc_failed, received, cancelled
   totalItems: integer("total_items").default(0),
   totalValue: numericMoney("total_value").default(0),
   qcRequiredItems: integer("qc_required_items").default(0),
   qcPassedItems: integer("qc_passed_items").default(0),
-  receivedBy: varchar("received_by").references(() => users.id),
-  qcBy: varchar("qc_by").references(() => users.id),
+  receivedBy: varchar("received_by").references(() => users.id, { onDelete: "set null" }),
+  qcBy: varchar("qc_by").references(() => users.id, { onDelete: "set null" }),
   notes: text("notes"),
   invoiceNumber: varchar("invoice_number", { length: 50 }),
   invoiceDate: varchar("invoice_date", { length: 10 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   receivedAt: timestamp("received_at"),
 }, (t) => [
+  check("goods_receipts_status_chk", sql`${t.status} IN ('draft','pending_qc','qc_passed','qc_failed','received','cancelled')`),
+  check("goods_receipts_total_value_chk", sql`${t.totalValue} IS NULL OR ${t.totalValue} >= 0`),
   index("idx_goods_receipts_supplier_id").on(t.supplierId),
   index("idx_goods_receipts_warehouse_id").on(t.warehouseId),
   index("idx_goods_receipts_status").on(t.status),
@@ -99,7 +109,7 @@ export type InsertGoodsReceipt = z.infer<typeof insertGoodsReceiptSchema>;
 export const goodsReceiptLines = pgTable("goods_receipt_lines", {
   id: serial("id").primaryKey(),
   receiptId: integer("receipt_id").notNull().references(() => goodsReceipts.id, { onDelete: "cascade" }),
-  materialCardId: varchar("material_card_id").references(() => materialCards.id),
+  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
   orderedQuantity: numericMoney("ordered_quantity"),
   receivedQuantity: numericMoney("received_quantity").notNull(),
   acceptedQuantity: numericMoney("accepted_quantity"),
@@ -111,9 +121,14 @@ export const goodsReceiptLines = pgTable("goods_receipt_lines", {
   qcStatus: varchar("qc_status", { length: 20 }).default("pending"), // pending, passed, failed, not_required
   qcNotes: text("qc_notes"),
   qcDate: varchar("qc_date", { length: 10 }),
-  binId: varchar("bin_id").references(() => warehouseBins.id),
+  binId: varchar("bin_id").references(() => warehouseBins.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
+  check("goods_receipt_lines_qc_status_chk", sql`${t.qcStatus} IN ('pending','passed','failed','not_required')`),
+  check("goods_receipt_lines_received_qty_chk", sql`${t.receivedQuantity} > 0`),
+  check("goods_receipt_lines_rejected_qty_chk", sql`${t.rejectedQuantity} IS NULL OR ${t.rejectedQuantity} >= 0`),
+  check("goods_receipt_lines_unit_cost_chk", sql`${t.unitCost} IS NULL OR ${t.unitCost} >= 0`),
+  check("goods_receipt_lines_total_cost_chk", sql`${t.totalCost} IS NULL OR ${t.totalCost} >= 0`),
   index("idx_goods_receipt_lines_receipt_id").on(t.receiptId),
   index("idx_goods_receipt_lines_material_card_id").on(t.materialCardId),
   index("idx_goods_receipt_lines_qc_status").on(t.qcStatus),
@@ -137,7 +152,7 @@ export type InsertGoodsReceiptLine = z.infer<typeof insertGoodsReceiptLineSchema
 export const goodsReceiptItems = pgTable("goods_receipt_items", {
   id: serial("id").primaryKey(),
   grId: integer("gr_id").references(() => goodsReceipts.id, { onDelete: "cascade" }).notNull(),
-  rawMaterialId: integer("raw_material_id").references(() => rawMaterials.id).notNull(),
+  rawMaterialId: integer("raw_material_id").references(() => rawMaterials.id, { onDelete: "cascade" }).notNull(),
   orderedQty: numericMoney("ordered_qty").notNull(),
   receivedQty: numericMoney("received_qty").notNull(),
   unit: varchar("unit", { length: 20 }).notNull(),
@@ -168,14 +183,15 @@ export const goodsIssues = pgTable("goods_issues", {
   issueDate: varchar("issue_date", { length: 10 }).notNull(), // YYYY-MM-DD
   issueType: varchar("issue_type", { length: 20 }).notNull(), // production, sales, adjustment
   referenceId: varchar("reference_id", { length: 100 }), // Reference to production order, sales order, etc.
-  warehouseId: integer("warehouse_id").references(() => warehouses.id).notNull(),
-  issuedBy: varchar("issued_by").references(() => users.id),
+  warehouseId: integer("warehouse_id").references(() => warehouses.id, { onDelete: "cascade" }).notNull(),
+  issuedBy: varchar("issued_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   index("idx_goods_issues_warehouse_id").on(t.warehouseId),
   index("idx_goods_issues_issue_type").on(t.issueType),
   index("idx_goods_issues_issue_date").on(t.issueDate),
   index("idx_goods_issues_created_at").on(t.createdAt),
+  check("goods_issues_issue_type_chk", sql`${t.issueType} IN ('production','sales','adjustment')`),
 ]);
 
 
@@ -196,7 +212,7 @@ export type InsertGoodsIssue = z.infer<typeof insertGoodsIssueSchema>;
 export const goodsIssueItems = pgTable("goods_issue_items", {
   id: serial("id").primaryKey(),
   giId: integer("gi_id").references(() => goodsIssues.id, { onDelete: "cascade" }).notNull(),
-  rawMaterialId: integer("raw_material_id").references(() => rawMaterials.id).notNull(),
+  rawMaterialId: integer("raw_material_id").references(() => rawMaterials.id, { onDelete: "cascade" }).notNull(),
   quantity: numericMoney("quantity").notNull(),
   unit: varchar("unit", { length: 20 }).notNull(),
 }, (t) => [

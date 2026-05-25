@@ -1,5 +1,11 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { z } from "zod";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export type Lead = {
   id: number;
   title: string;
@@ -44,7 +50,7 @@ export const STAGE_CONFIG: Record<string, { label: string; color: string; icon: 
   FINAL: { label: "Yakunlash", color: "#9C27B0", icon: "🎯" },
   CONVERTED: { label: "Konvertatsiya", color: "#22C55E", icon: "✅" },
   WON: { label: "Yutildi", color: "#16A34A", icon: "🏆" },
-  LOST: { label: "Yo'qotildi", color: "#EF4444", icon: "❌" },
+  LOST: { label: tLabel('common..yoqotildi', "Yo'qotildi"), color: "#EF4444", icon: "❌" },
 };
 
 export interface Stage {

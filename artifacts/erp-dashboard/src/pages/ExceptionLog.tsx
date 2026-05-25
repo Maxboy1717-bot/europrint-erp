@@ -1,3 +1,8 @@
+/**
+ * @module ExceptionLog
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +20,8 @@ import {
   FileWarning,
 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
+import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface ExceptionStats {
   total: number;
@@ -60,10 +67,10 @@ const EXCEPTION_LABELS: Record<string, string> = {
 };
 
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: "text-red-600 dark:text-red-400",
-  high: "text-orange-600 dark:text-orange-400",
-  medium: "text-yellow-600 dark:text-yellow-400",
-  low: "text-blue-600 dark:text-blue-400",
+  critical: "text-[var(--ep-red)] dark:text-red-400",
+  high: "text-[var(--ep-primary)] dark:text-orange-400",
+  medium: "text-[var(--ep-yellow)] dark:text-yellow-400",
+  low: "text-[var(--ep-blue)] dark:text-blue-400",
 };
 
 function StatCard({
@@ -85,7 +92,7 @@ function StatCard({
         </div>
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>
-          {loading ? <Skeleton className="h-7 w-16 mt-1" /> : <p className="text-2xl font-bold">{value}</p>}
+          {loading ? <Skeleton className="h-7 w-16 mt-1 rounded-lg" /> : <p className="text-2xl font-bold">{value}</p>}
         </div>
       </CardContent>
     </Card>
@@ -93,6 +100,7 @@ function StatCard({
 }
 
 export default function ExceptionLog() {
+  const { t } = useTranslation("common");
   const [typeFilter, setTypeFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
 
@@ -128,15 +136,15 @@ export default function ExceptionLog() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-page-title">
             <AlertOctagon className="w-7 h-7" />
-            Istisno Holatlar Logi
+            {t("istisnoHolatlarLogi")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Tizimda ro'y bergan barcha istisno holatlar va favqulodda qarorlar
+            {t("tizimdaRoyBerganBarchaIstisno")}
           </p>
         </div>
         <Button
@@ -148,16 +156,16 @@ export default function ExceptionLog() {
           }}
         >
           <RefreshCw className="w-4 h-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard title="Jami istisno" value={s?.total ?? 0} icon={AlertOctagon} loading={statsLoading} />
-        <StatCard title="Oxirgi hafta" value={s?.lastWeek ?? 0} icon={Activity} loading={statsLoading} />
-        <StatCard title="Oxirgi oy" value={s?.lastMonth ?? 0} icon={TrendingUp} loading={statsLoading} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:grid-cols-4">
+        <StatCard title={t("jamiIstisno")} value={s?.total ?? 0} icon={AlertOctagon} loading={statsLoading} />
+        <StatCard title={t("oxirgiHafta")} value={s?.lastWeek ?? 0} icon={Activity} loading={statsLoading} />
+        <StatCard title={t("oxirgiOy")} value={s?.lastMonth ?? 0} icon={TrendingUp} loading={statsLoading} />
         <StatCard
-          title="Kritik"
+          title={t("kritik")}
           value={s?.bySeverity?.critical ?? 0}
           icon={ShieldAlert}
           loading={statsLoading}
@@ -169,7 +177,7 @@ export default function ExceptionLog() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <FileWarning className="w-5 h-5" />
-              Turlar bo'yicha taqsimot
+              {t("turlarBoyichaTaqsimot")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -184,7 +192,7 @@ export default function ExceptionLog() {
                     onClick={() => setTypeFilter(typeFilter === type ? "all" : type)}
                   >
                     <span className="text-muted-foreground">{EXCEPTION_LABELS[type] || type}</span>
-                    <Badge variant="secondary">{cnt}</Badge>
+                    <EPStatusPill tone="neutral">{cnt}</EPStatusPill>
                   </div>
                 ))}
             </div>
@@ -194,29 +202,29 @@ export default function ExceptionLog() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
-          <CardTitle className="text-base">Barcha istisno holatlar</CardTitle>
+          <CardTitle className="text-base">{t("barchaIstisnoHolatlar")}</CardTitle>
           <div className="flex gap-2">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-44" data-testid="select-type-filter">
-                <SelectValue placeholder="Tur bo'yicha" />
+              <SelectTrigger className="w-44 h-9" data-testid="select-type-filter">
+                <SelectValue placeholder={t("turBoyicha1")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barcha turlar</SelectItem>
+                <SelectItem value="all">{t("barchaTurlar")}</SelectItem>
                 {Object.keys(EXCEPTION_LABELS).map((k) => (
                   <SelectItem key={k} value={k}>{EXCEPTION_LABELS[k]}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={severityFilter} onValueChange={setSeverityFilter}>
-              <SelectTrigger className="w-40" data-testid="select-severity-filter">
-                <SelectValue placeholder="Darajasi" />
+              <SelectTrigger className="w-40 h-9" data-testid="select-severity-filter">
+                <SelectValue placeholder={t("darajasi")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barchasi</SelectItem>
-                <SelectItem value="critical">Kritik</SelectItem>
-                <SelectItem value="high">Yuqori</SelectItem>
-                <SelectItem value="medium">O'rta</SelectItem>
-                <SelectItem value="low">Past</SelectItem>
+                <SelectItem value="all">{t("Barchasi")}</SelectItem>
+                <SelectItem value="critical">{t("kritik")}</SelectItem>
+                <SelectItem value="high">{t("high")}</SelectItem>
+                <SelectItem value="medium">{t("medium")}</SelectItem>
+                <SelectItem value="low">{t("low")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -225,25 +233,25 @@ export default function ExceptionLog() {
           {logsLoading ? (
             <div className="space-y-2">
               {([1, 2, 3, 4, 5]).map((i) => (
-                <Skeleton key={`k-${i}`} className="h-10 w-full" />
+                <Skeleton key={`k-${i}`} className="h-10 w-full rounded-lg" />
               ))}
             </div>
           ) : (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Daraja</TableHead>
-                  <TableHead>Tur</TableHead>
-                  <TableHead>Xabar</TableHead>
-                  <TableHead>Kim tomonidan</TableHead>
-                  <TableHead>Buyurtma</TableHead>
-                  <TableHead>Holat</TableHead>
-                  <TableHead>Sana</TableHead>
+                  <TableHead>{t("daraja")}</TableHead>
+                  <TableHead>{t("tur")}</TableHead>
+                  <TableHead>{t("xabar")}</TableHead>
+                  <TableHead>{t("kimTomonidan")}</TableHead>
+                  <TableHead>{t("Buyurtma")}</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
+                  <TableHead>{t("date")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(Array.isArray(logs?.data) ? logs.data : []).map((log) => (
-                  <TableRow key={log.id} data-testid={`row-log-${log.id}`}>
+                  <TableRow key={log.id} data-testid={`row-log-${log.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell>{severityBadge(log.severity)}</TableCell>
                     <TableCell className="text-sm">
                       {EXCEPTION_LABELS[log.exceptionType] || log.exceptionType}
@@ -257,9 +265,9 @@ export default function ExceptionLog() {
                     </TableCell>
                     <TableCell>
                       {log.resolvedAt ? (
-                        <Badge variant="default">Hal qilindi</Badge>
+                        <EPStatusPill tone="success">{t("halQilindi")}</EPStatusPill>
                       ) : (
-                        <Badge variant="secondary">Ochiq</Badge>
+                        <EPStatusPill tone="neutral">{t("ochiq")}</EPStatusPill>
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -276,12 +284,12 @@ export default function ExceptionLog() {
                 {(logs?.data?.length ?? 0) === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      Istisno holatlar topilmadi
+                      {t("istisnoHolatlarTopilmadi")}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>

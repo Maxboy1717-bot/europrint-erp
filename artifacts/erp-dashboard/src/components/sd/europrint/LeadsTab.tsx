@@ -1,3 +1,8 @@
+/**
+ * @module LeadsTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -9,14 +14,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Phone, ArrowRight } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import { 
   SdLead, 
   fmt, LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, SOURCE_LABELS 
 } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 const LEAD_STAGES = ["new", "working", "quoted", "negotiating", "won", "lost", "frozen"];
 
 export function LeadsTab() {
+  const { t } = useTranslation("common");
   const [isNew, setIsNew] = useState(false);
   const [form, setForm] = useState({
     contactName: "", contactPhone: "", source: "phone",
@@ -70,29 +78,29 @@ export function LeadsTab() {
         </div>
         <Dialog open={isNew} onOpenChange={setIsNew}>
           <DialogTrigger asChild>
-            <Button data-testid="button-add-lead"><Plus className="w-4 h-4 mr-1" />Yangi leed</Button>
+            <Button data-testid="button-add-lead"><Plus className="w-4 h-4 mr-1" />{t("yangiLeed")}</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Yangi leed</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiLeed")}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label>Kontakt ismi *</Label>
+              <div><Label>{t("kontaktIsmi")}</Label>
                 <Input data-testid="input-lead-name" value={form.contactName}
                   onChange={e => setForm({ ...form, contactName: e.target.value })} /></div>
-              <div><Label>Telefon</Label>
+              <div><Label>{t("phone")}</Label>
                 <Input data-testid="input-lead-phone" value={form.contactPhone}
                   onChange={e => setForm({ ...form, contactPhone: e.target.value })} /></div>
-              <div><Label>Manba</Label>
+              <div><Label>{t("manba")}</Label>
                 <Select value={form.source} onValueChange={v => setForm({ ...form, source: v })}>
-                  <SelectTrigger data-testid="select-lead-source"><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-testid="select-lead-source" className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(SOURCE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Qiziqish mahsuloti</Label>
+              <div><Label>{t("qiziqishMahsuloti")}</Label>
                 <Input data-testid="input-lead-product" value={form.productInterest}
                   onChange={e => setForm({ ...form, productInterest: e.target.value })} /></div>
-              <div><Label>Taxminiy qiymat (so'm)</Label>
+              <div><Label>{tLabel('common.LeadsTab.taxminiyQiymatSom', "Taxminiy qiymat (so'm)")}</Label>
                 <Input data-testid="input-lead-value" type="number" value={form.estimatedValue}
                   onChange={e => setForm({ ...form, estimatedValue: e.target.value })} /></div>
               <Button data-testid="button-save-lead" className="w-full"
@@ -138,27 +146,27 @@ export function LeadsTab() {
                           <Button size="sm" variant="outline" className="text-xs h-6 px-2"
                             data-testid={`button-lead-working-${lead.id}`}
                             onClick={() => statusMut.mutate({ id: lead.id, status: "working" })}>
-                            Boshlash
+                            {t("boshlash")}
                           </Button>
                         )}
                         {stage === "working" && (
                           <Button size="sm" variant="outline" className="text-xs h-6 px-2"
                             data-testid={`button-lead-quoted-${lead.id}`}
                             onClick={() => statusMut.mutate({ id: lead.id, status: "quoted" })}>
-                            Taklif yuborish
+                            {t("taklifYuborish")}
                           </Button>
                         )}
                         {(stage === "quoted" || stage === "negotiating") && (
                           <>
-                            <Button size="sm" className="text-xs h-6 px-2 bg-green-600 hover:bg-green-700"
+                            <Button size="sm" className="text-xs h-6 px-2 bg-green-600 hover:bg-[var(--ep-green)]/90"
                               data-testid={`button-lead-won-${lead.id}`}
                               onClick={() => statusMut.mutate({ id: lead.id, status: "won" })}>
-                              Yutdi
+                              {t("yutdi")}
                             </Button>
                             <Button size="sm" variant="outline" className="text-xs h-6 px-2"
                               data-testid={`button-lead-lost-${lead.id}`}
                               onClick={() => statusMut.mutate({ id: lead.id, status: "lost" })}>
-                              Yutqizdi
+                              {t("yutqizdi")}
                             </Button>
                           </>
                         )}
@@ -167,7 +175,7 @@ export function LeadsTab() {
                   </Card>
                 ))}
                 {leadsByStatus[stage]?.length === 0 && (
-                  <div className="text-xs text-muted-foreground text-center py-4">Bo'sh</div>
+                  <div className="text-xs text-muted-foreground text-center py-4">{t("bosh")}</div>
                 )}
               </div>
             </div>

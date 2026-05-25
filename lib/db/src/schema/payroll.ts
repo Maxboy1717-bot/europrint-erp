@@ -1,3 +1,8 @@
+/**
+ * @module payroll
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -5,7 +10,9 @@ import { employees } from "./employees";
 
 export const salaryHistory = pgTable("salary_history", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  // Multi-tenancy (Phase 2 / Task 2.1). See employees.ts for rationale.
+  tenantId: integer("tenant_id").notNull().default(1),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   salaryPeriodStart: date("salary_period_start").notNull(),
   salaryPeriodEnd: date("salary_period_end").notNull(),
   baseSalary: decimal("base_salary", { precision: 12, scale: 2 }),
@@ -39,7 +46,7 @@ export const salaryHistory = pgTable("salary_history", {
 
 export const bonusPayments = pgTable("bonus_payments", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   bonusType: varchar("bonus_type", { length: 30 }),
   bonusPeriodStart: date("bonus_period_start"),
   bonusPeriodEnd: date("bonus_period_end"),
@@ -57,7 +64,7 @@ export const bonusPayments = pgTable("bonus_payments", {
 
 export const overtimePayments = pgTable("overtime_payments", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   overtimeDate: date("overtime_date").notNull(),
   overtimeHours: decimal("overtime_hours", { precision: 6, scale: 2 }),
   overtimeType: varchar("overtime_type", { length: 20 }),
@@ -71,7 +78,7 @@ export const overtimePayments = pgTable("overtime_payments", {
 
 export const employeeFines = pgTable("employee_fines", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   fineDate: date("fine_date").notNull(),
   fineAmount: decimal("fine_amount", { precision: 12, scale: 2 }),
   fineReason: varchar("fine_reason", { length: 255 }),
@@ -85,7 +92,7 @@ export const employeeFines = pgTable("employee_fines", {
 
 export const cashAdvances = pgTable("cash_advances", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   advanceAmount: decimal("advance_amount", { precision: 12, scale: 2 }),
   advanceDate: date("advance_date").notNull(),
   requestedDate: date("requested_date"),

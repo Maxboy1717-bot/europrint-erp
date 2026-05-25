@@ -1,9 +1,16 @@
+/**
+ * @module HRRoutes
+ * @description Frontend route definition.
+ */
+
 import { lazy } from "react";
 
 const Employees = lazy(() => import("@/pages/Employees"));
 const EmployeeProfile = lazy(() => import("@/pages/EmployeeProfile"));
 const OrgChartPage = lazy(() => import("@/pages/OrgChartPage"));
 const Adaptation = lazy(() => import("@/pages/Adaptation"));
+const DepartmentsPage = lazy(() => import("@/pages/Departments"));
+const PositionsPage = lazy(() => import("@/pages/Positions"));
 const HRMap = lazy(() => import("@/pages/HRMap"));
 const RecruitingKanban = lazy(() => import("@/pages/RecruitingKanban"));
 const SevenFunctionsDashboard = lazy(() => import("@/pages/SevenFunctionsDashboard"));
@@ -55,12 +62,13 @@ export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/employees/:id',                    EmployeeProfile],
   ['/org-chart',                        OrgChartPage],
   ['/adaptation',                       Adaptation],
+  ['/departments',                      DepartmentsPage],
+  ['/positions',                        PositionsPage],
   ['/hr-map',                           HRMap],
   ['/hr/recruiting',                    RecruitingKanban],
   ['/seven-functions',                  SevenFunctionsDashboard],
   ['/business-health',                  RACIMatrixPage],
   ['/raci-matrix',                      RACIMatrixPage],
-  ['/hr/succession-planning',           HRSuccessionPlanning],
   ['/skills-matrix',                    SkillsMatrix],
   ['/mentorship',                       Mentorship],
   ['/events-calendar',                  EventsCalendar],

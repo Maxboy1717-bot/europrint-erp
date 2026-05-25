@@ -1,3 +1,8 @@
+/**
+ * @module work-orders.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IWorkOrdersRepository, WORK_ORDERS_REPO } from './i-work-orders.repo';

@@ -1,3 +1,8 @@
+/**
+ * @module ImportEmployeesDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -12,8 +17,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useTranslation } from '@/lib/i18n';
 
 interface ImportEmployeesDialogProps {
   open: boolean;
@@ -24,28 +30,17 @@ export function ImportEmployeesDialog({
   open,
   onOpenChange,
 }: ImportEmployeesDialogProps) {
+  const { t } = useTranslation("common");
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   const uploadMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const response = await fetch("/api/employees/import", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Import xatolik");
-      }
-
-      return response.json();
-    },
+    mutationFn: (formData: FormData) => apiRequest<unknown>('POST', "/api/employees/import", formData),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
       toast({
         title: "Muvaffaqiyatli",
-        description: `${data.imported} ta xodim import qilindi`,
+        description: `${(data as { imported?: number })?.imported ?? 0} ta xodim import qilindi`,
       });
       setFile(null);
       onOpenChange(false);
@@ -119,11 +114,11 @@ export function ImportEmployeesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] p-6">
         <DialogHeader>
-          <DialogTitle>Xodimlarni import qilish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("xodimlarniImportQilish")}</DialogTitle>
           <DialogDescription>
-            Excel yoki CSV fayl orqali xodimlarni ommaviy import qilish
+            {t("excelYokiCsvFaylOrqali")}
           </DialogDescription>
         </DialogHeader>
 
@@ -131,22 +126,22 @@ export function ImportEmployeesDialog({
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Shablon faylni yuklab olib, ma'lumotlarni to'ldiring va yuklang
+              {t("shablonFaylniYuklabOlibMalumotlarni")}
             </AlertDescription>
           </Alert>
 
           <Button
             variant="outline"
             onClick={handleDownloadTemplate}
-            className="w-full"
+            className="w-full gap-2"
             data-testid="button-download-template"
           >
-            <FileSpreadsheet className="w-4 h-4 mr-2" />
-            Shablon faylni yuklab olish
+            <FileSpreadsheet className="w-4 h-4" />
+            {t("shablonFaylniYuklabOlish")}
           </Button>
 
-          <div className="space-y-2">
-            <Label htmlFor="file">Fayl tanlash</Label>
+          <div className="space-y-1">
+          <Label htmlFor="file">{t("faylTanlash")}</Label>
             <Input
               id="file"
               type="file"
@@ -168,7 +163,7 @@ export function ImportEmployeesDialog({
               disabled={uploadMutation.isPending}
               data-testid="button-cancel-import"
             >
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button
               onClick={handleUpload}

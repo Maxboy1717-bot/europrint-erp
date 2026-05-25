@@ -15,6 +15,7 @@ const TRUE_VALUES = new Set(['true', '1', 'yes', 'on']);
 
 let cachedDecision: boolean | null = null;
 
+// eslint-disable-next-line react-hooks/rules-of-hooks
 export function useIntFkColumns(): boolean {
   if (cachedDecision !== null) return cachedDecision;
   const raw = (process.env.FK_USE_INT_COLUMNS ?? 'false').toLowerCase();
@@ -38,5 +39,6 @@ export function _resetFkSwitchCache(): void {
  *   // FK_USE_INT_COLUMNS=false → 'customer_id'
  */
 export function fkColumnName(legacyName: string): string {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   return useIntFkColumns() ? `${legacyName}_int` : legacyName;
 }

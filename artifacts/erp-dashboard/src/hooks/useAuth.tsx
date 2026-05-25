@@ -1,5 +1,16 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { safeStorage } from '@/lib/safeStorage';
+/**
+ * @module useAuth
+ * @description Canonical auth Context + hook. Reads the current user from
+ * `/api/auth/me` (auth carried by httpOnly cookies — see auth-refresh.ts).
+ * Exposes the AuthUser plus login/logout helpers, and surfaces role aliases
+ * that mirror the backend's RBAC table (so the UI never grants a permission
+ * the server would refuse).
+ *
+ * All new code MUST import from this file; `use-auth.ts` is a deprecated shim.
+ */
+
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { apiRequest } from '@/lib/queryClient';
 
 // Mirror backend ROLE_ALIASES so UI permissions consistently match server authorization
 const ROLE_ALIASES: Record<string, string> = {
@@ -17,14 +28,28 @@ const ROLE_ALIASES: Record<string, string> = {
   department_head: "department_head",
 };
 
-interface User {
+/**
+ * Authenticated user as exposed to the React tree. Mirrors the JWT payload
+ * minus secrets. `positionId` / `position_id` coexist because the server
+ * historically used snake_case; new code should read `positionId`.
+ */
+export interface AuthUser {
   id: number;
   username: string;
   fullName: string;
   role: string;
   email?: string;
   employeeId?: number;
+  positionId?: number;
+  /** @deprecated use positionId */
+  position_id?: number;
+  firstName?: string;
+  lastName?: string;
+  name?: string;
 }
+
+/** @deprecated use AuthUser */
+type User = AuthUser;
 
 interface AuthContextType {
   user: User | null;
@@ -47,16 +72,43 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isRefreshingRef = useRef(false);
 
   const fetchUser = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const token = safeStorage.getItem("access_token");
-      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await fetch("/api/auth/me", { credentials: "include", headers });
+      // Auth carried by the httpOnly access_token cookie (sent automatically
+      // when `credentials: 'include'`). We can't tell client-side whether the
+      // cookie is present, so we just call /me and let the server respond
+      // 401 if it isn't — then attempt a refresh, mirroring api-request.ts.
+      const res = await fetch("/api/auth/me", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
         setUser(data);
       } else {
+        if (res.status === 401 && !isRefreshingRef.current) {
+          isRefreshingRef.current = true;
+          try {
+            // Refresh: server reads refresh_token cookie and sets a new
+            // access_token cookie on success. No body / no Authorization
+            // header is required.
+            const refreshRes = await fetch('/api/auth/refresh', {
+              method: 'POST',
+              credentials: 'include',
+            });
+            if (refreshRes.ok) {
+              isRefreshingRef.current = false;
+              const retryRes = await fetch('/api/auth/me', {
+                credentials: 'include',
+              });
+              if (retryRes.ok) {
+                setUser(await retryRes.json());
+                return;
+              }
+            }
+          } catch { /* refresh failed, fall through to logout */ }
+          isRefreshingRef.current = false;
+        }
         setUser(null);
       }
     } catch {
@@ -77,12 +129,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const logout = useCallback(async () => {
-    const token = safeStorage.getItem("access_token");
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include", headers });
-    safeStorage.removeItem("access_token");
-    safeStorage.removeItem("refresh_token");
+    // The server clears the httpOnly cookies on /auth/logout.
+    // We also purge any legacy tokens that might still be in localStorage
+    // from before the cookie migration, so they don't linger.
+    try {
+      await apiRequest('POST', "/api/auth/logout");
+    } catch { /* swallow — we still want to clear local state and redirect */ }
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("token");
+      }
+    } catch { /* localStorage may be unavailable */ }
     setUser(null);
+    window.location.href = '/login';
   }, []);
 
   return (

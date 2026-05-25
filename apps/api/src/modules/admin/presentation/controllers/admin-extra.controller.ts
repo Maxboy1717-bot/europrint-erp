@@ -1,6 +1,11 @@
+/**
+ * @module admin-extra.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../infrastructure/guards/roles.guard';
 import { Roles } from '../../infrastructure/decorators/roles.decorator';
@@ -11,7 +16,7 @@ import { unwrapOrInternal } from '@common/http-result';
 
 @ApiTags('Admin — Extra')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.SUPER_ADMIN, UserRole.DIRECTOR)
@@ -31,13 +36,38 @@ export class AdminExtraController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return unwrapOrInternal(await this.svc.getLogs(Number(page), Number(limit)));
+    return unwrapOrInternal(await this.svc.getLogs(Number(page) || 1, Number(limit) || 20));
   }
 
   @Get('audit')
   @ApiOperation({ summary: 'Audit yozuvlari' })
   async getAudit(@Query('table') tableName?: string, @Query('page') page?: string) {
-    return unwrapOrInternal(await this.svc.getAudit(tableName, Number(page)));
+    return unwrapOrInternal(await this.svc.getAudit(tableName, Number(page) || 1));
+  }
+
+  @Get('audit-filtered')
+  @ApiOperation({ summary: 'Filtrli audit loglari (super admin)' })
+  async getAuditFiltered(
+    @Query('action') action?: string,
+    @Query('table') tableName?: string,
+    @Query('userId') userId?: string,
+    @Query('search') search?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return unwrapOrInternal(await this.svc.getLogsFiltered({
+      action, tableName, userId, search, from, to,
+      page: Number(page) || 1,
+      limit: Number(limit) || 50,
+    }));
+  }
+
+  @Get('audit-tables')
+  @ApiOperation({ summary: 'Audit logdagi jadval nomlari (filter uchun)' })
+  async getAuditTables() {
+    return unwrapOrInternal(await this.svc.getDistinctTables());
   }
 
   @Get('system')

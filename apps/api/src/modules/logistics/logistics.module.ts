@@ -1,3 +1,8 @@
+/**
+ * @module logistics.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { DispatchDeliveryHandler } from './application/commands/dispatch-delivery.handler';
@@ -5,6 +10,8 @@ import { AssignDriverHandler } from './application/commands/assign-driver.handle
 import { CompleteDeliveryHandler } from './application/commands/complete-delivery.handler';
 import { GetDeliveriesHandler } from './application/queries/get-deliveries.handler';
 import { SalesOrderConfirmedListener } from './infrastructure/event-handlers/sales-order-confirmed.listener';
+import { OrderCreatedDeliveryListener } from './infrastructure/event-handlers/order-created-delivery.listener';
+import { OrderStatusChangedDeliveryListener } from './infrastructure/event-handlers/order-status-changed-delivery.listener';
 import { LogisticsController } from './presentation/logistics.controller';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { DELIVERY_REPO } from './domain/repositories/i-delivery.repo';
@@ -17,7 +24,13 @@ import { RouteService } from './domain/services/route.service';
 import { VrpService } from './domain/services/vrp.service';
 
 const commandHandlers = [DispatchDeliveryHandler, AssignDriverHandler, CompleteDeliveryHandler];
-const eventHandlers = [SalesOrderConfirmedListener];
+const eventHandlers = [
+  SalesOrderConfirmedListener,
+  // Wave 4 round-4 — canonical CQRS handlers replacing the two @OnEvent
+  // listeners that used to live on SalesOrderConfirmedListener.
+  OrderCreatedDeliveryListener,
+  OrderStatusChangedDeliveryListener,
+];
 const queryHandlers = [GetDeliveriesHandler];
 const repositories = [
   {

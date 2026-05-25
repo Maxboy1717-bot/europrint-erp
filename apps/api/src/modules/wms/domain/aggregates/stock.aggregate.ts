@@ -1,6 +1,11 @@
+/**
+ * @module stock.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { AggregateRoot } from '@nestjs/cqrs';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { Err } from '@common/result';
 import { Result } from '@common/result';
 
@@ -69,7 +74,7 @@ export class Stock extends AggregateRoot {
       return Err('Miqdor 0 dan katta bo\'lishi kerak');
     }
     this.reservedQuantity += amount;
-    this.apply({
+    this.addDomainEvent({
       type: 'STOCK_RESERVED',
       data: { stockId: this.id, amount, timestamp: _time.now() },
     });
@@ -82,7 +87,7 @@ export class Stock extends AggregateRoot {
     }
     this.quantity -= amount;
     this.reservedQuantity -= amount;
-    this.apply({
+    this.addDomainEvent({
       type: 'STOCK_ISSUED',
       data: { stockId: this.id, amount, timestamp: _time.now() },
     });
@@ -94,7 +99,7 @@ export class Stock extends AggregateRoot {
       return Err('Miqdor 0 dan katta bo\'lishi kerak');
     }
     this.quantity += amount;
-    this.apply({
+    this.addDomainEvent({
       type: 'STOCK_RECEIVED',
       data: { stockId: this.id, amount, timestamp: _time.now() },
     });

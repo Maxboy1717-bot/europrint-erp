@@ -145,20 +145,19 @@ export class HrDashboardController {
     return { created: true };
   }
 
-  @Get('offboarding/cases')
-  getOffboardingCases() {
-    return { items: [], total: 0 };
-  }
+  // `GET hr/offboarding/cases` is implemented by `HrOffboardingController`
+  // (see `apps/api/src/modules/hr/offboarding/hr-offboarding.controller.ts`).
+  // The previous stub here returned `{ items: [], total: 0 }` and shadowed the
+  // real handler depending on module-registration order. Removed in Phase 4 Task 4.4.
 
   @Get('offboarding/questions')
   getOffboardingQuestions() {
     return { items: [], total: 0 };
   }
 
-  @Get('onboarding-checklists')
-  getOnboardingChecklists() {
-    return { items: [], total: 0 };
-  }
+  // `GET hr/onboarding-checklists` is implemented by
+  // `OnboardingChecklistsController` (apps/api/src/modules/hr/onboarding-checklists/).
+  // The previous stub here shadowed the real handler. Removed in Phase 4 Task 4.5.
 
   @Get('fp-cycle')
   getFpCycle() {

@@ -1,5 +1,11 @@
+/**
+ * @module telegram.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Ok, Err, safeCall, Result, AppError } from '@common/result';
 import { Injectable, Logger } from '@nestjs/common'
+import { I18nService } from 'nestjs-i18n'
 import TelegramBot from 'node-telegram-bot-api'
 
 interface DirectorReport {
@@ -17,7 +23,7 @@ export class TelegramService {
   private bot: TelegramBot
   private readonly logger = new Logger(TelegramService.name)
 
-  constructor() {
+  constructor(private readonly i18n: I18nService) {
     const token = process.env.TELEGRAM_BOT_TOKEN || ''
     this.bot = new TelegramBot(token, { polling: false })
   }
@@ -42,19 +48,18 @@ export class TelegramService {
     directorChatId: string | number,
     report: DirectorReport,
   ): Promise<Result<TelegramBot.Message, AppError>> {
-    const text = `
-📊 <b>Kunlik Direktor Hisoboti</b> - ${report.date}
-
-💰 <b>Sotuvlar:</b> ${report.salesAmount.toLocaleString()} USD
-🎯 <b>Deal'lar:</b> ${report.dealsCount} ta
-👥 <b>Yangi Lid'lar:</b> ${report.newLeads} ta
-
-🏭 <b>Ishlab Chiqarish:</b> ${report.productionUnits} ta smartfon
-⭐ <b>Sifat Natijasi:</b> ${report.qualityScore}%
-👤 <b>Davomat:</b> ${report.attendanceRate}
-
-Batafsil: ${process.env.DASHBOARD_URL || 'dashboard.url'}
-    `
+    const text = await this.i18n.t('telegram.service.directorDailyReport', {
+      args: {
+        date: report.date,
+        salesAmount: report.salesAmount.toLocaleString(),
+        dealsCount: report.dealsCount,
+        newLeads: report.newLeads,
+        productionUnits: report.productionUnits,
+        qualityScore: report.qualityScore,
+        attendanceRate: report.attendanceRate,
+        dashboardUrl: process.env.DASHBOARD_URL || 'dashboard.url',
+      },
+    })
     return this.sendMessage(directorChatId, text)
   }
 }

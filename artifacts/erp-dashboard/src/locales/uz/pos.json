@@ -1,6 +1,6 @@
 {
   "title": "Savdo nuqtasi",
-  "dashboard": "POS Dashboard",
+  "dashboard": "POS paneli",
   "sale": "Sotuv",
   "sales": "Sotuvlar",
   "newSale": "Yangi sotuv",
@@ -58,7 +58,7 @@
   "cashier": "Kassir",
   "cashierName": "Kassir nomi",
   "register": "Kassa apparati",
-  "terminal": "Terminal",
+  "terminal": "Terminal qurilmasi",
   "loyaltyCard": "Sadoqat kartasi",
   "loyaltyPoints": "Sadoqat ballari",
   "redeemPoints": "Ballarni sarflash",

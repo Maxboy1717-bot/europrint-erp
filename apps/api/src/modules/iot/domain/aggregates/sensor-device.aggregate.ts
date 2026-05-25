@@ -1,7 +1,12 @@
+/**
+ * @module sensor-device.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { v4 as uuid } from 'uuid';
-import { AggregateRoot } from '@nestjs/cqrs';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { SensorStatus, SensorType } from '../enums/sensor-status.enum';
 import { SensorReading } from './sensor-reading.aggregate';
 
@@ -48,7 +53,7 @@ export class SensorDevice extends AggregateRoot {
   calculateOEE(): number {
     if (this.readings.length === 0) return 0;
     const recentReadings = this.readings.slice(-100);
-    const validReadings = (recentReadings ?? []).filter((r) => !r.isAnomaly);
+    const validReadings = (Array.isArray(recentReadings) ? recentReadings : []).filter((r) => !r.isAnomaly);
     return (validReadings.length / recentReadings.length) * 100;
   }
 

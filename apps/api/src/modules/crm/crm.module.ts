@@ -1,3 +1,8 @@
+/**
+ * @module crm.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CqrsModule } from '@nestjs/cqrs';
@@ -17,11 +22,18 @@ import { CreateLeadHandler } from './application/commands/create-lead.handler';
 import { QualifyLeadHandler } from './application/commands/qualify-lead.handler';
 import { CreateDealHandler } from './application/commands/create-deal.handler';
 import { MarkDealWonHandler } from './application/commands/mark-deal-won.handler';
+import { MarkDealLostHandler } from './application/commands/mark-deal-lost.handler';
+import { ConvertLeadToDealHandler } from './application/commands/convert-lead-to-deal.handler';
+import { UpdateDealHandler } from './application/commands/update-deal.handler';
+import { UpdateDealStageHandler } from './application/commands/update-deal-stage.handler';
+import { DeleteDealHandler } from './application/commands/delete-deal.handler';
 import { ListLeadsHandler } from './application/queries/list-leads.handler';
 import { GetLeadByIdHandler } from './application/queries/get-lead-by-id.handler';
 import { CrmPipelineHandler } from './application/queries/crm-pipeline.handler';
 import { DrizzleLeadRepository } from './infrastructure/repositories/drizzle-lead.repo';
 import { DrizzleDealRepository } from './infrastructure/repositories/drizzle-deal.repo';
+import { LEAD_REPO } from './domain/repositories/i-lead.repo';
+import { DEAL_REPO } from './domain/repositories/i-deal.repo';
 import { DealWonListener } from './infrastructure/event-handlers/deal-won.listener';
 import { WebsiteOrderLeadListener } from './listeners/website-order-lead.listener';
 import { WebsiteContactLeadListener } from './listeners/website-contact-lead.listener';
@@ -46,27 +58,47 @@ import { CRM_PIPELINES_REPO } from './pipelines/i-crm-pipelines.repo';
 import { DrizzleCrmPipelinesRepository } from './pipelines/drizzle-crm-pipelines.repo';
 import { PipelinesService } from './pipelines/pipelines.service';
 import { CrmActivitiesService } from './application/crm-activities.service';
-import { CrmActivitiesRepository } from './application/crm-activities.repository';
+import { CrmActivitiesRepository } from './infrastructure/repositories/crm-activities.repository';
+import { CRM_ACTIVITIES_REPO } from './domain/repositories/i-crm-activities.repo';
 import { CrmAiService } from './application/crm-ai.service';
-import { CrmAiRepository } from './application/crm-ai.repository';
+import { CrmAiRepository } from './infrastructure/repositories/crm-ai.repository';
+import { CRM_AI_REPO } from './domain/repositories/i-crm-ai.repo';
 import { CrmAutoLeadService } from './application/crm-auto-lead.service';
-import { CrmAutoLeadRepository } from './application/crm-auto-lead.repository';
+import { CrmAutoLeadRepository } from './infrastructure/repositories/crm-auto-lead.repository';
+import { CRM_AUTO_LEAD_REPO } from './domain/repositories/i-crm-auto-lead.repo';
 import { CrmBitrixCompatService } from './application/crm-bitrix-compat.service';
-import { CrmBitrixCompatRepository } from './application/crm-bitrix-compat.repository';
+import { CrmBitrixCompatRepository } from './infrastructure/repositories/crm-bitrix-compat.repository';
+import { CrmBitrixCompatProposalsRepository } from './infrastructure/repositories/crm-bitrix-compat-proposals.repository';
+import { CrmBitrixCompatRobotsRepository } from './infrastructure/repositories/crm-bitrix-compat-robots.repository';
+import { CrmBitrixCompatInvoicesRepository } from './infrastructure/repositories/crm-bitrix-compat-invoices.repository';
+import { CRM_BITRIX_COMPAT_REPO } from './domain/repositories/i-crm-bitrix-compat.repo';
 import { CrmCompaniesService } from './application/crm-companies.service';
-import { CrmCompaniesRepository } from './application/crm-companies.repository';
+import { CrmCompaniesRepository } from './infrastructure/repositories/crm-companies.repository';
+import { CRM_COMPANIES_REPO } from './domain/repositories/i-crm-companies.repo';
 import { CrmContactsService } from './application/crm-contacts.service';
-import { CrmContactsRepository } from './application/crm-contacts.repository';
+import { CrmContactsRepository } from './infrastructure/repositories/crm-contacts.repository';
+import { CRM_CONTACTS_APP_REPO } from './domain/repositories/i-crm-contacts-app.repo';
 import { CrmFollowupCompatService } from './application/crm-followup-compat.service';
-import { CrmFollowupCompatRepository } from './application/crm-followup-compat.repository';
-import { CrmLeadsOpsService } from './application/crm-leads-ops.service';
-import { CrmLeadsOpsRepository } from './application/crm-leads-ops.repository';
+import { CrmFollowupCompatRepository } from './infrastructure/repositories/crm-followup-compat.repository';
+import { CRM_FOLLOWUP_COMPAT_REPO } from './domain/repositories/i-crm-followup-compat.repo';
+import { CrmLeadsOpsRepository } from './infrastructure/repositories/crm-leads-ops.repository';
+import { CRM_LEADS_OPS_REPO } from './domain/repositories/i-crm-leads-ops.repo';
+import { UpdateLeadHandler } from './application/commands/update-lead.handler';
+import { UpdateLeadStageHandler } from './application/commands/update-lead-stage.handler';
+import { DeleteLeadHandler } from './application/commands/delete-lead.handler';
 import { CrmExtrasService } from './application/crm-extras.service';
-import { CrmExtrasRepository } from './application/crm-extras.repository';
+import { CrmExtrasRepository } from './infrastructure/repositories/crm-extras.repository';
+import { CrmExtrasCommentsRepository } from './infrastructure/repositories/crm-extras-comments.repository';
+import { CrmExtrasDashboardRepository } from './infrastructure/repositories/crm-extras-dashboard.repository';
+import { CrmExtrasTasksRepository } from './infrastructure/repositories/crm-extras-tasks.repository';
+import { CrmExtrasDocumentsRepository } from './infrastructure/repositories/crm-extras-documents.repository';
+import { CRM_EXTRAS_REPO } from './domain/repositories/i-crm-extras.repo';
 import { CrmCommsService } from './application/crm-comms.service';
-import { CrmCommsRepository } from './application/crm-comms.repository';
+import { CrmCommsRepository } from './infrastructure/repositories/crm-comms.repository';
+import { CRM_COMMS_REPO } from './domain/repositories/i-crm-comms.repo';
 import { CrmCustomFieldsService } from './application/crm-custom-fields.service';
-import { CrmCustomFieldsRepository } from './application/crm-custom-fields.repository';
+import { CrmCustomFieldsRepository } from './infrastructure/repositories/crm-custom-fields.repository';
+import { CRM_CUSTOM_FIELDS_REPO } from './domain/repositories/i-crm-custom-fields.repo';
 import { CrmAiExtendedService } from './application/crm-ai-extended.service';
 import { LeadScorerV2Service } from './domain/services/lead-scorer-v2.service';
 import { EloRatingService } from './domain/services/elo-rating.service';
@@ -78,8 +110,15 @@ import { CohortService } from './analytics/cohort.service';
 import { KMeansService } from './analytics/kmeans.service';
 import { ChurnRetrainService } from './analytics/churn-retrain.service';
 import { CrmAnalyticsController } from './presentation/crm-analytics.controller';
+import { CRM_ANALYTICS_REPO } from './analytics/repositories/i-crm-analytics.repo';
+import { DrizzleCrmAnalyticsRepository } from './analytics/repositories/drizzle-crm-analytics.repo';
 
-const commandHandlers = [CreateLeadHandler, QualifyLeadHandler, CreateDealHandler, MarkDealWonHandler];
+const commandHandlers = [
+  CreateLeadHandler, QualifyLeadHandler, CreateDealHandler,
+  MarkDealWonHandler, MarkDealLostHandler, ConvertLeadToDealHandler,
+  UpdateLeadHandler, UpdateLeadStageHandler, DeleteLeadHandler,
+  UpdateDealHandler, UpdateDealStageHandler, DeleteDealHandler,
+];
 const queryHandlers = [ListLeadsHandler, GetLeadByIdHandler, CrmPipelineHandler];
 const eventListeners = [
   DealWonListener,
@@ -88,8 +127,8 @@ const eventListeners = [
 ];
 
 const repositories = [
-  { provide: 'ILeadRepository', useClass: DrizzleLeadRepository },
-  { provide: 'IDealRepository', useClass: DrizzleDealRepository },
+  { provide: LEAD_REPO, useClass: DrizzleLeadRepository },
+  { provide: DEAL_REPO, useClass: DrizzleDealRepository },
 ];
 
 @Module({
@@ -126,31 +165,42 @@ const repositories = [
     LeadsService,
     { provide: CRM_PIPELINES_REPO, useClass: DrizzleCrmPipelinesRepository },
     PipelinesService,
-    CrmActivitiesRepository,
+    { provide: CRM_ACTIVITIES_REPO, useClass: CrmActivitiesRepository },
     CrmActivitiesService,
-    CrmAiRepository,
+    { provide: CRM_AI_REPO, useClass: CrmAiRepository },
     CrmAiService,
-    CrmAutoLeadRepository,
+    { provide: CRM_AUTO_LEAD_REPO, useClass: CrmAutoLeadRepository },
     CrmAutoLeadService,
+    CrmBitrixCompatProposalsRepository,
+    CrmBitrixCompatRobotsRepository,
+    CrmBitrixCompatInvoicesRepository,
     CrmBitrixCompatRepository,
+    { provide: CRM_BITRIX_COMPAT_REPO, useClass: CrmBitrixCompatRepository },
     CrmBitrixCompatService,
-    CrmCompaniesRepository,
+    { provide: CRM_COMPANIES_REPO, useClass: CrmCompaniesRepository },
     CrmCompaniesService,
-    CrmContactsRepository,
+    { provide: CRM_CONTACTS_APP_REPO, useClass: CrmContactsRepository },
     CrmContactsService,
     CrmFollowupCompatRepository,
+    { provide: CRM_FOLLOWUP_COMPAT_REPO, useClass: CrmFollowupCompatRepository },
     CrmFollowupCompatService,
-    CrmLeadsOpsRepository,
-    CrmLeadsOpsService,
+    { provide: CRM_LEADS_OPS_REPO, useClass: CrmLeadsOpsRepository },
+    CrmExtrasCommentsRepository,
+    CrmExtrasDashboardRepository,
+    CrmExtrasTasksRepository,
+    CrmExtrasDocumentsRepository,
     CrmExtrasRepository,
+    { provide: CRM_EXTRAS_REPO, useClass: CrmExtrasRepository },
     CrmExtrasService,
     CrmCommsRepository,
+    { provide: CRM_COMMS_REPO, useClass: CrmCommsRepository },
     CrmCommsService,
-    CrmCustomFieldsRepository,
+    { provide: CRM_CUSTOM_FIELDS_REPO, useClass: CrmCustomFieldsRepository },
     CrmCustomFieldsService,
     CrmAiExtendedService,
     LeadScorerV2Service,
     EloRatingService,
+    { provide: CRM_ANALYTICS_REPO, useClass: DrizzleCrmAnalyticsRepository },
     RfmService,
     ClvService,
     ChurnService,
@@ -162,6 +212,6 @@ const repositories = [
     WebsiteLeadRepository,
     WebsiteLeadService,
   ],
-  exports: ['ILeadRepository', 'IDealRepository', LeadScorerService, LeadScorerV2Service, EloRatingService, RfmService, ClvService, ChurnService, FunnelService, CohortService, KMeansService, ChurnRetrainService],
+  exports: [LEAD_REPO, DEAL_REPO, LeadScorerService, LeadScorerV2Service, EloRatingService, RfmService, ClvService, ChurnService, FunnelService, CohortService, KMeansService, ChurnRetrainService],
 })
 export class CrmModule {}

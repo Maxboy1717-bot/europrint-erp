@@ -1,3 +1,8 @@
+/**
+ * @module pp.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -8,9 +13,11 @@ import { PpWorkCentersController } from './presentation/pp-work-centers.controll
 import { PpPlanningController } from './presentation/pp-planning.controller';
 import { PpEquipmentController } from './presentation/pp-equipment.controller';
 import { PpPlanningService } from './application/pp-planning.service';
-import { PpPlanningRepository } from './application/pp-planning.repository';
+import { PpPlanningRepository } from './infrastructure/repositories/pp-planning.repository';
+import { PP_PLANNING_REPO } from './domain/repositories/i-pp-planning.repo';
 import { PpEquipmentService } from './application/pp-equipment.service';
-import { PpEquipmentRepository } from './application/pp-equipment.repository';
+import { PpEquipmentRepository } from './infrastructure/repositories/pp-equipment.repository';
+import { PP_EQUIPMENT_REPO } from './domain/repositories/i-pp-equipment.repo';
 import { CreateProductionOrderHandler } from './application/commands/create-production-order.handler';
 import { ReleaseProductionOrderHandler } from './application/commands/release-production-order.handler';
 import { ApproveBomHandler } from './application/commands/approve-bom.handler';
@@ -20,6 +27,7 @@ import { UpdateWorkCenterHandler } from './application/commands/update-work-cent
 import { ProductionPlanHandler } from './application/queries/production-plan.handler';
 import { MachineLoadHandler } from './application/queries/machine-load.handler';
 import { GetProductionOrdersHandler } from './application/queries/get-production-orders.handler';
+import { GetProductionOrderByIdHandler } from './application/queries/get-production-order-by-id.handler';
 import { GetBomsHandler } from './application/queries/get-boms.handler';
 import { GetRoutingsHandler } from './application/queries/get-routings.handler';
 import { GetMrpReportHandler } from './application/queries/get-mrp-report.handler';
@@ -27,9 +35,14 @@ import { GetWorkCentersHandler } from './application/queries/get-work-centers.ha
 import { GetWorkCentersStatsHandler } from './application/queries/get-work-centers-stats.handler';
 import { DrizzlePpRepository } from './infrastructure/repositories/drizzle-pp.repo';
 import { DrizzleWorkCenterRepository } from './infrastructure/repositories/drizzle-work-center.repo';
+import { PP_REPO, WORK_CENTER_REPO } from './domain/repositories/pp.repository';
 import { AdvanceApprovedListener } from './infrastructure/event-handlers/advance-approved.listener';
 import { MroStopListener } from './infrastructure/event-handlers/mro-stop.listener';
-import { DesignLabCompletedListener } from './infrastructure/event-handlers/design-lab-completed.listener';
+// Wave 4 round-2 (PA2-18): DesignLabCompletedListener split into two
+// canonical @EventsHandler listeners + a shared join service.
+import { DesignApprovedTrigger5Listener } from './infrastructure/event-handlers/design-approved-trigger5.listener';
+import { LabTestPassedTrigger5Listener } from './infrastructure/event-handlers/lab-test-passed-trigger5.listener';
+import { DesignLabJoinService } from './infrastructure/event-handlers/design-lab-join.service';
 import { WmsGoodsIssuedListener } from './infrastructure/event-handlers/wms-goods-issued.listener';
 import { PP_PRODUCTION_ORDERS_REPO } from './production-orders/i-pp-production-orders.repo';
 import { DrizzlePpProductionOrdersRepository } from './production-orders/drizzle-pp-production-orders.repo';
@@ -56,6 +69,17 @@ import { PpIntelligenceService } from './application/services/pp-intelligence.se
 import { PpMpsService } from './application/services/pp-mps.service';
 import { PpCrpService } from './application/services/pp-crp.service';
 import { PpIntelligenceController } from './presentation/pp-intelligence.controller';
+// PA3-17 Wave 5: merged from former modules/technology/ (route prefix '/technology' preserved)
+import { TechnologyController } from './technology/technology.controller';
+import { TechnologyService } from './technology/technology.service';
+import { TechnologyRepository } from './technology/technology.repository';
+import { TechnologySchemaService } from './technology/technology-schema.service';
+import { TechnologySchemaRepository } from './technology/technology-schema.repository';
+// PA3-17 Wave 6: merged from former modules/production/ (route prefixes '/production' and '/production/shift-reports' preserved)
+import { ProductionShiftReportsController } from './production/production-shift-reports.controller';
+import { ProductionReportsController } from './production/production-reports.controller';
+import { ProductionService } from './production/production.service';
+import { ProductionRepository } from './production/production.repository';
 
 const handlers = [
   CreateProductionOrderHandler,
@@ -65,6 +89,7 @@ const handlers = [
   ProductionPlanHandler,
   MachineLoadHandler,
   GetProductionOrdersHandler,
+  GetProductionOrderByIdHandler,
   GetBomsHandler,
   GetRoutingsHandler,
   GetMrpReportHandler,
@@ -75,20 +100,28 @@ const handlers = [
 ];
 
 const listeners = [
-  AdvanceApprovedListener,         // Trigger 7
-  MroStopListener,                 // Trigger 18
-  DesignLabCompletedListener,      // Trigger 5
-  WmsGoodsIssuedListener,          // Trigger 9
+  AdvanceApprovedListener,            // Trigger 7
+  MroStopListener,                    // Trigger 18
+  DesignApprovedTrigger5Listener,     // Trigger 5 (design side, Wave 4 round-2)
+  LabTestPassedTrigger5Listener,      // Trigger 5 (lab side, Wave 4 round-2)
+  WmsGoodsIssuedListener,             // Trigger 9
 ];
 
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot()],
-  controllers: [PpOrdersController, PpBomController, PpRoutingController, PpWorkCentersController, PpPlanningController, PpEquipmentController, PpIntelligenceController],
+  controllers: [PpOrdersController, PpBomController, PpRoutingController, PpWorkCentersController, PpPlanningController, PpEquipmentController, PpIntelligenceController,
+    // PA3-17 Wave 5: merged from modules/technology/
+    TechnologyController,
+    // PA3-17 Wave 6: merged from modules/production/
+    ProductionShiftReportsController,
+    ProductionReportsController,
+  ],
   providers: [
     ...handlers,
     ...listeners,
-    { provide: 'IPpRepository', useClass: DrizzlePpRepository },
-    { provide: 'IWorkCenterRepository', useClass: DrizzleWorkCenterRepository },
+    DesignLabJoinService,            // Wave 4 round-2: shared by Trigger 5 split listeners
+    { provide: PP_REPO, useClass: DrizzlePpRepository },
+    { provide: WORK_CENTER_REPO, useClass: DrizzleWorkCenterRepository },
     { provide: PP_PRODUCTION_ORDERS_REPO, useClass: DrizzlePpProductionOrdersRepository },
     ProductionOrdersService,
     { provide: PP_BOM_REPO, useClass: DrizzlePpBomRepository },
@@ -98,8 +131,10 @@ const listeners = [
     { provide: PP_WORK_CENTERS_REPO, useClass: DrizzlePpWorkCentersRepository },
     WorkCentersService,
     PpPlanningRepository,
+    { provide: PP_PLANNING_REPO, useClass: PpPlanningRepository },
     PpPlanningService,
     PpEquipmentRepository,
+    { provide: PP_EQUIPMENT_REPO, useClass: PpEquipmentRepository },
     PpEquipmentService,
     SchedulingJohnsonService,
     SchedulingNetworkService,
@@ -113,7 +148,15 @@ const listeners = [
     PpIntelligenceService,
     PpMpsService,
     PpCrpService,
+    // PA3-17 Wave 5: merged from modules/technology/
+    TechnologyService,
+    TechnologyRepository,
+    TechnologySchemaService,
+    TechnologySchemaRepository,
+    // PA3-17 Wave 6: merged from modules/production/
+    ProductionService,
+    ProductionRepository,
   ],
-  exports: ['IPpRepository', 'IWorkCenterRepository'],
+  exports: [PP_REPO, WORK_CENTER_REPO, BomExplosionService, ProductionService],
 })
 export class PpModule {}

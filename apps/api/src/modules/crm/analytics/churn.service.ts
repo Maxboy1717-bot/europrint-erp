@@ -18,12 +18,11 @@
  *   P ≤ 0.4: LOW
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeNum, safeSum } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { CRM_ANALYTICS_REPO, ICrmAnalyticsRepo } from './repositories/i-crm-analytics.repo';
 
 export type ChurnRisk = 'HIGH' | 'MEDIUM' | 'LOW';
 
@@ -63,6 +62,10 @@ export interface ChurnResult {
 
 @Injectable()
 export class ChurnService {
+  constructor(
+    @Inject(CRM_ANALYTICS_REPO) private readonly repo: ICrmAnalyticsRepo,
+  ) {}
+
   private sigmoid(z: number): number {
     return 1 / (1 + Math.exp(-z));
   }
@@ -123,15 +126,9 @@ export class ChurnService {
    * Returns null when no active model exists (caller falls back to DEFAULT_CHURN_COEFFICIENTS).
    */
   async loadActiveModel(): Promise<number[] | null> {
-    const rows = await runQuery<{ coefficients: { values: number[] } }>(sql`
-      SELECT coefficients
-      FROM churn_model_params
-      WHERE is_active = true
-      ORDER BY trained_at DESC
-      LIMIT 1
-    `);
-    if (!rows.length) return null;
-    const values = rows[0]?.coefficients?.values;
+    const row = await this.repo.findActiveChurnModel();
+    if (!row) return null;
+    const values = row.coefficients?.values;
     if (!Array.isArray(values) || values.length < 7) return null;
     return values;
   }
@@ -149,41 +146,41 @@ export class ChurnService {
     }
 
     const activeCoef = await this.loadActiveModel();
-
-    let logit: number;
-    let modelSource: 'db' | 'default';
-
-    if (activeCoef) {
-      // Build feature vector matching FEATURE_NAMES:
-      // ['intercept', 'r_norm', 'f_norm', 'm_norm', 'complaints', 'days_contact', 'tickets']
-      const rNorm = (rfm - 1) / 4;                          // normalize 1-5 → 0-1
-      const featureVec = [
-        1,                                                    // intercept
-        rNorm,                                               // r_norm
-        0.5,                                                 // f_norm — not in ChurnFeatures, use neutral
-        0.5,                                                 // m_norm — not in ChurnFeatures, use neutral
-        safeNum(features.complaintCount),                    // complaints
-        safeNum(features.daysSinceLastContact),              // days_contact
-        safeNum(features.supportTicketCount),                // tickets
-      ];
-      logit = (activeCoef ?? []).reduce((s, b, i) => s + b * (featureVec[i] ?? 0), 0);
-      modelSource = 'db';
-    } else {
-      const c = DEFAULT_CHURN_COEFFICIENTS;
-      logit = safeSum([
-        c.intercept,
-        c.rfmRecency    * rfm,
-        c.complaints    * safeNum(features.complaintCount),
-        c.daysSinceContact * safeNum(features.daysSinceLastContact),
-        c.supportTickets * safeNum(features.supportTicketCount),
-        c.paymentLate   * safeNum(features.paymentLateCount),
-      ]);
-      modelSource = 'default';
-    }
+    const { logit, modelSource } = activeCoef
+      ? { logit: this.logitFromDbModel(activeCoef, features, rfm), modelSource: 'db' as const }
+      : { logit: this.logitFromDefaults(features, rfm), modelSource: 'default' as const };
 
     const probability = this.sigmoid(logit);
     const risk: ChurnRisk = probability > 0.7 ? 'HIGH' : probability > 0.4 ? 'MEDIUM' : 'LOW';
-
     return Ok({ probability, risk, logit, requiresAlert: risk === 'HIGH', features, modelSource });
+  }
+
+  private logitFromDbModel(activeCoef: number[], features: ChurnFeatures, rfm: number): number {
+    // Build feature vector matching FEATURE_NAMES:
+    // ['intercept', 'r_norm', 'f_norm', 'm_norm', 'complaints', 'days_contact', 'tickets']
+    const rNorm = (rfm - 1) / 4; // normalize 1-5 → 0-1
+    const featureVec = [
+      1,                                          // intercept
+      rNorm,                                      // r_norm
+      0.5,                                        // f_norm — not in ChurnFeatures, neutral
+      0.5,                                        // m_norm — not in ChurnFeatures, neutral
+      safeNum(features.complaintCount),
+      safeNum(features.daysSinceLastContact),
+      safeNum(features.supportTicketCount),
+    ];
+    const coefs = Array.isArray(activeCoef) ? activeCoef : [];
+    return coefs.reduce((s, b, i) => s + b * (featureVec[i] ?? 0), 0);
+  }
+
+  private logitFromDefaults(features: ChurnFeatures, rfm: number): number {
+    const c = DEFAULT_CHURN_COEFFICIENTS;
+    return safeSum([
+      c.intercept,
+      c.rfmRecency       * rfm,
+      c.complaints       * safeNum(features.complaintCount),
+      c.daysSinceContact * safeNum(features.daysSinceLastContact),
+      c.supportTickets   * safeNum(features.supportTicketCount),
+      c.paymentLate      * safeNum(features.paymentLateCount),
+    ]);
   }
 }

@@ -1,3 +1,8 @@
+/**
+ * @module AIReservationTab
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +20,6 @@ import {
   Sparkles, Zap, ShieldCheck, TrendingUp, Send, CheckCircle, AlertTriangle, Clock,
 } from "lucide-react";
 import { OptimizationResult, Translations } from "./types";
-
 interface AIReservationTabProps {
   t: Translations;
   aiForm: {
@@ -37,8 +41,7 @@ interface AIReservationTabProps {
   onClearRecommendation?: () => void;
 }
 
-export function AIReservationTab({
-  t,
+export function AIReservationTab({t,
   aiForm,
   setAiForm,
   materialTypes,
@@ -60,14 +63,14 @@ export function AIReservationTab({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>{t.aiPanel.materialType} *</Label>
+          <div className="space-y-1">
+          <Label>{t.aiPanel.materialType} *</Label>
             {materialTypes.length > 0 ? (
               <Select
                 value={aiForm.materialType}
                 onValueChange={(v) => setAiForm({ ...aiForm, materialType: v })}
               >
-                <SelectTrigger data-testid="select-ai-material-type">
+                <SelectTrigger data-testid="select-ai-material-type" className="h-9">
                   <SelectValue placeholder={t.aiPanel.selectType} />
                 </SelectTrigger>
                 <SelectContent>
@@ -88,9 +91,9 @@ export function AIReservationTab({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{t.aiPanel.quantity} *</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label>{t.aiPanel.quantity} *</Label>
               <Input
                 type="number"
                 value={aiForm.requiredQuantity}
@@ -99,10 +102,10 @@ export function AIReservationTab({
                 data-testid="input-ai-quantity"
               />
             </div>
-            <div className="space-y-2">
-              <Label>{t.aiPanel.unit}</Label>
+            <div className="space-y-1">
+          <Label>{t.aiPanel.unit}</Label>
               <Select value={aiForm.unit} onValueChange={(v) => setAiForm({ ...aiForm, unit: v })}>
-                <SelectTrigger data-testid="select-ai-unit">
+                <SelectTrigger data-testid="select-ai-unit" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -111,15 +114,15 @@ export function AIReservationTab({
                   <SelectItem value="m2">m2</SelectItem>
                   <SelectItem value="dona">dona</SelectItem>
                   <SelectItem value="rulon">rulon</SelectItem>
-                  <SelectItem value="list">list</SelectItem>
+                  <SelectItem value="list">{"list"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{t.aiPanel.requiredBy}</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label>{t.aiPanel.requiredBy}</Label>
               <Input
                 type="date"
                 value={aiForm.requiredByDate}
@@ -127,10 +130,10 @@ export function AIReservationTab({
                 data-testid="input-ai-required-date"
               />
             </div>
-            <div className="space-y-2">
-              <Label>{t.aiPanel.priority}</Label>
+            <div className="space-y-1">
+          <Label>{t.aiPanel.priority}</Label>
               <Select value={aiForm.priority} onValueChange={(v) => setAiForm({ ...aiForm, priority: v })}>
-                <SelectTrigger data-testid="select-ai-priority">
+                <SelectTrigger data-testid="select-ai-priority" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -143,8 +146,8 @@ export function AIReservationTab({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>{t.aiPanel.notes}</Label>
+          <div className="space-y-1">
+          <Label>{t.aiPanel.notes}</Label>
             <Textarea
               value={aiForm.notes}
               onChange={(e) => setAiForm({ ...aiForm, notes: e.target.value })}
@@ -169,7 +172,7 @@ export function AIReservationTab({
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-green-500" />
+              <ShieldCheck className="w-5 h-5 text-[var(--ep-green)]" />
               {t.recommendation.title}
             </div>
             {optimizationResult && (
@@ -183,22 +186,22 @@ export function AIReservationTab({
         <CardContent className="flex-1 flex flex-col min-h-[300px]">
           {optimizationResult ? (
             <div className="space-y-6 flex-1 flex flex-col">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                   <p className="text-xs text-muted-foreground">{t.recommendation.coverage}</p>
-                  <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  <p className="text-lg font-bold text-[var(--ep-blue)] dark:text-blue-400">
                     {optimizationResult.coverage}%
                   </p>
                 </div>
                 <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
                   <p className="text-xs text-muted-foreground">{t.recommendation.shortage}</p>
-                  <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                  <p className="text-lg font-bold text-[var(--ep-primary)] dark:text-orange-400">
                     {optimizationResult.shortage} {aiForm.unit}
                   </p>
                 </div>
                 <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                   <p className="text-xs text-muted-foreground">FEFO</p>
-                  <p className="text-lg font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
+                  <p className="text-lg font-bold text-[var(--ep-green)] dark:text-green-400 flex items-center gap-1">
                     <TrendingUp className="w-4 h-4" />
                     {optimizationResult.confidence}%
                   </p>
@@ -206,7 +209,7 @@ export function AIReservationTab({
               </div>
 
               <ScrollArea className="flex-1 h-[200px] border rounded-md">
-                <Table>
+                <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t.recommendation.batch}</TableHead>
@@ -217,7 +220,7 @@ export function AIReservationTab({
                   </TableHeader>
                   <TableBody>
                     {(Array.isArray(optimizationResult.allocation) ? optimizationResult.allocation : []).map((item) => (
-                      <TableRow key={item.batchId}>
+                      <TableRow key={item.batchId} className="hover:bg-muted/40 transition-colors">
                         <TableCell className="font-medium">{item.batchNumber}</TableCell>
                         <TableCell className="text-right">
                           {item.quantity} {aiForm.unit}
@@ -233,7 +236,7 @@ export function AIReservationTab({
                       </TableRow>
                     ))}
                   </TableBody>
-                </Table>
+                </Table></div>
               </ScrollArea>
 
               <div className="pt-4 border-t mt-auto flex gap-3">

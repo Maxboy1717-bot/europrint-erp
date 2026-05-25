@@ -1,7 +1,13 @@
+/**
+ * @module asset-management.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { assetItems, assetMaintenance, assetDisposals, assetTransfers } from '@shared/db/europrint-compat';
 import { eq, desc } from 'drizzle-orm';
+import { Ok, Err, safeCall, AppErr } from '@common/result';
 
 type AssetInsert = {
   name: string; assetCode?: string; category: string; status: string;
@@ -29,17 +35,20 @@ type TransferInsert = {
 
 @Injectable()
 export class AssetManagementRepo {
-  async findAllAssets() {
-    return db.select().from(assetItems).orderBy(desc(assetItems.createdAt));
+  findAllAssets() {
+    return safeCall(() => db.select().from(assetItems).orderBy(desc(assetItems.createdAt)), 'DB_ERROR');
   }
 
   async findAssetById(id: string) {
-    const rows = await db.select().from(assetItems).where(eq(assetItems.id, id));
-    return rows[0] ?? null;
+    const r = await safeCall(() => db.select().from(assetItems).where(eq(assetItems.id, id)), 'DB_ERROR');
+    if (!r.ok) return Err(r.error);
+    const row = r.data[0];
+    if (!row) return Err(AppErr('NOT_FOUND', `Asset ${id} not found`));
+    return Ok(row);
   }
 
-  async insertAsset(data: AssetInsert) {
-    return db.insert(assetItems).values({
+  insertAsset(data: AssetInsert) {
+    return safeCall(() => db.insert(assetItems).values({
       name:          data.name,
       assetCode:     data.assetCode ?? null,
       category:      data.category,
@@ -52,11 +61,11 @@ export class AssetManagementRepo {
       purchaseValue: data.purchaseValue ?? null,
       currentValue:  data.currentValue ?? null,
       notes:         data.notes ?? null,
-    }).returning();
+    }).returning(), 'DB_ERROR');
   }
 
-  async updateAsset(id: string, data: AssetUpdate) {
-    return db.update(assetItems).set({
+  updateAsset(id: string, data: AssetUpdate) {
+    return safeCall(() => db.update(assetItems).set({
       name:          data.name,
       assetCode:     data.assetCode,
       category:      data.category,
@@ -70,24 +79,26 @@ export class AssetManagementRepo {
       currentValue:  data.currentValue,
       notes:         data.notes,
       updatedAt:     data.updatedAt,
-    }).where(eq(assetItems.id, id)).returning();
+    }).where(eq(assetItems.id, id)).returning(), 'DB_ERROR');
   }
 
-  async deleteAsset(id: string) {
-    return db.delete(assetItems).where(eq(assetItems.id, id)).returning();
+  deleteAsset(id: string) {
+    return safeCall(() => db.delete(assetItems).where(eq(assetItems.id, id)).returning(), 'DB_ERROR');
   }
 
-  async findAllMaintenance() {
-    return db.select().from(assetMaintenance).orderBy(desc(assetMaintenance.createdAt));
+  findAllMaintenance() {
+    return safeCall(() => db.select().from(assetMaintenance).orderBy(desc(assetMaintenance.createdAt)), 'DB_ERROR');
   }
 
   async findMaintenanceByAsset(assetId: string) {
-    const rows = await db.select().from(assetMaintenance).orderBy(desc(assetMaintenance.createdAt));
-    return (rows ?? []).filter((r) => r.assetId === assetId);
+    const r = await safeCall(() => db.select().from(assetMaintenance).orderBy(desc(assetMaintenance.createdAt)), 'DB_ERROR');
+    if (!r.ok) return Err(r.error);
+    const rows = Array.isArray(r.data) ? r.data : [];
+    return Ok(rows.filter((row) => row.assetId === assetId));
   }
 
-  async insertMaintenance(data: MaintenanceInsert) {
-    return db.insert(assetMaintenance).values({
+  insertMaintenance(data: MaintenanceInsert) {
+    return safeCall(() => db.insert(assetMaintenance).values({
       assetId:         data.assetId,
       maintenanceType: data.maintenanceType,
       scheduledAt:     data.scheduledAt ?? null,
@@ -95,36 +106,36 @@ export class AssetManagementRepo {
       cost:            data.cost ?? null,
       notes:           data.notes ?? null,
       status:          data.status,
-    }).returning();
+    }).returning(), 'DB_ERROR');
   }
 
-  async findAllDisposals() {
-    return db.select().from(assetDisposals).orderBy(desc(assetDisposals.createdAt));
+  findAllDisposals() {
+    return safeCall(() => db.select().from(assetDisposals).orderBy(desc(assetDisposals.createdAt)), 'DB_ERROR');
   }
 
-  async insertDisposal(data: DisposalInsert) {
-    return db.insert(assetDisposals).values({
+  insertDisposal(data: DisposalInsert) {
+    return safeCall(() => db.insert(assetDisposals).values({
       assetId:      data.assetId,
       disposalType: data.disposalType,
       disposalDate: data.disposalDate ?? null,
       saleValue:    data.saleValue ?? null,
       reason:       data.reason ?? null,
       approvedBy:   data.approvedBy ?? null,
-    }).returning();
+    }).returning(), 'DB_ERROR');
   }
 
-  async findAllTransfers() {
-    return db.select().from(assetTransfers).orderBy(desc(assetTransfers.createdAt));
+  findAllTransfers() {
+    return safeCall(() => db.select().from(assetTransfers).orderBy(desc(assetTransfers.createdAt)), 'DB_ERROR');
   }
 
-  async insertTransfer(data: TransferInsert) {
-    return db.insert(assetTransfers).values({
+  insertTransfer(data: TransferInsert) {
+    return safeCall(() => db.insert(assetTransfers).values({
       assetId:      data.assetId,
       fromDeptId:   data.fromDeptId ?? null,
       toDeptId:     data.toDeptId ?? null,
       transferDate: data.transferDate ?? null,
       reason:       data.reason ?? null,
       approvedBy:   data.approvedBy ?? null,
-    }).returning();
+    }).returning(), 'DB_ERROR');
   }
 }

@@ -1,3 +1,8 @@
+/**
+ * @module business-logic
+ * @description Frontend utility / library module.
+ */
+
 // ─── GSD (Haftalik natija ko'rsatkichi) ───────────────────────────────────────
 
 /**

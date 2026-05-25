@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, Optional } from '@nestjs/common';
+/**
+ * @module permission.guard
+ * @description NestJS guard. canActivate() returns true when access is permitted; throws Unauthorized/Forbidden otherwise.
+ */
+
+import { Injectable, CanActivate, ExecutionContext, Optional, Logger, InternalServerErrorException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PERMISSION_KEY } from '../decorators/require-permission.decorator';
 import { RbacCacheService } from '../cache/rbac-cache.service';
@@ -10,6 +15,8 @@ const LEVELS = ['NONE', 'READ', 'READ_PLUS', 'WRITE', 'FULL'];
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
+  private readonly logger = new Logger(PermissionGuard.name);
+
   constructor(
     private reflector: Reflector,
     @Optional() private readonly rbacCache: RbacCacheService,
@@ -45,7 +52,7 @@ export class PermissionGuard implements CanActivate {
     for (const p of perms) { modulePerms[p.moduleCode] = p.accessLevel; }
     if (this.rbacCache?.isRedisConnected) {
       await this.rbacCache.setPositionPerms(positionId, {
-        actions: [], resources: (perms ?? []).map((p) => p.moduleCode), conditions: modulePerms,
+        actions: [], resources: (Array.isArray(perms) ? perms : []).map((p) => p.moduleCode), conditions: modulePerms,
       });
     }
     const accessLevel = modulePerms[moduleCode];
@@ -65,6 +72,11 @@ export class PermissionGuard implements CanActivate {
     const level = (requiredLevel || 'READ').toUpperCase();
     const cached = await this.fetchFromCacheAsync(positionId, moduleCode, level);
     if (cached !== null) return cached;
-    try { return await this.checkFromDb(positionId, moduleCode, level); } catch { return false; }
+    try {
+      return await this.checkFromDb(positionId, moduleCode, level);
+    } catch (err: unknown) {
+      this.logger.error(`RBAC DB lookup failed: ${err}`);
+      throw new InternalServerErrorException('Permission check temporarily unavailable — please retry');
+    }
   }
 }

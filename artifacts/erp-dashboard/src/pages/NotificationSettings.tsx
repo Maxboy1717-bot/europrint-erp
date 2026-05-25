@@ -1,3 +1,8 @@
+/**
+ * @module NotificationSettings
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Bell, Mail, MessageSquare, Smartphone, Save } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface NotifPref {
   key: string;
@@ -38,6 +45,7 @@ const DEFAULT_PREFS: NotifPref[] = NOTIFICATION_TYPES.map((t) => ({
 }));
 
 export default function NotificationSettings() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [prefs, setPrefs] = useState<NotifPref[]>(DEFAULT_PREFS);
 
@@ -61,7 +69,7 @@ export default function NotificationSettings() {
 
   function toggle(key: string, channel: keyof Omit<NotifPref, "key">) {
     setPrefs((prev) =>
-      (prev ?? []).map((p) =>
+      (Array.isArray(prev) ? prev : []).map((p) =>
         p.key === key ? { ...p, [channel]: !p[channel] } : p
       )
     );
@@ -83,12 +91,12 @@ export default function NotificationSettings() {
   );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Bell className="h-5 w-5 text-primary" />
-          <h1 className="font-semibold text-base">Bildirishnoma Sozlamalari</h1>
-          <Badge variant="secondary">{activeCount} faol</Badge>
+          <h1 className="font-semibold text-base">{t("bildirishnomaSozlamalari")}</h1>
+          <EPStatusPill tone="neutral">{activeCount} faol</EPStatusPill>
         </div>
         <Button
           size="sm"
@@ -104,19 +112,19 @@ export default function NotificationSettings() {
       <div className="flex-1 overflow-auto p-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Kanal sozlamalari</CardTitle>
+            <CardTitle className="text-base">{t("kanalSozlamalari")}</CardTitle>
             <CardDescription>
-              Har bir bildirishnoma turi uchun qaysi kanallar orqali xabar olishni belgilang
+              {t("harBirBildirishnomaTuriUchun")}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="grid grid-cols-5 gap-0 border-b px-4 py-2 text-xs text-muted-foreground font-medium">
-              <div className="col-span-2">Bildirishnoma turi</div>
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-0 border-b px-4 py-2 text-xs text-muted-foreground font-medium">
+              <div className="col-span-2">{t("bildirishnomaTuri")}</div>
               <div className="flex items-center gap-1 justify-center">
-                <Mail className="h-3 w-3" /> Email
+                <Mail className="h-3 w-3" /> {t("email1")}
               </div>
               <div className="flex items-center gap-1 justify-center">
-                <MessageSquare className="h-3 w-3" /> Telegram
+                <MessageSquare className="h-3 w-3" /> {t("telegram")}
               </div>
               <div className="flex items-center gap-1 justify-center">
                 <Smartphone className="h-3 w-3" /> In-app
@@ -128,7 +136,7 @@ export default function NotificationSettings() {
               return (
                 <div
                   key={type.key}
-                  className="grid grid-cols-5 gap-0 px-4 py-3 border-b last:border-b-0 hover:bg-muted/30 transition-colors items-center"
+                  className="grid grid-cols-2 lg:grid-cols-5 gap-0 px-4 py-3 border-b last:border-b-0 hover:bg-muted/30 transition-colors items-center"
                   data-testid={`notif-row-${type.key}`}
                 >
                   <div className="col-span-2">

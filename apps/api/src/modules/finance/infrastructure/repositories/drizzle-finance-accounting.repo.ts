@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-finance-accounting.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { sql, SQL } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
@@ -82,7 +87,7 @@ export class DrizzleFinanceAccountingRepo {
       VALUES (${documentNumber}, ${document_type}, ${document_date}, ${posting_date || document_date}, ${description}, ${currency}, ${reference_type || null}, ${reference_id || null}, ${cost_center_id || null}, ${profit_center_id || null}, 'draft')
       RETURNING *
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async insertGlLine(docId: number, lineNumber: number, line: Row): Promise<void> {
@@ -103,7 +108,7 @@ export class DrizzleFinanceAccountingRepo {
     const rows = await runQuery<Row>(sql`
       UPDATE accounting_periods SET status = 'closed', closed_by = ${closedBy}, closed_at = NOW() WHERE id = ${id} RETURNING *
     `);
-    return rows.rows[0] as Row;
+    return (rows.rows[0] ?? {}) as Row;
   }
 
   async getMaterials(where: SQL, limitVal: number, offsetVal: number): Promise<Row[]> {
@@ -140,7 +145,7 @@ export class DrizzleFinanceAccountingRepo {
 
   async getExpenseReports(statusParam: string | null, limit: number, offset: number): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
-      SELECT er.id, er.title, er.status, er.total_amount, er.currency, er.submitted_at, er.approved_at, er.created_at, u.full_name AS employee_name
+      SELECT er.id, er.title, er.status, er.total_amount, er.currency, er.submitted_at, er.approved_at, er.created_at, (u.first_name || ' ' || u.last_name) AS employee_name
       FROM expense_reports er LEFT JOIN users u ON u.id = er.employee_id
       WHERE (${statusParam}::text IS NULL OR er.status = ${statusParam})
       ORDER BY er.created_at DESC LIMIT ${limit} OFFSET ${offset}
@@ -150,7 +155,7 @@ export class DrizzleFinanceAccountingRepo {
 
   async getExpenseReportById(id: string): Promise<Row | null> {
     const rows = await runQuery<Row>(sql`
-      SELECT er.id, er.title, er.status, er.total_amount, er.currency, er.submitted_at, er.approved_at, er.created_at, u.full_name AS employee_name
+      SELECT er.id, er.title, er.status, er.total_amount, er.currency, er.submitted_at, er.approved_at, er.created_at, (u.first_name || ' ' || u.last_name) AS employee_name
       FROM expense_reports er LEFT JOIN users u ON u.id = er.employee_id
       WHERE er.id = ${id} LIMIT 1
     `);

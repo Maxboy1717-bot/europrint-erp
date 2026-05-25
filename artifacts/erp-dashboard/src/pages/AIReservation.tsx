@@ -1,3 +1,8 @@
+/**
+ * @module AIReservation
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -8,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/lib/i18n';
+import { tLabel } from "@/lib/i18n/tLabel";
 import {
   Brain,
   Package,
@@ -81,7 +88,7 @@ function StatCard({
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>
           {loading ? (
-            <Skeleton className="h-7 w-20 mt-1" />
+            <Skeleton className="h-7 w-20 mt-1 rounded-lg" />
           ) : (
             <>
               <p className="text-2xl font-bold">{value}</p>
@@ -95,6 +102,7 @@ function StatCard({
 }
 
 export default function AIReservation() {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
 
@@ -118,7 +126,7 @@ export default function AIReservation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai-reservation/requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ai-reservation/dashboard"] });
-      toast({ title: "Rezervatsiya tasdiqlandi" });
+      toast({ title: tLabel('common.rezervatsiyaTasdiqlandi', "Rezervatsiya tasdiqlandi") });
     },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
@@ -158,14 +166,14 @@ export default function AIReservation() {
   const d = dashboard;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-page-title">
             <Brain className="w-7 h-7" />
-            AI Rezervatsiya Tizimi
+            {t("aiRezervatsiyaTizimi")}
           </h1>
-          <p className="text-sm text-muted-foreground">Material partiyalari va buyurtma rezervatsiyalarini AI boshqaradi</p>
+          <p className="text-sm text-muted-foreground">{t("materialPartiyalariVaBuyurtmaRezervatsiyalarini")}</p>
         </div>
         <Button
           variant="outline"
@@ -173,33 +181,33 @@ export default function AIReservation() {
           onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/ai-reservation/dashboard"] })}
         >
           <RefreshCw className="w-4 h-4 mr-2" />
-          Yangilash
+          {t("refresh")}
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard
-          title="Jami partiyalar"
+          title={t("jamiPartiyalar")}
           value={d?.totalBatches ?? 0}
           icon={Layers}
           loading={dashLoading}
           sub={`${d?.totalQuantity ?? 0} jami miqdor`}
         />
         <StatCard
-          title="Rezervatsiya"
+          title={t("rezervatsiya")}
           value={`${d?.reservedPercent ?? 0}%`}
           icon={Percent}
           loading={dashLoading}
           sub={`${d?.totalReserved ?? 0} ajratilgan`}
         />
         <StatCard
-          title="AI ishonch"
+          title={t("aiIshonch")}
           value={`${d?.avgConfidence ?? 0}%`}
           icon={Brain}
           loading={dashLoading}
         />
         <StatCard
-          title="Tez muddatlilar"
+          title={t("tezMuddatlilar")}
           value={d?.expiringSoon ?? 0}
           icon={Clock}
           loading={dashLoading}
@@ -210,9 +218,9 @@ export default function AIReservation() {
       {(d?.shortageAlerts ?? 0) > 0 && (
         <Card className="border-yellow-200 dark:border-yellow-800">
           <CardContent className="flex items-center gap-3 p-4">
-            <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0" />
+            <AlertTriangle className="w-5 h-5 text-[var(--ep-yellow)] dark:text-yellow-400 shrink-0" />
             <p className="text-sm">
-              <span className="font-semibold text-yellow-600 dark:text-yellow-400">{d?.shortageAlerts} ta so'rov</span>
+              <span className="font-semibold text-[var(--ep-yellow)] dark:text-yellow-400">{d?.shortageAlerts} ta so'rov</span>
               {" "}yetarli material topilmadi — qo'lda ko'rib chiqing
             </p>
           </CardContent>
@@ -221,9 +229,9 @@ export default function AIReservation() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="dashboard" data-testid="tab-dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="batches" data-testid="tab-batches">Partiyalar</TabsTrigger>
-          <TabsTrigger value="requests" data-testid="tab-requests">Rezervatsiyalar</TabsTrigger>
+          <TabsTrigger value="dashboard" data-testid="tab-dashboard">{t('dashboard1')}</TabsTrigger>
+          <TabsTrigger value="batches" data-testid="tab-batches">{t("partiyalar")}</TabsTrigger>
+          <TabsTrigger value="requests" data-testid="tab-requests">{t("rezervatsiyalar")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-4 space-y-4">
@@ -233,14 +241,14 @@ export default function AIReservation() {
             </CardHeader>
             <CardContent>
               {dashLoading ? (
-                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full rounded-lg" />
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {(Array.isArray(d?.materialTypes) ? d?.materialTypes : []).map((mt) => (
                     <Badge key={mt} variant="secondary" data-testid={`badge-material-${mt}`}>{mt}</Badge>
                   ))}
                   {(d?.materialTypes?.length ?? 0) === 0 && (
-                    <p className="text-sm text-muted-foreground">Hali material turlari yo'q</p>
+                    <p className="text-sm text-muted-foreground">{t("haliMaterialTurlariYoq")}</p>
                   )}
                 </div>
               )}
@@ -268,28 +276,28 @@ export default function AIReservation() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Package className="w-5 h-5" />
-                Material partiyalar
+                {t("materialPartiyalar")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {batchesLoading ? (
-                <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-10 w-full"/>)}</div>
+                <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-10 w-full rounded-lg"/>)}</div>
               ) : (
-                <Table>
+                <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Partiya raqami</TableHead>
-                      <TableHead>Material turi</TableHead>
-                      <TableHead className="text-right">Jami</TableHead>
-                      <TableHead className="text-right">Ajratilgan</TableHead>
-                      <TableHead className="text-right">Bo'sh</TableHead>
-                      <TableHead>Holat</TableHead>
-                      <TableHead>Muddati</TableHead>
+                      <TableHead>{t("partiyaRaqami")}</TableHead>
+                      <TableHead>{t("materialTuri")}</TableHead>
+                      <TableHead className="text-right">{t("total")}</TableHead>
+                      <TableHead className="text-right">{t("ajratilgan")}</TableHead>
+                      <TableHead className="text-right">{t("bosh")}</TableHead>
+                      <TableHead>{t("status28")}</TableHead>
+                      <TableHead>{t("muddati")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {batches?.data?.map((b) => (
-                      <TableRow key={b.id} data-testid={`row-batch-${b.id}`}>
+                      <TableRow key={b.id} data-testid={`row-batch-${b.id}`} className="hover:bg-muted/40 transition-colors">
                         <TableCell className="font-mono text-sm">{b.batchNumber}</TableCell>
                         <TableCell>{b.materialType}</TableCell>
                         <TableCell className="text-right">{b.quantity}</TableCell>
@@ -304,12 +312,12 @@ export default function AIReservation() {
                     {(batches?.data?.length ?? 0) === 0 && (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                          Partiyalar yo'q
+                          {t("partiyalarYoq")}
                         </TableCell>
                       </TableRow>
                     )}
                   </TableBody>
-                </Table>
+                </Table></div>
               )}
             </CardContent>
           </Card>
@@ -320,37 +328,37 @@ export default function AIReservation() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                Rezervatsiya so'rovlar
+                {t("rezervatsiyaSorovlar")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {requestsLoading ? (
-                <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-10 w-full"/>)}</div>
+                <div className="space-y-2">{([1,2,3]).map(i => <Skeleton key={`k-${i}`} className="h-10 w-full rounded-lg"/>)}</div>
               ) : (
-                <Table>
+                <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Holat</TableHead>
-                      <TableHead>Material turi</TableHead>
-                      <TableHead className="text-right">Kerak</TableHead>
-                      <TableHead className="text-right">Ajratildi</TableHead>
-                      <TableHead>Kerak sana</TableHead>
-                      <TableHead className="text-right">AI ishonch</TableHead>
-                      <TableHead>AI tavsiya</TableHead>
+                      <TableHead>{t("status28")}</TableHead>
+                      <TableHead>{t("materialTuri")}</TableHead>
+                      <TableHead className="text-right">{t("kerak")}</TableHead>
+                      <TableHead className="text-right">{t("ajratildi")}</TableHead>
+                      <TableHead>{t("kerakSana")}</TableHead>
+                      <TableHead className="text-right">{t("aiIshonch")}</TableHead>
+                      <TableHead>{t("aiTavsiya")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {requests?.data?.map((r) => (
-                      <TableRow key={r.id} data-testid={`row-request-${r.id}`}>
+                      <TableRow key={r.id} data-testid={`row-request-${r.id}`} className="hover:bg-muted/40 transition-colors">
                         <TableCell>{statusBadge(r.status)}</TableCell>
                         <TableCell className="font-medium">{r.materialType}</TableCell>
                         <TableCell className="text-right">{r.requiredQuantity}</TableCell>
                         <TableCell className="text-right">{r.allocatedQuantity}</TableCell>
                         <TableCell className="text-sm">
-                          {new Date(r.requiredDate).toLocaleDateString("uz-UZ")}
+                          {r.requiredDate ? new Date(r.requiredDate).toLocaleDateString("uz-UZ") : "—"}
                         </TableCell>
                         <TableCell className="text-right">
-                          <span className={r.aiConfidence >= 80 ? "text-green-600 dark:text-green-400 font-semibold" : r.aiConfidence >= 60 ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400"}>
+                          <span className={r.aiConfidence >= 80 ? "text-[var(--ep-green)] dark:text-green-400 font-semibold" : r.aiConfidence >= 60 ? "text-[var(--ep-yellow)] dark:text-yellow-400" : "text-[var(--ep-red)] dark:text-red-400"}>
                             {r.aiConfidence}%
                           </span>
                         </TableCell>
@@ -362,12 +370,12 @@ export default function AIReservation() {
                     {(requests?.data?.length ?? 0) === 0 && (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                          So'rovlar yo'q
+                          {t("sorovlarYoq")}
                         </TableCell>
                       </TableRow>
                     )}
                   </TableBody>
-                </Table>
+                </Table></div>
               )}
             </CardContent>
           </Card>

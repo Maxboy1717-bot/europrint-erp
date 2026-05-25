@@ -1,3 +1,8 @@
+/**
+ * @module notifications.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
@@ -13,8 +18,8 @@ import {
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { throwFromError, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Roles} from '@common/decorators/roles.decorator';
 import { CurrentUser} from '@common/decorators/current-user.decorator';
 import { AuditInterceptor} from '@common/interceptors/audit.interceptor';
@@ -24,7 +29,7 @@ import { CreateNotificationDto} from './dto/notification.dto';
 import { NotificationPreferencesService } from '../application/notification-preferences.service';
 import { parseNotificationPreferences } from './dto/notification-preferences.dto';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @ApiTags('Notifications')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -39,6 +44,8 @@ export class NotificationsController {
     private readonly queryBus: QueryBus,
     private readonly prefsSvc: NotificationPreferencesService) {}
 
+  @ApiOperation({ summary: 'List notifications' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async listNotifications(
     @CurrentUser() user: AuthenticatedUser,
@@ -53,6 +60,8 @@ export class NotificationsController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get user notifications' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('/my')
   async getUserNotifications(
     @CurrentUser() user: AuthenticatedUser,
@@ -68,11 +77,16 @@ export class NotificationsController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get unread count' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('/my/unread-count')
   async getUnreadCount(@CurrentUser() _user: AuthenticatedUser) {
     return { statusCode: HttpStatus.OK, data: { unreadCount: 0 } };
   }
 
+  @ApiOperation({ summary: 'Mark all read my' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('/my/mark-all-read')
   async markAllReadMy(@CurrentUser() user: AuthenticatedUser) {
     const result = await this.prefsSvc.markAllRead(user.id);
@@ -80,6 +94,8 @@ export class NotificationsController {
     return { statusCode: HttpStatus.OK, data: result.data };
   }
 
+  @ApiOperation({ summary: 'Get preferences' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('/preferences')
   async getPreferences(@CurrentUser() user: AuthenticatedUser) {
     const result = await this.prefsSvc.getPreferences(user.id);
@@ -87,6 +103,9 @@ export class NotificationsController {
     return { statusCode: HttpStatus.OK, data: result.data };
   }
 
+  @ApiOperation({ summary: 'Update preferences' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Put('/preferences')
   async updatePreferences(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
     const dto = parseNotificationPreferences(body);
@@ -95,17 +114,48 @@ export class NotificationsController {
     return { statusCode: HttpStatus.OK, data: result.data };
   }
 
+  @ApiOperation({ summary: 'Mark as read' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('/:id/read')
   async markAsRead(@Param('id') notificationId: string) {
     return { statusCode: HttpStatus.OK, data: { id: notificationId, isRead: true } };
   }
 
+  @ApiOperation({ summary: 'Mark all as read' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('/read-all')
   async markAllAsRead(@CurrentUser() user: AuthenticatedUser) {
     this.logger.log({ userId: user.id }, 'Mark all notifications as read');
     return { statusCode: HttpStatus.OK, data: { updated: 0 } };
   }
 
+  @ApiOperation({ summary: 'Patch mark all read my' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Patch('/my/mark-all-read')
+  async patchMarkAllReadMy(@CurrentUser() user: AuthenticatedUser) {
+    const result = await this.prefsSvc.markAllRead(user.id);
+    assertOk(result);
+    return { statusCode: HttpStatus.OK, data: result.data };
+  }
+
+  @ApiOperation({ summary: 'Patch preferences' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Patch('/preferences')
+  async patchPreferences(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    const dto = parseNotificationPreferences(body);
+    const result = await this.prefsSvc.updatePreferences(user.id, dto);
+    assertOk(result);
+    return { statusCode: HttpStatus.OK, data: result.data };
+  }
+
+  @ApiOperation({ summary: 'Create notification' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles('admin', 'super_admin')
   async createNotification(@Body() dto: CreateNotificationDto) {

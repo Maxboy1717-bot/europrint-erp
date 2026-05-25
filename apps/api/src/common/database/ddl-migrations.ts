@@ -1,3 +1,8 @@
+/**
+ * @module ddl-migrations
+ * @description Source module. See exports for details.
+ */
+
 import { ddlRun } from '@shared/db';
 import { sql } from 'drizzle-orm';
 
@@ -18,6 +23,7 @@ export async function ensureOtpTables(): Promise<void> {
 }
 
 export async function ensureHrAssetsTables(): Promise<void> {
+  // NOTE: P3-30 — literal CREATE TABLE DDL for `employee_assets`; no user input.
   await ddlRun(sql.raw(`
     CREATE TABLE IF NOT EXISTS employee_assets (
       id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -31,7 +37,9 @@ export async function ensureHrAssetsTables(): Promise<void> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `));
+  // NOTE: P3-30 — literal CREATE INDEX DDL for `employee_assets.asset_id`; no user input.
   await ddlRun(sql.raw(`CREATE INDEX IF NOT EXISTS employee_assets_asset_id_idx ON employee_assets(asset_id)`));
+  // NOTE: P3-30 — literal CREATE INDEX DDL for `employee_assets.employee_id`; no user input.
   await ddlRun(sql.raw(`CREATE INDEX IF NOT EXISTS employee_assets_employee_id_idx ON employee_assets(employee_id)`));
 }
 
@@ -111,10 +119,41 @@ export async function ensureChatTables(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_chat_reactions_message_id ON chat_reactions(message_id);
     CREATE INDEX IF NOT EXISTS idx_chat_poll_votes_poll_id ON chat_poll_votes(poll_id);
   `);
+
+  // Ensure all columns that the Drizzle schema expects actually exist (idempotent ALTERs)
+  const columnMigrations = [
+    // chat_rooms extras
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS description TEXT`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS avatar_url TEXT`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS last_message_text TEXT`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS last_message_at TIMESTAMPTZ`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS is_read_only BOOLEAN DEFAULT FALSE`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS context_type TEXT`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS context_id TEXT`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS member_count INTEGER DEFAULT 0`,
+    `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS last_message_id TEXT`,
+    // chat_members extras
+    `ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS unread_count INTEGER DEFAULT 0`,
+    `ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS is_muted BOOLEAN DEFAULT FALSE`,
+    `ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS muted_until TIMESTAMPTZ`,
+    `ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS left_at TIMESTAMPTZ`,
+    `ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS last_message_at TIMESTAMPTZ`,
+    `ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS last_read_message_id TEXT`,
+    // chat_messages extras
+    `ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS text TEXT`,
+    `ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS mentioned_user_ids JSONB DEFAULT '[]'::jsonb`,
+    `ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS client_msg_id TEXT`,
+  ];
+  for (const m of columnMigrations) {
+    // NOTE: P3-30 — `m` is iterated from the local `columnMigrations` literal-string array above (ALTER TABLE … ADD COLUMN IF NOT EXISTS DDL); no user input.
+    try { await ddlRun(sql.raw(m)); } catch { /* already exists */ }
+  }
 }
 
 export async function runChatMigrations(migrations: string[]): Promise<void> {
   for (const m of migrations) {
+    // NOTE: P3-30 — caller passes a literal `string[]` of chat-schema DDL statements (see callers in chat module bootstrap); never user input. Signature is internal-only.
     try { await ddlRun(sql.raw(m)); } catch { /* already exists */ }
   }
 }
@@ -163,6 +202,7 @@ export async function ensureNotificationTables(): Promise<void> {
 }
 
 export async function ensureTechnologyTables(): Promise<void> {
+  // NOTE: P3-30 — literal CREATE TABLE DDL for `technology_approvals`; no user input.
   await ddlRun(sql.raw(`
     CREATE TABLE IF NOT EXISTS technology_approvals (
       id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -179,7 +219,9 @@ export async function ensureTechnologyTables(): Promise<void> {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `));
+  // NOTE: P3-30 — literal CREATE UNIQUE INDEX DDL for `technology_approvals.papka_order_id`; no user input.
   await ddlRun(sql.raw(`CREATE UNIQUE INDEX IF NOT EXISTS technology_approvals_papka_order_id_uidx ON technology_approvals(papka_order_id)`));
+  // NOTE: P3-30 — literal CREATE INDEX DDL for `technology_approvals.papka_order_id`; no user input.
   await ddlRun(sql.raw(`CREATE INDEX IF NOT EXISTS technology_approvals_papka_order_id_idx ON technology_approvals(papka_order_id)`));
 }
 
@@ -195,6 +237,7 @@ export async function ensureBotTables(): Promise<void> {
     ['pip_goals', `CREATE TABLE IF NOT EXISTS pip_goals (id SERIAL PRIMARY KEY, pip_plan_id INTEGER NOT NULL, title TEXT NOT NULL, description TEXT, status VARCHAR(20) NOT NULL DEFAULT 'pending', due_date DATE, completed_at TIMESTAMP, created_at TIMESTAMP NOT NULL DEFAULT NOW())`],
   ];
   for (const [, ddl] of tables) {
+    // NOTE: P3-30 — `ddl` is iterated from the local `tables` literal-tuple array (bot/HR DDL); no user input.
     try { await ddlRun(sql.raw(ddl)); } catch { /* already exists */ }
   }
 }

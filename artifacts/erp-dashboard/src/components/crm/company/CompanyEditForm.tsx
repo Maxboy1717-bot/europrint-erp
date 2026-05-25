@@ -1,3 +1,8 @@
+/**
+ * @module CompanyEditForm
+ * @description React UI component.
+ */
+
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +23,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Company, generateId } from "./types";
 
+import { useTranslation } from '@/lib/i18n';
 const updateCompanySchema = z.object({
   title: z.string().min(1, "Kompaniya nomi kerak"),
   industry: z.string().optional(),
@@ -37,7 +43,9 @@ interface CompanyEditFormProps {
   onSuccess: () => void;
 }
 
-export function CompanyEditForm({ company, onCancel, onSuccess }: CompanyEditFormProps) {
+export function CompanyEditForm({company, onCancel, onSuccess }: CompanyEditFormProps) {
+  const { t } = useTranslation('common');
+  const { t: tCrm } = useTranslation('crm');
   const { toast } = useToast();
 
   const form = useForm<UpdateCompanyForm>({
@@ -67,11 +75,11 @@ export function CompanyEditForm({ company, onCancel, onSuccess }: CompanyEditFor
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/companies"] });
       queryClient.invalidateQueries({ queryKey: ["/api/crm/companies", company.id] });
-      toast({ title: "Muvaffaqiyatli", description: "Kompaniya ma'lumotlari yangilandi" });
+      toast({ title: t("muvaffaqiyatli"), description: tCrm("companyDataUpdated") });
       onSuccess();
     },
     onError: (error: Error) => {
-      toast({ title: "Xatolik", description: error.message || "Ma'lumotlarni yangilashda xatolik", variant: "destructive" });
+      toast({ title: t("error"), description: error.message || tCrm("dataUpdateError"), variant: "destructive" });
     },
   });
 
@@ -87,7 +95,7 @@ export function CompanyEditForm({ company, onCancel, onSuccess }: CompanyEditFor
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Kompaniya nomi *</FormLabel>
+              <FormLabel>{t("kompaniyaNomi")}</FormLabel>
               <FormControl>
                 <Input {...field} data-testid="input-edit-title" />
               </FormControl>
@@ -101,22 +109,22 @@ export function CompanyEditForm({ company, onCancel, onSuccess }: CompanyEditFor
           name="industry"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Soha</FormLabel>
+              <FormLabel>{t("soha")}</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="IT, Qurilish, Savdo" data-testid="input-edit-industry" />
+                <Input {...field} placeholder={t("itQurilishSavdo")} data-testid="input-edit-industry" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="employees"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Xodimlar soni</FormLabel>
+                <FormLabel>{t("xodimlarSoni")}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -136,7 +144,7 @@ export function CompanyEditForm({ company, onCancel, onSuccess }: CompanyEditFor
             name="revenue"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Yillik daromad</FormLabel>
+                <FormLabel>{t("yillikDaromad")}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -164,14 +172,14 @@ export function CompanyEditForm({ company, onCancel, onSuccess }: CompanyEditFor
             });
             return (
               <FormItem>
-                <FormLabel>Telefon raqamlari</FormLabel>
+                <FormLabel>{t("telefonRaqamlari")}</FormLabel>
                 <FormControl>
                   <MultiFieldInput
                     value={(field.value || []).map((p: { id: string; value: string; type: string }) => p.value)}
                     onChange={(values: string[]) => {
                       const existing = field.value || [];
                       const usedIds = new Set<string>();
-                      const newPhones = (values ?? []).map((val, idx) => {
+                      const newPhones = (Array.isArray(values) ? values : []).map((val, idx) => {
                         const matchByIndex = existing[idx];
                         if (matchByIndex && matchByIndex.value === val && !usedIds.has(matchByIndex.id)) {
                           usedIds.add(matchByIndex.id);
@@ -185,7 +193,7 @@ export function CompanyEditForm({ company, onCancel, onSuccess }: CompanyEditFor
                       });
                       field.onChange(newPhones);
                     }}
-                    label="Telefon"
+                    label={t("phone")}
                     placeholder="+998 90 123 45 67"
                   />
                 </FormControl>
@@ -207,14 +215,14 @@ export function CompanyEditForm({ company, onCancel, onSuccess }: CompanyEditFor
             });
             return (
               <FormItem>
-                <FormLabel>Email manzillar</FormLabel>
+                <FormLabel>{t('emailManzillar')}</FormLabel>
                 <FormControl>
                   <MultiFieldInput
                     value={(field.value || []).map((e: { id: string; value: string; type: string }) => e.value)}
                     onChange={(values: string[]) => {
                       const existing = field.value || [];
                       const usedIds = new Set<string>();
-                      const newEmails = (values ?? []).map((val, idx) => {
+                      const newEmails = (Array.isArray(values) ? values : []).map((val, idx) => {
                         const matchByIndex = existing[idx];
                         if (matchByIndex && matchByIndex.value === val && !usedIds.has(matchByIndex.id)) { usedIds.add(matchByIndex.id); return { ...matchByIndex }; }
                         const candidates = valueMap.get(val) || [];
@@ -225,7 +233,7 @@ export function CompanyEditForm({ company, onCancel, onSuccess }: CompanyEditFor
                       });
                       field.onChange(newEmails);
                     }}
-                    label="Email"
+                    label={t('email1')}
                     placeholder="info@company.com"
                   />
                 </FormControl>
@@ -241,20 +249,20 @@ export function CompanyEditForm({ company, onCancel, onSuccess }: CompanyEditFor
           render={({ field }) => {
             return (
               <FormItem>
-                <FormLabel>Veb-saytlar</FormLabel>
+                <FormLabel>{t("vebSaytlar")}</FormLabel>
                 <FormControl>
                   <MultiFieldInput
                     value={(field.value || []).map((w: { id: string; value: string; type: string }) => w.value)}
                     onChange={(values: string[]) => {
                       const existing = field.value || [];
-                      const newWebsites = (values ?? []).map((val, idx) => {
+                      const newWebsites = (Array.isArray(values) ? values : []).map((val, idx) => {
                         const matchByIndex = existing[idx];
                         if (matchByIndex) return { ...matchByIndex, value: val };
                         return { id: generateId(), value: val, type: "WEB" };
                       });
                       field.onChange(newWebsites);
                     }}
-                    label="Veb-sayt"
+                    label={t("vebSayt")}
                     placeholder="https://example.com"
                   />
                 </FormControl>
@@ -269,7 +277,7 @@ export function CompanyEditForm({ company, onCancel, onSuccess }: CompanyEditFor
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Manzil</FormLabel>
+              <FormLabel>{t("address")}</FormLabel>
               <FormControl>
                 <Input {...field} data-testid="input-edit-address" />
               </FormControl>
@@ -279,13 +287,13 @@ export function CompanyEditForm({ company, onCancel, onSuccess }: CompanyEditFor
         />
 
         <div className="flex gap-2">
-          <Button type="submit" disabled={updateMutation.isPending} className="flex-1" data-testid="button-save">
-            <Check className="h-4 w-4 mr-2" />
-            {updateMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+          <Button type="submit" disabled={updateMutation.isPending} className="flex-1 gap-2" data-testid="button-save">
+            <Check className="h-4 w-4" />
+            {updateMutation.isPending ? t("saving") : t("save")}
           </Button>
           <Button type="button" variant="outline" onClick={onCancel} data-testid="button-cancel-edit">
             <X className="h-4 w-4 mr-2" />
-            Bekor qilish
+            {t("cancel")}
           </Button>
         </div>
       </form>

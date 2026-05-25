@@ -1,9 +1,14 @@
+/**
+ * @module kanban-checklist.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
   Controller, Get, Post, Put, Delete, Param, Body,
   UseGuards, UseInterceptors, Logger, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard }  from '@common/guards/roles.guard';
 import { Roles }       from '@common/decorators/roles.decorator';
@@ -20,7 +25,7 @@ import {
 
 @ApiTags('§16 Kanban Checklists')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('kanban')
 @Roles('super_admin', 'director', 'manager', 'employee')

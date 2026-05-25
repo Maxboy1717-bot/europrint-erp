@@ -1,3 +1,8 @@
+/**
+ * @module finance-engine.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { Money, CurrencyMismatchError, MoneyArithmeticError } from '../src/common/money/money.vo';
 import { DepreciationService } from '../src/modules/finance/domain/services/depreciation.service';
 import { InvestmentService } from '../src/modules/finance/domain/services/investment.service';

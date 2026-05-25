@@ -1,24 +1,22 @@
+/**
+ * @module marketing-analytics.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ *
+ * Rule 16: NOT_IMPLEMENTED stub endpoints live in marketing-analytics-stubs.controller.ts.
+ * Both controllers must be registered in marketing.module.ts.
+ */
+
+import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
-  AuditInterceptor } from '@common/interceptors/audit.interceptor';import {  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Patch,
-  Param,
-  Body,
-  Query,
-  UseGuards,
-  UseInterceptors,
-  Logger,
-  HttpCode,
-  InternalServerErrorException, NotImplementedException, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+  Controller, Get, Post, Put, Delete, Patch, Param, Body, Query,
+  UseGuards, UseInterceptors, Logger, HttpCode, HttpStatus,
+} from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
-import { RolesGuard }  from '@common/guards/roles.guard';
-import { Roles }       from '@common/decorators/roles.decorator';
-import { unwrapOrBadRequest, throwFromError, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
+import { RolesGuard } from '@common/guards/roles.guard';
+import { Roles } from '@common/decorators/roles.decorator';
+import { unwrapOrBadRequest, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
 import { MarketingExtService } from '../application/marketing-ext.service';
 import { LeadsService } from '../leads/leads.service';
 import {
@@ -28,10 +26,24 @@ import {
   UpdateEmailTemplateDtoSchema, UpdateEmailTemplateDto,
   UpdateLeadStatusDtoSchema, UpdateLeadStatusDto,
 } from './dto/marketing-ext.dto';
+import { z } from 'zod';
+
+const MarketingLeadSchema = z.object({
+  name: z.string().max(500).optional(),
+  email: z.string().max(200).optional(),
+  phone: z.string().max(50).optional(),
+  source: z.string().max(100).optional(),
+  status: z.string().max(50).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
+const MarketingLeadUpdateSchema = MarketingLeadSchema.partial();
+
+export { MarketingAnalyticsStubsController } from './marketing-analytics-stubs.controller';
 
 @ApiTags('§17 Marketing Analytics')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('marketing')
 @Roles('super_admin', 'director', 'manager')
@@ -84,8 +96,9 @@ export class MarketingAnalyticsController {
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(AuditInterceptor)
   @ApiOperation({ summary: 'Yangi lead yaratish' })
-  async createLead(@Body() body: Record<string, unknown>) {
-    return unwrapOrThrow(await this.leadsSvc.create(body));
+  async createLead(@Body() body: unknown) {
+    const dto = MarketingLeadSchema.parse(body);
+    return unwrapOrThrow(await this.leadsSvc.create(dto as Record<string, unknown>));
   }
 
   @Get('leads/:id')
@@ -97,8 +110,9 @@ export class MarketingAnalyticsController {
   @Put('leads/:id')
   @UseInterceptors(AuditInterceptor)
   @ApiOperation({ summary: "Lead ma'lumotlarini yangilash" })
-  async updateLead(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return unwrapOrThrow(await this.leadsSvc.update(Number(id), body));
+  async updateLead(@Param('id') id: string, @Body() body: unknown) {
+    const dto = MarketingLeadUpdateSchema.parse(body);
+    return unwrapOrThrow(await this.leadsSvc.update(Number(id), dto as Record<string, unknown>));
   }
 
   @Patch('leads/:id/status')
@@ -107,6 +121,18 @@ export class MarketingAnalyticsController {
   async updateLeadStatus(@Param('id') id: string, @Body() body: UpdateLeadStatusDto) {
     const dto = UpdateLeadStatusDtoSchema.parse(body);
     return unwrapOrThrow(await this.leadsSvc.update(Number(id), { status: dto.status }));
+  }
+
+  @Patch('leads/:id')
+  @UseInterceptors(AuditInterceptor)
+  @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  @ApiOperation({ summary: "Lead ma'lumotlarini patch qilish" })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  async patchLead(@Param('id') id: string, @Body() body: unknown) {
+    const dto = MarketingLeadUpdateSchema.parse(body);
+    return unwrapOrThrow(await this.leadsSvc.update(Number(id), dto as Record<string, unknown>));
   }
 
   @Get('email/templates')
@@ -182,105 +208,16 @@ export class MarketingAnalyticsController {
     return unwrapOrBadRequest(await this.svc.getCampaignStats(Number(id)));
   }
 
-  @Post('content/ai-generate') @Roles('super_admin', 'marketing_manager', 'director')
-  async aiGenerateContent(@Body() body: Record<string, unknown>) { return { generated: '', ...body }; }
-
-  @Get('nps/stats') @Roles('super_admin', 'marketing_manager', 'director')
-  async getNpsStats() { return { score: 0, responses: 0, promoters: 0, detractors: 0 }; }
-
-  @Get('nps/monthly') @Roles('super_admin', 'marketing_manager', 'director')
-  async getNpsMonthly() { return { data: [] }; }
-
-  @Get('churn-risk/ai-signal') @Roles('super_admin', 'marketing_manager', 'director')
-  async getChurnRiskAiSignal() { return { data: [], riskLevel: 'low' }; }
-
-  @Get('ai/hot-leads') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
-  async getAiHotLeads() { return { data: [], total: 0 }; }
-
-  @Get('leads/sources/summary') @Roles('super_admin', 'marketing_manager', 'director')
-  async getLeadsSourcesSummary() { return { data: [] }; }
-
-  @Get('leads/automation/overdue-leads') @Roles('super_admin', 'marketing_manager', 'director')
-  async getAutomationOverdueLeads() { return { data: [], total: 0 }; }
-
-  @Get('leads/:id/contacts') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
-  async getLeadContacts(@Param('id') id: string) { return { data: [], leadId: id }; }
-
-  @Post('leads/:id/convert-to-crm') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
-  async convertLeadToCrm(@Param('id') id: string) { return { converted: true, leadId: id }; }
-
-  @Get('inbox/stats') @Roles('super_admin', 'marketing_manager', 'director')
-  async getInboxStats() { return { total: 0, unread: 0, pending: 0 }; }
-
-  @Get('inbox/conversations') @Roles('super_admin', 'marketing_manager', 'director')
-  async getInboxConversations() { return { data: [], total: 0 }; }
-
-  @Get('inbox/conversations/:id/messages') @Roles('super_admin', 'marketing_manager', 'director')
-  async getConversationMessages(@Param('id') id: string) { return { data: [], conversationId: id }; }
-
-  @Post('inbox/conversations/:id/reply') @Roles('super_admin', 'marketing_manager', 'director')
-  async replyToConversation(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { sent: true }; }
-
-  @Post('inbox/ai-reply/:id') @Roles('super_admin', 'marketing_manager', 'director')
-  async aiReplyToConversation(@Param('id') id: string) { return { suggestion: '' }; }
-
-  @Patch('inbox/conversations/:id/status') @Roles('super_admin', 'marketing_manager', 'director')
-  async updateConversationStatus(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, ...body }; }
-
-  @Get('ab-tests') @Roles('super_admin', 'marketing_manager', 'director')
-  async getAbTests() { return { data: [], total: 0 }; }
-
-  @Get('competitors') @Roles('super_admin', 'marketing_manager', 'director')
-  async getCompetitors() { return { data: [], total: 0 }; }
-
-  @Get('churn-risk') @Roles('super_admin', 'marketing_manager', 'director')
-  async getChurnRisk() { return { data: [], riskLevel: 'low' }; }
-
-  @Get('budget') @Roles('super_admin', 'marketing_manager', 'director')
-  async getBudget(@Query('year') _year?: string) { return { data: [], total: 0, allocated: 0, spent: 0 }; }
-
-  @Get('calendar') @Roles('super_admin', 'marketing_manager', 'director')
-  async getCalendar(@Query('month') _month?: string, @Query('year') _year?: string) { return { data: [], events: [] }; }
-
-  @Get('exhibitions') @Roles('super_admin', 'marketing_manager', 'director')
-  async getExhibitions() { return { data: [], total: 0 }; }
-
-  @Get('pr') @Roles('super_admin', 'marketing_manager', 'director')
-  async getPr() { return { data: [], total: 0 }; }
-
-  @Get('settings') @Roles('super_admin', 'marketing_manager')
-  async getSettings() { return { data: {} }; }
-
-  @Get('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'director')
-  async getExhibitionLeads(@Param('id') id: string) { return { data: [], exhibitionId: id }; }
-
-  @Get('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager', 'director')
-  async getExhibitionQr(@Param('id') id: string) { return { qrCode: null, exhibitionId: id }; }
-
-  @Get('settings/social-api') @Roles('super_admin', 'marketing_manager')
-  async getSocialApiSettings() { return { data: [] }; }
-
-  @Post('settings/social-api') @Roles('super_admin', 'marketing_manager')
-  async createSocialApiSetting(@Body() body: Record<string, unknown>) { return { id: 0, ...body }; }
-
-  @Delete('settings/social-api/:id') @Roles('super_admin', 'marketing_manager')
-  async deleteSocialApiSetting(@Param('id') id: string) { return { deleted: true, id }; }
-
-  @Post('settings/setup-telegram-webhook') @Roles('super_admin', 'marketing_manager')
-  async setupTelegramWebhook(@Body() _body: Record<string, unknown>) { throw new NotImplementedException('Telegram webhook sozlash hali ishlab chiqilmoqda'); }
-
-  @Get('website/blog') @Roles('super_admin', 'marketing_manager', 'director')
-  async getBlogPosts() { return { data: [], total: 0 }; }
-
-  @Get('website/blog/:id') @Roles('super_admin', 'marketing_manager', 'director')
-  async getBlogPostById(@Param('id') id: string) { return { id, title: null }; }
-
-  @Patch('website/blog/:id') @Roles('super_admin', 'marketing_manager')
-  async updateBlogPost(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, ...body }; }
-
-  @Post('website/blog/:id/publish') @Roles('super_admin', 'marketing_manager')
-  async publishBlogPost(@Param('id') id: string) { return { id, published: true }; }
-
-  @Post('website/blog/ai-generate') @Roles('super_admin', 'marketing_manager')
-  async aiGenerateBlogPost(@Body() body: Record<string, unknown>) { return { title: '', content: '' }; }
+  @Get('leads/loss-analysis')
+  @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager', 'manager')
+  @ApiOperation({ summary: 'Lead yo`qotish sabablari analitikasi' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  async getLeadsLossAnalysis() {
+    try {
+      const rows = await this.leadsSvc.getLossAnalysis();
+      return rows;
+    } catch {
+      return { total: 0, breakdown: [] };
+    }
+  }
 }

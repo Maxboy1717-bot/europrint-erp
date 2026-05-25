@@ -1,8 +1,13 @@
+/**
+ * @module reserve-material.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { AppErr, Err , Ok } from '@common/result';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
-import { IWmsRepository } from '../../domain/repositories/wms.repository';
+import { IWmsRepository, WMS_REPO } from '../../domain/repositories/wms.repository';
 
 export class ReserveMaterialCommand {
   constructor(public materialId: number,
@@ -15,7 +20,7 @@ export class ReserveMaterialCommand {
 export class ReserveMaterialHandler implements ICommandHandler<ReserveMaterialCommand> {
   private readonly logger = new Logger(ReserveMaterialHandler.name);
   constructor(
-    @Inject('IWmsRepository') private wmsRepo: IWmsRepository
+    @Inject(WMS_REPO) private wmsRepo: IWmsRepository
   ) {}
 
   async execute(command: ReserveMaterialCommand): Promise<Result<void>> {

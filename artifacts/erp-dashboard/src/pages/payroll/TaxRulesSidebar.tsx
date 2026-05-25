@@ -1,3 +1,8 @@
+/**
+ * @module TaxRulesSidebar
+ * @description React page component. Route-level UI.
+ */
+
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +13,7 @@ import { Percent, AlertCircle, TrendingUp, RefreshCw } from "lucide-react";
 import type { PayrollTaxRule } from "./types";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { EPStatusPill } from "@/components/ep";
 
 interface TaxRulesSidebarProps {
   taxRules: PayrollTaxRule[];
@@ -16,16 +22,17 @@ interface TaxRulesSidebarProps {
 }
 
 export function TaxRulesSidebar({ taxRules, taxRulesLoading, minWage }: TaxRulesSidebarProps) {
+  const { t } = useTranslation("common");
   const { t: tFinance } = useTranslation('finance');
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Percent className="h-5 w-5" />
+            <Percent className="h-4 w-4" />
             {tFinance('taxRules')}
           </CardTitle>
           <CardDescription>{tFinance('taxRules')}</CardDescription>
@@ -36,10 +43,10 @@ export function TaxRulesSidebar({ taxRules, taxRulesLoading, minWage }: TaxRules
               <CardContent className="py-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-orange-600">INPS</p>
+                    <p className="font-medium text-[var(--ep-primary)]">INPS</p>
                     <p className="text-xs text-muted-foreground">{tFinance('pensionFund')}</p>
                   </div>
-                  <Badge className="bg-orange-500 text-white">12%</Badge>
+                  <Badge className="bg-[var(--ep-primary)] text-white">12%</Badge>
                 </div>
               </CardContent>
             </Card>
@@ -48,10 +55,10 @@ export function TaxRulesSidebar({ taxRules, taxRulesLoading, minWage }: TaxRules
               <CardContent className="py-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-red-600">JSHD</p>
+                    <p className="font-medium text-[var(--ep-red)]">JSHD</p>
                     <p className="text-xs text-muted-foreground">{tFinance('incomeTax')}</p>
                   </div>
-                  <Badge className="bg-red-500 text-white">12%</Badge>
+                  <EPStatusPill tone="danger">12%</EPStatusPill>
                 </div>
               </CardContent>
             </Card>
@@ -60,10 +67,10 @@ export function TaxRulesSidebar({ taxRules, taxRulesLoading, minWage }: TaxRules
               <CardContent className="py-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-green-600">{tFinance('minWageGuarantee')}</p>
+                    <p className="font-medium text-[var(--ep-green)]">{tFinance('minWageGuarantee')}</p>
                     <p className="text-xs text-muted-foreground">{tFinance('minWageGuarantee')}</p>
                   </div>
-                  <Badge className="bg-green-500 text-white">{formatCurrency(minWage)}</Badge>
+                  <EPStatusPill tone="success">{formatCurrency(minWage)}</EPStatusPill>
                 </div>
               </CardContent>
             </Card>
@@ -73,18 +80,18 @@ export function TaxRulesSidebar({ taxRules, taxRulesLoading, minWage }: TaxRules
 
           <div className="text-sm space-y-2">
             <h4 className="font-medium flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-blue-500" />
+              <AlertCircle className="h-4 w-4 text-[var(--ep-blue)]" />
               {tFinance('importantNotes')}
             </h4>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 text-xs">
-              <li>INPS va JSHD yalpi ish haqidan hisoblanadi</li>
-              <li>Minimal ish haqi kafolati faol bo'lsa, sof ish haqi min. darajadan kam bo'lmaydi</li>
-              <li>Avans va qarzlar sof ish haqidan ushlab qolinadi</li>
+              <li>{t("inpsVaJshdYalpiIsh")}</li>
+              <li>{t("minimalIshHaqiKafolatiFaol")}</li>
+              <li>{t("avansVaQarzlarSofIsh")}</li>
             </ul>
           </div>
 
           {taxRulesLoading ? (
-            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full rounded-lg" />
           ) : taxRules.length > 0 && (
             <>
               <Separator />
@@ -111,16 +118,16 @@ export function TaxRulesSidebar({ taxRules, taxRulesLoading, minWage }: TaxRules
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-start gap-3 p-2 rounded bg-blue-500/10">
-            <Badge className="bg-blue-500 text-white shrink-0">Ishbay</Badge>
-            <p className="text-xs text-muted-foreground">O'zgarmas oylik maosh. Belgilangan summa oylik sifatida to'lanadi.</p>
+            <EPStatusPill tone="info">{t("ishbay")}</EPStatusPill>
+            <p className="text-xs text-muted-foreground">{t("ozgarmasOylikMaoshBelgilanganSumma")}</p>
           </div>
           <div className="flex items-start gap-3 p-2 rounded bg-purple-500/10">
-            <Badge className="bg-purple-500 text-white shrink-0">Vaqtbay</Badge>
-            <p className="text-xs text-muted-foreground">Soatlik to'lov. Ishlagan soatlar × soatlik stavka.</p>
+            <Badge className="bg-[var(--ep-purple)] text-white shrink-0">{t("vaqtbay")}</Badge>
+            <p className="text-xs text-muted-foreground">{t("soatlikTolovIshlaganSoatlarSoatlik")}</p>
           </div>
           <div className="flex items-start gap-3 p-2 rounded bg-green-500/10">
-            <Badge className="bg-green-500 text-white shrink-0">Donabay</Badge>
-            <p className="text-xs text-muted-foreground">Mahsulot bo'yicha to'lov. Ishlab chiqarilgan birliklar × birlik narxi.</p>
+            <EPStatusPill tone="success">{t("donabay")}</EPStatusPill>
+            <p className="text-xs text-muted-foreground">{t("mahsulotBoyichaTolovIshlabChiqarilgan")}</p>
           </div>
         </CardContent>
       </Card>

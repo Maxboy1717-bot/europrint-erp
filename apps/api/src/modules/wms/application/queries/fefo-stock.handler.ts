@@ -1,8 +1,13 @@
+/**
+ * @module fefo-stock.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
 import { Stock } from '../../domain/aggregates/stock.aggregate';
-import { IWmsRepository } from '../../domain/repositories/wms.repository';
+import { IWmsRepository, WMS_REPO } from '../../domain/repositories/wms.repository';
 
 export class FefoStockQuery {
   constructor(public materialId: number, public warehouseId: number) {}
@@ -12,7 +17,7 @@ export class FefoStockQuery {
 export class FefoStockHandler implements IQueryHandler<FefoStockQuery> {
   private readonly logger = new Logger(FefoStockHandler.name);
   constructor(
-    @Inject('IWmsRepository') private wmsRepo: IWmsRepository
+    @Inject(WMS_REPO) private wmsRepo: IWmsRepository
   ) {}
 
   async execute(query: FefoStockQuery): Promise<Result<Stock[]>> {

@@ -1,6 +1,11 @@
+/**
+ * @module forecast-ext.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Post, Param, Body, UseGuards, UseInterceptors, InternalServerErrorException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { PermissionGuard } from '@common/guards/permission.guard';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
@@ -47,7 +52,7 @@ function weekPeriod(i: number): Date {
 
 @ApiTags('Forecast Extended')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@AiThrottle()
 @Controller('forecast')
 @UseGuards(JwtAuthGuard, PermissionGuard)
 @UseInterceptors(AuditInterceptor)
@@ -88,7 +93,7 @@ export class ForecastExtController {
 
     // Persist predicted periods to forecast_series — awaited so failures propagate
     const saveR = await this.persistenceSvc.saveForecast(
-      (data?.predicted ?? []).map((qty, i) => ({
+      (Array.isArray(data?.predicted) ? data?.predicted : []).map((qty, i) => ({
         materialId: id,
         period:     weekPeriod(i + 1),
         forecastQty: qty,
@@ -121,7 +126,7 @@ export class ForecastExtController {
 
     // Persist predicted periods to forecast_series — awaited so failures propagate
     const saveR = await this.persistenceSvc.saveForecast(
-      (data?.predicted ?? []).map((qty, i) => ({
+      (Array.isArray(data?.predicted) ? data?.predicted : []).map((qty, i) => ({
         materialId: id,
         period:     weekPeriod(i + 1),
         forecastQty: qty,

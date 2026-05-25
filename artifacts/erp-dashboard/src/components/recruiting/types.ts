@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 export type FunnelStage =
   | "NEW" | "QUESTIONNAIRE_SENT" | "PHONE_SCREENING" | "INTERVIEW_SCHEDULED"
   | "INTERVIEWED" | "TEST_SENT" | "REFERENCES" | "OFFER_SENT"

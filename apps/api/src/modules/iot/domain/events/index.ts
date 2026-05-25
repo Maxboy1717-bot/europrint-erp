@@ -1,3 +1,8 @@
+/**
+ * @module index
+ * @description Barrel re-export file. Surfaces the public API of this folder.
+ */
+
 export class SensorReadingRecordedEvent {
   constructor(readonly deviceId: string,
     readonly value: number,
@@ -10,5 +15,17 @@ export class AnomalyDetectedEvent {
     readonly machineId: string,
     readonly anomalyType: string,
     readonly value: number,
+  ) {}
+}
+
+export class SensorAnomalyDetectedEvent {
+  readonly eventName = 'SensorAnomalyDetected';
+  constructor(
+    readonly readingId: string,
+    readonly deviceId: string,
+    readonly value: number,
+    readonly threshold: number,
+    readonly reason: string,
+    readonly occurredAt: Date = new Date(),
   ) {}
 }

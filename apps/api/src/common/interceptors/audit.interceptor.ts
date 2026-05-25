@@ -1,11 +1,17 @@
+/**
+ * @module audit.interceptor
+ * @description NestJS interceptor. Wraps request/response pipeline.
+ */
 
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { db } from '@shared/db';
-import { auditLogs } from '../../shared/db/schema';
+import { auditLogs as auditLogsTable } from '@shared/db/schema-rbac';
+import { randomUUID } from 'crypto';
 
 const SKIP_METHODS = ['GET'];
 
@@ -40,13 +46,13 @@ export class AuditInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     if (SKIP_METHODS.includes(request.method as string)) return next.handle();
 
-    const user = request['user'] as { id?: string | number; sub?: string | number } | undefined;
+    const user = request['user'] as { id?: string | number; sub?: string | number; role?: string; fullName?: string } | undefined;
     const userId      = user?.id ?? user?.sub;
     const httpMethod  = request.method as string;
     const action      = METHOD_TO_ACTION[httpMethod] ?? httpMethod;
     const endpoint    = httpMethod + ' ' + (request.path as string);
     const deviceInfo  = (request.headers?.['user-agent'] as string | undefined) ?? 'unknown';
-    const ipAddress   = (request.ip as string | undefined) ?? 'unknown';
+    const ipAddress   = ((request.headers?.['x-forwarded-for'] as string | undefined) ?? request.ip as string | undefined ?? 'unknown').split(',')[0].trim();
     const timestamp   = Date.now();
     const requestBody = redact(request.body);
 
@@ -63,8 +69,11 @@ export class AuditInterceptor implements NestInterceptor {
         const afterObj  = redact(afterValue);
         const recordId  = afterObj?.['id']?.toString() ?? requestBody?.['id']?.toString() ?? 'unknown';
 
-        await db.insert(auditLogs).values({
+        await db.insert(auditLogsTable).values({
+          id:            randomUUID(),
           userId:        userId != null ? String(userId) : undefined,
+          userFullName:  user?.fullName,
+          userRole:      user?.role,
           action,
           tableName:     module,
           recordId,
@@ -74,13 +83,16 @@ export class AuditInterceptor implements NestInterceptor {
             `result:${result}`,
             `action:${action}`,
             `module:${module}`,
-            `timestamp:${timestamp}`,
-            `deviceInfo:${deviceInfo}`,
+            `ua:${deviceInfo.slice(0, 80)}`,
           ],
+          reason:        `${result} • ${endpoint}`,
           ipAddress,
-          userAgent:     deviceInfo,
         });
-      } catch {}
+      } catch (e) {
+        // WHY: audit-log persistence failure must NEVER break the request
+        // pipeline. Best-effort logging only; the request continues.
+        Logger.warn(`AuditInterceptor persist failed: ${String(e)}`, 'AuditInterceptor');
+      }
     };
 
     return next.handle().pipe(

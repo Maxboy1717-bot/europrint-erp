@@ -1,3 +1,8 @@
+/**
+ * @module chat-ext.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertOk, unwrapOrInternal } from '@common/http-result';
 import {
   Body, Controller, Delete, Get,
@@ -7,8 +12,8 @@ import {
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { castTo } from '@common/db-rows';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
@@ -24,7 +29,7 @@ import { parseContextRoom, parseUpdateMemberRole } from './dto/chat-ext.dto';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin', 'manager', 'supervisor', 'operator', 'employee', 'viewer', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('chat')
 export class ChatExtController {
@@ -35,6 +40,8 @@ export class ChatExtController {
     private readonly chatMessageSvc: ChatMessageService,
   ) {}
 
+  @ApiOperation({ summary: 'Get notifications' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('notifications')
   async getNotifications(@CurrentUser() user: AuthenticatedUser) {
     const result = await this.chatNotifSvc.getNotifications(user.id);
@@ -42,6 +49,9 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Mark all read post' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('notifications/read-all')
   @HttpCode(HttpStatus.OK)
   async markAllReadPost(@CurrentUser() user: AuthenticatedUser) {
@@ -50,6 +60,9 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Mark all read patch' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('notifications/read-all')
   @HttpCode(HttpStatus.OK)
   async markAllReadPatch(@CurrentUser() user: AuthenticatedUser) {
@@ -58,6 +71,10 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Mark one read' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('notifications/:id/read')
   @HttpCode(HttpStatus.OK)
   async markOneRead(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
@@ -66,6 +83,8 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Search messages' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('search')
   async searchMessages(@CurrentUser() user: AuthenticatedUser, @Query('q') q: string) {
     const result = await this.chatNotifSvc.searchMessages(user.id, q ?? '');
@@ -73,6 +92,8 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get message tasks' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('message-tasks')
   async getMessageTasks(@CurrentUser() user: AuthenticatedUser) {
     const result = await this.chatNotifSvc.getMessageTasks(user.id);
@@ -80,6 +101,9 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Create message task' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('message-tasks')
   @HttpCode(HttpStatus.CREATED)
   async createMessageTask(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
@@ -92,6 +116,9 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get or create context room' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('context-room')
   @HttpCode(HttpStatus.OK)
   async getOrCreateContextRoom(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
@@ -101,6 +128,8 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get admin rooms' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('admin/rooms')
   @Roles('admin', 'director')
   async getAdminRooms() {
@@ -109,6 +138,9 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get admin room members' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('admin/rooms/:roomId/members')
   @Roles('admin', 'director')
   async getAdminRoomMembers(@Param('roomId') roomId: string) {
@@ -117,6 +149,10 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Archive room' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('admin/rooms/:roomId/archive')
   @Roles('admin', 'director')
   @HttpCode(HttpStatus.OK)
@@ -126,6 +162,10 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Remove room member' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('admin/rooms/:roomId/members/:userId')
   @Roles('admin', 'director')
   @HttpCode(HttpStatus.OK)
@@ -135,6 +175,10 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Update member role' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('admin/rooms/:roomId/members/:userId/role')
   @Roles('admin', 'director')
   @HttpCode(HttpStatus.OK)
@@ -145,6 +189,8 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get admin audit logs' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('admin/audit-logs')
   @Roles('admin', 'director')
   async getAdminAuditLogs(@Query('limit') limit?: string) {
@@ -153,6 +199,9 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Pin message' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('messages/:id/pin')
   @HttpCode(HttpStatus.OK)
   async pinMessage(
@@ -165,6 +214,9 @@ export class ChatExtController {
     return { pinned: isPinned };
   }
 
+  @ApiOperation({ summary: 'Star message' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('messages/:id/star')
   @HttpCode(HttpStatus.OK)
   async starMessage(
@@ -176,6 +228,9 @@ export class ChatExtController {
     return unwrapOrInternal(await this.chatMessageSvc.starMessage(messageId, String(user.id), starred));
   }
 
+  @ApiOperation({ summary: 'Get admin room member' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('admin/rooms/:roomId/members/:userId')
   @Roles('admin', 'director')
   async getAdminRoomMember(@Param('roomId') roomId: string, @Param('userId') userId: string) {

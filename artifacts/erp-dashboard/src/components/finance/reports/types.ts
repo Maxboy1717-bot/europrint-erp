@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 export interface WeeklySummary {
   revenue: number;
   expenses: number;

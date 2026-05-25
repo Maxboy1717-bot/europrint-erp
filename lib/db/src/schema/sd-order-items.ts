@@ -1,6 +1,11 @@
+/**
+ * @module sd-order-items
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -163,7 +168,7 @@ export const orderStatusLogs = pgTable("order_status_logs", {
   salesOrderId: varchar("sales_order_id").notNull().references(() => salesOrders.id, { onDelete: "cascade" }),
   fromStatus: varchar("from_status", { length: 50 }),
   toStatus: varchar("to_status", { length: 50 }).notNull(),
-  changedBy: varchar("changed_by").references(() => users.id),
+  changedBy: varchar("changed_by").references(() => users.id, { onDelete: "set null" }),
   changedAt: timestamp("changed_at").notNull().defaultNow(),
   reason: varchar("reason", { length: 200 }),
   notes: text("notes"),
@@ -179,7 +184,7 @@ export const salesOrderItems = pgTable("sales_order_items", {
   itemNumber: varchar("item_number", { length: 10 }).notNull(), // 000010, 000020, 000030
   
   // Material data
-  materialId: varchar("material_id").references(() => products.id),
+  materialId: varchar("material_id").references(() => products.id, { onDelete: "set null" }),
   materialNumber: varchar("material_number", { length: 50 }),
   description: text("description").notNull(),
   
@@ -208,11 +213,14 @@ export const salesOrderItems = pgTable("sales_order_items", {
   billingStatus: varchar("billing_status", { length: 20 }).notNull().default("NOT_BILLED"),
   
   // Integration references
-  productionOrderId: varchar("production_order_id").references(() => productionOrders.id),
+  productionOrderId: varchar("production_order_id").references(() => productionOrders.id, { onDelete: "set null" }),
   deliveryItemId: varchar("delivery_item_id"),
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("sales_order_items_delivery_status_chk", sql`${t.deliveryStatus} IN ('NOT_DELIVERED','PARTIALLY','FULLY')`),
+  check("sales_order_items_billing_status_chk", sql`${t.billingStatus} IN ('NOT_BILLED','PARTIALLY','FULLY')`),
+]);
 
 
 export const insertSalesOrderItemSchema = createInsertSchema(salesOrderItems, {

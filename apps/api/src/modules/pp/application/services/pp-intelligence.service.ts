@@ -1,3 +1,60 @@
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   CREATE UNIQUE INDEX ... WHERE status = 'running' (partial unique index DDL),
+ *   EXTRACT(DAY FROM (date1 - date2))::integer / 7 period-offset math for
+ *   scheduled-receipts bucketing, ROW_NUMBER() OVER (ORDER BY ...) window
+ *   for MPS row-indexing, and INSERT ... ON CONFLICT DO NOTHING with
+ *   multi-column natural keys for MRP line idempotency.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
+ * @module pp-intelligence.service
+ * @description Production-planning orchestrator that wraps the pure MRP
+ *   handler with the *plumbing* needed for a real MRP run:
+ *     - Load opening on-hand inventory + scheduled receipts from WMS
+ *     - Load per-material policies (lot-sizing, lead time, safety stock)
+ *     - Insert a `pp_mrp_runs` row with status='running' (concurrency guard)
+ *     - Call `RunMrpHandler.runMrp(...)` for the actual math
+ *     - Persist the planned-orders + net-requirements rows
+ *     - Flip status to 'completed' or 'failed'
+ *
+ *   Also exposes the learning-curve service for productivity forecasting on
+ *   new product launches.
+ * @layer Application Service (PP — orchestration over the MRP handler)
+ *
+ * WHY THIS SERVICE IS SEPARATE FROM run-mrp.handler
+ *   The handler is pure compute — given inputs, produce planned orders. It
+ *   doesn't touch the DB except to read its inputs. This service is the
+ *   *use-case* — fetch inputs, run, persist, audit. Splitting them lets us
+ *   test the math in isolation (the handler has unit tests) and lets the
+ *   service worry about idempotency, concurrency, and run tracking.
+ *
+ * WHY THE UNIQUE PARTIAL INDEX ON `status='running'`
+ *   MRP is expensive (10-30 seconds for a real factory). Two simultaneous
+ *   runs would double-write `pp_mrp_planned_orders` and corrupt the period.
+ *   The PostgreSQL partial unique index (`WHERE status = 'running'`)
+ *   guarantees at most one row can be in 'running' state — INSERT fails
+ *   with a unique-violation, which we catch and turn into a 409 CONFLICT.
+ *
+ *   The cleanup on module init flips stale 'running' rows to 'failed'
+ *   (handles the case where the previous process crashed mid-run). The
+ *   index itself is created idempotently (CREATE INDEX IF NOT EXISTS) so
+ *   first-time deploy and subsequent restarts both work.
+ *
+ * WHY DEFAULT HORIZON = 12 PERIODS
+ *   Our production schedule is monthly buckets; 12 = one calendar year.
+ *   Long enough to capture seasonal raw-material lead times (some imported
+ *   inks take 90+ days), short enough to keep the DP at Wagner-Whitin
+ *   tractable (O(n²) at n=12 is trivial; n=52 weekly buckets gets noticeable).
+ *
+ * WHY DEFAULT LOT-SIZING METHOD IS L4L
+ *   When the planner hasn't specified, lot-for-lot is the safest "least
+ *   surprise" default — order exactly net requirements every period.
+ *   Switching to EOQ/POQ/W-W requires the planner to opt in because those
+ *   methods over-stock to amortise setup cost, which is only correct if
+ *   setup cost > 0. L4L works for any setup-cost regime.
+ */
+
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery, ddlRun } from '@shared/db';
@@ -69,7 +126,9 @@ export class PpIntelligenceService implements OnModuleInit {
         VALUES (${method}, 'running', ${horizon}, NOW())
         RETURNING id
       `);
-      return r.rows[0]['id'];
+      const row = r.rows[0];
+      if (!row) throw Object.assign(new Error('MRP run yaratilmadi'), { code: 'INTERNAL' });
+      return row['id'];
     } catch {
       throw Object.assign(new Error('MRP hisoblash allaqachon bajarilmoqda'), { code: 'CONFLICT' });
     }
@@ -101,7 +160,7 @@ export class PpIntelligenceService implements OnModuleInit {
     const onHand: Record<string, number> = {};
     for (const r of onHandRows.rows ?? []) onHand[String(r['material_id'])] = safeNum(r['qty_on_hand']);
 
-    const policies: MaterialPolicy[] = (policyRows.rows ?? []).map((r) => ({
+    const policies: MaterialPolicy[] = (Array.isArray(policyRows.rows) ? policyRows.rows : []).map((r) => ({
       materialId: String(r['material_id']),
       lotSizingMethod: method as LotSizingMethod,
       leadTimeDays: safeNum(r['lead_time_days']),
@@ -151,7 +210,7 @@ export class PpIntelligenceService implements OnModuleInit {
     `);
 
     if (r.rows && r.rows.length > 0) {
-      return (r?.rows ?? []).map((row) => ({ productId: String(row['product_id']), periodIndex: Number(row['row_idx']) % horizon, quantity: safeNum(row['quantity']) }));
+      return (Array.isArray(r?.rows) ? r?.rows : []).map((row) => ({ productId: String(row['product_id']), periodIndex: Number(row['row_idx']) % horizon, quantity: safeNum(row['quantity']) }));
     }
 
     const po = await runQuery(sql`
@@ -159,7 +218,7 @@ export class PpIntelligenceService implements OnModuleInit {
       FROM production_orders WHERE status NOT IN ('completed','cancelled') AND planned_start_date IS NOT NULL
       ORDER BY planned_start_date LIMIT ${horizon * 20}
     `);
-    return (po.rows ?? []).map((row, i) => ({ productId: String(row['product_id']), periodIndex: i % horizon, quantity: safeNum(row['quantity']) }));
+    return (Array.isArray(po.rows) ? po.rows : []).map((row, i) => ({ productId: String(row['product_id']), periodIndex: i % horizon, quantity: safeNum(row['quantity']) }));
   }
 
   private async persistRunLines(runId: number, data: MrpRunResult, onHand: Record<string, number>): Promise<void> {
@@ -169,14 +228,15 @@ export class PpIntelligenceService implements OnModuleInit {
       const key = `${po.materialId}:${po.periodIndex}`;
       poByPeriod.set(key, (poByPeriod.get(key) ?? 0) + po.qty);
     }
-    for (const nr of data.netRequirements) {
+    // Pattern 2: each ON CONFLICT DO NOTHING insert is independent — fire in parallel to remove N+1 latency
+    await Promise.all(data.netRequirements.map((nr) => {
       const poQty = poByPeriod.get(`${nr.materialId}:${nr.period}`) ?? 0;
-      await runQuery(sql`
+      return runQuery(sql`
         INSERT INTO pp_mrp_run_lines (run_id, material_id, period, gross_req, on_hand, net_req, planned_order)
         VALUES (${runId}, ${nr.materialId}, ${`W${nr.period + 1}`}, ${nr.gr}, ${onHand[nr.materialId] ?? 0}, ${nr.nr}, ${poQty})
         ON CONFLICT DO NOTHING
       `).catch((e: Error) => this.logger.warn(`MRP line insert failed: ${e.message}`));
-    }
+    }));
   }
 
   async getLearningCurve(productId: string): Promise<Result<LearningCurveResult, AppError>> {

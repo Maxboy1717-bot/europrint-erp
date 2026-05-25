@@ -1,3 +1,8 @@
+/**
+ * @module CanteenManagementPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -41,7 +46,7 @@ export default function CanteenManagementPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Section title={t('canteen.topMeals', "Mashhur ovqatlar")}>
           {isLoading ? (
-            <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-10" />)}</div>
+            <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 rounded-lg" />)}</div>
           ) : topMeals.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">{t('canteen.noMeals', "Bugun ovqat yo'q")}</p>
           ) : (
@@ -58,7 +63,7 @@ export default function CanteenManagementPage() {
 
         <Section title={t('canteen.consumption', "Sarflangan masalliqlar")}>
           {isLoading ? (
-            <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-10" />)}</div>
+            <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 rounded-lg" />)}</div>
           ) : consumption.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">{t('canteen.noConsumption', "Sarf yo'q")}</p>
           ) : (
@@ -66,7 +71,7 @@ export default function CanteenManagementPage() {
               {consumption.map((c) => (
                 <div key={c.ingredientName} className="flex items-center justify-between p-2 border rounded">
                   <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4 text-orange-600" />
+                    <Package className="h-4 w-4 text-[var(--ep-primary)]" />
                     <span>{c.ingredientName}</span>
                   </div>
                   <span className="text-sm">

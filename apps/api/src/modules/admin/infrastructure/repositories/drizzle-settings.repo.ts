@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-settings.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { dbRows } from '../../../hr/common/db-rows';
@@ -20,7 +25,7 @@ const SETTING_KEYS = {
 type SettingRow = typeof systemSettings.$inferSelect;
 
 function parseSettingsData(rows: SettingRow[]): SystemSettingsData | null {
-  const map = new Map<string, string>((rows ?? []).map((r) => [r.key, r.value]));
+  const map = new Map<string, string>((Array.isArray(rows) ? rows : []).map((r) => [r.key, r.value]));
   const advancePercent = Number(map.get(SETTING_KEYS.ADVANCE_PERCENT) ?? '');
   if (Number.isNaN(advancePercent)) return null;
   const lastRow = rows[rows.length - 1];

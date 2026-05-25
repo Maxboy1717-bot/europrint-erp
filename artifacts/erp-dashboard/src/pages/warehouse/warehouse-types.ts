@@ -1,5 +1,11 @@
+/**
+ * @module warehouse-types
+ * @description React page component. Route-level UI.
+ */
+
 import { z } from "zod";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface WarehouseData {
   id: string;
   code: string;
@@ -81,12 +87,12 @@ export interface MaterialCard {
   currentStock: number;
 }
 
-export type Lang = "uz" | "ru";
+export type Lang = "uz" | "uz-cyr" | "ru";
 
 export const translations = {
   uz: {
     title: "Ombor Katalogi",
-    subtitle: "Omborlar, zonalar, binlar va ko'chirishlarni boshqarish",
+    subtitle: tLabel('warehouse.warehouse-.omborlarZonalarBinlarVaKochirishlarni', "Omborlar, zonalar, binlar va ko'chirishlarni boshqarish"),
     warehouses: "Omborlar",
     zones: "Zonalar",
     bins: "Binlar",
@@ -98,7 +104,7 @@ export const translations = {
     save: "Saqlash",
     cancel: "Bekor qilish",
     code: "Kod",
-    name: "Nomi",
+    name: tLabel('warehouse.warehouse-.nomi', "Nomi"),
     nameRu: "Nomi (RU)",
     type: "Turi",
     location: "Manzil",
@@ -186,9 +192,111 @@ export const translations = {
       cancelled: "Bekor qilindi",
     },
   },
+  'uz-cyr': {
+    title: "Омбор Каталоги",
+    subtitle: tLabel('warehouse.warehouse-.omborlarZonalarBinlarVaKochirishlarni', "Омборлар, зоналар, бинлар ва кўчиришларни бошқариш"),
+    warehouses: "Омборлар",
+    zones: "Зоналар",
+    bins: "Бинлар",
+    transfers: "Кўчиришлар",
+    search: "Қидириш...",
+    add: "Қўшиш",
+    edit: "Таҳрирлаш",
+    delete: "Ўчириш",
+    save: "Сақлаш",
+    cancel: "Бекор қилиш",
+    code: "Код",
+    name: tLabel('warehouse.warehouse-.nomi', "Номи"),
+    nameRu: "Номи (РУ)",
+    type: "Тури",
+    location: "Манзил",
+    status: "Ҳолат",
+    actions: "Амаллар",
+    active: "Фаол",
+    inactive: "Нофаол",
+    capacity: "Сиғим",
+    zoneType: "Зона тури",
+    binCode: "Бин коди",
+    row: "Қатор",
+    shelf: "Токча",
+    level: "Даража",
+    binType: "Бин тури",
+    maxWeight: "Мах оғирлик (кг)",
+    maxVolume: "Мах ҳажм (Л)",
+    occupancy: "Банд бўлиш %",
+    transferNumber: "Трансфер №",
+    date: "Сана",
+    from: "Қайердан",
+    to: "Қайерга",
+    items: "Елементлар",
+    totalValue: "Умумий қиймат",
+    selectWarehouse: "Омборни танланг",
+    selectZone: "Зонани танланг",
+    allWarehouses: "Барча омборлар",
+    allZones: "Барча зоналар",
+    allStatuses: "Барча ҳолатлар",
+    createWarehouse: "Омбор яратиш",
+    editWarehouse: "Омборни таҳрирлаш",
+    createZone: "Зона яратиш",
+    editZone: "Зонани таҳрирлаш",
+    createBin: "Бин яратиш",
+    editBin: "Бинни таҳрирлаш",
+    createTransfer: "Кўчириш яратиш",
+    transferDetails: "Кўчириш тафсилотлари",
+    step1: "1-қадам: Омборларни танлаш",
+    step2: "2-қадам: Материалларни қўшиш",
+    next: "Кейинги",
+    back: "Орқага",
+    submit: "Юбориш",
+    sourceWarehouse: "Манба омбори",
+    targetWarehouse: "Мақсад омбори",
+    material: "Материал",
+    quantity: "Миқдор",
+    addMaterial: "Материал қўшиш",
+    notes: "Изоҳлар",
+    stats: {
+      totalWarehouses: "Жами омборлар",
+      totalMaterials: "Жами материаллар",
+      stockValue: "Захира қиймати",
+      lowStock: "Кам қолдиқ",
+    },
+    warehouseTypes: {
+      main: "Асосий",
+      raw_material: "Хом ашё",
+      finished_goods: "Тайёр маҳсулот",
+      transit: "Транзит",
+      semi_finished: "Ярим тайёр",
+      defective: "Брак",
+      quarantine: "Карантин",
+      tools_equipment: "Асбоб-ускуна",
+      household_mro: "Хўжалик",
+      mro: "МРО",
+      production: "Ишлаб чиқариш омбори",
+    },
+    zoneTypes: {
+      storage: "Сақлаш",
+      receiving: "Қабул қилиш",
+      shipping: "Жўнатиш",
+      staging: "Тайёрлаш",
+      quarantine: "Карантин",
+    },
+    binTypes: {
+      standard: "Стандарт",
+      bulk: "Оммавий",
+      cold: "Совуқ",
+      hazardous: "Хавфли",
+    },
+    transferStatuses: {
+      draft: "Қоралама",
+      pending: "Кутилмоқда",
+      in_transit: "Ёълда",
+      received: "Қабул қилинди",
+      cancelled: "Бекор қилинди",
+    },
+  },
   ru: {
-    title: "Каталог Складов",
-    subtitle: "Управление складами, зонами, ячейками и перемещениями",
+    title: tLabel('warehouse.warehouse-.untitled', "Каталог Складов"),
+    subtitle: tLabel('warehouse.warehouse-.untitled', "Управление складами, зонами, ячейками и перемещениями"),
     warehouses: "Склады",
     zones: "Зоны",
     bins: "Ячейки",
@@ -200,7 +308,7 @@ export const translations = {
     save: "Сохранить",
     cancel: "Отмена",
     code: "Код",
-    name: "Название",
+    name: tLabel('warehouse.warehouse-.untitled', "Название"),
     nameRu: "Название (RU)",
     type: "Тип",
     location: "Адрес",

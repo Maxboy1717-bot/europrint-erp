@@ -1,3 +1,8 @@
+/**
+ * @module i-hr-onboarding.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { hrOnboardingPlans, hrEmployeeOnboardings } from '@europrint/schemas';
 import { Result } from '@common/result';
 
@@ -14,6 +19,8 @@ export interface IHrOnboardingRepository {
   updateProgress(id: number, weeklyProgress: unknown[], updatedAt: Date): Promise<Result<EmployeeOnboardingRow>>;
   completeProbation(id: number, dto: { status: string; probationScore?: number; probationNotes?: string; isProbationPassed: boolean; actualEndDate: Date; updatedAt: Date }): Promise<Result<EmployeeOnboardingRow>>;
   getEmployeeOnboarding(employeeId: number): Promise<Result<EmployeeOnboardingRow[]>>;
+  assignBuddy(onboardingId: number, buddyId: number): Promise<Result<EmployeeOnboardingRow>>;
+  listAllOnboardings(): Promise<Result<EmployeeOnboardingRow[]>>;
 }
 
 export const HR_ONBOARDING_REPO = 'IHrOnboardingRepository';

@@ -1,9 +1,14 @@
+/**
+ * @module approve-tech-checkpoint.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { AppErr, Err, Ok, Result } from '@common/result';
-import { ISalesOrderRepository } from '../../domain/repositories/i-sales-order.repo';
+import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 
 export class ApproveTechCheckpointCommand {
   private readonly logger = new Logger(ApproveTechCheckpointCommand.name);
@@ -16,7 +21,7 @@ export class ApproveTechCheckpointHandler implements ICommandHandler<ApproveTech
   private readonly logger = new Logger(ApproveTechCheckpointHandler.name);
 
   constructor(
-    @Inject('ISalesOrderRepository') private readonly orderRepo: ISalesOrderRepository,
+    @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
     private readonly eventBus: EventBus,
   ) {}
 

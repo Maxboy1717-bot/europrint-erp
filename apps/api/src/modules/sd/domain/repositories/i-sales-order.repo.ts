@@ -1,12 +1,27 @@
+/**
+ * @module i-sales-order.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Result } from '@common/types/result.type';
 import { SalesOrder } from '../aggregates/sales-order.aggregate';
 
+/**
+ * Optional Drizzle transaction executor. Typed as `unknown` here to avoid a
+ * domain → infrastructure dependency on Drizzle internals; the concrete
+ * repository casts it back to the real executor type. Callers (handlers) pass
+ * the `tx` value returned by `db.transaction(async (tx) => ...)` so the save
+ * participates in the same transaction as outbox writes (PA0-6).
+ */
+export type DrizzleTxExecutor = unknown;
+
 export interface ISalesOrderRepository {
-  save(order: SalesOrder): Promise<Result<SalesOrder>>;
+  save(order: SalesOrder, tx?: DrizzleTxExecutor): Promise<Result<SalesOrder>>;
   findById(id: number): Promise<Result<SalesOrder | null>>;
   findByOrderNumber(orderNumber: string): Promise<Result<SalesOrder | null>>;
   findByCompanyId(companyId: number, limit: number, offset: number): Promise<Result<SalesOrder[]>>;
   findByStatus(status: string, limit: number, offset: number): Promise<Result<SalesOrder[]>>;
+  findAll(limit: number, offset: number): Promise<Result<SalesOrder[]>>;
   findPendingAdvanceOrders(limit: number, offset: number): Promise<Result<SalesOrder[]>>;
   update(order: SalesOrder): Promise<Result<void>>;
   updateAdvancePaidWithLock(
@@ -25,3 +40,9 @@ export interface ISalesOrderRepository {
   delete(id: number): Promise<Result<void>>;
   count(): Promise<Result<number>>;
 }
+
+/**
+ * DI token for ISalesOrderRepository — Symbol-based to avoid string-literal collisions.
+ * (P2-20: replaces the legacy `'ISalesOrderRepository'` string token.)
+ */
+export const SALES_ORDER_REPO = Symbol('SALES_ORDER_REPO');

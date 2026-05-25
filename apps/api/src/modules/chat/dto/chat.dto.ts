@@ -1,3 +1,8 @@
+/**
+ * @module chat.dto
+ * @description DTO + Zod schema definition. Zod schema validates request bodies; DTO type is inferred via z.infer.
+ */
+
 import { z } from 'zod';
 import { MAX_NOTES_LENGTH, MAX_NAME_LENGTH } from '@common/constants/app.constants';
 
@@ -9,6 +14,7 @@ export type ChatStartDirectDto = z.infer<typeof ChatStartDirectSchema>;
 export const ChatCreateGroupSchema = z.object({
   name:      z.string().min(1).max(MAX_NAME_LENGTH),
   memberIds: z.array(z.number().int().positive()).min(1),
+  type:      z.enum(['GROUP', 'CHANNEL']).default('GROUP'),
 });
 export type ChatCreateGroupDto = z.infer<typeof ChatCreateGroupSchema>;
 

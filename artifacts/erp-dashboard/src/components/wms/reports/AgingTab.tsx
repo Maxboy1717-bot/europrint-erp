@@ -1,3 +1,8 @@
+/**
+ * @module AgingTab
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Clock, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { formatCurrency } from "@/lib/format";
 import { AgingData, AgingItem, TranslationType, STATUS_COLORS } from "./types";
+import { apiRequest } from '@/lib/queryClient';
 
 interface AgingTabProps {
   t: TranslationType;
@@ -36,21 +42,17 @@ export function AgingTab({ t, daysThreshold, setDaysThreshold }: AgingTabProps) 
     queryKey: ["/api/warehouse/reports/aging", daysThreshold],
     queryFn: async () => {
       const params = new URLSearchParams({ daysThreshold });
-      const res = await fetch(`/api/warehouse/reports/aging?${params}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
+      return await apiRequest('GET', `/api/warehouse/reports/aging?${params}`);
     },
   });
 
   if (isLoadingAging) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-4">
-          {([1, 2, 3]).map(i => <Skeleton key={`k-${i}`} className="h-24" />)}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {([1, 2, 3]).map(i => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}
         </div>
-        <Skeleton className="h-64" />
+        <Skeleton className="h-64 rounded-lg" />
       </div>
     );
   }
@@ -61,7 +63,7 @@ export function AgingTab({ t, daysThreshold, setDaysThreshold }: AgingTabProps) 
         <div className="flex items-center gap-2">
           <Label>{t.aging.threshold}</Label>
           <Select value={daysThreshold} onValueChange={setDaysThreshold}>
-            <SelectTrigger className="w-32" data-testid="select-threshold">
+            <SelectTrigger className="w-32 h-9" data-testid="select-threshold">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -77,7 +79,7 @@ export function AgingTab({ t, daysThreshold, setDaysThreshold }: AgingTabProps) 
         </Button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-green-500/30">
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
@@ -119,7 +121,7 @@ export function AgingTab({ t, daysThreshold, setDaysThreshold }: AgingTabProps) 
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px]">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t.aging.material}</TableHead>
@@ -132,7 +134,7 @@ export function AgingTab({ t, daysThreshold, setDaysThreshold }: AgingTabProps) 
               </TableHeader>
               <TableBody>
                 {agingData?.data?.map((item: AgingItem) => (
-                  <TableRow key={item.materialId} data-testid={`row-aging-${item.materialId}`}>
+                  <TableRow key={item.materialId} data-testid={`row-aging-${item.materialId}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>{item.lastMovementDate ? format(new Date(item.lastMovementDate), 'dd.MM.yyyy') : '-'}</TableCell>
                     <TableCell className="text-right">{item.daysWithoutMovement}</TableCell>
@@ -153,7 +155,7 @@ export function AgingTab({ t, daysThreshold, setDaysThreshold }: AgingTabProps) 
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </ScrollArea>
         </CardContent>
       </Card>

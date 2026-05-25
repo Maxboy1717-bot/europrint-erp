@@ -5,6 +5,9 @@
   "compilerOptions": {
     "builder": "swc",
     "deleteOutDir": true,
+    "assets": [
+      { "include": "i18n/**/*.json", "outDir": "dist", "watchAssets": true }
+    ],
     "plugins": [
       {
         "name": "@nestjs/swagger",

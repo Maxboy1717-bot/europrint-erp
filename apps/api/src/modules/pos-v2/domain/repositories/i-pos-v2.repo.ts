@@ -1,3 +1,8 @@
+/**
+ * @module i-pos-v2.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Result } from '@common/result';
 import { InventoryCount, CountStatus, CountLine } from '../aggregates/inventory-count.aggregate';
 import { TransferRequest, RequestStatus, RequestLine } from '../aggregates/transfer-request.aggregate';
@@ -59,6 +64,19 @@ export interface IPosV2Repo {
 
   saveRequest(request: TransferRequest, lines: RequestLine[]): Promise<Result<TransferRequest>>;
   updateRequestStatus(requestId: string, status: RequestStatus, approvedBy?: string): Promise<Result<TransferRequest>>;
+
+  // ===== Stock items =====
+  /**
+   * Returns all stock items in a warehouse (raw rows for count-line creation).
+   * Used by StartInventoryCountHandler (PA1-10).
+   */
+  findStockItemsByWarehouse(warehouseId: string): Promise<Result<Array<Record<string, unknown>>>>;
+
+  /**
+   * Updates each stock item's quantity to the counted quantity (post-approval sync).
+   * Used by ApproveCountHandler (PA1-10).
+   */
+  syncStockQuantities(updates: Array<{ stockItemId: string; quantity: number }>): Promise<Result<void>>;
 
   // ===== Barcode Lookup =====
   findByBarcode(barcode: string): Promise<Result<StockItemBarcode | null>>;

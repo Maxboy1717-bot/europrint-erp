@@ -1,5 +1,11 @@
+/**
+ * @module types
+ * @description React page component. Route-level UI.
+ */
+
 import { z } from "zod";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface Skill {
   id: string;
   code: string;
@@ -46,9 +52,9 @@ export type EmployeeSkillFormValues = z.infer<typeof employeeSkillFormSchema>;
 
 export function getLevelBadge(level: number) {
   const levels = [
-    { label: "Boshlang'ich", variant: "secondary" as const },
+    { label: tLabel('common..boshlangich', "Boshlang'ich"), variant: "secondary" as const },
     { label: "Oddiy", variant: "outline" as const },
-    { label: "O'rta", variant: "default" as const },
+    { label: tLabel('common..orta', "O'rta"), variant: "default" as const },
     { label: "Yuqori", variant: "default" as const },
     { label: "Mutaxassis", variant: "default" as const },
   ];

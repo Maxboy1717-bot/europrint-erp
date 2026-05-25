@@ -1,3 +1,8 @@
+/**
+ * @module db
+ * @description Source module. See exports for details.
+ */
+
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 

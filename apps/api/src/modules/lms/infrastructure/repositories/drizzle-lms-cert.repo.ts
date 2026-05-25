@@ -1,13 +1,18 @@
+/**
+ * @module drizzle-lms-cert.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { Result, Err , Ok } from '@common/types/result.type';
 import { execLmsCertificateStatusUpdate } from '@common/database/queries-remaining';
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 
@@ -74,7 +79,7 @@ export class LmsCertRepo {
   async findByOperatorId(operatorId: number) {
     try {
       const r = await exec(sql`SELECT cert.id, cert.course_id AS "courseId", c.title_uz AS "courseName", cert.issued_date AS "issuedAt", cert.expiry_date AS "expiresAt", CASE WHEN cert.is_active AND (cert.expiry_date IS NULL OR cert.expiry_date > NOW()) THEN 'active' ELSE 'expired' END AS status FROM certificates cert JOIN courses c ON c.id = cert.course_id WHERE cert.employee_id = ${operatorId} ORDER BY cert.issued_date DESC`);
-      return (r ?? []).map((row) => ({
+      return (Array.isArray(r) ? r : []).map((row) => ({
         id: row.id, courseId: row.courseId, courseName: row.courseName,
         issuedAt: row.issuedAt ? new Date(String(row.issuedAt)) : _time.now(),
         expiresAt: row.expiresAt ? new Date(String(row.expiresAt)) : undefined,

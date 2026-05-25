@@ -1,4 +1,10 @@
+/**
+ * @module resources.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { MAX_LARGE_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db,
   rawSql} from '@shared/db';
@@ -10,6 +16,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class ResourcesCompatService {
+  constructor(private readonly i18n: I18nService) {}
 
   async getWarehouses(page = '1', limit = '100'): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
@@ -85,8 +92,55 @@ export class ResourcesCompatService {
       GROUP BY d.id ORDER BY d.name LIMIT ${lim} OFFSET ${off}
     `);
     return dbRows(result);
-  
+
     });}
+
+  /**
+   * `/api/org-departments` — frontend `OrgStructureSection` (EmployeeDialog) ishlatadi.
+   *
+   * `org_departments` jadvalidan camelCase format'da qaytaradi:
+   *   { id, name, nameRu, tskp, hierarchyLevel, nodeType, headUserId, headUserName }
+   *
+   * Eslatma: `getDepartments` (yuqorida) eski `departments` jadval uchun.
+   * Bu metod yangi `org_departments` (org-structure-sync migration) bilan ishlaydi.
+   */
+  async getOrgDepartments(page = '1', limit = '200'): Promise<Result<Record<string, unknown>[]>> {
+    return safeCall(async () => {
+      const lim = Math.min(si(limit, 200), MAX_LARGE_QUERY_LIMIT);
+      const off = (Math.max(1, si(page, 1)) - 1) * lim;
+      const result = await this.queryOrgDepartments(lim, off);
+      return dbRows(result);
+    });
+  }
+
+  private queryOrgDepartments(lim: number, off: number) {
+    return rawSql(sql`
+      SELECT
+        od.id::text                                   AS id,
+        COALESCE(od.name, '')                         AS name,
+        od.name_ru                                    AS "nameRu",
+        od.tskp                                       AS tskp,
+        od.tskp_ru                                    AS "tskpRu",
+        od.hierarchy_level                            AS "hierarchyLevel",
+        COALESCE(od.node_type, 'department')          AS "nodeType",
+        od.parent_id                                  AS "parentId",
+        od.head_user_id::text                         AS "headUserId",
+        (u.first_name || ' ' || u.last_name)          AS "headUserName",
+        u.employee_id                                 AS "headEmployeeId",
+        od.color                                      AS color,
+        od.description                                AS description,
+        (SELECT COUNT(*)::int
+           FROM employee_org_departments eod
+           JOIN users eu ON eu.id = eod.user_id
+          WHERE eod.org_department_id = od.id)        AS "employeeCount"
+      FROM org_departments od
+      LEFT JOIN users u
+        ON u.id = od.head_user_id
+      WHERE od.is_active = true
+      ORDER BY od.level NULLS FIRST, od.sort_order, od.id
+      LIMIT ${lim} OFFSET ${off}
+    `);
+  }
 
   async getDepartment(id: string){
     return safeCall(async () => {
@@ -187,11 +241,30 @@ export class ResourcesCompatService {
   
     });}
 
+  async assignKpiTemplate(id: string, templateKey: string){
+    return safeCall(async () => {
+      const marker = `[KPI:${templateKey}]`;
+      const result = await rawSql(sql`
+        UPDATE positions
+        SET description = CASE
+          WHEN description IS NULL THEN ${marker}
+          WHEN description LIKE '[KPI:%]%' THEN REGEXP_REPLACE(description, '^\\[KPI:[^\\]]*\\]', ${marker})
+          ELSE (${marker} || ' ' || description)
+        END,
+        updated_at = NOW()
+        WHERE id = ${si(id)} RETURNING id, name_uz, description
+      `);
+      const found = dbRows(result)[0];
+      if (!found) throw new NotFoundException(await this.i18n.t('errors.positionNotFound'));
+      return found;
+    });
+  }
+
   async deletePosition(id: string){
     return safeCall(async () => {
     await rawSql(sql`UPDATE positions SET is_active = false WHERE id = ${si(id)}`)
     return { ok: true, deleted: true };
-  
+
     });}
 
   async createWarehouse(body: Record<string, unknown>){

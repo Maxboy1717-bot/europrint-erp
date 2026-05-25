@@ -1,9 +1,15 @@
+/**
+ * @module translations
+ * @description React UI component.
+ */
+
 import { Translations } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export const translations: Record<"uz" | "ru", Translations> = {
   uz: {
     title: "AI Material Zaxira",
-    subtitle: "FEFO optimizatsiyasi bilan AI-asosiy material rezervatsiyasi",
+    subtitle: tLabel('warehouse.translations.fefoOptimizatsiyasiBilanAiAsosiy', "FEFO optimizatsiyasi bilan AI-asosiy material rezervatsiyasi"),
     tabs: { aiReservation: "AI Zaxira", batches: "Partiyalar", history: "Tarix" },
     dashboard: {
       totalStock: "Jami Zaxira",
@@ -12,7 +18,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
       aiConfidence: "AI Ishonch",
     },
     aiPanel: {
-      title: "AI Zaxira So'rovi",
+      title: tLabel('warehouse.translations.aiZaxiraSorovi', "AI Zaxira So'rovi"),
       materialType: "Material turi",
       quantity: "Miqdor",
       unit: "Birlik",
@@ -56,7 +62,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
       noBatches: "Partiyalar topilmadi",
     },
     history: {
-      title: "Zaxira So'rovlari Tarixi",
+      title: tLabel('warehouse.translations.zaxiraSorovlariTarixi', "Zaxira So'rovlari Tarixi"),
       id: "ID",
       type: "Turi",
       qty: "Miqdor",
@@ -89,8 +95,8 @@ export const translations: Record<"uz" | "ru", Translations> = {
     batchNumber: "Partiya raqami",
   },
   ru: {
-    title: "AI Резерв Материалов",
-    subtitle: "Резервирование материалов на основе AI с FEFO оптимизацией",
+    title: tLabel('warehouse.translations.ai', "AI Резерв Материалов"),
+    subtitle: tLabel('warehouse.translations.aiFefo', "Резервирование материалов на основе AI с FEFO оптимизацией"),
     tabs: { aiReservation: "AI Резерв", batches: "Партии", history: "История" },
     dashboard: {
       totalStock: "Общий Запас",
@@ -99,7 +105,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
       aiConfidence: "AI Уверенность",
     },
     aiPanel: {
-      title: "AI Запрос на Резерв",
+      title: tLabel('warehouse.translations.ai', "AI Запрос на Резерв"),
       materialType: "Тип материала",
       quantity: "Количество",
       unit: "Единица",
@@ -111,7 +117,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
     },
     priorities: { low: "Низкий", normal: "Обычный", high: "Высокий", urgent: "Срочный" },
     recommendation: {
-      title: "AI Рекомендация",
+      title: tLabel('warehouse.translations.ai', "AI Рекомендация"),
       batch: "Партия",
       takeQty: "Кол-во для взятия",
       expiry: "Срок годности",
@@ -126,7 +132,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
       noData: "Нажмите кнопку для оптимизации",
     },
     batches: {
-      title: "Партии Материалов",
+      title: tLabel('warehouse.translations.untitled', "Партии Материалов"),
       addBatch: "Добавить партию",
       batchNum: "Партия №",
       material: "Материал",
@@ -143,7 +149,7 @@ export const translations: Record<"uz" | "ru", Translations> = {
       noBatches: "Партии не найдены",
     },
     history: {
-      title: "История Запросов Резервирования",
+      title: tLabel('warehouse.translations.untitled', "История Запросов Резервирования"),
       id: "ID",
       type: "Тип",
       qty: "Кол-во",
@@ -178,18 +184,18 @@ export const translations: Record<"uz" | "ru", Translations> = {
 };
 
 export const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400",
-  reserved: "bg-blue-500/20 text-blue-700 dark:text-blue-400",
-  partial: "bg-orange-500/20 text-orange-700 dark:text-orange-400",
-  insufficient: "bg-red-500/20 text-red-700 dark:text-red-400",
+  pending: "bg-yellow-500/20 text-[var(--ep-yellow)] dark:text-yellow-400",
+  reserved: "bg-blue-500/20 text-[var(--ep-blue)] dark:text-blue-400",
+  partial: "bg-orange-500/20 text-[var(--ep-primary)] dark:text-orange-400",
+  insufficient: "bg-red-500/20 text-[var(--ep-red)] dark:text-red-400",
   cancelled: "bg-muted text-muted-foreground",
-  available: "bg-green-500/20 text-green-700 dark:text-green-400",
+  available: "bg-green-500/20 text-[var(--ep-green)] dark:text-green-400",
   depleted: "bg-muted text-muted-foreground",
-  expired: "bg-red-500/20 text-red-700 dark:text-red-400",
+  expired: "bg-red-500/20 text-[var(--ep-red)] dark:text-red-400",
 };
 
 export const GRADE_COLORS: Record<string, string> = {
-  A: "bg-green-500/20 text-green-700 dark:text-green-400",
-  B: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400",
-  C: "bg-red-500/20 text-red-700 dark:text-red-400",
+  A: "bg-green-500/20 text-[var(--ep-green)] dark:text-green-400",
+  B: "bg-yellow-500/20 text-[var(--ep-yellow)] dark:text-yellow-400",
+  C: "bg-red-500/20 text-[var(--ep-red)] dark:text-red-400",
 };

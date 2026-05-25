@@ -1,3 +1,8 @@
+/**
+ * @module sd-customers.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { DrizzleSdCustomersRepository } from '../infrastructure/repositories/drizzle-sd-customers.repo';
@@ -21,6 +26,10 @@ export class SdCustomersService {
     return safeCall(async () => this.repo.get360View(cid));
   }
 
+  async create(body: Record<string, unknown>) {
+    return safeCall(async () => this.repo.create(body));
+  }
+
   async update(cid: number, body: Record<string, unknown>) {
     return safeCall(async () => this.repo.update(cid, body));
   }
@@ -33,12 +42,28 @@ export class SdCustomersService {
     return safeCall(async () => this.repo.getContacts(cid));
   }
 
-  async addContact(cid: number, full_name: unknown, phone: unknown, email: unknown, position: unknown, is_primary: unknown) {
-    return safeCall(async () => this.repo.addContact(cid, full_name, phone, email, position, is_primary));
+  async getRecentOrders(cid: number) {
+    return safeCall(async () => this.repo.getRecentOrders(cid));
   }
 
-  async updateContact(kid: number, cid: number, full_name: unknown, phone: unknown, email: unknown, position: unknown) {
-    return safeCall(async () => this.repo.updateContact(kid, cid, full_name, phone, email, position));
+  async addContact(cid: number, full_name: unknown, phone: unknown, email: unknown, position: unknown, is_primary: unknown, extras?: Record<string, unknown>) {
+    return safeCall(async () => this.repo.addContact(cid, full_name, phone, email, position, is_primary, extras));
+  }
+
+  async updateContact(kid: number, cid: number, full_name: unknown, phone: unknown, email: unknown, position: unknown, extras?: Record<string, unknown>) {
+    return safeCall(async () => this.repo.updateContact(kid, cid, full_name, phone, email, position, extras));
+  }
+
+  async getNps(cid: number) {
+    return safeCall(async () => this.repo.getNps(cid));
+  }
+
+  async addNps(cid: number, score: number, comment: unknown) {
+    return safeCall(async () => this.repo.addNps(cid, score, comment));
+  }
+
+  async updateInternalNotes(cid: number, body: Record<string, unknown>) {
+    return safeCall(async () => this.repo.updateInternalNotes(cid, body));
   }
 
   async deleteContact(kid: number, cid: number) {
@@ -67,6 +92,17 @@ export class SdCustomersService {
 
   async getCompetitors(cid: number) {
     return safeCall(async () => this.repo.getCompetitors(cid));
+  }
+
+  async addCompetitor(cid: number, body: Record<string, unknown>) {
+    return safeCall(async () => this.repo.addCompetitor(
+      cid,
+      body.competitor_name ?? body.name,
+      body.notes,
+      body.product_type ?? body.product,
+      body.estimated_share_pct ?? body.estimatedSharePct,
+      body.win_back_potential ?? body.winBackPotential,
+    ));
   }
 
   async deleteCompetitor(customerId: number, competitorId: number) {

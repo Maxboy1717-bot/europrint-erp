@@ -1,13 +1,19 @@
+/**
+ * @module hr-safety.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
-Controller, Get, Patch, Post, Body, Param, ParseIntPipe,
+Controller, Get, Patch, Post, Delete, Body, Param, ParseIntPipe,
   UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { HrSafetyService } from './hr-safety.service';
 import {
   HrSafetyUpdateIncidentSchema, HrSafetyUpdateIncidentDto,
@@ -17,14 +23,18 @@ import {
 
 const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'SAFETY_OFFICER', 'admin'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Roles(...HR_ROLES)
+@ApiTags('Hr Safety')
+@ApiBearerAuth()
 @Controller('hr/safety')
 export class HrSafetyController {
   constructor(private readonly svc: HrSafetyService) {}
 
+  @ApiOperation({ summary: 'Get department summary' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('department-summary')
   async getDepartmentSummary() {
     const r = await this.svc.getDepartmentSummary();
@@ -32,6 +42,9 @@ export class HrSafetyController {
     return { items: rows, total: rows.length };
   }
 
+  @ApiOperation({ summary: 'Get incident' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('incidents/:id')
   async getIncident(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.getIncidentById(id);
@@ -39,6 +52,19 @@ export class HrSafetyController {
     return { data: row };
   }
 
+  @ApiOperation({ summary: 'Delete incident' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Delete('incidents/:id')
+  async deleteIncident(@Param('id', ParseIntPipe) id: number) {
+    const r = await this.svc.updateIncident(id, { status: 'closed' } as HrSafetyUpdateIncidentDto);
+    return { data: r.ok ? { deleted: true, id } : { deleted: false, id } };
+  }
+
+  @ApiOperation({ summary: 'Update incident' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('incidents/:id')
   @UsePipes(new ZodValidationPipe(HrSafetyUpdateIncidentSchema))
   async updateIncident(
@@ -50,6 +76,9 @@ export class HrSafetyController {
     return { data: row };
   }
 
+  @ApiOperation({ summary: 'Get hazard zone' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('hazard-zones/:id')
   async getHazardZone(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.getHazardZoneById(id);
@@ -57,6 +86,9 @@ export class HrSafetyController {
     return { data: row };
   }
 
+  @ApiOperation({ summary: 'Update hazard zone' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('hazard-zones/:id')
   @UsePipes(new ZodValidationPipe(HrSafetyUpdateHazardZoneSchema))
   async updateHazardZone(
@@ -68,6 +100,9 @@ export class HrSafetyController {
     return { data: row };
   }
 
+  @ApiOperation({ summary: 'Export pdf' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('export/pdf')
   @UsePipes(new ZodValidationPipe(HrSafetyExportPdfSchema))
   async exportPdf(@Body() _body: HrSafetyExportPdfDto) {

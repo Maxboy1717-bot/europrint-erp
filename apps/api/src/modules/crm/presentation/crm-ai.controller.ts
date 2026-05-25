@@ -1,12 +1,18 @@
+/**
+ * @module crm-ai.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertAnyRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { safeInt } from '../../hr/common/db-rows';
+import { safeInt } from '@common/db/db-rows';
 import {
   BadRequestException, Body, Controller, Get, Logger, NotFoundException,
   Param, Post, Query, UseGuards,
   UseInterceptors, InternalServerErrorException, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -19,8 +25,10 @@ import {
 
 const CRM_AI_ROLES = ['sales_manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Crm Ai')
+@ApiBearerAuth()
 @Controller('crm')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(...CRM_AI_ROLES)
@@ -29,6 +37,10 @@ export class CrmAiController {
 
   constructor(private readonly svc: CrmAiService) {}
 
+  @ApiOperation({ summary: 'Analyze lead ai' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('leads/:id/ai-analysis')
   @UsePipes(new ZodValidationPipe(CrmAiContextDtoSchema))
   async analyzeLeadAi(@Param('id') id: string, @Body() _body: CrmAiContextDto) {
@@ -39,6 +51,10 @@ export class CrmAiController {
     return r;
   }
 
+  @ApiOperation({ summary: 'Score lead v2' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('leads/:id/scoring-v2')
   @UsePipes(new ZodValidationPipe(CrmAiContextDtoSchema))
   async scoreLeadV2(@Param('id') id: string, @Body() _body: CrmAiContextDto) {
@@ -49,6 +65,10 @@ export class CrmAiController {
     return r;
   }
 
+  @ApiOperation({ summary: 'Forecast deal' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('deals/:id/ai-forecast')
   @UsePipes(new ZodValidationPipe(CrmAiContextDtoSchema))
   async forecastDeal(@Param('id') id: string, @Body() _body: CrmAiContextDto) {
@@ -59,17 +79,26 @@ export class CrmAiController {
     return r;
   }
 
+  @ApiOperation({ summary: 'Get dashboard analysis' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard-analysis')
   async getDashboardAnalysis(@Query('managerId') managerId?: string) {
     return unwrapOrThrow(await this.svc.getDashboardAnalysis(managerId ? safeInt(managerId, 0) : null));
   }
 
+  @ApiOperation({ summary: 'Get next best action' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('nba/:entityType/:entityId')
   @UsePipes(new ZodValidationPipe(CrmAiContextDtoSchema))
   async getNextBestAction(@Param('entityType') entityType: string, @Param('entityId') entityId: string, @Body() _body: CrmAiContextDto) {
     return unwrapOrThrow(await this.svc.getNextBestAction(entityType, safeInt(entityId, 0)));
   }
 
+  @ApiOperation({ summary: 'Suggest action' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('suggest-action')
   @UsePipes(new ZodValidationPipe(CrmAiSuggestActionDtoSchema))
   async suggestAction(@Body() body: CrmAiSuggestActionDto) {

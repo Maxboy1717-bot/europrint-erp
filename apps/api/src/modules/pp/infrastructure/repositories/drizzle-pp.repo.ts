@@ -1,11 +1,19 @@
+/**
+ * @module drizzle-pp.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Err, Ok } from '@common/result';
 import { Database } from '@/infrastructure/database/database';
 import { Result } from '@common/result';
+import { runQuery } from '@shared/db';
+import { sql } from 'drizzle-orm';
+import { safeNum } from '@common/math/math-utils';
 import { ProductionOrder } from '../../domain/aggregates/production-order.aggregate';
 import { Bom } from '../../domain/aggregates/bom.aggregate';
 import { Routing } from '../../domain/aggregates/routing.aggregate';
-import { IPpRepository } from '../../domain/repositories/pp.repository';
+import { IPpRepository, BomComponentRow } from '../../domain/repositories/pp.repository';
 import {
   execSavePo, queryPo, queryPoByStatus,
   execSaveBom, queryBom, queryBomByProduct,
@@ -23,8 +31,8 @@ export class DrizzlePpRepository implements IPpRepository {
 
   async savePo(po: ProductionOrder): Promise<Result<number>> {
     try {
-      await execSavePo(po.getSoId(), po.getStatus(), po.getBomId(), po.getRoutingId(), po.getPlannedStart(), po.getPlannedEnd());
-      return Ok(1);
+      const id = await execSavePo(po.getSoId(), po.getStatus(), po.getBomId(), po.getRoutingId(), po.getPlannedStart(), po.getPlannedEnd());
+      return Ok(id);
     } catch {
       this.logger.error('Failed to save production order');
       return Err('Saqlashda xatolik');
@@ -45,7 +53,7 @@ export class DrizzlePpRepository implements IPpRepository {
   async getAllPoByStatus(status: string): Promise<Result<ProductionOrder[]>> {
     try {
       const rows = await queryPoByStatus(status);
-      return Ok((rows ?? []).map((r) => new ProductionOrder(Number(r['id']), Number(r['sales_order_id']), Number(r['bom_id']), Number(r['routing_id']), r['scheduled_start'] as Date, r['scheduled_end'] as Date)));
+      return Ok((Array.isArray(rows) ? rows : []).map((r) => new ProductionOrder(Number(r['id']), Number(r['sales_order_id']), Number(r['bom_id']), Number(r['routing_id']), r['scheduled_start'] as Date, r['scheduled_end'] as Date)));
     } catch {
       this.logger.error('Failed to get production orders');
       return Err('Oqish xatoligi');
@@ -54,8 +62,8 @@ export class DrizzlePpRepository implements IPpRepository {
 
   async saveBom(bom: Bom): Promise<Result<number>> {
     try {
-      await execSaveBom(String(bom.getProductId()), String(bom.getVersion()));
-      return Ok(1);
+      const insertedId = await execSaveBom(String(bom.getProductId()), String(bom.getVersion()));
+      return Ok(insertedId);
     } catch {
       this.logger.error('Failed to save BOM');
       return Err('BOM saqlashda xatolik');
@@ -66,7 +74,7 @@ export class DrizzlePpRepository implements IPpRepository {
     try {
       const row = await queryBom(id);
       if (!row) return Err('BOM topilmadi');
-      return Ok(new Bom(Number(row['id']), Number(row['product_name']), Number(row['version'] ?? 1)));
+      return Ok(new Bom(Number(row['id']), Number(row['product_id']), Number(row['version'] ?? 1)));
     } catch {
       this.logger.error('Failed to get BOM');
       return Err('Oqish xatoligi');
@@ -77,7 +85,7 @@ export class DrizzlePpRepository implements IPpRepository {
     try {
       const row = await queryBomByProduct(productId);
       if (!row) return Err('BOM topilmadi');
-      return Ok(new Bom(Number(row['id']), Number(row['product_name']), Number(row['version'] ?? 1)));
+      return Ok(new Bom(Number(row['id']), Number(row['product_id']), Number(row['version'] ?? 1)));
     } catch {
       this.logger.error('Failed to get BOM by product');
       return Err('Oqish xatoligi');
@@ -86,8 +94,8 @@ export class DrizzlePpRepository implements IPpRepository {
 
   async saveRouting(routing: Routing): Promise<Result<number>> {
     try {
-      await execSaveRouting(Number(routing.getProductId()));
-      return Ok(1);
+      const insertedId = await execSaveRouting(Number(routing.getProductId()), `routing-${routing.getProductId()}`, routing.getVersion());
+      return Ok(insertedId);
     } catch {
       this.logger.error('Failed to save routing');
       return Err('Routing saqlashda xatolik');
@@ -98,7 +106,7 @@ export class DrizzlePpRepository implements IPpRepository {
     try {
       const row = await queryRouting(id);
       if (!row) return Err('Routing topilmadi');
-      return Ok(new Routing(Number(row['id']), Number(row['name']), Number(row['version'] ?? 1)));
+      return Ok(new Routing(Number(row['id']), Number(row['product_id'] ?? 0), Number(row['version'] ?? 1)));
     } catch {
       this.logger.error('Failed to get routing');
       return Err('Oqish xatoligi');
@@ -109,7 +117,7 @@ export class DrizzlePpRepository implements IPpRepository {
     try {
       const row = await queryRoutingByProduct(productId);
       if (!row) return Err('Routing topilmadi');
-      return Ok(new Routing(Number(row['id']), Number(row['name']), Number(row['version'] ?? 1)));
+      return Ok(new Routing(Number(row['id']), Number(row['product_id'] ?? 0), Number(row['version'] ?? 1)));
     } catch {
       this.logger.error('Failed to get routing by product');
       return Err('Oqish xatoligi');
@@ -141,6 +149,27 @@ export class DrizzlePpRepository implements IPpRepository {
     } catch {
       this.logger.error('Failed to get machine load');
       return Err('Oqish xatoligi');
+    }
+  }
+
+  async findActiveBomComponents(): Promise<Result<BomComponentRow[]>> {
+    try {
+      const result = await runQuery<DbRow>(sql`
+        SELECT parent_id AS "parentId", child_id AS "childId",
+               qty_per_unit AS "qtyPerUnit"
+        FROM bom_components
+        WHERE is_active = true
+      `);
+      const rawRows = result?.rows ?? [];
+      const rows: BomComponentRow[] = (Array.isArray(rawRows) ? rawRows : []).map((r) => ({
+        parentId: String(r['parentId'] ?? ''),
+        childId: String(r['childId'] ?? ''),
+        qtyPerUnit: safeNum(r['qtyPerUnit'], 1),
+      }));
+      return Ok(rows);
+    } catch (e) {
+      this.logger.error(`Failed to load active BOM components: ${String(e)}`);
+      return Err('BOM komponentlarini o\'qishda xatolik');
     }
   }
 }

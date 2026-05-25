@@ -1,5 +1,15 @@
+/**
+ * @module gl.service
+ * @description General-Ledger business logic. Wraps every repo call in
+ * `safeCall` so the outermost return is always `Result<T>`. Posting a GL
+ * document enforces the debit/credit balance invariant; mismatched totals
+ * surface as 400 BadRequest, not a silent rounding. The chart-of-accounts
+ * seed bootstraps the standard EuroPrint asset/liability/equity tree.
+ */
+
 import { GL } from "../domain/constants/gl-accounts.constants";
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IFinanceGlRepository, FINANCE_GL_REPO } from './i-finance-gl.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -7,8 +17,17 @@ import { safeCall, Result, AppError } from '@common/result';
 export class GlService {
   private readonly logger = new Logger(GlService.name);
 
-  constructor(@Inject(FINANCE_GL_REPO) private readonly financeGlRepo: IFinanceGlRepository) {}
+  constructor(
+    @Inject(FINANCE_GL_REPO) private readonly financeGlRepo: IFinanceGlRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
+  /**
+   * Paginated list of GL documents.
+   * @param query - { page?: number; limit?: number } from the request query string
+   * @returns Result with `{ data, pagination: { total, page, limit } }`. On
+   *   repo failure returns Ok with empty data so the dashboard doesn't break.
+   */
   async findAllDocuments(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
     const page   = Number((query.page  as number | undefined) ?? 1);
@@ -35,29 +54,53 @@ export class GlService {
   
     });}
 
+  /**
+   * Look up one chart-of-accounts entry by primary key.
+   * @param id - GL account id
+   * @returns Result.ok(account) when found; the wrapped throw becomes
+   *   Result.err('NOT_FOUND') so the controller produces a clean 404.
+   */
   async findAccountById(id: number){
+    const notFoundMsg = await this.i18n.t('errors.notFound');
     return safeCall(async () => {
     const result = await this.financeGlRepo.findAccountById(id);
     if (!result.ok) {
       this.logger.warn(`findAccountById(${id}): ${result.error}`);
-      throw new NotFoundException(`GL hisob #${id} topilmadi`);
+      throw new NotFoundException(notFoundMsg);
     }
-    if (!result.data) throw new NotFoundException(`GL hisob #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(notFoundMsg);
     return result.data;
-  
+
     });}
 
+  /**
+   * Persists a new GL document. Enforces the balanced-entry invariant:
+   * `totalDebit === totalCredit`. WHY: an unbalanced entry corrupts the
+   * trial-balance and downstream financial statements — better to fail
+   * loudly at write-time than to spend hours reconciling later.
+   * @param dto - the journal entry: header + lines
+   * @returns Result.ok({ id }) on success
+   * @throws (via wrapped safeCall → Result.err) BadRequestException-equivalent when unbalanced
+   */
   async postDocument(dto: Record<string, unknown>){
+    const debitCreditMismatchMsg = await this.i18n.t('errors.debitCreditMismatch');
     return safeCall(async () => {
     if (dto.totalDebit !== dto.totalCredit) {
-      throw new BadRequestException('Debet va kredit mos kelishi kerak');
+      throw new BadRequestException(debitCreditMismatchMsg);
     }
     const result = await this.financeGlRepo.postDocument(dto);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
-  
+
     });}
 
+  /**
+   * Seeds the chart of accounts. Idempotent via the repo (relies on
+   * onConflictDoNothing). If `rows` is empty, the default EuroPrint chart
+   * is used.
+   * @param rows - account definitions, or empty for the built-in defaults
+   * @returns Result.ok({ inserted: count })
+   */
   async seedAccounts(rows: Record<string, unknown>[]){
     return safeCall(async () => {
     const payload = rows.length > 0 ? rows : this.defaultChartOfAccounts();
@@ -67,6 +110,28 @@ export class GlService {
   
     });}
 
+  async getTrialBalance(date?: string) {
+    return safeCall(async () => {
+      const result = await this.financeGlRepo.getTrialBalance(date);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
+  async getLedger(accountCode: string, page = 1, limit = 50) {
+    return safeCall(async () => {
+      const offset = (page - 1) * limit;
+      const result = await this.financeGlRepo.getLedger(accountCode, limit, offset);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
+  /**
+   * Returns the built-in chart of accounts seed rows. Codes come from
+   * `domain/constants/gl-accounts.constants.ts` so the entire codebase
+   * references the same account numbers.
+   */
   private defaultChartOfAccounts(): Record<string, unknown>[] {
     return [
       { accountCode: GL.CASH, accountName: 'Asosiy kassa',              accountType: 'asset'     },

@@ -1,7 +1,12 @@
+/**
+ * @module drizzle-notification.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { and, eq, desc , sql } from 'drizzle-orm';
+import { and, eq, desc } from 'drizzle-orm';
 import { Result, Err , Ok } from '@common/types/result.type';
 import { INotificationRepo } from '../../domain/repositories/i-notification.repo';
 import { Notification } from '../../domain/aggregates/notification.aggregate';
@@ -17,7 +22,7 @@ export class DrizzleNotificationRepository implements INotificationRepo {
     return db
       .select()
       .from(notifications)
-      .where(sql`${notifications.id} = ${id}`)
+      .where(eq(notifications.id, Number(id)))
       .execute()
       .then((rows) => {
         if (rows.length === 0) {
@@ -47,9 +52,9 @@ export class DrizzleNotificationRepository implements INotificationRepo {
         .from(notifications)
         .where(
           and(
-            sql`${notifications.user_id} = ${filters.userId}`,
-            filters.isRead !== undefined ? sql`${notifications.is_read} = ${filters.isRead}` : undefined))
-        .orderBy(desc(notifications.created_at))
+            eq(notifications.userId, filters.userId),
+            filters.isRead !== undefined ? eq(notifications.isRead, filters.isRead) : undefined))
+        .orderBy(desc(notifications.createdAt))
         .limit(limit)
         .offset(offset)
         .execute()
@@ -62,8 +67,8 @@ export class DrizzleNotificationRepository implements INotificationRepo {
         .from(notifications)
         .where(
           and(
-            sql`${notifications.user_id} = ${filters.userId}`,
-            filters.isRead !== undefined ? sql`${notifications.is_read} = ${filters.isRead}` : undefined))
+            eq(notifications.userId, filters.userId),
+            filters.isRead !== undefined ? eq(notifications.isRead, filters.isRead) : undefined))
         .execute()
         .then((rows) => rows.length)
         .catch((error) => {
@@ -81,9 +86,9 @@ export class DrizzleNotificationRepository implements INotificationRepo {
     return db
       .select()
       .from(notifications)
-      .where(and(eq(notifications.user_id, userId), eq(notifications.is_read, false)))
+      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)))
       .execute()
-      .then((rows) => (Ok(rows.length,)))
+      .then((rows) => (Ok(rows.length)))
       .catch((error) => {
         this.logger.error('Error counting unread notifications');
         return Err((error as Error).message);
@@ -94,16 +99,14 @@ export class DrizzleNotificationRepository implements INotificationRepo {
     return db
       .insert(notifications)
       .values({
-        id: notification.id,
-        user_id: notification.userId,
+        userId: String(notification.userId),
         title: notification.title,
-        body: notification.body,
+        message: notification.body,
         type: notification.type,
-        is_read: notification.isRead,
-        reference_id: notification.referenceId,
-        reference_type: notification.referenceType,
-        created_at: notification.createdAt,
-        updated_at: notification.updatedAt,
+        isRead: notification.isRead,
+        entityType: notification.referenceType || null,
+        entityId: notification.referenceId || null,
+        createdAt: notification.createdAt,
       } as typeof notifications.$inferInsert)
       .returning()
       .execute()
@@ -122,8 +125,8 @@ export class DrizzleNotificationRepository implements INotificationRepo {
   async markAsRead(id: string): Promise<Result<Notification>> {
     return db
       .update(notifications)
-      .set({ is_read: true })
-      .where(sql`${notifications.id} = ${id}`)
+      .set({ isRead: true })
+      .where(eq(notifications.id, Number(id)))
       .returning()
       .execute()
       .then((rows) => {
@@ -141,8 +144,8 @@ export class DrizzleNotificationRepository implements INotificationRepo {
   async markAllAsRead(userId: string): Promise<Result<number>> {
     return db
       .update(notifications)
-      .set({ is_read: true })
-      .where(and(eq(notifications.user_id, userId), eq(notifications.is_read, false)))
+      .set({ isRead: true })
+      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)))
       .execute()
       .then(() => {
         return Ok(0); // Return number updated if available from DB
@@ -154,14 +157,19 @@ export class DrizzleNotificationRepository implements INotificationRepo {
   }
 
   private toDomain(row: Record<string, unknown>): Notification {
-    const notification = new Notification(String(row.user_id ?? ''), String(row.title ?? ''), String(row.body ?? ''), String(row.type ?? 'info'));
+    const notification = new Notification(
+      String(row.userId ?? ''),
+      String(row.title ?? ''),
+      String(row.message ?? ''),
+      String(row.type ?? 'info'),
+    );
 
     notification.id = String(row.id ?? '');
-    notification.isRead = Boolean(row.is_read);
-    notification.referenceId = String(row.reference_id ?? '');
-    notification.referenceType = String(row.reference_type ?? '');
-    notification.createdAt = row.created_at ? new Date(String(row.created_at)) : _time.now();
-    notification.updatedAt = row.updated_at ? new Date(String(row.updated_at)) : _time.now();
+    notification.isRead = Boolean(row.isRead);
+    notification.referenceId = String(row.entityId ?? '');
+    notification.referenceType = String(row.entityType ?? '');
+    notification.createdAt = row.createdAt ? new Date(String(row.createdAt)) : _time.now();
+    notification.updatedAt = _time.now();
 
     return notification;
   }

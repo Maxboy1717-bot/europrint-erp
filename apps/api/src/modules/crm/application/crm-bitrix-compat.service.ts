@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+/**
+ * @module crm-bitrix-compat.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { CrmBitrixCompatRepository } from './crm-bitrix-compat.repository';
+import { CRM_BITRIX_COMPAT_REPO, type ICrmBitrixCompatRepo } from '../domain/repositories/i-crm-bitrix-compat.repo';
 
 @Injectable()
 export class CrmBitrixCompatService {
-  constructor(private readonly repo: CrmBitrixCompatRepository) {}
+  constructor(@Inject(CRM_BITRIX_COMPAT_REPO) private readonly repo: ICrmBitrixCompatRepo) {}
 
   async listProposals(lim: number, off: number): Promise<Result<object, AppError>> {
     return this.repo.listProposals(lim, off);
@@ -46,5 +51,27 @@ export class CrmBitrixCompatService {
       await this.repo.deleteRobot(id);
       return { deleted: true };
     });
+  }
+
+  async deleteProposal(id: number) {
+    return safeCall(async () => {
+      await this.repo.deleteProposal(id);
+      return { deleted: true };
+    });
+  }
+
+  async deleteInvoice(id: number) {
+    return safeCall(async () => {
+      await this.repo.deleteInvoice(id);
+      return { deleted: true };
+    });
+  }
+
+  async updateProposalStage(id: number, status: string) {
+    return this.repo.updateProposalStage(id, status);
+  }
+
+  async updateInvoiceStage(id: number, status: string) {
+    return this.repo.updateInvoiceStage(id, status);
   }
 }

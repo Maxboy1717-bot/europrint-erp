@@ -1,3 +1,8 @@
+/**
+ * @module helpers
+ * @description React UI component.
+ */
+
 import React from "react";
 import { OrgNode, LayoutNode, CARD_W, CARD_H, H_GAP, V_GAP } from "./types";
 
@@ -49,7 +54,7 @@ export function flattenLayout(root: LayoutNode): LayoutNode[] {
 }
 
 export function countNodes(nodes: OrgNode[]): number {
-  return (nodes ?? []).reduce((sum, n) => sum + 1 + countNodes(n.children || []), 0);
+  return (Array.isArray(nodes) ? nodes : []).reduce((sum, n) => sum + 1 + countNodes(n.children || []), 0);
 }
 
 export function getInitials(name?: string | null): string {

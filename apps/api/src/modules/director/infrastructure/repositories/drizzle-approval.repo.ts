@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-approval.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql, eq, and, desc, count } from 'drizzle-orm';
@@ -23,7 +28,7 @@ export class DrizzleApprovalRepo implements IApprovalRepo {
 
   async findById(id: string): Promise<Result<ApprovalRequest>> {
     try {
-      const rows = await db.select().from(approvalRequests).where(eq(approvalRequests.id, id)).limit(1);
+      const rows = await db.select().from(approvalRequests).where(eq(approvalRequests.id, Number(id))).limit(1);
       if (rows.length === 0) return Err(`Tasdiqlash so'rovi topilmadi: ${id}`);
       return Ok(this.mapToAggregate(rows[0]));
     } catch (err) {
@@ -43,7 +48,7 @@ export class DrizzleApprovalRepo implements IApprovalRepo {
         db.select().from(approvalRequests).where(and(...conditions)).orderBy(desc(approvalRequests.createdAt)).limit(limit).offset(offset),
         db.select({ count: count() }).from(approvalRequests).where(and(...conditions)),
       ]);
-      return { ok: true, data: { items: (rows ?? []).map((r) => this.mapToAggregate(r)), total: countResult[0]?.count ?? 0 } };
+      return { ok: true, data: { items: (Array.isArray(rows) ? rows : []).map((r) => this.mapToAggregate(r)), total: countResult[0]?.count ?? 0 } };
     } catch (err) {
       this.logger.error(`findPending error: ${err}`);
       return Err('Pending so\'rovlar yuklanishida xatolik');
@@ -63,7 +68,7 @@ export class DrizzleApprovalRepo implements IApprovalRepo {
         db.select().from(approvalRequests).where(whereClause).orderBy(desc(approvalRequests.updatedAt)).limit(limit).offset(offset),
         db.select({ count: count() }).from(approvalRequests).where(whereClause),
       ]);
-      return { ok: true, data: { items: (rows ?? []).map((r) => this.mapToAggregate(r)), total: countResult[0]?.count ?? 0 } };
+      return { ok: true, data: { items: (Array.isArray(rows) ? rows : []).map((r) => this.mapToAggregate(r)), total: countResult[0]?.count ?? 0 } };
     } catch (err) {
       this.logger.error(`findHistory error: ${err}`);
       return Err('Tarixni yuklanishida xatolik');

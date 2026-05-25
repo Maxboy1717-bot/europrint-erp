@@ -1,3 +1,8 @@
+/**
+ * @module create-warehouse.command
+ * @description Source module. See exports for details.
+ */
+
 export class CreateWarehouseCommand {
   constructor(public readonly name: string,
     public readonly address: string,

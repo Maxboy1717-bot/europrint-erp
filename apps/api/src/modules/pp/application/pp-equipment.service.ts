@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module pp-equipment.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { PpEquipmentRepository } from './pp-equipment.repository';
+import { PP_EQUIPMENT_REPO, type IPpEquipmentRepo } from '../domain/repositories/i-pp-equipment.repo';
 
 @Injectable()
 export class PpEquipmentService {
-  constructor(private readonly repo: PpEquipmentRepository) {}
+  constructor(@Inject(PP_EQUIPMENT_REPO) private readonly repo: IPpEquipmentRepo) {}
 
   async listEquipment(status: string | null, limit: number): Promise<Result<object, AppError>> {
     return safeCall(async () => {

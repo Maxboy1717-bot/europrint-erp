@@ -1,0 +1,28 @@
+{
+  "name": "@workspace/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "hello":          "tsx ./src/hello.ts",
+    "typecheck":      "tsc -p tsconfig.json --noEmit",
+    "audit:api":      "bash ../apps/api/audit.sh",
+    "audit:404":      "tsx ../scripts/audit-api-endpoints.ts",
+    "audit:coverage": "tsx ../scripts/audit-backend-coverage.ts",
+    "audit:full":     "tsx ../scripts/audit-full-system.ts",
+    "audit:buttons":  "node ../scripts/button-audit.cjs",
+    "audit:arch":     "bash ../scripts/master-data-audit.sh",
+    "audit:crud":     "bash ../scripts/missing-crud-audit.sh",
+    "audit:crud-v2":  "bash ../scripts/missing-crud-v2.sh",
+    "audit:gap":      "bash ../scripts/src/frontend-gap-audit.sh",
+    "audit:loc":      "bash ../scripts/count_loc.sh",
+    "audit:pentest":  "bash ../scripts/src/pentest.sh",
+    "audit:fix":      "node ../scripts/fix-result-literals.cjs",
+    "audit:master":   "bash src/master-audit.sh",
+    "audit:all":      "bash ../scripts/run-all-audits.sh"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsx": "catalog:"
+  }
+}

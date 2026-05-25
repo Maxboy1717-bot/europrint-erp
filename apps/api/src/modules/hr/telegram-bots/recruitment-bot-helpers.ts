@@ -1,3 +1,8 @@
+/**
+ * @module recruitment-bot-helpers
+ * @description Source module. See exports for details.
+ */
+
 import { Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -50,8 +55,9 @@ export async function incrementAttempts(chatId: number, vacancyId: number | null
       ? await runQuery<{ id: number }>(sql`SELECT id FROM recruitment_bot_attempts WHERE telegram_chat_id = ${String(chatId)} AND vacancy_id = ${vacancyId} LIMIT 1`)
       : await runQuery<{ id: number }>(sql`SELECT id FROM recruitment_bot_attempts WHERE telegram_chat_id = ${String(chatId)} AND vacancy_id IS NULL LIMIT 1`);
 
-    if (existingRows.rows.length > 0) {
-      await execRecruitmentBotAttemptIncrement(existingRows.rows[0].id as number);
+    const existingRow = existingRows.rows[0];
+    if (existingRow) {
+      await execRecruitmentBotAttemptIncrement(existingRow.id as number);
     } else {
       await execRecruitmentBotAttemptInsert(chatId, vacancyId);
     }

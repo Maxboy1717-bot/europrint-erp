@@ -1,3 +1,8 @@
+/**
+ * @module settings-admin.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import {
@@ -7,6 +12,7 @@ import {
   adminFilters as filtersTable,
 } from '@shared/db/europrint-compat';
 import { eq } from 'drizzle-orm';
+import { safeCall } from '@common/result';
 
 type GuidelineInsert  = { title: string; content: string; category: string; isActive: boolean; createdBy?: string };
 type GuidelineUpdate  = Partial<GuidelineInsert> & { updatedAt: Date };
@@ -17,83 +23,87 @@ type SystemUpdate     = { companyName?: string; timezone?: string; language?: st
 
 @Injectable()
 export class SettingsAdminRepo {
-  async findAllGuidelines() {
-    return db.select().from(guidelinesTable).orderBy(guidelinesTable.createdAt);
+  findAllGuidelines() {
+    return safeCall(() => db.select().from(guidelinesTable).orderBy(guidelinesTable.createdAt), 'DB_ERROR');
   }
 
-  async insertGuideline(data: GuidelineInsert) {
-    return db.insert(guidelinesTable).values({
+  insertGuideline(data: GuidelineInsert) {
+    return safeCall(() => db.insert(guidelinesTable).values({
       title:     data.title,
       content:   data.content,
       category:  data.category,
       isActive:  data.isActive,
       createdBy: data.createdBy ?? null,
-    }).returning();
+    }).returning(), 'DB_ERROR');
   }
 
-  async updateGuideline(id: string, data: GuidelineUpdate) {
-    return db.update(guidelinesTable).set({
+  updateGuideline(id: string, data: GuidelineUpdate) {
+    return safeCall(() => db.update(guidelinesTable).set({
       title:     data.title,
       content:   data.content,
       category:  data.category,
       isActive:  data.isActive,
       createdBy: data.createdBy,
       updatedAt: data.updatedAt,
-    }).where(eq(guidelinesTable.id, id)).returning();
+    }).where(eq(guidelinesTable.id, id)).returning(), 'DB_ERROR');
   }
 
-  async deleteGuideline(id: string) {
-    return db.delete(guidelinesTable).where(eq(guidelinesTable.id, id)).returning();
+  deleteGuideline(id: string) {
+    return safeCall(() => db.delete(guidelinesTable).where(eq(guidelinesTable.id, id)).returning(), 'DB_ERROR');
   }
 
-  async getContactSettings() {
-    return db.select().from(contactTable);
+  getContactSettings() {
+    return safeCall(() => db.select().from(contactTable), 'DB_ERROR');
   }
 
-  async upsertContactSettings(data: ContactUpdate) {
-    const existing = await db.select().from(contactTable);
-    if (existing.length === 0) {
-      return db.insert(contactTable).values({ id: 1, ...data }).returning();
-    }
-    return db.update(contactTable).set(data).returning();
+  upsertContactSettings(data: ContactUpdate) {
+    return safeCall(async () => {
+      const existing = await db.select().from(contactTable);
+      if (existing.length === 0) {
+        return await db.insert(contactTable).values({ id: 1, ...data }).returning();
+      }
+      return await db.update(contactTable).set(data).returning();
+    }, 'DB_ERROR');
   }
 
-  async getSystemSettings() {
-    return db.select().from(sysTable);
+  getSystemSettings() {
+    return safeCall(() => db.select().from(sysTable), 'DB_ERROR');
   }
 
-  async upsertSystemSettings(data: SystemUpdate) {
-    const existing = await db.select().from(sysTable);
-    if (existing.length === 0) {
-      return db.insert(sysTable).values({ id: 1, ...data }).returning();
-    }
-    return db.update(sysTable).set(data).returning();
+  upsertSystemSettings(data: SystemUpdate) {
+    return safeCall(async () => {
+      const existing = await db.select().from(sysTable);
+      if (existing.length === 0) {
+        return await db.insert(sysTable).values({ id: 1, ...data }).returning();
+      }
+      return await db.update(sysTable).set(data).returning();
+    }, 'DB_ERROR');
   }
 
-  async findAllFilters() {
-    return db.select().from(filtersTable).orderBy(filtersTable.createdAt);
+  findAllFilters() {
+    return safeCall(() => db.select().from(filtersTable).orderBy(filtersTable.createdAt), 'DB_ERROR');
   }
 
-  async insertFilter(data: FilterInsert) {
-    return db.insert(filtersTable).values({
+  insertFilter(data: FilterInsert) {
+    return safeCall(() => db.insert(filtersTable).values({
       name:       data.name,
       filterType: data.filterType,
       config:     data.config,
       isActive:   data.isActive,
-    }).returning();
+    }).returning(), 'DB_ERROR');
   }
 
-  async updateFilter(id: string, data: FilterUpdate) {
-    return db.update(filtersTable).set({
+  updateFilter(id: string, data: FilterUpdate) {
+    return safeCall(() => db.update(filtersTable).set({
       name:       data.name,
       filterType: data.filterType,
       config:     data.config,
       isActive:   data.isActive,
       updatedAt:  data.updatedAt,
-    }).where(eq(filtersTable.id, id)).returning();
+    }).where(eq(filtersTable.id, id)).returning(), 'DB_ERROR');
   }
 
-  async deleteFilter(id: string) {
-    return db.delete(filtersTable).where(eq(filtersTable.id, id)).returning();
+  deleteFilter(id: string) {
+    return safeCall(() => db.delete(filtersTable).where(eq(filtersTable.id, id)).returning(), 'DB_ERROR');
   }
 }

@@ -1,6 +1,11 @@
+/**
+ * @module gamification.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { errMsg } from "../hr-v2-error";
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron } from '@nestjs/schedule';
 import { HrV2Events } from '../events/hr-v2-events';
 import { safeCall, Result, AppError } from '@common/result';
@@ -101,29 +106,11 @@ export class GamificationService {
     return this.repo.upsertBadgeCatalogEntry(body);
   }
 
-  @OnEvent(HrV2Events.DAILY_REPORT_SUBMITTED)
-  async onDailyReportSubmitted(payload: { employeeId: number }) {
-    return safeCall(async () => {
-      await this.awardPoints(payload.employeeId, 5, 'daily_report', 'Kunlik hisobot topshirildi');
-    });
-  }
-
-  @OnEvent(HrV2Events.DOCUMENT_APPROVED)
-  async onDocumentApproved(payload: { employeeId?: number }) {
-    return safeCall(async () => {
-      if (payload.employeeId) {
-        await this.awardPoints(payload.employeeId, 10, 'document_approved', 'Hujjat tasdiqlandi');
-      }
-    });
-  }
-
-  @OnEvent(HrV2Events.CERTIFICATE_EARNED)
-  async onCertificateEarned(payload: { employeeId: number; certificateName: string }) {
-    return safeCall(async () => {
-      await this.awardPoints(payload.employeeId, 50, 'certificate_earned', `Sertifikat: ${payload.certificateName}`);
-      await this.awardBadge(payload.employeeId, 'LEARNER', undefined, 'O\'quvchi sertifikati oldi');
-    });
-  }
+  // Wave 4 round-4 (PA2-18): the three @OnEvent listeners that previously
+  // lived here (DAILY_REPORT_SUBMITTED / DOCUMENT_APPROVED / CERTIFICATE_EARNED)
+  // have been extracted into canonical @EventsHandler classes in
+  // ./gamification.listeners.ts. Their side-effects (awardPoints / awardBadge)
+  // are unchanged — they delegate back into this service.
 
   @Cron('0 9 1 * *')
   async announceMonthlyChampion() {

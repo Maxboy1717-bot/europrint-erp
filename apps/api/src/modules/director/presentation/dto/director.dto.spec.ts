@@ -1,3 +1,8 @@
+/**
+ * @module director.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 
 import {
   ZnoCreateSchema,

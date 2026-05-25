@@ -202,9 +202,8 @@ export class RoomSnapshotCron {
       if (!recResult.ok) return defaultResult;
 
       const faces = recResult.data.faces ?? [];
-      if (faces.length === 0) return defaultResult;
-
-      const face = faces[0]!;
+      const face = faces[0];
+      if (!face) return defaultResult;
       let anomaly        = false;
       let anomaly_reason: string | undefined;
 

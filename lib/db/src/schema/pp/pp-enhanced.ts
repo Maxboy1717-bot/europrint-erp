@@ -1,6 +1,11 @@
+/**
+ * @module pp-enhanced
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "../numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, type AnyPgColumn, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { departments, unitOfMeasures, users } from "../core-schema";
@@ -14,7 +19,7 @@ import { papkaOrders } from "./pp-papka";
 // Machine Crews (Mashina jamoalari)
 export const machineCrews = pgTable("machine_crews", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id).notNull(),
+  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
   masterId: integer("master_id").notNull(),
   polmasterId: integer("polmaster_id"),
   shogirdId: integer("shogird_id"),
@@ -29,9 +34,9 @@ export type InsertMachineCrew = z.infer<typeof insertMachineCrewSchema>;
 // Setup Checklists (Sozlash oldi cheklistlari)
 export const setupChecklists = pgTable("setup_checklists", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id).notNull(),
-  kitId: varchar("kit_id").references(() => materialKits.id),
-  orderId: varchar("order_id").references(() => papkaOrders.id),
+  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
+  kitId: varchar("kit_id").references(() => materialKits.id, { onDelete: "set null" }),
+  orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
@@ -51,7 +56,7 @@ export type InsertSetupChecklist = z.infer<typeof insertSetupChecklistSchema>;
 // Checklist Items
 export const checklistItems = pgTable("checklist_items", {
   id: serial("id").primaryKey(),
-  checklistId: varchar("checklist_id").references(() => setupChecklists.id).notNull(),
+  checklistId: varchar("checklist_id").references(() => setupChecklists.id, { onDelete: "cascade" }).notNull(),
   category: varchar("category", { length: 30 }).notNull(),
   itemType: varchar("item_type", { length: 50 }).notNull(),
   title: text("title").notNull(),
@@ -72,10 +77,10 @@ export type InsertChecklistItem = z.infer<typeof insertChecklistItemSchema>;
 // Material Consumption (Sarflangan materiallar hisobi)
 export const materialConsumption = pgTable("material_consumption", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id).notNull(),
-  orderId: varchar("order_id").references(() => papkaOrders.id).notNull(),
-  kitId: varchar("kit_id").references(() => materialKits.id),
-  materialId: varchar("material_id").references(() => rawMaterials.id),
+  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
+  orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "cascade" }).notNull(),
+  kitId: varchar("kit_id").references(() => materialKits.id, { onDelete: "set null" }),
+  materialId: varchar("material_id").references(() => rawMaterials.id, { onDelete: "set null" }),
   materialName: text("material_name").notNull(),
   issuedQuantity: numericMoney("issued_quantity").notNull(),
   consumedQuantity: numericMoney("consumed_quantity").notNull(),
@@ -95,8 +100,8 @@ export type InsertMaterialConsumption = z.infer<typeof insertMaterialConsumption
 // Defect Reports (Brak hisobotlari)
 export const defectReports = pgTable("defect_reports", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id).notNull(),
-  orderId: varchar("order_id").references(() => papkaOrders.id),
+  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
+  orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
   quantity: integer("quantity").notNull(),
   defectType: varchar("defect_type", { length: 50 }).notNull(),
   defectCause: varchar("defect_cause", { length: 50 }),
@@ -132,8 +137,8 @@ export type BomTemplate = typeof bomTemplates.$inferSelect;
 // Technology Cards
 export const technologyCards = pgTable("technology_cards", {
   id: serial("id").primaryKey(),
-  productId: varchar("product_id").references(() => products.id),
-  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id),
+  productId: varchar("product_id").references(() => products.id, { onDelete: "set null" }),
+  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
   productType: varchar("product_type", { length: 50 }),
   formatA: integer("format_a"),
   formatB: integer("format_b"),
@@ -158,10 +163,10 @@ export type InsertTechnologyCard = z.infer<typeof insertTechnologyCardSchema>;
 // Material Norms
 export const materialNorms = pgTable("material_norms", {
   id: serial("id").primaryKey(),
-  productId: varchar("product_id").references(() => products.id),
-  technologyCardId: varchar("technology_card_id").references(() => technologyCards.id),
-  materialCategoryId: varchar("material_category_id").references(() => materialCategories.id),
-  materialId: varchar("material_id").references(() => rawMaterials.id),
+  productId: varchar("product_id").references(() => products.id, { onDelete: "set null" }),
+  technologyCardId: varchar("technology_card_id").references(() => technologyCards.id, { onDelete: "set null" }),
+  materialCategoryId: varchar("material_category_id").references(() => materialCategories.id, { onDelete: "set null" }),
+  materialId: varchar("material_id").references(() => rawMaterials.id, { onDelete: "set null" }),
   materialName: text("material_name").notNull(),
   normQuantityPer1000: numericMoney("norm_quantity_per_1000").notNull(),
   unit: varchar("unit", { length: 20 }).notNull(),
@@ -185,9 +190,9 @@ export type InsertMaterialNorm = z.infer<typeof insertMaterialNormSchema>;
 // Order Production History
 export const orderProductionHistory = pgTable("order_production_history", {
   id: serial("id").primaryKey(),
-  orderId: varchar("order_id").references(() => papkaOrders.id).notNull(),
-  sessionId: varchar("session_id").references(() => productionSessions.id),
-  equipmentId: varchar("equipment_id").references(() => equipment.id),
+  orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "cascade" }).notNull(),
+  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "set null" }),
+  equipmentId: varchar("equipment_id").references(() => equipment.id, { onDelete: "set null" }),
   equipmentName: text("equipment_name"),
   masterId: integer("master_id"),
   masterName: text("master_name"),
@@ -230,7 +235,7 @@ export const assetInventory = pgTable("asset_inventory", {
   assetNameRu: text("asset_name_ru"),
   assetType: varchar("asset_type", { length: 30 }).notNull(),
   location: text("location"),
-  departmentId: integer("department_id").references(() => departments.id),
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
   responsibleId: integer("responsible_id"),
   purchaseDate: varchar("purchase_date", { length: 10 }),
   purchaseValue: numericMoney("purchase_value").notNull(),
@@ -245,7 +250,12 @@ export const assetInventory = pgTable("asset_inventory", {
   serialNumber: varchar("serial_number", { length: 100 }),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("asset_inventory_type_chk", sql`${t.assetType} IN ('equipment','vehicle','building','furniture','it_equipment')`),
+  check("asset_inventory_depreciation_chk", sql`${t.depreciationMethod} IS NULL OR ${t.depreciationMethod} IN ('straight_line','declining_balance')`),
+  check("asset_inventory_condition_chk", sql`${t.condition} IS NULL OR ${t.condition} IN ('excellent','good','fair','poor')`),
+  check("asset_inventory_status_chk", sql`${t.status} IN ('active','disposed','under_repair')`),
+]);
 
 export const insertAssetInventorySchema = createInsertSchema(assetInventory, {
   assetCode: z.string().min(3, "Aktiv kodi kamida 3 ta belgidan iborat bo'lishi kerak"),
@@ -270,7 +280,7 @@ export const productCategories = pgTable("product_categories", {
   description: text("description"),
   descriptionRu: text("description_ru"),
   imageUrl: text("image_url"),
-  parentId: varchar("parent_id").references((): AnyPgColumn => productCategories.id),
+  parentId: varchar("parent_id").references((): AnyPgColumn => productCategories.id, { onDelete: "set null" }),
   sortOrder: integer("sort_order").default(0),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -288,8 +298,8 @@ export const productMasters = pgTable("product_masters", {
   productNameRu: text("product_name_ru"),
   productType: varchar("product_type", { length: 30 }).notNull(),
   categoryCode: varchar("category_code", { length: 50 }),
-  unitOfMeasureId: varchar("unit_of_measure_id").references(() => unitOfMeasures.id),
-  defaultWarehouseId: varchar("default_warehouse_id").references(() => warehouses.id),
+  unitOfMeasureId: varchar("unit_of_measure_id").references(() => unitOfMeasures.id, { onDelete: "set null" }),
+  defaultWarehouseId: varchar("default_warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   minimumStock: numericMoney("minimum_stock").default(0),
   maximumStock: numericMoney("maximum_stock"),
   reorderPoint: numericMoney("reorder_point"),
@@ -302,7 +312,7 @@ export const productMasters = pgTable("product_masters", {
   isBatchManaged: boolean("is_batch_managed").default(false),
   isSerialManaged: boolean("is_serial_managed").default(false),
   isActive: boolean("is_active").notNull().default(true),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
 });
@@ -314,7 +324,7 @@ export type InsertProductMaster = z.infer<typeof insertProductMasterSchema>;
 // Order Approvals (Buyurtma tasdiqlash tarixi)
 export const orderApprovals = pgTable("order_approvals", {
   id: serial("id").primaryKey(),
-  orderId: varchar("order_id").notNull().references(() => papkaOrders.id),
+  orderId: varchar("order_id").notNull().references(() => papkaOrders.id, { onDelete: "cascade" }),
   stage: varchar("stage", { length: 30 }).notNull(),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   approvedBy: integer("approved_by"),
@@ -325,7 +335,7 @@ export const orderApprovals = pgTable("order_approvals", {
   bomApproved: boolean("bom_approved"),
   routingApproved: boolean("routing_approved"),
   techCardApproved: boolean("tech_card_approved"),
-  qcTestId: varchar("qc_test_id").references(() => qcMaterialTests.id),
+  qcTestId: varchar("qc_test_id").references(() => qcMaterialTests.id, { onDelete: "set null" }),
   materialApproved: boolean("material_approved"),
   advancePercentage: numericMoney("advance_percentage"),
   advanceAmount: numericMoney("advance_amount"),
@@ -335,7 +345,10 @@ export const orderApprovals = pgTable("order_approvals", {
   rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
-});
+}, (t) => [
+  check("order_approvals_stage_chk", sql`${t.stage} IN ('design','technical','qc','finance')`),
+  check("order_approvals_status_chk", sql`${t.status} IN ('pending','approved','rejected','revision_requested')`),
+]);
 
 export const insertOrderApprovalSchema = createInsertSchema(orderApprovals, {
   stage: z.enum(["design", "technical", "qc", "finance"]),
@@ -366,7 +379,9 @@ export const wasteRecords = pgTable("waste_records", {
   isRecyclable: boolean("is_recyclable").default(false),
   recycledQuantity: numericMoney("recycled_quantity").default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("waste_records_waste_type_chk", sql`${t.wasteType} IN ('setup','trim','defect','overrun','material_defect','other')`),
+]);
 
 export const wasteTargets = pgTable("waste_targets", {
   id: serial("id").primaryKey(),
@@ -378,7 +393,9 @@ export const wasteTargets = pgTable("waste_targets", {
   period: varchar("period", { length: 10 }).notNull(),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("waste_targets_target_type_chk", sql`${t.targetType} IN ('daily','weekly','monthly')`),
+]);
 
 export const insertWasteRecordSchema = createInsertSchema(wasteRecords, {
   wasteType: z.enum(["setup", "trim", "defect", "overrun", "material_defect", "other"]),
@@ -445,7 +462,7 @@ export const aiProductionPlans = pgTable("ai_production_plans", {
 
 export const aiPlanningDecisions = pgTable("ai_planning_decisions", {
   id: serial("id").primaryKey(),
-  planId: varchar("plan_id").notNull().references(() => aiProductionPlans.id),
+  planId: varchar("plan_id").notNull().references(() => aiProductionPlans.id, { onDelete: "cascade" }),
   decisionType: varchar("decision_type", { length: 30 }).notNull(),
   description: text("description").notNull(),
   confidenceScore: numericMoney("confidence_score").default(0),
@@ -492,7 +509,11 @@ export const equipmentMaintenance = pgTable("equipment_maintenance", {
   cost: numericMoney("cost").default(0),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("equip_maint_type_chk", sql`${t.maintenanceType} IN ('PREVENTIVE','CORRECTIVE','PREDICTIVE','EMERGENCY')`),
+  check("equip_maint_freq_chk", sql`${t.frequency} IS NULL OR ${t.frequency} IN ('DAILY','WEEKLY','MONTHLY','QUARTERLY','SEMI_ANNUAL','ANNUAL')`),
+  check("equip_maint_status_chk", sql`${t.status} IN ('scheduled','in_progress','completed','overdue','cancelled')`),
+]);
 
 export const insertEquipmentMaintenanceSchema = createInsertSchema(equipmentMaintenance, {
   maintenanceType: z.enum(["PREVENTIVE", "CORRECTIVE", "PREDICTIVE", "EMERGENCY"]),
@@ -514,7 +535,7 @@ export const sosAlerts = pgTable("sos_alerts", {
   message: text("message").notNull().default(""),
   status: varchar("status", { length: 20 }).notNull().default("open"),
   resolvedAt: timestamp("resolved_at"),
-  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolvedBy: integer("resolved_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -528,7 +549,7 @@ export type InsertSosAlert = z.infer<typeof insertSosAlertSchema>;
 
 export const assetMaintenanceRecords = pgTable("asset_maintenance_records", {
   id: serial("id").primaryKey(),
-  assetId: integer("asset_id").notNull().references(() => assetInventory.id),
+  assetId: integer("asset_id").notNull().references(() => assetInventory.id, { onDelete: "cascade" }),
   maintenanceType: varchar("maintenance_type", { length: 30 }).notNull().default("preventive"),
   scheduledDate: varchar("scheduled_date", { length: 10 }),
   completedDate: varchar("completed_date", { length: 10 }),
@@ -540,21 +561,13 @@ export const assetMaintenanceRecords = pgTable("asset_maintenance_records", {
   notes: text("notes"),
   nextMaintenanceDate: varchar("next_maintenance_date", { length: 10 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("asset_maint_type_chk", sql`${t.maintenanceType} IN ('preventive','corrective','predictive','emergency')`),
+  check("asset_maint_status_chk", sql`${t.status} IN ('scheduled','in_progress','completed','cancelled')`),
+]);
 
-export const assetDisposals = pgTable("asset_disposals", {
-  id: serial("id").primaryKey(),
-  assetId: integer("asset_id").notNull().references(() => assetInventory.id),
-  disposalMethod: varchar("disposal_method", { length: 30 }).notNull().default("write_off"),
-  disposalDate: varchar("disposal_date", { length: 10 }).notNull(),
-  disposalValue: numericMoney("disposal_value").default(0),
-  bookValueAtDisposal: numericMoney("book_value_at_disposal").default(0),
-  gainLoss: numericMoney("gain_loss").default(0),
-  reason: text("reason"),
-  approvedBy: integer("approved_by"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+// assetDisposals — canonical definition lives in ../admin-assets
+export { assetDisposals, insertAssetDisposalSchema, AssetDisposal, InsertAssetDisposal } from "../admin-assets";
 
 export const insertAssetMaintenanceSchema = createInsertSchema(assetMaintenanceRecords, {
   maintenanceType: z.enum(["preventive", "corrective", "predictive", "emergency"]).default("preventive"),
@@ -562,44 +575,14 @@ export const insertAssetMaintenanceSchema = createInsertSchema(assetMaintenanceR
   status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]).default("scheduled"),
 }).omit({ id: true, createdAt: true } as never);
 
-export const insertAssetDisposalSchema = createInsertSchema(assetDisposals, {
-  disposalMethod: z.enum(["write_off", "sale", "donation", "scrap"]).default("write_off"),
-  disposalDate: z.string().min(8, "Sana kerak"),
-  disposalValue: z.number().nonnegative().default(0),
-}).omit({ id: true, createdAt: true } as never);
-
 export type AssetMaintenanceRecord = typeof assetMaintenanceRecords.$inferSelect;
 export type InsertAssetMaintenance = z.infer<typeof insertAssetMaintenanceSchema>;
-export type AssetDisposal = typeof assetDisposals.$inferSelect;
-export type InsertAssetDisposal = z.infer<typeof insertAssetDisposalSchema>;
 
 // ============================================================
-// ASSET TRANSFERS (Asosiy vosita o'tkazish)
+// ASSET TRANSFERS — canonical definition lives in ../admin-assets
 // ============================================================
 
-export const assetTransfers = pgTable("asset_transfers", {
-  id: serial("id").primaryKey(),
-  assetId: integer("asset_id").notNull().references(() => assetInventory.id),
-  fromDepartmentId: integer("from_department_id").references(() => departments.id),
-  toDepartmentId: integer("to_department_id").references(() => departments.id),
-  fromLocation: text("from_location"),
-  toLocation: text("to_location"),
-  transferDate: varchar("transfer_date", { length: 10 }).notNull(),
-  transferredBy: varchar("transferred_by"),
-  receivedBy: varchar("received_by"),
-  reason: text("reason"),
-  status: varchar("status", { length: 20 }).notNull().default("pending"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const insertAssetTransferSchema = createInsertSchema(assetTransfers, {
-  transferDate: z.string().min(8, "Sana kerak"),
-  status: z.enum(["pending", "approved", "completed", "cancelled"]).default("pending"),
-}).omit({ id: true, createdAt: true } as never);
-
-export type AssetTransfer = typeof assetTransfers.$inferSelect;
-export type InsertAssetTransfer = z.infer<typeof insertAssetTransferSchema>;
+export { assetTransfers, insertAssetTransferSchema, AssetTransfer, InsertAssetTransfer } from "../admin-assets";
 
 // ============================================================
 // ASSET INSURANCE (Asosiy vosita sug'urtasi)
@@ -607,7 +590,7 @@ export type InsertAssetTransfer = z.infer<typeof insertAssetTransferSchema>;
 
 export const assetInsurance = pgTable("asset_insurance", {
   id: serial("id").primaryKey(),
-  assetId: integer("asset_id").notNull().references(() => assetInventory.id),
+  assetId: integer("asset_id").notNull().references(() => assetInventory.id, { onDelete: "cascade" }),
   policyNumber: varchar("policy_number", { length: 100 }).notNull(),
   insurerName: text("insurer_name").notNull(),
   coverageType: varchar("coverage_type", { length: 50 }).notNull().default("comprehensive"),
@@ -619,7 +602,10 @@ export const assetInsurance = pgTable("asset_insurance", {
   contactInfo: text("contact_info"),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("asset_insurance_coverage_chk", sql`${t.coverageType} IN ('comprehensive','partial','fire','theft','liability')`),
+  check("asset_insurance_status_chk", sql`${t.status} IN ('active','expired','cancelled')`),
+]);
 
 export const insertAssetInsuranceSchema = createInsertSchema(assetInsurance, {
   policyNumber: z.string().min(1, "Polisi raqami kerak"),

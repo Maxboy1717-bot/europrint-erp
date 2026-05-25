@@ -1,3 +1,8 @@
+/**
+ * @module kanban-types
+ * @description React page component. Route-level UI.
+ */
+
 import { format, isToday, isBefore, isThisWeek, addWeeks, startOfDay, endOfWeek } from "date-fns";
 import { Image, FileVideo, FileText, FileSpreadsheet, File } from "lucide-react";
 import type {
@@ -13,6 +18,7 @@ import type {
   TaskTimeTrack,
 } from "@shared/schema";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface ResultWithFiles extends TaskResult {
   creator?: { id: string; fullName: string };
   files: TaskResultFile[];
@@ -21,7 +27,7 @@ export interface ResultWithFiles extends TaskResult {
 export const T = {
   uz: {
     views: { kanban: "Kanban", list: "Ro'yxat", deadlines: "Muddatlar", myPlan: "Mening rejam", calendar: "Kalendar", gantt: "Gant", dashboard: "Dashboard", allocation: "Resurslar" },
-    flows: { title: "Potoklar", addFlow: "Poток qo'shish", name: "Nomi", type: "Turi", users: "Foydalanuvchilar", roundRobin: "Navbat bilan", leastBusy: "Eng kam bandga", random: "Tasodifiy", noFlows: "Potoklar yo'q", selectUsers: "Foydalanuvchilarni tanlang", assign: "Tayinlash" },
+    flows: { title: tLabel('kanban.kanban-.potoklar', "Potoklar"), addFlow: "Poток qo'shish", name: tLabel('kanban.kanban-.nomi', "Nomi"), type: "Turi", users: "Foydalanuvchilar", roundRobin: "Navbat bilan", leastBusy: "Eng kam bandga", random: "Tasodifiy", noFlows: "Potoklar yo'q", selectUsers: "Foydalanuvchilarni tanlang", assign: "Tayinlash" },
     allocation: { title: "Resurs taqsimoti", employee: "Xodim", today: "Bugun", thisWeek: "Bu hafta", thisMonth: "Bu oy", total: "Jami", noData: "Ma'lumotlar yo'q" },
     create: { task: "Vazifa", project: "Loyiha", template: "Shablon", createNew: "Yaratish" },
     roles: { all: "Barcha rollar", executor: "Men ijrochi", creator: "Men qo'yuvchi sifatida" },
@@ -29,37 +35,39 @@ export const T = {
     columns: { overdue: "Kechikkan", today: "Bugun", thisWeek: "Bu hafta", nextWeek: "Keyingi hafta", noDeadline: "Muddatsiz" },
     priority: { urgent: "Kritik", high: "Yuqori", normal: "O'rtacha", low: "Past" },
     tabs: { main: "Asosiy", checklist: "Chek-list", results: "Natijalar", files: "Fayllar", activity: "Faoliyat" },
-    fields: { title: "Sarlavha", description: "Tavsif", deadline: "Muddat", assignee: "Ijrochi", priority: "Ustuvorlik", tags: "Teglar", project: "Loyiha", observers: "Kuzatuvchilar", coExecutors: "Hamijrochilar" },
+    fields: { title: "Sarlavha", description: tLabel('kanban.kanban-.tavsif', "Tavsif"), deadline: "Muddat", assignee: "Ijrochi", priority: "Ustuvorlik", tags: "Teglar", project: "Loyiha", observers: "Kuzatuvchilar", coExecutors: "Hamijrochilar" },
     table: { taskName: "Vazifa nomi", activity: "Faoliyat", deadline: "Muddat", creator: "Qo'yuvchi", assignee: "Ijrochi", project: "Loyiha", status: "Status" },
     actions: { save: "Saqlash", cancel: "Bekor qilish", delete: "O'chirish", add: "Qo'shish", send: "Yuborish", upload: "Yuklash", start: "Boshlash", stop: "To'xtatish" },
-    notifications: { title: "Bildirishnomalar", markAllRead: "Barchasini o'qilgan", empty: "Bildirishnomalar yo'q", categories: "Kategoriyalar", allCategory: "Hammasi", taskCategory: "Vazifalar", reminderCategory: "Eslatmalar", automationCategory: "Avtomatik", items: "ta" },
+    notifications: { title: tLabel('kanban.kanban-.bildirishnomalar', "Bildirishnomalar"), markAllRead: "Barchasini o'qilgan", empty: "Bildirishnomalar yo'q", categories: "Kategoriyalar", allCategory: "Hammasi", taskCategory: "Vazifalar", reminderCategory: "Eslatmalar", automationCategory: "Avtomatik", items: "ta" },
     robots: { title: "Avtomatlashtirish robotlari", addRobot: "Robot qo'shish", trigger: "Trigger", action: "Harakat", onCreate: "Yaratilganda", onMove: "Ko'chirilganda", onComplete: "Tugallanganda", onDeadline: "Muddat kelganda", moveToColumn: "Ustun ko'chirish", sendNotification: "Bildirishnoma yuborish", assignUser: "Foydalanuvchi tayinlash", addTag: "Teg qo'shish" },
-    templates: { title: "Shablonlar", name: "Shablon nomi", taskTitle: "Vazifa sarlavhasi", search: "Qidirish", empty: "Shablonlar yo'q", createNew: "Yangi shablon", edit: "Tahrirlash", apply: "Qo'llash" },
+    templates: { title: tLabel('kanban.kanban-.shablonlar', "Shablonlar"), name: tLabel('kanban.kanban-.shablonNomi', "Shablon nomi"), taskTitle: "Vazifa sarlavhasi", search: "Qidirish", empty: "Shablonlar yo'q", createNew: "Yangi shablon", edit: "Tahrirlash", apply: "Qo'llash" },
     empty: { selectBoard: "Doska tanlang", createBoard: "Yangi doska yaratish", noTasks: "Vazifalar topilmadi" },
     time: { tracking: "Vaqt kuzatuvi", target: "Maqsad", total: "Jami" },
-    chat: { placeholder: "Xabar yozing... @ bilan eslatish", systemLog: "Tizim logi", mentionHint: "@ belgisi bilan foydalanuvchini eslatish" },
-    board: { newBoard: "Yangi doska", newColumn: "Yangi ustun", newCard: "Yangi vazifa", addCard: "Karta qo'shish" }
+    chat: { placeholder: tLabel('kanban.kanban-.xabarYozingBilanEslatish', "Xabar yozing... @ bilan eslatish"), systemLog: "Tizim logi", mentionHint: "@ belgisi bilan foydalanuvchini eslatish" },
+    board: { newBoard: "Yangi doska", newColumn: "Yangi ustun", newCard: "Yangi vazifa", addCard: "Karta qo'shish" },
+    baskets: { title: "3 Savat Tizimi", incoming: "Kiruvchi savat", pending: "Kutish savati", outgoing: "Chiquvchi savat", moveToPending: "Ishlovga o'tkazish", moveToOutgoing: "Chiqishga o'tkazish", moveToIncoming: "← Kiruvchiga", archive: "Arxivlash", rule24h: "Kiruvchi 24 soatdan ko'p turmasligi kerak", overdueLabel: "Muddati o'tgan", empty: "Bo'sh" }
   },
   ru: {
     views: { kanban: "Канбан", list: "Список", deadlines: "Сроки", myPlan: "Мой план", calendar: "Календарь", gantt: "Гант", dashboard: "Дашборд", allocation: "Ресурсы" },
-    flows: { title: "Потоки", addFlow: "Добавить поток", name: "Название", type: "Тип", users: "Пользователи", roundRobin: "По очереди", leastBusy: "Наименее занятому", random: "Случайно", noFlows: "Нет потоков", selectUsers: "Выберите пользователей", assign: "Назначить" },
-    allocation: { title: "Распределение ресурсов", employee: "Сотрудник", today: "Сегодня", thisWeek: "Эта неделя", thisMonth: "Этот месяц", total: "Всего", noData: "Нет данных" },
+    flows: { title: tLabel('kanban.kanban-.untitled', "Потоки"), addFlow: "Добавить поток", name: tLabel('kanban.kanban-.untitled', "Название"), type: "Тип", users: "Пользователи", roundRobin: "По очереди", leastBusy: "Наименее занятому", random: "Случайно", noFlows: "Нет потоков", selectUsers: "Выберите пользователей", assign: "Назначить" },
+    allocation: { title: tLabel('kanban.kanban-.untitled', "Распределение ресурсов"), employee: "Сотрудник", today: "Сегодня", thisWeek: "Эта неделя", thisMonth: "Этот месяц", total: "Всего", noData: "Нет данных" },
     create: { task: "Задача", project: "Проект", template: "Шаблон", createNew: "Создать" },
     roles: { all: "Все роли", executor: "Я исполнитель", creator: "Я постановщик" },
     filters: { overdue: "Просроченные", newComments: "Новые комментарии", filter: "Фильтр", clear: "Очистить" },
     columns: { overdue: "Просрочено", today: "Сегодня", thisWeek: "На этой неделе", nextWeek: "На следующей неделе", noDeadline: "Без срока" },
     priority: { urgent: "Критичный", high: "Высокий", normal: "Средний", low: "Низкий" },
     tabs: { main: "Основное", checklist: "Чек-лист", results: "Результаты", files: "Файлы", activity: "Активность" },
-    fields: { title: "Заголовок", description: "Описание", deadline: "Срок", assignee: "Исполнитель", priority: "Приоритет", tags: "Теги", project: "Проект", observers: "Наблюдатели", coExecutors: "Соисполнители" },
+    fields: { title: tLabel('kanban.kanban-.untitled', "Заголовок"), description: tLabel('kanban.kanban-.untitled', "Описание"), deadline: "Срок", assignee: "Исполнитель", priority: "Приоритет", tags: "Теги", project: "Проект", observers: "Наблюдатели", coExecutors: "Соисполнители" },
     table: { taskName: "Название задачи", activity: "Активность", deadline: "Срок", creator: "Постановщик", assignee: "Исполнитель", project: "Проект", status: "Статус" },
     actions: { save: "Сохранить", cancel: "Отмена", delete: "Удалить", add: "Добавить", send: "Отправить", upload: "Загрузить", start: "Начать", stop: "Остановить" },
-    notifications: { title: "Уведомления", markAllRead: "Прочитано", empty: "Нет уведомлений", categories: "Категории", allCategory: "Все", taskCategory: "Задачи", reminderCategory: "Напоминания", automationCategory: "Автоматика", items: "шт" },
-    robots: { title: "Роботы автоматизации", addRobot: "Добавить робота", trigger: "Триггер", action: "Действие", onCreate: "При создании", onMove: "При перемещении", onComplete: "При завершении", onDeadline: "При наступлении срока", moveToColumn: "Переместить в колонку", sendNotification: "Отправить уведомление", assignUser: "Назначить пользователя", addTag: "Добавить тег" },
-    templates: { title: "Шаблоны", name: "Название шаблона", taskTitle: "Заголовок задачи", search: "Поиск", empty: "Нет шаблонов", createNew: "Новый шаблон", edit: "Редактировать", apply: "Применить" },
+    notifications: { title: tLabel('kanban.kanban-.untitled', "Уведомления"), markAllRead: "Прочитано", empty: "Нет уведомлений", categories: "Категории", allCategory: "Все", taskCategory: "Задачи", reminderCategory: "Напоминания", automationCategory: "Автоматика", items: "шт" },
+    robots: { title: tLabel('kanban.kanban-.untitled', "Роботы автоматизации"), addRobot: "Добавить робота", trigger: "Триггер", action: "Действие", onCreate: "При создании", onMove: "При перемещении", onComplete: "При завершении", onDeadline: "При наступлении срока", moveToColumn: "Переместить в колонку", sendNotification: "Отправить уведомление", assignUser: "Назначить пользователя", addTag: "Добавить тег" },
+    templates: { title: tLabel('kanban.kanban-.untitled', "Шаблоны"), name: tLabel('kanban.kanban-.untitled', "Название шаблона"), taskTitle: "Заголовок задачи", search: "Поиск", empty: "Нет шаблонов", createNew: "Новый шаблон", edit: "Редактировать", apply: "Применить" },
     empty: { selectBoard: "Выберите доску", createBoard: "Создать новую доску", noTasks: "Задачи не найдены" },
     time: { tracking: "Учёт времени", target: "Цель", total: "Всего" },
-    chat: { placeholder: "Напишите сообщение... @ для упоминания", systemLog: "Системный лог", mentionHint: "Используйте @ для упоминания пользователей" },
-    board: { newBoard: "Новая доска", newColumn: "Новая колонка", newCard: "Новая задача", addCard: "Добавить карточку" }
+    chat: { placeholder: tLabel('kanban.kanban-.untitled', "Напишите сообщение... @ для упоминания"), systemLog: "Системный лог", mentionHint: "Используйте @ для упоминания пользователей" },
+    board: { newBoard: "Новая доска", newColumn: "Новая колонка", newCard: "Новая задача", addCard: "Добавить карточку" },
+    baskets: { title: tLabel('kanban.kanban-.3', "Система 3-х корзин"), incoming: "Входящая корзина", pending: "Корзина ожидания", outgoing: "Исходящая корзина", moveToPending: "В обработку", moveToOutgoing: "В исходящую", moveToIncoming: "← Входящая", archive: "В архив", rule24h: "Входящие не должны оставаться более 24 часов", overdueLabel: "Просрочено", empty: "Пусто" }
   }
 };
 
@@ -230,11 +238,11 @@ export const PRIORITY_CONFIG = {
 };
 
 export const DEADLINE_COLUMNS = {
-  overdue: { color: "bg-red-50 dark:bg-red-950/30", headerBg: "bg-gradient-to-r from-red-500 to-red-600", headerText: "text-white" },
-  today: { color: "bg-lime-50 dark:bg-lime-950/30", headerBg: "bg-gradient-to-r from-lime-400 to-yellow-400", headerText: "text-gray-900" },
-  thisWeek: { color: "bg-emerald-50 dark:bg-emerald-950/30", headerBg: "bg-gradient-to-r from-emerald-500 to-emerald-600", headerText: "text-white" },
-  nextWeek: { color: "bg-sky-50 dark:bg-sky-950/30", headerBg: "bg-gradient-to-r from-sky-500 to-blue-500", headerText: "text-white" },
-  noDeadline: { color: "bg-gray-50 dark:bg-gray-900/30", headerBg: "bg-gradient-to-r from-gray-400 to-gray-500", headerText: "text-white" },
+  overdue: { color: "bg-red-50 dark:bg-red-950/30", headerBg: "bg-red-500", headerText: "text-white" },
+  today: { color: "bg-lime-50 dark:bg-lime-950/30", headerBg: "from-lime-400 to-yellow-400", headerText: "text-gray-900" },
+  thisWeek: { color: "bg-emerald-50 dark:bg-emerald-950/30", headerBg: "bg-emerald-500", headerText: "text-white" },
+  nextWeek: { color: "bg-sky-50 dark:bg-sky-950/30", headerBg: "bg-blue-500", headerText: "text-white" },
+  noDeadline: { color: "bg-gray-50 dark:bg-gray-900/30", headerBg: "bg-slate-500", headerText: "text-white" },
 };
 
 export type KanbanTranslations = typeof T.uz;
@@ -321,18 +329,18 @@ export function getDeadlineCategory(dueDate: string | null): keyof typeof DEADLI
 export function getFileIcon(mimeType: string | null, fileName: string) {
   if (!mimeType) {
     const ext = fileName.split('.').pop()?.toLowerCase() || '';
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return { icon: Image, color: "text-green-500" };
-    if (['mp4', 'avi', 'mov', 'webm'].includes(ext)) return { icon: FileVideo, color: "text-purple-500" };
-    if (['pdf'].includes(ext)) return { icon: FileText, color: "text-red-500" };
-    if (['xls', 'xlsx', 'csv'].includes(ext)) return { icon: FileSpreadsheet, color: "text-emerald-500" };
-    if (['doc', 'docx', 'txt'].includes(ext)) return { icon: FileText, color: "text-blue-500" };
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return { icon: Image, color: "text-[var(--ep-green)]" };
+    if (['mp4', 'avi', 'mov', 'webm'].includes(ext)) return { icon: FileVideo, color: "text-[var(--ep-purple)]" };
+    if (['pdf'].includes(ext)) return { icon: FileText, color: "text-[var(--ep-red)]" };
+    if (['xls', 'xlsx', 'csv'].includes(ext)) return { icon: FileSpreadsheet, color: "text-[var(--ep-green)]" };
+    if (['doc', 'docx', 'txt'].includes(ext)) return { icon: FileText, color: "text-[var(--ep-blue)]" };
     return { icon: File, color: "text-muted-foreground" };
   }
-  if (mimeType.startsWith('image/')) return { icon: Image, color: "text-green-500" };
-  if (mimeType.startsWith('video/')) return { icon: FileVideo, color: "text-purple-500" };
-  if (mimeType === 'application/pdf') return { icon: FileText, color: "text-red-500" };
-  if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return { icon: FileSpreadsheet, color: "text-emerald-500" };
-  if (mimeType.includes('document') || mimeType.includes('word')) return { icon: FileText, color: "text-blue-500" };
+  if (mimeType.startsWith('image/')) return { icon: Image, color: "text-[var(--ep-green)]" };
+  if (mimeType.startsWith('video/')) return { icon: FileVideo, color: "text-[var(--ep-purple)]" };
+  if (mimeType === 'application/pdf') return { icon: FileText, color: "text-[var(--ep-red)]" };
+  if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return { icon: FileSpreadsheet, color: "text-[var(--ep-green)]" };
+  if (mimeType.includes('document') || mimeType.includes('word')) return { icon: FileText, color: "text-[var(--ep-blue)]" };
   return { icon: File, color: "text-muted-foreground" };
 }
 

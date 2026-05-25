@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-campaign.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
@@ -66,7 +71,7 @@ export class DrizzleCampaignRepository implements ICampaignRepo {
           throw error;
         }),
     ])
-      .then(([items, total]) => (Ok({ items: (items ?? []).map((row) => this.toDomain(row)), total })))
+      .then(([items, total]) => (Ok({ items: (Array.isArray(items) ? items : []).map((row) => this.toDomain(row)), total })))
       .catch((error) => {
         return Err((error as Error).message);
       });
@@ -79,7 +84,7 @@ export class DrizzleCampaignRepository implements ICampaignRepo {
       .where(eq(campaigns.status, 'active'))
       .orderBy(desc(campaigns.created_at))
       .execute()
-      .then((rows) => (Ok((rows ?? []).map((row) => this.toDomain(row)),)))
+      .then((rows) => (Ok((Array.isArray(rows) ? rows : []).map((row) => this.toDomain(row)),)))
       .catch((error) => {
         this.logger.error('Error finding active campaigns');
         return Err((error as Error).message);

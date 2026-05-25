@@ -1,8 +1,14 @@
+/**
+ * @module QCPanel
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, CheckCircle2, XCircle } from "lucide-react";
 import { BarcodeItem } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface QCProps {
   count: number;
@@ -13,6 +19,7 @@ interface QCProps {
 }
 
 export function QCPanel({ count, items, onApprove, onReject, isPending }: QCProps) {
+  const { t } = useTranslation("common");
   const qcItems = (Array.isArray(items) ? items : []).filter(b => b.status === "QC_HOLD");
 
   return (
@@ -27,7 +34,7 @@ export function QCPanel({ count, items, onApprove, onReject, isPending }: QCProp
       <CardContent>
         {qcItems.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
-            QC kutayotgan material yo'q
+            {t("qcKutayotganMaterialYoq")}
           </p>
         ) : (
           <div className="space-y-2">
@@ -45,7 +52,7 @@ export function QCPanel({ count, items, onApprove, onReject, isPending }: QCProp
                     data-testid={`button-qc-approve-${b.id}`}
                   >
                     <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Tasdiqlash
+                    {t("verify")}
                   </Button>
                   <Button
                     size="sm"

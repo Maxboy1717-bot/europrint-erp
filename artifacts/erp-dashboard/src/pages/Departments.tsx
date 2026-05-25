@@ -1,10 +1,23 @@
-import { useState } from "react";
+/**
+ * @module Departments
+ * @description Bo'limlar boshqaruvi sahifasi.
+ *
+ *   Migrated to the EuroPrint design system:
+ *     - <EPPageHeader> for the breadcrumb + title + actions strip
+ *     - 4-tile <EPKpiCard> row at the top (animated count-up + module hue)
+ *     - <EPCard> for the table frame
+ *     - <EPStatusPill> for Faol / Nofaol chips
+ *     - <EPEmptyState>, <EPErrorState>, <EPSkeletonTable> for the three
+ *       data-state branches
+ *     - Hover-lift on table rows + fade-up stagger on KPI tiles
+ *     - Uzbek sentence-case CTAs ("Yangi bo'lim qo'shish", not "Qo'shish")
+ */
+
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -14,8 +27,16 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Search, Pencil, Trash2, Building2 } from "lucide-react";
+import {
+  Plus, Search, Pencil, Trash2, Building2,
+  CheckCircle2, MinusCircle, Layers,
+} from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  EPPageHeader, EPCard, EPKpiCard, EPStatusPill,
+  EPEmptyState, EPErrorState, EPSkeletonKpiRow, EPSkeletonTable,
+} from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 
 interface Department {
   id: string;
@@ -28,11 +49,17 @@ interface Department {
   is_active: boolean;
   description: string | null;
   color: string | null;
+  created_at?: string;
 }
 
-const EMPTY_FORM = { name: "", name_uz: "", name_ru: "", code: "", description: "", is_active: true };
+const EMPTY_FORM = {
+  name: "", name_uz: "", name_ru: "", code: "", description: "", is_active: true,
+};
 
 export default function Departments() {
+  const { t } = useTranslation("hr");
+  const { t: tCommon } = useTranslation("common");
+  const { t: tNav } = useTranslation("navigation");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -41,35 +68,41 @@ export default function Departments() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data: departments = [], isLoading } = useQuery<Department[]>({
+  const {
+    data: departments = [],
+    isLoading,
+    isError, error,
+    refetch,
+  } = useQuery<Department[]>({
     queryKey: ["/api/departments"],
   });
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof form) => {
-      if (editing) {
-        return apiRequest("PATCH", `/api/departments/${editing.id}`, data);
-      }
+      if (editing) return apiRequest("PATCH", `/api/departments/${editing.id}`, data);
       return apiRequest("POST", "/api/departments", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/departments"] });
-      toast({ title: editing ? "Bo'lim yangilandi" : "Bo'lim qo'shildi" });
+      toast({ title: editing ? t("departments.toastUpdated") : t("departments.toastAdded") });
       setDialogOpen(false);
     },
-    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+    onError: () => toast({ title: tCommon("errorOccurred"), variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/departments/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/departments"] });
-      toast({ title: "Bo'lim o'chirildi" });
+      toast({ title: t("departments.toastDeleted") });
       setDeleteId(null);
     },
     onError: (err: Error) => {
-      const msg = err?.message || "O'chirishda xatolik";
-      toast({ title: msg.includes("employees") ? "Xodimlari bor bo'limni o'chirish mumkin emas" : msg, variant: "destructive" });
+      const msg = err?.message || t("departments.errorDeleting");
+      toast({
+        title: msg.includes("employees") ? t("departments.errorHasEmployees") : msg,
+        variant: "destructive",
+      });
       setDeleteId(null);
     },
   });
@@ -93,143 +126,260 @@ export default function Departments() {
     setDialogOpen(true);
   };
 
-  const filtered = (Array.isArray(departments) ? departments : []).filter((d) => {
-    if (!search) return true;
+  // ─── Derived data ──────────────────────────────────────────────────────
+  const list = Array.isArray(departments) ? departments : [];
+
+  const stats = useMemo(() => {
+    const active = list.filter((d) => d.is_active).length;
+    const inactive = list.length - active;
+    // "Yangi bu oy" — bo'limlar yaratilgan oxirgi 30 kun ichida
+    const month = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const newThisMonth = list.filter(
+      (d) => d.created_at && new Date(d.created_at).getTime() > month,
+    ).length;
+    const levels = new Set(list.map((d) => d.level).filter((l) => l != null)).size;
+    return { total: list.length, active, inactive, newThisMonth, levels };
+  }, [list]);
+
+  const filtered = useMemo(() => {
+    if (!search) return list;
     const s = search.toLowerCase();
-    return (
+    return list.filter((d) =>
       d.name?.toLowerCase().includes(s) ||
       d.name_uz?.toLowerCase().includes(s) ||
       d.name_ru?.toLowerCase().includes(s) ||
-      d.code?.toLowerCase().includes(s)
+      d.code?.toLowerCase().includes(s),
     );
-  });
+  }, [list, search]);
 
+  // ─── Render ────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-full">
-      <PageHeader
-        title="Bo'limlar"
-        description="Kompaniya bo'limlari ro'yxati va boshqaruvi"
-        icon={<Building2 className="h-5 w-5" />}
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <EPPageHeader
+        breadcrumb={<>{tCommon("dashboard")} · {tNav("HR")} · <b className="text-foreground">{t("departments.title")}</b></>}
+        title={t("departments.title")}
+        subtitle={t("departments.subtitle")}
         actions={
-          <Button size="sm" onClick={openAdd}>
-            <Plus className="h-4 w-4 mr-1" /> Qo'shish
+          <Button onClick={openAdd} className="ep-btn-primary-shimmer gap-1.5">
+            <Plus className="h-4 w-4" />
+            {t("departments.addNew")}
           </Button>
         }
       />
 
-      <div className="px-6 py-3 flex items-center gap-3">
+      {/* ── KPI row ───────────────────────────────────────────────────── */}
+      {isLoading ? (
+        <EPSkeletonKpiRow count={4} />
+      ) : !isError && (
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <EPKpiCard
+            label={t("departments.totalDepartments")}
+            value={stats.total}
+            icon={Building2}
+            iconBg="hr"
+            enterDelayMs={0}
+          />
+          <EPKpiCard
+            label={t("departments.active")}
+            value={stats.active}
+            icon={CheckCircle2}
+            iconBg="var(--ep-green)"
+            enterDelayMs={60}
+          />
+          <EPKpiCard
+            label={t("departments.inactive")}
+            value={stats.inactive}
+            icon={MinusCircle}
+            iconBg="var(--ep-muted)"
+            enterDelayMs={120}
+          />
+          <EPKpiCard
+            label={t("departments.levels")}
+            value={stats.levels}
+            icon={Layers}
+            iconBg="var(--ep-blue)"
+            enterDelayMs={180}
+          />
+        </div>
+      )}
+
+      {/* ── Toolbar ───────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4"
+            style={{ color: "hsl(var(--muted-foreground))" }}
+          />
           <Input
-            placeholder="Qidirish..."
+            placeholder={t("departments.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8 h-9"
           />
         </div>
-        <span className="text-sm text-muted-foreground">{filtered.length} ta bo'lim</span>
+        <span className="ep-caption">{t("departments.countSuffix", { n: String(filtered.length) })}</span>
       </div>
 
-      <div className="flex-1 overflow-auto px-6 pb-6">
-        <div className="rounded-lg border bg-card overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[80px]">Kod</TableHead>
-                <TableHead>Nomi (UZ)</TableHead>
-                <TableHead>Nomi (RU)</TableHead>
-                <TableHead className="w-[80px]">Daraja</TableHead>
-                <TableHead className="w-[90px]">Holat</TableHead>
-                <TableHead className="w-[100px] text-right">Amallar</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <TableRow key={`k-${i}`}>
-                    {Array.from({ length: 6 }).map((_, j) => (
-                      <TableCell key={j}><div className="h-4 bg-muted animate-pulse rounded" /></TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
-                    Bo'limlar topilmadi
-                  </TableCell>
+      {/* ── Table / states ────────────────────────────────────────────── */}
+      <div className="flex-1 min-h-0">
+        {isError ? (
+          <EPErrorState onRetry={() => refetch()} />
+        ) : isLoading ? (
+          <EPSkeletonTable rows={6} cols={6} />
+        ) : filtered.length === 0 ? (
+          <EPEmptyState
+            icon={Building2}
+            title={search ? t("departments.emptySearchTitle") : t("departments.emptyTitle")}
+            description={
+              search
+                ? t("departments.emptySearchDesc")
+                : t("departments.emptyDesc")
+            }
+            action={
+              !search && (
+                <Button onClick={openAdd} className="ep-btn-primary-shimmer gap-1.5">
+                  <Plus className="h-4 w-4" />
+                  {t("departments.addNew")}
+                </Button>
+              )
+            }
+          />
+        ) : (
+          <EPCard padding={0} className="overflow-hidden">
+            <div className="ep-table-scroll">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-muted/40 transition-colors">
+                  <TableHead className="w-[80px] ep-eyebrow">{t("departments.code")}</TableHead>
+                  <TableHead className="ep-eyebrow">{t("departments.nameUz")}</TableHead>
+                  <TableHead className="ep-eyebrow">{t("departments.nameRu")}</TableHead>
+                  <TableHead className="w-[90px] ep-eyebrow">{t("departments.level")}</TableHead>
+                  <TableHead className="w-[100px] ep-eyebrow">{t("departments.status")}</TableHead>
+                  <TableHead className="w-[100px] text-right ep-eyebrow">{t("departments.actions")}</TableHead>
                 </TableRow>
-              ) : (
-                (Array.isArray(filtered) ? filtered : []).map((dept) => (
-                  <TableRow key={dept.id} className="group">
-                    <TableCell className="font-mono text-xs text-muted-foreground">{dept.code || "—"}</TableCell>
-                    <TableCell className="font-medium">{dept.name_uz || dept.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{dept.name_ru || "—"}</TableCell>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((dept, i) => (
+                  <TableRow
+                    key={dept.id}
+                    className="group ep-fade-up border-border transition-colors hover:bg-muted/40"
+                    style={{
+                      animationDelay: `${Math.min(i, 20) * 30}ms`,
+                      animationDuration: "0.4s",
+                    }}
+                  >
+                    <TableCell className="ep-mono text-muted-foreground">
+                      {dept.code || "—"}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {dept.name_uz || dept.name}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {dept.name_ru || "—"}
+                    </TableCell>
                     <TableCell>
                       {dept.level != null ? (
-                        <Badge variant="outline" className="text-xs">{dept.level}-daraja</Badge>
+                        <EPStatusPill tone="neutral" hideDot>
+                          {t("departments.levelN", { n: String(dept.level) })}
+                        </EPStatusPill>
                       ) : "—"}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={dept.is_active ? "default" : "secondary"} className="text-xs">
-                        {dept.is_active ? "Faol" : "Nofaol"}
-                      </Badge>
+                      <EPStatusPill tone={dept.is_active ? "success" : "neutral"}>
+                        {dept.is_active ? t("departments.active") : t("departments.inactive")}
+                      </EPStatusPill>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(dept)}>
+                        <Button
+                          variant="ghost" size="icon" className="h-7 w-7"
+                          onClick={() => openEdit(dept)}
+                          aria-label={tCommon("edit")}
+                        >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <Button
-                          variant="ghost" size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          variant="ghost" size="icon" className="h-7 w-7"
+                          style={{ color: "var(--ep-red)" }}
                           onClick={() => setDeleteId(dept.id)}
+                          aria-label={tCommon("delete")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                ))}
+              </TableBody>
+            </Table>
+            </div>
+          </EPCard>
+        )}
       </div>
 
-      {/* Add/Edit Dialog */}
+      {/* ── Add/Edit Dialog ──────────────────────────────────────────── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md p-6">
           <DialogHeader>
-            <DialogTitle>{editing ? "Bo'limni tahrirlash" : "Yangi bo'lim qo'shish"}</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold"> {editing ? t("departments.editTitle") : t("departments.addNew")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label>Nomi (UZ) *</Label>
-                <Input value={form.name_uz} onChange={(e) => setForm((f) => ({ ...f, name_uz: e.target.value, name: e.target.value }))} placeholder="Bo'lim nomi" />
+                <Label className="ep-label">{t("departments.nameUzRequired")}</Label>
+                <Input
+                  value={form.name_uz}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, name_uz: e.target.value, name: e.target.value }))
+                  }
+                  placeholder={t("departments.namePlaceholder")}
+                />
               </div>
               <div className="space-y-1">
-                <Label>Nomi (RU)</Label>
-                <Input value={form.name_ru} onChange={(e) => setForm((f) => ({ ...f, name_ru: e.target.value }))} placeholder="Название отдела" />
+                <Label className="ep-label">{t("departments.nameRu")}</Label>
+                <Input
+                  value={form.name_ru}
+                  onChange={(e) => setForm((f) => ({ ...f, name_ru: e.target.value }))}
+                  placeholder={t("departments.nameRuPlaceholder")}
+                />
               </div>
             </div>
             <div className="space-y-1">
-              <Label>Kod</Label>
-              <Input value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} placeholder="DEPT-001" className="uppercase" />
+              <Label className="ep-label">{t("departments.code")}</Label>
+              <Input
+                value={form.code}
+                onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
+                placeholder="DEPT-001"
+                className="uppercase ep-mono"
+              />
             </div>
             <div className="space-y-1">
-              <Label>Tavsif</Label>
-              <Input value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Qisqacha tavsif" />
+              <Label className="ep-label">{t("departments.descriptionLabel")}</Label>
+              <Input
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder={t("departments.descriptionPlaceholder")}
+              />
             </div>
             <div className="flex items-center gap-2">
-              <Switch checked={form.is_active} onCheckedChange={(v) => setForm((f) => ({ ...f, is_active: v }))} id="dept-active" />
-              <Label htmlFor="dept-active">Faol</Label>
+              <Switch
+                checked={form.is_active}
+                onCheckedChange={(v) => setForm((f) => ({ ...f, is_active: v }))}
+                id="dept-active"
+              />
+              <Label htmlFor="dept-active" className="ep-label">{t("departments.active")}</Label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Bekor qilish</Button>
-            <Button onClick={() => saveMutation.mutate(form)} disabled={!form.name_uz || saveMutation.isPending}>
-              {saveMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              {tCommon("cancel")}
+            </Button>
+            <Button
+              onClick={() => saveMutation.mutate(form)}
+              disabled={!form.name_uz || saveMutation.isPending}
+              className="ep-btn-primary-shimmer"
+            >
+              {saveMutation.isPending ? t("departments.saving") : editing ? t("departments.saveChanges") : tCommon("save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -238,10 +388,10 @@ export default function Departments() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(open) => { if (!open) setDeleteId(null); }}
-        title="Bo'limni o'chirish"
-        description="Ushbu bo'limni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
-        confirmText="O'chirish"
-        cancelText="Bekor qilish"
+        title={t("departments.deleteTitle")}
+        description={t("departments.deleteDesc")}
+        confirmText={tCommon("delete")}
+        cancelText={tCommon("cancel")}
         variant="destructive"
         onConfirm={() => { if (deleteId) deleteMutation.mutate(deleteId); }}
       />

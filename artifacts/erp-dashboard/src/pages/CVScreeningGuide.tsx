@@ -1,3 +1,8 @@
+/**
+ * @module CVScreeningGuide
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import {
   Sheet,
@@ -10,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileSearch, ChevronDown, ChevronUp, CheckCircle2, XCircle, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Material №52: CV Skrining mezonlari ────────────────────────────────────
 const GOOD_CV_SIGNS = [
@@ -46,7 +52,7 @@ const EVALUATION_PARAMS = [
     icon: "🎓",
     color: "bg-blue-50",
     border: "border-blue-200",
-    textColor: "text-blue-700",
+    textColor: "text-[var(--ep-blue)]",
     criteria: [
       { level: "A'lo", desc: "Talab qilingan soha bo'yicha oliy ta'lim, magistratura yoki chet el diplomi" },
       { level: "Yaxshi", desc: "Oliy ta'lim, soha mos emas lekin tajriba bor" },
@@ -60,7 +66,7 @@ const EVALUATION_PARAMS = [
     icon: "💼",
     color: "bg-amber-50",
     border: "border-amber-200",
-    textColor: "text-amber-700",
+    textColor: "text-[var(--ep-yellow)]",
     criteria: [
       { level: "A'lo", desc: "5+ yil mos sohada, yirik kompaniyalarda, lavozim bo'yicha aniq natijalar" },
       { level: "Yaxshi", desc: "3-5 yil tajriba, 1-2 mos ish joyi, o'rtacha natijalar" },
@@ -74,7 +80,7 @@ const EVALUATION_PARAMS = [
     icon: "💰",
     color: "bg-green-50",
     border: "border-green-200",
-    textColor: "text-green-700",
+    textColor: "text-[var(--ep-green)]",
     criteria: [
       { level: "Mos", desc: "Kompaniya budjetiga to'liq mos, diapazon ichida" },
       { level: "Muzokarali", desc: "10-20% yuqori — tajriba asosida muhokama qilish mumkin" },
@@ -88,7 +94,7 @@ const EVALUATION_PARAMS = [
     icon: "⚡",
     color: "bg-purple-50",
     border: "border-purple-200",
-    textColor: "text-purple-700",
+    textColor: "text-[var(--ep-purple)]",
     criteria: [
       { level: "A'lo", desc: "Barcha asosiy ko'nikmalar bor, qo'shimcha sifatida foydali ko'nikmalar ham" },
       { level: "Yaxshi", desc: "Asosiy ko'nikmalar bor, 1-2 ta qo'shimcha ko'nikmani o'rgana oladi" },
@@ -147,6 +153,7 @@ export function CVScreeningGuide({
   candidateName?: string;
   trigger?: React.ReactNode;
 }) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
 
   return (
@@ -156,46 +163,46 @@ export function CVScreeningGuide({
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 text-[10px] text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 gap-1 px-1"
+            className="h-6 text-[10px] text-teal-400 hover:text-teal-300 hover:bg-[var(--ep-cyan)]/90/10 gap-1 px-1"
             data-testid="button-cv-screening-guide"
           >
             <FileSearch className="w-2.5 h-2.5" />
-            CV Mezonlari №52
+            {t("cvMezonlari52")}
           </Button>
         )}
       </SheetTrigger>
       <SheetContent side="right" className="w-[500px] max-w-full overflow-y-auto p-0">
         {/* Header */}
-        <SheetHeader className="px-5 pt-5 pb-3 border-b bg-[#1a1a2e] text-white sticky top-0 z-10">
+        <SheetHeader className="px-5 pt-5 pb-3 border-b from-primary to-amber-500 text-white sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-white flex items-center gap-2 text-base">
-              <FileSearch className="w-4 h-4 text-teal-400" />
-              CV Skrining Ko'rsatmasi
+              <FileSearch className="w-4 h-4 text-white/80" />
+              {t("cvSkriningKorsatmasi")}
             </SheetTitle>
             <Badge className="bg-teal-500/20 text-teal-300 border border-teal-500/40 text-[10px]">
-              Material №52
+              {t("material52")}
             </Badge>
           </div>
           {candidateName && (
             <p className="text-sm text-slate-300 mt-0.5">{candidateName}</p>
           )}
           <p className="text-xs text-slate-400 mt-1">
-            CV ni ko'rib chiqish uchun mezonlar va baholash ko'rsatmalari
+            {t("cvNiKoribChiqishUchun")}
           </p>
         </SheetHeader>
 
         <div className="px-4 py-4 space-y-3">
           {/* Good signs */}
           <CollapsibleSection
-            title="Yaxshi CV belgilari"
+            title={t("yaxshiCvBelgilari")}
             defaultOpen={true}
-            icon={<CheckCircle2 className="w-4 h-4 text-green-500" />}
+            icon={<CheckCircle2 className="w-4 h-4 text-[var(--ep-green)]" />}
             headerClass="bg-green-50 text-green-800"
           >
             <div className="p-3 space-y-1.5">
               {(Array.isArray(GOOD_CV_SIGNS) ? GOOD_CV_SIGNS : []).map((sign, i) => (
                 <div key={`k-${i}`} className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ep-green)] shrink-0 mt-0.5" />
                   <p className="text-xs text-slate-700">{sign}</p>
                 </div>
               ))}
@@ -204,9 +211,9 @@ export function CVScreeningGuide({
 
           {/* Bad signs */}
           <CollapsibleSection
-            title="Xavfli belgilar (qizil bayroqlar)"
+            title={t("xavfliBelgilarQizilBayroqlar")}
             defaultOpen={true}
-            icon={<XCircle className="w-4 h-4 text-red-500" />}
+            icon={<XCircle className="w-4 h-4 text-[var(--ep-red)]" />}
             headerClass="bg-red-50 text-red-800"
           >
             <div className="p-3 space-y-1.5">
@@ -222,7 +229,7 @@ export function CVScreeningGuide({
           {/* Evaluation parameters */}
           <div>
             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">
-              Baholash parametrlari
+              {t("baholashParametrlari")}
             </p>
             <div className="space-y-2">
               {(Array.isArray(EVALUATION_PARAMS) ? EVALUATION_PARAMS : []).map(param => (
@@ -235,10 +242,10 @@ export function CVScreeningGuide({
                   <div className="divide-y divide-slate-100">
                     {(Array.isArray(param.criteria) ? param.criteria : []).map((crit, i) => {
                       const levelColor =
-                        i === 0 ? "text-green-600 bg-green-50" :
-                        i === 1 ? "text-blue-600 bg-blue-50" :
-                        i === 2 ? "text-amber-600 bg-amber-50" :
-                        "text-red-600 bg-red-50";
+                        i === 0 ? "text-[var(--ep-green)] bg-green-50" :
+                        i === 1 ? "text-[var(--ep-blue)] bg-blue-50" :
+                        i === 2 ? "text-[var(--ep-yellow)] bg-amber-50" :
+                        "text-[var(--ep-red)] bg-red-50";
                       return (
                         <div key={`k-${i}`} className="flex items-start gap-3 px-3 py-2">
                           <span className={cn(
@@ -261,7 +268,7 @@ export function CVScreeningGuide({
           <div className="rounded-lg border border-slate-200 overflow-hidden">
             <div className="bg-slate-700 px-3 py-2.5 flex items-center gap-2">
               <Star className="w-4 h-4 text-amber-400" />
-              <span className="text-sm font-semibold text-white">Qaror matritsasi</span>
+              <span className="text-sm font-semibold text-white">{t("qarorMatritsasi")}</span>
             </div>
             <div className="divide-y divide-slate-100 bg-white">
               {(Array.isArray(DECISION_MATRIX) ? DECISION_MATRIX : []).map((row, i) => (
@@ -280,18 +287,18 @@ export function CVScreeningGuide({
 
           {/* Scoring tip */}
           <div className="bg-violet-50 border border-violet-200 rounded-lg p-3">
-            <p className="text-[10px] font-semibold text-violet-700 mb-1.5">Hisoblash usuli:</p>
+            <p className="text-[10px] font-semibold text-[var(--ep-purple)] mb-1.5">{t("hisoblashUsuli")}</p>
             <p className="text-[11px] text-slate-600 leading-relaxed">
               Har bir parametrni 0–25 ball bilan baholang (ta'lim, tajriba, maosh, ko'nikmalar).
               Jami 100 ball. Yakuniy ball asosida yuqoridagi qaror matritsasidan foydalaning.
             </p>
-            <div className="grid grid-cols-2 gap-1.5 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-2">
               {(Array.isArray(EVALUATION_PARAMS) ? EVALUATION_PARAMS : []).map(p => (
                 <div key={p.key} className="flex items-center gap-1.5">
                   <span className="text-base">{p.icon}</span>
                   <div>
                     <p className="text-[10px] font-medium text-slate-700">{p.label}</p>
-                    <p className="text-[9px] text-slate-500">0–25 ball</p>
+                    <p className="text-[9px] text-slate-500">{t("k025Ball")}</p>
                   </div>
                 </div>
               ))}

@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+/**
+ * @module crm-activities.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { CrmActivitiesRepository } from './crm-activities.repository';
+import { CRM_ACTIVITIES_REPO, type ICrmActivitiesRepo } from '../domain/repositories/i-crm-activities.repo';
 
 @Injectable()
 export class CrmActivitiesService {
-  constructor(private readonly repo: CrmActivitiesRepository) {}
+  constructor(@Inject(CRM_ACTIVITIES_REPO) private readonly repo: ICrmActivitiesRepo) {}
 
   async list(lid: number | null, did: number | null, uid: number | null, type: string | undefined, status: string | undefined, lim: number, off: number): Promise<Result<object, AppError>> {
     return this.repo.list(lid, did, uid, type, status, lim, off);

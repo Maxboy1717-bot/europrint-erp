@@ -1,3 +1,8 @@
+/**
+ * @module queries-bots
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import {
   recruitment_bot_attempts, bot_candidates, hr_sick_reports,
@@ -19,13 +24,19 @@ export async function execBotCandidateUpsert(
   name: string, chatId: string, vacancyId: number | null,
   cvFileId: string | null, cvFileName: string | null, answersJson: string, lang: string,
 ): Promise<void> {
+  let screeningAnswers: unknown;
+  try {
+    screeningAnswers = JSON.parse(answersJson);
+  } catch {
+    screeningAnswers = {};
+  }
   await db.insert(bot_candidates).values({
     full_name: name,
     telegram_chat_id: chatId,
     vacancy_id: vacancyId,
     cv_file_id: cvFileId ?? null,
     cv_file_name: cvFileName ?? null,
-    screening_answers: JSON.parse(answersJson),
+    screening_answers: screeningAnswers,
     lang,
     status: 'new',
   }).onConflictDoUpdate({
@@ -94,20 +105,20 @@ export async function execTelegramBotNotificationInsert(employeeId: number, mess
     .limit(1);
   if (userRow) {
     await db.insert(notificationsApp).values({
-      user_id: userRow.id,
+      userId: userRow.id,
       title: 'HR Bildirishnomasi',
       message,
       type: 'info',
-      is_read: false,
+      read: false,
     });
   }
 }
 
 export async function execEmployeeBlockInsert(employeeId: number): Promise<void> {
   await db.insert(employee_blocks).values({
-    employee_id: employeeId,
+    employeeId: employeeId,
     reason: 'Oxirgi ish kuni tugadi — avtomatik bloklash',
-    blocked_by: 1,
-    is_active: true,
+    blockedBy: 1,
+    isActive: true,
   }).onConflictDoNothing();
 }

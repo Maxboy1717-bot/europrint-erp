@@ -1,3 +1,8 @@
+/**
+ * @module chatStore
+ * @description Zustand / state-store slice.
+ */
+
 import { create } from "zustand";
 
 export interface ChatRoom {
@@ -9,6 +14,8 @@ export interface ChatRoom {
   avatarEmoji?: string;
   description?: string;
   isMuted?: boolean;
+  otherUserId?: number | string | null;
+  memberRole?: string;
   unreadCount: number;
   lastMessage?: {
     id: string;
@@ -18,7 +25,6 @@ export interface ChatRoom {
     messageType: string;
   };
   createdAt: string;
-  memberRole?: string;
 }
 
 export interface ChatReaction {
@@ -48,7 +54,8 @@ export interface ChatMessage {
   fileName?: string;
   fileSize?: number;
   mimeType?: string;
-  messageType: "text" | "image" | "file" | "poll" | "system";
+  fileType?: string;
+  messageType: "text" | "image" | "file" | "poll" | "system" | "voice";
   isDeleted: boolean;
   isEdited?: boolean;
   isPinned?: boolean;
@@ -142,7 +149,7 @@ export const useChatStore = create<ChatStore>((set) => ({
 
   setRooms: (rooms) =>
     set((_s) => {
-      const total = (rooms ?? []).reduce((acc, r) => acc + r.unreadCount, 0);
+      const total = (Array.isArray(rooms) ? rooms : []).reduce((acc, r) => acc + r.unreadCount, 0);
       return { rooms, totalUnread: total };
     }),
 
@@ -249,7 +256,7 @@ export const useChatStore = create<ChatStore>((set) => ({
       const rooms = s.rooms?.map((r) =>
         r.id === roomId ? { ...r, unreadCount: 0 } : r
       );
-      const total = (rooms ?? []).reduce((acc, r) => acc + r.unreadCount, 0);
+      const total = (Array.isArray(rooms) ? rooms : []).reduce((acc, r) => acc + r.unreadCount, 0);
       return { rooms, totalUnread: total };
     }),
 

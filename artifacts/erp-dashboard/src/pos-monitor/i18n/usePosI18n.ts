@@ -1,19 +1,30 @@
+/**
+ * @module usePosI18n
+ * @description Source module. See exports for details.
+ */
+
 import { useState, useCallback, useEffect } from "react";
 import uz from "./uz.json";
+import uzCyr from "./uz-cyr.json";
 import ru from "./ru.json";
 
-type Lang = "uz" | "ru";
-type DeepRecord = { [key: string]: string | DeepRecord };
+type Lang = "uz" | "uz-cyr" | "ru";
+type DeepRecord = { [key: string]: string | string[] | DeepRecord };
 
-const TRANSLATIONS: Record<Lang, DeepRecord> = { uz, ru };
+const TRANSLATIONS: Record<Lang, DeepRecord> = {
+  uz: uz as unknown as DeepRecord,
+  'uz-cyr': uzCyr as unknown as DeepRecord,
+  ru: ru as unknown as DeepRecord,
+};
 
 function getNestedValue(obj: DeepRecord, path: string): string {
   const parts = path.split(".");
-  let current: string | DeepRecord = obj;
+  let current: string | string[] | DeepRecord = obj;
   for (const part of parts) {
-    if (typeof current !== "object" || current === null) return path;
-    current = (current as DeepRecord)[part];
-    if (current === undefined) return path;
+    if (typeof current !== "object" || current === null || Array.isArray(current)) return path;
+    const next: string | string[] | DeepRecord | undefined = (current as DeepRecord)[part];
+    if (next === undefined) return path;
+    current = next;
   }
   return typeof current === "string" ? current : path;
 }
@@ -30,7 +41,7 @@ export function setGlobalLang(lang: Lang): void {
 export function getGlobalLang(): Lang {
   try {
     const stored = localStorage.getItem("pos_lang") as Lang;
-    if (stored === "uz" || stored === "ru") { _lang = stored; }
+    if (stored === "uz" || stored === "uz-cyr" || stored === "ru") { _lang = stored; }
   } catch { /* noop */ }
   return _lang;
 }
@@ -45,7 +56,8 @@ export function usePosI18n() {
   }, []);
 
   const toggleLang = useCallback(() => {
-    const next: Lang = lang === "uz" ? "ru" : "uz";
+    // 3-way cycle: uz → uz-cyr → ru → uz
+    const next: Lang = lang === "uz" ? "uz-cyr" : lang === "uz-cyr" ? "ru" : "uz";
     setGlobalLang(next);
   }, [lang]);
 

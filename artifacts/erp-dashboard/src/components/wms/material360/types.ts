@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import type { ComponentType } from "react";
 
 export const fmtNum = (n: unknown) => parseFloat(String(n || 0)) || 0;
@@ -174,6 +179,8 @@ export interface QualityData {
   acceptanceRate?: number;
   totalBatches?: number;
   quarantineBatches?: number;
+  /** On-time delivery rate (0–100). Null when backend has no data yet. */
+  onTimeRate?: number | null;
   recentBatches?: QualityBatch[];
 }
 

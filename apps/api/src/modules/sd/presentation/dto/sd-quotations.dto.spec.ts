@@ -1,3 +1,8 @@
+/**
+ * @module sd-quotations.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 
 import {
   SdCreateQuotationSchema,

@@ -1,31 +1,38 @@
+/**
+ * @module ContractSection
+ * @description React UI component.
+ */
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { FormSectionProps } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function ContractSection({ form }: FormSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="shift"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Smena</FormLabel>
+              <FormLabel>{t("smena")}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger data-testid="select-shift">
-                    <SelectValue placeholder="Smenani tanlang" />
+                  <SelectTrigger data-testid="select-shift" className="h-9">
+                    <SelectValue placeholder={t("smenaniTanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="A">A smena</SelectItem>
-                  <SelectItem value="B">B smena</SelectItem>
-                  <SelectItem value="C">C smena</SelectItem>
-                  <SelectItem value="D">D smena</SelectItem>
-                  <SelectItem value="kunlik">Kunlik</SelectItem>
-                  <SelectItem value="ofis">Ofis</SelectItem>
+                  <SelectItem value="A">{t("aSmena")}</SelectItem>
+                  <SelectItem value="B">{t("bSmena")}</SelectItem>
+                  <SelectItem value="C">{t("cSmena")}</SelectItem>
+                  <SelectItem value="D">{t("dSmena")}</SelectItem>
+                  <SelectItem value="kunlik">{t("daily")}</SelectItem>
+                  <SelectItem value="ofis">{t("ofis")}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -37,18 +44,18 @@ export function ContractSection({ form }: FormSectionProps) {
           name="salaryType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Ish haqi turi</FormLabel>
+              <FormLabel>{t("ishHaqiTuri")}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger data-testid="select-salary-type">
-                    <SelectValue placeholder="Turini tanlang" />
+                  <SelectTrigger data-testid="select-salary-type" className="h-9">
+                    <SelectValue placeholder={t("turiniTanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="fiks">Fiks (Oylik)</SelectItem>
-                  <SelectItem value="baytulmal">Ishbay</SelectItem>
-                  <SelectItem value="smenbay">Smenbay</SelectItem>
-                  <SelectItem value="soatbay">Soatbay</SelectItem>
+                  <SelectItem value="fiks">{t("fiksOylik")}</SelectItem>
+                  <SelectItem value="baytulmal">{t("ishbay")}</SelectItem>
+                  <SelectItem value="smenbay">{t("smenbay")}</SelectItem>
+                  <SelectItem value="soatbay">{t("soatbay")}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -56,15 +63,15 @@ export function ContractSection({ form }: FormSectionProps) {
           )}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="workshopZone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Sex/Hudud</FormLabel>
+              <FormLabel>{t("sexHudud")}</FormLabel>
               <FormControl>
-                <Input placeholder="Masalan: 1-sex" {...field} data-testid="input-workshopZone" />
+                <Input placeholder={t("masalan1Sex")} {...field} data-testid="input-workshopZone" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -75,18 +82,18 @@ export function ContractSection({ form }: FormSectionProps) {
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Holati</FormLabel>
+              <FormLabel>{t("holati")}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger data-testid="select-status">
-                    <SelectValue placeholder="Holatni tanlang" />
+                  <SelectTrigger data-testid="select-status" className="h-9">
+                    <SelectValue placeholder={t("holatniTanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="active">Faol</SelectItem>
-                  <SelectItem value="inactive">Faol emas</SelectItem>
-                  <SelectItem value="on_leave">Ta'tilda</SelectItem>
-                  <SelectItem value="probation">Sinov muddati</SelectItem>
+                  <SelectItem value="active">{t("active")}</SelectItem>
+                  <SelectItem value="inactive">{t("faolEmas")}</SelectItem>
+                  <SelectItem value="on_leave">{t("tatilda")}</SelectItem>
+                  <SelectItem value="probation">{t("sinovMuddati")}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -94,13 +101,13 @@ export function ContractSection({ form }: FormSectionProps) {
           )}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="hireDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Ishga kirgan sana</FormLabel>
+              <FormLabel>{t("ishgaKirganSana")}</FormLabel>
               <FormControl>
                 <Input type="date" {...field} data-testid="input-hireDate" />
               </FormControl>
@@ -113,7 +120,7 @@ export function ContractSection({ form }: FormSectionProps) {
           name="attestationDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Attestatsiya sanasi</FormLabel>
+              <FormLabel>{t("attestatsiyaSanasi")}</FormLabel>
               <FormControl>
                 <Input type="date" {...field} data-testid="input-attestationDate" />
               </FormControl>

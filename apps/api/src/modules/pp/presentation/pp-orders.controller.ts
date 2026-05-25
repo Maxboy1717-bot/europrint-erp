@@ -1,13 +1,21 @@
+/**
+ * @module pp-orders.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, Post, Patch, Body, Param, UseGuards, UseInterceptors, Query, Logger , InternalServerErrorException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from 'src/common/guards/roles.guard';
 import { Roles} from 'src/common/decorators/roles.decorator';
 import { AuditInterceptor} from 'src/common/interceptors/audit.interceptor';
 import { CreateProductionOrderCommand} from '../application/commands/create-production-order.handler';
 import { ReleaseProductionOrderCommand} from '../application/commands/release-production-order.handler';
 import { ProductionPlanQuery} from '../application/queries/production-plan.handler';
+import { GetProductionOrdersQuery } from '../application/queries/get-production-orders.query';
+import { GetProductionOrderByIdQuery } from '../application/queries/get-production-order-by-id.query';
 import { z } from 'zod';
 
 enum Role {
@@ -31,7 +39,8 @@ const ReleaseProductionOrderDtoSchema = z.object({
   reason: z.string().min(5),
 });
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Pp Orders')
 @Controller('pp/orders')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -41,20 +50,46 @@ export class PpOrdersController {
  constructor(private commandBus: CommandBus,
   private queryBus: QueryBus) {}
 
+ @ApiOperation({ summary: 'Get all' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
- async getAll(){
+ async getAll(
+   @Query('status') status?: string,
+   @Query('salesOrderId') salesOrderId?: string,
+   @Query('from') from?: string,
+   @Query('to') to?: string,
+   @Query('page') page?: string,
+   @Query('limit') limit?: string,
+ ) {
   this.logger.log('Getting all production orders');
-  return [];
+  const query = new GetProductionOrdersQuery({
+    status,
+    salesOrderId,
+    from: from ? new Date(from) : undefined,
+    to: to ? new Date(to) : undefined,
+    page: page ? Number(page) : undefined,
+    limit: limit ? Number(limit) : undefined,
+  });
+  const res = await this.queryBus.execute(query);
+  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Get by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
- async getById(@Param('id') id: number){
-  this.logger.log('Getting production order');
-  return {};
+ async getById(@Param('id') id: number) {
+  this.logger.log(`Getting production order id=${id}`);
+  const query = new GetProductionOrderByIdQuery(Number(id));
+  const res = await this.queryBus.execute(query);
+  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Create' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
  @Roles(Role.SUPER_ADMIN)
  async create(
@@ -74,6 +109,9 @@ export class PpOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Release' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/release')
  @Roles(Role.SUPER_ADMIN)
  async release(
@@ -86,6 +124,8 @@ export class PpOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Get production plan' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('/plan/:startDate/:endDate')
  @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
  async getProductionPlan(

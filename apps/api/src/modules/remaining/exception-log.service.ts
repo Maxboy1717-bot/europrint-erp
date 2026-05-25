@@ -1,3 +1,8 @@
+/**
+ * @module exception-log.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -123,5 +128,18 @@ export class ExceptionLogService {
     } catch {
       return { checked: true, expiring: [] };
     }
+  }
+
+  async update(id: string, patch: Record<string, unknown>) {
+    const result = await this.repo.update(id, patch);
+    if (!result.ok) throw new NotFoundException(`Exception log ${id} not found`);
+    if (!result.data) throw new NotFoundException(`Exception log ${id} not found`);
+    return Ok(result.data);
+  }
+
+  async deleteOne(id: string) {
+    const deleted = await this.repo.softDelete(id);
+    if (!deleted.ok || !deleted.data) throw new NotFoundException(`Exception log ${id} not found`);
+    return Ok({ deleted: true, id });
   }
 }

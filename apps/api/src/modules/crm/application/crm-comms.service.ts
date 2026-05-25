@@ -1,12 +1,17 @@
+/**
+ * @module crm-comms.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { CrmCommsRepository } from './crm-comms.repository';
+import { CRM_COMMS_REPO, type ICrmCommsRepo } from '../domain/repositories/i-crm-comms.repo';
 
 @Injectable()
 export class CrmCommsService {
-  constructor(private readonly repo: CrmCommsRepository) {}
+  constructor(@Inject(CRM_COMMS_REPO) private readonly repo: ICrmCommsRepo) {}
 
   async sendEmail(to: string, subject: string, body: string, leadId: number | null, dealId: number | null): Promise<Result<object, AppError>> {
     return safeCall(async () => {

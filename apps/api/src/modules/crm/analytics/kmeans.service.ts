@@ -1,9 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+/**
+ * @module kmeans.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeDiv, safeNum } from '@common/math/math-utils';
 import { Ok, Err, Result, AppError } from '@common/result';
-import { rawSql } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { CRM_ANALYTICS_REPO, ICrmAnalyticsRepo } from './repositories/i-crm-analytics.repo';
 
 export const KMEANS_K = 6;
 const KMEANS_MAX_ITER = 100;
@@ -52,14 +56,9 @@ function assignLabels(centroids: number[][]): SegmentLabel[] {
   });
 }
 
-function kmeansOnce(points: number[][], k: number): { labels: number[]; centroids: number[][]; inertia: number } {
+function initCentroidsPlusPlus(points: number[][], k: number): number[][] {
   const n = points.length;
-  const dim = points[0]?.length ?? 3;
-  const centroids: number[][] = [];
-
-  const first = Math.floor(Math.random() * n);
-  centroids.push([...(points[first] as number[])]);
-
+  const centroids: number[][] = [[...(points[Math.floor(Math.random() * n)] as number[])]];
   for (let c = 1; c < k; c++) {
     const dists = points.map(p => {
       const minD = Math.min(...centroids.map(cent => dist(p, cent)));
@@ -74,30 +73,34 @@ function kmeansOnce(points: number[][], k: number): { labels: number[]; centroid
     }
     centroids.push([...(points[chosen] as number[])]);
   }
+  return centroids;
+}
 
+function recomputeCentroids(points: number[][], labels: number[], centroids: number[][], k: number, dim: number): number[][] {
+  return Array.from({ length: k }, (_, ci) => {
+    const members = points.filter((_, pi) => labels[pi] === ci);
+    if (!members.length) return centroids[ci] as number[];
+    const avg = new Array(dim).fill(0) as number[];
+    for (const p of members) for (let d = 0; d < dim; d++) avg[d] += (p[d] ?? 0) / members.length;
+    return avg;
+  });
+}
+
+function kmeansOnce(points: number[][], k: number): { labels: number[]; centroids: number[][]; inertia: number } {
+  const n = points.length;
+  const dim = points[0]?.length ?? 3;
+  const centroids = initCentroidsPlusPlus(points, k);
   let labels = new Array(n).fill(0) as number[];
   for (let iter = 0; iter < KMEANS_MAX_ITER; iter++) {
     const newLabels = points.map(p =>
-      centroids.reduce(
-        (best, c, ci) => dist(p, c) < best.d ? { d: dist(p, c), i: ci } : best,
-        { d: Infinity, i: 0 },
-      ).i,
+      centroids.reduce((best, c, ci) => dist(p, c) < best.d ? { d: dist(p, c), i: ci } : best, { d: Infinity, i: 0 }).i,
     );
-
-    const newCentroids = Array.from({ length: k }, (_, ci) => {
-      const members = points.filter((_, pi) => newLabels[pi] === ci);
-      if (!members.length) return centroids[ci] as number[];
-      const avg = new Array(dim).fill(0) as number[];
-      for (const p of members) for (let d = 0; d < dim; d++) avg[d] += (p[d] ?? 0) / members.length;
-      return avg;
-    });
-
+    const newCentroids = recomputeCentroids(points, newLabels, centroids, k, dim);
     const shift = centroids.reduce((s, c, ci) => s + dist(c, newCentroids[ci] as number[]) ** 2, 0);
     labels = newLabels;
     for (let ci = 0; ci < k; ci++) centroids[ci] = newCentroids[ci] as number[];
     if (shift < KMEANS_TOL ** 2) break;
   }
-
   const inertia = points.reduce((s, p, i) => s + dist(p, centroids[labels[i] ?? 0] as number[]) ** 2, 0);
   return { labels, centroids, inertia };
 }
@@ -106,24 +109,35 @@ function kmeansOnce(points: number[][], k: number): { labels: number[]; centroid
 export class KMeansService {
   private readonly logger = new Logger(KMeansService.name);
 
+  constructor(
+    @Inject(CRM_ANALYTICS_REPO) private readonly repo: ICrmAnalyticsRepo,
+  ) {}
+
   @Calculation('crm.kmeans.cluster')
   async cluster(points: RfmPoint[]): Promise<Result<ClusterResult[], AppError>> {
     if (!Array.isArray(points) || points.length < KMEANS_K) {
       return Err({ code: 'BAD_REQUEST', message: `K-Means uchun kamida ${KMEANS_K} ta mijoz kerak` });
     }
+    const best = this.runMultiStart(points);
+    const results = this.buildClusterResults(points, best);
+    const persistErr = await this.persistClusterAssignments(results);
+    if (persistErr) return persistErr;
+    return Ok(results);
+  }
 
-    const vecs = (points ?? []).map(p => [safeNum(p.rNorm), safeNum(p.fNorm), safeNum(p.mNorm)]);
+  private runMultiStart(points: RfmPoint[]): { labels: number[]; centroids: number[][]; inertia: number } {
+    const vecs = (Array.isArray(points) ? points : []).map(p => [safeNum(p.rNorm), safeNum(p.fNorm), safeNum(p.mNorm)]);
     let best = { labels: [] as number[], centroids: [] as number[][], inertia: Infinity };
-
     for (let init = 0; init < KMEANS_N_INIT; init++) {
       const result = kmeansOnce(vecs, KMEANS_K);
       if (result.inertia < best.inertia) best = result;
     }
+    return best;
+  }
 
+  private buildClusterResults(points: RfmPoint[], best: { labels: number[]; centroids: number[][] }): ClusterResult[] {
     const segLabels = assignLabels(best.centroids);
-    const calculatedAt = new Date().toISOString();
-
-    const results: ClusterResult[] = (points ?? []).map((p, i) => ({
+    return (Array.isArray(points) ? points : []).map((p, i) => ({
       customerId: p.customerId,
       clusterId: best.labels[i] ?? 0,
       rNorm: p.rNorm,
@@ -131,31 +145,17 @@ export class KMeansService {
       mNorm: p.mNorm,
       segmentLabel: segLabels[best.labels[i] ?? 0] as SegmentLabel,
     }));
+  }
 
-    // Persist cluster assignments to rfm_clusters table (fail-fast: propagate DB errors)
+  private async persistClusterAssignments(results: ClusterResult[]): Promise<Result<ClusterResult[], AppError> | null> {
+    const calculatedAt = new Date().toISOString();
     for (const r of results) {
       try {
-        await rawSql(sql`
-          INSERT INTO rfm_clusters
-            (customer_id, cluster_id, r_norm, f_norm, m_norm, segment_label, calculated_at)
-          VALUES
-            (${r.customerId}, ${r.clusterId}, ${r.rNorm}, ${r.fNorm}, ${r.mNorm}, ${r.segmentLabel}, ${calculatedAt})
-          ON CONFLICT (customer_id, calculated_at)
-          DO UPDATE SET
-            cluster_id    = EXCLUDED.cluster_id,
-            r_norm        = EXCLUDED.r_norm,
-            f_norm        = EXCLUDED.f_norm,
-            m_norm        = EXCLUDED.m_norm,
-            segment_label = EXCLUDED.segment_label
-        `);
+        await this.repo.upsertRfmCluster(r, calculatedAt);
       } catch (e) {
-        return Err({
-          code: 'DB_ERROR',
-          message: `rfm_clusters ga yozishda xato (customerId=${r.customerId}): ${String(e)}`,
-        });
+        return Err({ code: 'DB_ERROR', message: `rfm_clusters ga yozishda xato (customerId=${r.customerId}): ${String(e)}` });
       }
     }
-
-    return Ok(results);
+    return null;
   }
 }

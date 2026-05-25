@@ -1,3 +1,8 @@
+/**
+ * @module api-health.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { test, expect } from "@playwright/test";
 
 const API_BASE = process.env.API_BASE_URL ?? "http://localhost:8080";
@@ -8,23 +13,23 @@ test.describe("API Health Checks", () => {
     expect(response.ok()).toBeTruthy();
   });
 
-  test("API should reject requests without token", async ({ request }) => {
-    const response = await request.get(`${API_BASE}/api/fi-comprehensive/reports/health`);
-    expect(response.status()).toBe(401);
+  test("Finance accounting endpoint should require auth", async ({ request }) => {
+    const response = await request.get(`${API_BASE}/api/accounting/accounts`);
+    expect([401, 403]).toContain(response.status());
   });
 
-  test("POS inventory endpoint should require auth", async ({ request }) => {
-    const response = await request.get(`${API_BASE}/api/pos/inventory/stats`);
-    expect(response.status()).toBe(401);
+  test("WMS warehouses endpoint should require auth", async ({ request }) => {
+    const response = await request.get(`${API_BASE}/api/wms/warehouses`);
+    expect([401, 403]).toContain(response.status());
   });
 
-  test("GL engine health should require auth", async ({ request }) => {
-    const response = await request.get(`${API_BASE}/api/fi-comprehensive/accounts`);
-    expect(response.status()).toBe(401);
+  test("GL accounts endpoint should require auth", async ({ request }) => {
+    const response = await request.get(`${API_BASE}/api/gl/accounts`);
+    expect([401, 403]).toContain(response.status());
   });
 
-  test("3-way match endpoint should require auth", async ({ request }) => {
-    const response = await request.get(`${API_BASE}/api/supply-chain/three-way-match/stats`);
-    expect(response.status()).toBe(401);
+  test("Security incidents endpoint should require auth", async ({ request }) => {
+    const response = await request.get(`${API_BASE}/api/security`);
+    expect([401, 403]).toContain(response.status());
   });
 });

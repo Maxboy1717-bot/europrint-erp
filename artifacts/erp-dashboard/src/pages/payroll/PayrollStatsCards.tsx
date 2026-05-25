@@ -1,3 +1,8 @@
+/**
+ * @module PayrollStatsCards
+ * @description React page component. Route-level UI.
+ */
+
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,6 +28,7 @@ export function PayrollStatsCards({
   contractsLoading,
   calculationsLoading,
 }: PayrollStatsCardsProps) {
+  const { t } = useTranslation("common");
   const { t: tFinance } = useTranslation('finance');
 
   const cards = [
@@ -31,9 +37,9 @@ export function PayrollStatsCards({
       value: activeContracts,
       loading: contractsLoading,
       icon: FileText,
-      gradient: "from-indigo-600 to-indigo-500",
+      gradient: "",
       iconColor: "text-indigo-200",
-      textColor: "text-indigo-100",
+      textColor: "text-white/80",
       skeletonColor: "bg-indigo-400/30",
       testId: "card-active-contracts",
       formatValue: false,
@@ -43,7 +49,7 @@ export function PayrollStatsCards({
       value: pendingCalcs,
       loading: calculationsLoading,
       icon: Clock,
-      gradient: "from-amber-600 to-amber-500",
+      gradient: "",
       iconColor: "text-amber-200",
       textColor: "text-amber-100",
       skeletonColor: "bg-amber-400/30",
@@ -55,9 +61,9 @@ export function PayrollStatsCards({
       value: approvedCalcs,
       loading: calculationsLoading,
       icon: CheckCircle2,
-      gradient: "from-green-600 to-green-500",
+      gradient: "",
       iconColor: "text-green-200",
-      textColor: "text-green-100",
+      textColor: "text-white/80",
       skeletonColor: "bg-green-400/30",
       testId: "card-approved-calcs",
       formatValue: false,
@@ -67,9 +73,9 @@ export function PayrollStatsCards({
       value: totalGross,
       loading: calculationsLoading,
       icon: Wallet,
-      gradient: "from-purple-600 to-purple-500",
+      gradient: "",
       iconColor: "text-purple-200",
-      textColor: "text-purple-100",
+      textColor: "text-white/80",
       skeletonColor: "bg-purple-400/30",
       testId: "card-total-gross",
       formatValue: true,
@@ -78,12 +84,12 @@ export function PayrollStatsCards({
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {(Array.isArray(cards) ? cards : []).map((card) => {
         const Icon = card.icon;
         return (
-          <Card key={card.testId} className={`bg-gradient-to-br ${card.gradient} text-white border-0`} data-testid={card.testId}>
+          <Card key={card.testId} className={`${card.gradient} text-white border-0`} data-testid={card.testId}>
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className={`text-sm font-medium ${card.textColor}`}>{card.title}</CardTitle>
               <Icon className={`h-5 w-5 ${card.iconColor}`} />

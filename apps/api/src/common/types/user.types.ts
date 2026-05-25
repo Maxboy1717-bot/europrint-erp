@@ -1,3 +1,8 @@
+/**
+ * @module user.types
+ * @description Type-only exports (interfaces, type aliases, enums). No runtime code.
+ */
+
 import { Role } from '../constants/roles.constants'
 
 export interface JwtPayload {

@@ -1,9 +1,15 @@
+/**
+ * @module AISummaryCard
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Brain, Sparkles } from "lucide-react";
 import type { AISummary } from "@/components/director/types";
+import { useTranslation } from '@/lib/i18n';
 
 interface AISummaryCardProps {
   ai: AISummary | undefined;
@@ -11,18 +17,19 @@ interface AISummaryCardProps {
 }
 
 export function AISummaryCard({ ai, aiLoad }: AISummaryCardProps) {
+  const { t } = useTranslation("common");
   const [aiExpanded, setAiExpanded] = useState(false);
 
   return (
-    <div className="rounded-xl border bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20 p-5" data-testid="card-ai-summary">
+    <div className="rounded-xl border from-primary/5 to-primary/10 border-primary/20 p-5" data-testid="card-ai-summary">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <Brain className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <p className="text-xs font-bold uppercase tracking-wider text-primary">AI Kunlik Xulosa</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-primary">{t("aiKunlikXulosa")}</p>
               {ai?.aiGenerated && (
                 <Badge variant="secondary" className="text-[9px] px-1.5 py-0">GPT-4o</Badge>
               )}
@@ -33,14 +40,14 @@ export function AISummaryCard({ ai, aiLoad }: AISummaryCardProps) {
               )}
             </div>
             {aiLoad ? (
-              <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div>
+              <div className="space-y-2"><Skeleton className="h-4 w-full rounded-lg" /><Skeleton className="h-4 w-3/4 rounded-lg" /></div>
             ) : (
               <p className="text-sm text-foreground leading-relaxed">{ai?.summary ?? "Ma'lumot yuklanmoqda..."}</p>
             )}
           </div>
         </div>
         {ai?.stats && aiExpanded && (
-          <div className="grid grid-cols-3 gap-3 w-full mt-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full mt-3">
             {([
               { label: "Buyurtmalar", val: ai.stats.totalOrders },
               { label: "Bajarildi", val: ai.stats.completedOrders },

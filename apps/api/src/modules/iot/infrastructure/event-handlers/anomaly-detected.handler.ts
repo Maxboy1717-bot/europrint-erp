@@ -1,3 +1,8 @@
+/**
+ * @module anomaly-detected.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { AnomalyDetectedEvent } from '../../domain/events';

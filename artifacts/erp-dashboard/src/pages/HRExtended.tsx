@@ -1,3 +1,8 @@
+/**
+ * @module HRExtended
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -28,6 +33,8 @@ import {
 } from "@/components/hr/extended/types";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const URL_TAB_MAP: Record<string, string> = {
   "/hr/onboarding": "onboarding",
@@ -52,6 +59,7 @@ const tabMeta: Record<string, TabMeta> = {
 };
 
 export default function HRExtended() {
+  const { t } = useTranslation("common");
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "vacation");
 
@@ -236,12 +244,12 @@ export default function HRExtended() {
   });
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center gap-3">
         <Users className="h-5 w-5 text-primary" />
-        <h1 className="font-semibold text-base">HR — Kengaytirilgan Modullar</h1>
+        <h1 className="font-semibold text-base">{t("hrKengaytirilganModullar")}</h1>
         {pendingLeave.length > 0 && (
-          <Badge variant="secondary" className="ml-2">{pendingLeave.length} so'rov kutmoqda</Badge>
+          <EPStatusPill tone="neutral" className="ml-2">{pendingLeave.length} so'rov kutmoqda</EPStatusPill>
         )}
         <Button variant="ghost" size="sm" onClick={() => refetchLeave()} className="ml-auto">
           <RefreshCw className="h-4 w-4" />
@@ -252,7 +260,7 @@ export default function HRExtended() {
         <div className="flex-1 overflow-auto p-6">
           <ModuleSectionHeader
             moduleName="HR"
-            moduleColor="text-indigo-600"
+            moduleColor="text-[var(--ep-blue)]"
             sectionTitle={meta?.title || ""}
             icon={meta?.icon || (() => null)}
           />

@@ -1,11 +1,12 @@
+/**
+ * @module create-payment-plan.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
-import { db } from '@shared/db';
-import { eq } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/types/result.type';
-import { safeCall } from '@common/types/result.type';
-import { IOrderRepo, ORDER_WF_REPO } from '../../infrastructure/repositories/i-order.repo';
-import { owPaymentPlanEntries } from '@shared/db';
+import { IOrderRepo, ORDER_WF_REPO, PaymentPlanEntryRow } from '../../infrastructure/repositories/i-order.repo';
 
 const MAX_ENTRIES = 10;
 const PCT_TOTAL   = 100;
@@ -43,7 +44,7 @@ export class CreatePaymentPlanHandler implements ICommandHandler<CreatePaymentPl
       return Err(AppErr('VALIDATION', `Maksimum ${MAX_ENTRIES} ta entry ruxsat etiladi`));
     }
 
-    const totalPct = (command.entries ?? []).reduce((s, e) => s + e.percent, 0);
+    const totalPct = (Array.isArray(command.entries) ? command.entries : []).reduce((s, e) => s + e.percent, 0);
     if (Math.abs(totalPct - PCT_TOTAL) > 0.01) {
       return Err(AppErr('VALIDATION', `Foizlar yig'indisi 100 bo'lishi kerak, hozir: ${totalPct}`));
     }
@@ -54,13 +55,7 @@ export class CreatePaymentPlanHandler implements ICommandHandler<CreatePaymentPl
 
     const order = found.data;
 
-    const deleteResult = await safeCall(
-      () => db.delete(owPaymentPlanEntries).where(eq(owPaymentPlanEntries.orderId, command.orderId)),
-      'DB_ERROR',
-    );
-    if (!deleteResult.ok) return Err(deleteResult.error);
-
-    const rows = (command.entries ?? []).map((e) => ({
+    const rows: PaymentPlanEntryRow[] = (Array.isArray(command.entries) ? command.entries : []).map((e) => ({
       orderId:      command.orderId,
       sequence:     e.sequence,
       dueType:      e.dueType,
@@ -70,11 +65,8 @@ export class CreatePaymentPlanHandler implements ICommandHandler<CreatePaymentPl
       status:       'PENDING' as const,
     }));
 
-    const insertResult = await safeCall(
-      () => db.insert(owPaymentPlanEntries).values(rows),
-      'DB_ERROR',
-    );
-    if (!insertResult.ok) return Err(insertResult.error);
+    const replaceResult = await this.repo.replacePaymentPlanEntries(command.orderId, rows);
+    if (!replaceResult.ok) return Err(replaceResult.error);
 
     this.logger.log({ msg: 'To\'lov rejasi yaratildi', orderId: command.orderId, count: rows.length });
     return Ok({ count: rows.length });

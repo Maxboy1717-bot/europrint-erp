@@ -1,24 +1,24 @@
-import { useState, useMemo } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+/**
+ * @module useKanbanBoard
+ * @description Top-level kanban board hook. Composes state (useKanbanBoard.state),
+ *   mutations (useKanbanBoard.mutations) and drag handlers (useKanbanBoard.drag)
+ *   into the single API consumed by KanbanBoardView. Split to respect the
+ *   300-line file budget.
+ */
+
+import { useReducer, useMemo, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import {
-  format, isBefore, startOfDay, endOfWeek, addWeeks,
-} from "date-fns";
-import {
-  sortableKeyboardCoordinates,
-} from "@dnd-kit/sortable";
+import { isBefore, startOfDay } from "date-fns";
 import {
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
 } from "@dnd-kit/core";
-import {
-  getDeadlineCategory,
-} from "@/pages/kanban/kanban-types";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { getDeadlineCategory } from "@/pages/kanban/kanban-types";
+import { getProp } from "@/pages/kanban/kanban-utils";
 import {
   KanbanBoardType,
   Employee,
@@ -31,44 +31,28 @@ import {
   DEADLINE_COLUMNS,
 } from "@/components/kanban/types";
 
+import { initialKanbanState, kanbanReducer } from "./useKanbanBoard.state";
+import { useKanbanMutations } from "./useKanbanBoard.mutations";
+import { buildDragHandlers } from "./useKanbanBoard.drag";
+
 export function useKanbanBoard() {
   const { toast } = useToast();
-  const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("kanban");
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
-  const [activeCardId, setActiveCardId] = useState<string | null>(null);
-  const [showEditCard, setShowEditCard] = useState<CardWithOwner | null>(null);
-  const [showCreateBoard, setShowCreateBoard] = useState(false);
-  const [showAddColumn, setShowAddColumn] = useState(false);
-  const [showQuickTask, setShowQuickTask] = useState(false);
-  const [showRobots, setShowRobots] = useState(false);
-  const [showFlows, setShowFlows] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
-  const [showReports, setShowReports] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [newBoardName, setNewBoardName] = useState("");
-  const [newColumnName, setNewColumnName] = useState("");
-  const [quickTaskTitle, setQuickTaskTitle] = useState("");
-  const [quickTaskType, setQuickTaskType] = useState<"task" | "project" | "template">("task");
-  const [filters, setFilters] = useState<FilterState>({
-    search: "",
-    columnId: null,
-    priority: null,
-    assigneeId: null,
-    overdue: false,
-    hasNewComments: false,
-    tagId: null,
-    tagName: null,
-  });
+  const [state, dispatch] = useReducer(kanbanReducer, initialKanbanState);
+
+  const {
+    selectedBoardId, viewMode, roleFilter, activeCardId, showEditCard,
+    showCreateBoard, showAddColumn, showQuickTask, showRobots, showFlows,
+    showTemplates, showReports, showNotifications,
+    newBoardName, newColumnName, quickTaskTitle, quickTaskType, filters,
+  } = state;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const { data: boards = [], isLoading: boardsLoading, isError: boardsError, refetch: refetchBoards } = useQuery<KanbanBoardType[]>({
-    queryKey: ["/api/kanban/boards"],
-  });
+  const { data: boards = [], isLoading: boardsLoading, isError: boardsError, refetch: refetchBoards } =
+    useQuery<KanbanBoardType[]>({ queryKey: ["/api/kanban/boards"] });
 
   const { data: boardData, isLoading: boardLoading } = useQuery<BoardWithData>({
     queryKey: ["/api/kanban/boards", selectedBoardId],
@@ -77,104 +61,53 @@ export function useKanbanBoard() {
 
   const { data: employees = [] } = useQuery<Employee[]>({
     queryKey: ["/api/kanban/employees"],
+    select: (data) =>
+      (Array.isArray(data) ? data : []).map((emp) => ({
+        id: String(getProp<string>(emp, "id") ?? ""),
+        fullName: String(getProp<string>(emp, "fullName", "full_name") ?? "Noma'lum"),
+        profileImageUrl: getProp<string | null>(emp, "profileImageUrl", "profile_image_url") ?? null,
+      } satisfies Employee)),
   });
 
   const { data: templates = [] } = useQuery<KanbanTemplate[]>({
     queryKey: ["/api/kanban/templates"],
-    queryFn: async () => {
-      const res = await fetch("/api/kanban/templates", { credentials: "include" });
-      if (!res.ok) return [];
-      return res.json();
-    },
     select: (data) => data || [],
   });
 
   const { data: unreadCountData } = useQuery<{ unreadCount: number }>({
     queryKey: ["/api/kanban/notifications/unread-count"],
-    queryFn: async () => {
-      const res = await fetch("/api/kanban/notifications/unread-count", { credentials: "include" });
-      if (!res.ok) return { unreadCount: 0 };
-      return res.json();
-    },
   });
   const unreadCount = unreadCountData?.unreadCount ?? 0;
 
-  const createBoardMutation = useMutation({
-    mutationFn: async (data: { name: string; type: string }) => {
-      const res = await apiRequest("POST", "/api/kanban/boards", data);
-      return res;
-    },
-    onSuccess: (newBoard) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/kanban/boards"] });
-      setSelectedBoardId(newBoard.id);
-      setShowCreateBoard(false);
-      setNewBoardName("");
-      toast({ title: "Doska yaratildi" });
-    },
-  });
+  const mutations = useKanbanMutations(selectedBoardId, dispatch, toast);
 
-  const createColumnMutation = useMutation({
-    mutationFn: async (data: { name: string; sortOrder: number }) => {
-      await apiRequest("POST", `/api/kanban/boards/${selectedBoardId}/columns`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/kanban/boards", selectedBoardId] });
-      setShowAddColumn(false);
-      setNewColumnName("");
-    },
-  });
-
-  const createCardMutation = useMutation({
-    mutationFn: async (data: { title: string; columnId: string; sortOrder: number; priority: string }) => {
-      await apiRequest("POST", `/api/kanban/boards/${selectedBoardId}/cards`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/kanban/boards", selectedBoardId] });
-      setShowQuickTask(false);
-      setQuickTaskTitle("");
-    },
-  });
-
-  const updateCardMutation = useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; [key: string]: unknown }) => {
-      await apiRequest("PUT", `/api/kanban/cards/${id}`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/kanban/boards", selectedBoardId] });
-    },
-  });
-
-  const deleteCardMutation = useMutation({
-    mutationFn: async (cardId: string) => {
-      await apiRequest("DELETE", `/api/kanban/cards/${cardId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/kanban/boards", selectedBoardId] });
-      setShowEditCard(null);
-    },
-  });
-
-  const moveCardMutation = useMutation({
-    mutationFn: async ({ id, columnId, sortOrder }: { id: string; columnId: string; sortOrder: number }) => {
-      await apiRequest("PUT", `/api/kanban/cards/${id}/move`, { columnId, sortOrder });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/kanban/boards", selectedBoardId] });
-    },
-  });
+  const autoSelectedRef = useRef(false);
+  useEffect(() => {
+    if (boards.length > 0 && !selectedBoardId && !autoSelectedRef.current) {
+      autoSelectedRef.current = true;
+      dispatch({ type: "SET_BOARD_ID", id: String(boards[0].id) });
+    }
+  }, [boards, selectedBoardId]);
 
   const columns = boardData?.columns || [];
   const allCards = boardData?.cards || [];
 
   const filteredCards = useMemo(() => {
     return (Array.isArray(allCards) ? allCards : []).filter((card) => {
-      if (filters.search && !(card.title ?? "").toLowerCase().includes(filters.search.toLowerCase()) &&
-          !card.description?.toLowerCase().includes(filters.search.toLowerCase())) {
+      if (
+        filters.search &&
+        !(card.title ?? "").toLowerCase().includes(filters.search.toLowerCase()) &&
+        !card.description?.toLowerCase().includes(filters.search.toLowerCase())
+      ) {
         return false;
       }
       if (filters.priority && card.priority !== filters.priority) return false;
       if (filters.assigneeId && card.ownerUserId !== filters.assigneeId) return false;
-      if (filters.overdue && (!card.dueDate || !isBefore(new Date(card.dueDate), startOfDay(new Date())))) return false;
+      if (
+        filters.overdue &&
+        (!card.dueDate || !isBefore(new Date(card.dueDate), startOfDay(new Date())))
+      )
+        return false;
       return true;
     });
   }, [allCards, filters]);
@@ -187,115 +120,118 @@ export function useKanbanBoard() {
       nextWeek: [],
       noDeadline: [],
     };
-
     (Array.isArray(filteredCards) ? filteredCards : []).forEach((card) => {
       const category = getDeadlineCategory(card.dueDate ?? null);
       result[category].push(card);
     });
-
     Object.keys(result).forEach((key) => {
       result[key as keyof typeof DEADLINE_COLUMNS].sort((a, b) => a.sortOrder - b.sortOrder);
     });
-
     return result;
   }, [filteredCards]);
 
   const cardsByColumn = useMemo(() => {
     const map: Record<string, CardWithOwner[]> = {};
-    for (const col of columns) map[col.id] = [];
+    for (const col of columns) map[String(col.id)] = [];
     for (const card of filteredCards) {
-      if (map[card.columnId]) map[card.columnId].push(card);
-      else map[card.columnId] = [card];
+      const colId = String(card.columnId ?? getProp<string>(card, "column_id") ?? "");
+      if (!colId || colId === "undefined" || colId === "null") continue;
+      if (map[colId]) map[colId].push(card);
+      else map[colId] = [card];
     }
     return map;
   }, [filteredCards, columns]);
 
-  const activeCard = useMemo(() => (Array.isArray(allCards) ? allCards : []).find((c) => c.id === activeCardId) || null, [allCards, activeCardId]);
+  const activeCard = useMemo(
+    () =>
+      (Array.isArray(allCards) ? allCards : []).find((c) => c.id === activeCardId) || null,
+    [allCards, activeCardId]
+  );
 
   const overdueCount = useMemo(() => {
-    return (Array.isArray(allCards) ? allCards : []).filter((card) => card.dueDate && isBefore(new Date(card.dueDate), startOfDay(new Date()))).length;
+    return (Array.isArray(allCards) ? allCards : []).filter(
+      (card) => card.dueDate && isBefore(new Date(card.dueDate), startOfDay(new Date()))
+    ).length;
   }, [allCards]);
 
   const newCommentsCount = useMemo(() => {
-    return (Array.isArray(allCards) ? allCards : []).filter((card) => (card.commentsCount || 0) > 0).length;
+    return (Array.isArray(allCards) ? allCards : []).filter(
+      (card) => (card.commentsCount || 0) > 0
+    ).length;
   }, [allCards]);
 
-  const hasActiveFilters = !!(filters.search || filters.priority || filters.assigneeId || filters.overdue || filters.hasNewComments || filters.tagId);
+  const hasActiveFilters = !!(
+    filters.search ||
+    filters.priority ||
+    filters.assigneeId ||
+    filters.overdue ||
+    filters.hasNewComments ||
+    filters.tagId
+  );
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    if ((Array.isArray(allCards) ? allCards : []).find((c) => c.id === active.id)) {
-      setActiveCardId(active.id as string);
-    }
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveCardId(null);
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const activeId = active.id as string;
-    const card = (Array.isArray(allCards) ? allCards : []).find((c) => c.id === activeId);
-    if (!card) return;
-
-    const overId = over.id as string;
-    
-    if (overId.startsWith("deadline-")) {
-      const columnKey = overId.replace("deadline-", "") as keyof typeof DEADLINE_COLUMNS;
-      let newDueDate: string | null = null;
-      const today = startOfDay(new Date());
-      switch (columnKey) {
-        case "today": newDueDate = format(today, "yyyy-MM-dd"); break;
-        case "thisWeek": newDueDate = format(endOfWeek(today, { weekStartsOn: 1 }), "yyyy-MM-dd"); break;
-        case "nextWeek": newDueDate = format(endOfWeek(addWeeks(today, 1), { weekStartsOn: 1 }), "yyyy-MM-dd"); break;
-        case "noDeadline": newDueDate = null; break;
-        case "overdue": toast({ title: "Kechikkan ustuniga tashlab bo'lmaydi", variant: "destructive" }); return;
-      }
-      updateCardMutation.mutate({ id: activeId, dueDate: newDueDate });
-      return;
-    }
-
-    const overCard = (Array.isArray(allCards) ? allCards : []).find((c) => c.id === overId);
-    if (overCard) {
-      moveCardMutation.mutate({
-        id: activeId,
-        columnId: overCard.columnId,
-        sortOrder: overCard.sortOrder,
-      });
-    }
-  };
+  const { handleDragStart, handleDragEnd } = buildDragHandlers({
+    allCards,
+    columns,
+    cardsByColumn,
+    dispatch,
+    toast,
+    updateCardMutation: mutations.updateCardMutation,
+    moveCardMutation: mutations.moveCardMutation,
+  });
 
   return {
-    selectedBoardId, setSelectedBoardId,
-    viewMode, setViewMode,
-    roleFilter, setRoleFilter,
-    activeCardId, setActiveCardId,
-    showEditCard, setShowEditCard,
-    showCreateBoard, setShowCreateBoard,
-    showAddColumn, setShowAddColumn,
-    showQuickTask, setShowQuickTask,
-    showRobots, setShowRobots,
-    showFlows, setShowFlows,
-    showTemplates, setShowTemplates,
-    showReports, setShowReports,
-    showNotifications, setShowNotifications,
-    newBoardName, setNewBoardName,
-    newColumnName, setNewColumnName,
-    quickTaskTitle, setQuickTaskTitle,
-    quickTaskType, setQuickTaskType,
-    filters, setFilters,
+    selectedBoardId,
+    setSelectedBoardId: (id: string | number | null) =>
+      dispatch({ type: "SET_BOARD_ID", id: id !== null ? String(id) : null }),
+    viewMode,
+    setViewMode: (mode: ViewMode) => dispatch({ type: "SET_VIEW_MODE", mode }),
+    roleFilter,
+    setRoleFilter: (filter: RoleFilter) => dispatch({ type: "SET_ROLE_FILTER", filter }),
+    activeCardId,
+    setActiveCardId: (id: string | null) => dispatch({ type: "SET_ACTIVE_CARD_ID", id }),
+    showEditCard,
+    setShowEditCard: (card: CardWithOwner | null) => dispatch({ type: "SET_EDIT_CARD", card }),
+    showCreateBoard,
+    setShowCreateBoard: (open: boolean) => dispatch({ type: "SET_SHOW_CREATE_BOARD", open }),
+    showAddColumn,
+    setShowAddColumn: (open: boolean) => dispatch({ type: "SET_SHOW_ADD_COLUMN", open }),
+    showQuickTask,
+    setShowQuickTask: (open: boolean) => dispatch({ type: "SET_SHOW_QUICK_TASK", open }),
+    showRobots,
+    setShowRobots: (open: boolean) => dispatch({ type: "SET_SHOW_ROBOTS", open }),
+    showFlows,
+    setShowFlows: (open: boolean) => dispatch({ type: "SET_SHOW_FLOWS", open }),
+    showTemplates,
+    setShowTemplates: (open: boolean) => dispatch({ type: "SET_SHOW_TEMPLATES", open }),
+    showReports,
+    setShowReports: (open: boolean) => dispatch({ type: "SET_SHOW_REPORTS", open }),
+    showNotifications,
+    setShowNotifications: (open: boolean) => dispatch({ type: "SET_SHOW_NOTIFICATIONS", open }),
+    newBoardName,
+    setNewBoardName: (name: string) => dispatch({ type: "SET_BOARD_NAME", name }),
+    newColumnName,
+    setNewColumnName: (name: string) => dispatch({ type: "SET_COLUMN_NAME", name }),
+    quickTaskTitle,
+    setQuickTaskTitle: (title: string) => dispatch({ type: "SET_QUICK_TASK_TITLE", title }),
+    quickTaskType,
+    setQuickTaskType: (taskType: "task" | "project" | "template") =>
+      dispatch({ type: "SET_QUICK_TASK_TYPE", taskType }),
+    filters,
+    setFilters: (update: FilterState | ((f: FilterState) => FilterState)) => {
+      const next = typeof update === "function" ? update(filters) : update;
+      dispatch({ type: "SET_FILTERS", filters: next });
+    },
     sensors,
-    boards, boardsLoading, boardsError, refetchBoards,
-    boardData, boardLoading,
+    boards,
+    boardsLoading,
+    boardsError,
+    refetchBoards,
+    boardData,
+    boardLoading,
     employees,
     templates,
     unreadCount,
-    createBoardMutation,
-    createColumnMutation,
-    createCardMutation,
-    updateCardMutation,
-    deleteCardMutation,
-    moveCardMutation,
+    ...mutations,
     columns,
     allCards,
     filteredCards,

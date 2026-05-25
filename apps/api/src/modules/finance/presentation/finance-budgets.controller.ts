@@ -1,3 +1,8 @@
+/**
+ * @module finance-budgets.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
@@ -13,9 +18,10 @@ import {
   Query,
   UseGuards,
   UseInterceptors, InternalServerErrorException} from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { assertOk, assertOkOrThrow, throwFromError, unwrapOrWarn } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '@common/guards/roles.guard';
 import { Roles} from '@common/decorators/roles.decorator';
 import { AuditInterceptor} from '@common/interceptors/audit.interceptor';
@@ -31,7 +37,8 @@ import {
  GetBudgetsDtoSchema,
 } from './dto/budget.dto';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Finance Budgets')
 @Controller('finance/budgets')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -41,6 +48,8 @@ export class FinanceBudgetsController {
  constructor(private commandBus: CommandBus,
  private queryBus: QueryBus) {}
 
+ @ApiOperation({ summary: 'Get budgets' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  @Roles('FINANCE_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
  async getBudgets(@Query() query: Record<string, unknown>) {
@@ -49,6 +58,8 @@ export class FinanceBudgetsController {
    return unwrapOrWarn(result, (e) => this.logger.warn(`getBudgets: ${e?.message ?? String(e)}`), { items: [], total: 0 });
  }
 
+ @ApiOperation({ summary: 'Get budget stats' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('stats')
  @Roles('FINANCE_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
  async getBudgetStats(@Query('fiscalYear') fiscalYear: string) {
@@ -58,6 +69,9 @@ export class FinanceBudgetsController {
    return unwrapOrWarn(result, (e) => this.logger.warn(`getBudgetStats: ${e?.message ?? String(e)}`), { totalBudget: 0, totalActual: 0, variance: 0 });
  }
 
+ @ApiOperation({ summary: 'Get budget by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles('FINANCE_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
  async getBudgetById(@Param('id') id: string) {
@@ -67,6 +81,9 @@ export class FinanceBudgetsController {
    return result.data;
  }
 
+ @ApiOperation({ summary: 'Get budget variance' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id/variance')
  @Roles('FINANCE_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
  async getBudgetVariance(@Param('id') budgetId: string) {
@@ -75,9 +92,12 @@ export class FinanceBudgetsController {
    return unwrapOrWarn(result, (e) => this.logger.warn(`getBudgetVariance(${budgetId}): ${e?.message ?? String(e)}`), { items: [], variance: 0 });
  }
 
+ @ApiOperation({ summary: 'Create budget' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
  @Roles('FINANCE_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
- async createBudget(@Body() body: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+ async createBudget(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
 
  const validated = CreateBudgetDtoSchema.parse(body);
 
@@ -100,6 +120,10 @@ export class FinanceBudgetsController {
 
 }
 
+ @ApiOperation({ summary: 'Submit budget for approval' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/submit')
  @Roles('FINANCE_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
  async submitBudgetForApproval(@Param('id') budgetId: string) {
@@ -115,6 +139,10 @@ export class FinanceBudgetsController {
 
 }
 
+ @ApiOperation({ summary: 'Approve budget' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/approve')
  @Roles('SUPER_ADMIN', 'DIRECTOR')
  async approveBudget(@Param('id') budgetId: string, @CurrentUser() user: AuthenticatedUser) {

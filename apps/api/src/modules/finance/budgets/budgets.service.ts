@@ -1,11 +1,20 @@
+/**
+ * @module budgets.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IFinanceBudgetsRepository, FINANCE_BUDGETS_REPO } from './i-finance-budgets.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
 @Injectable()
 export class BudgetsService {
 
-  constructor(@Inject(FINANCE_BUDGETS_REPO) private readonly financeBudgetsRepo: IFinanceBudgetsRepository) {}
+  constructor(
+    @Inject(FINANCE_BUDGETS_REPO) private readonly financeBudgetsRepo: IFinanceBudgetsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -22,7 +31,7 @@ export class BudgetsService {
   async findOne(id: number) {
     const result = await this.financeBudgetsRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Byudjet #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.notFound'));
     return result.data;
   }
 
@@ -44,13 +53,14 @@ export class BudgetsService {
     });}
 
   async approve(id: number){
+    const onlyDraftMsg = await this.i18n.t('errors.onlyDraftBudgetApprovable');
     return safeCall(async () => {
     const budget = await this.findOne(id);
-    if (budget.status !== 'draft') throw new BadRequestException('Faqat draft byudjetni tasdiqlash mumkin');
+    if (budget.status !== 'draft') throw new BadRequestException(onlyDraftMsg);
     const result = await this.financeBudgetsRepo.approve(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
-  
+
     });}
 
   async remove(id: number){

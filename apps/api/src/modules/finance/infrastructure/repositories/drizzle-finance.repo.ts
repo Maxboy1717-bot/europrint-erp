@@ -1,133 +1,70 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+/**
+ * @module drizzle-finance.repo
+ * @description Umbrella facade implementing {@link IFinanceRepo}. After Rule 13/16 split,
+ *              every concern is delegated to a focused sub-repo:
+ *                • Ops/payroll/cash         → {@link FinanceOpsRepo}
+ *                • Invoices/Payments/GL     → {@link FinanceInvoiceRepo}
+ *                • Reports (AR aging, etc.) → {@link FinanceReportRepo}
+ *                • Budgets                  → {@link FinanceBudgetRepo}
+ *                • CFO Config (P0-1)        → {@link FinanceCfoRepo}
+ *                • Planning (P0-2)          → {@link FinancePlanningRepo}
+ *                • Costing/Pricing (P0-2)   → {@link FinanceCostingRepo}
+ *                • Variance analysis (P0-2) → {@link FinanceVarianceRepo}
+ *
+ *              The facade preserves the public IFinanceRepo contract so consumers
+ *              (handlers, listeners, modules) keep working unchanged. See
+ *              ARCHITECTURE_RULES.md Rule 16.
+ */
+
+import { Injectable } from '@nestjs/common';
 import { Result } from '@common/types/result.type';
-import { IFinanceRepo, FinanceRow } from '../../domain/repositories/i-finance.repo';
+import {
+  IFinanceRepo, FinanceRow,
+  CfoConfigRow, BreakEvenInputs, CashflowWeekRaw,
+  FinancialRatiosGl, FinancialRatiosSnapshotInput,
+  StandardCostRecord, StandardCostCalcInputs, StandardCostUpsertInput,
+  PriceTierRow, PriceTierUpsertInput,
+  VarianceOrderInputs, VarianceReportInput,
+} from '../../domain/repositories/i-finance.repo';
 import { FinanceInvoiceRepo } from './drizzle-finance-invoice.repo';
 import { FinanceReportRepo } from './drizzle-finance-report.repo';
 import { FinanceBudgetRepo } from './drizzle-finance-budget.repo';
+import { FinanceOpsRepo } from './drizzle-finance-ops.repo';
+import { FinanceCfoRepo } from './drizzle-finance-cfo.repo';
+import { FinancePlanningRepo } from './drizzle-finance-planning.repo';
+import { FinanceCostingRepo } from './drizzle-finance-costing.repo';
+import { FinanceVarianceRepo } from './drizzle-finance-variance.repo';
 
 @Injectable()
 export class FinanceRepository implements IFinanceRepo {
-  private readonly logger = new Logger(FinanceRepository.name);
-
   constructor(
-    private readonly invoiceRepo: FinanceInvoiceRepo,
-    private readonly reportRepo: FinanceReportRepo,
-    private readonly budgetRepo: FinanceBudgetRepo,
+    private readonly invoiceRepo:  FinanceInvoiceRepo,
+    private readonly reportRepo:   FinanceReportRepo,
+    private readonly budgetRepo:   FinanceBudgetRepo,
+    private readonly opsRepo:      FinanceOpsRepo,
+    private readonly cfoRepo:      FinanceCfoRepo,
+    private readonly planningRepo: FinancePlanningRepo,
+    private readonly costingRepo:  FinanceCostingRepo,
+    private readonly varianceRepo: FinanceVarianceRepo,
   ) {}
 
-  async getSettingValue(settingKey: string): Promise<number> {
-    try {
-      const r = await runQuery<{ value: string }>(sql`SELECT value FROM settings WHERE key = ${settingKey} LIMIT 1`);
-      return r.rows[0]?.value ? parseInt(r.rows[0].value, 10) : 70;
-    } catch (error: unknown) {
-      this.logger.error(`Error fetching setting ${settingKey}: ${(error as Error).message}`);
-      return 70;
-    }
-  }
+  // ── Ops/payroll/cash (handler support) ──────────────────────────────────────
+  getSettingValue(settingKey: string): Promise<number> { return this.opsRepo.getSettingValue(settingKey); }
+  findEmployeeBalance(employeeId: number): Promise<{ baseSalary: number } | null> { return this.opsRepo.findEmployeeBalance(employeeId); }
+  recordAdvance(advance: Parameters<FinanceOpsRepo['recordAdvance']>[0]): Promise<void> { return this.opsRepo.recordAdvance(advance); }
+  recordPayment(payment: Parameters<FinanceOpsRepo['recordPayment']>[0]): Promise<void> { return this.opsRepo.recordPayment(payment); }
+  getWarehouseRentalRate(warehouseId: number): Promise<number> { return this.opsRepo.getWarehouseRentalRate(warehouseId); }
+  recordWarehouseRental(rental: Parameters<FinanceOpsRepo['recordWarehouseRental']>[0]): Promise<number> { return this.opsRepo.recordWarehouseRental(rental); }
+  getAllUnpaidInvoices(): Promise<{ id: number; totalAmount: number; paidAmount: number; dueDate: Date }[]> { return this.opsRepo.getAllUnpaidInvoices(); }
+  getCashBalance(asOfDate: Date): Promise<number> { return this.opsRepo.getCashBalance(asOfDate); }
+  getSalesReceipts(startDate: Date, endDate: Date): Promise<number> { return this.opsRepo.getSalesReceipts(startDate, endDate); }
+  getOtherReceipts(startDate: Date, endDate: Date): Promise<number> { return this.opsRepo.getOtherReceipts(startDate, endDate); }
+  getExpenses(startDate: Date, endDate: Date): Promise<number> { return this.opsRepo.getExpenses(startDate, endDate); }
+  getPayrollDisbursements(startDate: Date, endDate: Date): Promise<number> { return this.opsRepo.getPayrollDisbursements(startDate, endDate); }
+  getOtherDisbursements(startDate: Date, endDate: Date): Promise<number> { return this.opsRepo.getOtherDisbursements(startDate, endDate); }
 
-  async findEmployeeBalance(employeeId: number): Promise<{ baseSalary: number } | null> {
-    try {
-      const r = await runQuery<{ base_salary: string }>(sql`SELECT base_salary FROM employees WHERE id = ${employeeId} LIMIT 1`);
-      if (!r.rows[0]) return null;
-      return { baseSalary: parseFloat(r.rows[0].base_salary ?? '0') };
-    } catch (error: unknown) {
-      this.logger.error(`Error finding employee: ${(error as Error).message}`);
-      throw error;
-    }
-  }
-
-  async recordAdvance(advance: {
-    employeeId: number; amount: number; status: string; approvedBy: number; remarks?: string; approvedAt: Date;
-  }): Promise<void> {
-    this.logger.debug(`Advance recorded - Employee: ${advance.employeeId}, Amount: ${advance.amount}`);
-  }
-
-  async findInvoiceById(invoiceId: string): Promise<Result<Record<string, unknown> | null>> {
-    try {
-      const r = await runQuery<Record<string, unknown>>(sql`SELECT * FROM fi_invoices WHERE id = ${invoiceId} LIMIT 1`);
-      return { ok: true, data: r.rows[0] || null };
-    } catch (error: unknown) {
-      this.logger.error(`Error finding invoice: ${(error as Error).message}`);
-      return { ok: false, error: { code: 'DB_ERROR', message: (error as Error).message } };
-    }
-  }
-
-  async recordPayment(payment: {
-    paymentId: number; invoiceId: number; amount: number; status: string; recordedBy: number; recordedAt: Date;
-  }): Promise<void> {
-    this.logger.debug(`Payment recorded - Payment ID: ${payment.paymentId}`);
-  }
-
-  async getWarehouseRentalRate(warehouseId: number): Promise<number> {
-    try {
-      const r = await runQuery<{ rental_rate_per_m2: string }>(sql`SELECT rental_rate_per_m2 FROM warehouses WHERE id = ${warehouseId} LIMIT 1`);
-      return parseFloat(r.rows[0]?.rental_rate_per_m2 ?? '0');
-    } catch (error: unknown) {
-      this.logger.error(`Error fetching rental rate: ${(error as Error).message}`);
-      return 0;
-    }
-  }
-
-  async recordWarehouseRental(rental: {
-    orderId: number; warehouseId: number; areaM2: number; dailyRate: number; startDate: Date; status: string; startedBy: number;
-  }): Promise<number> {
-    this.logger.debug(`Warehouse rental recorded - Order: ${rental.orderId}`);
-    return 0;
-  }
-
-  async getAllUnpaidInvoices(): Promise<{ id: number; totalAmount: number; paidAmount: number; dueDate: Date }[]> {
-    try {
-      const r = await runQuery<{ id: number; totalAmount: number; paidAmount: number; dueDate: Date }>(sql`SELECT * FROM fi_invoices WHERE status != 'paid'`);
-      return r.rows as { id: number; totalAmount: number; paidAmount: number; dueDate: Date }[];
-    } catch (error: unknown) {
-      this.logger.error(`Error fetching unpaid invoices: ${(error as Error).message}`);
-      throw error;
-    }
-  }
-
-  async getCashBalance(asOfDate: Date): Promise<number> {
-    try {
-      const r = await runQuery<{ balance: string }>(sql`SELECT COALESCE(SUM(total_debit) - SUM(total_credit), 0) AS balance FROM gl_journal_entries WHERE entry_date <= ${asOfDate}`);
-      return parseFloat(r.rows[0]?.balance || '0');
-    } catch (error: unknown) {
-      this.logger.error(`Error fetching cash balance: ${(error as Error).message}`);
-      return 0;
-    }
-  }
-
-  async getSalesReceipts(startDate: Date, endDate: Date): Promise<number> {
-    try {
-      const r = await runQuery<{ total: string }>(sql`SELECT COALESCE(SUM(total_amount), 0) AS total FROM fi_invoices WHERE status = 'paid' AND updated_at BETWEEN ${startDate} AND ${endDate}`);
-      return parseFloat(r.rows[0]?.total || '0');
-    } catch { return 0; }
-  }
-
-  async getOtherReceipts(startDate: Date, endDate: Date): Promise<number> {
-    try {
-      const r = await runQuery<{ total: string }>(sql`SELECT COALESCE(SUM(total_debit), 0) AS total FROM gl_journal_entries WHERE source_type != 'sales' AND entry_date BETWEEN ${startDate} AND ${endDate}`);
-      return parseFloat(r.rows[0]?.total || '0');
-    } catch { return 0; }
-  }
-
-  async getExpenses(startDate: Date, endDate: Date): Promise<number> {
-    try {
-      const r = await runQuery<{ total: string }>(sql`SELECT COALESCE(SUM(total_debit), 0) AS total FROM gl_journal_entries WHERE entry_date BETWEEN ${startDate} AND ${endDate}`);
-      return parseFloat(r.rows[0]?.total || '0');
-    } catch { return 0; }
-  }
-
-  async getPayrollDisbursements(_startDate: Date, _endDate: Date): Promise<number> { return 0; }
-
-  async getOtherDisbursements(startDate: Date, endDate: Date): Promise<number> {
-    try {
-      const r = await runQuery<{ total: string }>(sql`SELECT COALESCE(SUM(total_credit), 0) AS total FROM gl_journal_entries WHERE entry_date BETWEEN ${startDate} AND ${endDate}`);
-      return parseFloat(r.rows[0]?.total || '0');
-    } catch { return 0; }
-  }
-
-  async findInvoiceByIdStr(id: string): Promise<Result<FinanceRow | null>> { return this.invoiceRepo.findInvoiceById(id); }
+  // ── Invoices / Payments / GL ────────────────────────────────────────────────
+  async findInvoiceById(id: string): Promise<Result<FinanceRow | null>> { return this.invoiceRepo.findInvoiceById(id); }
   async findInvoices(f: Parameters<FinanceInvoiceRepo['findInvoices']>[0]): Promise<Result<{ items: FinanceRow[]; total: number }>> { return this.invoiceRepo.findInvoices(f); }
   async findInvoiceBySalesOrderId(sid: string): Promise<Result<FinanceRow | null>> { return this.invoiceRepo.findInvoiceBySalesOrderId(sid); }
   async saveInvoice(inv: FinanceRow): Promise<Result<FinanceRow>> { return this.invoiceRepo.saveInvoice(inv); }
@@ -137,14 +74,44 @@ export class FinanceRepository implements IFinanceRepo {
   async saveGlEntry(entry: FinanceRow): Promise<Result<FinanceRow>> { return this.invoiceRepo.saveGlEntry(entry); }
   async findGlEntries(f: Parameters<FinanceInvoiceRepo['findGlEntries']>[0]): Promise<Result<{ items: FinanceRow[]; total: number }>> { return this.invoiceRepo.findGlEntries(f); }
 
+  // ── Reports ─────────────────────────────────────────────────────────────────
   async getArAging(): Promise<Result<FinanceRow[]>> { return this.reportRepo.getArAging(); }
   async getCashFlow(from: Date, to: Date): Promise<Result<{ inflows: number; outflows: number; netFlow: number; from: Date; to: Date }>> { return this.reportRepo.getCashFlow(from, to); }
   async getAdvanceSummary(): Promise<Result<FinanceRow[]>> { return this.reportRepo.getAdvanceSummary(); }
 
+  // ── Budgets ─────────────────────────────────────────────────────────────────
   async findBudgetById(id: string): Promise<Result<FinanceRow>> { return this.budgetRepo.findBudgetById(id); }
   async findBudgets(f: Parameters<FinanceBudgetRepo['findBudgets']>[0]): Promise<Result<{ items: FinanceRow[]; total: number }>> { return this.budgetRepo.findBudgets(f); }
   async saveBudget(budget: FinanceRow, lines: FinanceRow[]): Promise<Result<FinanceRow>> { return this.budgetRepo.saveBudget(budget, lines); }
   async updateBudgetStatus(id: string, status: string): Promise<Result<FinanceRow>> { return this.budgetRepo.updateBudgetStatus(id, status); }
   async updateActuals(budgetId: string): Promise<Result<FinanceRow>> { return this.budgetRepo.updateActuals(budgetId); }
   async getBudgetStats(fiscalYear: number): Promise<Result<{ totalBudgets: number; approved: number; draft: number; totalPlanned: number; totalActual: number; overallVariancePercent: number }>> { return this.budgetRepo.getBudgetStats(fiscalYear); }
+
+  // ── CFO Config (P0-1) ───────────────────────────────────────────────────────
+  findCfoConfig(key: string): Promise<Result<CfoConfigRow | null>> { return this.cfoRepo.findCfoConfig(key); }
+  findCfoConfigMap(keys: string[]): Promise<Result<Map<string, string>>> { return this.cfoRepo.findCfoConfigMap(keys); }
+  findAllCfoConfig(): Promise<Result<CfoConfigRow[]>> { return this.cfoRepo.findAllCfoConfig(); }
+  upsertCfoConfig(input: { key: string; value: number }): Promise<Result<CfoConfigRow>> { return this.cfoRepo.upsertCfoConfig(input); }
+
+  // ── Planning (P0-2: Break-even, Cashflow, Ratios) ───────────────────────────
+  fetchBreakEvenInputs(productName: string, period: string): Promise<BreakEvenInputs> { return this.planningRepo.fetchBreakEvenInputs(productName, period); }
+  upsertCostStructure(input: Parameters<FinancePlanningRepo['upsertCostStructure']>[0]): Promise<void> { return this.planningRepo.upsertCostStructure(input); }
+  fetchCashflowWeek(weekStartIso: string, weekEndIso: string, eclRates: { e030: number; e3160: number; e6190: number; e91p: number }): Promise<CashflowWeekRaw> { return this.planningRepo.fetchCashflowWeek(weekStartIso, weekEndIso, eclRates); }
+  fetchFinancialRatiosGl(period: string): Promise<FinancialRatiosGl | null> { return this.planningRepo.fetchFinancialRatiosGl(period); }
+  saveFinancialRatiosSnapshot(snapshot: FinancialRatiosSnapshotInput): Promise<void> { return this.planningRepo.saveFinancialRatiosSnapshot(snapshot); }
+  flagAltmanDistress(period: string, zScore: number): Promise<void> { return this.planningRepo.flagAltmanDistress(period, zScore); }
+
+  // ── Costing / Pricing / Variance (P0-2) ─────────────────────────────────────
+  findStandardCostByName(productName: string, period: string): Promise<StandardCostRecord | null> { return this.costingRepo.findStandardCostByName(productName, period); }
+  findStandardCostById(productId: number, period: string): Promise<StandardCostRecord | null> { return this.costingRepo.findStandardCostById(productId, period); }
+  listStandardCosts(productName: string, limit: number): Promise<StandardCostRecord[]> { return this.costingRepo.listStandardCosts(productName, limit); }
+  fetchStandardCostCalcInputs(productName: string): Promise<StandardCostCalcInputs> { return this.costingRepo.fetchStandardCostCalcInputs(productName); }
+  upsertStandardCost(input: StandardCostUpsertInput): Promise<void> { return this.costingRepo.upsertStandardCost(input); }
+  findLatestStandardCost(productId: number | null, productName: string): Promise<{ stdMaterialUzs: number; stdLaborUzs: number; stdOverheadUzs: number; stdTotal: number } | null> { return this.costingRepo.findLatestStandardCost(productId, productName); }
+  findPriceTierForQty(productName: string, qty: number, effectiveDateIso: string): Promise<PriceTierRow | null> { return this.costingRepo.findPriceTierForQty(productName, qty, effectiveDateIso); }
+  listPriceTiers(productName: string): Promise<PriceTierRow[]> { return this.costingRepo.listPriceTiers(productName); }
+  upsertPriceTier(input: PriceTierUpsertInput): Promise<PriceTierRow | null> { return this.costingRepo.upsertPriceTier(input); }
+  fetchVarianceOrderInputs(orderId: number): Promise<VarianceOrderInputs> { return this.varianceRepo.fetchVarianceOrderInputs(orderId); }
+  saveVarianceReport(input: VarianceReportInput): Promise<void> { return this.varianceRepo.saveVarianceReport(input); }
+  createKaizenAuditTask(title: string, description: string): Promise<void> { return this.varianceRepo.createKaizenAuditTask(title, description); }
 }

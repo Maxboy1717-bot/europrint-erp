@@ -1,3 +1,8 @@
+/**
+ * @module jwt.strategy
+ * @description Passport strategy. Extracts and validates auth credentials from the request.
+ */
+
 import { Injectable, Logger, Inject, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
@@ -38,6 +43,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       username: user.getUsername(),
       email: user.getEmail(),
       role: user.getRole(),
+      // Phase 2 / Task 2.1 — propagate tenant from JWT claim so the
+      // TenantContextInterceptor can pick it up. Optional; falls back
+      // to DEFAULT_TENANT_ID downstream when missing.
+      tenantId: payload.tenantId,
     };
   }
 }

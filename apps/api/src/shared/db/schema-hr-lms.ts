@@ -1,3 +1,17 @@
+/**
+ * @module schema-hr-lms
+ * @description HR / LMS tables. Canonical sources re-exported from @workspace/db
+ * where available; local definitions kept for tables not yet in lib/db or
+ * tables with FK dependencies on local uuid-PK employees.
+ */
+
+// ─── Canonical re-exports from @workspace/db ────────────────────────────────
+// leave_requests → lib/db: leave.ts (pgTable "leave_requests", as leaveRequests)
+
+export { leaveRequests as leave_requests } from '@workspace/db';
+
+// ─── Local definitions ──────────────────────────────────────────────────────
+
 import {
   pgTable,
   uuid,
@@ -7,6 +21,7 @@ import {
   decimal,
   integer,
   index,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
 import {
@@ -168,34 +183,28 @@ export const positions = pgTable('positions', {
 });
 
 export const user_panels = pgTable('user_panels', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
+  id: text('id').primaryKey().$defaultFn(() => createId()),
   userId: text('user_id').unique().notNull(),
   name: text('name').notNull().default('My Dashboard'),
-  layout: text('layout').notNull().default('[]'),
+  // Layout stored as JSONB so the API can write/read structured PanelLayout[] directly.
+  layout: jsonb('layout').notNull().default([]),
   isDefault: boolean('is_default').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 // ============================================================================
-// HR — Leave Requests
+// LMS — Support Tickets
 // ============================================================================
 
-export const leave_requests = pgTable('leave_requests', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  employeeId: uuid('employee_id').notNull(),
-  userId: text('user_id').notNull(),
-  leaveType: text('leave_type').notNull(),
-  startDate: timestamp('start_date', { withTimezone: true }).notNull(),
-  endDate: timestamp('end_date', { withTimezone: true }).notNull(),
-  daysRequested: integer('days_requested').notNull(),
-  status: text('status').notNull().default('pending'),
-  reason: text('reason').notNull(),
-  approvedBy: text('approved_by'),
-  approvedAt: timestamp('approved_at', { withTimezone: true }),
-  rejectedBy: text('rejected_by'),
-  rejectionReason: text('rejection_reason'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+export const lms_support_tickets = pgTable('lms_support_tickets', {
+  id:         uuid('id').primaryKey().$defaultFn(() => createId()),
+  subject:    text('subject').notNull(),
+  message:    text('message').notNull(),
+  priority:   text('priority').default('medium'), // low | medium | high
+  status:     text('status').default('open'),      // open | in_progress | resolved
+  created_by: text('created_by'),
+  resolved_at: timestamp('resolved_at', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
-

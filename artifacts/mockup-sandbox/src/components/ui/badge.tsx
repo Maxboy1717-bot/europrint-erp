@@ -1,3 +1,8 @@
+/**
+ * @module badge
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 

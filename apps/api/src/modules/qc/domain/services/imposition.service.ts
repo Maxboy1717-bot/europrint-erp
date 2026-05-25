@@ -1,10 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+/**
+ * @module imposition.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeNum } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { ROUND_2DP_FACTOR, ROUND_3DP_FACTOR } from '@common/constants/app.constants';
-import { rawSql } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { IQcComputeRepository, QC_COMPUTE_REPO } from '../repositories/i-qc.repo';
 
 const UTIL_PERCENT_DIVISOR = 10;
 const SVG_VIEW_W = 600;
@@ -101,6 +105,10 @@ interface Strip {
 @Injectable()
 export class ImpositionService {
   private readonly logger = new Logger(ImpositionService.name);
+
+  constructor(
+    @Inject(QC_COMPUTE_REPO) private readonly qcRepo: IQcComputeRepository,
+  ) {}
 
   @Calculation('qc.imposition.pack')
   async pack(
@@ -253,15 +261,16 @@ export class ImpositionService {
         usedArea:  result.usedArea,
         wastePercent: result.wastePercent,
       });
-      await rawSql(sql`
-        INSERT INTO imposition_layouts
-          (sheet_width, sheet_height, product_count, sheet_count, utilization,
-           placed_count, unplaced_count, layout_json)
-        VALUES
-          (${sheetWidth}, ${sheetHeight}, ${items.length}, ${sheets},
-           ${utilization}, ${result.placed.length}, ${result.unplaced.length},
-           ${layoutJson}::jsonb)
-      `);
+      await this.qcRepo.saveImpositionLayout({
+        sheetWidth,
+        sheetHeight,
+        productCount:  items.length,
+        sheetCount:    sheets,
+        utilization,
+        placedCount:   result.placed.length,
+        unplacedCount: result.unplaced.length,
+        layoutJson,
+      });
     } catch (e) {
       this.logger.error(`imposition_layouts ga yozishda xato: ${String(e)}`);
     }

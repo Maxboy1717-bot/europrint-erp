@@ -1,12 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { FinanceActionsRepository } from './finance-actions.repository';
+/**
+ * @module finance-actions.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
+import { FINANCE_ACTIONS_REPO, type IFinanceActionsRepo } from '../domain/repositories/i-finance-actions.repo';
 import { Result } from '@common/result';
 
 type Row = Record<string, unknown>;
 
 @Injectable()
 export class FinanceActionsService {
-  constructor(private readonly repo: FinanceActionsRepository) {}
+  constructor(@Inject(FINANCE_ACTIONS_REPO) private readonly repo: IFinanceActionsRepo) {}
 
   getSalaryBenchmark(): Promise<Result<Row>> {
     return this.repo.getSalaryBenchmark();
@@ -22,5 +27,13 @@ export class FinanceActionsService {
 
   getPendingAdvances() {
     return this.repo.getPendingAdvances();
+  }
+
+  createApEntry(data: Record<string, unknown>) {
+    return this.repo.createApEntry(data);
+  }
+
+  createArEntry(data: Record<string, unknown>) {
+    return this.repo.createArEntry(data);
   }
 }

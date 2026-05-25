@@ -1,21 +1,36 @@
+/**
+ * @module warehouse-barcode-ops.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   warehouse-barcode-ops module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
+ */
 import { Controller, UseGuards, Get, Post, Body, Param, Query, HttpCode, HttpStatus , UseInterceptors} from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { WarehouseBarcodeOpsService } from './warehouse-barcode-ops.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { BulkGenerateBarcodeDto, GenerateBarcodeDto, ScanBarcodeDto } from './dto/compat-body.dto';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  BarcodeScanResultAclTranslator,
+  type LegacyBarcodeScanResultRow,
+  type BarcodeScanResultDto,
+} from './acl/warehouse-barcode-scan-acl';
 
 @ApiTags('Warehouse Barcode Ops (ERP)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
 @Controller('warehouse')
 export class WarehouseBarcodeOpsController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly scanAcl = new BarcodeScanResultAclTranslator();
+
   constructor(private readonly svc: WarehouseBarcodeOpsService) {}
 
   @Post('barcode/generate')
@@ -28,6 +43,19 @@ export class WarehouseBarcodeOpsController {
   @HttpCode(HttpStatus.OK)
   async scanBarcode(@Body() body: ScanBarcodeDto) {
     return unwrapOrInternal(await this.svc.scanBarcode(body.barcode));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant. New BC-5 (Warehouse / WMS) consumers
+   * should target this endpoint; the legacy `barcode/scan` route stays for
+   * backwards-compat.
+   */
+  @Post('barcode/scan/v2')
+  @HttpCode(HttpStatus.OK)
+  async scanBarcodeV2(@Body() body: ScanBarcodeDto): Promise<BarcodeScanResultDto | null> {
+    const raw = unwrapOrInternal(await this.svc.scanBarcode(body.barcode)) as unknown as LegacyBarcodeScanResultRow;
+    const r = this.scanAcl.toDomain(raw);
+    return r.ok ? r.data : null;
   }
 
   @Post('barcode/bulk-generate')

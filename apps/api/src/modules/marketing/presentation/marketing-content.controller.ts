@@ -1,9 +1,14 @@
+/**
+ * @module marketing-content.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
-  Controller, Get, Post, Put, Delete, Param, Body, Query,
+  Controller, Get, Post, Put, Patch, Delete, Param, Body, Query,
   UseGuards, UseInterceptors, Logger, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard }  from '@common/guards/roles.guard';
 import { Roles }       from '@common/decorators/roles.decorator';
@@ -17,7 +22,7 @@ import {
 
 @ApiTags('§17 Marketing Content')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('marketing')
 @Roles('super_admin', 'director', 'manager')
@@ -116,5 +121,16 @@ export class MarketingContentController {
   @ApiOperation({ summary: "Ijtimoiy tarmoq akkaunti o'chirish" })
   async deleteSocialAccount(@Param('id') id: string) {
     return unwrapOrBadRequest(await this.svc.deleteSocialAccount(id));
+  }
+
+  @Patch('content/posts/:id')
+  @UseInterceptors(AuditInterceptor)
+  @ApiOperation({ summary: "Kontent postni patch qilish" })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  async patchContentPost(@Param('id') id: string, @Body() body: UpdateContentPostDto) {
+    const dto = UpdateContentPostDtoSchema.parse(body);
+    return unwrapOrBadRequest(await this.svc.updateContentPost(id, dto));
   }
 }

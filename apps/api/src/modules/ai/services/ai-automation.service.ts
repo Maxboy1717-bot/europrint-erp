@@ -1,30 +1,19 @@
+/**
+ * @module ai-automation.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { safeCall, Ok, Result, AppError } from '@common/result';
-import { db } from '@shared/db';
-import {
-  crmLeads,
-  crmDeals,
-  hrCandidateFunnels,
-  users,
-} from '@europrint/schemas';
-import {
-  eq,
-  isNull,
-  and,
-  isNotNull,
-  desc,
-  sql,
-} from 'drizzle-orm';
 import { HrAiService } from './hr-ai.service';
 import { CrmAiService } from './crm-ai.service';
 import { WmsAiService } from './wms-ai.service';
 import { AiAutomationRepository } from './ai-automation.repository';
 
-import { MAX_NAME_LENGTH } from '@common/constants/app.constants';
-const SYSTEM_USER_ID = 1;
+import { MAX_NAME_LENGTH, SYSTEM_USER_ID } from '@common/constants/app.constants';
 
 @Injectable()
 export class AiAutomationService {
@@ -69,54 +58,38 @@ export class AiAutomationService {
     if (this.isRunning['candidate_screen']) return;
     this.isRunning['candidate_screen'] = true;
     try {
-      const unscreened = await db
-        .select({ funnelId: hrCandidateFunnels.id, candidateId: hrCandidateFunnels.candidateId })
-        .from(hrCandidateFunnels)
-        .where(
-          and(
-            eq(hrCandidateFunnels.funnelStage, 'NEW'),
-            eq(hrCandidateFunnels.isActive, true),
-            isNull(hrCandidateFunnels.screeningScore),
-          ),
-        )
-        .limit(5);
+      const unscreenedR = await this.repo.getUnscreenedCandidates(5);
+      if (!unscreenedR.ok) { this.logger.warn(`[AI-AUTO] getUnscreenedCandidates: ${unscreenedR.error.message}`); return; }
+      const unscreened = unscreenedR.data;
       if (unscreened.length === 0) return;
       this.logger.log(`[AI-AUTO] ${unscreened.length} ta nomzod skrining`);
       for (const item of unscreened) {
-        try {
-          const screenR = await this.hrAi.screenCandidate(item.candidateId, SYSTEM_USER_ID);
-          if (!screenR.ok) continue;
-          const result = screenR.data as { score: number; recommendation: string; aiNotes: string; productivityCategory: string; weaknesses: string[] };
-          const productivityCategory: string = result.productivityCategory;
-          await db
-            .update(hrCandidateFunnels)
-            .set({
-              screeningScore: String(result.score),
-              initialScreeningNotes: `[AI] ${result.recommendation}: ${result.aiNotes.substring(0, MAX_NAME_LENGTH)}`,
-              productivityCategory,
-              updatedAt: _time.now(),
-            })
-            .where(eq(hrCandidateFunnels.id, item.funnelId));
-          if (result.score < 30 && result.recommendation === 'REJECT') {
-            await db
-              .update(hrCandidateFunnels)
-              .set({
-                funnelStage: 'REJECTED',
-                isActive: false,
-                rejectedAt: _time.now(),
-                isQuickRejected: true,
-                quickRejectionReason: `[AI Avtomatik] Ball: ${result.score}/100. ${result.weaknesses.join('; ')}`,
-                updatedAt: _time.now(),
-              })
-              .where(eq(hrCandidateFunnels.id, item.funnelId));
-            this.logger.debug(`[AI-AUTO] Nomzod #${item.candidateId} rad etildi (${result.score})`);
-          }
-        } catch (err) {
-          this.logger.warn(`[AI-AUTO] Nomzod #${item.candidateId} xatosi: ${(err as Error).message}`);
-        }
+        await this.screenSingleCandidate(item);
       }
     } finally {
       this.isRunning['candidate_screen'] = false;
+    }
+  }
+
+  private async screenSingleCandidate(item: { candidateId: number; funnelId: number }): Promise<void> {
+    try {
+      const screenR = await this.hrAi.screenCandidate(item.candidateId, SYSTEM_USER_ID);
+      if (!screenR.ok) return;
+      const result = screenR.data as { score: number; recommendation: string; aiNotes: string; productivityCategory: string; weaknesses: string[] };
+      await this.repo.updateCandidateFunnelScreening(item.funnelId, {
+        screeningScore:        String(result.score),
+        initialScreeningNotes: `[AI] ${result.recommendation}: ${result.aiNotes.substring(0, MAX_NAME_LENGTH)}`,
+        productivityCategory:  result.productivityCategory,
+      });
+      if (result.score < 30 && result.recommendation === 'REJECT') {
+        await this.repo.rejectCandidateFunnel(
+          item.funnelId,
+          `[AI Avtomatik] Ball: ${result.score}/100. ${result.weaknesses.join('; ')}`,
+        );
+        this.logger.debug(`[AI-AUTO] Nomzod #${item.candidateId} rad etildi (${result.score})`);
+      }
+    } catch (err) {
+      this.logger.warn(`[AI-AUTO] Nomzod #${item.candidateId} xatosi: ${(err as Error).message}`);
     }
   }
 
@@ -126,11 +99,7 @@ export class AiAutomationService {
     this.isRunning['deal_prob'] = true;
     try {
       return await safeCall(async () => {
-        const activeDeals = await db
-          .select({ id: crmDeals.id })
-          .from(crmDeals)
-          .where(isNull(crmDeals.deleted_at))
-          .limit(20);
+        const activeDeals = await this.repo.getActiveDeals(20);
         this.logger.log(`[AI-AUTO] ${activeDeals.length} ta bitim ehtimolini yangilash`);
         for (const deal of activeDeals) {
           try {
@@ -158,15 +127,20 @@ export class AiAutomationService {
   async getAutomationStatus() {
     const today = _time.now();
     today.setHours(0, 0, 0, 0);
-    let todayAiOpsCount = 0;
-    let unscoredLeadsCount = 0;
-    let unscreenedCandidatesCount = 0;
-    try { const r = await this.repo.getTodayAiOpsCount(today); if (r.ok) todayAiOpsCount = r.data; }
-    catch { this.logger.warn('[AI-AUTO] ai_usage_logs query failed, using fallback'); }
-    try { const r = await this.repo.getUnscoredLeadsCount(); if (r.ok) unscoredLeadsCount = r.data; }
-    catch { this.logger.warn('[AI-AUTO] crm_leads query failed, using fallback'); }
-    try { const r = await this.repo.getUnscreenedCandidatesCount(); if (r.ok) unscreenedCandidatesCount = r.data; }
-    catch { this.logger.warn('[AI-AUTO] hr_candidate_funnels query failed, using fallback'); }
+    const [opsRes, leadsRes, candidatesRes] = await Promise.allSettled([
+      this.repo.getTodayAiOpsCount(today),
+      this.repo.getUnscoredLeadsCount(),
+      this.repo.getUnscreenedCandidatesCount(),
+    ]);
+    const todayAiOpsCount = opsRes.status === 'fulfilled' && opsRes.value.ok
+      ? opsRes.value.data
+      : (this.logger.warn('[AI-AUTO] ai_usage_logs query failed, using fallback'), 0);
+    const unscoredLeadsCount = leadsRes.status === 'fulfilled' && leadsRes.value.ok
+      ? leadsRes.value.data
+      : (this.logger.warn('[AI-AUTO] crm_leads query failed, using fallback'), 0);
+    const unscreenedCandidatesCount = candidatesRes.status === 'fulfilled' && candidatesRes.value.ok
+      ? candidatesRes.value.data
+      : (this.logger.warn('[AI-AUTO] hr_candidate_funnels query failed, using fallback'), 0);
     return {
       todayAiOperations: todayAiOpsCount,
       pendingLeadScores: unscoredLeadsCount,

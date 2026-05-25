@@ -1,3 +1,8 @@
+/**
+ * @module ERPOrdersTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -109,9 +114,9 @@ export function ERPOrdersTab() {
                   {tCommon('add')}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="sm:max-w-[500px] p-6">
                 <DialogHeader>
-                  <DialogTitle>{editingOrder ? t('editOrder') : t('newOrderForm')}</DialogTitle>
+                  <DialogTitle className="text-[18px] font-semibold">{editingOrder ? t('editOrder') : t('newOrderForm')}</DialogTitle>
                   <DialogDescription>{t('enterOrderData')}</DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
@@ -128,7 +133,7 @@ export function ERPOrdersTab() {
                         <FormLabel>{t('product')}</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value || undefined}>
                           <FormControl>
-                            <SelectTrigger data-testid="select-order-product">
+                            <SelectTrigger data-testid="select-order-product" className="h-9">
                               <SelectValue placeholder={t('selectProduct')} />
                             </SelectTrigger>
                           </FormControl>
@@ -155,7 +160,7 @@ export function ERPOrdersTab() {
                     <FormField control={form.control} name="customerName" render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t('customerName')}</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} placeholder="ABC Company" data-testid="input-order-customer" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} placeholder={t("abcCompany")} data-testid="input-order-customer" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -171,7 +176,7 @@ export function ERPOrdersTab() {
                         <FormLabel>{t('priorityLabel')}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger data-testid="select-order-priority">
+                            <SelectTrigger data-testid="select-order-priority" className="h-9">
                               <SelectValue placeholder={t('selectPriority')} />
                             </SelectTrigger>
                           </FormControl>
@@ -190,7 +195,7 @@ export function ERPOrdersTab() {
                         <FormLabel>{tCommon('status')}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger data-testid="select-order-status">
+                            <SelectTrigger data-testid="select-order-status" className="h-9">
                               <SelectValue placeholder={t('selectStatus')} />
                             </SelectTrigger>
                           </FormControl>
@@ -224,7 +229,7 @@ export function ERPOrdersTab() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('orderNumber')}</TableHead>
@@ -239,23 +244,23 @@ export function ERPOrdersTab() {
               </TableHeader>
               <TableBody>
                 {([1, 2, 3, 4, 5]).map((i) => (
-                  <TableRow key={`k-${i}`}>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
+                    <TableCell><Skeleton className="h-4 w-24 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-28 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-12 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20 rounded-lg" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto rounded-lg" /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           ) : orders.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">{t('noOrdersFound')}</div>
+            <div className="text-center py-8 text-[13px] text-muted-foreground">{t('noOrdersFound')}</div>
           ) : (
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('orderNumber')}</TableHead>
@@ -272,7 +277,7 @@ export function ERPOrdersTab() {
                 {(Array.isArray(orders) ? orders : []).map((order) => {
                   const product = (Array.isArray(products) ? products : []).find(p => p.id === order.productId);
                   return (
-                    <TableRow key={order.id} data-testid={`row-order-${order.id}`}>
+                    <TableRow key={order.id} data-testid={`row-order-${order.id}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell className="font-medium">{order.orderNumber}</TableCell>
                       <TableCell>{product?.name || '-'}</TableCell>
                       <TableCell>{order.customerName || '-'}</TableCell>
@@ -311,7 +316,7 @@ export function ERPOrdersTab() {
                   );
                 })}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>

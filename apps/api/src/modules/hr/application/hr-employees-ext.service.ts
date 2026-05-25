@@ -1,13 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
+/**
+ * @module hr-employees-ext.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { safeInt } from '../common/db-rows';
 import { safeCall, Result, AppError } from '@common/result';
-import { HrEmployeesExtRepository } from './hr-employees-ext.repository';
+import { HR_EMPLOYEES_EXT_REPO, type IHrEmployeesExtRepo } from '../domain/repositories/i-hr-employees-ext.repo';
 
 @Injectable()
 export class HrEmployeesExtService {
   private readonly logger = new Logger(HrEmployeesExtService.name);
 
-  constructor(private readonly repo: HrEmployeesExtRepository) {}
+  constructor(@Inject(HR_EMPLOYEES_EXT_REPO) private readonly repo: IHrEmployeesExtRepo) {}
 
   async updateProfileImage(id: string, imageUrl: string): Promise<Result<object, AppError>> {
     return safeCall(() => this.repo.updateProfileImage(safeInt(id, 0), imageUrl));

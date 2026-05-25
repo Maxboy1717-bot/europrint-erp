@@ -1,13 +1,21 @@
+/**
+ * @module OutcomesTab
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Target, Award, TrendingUp, Loader2, RefreshCw } from "lucide-react";
+import { Target, Award, TrendingUp, RefreshCw } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, AreaChart, Area, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ComposedChart, Line } from "recharts";
 import type { LearningOutcomes, FunnelData, ScoreDistribution, UserActivityItem, DepartmentStat, PositionStat, SkillsMatrixItem } from "./analytics-types";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 interface OutcomesTabProps {
   learningOutcomes: LearningOutcomes | undefined;
   outcomesLoading: boolean;
@@ -38,22 +46,23 @@ export function OutcomesTab({
   skillsMatrix,
   skillsMatrixLoading,
 }: OutcomesTabProps) {
+  const { t } = useTranslation("common");
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-4">
       {outcomesLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {([1, 2, 3]).map((i) => (
             <Card key={`k-${i}`}>
               <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-32 rounded-lg" />
+                <Skeleton className="h-4 w-4 rounded-full" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-8 w-20 mb-2" />
-                <Skeleton className="h-4 w-40 mb-2" />
-                <Skeleton className="h-2 w-full" />
+                <Skeleton className="h-8 w-20 mb-2 rounded-lg" />
+                <Skeleton className="h-4 w-40 mb-2 rounded-lg" />
+                <Skeleton className="h-2 w-full rounded-lg" />
               </CardContent>
             </Card>
           ))}
@@ -62,7 +71,7 @@ export function OutcomesTab({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Kurs Tugatish Foizi</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("kursTugatishFoizi")}</CardTitle>
               <Target className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -76,7 +85,7 @@ export function OutcomesTab({
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">O'tish Foizi</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("otishFoizi1")}</CardTitle>
               <Award className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -90,7 +99,7 @@ export function OutcomesTab({
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">O'rtacha Ball</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("ortachaBall")}</CardTitle>
               <TrendingUp className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -107,8 +116,8 @@ export function OutcomesTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>O'quv Jarayoni Funnel</CardTitle>
-          <CardDescription>Tayinlandi → Boshladi → Tugatdi → Sertifikat oldi</CardDescription>
+          <CardTitle>{t("oquvJarayoniFunnel")}</CardTitle>
+          <CardDescription>{t("tayinlandiBoshladiTugatdiSertifikatOldi")}</CardDescription>
         </CardHeader>
         <CardContent>
           {funnelLoading ? (
@@ -116,39 +125,39 @@ export function OutcomesTab({
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {([1, 2, 3, 4]).map((i) => (
                   <div key={`k-${i}`} className="text-center p-4 rounded-lg border bg-card">
-                    <Skeleton className="h-12 w-16 mx-auto mb-2" />
-                    <Skeleton className="h-4 w-24 mx-auto mb-2" />
-                    <Skeleton className="h-6 w-16 mx-auto" />
+                    <Skeleton className="h-12 w-16 mx-auto mb-2 rounded-lg" />
+                    <Skeleton className="h-4 w-24 mx-auto mb-2 rounded-lg" />
+                    <Skeleton className="h-6 w-16 mx-auto rounded-lg" />
                   </div>
                 ))}
               </div>
-              <Skeleton className="h-[200px] w-full" />
+              <Skeleton className="h-[200px] w-full rounded-lg" />
             </div>
           ) : funnelData ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 rounded-lg border bg-card">
                   <div className="text-3xl font-bold text-primary">{funnelData.assigned}</div>
-                  <p className="text-sm text-muted-foreground mt-1">Tayinlandi</p>
+                  <p className="text-sm text-muted-foreground mt-1">{t("tayinlandi")}</p>
                   <Badge variant="outline" className="mt-2">100%</Badge>
                 </div>
                 <div className="text-center p-4 rounded-lg border bg-card">
-                  <div className="text-3xl font-bold text-blue-600">{funnelData.started}</div>
-                  <p className="text-sm text-muted-foreground mt-1">Boshladi</p>
+                  <div className="text-3xl font-bold text-[var(--ep-blue)]">{funnelData.started}</div>
+                  <p className="text-sm text-muted-foreground mt-1">{t("boshladi")}</p>
                   <Badge variant="outline" className="mt-2">
                     {(funnelData.assigned ?? 0) > 0 ? Math.round((funnelData.started / (funnelData.assigned ?? 1)) * 100) : 0}%
                   </Badge>
                 </div>
                 <div className="text-center p-4 rounded-lg border bg-card">
-                  <div className="text-3xl font-bold text-green-600">{funnelData.completed}</div>
-                  <p className="text-sm text-muted-foreground mt-1">Tugatdi</p>
+                  <div className="text-3xl font-bold text-[var(--ep-green)]">{funnelData.completed}</div>
+                  <p className="text-sm text-muted-foreground mt-1">{t("tugatdi")}</p>
                   <Badge variant="outline" className="mt-2">
                     {(funnelData.assigned ?? 0) > 0 ? Math.round((funnelData.completed / (funnelData.assigned ?? 1)) * 100) : 0}%
                   </Badge>
                 </div>
                 <div className="text-center p-4 rounded-lg border bg-card">
-                  <div className="text-3xl font-bold text-yellow-600">{funnelData.certificated}</div>
-                  <p className="text-sm text-muted-foreground mt-1">Sertifikat oldi</p>
+                  <div className="text-3xl font-bold text-[var(--ep-yellow)]">{funnelData.certificated}</div>
+                  <p className="text-sm text-muted-foreground mt-1">{t("sertifikatOldi")}</p>
                   <Badge variant="outline" className="mt-2">
                     {(funnelData.assigned ?? 0) > 0 ? Math.round(((funnelData.certificated ?? 0) / (funnelData.assigned ?? 1)) * 100) : 0}%
                   </Badge>
@@ -176,7 +185,7 @@ export function OutcomesTab({
             </div>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              Ma'lumot yuklanmoqda...
+              {t("malumotYuklanmoqda")}
             </div>
           )}
         </CardContent>
@@ -185,13 +194,13 @@ export function OutcomesTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>📊 Ball Taqsimoti</CardTitle>
-            <CardDescription>Xodimlarning ball oralig'i bo'yicha taqsimoti</CardDescription>
+            <CardTitle>{t("ballTaqsimoti")}</CardTitle>
+            <CardDescription>{t("xodimlarningBallOraligiBoyichaTaqsimoti")}</CardDescription>
           </CardHeader>
           <CardContent>
             {scoreDistLoading ? (
               <div className="h-[300px] flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <EPLoader size={32} tone="muted" />
               </div>
             ) : scoreDistribution?.distribution && scoreDistribution.distribution.length > 0 ? (
               <div className="glass-chart">
@@ -213,7 +222,7 @@ export function OutcomesTab({
               </div>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot topilmadi
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -221,8 +230,8 @@ export function OutcomesTab({
 
         <Card>
           <CardHeader>
-            <CardTitle>📈 O'zlashtirish Dinamikasi</CardTitle>
-            <CardDescription>Oxirgi 30 kun ichidagi o'sish tendentsiyasi</CardDescription>
+            <CardTitle>{t("ozlashtirishDinamikasi")}</CardTitle>
+            <CardDescription>{t("oxirgi30KunIchidagiOsish")}</CardDescription>
           </CardHeader>
           <CardContent>
             {activityTrend.length > 0 ? (
@@ -250,14 +259,14 @@ export function OutcomesTab({
                     stroke="hsl(var(--primary))" 
                     fillOpacity={1} 
                     fill="url(#colorProgress)"
-                    name="Faol o'quvchilar"
+                    name={tLabel('analytics.OutcomesTab.faolOquvchilar', "Faol o'quvchilar")}
                   />
                 </AreaChart>
               </ResponsiveContainer>
               </div>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot topilmadi
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -267,8 +276,8 @@ export function OutcomesTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Tashkiliy tuzilma bo'yicha Natijalar</CardTitle>
-            <CardDescription>Bo'limlar bo'yicha tugatish foizi va o'rtacha ball</CardDescription>
+            <CardTitle>{t("tashkiliyTuzilmaBoyichaNatijalar")}</CardTitle>
+            <CardDescription>{t("bolimlarBoyichaTugatishFoiziVa")}</CardDescription>
           </CardHeader>
           <CardContent>
             {departmentStats.length > 0 ? (
@@ -280,14 +289,14 @@ export function OutcomesTab({
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="completionRate" fill="hsl(var(--primary))" name="Tugatish %" />
-                  <Line type="monotone" dataKey="averageScore" stroke="#22c55e" strokeWidth={2} name="O'rtacha ball" />
+                  <Bar dataKey="completionRate" fill="hsl(var(--primary))" name={tLabel('analytics.OutcomesTab.tugatish', "Tugatish %")} />
+                  <Line type="monotone" dataKey="averageScore" stroke="#22c55e" strokeWidth={2} name={tLabel('analytics.OutcomesTab.ortachaBall', "O'rtacha ball")} />
                 </ComposedChart>
               </ResponsiveContainer>
               </div>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot topilmadi
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -295,8 +304,8 @@ export function OutcomesTab({
 
         <Card>
           <CardHeader>
-            <CardTitle>Funksiyalar bo'yicha Natijalar</CardTitle>
-            <CardDescription>Lavozimlar bo'yicha tugatish foizi va o'rtacha ball</CardDescription>
+            <CardTitle>{t("funksiyalarBoyichaNatijalar")}</CardTitle>
+            <CardDescription>{t("lavozimlarBoyichaTugatishFoiziVa")}</CardDescription>
           </CardHeader>
           <CardContent>
             {positionStats.length > 0 ? (
@@ -308,14 +317,14 @@ export function OutcomesTab({
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="completionRate" fill="hsl(var(--accent))" name="Tugatish %" />
-                  <Line type="monotone" dataKey="averageScore" stroke="#3b82f6" strokeWidth={2} name="O'rtacha ball" />
+                  <Bar dataKey="completionRate" fill="hsl(var(--accent))" name={tLabel('analytics.OutcomesTab.tugatish', "Tugatish %")} />
+                  <Line type="monotone" dataKey="averageScore" stroke="#3b82f6" strokeWidth={2} name={tLabel('analytics.OutcomesTab.ortachaBall', "O'rtacha ball")} />
                 </ComposedChart>
               </ResponsiveContainer>
               </div>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot topilmadi
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -324,13 +333,13 @@ export function OutcomesTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>🎯 Ko'nikmalar Matritsasi</CardTitle>
-          <CardDescription>Har bir ko'nikma bo'yicha o'zlashtirish darajasi</CardDescription>
+          <CardTitle>{t("konikmalarMatritsasi")}</CardTitle>
+          <CardDescription>{t("harBirKonikmaBoyichaOzlashtirish")}</CardDescription>
         </CardHeader>
         <CardContent>
           {skillsMatrixLoading ? (
             <div className="h-[350px] flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <EPLoader size={32} tone="muted" />
             </div>
           ) : skillsMatrix.length > 0 ? (
             <div className="glass-chart">
@@ -340,14 +349,14 @@ export function OutcomesTab({
                 <PolarAngleAxis dataKey="subject" />
                 <PolarRadiusAxis angle={90} domain={[0, 100]} />
                 <Radar 
-                  name="O'rtacha daraja" 
+                  name={tLabel('analytics.OutcomesTab.ortachaDaraja', "O'rtacha daraja")} 
                   dataKey="A" 
                   stroke="#22c55e" 
                   fill="#22c55e" 
                   fillOpacity={0.6} 
                 />
                 <Radar 
-                  name="Tasdiqlangan (%)" 
+                  name={tLabel('analytics.OutcomesTab.tasdiqlangan', "Tasdiqlangan (%)")} 
                   dataKey="B" 
                   stroke="#3b82f6" 
                   fill="#3b82f6" 
@@ -360,7 +369,7 @@ export function OutcomesTab({
             </div>
           ) : (
             <div className="h-[350px] flex items-center justify-center text-muted-foreground">
-              Ko'nikmalar ma'lumotlari topilmadi
+              {t("konikmalarMalumotlariTopilmadi")}
             </div>
           )}
         </CardContent>

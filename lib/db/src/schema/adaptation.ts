@@ -1,4 +1,10 @@
-import { pgTable, serial, integer, timestamp, varchar, boolean, text, date } from "drizzle-orm/pg-core";
+/**
+ * @module adaptation
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { pgTable, serial, integer, timestamp, varchar, boolean, text, date, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { employees } from "./employees";
@@ -18,10 +24,10 @@ export const adaptationPrograms = pgTable("adaptation_programs", {
 
 export const adaptationRecords = pgTable("adaptation_records", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
-  programId: integer("program_id").references(() => adaptationPrograms.id).notNull(),
-  mentorId: integer("mentor_id").references(() => employees.id),
-  professionalMasterId: integer("professional_master_id").references(() => employees.id),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
+  programId: integer("program_id").references(() => adaptationPrograms.id, { onDelete: "cascade" }).notNull(),
+  mentorId: integer("mentor_id").references(() => employees.id, { onDelete: "set null" }),
+  professionalMasterId: integer("professional_master_id").references(() => employees.id, { onDelete: "set null" }),
   startDate: date("start_date").notNull(),
   endDate: date("end_date"),
   status: varchar("status", { length: 20 }).default("in_progress"),
@@ -36,21 +42,10 @@ export const adaptationRecords = pgTable("adaptation_records", {
   extensionReason: text("extension_reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-export const adaptationMilestones = pgTable("adaptation_milestones", {
-  id: serial("id").primaryKey(),
-  recordId: integer("record_id").references(() => adaptationRecords.id).notNull(),
-  milestoneNumber: integer("milestone_number").notNull(),
-  milestoneTitle: varchar("milestone_title", { length: 200 }),
-  description: text("description"),
-  dueDate: date("due_date"),
-  completedDate: date("completed_date"),
-  status: varchar("status", { length: 20 }).default("pending"),
-  verifiedBy: integer("verified_by"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("adaptation_records_status_chk", sql`${t.status} IN ('in_progress','completed','cancelled','extended','at_risk')`),
+  check("adaptation_records_progress_chk", sql`${t.progressPercent} IS NULL OR (${t.progressPercent} >= 0 AND ${t.progressPercent} <= 100)`),
+]);
 
 export const insertAdaptationProgramSchema = createInsertSchema(adaptationPrograms).omit({ id: true, createdAt: true } as never);
 export type InsertAdaptationProgram = z.infer<typeof insertAdaptationProgramSchema>;
@@ -60,6 +55,3 @@ export const insertAdaptationRecordSchema = createInsertSchema(adaptationRecords
 export type InsertAdaptationRecord = z.infer<typeof insertAdaptationRecordSchema>;
 export type AdaptationRecord = typeof adaptationRecords.$inferSelect;
 
-export const insertAdaptationMilestoneSchema = createInsertSchema(adaptationMilestones).omit({ id: true, createdAt: true } as never);
-export type InsertAdaptationMilestone = z.infer<typeof insertAdaptationMilestoneSchema>;
-export type AdaptationMilestone = typeof adaptationMilestones.$inferSelect;

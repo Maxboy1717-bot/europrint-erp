@@ -1,20 +1,35 @@
+/**
+ * @module europrint-control.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   europrint-control module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
+ */
 import { Controller, UseGuards, Get, Query, Param , UseInterceptors} from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { EuroprintControlCompatService } from './europrint-control.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  AuditLogAclTranslator,
+  type LegacyAuditLogRow,
+  type AuditLogDto,
+} from './acl/audit-log-acl';
 
 @ApiTags('EuroPrint Control Center (Compat)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
 @Controller('europrint-control')
 export class EuroprintControlCompatController {
+  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
+  private readonly auditAcl = new AuditLogAclTranslator();
+
   constructor(private readonly svc: EuroprintControlCompatService) {}
 
   @Get('business-rules')
@@ -93,6 +108,25 @@ export class EuroprintControlCompatController {
     @Query('limit') limit?: string,
   ) {
     return unwrapOrInternal(await this.svc.getAuditLogs(action, userId, limit));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of the audit-log list. New BC-9
+   * (Director / Compliance) consumers should target this route;
+   * `/audit-logs` stays for backwards-compat.
+   */
+  @Get('audit-logs/v2')
+  async getAuditLogsV2(
+    @Query('action') action?: string,
+    @Query('userId') userId?: string,
+    @Query('limit') limit?: string,
+  ): Promise<AuditLogDto[]> {
+    const rows = (await this.svc.getAuditLogs(action, userId, limit)) as unknown as LegacyAuditLogRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.auditAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: AuditLogDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Get('action-types')

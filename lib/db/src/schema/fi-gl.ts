@@ -1,6 +1,11 @@
+/**
+ * @module fi-gl
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Position, approvalRequests, departments, users } from "./core-schema";
@@ -25,7 +30,9 @@ export const accounts = pgTable("accounts", {
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("accounts_type_chk", sql`${t.accountType} IN ('asset','liability','equity','revenue','expense')`),
+]);
 
 
 export const insertAccountSchema = createInsertSchema(accounts, {
@@ -47,13 +54,15 @@ export const entries = pgTable("entries", {
   entryDate: varchar("entry_date", { length: 10 }).notNull(), // YYYY-MM-DD
   documentType: varchar("document_type", { length: 50 }).notNull(), // purchase, sale, production, payment, other
   documentId: varchar("document_id"), // Bog'liq hujjat ID
-  debitAccountId: varchar("debit_account_id").references(() => accounts.id),
-  creditAccountId: varchar("credit_account_id").references(() => accounts.id),
+  debitAccountId: varchar("debit_account_id").references(() => accounts.id, { onDelete: "set null" }),
+  creditAccountId: varchar("credit_account_id").references(() => accounts.id, { onDelete: "set null" }),
   amount: numericMoney("amount").notNull(),
   description: text("description"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("entries_amount_chk", sql`${t.amount} > 0`),
+]);
 
 
 export const insertEntrySchema = createInsertSchema(entries, {
@@ -101,7 +110,7 @@ export const profitCenters = pgTable("profit_centers", {
   name: text("name").notNull(),
   nameRu: text("name_ru"),
   description: text("description"),
-  managerId: integer("manager_id").references(() => users.id),
+  managerId: integer("manager_id").references(() => users.id, { onDelete: "set null" }),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -132,7 +141,7 @@ export const glDocuments = pgTable("gl_documents", {
   totalDebit: numericMoney("total_debit").notNull().default(0),
   totalCredit: numericMoney("total_credit").notNull().default(0),
   status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, posted, reversed
-  postedBy: varchar("posted_by").references(() => users.id),
+  postedBy: varchar("posted_by").references(() => users.id, { onDelete: "set null" }),
   postedAt: timestamp("posted_at"),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -142,6 +151,8 @@ export const glDocuments = pgTable("gl_documents", {
   index("idx_gl_documents_document_date").on(t.documentDate),
   index("idx_gl_documents_reference_id").on(t.referenceId),
   index("idx_gl_documents_created_at").on(t.createdAt),
+  check("gl_documents_status_chk", sql`${t.status} IN ('draft','posted','reversed')`),
+  check("gl_documents_doc_type_chk", sql`${t.documentType} IN ('invoice','payment','transfer','adjustment','sales_invoice','purchase_invoice')`),
 ]);
 
 
@@ -165,9 +176,9 @@ export const glLines = pgTable("gl_lines", {
   id: serial("id").primaryKey(),
   glDocumentId: varchar("gl_document_id").notNull().references(() => glDocuments.id, { onDelete: "cascade" }),
   lineNumber: integer("line_number").notNull(),
-  accountId: varchar("account_id").notNull().references(() => accounts.id),
-  costCenterId: varchar("cost_center_id").references(() => costCenters.id),
-  profitCenterId: varchar("profit_center_id").references(() => profitCenters.id),
+  accountId: varchar("account_id").notNull().references(() => accounts.id, { onDelete: "restrict" }),
+  costCenterId: varchar("cost_center_id").references(() => costCenters.id, { onDelete: "set null" }),
+  profitCenterId: varchar("profit_center_id").references(() => profitCenters.id, { onDelete: "set null" }),
   debitAmount: numericMoney("debit_amount").notNull().default(0),
   creditAmount: numericMoney("credit_amount").notNull().default(0),
   description: text("description"),
@@ -194,10 +205,13 @@ export const accountingPeriods = pgTable("accounting_periods", {
   startDate: varchar("start_date", { length: 10 }).notNull(), // YYYY-MM-DD
   endDate: varchar("end_date", { length: 10 }).notNull(), // YYYY-MM-DD
   status: varchar("status", { length: 20 }).notNull().default("open"), // open, closed, soft_closed
-  closedBy: varchar("closed_by").references(() => users.id),
+  closedBy: varchar("closed_by").references(() => users.id, { onDelete: "set null" }),
   closedAt: timestamp("closed_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("accounting_periods_status_chk", sql`${t.status} IN ('open','closed','soft_closed')`),
+  check("accounting_periods_month_chk", sql`${t.month} >= 1 AND ${t.month} <= 12`),
+]);
 
 
 export const insertAccountingPeriodSchema = createInsertSchema(accountingPeriods, {
@@ -218,6 +232,8 @@ export type InsertAccountingPeriod = z.infer<typeof insertAccountingPeriodSchema
 // Payroll Periods (ish haqi davrlari)
 export const payrollPeriods = pgTable("payroll_periods", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy (Phase 2 / Task 2.1). See lib/db/src/schema/employees.ts.
+  tenantId: integer("tenant_id").notNull().default(1),
   periodName: text("period_name"),
   startDate: varchar("start_date", { length: 10 }),
   endDate: varchar("end_date", { length: 10 }),
@@ -235,7 +251,9 @@ export const payrollPeriods = pgTable("payroll_periods", {
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   closedAt: timestamp("closed_at"),
-});
+}, (t) => [
+  check("payroll_periods_status_chk", sql`${t.status} IN ('open','processing','closed')`),
+]);
 
 
 export const insertPayrollPeriodSchema = createInsertSchema(payrollPeriods, {
@@ -254,8 +272,8 @@ export type InsertPayrollPeriod = z.infer<typeof insertPayrollPeriodSchema>;
 // Payroll Rows (ish haqi qatorlari - faqat ishlab chiqarish)
 export const payrollRows = pgTable("payroll_rows", {
   id: serial("id").primaryKey(),
-  periodId: varchar("period_id").references(() => payrollPeriods.id),
-  employeeId: varchar("employee_id").references(() => users.id),
+  periodId: varchar("period_id").references(() => payrollPeriods.id, { onDelete: "set null" }),
+  employeeId: varchar("employee_id").references(() => users.id, { onDelete: "set null" }),
   workDays: integer("work_days").notNull().default(0),
   productionQuantity: integer("production_quantity").notNull().default(0), // Ishlab chiqargan mahsulot miqdori
   ratePerUnit: numericMoney("rate_per_unit"), // Bir birlik uchun to'lov

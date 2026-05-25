@@ -1,3 +1,8 @@
+/**
+ * @module chat-security.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { ChatService } from '../src/modules/chat/chat.service';
 
 describe('ChatService – room membership authorization', () => {
@@ -6,11 +11,16 @@ describe('ChatService – room membership authorization', () => {
 
   beforeEach(() => {
     mockRoomSvc = { isRoomMember: jest.fn() };
+    const mockI18n = {
+      t: jest.fn().mockImplementation(async (key: string) => key),
+      translate: jest.fn().mockImplementation(async (key: string) => key),
+    };
     service = new ChatService(
       mockRoomSvc as any,
       {} as any,
       {} as any,
       {} as any,
+      mockI18n as any,
     );
     jest.clearAllMocks();
   });

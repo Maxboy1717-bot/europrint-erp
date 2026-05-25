@@ -1,7 +1,12 @@
+/**
+ * @module pending-advance-orders.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { AppErr, Err, Ok, Result } from '@common/result';
-import { ISalesOrderRepository } from '../../domain/repositories/i-sales-order.repo';
+import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 
 export class PendingAdvanceOrdersQuery {
   constructor(public readonly limit: number = 50,
@@ -12,7 +17,7 @@ export class PendingAdvanceOrdersQuery {
 export class PendingAdvanceOrdersHandler implements IQueryHandler<PendingAdvanceOrdersQuery> {
   private readonly logger = new Logger(PendingAdvanceOrdersHandler.name);
   constructor(
-    @Inject('ISalesOrderRepository') private readonly orderRepo: ISalesOrderRepository,
+    @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
   ) {}
 
   async execute(query: PendingAdvanceOrdersQuery): Promise<Result<Record<string, unknown>>> {

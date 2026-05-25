@@ -1,3 +1,8 @@
+/**
+ * @module ImpositionCalculator
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,11 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { LayoutGrid, Loader2, Plus, Trash2, CheckCircle, AlertTriangle } from "lucide-react";
+import { LayoutGrid, Plus, Trash2, CheckCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
 
+import { EPLoader } from "@/components/ep";
 interface PlacedItem {
   id: string;
   copyIndex: number;
@@ -79,7 +85,7 @@ export default function ImpositionCalculator() {
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <LayoutGrid className="h-7 w-7 text-blue-600" />
+        <LayoutGrid className="h-7 w-7 text-[var(--ep-blue)]" />
         <div>
           <h1 className="text-2xl font-bold text-slate-900">{t('imposition')}</h1>
           <p className="text-sm text-slate-500">{t('impositionDesc')}</p>
@@ -115,7 +121,7 @@ export default function ImpositionCalculator() {
             </CardHeader>
             <CardContent className="space-y-3">
               {products.map((p, i) => (
-                <div key={p.id || `row-${i}`} className="grid grid-cols-5 gap-1 items-center text-xs">
+                <div key={p.id || `row-${i}`} className="grid grid-cols-2 lg:grid-cols-5 gap-1 items-center text-xs">
                   <Input
                     className="col-span-2 h-7 text-xs" placeholder="ID"
                     value={p.id} onChange={e => updateRow(i, "id", e.target.value)}
@@ -130,11 +136,11 @@ export default function ImpositionCalculator() {
                   />
                   <div className="flex gap-1">
                     <Input
-                      className="h-7 text-xs w-10" placeholder="Qty"
+                      className="h-7 text-xs w-10" placeholder={t("qty1")}
                       value={p.quantity} onChange={e => updateRow(i, "quantity", e.target.value)}
                     />
                     <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => removeRow(i)}>
-                      <Trash2 className="h-3 w-3 text-red-500" />
+                      <Trash2 className="h-3 w-3 text-[var(--ep-red)]" />
                     </Button>
                   </div>
                 </div>
@@ -147,7 +153,7 @@ export default function ImpositionCalculator() {
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending}
           >
-            {mutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <LayoutGrid className="h-4 w-4 mr-2" />}
+            {mutation.isPending ? <EPLoader className="mr-2" /> : <LayoutGrid className="h-4 w-4 mr-2" />}
             {mutation.isPending ? t('calculating') : t('calculate')}
           </Button>
         </div>
@@ -155,22 +161,22 @@ export default function ImpositionCalculator() {
         <div className="lg:col-span-2 space-y-4">
           {res && (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3">
                 <Card className="text-center p-3">
                   <p className="text-xs text-slate-500">{t('sheets')}</p>
-                  <p className="text-2xl font-bold text-blue-600">{res.sheets}</p>
+                  <p className="text-2xl font-bold text-[var(--ep-blue)]">{res.sheets}</p>
                 </Card>
                 <Card className="text-center p-3">
                   <p className="text-xs text-slate-500">{t('utilization')}</p>
-                  <p className="text-2xl font-bold text-green-600">{res.utilization.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold text-[var(--ep-green)]">{res.utilization.toFixed(1)}%</p>
                 </Card>
                 <Card className="text-center p-3">
                   <p className="text-xs text-slate-500">{t('waste')}</p>
-                  <p className="text-2xl font-bold text-orange-500">{res.wastePercent.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold text-[var(--ep-primary)]">{res.wastePercent.toFixed(1)}%</p>
                 </Card>
                 <Card className={`text-center p-3 ${res.unplaced.length > 0 ? "border-red-300" : "border-green-300"}`}>
                   <p className="text-xs text-slate-500">{t('unplaced')}</p>
-                  <p className={`text-2xl font-bold ${res.unplaced.length > 0 ? "text-red-600" : "text-green-600"}`}>
+                  <p className={`text-2xl font-bold ${res.unplaced.length > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}`}>
                     {res.unplaced.length}
                   </p>
                 </Card>
@@ -181,8 +187,8 @@ export default function ImpositionCalculator() {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
                       {res.utilization >= 70
-                        ? <CheckCircle className="h-4 w-4 text-green-500" />
-                        : <AlertTriangle className="h-4 w-4 text-orange-500" />}
+                        ? <CheckCircle className="h-4 w-4 text-[var(--ep-green)]" />
+                        : <AlertTriangle className="h-4 w-4 text-[var(--ep-primary)]" />}
                       {t('utilizationLabel')}
                     </CardTitle>
                     <Badge variant={res.utilization >= 70 ? "default" : "destructive"}>
@@ -232,7 +238,7 @@ export default function ImpositionCalculator() {
               {res.unplaced.length > 0 && (
                 <Card className="border-red-200 bg-red-50">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm text-red-700">{t('unplaced')}</CardTitle>
+                    <CardTitle className="text-sm text-[var(--ep-red)]">{t('unplaced')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
@@ -240,7 +246,7 @@ export default function ImpositionCalculator() {
                         <Badge key={id} variant="destructive">{id}</Badge>
                       ))}
                     </div>
-                    <p className="text-xs text-red-600 mt-2">{t('unplacedHint')}</p>
+                    <p className="text-xs text-[var(--ep-red)] mt-2">{t('unplacedHint')}</p>
                   </CardContent>
                 </Card>
               )}
@@ -259,7 +265,7 @@ export default function ImpositionCalculator() {
           {mutation.isPending && (
             <Card>
               <CardContent className="flex items-center justify-center h-48 gap-3 text-slate-500">
-                <Loader2 className="h-6 w-6 animate-spin" />
+                <EPLoader size={24} />
                 <p>{t('calculating')}</p>
               </CardContent>
             </Card>

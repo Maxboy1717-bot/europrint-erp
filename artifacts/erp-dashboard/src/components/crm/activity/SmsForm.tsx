@@ -1,3 +1,8 @@
+/**
+ * @module SmsForm
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -7,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Smartphone } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/lib/i18n';
 
 interface SmsFormProps {
   entityType: string;
@@ -15,6 +21,7 @@ interface SmsFormProps {
 }
 
 export function SmsForm({ entityType, entityId, phone }: SmsFormProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [smsForm, setSmsForm] = useState({
     phone: phone || "",
@@ -39,7 +46,7 @@ export function SmsForm({ entityType, entityId, phone }: SmsFormProps) {
   return (
     <div className="space-y-3 p-4">
       <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">Telefon</Label>
+        <Label className="text-xs text-muted-foreground">{t("phone")}</Label>
         <Input
           value={smsForm.phone}
           onChange={(e) => setSmsForm((prev) => ({ ...prev, phone: e.target.value }))}
@@ -48,7 +55,7 @@ export function SmsForm({ entityType, entityId, phone }: SmsFormProps) {
         />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">Xabar</Label>
+        <Label className="text-xs text-muted-foreground">{t("xabar")}</Label>
         <Textarea
           value={smsForm.message}
           onChange={(e) => setSmsForm((prev) => ({ ...prev, message: e.target.value }))}
@@ -58,13 +65,13 @@ export function SmsForm({ entityType, entityId, phone }: SmsFormProps) {
         />
       </div>
       <Button
-        className="w-full bg-blue-500 hover:bg-blue-600"
+        className="w-full bg-blue-500 hover:bg-[var(--ep-blue)]/90"
         onClick={() => sendSmsMutation.mutate(smsForm)}
         disabled={!smsForm.message || !smsForm.phone || sendSmsMutation.isPending}
         data-testid="button-send-sms"
       >
         <Smartphone className="h-4 w-4 mr-2" />
-        SMS yuborish
+        {t("smsYuborish")}
       </Button>
     </div>
   );

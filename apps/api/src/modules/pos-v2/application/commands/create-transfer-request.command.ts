@@ -1,3 +1,8 @@
+/**
+ * @module create-transfer-request.command
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, Inject } from '@nestjs/common';
@@ -72,7 +77,7 @@ export class CreateTransferRequestHandler implements ICommandHandler<CreateTrans
 
       // Create request lines
       const requestId = createId();
-      const requestLines: RequestLine[] = (command?.lines ?? []).map((line) => ({
+      const requestLines: RequestLine[] = (Array.isArray(command?.lines) ? command?.lines : []).map((line) => ({
         id: createId(),
         requestId,
         stockItemId: line.stockItemId,

@@ -1,3 +1,8 @@
+/**
+ * @module SlotsForm
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -12,6 +17,7 @@ import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { TIME_SLOTS, MEETING_DURATIONS } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface SlotsFormProps {
   entityType: string;
@@ -20,6 +26,7 @@ interface SlotsFormProps {
 }
 
 export function SlotsForm({ entityType, entityId, onActivityCreated }: SlotsFormProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [meetingForm, setMeetingForm] = useState({
     date: new Date(),
@@ -47,13 +54,13 @@ export function SlotsForm({ entityType, entityId, onActivityCreated }: SlotsForm
 
   return (
     <div className="space-y-3 p-4">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Sana</Label>
+          <Label className="text-xs text-muted-foreground">{t("date")}</Label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start h-9" data-testid="button-meeting-date">
-                <CalendarIcon className="h-3.5 w-3.5 mr-2" />
+              <Button variant="outline" className="w-full justify-start h-9 gap-2" data-testid="button-meeting-date">
+                <CalendarIcon className="h-3.5 w-3.5" />
                 {format(meetingForm.date, "dd.MM.yyyy")}
               </Button>
             </PopoverTrigger>
@@ -67,13 +74,13 @@ export function SlotsForm({ entityType, entityId, onActivityCreated }: SlotsForm
           </Popover>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Vaqt</Label>
+          <Label className="text-xs text-muted-foreground">{t("time")}</Label>
           <Select
             value={meetingForm.slot}
             onValueChange={(value) => setMeetingForm((prev) => ({ ...prev, slot: value }))}
           >
             <SelectTrigger className="h-9" data-testid="select-meeting-time">
-              <SelectValue placeholder="Vaqt" />
+              <SelectValue placeholder={t("time")} />
             </SelectTrigger>
             <SelectContent>
               {(Array.isArray(TIME_SLOTS) ? TIME_SLOTS : []).map((slot) => (
@@ -83,9 +90,9 @@ export function SlotsForm({ entityType, entityId, onActivityCreated }: SlotsForm
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Davomiyligi</Label>
+          <Label className="text-xs text-muted-foreground">{t("davomiyligi")}</Label>
           <Select
             value={meetingForm.duration}
             onValueChange={(value) => setMeetingForm((prev) => ({ ...prev, duration: value }))}
@@ -101,7 +108,7 @@ export function SlotsForm({ entityType, entityId, onActivityCreated }: SlotsForm
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Joylashuv</Label>
+          <Label className="text-xs text-muted-foreground">{t("location")}</Label>
           <Input
             value={meetingForm.location}
             onChange={(e) => setMeetingForm((prev) => ({ ...prev, location: e.target.value }))}
@@ -113,8 +120,8 @@ export function SlotsForm({ entityType, entityId, onActivityCreated }: SlotsForm
       </div>
       <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg border border-border">
         <div className="space-y-0.5">
-          <Label className="text-xs font-medium">Mijozni ogohlantirish</Label>
-          <p className="text-[10px] text-muted-foreground">SMS va Email orqali eslatma yuboriladi</p>
+          <Label className="text-xs font-medium">{t("mijozniOgohlantirish")}</Label>
+          <p className="text-[10px] text-muted-foreground">{t("smsVaEmailOrqaliEslatma")}</p>
         </div>
         <Switch
           checked={meetingForm.notifyClient}
@@ -123,13 +130,13 @@ export function SlotsForm({ entityType, entityId, onActivityCreated }: SlotsForm
         />
       </div>
       <Button
-        className="w-full bg-blue-500 hover:bg-blue-600"
+        className="w-full bg-blue-500 hover:bg-[var(--ep-blue)]/90"
         onClick={() => scheduleMeetingMutation.mutate(meetingForm)}
         disabled={!meetingForm.slot || scheduleMeetingMutation.isPending}
         data-testid="button-save-meeting"
       >
         <CalendarIcon className="h-4 w-4 mr-2" />
-        Rejalashtirish
+        {t("rejalashtirish")}
       </Button>
     </div>
   );

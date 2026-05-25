@@ -1,3 +1,8 @@
+/**
+ * @module tax-calculator.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeNum, roundTo } from '@common/math/math-utils';

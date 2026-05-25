@@ -1,204 +1,240 @@
-import { TashkentTimeService } from '@common/time';
-const _time = new TashkentTimeService();
+/**
+ * @module cfo.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ *
+ * Financial risk computation lives in `cfo-risk.service.ts` (delegated below)
+ * to keep this file under 300 lines (Rule 16). The public method
+ * `getFinancialRisk()` is preserved.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
-import { db, rawSql } from '@shared/db';
+import { ConfigService } from '@nestjs/config';
+import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
 import { safeCall, Result, AppError, Ok } from '@common/result';
 import { safeDiv } from '@common/math';
+import { COGS_MATERIAL_RATIO } from '@common/constants/business.constants';
+import { CfoRiskService } from './cfo-risk.service';
 
 type Row = Record<string, unknown>;
+
+/** Safe percentage: returns 0 when denominator is 0 rather than a misleading ratio. */
+function safePct(numerator: number, denominator: number): number {
+  return denominator === 0 ? 0 : safeDiv(numerator, denominator) * 100;
+}
 
 @Injectable()
 export class CfoCompatService {
   private readonly logger = new Logger(CfoCompatService.name);
+  /** VAT rate read from env via ConfigService (Rule 7); defaults to 12%. */
+  private readonly VAT_RATE: number;
+
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly riskService: CfoRiskService,
+  ) {
+    this.VAT_RATE = parseFloat(this.configService.get<string>('CFO_VAT_RATE') ?? '0.12');
+  }
 
   async getDashboard(): Promise<Result<object, AppError>> {
-    const [glKpiR, liquidityR] = await Promise.all([
-      safeCall(() => rawSql(sql`
-        SELECT
-          COALESCE(SUM(CASE WHEN account_code LIKE '4%' THEN credit_amount - debit_amount ELSE 0 END), 0) AS revenue,
-          COALESCE(SUM(CASE WHEN account_code LIKE '5%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS cogs,
-          COALESCE(SUM(CASE WHEN account_code LIKE '6%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS opex,
-          COALESCE(SUM(CASE WHEN account_code LIKE '1%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS total_assets,
-          COALESCE(SUM(CASE WHEN account_code LIKE '2%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS current_assets,
-          COALESCE(SUM(CASE WHEN account_code LIKE '3%' THEN credit_amount - debit_amount ELSE 0 END), 0) AS current_liabilities
-        FROM gl_journal_entries
-        WHERE EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM NOW())
-      `)),
-      safeCall(() => rawSql(sql`
-        SELECT
-          COALESCE((SELECT SUM(total_amount - COALESCE(paid_amount,0)) FROM fi_invoices WHERE status NOT IN ('paid','cancelled')), 0) AS accounts_receivable,
-          COALESCE((SELECT SUM(total_amount - COALESCE(paid_amount,0)) FROM fi_invoices WHERE type='payable' AND status NOT IN ('paid','cancelled')), 0) AS accounts_payable,
-          COALESCE((SELECT SUM(debit_amount - credit_amount) FROM gl_journal_entries WHERE account_code LIKE '14%'), 0) AS inventory
-      `)),
-    ]);
+    const [glKpiR, liquidityR] = await Promise.all([this.fetchGlKpis(), this.fetchLiquidity()]);
+    const glRow: Row  = glKpiR.ok    ? (dbRows(glKpiR.data)[0]    ?? {}) : {};
+    const liqRow: Row = liquidityR.ok ? (dbRows(liquidityR.data)[0] ?? {}) : {};
+    return Ok(this.buildDashboardKpis(glRow, liqRow));
+  }
 
-    const glRow: Row     = glKpiR.ok   ? (dbRows(glKpiR.data)[0]   ?? {}) : {};
-    const liqRow: Row    = liquidityR.ok ? (dbRows(liquidityR.data)[0] ?? {}) : {};
+  private fetchGlKpis() {
+    return safeCall(() => rawSql(sql`
+      SELECT
+        COALESCE(SUM(CASE WHEN account_code LIKE '4%' THEN credit_amount - debit_amount ELSE 0 END), 0) AS revenue,
+        COALESCE(SUM(CASE WHEN account_code LIKE '5%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS cogs,
+        COALESCE(SUM(CASE WHEN account_code LIKE '6%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS opex,
+        COALESCE(SUM(CASE WHEN account_code LIKE '1%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS total_assets,
+        COALESCE(SUM(CASE WHEN account_code LIKE '2%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS current_assets,
+        COALESCE(SUM(CASE WHEN account_code LIKE '3%' THEN credit_amount - debit_amount ELSE 0 END), 0) AS current_liabilities
+      FROM gl_journal_entries
+      WHERE EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM NOW())
+    `));
+  }
 
-    const revenue   = Number(glRow['revenue']   ?? 0);
-    const cogs      = Number(glRow['cogs']      ?? 0);
-    const opex      = Number(glRow['opex']      ?? 0);
-    const assets    = Number(glRow['total_assets'] ?? 0);
-    const ca        = Number(glRow['current_assets'] ?? 0);
-    const cl        = Number(glRow['current_liabilities'] ?? 0);
-    const ar        = Number(liqRow['accounts_receivable'] ?? 0);
-    const ap        = Number(liqRow['accounts_payable']    ?? 0);
-    const inventory = Number(liqRow['inventory']           ?? 0);
+  private fetchLiquidity() {
+    return safeCall(() => rawSql(sql`
+      SELECT
+        COALESCE((SELECT SUM(total_amount - COALESCE(paid_amount,0)) FROM fi_invoices WHERE status NOT IN ('paid','cancelled')), 0) AS accounts_receivable,
+        COALESCE((SELECT SUM(total_amount - COALESCE(paid_amount,0)) FROM fi_invoices WHERE type='payable' AND status NOT IN ('paid','cancelled')), 0) AS accounts_payable,
+        COALESCE((SELECT SUM(debit_amount - credit_amount) FROM gl_journal_entries WHERE account_code LIKE '14%'), 0) AS inventory
+    `));
+  }
 
-    const effectiveCa  = ca > 0 ? ca : ar;
-    const effectiveCl  = cl > 0 ? cl : ap;
-    const effectiveInv = inventory > 0 ? inventory : 0;
-
-    const grossProfit    = revenue - cogs;
-    const netIncome      = grossProfit - opex;
-    const grossMarginPct = safeDiv(grossProfit, revenue) * 100;
-    const netMarginPct   = safeDiv(netIncome, revenue) * 100;
-    const roa            = safeDiv(netIncome * 12, assets) * 100;
-    const currentRatio   = safeDiv(effectiveCa, effectiveCl);
-    const quickRatio     = safeDiv(effectiveCa - effectiveInv, effectiveCl);
-    const workingCapital = effectiveCa - effectiveCl;
-
-    return Ok({
+  private buildDashboardKpis(glRow: Row, liqRow: Row): object {
+    const revenue = Number(glRow['revenue'] ?? 0);
+    const cogs    = Number(glRow['cogs']    ?? 0);
+    const opex    = Number(glRow['opex']    ?? 0);
+    const assets  = Number(glRow['total_assets'] ?? 0);
+    const ar = Number(liqRow['accounts_receivable'] ?? 0);
+    const ap = Number(liqRow['accounts_payable']    ?? 0);
+    const effectiveCa  = Number(glRow['current_assets']      ?? 0) || ar;
+    const effectiveCl  = Number(glRow['current_liabilities'] ?? 0) || ap;
+    const effectiveInv = Math.max(Number(liqRow['inventory'] ?? 0), 0);
+    const grossProfit = revenue - cogs;
+    const netIncome   = grossProfit - opex;
+    return {
       kpis: {
-        currentRatio:      +currentRatio.toFixed(2),
-        quickRatio:        +quickRatio.toFixed(2),
-        grossProfitMargin: +grossMarginPct.toFixed(1),
-        netProfitMargin:   +netMarginPct.toFixed(1),
-        returnOnAssets:    +roa.toFixed(1),
+        currentRatio:      +safeDiv(effectiveCa, effectiveCl).toFixed(2),
+        quickRatio:        +safeDiv(effectiveCa - effectiveInv, effectiveCl).toFixed(2),
+        grossProfitMargin: +safePct(grossProfit, revenue).toFixed(1),
+        netProfitMargin:   +safePct(netIncome, revenue).toFixed(1),
+        returnOnAssets:    +safePct(netIncome * 12, assets).toFixed(1),
         returnOnEquity:    0,
       },
       revenue, expenses: cogs + opex, grossProfit,
-      cashBalance: 0, accountsReceivable: ar, accountsPayable: ap, workingCapital,
-    });
+      cashBalance: 0, accountsReceivable: ar, accountsPayable: ap,
+      workingCapital: effectiveCa - effectiveCl,
+    };
   }
 
   async getCashPosition(): Promise<Result<object, AppError>> {
     return safeCall(async () => {
+      const rows = await this.fetchCashAccounts();
+      const accounts = this.mapCashAccounts(rows);
+      const totalBalance = accounts.reduce((s, a) => s + a.balance, 0);
+      const byCurrency = this.groupAccountsByCurrency(accounts);
+      return { accounts, summary: { totalBalance, accountCount: accounts.length }, byCurrency };
+    });
+  }
+
+  private async fetchCashAccounts(): Promise<Row[]> {
     const r = await safeCall(() => rawSql(sql`
       SELECT
-        source_type AS account_name,
-        SUM(total_debit) AS total_debit,
-        SUM(total_credit) AS total_credit,
-        SUM(total_debit) - SUM(total_credit) AS balance
+        account_code,
+        description AS account_name,
+        'MAIN'      AS bank_name,
+        'UZS'       AS currency,
+        COALESCE(SUM(debit_amount - credit_amount), 0) AS balance
       FROM gl_journal_entries
-      GROUP BY source_type
+      WHERE account_code LIKE '11%'
+      GROUP BY account_code, description
       ORDER BY balance DESC
-      LIMIT 50
+      LIMIT 20
     `));
-    const accounts: Row[] = r.ok ? dbRows(r.data) : [];
-    const totalBalance = (accounts ?? []).reduce((s, a) => s + Number(a['balance'] ?? 0), 0);
-    return { accounts, summary: { totalBalance, accountCount: accounts.length, lastUpdated: _time.now() } };
-    });
+    return r.ok ? dbRows(r.data) : [];
+  }
+
+  private mapCashAccounts(rows: Row[]): Array<{ id: string; accountName: string; accountNumber: string; bankName: string; currency: string; balance: number }> {
+    return rows.map((row, idx) => ({
+      id:            String(idx + 1),
+      accountName:   String(row['account_name'] ?? `Hisob ${row['account_code']}`),
+      accountNumber: String(row['account_code'] ?? ''),
+      bankName:      String(row['bank_name']    ?? 'MAIN'),
+      currency:      String(row['currency']     ?? 'UZS'),
+      balance:       Number(row['balance']      ?? 0),
+    }));
+  }
+
+  private groupAccountsByCurrency(accounts: Array<{ currency: string; balance: number }>): Array<{ currency: string; total: number; accountCount: number }> {
+    const currMap: Record<string, { total: number; count: number }> = {};
+    for (const a of accounts) {
+      (currMap[a.currency] ??= { total: 0, count: 0 }).total += a.balance;
+      currMap[a.currency].count++;
+    }
+    const byCurrency = Object.entries(currMap).map(([currency, { total, count }]) => ({
+      currency, total, accountCount: count,
+    }));
+    if (!byCurrency.length) byCurrency.push({ currency: 'UZS', total: 0, accountCount: 0 });
+    return byCurrency;
   }
 
   async getProfitability(): Promise<Result<object, AppError>> {
     return safeCall(async () => {
-    const [byProductR, byCustomerR, glCostR] = await Promise.all([
-      safeCall(() => rawSql(sql`
-        SELECT
-          product_category AS name,
-          SUM(total_amount)::numeric(15,2) AS revenue,
-          COUNT(*)::int AS order_count
-        FROM fi_invoices
-        WHERE status = 'paid'
-        GROUP BY product_category
-        ORDER BY revenue DESC
-        LIMIT 20
-      `)),
-      safeCall(() => rawSql(sql`
-        SELECT
-          customer_name AS name,
-          SUM(total_amount)::numeric(15,2) AS revenue,
-          COUNT(*)::int AS invoice_count
-        FROM fi_invoices
-        WHERE status = 'paid'
-        GROUP BY customer_name
-        ORDER BY revenue DESC
-        LIMIT 20
-      `)),
-      safeCall(() => rawSql(sql`
-        SELECT
-          COALESCE(SUM(CASE WHEN account_code LIKE '4%' THEN credit_amount - debit_amount ELSE 0 END), 0) AS gl_revenue,
-          COALESCE(SUM(CASE WHEN account_code LIKE '5%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS gl_cogs
-        FROM gl_journal_entries
-        WHERE EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM NOW())
-      `)),
-    ]);
+      const [invoiceR, glCostR] = await Promise.all([this.fetchInvoiceRevenue(), this.fetchGlCosts()]);
+      const invRow: Row = invoiceR.ok ? (dbRows(invoiceR.data)[0] ?? {}) : {};
+      const glRow: Row  = glCostR.ok  ? (dbRows(glCostR.data)[0]  ?? {}) : {};
+      return this.buildProfitabilityResult(invRow, glRow);
+    });
+  }
 
-    const byProduct: Row[]  = byProductR.ok  ? dbRows(byProductR.data)  : [];
-    const byCustomer: Row[] = byCustomerR.ok ? dbRows(byCustomerR.data) : [];
-    const glCostRow: Row    = glCostR.ok     ? (dbRows(glCostR.data)[0] ?? {}) : {};
+  private fetchInvoiceRevenue() {
+    return safeCall(() => rawSql(sql`
+      SELECT
+        COALESCE(SUM(total_amount), 0)              AS total_revenue,
+        COALESCE(SUM(total_amount * ${this.VAT_RATE}), 0) AS tax_amount,
+        COUNT(*)::int                                AS invoice_count
+      FROM fi_invoices
+      WHERE status = 'paid'
+        AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM NOW())
+    `));
+  }
 
-    const invoiceRevenue = (byCustomer ?? []).reduce((s, r) => s + Number(r['revenue'] ?? 0), 0);
-    const glRevenue  = Number(glCostRow['gl_revenue'] ?? 0);
-    const glCogs     = Number(glCostRow['gl_cogs']    ?? 0);
+  private fetchGlCosts() {
+    return safeCall(() => rawSql(sql`
+      SELECT
+        COALESCE(SUM(CASE WHEN account_code LIKE '4%'  THEN credit_amount - debit_amount ELSE 0 END), 0) AS gl_revenue,
+        COALESCE(SUM(CASE WHEN account_code LIKE '5%'  THEN debit_amount - credit_amount ELSE 0 END), 0) AS gl_cogs,
+        COALESCE(SUM(CASE WHEN account_code LIKE '61%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS labor,
+        COALESCE(SUM(CASE WHEN account_code LIKE '62%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS overhead
+      FROM gl_journal_entries
+      WHERE EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM NOW())
+    `));
+  }
+
+  private buildProfitabilityResult(invRow: Row, glRow: Row): object {
+    const invoiceRevenue = Number(invRow['total_revenue'] ?? 0);
+    const taxAmount      = Number(invRow['tax_amount']    ?? 0);
+    const invoiceCount   = Number(invRow['invoice_count'] ?? 0);
+    const glRevenue      = Number(glRow['gl_revenue']     ?? 0);
+    const glCogs         = Number(glRow['gl_cogs']        ?? 0);
+    const labor          = Number(glRow['labor']          ?? 0);
+    const overhead       = Number(glRow['overhead']       ?? 0);
 
     const totalRevenue = glRevenue > 0 ? glRevenue : invoiceRevenue;
-    const totalCost    = glRevenue > 0 ? glCogs : 0;
+    const netValue     = totalRevenue - taxAmount;
+    const rawMaterial  = glCogs - labor - overhead;
+    const material     = rawMaterial > 0 ? rawMaterial : glCogs * COGS_MATERIAL_RATIO;
+    const totalCost    = glCogs;
     const grossProfit  = totalRevenue - totalCost;
 
     return {
-      byProduct,
-      byCustomer,
-      summary: {
-        totalRevenue,
-        totalCost,
-        grossProfit,
-        margin: +(safeDiv(grossProfit, totalRevenue) * 100).toFixed(1),
-      },
+      revenue: { total: totalRevenue, netValue, taxAmount, invoiceCount },
+      costs:   { total: totalCost, material, labor, overhead },
+      grossProfit,
+      grossMargin: +safePct(grossProfit, totalRevenue).toFixed(1),
     };
-    });
   }
 
   async getProfitabilityTrend(): Promise<Result<object, AppError>> {
     return safeCall(async () => {
-    const r = await safeCall(() => rawSql(sql`
-      SELECT
-        TO_CHAR(DATE_TRUNC('month', created_at), 'Mon') AS month,
-        COALESCE(SUM(CASE WHEN account_code LIKE '4%' THEN credit_amount - debit_amount ELSE 0 END), 0) AS revenue,
-        COALESCE(SUM(CASE WHEN account_code LIKE '5%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS expenses,
-        COALESCE(SUM(CASE WHEN account_code LIKE '4%' THEN credit_amount - debit_amount ELSE 0 END), 0) -
-        COALESCE(SUM(CASE WHEN account_code LIKE '5%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS gross_profit
-      FROM gl_journal_entries
-      WHERE created_at >= NOW() - INTERVAL '6 months'
-      GROUP BY 1, DATE_TRUNC('month', created_at)
-      ORDER BY DATE_TRUNC('month', created_at)
-      LIMIT 6
-    `));
+      const r = await safeCall(() => rawSql(sql`
+        SELECT
+          TO_CHAR(DATE_TRUNC('month', created_at), 'Mon') AS month,
+          COALESCE(SUM(CASE WHEN account_code LIKE '4%' THEN credit_amount - debit_amount ELSE 0 END), 0) AS revenue,
+          COALESCE(SUM(CASE WHEN account_code LIKE '5%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS expenses,
+          COALESCE(SUM(CASE WHEN account_code LIKE '4%' THEN credit_amount - debit_amount ELSE 0 END), 0) -
+          COALESCE(SUM(CASE WHEN account_code LIKE '5%' THEN debit_amount - credit_amount ELSE 0 END), 0) AS gross_profit
+        FROM gl_journal_entries
+        WHERE created_at >= NOW() - INTERVAL '6 months'
+        GROUP BY DATE_TRUNC('month', created_at)
+        ORDER BY DATE_TRUNC('month', created_at)
+        LIMIT 6
+      `));
 
-    const rows: Row[] = r.ok ? dbRows(r.data) : [];
-    return (Array.isArray(rows) ? rows : []).map(row => ({
-      month:       row['month'],
-      revenue:     Number(row['revenue']      ?? 0),
-      expenses:    Number(row['expenses']     ?? 0),
-      grossProfit: Number(row['gross_profit'] ?? 0),
-      margin:      +(safeDiv(Number(row['gross_profit'] ?? 0), Number(row['revenue'] ?? 1)) * 100).toFixed(1),
-    }));
+      const rows: Row[] = r.ok ? dbRows(r.data) : [];
+      return rows.map(row => {
+        const rev = Number(row['revenue']      ?? 0);
+        const gp  = Number(row['gross_profit'] ?? 0);
+        return {
+          month:       row['month'],
+          revenue:     rev,
+          expenses:    Number(row['expenses'] ?? 0),
+          grossProfit: gp,
+          margin:      +safePct(gp, rev).toFixed(1),
+        };
+      });
     });
   }
 
-  async getFinancialRisk(): Promise<Result<object, AppError>> {
-    return safeCall(async () => {
-      const r = await safeCall(() => rawSql(sql`
-        SELECT
-          COALESCE(SUM(total_amount - COALESCE(paid_amount,0)), 0) AS overdue_amount,
-          COUNT(*) AS overdue_count
-        FROM fi_invoices
-        WHERE status = 'overdue'
-      `));
-      if (!r.ok) this.logger.warn(`getFinancialRisk: ${r.error}`);
-      const row: Row = r.ok ? (dbRows(r.data)[0] ?? {}) : {};
-      const overdueRows: Row[] = r.ok ? dbRows(r.data) : [];
-      return {
-        overdueReceivables: Number(row['overdue_amount'] ?? 0),
-        overdueCount:       Number(row['overdue_count']  ?? 0),
-        concentrationRisk:  'MEDIUM',
-        liquidityRisk:      'LOW',
-        creditRisk:         'MEDIUM',
-        risks: overdueRows,
-      };
-    });
+  /** Financial risk — delegated to `CfoRiskService`. */
+  getFinancialRisk(): Promise<Result<object, AppError>> {
+    return this.riskService.getFinancialRisk();
   }
 }

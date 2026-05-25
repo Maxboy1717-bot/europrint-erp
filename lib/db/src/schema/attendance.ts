@@ -1,11 +1,19 @@
-import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date, uniqueIndex, jsonb, index } from "drizzle-orm/pg-core";
+/**
+ * @module attendance
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date, uniqueIndex, jsonb, index, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { employees } from "./employees";
 
 export const attendance = pgTable("attendance", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  // Multi-tenancy (Phase 2 / Task 2.1). See employees.ts for rationale.
+  tenantId: integer("tenant_id").notNull().default(1),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   attendanceDate: date("attendance_date").notNull(),
   checkInTime: timestamp("check_in_time"),
   checkOutTime: timestamp("check_out_time"),
@@ -22,6 +30,10 @@ export const attendance = pgTable("attendance", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
+  check("attendance_status_chk", sql`${table.status} IN ('present','absent','late','half_day','on_leave','sick_leave','business_trip','remote','holiday')`),
+  check("attendance_late_minutes_chk", sql`${table.lateMinutes} >= 0`),
+  check("attendance_early_leave_chk", sql`${table.earlyLeaveMinutes} >= 0`),
+  check("attendance_overtime_chk", sql`${table.overtimeMinutes} >= 0`),
   uniqueIndex("uq_attendance_emp_date").on(table.employeeId, table.attendanceDate),
   index("idx_attendance_employee_id").on(table.employeeId),
   index("idx_attendance_attendance_date").on(table.attendanceDate),
@@ -30,7 +42,7 @@ export const attendance = pgTable("attendance", {
 
 export const attendanceRecords = pgTable("attendance_records", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   eventType: varchar("event_type", { length: 10 }).notNull(),
   eventTime: timestamp("event_time").notNull(),
   source: varchar("source", { length: 50 }),
@@ -40,6 +52,7 @@ export const attendanceRecords = pgTable("attendance_records", {
   rawData: jsonb("raw_data"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
+  check("attendance_records_event_type_chk", sql`${table.eventType} IN ('in','out')`),
   index("idx_attendance_records_employee_id").on(table.employeeId),
   index("idx_attendance_records_event_time").on(table.eventTime),
   index("idx_attendance_records_event_type").on(table.eventType),
@@ -63,7 +76,7 @@ export const dailyAttendanceSummary = pgTable("daily_attendance_summary", {
 
 export const abcAnalysis = pgTable("abc_analysis", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   analysisPeriodStart: date("analysis_period_start").notNull(),
   analysisPeriodEnd: date("analysis_period_end").notNull(),
   attendanceScore: decimal("attendance_score", { precision: 5, scale: 2 }),
@@ -81,18 +94,10 @@ export const abcAnalysis = pgTable("abc_analysis", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
+  check("abc_analysis_category_chk", sql`${table.category} IS NULL OR ${table.category} IN ('A','B','C')`),
   uniqueIndex("uq_abc_emp_period").on(table.employeeId, table.analysisPeriodStart),
 ]);
 
-export const faceEncodings = pgTable("face_encodings", {
-  id: varchar("id", { length: 36 }).primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull().unique(),
-  faceEncoding: text("face_encoding"),
-  encodingDate: timestamp("encoding_date"),
-  embeddingModel: varchar("embedding_model", { length: 50 }),
-  confidenceScore: decimal("confidence_score", { precision: 5, scale: 3 }),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
 
 export const insertAttendanceSchema = createInsertSchema(attendance).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type InsertAttendance = z.infer<typeof insertAttendanceSchema>;
@@ -110,6 +115,3 @@ export const insertAbcAnalysisSchema = createInsertSchema(abcAnalysis).omit({ id
 export type InsertAbcAnalysis = z.infer<typeof insertAbcAnalysisSchema>;
 export type AbcAnalysis = typeof abcAnalysis.$inferSelect;
 
-export const insertFaceEncodingSchema = createInsertSchema(faceEncodings).omit({ updatedAt: true } as never);
-export type InsertFaceEncoding = z.infer<typeof insertFaceEncodingSchema>;
-export type FaceEncoding = typeof faceEncodings.$inferSelect;

@@ -1,10 +1,17 @@
+/**
+ * @module MessageInput
+ * @description React UI component.
+ */
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Send, X, Smile, Paperclip, BarChart2, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ChatMessage } from "@/store/chatStore";
 import { VoiceRecorder } from "./VoiceRecorder";
+import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface Props {
   roomId: string;
   replyTo?: ChatMessage | null;
@@ -20,6 +27,7 @@ interface Props {
 export function MessageInput({
   roomId, replyTo, onCancelReply, onSend, onTypingStart, onTypingStop, onUploadFile, onCreatePoll, onVoiceMessage,
 }: Props) {
+  const { t } = useTranslation("common");
   const [text, setText] = useState("");
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -35,6 +43,16 @@ export function MessageInput({
     ta.style.height = "auto";
     ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
   }, [text]);
+
+  // Cancel pending typing-stop timeout when the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
@@ -132,7 +150,7 @@ export function MessageInput({
     >
       {isDragOver && (
         <div className="mb-2 px-3 py-2 bg-primary/10 rounded-lg border border-primary/30 text-xs text-primary text-center">
-          Faylni tashlang...
+          {t("faylniTashlang")}
         </div>
       )}
 
@@ -171,7 +189,7 @@ export function MessageInput({
         {/* Emoji button (placeholder) */}
         <button
           className="flex-shrink-0 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors mb-0.5"
-          title="Emoji"
+          title={t("emoji")}
         >
           <Smile className="w-5 h-5" />
         </button>
@@ -182,7 +200,7 @@ export function MessageInput({
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          placeholder="Xabar yozing... (Enter = yuborish, Shift+Enter = yangi qator)"
+          placeholder={tLabel('common.MessageInput.xabarYozingEnterYuborishShift', "Xabar yozing... (Enter = yuborish, Shift+Enter = yangi qator)")}
           rows={1}
           className={cn(
             "flex-1 resize-none rounded-xl border border-border/60 bg-muted/30",
@@ -197,7 +215,7 @@ export function MessageInput({
         <button
           onClick={() => fileInputRef.current?.click()}
           className="flex-shrink-0 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors mb-0.5"
-          title="Fayl yuklash"
+          title={t("faylYuklash")}
         >
           <Paperclip className="w-5 h-5" />
         </button>
@@ -214,7 +232,7 @@ export function MessageInput({
           <button
             onClick={onCreatePoll}
             className="flex-shrink-0 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors mb-0.5"
-            title="So'rovnoma yaratish"
+            title={t("sorovnomaYaratish")}
           >
             <BarChart2 className="w-5 h-5" />
           </button>
@@ -229,7 +247,7 @@ export function MessageInput({
               ? "text-primary bg-primary/10 hover:bg-primary/20"
               : "text-muted-foreground hover:text-foreground hover:bg-muted"
           )}
-          title="Ovozli xabar"
+          title={t("ovozliXabar")}
         >
           <Mic className="w-5 h-5" />
         </button>
@@ -250,7 +268,7 @@ export function MessageInput({
       </div>
 
       <p className="text-[10px] text-muted-foreground/40 mt-1.5 pl-10">
-        Enter — yuborish · Shift+Enter — yangi qator · Drag & Drop fayl yuklash
+        {t("enterYuborishShiftEnterYangi")}
       </p>
     </div>
   );

@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module strategic.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { StrategicRepository } from './strategic.repository';
+import { STRATEGIC_REPO, type IStrategicRepo } from '../domain/repositories/i-strategic.repo';
 
 @Injectable()
 export class StrategicService {
-  constructor(private readonly repo: StrategicRepository) {}
+  constructor(@Inject(STRATEGIC_REPO) private readonly repo: IStrategicRepo) {}
 
   async listCategories(): Promise<Result<object, AppError>> {
     return this.repo.listCategories();

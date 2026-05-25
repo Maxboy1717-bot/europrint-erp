@@ -1,3 +1,8 @@
+/**
+ * @module result-unwrap.interceptor
+ * @description NestJS interceptor. Wraps request/response pipeline.
+ */
+
 import {
   Injectable,
   NestInterceptor,
@@ -44,7 +49,7 @@ function isTipB(val: unknown): val is { isOk(): boolean; value?: unknown; error?
  * Muammo:
  *   Controller → service Result<T> (Tip A yoki B) qaytaradi
  *   Frontend: { isSuccess: true, value: [...] } yoki { value: [...], isOk: fn }
- *   Frontend: (data ?? []).map(...) → TypeError!
+ *   Frontend: (Array.isArray(data) ? data : []).map(...) → TypeError!
  *
  * Yechim — Ikki tip ham unwrap qilinadi:
  *   Tip A: isSuccess === true  → value  |  isSuccess === false → 500

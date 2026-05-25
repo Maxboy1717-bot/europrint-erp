@@ -1,5 +1,10 @@
+/**
+ * @module reports-hub.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -7,15 +12,23 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ReportsHubService } from './reports-hub.service';
 import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  ReportDefinitionAclTranslator,
+  type LegacyReportDefinitionRow,
+  type ReportDefinitionDto,
+} from './acl/report-definition-acl';
 
 const REPORT_ROLES = ['manager', 'finance', 'admin', 'super_admin', 'director', 'MANAGER', 'ADMIN', 'SUPER_ADMIN', 'DIRECTOR'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('reports-hub')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Roles(...REPORT_ROLES)
 export class ReportsHubController {
+  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
+  private readonly definitionAcl = new ReportDefinitionAclTranslator();
+
   constructor(private readonly svc: ReportsHubService) {}
 
   @Get('dashboard')
@@ -31,6 +44,21 @@ export class ReportsHubController {
   @Get('definitions')
   async getDefinitions(@Query() q: Record<string, string>) {
     return unwrapOrInternal(await this.svc.getDefinitions(q));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of report definitions. New BC-9
+   * (Director / Reporting Hub) consumers should target this route;
+   * `/definitions` stays for backwards-compat.
+   */
+  @Get('definitions/v2')
+  async getDefinitionsV2(@Query() q: Record<string, string>): Promise<ReportDefinitionDto[]> {
+    const rows = (await this.svc.getDefinitions(q)) as unknown as LegacyReportDefinitionRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.definitionAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: ReportDefinitionDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post('definitions')

@@ -1,3 +1,8 @@
+/**
+ * @module enps-cron.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { enps_surveys, hrEmployees } from '@shared/db';
@@ -16,8 +21,12 @@ export interface EmployeeForNotificationRow {
 @Injectable()
 export class EnpsCronRepository {
   async findSurveyByTitle(title: string): Promise<EnpsSurveyRow | null> {
-    const rows = await db.select({ id: enps_surveys.id }).from(enps_surveys).where(eq(enps_surveys.title, title)).limit(1);
-    return rows[0] ? { id: rows[0].id } : null;
+    try {
+      const rows = await db.select({ id: enps_surveys.id }).from(enps_surveys).where(eq(enps_surveys.title, title)).limit(1);
+      return rows[0] ? { id: rows[0].id } : null;
+    } catch (e) {
+      throw new Error(`enps_cron.findSurveyByTitle: ${String(e)}`);
+    }
   }
 
   async insertSurvey(
@@ -27,16 +36,20 @@ export class EnpsCronRepository {
     startDate: string,
     endDate: string,
   ): Promise<number> {
-    const rows = await db.insert(enps_surveys).values({
-      title,
-      description,
-      questions,
-      period: 'quarterly',
-      status: 'active',
-      start_date: startDate,
-      end_date: endDate,
-    }).returning({ id: enps_surveys.id });
-    return rows[0]?.id ?? 0;
+    try {
+      const rows = await db.insert(enps_surveys).values({
+        title,
+        description,
+        questions,
+        period: 'quarterly',
+        status: 'active',
+        startDate: startDate,
+        endDate: endDate,
+      }).returning({ id: enps_surveys.id });
+      return rows[0]?.id ?? 0;
+    } catch (e) {
+      throw new Error(`enps_cron.insertSurvey: ${String(e)}`);
+    }
   }
 
   async findActiveEmployeesWithTelegram(): Promise<EmployeeForNotificationRow[]> {

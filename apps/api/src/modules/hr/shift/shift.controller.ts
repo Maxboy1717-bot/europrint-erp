@@ -1,7 +1,13 @@
+/**
+ * @module shift.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, UseGuards, Get, Post, Patch, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 import { ShiftService } from './shift.service';
@@ -34,14 +40,19 @@ const ScheduleQuerySchema = z.object({
 class ScheduleQueryDto extends createZodDto(ScheduleQuerySchema) {}
 
 @Roles('admin', 'manager', 'supervisor', 'hr_manager', 'employee')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
+@ApiTags('Shift')
+@ApiBearerAuth()
 @Controller('hr-v2/shifts')
 export class ShiftController {
   private readonly logger = new Logger(ShiftController.name);
   constructor(private readonly svc: ShiftService) {}
 
+  @ApiOperation({ summary: 'Assign' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   async assign(@Body() body: AssignShiftDto) {
     return unwrapOrInternal(await this.svc.assignShift({
@@ -54,6 +65,9 @@ export class ShiftController {
     }));
   }
 
+  @ApiOperation({ summary: 'Request swap' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('swap-request')
   async requestSwap(@Body() body: RequestSwapDto) {
     return unwrapOrInternal(await this.svc.requestSwap({
@@ -64,11 +78,17 @@ export class ShiftController {
     }));
   }
 
+  @ApiOperation({ summary: 'Approve swap' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/approve-swap')
   async approveSwap(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.approveSwap(id));
   }
 
+  @ApiOperation({ summary: 'Get schedule' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('schedule')
   async getSchedule(@Query() query: ScheduleQueryDto) {
     return unwrapOrInternal(await this.svc.getSchedule({

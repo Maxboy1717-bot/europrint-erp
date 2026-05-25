@@ -1,3 +1,8 @@
+/**
+ * @module seed-rbac
+ * @description Source module. See exports for details.
+ */
+
 import { db, pool } from "./index";
 import { positionPermissions, positionFeatureFlags } from "./schema/position-permissions";
 import { positions } from "./schema/positions";

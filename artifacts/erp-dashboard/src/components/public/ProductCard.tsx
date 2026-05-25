@@ -1,6 +1,12 @@
+/**
+ * @module ProductCard
+ * @description React UI component.
+ */
+
 import { Link } from 'wouter';
 import { Package, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '@/lib/public/i18n';
+import { useTranslation } from '@/lib/i18n';
 
 interface Product {
   id: string;
@@ -18,14 +24,15 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { language, t } = useLanguage();
+  const { t } = useTranslation("common");
+  const { language } = useLanguage();
 
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('uz-UZ').format(value);
   };
 
   return (
-    <div className="group bg-surface-container-lowest rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl" style={{ border: '1px solid rgba(0,0,0,0.04)' }} data-testid={`product-card-${product.id}`}>
+    <div className="group bg-card rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl" style={{ border: '1px solid rgba(0,0,0,0.04)' }} data-testid={`product-card-${product.id}`}>
       <Link href={`/site/product/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden" style={{ backgroundColor: '#FAFBFC' }}>
           {product.image ? (
@@ -39,7 +46,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               <Package className="w-20 h-20 transition-colors duration-300" style={{ color: '#E5E7EB' }} />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
       </Link>
       
@@ -61,7 +68,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         
         <div className="mt-4 flex items-center justify-between gap-3">
           <p className="text-lg font-bold" style={{ color: '#F97316' }}>
-            {formatPrice(product.price)} <span className="text-sm font-medium">so'm</span>
+            {formatPrice(product.price)} <span className="text-sm font-medium">{t("som")}</span>
           </p>
           <button 
             className="flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 active:scale-95"

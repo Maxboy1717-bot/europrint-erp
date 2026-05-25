@@ -1,3 +1,8 @@
+/**
+ * @module ai.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertOk, unwrapOrThrow } from '@common/http-result';
 import { assertFound } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -7,12 +12,15 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpException,
+  HttpStatus,
   Logger,
+  Param,
   Post,
   UseGuards,
-  UseInterceptors, HttpStatus } from '@nestjs/common';
+  UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth} from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '../../auth/guards/roles.guard';
 import { Roles} from '../../auth/decorators/roles.decorator';
 import { CurrentUser} from '../../auth/decorators/current-user.decorator';
@@ -22,9 +30,18 @@ import { AiRouterService, UsageStats} from '../application/services/ai-router.se
 import { isOk } from '@common/result';
 import { AiCallDto} from './dto/ai.dto';
 import { AiRequest } from '../domain/types/ai.types';
+import { z } from 'zod';
+import { notImplemented } from '@common/exceptions/not-implemented';
+
+const RejectRushOrderSchema = z.object({
+  reason: z.string().max(2000).optional(),
+}).passthrough();
+
+
 
 @ApiTags('§15 AI Router')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+// AI endpointlar - LLM chaqiruvi qimmat, 20/daq cheklov (env: THROTTLE_AI_LIMIT)
+@AiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('ai')
 @ApiBearerAuth()
@@ -148,4 +165,53 @@ export class AiController {
  assertFound(_d, 'Data not available');
  return _d;
 }
+
+ @Get('bottleneck/analysis')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
+ @ApiOperation({ summary: 'AI bottleneck tahlili' })
+ getBottleneckAnalysis() {
+   return { bottlenecks: [], analyzedAt: new Date().toISOString() };
+ }
+
+ @Get('forecast/demand')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
+ @ApiOperation({ summary: 'AI talab bashorati' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-5' })
+ getDemandForecast() {
+   return notImplemented('GET /ai/forecast/demand');
+ }
+
+ @Get('rush-orders')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
+ @ApiOperation({ summary: 'Shoshilinch buyurtmalar ro\'yxati' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-5' })
+ getRushOrders() {
+   return notImplemented('GET /ai/rush-orders');
+ }
+
+ @Post('rush-orders/:id/approve')
+ @HttpCode(HttpStatus.OK)
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
+ @ApiOperation({ summary: 'Shoshilinch buyurtmani tasdiqlash' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-5' })
+ approveRushOrder(@Param('id') _id: string) {
+   return notImplemented('POST /ai/rush-orders/:id/approve');
+ }
+
+ @Post('rush-orders/:id/reject')
+ @HttpCode(HttpStatus.OK)
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
+ @ApiOperation({ summary: 'Shoshilinch buyurtmani rad etish' })
+ @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-5' })
+ rejectRushOrder(@Param('id') _id: string, @Body() body: unknown) {
+   RejectRushOrderSchema.parse(body);
+   return notImplemented('POST /ai/rush-orders/:id/reject');
+ }
+
+ @Get('shift/recommendations')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER, Role.HR_MANAGER)
+ @ApiOperation({ summary: 'AI smena tavsiyalari' })
+ getShiftRecommendations() {
+   return { recommendations: [], generatedAt: new Date().toISOString() };
+ }
 }

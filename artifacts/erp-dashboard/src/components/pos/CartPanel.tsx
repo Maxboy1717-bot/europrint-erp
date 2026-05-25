@@ -1,3 +1,8 @@
+/**
+ * @module CartPanel
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,25 +19,31 @@ interface CartPanelProps {
 }
 
 export function CartPanel({
-  cart,
+  cart = [],
   setCart,
   updateQuantity,
   removeFromCart,
 }: CartPanelProps) {
   const { t } = useTranslation('finance');
   const { t: tCommon } = useTranslation('common');
+  const safeCart = Array.isArray(cart) ? cart : [];
+
+  const handleClearCart = () => {
+    if (!window.confirm('Savatni tozalab tashlamoqchimisiz?')) return;
+    setCart([]);
+  };
 
   return (
     <Card className="flex-1 flex flex-col min-h-0">
       <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-sm">
-          {t('products')} ({cart.length})
+          {t('products')} ({safeCart.length})
         </CardTitle>
-        {cart.length > 0 && (
+        {safeCart.length > 0 && (
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCart([])}
+            onClick={handleClearCart}
             data-testid="button-clear-cart"
           >
             <Trash2 className="h-3 w-3 mr-1" /> {tCommon('delete')}
@@ -40,15 +51,15 @@ export function CartPanel({
         )}
       </CardHeader>
       <CardContent className="p-0 flex-1 overflow-auto">
-        {cart.length === 0 ? (
+        {safeCart.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
             <ScanBarcode className="h-12 w-12 mb-2 opacity-30" />
-            <p className="text-sm">Shtrix-kodni skanerlang</p>
-            <p className="text-xs">Scan barcode to add products</p>
+            <p className="text-sm">{t("shtrixKodniSkanerlang")}</p>
+            <p className="text-xs">{t("scanBarcodeToAddProducts")}</p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
+          <div className="ep-table-scroll"><Table>
+            <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
                 <TableHead>{t('products')}</TableHead>
                 <TableHead className="text-center w-32">{t('quantity')}</TableHead>
@@ -58,8 +69,8 @@ export function CartPanel({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(Array.isArray(cart) ? cart : []).map((item) => (
-                <TableRow key={item.productId} data-testid={`row-cart-item-${item.productId}`}>
+              {safeCart.map((item) => (
+                <TableRow key={item.productId} data-testid={`row-cart-item-${item.productId}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell>
                     <div>
                       <span className="font-medium text-sm">{item.name}</span>
@@ -111,7 +122,7 @@ export function CartPanel({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         )}
       </CardContent>
     </Card>

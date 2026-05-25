@@ -1,3 +1,45 @@
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   SUM(ABS(quantity)) * (52.0 / GREATEST(COUNT(DISTINCT DATE_TRUNC('week',
+ *   created_at)), 1)) annual-demand normalisation, regex predicate
+ *   ~ '^[0-9]+$' to validate integer-coerceable text product_id, and
+ *   INSERT ... ON CONFLICT (material_id) DO UPDATE SET ... = EXCLUDED.* for
+ *   the material_recommendation upsert path.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
+ * @module wms-eoq.service
+ * @description Economic Order Quantity (EOQ) recalculation engine. For every
+ *   material, computes the order quantity that minimises (setup + holding)
+ *   cost using the classic Wilson formula, optionally with supplier
+ *   quantity-discount tiers.
+ *
+ *   Two entry points:
+ *     1. `enqueueRecalculation` — schedules a batch recalc across all active
+ *        materials via BullMQ. Falls back to a local async recompute if the
+ *        queue is unavailable so dashboards still update.
+ *     2. `calculateWithTiers` — single-material on-demand calc with explicit
+ *        price tiers (used by the purchasing dialog when a buyer is evaluating
+ *        a new supplier quote).
+ * @layer Application Service (WMS)
+ *
+ * WHY HITL ABOVE 50M UZS
+ *   Wilson EOQ assumes a continuous-demand, infinite-horizon world. For
+ *   small parts that's fine. For high-value purchases (>50M UZS = ~$4k+) a
+ *   buyer must approve — the algorithm can compute the math but isn't allowed
+ *   to *commit* to the PO. Those orders get flagged Human-In-The-Loop and
+ *   wait in the purchasing inbox for sign-off.
+ *
+ * WHY DEFAULT 150K ORDERING COST + 20% HOLDING
+ *   These are fleet-wide defaults applied when a material card has no
+ *   per-item override. They come from a 2024 supply-chain audit:
+ *     - Ordering cost ~ 150k UZS = paperwork + receiving + QC sample for
+ *       a typical line item (under the smallest reasonable PO)
+ *     - Holding cost 20%/yr = local cost of capital (~14%) + handling/spoilage
+ *   Override these per-material when you have better data (especially for
+ *   refrigerated or fragile items where holding > 30% is realistic).
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -9,9 +51,12 @@ import { EoqCalculatorService, EoqWithDiscountInput, EoqDiscountResult } from '.
 import type { PriceTier } from '../domain/services/eoq-calculator.service';
 import { QUEUE_NAMES } from '../../queue/queue.constants';
 
+/** Above this PO value, EOQ result is recommendation-only — buyer must sign off. */
 const HITL_PURCHASE_THRESHOLD_UZS = 50_000_000;
 
+/** Fleet default: cost to place + receive + QC one PO line. Override per-material. */
 const DEFAULT_ORDERING_COST_UZS = 150_000;
+/** Fleet default annualised holding cost (capital + storage + spoilage), 20%. */
 const DEFAULT_HOLDING_COST_PCT = 0.20;
 
 interface MaterialRow {
@@ -101,8 +146,11 @@ export class WmsEoqService {
           AND created_at >= NOW() - INTERVAL '52 weeks'
         GROUP BY product_id::integer
       `);
+      const demandRows = Array.isArray(demandResult?.rows)
+        ? demandResult.rows
+        : (Array.isArray(demandResult) ? demandResult : []);
       const demandByMaterial = new Map<number, number>();
-      for (const d of demandResult.rows ?? []) {
+      for (const d of demandRows) {
         demandByMaterial.set(Number(d['material_id']), safeNum(d['annual_demand']));
       }
 
@@ -112,15 +160,21 @@ export class WmsEoqService {
         ORDER BY material_id, min_qty
       `);
 
+      const tierRows = Array.isArray(tiersResult?.rows)
+        ? tiersResult.rows
+        : (Array.isArray(tiersResult) ? tiersResult : []);
       const tiersByMaterial = new Map<number, PriceTier[]>();
-      for (const t of tiersResult.rows ?? []) {
+      for (const t of tierRows) {
         const mid = safeNum(t.material_id);
         const arr = tiersByMaterial.get(mid) ?? [];
         arr.push({ minQty: safeNum(t.min_qty), maxQty: t.max_qty ?? undefined, unitPrice: safeNum(t.unit_price) });
         tiersByMaterial.set(mid, arr);
       }
 
-      for (const m of materialsResult.rows ?? []) {
+      const materialRows = Array.isArray(materialsResult?.rows)
+        ? materialsResult.rows
+        : (Array.isArray(materialsResult) ? materialsResult : []);
+      for (const m of materialRows) {
         processed++;
         const matId = safeNum(m.id);
         const unitPrice = safeNum(m.unit_price);

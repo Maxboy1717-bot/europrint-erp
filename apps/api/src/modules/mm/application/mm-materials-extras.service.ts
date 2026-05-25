@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module mm-materials-extras.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { MmMaterialsExtrasRepository } from './mm-materials-extras.repository';
+import { MM_MATERIALS_EXTRAS_REPO, type IMmMaterialsExtrasRepo } from '../domain/repositories/i-mm-materials-extras.repo';
 
 @Injectable()
 export class MmMaterialsExtrasService {
-  constructor(private readonly repo: MmMaterialsExtrasRepository) {}
+  constructor(@Inject(MM_MATERIALS_EXTRAS_REPO) private readonly repo: IMmMaterialsExtrasRepo) {}
 
   async listRawMaterials(page: number, limit: number, search?: string): Promise<Result<object, AppError>> {
     return safeCall(async () => {

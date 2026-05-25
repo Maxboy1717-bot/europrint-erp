@@ -1,8 +1,13 @@
+/**
+ * @module create-purchase-order.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, BadRequestException, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/result';
 import { PurchaseOrder, PurchaseOrderItem } from '../../domain/aggregates/purchase-order.aggregate';
-import { IMmRepository } from '../../domain/repositories/mm.repository';
+import { IMmRepository, MM_REPO } from '../../domain/repositories/mm.repository';
 import { PO_MAX_AMOUNT_UZS } from '@common/constants/app.constants';
 
 export class CreatePurchaseOrderCommand {
@@ -17,7 +22,7 @@ export class CreatePurchaseOrderHandler
 {
   private readonly logger = new Logger(CreatePurchaseOrderHandler.name);
   constructor(
-    @Inject('IMmRepository') private mmRepo: IMmRepository,
+    @Inject(MM_REPO) private mmRepo: IMmRepository,
     private eventBus: EventBus
   ) {}
 

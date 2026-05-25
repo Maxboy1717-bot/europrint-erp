@@ -1,3 +1,8 @@
+/**
+ * @module mm-material-cards.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound } from '@common/assertions';
 import {
   Controller,
@@ -10,8 +15,9 @@ import {
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -20,8 +26,9 @@ import { safeInt } from '../../hr/common/db-rows';
 
 const MM_ROLES = ['super_admin', 'director', 'warehouse_manager', 'production_manager', 'planner'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Mm Material Cards')
 @Controller('materials/cards')
 @UseGuards(RolesGuard)
 @Roles(...MM_ROLES)
@@ -30,6 +37,8 @@ export class MmMaterialCardsController {
 
   constructor(private readonly svc: MmMaterialsExtrasService) {}
 
+  @ApiOperation({ summary: 'List' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async list(
     @Query('page') page?: string,
@@ -40,6 +49,9 @@ export class MmMaterialCardsController {
     return unwrapOrThrow(await this.svc.listMaterialCards(safeInt(page, 1), safeInt(limit, 50), search, category));
   }
 
+  @ApiOperation({ summary: 'Get by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   async getById(@Param('id') id: string) {
     const r = await this.svc.getMaterialCard(safeInt(id, 0));

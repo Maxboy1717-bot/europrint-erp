@@ -1,3 +1,8 @@
+/**
+ * @module inventory-count.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, parseSafe } from '@common/assertions';
 import { assertOk, unwrapOrThrow } from '@common/http-result';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -5,6 +10,7 @@ import {
 Body,
   Controller,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   Patch,
@@ -13,9 +19,10 @@ Body,
   NotFoundException,
   UseGuards, Logger, UseInterceptors , BadRequestException, UsePipes,
 InternalServerErrorException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '@shared/guards/roles.guard';
 import { Roles} from '@shared/decorators/roles.decorator';
 import { CurrentUser} from '@shared/decorators/current-user.decorator';
@@ -33,8 +40,9 @@ import {
  GetCountsDtoSchema,
 } from './dto/pos-v2.dto';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Inventory Count')
 @Controller('pos-v2/inventory-counts')
 @UseGuards(RolesGuard)
 export class InventoryCountController {
@@ -42,6 +50,25 @@ export class InventoryCountController {
  constructor(private readonly commandBus: CommandBus,
  private readonly queryBus: QueryBus) {}
 
+ @ApiOperation({ summary: 'Create count' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @Post()
+ @HttpCode(HttpStatus.CREATED)
+ async createCount(
+ @Query() query: Record<string, unknown>,
+ @CurrentUser() user: AuthenticatedUser,
+ ): Promise<{ data: InventoryCount[]; total: number; page: number; limit: number}> {
+ const dto = parseSafe(GetCountsDtoSchema, query, 'Invalid request body');
+ const dtoAny = dto as Record<string, unknown>;
+ const res = await this.commandBus.execute(
+ new StartInventoryCountCommand(dto.warehouseId ?? '', String(user.id), dtoAny['notes'] as string | undefined),
+ );
+ return unwrapOrThrow(res);
+}
+
+ @ApiOperation({ summary: 'Find counts' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  async findCounts(
  @Query() query: Record<string, unknown>,
@@ -55,17 +82,22 @@ export class InventoryCountController {
  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Find count by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get(':id')
  async findCountById(
  @Param('id') countId: string,
  ): Promise<InventoryCount> {
  const result = await this.queryBus.execute(new GetCountsQuery());
  assertOk(result);
- const count = (result?.data?.data ?? []).find((c: InventoryCount) => c.id === countId);
+ const count = (Array.isArray(result?.data?.data) ? result?.data?.data : []).find((c: InventoryCount) => c.id === countId);
  assertFound(count, 'Inventarizatsiya topilmadi');
  return count;
 }
 
+ @ApiOperation({ summary: 'Update count line' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/lines/:lineId')
   @UsePipes(new ZodValidationPipe(UpdateCountLineDtoSchema))
  async updateCountLine(
@@ -80,6 +112,9 @@ export class InventoryCountController {
  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Complete count' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/complete')
  @Roles('WAREHOUSE_MANAGER')
  async completeCount(
@@ -90,6 +125,9 @@ export class InventoryCountController {
  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Approve count' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/approve')
   @UsePipes(new ZodValidationPipe(ApproveCountDtoSchema))
  @Roles('WAREHOUSE_MANAGER', 'SUPER_ADMIN')

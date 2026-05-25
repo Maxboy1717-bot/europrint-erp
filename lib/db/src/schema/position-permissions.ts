@@ -1,3 +1,8 @@
+/**
+ * @module position-permissions
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { pgTable, serial, integer, varchar, boolean, timestamp, date, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -5,7 +10,7 @@ import { positions } from "./positions";
 
 export const positionPermissions = pgTable("position_permissions", {
   id: serial("id").primaryKey(),
-  positionId: integer("position_id").references(() => positions.id).notNull(),
+  positionId: integer("position_id").references(() => positions.id, { onDelete: "cascade" }).notNull(),
   moduleCode: varchar("module_code", { length: 50 }).notNull(),
   accessLevel: varchar("access_level", { length: 20 }).notNull(),
   extraActions: jsonb("extra_actions"),
@@ -18,7 +23,7 @@ export const positionPermissions = pgTable("position_permissions", {
 
 export const positionFeatureFlags = pgTable("position_feature_flags", {
   id: serial("id").primaryKey(),
-  positionId: integer("position_id").references(() => positions.id).notNull(),
+  positionId: integer("position_id").references(() => positions.id, { onDelete: "cascade" }).notNull(),
   featureKey: varchar("feature_key", { length: 100 }).notNull(),
   isAllowed: boolean("is_allowed").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

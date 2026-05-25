@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module kaizen.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { KaizenRepository } from './kaizen.repository';
+import { KAIZEN_REPO, type IKaizenRepo } from '../domain/repositories/i-kaizen.repo';
 
 @Injectable()
 export class KaizenService {
-  constructor(private readonly repo: KaizenRepository) {}
+  constructor(@Inject(KAIZEN_REPO) private readonly repo: IKaizenRepo) {}
 
   async createSuggestion(title: string, description: string, category: string, expectedBenefit: string | null, submittedBy: number): Promise<Result<object, AppError>> {
     return this.repo.createSuggestion(title, description, category, expectedBenefit, submittedBy);

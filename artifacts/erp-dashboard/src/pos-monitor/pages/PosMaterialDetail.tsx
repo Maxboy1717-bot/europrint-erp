@@ -1,3 +1,8 @@
+/**
+ * @module PosMaterialDetail
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
@@ -31,7 +36,7 @@ export default function PosMaterialDetail() {
 
   useEffect(() => { void loadData(); }, [loadData]);
 
-  const totalBalance = (stock ?? []).reduce((s, r) => s + (r.balance ?? 0), 0);
+  const totalBalance = (Array.isArray(stock) ? stock : []).reduce((s, r) => s + (r.balance ?? 0), 0);
 
   return (
     <div>
@@ -41,17 +46,17 @@ export default function PosMaterialDetail() {
         <div style={{ flex: 1 }} />
         <div className="pos-card" style={{ padding: "8px 16px", display: "inline-flex", gap: 16 }}>
           <div>
-            <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>Jami stok</div>
+            <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>{t("jamiStok")}</div>
             <div className="pos-mono" style={{ fontWeight: 700, color: "var(--pos-accent)", fontSize: 18 }}>{totalBalance.toFixed(2)}</div>
           </div>
         </div>
       </div>
 
       <div className="pos-tabs">
-        <div className={`pos-tab ${tab === "general" ? "active" : ""}`} onClick={() => setTab("general")}>Umumiy</div>
-        <div className={`pos-tab ${tab === "stock" ? "active" : ""}`} onClick={() => setTab("stock")}>Stok</div>
-        <div className={`pos-tab ${tab === "history" ? "active" : ""}`} onClick={() => setTab("history")}>Harakat tarixi</div>
-        <div className={`pos-tab ${tab === "analytics" ? "active" : ""}`} onClick={() => setTab("analytics")}>Analytics</div>
+        <div className={`pos-tab ${tab === "general" ? "active" : ""}`} onClick={() => setTab("general")}>{t("umumiy")}</div>
+        <div className={`pos-tab ${tab === "stock" ? "active" : ""}`} onClick={() => setTab("stock")}>{t("stok")}</div>
+        <div className={`pos-tab ${tab === "history" ? "active" : ""}`} onClick={() => setTab("history")}>{t("harakatTarixi")}</div>
+        <div className={`pos-tab ${tab === "analytics" ? "active" : ""}`} onClick={() => setTab("analytics")}>{t('common.analytics')}</div>
       </div>
 
       {loading && <div style={{ textAlign: "center", padding: 40, color: "var(--pos-text-muted)" }}>{t("common.loading")}</div>}
@@ -60,23 +65,23 @@ export default function PosMaterialDetail() {
         <div className="pos-card">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
             <div>
-              <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4 }}>Material ID</div>
+              <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4 }}>{t('common.materialId')}</div>
               <div className="pos-mono" style={{ fontSize: 18, fontWeight: 700, color: "var(--pos-accent)" }}>#{matId}</div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4 }}>Jami stok</div>
+              <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4 }}>{t("jamiStok")}</div>
               <div className="pos-mono" style={{ fontSize: 18, fontWeight: 700 }}>{totalBalance.toFixed(3)}</div>
             </div>
           </div>
           <div style={{ marginTop: 20, padding: "16px", background: "rgba(0,212,255,0.05)", borderRadius: 10, border: "1px solid rgba(0,212,255,0.15)" }}>
-            <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 8 }}>Barcode</div>
+            <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 8 }}>{t("barcode2")}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ fontFamily: "'Courier New', monospace", fontSize: 28, letterSpacing: 6, color: "var(--pos-text)", border: "1px solid var(--pos-border)", borderRadius: 6, padding: "8px 16px", background: "rgba(0,0,0,0.3)" }}>
                 {String(matId).padStart(8, "0")}
               </div>
               <div style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>
-                <div>Material ID: <span className="pos-mono" style={{ color: "var(--pos-accent)" }}>#{matId}</span></div>
-                <div>Jami stok: <span className="pos-mono" style={{ color: "var(--pos-success)" }}>{totalBalance.toFixed(3)}</span></div>
+                <div>{t("materialId2")}<span className="pos-mono" style={{ color: "var(--pos-accent)" }}>#{matId}</span></div>
+                <div>{t("jamiStok1")}<span className="pos-mono" style={{ color: "var(--pos-success)" }}>{totalBalance.toFixed(3)}</span></div>
                 <div>{stock.length} ta ombordan</div>
               </div>
             </div>
@@ -89,13 +94,13 @@ export default function PosMaterialDetail() {
           <table className="pos-table">
             <thead>
               <tr>
-                <th>Ombor</th>
-                <th>Balans</th>
-                <th>Amallar</th>
+                <th>{t("ombor")}</th>
+                <th>{t("balans")}</th>
+                <th>{t("Amallar")}</th>
               </tr>
             </thead>
             <tbody>
-              {(stock ?? []).map(r => (
+              {(Array.isArray(stock) ? stock : []).map(r => (
                 <tr key={`${r.warehouseId}-${r.materialCardId}`}>
                   <td>
                     <button className="pos-btn pos-btn-ghost" style={{ fontSize: 11, padding: "2px 8px" }} onClick={() => navigate(`/pos-monitor/warehouses/${r.warehouseId}`)}>
@@ -107,7 +112,7 @@ export default function PosMaterialDetail() {
                   </td>
                   <td>
                     <button className="pos-btn pos-btn-ghost" style={{ fontSize: 11, padding: "2px 8px" }} onClick={() => navigate(`/pos-monitor/movements/new?mat=${matId}&wh=${r.warehouseId}`)}>
-                      + Harakat
+                      {t("harakat1")}
                     </button>
                   </td>
                 </tr>
@@ -122,10 +127,10 @@ export default function PosMaterialDetail() {
         <div className="pos-card" style={{ overflowX: "auto" }}>
           <table className="pos-table">
             <thead>
-              <tr><th>Doc No</th><th>Tur</th><th>Status</th><th>Summa</th><th>Sana</th></tr>
+              <tr><th>{t('common.docNo')}</th><th>{t("tur")}</th><th>{t('common.status1')}</th><th>{t("summa")}</th><th>{t("date")}</th></tr>
             </thead>
             <tbody>
-              {(history ?? []).map(m => (
+              {(Array.isArray(history) ? history : []).map(m => (
                 <tr key={m.id} style={{ cursor: "pointer" }} onClick={() => navigate(`/pos-monitor/movements/${m.id}`)}>
                   <td className="pos-mono" style={{ color: "var(--pos-accent)" }}>{m.movementNumber ?? `#${m.id}`}</td>
                   <td><span className="pos-badge pos-badge-blue" style={{ fontSize: 10 }}>{m.movementType}</span></td>
@@ -143,7 +148,7 @@ export default function PosMaterialDetail() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* ABC Classification */}
           <div className="pos-card">
-            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 16 }}>📊 ABC Tahlil</div>
+            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 16 }}>{t("abcTahlil")}</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
               {[
                 { cls: "A", color: "var(--pos-success)", desc: "Yuqori qiymat (>80%)", pct: 80 },
@@ -162,10 +167,10 @@ export default function PosMaterialDetail() {
           </div>
           {/* Turnover stats */}
           <div className="pos-card">
-            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 16 }}>📈 Oborot Ko'rsatkichlari</div>
+            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 16 }}>{t("oborotKorsatkichlari")}</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16 }}>
               <div>
-                <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4 }}>Umumiy harakatlar</div>
+                <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4 }}>{t("umumiyHarakatlar")}</div>
                 <div className="pos-mono" style={{ fontSize: 22, fontWeight: 700, color: "var(--pos-accent)" }}>
                   {history.length}
                 </div>
@@ -177,13 +182,13 @@ export default function PosMaterialDetail() {
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4 }}>Stok omborlarda</div>
+                <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4 }}>{t("stokOmborlarda")}</div>
                 <div className="pos-mono" style={{ fontSize: 22, fontWeight: 700, color: "var(--pos-warning)" }}>
                   {stock.length}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4 }}>Jami balans</div>
+                <div style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4 }}>{t("jamiBalans")}</div>
                 <div className="pos-mono" style={{ fontSize: 22, fontWeight: 700 }}>
                   {totalBalance.toFixed(3)}
                 </div>

@@ -1,6 +1,11 @@
+/**
+ * @module ecommerce-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { crmCompanies, crmDeals, crmLeads } from "./crm-schema";
@@ -10,7 +15,7 @@ import { orders, productCategories, products } from "./pp-schema";
 // Public Products (Ommaviy mahsulotlar)
 export const publicProducts = pgTable("public_products", {
   id: serial("id").primaryKey(),
-  categoryId: varchar("category_id").references(() => productCategories.id),
+  categoryId: varchar("category_id").references(() => productCategories.id, { onDelete: "set null" }),
   name: text("name").notNull(),
   nameRu: text("name_ru"),
   slug: varchar("slug", { length: 100 }).notNull().unique(),
@@ -26,7 +31,7 @@ export const publicProducts = pgTable("public_products", {
   inStock: boolean("in_stock").default(true),
   isFeatured: boolean("is_featured").default(false),
   isActive: boolean("is_active").default(true),
-  erpProductId: varchar("erp_product_id").references(() => products.id),
+  erpProductId: varchar("erp_product_id").references(() => products.id, { onDelete: "set null" }),
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -48,7 +53,7 @@ export const customerAccounts = pgTable("customer_accounts", {
   passwordHash: text("password_hash"),
   fullName: text("full_name").notNull(),
   companyName: text("company_name"),
-  crmCompanyId: integer("crm_company_id").references(() => crmCompanies.id),
+  crmCompanyId: integer("crm_company_id").references(() => crmCompanies.id, { onDelete: "set null" }),
   inn: varchar("inn", { length: 20 }),
   address: text("address"),
   isVerified: boolean("is_verified").default(false),
@@ -69,7 +74,7 @@ export type InsertCustomerAccount = z.infer<typeof insertCustomerAccountSchema>;
 export const customerOrders = pgTable("customer_orders", {
   id: serial("id").primaryKey(),
   orderNumber: varchar("order_number", { length: 20 }).notNull().unique(),
-  customerId: varchar("customer_id").references(() => customerAccounts.id),
+  customerId: varchar("customer_id").references(() => customerAccounts.id, { onDelete: "set null" }),
   guestPhone: varchar("guest_phone", { length: 20 }), // For guest orders
   guestName: text("guest_name"),
   guestEmail: varchar("guest_email", { length: 255 }),
@@ -85,11 +90,15 @@ export const customerOrders = pgTable("customer_orders", {
   notes: text("notes"),
   attachments: jsonb("attachments"), // [{ name, url, type }] - design files
   estimatedDelivery: timestamp("estimated_delivery"),
-  crmLeadId: integer("crm_lead_id").references(() => crmLeads.id),
-  crmDealId: integer("crm_deal_id").references(() => crmDeals.id),
+  crmLeadId: integer("crm_lead_id").references(() => crmLeads.id, { onDelete: "set null" }),
+  crmDealId: integer("crm_deal_id").references(() => crmDeals.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
-});
+}, (t) => [
+  check("customer_orders_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('new','confirmed','in_production','ready','shipped','delivered','cancelled')`),
+  check("customer_orders_payment_status_chk", sql`${t.paymentStatus} IS NULL OR ${t.paymentStatus} IN ('pending','paid','refunded')`),
+  check("customer_orders_delivery_method_chk", sql`${t.deliveryMethod} IS NULL OR ${t.deliveryMethod} IN ('pickup','delivery')`),
+]);
 
 
 export const insertCustomerOrderSchema = createInsertSchema(customerOrders).omit({ id: true, createdAt: true } as never);
@@ -105,7 +114,7 @@ export const portfolioItems = pgTable("portfolio_items", {
   description: text("description"),
   descriptionRu: text("description_ru"),
   clientName: text("client_name"),
-  categoryId: varchar("category_id").references(() => productCategories.id),
+  categoryId: varchar("category_id").references(() => productCategories.id, { onDelete: "set null" }),
   images: jsonb("images").notNull(), // [{ url, alt }]
   year: integer("year"),
   isFeatured: boolean("is_featured").default(false),
@@ -217,7 +226,7 @@ export type InsertPublicCategory = z.infer<typeof insertPublicCategorySchema>;
 export const customerOrderItems = pgTable("customer_order_items", {
   id: serial("id").primaryKey(),
   orderId: integer("order_id").notNull().references(() => customerOrders.id, { onDelete: "cascade" }),
-  productId: integer("product_id").references(() => publicProducts.id),
+  productId: integer("product_id").references(() => publicProducts.id, { onDelete: "set null" }),
   productName: text("product_name").notNull(),
   productNameRu: text("product_name_ru"),
   quantity: integer("quantity").notNull(),
@@ -253,14 +262,14 @@ export type InsertProductFavorite = z.infer<typeof insertProductFavoriteSchema>;
 // Website Reviews (Mijoz sharhlari)
 export const websiteReviews = pgTable("website_reviews", {
   id: serial("id").primaryKey(),
-  customerId: integer("customer_id").references(() => customerAccounts.id),
+  customerId: integer("customer_id").references(() => customerAccounts.id, { onDelete: "set null" }),
   customerName: text("customer_name").notNull(),
   companyName: text("company_name"),
   rating: integer("rating").notNull(),
   review: text("review").notNull(),
   reviewRu: text("review_ru"),
-  productId: integer("product_id").references(() => publicProducts.id),
-  orderId: integer("order_id").references(() => customerOrders.id),
+  productId: integer("product_id").references(() => publicProducts.id, { onDelete: "set null" }),
+  orderId: integer("order_id").references(() => customerOrders.id, { onDelete: "set null" }),
   isApproved: boolean("is_approved").default(false),
   isFeatured: boolean("is_featured").default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -275,7 +284,7 @@ export type InsertWebsiteReview = z.infer<typeof insertWebsiteReviewSchema>;
 export const websiteChatLogs = pgTable("website_chat_logs", {
   id: serial("id").primaryKey(),
   sessionId: varchar("session_id", { length: 100 }).notNull(),
-  customerId: integer("customer_id").references(() => customerAccounts.id),
+  customerId: integer("customer_id").references(() => customerAccounts.id, { onDelete: "set null" }),
   role: varchar("role", { length: 20 }).notNull(),
   message: text("message").notNull(),
   provider: varchar("provider", { length: 30 }),

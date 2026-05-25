@@ -1,7 +1,12 @@
+/**
+ * @module zno.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { safeNum } from '@common/math';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError, Err } from '@common/result';
-import { ZnoRepository } from './zno.repository';
+import { ZNO_REPO, type IZnoRepo } from '../domain/repositories/i-zno.repo';
 
 function parsePositiveAmount(value: unknown): number | null {
   const amt = safeNum(value);
@@ -10,7 +15,7 @@ function parsePositiveAmount(value: unknown): number | null {
 
 @Injectable()
 export class ZnoService {
-  constructor(private readonly repo: ZnoRepository) {}
+  constructor(@Inject(ZNO_REPO) private readonly repo: IZnoRepo) {}
 
   async createZnoWithValidation(
     body: Record<string, unknown>,

@@ -1,4 +1,10 @@
+/**
+ * @module chat-message.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { ChatMessageRepository } from './repositories/chat-message.repository';
 
@@ -6,7 +12,10 @@ import { ChatMessageRepository } from './repositories/chat-message.repository';
 export class ChatMessageService {
   private readonly logger = new Logger(ChatMessageService.name);
 
-  constructor(private readonly msgRepo: ChatMessageRepository) {}
+  constructor(
+    private readonly msgRepo: ChatMessageRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   private buildSentMessage(
     msg: Record<string, unknown>,
@@ -25,12 +34,13 @@ export class ChatMessageService {
   }
 
   async getMessages(roomId: string | number, userId: number, limit = 50, before?: string): Promise<Result<object, AppError>>{
+    const notGroupMember = await this.i18n.t('errors.notGroupMember');
     return safeCall(async () => {
       const roomIdStr = String(roomId);
       const userIdStr = String(userId);
       const isMemberResult = await this.msgRepo.checkMembership(roomIdStr, userIdStr);
       const isMember = isMemberResult.ok && isMemberResult.data;
-      if (!isMember) throw new ForbiddenException('Guruh a\'zosi emassiz');
+      if (!isMember) throw new ForbiddenException(notGroupMember);
       const rowsResult = await this.msgRepo.fetchMessages(roomIdStr, userIdStr, limit, before);
       if (!rowsResult.ok) throw new Error(rowsResult.error.message);
       return (rowsResult.data as Record<string, unknown>[]).reverse();
@@ -65,38 +75,41 @@ export class ChatMessageService {
   }
 
   async editMessage(messageId: string | number, userId: number, content: string): Promise<Record<string, unknown> | null> {
-    return this.msgRepo.updateMessageContent(messageId, userId, content);
+    const result = await this.msgRepo.updateMessageContent(messageId, userId, content);
+    return result.ok ? (result.data as Record<string, unknown> | null) : null;
   }
 
   async deleteMessage(messageId: string | number, userId: number): Promise<Record<string, unknown> | null> {
     this.logger.log(`chat message: o'chirilmoqda`);
-    return this.msgRepo.softDeleteMessage(messageId, userId);
+    const result = await this.msgRepo.softDeleteMessage(messageId, userId);
+    return result.ok ? (result.data as Record<string, unknown> | null) : null;
   }
 
   async pinMessage(messageId: string | number, userId: number, pin: boolean): Promise<Record<string, unknown> | null> {
     const msgIdStr = String(messageId);
     const msgRowResult = await this.msgRepo.findMessageRoomId(msgIdStr);
     const msgRow = (msgRowResult.ok ? msgRowResult.data : null) as Record<string, unknown> | null;
-    if (!msgRow) throw new NotFoundException(`Xabar #${messageId} topilmadi`);
+    if (!msgRow) throw new NotFoundException(await this.i18n.t('errors.messageNotFound'));
     const roomId = String(msgRow['room_id']);
     const isMemberResult = await this.msgRepo.checkMembership(roomId, String(userId));
     const isMember = isMemberResult.ok && isMemberResult.data;
-    if (!isMember) throw new ForbiddenException('Bu xonaga kirishingiz yo\'q');
+    if (!isMember) throw new ForbiddenException(await this.i18n.t('errors.notRoomMember'));
     await this.msgRepo.setPinned(msgIdStr, pin);
     return { messageId: msgIdStr, isPinned: pin, roomId };
   }
 
   async getPinnedMessage(roomId: string | number): Promise<Record<string, unknown> | null> {
-    return this.msgRepo.findPinnedMessage(String(roomId));
+    const result = await this.msgRepo.findPinnedMessage(String(roomId));
+    return result.ok ? (result.data as Record<string, unknown> | null) : null;
   }
 
   async starMessage(messageId: string, userId: string, starred: boolean): Promise<{ starred: boolean; messageId: string }> {
     const msgResult = await this.msgRepo.findMessageRoomForStar(messageId);
     const msg = (msgResult.ok ? msgResult.data : null) as Record<string, unknown> | null;
-    if (!msg) throw new NotFoundException('Xabar topilmadi');
+    if (!msg) throw new NotFoundException(await this.i18n.t('errors.messageNotFound'));
     const isMemberResult = await this.msgRepo.checkMembershipByRoom(String(msg['room_id']), userId);
     const isMember = isMemberResult.ok && isMemberResult.data;
-    if (!isMember) throw new ForbiddenException('Bu xonaga kirishingiz yo\'q');
+    if (!isMember) throw new ForbiddenException(await this.i18n.t('errors.notRoomMember'));
     if (starred) {
       await this.msgRepo.starMessage(messageId, userId);
     } else {

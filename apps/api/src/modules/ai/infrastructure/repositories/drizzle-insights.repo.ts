@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-insights.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -32,7 +37,7 @@ export class DrizzleInsightsRepo {
         .from(aiInsights)
         .where(or(eq(aiInsights.userId, Number(userId)), isNull(aiInsights.userId)))
         .limit(50);
-      return (rows ?? []).map((r) => this.toItem(r));
+      return (Array.isArray(rows) ? rows : []).map((r) => this.toItem(r));
     });
   }
 

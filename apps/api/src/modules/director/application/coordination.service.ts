@@ -1,24 +1,30 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module coordination.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError, Err } from '@common/result';
-import { CoordinationRepository } from './coordination.repository';
+import { COORDINATION_REPO, type ICoordinationRepo } from '../domain/repositories/i-coordination.repo';
 
 const PRIVILEGED_ROLES = new Set(['admin', 'super_admin', 'director', 'ceo']);
 
 @Injectable()
 export class CoordinationService {
-  constructor(private readonly repo: CoordinationRepository) {}
+  constructor(@Inject(COORDINATION_REPO) private readonly repo: ICoordinationRepo) {}
 
   async createDoklaWithValidation(
     userId: number,
     body: Record<string, unknown>,
   ): Promise<Result<object, AppError>> {
-    const { title, content, council_level, problem, result: result_, proposal } = body;
-    if (!title) return Err({ code: 'BAD_REQUEST', message: 'title majburiy' });
+    const { title, subject, content, council_level, problem, result: result_, proposal } = body;
+    const resolvedTitle = (title as string) ?? (subject as string);
+    if (!resolvedTitle) return Err({ code: 'BAD_REQUEST', message: 'title yoki subject majburiy' });
     return safeCall(() =>
       this.repo.createDokla(
         userId,
         (council_level as string) ?? null,
-        title as string,
+        resolvedTitle,
         (problem as string) ?? (content as string) ?? null,
         (result_ as string) ?? null,
         (proposal as string) ?? null,
@@ -64,9 +70,9 @@ export class CoordinationService {
     userId: number,
     body: Record<string, unknown>,
   ): Promise<Result<object, AppError>> {
-    const { title, description, deadline, assignee_id, to_user, priority } = body;
-    const task = (title as string) ?? (description as string);
-    if (!task) return Err({ code: 'BAD_REQUEST', message: 'title majburiy' });
+    const { title, task: taskAlias, description, deadline, assignee_id, to_user, priority } = body;
+    const task = (title as string) ?? (taskAlias as string) ?? (description as string);
+    if (!task) return Err({ code: 'BAD_REQUEST', message: 'title yoki task majburiy' });
     const toUser = (to_user as string) ?? (assignee_id ? String(assignee_id) : null);
     return safeCall(() =>
       this.repo.createRasporyazhenie(userId, toUser, task, (deadline as string) ?? null, (priority as string) ?? 'normal'),
@@ -122,6 +128,10 @@ export class CoordinationService {
       return Err({ code: 'FORBIDDEN', message: "Faqat beruvchi yoki administrator o'chira oladi" });
     await this.repo.deleteRasp(id);
     return { ok: true, data: { message: "O'chirildi", deleted: String(id) } };
+  }
+
+  async getBaskets(): Promise<Result<object, AppError>> {
+    return safeCall(async () => this.repo.listBaskets());
   }
 
   async getStats() {

@@ -1,3 +1,8 @@
+/**
+ * @module record-downtime.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
@@ -6,7 +11,7 @@ import { createId } from '@paralleldrive/cuid2';
 import { Result, Err } from '@common/result';
 import { DowntimeEvent } from '../../domain/aggregates/downtime-event.aggregate';
 import { DrizzleDowntimeRepository } from '../../infrastructure/repositories/drizzle-downtime.repo';
-import { IMesRepository } from '../../domain/repositories/mes.repository';
+import { IMesRepository, MES_REPO, DOWNTIME_REPO } from '../../domain/repositories/mes.repository';
 
 export class RecordDowntimeCommand {
   constructor(public readonly sessionId: string,
@@ -23,9 +28,9 @@ export class RecordDowntimeHandler implements ICommandHandler<RecordDowntimeComm
   private readonly logger = new Logger(RecordDowntimeHandler.name);
 
   constructor(
-    @Inject('IDowntimeRepository')
+    @Inject(DOWNTIME_REPO)
     private readonly downtimeRepo: DrizzleDowntimeRepository,
-    @Inject('IMesRepository') private readonly mesRepo: IMesRepository,
+    @Inject(MES_REPO) private readonly mesRepo: IMesRepository,
   ) {}
 
   async execute(command: RecordDowntimeCommand): Promise<Result<DowntimeEvent>> {

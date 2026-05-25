@@ -1,65 +1,40 @@
+/**
+ * @module schema-business-a-2
+ * @description Source module. See exports for details.
+ *
+ *   MRO tables (mro_*) live in schema-business-a-2-mro.ts (Rule 16). This file
+ *   re-exports them so the public import surface is unchanged.
+ */
+
 import {
-  pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, varchar, date,
+  pgTable, serial, text, integer, timestamp, numeric, varchar, date,
 } from 'drizzle-orm/pg-core';
 
-export const strategic_categories = pgTable('strategic_categories', {
-  id:          serial('id').primaryKey(),
-  name:        text('name').notNull(),
-  description: text('description'),
-  color:       varchar('color', { length: 20 }).default('#3B82F6'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// Re-exports — MRO tables (split for Rule 16)
+export {
+  mro_equipment,
+  mro_items,
+  mro_requests,
+  mro_work_orders,
+  mro_facilities,
+  mro_cleaning_schedules,
+  mro_pm_schedules,
+  mro_utility_readings,
+  mro_canteen_logs,
+} from './schema-business-a-2-mro';
 
-export const strategic_tasks = pgTable('strategic_tasks', {
-  id:           serial('id').primaryKey(),
-  title:        text('title').notNull(),
-  category_id:  integer('category_id'),
-  assignee_id:  integer('assigned_user_id'),
-  created_by:   integer('created_by'),
-  due_date:     varchar('target_date', { length: 10 }),
-  priority:     text('priority').default('medium'),
-  description:  text('description'),
-  status:       text('status').default('planned'),
-  progress:     integer('progress_percent').default(0),
-  created_at:   timestamp('created_at').defaultNow(),
-  updated_at:   timestamp('updated_at').defaultNow(),
-});
+// ─── Director: Strategic, OKR ─────────────────────────────────────────────────
+// strategicCategories, strategicTasks, strategicMilestones, okrObjectives, okrKeyResults
+// → all defined in lib/db (strategic-ext-schema.ts)
+export { strategicCategories  as strategic_categories }  from '@workspace/db';
+export { strategicTasks       as strategic_tasks }        from '@workspace/db';
+export { strategicMilestones  as strategic_milestones }   from '@workspace/db';
+export { okrObjectives        as okr_objectives }         from '@workspace/db';
+export { okrKeyResults        as okr_key_results }        from '@workspace/db';
 
-export const strategic_milestones = pgTable('strategic_milestones', {
-  id:           serial('id').primaryKey(),
-  task_id:      integer('task_id').notNull(),
-  title:        text('title').notNull(),
-  due_date:     date('due_date'),
-  description:  text('description'),
-  status:       text('status').default('pending'),
-  updated_at:   timestamp('updated_at').defaultNow(),
-});
-
-export const okr_objectives = pgTable('okr_objectives', {
-  id:          serial('id').primaryKey(),
-  title:       text('title').notNull(),
-  type:        text('type').default('company'),
-  year:        integer('year'),
-  quarter:     text('quarter'),
-  description: text('description'),
-  owner_id:    integer('owner_id'),
-  status:      text('status').default('active'),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
-
-export const okr_key_results = pgTable('okr_key_results', {
-  id:            serial('id').primaryKey(),
-  objective_id:  integer('objective_id').notNull(),
-  title:         text('title').notNull(),
-  target_value:  numeric('target_value', { precision: 15, scale: 2 }),
-  current_value: numeric('current_value', { precision: 15, scale: 2 }),
-  unit:          text('unit'),
-  owner_id:      integer('owner_id'),
-  status:        text('status').default('active'),
-  created_at:    timestamp('created_at').defaultNow(),
-  updated_at:    timestamp('updated_at').defaultNow(),
-});
+// TODO: Move to lib/db/src/schema/
+// dokla — NOT yet in lib/db
+// rasporyazhenie — NOT yet in lib/db
 
 export const dokla = pgTable('dokla', {
   id:            serial('id').primaryKey(),
@@ -90,7 +65,13 @@ export const rasporyazhenie = pgTable('rasporyazhenie', {
   updated_at:   timestamp('updated_at').defaultNow(),
 });
 
-// ─── Core: Seven Functions & RACI ────────────────────────────────────────────
+// ─── Core: Seven Functions & RACI ─────────────────────────────────────────────
+// TODO: Move to lib/db/src/schema/
+// seven_functions — NOT yet in lib/db
+// seven_function_kpis — NOT yet in lib/db
+// raci_stages — NOT yet in lib/db
+// crisis_records — NOT yet in lib/db
+// risk_assessments — NOT yet in lib/db
 
 export const seven_functions = pgTable('seven_functions', {
   id:          serial('id').primaryKey(),
@@ -116,25 +97,9 @@ export const seven_function_kpis = pgTable('seven_function_kpis', {
   updated_at:     timestamp('updated_at').defaultNow(),
 });
 
-export const raci_tasks = pgTable('raci_tasks', {
-  id:             serial('id').primaryKey(),
-  title:          text('title').notNull(),
-  description:    text('description'),
-  responsible_id: integer('responsible_id'),
-  accountable_id: integer('accountable_id'),
-  created_by:     integer('created_by'),
-  deadline:       date('deadline'),
-  status:         text('status').default('pending'),
-  created_at:     timestamp('created_at').defaultNow(),
-  updated_at:     timestamp('updated_at').defaultNow(),
-});
-
-export const raci_assignments = pgTable('raci_assignments', {
-  id:          serial('id').primaryKey(),
-  task_id:     integer('task_id').notNull(),
-  employee_id: integer('employee_id').notNull(),
-  role:        text('role'),
-});
+// raciTasks, raciAssignments → lib/db (strategic-ext-schema.ts)
+export { raciTasks       as raci_tasks }       from '@workspace/db';
+export { raciAssignments as raci_assignments } from '@workspace/db';
 
 export const raci_stages = pgTable('raci_stages', {
   id:          serial('id').primaryKey(),
@@ -165,64 +130,4 @@ export const risk_assessments = pgTable('risk_assessments', {
   status:      text('status').default('open'),
   created_at:  timestamp('created_at').defaultNow(),
   updated_at:  timestamp('updated_at').defaultNow(),
-});
-
-// ─── MRO (Maintenance, Repair & Operations) ──────────────────────────────────
-
-export const mro_equipment = pgTable('mro_equipment', {
-  id:                    serial('id').primaryKey(),
-  name:                  text('name').notNull(),
-  category:              text('category'),
-  status:                text('status').default('active'),
-  location:              text('location'),
-  purchase_date:         date('purchase_date'),
-  next_maintenance_date: date('next_maintenance_date'),
-  created_at:            timestamp('created_at').defaultNow(),
-  updated_at:            timestamp('updated_at').defaultNow(),
-});
-
-export const mro_items = pgTable('mro_items', {
-  id:            serial('id').primaryKey(),
-  name:          text('name').notNull(),
-  category:      text('category'),
-  unit:          text('unit'),
-  current_stock: numeric('current_stock', { precision: 15, scale: 3 }),
-  min_stock:     numeric('min_stock', { precision: 15, scale: 3 }),
-  unit_cost:     numeric('unit_cost', { precision: 12, scale: 2 }),
-  location:      text('location'),
-  supplier:      text('supplier'),
-  created_at:    timestamp('created_at').defaultNow(),
-  updated_at:    timestamp('updated_at').defaultNow(),
-});
-
-export const mro_requests = pgTable('mro_requests', {
-  id:                 serial('id').primaryKey(),
-  item_id:            integer('item_id'),
-  requested_quantity: numeric('requested_quantity', { precision: 15, scale: 3 }),
-  reason:             text('reason'),
-  requested_by:       integer('requested_by'),
-  priority:           text('priority').default('normal'),
-  status:             text('status').default('pending'),
-  approved_by:        integer('approved_by'),
-  approved_at:        timestamp('approved_at'),
-  fulfillment_date:   date('fulfillment_date'),
-  notes:              text('notes'),
-  created_at:         timestamp('created_at').defaultNow(),
-  updated_at:         timestamp('updated_at').defaultNow(),
-});
-
-export const mro_work_orders = pgTable('mro_work_orders', {
-  id:            serial('id').primaryKey(),
-  equipment_id:  integer('equipment_id'),
-  type:          text('type').default('preventive'),
-  description:   text('description'),
-  assigned_to:   integer('assigned_to'),
-  priority:      text('priority').default('normal'),
-  status:        text('status').default('pending'),
-  scheduled_date: date('scheduled_date'),
-  completed_date: date('completed_date'),
-  notes:         text('notes'),
-  cost:          numeric('cost', { precision: 12, scale: 2 }),
-  created_at:    timestamp('created_at').defaultNow(),
-  updated_at:    timestamp('updated_at').defaultNow(),
 });

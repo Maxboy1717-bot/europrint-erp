@@ -1,8 +1,14 @@
+/**
+ * @module EmergencyContactDialog
+ * @description React UI component.
+ */
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from '@/lib/i18n';
 
 interface EmergencyContactForm {
   contactName: string;
@@ -30,52 +36,53 @@ export function EmergencyContactDialog({
   onSave,
   isPending
 }: EmergencyContactDialogProps) {
+  const { t } = useTranslation("common");
   const updateField = (field: keyof EmergencyContactForm, value: string | boolean) => {
     onChange({ ...form, [field]: value });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Favqulodda aloqa qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("favquloddaAloqaQoshish")}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="contactName">Ism-sharif</Label>
+          <div className="space-y-1">
+          <Label htmlFor="contactName">{t("ismSharif")}</Label>
             <Input
               id="contactName"
               value={form.contactName}
               onChange={(e) => updateField("contactName", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="relationship">Qarindoshlik darajasi</Label>
+          <div className="space-y-1">
+          <Label htmlFor="relationship">{t("qarindoshlikDarajasi")}</Label>
             <Input
               id="relationship"
               value={form.relationship}
               onChange={(e) => updateField("relationship", e.target.value)}
-              placeholder="Masalan: Otasi, Onasi, Turmush o'rtog'i"
+              placeholder={t("masalanOtasiOnasiTurmushOrtogi")}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="phoneNumber">Telefon raqami</Label>
+          <div className="space-y-1">
+          <Label htmlFor="phoneNumber">{t("telefonRaqami")}</Label>
             <Input
               id="phoneNumber"
               value={form.phoneNumber}
               onChange={(e) => updateField("phoneNumber", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="alternativePhone">Muqobil telefon</Label>
+          <div className="space-y-1">
+          <Label htmlFor="alternativePhone">{t("muqobilTelefon")}</Label>
             <Input
               id="alternativePhone"
               value={form.alternativePhone}
               onChange={(e) => updateField("alternativePhone", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="address">Manzil</Label>
+          <div className="space-y-1">
+          <Label htmlFor="address">{t("address")}</Label>
             <Input
               id="address"
               value={form.address}
@@ -88,11 +95,11 @@ export function EmergencyContactDialog({
               checked={form.isPrimary}
               onCheckedChange={(checked) => updateField("isPrimary", checked)}
             />
-            <Label htmlFor="isPrimary">Asosiy aloqa</Label>
+            <Label htmlFor="isPrimary">{t("asosiyAloqa")}</Label>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor qilish</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSave} disabled={isPending}>
             {isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

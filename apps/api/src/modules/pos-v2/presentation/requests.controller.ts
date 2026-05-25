@@ -1,3 +1,8 @@
+/**
+ * @module requests.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertValidated, parseSafe } from '@common/assertions';
 import { assertOk, unwrapOrThrow } from '@common/http-result';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -12,10 +17,11 @@ Body,
   Query,
   UseGuards, Logger, UseInterceptors , BadRequestException, NotFoundException, InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '@shared/guards/roles.guard';
 import { Roles} from '@shared/decorators/roles.decorator';
 import { CurrentUser} from '@shared/decorators/current-user.decorator';
@@ -31,8 +37,9 @@ import {
 
 interface AuthenticatedUser { id: number; role: string; }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Requests')
 @Controller('pos-v2/transfer-requests')
 @UseGuards(RolesGuard)
 export class RequestsController {
@@ -40,6 +47,8 @@ export class RequestsController {
  constructor(private readonly commandBus: CommandBus,
  private readonly queryBus: QueryBus) {}
 
+ @ApiOperation({ summary: 'Find requests' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  async findRequests(
  @Query() query: Record<string, unknown>,
@@ -58,6 +67,8 @@ export class RequestsController {
  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Find request by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get(':id')
  async findRequestById(
  @Param('id') requestId: string,
@@ -65,18 +76,21 @@ export class RequestsController {
  ): Promise<TransferRequest> {
  const result = await this.queryBus.execute(new GetRequestsQuery());
  assertOk(result);
- const request = (result?.data?.data ?? []).find((r: TransferRequest) => r.id === requestId);
+ const request = (Array.isArray(result?.data?.data) ? result?.data?.data : []).find((r: TransferRequest) => r.id === requestId);
  assertFound(request, 'Not found');
  return request;
 }
 
+ @ApiOperation({ summary: 'Create request' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
   @UsePipes(new ZodValidationPipe(CreateTransferRequestDtoSchema))
  async createRequest(
  @Body() body: CreateTransferRequestDto,
  @CurrentUser() user: AuthenticatedUser,
  ): Promise<TransferRequest> {
- const lines: TransferLineInput[] = (body?.lines ?? []).map((line) => ({
+ const lines: TransferLineInput[] = (Array.isArray(body?.lines) ? body?.lines : []).map((line) => ({
  stockItemId: line.stockItemId,
  itemName: line.itemName,
  sku: line.sku,
@@ -96,6 +110,9 @@ export class RequestsController {
  return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Update status' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/status')
   @UsePipes(new ZodValidationPipe(UpdateTransferStatusDtoSchema))
  @Roles('WAREHOUSE_MANAGER')

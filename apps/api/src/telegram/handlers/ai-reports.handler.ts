@@ -1,7 +1,13 @@
+/**
+ * @module ai-reports.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
+import { I18nService } from 'nestjs-i18n'
 import { TelegramService } from '../telegram.service'
 
 interface DailyAiReport {
@@ -17,7 +23,10 @@ interface DailyAiReport {
 export class AiReportsHandler {
   private readonly logger = new Logger(AiReportsHandler.name)
 
-  constructor(private telegramService: TelegramService) {}
+  constructor(
+    private telegramService: TelegramService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Cron('0 7 * * *')
   async sendDailyAiReport(): Promise<void> {
@@ -25,6 +34,7 @@ export class AiReportsHandler {
       const directorChatId = process.env.DIRECTOR_CHAT_ID || ''
 
       // Bugungi AI tahlili va tavsiyalar
+      // TODO F2: replace mock risk_alerts / recommendations with i18n-localized DB data once AI report source is wired
       const report: DailyAiReport = {
         date: _time.now().toISOString().split('T')[0],
         sales_forecast: 45_000,
@@ -40,23 +50,19 @@ export class AiReportsHandler {
         director_chat_id: directorChatId,
       }
 
-      const risksText = (report?.risk_alerts ?? []).map(r => `⚠️ ${r}`).join('\n')
-      const recsText = (report?.recommendations ?? []).map(r => `✓ ${r}`).join('\n')
+      const risksText = (Array.isArray(report?.risk_alerts) ? report?.risk_alerts : []).map(r => `⚠️ ${r}`).join('\n')
+      const recsText = (Array.isArray(report?.recommendations) ? report?.recommendations : []).map(r => `✓ ${r}`).join('\n')
 
-      const text = `
-🤖 <b>Kunlik AI Tahlili</b> - ${report.date}
-
-📈 <b>Sotuvlar Prognozi:</b> ${report.sales_forecast.toLocaleString()} USD
-📊 <b>Talab:</b> ${report.demand_prediction}
-
-⚠️ <b>Risk Ogohlantirmalari:</b>
-${risksText}
-
-💡 <b>Tavsiyalar:</b>
-${recsText}
-
-Batafsil: ${process.env.AI_REPORTS_URL}
-      `
+      const text = await this.i18n.t('telegram.aiReports.dailyAiReport', {
+        args: {
+          date: report.date,
+          salesForecast: report.sales_forecast.toLocaleString(),
+          demandPrediction: report.demand_prediction,
+          risksText,
+          recsText,
+          reportsUrl: process.env.AI_REPORTS_URL ?? '',
+        },
+      })
       await this.telegramService.sendMessage(directorChatId, text)
       this.logger.log('Daily AI report sent')
     } catch (err) {

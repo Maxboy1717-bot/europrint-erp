@@ -1,3 +1,8 @@
+/**
+ * @module CrmRfmClusters
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +12,12 @@ import {
   ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, Legend,
 } from "recharts";
-import { Users, Target, Loader2, RefreshCw } from "lucide-react";
+import { Users, Target, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
 
+import { EPLoader } from "@/components/ep";
 type SegmentLabel = "Champions" | "Loyal" | "At-Risk" | "New Customer" | "Hibernating" | "Lost";
 
 interface ClusterPoint {
@@ -74,21 +80,21 @@ export default function CrmRfmClusters() {
   const scatterData = (Object.entries(grouped) as [SegmentLabel, ClusterPoint[]][]).map(([seg, pts]) => ({
     label: seg,
     color: SEGMENT_CONFIG[seg]?.color ?? "#ccc",
-    data: (pts ?? []).map(p => ({ x: p.rNorm, y: p.fNorm, z: p.mNorm, id: p.customerId })),
+    data: (Array.isArray(pts) ? pts : []).map(p => ({ x: p.rNorm, y: p.fNorm, z: p.mNorm, id: p.customerId })),
   }));
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Users className="w-7 h-7 text-purple-600" />
+          <Users className="w-7 h-7 text-[var(--ep-purple)]" />
           <div>
             <h1 className="text-2xl font-bold">{t('rfmClusters')}</h1>
             <p className="text-muted-foreground text-sm">{t('rfmDesc')}</p>
           </div>
         </div>
         <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-          {mutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+          {mutation.isPending ? <EPLoader className="w-4 h-4 mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
           {clusters.length ? t('recluster') : t('cluster')}
         </Button>
       </div>
@@ -104,7 +110,7 @@ export default function CrmRfmClusters() {
 
       {clusters.length > 0 && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {(Object.entries(SEGMENT_CONFIG) as [SegmentLabel, { color: string; desc: string }][]).map(([seg, cfg]) => {
               const count = grouped[seg]?.length ?? 0;
               return (
@@ -146,7 +152,7 @@ export default function CrmRfmClusters() {
                     );
                   }} />
                   <Legend />
-                  {(scatterData ?? []).map(seg => (
+                  {(Array.isArray(scatterData) ? scatterData : []).map(seg => (
                     <Scatter key={seg.label} name={seg.label} data={seg.data} fill={seg.color} shape={<CustomDot />} />
                   ))}
                 </ScatterChart>

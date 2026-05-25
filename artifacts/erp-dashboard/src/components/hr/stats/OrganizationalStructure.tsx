@@ -1,9 +1,15 @@
+/**
+ * @module OrganizationalStructure
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Building2 } from "lucide-react";
 import { Employee, Subordinate } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface OrganizationalStructureProps {
   employee: Employee;
@@ -12,6 +18,7 @@ interface OrganizationalStructureProps {
 }
 
 export function OrganizationalStructure({ employee, getInitials, onNavigate }: OrganizationalStructureProps) {
+  const { t } = useTranslation("common");
   if (!(employee.positionOfficialTitle || employee.positionCkp || employee.managerName || (employee.subordinates && employee.subordinates.length > 0))) {
     return null;
   }
@@ -21,26 +28,26 @@ export function OrganizationalStructure({ employee, getInitials, onNavigate }: O
       <CardHeader>
         <div className="flex items-center gap-2">
           <Building2 className="w-5 h-5" />
-          <CardTitle>Tashkiliy tuzilma</CardTitle>
+          <CardTitle>{t("tashkiliyTuzilma")}</CardTitle>
         </div>
         <CardDescription>
-          Lavozim va bo'ysunish ma'lumotlari
+          {t("lavozimVaBoysunishMalumotlari")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {(employee.positionOfficialTitle || employee.positionCkp) && (
           <div className="space-y-2">
-            <div className="text-sm font-medium">Lavozim ma'lumotlari</div>
+            <div className="text-sm font-medium">{t("lavozimMalumotlari")}</div>
             <div className="space-y-1">
               {employee.positionOfficialTitle && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Rasmiy lavozim:</span>
+                  <span className="text-sm text-muted-foreground">{t("rasmiyLavozim")}</span>
                   <span className="text-sm font-medium" data-testid="text-position-official">{employee.positionOfficialTitle}</span>
                 </div>
               )}
               {employee.positionCkp && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">ЦКП kodi:</span>
+                  <span className="text-sm text-muted-foreground">{t("kodi")}</span>
                   <Badge variant="secondary" data-testid="badge-position-ckp">{employee.positionCkp}</Badge>
                 </div>
               )}
@@ -50,7 +57,7 @@ export function OrganizationalStructure({ employee, getInitials, onNavigate }: O
 
         {employee.managerName && (
           <div className="space-y-2">
-            <div className="text-sm font-medium">Rahbar</div>
+            <div className="text-sm font-medium">{t("rahbar")}</div>
             <div className="flex items-center gap-3">
               <Avatar className="w-12 h-12 rounded-md">
                 <AvatarImage src={employee.managerProfileImageUrl} alt={employee.managerName} />
@@ -96,7 +103,7 @@ export function OrganizationalStructure({ employee, getInitials, onNavigate }: O
                     onClick={() => onNavigate(`/employees/${sub.id}`)}
                     data-testid={`button-view-subordinate-${sub.id}`}
                   >
-                    Ko'rish
+                    {t("view")}
                   </Button>
                 </div>
               ))}

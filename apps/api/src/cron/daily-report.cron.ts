@@ -1,3 +1,8 @@
+/**
+ * @module daily-report.cron
+ * @description Scheduled cron job. @nestjs/schedule registered task.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common'
@@ -18,22 +23,22 @@ export class DailyReportCron {
       const today = _time.now().toISOString().split('T')[0]
 
       const alreadyReported = await db
-        .select({ employee_id: hr_daily_reports.employee_id })
+        .select({ employee_id: hr_daily_reports.employeeId })
         .from(hr_daily_reports)
-        .where(eq(hr_daily_reports.report_date, today))
-      const reportedIds = (alreadyReported ?? []).map(r => r.employee_id)
+        .where(eq(hr_daily_reports.reportDate, today))
+      const reportedIds = (Array.isArray(alreadyReported) ? alreadyReported : []).map(r => r.employee_id)
 
       const baseQuery = db
-        .select({ id: hrEmployees.id, position_name: hrPositions.name })
+        .select({ id: hrEmployees.id, position_name: hrPositions.title })
         .from(hrEmployees)
         .leftJoin(hrPositions, eq(hrPositions.id, hrEmployees.position_id))
         .where(
           and(
             eq(hrEmployees.status, 'active'),
             isNull(hrEmployees.deleted_at),
-            or(isNull(hrPositions.name), not(ilike(hrPositions.name, '%mashina operator%'))),
-            or(isNull(hrPositions.name), not(ilike(hrPositions.name, '%mashin operator%'))),
-            or(isNull(hrPositions.name), not(ilike(hrPositions.name, '%machine operator%'))),
+            or(isNull(hrPositions.title), not(ilike(hrPositions.title, '%mashina operator%'))),
+            or(isNull(hrPositions.title), not(ilike(hrPositions.title, '%mashin operator%'))),
+            or(isNull(hrPositions.title), not(ilike(hrPositions.title, '%machine operator%'))),
             reportedIds.length > 0 ? notInArray(hrEmployees.id, reportedIds) : undefined,
           ),
         )
@@ -46,12 +51,12 @@ export class DailyReportCron {
       }
 
       await db.insert(hr_daily_reports).values(
-        (activeEmps ?? []).map(e => ({
-          employee_id: e.id,
-          report_date: today,
-          tasks_completed: '',
+        (Array.isArray(activeEmps) ? activeEmps : []).map(e => ({
+          employeeId: e.id,
+          reportDate: today,
+          tasksCompleted: '',
           status: 'absent',
-          is_auto_absent: true,
+          isAutoAbsent: true,
         })),
       ).onConflictDoNothing()
 

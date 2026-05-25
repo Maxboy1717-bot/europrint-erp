@@ -28,7 +28,7 @@
   "terminateSession": "Завершить сессию",
   "terminateAll": "Завершить все сессии",
   "deviceInfo": "Информация об устройстве",
-  "userAgent": "User Agent",
+  "userAgent": "Информация о браузере",
   "location": "Местоположение",
   "loginTime": "Время входа",
   "lastActivity": "Последняя активность",

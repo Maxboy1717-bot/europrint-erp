@@ -1,3 +1,8 @@
+/**
+ * @module CustomersTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -11,12 +16,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Plus, MapPin, Phone } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import { 
   SdCustomer, SdContact, SdOrderSummary, 
   fmt, SEGMENT_LABELS, SEGMENT_COLORS 
 } from "./types";
 
 export function CustomersTab() {
+  const { t } = useTranslation("common");
   const [search, setSearch] = useState("");
   const [segment, setSegment] = useState("all");
   const [selected, setSelected] = useState<SdCustomer | null>(null);
@@ -49,10 +56,10 @@ export function CustomersTab() {
       setForm({ name: "", stir: "", actualAddress: "", legalAddress: "", segment: "new", notes: "" });
       toast({ title: "Mijoz qo'shildi" });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: (err: Error) => toast({ title: "Xatolik", description: err.message || "Mijoz qo'shib bo'lmadi", variant: "destructive" }),
   });
 
-  const customers = data?.data || [];
+  const customers: SdCustomer[] = Array.isArray(data) ? data : (data?.data || []);
 
   return (
     <div className="flex gap-4 h-[calc(100vh-200px)]">
@@ -61,7 +68,7 @@ export function CustomersTab() {
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
-            <Input data-testid="input-customer-search" placeholder="Qidirish..." className="pl-8"
+            <Input data-testid="input-customer-search" placeholder={t("Qidirish...")} className="pl-8"
               value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <Dialog open={isNew} onOpenChange={setIsNew}>
@@ -69,23 +76,23 @@ export function CustomersTab() {
               <Button size="icon" data-testid="button-add-customer"><Plus className="w-4 h-4" /></Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Yangi mijoz</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiMijoz")}</DialogTitle></DialogHeader>
               <div className="space-y-3">
-                <div><Label>Kompaniya nomi *</Label>
+                <div><Label>{t("kompaniyaNomi")}</Label>
                   <Input data-testid="input-customer-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
                 <div><Label>STIR</Label>
                   <Input data-testid="input-customer-stir" value={form.stir} onChange={e => setForm({ ...form, stir: e.target.value })} /></div>
-                <div><Label>Segment</Label>
+                <div><Label>{t("segment")}</Label>
                   <Select value={form.segment} onValueChange={v => setForm({ ...form, segment: v })}>
-                    <SelectTrigger data-testid="select-customer-segment"><SelectValue /></SelectTrigger>
+                    <SelectTrigger data-testid="select-customer-segment" className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {Object.entries(SEGMENT_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-                <div><Label>Manzil</Label>
+                <div><Label>{t("address")}</Label>
                   <Input data-testid="input-customer-address" value={form.actualAddress} onChange={e => setForm({ ...form, actualAddress: e.target.value })} /></div>
-                <div><Label>Izoh</Label>
+                <div><Label>{t("Izoh")}</Label>
                   <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
                 <Button data-testid="button-save-customer" className="w-full" onClick={() => createMut.mutate(form)} disabled={!form.name || createMut.isPending}>
                   {createMut.isPending ? "Saqlanmoqda..." : "Saqlash"}
@@ -96,15 +103,15 @@ export function CustomersTab() {
         </div>
 
         <Select value={segment} onValueChange={setSegment}>
-          <SelectTrigger data-testid="select-segment-filter"><SelectValue placeholder="Segment" /></SelectTrigger>
+          <SelectTrigger data-testid="select-segment-filter" className="h-9"><SelectValue placeholder={t("segment")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Barchasi</SelectItem>
+            <SelectItem value="all">{t("Barchasi")}</SelectItem>
             {Object.entries(SEGMENT_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
 
         <div className="flex-1 overflow-y-auto space-y-2">
-          {isLoading && <div className="text-sm text-muted-foreground p-2">Yuklanmoqda...</div>}
+          {isLoading && <div className="text-sm text-muted-foreground p-2">{t("Yuklanmoqda...")}</div>}
           {(Array.isArray(customers) ? customers : []).map((c: SdCustomer) => (
             <div key={c.id} data-testid={`card-customer-${c.id}`}
               className={`p-3 rounded-md border cursor-pointer hover-elevate transition-colors ${selected?.id === c.id ? "bg-primary/5 border-primary/30" : ""}`}
@@ -120,7 +127,7 @@ export function CustomersTab() {
             </div>
           ))}
           {!isLoading && customers.length === 0 && (
-            <div className="text-sm text-muted-foreground text-center p-4">Mijozlar topilmadi</div>
+            <div className="text-sm text-muted-foreground text-center p-4">{t("mijozlarTopilmadi")}</div>
           )}
         </div>
       </div>
@@ -129,7 +136,7 @@ export function CustomersTab() {
       <div className="flex-1 overflow-y-auto">
         {!selected ? (
           <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-            Mijozni tanlang
+            {t("mijozniTanlang")}
           </div>
         ) : (
           <div className="space-y-4">
@@ -151,18 +158,18 @@ export function CustomersTab() {
                   </div>
                 )}
                 {detail?.notes && <div className="text-sm text-muted-foreground">{detail.notes}</div>}
-                <div className="grid grid-cols-3 gap-3 pt-2 border-t">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t">
                   <div className="text-center">
                     <div className="text-xl font-bold text-primary">{detail?.totalOrders || 0}</div>
-                    <div className="text-xs text-muted-foreground">Buyurtmalar</div>
+                    <div className="text-xs text-muted-foreground">{t("buyurtmalar")}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold">{fmt(detail?.totalRevenue || 0)}</div>
-                    <div className="text-xs text-muted-foreground">Jami summa</div>
+                    <div className="text-xs text-muted-foreground">{t("jamiSumma")}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold">{detail?.creditLimit ? fmt(detail.creditLimit) : "—"}</div>
-                    <div className="text-xs text-muted-foreground">Kredit limit</div>
+                    <div className="text-xs text-muted-foreground">{t("kreditLimit")}</div>
                   </div>
                 </div>
               </CardContent>
@@ -170,7 +177,7 @@ export function CustomersTab() {
 
             {detail?.contacts && detail.contacts.length > 0 && (
               <Card>
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Kontaktlar</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">{t("kontaktlar")}</CardTitle></CardHeader>
                 <CardContent className="p-4 pt-0 space-y-2">
                   {(Array.isArray(detail.contacts) ? detail.contacts : []).map((ct: SdContact) => (
                     <div key={ct.id} className="flex items-center gap-3 text-sm">
@@ -179,7 +186,7 @@ export function CustomersTab() {
                         {ct.position && <span className="text-muted-foreground"> · {ct.position}</span>}
                       </div>
                       {ct.phone && <div className="flex items-center gap-1 text-muted-foreground"><Phone className="w-3 h-3" />{ct.phone}</div>}
-                      {ct.isPrimary && <Badge className="text-xs">Asosiy</Badge>}
+                      {ct.isPrimary && <Badge className="text-xs">{t("primary")}</Badge>}
                     </div>
                   ))}
                 </CardContent>
@@ -188,7 +195,7 @@ export function CustomersTab() {
 
             {detail?.recentOrders && detail.recentOrders.length > 0 && (
               <Card>
-                <CardHeader className="pb-2"><CardTitle className="text-sm">So'nggi buyurtmalar</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">{t("songgiBuyurtmalar")}</CardTitle></CardHeader>
                 <CardContent className="p-4 pt-0 space-y-2">
                   {(Array.isArray(detail.recentOrders) ? detail.recentOrders : []).map((o: SdOrderSummary) => (
                     <div key={o.id} className="flex items-center justify-between gap-2 text-sm py-1 border-b last:border-0">

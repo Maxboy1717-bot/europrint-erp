@@ -1,5 +1,11 @@
+/**
+ * @module HRRequestsHistory
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { HRRequest } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface HRRequestsHistoryProps {
   requests: HRRequest[];
@@ -21,18 +27,19 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export function HRRequestsHistory({ requests }: HRRequestsHistoryProps) {
+  const { t } = useTranslation("common");
   if (requests.length === 0) return null;
 
   return (
     <div className="border-t pt-4">
       <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-        HR So'rovlar tarixi
+        {t("hrSorovlarTarixi")}
       </h4>
       <div className="flex flex-col gap-2">
         {(Array.isArray(requests) ? requests : []).map(r => {
           const st = STATUS_LABELS[r.status] ?? { label: r.status, color: "bg-gray-500" };
           return (
-            <div key={r.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-border/40 bg-surface-container-low text-xs">
+            <div key={r.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-border/40 bg-muted/40 text-xs">
               <div className={`w-2 h-2 rounded-full shrink-0 ${st.color}`} />
               <div className="flex-1 min-w-0">
                 <span className="font-medium">{TYPE_LABELS[r.request_type] ?? r.request_type}</span>
@@ -45,7 +52,7 @@ export function HRRequestsHistory({ requests }: HRRequestsHistoryProps) {
                 </p>
               </div>
               {r.priority === "urgent" && (
-                <Badge className="bg-red-500 text-white text-[9px] shrink-0">Shoshilinch</Badge>
+                <Badge className="bg-[var(--ep-red)] text-white text-[9px] shrink-0">{t("Shoshilinch")}</Badge>
               )}
             </div>
           );

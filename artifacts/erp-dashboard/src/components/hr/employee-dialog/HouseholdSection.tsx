@@ -1,30 +1,37 @@
+/**
+ * @module HouseholdSection
+ * @description React UI component.
+ */
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { FormSectionProps } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function HouseholdSection({ form }: FormSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="housingType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Uy turi</FormLabel>
+              <FormLabel>{t("uyTuri")}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger data-testid="select-housing-type">
-                    <SelectValue placeholder="Uy turini tanlang" />
+                  <SelectTrigger data-testid="select-housing-type" className="h-9">
+                    <SelectValue placeholder={t("uyTuriniTanlang")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="shaxsiy uy">Shaxsiy uy</SelectItem>
-                  <SelectItem value="kvartira">Kvartira</SelectItem>
-                  <SelectItem value="ijara">Ijaraga olingan</SelectItem>
-                  <SelectItem value="yotoqxona">Yotoqxona</SelectItem>
-                  <SelectItem value="qarindoshlar bilan">Qarindoshlar bilan</SelectItem>
+                  <SelectItem value="shaxsiy uy">{t("shaxsiyUy")}</SelectItem>
+                  <SelectItem value="kvartira">{t("kvartira")}</SelectItem>
+                  <SelectItem value="ijara">{t("ijaragaOlingan")}</SelectItem>
+                  <SelectItem value="yotoqxona">{t("yotoqxona")}</SelectItem>
+                  <SelectItem value="qarindoshlar bilan">{t("qarindoshlarBilan")}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -36,12 +43,12 @@ export function HouseholdSection({ form }: FormSectionProps) {
           name="householdSize"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Oilada necha kishi yashaydi</FormLabel>
+              <FormLabel>{t("oiladaNechaKishiYashaydi")}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   type="number"
-                  placeholder="Masalan: 5"
+                  placeholder={t("masalan5")}
                   data-testid="input-household-size"
                 />
               </FormControl>
@@ -55,32 +62,32 @@ export function HouseholdSection({ form }: FormSectionProps) {
         name="householdMembers"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Kimlar bilan yashaydi</FormLabel>
+            <FormLabel>{t("kimlarBilanYashaydi")}</FormLabel>
             <FormControl>
               <Input
                 {...field}
-                placeholder="Masalan: turmush o'rtog'i, 2 ta farzand, qaynona, qaynota"
+                placeholder={t("masalanTurmushOrtogi2Ta")}
                 data-testid="input-household-members"
               />
             </FormControl>
             <p className="text-xs text-muted-foreground">
-              Oila a'zolarini vergul bilan ajratib yozing
+              {t("oilaAzolariniVergulBilanAjratib")}
             </p>
             <FormMessage />
           </FormItem>
         )}
       />
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="latitude"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Kenglik (Latitude)</FormLabel>
+              <FormLabel>{t("kenglikLatitude")}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder="Masalan: 40.5286"
+                  placeholder={t("masalan405286")}
                   data-testid="input-latitude"
                 />
               </FormControl>
@@ -93,11 +100,11 @@ export function HouseholdSection({ form }: FormSectionProps) {
           name="longitude"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Uzunlik (Longitude)</FormLabel>
+              <FormLabel>{t("uzunlikLongitude")}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder="Masalan: 70.9425"
+                  placeholder={t("masalan709425")}
                   data-testid="input-longitude"
                 />
               </FormControl>

@@ -1,6 +1,11 @@
+/**
+ * @module approval-request.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { InternalServerErrorException } from '@nestjs/common';
+import { DomainError } from '../../../../shared/domain/errors/domain-error';
 import { HitlDocumentType, ApprovalStatus, HITL_THRESHOLDS } from '../enums/hitl-document-type.enum';
 
 export class ApprovalRequest {
@@ -23,7 +28,9 @@ export class ApprovalRequest {
 
   approve(userId: string, notes?: string): void {
     if (this.status !== ApprovalStatus.PENDING) {
-      throw new InternalServerErrorException('Faqat pending so\'rov tasdiqlanadi');
+      // INVALID_STATE: only PENDING approval requests can be approved.
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingApprovable'.
+      throw new DomainError('INVALID_STATE', 'Faqat pending so\'rov tasdiqlanadi');
     }
     this.status = ApprovalStatus.APPROVED;
     this.approvedBy = userId;
@@ -33,10 +40,14 @@ export class ApprovalRequest {
 
   reject(userId: string, reason: string): void {
     if (this.status !== ApprovalStatus.PENDING) {
-      throw new InternalServerErrorException('Faqat pending so\'rov rad etiladi');
+      // INVALID_STATE: only PENDING approval requests can be rejected.
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.onlyPendingRejectable'.
+      throw new DomainError('INVALID_STATE', 'Faqat pending so\'rov rad etiladi');
     }
     if (!reason || reason.length < 5) {
-      throw new InternalServerErrorException('Rad etish sababi kamida 5 ta belgi');
+      // INVALID_INPUT: reject reason must be at least 5 characters.
+      // I18N_LEAK: domain aggregate (no DI). Caller may translate via 'errors.rejectReasonTooShort'.
+      throw new DomainError('INVALID_INPUT', 'Rad etish sababi kamida 5 ta belgi');
     }
     this.status = ApprovalStatus.REJECTED;
     this.rejectedBy = userId;

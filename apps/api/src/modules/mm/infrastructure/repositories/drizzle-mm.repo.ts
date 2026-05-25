@@ -1,18 +1,35 @@
+/**
+ * @module drizzle-mm.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { eq, sql } from 'drizzle-orm';
-import { Err, Ok } from '@common/result';
+import { AppErr, Err, Ok } from '@common/result';
 import { Database } from '@/infrastructure/database/database';
 import { Result } from '@common/result';
 import { Material } from '../../domain/aggregates/material.aggregate';
 import { PurchaseOrder } from '../../domain/aggregates/purchase-order.aggregate';
-import { IMmRepository } from '../../domain/repositories/mm.repository';
+import { IMmRepository, DrizzleExecutor } from '../../domain/repositories/mm.repository';
 import { db , runQuery } from '@shared/db';
-import { materials, purchase_orders, vendors } from '@shared/db';
+import { materials, purchase_orders, purchase_orders_legacy, vendors } from '@shared/db';
 import { execMmMaterialInsert, execMmPurchaseOrderInsert } from '@common/database/queries-remaining';
 
 type DbRow = Record<string, unknown>;
+
+/**
+ * Narrow shape we need from a Drizzle executor (db or tx). Restricted to the
+ * surface used in this repo so we don't import `PgTransaction` types.
+ */
+type ExecLike = {
+  select: typeof db.select;
+  insert: typeof db.insert;
+  update: typeof db.update;
+};
+
+const asExec = (tx?: DrizzleExecutor): ExecLike => (tx ?? db) as unknown as ExecLike;
 
 @Injectable()
 export class DrizzleMmRepository implements IMmRepository {
@@ -54,8 +71,22 @@ export class DrizzleMmRepository implements IMmRepository {
     }
   }
 
-  async savePurchaseOrder(po: PurchaseOrder): Promise<Result<number>> {
+  async savePurchaseOrder(po: PurchaseOrder, tx?: DrizzleExecutor): Promise<Result<number>> {
     try {
+      if (tx) {
+        // In-transaction path: inline against the supplied tx executor.
+        // purchase_orders status is an enum union; cast the runtime string at the call site.
+        type PoStatus = 'draft' | 'cancelled' | 'invoiced' | 'pending' | 'approved' | 'partially_received' | 'received' | 'paid';
+        const exec = asExec(tx);
+        await exec.insert(purchase_orders_legacy).values({
+          po_number: po.getPoNumber(),
+          vendor_name: String(po.getSupplierId()),
+          total_amount: String(po.getTotalAmount()),
+          status: String(po.getStatus()) as PoStatus,
+          created_by: String(po.getCreatedBy()),
+        });
+        return Ok(1);
+      }
       await execMmPurchaseOrderInsert(po.getPoNumber(), String(po.getSupplierId()), po.getTotalAmount(), String(po.getStatus()), String(po.getCreatedBy()));
       return Ok(1);
     } catch (error: unknown) {
@@ -64,9 +95,10 @@ export class DrizzleMmRepository implements IMmRepository {
     }
   }
 
-  async getPurchaseOrder(id: number): Promise<Result<PurchaseOrder>> {
+  async getPurchaseOrder(id: number, tx?: DrizzleExecutor): Promise<Result<PurchaseOrder>> {
     try {
-      const rows = await db.select().from(purchase_orders).where(eq(purchase_orders.id, String(id))).limit(1);
+      const exec = asExec(tx);
+      const rows = await exec.select().from(purchase_orders).where(eq(purchase_orders.id, String(id))).limit(1);
       const row = rows[0] as DbRow | undefined;
       if (!row) return Err('PO topilmadi');
       return Ok(new PurchaseOrder(row['id'] as number, String(row['po_number'] ?? ''), row['vendor_id'] as number, Number(row['created_by'] ?? 0)));
@@ -76,10 +108,24 @@ export class DrizzleMmRepository implements IMmRepository {
     }
   }
 
+  async withTransaction<T>(
+    work: (tx: DrizzleExecutor) => Promise<Result<T>>,
+  ): Promise<Result<T>> {
+    try {
+      return await db.transaction(async (tx) => work(tx as DrizzleExecutor));
+    } catch (e: unknown) {
+      this.logger.error('MM transaction failed');
+      return Err(AppErr('DB_ERROR', (e as Error)?.message || 'Tranzaksiya xatoligi'));
+    }
+  }
+
   async getAllPoByStatus(status: string): Promise<Result<PurchaseOrder[]>> {
     try {
-      const result = await runQuery<DbRow>(sql`SELECT * FROM purchase_orders WHERE status = ${status}`);
-      return Ok((result.rows ?? []).map((r) => new PurchaseOrder(r['id'] as number, String(r['po_number'] ?? ''), r['vendor_id'] as number, Number(r['created_by'] ?? 0))));
+      const rows = await db.select().from(purchase_orders).where(eq(purchase_orders.status, status as never));
+      return Ok((Array.isArray(rows) ? rows : []).map((r) => {
+        const row = r as DbRow;
+        return new PurchaseOrder(row['id'] as number, String(row['po_number'] ?? ''), row['vendor_id'] as number, Number(row['created_by'] ?? 0));
+      }));
     } catch (error: unknown) {
       this.logger.error('Failed to get purchase orders');
       return Err('Oqish xatoligi');
@@ -110,9 +156,13 @@ export class DrizzleMmRepository implements IMmRepository {
     }
   }
 
-  async validateThreeWayMatch(poId: number): Promise<Result<{ matched: boolean; difference: number }>> {
+  async validateThreeWayMatch(
+    poId: number,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<{ matched: boolean; difference: number }>> {
     try {
-      const rows = await db.select().from(purchase_orders).where(eq(purchase_orders.id, String(poId))).limit(1);
+      const exec = asExec(tx);
+      const rows = await exec.select().from(purchase_orders).where(eq(purchase_orders.id, String(poId))).limit(1);
       const po = rows[0] as DbRow | undefined;
       if (!po) return Err('PO topilmadi');
       const invoiceMatched = Boolean(po['invoice_matched']);

@@ -1,3 +1,8 @@
+/**
+ * @module mes.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -16,6 +21,7 @@ import { GetDowntimeHandler } from './application/queries/get-downtime.handler';
 import { GetDowntimeSummaryHandler } from './application/queries/get-downtime-summary.handler';
 import { DrizzleMesRepository } from './infrastructure/repositories/drizzle-mes.repo';
 import { DrizzleDowntimeRepository } from './infrastructure/repositories/drizzle-downtime.repo';
+import { MES_REPO, DOWNTIME_REPO } from './domain/repositories/mes.repository';
 import { WorkOrdersService } from './work-orders/work-orders.service';
 import { MesMaintenanceService } from './application/mes-maintenance.service';
 import { MesShiftsStatsService } from './application/mes-shifts-stats.service';
@@ -25,10 +31,15 @@ import { WORK_ORDERS_REPO } from './work-orders/i-work-orders.repo';
 import { MesMaintenanceRepository } from './infrastructure/repositories/mes-maintenance.repo';
 import { MesShiftsStatsRepository } from './infrastructure/repositories/mes-shifts-stats.repo';
 import { MesProductionSessionsRepository } from './infrastructure/repositories/mes-production-sessions.repo';
-import { LmsCertExpiredListener } from './infrastructure/event-handlers/lms-cert-expired.listener';
+// Wave 4 round-2 (PA2-18): LmsCertExpiredListener split into two
+// canonical @EventsHandler listeners + a shared block service.
+import { LmsCertExpiredMesListener } from './infrastructure/event-handlers/lms-cert-expired-mes.listener';
+import { LmsCertExpiredLiveMesListener } from './infrastructure/event-handlers/lms-cert-expired-live-mes.listener';
+import { LmsCertExpiredBlockService } from './infrastructure/event-handlers/lms-cert-expired-block.service';
 
 const listeners = [
-  LmsCertExpiredListener,          // Trigger 17 — LMS cert → MES blok
+  LmsCertExpiredMesListener,       // Trigger 17 — daily-sweep variant (Wave 4 round-2)
+  LmsCertExpiredLiveMesListener,   // Trigger 17 — realtime variant   (Wave 4 round-2)
 ];
 
 const handlers = [
@@ -48,8 +59,9 @@ const handlers = [
   providers: [
     ...handlers,
     ...listeners,
-    { provide: 'IMesRepository', useClass: DrizzleMesRepository },
-    { provide: 'IDowntimeRepository', useClass: DrizzleDowntimeRepository },
+    LmsCertExpiredBlockService,    // Wave 4 round-2: shared by Trigger 17 split listeners
+    { provide: MES_REPO, useClass: DrizzleMesRepository },
+    { provide: DOWNTIME_REPO, useClass: DrizzleDowntimeRepository },
     { provide: WORK_ORDERS_REPO, useClass: DrizzleWorkOrdersRepository },
     WorkOrdersService,
     MesMaintenanceService,
@@ -59,6 +71,6 @@ const handlers = [
     MesShiftsStatsRepository,
     MesProductionSessionsRepository,
   ],
-  exports: ['IMesRepository', 'IDowntimeRepository', WORK_ORDERS_REPO, WorkOrdersService],
+  exports: [MES_REPO, DOWNTIME_REPO, WORK_ORDERS_REPO, WorkOrdersService],
 })
 export class MesModule {}

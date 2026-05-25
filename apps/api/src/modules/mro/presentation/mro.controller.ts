@@ -1,18 +1,27 @@
+/**
+ * @module mro.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
   Get,
   HttpStatus,
+  Inject,
   Logger,
+  NotFoundException,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
   UseGuards,
   UseInterceptors, BadRequestException, InternalServerErrorException} from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '@common/guards/roles.guard';
 import { Roles} from '@common/decorators/roles.decorator';
 import { AuditInterceptor} from '@common/interceptors/audit.interceptor';
@@ -22,6 +31,22 @@ import { AssignMaintenanceCommand} from '../application/commands/assign-maintena
 import { CompleteMaintenanceCommand} from '../application/commands/complete-maintenance.handler';
 import { GetMaintenanceOrdersQuery} from '../application/queries/get-maintenance-orders.query';
 import { StopMachineDto, AssignMaintenanceDto, CompleteMaintenanceDto} from './dto/mro.dto';
+import { IMaintenanceRepo, MAINTENANCE_REPO } from '../domain/repositories/i-maintenance.repo';
+import { MaintenanceService } from '../maintenance/maintenance.service';
+import { unwrapOrInternal } from '@common/http-result';
+import { z } from 'zod';
+
+const CreateEquipmentSchema = z.object({
+  name: z.string().max(200).optional(),
+  code: z.string().max(50).optional(),
+  type: z.string().max(50).optional(),
+  status: z.string().max(50).optional(),
+  location: z.string().max(500).optional(),
+}).passthrough();
+
+const UpdateEquipmentStatusSchema = z.object({
+  status: z.string().max(50),
+}).passthrough();
 
 enum Role {
  SUPER_ADMIN = 'super_admin',
@@ -30,7 +55,8 @@ enum Role {
  TECHNICIAN = 'technician',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Mro')
 @Controller('mro')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -39,8 +65,13 @@ export class MroController {
 
  constructor(
  private readonly commandBus: CommandBus,
- private readonly queryBus: QueryBus) {}
+ private readonly queryBus: QueryBus,
+ @Inject(MAINTENANCE_REPO) private readonly maintenanceRepo: IMaintenanceRepo,
+ private readonly maintenanceSvc: MaintenanceService,
+ ) {}
 
+ @ApiOperation({ summary: 'Get all' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
  async getAll(
@@ -63,16 +94,20 @@ export class MroController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Get by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
  async getById(@Param('id') id: string) {
- this.logger.log('Get maintenance order');
- return {
- statusCode: HttpStatus.OK,
- data: { id},
-};
+   const result = await this.maintenanceRepo.findById(id);
+   if (!result.ok || !result.data) throw new NotFoundException(`Ta'mirlash buyurtmasi #${id} topilmadi`);
+   return { statusCode: HttpStatus.OK, data: result.data };
 }
 
+ @ApiOperation({ summary: 'Stop machine' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post('/stop-machine')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE, Role.TECHNICIAN)
  async stopMachine(
@@ -87,6 +122,9 @@ export class MroController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Assign maintenance' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/assign')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
  async assignMaintenance(
@@ -101,6 +139,9 @@ export class MroController {
  return result.data;
 }
 
+ @ApiOperation({ summary: 'Complete maintenance' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/complete')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
  async completeMaintenance(
@@ -114,4 +155,84 @@ export class MroController {
 
  return result.data;
 }
+
+ @ApiOperation({ summary: 'Get spare parts' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get('spare-parts')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE, Role.TECHNICIAN)
+ async getSpareParts(@Query('search') search?: string) {
+   return unwrapOrInternal(await this.maintenanceSvc.findSpareParts(search));
+ }
+
+ @ApiOperation({ summary: 'Get canteen stats' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get('canteen/stats')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async getCanteenStats() {
+   return unwrapOrInternal(await this.maintenanceSvc.getCanteenStats());
+ }
+
+ @ApiOperation({ summary: 'Get cleaning schedules' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get('cleaning/schedules')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async getCleaningSchedules() {
+   return unwrapOrInternal(await this.maintenanceSvc.findCleaningSchedules());
+ }
+
+ @ApiOperation({ summary: 'Get facilities' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get('facilities')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async getFacilities() {
+   return unwrapOrInternal(await this.maintenanceSvc.findFacilities());
+ }
+
+ @ApiOperation({ summary: 'Get pm schedules' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get('pm/schedules')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async getPmSchedules() {
+   return unwrapOrInternal(await this.maintenanceSvc.findPmSchedules());
+ }
+
+ @ApiOperation({ summary: 'Get utility readings' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get('utility/readings')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async getUtilityReadings() {
+   return unwrapOrInternal(await this.maintenanceSvc.findUtilityReadings());
+ }
+
+ @ApiOperation({ summary: 'Get equipment' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get('equipment')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE, Role.TECHNICIAN)
+ async getEquipment(@Query() query: Record<string, unknown>) {
+   return unwrapOrInternal(await this.maintenanceSvc.findEquipment(query));
+ }
+
+ @ApiOperation({ summary: 'Create equipment' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @Post('equipment')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async createEquipment(@Body() body: unknown) {
+   const dto = CreateEquipmentSchema.parse(body);
+   return unwrapOrInternal(await this.maintenanceSvc.createEquipment(dto as Record<string, unknown>));
+ }
+
+ @ApiOperation({ summary: 'Update equipment status' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @Patch('equipment/:id/status')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async updateEquipmentStatus(
+   @Param('id', ParseIntPipe) id: number,
+   @Body() body: unknown,
+ ) {
+   const dto = UpdateEquipmentStatusSchema.parse(body);
+   const status = String(dto.status ?? 'active');
+   return unwrapOrInternal(await this.maintenanceSvc.updateEquipmentStatus(id, status));
+ }
 }

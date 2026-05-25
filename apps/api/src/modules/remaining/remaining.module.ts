@@ -1,13 +1,18 @@
+/**
+ * @module remaining.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 
 import { WasteController } from './waste.controller';
 import { ExceptionLogController } from './exception-log.controller';
 import { ReportsHubController } from './reports-hub.controller';
-import { SystemController, SystemSettingsController } from './system.controller';
+import { SystemController, SystemSettingsController, SupplyChainController } from './system.controller';
 import { WeeklyPlanController } from './weekly-plan.controller';
 import { MaterialBalanceController } from './material-balance.controller';
 import { CompanyStateController } from './company-state.controller';
-import { FiController } from './fi.controller';
+// FiController olib tashlandi: FinanceModule.FiController bilan duplicate edi (/api/fi prefix)
 import { IdealRasmController } from './ideal-rasm.controller';
 import { ProductionFactsController } from './production-facts.controller';
 import { OrderStatusController } from './order-status.controller';
@@ -32,8 +37,8 @@ import { ProductionFactsService } from './production-facts.service';
 import { ProductionFactsRepository } from './production-facts.repository';
 import { OrderStatusService } from './order-status.service';
 import { OrderStatusRepository } from './order-status.repository';
-import { ThreeWayMatchService } from './three-way-match.service';
-import { ThreeWayMatchRepository } from './three-way-match.repository';
+import { ThreeWayMatchService }    from '../pos/application/services/three-way-match.service';
+import { ThreeWayMatchRepository } from '../pos/infrastructure/repositories/three-way-match.repository';
 import { FiRepository } from './fi.repository';
 import { WasteRepository } from './waste.repository';
 import { ReportsHubRepository } from './reports-hub.repository';
@@ -45,10 +50,10 @@ import { ReportsHubRepository } from './reports-hub.repository';
     ReportsHubController,
     SystemController,
     SystemSettingsController,
+    SupplyChainController,
     WeeklyPlanController,
     MaterialBalanceController,
     CompanyStateController,
-    FiController,
     IdealRasmController,
     ProductionFactsController,
     OrderStatusController,

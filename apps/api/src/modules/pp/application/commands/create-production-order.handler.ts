@@ -1,9 +1,14 @@
+/**
+ * @module create-production-order.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { AppErr, Err } from '@common/result';
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
 import { ProductionOrder, MaterialRequirement } from '../../domain/aggregates/production-order.aggregate';
-import { IPpRepository } from '../../domain/repositories/pp.repository';
+import { IPpRepository, PP_REPO } from '../../domain/repositories/pp.repository';
 
 export class CreateProductionOrderCommand {
   constructor(public soId: number,
@@ -18,7 +23,7 @@ export class CreateProductionOrderCommand {
 export class CreateProductionOrderHandler implements ICommandHandler<CreateProductionOrderCommand> {
   private readonly logger = new Logger(CreateProductionOrderHandler.name);
   constructor(
-    @Inject('IPpRepository') private ppRepo: IPpRepository,
+    @Inject(PP_REPO) private ppRepo: IPpRepository,
     private eventBus: EventBus
   ) {}
 

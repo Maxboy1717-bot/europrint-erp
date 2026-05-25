@@ -1,3 +1,8 @@
+/**
+ * @module order-status-changed.event
+ * @description Domain event payload. Published via the CQRS EventBus.
+ */
+
 export class OrderStatusChangedEvent {
   constructor(
     public readonly orderId: string,

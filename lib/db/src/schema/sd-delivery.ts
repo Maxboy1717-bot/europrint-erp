@@ -1,6 +1,11 @@
+/**
+ * @module sd-delivery
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -20,7 +25,7 @@ export const deliveries = pgTable("deliveries", {
   loadingPoint: varchar("loading_point", { length: 10 }).notNull().default("LP01"),
 
   // References
-  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id),
+  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id, { onDelete: "set null" }),
   customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: 'set null' }),
 
   // Dates
@@ -39,7 +44,7 @@ export const deliveries = pgTable("deliveries", {
   driverName: varchar("driver_name", { length: 100 }),
   vehicleNumber: varchar("vehicle_number", { length: 20 }),
 
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
@@ -48,6 +53,7 @@ export const deliveries = pgTable("deliveries", {
   index("idx_deliveries_customer_id").on(t.customerId),
   index("idx_deliveries_status").on(t.deliveryStatus),
   index("idx_deliveries_created_at").on(t.createdAt),
+  check("deliveries_status_chk", sql`${t.deliveryStatus} IN ('PICKING','PACKING','GOODS_ISSUE','COMPLETED')`),
 ]);
 
 
@@ -70,9 +76,9 @@ export const deliveryItems = pgTable("delivery_items", {
   deliveryId: varchar("delivery_id").references(() => deliveries.id, { onDelete: "cascade" }).notNull(),
   itemNumber: varchar("item_number", { length: 10 }).notNull(),
 
-  salesOrderItemId: varchar("sales_order_item_id").references(() => salesOrderItems.id),
+  salesOrderItemId: varchar("sales_order_item_id").references(() => salesOrderItems.id, { onDelete: "set null" }),
 
-  materialId: varchar("material_id").references(() => products.id),
+  materialId: varchar("material_id").references(() => products.id, { onDelete: "set null" }),
   deliveryQuantity: numericMoney("delivery_quantity").notNull(),
   pickedQuantity: numericMoney("picked_quantity").notNull().default(0),
 
@@ -89,6 +95,8 @@ export const deliveryItems = pgTable("delivery_items", {
   index("idx_delivery_items_delivery_id").on(t.deliveryId),
   index("idx_delivery_items_material_id").on(t.materialId),
   index("idx_delivery_items_picking_status").on(t.pickingStatus),
+  check("delivery_items_picking_status_chk", sql`${t.pickingStatus} IN ('NOT_PICKED','PICKING','PICKED','PARTIAL')`),
+  check("delivery_items_gi_status_chk", sql`${t.goodsIssueStatus} IN ('NOT_ISSUED','PARTIALLY_ISSUED','ISSUED')`),
 ]);
 
 
@@ -111,8 +119,8 @@ export const billingDocuments = pgTable("billing_documents", {
   billingDate: varchar("billing_date", { length: 10 }).notNull(),
 
   // References
-  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id),
-  deliveryId: varchar("delivery_id").references(() => deliveries.id),
+  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id, { onDelete: "set null" }),
+  deliveryId: varchar("delivery_id").references(() => deliveries.id, { onDelete: "set null" }),
   customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: 'set null' }),
 
   // Amounts
@@ -135,7 +143,7 @@ export const billingDocuments = pgTable("billing_documents", {
   cancelledBy: varchar("cancelled_by"),
   cancellationOf: varchar("cancellation_of"), // Reference to original invoice if this is cancellation
 
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 }, (t) => [
@@ -143,6 +151,8 @@ export const billingDocuments = pgTable("billing_documents", {
   index("idx_billing_documents_customer_id").on(t.customerId),
   index("idx_billing_documents_billing_status").on(t.billingStatus),
   index("idx_billing_documents_created_at").on(t.createdAt),
+  check("billing_documents_status_chk", sql`${t.billingStatus} IN ('OPEN','PARTIALLY_PAID','PAID','CANCELLED')`),
+  check("billing_documents_type_chk", sql`${t.billingType} IN ('F2','G2')`),
 ]);
 
 
@@ -168,10 +178,10 @@ export const billingItems = pgTable("billing_items", {
   billingDocumentId: varchar("billing_document_id").references(() => billingDocuments.id, { onDelete: "cascade" }).notNull(),
   itemNumber: varchar("item_number", { length: 10 }).notNull(),
 
-  salesOrderItemId: varchar("sales_order_item_id").references(() => salesOrderItems.id),
-  deliveryItemId: varchar("delivery_item_id").references(() => deliveryItems.id),
+  salesOrderItemId: varchar("sales_order_item_id").references(() => salesOrderItems.id, { onDelete: "set null" }),
+  deliveryItemId: varchar("delivery_item_id").references(() => deliveryItems.id, { onDelete: "set null" }),
 
-  materialId: varchar("material_id").references(() => products.id),
+  materialId: varchar("material_id").references(() => products.id, { onDelete: "set null" }),
   billedQuantity: numericMoney("billed_quantity").notNull(),
 
   netPrice: numericMoney("net_price").notNull(),
@@ -243,7 +253,7 @@ export const quotations = pgTable("quotations", {
   convertedToOrderId: varchar("converted_to_order_id"),
 
   // Audit
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),

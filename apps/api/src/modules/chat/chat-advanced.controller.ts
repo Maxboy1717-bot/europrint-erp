@@ -1,19 +1,17 @@
+/**
+ * @module chat-advanced.controller
+ * @description Rooms/reactions/pin/polls endpoints. Thread/forward/upload endpoints
+ * were extracted to `chat-advanced-uploads.controller.ts` per Rule 16 (≤ 300 lines).
+ * Both controllers share the `/hr-v2/chat` prefix so consumers see no route change.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { assertFound, assertRequired, assertValidated, assertDefined } from '@common/assertions';
-import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
-import {Controller,
-  Get,
-  Post,
-  Patch,
-  Body,
-  Param,
-  UseGuards,
-  Logger, UseInterceptors, UsePipes } from '@nestjs/common';
-import { safeCall } from '@common/result';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Logger, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/user.types';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -25,18 +23,15 @@ import {
   ChatPinMessageSchema, ChatPinMessageDto,
   ChatAdvancedCreatePollSchema, ChatAdvancedCreatePollDto,
   ChatAdvancedVotePollSchema, ChatAdvancedVotePollDto,
-  ChatThreadMessageSchema, ChatThreadMessageDto,
-  ChatForwardMessageSchema, ChatForwardMessageDto,
-  ChatRequestUploadUrlSchema, ChatRequestUploadUrlDto,
-  ChatCompleteUploadSchema, ChatCompleteUploadDto,
 } from './dto/chat.dto';
+
+export { ChatAdvancedUploadsController } from './chat-advanced-uploads.controller';
 
 @ApiTags('Chat Advanced')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin', 'manager', 'supervisor', 'operator', 'employee', 'viewer', 'director')
-
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('hr-v2/chat')
 export class ChatAdvancedController {
@@ -48,6 +43,8 @@ export class ChatAdvancedController {
 
   // ── ROOMS ──────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Get pinned message' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms/:roomId/pinned')
   async getPinnedMessage(
     @CurrentUser() user: AuthenticatedUser,
@@ -65,6 +62,9 @@ export class ChatAdvancedController {
 
   // ── REACTIONS ──────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Toggle reaction' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('messages/:id/reactions')
   @UsePipes(new ZodValidationPipe(ChatEmojiSchema))
   async toggleReaction(
@@ -86,6 +86,9 @@ export class ChatAdvancedController {
 
   // ── PIN ────────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Pin message' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('messages/:id/pin')
   @UsePipes(new ZodValidationPipe(ChatPinMessageSchema))
   async pinMessage(
@@ -110,6 +113,9 @@ export class ChatAdvancedController {
 
   // ── POLLS ──────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'Create poll' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('polls')
   @UsePipes(new ZodValidationPipe(ChatAdvancedCreatePollSchema))
   async createPoll(
@@ -128,7 +134,7 @@ export class ChatAdvancedController {
       roomId,
       user.id,
       body.question.trim(),
-      (body?.options ?? []).filter((o) => o.trim()),
+      (Array.isArray(body?.options) ? body?.options : []).filter((o) => o.trim()),
       body.isMultiple ?? false,
       body.isAnonymous ?? false,
     );
@@ -145,6 +151,9 @@ export class ChatAdvancedController {
     return message;
   }
 
+  @ApiOperation({ summary: 'Vote poll' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('polls/:pollId/vote')
   @UsePipes(new ZodValidationPipe(ChatAdvancedVotePollSchema))
   async votePoll(
@@ -160,123 +169,5 @@ export class ChatAdvancedController {
     this.chatGateway.server?.to(`room:${voteData.roomId}`).emit('poll:updated', voteData);
 
     return voteData;
-  }
-
-  // ── THREADS ────────────────────────────────────────────────────────────────
-
-  @Get('messages/:id/thread')
-  async getThreadMessages(@CurrentUser() user: AuthenticatedUser, @Param('id') messageId: string) {
-    return unwrapOrInternal(await this.chatService.getThreadMessages(messageId, user.id));
-  }
-
-  @Post('messages/:id/thread')
-  @UsePipes(new ZodValidationPipe(ChatThreadMessageSchema))
-  async sendThreadMessage(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id') messageId: string,
-    @Body() body: ChatThreadMessageDto,
-  ) {
-    assertRequired(body.content?.trim(), 'content is required');
-
-    const result = await this.chatService.sendThreadMessage(
-      messageId,
-      user.id,
-      body.content.trim(),
-    );
-
-    this.chatGateway.server?.to(`room:${result.roomId}`).emit('thread:new_reply', result.msg);
-    this.chatGateway.server?.to(`room:${result.roomId}`).emit('thread:count_updated', {
-      messageId,
-      threadCount: result.threadCount,
-    });
-
-    return result.msg;
-  }
-
-  // ── FORWARD ────────────────────────────────────────────────────────────────
-
-  @Post('messages/:id/forward')
-  @UsePipes(new ZodValidationPipe(ChatForwardMessageSchema))
-  async forwardMessage(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id') messageId: string,
-    @Body() body: ChatForwardMessageDto,
-  ) {
-    const targetRoomId = String(body.targetRoomId);
-
-    const message = await this.chatService.forwardMessage(
-      messageId,
-      targetRoomId,
-      user.id,
-    );
-
-    this.chatGateway.server?.to(`room:${targetRoomId}`).emit('new_message', message);
-
-    const members = await this.chatService.getRoomMembers(targetRoomId);
-    for (const member of (Array.isArray(members) ? members : []).filter((m) => m.userId !== user.id)) {
-      const unread = await this.chatService.getTotalUnreadCount(Number(member.userId));
-      this.chatGateway.emitToUser(Number(member.userId), 'unread_count', { count: unread });
-      this.chatGateway.emitToUser(Number(member.userId), 'room_updated', { roomId: targetRoomId });
-    }
-
-    return message;
-  }
-
-  // ── FILE UPLOAD ────────────────────────────────────────────────────────────
-
-  @Post('upload/request-url')
-  @UsePipes(new ZodValidationPipe(ChatRequestUploadUrlSchema))
-  async requestUploadUrl(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() body: ChatRequestUploadUrlDto,
-  ) {
-    const roomId = String(body.roomId);
-
-    const members = await this.chatService.getRoomMembers(roomId);
-    assertRequired((members ?? []).find((m) => m.userId === user.id), 'Not a member of this room');
-
-
-    const storageResult = await safeCall(async () => {
-      const { ObjectStorageService } = await import('../../lib/objectStorage');
-      const objStorage = new ObjectStorageService();
-      const uploadURL = await objStorage.getObjectEntityUploadURL();
-      const path = uploadURL.split('?')[0];
-      const normalizedPath = path.includes('/objects/')
-        ? path.substring(path.indexOf('/objects/'))
-        : path;
-      const fileUrl = `/api/storage/objects${normalizedPath.replace(/^\/objects/, '')}`;
-      return { uploadURL, fileUrl };
-    }, 'EXTERNAL_SERVICE');
-    assertOk(storageResult);
-    return storageResult.data;
-  }
-
-  @Post('upload/complete')
-  @UsePipes(new ZodValidationPipe(ChatCompleteUploadSchema))
-  async completeUpload(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() body: ChatCompleteUploadDto,
-  ) {
-    const roomId = String(body.roomId);
-
-    const message = await this.chatService.uploadFileAndSendMessage(
-      roomId,
-      user.id,
-      body.fileUrl,
-      body.fileName,
-      body.fileType,
-      body.fileSize,
-    );
-
-    this.chatGateway.server?.to(`room:${roomId}`).emit('new_message', message);
-
-    const members = await this.chatService.getRoomMembers(roomId);
-    for (const member of (Array.isArray(members) ? members : []).filter((m) => m.userId !== user.id)) {
-      const unread = await this.chatService.getTotalUnreadCount(Number(member.userId));
-      this.chatGateway.emitToUser(Number(member.userId), 'unread_count', { count: unread });
-      this.chatGateway.emitToUser(Number(member.userId), 'room_updated', { roomId });
-    }
-
-    return message;
   }
 }

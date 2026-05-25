@@ -1,11 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+/**
+ * @module cashflow-forecast.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ *
+ * Domain-layer service — MUST NOT import Drizzle / @shared/db. Persistence
+ * is delegated to IFinanceRepo (see P0-2 DDD audit).
+ */
+
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Ok, Err, AppErr, Result, AppError } from '@common/result';
-import { safeNum, roundTo } from '@common/math/math-utils';
+import { roundTo } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { CfoConfigService } from './cfo-config.service';
 import { TashkentTimeService } from '@common/time';
+import { FINANCE_REPO, IFinanceRepo, CashflowWeekRaw } from '../repositories/i-finance.repo';
 
 const DEFAULT_WEEKS          = 13;
 const OPTIMISTIC_MULTIPLIER  = 1.20;
@@ -39,13 +46,7 @@ export interface CashflowForecastDto {
   generatedAt: string;
 }
 
-type Row = Record<string, unknown>;
-
-interface WeekRaw {
-  arCol: number;
-  soInflow: number;
-  apOut: number;
-  payrollOut: number;
+interface WeekRaw extends CashflowWeekRaw {
   vatOut: number;
 }
 
@@ -54,7 +55,10 @@ export class CashflowForecastService {
   private readonly logger = new Logger(CashflowForecastService.name);
   private readonly time = new TashkentTimeService();
 
-  constructor(private readonly cfoConfig: CfoConfigService) {}
+  constructor(
+    private readonly cfoConfig: CfoConfigService,
+    @Inject(FINANCE_REPO) private readonly repo: IFinanceRepo,
+  ) {}
 
   @Calculation('cashflow-forecast-weeks')
   async forecastWeeks(weeks: number = DEFAULT_WEEKS): Promise<Result<CashflowForecastDto, AppError>> {
@@ -107,52 +111,14 @@ export class CashflowForecastService {
       const wsStr = this.time.formatDate(ws);
       const weStr = this.time.formatDate(we);
 
-      const [arRows, soRows, apRows, payRows] = await Promise.all([
-        runQuery<Row>(sql`
-          SELECT
-            COALESCE(SUM(
-              CASE WHEN age_days BETWEEN 0  AND 30  THEN balance * ${1 - ecl030}
-                   WHEN age_days BETWEEN 31 AND 60  THEN balance * ${1 - ecl3160}
-                   WHEN age_days BETWEEN 61 AND 90  THEN balance * ${1 - ecl6190}
-                   WHEN age_days > 90               THEN balance * ${1 - ecl91p}
-                   ELSE 0 END
-            ), 0) AS ar_col
-          FROM (
-            SELECT total_amount AS balance,
-                   (${wsStr}::date - DATE(created_at)) AS age_days
-            FROM fi_invoices
-            WHERE status NOT IN ('paid', 'cancelled')
-              AND (invoice_type IS NULL OR invoice_type != 'payable')
-              AND DATE(due_date) BETWEEN ${wsStr}::date AND ${weStr}::date
-          ) sub
-        `),
-        runQuery<Row>(sql`
-          SELECT COALESCE(SUM(total_amount), 0) AS so_total
-          FROM sales_orders
-          WHERE status IN ('confirmed', 'in_production')
-            AND delivery_date BETWEEN ${wsStr} AND ${weStr}
-        `),
-        runQuery<Row>(sql`
-          SELECT COALESCE(SUM(total_amount), 0) AS ap_out
-          FROM fi_invoices
-          WHERE invoice_type = 'payable'
-            AND status NOT IN ('paid', 'cancelled')
-            AND DATE(due_date) BETWEEN ${wsStr}::date AND ${weStr}::date
-        `),
-        runQuery<Row>(sql`
-          SELECT COALESCE(SUM(net_pay), 0) AS payroll_out
-          FROM payroll_entries
-          WHERE DATE(created_at) BETWEEN ${wsStr}::date AND ${weStr}::date
-        `),
-      ]);
+      const week = await this.repo.fetchCashflowWeek(wsStr, weStr, {
+        e030: ecl030, e3160: ecl3160, e6190: ecl6190, e91p: ecl91p,
+      });
 
       const isTaxWeek = (w + 1) % 4 === 0;
       results.push({
-        arCol:      safeNum(arRows[0]?.['ar_col'], 0),
-        soInflow:   safeNum(soRows[0]?.['so_total'], 0),
-        apOut:      safeNum(apRows[0]?.['ap_out'], 0),
-        payrollOut: safeNum(payRows[0]?.['payroll_out'], 0),
-        vatOut:     isTaxWeek ? weeklyTax : 0,
+        ...week,
+        vatOut: isTaxWeek ? weeklyTax : 0,
       });
     }
     return results;
@@ -163,7 +129,7 @@ export class CashflowForecastService {
     weekData: WeekRaw[], inflowMultiplier: number, startDate: Date,
   ): WeeklyForecast[] {
     let cumulative = opening;
-    return (weekData ?? []).map((w, idx) => {
+    return (Array.isArray(weekData) ? weekData : []).map((w, idx) => {
       const ws       = new Date(startDate.getTime() + idx * 7 * 86400_000);
       const we       = new Date(startDate.getTime() + (idx + 1) * 7 * 86400_000 - 1);
       const arCol    = roundTo(w.arCol    * inflowMultiplier, 2);

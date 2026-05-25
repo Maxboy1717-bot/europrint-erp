@@ -1,3 +1,8 @@
+/**
+ * @module investment.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Ok, Err, Result, AppError } from '@common/result';
 
 export interface NpvResult {
@@ -55,7 +60,7 @@ export class InvestmentService {
     let lo = -0.999;
     let hi = 10.0;
     const safeCashFlows = Array.isArray(cashFlows) ? cashFlows : [];
-    const npvAt = (r: number) => (safeCashFlows ?? []).reduce((s, cf, t) => s + cf / Math.pow(1 + r, t), 0);
+    const npvAt = (r: number) => (Array.isArray(safeCashFlows) ? safeCashFlows : []).reduce((s, cf, t) => s + cf / Math.pow(1 + r, t), 0);
 
     let loVal = npvAt(lo);
     let hiVal = npvAt(hi);

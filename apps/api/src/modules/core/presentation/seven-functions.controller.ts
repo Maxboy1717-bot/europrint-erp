@@ -1,7 +1,13 @@
+/**
+ * @module seven-functions.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertRequired } from '@common/assertions';
-import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Post, Put, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from 'shared/guards/roles.guard';
 import { Roles } from 'shared/decorators/roles.decorator';
 import { CurrentUser } from 'shared/decorators/current-user.decorator';
@@ -18,7 +24,8 @@ import {
 
 const MANAGER_ROLES = ['director', 'super_admin', 'manager'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Seven Functions')
 @Controller('seven-functions')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -27,11 +34,16 @@ export class SevenFunctionsController {
 
   constructor(private readonly svc: SevenFunctionsService) {}
 
+  @ApiOperation({ summary: 'List functions' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('functions')
   async listFunctions() {
     return unwrapOrThrow(await this.svc.listFunctions());
   }
 
+  @ApiOperation({ summary: 'Get function' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('functions/:id')
   async getFunction(@Param('id') id: string) {
     const _r = await this.svc.getFunction(parseInt(id, 10));
@@ -41,6 +53,9 @@ export class SevenFunctionsController {
     return data[0];
   }
 
+  @ApiOperation({ summary: 'Create function' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('functions')
   @Roles(...MANAGER_ROLES)
   @UsePipes(new ZodValidationPipe(SfCreateFunctionSchema))
@@ -60,6 +75,9 @@ export class SevenFunctionsController {
     return _r.data;
   }
 
+  @ApiOperation({ summary: 'Update function' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Put('functions/:id')
   @Roles(...MANAGER_ROLES)
   @UsePipes(new ZodValidationPipe(SfUpdateFunctionSchema))
@@ -78,6 +96,10 @@ export class SevenFunctionsController {
     return _r.data;
   }
 
+  @ApiOperation({ summary: 'Delete function' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('functions/:id')
   @Roles(...MANAGER_ROLES)
   async deleteFunction(@Param('id') id: string) {
@@ -85,11 +107,17 @@ export class SevenFunctionsController {
     return { message: "O'chirildi" };
   }
 
+  @ApiOperation({ summary: 'Get function kpis' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('kpis/:functionId')
   async getFunctionKpis(@Param('functionId') functionId: string) {
     return unwrapOrThrow(await this.svc.getFunctionKpis(parseInt(functionId, 10)));
   }
 
+  @ApiOperation({ summary: 'Create kpi' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('kpis')
   @Roles(...MANAGER_ROLES)
   @UsePipes(new ZodValidationPipe(SfCreateKpiSchema))
@@ -108,6 +136,9 @@ export class SevenFunctionsController {
     return _r.data;
   }
 
+  @ApiOperation({ summary: 'Update kpi' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Put('kpis/:id')
   @Roles(...MANAGER_ROLES)
   @UsePipes(new ZodValidationPipe(SfUpdateKpiSchema))
@@ -127,6 +158,10 @@ export class SevenFunctionsController {
     return _r.data;
   }
 
+  @ApiOperation({ summary: 'Delete kpi' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('kpis/:id')
   @Roles(...MANAGER_ROLES)
   async deleteKpi(@Param('id') id: string) {
@@ -134,6 +169,9 @@ export class SevenFunctionsController {
     return { message: "O'chirildi" };
   }
 
+  @ApiOperation({ summary: 'Analyze function' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('analyze')
   @UsePipes(new ZodValidationPipe(SfAnalyzeFunctionSchema))
   async analyzeFunction(@Body() body: SfAnalyzeFunctionDto) {
@@ -148,6 +186,25 @@ export class SevenFunctionsController {
       function: funcData,
       kpis: kpiData,
       analysis: { avg_progress: Math.round(avgProgress), total_kpis: kpiData.length },
+    };
+  }
+
+  /**
+   * SevenFunctionsDashboard page calls GET /api/seven-functions/ai-analysis
+   * for a cross-function rollup. Until the dedicated rollup service exists,
+   * return empty defaults so the dashboard renders the "no data yet" state.
+   */
+  @ApiOperation({ summary: 'Get ai analysis rollup' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('ai-analysis')
+  async getAiAnalysisRollup(@Query('period') _period?: string) {
+    return {
+      functions:    [],
+      strengths:    [],
+      weaknesses:   [],
+      recommendations: [],
+      overall_score: 0,
+      generated_at: new Date().toISOString(),
     };
   }
 }

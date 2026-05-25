@@ -1,3 +1,8 @@
+/**
+ * @module constants
+ * @description Frontend utility / library module.
+ */
+
 // EuroPrint ERP Dashboard — frontend konstantalari
 // Backend: apps/api/src/common/constants/app.constants.ts bilan muvofiq
 

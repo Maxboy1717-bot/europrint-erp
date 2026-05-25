@@ -1,7 +1,13 @@
+/**
+ * @module CandidateMarketSection
+ * @description React UI component.
+ */
+
 import { Users } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import type { CandidateMarket } from "./HiringForecast";
+import { useTranslation } from '@/lib/i18n';
 
 interface CandidateMarketSectionProps {
   candidateMarket: CandidateMarket;
@@ -9,20 +15,21 @@ interface CandidateMarketSectionProps {
 }
 
 export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: CandidateMarketSectionProps) {
+  const { t } = useTranslation("common");
   return (
     <section className="space-y-3">
       <h3 className="text-sm font-semibold flex items-center gap-2">
         <Users className="w-4 h-4 text-cyan-400" />
-        Ish izlovchilar bozori
+        {t("ishIzlovchilarBozori")}
       </h3>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <Label className="text-xs mb-1 block">Mavjud kandidatlar soni (taxminiy)</Label>
+          <Label className="text-xs mb-1 block">{t("mavjudKandidatlarSoniTaxminiy")}</Label>
           <Input
             type="number"
             min={0}
-            placeholder="Masalan: 50"
+            placeholder={t("masalan50")}
             value={candidateMarket.candidate_count}
             onChange={e => setCandidateMarket(prev => ({
               ...prev,
@@ -33,11 +40,11 @@ export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: 
         </div>
 
         <div>
-          <Label className="text-xs mb-1 block">Javob berish muddati (kun)</Label>
+          <Label className="text-xs mb-1 block">{t("javobBerishMuddatiKun")}</Label>
           <Input
             type="number"
             min={0}
-            placeholder="Masalan: 3"
+            placeholder={t("masalan3")}
             value={candidateMarket.avg_response_days}
             onChange={e => setCandidateMarket(prev => ({
               ...prev,
@@ -48,7 +55,7 @@ export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: 
         </div>
 
         <div>
-          <Label className="text-xs mb-1 block">Maosh kutilmasi (min, so'm)</Label>
+          <Label className="text-xs mb-1 block">{t("maoshKutilmasiMinSoM")}</Label>
           <Input
             type="number"
             min={0}
@@ -63,7 +70,7 @@ export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: 
         </div>
 
         <div>
-          <Label className="text-xs mb-1 block">Maosh kutilmasi (max, so'm)</Label>
+          <Label className="text-xs mb-1 block">{t("maoshKutilmasiMaxSoM")}</Label>
           <Input
             type="number"
             min={0}
@@ -78,7 +85,7 @@ export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: 
         </div>
 
         <div className="col-span-2">
-          <Label className="text-xs mb-1 block">Ko'nikmalar darajasi (o'rtacha)</Label>
+          <Label className="text-xs mb-1 block">{t("koNikmalarDarajasiORtacha")}</Label>
           <div className="flex gap-2">
             {(["junior", "middle", "senior"] as const).map(level => (
               <button
@@ -87,7 +94,7 @@ export function CandidateMarketSection({ candidateMarket, setCandidateMarket }: 
                 onClick={() => setCandidateMarket(prev => ({ ...prev, avg_skill_level: level }))}
                 className={`flex-1 text-xs rounded-lg border px-2 py-1.5 transition-all capitalize ${
                   candidateMarket.avg_skill_level === level
-                    ? "bg-primary/15 border-primary/50 text-primary font-semibold"
+                    ? "bg-primary/10 border-primary/50 text-primary font-semibold"
                     : "border-border/40 text-muted-foreground hover:border-border"
                 }`}
                 data-testid={`btn-skill-level-${level}`}

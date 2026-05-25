@@ -1,11 +1,17 @@
+/**
+ * @module saas.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
-import { Ok, Err, Result, safeCall } from '@common/result';
+import { Ok, Err, Result } from '@common/result';
 import { SaasRepo } from './repositories/saas.repo';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
-type TenantRow = Awaited<ReturnType<SaasRepo['findAll']>>[number];
+type ResultData<R> = R extends Promise<infer T> ? (T extends { ok: true; data: infer D } ? D : never) : never;
+type TenantRow = ResultData<ReturnType<SaasRepo['findAll']>> extends ReadonlyArray<infer R> ? R : never;
 
 export interface ModuleItem { key: string; label: string; enabled: boolean }
 
@@ -16,22 +22,21 @@ export class SaasService {
   constructor(private readonly repo: SaasRepo) {}
 
   getTenants(): Promise<Result<TenantRow[]>> {
-    return safeCall(() => this.repo.findAll());
+    return this.repo.findAll() as Promise<Result<TenantRow[]>>;
   }
 
   async createTenant(body: { name: string; domain?: string; plan: string; employeeLimit: number }): Promise<Result<TenantRow | undefined>> {
-    const result = await safeCall(() =>
-      this.repo.insert({ name: body.name, domain: body.domain, plan: body.plan, employeeLimit: body.employeeLimit }),
-    );
+    const result = await this.repo.insert({ name: body.name, domain: body.domain, plan: body.plan, employeeLimit: body.employeeLimit });
     if (!result.ok) return Err(result.error);
-    return Ok(result.data[0]);
+    return Ok(result.data[0] as TenantRow | undefined);
   }
 
   async getPlatformStats(): Promise<Result<{ totalTenants: number; activeTenants: number; inactiveTenants: number }>> {
-    const result = await safeCall(() => this.repo.findAll());
+    const result = await this.repo.findAll();
     if (!result.ok) return Err(result.error);
-    const active = (Array.isArray(result.data) ? result.data : []).filter((t) => t.status === 'active').length;
-    return Ok({ totalTenants: result.data.length, activeTenants: active, inactiveTenants: result.data.length - active });
+    const all = Array.isArray(result.data) ? result.data : [];
+    const active = all.filter((t) => t.status === 'active').length;
+    return Ok({ totalTenants: all.length, activeTenants: active, inactiveTenants: all.length - active });
   }
 
   getErrorLogs(): Promise<Result<{ logs: never[]; total: number }>> {
@@ -39,10 +44,10 @@ export class SaasService {
   }
 
   async updateTenantStatus(id: string, status: string): Promise<Result<TenantRow | undefined>> {
-    const result = await safeCall(() => this.repo.updateStatus(id, status));
+    const result = await this.repo.updateStatus(id, status);
     if (!result.ok) return Err(result.error);
     if (result.data.length === 0) return Err({ code: 'NOT_FOUND', message: `Tenant ${id} not found` });
-    return Ok(result.data[0]);
+    return Ok(result.data[0] as TenantRow | undefined);
   }
 
   getModules(): Promise<Result<{ modules: ModuleItem[] }>> {
@@ -61,33 +66,33 @@ export class SaasService {
     }));
   }
 
-  async getTenantById(id: string): Promise<Result<TenantRow | null>> {
-    const result = await safeCall(() => this.repo.findById(id));
+  async getTenantById(id: string): Promise<Result<TenantRow>> {
+    const result = await this.repo.findById(id);
     if (!result.ok) return Err(result.error);
-    if (!result.data) return Err({ code: 'NOT_FOUND', message: `Tenant ${id} not found` });
-    return result;
+    return Ok(result.data as TenantRow);
   }
 
   async updateTenant(id: string, body: Partial<{ name: string; domain?: string; plan: string; employeeLimit: number }>): Promise<Result<TenantRow | undefined>> {
-    const result = await safeCall(() => this.repo.update(id, { ...body, updatedAt: _time.now() }));
+    const result = await this.repo.update(id, { ...body, updatedAt: _time.now() });
     if (!result.ok) return Err(result.error);
     if (result.data.length === 0) return Err({ code: 'NOT_FOUND', message: `Tenant ${id} not found` });
-    return Ok(result.data[0]);
+    return Ok(result.data[0] as TenantRow | undefined);
   }
 
   async deleteTenant(id: string): Promise<Result<{ deleted: true; id: string }>> {
-    const result = await safeCall(() => this.repo.delete(id));
+    const result = await this.repo.delete(id);
     if (!result.ok) return Err(result.error);
     if (result.data.length === 0) return Err({ code: 'NOT_FOUND', message: `Tenant ${id} not found` });
     return Ok({ deleted: true, id });
   }
 
   async getExpiryAlerts(): Promise<Result<{ alerts: ExpiryAlert[]; total: number }>> {
-    const result = await safeCall(() => this.repo.findAll());
+    const result = await this.repo.findAll();
     if (!result.ok) return Err(result.error);
     const now = Date.now();
     const thirtyDays = 30 * MS_PER_DAY;
-    const alerts: ExpiryAlert[] = (Array.isArray(result.data) ? result.data : []).filter((t) => t.plan === 'trial' && (now - new Date(t.createdAt).getTime()) > thirtyDays * 0.8)
+    const all = Array.isArray(result.data) ? result.data : [];
+    const alerts: ExpiryAlert[] = all.filter((t) => t.plan === 'trial' && (now - new Date(t.createdAt).getTime()) > thirtyDays * 0.8)
       .map((t) => ({
         tenantId:  t.id,
         name:      t.name,

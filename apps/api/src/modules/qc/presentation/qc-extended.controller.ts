@@ -1,12 +1,18 @@
+/**
+ * @module qc-extended.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
 import {
 BadRequestException, Body, Controller, Get, Logger, NotFoundException, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -24,20 +30,27 @@ import {
 const QC_WRITE_ROLES = ['QC_MANAGER', 'production_manager', 'super_admin', 'director'];
 const QC_FLOOR_ROLES = ['qc_inspector', 'operator', 'worker', 'QC_MANAGER', 'production_manager', 'super_admin', 'director'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Qc Extended')
+@ApiBearerAuth()
 @Controller('qc')
 export class QcExtendedController {
   private readonly logger = new Logger(QcExtendedController.name);
 
   constructor(private readonly svc: QcExtendedService) {}
 
+  @ApiOperation({ summary: 'List standards' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('standards')
   async listStandards(@Query('category') category?: string, @Query('limit') limit?: string, @Query('offset') offset?: string) {
     return unwrapOrThrow(await this.svc.listStandards(category, safeInt(limit, 50), safeInt(offset, 0)));
   }
 
+  @ApiOperation({ summary: 'Get standard' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('standards/:id')
   async getStandard(@Param('id') id: string) {
     const _rR = await this.svc.getStandard(safeInt(id, 0));
@@ -47,6 +60,9 @@ export class QcExtendedController {
     return r[0];
   }
 
+  @ApiOperation({ summary: 'Create standard' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('standards')
   @UsePipes(new ZodValidationPipe(QcCreateStandardSchema))
   @Roles(...QC_WRITE_ROLES)
@@ -55,6 +71,10 @@ export class QcExtendedController {
     return unwrapOrThrow(await this.svc.createStandard(body.name, body.category ?? null, body.description ?? null, body.parameters ?? null, body.is_active ?? null));
   }
 
+  @ApiOperation({ summary: 'Update standard' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('standards/:id')
   @UsePipes(new ZodValidationPipe(QcUpdateStandardSchema))
   @Roles(...QC_WRITE_ROLES)
@@ -66,17 +86,24 @@ export class QcExtendedController {
     return r[0];
   }
 
+  @ApiOperation({ summary: 'List final inspections' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('final-inspections')
   async listFinalInspections(@Query('status') status?: string, @Query('orderId') orderId?: string,
     @Query('limit') limit?: string, @Query('offset') offset?: string) {
     return unwrapOrThrow(await this.svc.listFinalInspections(status, orderId ? safeInt(orderId, 0) : null, safeInt(limit, 50), safeInt(offset, 0)));
   }
 
+  @ApiOperation({ summary: 'Get final orders' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('final-orders')
   async getFinalOrders(@Query('limit') limit?: string) {
     return unwrapOrThrow(await this.svc.getFinalOrders(safeInt(limit, 50)));
   }
 
+  @ApiOperation({ summary: 'Create final inspection' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('final-inspections')
   @UsePipes(new ZodValidationPipe(QcCreateFinalInspectionSchema))
   @Roles(...QC_WRITE_ROLES)
@@ -84,6 +111,10 @@ export class QcExtendedController {
     return unwrapOrThrow(await this.svc.createFinalInspection(body.order_id, body.inspector_id ?? null, 'pending', body.notes ?? null, false));
   }
 
+  @ApiOperation({ summary: 'Complete final inspection' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('final-inspections/:id/complete')
   @UsePipes(new ZodValidationPipe(QcCompleteFinalInspectionSchema))
   @Roles(...QC_WRITE_ROLES)
@@ -95,11 +126,16 @@ export class QcExtendedController {
     return r[0];
   }
 
+  @ApiOperation({ summary: 'List in process' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('in-process')
   async listInProcess(@Query('sessionId') sessionId?: string, @Query('status') status?: string, @Query('limit') limit?: string) {
     return unwrapOrThrow(await this.svc.listInProcess(sessionId ? safeInt(sessionId, 0) : null, status, safeInt(limit, 50)));
   }
 
+  @ApiOperation({ summary: 'Create in process inspection' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('in-process')
   @UsePipes(new ZodValidationPipe(QcCreateInProcessInspectionSchema))
   @Roles(...QC_FLOOR_ROLES)
@@ -107,11 +143,16 @@ export class QcExtendedController {
     return unwrapOrThrow(await this.svc.createInProcessInspection(body.session_id, body.inspector_id ?? null, body.check_point ?? null, body.sample_size, body.defects_found, body.notes ?? null));
   }
 
+  @ApiOperation({ summary: 'List root causes' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('root-causes')
   async listRootCauses() {
     return unwrapOrThrow(await this.svc.listRootCauses());
   }
 
+  @ApiOperation({ summary: 'Create root cause' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('root-causes')
   @UsePipes(new ZodValidationPipe(QcCreateRootCauseSchema))
   @Roles(...QC_WRITE_ROLES)
@@ -119,6 +160,10 @@ export class QcExtendedController {
     return unwrapOrThrow(await this.svc.createRootCause(body.name, body.description, body.category));
   }
 
+  @ApiOperation({ summary: 'Update root cause' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('root-causes/:id')
   @UsePipes(new ZodValidationPipe(QcUpdateRootCauseSchema))
   @Roles(...QC_WRITE_ROLES)

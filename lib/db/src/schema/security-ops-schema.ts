@@ -1,6 +1,11 @@
+/**
+ * @module security-ops-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, varchar, text, integer, boolean, timestamp, jsonb, serial } from "drizzle-orm/pg-core";
+import { pgTable, varchar, text, integer, boolean, timestamp, jsonb, serial, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users, approvalRequests } from "./core-schema";
@@ -16,11 +21,13 @@ export const approvalMatrixConfig = pgTable("approval_matrix_config", {
   maxAmount: numericMoney("max_amount"),
   approvalLevel: integer("approval_level").notNull().default(1),
   approverRole: varchar("approver_role", { length: 50 }).notNull(),
-  approverId: varchar("approver_id").references(() => users.id),
+  approverId: varchar("approver_id").references(() => users.id, { onDelete: "set null" }),
   departmentId: varchar("department_id"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("approval_matrix_doc_type_chk", sql`${t.documentType} IN ('PURCHASE_ORDER','EXPENSE_REQUEST','PAYMENT','MRO_REQUEST','ADVANCE_PAYMENT','BUDGET_TRANSFER')`),
+]);
 
 export const insertApprovalMatrixConfigSchema = createInsertSchema(approvalMatrixConfig, {
   documentType: z.enum(["PURCHASE_ORDER", "EXPENSE_REQUEST", "PAYMENT", "MRO_REQUEST", "ADVANCE_PAYMENT", "BUDGET_TRANSFER"]),
@@ -34,11 +41,13 @@ export const multiLevelApprovalHistory = pgTable("multi_level_approval_history",
   requestId: varchar("request_id").references(() => approvalRequests.id, { onDelete: "cascade" }).notNull(),
   level: integer("level").notNull(),
   action: varchar("action", { length: 20 }).notNull(),
-  approverId: varchar("approver_id").references(() => users.id).notNull(),
+  approverId: varchar("approver_id").references(() => users.id, { onDelete: "restrict" }).notNull(),
   approverRole: varchar("approver_role", { length: 50 }),
   comments: text("comments"),
   actionAt: timestamp("action_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("multi_level_approval_action_chk", sql`${t.action} IN ('approved','rejected','returned','escalated')`),
+]);
 
 export const insertMultiLevelApprovalHistorySchema = createInsertSchema(multiLevelApprovalHistory, {
   action: z.enum(["approved", "rejected", "returned", "escalated"]),
@@ -61,7 +70,7 @@ export const visitors = pgTable("security_visitors", {
   exitedAt: timestamp("exited_at"),
   badgeNumber: varchar("badge_number", { length: 50 }),
   status: varchar("status", { length: 20 }).notNull().default("inside"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -150,10 +159,14 @@ export const securityIncidents = pgTable("security_incidents", {
   resolvedBy: varchar("resolved_by", { length: 200 }),
   resolvedAt: timestamp("resolved_at"),
   notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("security_incidents_type_chk", sql`${t.type} IN ('unauthorized_access','ppe_violation','fire_alarm','gas_leak','accident','theft','other')`),
+  check("security_incidents_severity_chk", sql`${t.severity} IN ('high','medium','low')`),
+  check("security_incidents_status_chk", sql`${t.status} IN ('open','investigating','resolved','closed')`),
+]);
 
 export const insertSecurityIncidentSchema = createInsertSchema(securityIncidents, {
   type: z.enum(["unauthorized_access", "ppe_violation", "fire_alarm", "gas_leak", "accident", "theft", "other"]),
@@ -177,7 +190,7 @@ export const securityPpeChecks = pgTable("security_ppe_checks", {
   glovesOk: boolean("gloves_ok").notNull().default(true),
   bootsOk: boolean("boots_ok").notNull().default(true),
   notes: text("notes"),
-  checkedBy: varchar("checked_by").references(() => users.id),
+  checkedBy: varchar("checked_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

@@ -1,25 +1,55 @@
+/**
+ * @module succession-compat.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   succession module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
+ */
 import { Controller, Get, Post, Put, Param, Query, Body, HttpCode, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { SuccessionCompatService } from './succession-compat.service';
 import { SuccessionBodyDto } from './dto/hr.dto';
 import { unwrapOrDefault, unwrapOrInternal } from '@common/http-result';
+import {
+  SuccessionPlanAclTranslator,
+  type LegacySuccessionPlanRow,
+  type SuccessionPlanDto,
+} from './acl/succession-plan-acl';
 
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Roles(...HR_ROLES)
 @Controller('succession')
 export class SuccessionCompatController {
+  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
+  private readonly planAcl = new SuccessionPlanAclTranslator();
+
   constructor(private readonly svc: SuccessionCompatService) {}
 
   @Get('career-plans')
   async getCareerPlans(@Query('employeeId') employeeId?: string) {
     return unwrapOrInternal(await this.svc.getCareerPlans(employeeId));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of career plans. New BC-3 (Talent)
+   * consumers should target this route; `/career-plans` stays for
+   * backwards-compat.
+   */
+  @Get('career-plans/v2')
+  async getCareerPlansV2(@Query('employeeId') employeeId?: string): Promise<SuccessionPlanDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getCareerPlans(employeeId)) as unknown as LegacySuccessionPlanRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.planAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: SuccessionPlanDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post('career-plans')

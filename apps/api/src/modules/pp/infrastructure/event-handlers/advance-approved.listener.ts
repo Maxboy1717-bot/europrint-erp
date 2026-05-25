@@ -1,22 +1,25 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
-import { IPpRepository } from '../../domain/repositories/pp.repository';
+/**
+ * @module advance-approved.listener
+ * @description PA2-18 Wave 6: canonical CQRS @EventsHandler form. Reacts to
+ *   `AdvanceApprovedEvent` (published by finance/tech-three-checkpoint.listener.ts)
+ *   and unlocks PP planning for the order. Trigger 7.
+ */
 
-export interface AdvanceApprovedEvent {
-  orderId: number;
-  advanceId: number;
-}
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { IPpRepository, PP_REPO } from '../../domain/repositories/pp.repository';
+import { AdvanceApprovedEvent } from '@modules/finance/domain/events/advance-approved.event';
 
 @Injectable()
-export class AdvanceApprovedListener {
+@EventsHandler(AdvanceApprovedEvent)
+export class AdvanceApprovedListener implements IEventHandler<AdvanceApprovedEvent> {
   private readonly logger = new Logger(AdvanceApprovedListener.name);
 
-  constructor(@Inject('IPpRepository') private readonly ppRepo: IPpRepository) {}
+  constructor(@Inject(PP_REPO) private readonly ppRepo: IPpRepository) {}
 
-  @OnEvent('ADVANCE_APPROVED')
-  async handle(event: AdvanceApprovedEvent) {
+  async handle(event: AdvanceApprovedEvent): Promise<void> {
     this.logger.log(
-      { orderId: event.orderId, advanceId: event.advanceId },
+      { orderId: event.orderId, advancePct: event.advancePct },
       'Trigger 7: Advance approved - Unlocking PP planning',
     );
 

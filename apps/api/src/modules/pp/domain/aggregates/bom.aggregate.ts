@@ -1,6 +1,11 @@
+/**
+ * @module bom.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { AggregateRoot } from '@nestjs/cqrs';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { Err } from '@common/result';
 import { Result } from '@common/result';
 
@@ -68,7 +73,7 @@ export class Bom extends AggregateRoot {
     this.status = BomStatus.APPROVED;
     this.approvedAt = _time.now();
     this.approvedBy = approvedBy;
-    this.apply({
+    this.addDomainEvent({
       type: 'BOM_APPROVED',
       data: { bomId: this.id, approvedBy },
     });

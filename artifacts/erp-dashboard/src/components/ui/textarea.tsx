@@ -1,3 +1,8 @@
+/**
+ * @module textarea
+ * @description React UI component.
+ */
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"

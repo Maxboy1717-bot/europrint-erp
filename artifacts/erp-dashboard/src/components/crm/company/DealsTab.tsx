@@ -1,3 +1,8 @@
+/**
+ * @module DealsTab
+ * @description React UI component.
+ */
+
 import { DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,31 +14,34 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Deal, formatAmount } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface DealsTabProps {
   deals: Deal[];
 }
 
-export function DealsTab({ deals }: DealsTabProps) {
+export function DealsTab({ deals = [] }: DealsTabProps) {
+  const { t } = useTranslation("common");
+  const safeDeals = Array.isArray(deals) ? deals : [];
   return (
     <div className="mt-4">
-      {deals.length === 0 ? (
+      {safeDeals.length === 0 ? (
         <div className="text-center text-muted-foreground py-8">
           <DollarSign className="h-8 w-8 mx-auto mb-2 opacity-30" />
-          <p className="text-sm">Bitimlar yo'q</p>
+          <p className="text-sm">{t("bitimlarYoq")}</p>
         </div>
       ) : (
-        <Table>
+        <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nomi</TableHead>
-              <TableHead>Summa</TableHead>
-              <TableHead>Bosqich</TableHead>
+              <TableHead>{t("name")}</TableHead>
+              <TableHead>{t("summa")}</TableHead>
+              <TableHead>{t("milestone1")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(Array.isArray(deals) ? deals : []).map((deal) => (
-              <TableRow key={deal.id}>
+            {safeDeals.map((deal) => (
+              <TableRow key={deal.id} className="hover:bg-muted/40 transition-colors">
                 <TableCell className="font-medium text-sm">{deal.title}</TableCell>
                 <TableCell className="text-sm">
                   {deal.opportunity ? `${formatAmount(deal.opportunity)} UZS` : "—"}
@@ -44,7 +52,7 @@ export function DealsTab({ deals }: DealsTabProps) {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       )}
     </div>
   );

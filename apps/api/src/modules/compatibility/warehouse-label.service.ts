@@ -1,3 +1,8 @@
+/**
+ * @module warehouse-label.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -6,7 +11,7 @@ import { db,
   rawSql} from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
-import { LabelService, LabelFormat } from '../pos/services/label.service';
+import { LabelService, LabelFormat } from '../pos/application/services/label.service';
 import { PrintLabelDto } from './dto/compat-body.dto';
 
 export interface LabelPrintResult {
@@ -23,36 +28,37 @@ export class WarehouseLabelCompatService {
   async printLabel(body: PrintLabelDto): Promise<LabelPrintResult & { format?: string; copies?: number }> {
     const format = ((body.format ?? 'ZPL').toUpperCase()) as LabelFormat;
     const copies = Math.max(1, body.copies ?? 1);
-
-    if (body.batchId) {
-      const rowR = await this.getBatchLabelData(body.batchId);
-      if (!rowR.ok) return { success: false, message: 'Partiya topilmadi' };
-      const row = rowR.data as Record<string, unknown>;
-      const labelData = {
-        materialCardId: Number(row['material_card_id']),
-        materialName:   String(row['material_name'] ?? ''),
-        materialCode:   String(row['material_code'] ?? ''),
-        barcode:        String(row['barcode'] ?? ''),
-        unitOfMeasure:  String(row['unit_of_measure'] ?? 'dona'),
-        batchNumber:    String(row['batch_number'] ?? ''),
-        productionDate: String(row['production_date'] ?? ''),
-        expiryDate:     String(row['expiry_date'] ?? ''),
-        quantity:       Number(row['quantity'] ?? 0),
-        warehouseName:  String(row['warehouse_name'] ?? ''),
-        date:           _time.now().toLocaleDateString('uz-UZ'),
-      };
-      const content = this.labelSvc.generateEpl(labelData, copies);
-      return { success: true, content, format, copies };
-    }
-
-    if (body.materialCardId) {
-      const labelDataR = await this.labelSvc.fetchLabelData(body.materialCardId);
-      const labelData = labelDataR.ok ? labelDataR.data : {};
-      const content = this.labelSvc.generateEpl(labelData as Parameters<typeof this.labelSvc.generateEpl>[0], copies);
-      return { success: true, content, format, copies };
-    }
-
+    if (body.batchId) return this.printBatchLabel(body.batchId, format, copies);
+    if (body.materialCardId) return this.printMaterialLabel(body.materialCardId, format, copies);
     return { success: false, message: 'batchId yoki materialCardId kerak' };
+  }
+
+  private async printBatchLabel(batchId: string, format: LabelFormat, copies: number): Promise<LabelPrintResult & { format?: string; copies?: number }> {
+    const rowR = await this.getBatchLabelData(batchId);
+    if (!rowR.ok) return { success: false, message: 'Partiya topilmadi' };
+    const row = rowR.data as Record<string, unknown>;
+    const labelData = {
+      materialCardId: Number(row['material_card_id']),
+      materialName:   String(row['material_name'] ?? ''),
+      materialCode:   String(row['material_code'] ?? ''),
+      barcode:        String(row['barcode'] ?? ''),
+      unitOfMeasure:  String(row['unit_of_measure'] ?? 'dona'),
+      batchNumber:    String(row['batch_number'] ?? ''),
+      productionDate: String(row['production_date'] ?? ''),
+      expiryDate:     String(row['expiry_date'] ?? ''),
+      quantity:       Number(row['quantity'] ?? 0),
+      warehouseName:  String(row['warehouse_name'] ?? ''),
+      date:           _time.now().toLocaleDateString('uz-UZ'),
+    };
+    const content = this.labelSvc.generateEpl(labelData, copies);
+    return { success: true, content, format, copies };
+  }
+
+  private async printMaterialLabel(materialCardId: number, format: LabelFormat, copies: number): Promise<LabelPrintResult & { format?: string; copies?: number }> {
+    const labelDataR = await this.labelSvc.fetchLabelData(materialCardId);
+    const labelData = labelDataR.ok ? labelDataR.data : {};
+    const content = this.labelSvc.generateEpl(labelData as Parameters<typeof this.labelSvc.generateEpl>[0], copies);
+    return { success: true, content, format, copies };
   }
 
   async getBatchLabelData(batchId: string): Promise<Result<object, AppError>> {

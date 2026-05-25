@@ -1,3 +1,8 @@
+/**
+ * @module iot-material-kits.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
 Body, Controller, Get, HttpCode, HttpStatus,
   Param, Patch, Post, Query,
@@ -5,8 +10,8 @@ Body, Controller, Get, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { WmsCreateMaterialKitSchema, WmsCreateMaterialKitDto, WmsGenerateMaterialKitSchema, WmsGenerateMaterialKitDto } from '../dto/wms.dto';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -22,12 +27,14 @@ const IOT_WRITE = ['super_admin', 'warehouse_manager', 'production_manager', 'ER
 
 @ApiTags('IoT Material Kits')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('iot')
 export class IotMaterialKitsController {
   constructor(private readonly svc: IotEnhancedService) {}
 
+  @ApiOperation({ summary: 'Get material kits' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('material-kits')
   @Roles(...IOT_READ)
   async getMaterialKits(@Query('status') status?: string) {
@@ -36,6 +43,9 @@ export class IotMaterialKitsController {
     return { items, total: items.length };
   }
 
+  @ApiOperation({ summary: 'Create material kit' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('material-kits')
   @UsePipes(new ZodValidationPipe(WmsCreateMaterialKitSchema))
   @UseInterceptors(AuditInterceptor)
@@ -47,6 +57,9 @@ export class IotMaterialKitsController {
     return unwrapOrThrow(await this.svc.createMaterialKit(body, user?.id ?? null));
   }
 
+  @ApiOperation({ summary: 'Generate material kit' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('material-kits/generate')
   @UsePipes(new ZodValidationPipe(WmsGenerateMaterialKitSchema))
   @UseInterceptors(AuditInterceptor)
@@ -59,12 +72,19 @@ export class IotMaterialKitsController {
     return { kit: unwrapOrThrow(kit) };
   }
 
+  @ApiOperation({ summary: 'Get material kit by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('material-kits/:id')
   @Roles(...IOT_READ)
   async getMaterialKitById(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getMaterialKitById(safeInt(id, 0)));
   }
 
+  @ApiOperation({ summary: 'Prepare material kit' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('material-kits/:id/prepare')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(AuditInterceptor)
@@ -73,6 +93,10 @@ export class IotMaterialKitsController {
     return unwrapOrThrow(await this.svc.prepareMaterialKit(safeInt(id, 0)));
   }
 
+  @ApiOperation({ summary: 'Ready material kit' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('material-kits/:id/ready')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(AuditInterceptor)
@@ -81,6 +105,9 @@ export class IotMaterialKitsController {
     return unwrapOrThrow(await this.svc.readyMaterialKit(safeInt(id, 0)));
   }
 
+  @ApiOperation({ summary: 'Get kit items' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('material-kits/:id/items')
   @Roles(...IOT_READ)
   async getKitItems(@Param('id') id: string) {

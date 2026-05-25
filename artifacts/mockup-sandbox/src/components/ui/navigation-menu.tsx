@@ -1,3 +1,8 @@
+/**
+ * @module navigation-menu
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu"
 import { cva } from "class-variance-authority"

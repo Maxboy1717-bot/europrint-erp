@@ -1,3 +1,8 @@
+/**
+ * @module movement-enums
+ * @description Source module. See exports for details.
+ */
+
 export enum MovementTypeCode {
   EXTERNAL_IN         = 'EXTERNAL_IN',
   EXTERNAL_OUT        = 'EXTERNAL_OUT',

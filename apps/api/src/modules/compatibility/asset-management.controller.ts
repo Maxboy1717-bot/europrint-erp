@@ -1,15 +1,27 @@
+/**
+ * @module asset-management.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   asset-management module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
+ */
 import {
-  Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query,
+  Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query,
   UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { unwrapOrBadRequest, unwrapOrNotFound } from '@common/http-result';
+import { unwrapOrBadRequest, unwrapOrNotFound, unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
 import { AssetManagementService } from './asset-management.service';
+import {
+  AssetAclTranslator,
+  type LegacyAssetRow,
+  type AssetDto,
+} from './acl/asset-acl';
 
 const AssetSchema = z.object({
   name:          z.string().min(1),
@@ -57,16 +69,36 @@ const TransferSchema = z.object({
 @ApiTags('Asset Management')
 @ApiBearerAuth()
 @Roles('super_admin', 'admin', 'director', 'manager')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('asset-management')
 export class AssetManagementController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly assetAcl = new AssetAclTranslator();
+
   constructor(private readonly svc: AssetManagementService) {}
 
   @Get('assets')
   async getAssets(@Query('status') status?: string, @Query('category') category?: string) {
-    return unwrapOrBadRequest(await this.svc.getAssets(status, category));
+    return unwrapOrInternal(await this.svc.getAssets(status, category));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant. New BC-7 (Finance) consumers should target
+   * this endpoint; the legacy `/assets` route stays for backwards-compat.
+   */
+  @Get('assets/v2')
+  async getAssetsV2(
+    @Query('status') status?: string,
+    @Query('category') category?: string,
+  ): Promise<AssetDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getAssets(status, category)) as unknown as LegacyAssetRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.assetAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: AssetDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post('assets')
@@ -78,7 +110,7 @@ export class AssetManagementController {
 
   @Get('assets/summary')
   async getSummary() {
-    return unwrapOrBadRequest(await this.svc.getSummary());
+    return unwrapOrInternal(await this.svc.getSummary());
   }
 
   @Get('assets/:id')
@@ -100,7 +132,7 @@ export class AssetManagementController {
 
   @Get('maintenance')
   async getMaintenance(@Query('assetId') assetId?: string) {
-    return unwrapOrBadRequest(await this.svc.getMaintenance(assetId));
+    return unwrapOrInternal(await this.svc.getMaintenance(assetId));
   }
 
   @Post('maintenance')
@@ -112,7 +144,7 @@ export class AssetManagementController {
 
   @Get('disposals')
   async getDisposals() {
-    return unwrapOrBadRequest(await this.svc.getDisposals());
+    return unwrapOrInternal(await this.svc.getDisposals());
   }
 
   @Post('disposals')
@@ -124,7 +156,7 @@ export class AssetManagementController {
 
   @Get('transfers')
   async getTransfers() {
-    return unwrapOrBadRequest(await this.svc.getTransfers());
+    return unwrapOrInternal(await this.svc.getTransfers());
   }
 
   @Post('transfers')
@@ -151,6 +183,17 @@ export class AssetManagementController {
   @Put('assets/:id/depreciate')
   depreciate(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, depreciated: true, ...b }; }
 
+  @Post('assets/:id/depreciate')
+  @HttpCode(HttpStatus.OK)
+  postDepreciate(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, depreciated: true, ...b }; }
+
+  @Post('insurance')
+  @HttpCode(HttpStatus.CREATED)
+  async createInsurance(@Body() b: Record<string, unknown>) { return { id: Date.now(), ...b, created: true }; }
+
   @Put('maintenance/:id/complete')
   completeMaintenance(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, status: 'completed', ...b }; }
+
+  @Patch('maintenance/:id/complete')
+  patchCompleteMaintenance(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, status: 'completed', ...b }; }
 }

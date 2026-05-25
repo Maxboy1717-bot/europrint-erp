@@ -1,3 +1,8 @@
+/**
+ * @module ListView
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -6,6 +11,7 @@ import { ArrowUpDown, Clock, AlertTriangle, Flame } from "lucide-react";
 import { format, isBefore, isToday, startOfDay } from "date-fns";
 import type { KanbanColumn } from "@shared/schema";
 import { type CardWithOwner, type T, PRIORITY_CONFIG, STATUS_BADGES, getDeadlineCategory } from "./kanban-types";
+import { getPersonName, getInitials } from "./kanban-utils";
 
 export function ListView({
   cards,
@@ -16,7 +22,7 @@ export function ListView({
   cards: CardWithOwner[];
   columns: KanbanColumn[];
   onCardClick: (card: CardWithOwner) => void;
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string) => string);
 }) {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -76,10 +82,10 @@ export function ListView({
     if (!dueDate) return "";
     const category = getDeadlineCategory(dueDate);
     switch (category) {
-      case "overdue": return "bg-red-500 text-white";
-      case "today": return "bg-lime-500 text-white";
-      case "thisWeek": return "bg-emerald-500 text-white";
-      case "nextWeek": return "bg-sky-500 text-white";
+      case "overdue": return "bg-[var(--ep-red)] text-white";
+      case "today": return "bg-[var(--ep-green)] text-white";
+      case "thisWeek": return "bg-[var(--ep-green)] text-white";
+      case "nextWeek": return "bg-[var(--ep-blue)] text-white";
       default: return "bg-gray-400 text-white";
     }
   };
@@ -96,10 +102,10 @@ export function ListView({
   };
 
   return (
-    <div className="border rounded-lg overflow-hidden bg-surface-container-lowest dark:bg-slate-900">
-      <Table>
+    <div className="border rounded-lg overflow-hidden bg-card dark:bg-slate-900">
+      <div className="ep-table-scroll"><Table>
         <TableHeader>
-          <TableRow className="bg-surface dark:bg-slate-800">
+          <TableRow className="bg-background dark:bg-slate-800 hover:bg-muted/40 transition-colors">
             <SortHeader column="title">{t.table.taskName}</SortHeader>
             <SortHeader column="activity">{t.table.activity}</SortHeader>
             <SortHeader column="deadline">{t.table.deadline}</SortHeader>
@@ -119,20 +125,20 @@ export function ListView({
             return (
               <TableRow
                 key={card.id}
-                className={`cursor-pointer hover-elevate ${idx % 2 === 0 ? "bg-surface/50 dark:bg-slate-800/50" : ""}`}
+                className={`cursor-pointer hover-elevate ${idx % 2 === 0 ? "bg-background/50 dark:bg-slate-800/50" : ""}`}
                 onClick={() => onCardClick(card)}
                 data-testid={`list-row-${card.id}`}
               >
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {isHighPriority ? (
-                      <Flame className={`h-4 w-4 flex-shrink-0 animate-pulse ${card.priority === "urgent" ? "text-red-500" : "text-orange-500"}`} data-testid={`icon-flame-${card.id}`} />
+                      <Flame className={`h-4 w-4 flex-shrink-0 animate-pulse ${card.priority === "urgent" ? "text-[var(--ep-red)]" : "text-[var(--ep-primary)]"}`} data-testid={`icon-flame-${card.id}`} />
                     ) : (
                       <div className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${priorityConfig.dotColor}`} />
                     )}
                     <span className="font-medium">{card.title}</span>
                     {card.tags && card.tags.length > 0 && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400">+{card.tags.length}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-[var(--ep-purple)] dark:text-purple-400">+{card.tags.length}</span>
                     )}
                   </div>
                 </TableCell>
@@ -159,9 +165,9 @@ export function ListView({
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6 ring-2 ring-white dark:ring-slate-800">
                         <AvatarImage src={card.creator.profileImageUrl || undefined} />
-                        <AvatarFallback className="text-[9px] bg-gradient-to-br from-blue-500 to-purple-500 text-white">{card.creator.fullName.split(" ").map(n => n[0]).join("").substring(0, 2)}</AvatarFallback>
+                        <AvatarFallback className="text-[9px] text-white">{getInitials(getPersonName(card.creator))}</AvatarFallback>
                       </Avatar>
-                      <span className="text-sm">{card.creator.fullName}</span>
+                      <span className="text-sm">{getPersonName(card.creator)}</span>
                     </div>
                   ) : "-"}
                 </TableCell>
@@ -170,9 +176,9 @@ export function ListView({
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6 ring-2 ring-white dark:ring-slate-800">
                         <AvatarImage src={card.owner.profileImageUrl || undefined} />
-                        <AvatarFallback className="text-[9px] bg-gradient-to-br from-emerald-500 to-cyan-500 text-white">{card.owner.fullName.split(" ").map(n => n[0]).join("").substring(0, 2)}</AvatarFallback>
+                        <AvatarFallback className="text-[9px] text-white">{getInitials(getPersonName(card.owner))}</AvatarFallback>
                       </Avatar>
-                      <span className="text-sm">{card.owner.fullName}</span>
+                      <span className="text-sm">{getPersonName(card.owner)}</span>
                     </div>
                   ) : "-"}
                 </TableCell>
@@ -186,13 +192,13 @@ export function ListView({
 
           {sortedCards.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+              <TableCell colSpan={7} className="text-center py-12 text-[13px] text-muted-foreground">
                 {t.empty.noTasks}
               </TableCell>
             </TableRow>
           )}
         </TableBody>
-      </Table>
+      </Table></div>
     </div>
   );
 }

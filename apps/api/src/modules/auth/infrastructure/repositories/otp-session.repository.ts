@@ -1,10 +1,15 @@
+/**
+ * @module otp-session.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { Ok, Err, Result } from '@common/result';
 import { db } from '@shared/db';
 import { otp_sessions } from '@shared/db';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, lt, sql } from 'drizzle-orm';
 
 export interface OtpSessionRow {
   id: number; sessionId: string; code: string; expiresAt: Date; used: boolean;
@@ -56,6 +61,24 @@ export class OtpSessionRepository {
     try {
       await db.update(otp_sessions).set({ used: true }).where(eq(otp_sessions.id, id));
       return Ok(undefined);
+    } catch (e: unknown) { return Err((e as Error).message); }
+  }
+
+  /**
+   * Deletes OTP sessions whose `expires_at` is in the past. Called from the
+   * session-cleanup cron (audit B.16) to keep the table bounded — without this
+   * the table grows linearly with attempted logins.
+   *
+   * Returns the number of rows deleted so the caller can log / alert if the
+   * value is unusually high (potential abuse signal).
+   */
+  async deleteExpired(): Promise<Result<number>> {
+    try {
+      const deleted = await db.delete(otp_sessions)
+        .where(lt(otp_sessions.expires_at, sql`NOW()`))
+        .returning({ id: otp_sessions.id });
+      const rowCount = Array.isArray(deleted) ? deleted.length : 0;
+      return Ok(rowCount);
     } catch (e: unknown) { return Err((e as Error).message); }
   }
 }

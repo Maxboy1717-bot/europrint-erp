@@ -1,3 +1,8 @@
+/**
+ * @module scheduling-johnson.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum } from '@common/math/math-utils';
@@ -51,7 +56,7 @@ export class SchedulingJohnsonService {
     let m2End = 0;
 
     for (const id of order) {
-      const job = (safeJobs ?? []).find((j) => j.id === id);
+      const job = (Array.isArray(safeJobs) ? safeJobs : []).find((j) => j.id === id);
       if (!job) continue;
       const m1Start = m1End;
       m1End = m1Start + safeNum(job.t1);

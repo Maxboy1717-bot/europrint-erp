@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { LucideIcon } from "lucide-react";
 
 export interface Product {
@@ -96,7 +101,7 @@ export interface FormData {
   selectedBomId: string;
 }
 
-export type Language = "uz" | "ru";
+export type Language = "uz" | "uz-cyr" | "ru";
 
 export interface Translation {
   title: string;

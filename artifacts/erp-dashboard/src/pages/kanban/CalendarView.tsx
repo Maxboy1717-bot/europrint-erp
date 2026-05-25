@@ -1,3 +1,8 @@
+/**
+ * @module CalendarView
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -17,7 +22,7 @@ export function CalendarView({
   cards: CardWithOwner[];
   onCardClick: (card: CardWithOwner) => void;
   onCreateTask: (date: Date) => void;
-  t: typeof T.uz;
+  t: (key: string) => string;
 }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
@@ -48,30 +53,30 @@ export function CalendarView({
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Oldingi oy" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} data-testid="button-prev-month">
+              <Button variant="outline" size="icon" aria-label={t("oldingiOy")} onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} data-testid="button-prev-month">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Oldingi oy</TooltipContent>
+            <TooltipContent>{t("oldingiOy")}</TooltipContent>
           </Tooltip>
           <h2 className="text-lg font-semibold min-w-[200px] text-center">
             {format(currentMonth, "MMMM yyyy")}
           </h2>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Keyingi oy" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} data-testid="button-next-month">
+              <Button variant="outline" size="icon" aria-label={t("keyingiOy")} onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} data-testid="button-next-month">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Keyingi oy</TooltipContent>
+            <TooltipContent>{t("keyingiOy")}</TooltipContent>
           </Tooltip>
         </div>
         <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())} data-testid="button-today">
-          Bugun
+          {t("today")}
         </Button>
       </div>
       
-      <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden flex-1">
+      <div className="grid grid-cols-2 lg:grid-cols-7 gap-px bg-border rounded-lg overflow-hidden flex-1">
         {(Array.isArray(weekDays) ? weekDays : []).map((day) => (
           <div key={day} className="bg-muted p-2 text-center text-sm font-medium">
             {day}

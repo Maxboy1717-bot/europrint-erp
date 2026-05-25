@@ -1,40 +1,53 @@
+/**
+ * @module tech-three-checkpoint.listener
+ * @description Wave 4 round-4 (PA2-18): canonical CQRS
+ *   `@EventsHandler(TechThreeCheckpointEvent)` form. Migrated from the legacy
+ *   `@OnEvent(ERP_EVENTS.TECH_THREE_CHECKPOINT)` string topic to the canonical
+ *   event class. EventBridge keeps re-emitting to the legacy string topic for
+ *   any non-migrated emit sites — see EVENT_NAME_MAP entry in
+ *   event-bridge.service.ts.
+ *
+ *   Trigger 6 — Tech 3-checkpoint to'liq tasdiqlandi → FI advance check.
+ *
+ *   Mantiq:
+ *     1. sales_orders.tech_bom_approved + routing + card barchasi true bo'lsa
+ *     2. advance_paid_amount / total_value >= advance_required_percent → advance OK
+ *        → master_status = 'ready_for_planning' + emit ADVANCE_APPROVED (Trigger 7)
+ *     3. advance yetmasa → master_status = 'pending_advance' + emit (eslatma uchun)
+ *
+ *   ARCHITECTURE.md §10 #6, §8.1 (HARD BLOCK)
+ *
+ *   No production code currently publishes this event on the CQRS bus
+ *   (the legacy listener received no string-topic emits either, so it was
+ *   already dead-letter); the listener is therefore a no-op at runtime until
+ *   a publisher is wired — same dead-letter state as the legacy @OnEvent
+ *   listener was previously in.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
+import { EventsHandler, IEventHandler, EventBus } from '@nestjs/cqrs';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { Result, safeCall, isErr } from '@common/result';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
-
-interface TechCheckpointPayload {
-  orderId: number;
-  approvedBy?: number;
-  approvedAt?: string;
-}
+import { TechThreeCheckpointEvent } from '../../domain/events/tech-three-checkpoint.event';
+import { AdvanceApprovedEvent } from '../../domain/events/advance-approved.event';
 
 type Row = Record<string, unknown>;
 
 const ADVANCE_PERCENT_DEFAULT = 70;     // ARCHITECTURE.md §8.1
 const ADVANCE_PCT_TOLERANCE = 0.001;    // float taqqos toleransi
 
-/**
- * Trigger 6 — Tech 3-checkpoint to'liq tasdiqlandi → FI advance check.
- *
- * Mantiq:
- *  1. sales_orders.tech_bom_approved + routing + card barchasi true bo'lsa
- *  2. advance_paid_amount / total_value >= advance_required_percent → advance OK
- *     → master_status = 'ready_for_planning' + emit ADVANCE_APPROVED (Trigger 7)
- *  3. advance yetmasa → master_status = 'pending_advance' + emit (eslatma uchun)
- *
- * ARCHITECTURE.md §10 #6, §8.1 (HARD BLOCK)
- */
 @Injectable()
-export class TechThreeCheckpointListener {
+@EventsHandler(TechThreeCheckpointEvent)
+export class TechThreeCheckpointListener
+  implements IEventHandler<TechThreeCheckpointEvent>
+{
   private readonly logger = new Logger(TechThreeCheckpointListener.name);
 
-  constructor(private readonly events: EventEmitter2) {}
+  constructor(private readonly eventBus: EventBus) {}
 
-  @OnEvent(ERP_EVENTS.TECH_THREE_CHECKPOINT, { async: true, promisify: true })
-  async handle(payload: TechCheckpointPayload): Promise<void> {
+  async handle(event: TechThreeCheckpointEvent): Promise<void> {
+    const payload = event.props;
     if (!Number.isFinite(payload?.orderId)) {
       this.logger.warn(`Trigger 6: orderId yo'q`);
       return;
@@ -73,11 +86,11 @@ export class TechThreeCheckpointListener {
         this.logger.error(`Trigger 6: order ${payload.orderId} update fail — ${updR.error.message}`);
         return;
       }
-      this.events.emit(ERP_EVENTS.ADVANCE_APPROVED, {
-        orderId: payload.orderId,
-        advancePaid,
-        advancePct: advancePaidPct,
-      });
+      // PA2-18 Wave 6: canonical class form; EventBridge re-emits to legacy
+      // @OnEvent(ERP_EVENTS.ADVANCE_APPROVED) listeners (e.g. PP planning unlock).
+      this.eventBus.publish(
+        new AdvanceApprovedEvent(payload.orderId, advancePaid, advancePaidPct),
+      );
       this.logger.log(
         `Trigger 6 ✅ order ${payload.orderId}: advance OK (${advancePaidPct.toFixed(2)}%) → ready_for_planning`,
       );

@@ -1,6 +1,11 @@
+/**
+ * @module crm-deal-products
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, date, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, date, uuid, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -33,7 +38,7 @@ export const crmProducts = pgTable("crm_products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   nameRu: text("name_ru"),
-  categoryId: integer("category_id").references(() => crmProductCategories.id),
+  categoryId: integer("category_id").references(() => crmProductCategories.id, { onDelete: "set null" }),
   
   price: numericMoney("price").notNull(),
   currencyId: varchar("currency_id", { length: 3 }).default("UZS"),
@@ -69,7 +74,7 @@ export const crmDealProducts = pgTable("crm_deal_products", {
   ownerId: integer("owner_id").notNull().references(() => crmDeals.id, { onDelete: "cascade" }),
   ownerType: varchar("owner_type", { length: 20 }).default("D"), // D=Deal, L=Lead, Q=Quote
   
-  productId: integer("product_id").references(() => crmProducts.id),
+  productId: integer("product_id").references(() => crmProducts.id, { onDelete: "set null" }),
   productName: text("product_name").notNull(),
   
   price: numericMoney("price").notNull(),
@@ -130,20 +135,24 @@ export const crmActivities = pgTable("crm_activities", {
   completed: boolean("completed").default(false),
   status: varchar("status", { length: 50 }), // waiting, completed, notcompleted
   priority: varchar("priority", { length: 20 }).default("medium"), // low, medium, high
-  
+
   // Assignment
   responsibleId: varchar("responsible_id").references(() => users.id, { onDelete: 'restrict' }).notNull(),
   createdById: integer("created_by_id").references(() => users.id, { onDelete: 'set null' }),
-  
+
   // Metadata
   dateCreate: timestamp("date_create").notNull().defaultNow(),
   dateModify: timestamp("date_modify").notNull().defaultNow(),
-  
+
   // Communication
   direction: varchar("direction", { length: 20 }), // incoming, outgoing
   communicationChannel: varchar("communication_channel", { length: 50 }), // phone, email, telegram
   communicationData: jsonb("communication_data"),
-});
+}, (t) => [
+  check("crm_activities_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('waiting','completed','notcompleted')`),
+  check("crm_activities_priority_chk", sql`${t.priority} IS NULL OR ${t.priority} IN ('low','medium','high')`),
+  check("crm_activities_direction_chk", sql`${t.direction} IS NULL OR ${t.direction} IN ('incoming','outgoing')`),
+]);
 
 
 export const insertCrmActivitySchema = createInsertSchema(crmActivities, {

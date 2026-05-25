@@ -1,39 +1,55 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { safeCall, Result, AppError } from '@common/result';
-import { ThreeWayMatchRepository } from './three-way-match.repository';
+/**
+ * @module remaining/three-way-match.service
+ * @description Minimal Three-Way-Match service for the remaining module.
+ * Compares PO amount, GR amount, and vendor invoice amount; returns
+ * matched/discrepancy status.
+ */
+
+import { Injectable } from '@nestjs/common';
+import { Ok, Err, Result, AppError } from '@common/result';
+
+export interface IThreeWayMatchRepo {
+  getResults(poId: number | null, limit: number): Promise<unknown>;
+  getPurchaseOrderAmount(poId: number): Promise<Result<number, AppError>>;
+  getGoodsReceiptAmount(grId: number): Promise<Result<number, AppError>>;
+  insertResult(data: Record<string, unknown>): Promise<unknown>;
+}
+
+const TOLERANCE_PCT = 0.05;
 
 @Injectable()
 export class ThreeWayMatchService {
-  constructor(private readonly repo: ThreeWayMatchRepository) {}
+  constructor(private readonly repo: IThreeWayMatchRepo) {}
 
-  async getResults(poId: number | null, limit: number): Promise<Result<object, AppError>> {
-    return safeCall(() => this.repo.getResults(poId, limit).then(data => ({ data })));
+  async perform(
+    body: { poId?: number; grId?: number; vendorInvoiceId?: string; invoiceAmount?: number },
+    _userId: number,
+  ): Promise<Result<{ status: string; paymentBlocked: boolean }, AppError>> {
+    const { poId, grId, vendorInvoiceId, invoiceAmount = 0 } = body;
+    if (!poId || !grId || !vendorInvoiceId) {
+      return Err({ message: 'poId, grId, vendorInvoiceId talab qilinadi', code: 'BAD_REQUEST' });
+    }
+
+    const poRes = await this.repo.getPurchaseOrderAmount(poId);
+    if (!poRes.ok) return Err(poRes.error);
+    const poAmount = poRes.data;
+
+    const grRes = await this.repo.getGoodsReceiptAmount(grId);
+    if (!grRes.ok) return Err(grRes.error);
+    const grAmount = grRes.data;
+
+    const variance = Math.abs(invoiceAmount - poAmount) / Math.max(poAmount, 1);
+    const paymentBlocked = variance > TOLERANCE_PCT;
+    const status = paymentBlocked ? 'discrepancy' : 'matched';
+
+    await this.repo.insertResult({
+      poId, grId, vendorInvoiceId, invoiceAmount, poAmount, grAmount, status,
+    });
+
+    return Ok({ status, paymentBlocked });
   }
 
-  async perform(body: Record<string, unknown>, userId: number) {
-    return safeCall(async () => {
-      const { poId, grId, vendorInvoiceId } = body as { poId: number; grId: number; vendorInvoiceId: string };
-      if (!poId || !grId || !vendorInvoiceId) {
-        throw new BadRequestException('poId, grId, vendorInvoiceId talab qilinadi');
-      }
-      const [poAmountR, grAmountR] = await Promise.all([
-        this.repo.getPurchaseOrderAmount(poId),
-        this.repo.getGoodsReceiptAmount(grId),
-      ]);
-      const poAmount = poAmountR.ok ? (poAmountR.data as number) : 0;
-      const grAmount = grAmountR.ok ? (grAmountR.data as number) : 0;
-      const invoiceAmount = Number(body['invoiceAmount'] ?? 0);
-      const tolerance = 0.05;
-      const poGrDiff = Math.abs(poAmount - grAmount) / Math.max(poAmount, 1);
-      const poInvDiff = Math.abs(poAmount - invoiceAmount) / Math.max(poAmount, 1);
-      const status = (poGrDiff <= tolerance && poInvDiff <= tolerance) ? 'matched' : 'discrepancy';
-      const paymentBlocked = status === 'discrepancy';
-      await this.repo.insertResult(poId, grId, vendorInvoiceId, poAmount, grAmount, invoiceAmount, status, userId);
-      return {
-        success: !paymentBlocked, status, paymentBlocked,
-        message: paymentBlocked ? "To'lov bloklandi: 3-Way Match mos kelmadi" : '3-Way Match muvaffaqiyatli',
-        amounts: { po: poAmount, gr: grAmount, invoice: invoiceAmount },
-      };
-    });
+  async getResults(poId: number | null, limit: number): Promise<unknown> {
+    return this.repo.getResults(poId, limit);
   }
 }

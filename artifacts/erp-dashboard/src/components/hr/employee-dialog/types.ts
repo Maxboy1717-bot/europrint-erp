@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { z } from "zod";
 import { UseFormReturn } from "react-hook-form";
 
@@ -7,6 +12,11 @@ export const employeeSchema = z.object({
   phone: z.string().min(1, "Telefon raqamini kiriting"),
   departmentId: z.string().optional(),
   positionId: z.string().optional(),
+  // Phase 2 / Task 2.5 — manager (autocomplete by name) + base salary.
+  // Stored as strings to match useEmployeeMutation's existing cleanData
+  // shape; empty string means "not set" (mutation handles the clear path).
+  managerId: z.string().optional(),
+  baseSalary: z.string().optional(),
   shift: z.string().optional(),
   salaryType: z.string().optional(),
   workshopZone: z.string().optional(),
@@ -40,6 +50,8 @@ export interface EmployeeDialogProps {
     phone?: string;
     departmentId?: string;
     positionId?: string;
+    managerId?: string | number;
+    baseSalary?: string | number;
     shift?: string;
     salaryType?: string;
     workshopZone?: string;

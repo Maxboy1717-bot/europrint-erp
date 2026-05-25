@@ -1,3 +1,10 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 export interface StockBalanceItem extends Record<string, unknown> {
   materialId: string;
   name: string;
@@ -102,7 +109,7 @@ export interface ExpiryData {
   };
 }
 
-export type Lang = "uz" | "ru";
+export type Lang = "uz" | "uz-cyr" | "ru";
 
 export interface TranslationType {
   title: string;
@@ -308,9 +315,110 @@ export const translations: Record<Lang, TranslationType> = {
       sum: "UZS",
     },
   },
+  'uz-cyr': {
+    title: "Омбор Ҳисоботлари",
+    subtitle: "Захира, айланма ва таҳлил ҳисоботлари",
+    tabs: {
+      stockBalance: "Қолдиқ",
+      turnover: "Айланма",
+      abcAnalysis: "АБС/ХЙЗ",
+      aging: "Ескириш",
+      expiry: "Муддат",
+    },
+    stockBalance: {
+      title: "Қолдиқ ҳисоботи",
+      material: "Материал",
+      code: "Код",
+      warehouse: "Омбор",
+      currentStock: "Жорий қолдиқ",
+      minStock: "Мин қолдиқ",
+      value: "Қиймат",
+      status: "Ҳолат",
+      totalMaterials: "Жами материаллар",
+      totalValue: "Жами қиймат",
+      lowStockCount: "Кам қолдиқ",
+      criticalCount: "Критик",
+      normal: "Нормал",
+      low: "Кам",
+      critical: "Критик",
+      lowStockOnly: "Фақат кам қолдиқлар",
+      top10ByValue: "Қиймат бўйича топ 10",
+    },
+    turnover: {
+      title: "Айланма ҳисоботи",
+      material: "Материал",
+      opening: "Бошланиш",
+      inflow: "Кирим",
+      outflow: "Чиқим",
+      closing: "Тугаш",
+      rate: "Айланма коеф.",
+      avgTurnover: "Ўртача айланма",
+      fastMovers: "Тез айланадиган",
+      slowMovers: "Секин айланадиган",
+      dateRange: "Давр",
+      from: "Дан",
+      to: "Гача",
+    },
+    abc: {
+      title: "АБС/ХЙЗ таҳлили",
+      material: "Материал",
+      totalValue: "Жами қиймат",
+      percentage: "Фоиз",
+      cumulative: "Йиғма фоиз",
+      class: "Синф",
+      xyz: "ХЙЗ",
+      period: "Давр (кунлар)",
+      classA: "А синф",
+      classB: "Б синф",
+      classC: "С синф",
+      distribution: "АБС тақсимоти",
+    },
+    aging: {
+      title: "Ескириш ҳисоботи",
+      material: "Материал",
+      lastMovement: "Охирги ҳаракат",
+      days: "Кунлар",
+      stock: "Қолдиқ",
+      value: "Қиймат",
+      category: "Категория",
+      active: "Фаол",
+      slow: "Секин",
+      obsolete: "Ескирган",
+      threshold: "Чегара (кунлар)",
+      activePercent: "Фаол %",
+      slowPercent: "Секин %",
+      obsoletePercent: "Ескирган %",
+    },
+    expiry: {
+      title: "Муддат кузатуви",
+      material: "Материал",
+      batch: "Партия",
+      expiryDate: "Яроқлилик муддати",
+      daysLeft: "Қолган кунлар",
+      quantity: "Миқдор",
+      value: "Қиймат",
+      status: "Ҳолат",
+      ok: "Яхши",
+      warning: "Огоҳлантириш",
+      critical: "Критик",
+      expired: "Муддати ўтган",
+      daysAhead: "Кунлар олдин",
+      expiredCount: "Муддати ўтган",
+      atRiskValue: "Хавф остида қиймат",
+    },
+    common: {
+      export: "Експорт",
+      refresh: "Янгилаш",
+      category: "Категория",
+      allCategories: "Барча категориялар",
+      loading: "Юкланмоқда...",
+      noData: "Маълумот топилмади",
+      sum: "УЗС",
+    },
+  },
   ru: {
-    title: "Складские Отчёты",
-    subtitle: "Отчёты по остаткам, оборачиваемости и анализу",
+    title: tLabel('warehouse..untitled', "Складские Отчёты"),
+    subtitle: tLabel('warehouse..untitled', "Отчёты по остаткам, оборачиваемости и анализу"),
     tabs: {
       stockBalance: "Остатки",
       turnover: "Оборот",
@@ -319,7 +427,7 @@ export const translations: Record<Lang, TranslationType> = {
       expiry: "Сроки",
     },
     stockBalance: {
-      title: "Отчёт по остаткам",
+      title: tLabel('warehouse..untitled', "Отчёт по остаткам"),
       material: "Материал",
       code: "Код",
       warehouse: "Склад",
@@ -338,7 +446,7 @@ export const translations: Record<Lang, TranslationType> = {
       top10ByValue: "Топ 10 по стоимости",
     },
     turnover: {
-      title: "Отчёт по оборачиваемости",
+      title: tLabel('warehouse..untitled', "Отчёт по оборачиваемости"),
       material: "Материал",
       opening: "Начало",
       inflow: "Приход",
@@ -353,7 +461,7 @@ export const translations: Record<Lang, TranslationType> = {
       to: "До",
     },
     abc: {
-      title: "ABC/XYZ анализ",
+      title: tLabel('warehouse..abcXyz', "ABC/XYZ анализ"),
       material: "Материал",
       totalValue: "Общая стоимость",
       percentage: "Процент",
@@ -367,7 +475,7 @@ export const translations: Record<Lang, TranslationType> = {
       distribution: "Распределение ABC",
     },
     aging: {
-      title: "Отчёт по старению",
+      title: tLabel('warehouse..untitled', "Отчёт по старению"),
       material: "Материал",
       lastMovement: "Последнее движение",
       days: "Дни",
@@ -383,7 +491,7 @@ export const translations: Record<Lang, TranslationType> = {
       obsoletePercent: "Устаревшие %",
     },
     expiry: {
-      title: "Контроль сроков",
+      title: tLabel('warehouse..untitled', "Контроль сроков"),
       material: "Материал",
       batch: "Партия",
       expiryDate: "Срок годности",

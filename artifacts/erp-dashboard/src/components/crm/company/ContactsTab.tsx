@@ -1,5 +1,11 @@
+/**
+ * @module ContactsTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Users, User, X, Briefcase, Phone } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -14,14 +20,19 @@ import { Contact } from "./types";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface ContactsTabProps {
   companyId: number;
   contacts: Contact[];
 }
 
-export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
+export function ContactsTab({ companyId, contacts = [] }: ContactsTabProps) {
+  const { t } = useTranslation("common");
+  const safeContacts = Array.isArray(contacts) ? contacts : [];
   const [showLinkContactDialog, setShowLinkContactDialog] = useState(false);
+  const [confirmUnlinkId, setConfirmUnlinkId] = useState<number | null>(null);
   const [linkContactId, setLinkContactId] = useState("");
   const [linkContactRole, setLinkContactRole] = useState("");
   const { toast } = useToast();
@@ -60,23 +71,23 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
       <div className="flex justify-end">
         <Button size="sm" variant="outline" onClick={() => setShowLinkContactDialog(true)}>
           <Users className="h-3 w-3 mr-1" />
-          Kontakt ulash
+          {t("kontaktUlash")}
         </Button>
       </div>
-      {contacts.length === 0 ? (
+      {safeContacts.length === 0 ? (
         <div className="text-center text-muted-foreground py-8">
           <User className="h-8 w-8 mx-auto mb-2 opacity-30" />
-          <p className="text-sm">Kontaktlar yo'q</p>
+          <p className="text-sm">{t("kontaktlarYoq")}</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {(Array.isArray(contacts) ? contacts : []).map((contact) => (
+          {safeContacts.map((contact) => (
             <div key={contact.id} className="flex items-center justify-between p-3 rounded-lg border">
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-sm flex items-center gap-1">
                   {([contact.lastName, contact.name]).filter(Boolean).join(' ') || 'Nomsiz kontakt'}
                   {contact.linkIsPrimary && (
-                    <Badge variant="secondary" className="text-xs ml-1">Asosiy</Badge>
+                    <Badge variant="secondary" className="text-xs ml-1">{t("primary")}</Badge>
                   )}
                 </div>
                 {(contact.post || contact.linkRole) && (
@@ -98,7 +109,7 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
                   variant="ghost"
                   className="text-destructive hover:text-destructive ml-2 shrink-0"
                   disabled={unlinkContactMutation.isPending}
-                  onClick={() => unlinkContactMutation.mutate(contact.id)}
+                  onClick={() => setConfirmUnlinkId(contact.id)}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -110,37 +121,37 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
 
       {/* Link Contact Dialog */}
       <Dialog open={showLinkContactDialog} onOpenChange={setShowLinkContactDialog}>
-        <DialogContent data-testid="dialog-link-contact">
+        <DialogContent data-testid="dialog-link-contact" className="p-6">
           <DialogHeader>
-            <DialogTitle>Kontakt ulash</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("kontaktUlash")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Kontakt ID *</label>
+              <label className="text-sm font-medium">{t("kontaktId")}</label>
               <Input
                 type="number"
                 value={linkContactId}
                 onChange={(e) => setLinkContactId(e.target.value)}
-                placeholder="Kontakt ID raqamini kiriting"
+                placeholder={t("kontaktIdRaqaminiKiriting")}
                 data-testid="input-link-contact-id"
               />
               <p className="text-xs text-muted-foreground">
-                Kontaktlar ro'yxatidan ID raqamini toping
+                {t("kontaktlarRoyxatidanIdRaqaminiToping")}
               </p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Rol / Lavozim</label>
+              <label className="text-sm font-medium">{tLabel('common.ContactsTab.rolLavozim', "Rol / Lavozim")}</label>
               <Input
                 value={linkContactRole}
                 onChange={(e) => setLinkContactRole(e.target.value)}
-                placeholder="masalan: Direktor, Buxgalter"
+                placeholder={t("masalanDirektorBuxgalter")}
                 data-testid="input-link-contact-role"
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowLinkContactDialog(false)}>
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button
               onClick={() => {
@@ -159,6 +170,17 @@ export function ContactsTab({ companyId, contacts }: ContactsTabProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={confirmUnlinkId !== null}
+        onOpenChange={(open) => { if (!open) setConfirmUnlinkId(null); }}
+        title={t("kontaktniUzish")}
+        description={t("ushbuKontaktniKompaniyadanUzishniTasdiqlaysizmi")}
+        confirmText="Uzish"
+        cancelText="Bekor qilish"
+        variant="destructive"
+        onConfirm={() => { if (confirmUnlinkId !== null) unlinkContactMutation.mutate(confirmUnlinkId); }}
+      />
     </div>
   );
 }

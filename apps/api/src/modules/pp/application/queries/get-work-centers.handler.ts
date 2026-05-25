@@ -1,8 +1,14 @@
+/**
+ * @module get-work-centers.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/result';
 import { WorkCenter } from '../../domain/aggregates/work-center.aggregate';
 import { DrizzleWorkCenterRepository } from '../../infrastructure/repositories/drizzle-work-center.repo';
+import { WORK_CENTER_REPO } from '../../domain/repositories/pp.repository';
 import { GetWorkCentersQuery } from './get-work-centers.query';
 
 @Injectable()
@@ -11,7 +17,7 @@ export class GetWorkCentersHandler implements IQueryHandler<GetWorkCentersQuery>
   private readonly logger = new Logger(GetWorkCentersHandler.name);
 
   constructor(
-    @Inject('IWorkCenterRepository')
+    @Inject(WORK_CENTER_REPO)
     private readonly workCenterRepo: DrizzleWorkCenterRepository,
   ) {}
 

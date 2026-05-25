@@ -1,3 +1,8 @@
+/**
+ * @module onboarding.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {Controller,
   Get,
@@ -18,7 +23,7 @@ import {
   ApiQuery,
   ApiParam,
 } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { OnboardingService } from './onboarding.service';
 import {
   CreateOnboardingPlanDto,
@@ -39,7 +44,7 @@ import { unwrapOrInternal } from '@common/http-result';
 @ApiTags('HR Onboarding')
 @ApiBearerAuth()
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('hr/onboarding')
 export class OnboardingController {
@@ -169,5 +174,28 @@ export class OnboardingController {
   @ApiOperation({ summary: 'Xodimning joriy motivatsiya rejasi' })
   async getMotivationPlan(@Param('employeeId', ParseIntPipe) employeeId: number) {
     return unwrapOrInternal(await this.onboardingService.getEmployeeMotivationPlan(employeeId));
+  }
+
+  // ──────────────── BUDDY ASSIGNMENT (Buddy / mentor) ─────────────────────
+
+  @Patch(':id/buddy')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'hr_manager', 'hr')
+  @ApiOperation({ summary: 'Onboarding ga buddy / mentor biriktirish' })
+  @ApiParam({ name: 'id', type: Number })
+  async assignBuddy(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { buddyId: number },
+  ) {
+    const buddyId = Number(body?.buddyId);
+    return unwrapOrInternal(await this.onboardingService.assignBuddy(id, buddyId));
+  }
+
+  // ──────────────── DASHBOARD STATS ───────────────────────────────────────
+
+  @Get('dashboard/stats')
+  @ApiOperation({ summary: 'Onboarding dashboard statistikasi (active / completed / atRisk / overdue)' })
+  async dashboardStats() {
+    return unwrapOrInternal(await this.onboardingService.getDashboardStats());
   }
 }

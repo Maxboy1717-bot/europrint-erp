@@ -1,7 +1,12 @@
+/**
+ * @module inspection.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { v4 as uuid } from 'uuid';
-import { AggregateRoot } from '@nestjs/cqrs';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { InspectionStatus } from '../enums/inspection-status.enum';
 import { Defect } from './defect.aggregate';
 import { QcPassedEvent, QcFailedEvent } from '../events';
@@ -50,13 +55,13 @@ export class Inspection extends AggregateRoot {
   pass(): void {
     this.status = InspectionStatus.PASSED;
     this.updatedAt = _time.now();
-    this.apply(new QcPassedEvent(this.id, this.orderId));
+    this.addDomainEvent(new QcPassedEvent(this.id, this.orderId));
   }
 
   fail(reason: string): void {
     this.status = InspectionStatus.FAILED;
     this.updatedAt = _time.now();
-    this.apply(new QcFailedEvent(this.id, this.orderId, reason));
+    this.addDomainEvent(new QcFailedEvent(this.id, this.orderId, reason));
   }
 
   rework(): void {

@@ -1,3 +1,8 @@
+/**
+ * @module table
+ * @description React UI component.
+ */
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -20,7 +25,7 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("bg-surface-container", className)} {...props} />
+  <thead ref={ref} className={cn("bg-muted/60", className)} {...props} />
 ))
 TableHeader.displayName = "TableHeader"
 
@@ -43,7 +48,7 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "bg-surface-container-low font-medium",
+      "bg-muted/40 font-medium",
       className
     )}
     {...props}
@@ -58,7 +63,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "transition-colors hover:bg-surface-container-low data-[state=selected]:bg-surface-container",
+      "transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted/60",
       className
     )}
     {...props}
@@ -73,7 +78,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "py-3 px-6 text-left align-middle text-xs font-semibold uppercase tracking-wider text-on-surface-variant [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      "py-3 px-6 text-left align-middle text-xs font-semibold uppercase tracking-wider text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className
     )}
     {...props}
@@ -88,7 +93,7 @@ const TableCell = React.forwardRef<
   <td
     ref={ref}
     className={cn(
-      "py-3 px-6 align-middle text-on-surface [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      "py-3 px-6 align-middle text-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className
     )}
     {...props}
@@ -102,7 +107,7 @@ const TableCaption = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <caption
     ref={ref}
-    className={cn("mt-4 text-sm text-on-surface-variant", className)}
+    className={cn("mt-4 text-sm text-muted-foreground", className)}
     {...props}
   />
 ))

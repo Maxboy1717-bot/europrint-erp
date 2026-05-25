@@ -1,3 +1,8 @@
+/**
+ * @module operations
+ * @description Frontend utility / library module.
+ */
+
 import { apiRequest } from "@/lib/queryClient";
 
 export const operationsApi = {

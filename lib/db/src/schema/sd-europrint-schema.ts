@@ -1,6 +1,11 @@
+/**
+ * @module sd-europrint-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, bigint } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, bigint, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { employees } from "./employees";
@@ -16,7 +21,11 @@ export const sdCustomers = pgTable("sd_customers", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   stir: varchar("stir", { length: 20 }),
+  /** INN — same registry number, kept as alias column for legacy INSERT compatibility */
+  inn: varchar("inn", { length: 20 }),
   legalAddress: text("legal_address"),
+  /** Generic address column (legacy INSERT uses 'address'; mirrors actual_address) */
+  address: text("address"),
   actualAddress: text("actual_address"),
   segment: varchar("segment", { length: 20 }).notNull().default("new"), // vip, regular, new, potential
   managerId: varchar("manager_id"),
@@ -24,16 +33,29 @@ export const sdCustomers = pgTable("sd_customers", {
   isBlocked: boolean("is_blocked").notNull().default(false),
   blockReason: text("block_reason"),
   creditLimit: numericMoney("credit_limit").default(0),
+  /** Payment terms in days (e.g. 7, 14, 30) */
+  paymentTermsDays: integer("payment_terms_days").default(30),
   openDebt: numericMoney("open_debt").default(0),
   totalOrders: integer("total_orders").default(0),
   totalRevenue: numericMoney("total_revenue").default(0),
   lastOrderDate: varchar("last_order_date", { length: 10 }),
+  /** Industry / sector of the customer (e.g. 'printing', 'retail') */
+  industry: varchar("industry", { length: 100 }),
+  /** Company website URL */
+  website: varchar("website", { length: 500 }),
+  /** Primary phone number for the company (not a contact person) */
+  phone: varchar("phone", { length: 30 }),
+  /** Primary email address for the company */
+  email: varchar("email", { length: 255 }),
   notes: text("notes"),
   // Link to CRM company (application-level FK — avoids circular import)
   crmCompanyId: integer("crm_company_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("sd_customers_segment_chk", sql`${t.segment} IN ('vip','regular','new','potential')`),
+  check("sd_customers_status_chk", sql`${t.status} IN ('active','inactive')`),
+]);
 
 export const insertSdCustomerSchema = createInsertSchema(sdCustomers, {
   name: z.string().min(2, "Mijoz nomi kerak"),
@@ -48,7 +70,7 @@ export type InsertSdCustomer = z.infer<typeof insertSdCustomerSchema>;
 // 2. KONTAKT SHAXSLAR
 export const sdContacts = pgTable("sd_contacts", {
   id: serial("id").primaryKey(),
-  customerId: varchar("customer_id").notNull().references(() => sdCustomers.id),
+  customerId: varchar("customer_id").notNull().references(() => sdCustomers.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   position: varchar("position", { length: 100 }),
   phone: varchar("phone", { length: 30 }),
@@ -72,10 +94,10 @@ export const sdLeads = pgTable("sd_leads", {
   // phone, telegram, website, mobile, instagram, exhibition, referral, other
   status: varchar("status", { length: 30 }).notNull().default("new"),
   // new, working, quoted, negotiating, won, lost, frozen
-  customerId: integer("customer_id").references(() => sdCustomers.id),
+  customerId: integer("customer_id").references(() => sdCustomers.id, { onDelete: "set null" }),
   contactName: text("contact_name"),
   contactPhone: varchar("contact_phone", { length: 30 }),
-  managerId: integer("manager_id").references(() => employees.id),
+  managerId: integer("manager_id").references(() => employees.id, { onDelete: "set null" }),
   productInterest: text("product_interest"),
   estimatedVolume: numericMoney("estimated_volume"),
   estimatedValue: numericMoney("estimated_value"),
@@ -84,7 +106,10 @@ export const sdLeads = pgTable("sd_leads", {
   convertedAt: timestamp("converted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("sd_leads_source_chk", sql`${t.source} IN ('phone','telegram','website','mobile','instagram','exhibition','referral','other')`),
+  check("sd_leads_status_chk", sql`${t.status} IN ('new','working','quoted','negotiating','won','lost','frozen')`),
+]);
 
 export const insertSdLeadSchema = createInsertSchema(sdLeads, {
   source: z.enum(["phone", "telegram", "website", "mobile", "instagram", "exhibition", "referral", "other"]).default("other"),
@@ -97,12 +122,14 @@ export type InsertSdLead = z.infer<typeof insertSdLeadSchema>;
 // 4. LEED AKTIVLIGI (muloqot tarixi)
 export const sdLeadActivities = pgTable("sd_lead_activities", {
   id: serial("id").primaryKey(),
-  leadId: varchar("lead_id").notNull().references(() => sdLeads.id),
+  leadId: varchar("lead_id").notNull().references(() => sdLeads.id, { onDelete: "cascade" }),
   type: varchar("type", { length: 30 }).notNull(), // call, message, meeting, note, status_change
   note: text("note"),
   managerId: varchar("manager_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("sd_lead_activities_type_chk", sql`${t.type} IN ('call','message','meeting','note','status_change')`),
+]);
 
 export const insertSdLeadActivitySchema = createInsertSchema(sdLeadActivities, {
   type: z.enum(["call", "message", "meeting", "note", "status_change"]),
@@ -169,8 +196,8 @@ export type InsertSdPriceFormulas = z.infer<typeof insertSdPriceFormulasSchema>;
 export const sdQuotations = pgTable("sd_quotations", {
   id: serial("id").primaryKey(),
   quotationNumber: varchar("quotation_number", { length: 30 }).notNull().unique(),
-  leadId: varchar("lead_id").references(() => sdLeads.id),
-  customerId: varchar("customer_id").references(() => sdCustomers.id),
+  leadId: varchar("lead_id").references(() => sdLeads.id, { onDelete: "set null" }),
+  customerId: varchar("customer_id").references(() => sdCustomers.id, { onDelete: "set null" }),
   managerId: varchar("manager_id"),
   totalPrice: numericMoney("total_price").notNull().default(0),
   costPrice: numericMoney("cost_price").notNull().default(0),
@@ -184,7 +211,9 @@ export const sdQuotations = pgTable("sd_quotations", {
   approvedAt: timestamp("approved_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("sd_quotations_status_chk", sql`${t.status} IN ('draft','sent','viewed','approved','rejected','expired')`),
+]);
 
 export const insertSdQuotationSchema = createInsertSchema(sdQuotations, {
   quotationNumber: z.string().min(1),
@@ -197,7 +226,7 @@ export type InsertSdQuotation = z.infer<typeof insertSdQuotationSchema>;
 // 7. TAKLIFNOMA SATRLARI
 export const sdQuotationItems = pgTable("sd_quotation_items", {
   id: serial("id").primaryKey(),
-  quotationId: varchar("quotation_id").notNull().references(() => sdQuotations.id),
+  quotationId: varchar("quotation_id").notNull().references(() => sdQuotations.id, { onDelete: "cascade" }),
   productType: varchar("product_type", { length: 50 }).notNull().default("box"),
   // box, lid, tray, cup, other
   paperType: varchar("paper_type", { length: 50 }),
@@ -220,7 +249,9 @@ export const sdQuotationItems = pgTable("sd_quotation_items", {
   dieCost: numericMoney("die_cost").default(0),
   setupTimeMinutes: integer("setup_time_minutes").default(15),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("sd_quotation_items_product_type_chk", sql`${t.productType} IN ('box','lid','tray','cup','other')`),
+]);
 
 export const insertSdQuotationItemSchema = createInsertSchema(sdQuotationItems, {
   productType: z.enum(["box", "lid", "tray", "cup", "other"]).default("box"),
@@ -234,8 +265,8 @@ export type InsertSdQuotationItem = z.infer<typeof insertSdQuotationItemSchema>;
 export const sdOrders = pgTable("sd_orders", {
   id: serial("id").primaryKey(),
   orderNumber: varchar("order_number", { length: 30 }).notNull().unique(),
-  quotationId: varchar("quotation_id").references(() => sdQuotations.id),
-  customerId: varchar("customer_id").notNull().references(() => sdCustomers.id),
+  quotationId: varchar("quotation_id").references(() => sdQuotations.id, { onDelete: "set null" }),
+  customerId: varchar("customer_id").notNull().references(() => sdCustomers.id, { onDelete: "cascade" }),
   managerId: varchar("manager_id"),
   status: varchar("status", { length: 30 }).notNull().default("new"),
   // new | advance_pending | advance_paid | design | technologist | planned | production | quality_check | in_warehouse | delivering | delivered | closed | cancelled
@@ -259,7 +290,10 @@ export const sdOrders = pgTable("sd_orders", {
   version: bigint("version", { mode: "number" }).notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("sd_orders_status_chk", sql`${t.status} IN ('new','advance_pending','advance_paid','design','technologist','planned','production','quality_check','in_warehouse','delivering','delivered','closed','cancelled')`),
+  check("sd_orders_delivery_type_chk", sql`${t.deliveryType} IS NULL OR ${t.deliveryType} IN ('own','external','pickup')`),
+]);
 
 export const insertSdOrderSchema = createInsertSchema(sdOrders, {
   orderNumber: z.string().min(1),
@@ -286,8 +320,8 @@ export type SdOrderTimeline = typeof sdOrderTimeline.$inferSelect;
 // 10. TO'LOVLAR
 export const sdPayments = pgTable("sd_payments", {
   id: serial("id").primaryKey(),
-  orderId: integer("order_id").notNull().references(() => sdOrders.id),
-  customerId: integer("customer_id").notNull().references(() => sdCustomers.id),
+  orderId: integer("order_id").notNull().references(() => sdOrders.id, { onDelete: "cascade" }),
+  customerId: integer("customer_id").notNull().references(() => sdCustomers.id, { onDelete: "cascade" }),
   amount: numericMoney("amount").notNull(),
   type: varchar("type", { length: 20 }).notNull(), // advance, balance, partial
   status: varchar("status", { length: 20 }).notNull().default("pending"),
@@ -300,7 +334,10 @@ export const sdPayments = pgTable("sd_payments", {
   createdBy: varchar("created_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("sd_payments_type_chk", sql`${t.type} IN ('advance','balance','partial')`),
+  check("sd_payments_status_chk", sql`${t.status} IN ('pending','paid','overdue','returned')`),
+]);
 
 export const insertSdPaymentSchema = createInsertSchema(sdPayments, {
   amount: z.number().positive("Summa musbat bo'lishi kerak"),
@@ -314,7 +351,7 @@ export type InsertSdPayment = z.infer<typeof insertSdPaymentSchema>;
 // 11. OMBOR IJARA (Storage Fees)
 export const sdStorageFees = pgTable("sd_storage_fees", {
   id: serial("id").primaryKey(),
-  orderId: varchar("order_id").notNull().references(() => sdOrders.id),
+  orderId: varchar("order_id").notNull().references(() => sdOrders.id, { onDelete: "cascade" }),
   startDate: varchar("start_date", { length: 10 }).notNull(),
   endDate: varchar("end_date", { length: 10 }),
   areaM2: numericMoney("area_m2").notNull().default(1),
@@ -332,7 +369,7 @@ export type SdStorageFee = typeof sdStorageFees.$inferSelect;
 // 12. SHARTNOMALAR
 export const sdContracts = pgTable("sd_contracts", {
   id: serial("id").primaryKey(),
-  orderId: integer("order_id").notNull().references(() => sdOrders.id),
+  orderId: integer("order_id").notNull().references(() => sdOrders.id, { onDelete: "cascade" }),
   contractNumber: varchar("contract_number", { length: 30 }).notNull().unique(),
   templateType: varchar("template_type", { length: 30 }).default("standard"),
   // standard, longterm, vip, onetime

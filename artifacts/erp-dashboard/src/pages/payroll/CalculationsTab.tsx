@@ -1,3 +1,8 @@
+/**
+ * @module CalculationsTab
+ * @description React page component. Route-level UI.
+ */
+
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,13 +42,13 @@ function computeDrift(calc: PayrollCalculation): { pct: number; label: string; c
 function DriftBadge({ calc }: { calc: PayrollCalculation }) {
   const { pct, label, color } = computeDrift(calc);
   const colorMap = {
-    green: 'bg-green-100 text-green-700 border-green-200',
-    yellow: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    red: 'bg-red-100 text-red-700 border-red-200',
+    green: 'bg-green-100 text-[var(--ep-green)] border-green-200',
+    yellow: 'bg-yellow-100 text-[var(--ep-yellow)] border-yellow-200',
+    red: 'bg-red-100 text-[var(--ep-red)] border-red-200',
   };
   const Icon = pct === 0 ? Minus : pct > 0 ? TrendingUp : TrendingDown;
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-medium ${colorMap[color]}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-medium ${colorMap[color as keyof typeof colorMap]}`}>
       <Icon className="h-3 w-3" />
       {label}
     </span>
@@ -52,13 +57,13 @@ function DriftBadge({ calc }: { calc: PayrollCalculation }) {
 
 export function CalculationsTab({ calculations, employeeMap, loading, onNewCalculation }: CalculationsTabProps) {
   const { t } = useTranslation('hr');
-  const { t: tCommon } = useTranslation('common');
   const { t: tFinance } = useTranslation('finance');
+  const { t: tCommon } = useTranslation('common');
   const { toast } = useToast();
 
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest("POST", `/api/finance-extended/payroll-calculations/${id}/approve`, { approvedBy: "admin" });
+      return apiRequest("PATCH", `/api/finance-extended/payroll-calculations/${id}/approve`, { approvedBy: "admin" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/finance-extended/payroll-calculations"] });
@@ -79,21 +84,21 @@ export function CalculationsTab({ calculations, employeeMap, loading, onNewCalcu
         {loading ? (
           <div className="space-y-2">
             {([...Array(5)]).map((_, i) => (
-              <Skeleton key={`k-${i}`} className="h-12 w-full" />
+              <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />
             ))}
           </div>
         ) : calculations.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-[13px] text-muted-foreground">
             <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>{tCommon('noData')}</p>
-            <Button variant="outline" className="mt-4" onClick={onNewCalculation}>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button variant="outline" className="mt-4 gap-2" onClick={onNewCalculation}>
+              <Plus className="h-4 w-4" />
               {tFinance('newCalculation')}
             </Button>
           </div>
         ) : (
           <ScrollArea className="h-[400px]">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('employee')}</TableHead>
@@ -101,14 +106,14 @@ export function CalculationsTab({ calculations, employeeMap, loading, onNewCalcu
                   <TableHead className="text-right">{tFinance('grossSalary')}</TableHead>
                   <TableHead className="text-right">{tFinance('totalTaxes')}</TableHead>
                   <TableHead className="text-right">{tFinance('netSalary')}</TableHead>
-                  <TableHead className="text-center">Drift</TableHead>
+                  <TableHead className="text-center">{t("drift")}</TableHead>
                   <TableHead>{tCommon('status')}</TableHead>
                   <TableHead>{tCommon('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(Array.isArray(calculations) ? calculations : []).map((calc) => (
-                  <TableRow key={calc.id} data-testid={`row-calculation-${calc.id}`}>
+                  <TableRow key={calc.id} data-testid={`row-calculation-${calc.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">
                       {employeeMap[calc.employeeId]?.fullName || calc.employeeId}
                     </TableCell>
@@ -116,8 +121,8 @@ export function CalculationsTab({ calculations, employeeMap, loading, onNewCalcu
                       <Badge variant="outline" className="text-xs">{tFinance(payTypeKeys[calc.payType])}</Badge>
                     </TableCell>
                     <TableCell className="text-right font-medium">{formatCurrency(calc.grossPay)}</TableCell>
-                    <TableCell className="text-right text-red-500">-{formatCurrency(calc.totalTaxes)}</TableCell>
-                    <TableCell className="text-right font-bold text-green-600">{formatCurrency(calc.netPay)}</TableCell>
+                    <TableCell className="text-right text-[var(--ep-red)]">-{formatCurrency(calc.totalTaxes)}</TableCell>
+                    <TableCell className="text-right font-bold text-[var(--ep-green)]">{formatCurrency(calc.netPay)}</TableCell>
                     <TableCell className="text-center">
                       <DriftBadge calc={calc} />
                     </TableCell>
@@ -134,7 +139,7 @@ export function CalculationsTab({ calculations, employeeMap, loading, onNewCalcu
                         </Button>
                       )}
                       {calc.status === "approved" && (
-                        <Badge variant="outline" className="bg-green-500/10 text-green-600">
+                        <Badge variant="outline" className="bg-green-500/10 text-[var(--ep-green)]">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
                           {tFinance('approved')}
                         </Badge>
@@ -143,7 +148,7 @@ export function CalculationsTab({ calculations, employeeMap, loading, onNewCalcu
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </ScrollArea>
         )}
       </CardContent>

@@ -1,11 +1,16 @@
+/**
+ * @module fp-cycle-cron.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CommandBus } from '@nestjs/cqrs';
 import { Result, AppError, Ok } from '@common/result';
 import { CreateNotificationCommand } from '../../notifications/application/commands/create-notification.command';
-import { FpCycleCronRepository } from './fp-cycle-cron.repository';
+import { FP_CYCLE_CRON_REPO, type IFpCycleCronRepo } from '../domain/repositories/i-fp-cycle-cron.repo';
 
 @Injectable()
 export class FpCycleCronService {
@@ -13,7 +18,7 @@ export class FpCycleCronService {
 
   constructor(
     private readonly commandBus: CommandBus,
-    private readonly repo: FpCycleCronRepository,
+    @Inject(FP_CYCLE_CRON_REPO) private readonly repo: IFpCycleCronRepo,
   ) {}
 
   private getWeekStart(): string {
@@ -34,7 +39,7 @@ export class FpCycleCronService {
     const idsResult = await this.repo.getEmployeeIdsByRoles(roles);
     const ids = idsResult.ok ? idsResult.data : [];
     await Promise.allSettled(
-      (ids ?? []).map((userId) =>
+      (Array.isArray(ids) ? ids : []).map((userId) =>
         this.commandBus.execute(
           new CreateNotificationCommand(String(userId), title, body, type),
         ),

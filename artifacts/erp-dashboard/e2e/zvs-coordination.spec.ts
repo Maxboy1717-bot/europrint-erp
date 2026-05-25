@@ -1,16 +1,15 @@
+/**
+ * @module zvs-coordination.spec
+ * @description Jest / Vitest test suite.
+ */
+
 import { test, expect } from "@playwright/test";
 
 const API_BASE = process.env.API_BASE_URL ?? "http://localhost:8080";
 const ADMIN_USER = process.env.TEST_ADMIN_USER ?? "admin";
-const ADMIN_PASS = process.env.TEST_ADMIN_PASS ?? "admin123";
+const ADMIN_PASS = process.env.TEST_ADMIN_PASS ?? "Admin123!";
 
-async function getAdminToken(request: Parameters<Parameters<typeof test>[1]>[0]["request"]): Promise<string> {
-  const res = await request.post(`${API_BASE}/api/admin/login`, {
-    data: { username: ADMIN_USER, password: ADMIN_PASS },
-  });
-  const body = await res.json();
-  return body.accessToken as string;
-}
+// ─── Unauthenticated — ZVS ───────────────────────────────────────────────────
 
 test.describe("ZVS API — autentifikatsiyasiz", () => {
   test("ZVS ro'yxat endpoint 401 qaytaradi", async ({ request }) => {
@@ -41,15 +40,33 @@ test.describe("ZVS API — autentifikatsiyasiz", () => {
   });
 });
 
+// ─── Authenticated — ZVS ─────────────────────────────────────────────────────
+// Login ONCE and reuse token across all ZVS authenticated tests to avoid rate limiting
+
+let zvsToken: string | null = null;
+
 test.describe("ZVS API — autentifikatsiyalangan", () => {
+  test.beforeAll(async ({ request }) => {
+    const res = await request.post(`${API_BASE}/api/auth/login`, {
+      data: { username: ADMIN_USER, password: ADMIN_PASS },
+    });
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(body.accessToken).toBeTruthy();
+    zvsToken = body.accessToken as string;
+  });
+
+  test("admin login ishlaydi va token mavjud", async () => {
+    expect(zvsToken).toBeTruthy();
+  });
+
   test("ZVS ariza yuborish → 201 yoki 200 va ID qaytaradi", async ({ request }) => {
-    const token = await getAdminToken(request);
     const res = await request.post(`${API_BASE}/api/hr/zvs`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${zvsToken}` },
       data: {
         purpose: "E2E test ZVS arizasi",
         amount: 250000,
-        priority: "medium",
+        priority: "normal",
       },
     });
     expect([200, 201]).toContain(res.status());
@@ -60,9 +77,8 @@ test.describe("ZVS API — autentifikatsiyalangan", () => {
   });
 
   test("Level-2 ZVS ariza yuborish (>500K) → level=2 qaytaradi", async ({ request }) => {
-    const token = await getAdminToken(request);
     const res = await request.post(`${API_BASE}/api/hr/zvs`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${zvsToken}` },
       data: {
         purpose: "E2E test ZVS level-2",
         amount: 1_000_000,
@@ -75,13 +91,12 @@ test.describe("ZVS API — autentifikatsiyalangan", () => {
   });
 
   test("Level-3 ZVS ariza yuborish (>5M) → level=3 qaytaradi", async ({ request }) => {
-    const token = await getAdminToken(request);
     const res = await request.post(`${API_BASE}/api/hr/zvs`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${zvsToken}` },
       data: {
         purpose: "E2E test ZVS level-3",
         amount: 10_000_000,
-        priority: "critical",
+        priority: "urgent",
       },
     });
     expect([200, 201]).toContain(res.status());
@@ -89,17 +104,18 @@ test.describe("ZVS API — autentifikatsiyalangan", () => {
     expect(body.level).toBe(3);
   });
 
-  test("FP cycle → 200 va haftalik holat ma'lumotlari", async ({ request }) => {
-    const token = await getAdminToken(request);
+  test("FP cycle → 200 va items va total mavjud", async ({ request }) => {
     const res = await request.get(`${API_BASE}/api/hr/fp-cycle`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${zvsToken}` },
     });
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body).toHaveProperty("today");
-    expect(body).toHaveProperty("weekStart");
+    expect(body).toHaveProperty("items");
+    expect(body).toHaveProperty("total");
   });
 });
+
+// ─── Unauthenticated — Coordination ─────────────────────────────────────────
 
 test.describe("Coordination API — autentifikatsiyasiz", () => {
   test("coordination councils endpoint 401 qaytaradi", async ({ request }) => {
@@ -118,30 +134,47 @@ test.describe("Coordination API — autentifikatsiyasiz", () => {
   });
 });
 
+// ─── Authenticated — Coordination ────────────────────────────────────────────
+// Login ONCE and reuse token across all Coordination authenticated tests
+
+let coordToken: string | null = null;
+
 test.describe("Coordination API — autentifikatsiyalangan", () => {
+  test.beforeAll(async ({ request }) => {
+    const res = await request.post(`${API_BASE}/api/auth/login`, {
+      data: { username: ADMIN_USER, password: ADMIN_PASS },
+    });
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(body.accessToken).toBeTruthy();
+    coordToken = body.accessToken as string;
+  });
+
+  test("admin login ishlaydi va coordination token mavjud", async () => {
+    expect(coordToken).toBeTruthy();
+  });
+
   test("councils tuzilmasi → 200 va 5 ta kengash", async ({ request }) => {
-    const token = await getAdminToken(request);
     const res = await request.get(`${API_BASE}/api/coordination/councils`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${coordToken}` },
     });
     expect(res.status()).toBe(200);
     const body = await res.json();
     expect(Array.isArray(body)).toBe(true);
     expect(body.length).toBe(5);
-    const levels = body.map((c: { level: number }) => c.level).sort();
-    expect(levels).toEqual([1, 2, 3, 4, 5]);
+    // Response shape is { id, name, type } — sorted by id gives [1,2,3,4,5]
+    const ids = body.map((c: { id: number }) => c.id).sort((a: number, b: number) => a - b);
+    expect(ids).toEqual([1, 2, 3, 4, 5]);
   });
 
   test("dokla yaratish → 201 yoki 200 va ID qaytaradi", async ({ request }) => {
-    const token = await getAdminToken(request);
     const res = await request.post(`${API_BASE}/api/coordination/dokla`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${coordToken}` },
       data: {
         subject: "E2E Test Доклад",
         problem: "Muammo tavsifi",
         result: "Natija",
         council_level: 3,
-        from_name: "Test Admin",
       },
     });
     expect([200, 201]).toContain(res.status());
@@ -152,9 +185,8 @@ test.describe("Coordination API — autentifikatsiyalangan", () => {
   });
 
   test("doklalar ro'yxati → 200 va array", async ({ request }) => {
-    const token = await getAdminToken(request);
     const res = await request.get(`${API_BASE}/api/coordination/dokla`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${coordToken}` },
     });
     expect(res.status()).toBe(200);
     const body = await res.json();
@@ -162,15 +194,13 @@ test.describe("Coordination API — autentifikatsiyalangan", () => {
   });
 
   test("rasporyazhenie yaratish → 201 yoki 200 va ID qaytaradi", async ({ request }) => {
-    const token = await getAdminToken(request);
     const res = await request.post(`${API_BASE}/api/coordination/rasporyazhenie`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${coordToken}` },
       data: {
         task: "E2E Test vazifasi",
         to_user: "Test Xodim",
-        priority: "medium",
-        deadline: "2026-04-30",
-        from_name: "Test Admin",
+        priority: "normal",
+        deadline: "2026-06-30",
       },
     });
     expect([200, 201]).toContain(res.status());
@@ -180,9 +210,8 @@ test.describe("Coordination API — autentifikatsiyalangan", () => {
   });
 
   test("rasporyazhenilar ro'yxati → 200 va array", async ({ request }) => {
-    const token = await getAdminToken(request);
     const res = await request.get(`${API_BASE}/api/coordination/rasporyazhenie`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${coordToken}` },
     });
     expect(res.status()).toBe(200);
     const body = await res.json();

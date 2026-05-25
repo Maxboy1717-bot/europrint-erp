@@ -1,23 +1,118 @@
-import { Plus, ChevronDown, ListTodo, FolderKanban, FileText, Users, AlertTriangle, MessageSquare, Bell, Bot, GitBranch, TrendingUp, Search, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+/**
+ * @module BoardHeader
+ * @description React UI component.
+ */
+
+import {
+  Plus, ChevronDown, ListTodo, FolderKanban, FileText, Users,
+  AlertTriangle, MessageSquare, Bell, Bot, GitBranch, TrendingUp, Search, X, Trash2,
+} from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { NotificationsPanel } from "../../pages/kanban/NotificationsPanel";
 import {
-  KanbanBoardType,
-  KanbanColumn,
-  KanbanTranslations,
-  KanbanTemplate,
-  RoleFilter,
-  FilterState,
-  ViewMode,
+  KanbanBoardType, KanbanColumn, KanbanTranslations,
+  KanbanTemplate, RoleFilter, FilterState, ViewMode,
 } from "./types";
 
+// ── Neumorphic soya ─────────────────────────────────────────────────────────
+const SHADOW = "6px 6px 16px rgba(163,177,198,0.50), -4px -4px 12px rgba(255,255,255,0.80)";
+const BTN_SHADOW = "3px 3px 8px rgba(163,177,198,0.40), -2px -2px 6px rgba(255,255,255,0.80)";
+const BTN_SHADOW_HOVER = "5px 5px 12px rgba(163,177,198,0.55), -3px -3px 8px rgba(255,255,255,0.90)";
+const INPUT_SHADOW = "inset 2px 2px 6px rgba(163,177,198,0.30), inset -2px -2px 6px rgba(255,255,255,0.70)";
+
+// ── Kichik tugma komponenti ──────────────────────────────────────────────────
+function NeuBtn({
+  children, onClick, active = false, danger = false, title, testId,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  active?: boolean;
+  danger?: boolean;
+  title?: string;
+  testId?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      data-testid={testId}
+      style={{
+        display: "flex", alignItems: "center", gap: 6,
+        padding: "8px 14px", borderRadius: 12,
+        border: "none", cursor: "pointer",
+        fontSize: 13, fontWeight: 500,
+        background: active
+          ? (danger ? "#F08080" : "#5B9BD5")
+          : "#FFFFFF",
+        color: active ? "#FFFFFF" : (danger ? "#C05050" : "#718096"),
+        boxShadow: active ? `3px 3px 8px ${danger ? "rgba(240,128,128,0.4)" : "rgba(91,155,213,0.4)"}` : BTN_SHADOW,
+        transition: "all 0.18s",
+        whiteSpace: "nowrap",
+      }}
+      onMouseEnter={e => {
+        if (!active) (e.currentTarget as HTMLElement).style.boxShadow = BTN_SHADOW_HOVER;
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.boxShadow = active
+          ? `3px 3px 8px ${danger ? "rgba(240,128,128,0.4)" : "rgba(91,155,213,0.4)"}`
+          : BTN_SHADOW;
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ── Icon tugma (kvadrat) ─────────────────────────────────────────────────────
+function IconBtn({
+  children, onClick, badge, title, testId,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  badge?: number;
+  title?: string;
+  testId?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      data-testid={testId}
+      className="relative"
+      style={{
+        width: 40, height: 40, borderRadius: 12,
+        border: "none", cursor: "pointer",
+        background: "#FFFFFF",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: BTN_SHADOW,
+        transition: "all 0.18s",
+        color: "#718096",
+      }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = BTN_SHADOW_HOVER; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = BTN_SHADOW; }}
+    >
+      {children}
+      {badge != null && badge > 0 && (
+        <span
+          className="absolute flex items-center justify-center text-white rounded-full"
+          style={{
+            top: -4, right: -4,
+            width: 16, height: 16,
+            background: "#F08080",
+            fontSize: 9, fontWeight: 700,
+          }}
+        >
+          {badge > 9 ? "9+" : badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
 interface BoardHeaderProps {
-  t: KanbanTranslations;
+  t: KanbanTranslations & ((key: string) => string);
   viewMode: ViewMode;
   setViewMode: (v: ViewMode) => void;
   templates: KanbanTemplate[];
@@ -30,7 +125,7 @@ interface BoardHeaderProps {
   roleFilter: RoleFilter;
   setRoleFilter: (role: RoleFilter) => void;
   filters: FilterState;
-  setFilters: (update: (f: FilterState) => FilterState) => void;
+  setFilters: (update: FilterState | ((f: FilterState) => FilterState)) => void;
   overdueCount: number;
   newCommentsCount: number;
   unreadCount: number;
@@ -43,227 +138,313 @@ interface BoardHeaderProps {
   boards: KanbanBoardType[];
   setShowCreateBoard: (show: boolean) => void;
   hasActiveFilters: boolean;
+  onDeleteBoard: (boardId: string) => void;
 }
 
 export function BoardHeader({
-  t,
-  templates,
-  selectedBoardId,
-  setSelectedBoardId,
-  columns,
-  createCardMutation,
-  setQuickTaskType,
-  setShowQuickTask,
-  roleFilter,
-  setRoleFilter,
-  filters,
-  setFilters,
-  overdueCount,
-  newCommentsCount,
-  unreadCount,
-  showNotifications,
-  setShowNotifications,
-  setShowRobots,
-  setShowFlows,
-  setShowReports,
-  setShowTemplates,
-  boards,
-  setShowCreateBoard,
-  hasActiveFilters,
+  t: tProp, templates, selectedBoardId, setSelectedBoardId,
+  columns, createCardMutation, setQuickTaskType, setShowQuickTask,
+  roleFilter, setRoleFilter, filters, setFilters,
+  overdueCount, newCommentsCount, unreadCount,
+  showNotifications, setShowNotifications,
+  setShowRobots, setShowFlows, setShowReports, setShowTemplates,
+  boards, setShowCreateBoard, hasActiveFilters, onDeleteBoard,
 }: BoardHeaderProps) {
+  const t = tProp as unknown as KanbanTranslations & ((key: string) => string);
   const clearFilters = () => setFilters(() => ({
-    search: "",
-    columnId: null,
-    priority: null,
-    assigneeId: null,
-    overdue: false,
-    hasNewComments: false,
-    tagId: null,
-    tagName: null,
+    search: "", columnId: null, priority: null, assigneeId: null,
+    overdue: false, hasNewComments: false, tagId: null, tagName: null,
   }));
 
   return (
-    <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-3 flex-shrink-0 rounded-2xl mb-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-2">
-          {/* Tabs are handled in parent for now, but header controls can be here */}
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="lg" className="bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-500/30 min-h-[52px] min-w-[180px] px-8 text-lg font-semibold" data-testid="button-create-dropdown">
-                  <Plus className="h-6 w-6 mr-3" />
-                  {t.create.createNew}
-                  <ChevronDown className="h-6 w-6 ml-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuItem onClick={() => { setQuickTaskType("task"); setShowQuickTask(true); }} data-testid="menu-create-task">
-                  <ListTodo className="h-4 w-4 mr-2" />
-                  {t.create.task}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => { setQuickTaskType("project"); setShowQuickTask(true); }} data-testid="menu-create-project">
-                  <FolderKanban className="h-4 w-4 mr-2" />
-                  {t.create.project}
-                </DropdownMenuItem>
+    <div
+      className="flex-shrink-0 mb-4"
+      style={{
+        background: "#FFFFFF",
+        borderRadius: 20,
+        padding: "18px 20px 14px",
+        boxShadow: SHADOW,
+      }}
+    >
+      {/* ── Birinchi qator: sarlavha + boshqaruv tugmalari ──────── */}
+      <div className="flex items-center gap-3 flex-wrap">
+        {/* Sarlavha */}
+        <h1
+          className="mr-2"
+          style={{ fontSize: 22, fontWeight: 700, color: "#2D3748", letterSpacing: "-0.01em" }}
+        >
+          {t("kanbanDoskasi")}
+        </h1>
+
+        {/* Yangi vazifa dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              data-testid="button-create-dropdown"
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "9px 18px", borderRadius: 12,
+                border: "none", cursor: "pointer",
+                fontSize: 14, fontWeight: 600,
+                background: "#5B9BD5", color: "#FFFFFF",
+                boxShadow: "4px 4px 12px rgba(91,155,213,0.40)",
+                transition: "all 0.18s",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "6px 6px 16px rgba(91,155,213,0.55)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "4px 4px 12px rgba(91,155,213,0.40)"; }}
+            >
+              <Plus style={{ width: 16, height: 16 }} />
+              {t.create?.createNew ?? "Yangi yaratish"}
+              <ChevronDown style={{ width: 14, height: 14 }} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-52">
+            <DropdownMenuItem onClick={() => { setQuickTaskType("task"); setShowQuickTask(true); }} data-testid="menu-create-task">
+              <ListTodo className="h-4 w-4 mr-2" />
+              {t.create?.task ?? "Vazifa"}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { setQuickTaskType("project"); setShowQuickTask(true); }} data-testid="menu-create-project">
+              <FolderKanban className="h-4 w-4 mr-2" />
+              {t.create?.project ?? "Loyiha"}
+            </DropdownMenuItem>
+            {templates.length > 0 && (
+              <>
                 <DropdownMenuSeparator />
                 <div className="px-2 py-1.5">
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">{t.create.template}</p>
-                  <div className="space-y-1">
-                    {templates.length > 0 ? (
-                      templates.slice(0, 5).map((template) => (
-                        <div
-                          key={template.id}
-                          className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover-elevate cursor-pointer"
-                          onClick={() => {
-                            if (selectedBoardId && columns.length > 0) {
-                              createCardMutation.mutate({
-                                title: template.title,
-                                columnId: columns[0].id,
-                                sortOrder: 0,
-                                priority: template.priority || "normal",
-                              });
-                            }
-                          }}
-                          data-testid={`template-${template.id}`}
-                        >
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="truncate">{template.title}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-xs text-muted-foreground px-2 py-1">Shablonlar yo'q</p>
-                    )}
+                  <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">{t.create?.template ?? "Shablonlar"}</p>
+                  <div className="space-y-0.5">
+                    {templates.slice(0, 5).map(tmpl => (
+                      <div
+                        key={tmpl.id}
+                        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-muted cursor-pointer"
+                        onClick={() => {
+                          if (selectedBoardId && columns.length > 0) {
+                            createCardMutation.mutate({
+                              title: tmpl.title, columnId: columns[0].id,
+                              sortOrder: 0, priority: tmpl.priority || "normal",
+                            });
+                          }
+                        }}
+                        data-testid={`template-${tmpl.id}`}
+                      >
+                        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="truncate text-xs">{tmpl.title}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => { setQuickTaskType("template"); setShowQuickTask(true); }} data-testid="menu-create-template">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Yangi shablon yaratish
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => { setQuickTaskType("template"); setShowQuickTask(true); }} data-testid="menu-create-template">
+              <Plus className="h-4 w-4 mr-2" />
+              {t("yangiShablon")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-            <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as RoleFilter)}>
-              <SelectTrigger className="w-[200px] min-h-[48px] bg-blue-700/50 border-blue-400/30 text-white text-base" data-testid="select-role-filter">
-                <Users className="h-6 w-6 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="text-base py-3">{t.roles.all}</SelectItem>
-                <SelectItem value="executor" className="text-base py-3">{t.roles.executor}</SelectItem>
-                <SelectItem value="creator" className="text-base py-3">{t.roles.creator}</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              variant={filters.overdue ? "default" : "ghost"}
-              className={`min-h-[48px] px-6 text-base font-semibold ${filters.overdue ? "bg-red-500 text-white hover:bg-red-600" : "bg-blue-700/50 text-white hover:bg-blue-700/70 border-0"}`}
-              onClick={() => setFilters(f => ({ ...f, overdue: !f.overdue }))}
-              data-testid="button-filter-overdue"
+        {/* Rol filtri */}
+        <div style={{ position: "relative" }}>
+          <Select value={roleFilter} onValueChange={v => setRoleFilter(v as RoleFilter)}>
+            <SelectTrigger
+              className="w-full sm:w-[160px] h-9"
+              data-testid="select-role-filter"
+              style={{
+                borderRadius: 12, border: "none",
+                background: "#FFFFFF", color: "#718096", fontSize: 13,
+                boxShadow: BTN_SHADOW, height: 40,
+              }}
             >
-              <AlertTriangle className="h-6 w-6 mr-2" />
-              {t.filters.overdue} ({overdueCount})
-              {filters.overdue && <X className="h-5 w-5 ml-2" />}
-            </Button>
-
-            <Button
-              variant={filters.hasNewComments ? "default" : "ghost"}
-              className={`min-h-[48px] px-6 text-base font-semibold ${filters.hasNewComments ? "bg-blue-400 text-white hover:bg-blue-300" : "bg-blue-700/50 text-white hover:bg-blue-700/70 border-0"}`}
-              onClick={() => setFilters(f => ({ ...f, hasNewComments: !f.hasNewComments }))}
-              data-testid="button-filter-comments"
-            >
-              <MessageSquare className="h-6 w-6 mr-2" />
-              {t.filters.newComments} ({newCommentsCount})
-              {filters.hasNewComments && <X className="h-5 w-5 ml-2" />}
-            </Button>
-
-            <Popover open={showNotifications} onOpenChange={setShowNotifications}>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" className="relative h-12 w-12 bg-blue-700/50 text-white hover:bg-blue-700/70" data-testid="button-notifications">
-                  <Bell className="h-6 w-6" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-red-500 text-sm text-white flex items-center justify-center font-bold">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <NotificationsPanel open={showNotifications} onOpenChange={setShowNotifications} t={t} />
-            </Popover>
-
-            <Button variant="ghost" className="h-12 w-12 bg-blue-700/50 text-white hover:bg-blue-700/70" onClick={() => setShowRobots(true)} data-testid="button-robots">
-              <Bot className="h-6 w-6" />
-            </Button>
-
-            <Button variant="ghost" className="h-12 w-12 bg-blue-700/50 text-white hover:bg-blue-700/70" onClick={() => setShowFlows(true)} data-testid="button-flows">
-              <GitBranch className="h-6 w-6" />
-            </Button>
-
-            <Button variant="ghost" className="h-12 w-12 bg-blue-700/50 text-white hover:bg-blue-700/70" onClick={() => setShowReports(true)} data-testid="button-reports">
-              <TrendingUp className="h-6 w-6" />
-            </Button>
-
-            <Button variant="ghost" className="h-12 w-12 bg-blue-700/50 text-white hover:bg-blue-700/70" onClick={() => setShowTemplates(true)} data-testid="button-templates">
-              <FileText className="h-6 w-6" />
-            </Button>
-          </div>
+              <Users style={{ width: 14, height: 14, marginRight: 6 }} />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t.roles?.all ?? "Hammasi"}</SelectItem>
+              <SelectItem value="executor">{t.roles?.executor ?? "Ijrochi"}</SelectItem>
+              <SelectItem value="creator">{t.roles?.creator ?? "Yaratuvchi"}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
+        {/* Kechikkan filter */}
+        <NeuBtn
+          active={filters.overdue}
+          danger
+          onClick={() => setFilters(f => ({ ...f, overdue: !f.overdue }))}
+          testId="button-filter-overdue"
+        >
+          <AlertTriangle style={{ width: 14, height: 14 }} />
+          Kechikkan ({overdueCount})
+          {filters.overdue && <X style={{ width: 12, height: 12 }} />}
+        </NeuBtn>
+
+        {/* Yangi izohlar filter */}
+        <NeuBtn
+          active={filters.hasNewComments}
+          onClick={() => setFilters(f => ({ ...f, hasNewComments: !f.hasNewComments }))}
+          testId="button-filter-comments"
+        >
+          <MessageSquare style={{ width: 14, height: 14 }} />
+          Izohlar ({newCommentsCount})
+          {filters.hasNewComments && <X style={{ width: 12, height: 12 }} />}
+        </NeuBtn>
+
+        {/* Bildirishnomalar */}
+        <Popover open={showNotifications} onOpenChange={setShowNotifications}>
+          <PopoverTrigger asChild>
+            <span>
+              <IconBtn badge={unreadCount} title={t("notifications")} testId="button-notifications">
+                <Bell style={{ width: 16, height: 16 }} />
+              </IconBtn>
+            </span>
+          </PopoverTrigger>
+          <NotificationsPanel open={showNotifications} onOpenChange={setShowNotifications} t={t} />
+        </Popover>
+
+        {/* Robotlar */}
+        <IconBtn onClick={() => setShowRobots(true)} title={t("robotlar")} testId="button-robots">
+          <Bot style={{ width: 16, height: 16 }} />
+        </IconBtn>
+
+        {/* Oqimlar */}
+        <IconBtn onClick={() => setShowFlows(true)} title={t("oqimlar")} testId="button-flows">
+          <GitBranch style={{ width: 16, height: 16 }} />
+        </IconBtn>
+
+        {/* Hisobotlar */}
+        <IconBtn onClick={() => setShowReports(true)} title={t("reports")} testId="button-reports">
+          <TrendingUp style={{ width: 16, height: 16 }} />
+        </IconBtn>
+
+        {/* Shablonlar */}
+        <IconBtn onClick={() => setShowTemplates(true)} title={t("shablonlar")} testId="button-templates">
+          <FileText style={{ width: 16, height: 16 }} />
+        </IconBtn>
       </div>
 
-      <div className="flex items-center gap-4 mt-4 bg-surface-container-lowest/10 rounded-xl px-5 py-4">
-        <Select value={selectedBoardId || ""} onValueChange={setSelectedBoardId}>
-          <SelectTrigger className="w-[240px] min-h-[48px] bg-surface-container-lowest/20 border-white/30 text-white text-base" data-testid="select-board">
-            <SelectValue placeholder={t.empty.selectBoard} />
+      {/* ── Ikkinchi qator: Doska tanlash + Qidiruv ─────────────── */}
+      <div className="flex items-center gap-3 mt-3 flex-wrap">
+        {/* Doska tanlash */}
+        <Select value={selectedBoardId ? String(selectedBoardId) : ""} onValueChange={setSelectedBoardId}>
+          <SelectTrigger
+            className="w-full sm:w-[220px] h-9"
+            data-testid="select-board"
+            style={{
+              borderRadius: 12, border: "none",
+              background: "#EEF2F7", color: "#2D3748", fontSize: 13,
+              boxShadow: INPUT_SHADOW, height: 40,
+            }}
+          >
+            <SelectValue placeholder={t.empty?.selectBoard ?? "Doska tanlang"} />
           </SelectTrigger>
           <SelectContent>
-            {(Array.isArray(boards) ? boards : []).map((board) => (
-              <SelectItem key={board.id} value={board.id} className="text-base py-3">{board.name}</SelectItem>
+            {(Array.isArray(boards) ? boards : []).map(b => (
+              <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Button variant="ghost" className="min-h-[48px] px-6 bg-surface-container-lowest/20 text-white hover:bg-surface-container-lowest/30 border-0 text-base font-semibold" onClick={() => setShowCreateBoard(true)} data-testid="button-new-board">
-          <Plus className="h-6 w-6 mr-2" />
-          {t.board.newBoard}
-        </Button>
+        {/* Yangi doska */}
+        <NeuBtn onClick={() => setShowCreateBoard(true)} testId="button-new-board">
+          <Plus style={{ width: 14, height: 14 }} />
+          {t.board?.newBoard ?? "Yangi doska"}
+        </NeuBtn>
 
-        <div className="flex-1" />
+        {/* Doskani o'chirish */}
+        {selectedBoardId && (
+          <button
+            title={t("doskaniOchirish")}
+            data-testid="button-delete-board"
+            onClick={() => {
+              const board = boards.find(b => String(b.id) === String(selectedBoardId));
+              const name = board?.name ?? "bu doska";
+              if (window.confirm(`"${name}" doskasini o'chirasizmi? Barcha ustunlar va kartalar ham o'chadi.`)) {
+                onDeleteBoard(String(selectedBoardId));
+              }
+            }}
+            style={{
+              width: 36, height: 36, borderRadius: 10,
+              border: "none", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: "rgba(255,255,255,0.7)",
+              boxShadow: BTN_SHADOW,
+              color: "#EF4444",
+              transition: "box-shadow 0.18s, background 0.18s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#FEE2E2"; (e.currentTarget as HTMLElement).style.boxShadow = BTN_SHADOW_HOVER; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.7)"; (e.currentTarget as HTMLElement).style.boxShadow = BTN_SHADOW; }}
+          >
+            <Trash2 style={{ width: 15, height: 15 }} />
+          </button>
+        )}
 
-        <div className="relative w-80 bg-surface-container-lowest/20 rounded-xl">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-white/60" />
-          <Input
+        <div className="flex-1 min-w-[20px]" />
+
+        {/* Qidiruv */}
+        <div className="relative" style={{ width: 280 }}>
+          <Search
+            style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: "#A0AEC0" }}
+          />
+          <input
             value={filters.search}
-            onChange={(e) => setFilters(f => ({ ...f, search: e.target.value }))}
-            placeholder="Qidirish..."
-            className="min-h-[48px] pl-12 bg-surface-container-lowest/20 border-white/30 text-white placeholder:text-white/60 text-base"
+            onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
+            placeholder={t("Qidirish...")}
             data-testid="input-search"
+            style={{
+              width: "100%", height: 40,
+              paddingLeft: 36, paddingRight: filters.search ? 36 : 14,
+              borderRadius: 12, border: "none",
+              background: "#EEF2F7", color: "#2D3748",
+              fontSize: 13, outline: "none",
+              boxShadow: INPUT_SHADOW,
+              transition: "box-shadow 0.18s",
+            }}
+            onFocus={e => { (e.target as HTMLElement).style.boxShadow = "inset 3px 3px 8px rgba(163,177,198,0.40), inset -2px -2px 6px rgba(255,255,255,0.70), 0 0 0 2px rgba(91,155,213,0.25)"; }}
+            onBlur={e  => { (e.target as HTMLElement).style.boxShadow = INPUT_SHADOW; }}
           />
           {filters.search && (
-            <Button
-              variant="ghost"
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 text-white hover:bg-surface-container-lowest/20"
+            <button
               onClick={() => setFilters(f => ({ ...f, search: "" }))}
+              style={{
+                position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+                background: "none", border: "none", cursor: "pointer", color: "#A0AEC0",
+              }}
             >
-              <X className="h-5 w-5" />
-            </Button>
+              <X style={{ width: 13, height: 13 }} />
+            </button>
           )}
         </div>
 
+        {/* Teg filtri badge */}
         {filters.tagId && filters.tagName && (
-          <Badge
-            className="cursor-pointer bg-surface-container-lowest/20 text-white border-0 hover:bg-surface-container-lowest/30"
+          <button
             onClick={() => setFilters(f => ({ ...f, tagId: null, tagName: null }))}
             data-testid="badge-tag-filter"
+            style={{
+              display: "flex", alignItems: "center", gap: 4,
+              padding: "4px 10px", borderRadius: 8,
+              border: "none", cursor: "pointer",
+              fontSize: 12, fontWeight: 500, color: "#5B9BD5",
+              background: "rgba(91,155,213,0.12)",
+            }}
           >
             Teg: {filters.tagName}
-            <X className="h-3 w-3 ml-1" />
-          </Badge>
+            <X style={{ width: 11, height: 11 }} />
+          </button>
         )}
 
+        {/* Filtrlarni tozalash */}
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" className="text-white hover:bg-surface-container-lowest/20" onClick={clearFilters} data-testid="button-clear-filters">
-            {t.filters.clear}
-          </Button>
+          <button
+            onClick={clearFilters}
+            data-testid="button-clear-filters"
+            style={{
+              fontSize: 12, color: "#F08080", background: "none",
+              border: "none", cursor: "pointer", fontWeight: 500,
+            }}
+          >
+            {t.filters?.clear ?? "Filtrlarni tozalash"}
+          </button>
         )}
       </div>
     </div>

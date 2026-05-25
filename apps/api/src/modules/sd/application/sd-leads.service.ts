@@ -1,10 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+/**
+ * @module sd-leads.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
-import { SdLeadsRepository } from './sd-leads.repository';
+import { ISdLeadsRepo, SD_LEADS_REPO } from '../domain/repositories/i-sd-leads.repo';
 
 @Injectable()
 export class SdLeadsService {
-  constructor(private readonly repo: SdLeadsRepository) {}
+  constructor(
+    @Inject(SD_LEADS_REPO) private readonly repo: ISdLeadsRepo,
+    private readonly i18n: I18nService,
+  ) {}
 
   async list(status: string | undefined, uid: number | null, pat: string | null, lim: number, off: number): Promise<Result<object, AppError>> {
     return this.repo.list(status, uid, pat, lim, off);
@@ -39,14 +48,22 @@ export class SdLeadsService {
   }
 
   async convert(lid: number, notesVal: unknown) {
+    const leadNotFoundMsg = await this.i18n.t('errors.leadNotFound');
     return safeCall(async () => {
       const leadResult = await this.repo.getLeadForConvert(lid);
       if (!leadResult.ok) throw new Error(leadResult.error.message);
       const lead = leadResult.data;
-      if (!lead) throw new NotFoundException(`Lead #${lid} topilmadi`);
-      const order = await this.repo.insertOrderFromLead((lead as Record<string, unknown>).customer_id, (lead as Record<string, unknown>).expected_amount, lid, notesVal);
-      await this.repo.markConverted(lid);
-      return { lead_id: lid, order };
+      if (!lead) throw new NotFoundException(leadNotFoundMsg);
+      // Atomic: order INSERT + lead status UPDATE in one tx (was: 2 separate writes,
+      // partial failure left orphan order + lead still re-convertible = duplicate orders)
+      const orderResult = await this.repo.convertLeadToOrderAtomic(
+        (lead as Record<string, unknown>).customer_id,
+        (lead as Record<string, unknown>).expected_amount,
+        lid,
+        notesVal,
+      );
+      if (!orderResult.ok) throw new Error(orderResult.error.message);
+      return { lead_id: lid, order: orderResult.data };
     });
   }
 

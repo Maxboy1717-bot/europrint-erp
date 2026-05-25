@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-reports.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -14,17 +19,17 @@ export class DrizzleFinanceReportsRepository implements IFinanceReportsRepositor
     try {
       const year = fiscalYear ?? _time.now().getFullYear();
       const rows = await db.select({
-        code: accounts.code,
-        name: accounts.name,
-        type: accounts.type,
+        code: accounts.accountCode,
+        name: accounts.accountName,
+        type: accounts.accountType,
         debit: sql<number>`COALESCE(SUM(CASE WHEN ${entries.debitAccountId} = ${accounts.id}::varchar THEN ${entries.amount}::numeric ELSE 0 END), 0)`,
         credit: sql<number>`COALESCE(SUM(CASE WHEN ${entries.creditAccountId} = ${accounts.id}::varchar THEN ${entries.amount}::numeric ELSE 0 END), 0)`,
       })
         .from(accounts)
         .leftJoin(entries, sql`EXTRACT(YEAR FROM ${entries.createdAt}) = ${year}`)
         .where(eq(accounts.isActive, true))
-        .groupBy(accounts.id, accounts.code, accounts.name, accounts.type)
-        .orderBy(accounts.code);
+        .groupBy(accounts.id, accounts.accountCode, accounts.accountName, accounts.accountType)
+        .orderBy(accounts.accountCode);
       return Ok(rows);
     } catch (e: unknown) { return Err((e as Error).message || 'Sinov balansi topilmadi'); }
   }
@@ -37,11 +42,11 @@ export class DrizzleFinanceReportsRepository implements IFinanceReportsRepositor
         db.select({ total: sum(entries.amount) })
           .from(entries)
           .leftJoin(accounts, eq(entries.debitAccountId, accounts.id))
-          .where(sql`${accounts.type} = 'revenue' AND ${entries.entryDate} >= ${fromDate} AND ${entries.entryDate} <= ${toDate}`),
+          .where(sql`${accounts.accountType} = 'revenue' AND ${entries.entryDate} >= ${fromDate} AND ${entries.entryDate} <= ${toDate}`),
         db.select({ total: sum(entries.amount) })
           .from(entries)
           .leftJoin(accounts, eq(entries.debitAccountId, accounts.id))
-          .where(sql`${accounts.type} = 'expense' AND ${entries.entryDate} >= ${fromDate} AND ${entries.entryDate} <= ${toDate}`),
+          .where(sql`${accounts.accountType} = 'expense' AND ${entries.entryDate} >= ${fromDate} AND ${entries.entryDate} <= ${toDate}`),
       ]);
       const totalRevenue = Number(revenue[0]?.total || 0);
       const totalExpense = Number(expense[0]?.total || 0);

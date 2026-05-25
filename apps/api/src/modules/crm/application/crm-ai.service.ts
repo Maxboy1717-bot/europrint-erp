@@ -1,11 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+/**
+ * @module crm-ai.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { safeCall, Result, AppError, Err } from '@common/result';
-import { CrmAiRepository } from './crm-ai.repository';
+import { CRM_AI_REPO, type ICrmAiRepo } from '../domain/repositories/i-crm-ai.repo';
 
 import { MS_PER_DAY, CRM_LARGE_DEAL_THRESHOLD } from '@common/constants/app.constants';
 @Injectable()
 export class CrmAiService {
-  constructor(private readonly repo: CrmAiRepository) {}
+  constructor(@Inject(CRM_AI_REPO) private readonly repo: ICrmAiRepo) {}
 
   async analyzeLeadAi(lid: number): Promise<Result<object, AppError>> {
     return safeCall(async () => {

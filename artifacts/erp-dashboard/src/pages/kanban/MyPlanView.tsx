@@ -1,3 +1,8 @@
+/**
+ * @module MyPlanView
+ * @description React page component. Route-level UI.
+ */
+
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ListTodo, CheckCircle2, AlertTriangle, Timer, Calendar } from "lucide-react";
 import { format, isToday, isBefore, isThisWeek, startOfDay } from "date-fns";
 import { type CardWithOwner, type T, PRIORITY_CONFIG, formatTimeShort } from "./kanban-types";
+import { EPStatusPill } from "@/components/ep";
 
 export function MyPlanView({
   cards,
@@ -17,7 +23,7 @@ export function MyPlanView({
   cards: CardWithOwner[];
   onCardClick: (card: CardWithOwner) => void;
   onToggleComplete: (card: CardWithOwner) => void;
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string) => string);
 }) {
   const groupedTasks = useMemo(() => {
     const today: CardWithOwner[] = [];
@@ -56,7 +62,7 @@ export function MyPlanView({
       <div className="flex items-center gap-2 mb-3">
         <div className={`h-3 w-3 rounded-full ${color}`} />
         <h3 className="font-semibold">{title}</h3>
-        <Badge variant="secondary" className="text-xs">{tasks.length}</Badge>
+        <EPStatusPill tone="neutral" className="text-xs">{tasks.length}</EPStatusPill>
       </div>
       <div className="space-y-2">
         {(Array.isArray(tasks) ? tasks : []).map((task) => {
@@ -103,7 +109,7 @@ export function MyPlanView({
                 <Avatar className="h-6 w-6">
                   <AvatarImage src={task.owner.profileImageUrl || undefined} />
                   <AvatarFallback className="text-[8px]">
-                    {task.owner.fullName.split(" ").map((n) => n[0]).join("").substring(0, 2)}
+                    {String((task.owner as unknown as Record<string,unknown>).fullName ?? (task.owner as unknown as Record<string,unknown>).full_name ?? "?").split(" ").map(n => n[0] ?? "").join("").substring(0, 2).toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
               )}
@@ -111,7 +117,7 @@ export function MyPlanView({
           );
         })}
         {tasks.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">Vazifalar yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("vazifalarYoq")}</p>
         )}
       </div>
     </div>
@@ -119,48 +125,48 @@ export function MyPlanView({
 
   return (
     <div className="h-full flex flex-col" data-testid="myplan-view">
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
               <ListTodo className="h-5 w-5 text-primary" />
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.totalTasks}</p>
-              <p className="text-xs text-muted-foreground">Jami vazifalar</p>
+              <p className="text-xs text-muted-foreground">{t("jamiVazifalar")}</p>
             </div>
           </div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-green-500/20 flex items-center justify-center">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              <CheckCircle2 className="h-5 w-5 text-[var(--ep-green)]" />
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.completedTasks}</p>
-              <p className="text-xs text-muted-foreground">Bajarilgan</p>
+              <p className="text-xs text-muted-foreground">{t("bajarilgan")}</p>
             </div>
           </div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-red-500/20 flex items-center justify-center">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <AlertTriangle className="h-5 w-5 text-[var(--ep-red)]" />
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.overdueCount}</p>
-              <p className="text-xs text-muted-foreground">Kechikkan</p>
+              <p className="text-xs text-muted-foreground">{t("kechikkan")}</p>
             </div>
           </div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-              <Timer className="h-5 w-5 text-blue-500" />
+              <Timer className="h-5 w-5 text-[var(--ep-blue)]" />
             </div>
             <div>
               <p className="text-2xl font-bold">{formatTimeShort(stats.totalTrackedTime)}</p>
-              <p className="text-xs text-muted-foreground">Sarflangan vaqt</p>
+              <p className="text-xs text-muted-foreground">{t("sarflanganVaqt")}</p>
             </div>
           </div>
         </Card>
@@ -170,7 +176,7 @@ export function MyPlanView({
         <div className="max-w-3xl">
           <TaskGroup title={t.columns.today} tasks={groupedTasks.today} color="bg-orange-500" />
           <TaskGroup title={t.columns.thisWeek} tasks={groupedTasks.thisWeek} color="bg-yellow-500" />
-          <TaskGroup title="Keyinroq" tasks={groupedTasks.later} color="bg-gray-500" />
+          <TaskGroup title={t("keyinroq")} tasks={groupedTasks.later} color="bg-gray-500" />
         </div>
       </ScrollArea>
     </div>

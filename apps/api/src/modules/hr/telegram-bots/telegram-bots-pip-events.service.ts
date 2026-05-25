@@ -1,3 +1,8 @@
+/**
+ * @module telegram-bots-pip-events.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { errMsg } from "../hr-v2-error";
@@ -23,9 +28,11 @@ export class TelegramBotsPipEventsService {
 
   private async broadcastMsg(message: string) {
     const chatIds = await this.repo.getActiveChatIds();
-    for (const chatId of (chatIds.ok ? chatIds.data : [])) {
-      await this.notificationBot.sendMessage(chatId, message).catch((): void => undefined);
-    }
+    const ids = chatIds.ok ? chatIds.data : [];
+    // Pattern 2: per-chat Telegram sends are independent — fan out in parallel
+    await Promise.all(ids.map((chatId) =>
+      this.notificationBot.sendMessage(chatId, message).catch((): void => undefined),
+    ));
   }
 
   @OnEvent(HrV2Events.PIP_STARTED)

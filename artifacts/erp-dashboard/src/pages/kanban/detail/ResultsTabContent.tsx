@@ -1,3 +1,8 @@
+/**
+ * @module ResultsTabContent
+ * @description React page component. Route-level UI.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -7,6 +12,7 @@ import { Plus, Paperclip, X } from "lucide-react";
 import { format } from "date-fns";
 import { getFileIcon, isImageFile } from "../kanban-types";
 import type { ResultWithFiles } from "../kanban-types";
+import { useTranslation } from '@/lib/i18n';
 
 interface ResultsTabContentProps {
   results: ResultWithFiles[];
@@ -27,14 +33,15 @@ export function ResultsTabContent({
   onDeleteResultFile,
   isUploadingResultFile,
 }: ResultsTabContentProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div>
-        <Label>Natija matni</Label>
+        <Label>{t("natijaMatni")}</Label>
         <Textarea
           value={resultText}
           onChange={(e) => onResultTextChange(e.target.value)}
-          placeholder="Vazifa natijasini kiriting..."
+          placeholder={t("vazifaNatijasiniKiriting")}
           className="min-h-[100px]"
           data-testid="input-result-text"
         />
@@ -44,7 +51,7 @@ export function ResultsTabContent({
           disabled={!resultText.trim()}
         >
           <Plus className="h-4 w-4 mr-2" />
-          Natija qo'shish
+          {t("natijaQoshish")}
         </Button>
       </div>
 
@@ -98,7 +105,7 @@ export function ResultsTabContent({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-5 w-5 ml-1 opacity-0 group-hover:opacity-100"
+                          className="h-4 w-4 ml-1 opacity-0 group-hover:opacity-100"
                           onClick={() => onDeleteResultFile(file.id)}
                         >
                           <X className="h-3 w-3" />
@@ -132,14 +139,14 @@ export function ResultsTabContent({
               disabled={isUploadingResultFile}
             >
               <Paperclip className="h-3 w-3 mr-1" />
-              Fayl biriktirish
+              {t("faylBiriktirish")}
             </Button>
           </div>
         </div>
       ))}
 
       {results.length === 0 && (
-        <p className="text-center text-muted-foreground py-4">Natijalar yo'q</p>
+        <p className="text-center text-muted-foreground py-4">{t("natijalarYoq")}</p>
       )}
     </div>
   );

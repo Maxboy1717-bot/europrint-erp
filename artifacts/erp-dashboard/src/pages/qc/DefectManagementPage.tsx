@@ -1,3 +1,8 @@
+/**
+ * @module DefectManagementPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -20,9 +25,9 @@ interface DefectRecord {
 }
 
 const DECISION_CONFIG: Record<DefectRecord["decision"], { label: string; className: string }> = {
-  rework:    { label: "Qayta ishlash", className: "bg-yellow-100 text-yellow-700" },
-  scrap:     { label: "Brak",          className: "bg-rose-100 text-rose-700" },
-  downgrade: { label: "Pasaytirish",   className: "bg-orange-100 text-orange-700" },
+  rework:    { label: "Qayta ishlash", className: "bg-yellow-100 text-[var(--ep-yellow)]" },
+  scrap:     { label: "Brak",          className: "bg-rose-100 text-[var(--ep-red)]" },
+  downgrade: { label: "Pasaytirish",   className: "bg-orange-100 text-[var(--ep-primary)]" },
   pending:   { label: "Kutilmoqda",    className: "bg-slate-100 text-slate-700" },
 };
 
@@ -53,7 +58,7 @@ export default function DefectManagementPage() {
 
       <Section title={t('defectMgmt.list', "Brak yozuvlari")}>
         {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16" />)}</div>
+          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('defectMgmt.empty', "Brak yozuvi yo'q")}</p>
         ) : (
@@ -69,11 +74,11 @@ export default function DefectManagementPage() {
                     </div>
                     <Badge className={cfg.className}>{cfg.label}</Badge>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
-                    <span>Markaz: <strong>{d.workCenterName ?? '—'}</strong></span>
-                    <span>Miqdor: <strong>{d.quantity} {d.unit}</strong></span>
-                    <span>Yo'qotish: <strong>{d.estimatedLossUzs.toLocaleString()} UZS</strong></span>
-                    <span>Sana: <strong>{new Date(d.reportedAt).toLocaleDateString()}</strong></span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
+                    <span>{t("markaz")}<strong>{d.workCenterName ?? '—'}</strong></span>
+                    <span>{t("miqdor")}<strong>{d.quantity} {d.unit}</strong></span>
+                    <span>{t("yoqotish")}<strong>{d.estimatedLossUzs.toLocaleString()} UZS</strong></span>
+                    <span>{t("sana1")}<strong>{new Date(d.reportedAt).toLocaleDateString()}</strong></span>
                   </div>
                   {d.rootCause ? (
                     <p className="text-xs italic mt-2 text-muted-foreground">

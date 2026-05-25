@@ -1,12 +1,18 @@
+/**
+ * @module mm-vendors-pr.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
 import {
 BadRequestException, Body, Controller, Delete, Get, Logger, NotFoundException, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -20,19 +26,39 @@ import {
 
 const MM_WRITE_ROLES = ['ERP_MANAGER', 'mm_manager', 'warehouse_manager', 'super_admin', 'director'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Mm Vendors Pr')
 @Controller('mm')
 export class MmVendorsPrController {
   private readonly logger = new Logger(MmVendorsPrController.name);
 
   constructor(private readonly svc: MmVendorsPrService) {}
 
+  @ApiOperation({ summary: 'List vendors' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('vendors')
   async listVendors(@Query('search') search?: string, @Query('limit') limit?: string, @Query('offset') offset?: string) {
     return unwrapOrThrow(await this.svc.listVendors(search, safeInt(limit, 50), safeInt(offset, 0)));
   }
 
+  /**
+   * Alias for the integration module's vendor-performance endpoint so the
+   * VendorPerformance frontend page can call /api/mm/vendor-performance.
+   * Returns the same shape that integration-extended-hr.controller.ts emits.
+   * Real DB pull will land when vendor_performance schema is added; for now
+   * we serve an empty list (page renders empty state cleanly).
+   */
+  @ApiOperation({ summary: 'List vendor performance' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('vendor-performance')
+  async listVendorPerformance() {
+    return [];
+  }
+
+  @ApiOperation({ summary: 'Get vendor' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('vendors/:id')
   async getVendor(@Param('id') id: string) {
     const _rR = await this.svc.getVendor(safeInt(id, 0));
@@ -42,6 +68,9 @@ export class MmVendorsPrController {
     return r[0];
   }
 
+  @ApiOperation({ summary: 'Create vendor' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('vendors')
   @UsePipes(new ZodValidationPipe(MmCreateVendorSchema))
   @Roles(...MM_WRITE_ROLES)
@@ -50,6 +79,10 @@ export class MmVendorsPrController {
     return unwrapOrThrow(await this.svc.createVendor(body));
   }
 
+  @ApiOperation({ summary: 'Update vendor' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('vendors/:id')
   @UsePipes(new ZodValidationPipe(MmUpdateVendorSchema))
   @Roles(...MM_WRITE_ROLES)
@@ -61,6 +94,10 @@ export class MmVendorsPrController {
     return r[0];
   }
 
+  @ApiOperation({ summary: 'Delete vendor' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('vendors/:id')
   @UseGuards(RolesGuard)
   @Roles(...MM_WRITE_ROLES)
@@ -69,11 +106,16 @@ export class MmVendorsPrController {
     return { deleted: true, id: safeInt(id, 0) };
   }
 
+  @ApiOperation({ summary: 'List requisitions' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('purchase-requisitions')
   async listRequisitions(@Query('status') status?: string, @Query('limit') limit?: string, @Query('offset') offset?: string) {
     return unwrapOrThrow(await this.svc.listRequisitions(status, safeInt(limit, 50), safeInt(offset, 0)));
   }
 
+  @ApiOperation({ summary: 'Get requisition' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('purchase-requisitions/:id')
   async getRequisition(@Param('id') id: string) {
     const _rGetRequisition = await this.svc.getRequisition(safeInt(id, 0));
@@ -83,6 +125,9 @@ export class MmVendorsPrController {
     return r;
   }
 
+  @ApiOperation({ summary: 'Create requisition' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('purchase-requisitions')
   @UsePipes(new ZodValidationPipe(MmCreateRequisitionSchema))
   @Roles(...MM_WRITE_ROLES)
@@ -91,6 +136,10 @@ export class MmVendorsPrController {
     return unwrapOrThrow(await this.svc.createRequisition(body.title, (user?.id as number) ?? null, body.needed_by, body.notes, (body.items ?? []) as Array<Record<string, unknown>>));
   }
 
+  @ApiOperation({ summary: 'Update requisition' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('purchase-requisitions/:id')
   @UsePipes(new ZodValidationPipe(MmUpdateRequisitionSchema))
   @Roles(...MM_WRITE_ROLES)
@@ -102,6 +151,10 @@ export class MmVendorsPrController {
     return r[0];
   }
 
+  @ApiOperation({ summary: 'Delete requisition' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('purchase-requisitions/:id')
   @UseGuards(RolesGuard)
   @Roles(...MM_WRITE_ROLES)

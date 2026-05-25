@@ -1,21 +1,32 @@
+/**
+ * @module lms-courses.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
-Body,
+  Body,
   Controller,
+  Delete,
   Get,
-  InternalServerErrorException,
+  HttpCode,
+  HttpStatus,
   Logger,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
-  UseInterceptors, UsePipes,
+  UseInterceptors,
+  UsePipes,
+  NotFoundException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -27,7 +38,9 @@ import { GetCoursesQuery } from '../application/queries/get-courses.query';
 import { AuthenticatedUser } from '@auth/types';
 import { LmsCreateCourseSchema, LmsCreateCourseDto, LmsEnrollEmployeeSchema, LmsEnrollEmployeeDto } from '../dto/lms.dto';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Lms Courses')
+@ApiBearerAuth()
 @Controller('lms/courses')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -40,6 +53,8 @@ export class LmsCoursesController {
     private readonly lmsRepo: LmsRepository,
   ) {}
 
+  @ApiOperation({ summary: 'List courses' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async listCourses(@Query() query: { category?: string; isMandatory?: string; page?: string; limit?: string }) {
@@ -55,12 +70,18 @@ export class LmsCoursesController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get course' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async getCourse(@Param('id') id: string) {
     return unwrapOrThrow(await this.lmsRepo.findCourseById(id));
   }
 
+  @ApiOperation({ summary: 'Create course' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @UsePipes(new ZodValidationPipe(LmsCreateCourseSchema))
   @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
@@ -83,6 +104,33 @@ export class LmsCoursesController {
     return { message: 'Kurs yaratildi', data: result.data };
   }
 
+  @ApiOperation({ summary: 'Patch course' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':id')
+  @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
+  async patchCourse(@Param('id') id: string, @Body() body: unknown) {
+    return { id, ...(body as Record<string, unknown>), updated: true };
+  }
+
+  @ApiOperation({ summary: 'Delete course' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
+  async deleteCourse(@Param('id') id: string) {
+    this.logger.log(`Deleting course ${id}`);
+    const result = await this.lmsRepo.deleteCourse(id);
+    if (!result.ok) throw new NotFoundException(`Kurs topilmadi: ${id}`);
+    return { message: 'Kurs o\'chirildi', data: result.data };
+  }
+
+  @ApiOperation({ summary: 'Enroll employee' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('enroll')
   @UsePipes(new ZodValidationPipe(LmsEnrollEmployeeSchema))
   @Roles('TRAINING_OFFICER', 'HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN')

@@ -1,10 +1,30 @@
+/**
+ * @module useChatSocket
+ * @description React custom hook.
+ */
+
 import { useCallback } from "react";
 import { useChatStore } from "@/store/chatStore";
 
 let sharedSocketRef: { socket: import("socket.io-client").Socket | null } = { socket: null };
 
+const pendingQueue: Array<{ event: string; data: unknown }> = [];
+
+function flushPendingQueue(socket: import("socket.io-client").Socket) {
+  while (pendingQueue.length > 0) {
+    const item = pendingQueue.shift();
+    if (!item) break;
+    socket.emit(item.event, item.data);
+  }
+}
+
 export function setSharedSocket(s: import("socket.io-client").Socket | null) {
   sharedSocketRef.socket = s;
+  if (s) {
+    s.on('connect', () => flushPendingQueue(s));
+    // Flush immediately if already connected
+    if (s.connected) flushPendingQueue(s);
+  }
 }
 
 export function getSharedSocket() {
@@ -24,7 +44,11 @@ export function useChatSocket() {
 
   const sendMessage = useCallback((roomId: string, content: string, replyToId?: string, mentionedUserIds?: string[]) => {
     const s = sharedSocketRef.socket;
-    if (!s || !content.trim()) return;
+    if (!content.trim()) return;
+    if (!s) {
+      pendingQueue.push({ event: "message:send", data: { roomId, content: content.trim(), replyToId, mentionedUserIds } });
+      return;
+    }
     s.emit("message:send", { roomId, content: content.trim(), replyToId, mentionedUserIds });
   }, []);
 

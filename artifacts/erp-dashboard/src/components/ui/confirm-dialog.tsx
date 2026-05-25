@@ -1,3 +1,8 @@
+/**
+ * @module confirm-dialog
+ * @description React UI component.
+ */
+
 import { useState, useCallback } from 'react';
 import {
   AlertDialog,

@@ -1,3 +1,8 @@
+/**
+ * @module LaborMarketSheet
+ * @description React UI component.
+ */
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -14,6 +19,7 @@ import { HiringForecast, type EmployerMarket, type CandidateMarket, type Histori
 import { EmployerMarketSection } from "./labor-market/EmployerMarketSection";
 import { CandidateMarketSection } from "./labor-market/CandidateMarketSection";
 import { RecommendationsSection } from "./labor-market/RecommendationsSection";
+import { useTranslation } from '@/lib/i18n';
 
 interface LaborMarketData {
   id?: number;
@@ -99,6 +105,7 @@ const DEFAULT_CANDIDATE_MARKET: CandidateMarket = {
 };
 
 export function LaborMarketSheet({ vacancyId, vacancyTitle, open, onOpenChange }: Props) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const [employerMarket, setEmployerMarket] = useState<EmployerMarket>(DEFAULT_EMPLOYER_MARKET);
@@ -150,7 +157,7 @@ export function LaborMarketSheet({ vacancyId, vacancyTitle, open, onOpenChange }
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full max-w-2xl overflow-y-auto"
+        className="w-full max-w-2xl overflow-y-auto p-6"
       >
         <SheetHeader className="mb-4">
           <SheetTitle className="flex items-center gap-2 text-base">
@@ -165,7 +172,7 @@ export function LaborMarketSheet({ vacancyId, vacancyTitle, open, onOpenChange }
         </SheetHeader>
 
         {isLoading ? (
-          <div className="text-sm text-muted-foreground py-8 text-center">Yuklanmoqda...</div>
+          <div className="text-sm text-muted-foreground py-8 text-center">{t("Yuklanmoqda...")}</div>
         ) : (
           <div className="space-y-6 pb-6">
             <EmployerMarketSection 
@@ -181,7 +188,7 @@ export function LaborMarketSheet({ vacancyId, vacancyTitle, open, onOpenChange }
             <section className="space-y-2">
               <h3 className="text-sm font-semibold flex items-center gap-2">
                 <Clock className="w-4 h-4 text-amber-400" />
-                Yollash vaqti bashorati
+                {t("yollashVaqtiBashorati")}
               </h3>
               <HiringForecast
                 em={employerMarket}

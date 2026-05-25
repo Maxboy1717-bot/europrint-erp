@@ -1,5 +1,10 @@
+/**
+ * @module lms-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Admin, User, departments, goals, positions, users } from "./core-schema";
@@ -28,7 +33,7 @@ export const mentors = pgTable("mentors", {
   achievements: text("achievements"), // Yutuqlar
   experience: text("experience"), // Tajriba (yillar, loyihalar)
   expertise: text("expertise"), // Mutaxassislik sohalari
-  userId: integer("user_id").references(() => users.id), // Agar bizning xodimimiz bo'lsa
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }), // Agar bizning xodimimiz bo'lsa
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
@@ -48,13 +53,15 @@ export const courses = pgTable("courses", {
   isRequired: boolean("is_required").notNull().default(false),
   duration: integer("duration"), // minutes
   level: varchar("level", { length: 20 }).notNull().default("beginner"), // beginner, intermediate, advanced
-  departmentId: integer("department_id").references(() => departments.id), // which department this course is for
-  mentorId: varchar("mentor_id").references(() => mentors.id), // Tayinlangan mentor
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }), // which department this course is for
+  mentorId: varchar("mentor_id").references(() => mentors.id, { onDelete: "set null" }), // Tayinlangan mentor
   startDate: varchar("start_date", { length: 10 }), // Default start date in YYYY-MM-DD format (optional)
   endDate: varchar("end_date", { length: 10 }), // Default end date in YYYY-MM-DD format (optional)
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 }, (t) => [
+  check("courses_level_chk", sql`${t.level} IN ('beginner','intermediate','advanced')`),
+  check("courses_duration_chk", sql`${t.duration} IS NULL OR ${t.duration} > 0`),
   index("idx_courses_department_id").on(t.departmentId),
   index("idx_courses_is_required").on(t.isRequired),
   index("idx_courses_level").on(t.level),
@@ -91,6 +98,7 @@ export const lessons = pgTable("lessons", {
   deletedAt: timestamp("deleted_at"),
 }, (t) => [
   index("idx_lessons_module_id").on(t.moduleId),
+  check("lessons_type_chk", sql`${t.type} IN ('video','text','pdf')`),
 ]);
 
 
@@ -109,6 +117,8 @@ export const tests = pgTable("tests", {
   randomizeQuestions: boolean("randomize_questions").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
+  check("tests_pass_percentage_chk", sql`${t.passPercentage} >= 0 AND ${t.passPercentage} <= 100`),
+  check("tests_max_attempts_chk", sql`${t.maxAttempts} > 0`),
   index("idx_tests_course_id").on(t.courseId),
   index("idx_tests_module_id").on(t.moduleId),
 ]);
@@ -129,20 +139,24 @@ export const questions = pgTable("questions", {
   order: integer("order").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("questions_type_chk", sql`${t.type} IN ('mcq','open','practice')`),
+  check("questions_difficulty_chk", sql`${t.difficulty} IN ('easy','medium','hard')`),
+]);
 
 
 // Attempts
 export const attempts = pgTable("attempts", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'set null' }),
-  testId: varchar("test_id").notNull().references(() => tests.id),
+  testId: varchar("test_id").notNull().references(() => tests.id, { onDelete: "cascade" }),
   startedAt: timestamp("started_at").notNull().defaultNow(),
   finishedAt: timestamp("finished_at"),
   score: integer("score"),
   passed: boolean("passed"),
   gptUsed: boolean("gpt_used").notNull().default(false),
 }, (t) => [
+  check("attempts_score_chk", sql`${t.score} IS NULL OR (${t.score} >= 0 AND ${t.score} <= 100)`),
   index("idx_attempts_user_id").on(t.userId),
   index("idx_attempts_test_id").on(t.testId),
 ]);
@@ -152,7 +166,7 @@ export const attempts = pgTable("attempts", {
 export const answers = pgTable("answers", {
   id: serial("id").primaryKey(),
   attemptId: varchar("attempt_id").notNull().references(() => attempts.id, { onDelete: "cascade" }),
-  questionId: varchar("question_id").notNull().references(() => questions.id),
+  questionId: varchar("question_id").notNull().references(() => questions.id, { onDelete: "cascade" }),
   response: text("response").notNull(),
   score: integer("score"),
   feedback: text("feedback"),
@@ -182,7 +196,7 @@ export const assignments = pgTable("assignments", {
 export const progress = pgTable("progress", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'set null' }),
-  lessonId: varchar("lesson_id").notNull().references(() => lessons.id),
+  lessonId: varchar("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
   completed: boolean("completed").notNull().default(false),
   completedAt: timestamp("completed_at"),
 }, (t) => [
@@ -202,12 +216,14 @@ export const aiExamAttempts = pgTable("ai_exam_attempts", {
   score: integer("score"), // Overall score
   evaluation: jsonb("evaluation"), // Detailed evaluation by category
   status: varchar("status", { length: 20 }).notNull().default("assigned"), // assigned, in_progress, completed, analyzed
-  assignedBy: varchar("assigned_by").references(() => users.id), // Admin who assigned the exam
+  assignedBy: varchar("assigned_by").references(() => users.id, { onDelete: "set null" }), // Admin who assigned the exam
   assignedAt: timestamp("assigned_at").defaultNow(),
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
   analyzedAt: timestamp("analyzed_at"),
-});
+}, (t) => [
+  check("ai_exam_attempts_status_chk", sql`${t.status} IN ('assigned','in_progress','completed','analyzed')`),
+]);
 
 export const insertMentorSchema = createInsertSchema(mentors).omit({ id: true, createdAt: true } as never);
 
@@ -326,7 +342,9 @@ export const userPoints = pgTable("user_points", {
   reason: text("reason"),
   reasonRu: text("reason_ru"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("user_points_source_chk", sql`${t.source} IN ('achievement','course','test','attendance','manual')`),
+]);
 
 
 // Skills (ko'nikmalar)
@@ -337,7 +355,10 @@ export const skills = pgTable("skills", {
   category: varchar("category", { length: 50 }).notNull(), // technical, soft, leadership
   level: varchar("level", { length: 20 }).notNull().default("beginner"), // beginner, intermediate, advanced, expert
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("skills_level_chk", sql`${t.level} IN ('beginner','intermediate','advanced','expert')`),
+  check("skills_category_chk", sql`${t.category} IN ('technical','soft','leadership')`),
+]);
 
 
 // User Skills (xodim ko'nikmalari - skill matrix)
@@ -346,13 +367,15 @@ export const userSkills = pgTable("user_skills", {
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   skillId: varchar("skill_id").notNull().references(() => skills.id, { onDelete: "cascade" }),
   level: varchar("level", { length: 20 }).notNull(), // beginner, intermediate, advanced, expert
-  verifiedBy: varchar("verified_by").references(() => users.id), // HR/Manager who verified
+  verifiedBy: varchar("verified_by").references(() => users.id, { onDelete: "set null" }), // HR/Manager who verified
   verifiedAt: timestamp("verified_at"),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (t) => [
+  check("user_skills_level_chk", sql`${t.level} IN ('beginner','intermediate','advanced','expert')`),
+]);
 
 
 // Onboarding Tasks (yangi xodimlar uchun vazifalar)
@@ -372,7 +395,9 @@ export const onboardingTasks = pgTable("onboarding_tasks", {
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
-});
+}, (t) => [
+  check("onboarding_tasks_type_chk", sql`${t.type} IN ('document','course','meeting','task')`),
+]);
 
 
 // User Onboarding Progress
@@ -402,7 +427,9 @@ export const mentorships = pgTable("mentorships", {
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("mentorships_status_chk", sql`${t.status} IN ('active','completed','cancelled')`),
+]);
 
 
 // Mentorship Sessions (mentorlik uchrashuvlari)
@@ -516,7 +543,7 @@ export const hrCapitalCourses = pgTable("hr_capital_courses", {
 
 export const hrCapitalModules = pgTable("hr_capital_modules", {
   id: serial("id").primaryKey(),
-  courseId: varchar("course_id").notNull().references(() => hrCapitalCourses.id),
+  courseId: varchar("course_id").notNull().references(() => hrCapitalCourses.id, { onDelete: "cascade" }),
   moduleNumber: integer("module_number"),
   title: text("title").notNull(),
   titleRu: text("title_ru"),
@@ -529,7 +556,7 @@ export const hrCapitalModules = pgTable("hr_capital_modules", {
 
 export const hrCapitalQuizQuestions = pgTable("hr_capital_quiz_questions", {
   id: serial("id").primaryKey(),
-  moduleId: varchar("module_id").notNull().references(() => hrCapitalModules.id),
+  moduleId: varchar("module_id").notNull().references(() => hrCapitalModules.id, { onDelete: "cascade" }),
   questionType: varchar("question_type", { length: 50 }).notNull().default("multiple_choice"),
   questionText: text("question_text").notNull(),
   questionTextRu: text("question_text_ru"),
@@ -546,7 +573,7 @@ export const hrCapitalQuizQuestions = pgTable("hr_capital_quiz_questions", {
 export const hrCapitalQuizAttempts = pgTable("hr_capital_quiz_attempts", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'set null' }),
-  moduleId: varchar("module_id").notNull().references(() => hrCapitalModules.id),
+  moduleId: varchar("module_id").notNull().references(() => hrCapitalModules.id, { onDelete: "cascade" }),
   score: integer("score"),
   totalQuestions: integer("total_questions"),
   correctAnswers: integer("correct_answers"),
@@ -586,8 +613,8 @@ export type InsertHrCapitalQuizAttempt = z.infer<typeof insertHrCapitalQuizAttem
 export const courseProgress = pgTable("course_progress", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'set null' }),
-  lessonId: varchar("lesson_id").notNull().references(() => lessons.id),
-  courseId: varchar("course_id").notNull().references(() => courses.id),
+  lessonId: varchar("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  courseId: varchar("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
   videoPosition: integer("video_position").notNull().default(0),
   completed: boolean("completed").notNull().default(false),
   completedAt: timestamp("completed_at"),

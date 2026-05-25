@@ -1,41 +1,46 @@
+/**
+ * @module forecast.service
+ * @description Time-series forecasting toolkit. Provides three baseline
+ *   methods plus error-metric reporting so callers can compare quality:
+ *
+ *     - **SMA** (Simple Moving Average) — flat smoothing, good for noisy
+ *       but trend-free series
+ *     - **EMA** (Exponential Moving Average) — weighted toward recent
+ *       observations; α-tunable
+ *     - **Linear regression** — captures trend; returns slope, intercept,
+ *       R² + per-point fitted values
+ *
+ *   Grid-search helper finds the optimal α for EMA by RMSE.
+ *
+ *   Three error metrics returned with every fit:
+ *     MAPE = (1/n) × Σ |yᵢ − ŷᵢ| / |yᵢ| × 100%     scale-free, %-style
+ *     RMSE = √((1/n) × Σ (yᵢ − ŷᵢ)²)               penalises large errors
+ *     MAE  = (1/n) × Σ |yᵢ − ŷᵢ|                   linear, interpretable
+ * @layer Domain Service (AI module — pure math)
+ *
+ * Type definitions live in `./forecast.types.ts`.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum, safeAvg, safeDiv } from '@common/math/math-utils';
 import { Ok, Err, Result, AppError } from '@common/result';
+import {
+  ErrorMetrics,
+  SmaResult,
+  EmaResult,
+  GridSearchResult,
+  LinearRegressionResult,
+  makeErr,
+} from './forecast.types';
 
-export interface ErrorMetrics {
-  mape: number;
-  rmse: number;
-  mae: number;
-}
-
-export interface SmaResult {
-  values: number[];
-  metrics: ErrorMetrics;
-}
-
-export interface EmaResult {
-  smoothed: number[];
-  alpha: number;
-  metrics: ErrorMetrics;
-}
-
-export interface GridSearchResult {
-  alpha: number;
-  rmse: number;
-}
-
-export interface LinearRegressionResult {
-  slope: number;
-  intercept: number;
-  r2: number;
-  predicted: number[];
-  metrics: ErrorMetrics;
-}
-
-function makeErr(msg: string, code: AppError['code'] = 'VALIDATION'): AppError {
-  return { code, message: msg };
-}
+export type {
+  ErrorMetrics,
+  SmaResult,
+  EmaResult,
+  GridSearchResult,
+  LinearRegressionResult,
+};
 
 /**
  * TZ-06: SMA (Oddiy Ko'chma O'rtacha) + EMA (Eksponensial Silliqlash)
@@ -184,8 +189,8 @@ export class ForecastService {
 
     const safeX = Array.isArray(x) ? x : [];
     const safeY = Array.isArray(y) ? y : [];
-    const xArr = (safeX ?? []).map(safeNum);
-    const yArr = (safeY ?? []).map(safeNum);
+    const xArr = (Array.isArray(safeX) ? safeX : []).map(safeNum);
+    const yArr = (Array.isArray(safeY) ? safeY : []).map(safeNum);
 
     const xBar = safeAvg(xArr);
     const yBar = safeAvg(yArr);
@@ -200,7 +205,7 @@ export class ForecastService {
     const slope = safeDiv(ssXY, ssXX);
     const intercept = yBar - slope * xBar;
 
-    const predicted = (safeX ?? []).map((xi) => slope * safeNum(xi) + intercept);
+    const predicted = (Array.isArray(safeX) ? safeX : []).map((xi) => slope * safeNum(xi) + intercept);
 
     let ssRes = 0;
     let ssTot = 0;

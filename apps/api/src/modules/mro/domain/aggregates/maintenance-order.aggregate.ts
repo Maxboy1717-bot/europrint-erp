@@ -1,7 +1,12 @@
+/**
+ * @module maintenance-order.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { v4 as uuid } from 'uuid';
-import { AggregateRoot } from '@nestjs/cqrs';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { MaintenanceStatus, MaintenanceType } from '../enums/maintenance-status.enum';
 
 export class MaintenanceOrder extends AggregateRoot {

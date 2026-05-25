@@ -1,3 +1,8 @@
+/**
+ * @module ResourceAllocationView
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -6,8 +11,9 @@ import { type T, type AllocationData } from "./kanban-types";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
 import { RefreshCw } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
 
-export function ResourceAllocationView({ t, boardId }: { t: typeof T.uz; boardId: string | null }) {
+export function ResourceAllocationView({ t, boardId }: { t: typeof T.uz & ((key: string) => string); boardId: string | null }) {
   const { data: allocation = [], isLoading } = useQuery<AllocationData[]>({
     queryKey: ['/api/kanban/resource-allocation', boardId],
     enabled: true,
@@ -16,14 +22,14 @@ export function ResourceAllocationView({ t, boardId }: { t: typeof T.uz; boardId
   if (isLoading) {
     return (
       <div className="p-6" data-testid="allocation-loading">
-        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full rounded-lg" />
       </div>
     );
   }
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="p-4" data-testid="allocation-view">
       <h2 className="text-lg font-semibold mb-4">{t.allocation.title}</h2>
       {allocation.length === 0 ? (
@@ -47,9 +53,9 @@ export function ResourceAllocationView({ t, boardId }: { t: typeof T.uz; boardId
                     <div className="flex items-center gap-2">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={row.user.profileImageUrl || undefined} />
-                        <AvatarFallback>{row.user.fullName.split(" ").map(n => n[0]).join("").substring(0, 2)}</AvatarFallback>
+                        <AvatarFallback>{String((row.user as unknown as Record<string,unknown>).fullName ?? (row.user as unknown as Record<string,unknown>).full_name ?? "?").split(" ").map(n => n[0] ?? "").join("").substring(0, 2).toUpperCase() || "?"}</AvatarFallback>
                       </Avatar>
-                      <span>{row.user.fullName}</span>
+                      <span>{String((row.user as unknown as Record<string,unknown>).fullName ?? (row.user as unknown as Record<string,unknown>).full_name ?? "Noma'lum")}</span>
                     </div>
                   </td>
                   <td className="text-center px-4 py-3">
@@ -59,7 +65,7 @@ export function ResourceAllocationView({ t, boardId }: { t: typeof T.uz; boardId
                     <Badge variant={row.thisWeek > 10 ? "destructive" : "secondary"}>{row.thisWeek}</Badge>
                   </td>
                   <td className="text-center px-4 py-3">
-                    <Badge variant="secondary">{row.thisMonth}</Badge>
+                    <EPStatusPill tone="neutral">{row.thisMonth}</EPStatusPill>
                   </td>
                   <td className="text-center px-4 py-3">
                     <Badge variant="outline">{row.total}</Badge>

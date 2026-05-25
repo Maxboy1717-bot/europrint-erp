@@ -1,11 +1,16 @@
+/**
+ * @module wms-extended.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { safeNum } from '@common/math';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { WmsExtendedRepository } from './wms-extended.repository';
+import { WMS_EXTENDED_REPO, type IWmsExtendedRepo } from '../domain/repositories/i-wms-extended.repo';
 
 @Injectable()
 export class WmsExtendedService {
-  constructor(private readonly repo: WmsExtendedRepository) {}
+  constructor(@Inject(WMS_EXTENDED_REPO) private readonly repo: IWmsExtendedRepo) {}
 
   async getTotalStats(): Promise<Result<object, AppError>> {
     return this.repo.getTotalStats();
@@ -38,7 +43,7 @@ export class WmsExtendedService {
       if (!itemsResult.ok) throw new Error(itemsResult.error.message);
       const items = (itemsResult.data as Record<string, unknown>[]);
       const batchResult = await this.repo.batchInsertLowStockAlerts(
-        (items ?? []).map((i) => ({
+        (Array.isArray(items) ? items : []).map((i) => ({
           material_id: safeNum(i['material_id']),
           warehouse_id: safeNum(i['warehouse_id']),
           material_name: String(i['material_name'] ?? ''),

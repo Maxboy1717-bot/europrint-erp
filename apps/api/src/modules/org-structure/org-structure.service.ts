@@ -1,3 +1,8 @@
+/**
+ * @module org-structure.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { OrgStructureRepository } from './org-structure.repository';
@@ -16,14 +21,14 @@ export class OrgStructureService {
       if (!nodes.ok) throw new Error(nodes.error.message);
       const nodeMap = new Map<number, Record<string, unknown>>();
 
-      (nodes?.data ?? []).forEach(n => {
+      (Array.isArray(nodes?.data) ? nodes?.data : []).forEach(n => {
         const cap = parseInt(String(n.capacity)) || 0;
         const emp = Number(n.employeeCount) || 0;
         nodeMap.set(Number(n.id), { ...n, children: [], employees: [], vacantCount: Math.max(0, cap - emp) });
       });
 
       const roots: Record<string, unknown>[] = [];
-      (nodes?.data ?? []).forEach(n => {
+      (Array.isArray(nodes?.data) ? nodes?.data : []).forEach(n => {
         const node = nodeMap.get(Number(n.id));
         if (!node) return;
         if (n.parentId && nodeMap.has(Number(n.parentId))) {
@@ -110,6 +115,45 @@ export class OrgStructureService {
 
   async move(id: number, newParentId: number | null) {
     return safeCall(async () => {
+      // ─── Defensive cycle check ────────────────────────────────────────────
+      // Phase 1 T1.3 (cycle-detector.service) is the canonical implementation.
+      // Until that lands, this inline check prevents the two trivial cycles
+      // that would break the tree:
+      //   (a) self-parent: moving a node under itself.
+      //   (b) ancestor-cycle: moving a node under one of its own descendants.
+      // The check walks newParentId's ancestors via `getHierarchyNodes()` (single
+      // O(n) fetch + O(depth) traversal) — small relative to a write.
+      if (newParentId !== null && newParentId !== undefined) {
+        if (Number(newParentId) === Number(id)) {
+          throw new Error('Tugun o\'zini ota qila olmaydi (self-cycle)');
+        }
+        const nodesR = await this.repo.getHierarchyNodes();
+        if (nodesR.ok) {
+          const parentByChild = new Map<number, number | null>();
+          const rows = Array.isArray(nodesR.data) ? nodesR.data : [];
+          for (const row of rows) {
+            const n = row as Record<string, unknown>;
+            const nid = Number(n['id']);
+            const rawParent = n['parentId'] ?? n['parent_id'];
+            const pid = rawParent === null || rawParent === undefined
+              ? null
+              : Number(rawParent);
+            if (Number.isFinite(nid)) parentByChild.set(nid, pid);
+          }
+          // Walk up from newParentId — if we hit `id` it would create a cycle.
+          let cursor: number | null = Number(newParentId);
+          const visited = new Set<number>();
+          while (cursor !== null && cursor !== undefined) {
+            if (visited.has(cursor)) break; // existing cycle — bail out
+            visited.add(cursor);
+            if (cursor === Number(id)) {
+              throw new Error('Bu ko\'chirish tsiklik bog\'lanish hosil qiladi');
+            }
+            cursor = parentByChild.get(cursor) ?? null;
+          }
+        }
+      }
+
       let level = 0;
       if (newParentId) {
         const levelR = await this.repo.getParentLevel(newParentId);
@@ -123,6 +167,27 @@ export class OrgStructureService {
     return safeCall(async () => {
       await this.repo.assignUser(userId, nodeId);
       return { message: "Xodim bo'limga biriktirildi" };
+    });
+  }
+
+  async getApprovalChain(nodeId: number) {
+    return safeCall(async () => {
+      const r = await this.repo.getApprovalChain(nodeId);
+      return { chain: r.ok ? r.data : [] };
+    });
+  }
+
+  async getDirectManager(nodeId: number) {
+    return safeCall(async () => {
+      const r = await this.repo.getDirectManager(nodeId);
+      return { manager: r.ok ? r.data : null };
+    });
+  }
+
+  async getTelegramGroupForNode(nodeId: number) {
+    return safeCall(async () => {
+      const r = await this.repo.getTelegramGroupForNode(nodeId);
+      return { telegramGroup: r.ok ? r.data : null };
     });
   }
 }

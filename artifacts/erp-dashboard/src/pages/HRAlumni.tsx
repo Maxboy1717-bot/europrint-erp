@@ -1,3 +1,8 @@
+/**
+ * @module HRAlumni
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +24,8 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface AlumniRecord {
   id: string;
@@ -56,6 +63,7 @@ function InviteDialog({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [message, setMessage] = useState("");
 
@@ -72,11 +80,11 @@ function InviteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <UserCheck className="h-4 w-4 text-green-600" />
-            Qayta taklif qilish
+            <UserCheck className="h-4 w-4 text-[var(--ep-green)]" />
+            {t("qaytaTaklifQilish")}
           </DialogTitle>
         </DialogHeader>
         <div className="py-2 space-y-3">
@@ -87,17 +95,17 @@ function InviteDialog({
             </div>
           )}
           <div>
-            <Label>Shaxsiy xabar (ixtiyoriy)</Label>
+            <Label>{t("shaxsiyXabarIxtiyoriy")}</Label>
             <Input
               value={message}
               onChange={e => setMessage(e.target.value)}
-              placeholder="Xabar qoldiring..."
+              placeholder={t("xabarQoldiring")}
               className="mt-1"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button onClick={() => invite.mutate()} disabled={invite.isPending}>
             <Mail className="h-3.5 w-3.5 mr-1" />
             {invite.isPending ? "Yuborilmoqda..." : "Taklif yuborish"}
@@ -109,6 +117,7 @@ function InviteDialog({
 }
 
 export default function HRAlumni() {
+  const { t } = useTranslation("common");
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [inviteTarget, setInviteTarget] = useState<AlumniRecord | null>(null);
@@ -135,12 +144,12 @@ export default function HRAlumni() {
     );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Users className="h-5 w-5 text-indigo-600" />
-          <h1 className="font-semibold text-base">HR — Alumni Hamjamiyati</h1>
-          <Badge variant="secondary">{stats.total} a'zo</Badge>
+          <Users className="h-4 w-4 text-[var(--ep-blue)]" />
+          <h1 className="font-semibold text-base">{t("hrAlumniHamjamiyati")}</h1>
+          <EPStatusPill tone="neutral">{stats.total} a'zo</EPStatusPill>
         </div>
       </div>
 
@@ -150,33 +159,33 @@ export default function HRAlumni() {
           <Card>
             <CardContent className="pt-4 pb-3 flex items-center gap-3">
               <div className="rounded-full bg-blue-100 p-2.5">
-                <Users className="h-4 w-4 text-blue-600" />
+                <Users className="h-4 w-4 text-[var(--ep-blue)]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-                <div className="text-xs text-muted-foreground">Jami alumni a'zolari</div>
+                <div className="text-2xl font-bold text-[var(--ep-blue)]">{stats.total}</div>
+                <div className="text-xs text-muted-foreground">{t("jamiAlumniAzolari")}</div>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4 pb-3 flex items-center gap-3">
               <div className="rounded-full bg-green-100 p-2.5">
-                <RefreshCcw className="h-4 w-4 text-green-600" />
+                <RefreshCcw className="h-4 w-4 text-[var(--ep-green)]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-600">{stats.returned}</div>
-                <div className="text-xs text-muted-foreground">Qayta ishga qaytganlar</div>
+                <div className="text-2xl font-bold text-[var(--ep-green)]">{stats.returned}</div>
+                <div className="text-xs text-muted-foreground">{t("qaytaIshgaQaytganlar")}</div>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4 pb-3 flex items-center gap-3">
               <div className="rounded-full bg-purple-100 p-2.5">
-                <Handshake className="h-4 w-4 text-purple-600" />
+                <Handshake className="h-4 w-4 text-[var(--ep-purple)]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-purple-600">{stats.collaborations}</div>
-                <div className="text-xs text-muted-foreground">Faol hamkorliklar</div>
+                <div className="text-2xl font-bold text-[var(--ep-purple)]">{stats.collaborations}</div>
+                <div className="text-xs text-muted-foreground">{t("faolHamkorliklar")}</div>
               </div>
             </CardContent>
           </Card>
@@ -187,21 +196,21 @@ export default function HRAlumni() {
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Ism, lavozim yoki kompaniya..."
-              className="pl-8 h-8 text-sm"
+              placeholder={t("ismLavozimYokiKompaniya")}
+              className="pl-8 h-9 text-sm"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
           <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[180px] h-8 text-sm">
-              <SelectValue placeholder="Filtr" />
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
+              <SelectValue placeholder={t("filter3")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Barchasi</SelectItem>
-              <SelectItem value="returned">Qayta qaytganlar</SelectItem>
-              <SelectItem value="collaborating">Hamkorlik qilayotganlar</SelectItem>
-              <SelectItem value="available">Boshqalar</SelectItem>
+              <SelectItem value="all">{t("Barchasi")}</SelectItem>
+              <SelectItem value="returned">{t("qaytaQaytganlar")}</SelectItem>
+              <SelectItem value="collaborating">{t("hamkorlikQilayotganlar")}</SelectItem>
+              <SelectItem value="available">{t("boshqalar")}</SelectItem>
             </SelectContent>
           </Select>
           {filtered.length !== alumni.length && (
@@ -212,28 +221,28 @@ export default function HRAlumni() {
         {/* Table */}
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
+            <div className="ep-table-scroll"><Table>
+              <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow>
-                  <TableHead>Xodim</TableHead>
-                  <TableHead>Oxirgi lavozim</TableHead>
-                  <TableHead>Chiqish sanasi</TableHead>
-                  <TableHead>Chiqish sababi</TableHead>
-                  <TableHead>Hozirgi ish joyi</TableHead>
-                  <TableHead>Holat</TableHead>
-                  <TableHead className="text-right">Amal</TableHead>
+                  <TableHead>{t("xodim1")}</TableHead>
+                  <TableHead>{t("oxirgiLavozim")}</TableHead>
+                  <TableHead>{t("chiqishSanasi")}</TableHead>
+                  <TableHead>{t("chiqishSababi")}</TableHead>
+                  <TableHead>{t("hozirgiIshJoyi")}</TableHead>
+                  <TableHead>{t("status28")}</TableHead>
+                  <TableHead className="text-right">{t("amal")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                      Yuklanmoqda...
+                    <TableCell colSpan={7} className="text-center py-6 text-[13px] text-muted-foreground">
+                      {t("Yuklanmoqda...")}
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-10 text-[13px] text-muted-foreground">
                       <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
                       <p className="text-sm">
                         {alumni.length === 0
@@ -244,10 +253,10 @@ export default function HRAlumni() {
                   </TableRow>
                 ) : (
                   (Array.isArray(filtered) ? filtered : []).map(a => (
-                    <TableRow key={a.id} data-testid={`row-alumni-${a.id}`}>
+                    <TableRow key={a.id} data-testid={`row-alumni-${a.id}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600 shrink-0">
+                          <div className="h-7 w-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-[var(--ep-blue)] shrink-0">
                             {a.fullName.charAt(0)}
                           </div>
                           <div>
@@ -281,11 +290,11 @@ export default function HRAlumni() {
                       <TableCell>
                         {a.isReturned ? (
                           <Badge variant="default" className="text-xs flex items-center gap-1 w-fit">
-                            <RefreshCcw className="h-2.5 w-2.5" />Qaytdi
+                            <RefreshCcw className="h-2.5 w-2.5" />{t("qaytdi")}
                           </Badge>
                         ) : a.collaborationProject ? (
                           <Badge variant="secondary" className="text-xs flex items-center gap-1 w-fit">
-                            <Handshake className="h-2.5 w-2.5" />Hamkor
+                            <Handshake className="h-2.5 w-2.5" />{t("hamkor")}
                           </Badge>
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
@@ -299,7 +308,7 @@ export default function HRAlumni() {
                             className="h-7 text-xs"
                             onClick={() => setInviteTarget(a)}
                           >
-                            <UserCheck className="h-3 w-3 mr-1" />Taklif
+                            <UserCheck className="h-3 w-3 mr-1" />{t("taklif")}
                           </Button>
                         )}
                       </TableCell>
@@ -307,7 +316,7 @@ export default function HRAlumni() {
                   ))
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       </div>

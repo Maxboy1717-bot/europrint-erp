@@ -1,3 +1,8 @@
+/**
+ * @module qc.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -19,16 +24,25 @@ import { QcDefectsExtendedController } from './presentation/qc-defects-extended.
 import { QcNewController } from './presentation/qc-new.controller';
 import { QcParametersController } from './presentation/qc-parameters.controller';
 import { QC_REPOSITORY_PROVIDER } from './application/repositories/qc.repository';
+import { QC_COMPUTE_REPO } from './domain/repositories/i-qc.repo';
+import { QC_DEFECT_REPO } from './infrastructure/repositories/drizzle-defect.repo';
 import { DrizzleDefectRepository } from './infrastructure/repositories/drizzle-defect.repo';
 import { DrizzleQcReclamationRepo } from './infrastructure/repositories/drizzle-qc-reclamation.repo';
 import { DrizzleQcInspectionRepository } from './infrastructure/repositories/drizzle-inspection.repo';
+import { DrizzleQcComputeRepository } from './infrastructure/repositories/drizzle-qc.repo';
 import { DefectsService } from './defects/defects.service';
 import { DrizzleDefectsRepository } from './defects/drizzle-defects.repo';
 import { DEFECTS_REPO } from './defects/i-defects.repo';
 import { QcDefectsExtendedService } from './application/qc-defects-extended.service';
-import { QcDefectsExtendedRepository } from './application/qc-defects-extended.repository';
+import { QcDefectsExtendedRepository } from './infrastructure/repositories/qc-defects-extended.repository';
+import { QC_DEFECTS_EXTENDED_REPO } from './domain/repositories/i-qc-defects-extended.repo';
 import { QcExtendedService } from './application/qc-extended.service';
-import { QcExtendedRepository } from './application/qc-extended.repository';
+import { QcExtendedRepository } from './infrastructure/repositories/qc-extended.repository';
+import { QcExtendedStandardsRepository } from './infrastructure/repositories/qc-extended-standards.repository';
+import { QcExtendedFinalRepository } from './infrastructure/repositories/qc-extended-final.repository';
+import { QcExtendedInProcessRepository } from './infrastructure/repositories/qc-extended-in-process.repository';
+import { QcExtendedRootCausesRepository } from './infrastructure/repositories/qc-extended-root-causes.repository';
+import { QC_EXTENDED_REPO } from './domain/repositories/i-qc-extended.repo';
 import { QcNewService } from './application/qc-new.service';
 import { QcParametersService } from './application/qc-parameters.service';
 import { QcNewRepository } from './infrastructure/repositories/qc-new.repository';
@@ -64,10 +78,11 @@ const queryHandlers = [
 const repositories = [
   DrizzleQcReclamationRepo,
   {
-    provide: 'IQcDefectRepository',
+    provide: QC_DEFECT_REPO,
     useClass: DrizzleDefectRepository,
   },
   { provide: DEFECTS_REPO, useClass: DrizzleDefectsRepository },
+  { provide: QC_COMPUTE_REPO, useClass: DrizzleQcComputeRepository },
   QcNewRepository,
   QcParametersRepository,
 ];
@@ -96,8 +111,14 @@ const repositories = [
     },
     DefectsService,
     QcDefectsExtendedRepository,
+    { provide: QC_DEFECTS_EXTENDED_REPO, useClass: QcDefectsExtendedRepository },
     QcDefectsExtendedService,
+    QcExtendedStandardsRepository,
+    QcExtendedFinalRepository,
+    QcExtendedInProcessRepository,
+    QcExtendedRootCausesRepository,
     QcExtendedRepository,
+    { provide: QC_EXTENDED_REPO, useClass: QcExtendedRepository },
     QcExtendedService,
     QcNewService,
     QcParametersService,
@@ -112,7 +133,7 @@ const repositories = [
     DpmoService,
   ],
   exports: [
-    'IQcDefectRepository', QC_REPOSITORY_PROVIDER, DEFECTS_REPO, DefectsService,
+    QC_DEFECT_REPO, QC_REPOSITORY_PROVIDER, DEFECTS_REPO, DefectsService,
     DefectDetectorService, SpcService, FmeaService,
     InkConsumptionService, ImpositionService, SpoilageService, DeltaEService,
     DpmoService,

@@ -1,3 +1,8 @@
+/**
+ * @module discipline.cron
+ * @description Scheduled cron job. @nestjs/schedule registered task.
+ */
+
 import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import { db, discipline_records } from '@shared/db'
@@ -15,12 +20,12 @@ export class DisciplineCron {
     try {
       const expired = await db
         .update(discipline_records)
-        .set({ is_expired: true })
+        .set({ isExpired: true })
         .where(
           and(
-            eq(discipline_records.is_expired, false),
-            eq(discipline_records.is_soft_deleted, false),
-            lt(discipline_records.issued_date, sql`CURRENT_DATE - INTERVAL '6 months'`),
+            eq(discipline_records.isExpired, false),
+            eq(discipline_records.isSoftDeleted, false),
+            lt(discipline_records.issuedDate, sql`CURRENT_DATE - INTERVAL '6 months'`),
           ),
         )
         .returning({ id: discipline_records.id })

@@ -1,3 +1,8 @@
+/**
+ * @module design-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 // §9 Dizayn + Tayyorlov moduli — status zanjirlari, holat konstantalari
 // Task #6: new→ai_generated→designer_review→waiting_customer_approval→revision_requested→approved/rejected/archived
 

@@ -1,3 +1,8 @@
+/**
+ * @module daily-report.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -42,7 +47,7 @@ export class DailyReportRepository {
   async updateReportStatus(reportId: number, newStatus: string): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.update(hr_daily_reports)
-        .set({ status: newStatus, updated_at: _time.now() })
+        .set({ status: newStatus, updatedAt: _time.now() })
         .where(eq(hr_daily_reports.id, reportId))
         .returning();
       return castTo<Row | null>((rows[0] ?? null));
@@ -51,11 +56,11 @@ export class DailyReportRepository {
 
   async insertAudit(reportId: number, hrUserId: number, previousStatus: string, newStatus: string, reason: string): Promise<void> {
     await db.insert(hr_daily_report_audit).values({
-      report_id:       reportId,
-      hr_user_id:      hrUserId,
-      previous_status: previousStatus,
-      new_status:      newStatus,
-      reason:          reason,
+      reportId:       reportId,
+      hrUserId:       hrUserId,
+      previousStatus: previousStatus,
+      newStatus:      newStatus,
+      reason:         reason,
     });
   }
 
@@ -77,24 +82,84 @@ export class DailyReportRepository {
     return safeCall(async () => {
       const rows = await db.select()
         .from(hr_daily_reports)
-        .where(eq(hr_daily_reports.employee_id, employeeId))
-        .orderBy(sql`${hr_daily_reports.report_date} DESC`)
+        .where(eq(hr_daily_reports.employeeId, employeeId))
+        .orderBy(sql`${hr_daily_reports.reportDate} DESC`)
         .limit(limit);
       return castTo<Row[]>(rows);
       }, 'DB_ERROR');
   }
 
-  async getByDate(date: string): Promise<Result<Row[]>> {
+  async getByDate(date: string, type: 'all' | 'operator' | 'office' = 'all', limit = 100): Promise<Result<Row[]>> {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
-        SELECT dr.*, e.first_name || ' ' || e.last_name AS employee_name, d.name AS department_name
+        SELECT dr.*,
+               e.first_name,
+               e.last_name,
+               e.employee_code,
+               COALESCE(e.is_machine_operator, false) AS is_machine_operator,
+               COALESCE(dr.is_machine_operator_report, false) AS is_machine_operator_report,
+               d.name AS department_name
         FROM hr_daily_reports dr
         JOIN employees e ON e.id = dr.employee_id
         LEFT JOIN departments d ON d.id = e.department_id
         WHERE dr.report_date::date = ${date}::date
+          AND (
+            ${type}::text = 'all'
+            OR (${type}::text = 'operator' AND COALESCE(e.is_machine_operator, false) = true)
+            OR (${type}::text = 'office'   AND COALESCE(e.is_machine_operator, false) = false)
+          )
         ORDER BY e.last_name
+        LIMIT ${limit}
       `);
       return rows.rows as Row[];
+      }, 'DB_ERROR');
+  }
+
+  /**
+   * Department snapshot: submitted vs. missing employees for a given date.
+   * Returns shape consumed by `DailyReportPage.tsx` admin tab:
+   *   { submitted: DailyReportEmployee[], missing: DailyReportEmployee[] }
+   */
+  async getByDepartment(departmentId: number, date: string): Promise<Result<{ submitted: Row[]; missing: Row[] }>> {
+    return safeCall(async () => {
+      const submitted = await runQuery<Row>(sql`
+        SELECT dr.id,
+               e.id AS employee_id,
+               e.first_name,
+               e.last_name,
+               e.employee_code,
+               COALESCE(e.is_machine_operator, false) AS is_machine_operator,
+               dr.submitted_at,
+               dr.status,
+               dr.is_auto_absent,
+               dr.tasks_completed
+        FROM employees e
+        JOIN hr_daily_reports dr
+          ON dr.employee_id = e.id
+         AND dr.report_date::date = ${date}::date
+        WHERE e.department_id = ${departmentId}
+          AND e.status = 'active'
+        ORDER BY e.last_name
+      `);
+
+      const missing = await runQuery<Row>(sql`
+        SELECT e.id,
+               e.first_name,
+               e.last_name,
+               e.employee_code,
+               COALESCE(e.is_machine_operator, false) AS is_machine_operator
+        FROM employees e
+        WHERE e.department_id = ${departmentId}
+          AND e.status = 'active'
+          AND NOT EXISTS (
+            SELECT 1 FROM hr_daily_reports dr
+            WHERE dr.employee_id = e.id
+              AND dr.report_date::date = ${date}::date
+          )
+        ORDER BY e.last_name
+      `);
+
+      return { submitted: submitted.rows as Row[], missing: missing.rows as Row[] };
       }, 'DB_ERROR');
   }
 
@@ -118,5 +183,25 @@ export class DailyReportRepository {
 
   async markAbsentForDate(today: string): Promise<void> {
     await execDailyReportMarkAbsent(today);
+  }
+
+  async findByIdWithEmployee(reportId: number): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT
+          dr.*,
+          e.first_name, e.last_name,
+          e.first_name || ' ' || e.last_name AS employee_name,
+          p.name AS position_name,
+          d.name AS department_name
+        FROM hr_daily_reports dr
+        JOIN employees e ON e.id = dr.employee_id
+        LEFT JOIN positions p ON p.id = e.position_id
+        LEFT JOIN departments d ON d.id = e.department_id
+        WHERE dr.id = ${reportId}
+        LIMIT 1
+      `);
+      return (rows.rows[0] ?? null) as Row | null;
+    }, 'DB_ERROR');
   }
 }

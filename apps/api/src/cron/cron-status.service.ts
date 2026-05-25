@@ -1,3 +1,8 @@
+/**
+ * @module cron-status.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Logger } from '@nestjs/common';
@@ -22,53 +27,53 @@ interface CronJobMeta {
   schedule: string
 }
 
+function matchesStepPart(part: string, value: number, min: number, max: number): boolean {
+  const [base, step] = part.split('/')
+  const start = base === '*' ? min : parseInt(base, 10)
+  const stepN = parseInt(step, 10)
+  for (let v = start; v <= max; v += stepN) {
+    if (v === value) return true
+  }
+  return false
+}
+
+function matchesPart(part: string, value: number, min: number, max: number): boolean {
+  if (part.includes('/')) return matchesStepPart(part, value, min, max)
+  if (part.includes('-')) {
+    const [lo, hi] = part.split('-').map(Number)
+    return value >= lo && value <= hi
+  }
+  return parseInt(part, 10) === value
+}
+
+function matchesField(field: string, value: number, min: number, max: number): boolean {
+  if (field === '*') return true
+  for (const part of field.split(',')) {
+    if (matchesPart(part, value, min, max)) return true
+  }
+  return false
+}
+
+function cronFieldsMatch(fields: string[], candidate: Date): boolean {
+  const [minField, hourField, domField, monthField, dowField] = fields
+  return (
+    matchesField(monthField, candidate.getMonth() + 1, 1, 12) &&
+    matchesField(domField, candidate.getDate(), 1, 31) &&
+    matchesField(dowField, candidate.getDay(), 0, 7) &&
+    matchesField(hourField, candidate.getHours(), 0, 23) &&
+    matchesField(minField, candidate.getMinutes(), 0, 59)
+  )
+}
+
 /** Parse a 5-field cron expression and return the next fire Date.
  *  Handles: numeric, *, ranges (a-b), lists (a,b,c), steps (n/step).
- *  Sufficient for all schedule variants in this project.
  */
 function nextCronDate(expression: string): Date {
   const fields = expression.split(' ')
-  const [minField, hourField, domField, monthField, dowField] = fields
-
-  function matchesField(field: string, value: number, min: number, max: number): boolean {
-    if (field === '*') return true
-    for (const part of field.split(',')) {
-      if (part.includes('/')) {
-        const [base, step] = part.split('/')
-        const start = base === '*' ? min : parseInt(base, 10)
-        const stepN = parseInt(step, 10)
-        for (let v = start; v <= max; v += stepN) {
-          if (v === value) return true
-        }
-      } else if (part.includes('-')) {
-        const [lo, hi] = part.split('-').map(Number)
-        if (value >= lo && value <= hi) return true
-      } else {
-        if (parseInt(part, 10) === value) return true
-      }
-    }
-    return false
-  }
-
   const candidate = new Date(Date.now() + 60_000)
   candidate.setSeconds(0, 0)
-
   for (let i = 0; i < 60 * 24 * 366; i++) {
-    const min = candidate.getMinutes()
-    const hour = candidate.getHours()
-    const dom = candidate.getDate()
-    const month = candidate.getMonth() + 1
-    const dow = candidate.getDay()
-
-    if (
-      matchesField(monthField, month, 1, 12) &&
-      matchesField(domField, dom, 1, 31) &&
-      matchesField(dowField, dow, 0, 7) &&
-      matchesField(hourField, hour, 0, 23) &&
-      matchesField(minField, min, 0, 59)
-    ) {
-      return candidate
-    }
+    if (cronFieldsMatch(fields, candidate)) return candidate
     candidate.setTime(candidate.getTime() + 60_000)
   }
   return new Date(Date.now() + 365 * 86400_000)
@@ -190,9 +195,9 @@ export class CronStatusService {
     const all = this.getAllStatuses()
     return Ok({
       total: all.length,
-      neverRan: (all ?? []).filter(j => j.lastResult === 'never').length,
-      successLast: (all ?? []).filter(j => j.lastResult === 'success').length,
-      failureLast: (all ?? []).filter(j => j.lastResult === 'failure').length,
+      neverRan: (Array.isArray(all) ? all : []).filter(j => j.lastResult === 'never').length,
+      successLast: (Array.isArray(all) ? all : []).filter(j => j.lastResult === 'success').length,
+      failureLast: (Array.isArray(all) ? all : []).filter(j => j.lastResult === 'failure').length,
     })
   }
 }

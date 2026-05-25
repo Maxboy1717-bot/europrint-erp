@@ -1,3 +1,8 @@
+/**
+ * @module career-path.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
@@ -14,12 +19,12 @@ export class CareerPathRepository {
   async createPath(dto: { employeeId: number; currentPositionId: number; targetPositionId: number; createdBy: number; estimatedMonths: number }): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(career_paths).values({
-        employee_id:         dto.employeeId,
-        current_position_id: dto.currentPositionId,
-        target_position_id:  dto.targetPositionId,
-        created_by:          dto.createdBy,
-        estimated_months:    dto.estimatedMonths,
-        status:              'active',
+        employeeId:        dto.employeeId,
+        currentPositionId: dto.currentPositionId,
+        targetPositionId:  dto.targetPositionId,
+        createdBy:         dto.createdBy,
+        estimatedMonths:   dto.estimatedMonths,
+        status:            'active',
       }).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
@@ -28,9 +33,9 @@ export class CareerPathRepository {
   async updateStep(stepId: number, pathId: number, isCompleted: boolean): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(career_path_steps).set({
-        is_completed:  isCompleted,
-        completed_at:  isCompleted ? _time.now() : null,
-      }).where(sql`${career_path_steps.id} = ${stepId} AND ${career_path_steps.career_path_id} = ${pathId}`).returning();
+        isCompleted: isCompleted,
+        completedAt: isCompleted ? _time.now() : null,
+      }).where(sql`${career_path_steps.id} = ${stepId} AND ${career_path_steps.careerPathId} = ${pathId}`).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
   }
@@ -39,10 +44,10 @@ export class CareerPathRepository {
     return safeCall(async () => {
       const r = await db.select({
         total:     sql<string>`COUNT(*)`,
-        completed: sql<string>`COUNT(*) FILTER (WHERE ${career_path_steps.is_completed} = true)`,
+        completed: sql<string>`COUNT(*) FILTER (WHERE ${career_path_steps.isCompleted} = true)`,
       })
         .from(career_path_steps)
-        .where(eq(career_path_steps.career_path_id, pathId));
+        .where(eq(career_path_steps.careerPathId, pathId));
       return {
         total:     parseInt(String(r[0]?.total ?? '0')),
         completed: parseInt(String(r[0]?.completed ?? '0')),
@@ -58,7 +63,7 @@ export class CareerPathRepository {
   }
 
   async updatePathProgress(pathId: number, progress: number): Promise<void> {
-    await db.update(career_paths).set({ progress_percent: progress }).where(eq(career_paths.id, pathId));
+    await db.update(career_paths).set({ progressPercent: progress }).where(eq(career_paths.id, pathId));
   }
 
   async markPathCompleted(pathId: number): Promise<void> {
@@ -83,8 +88,8 @@ export class CareerPathRepository {
     return safeCall(async () => {
       const rows = await db.select()
         .from(career_path_steps)
-        .where(eq(career_path_steps.career_path_id, Number(pathId)))
-        .orderBy(career_path_steps.step_order);
+        .where(eq(career_path_steps.careerPathId, Number(pathId)))
+        .orderBy(career_path_steps.stepOrder);
       return castTo<Row[]>(rows);
       }, 'DB_ERROR');
   }
@@ -92,11 +97,11 @@ export class CareerPathRepository {
   async addStep(pathId: number, dto: { stepOrder: number; positionTitle: string | null; skills: string | null; requiredMonths: number }): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(career_path_steps).values({
-        career_path_id:  pathId,
-        step_order:      dto.stepOrder,
-        position_title:  dto.positionTitle,
-        required_skills: dto.skills,
-        required_months: dto.requiredMonths,
+        careerPathId:   pathId,
+        stepOrder:      dto.stepOrder,
+        positionTitle:  dto.positionTitle,
+        requiredSkills: dto.skills,
+        requiredMonths: dto.requiredMonths,
       }).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');
@@ -138,11 +143,11 @@ export class CareerPathRepository {
   async getActivePathsForMonthlyCheck(): Promise<Result<Row[]>> {
     return safeCall(async () => {
       const rows = await db.select({
-        id:               career_paths.id,
-        employee_id:      career_paths.employee_id,
-        progress_percent: career_paths.progress_percent,
-        estimated_months: career_paths.estimated_months,
-        months_elapsed:   sql<number>`EXTRACT(MONTH FROM AGE(NOW(), ${career_paths.created_at}))`,
+        id:              career_paths.id,
+        employeeId:      career_paths.employeeId,
+        progressPercent: career_paths.progressPercent,
+        estimatedMonths: career_paths.estimatedMonths,
+        monthsElapsed:   sql<number>`EXTRACT(MONTH FROM AGE(NOW(), ${career_paths.createdAt}))`,
       })
         .from(career_paths)
         .where(sql`${career_paths.status} = 'active'`);

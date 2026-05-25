@@ -1,3 +1,8 @@
+/**
+ * @module territory.gateway
+ * @description NestJS WebSocket gateway. Socket.IO handlers.
+ */
+
 import { Logger } from '@nestjs/common';
 import {
   WebSocketGateway,
@@ -62,10 +67,10 @@ export class TerritoryGateway
       const payload = jwt.verify(token, this.jwtSecret) as jwt.JwtPayload;
       const rawRole = payload['role'] ?? payload['roles'];
       const roles: string[] = Array.isArray(rawRole)
-        ? (rawRole ?? []).map(String)
+        ? (Array.isArray(rawRole) ? rawRole : []).map(String)
         : typeof rawRole === 'string' ? [rawRole] : [];
 
-      const authorized = (roles ?? []).some((r) => ALLOWED_ROLES.has(r));
+      const authorized = (Array.isArray(roles) ? roles : []).some((r) => ALLOWED_ROLES.has(r));
       if (!authorized) {
         this.logger.warn(
           'TerritoryGateway: role %s not authorized from %s — disconnecting',

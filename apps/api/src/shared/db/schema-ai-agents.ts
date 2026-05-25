@@ -1,3 +1,8 @@
+/**
+ * @module schema-ai-agents
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, uuid, text, boolean, integer, jsonb,
   timestamp, numeric, index, uniqueIndex,

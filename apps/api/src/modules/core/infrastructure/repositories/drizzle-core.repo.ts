@@ -1,11 +1,14 @@
+/**
+ * @module drizzle-core.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
-import { pgTable, text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
 import { eq, sql } from 'drizzle-orm';
-import { db } from '@shared/db';
-import { departments, positions } from '@shared/db';
+import { db, user_panels as userPanels, departments, positions } from '@shared/db';
 import { Result, Err, Ok } from '@common/types/result.type';
 import { ICoreRepo } from '../../domain/repositories/i-core.repo';
 import { Department } from '../../domain/aggregates/department.aggregate';
@@ -13,15 +16,8 @@ import { Position } from '../../domain/aggregates/position.aggregate';
 import { Panel, PanelLayout } from '../../domain/aggregates/panel.aggregate';
 import { createId } from '@paralleldrive/cuid2';
 
-export const userPanels = pgTable('user_panels', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-  userId: text('user_id').unique().notNull(),
-  name: text('name').notNull().default('My Dashboard'),
-  layout: jsonb('layout').notNull().default([]),
-  isDefault: boolean('is_default').default(false),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
+// Re-export so callers that previously imported `userPanels` from this file keep working.
+export { userPanels };
 
 type DbRow = Record<string, unknown>;
 type UserPanelRow = typeof userPanels.$inferSelect;
@@ -49,7 +45,7 @@ export class DrizzleCoreRepo implements ICoreRepo {
   async findAllDepartments(_filters?: { isActive?: boolean; parentId?: string }): Promise<Result<Department[]>> {
     try {
       const r = await db.select().from(departments).orderBy(sql`${departments.id}`).then(r => castTo<DbRow[]>(r));
-      return Ok((r ?? []).map((row) => this.mapToDepartment(row)));
+      return Ok((Array.isArray(r) ? r : []).map((row) => this.mapToDepartment(row)));
     } catch (e: unknown) {
       this.logger.error(`findAllDepartments error: ${errMsg(e)}`);
       return Err(errMsg(e));
@@ -101,7 +97,7 @@ export class DrizzleCoreRepo implements ICoreRepo {
   async findAllPositions(_filters?: { departmentId?: string; isActive?: boolean }): Promise<Result<Position[]>> {
     try {
       const r = await db.select().from(positions).orderBy(sql`${positions.id}`).then(r => castTo<DbRow[]>(r));
-      return Ok((r ?? []).map((row) => this.mapToPosition(row)));
+      return Ok((Array.isArray(r) ? r : []).map((row) => this.mapToPosition(row)));
     } catch (e: unknown) {
       this.logger.error(`findAllPositions error: ${errMsg(e)}`);
       return Err(errMsg(e));
@@ -146,7 +142,13 @@ export class DrizzleCoreRepo implements ICoreRepo {
       const result = await db.select().from(userPanels).where(eq(userPanels.userId, userId));
       if (result.length === 0) return Ok(null);
       return Ok(this.mapToPanel(result[0]));
-    } catch { return Ok(null); }
+    } catch (error) {
+      this.logger.error(
+        { method: 'findPanelByUserId', userId, error },
+        'Database query failed',
+      );
+      return Err(`Failed to fetch user panel: ${(error as Error).message}`);
+    }
   }
 
   async savePanelForUser(userId: string, layout: PanelLayout[], name?: string): Promise<Result<Panel>> {
@@ -175,7 +177,13 @@ export class DrizzleCoreRepo implements ICoreRepo {
       const result = await db.select().from(userPanels).where(eq(userPanels.isDefault, true));
       if (result.length === 0) return Ok(null);
       return Ok(this.mapToPanel(result[0]));
-    } catch { return Ok(null); }
+    } catch (error) {
+      this.logger.error(
+        { method: 'getDefaultPanel', error },
+        'Database query failed',
+      );
+      return Err(`Failed to fetch default panel: ${(error as Error).message}`);
+    }
   }
 
   private mapToDepartment(row: DbRow): Department {

@@ -1,6 +1,12 @@
+/**
+ * @module CourseSettingsForm
+ * @description React UI component.
+ */
+
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from '@/lib/i18n';
 import {
   Select,
   SelectContent,
@@ -22,26 +28,28 @@ interface CourseSettingsFormProps {
 }
 
 export function CourseSettingsForm({ formData, setFormData }: CourseSettingsFormProps) {
+  const { t } = useTranslation("common");
+  const { t: tLms } = useTranslation("lms");
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="level">Daraja</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Label htmlFor="level">{t("daraja")}</Label>
           <Select value={formData.level} onValueChange={(value: string) => setFormData({ ...formData, level: value as "beginner" | "intermediate" | "advanced" })}>
-            <SelectTrigger data-testid="select-level">
+            <SelectTrigger data-testid="select-level" className="h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="beginner">Boshlang'ich</SelectItem>
-              <SelectItem value="intermediate">O'rta</SelectItem>
-              <SelectItem value="advanced">Ilg'or</SelectItem>
+              <SelectItem value="beginner">{t("boshlangich")}</SelectItem>
+              <SelectItem value="intermediate">{t("medium")}</SelectItem>
+              <SelectItem value="advanced">{t("ilgor")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="flex items-center justify-between space-x-2 pt-8">
           <Label htmlFor="required" className="cursor-pointer">
-            Majburiy kurs
+            {t("majburiyKurs")}
           </Label>
           <Switch
             id="required"
@@ -52,9 +60,9 @@ export function CourseSettingsForm({ formData, setFormData }: CourseSettingsForm
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="startDate">Boshlanish sanasi (ixtiyoriy)</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Label htmlFor="startDate">{tLms("startDateOptional")}</Label>
           <Input
             id="startDate"
             type="date"
@@ -66,8 +74,8 @@ export function CourseSettingsForm({ formData, setFormData }: CourseSettingsForm
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="endDate">Tugash sanasi (ixtiyoriy)</Label>
+        <div className="space-y-1">
+          <Label htmlFor="endDate">{tLms("endDateOptional")}</Label>
           <Input
             id="endDate"
             type="date"

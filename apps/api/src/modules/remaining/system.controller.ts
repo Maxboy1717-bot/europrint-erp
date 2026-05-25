@@ -1,19 +1,34 @@
-import { Body, Controller, Get, Put, UseGuards, UseInterceptors } from '@nestjs/common';
+/**
+ * @module system.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { SystemService } from './system.service';
 import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import {
+  CronJobAclTranslator,
+  type LegacyCronJobRow,
+  type CronJobDto,
+} from './acl/cron-job-acl';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(RolesGuard)
 @Controller('system')
 @Roles('admin', 'super_admin', 'director')
 export class SystemController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly cronAcl = new CronJobAclTranslator();
+
   constructor(private readonly svc: SystemService) {}
+
+  // POST /system endpoint removed — no frontend consumer, no service backing.
 
   @Get('health')
   async getHealth() {
@@ -32,6 +47,22 @@ export class SystemController {
     return r.data;
   }
 
+  /**
+   * PA2-14 ACL-translated variant. New BC-10 (Platform / Ops) consumers
+   * should target this endpoint; the legacy `/cron-jobs` route stays for
+   * backwards-compat.
+   */
+  @Get('cron-jobs/v2')
+  getCronJobsV2(): CronJobDto[] {
+    const r = this.svc.getCronJobs();
+    assertOk(r);
+    const rows = Array.isArray(r.data) ? r.data : [];
+    return rows
+      .map((row) => this.cronAcl.toDomain(row as unknown as LegacyCronJobRow))
+      .filter((res): res is { ok: true; data: CronJobDto } => res.ok)
+      .map((res) => res.data);
+  }
+
   @Get()
   getSystemInfo() { return { status: 'ok', version: '1.0.0' }; }
 
@@ -43,7 +74,21 @@ export class SystemController {
   }
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@UseInterceptors(AuditInterceptor)
+@UseGuards(RolesGuard)
+@Controller('supply-chain')
+@Roles('admin', 'super_admin', 'director', 'purchaser', 'purchase_manager')
+export class SupplyChainController {
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh() {
+    // Cache invalidation trigger — clients re-fetch after calling this
+    return { ok: true, refreshedAt: new Date().toISOString() };
+  }
+}
+
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(RolesGuard)
 @Controller('system/settings')

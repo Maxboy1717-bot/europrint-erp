@@ -1,14 +1,18 @@
+/**
+ * @module create-approval-request.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result } from '@common/types/result.type';
 import { ApprovalRequest } from '../../domain/aggregates/approval-request.aggregate';
 import { APPROVAL_REPO, IApprovalRepo } from '../../domain/repositories/i-approval.repo';
 import { ApprovalStatus } from '../../domain/enums/hitl-document-type.enum';
 import { CreateApprovalRequestCommand } from './create-approval-request.command';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
+import { HitlApprovalRequestedEvent } from '../../domain/events/hitl-approval-requested.event';
 
 @CommandHandler(CreateApprovalRequestCommand)
 export class CreateApprovalRequestHandler
@@ -18,7 +22,7 @@ export class CreateApprovalRequestHandler
 
   constructor(
     @Inject(APPROVAL_REPO) private readonly approvalRepo: IApprovalRepo,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly eventBus: EventBus,
   ) {}
 
   async execute(
@@ -71,15 +75,15 @@ export class CreateApprovalRequestHandler
     }
 
     // Emit event
-    this.eventEmitter.emit(ERP_EVENTS.HITL_APPROVAL_REQUESTED, {
-      id: saveResult.data.id,
-      documentType: saveResult.data.documentType,
-      documentId: saveResult.data.documentId,
-      amount: saveResult.data.amount,
-      currency: saveResult.data.currency,
-      requestedBy: saveResult.data.requestedBy,
-      createdAt: saveResult.data.createdAt,
-    });
+    await this.eventBus.publish(new HitlApprovalRequestedEvent(
+      saveResult.data.id,
+      saveResult.data.documentType,
+      saveResult.data.documentId,
+      saveResult.data.amount,
+      saveResult.data.currency,
+      saveResult.data.requestedBy,
+      saveResult.data.createdAt,
+    ));
 
     this.logger.log(
       `Tasdiqlash so'rovi yaratildi: ${saveResult.data.id} (${command.documentType})`,

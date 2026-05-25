@@ -1501,6 +1501,48 @@
         </div>
       </div>
     </div>
+
+    <!-- Employees List Table (SmartHR style) -->
+    <div class="row g-3 mt-1">
+      <div class="col-12">
+        <div class="ep-card">
+          <div class="ep-card-header">
+            <h6 class="mb-0">Xodimlar ro'yxati</h6>
+            <div class="d-flex gap-2 align-items-center">
+              <span class="badge bg-success-subtle text-success">1007 Faol</span>
+              <span class="badge bg-danger-subtle text-danger">8 Nofaol</span>
+              <input class="form-control form-control-sm" style="width:160px" placeholder="Qidirish...">
+              <select class="form-select form-select-sm" style="width:120px"><option>Lavozim</option><option>Operator</option><option>Menejer</option><option>Texnik</option></select>
+              <select class="form-select form-select-sm" style="width:100px"><option>Holat</option><option>Faol</option><option>Nofaol</option></select>
+              <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Qo'shish</button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead style="background:var(--bs-tertiary-bg)">
+                <tr><th class="small">Xodim ID</th><th class="small">Ism</th><th class="small">Telefon</th><th class="small">Lavozim</th><th class="small">Bo'lim</th><th class="small">Ish boshlagan</th><th class="small">Holat</th><th></th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="small text-muted">Emp-001</td><td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-primary);color:#fff">SK</span><div><div class="fw-semibold small">Sardor Karimov</div><small class="text-muted">s.karimov@europrint.uz</small></div></div></td><td class="small">+998 90 123-45-67</td><td class="small">Bosma operatori</td><td class="small">Ishlab chiqarish</td><td class="small">12 sen 2020</td><td><span class="badge bg-success-subtle text-success">Faol</span></td><td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td></tr>
+                <tr><td class="small text-muted">Emp-002</td><td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-cyan);color:#fff">DM</span><div><div class="fw-semibold small">Doniyor Mirsodikov</div><small class="text-muted">d.mirso@europrint.uz</small></div></div></td><td class="small">+998 91 234-56-78</td><td class="small">Yordamchi operator</td><td class="small">Ishlab chiqarish</td><td class="small">05 mar 2021</td><td><span class="badge bg-success-subtle text-success">Faol</span></td><td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td></tr>
+                <tr><td class="small text-muted">Emp-003</td><td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-purple);color:#fff">AT</span><div><div class="fw-semibold small">Akmal Tursunov</div><small class="text-muted">a.tursun@europrint.uz</small></div></div></td><td class="small">+998 93 345-67-89</td><td class="small">Brigada boshlig'i</td><td class="small">Ishlab chiqarish</td><td class="small">18 yan 2019</td><td><span class="badge bg-success-subtle text-success">Faol</span></td><td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td></tr>
+                <tr><td class="small text-muted">Emp-004</td><td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-green);color:#fff">BV</span><div><div class="fw-semibold small">Barno Vosiqova</div><small class="text-muted">b.vosiq@europrint.uz</small></div></div></td><td class="small">+998 97 456-78-90</td><td class="small">Moliyachilar</td><td class="small">Moliya</td><td class="small">20 apr 2022</td><td><span class="badge bg-success-subtle text-success">Faol</span></td><td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td></tr>
+                <tr><td class="small text-muted">Emp-005</td><td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-pink);color:#fff">FM</span><div><div class="fw-semibold small">Fotima Mamatova</div><small class="text-muted">f.mamat@europrint.uz</small></div></div></td><td class="small">+998 94 567-89-01</td><td class="small">HR menejeri</td><td class="small">HR</td><td class="small">08 iyun 2021</td><td><span class="badge bg-success-subtle text-success">Faol</span></td><td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td></tr>
+                <tr><td class="small text-muted">Emp-006</td><td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:#1B2850;color:#fff">SN</span><div><div class="fw-semibold small">Sherzod Nazarov</div><small class="text-muted">sh.nazar@europrint.uz</small></div></div></td><td class="small">+998 95 678-90-12</td><td class="small">IT muhandis</td><td class="small">IT</td><td class="small">14 avg 2022</td><td><span class="badge bg-success-subtle text-success">Faol</span></td><td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td></tr>
+                <tr><td class="small text-muted">Emp-007</td><td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-primary);color:#fff">GX</span><div><div class="fw-semibold small">Gulnora Xasanova</div><small class="text-muted">g.xasan@europrint.uz</small></div></div></td><td class="small">+998 98 789-01-23</td><td class="small">Savdo menejeri</td><td class="small">Savdo</td><td class="small">29 okt 2020</td><td><span class="badge bg-success-subtle text-success">Faol</span></td><td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td></tr>
+                <tr><td class="small text-muted">Emp-008</td><td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-yellow,#f5a623);color:#fff">DE</span><div><div class="fw-semibold small">Davron Egamov</div><small class="text-muted">d.egam@europrint.uz</small></div></div></td><td class="small">+998 99 890-12-34</td><td class="small">Texnik xizmat</td><td class="small">MRO</td><td class="small">03 fev 2023</td><td><span class="badge bg-warning-subtle text-warning">Sinov</span></td><td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td></tr>
+                <tr><td class="small text-muted">Emp-009</td><td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-cyan);color:#fff">ZR</span><div><div class="fw-semibold small">Zulfiya Rahimova</div><small class="text-muted">z.rahim@europrint.uz</small></div></div></td><td class="small">+998 90 901-23-45</td><td class="small">Buxgalter</td><td class="small">Moliya</td><td class="small">11 iyl 2019</td><td><span class="badge bg-success-subtle text-success">Faol</span></td><td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td></tr>
+                <tr><td class="small text-muted">Emp-010</td><td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-purple);color:#fff">LB</span><div><div class="fw-semibold small">Lochinbek Baxtiyorov</div><small class="text-muted">l.baxt@europrint.uz</small></div></div></td><td class="small">+998 91 012-34-56</td><td class="small">Dizayner</td><td class="small">Savdo</td><td class="small">17 noy 2021</td><td><span class="badge bg-danger-subtle text-danger">Nofaol</span></td><td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-between align-items-center px-3 py-2">
+            <span class="small text-muted">1–10 / 156 xodim ko'rsatilmoqda</span>
+            <nav><ul class="pagination pagination-sm mb-0"><li class="page-item disabled"><a class="page-link">‹</a></li><li class="page-item active"><a class="page-link">1</a></li><li class="page-item"><a class="page-link">2</a></li><li class="page-item"><a class="page-link">3</a></li><li class="page-item"><a class="page-link">›</a></li></ul></nav>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ============ SALES ============ -->
@@ -1728,45 +1770,162 @@
   <!-- ============ CRM ============ -->
   <div class="ep-page" id="page-crm">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <div><h2 class="ep-page-title mb-0">CRM — Mijozlar munosabatlari</h2>
-        <div class="breadcrumb-mini"><i class="bi bi-house"></i> <a href="#">Bosh</a> / CRM</div></div>
-      <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Yangi lead</button>
+      <div><h2 class="ep-page-title mb-0">CRM — Bitimlar boshqaruvi</h2>
+        <div class="breadcrumb-mini"><i class="bi bi-house"></i> <a href="#">Bosh</a> / CRM / Bitimlar</div></div>
+      <div class="d-flex gap-2">
+        <button class="pill-btn"><i class="bi bi-download me-1"></i>Eksport</button>
+        <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Bitim qo'shish</button>
+      </div>
     </div>
-    <div class="row g-3 mb-4">
-      <div class="col-6 col-xl-3"><div class="kpi-card"><div class="kpi-icon" style="background:var(--ep-primary)20;color:var(--ep-primary)"><i class="bi bi-people"></i></div><div class="kpi-val">384</div><div class="kpi-lbl">Jami mijozlar</div><div class="kpi-badge text-success"><i class="bi bi-arrow-up-short"></i>+12 bu oy</div></div></div>
-      <div class="col-6 col-xl-3"><div class="kpi-card"><div class="kpi-icon" style="background:var(--ep-cyan)20;color:var(--ep-cyan)"><i class="bi bi-funnel"></i></div><div class="kpi-val">67</div><div class="kpi-lbl">Pipeline dillari</div><div class="kpi-badge text-success"><i class="bi bi-arrow-up-short"></i>+8</div></div></div>
-      <div class="col-6 col-xl-3"><div class="kpi-card"><div class="kpi-icon" style="background:var(--ep-green)20;color:var(--ep-green)"><i class="bi bi-trophy"></i></div><td><div class="kpi-val">43%</div></td><div class="kpi-lbl">Yutish darajasi</div><div class="kpi-badge text-success"><i class="bi bi-arrow-up-short"></i>+5%</div></div></div>
-      <div class="col-6 col-xl-3"><div class="kpi-card"><div class="kpi-icon" style="background:var(--ep-purple)20;color:var(--ep-purple)"><i class="bi bi-currency-dollar"></i></div><div class="kpi-val">$420K</div><div class="kpi-lbl">Pipeline qiymati</div><div class="kpi-badge text-success"><i class="bi bi-arrow-up-short"></i>+18%</div></div></div>
+    <!-- KPI row -->
+    <div class="row g-3 mb-3">
+      <div class="col-md-3 col-sm-6"><div class="client-stat"><div class="csi" style="background:rgba(255,144,47,.12);color:var(--ep-primary)"><i class="bi bi-briefcase-fill"></i></div><div class="csbody"><div class="csl">Jami bitimlar</div><div class="csv">$20,245</div></div><span class="cspct text-success"><i class="bi bi-arrow-up-short"></i>+40.9%</span></div></div>
+      <div class="col-md-3 col-sm-6"><div class="client-stat"><div class="csi" style="background:rgba(255,111,145,.12);color:var(--ep-pink)"><i class="bi bi-currency-dollar"></i></div><div class="csbody"><div class="csl">Bitim qiymati</div><div class="csv">$12,546</div></div><span class="cspct text-danger"><i class="bi bi-arrow-down-short"></i>-1.48%</span></div></div>
+      <div class="col-md-3 col-sm-6"><div class="client-stat"><div class="csi" style="background:rgba(0,192,135,.12);color:var(--ep-green)"><i class="bi bi-trophy-fill"></i></div><div class="csbody"><div class="csl">Konversiya</div><div class="csv">$1.96%</div></div><span class="cspct text-success"><i class="bi bi-arrow-up-short"></i>+1.6%</span></div></div>
+      <div class="col-md-3 col-sm-6"><div class="client-stat"><div class="csi" style="background:rgba(40,201,232,.12);color:var(--ep-cyan)"><i class="bi bi-people-fill"></i></div><div class="csbody"><div class="csl">Yangi mijozlar</div><div class="csv">$987</div></div><span class="cspct text-success"><i class="bi bi-arrow-up-short"></i>+8.52%</span></div></div>
     </div>
-    <!-- Kanban pipeline -->
-    <div class="kanban-page">
-      <div class="kn-col">
-        <div class="kn-col-head"><span>Lead</span><span class="badge bg-secondary">18</span></div>
-        <div class="kn-card"><div class="kn-card-title">Toshkent Matbaa Ltd.</div><div class="kn-card-meta">$12,000 · Alijonov B.</div></div>
-        <div class="kn-card"><div class="kn-card-title">PrintZone UZ</div><div class="kn-card-meta">$8,500 · Nazarova G.</div></div>
-        <div class="kn-card"><div class="kn-card-title">Samarqand Kitob</div><div class="kn-card-meta">$6,200 · Ergashev T.</div></div>
+    <!-- Tab switcher -->
+    <div class="ep-card">
+      <div class="ep-card-header">
+        <div class="ep-tabs">
+          <button class="active" onclick="switchCrmView('list',this)"><i class="bi bi-list-ul me-1"></i>Ro'yxat</button>
+          <button onclick="switchCrmView('kanban',this)"><i class="bi bi-kanban me-1"></i>Kanban</button>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+          <span class="small text-muted">Sahifada ko'rsatish:</span>
+          <select class="form-select form-select-sm" style="width:70px"><option>10</option><option>25</option></select>
+          <select class="form-select form-select-sm" style="width:120px"><option>Bosqich tanlang</option><option>Lead</option><option>Aloqa</option><option>Taklif</option><option>Yutildi</option></select>
+          <select class="form-select form-select-sm" style="width:100px"><option>Holat</option><option>Faol</option><option>Yopildi</option></select>
+          <input class="form-control form-control-sm" style="width:170px" placeholder="Qidirish...">
+        </div>
       </div>
-      <div class="kn-col">
-        <div class="kn-col-head"><span>Aloqa o'rnatildi</span><span class="badge bg-secondary">14</span></div>
-        <div class="kn-card"><div class="kn-card-title">Buxoro Packaging</div><div class="kn-card-meta">$22,000 · Holmatov K.</div></div>
-        <div class="kn-card"><div class="kn-card-title">Navoiy Pharma Pack</div><div class="kn-card-meta">$45,000 · Rашidova D.</div></div>
-        <div class="kn-card"><div class="kn-card-title">Farg'ona Food Co.</div><div class="kn-card-meta">$18,000 · Xasanov J.</div></div>
+      <!-- LIST VIEW -->
+      <div id="crm-list-view">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead style="background:var(--bs-tertiary-bg)">
+              <tr><th><input type="checkbox"></th><th>Bitim nomi</th><th>Bosqich</th><th>Bitim qiymati</th><th>Teglar</th><th>Muddat</th><th>Mas'ul</th><th>Ehtimol</th><th>Holat</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="fw-semibold small">Coca-Cola etiketka</td>
+                <td><span class="badge rounded-pill" style="background:rgba(0,192,135,.15);color:var(--ep-green)">Taklif yuborildi</span></td>
+                <td class="small">$14,500,000</td>
+                <td><span class="badge bg-success-subtle text-success me-1">Bosma</span></td>
+                <td class="small text-muted">14 yan 2024</td>
+                <td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-primary);color:#fff">AB</span><span class="small">Alijonov B.</span></div></td>
+                <td><div class="d-flex align-items-center gap-1"><div class="progress flex-grow-1" style="height:5px;width:60px"><div class="progress-bar bg-success" style="width:85%"></div></div><span class="small ms-1">85%</span></div></td>
+                <td><span class="status-pill pill-green">Yutildi</span></td>
+                <td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="fw-semibold small">Namangan Pharma blister</td>
+                <td><span class="badge rounded-pill" style="background:rgba(255,144,47,.15);color:var(--ep-primary)">Aloqa o'rnatildi</span></td>
+                <td class="small">$30,000,000</td>
+                <td><span class="badge bg-warning-subtle text-warning me-1">Qadoqlash</span></td>
+                <td class="small text-muted">22 fev 2024</td>
+                <td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-cyan);color:#fff">NG</span><span class="small">Nazarova G.</span></div></td>
+                <td><div class="d-flex align-items-center gap-1"><div class="progress flex-grow-1" style="height:5px;width:60px"><div class="progress-bar bg-warning" style="width:65%"></div></div><span class="small ms-1">65%</span></div></td>
+                <td><span class="status-pill pill-orange">Davomda</span></td>
+                <td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="fw-semibold small">Andijon Tekstil yorliq</td>
+                <td><span class="badge rounded-pill" style="background:rgba(132,94,230,.15);color:var(--ep-purple)">Taqdimot</span></td>
+                <td class="small">$16,000,000</td>
+                <td><span class="badge bg-primary-subtle text-primary me-1">Flexo</span><span class="badge bg-danger-subtle text-danger">Yuqori</span></td>
+                <td class="small text-muted">13 apr 2024</td>
+                <td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-purple);color:#fff">ET</span><span class="small">Ergashev T.</span></div></td>
+                <td><div class="d-flex align-items-center gap-1"><div class="progress flex-grow-1" style="height:5px;width:60px"><div class="progress-bar bg-purple" style="width:75%;background:var(--ep-purple)"></div></div><span class="small ms-1">75%</span></div></td>
+                <td><span class="status-pill pill-blue">Yangi</span></td>
+                <td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="fw-semibold small">Farg'ona Food Co. qadoq</td>
+                <td><span class="badge rounded-pill" style="background:rgba(255,111,145,.15);color:var(--ep-pink)">Lead</span></td>
+                <td class="small">$6,500,000</td>
+                <td><span class="badge bg-info-subtle text-info me-1">Offset</span></td>
+                <td class="small text-muted">23 apr 2024</td>
+                <td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-pink);color:#fff">HK</span><span class="small">Holmatov K.</span></div></td>
+                <td><div class="d-flex align-items-center gap-1"><div class="progress flex-grow-1" style="height:5px;width:60px"><div class="progress-bar bg-danger" style="width:20%"></div></div><span class="small ms-1">20%</span></div></td>
+                <td><span class="status-pill pill-red">Bekor</span></td>
+                <td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="fw-semibold small">Buxoro Packaging karton</td>
+                <td><span class="badge rounded-pill" style="background:rgba(0,192,135,.15);color:var(--ep-green)">Taklif yuborildi</span></td>
+                <td class="small">$24,000,000</td>
+                <td><span class="badge bg-success-subtle text-success">Karton</span></td>
+                <td class="small text-muted">13 noy 2024</td>
+                <td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-green);color:#fff">YA</span><span class="small">Yusupov A.</span></div></td>
+                <td><div class="d-flex align-items-center gap-1"><div class="progress flex-grow-1" style="height:5px;width:60px"><div class="progress-bar bg-success" style="width:90%"></div></div><span class="small ms-1">90%</span></div></td>
+                <td><span class="status-pill pill-green">Yutildi</span></td>
+                <td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="fw-semibold small">Qashqadaryo Agro qop</td>
+                <td><span class="badge rounded-pill" style="background:rgba(255,144,47,.15);color:var(--ep-primary)">Aloqa o'rnatildi</span></td>
+                <td class="small">$28,500,000</td>
+                <td><span class="badge bg-warning-subtle text-warning">PP</span></td>
+                <td class="small text-muted">12 apr 2024</td>
+                <td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:#1B2850;color:#fff">TS</span><span class="small">Toshpulatov S.</span></div></td>
+                <td><div class="d-flex align-items-center gap-1"><div class="progress flex-grow-1" style="height:5px;width:60px"><div class="progress-bar bg-warning" style="width:55%"></div></div><span class="small ms-1">55%</span></div></td>
+                <td><span class="status-pill pill-orange">Davomda</span></td>
+                <td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="fw-semibold small">Termiz Trading lak bosma</td>
+                <td><span class="badge rounded-pill" style="background:rgba(132,94,230,.15);color:var(--ep-purple)">Taqdimot</span></td>
+                <td class="small">$15,000,000</td>
+                <td><span class="badge bg-primary-subtle text-primary">UV Lak</span></td>
+                <td class="small text-muted">13 dek 2023</td>
+                <td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-cyan);color:#fff">MO</span><span class="small">Mirzayev O.</span></div></td>
+                <td><div class="d-flex align-items-center gap-1"><div class="progress flex-grow-1" style="height:5px;width:60px"><div class="progress-bar" style="width:45%;background:var(--ep-purple)"></div></div><span class="small ms-1">45%</span></div></td>
+                <td><span class="status-pill pill-blue">Yangi</span></td>
+                <td><div class="d-flex gap-1"><button class="btn btn-xs btn-outline-secondary"><i class="bi bi-pencil"></i></button><button class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center px-3 py-2">
+          <span class="small text-muted">1–10 / 67 bitim ko'rsatilmoqda</span>
+          <nav><ul class="pagination pagination-sm mb-0"><li class="page-item disabled"><a class="page-link">‹</a></li><li class="page-item active"><a class="page-link">1</a></li><li class="page-item"><a class="page-link">2</a></li><li class="page-item"><a class="page-link">3</a></li><li class="page-item"><a class="page-link">›</a></li></ul></nav>
+        </div>
       </div>
-      <div class="kn-col">
-        <div class="kn-col-head"><span>Taklif yuborildi</span><span class="badge bg-secondary">21</span></div>
-        <div class="kn-card"><div class="kn-card-title">Andijon Tekstil</div><div class="kn-card-meta">$34,000 · Yusupov A.</div></div>
-        <div class="kn-card"><div class="kn-card-title">Qashqadaryo Agro</div><div class="kn-card-meta">$28,500 · Toshpulatov S.</div></div>
-        <div class="kn-card"><div class="kn-card-title">Termiz Trading</div><div class="kn-card-meta">$15,000 · Mirzayev O.</div></div>
-      </div>
-      <div class="kn-col">
-        <div class="kn-col-head" style="background:var(--ep-green)20"><span style="color:var(--ep-green)">Yutildi ✓</span><span class="badge bg-success">8</span></div>
-        <div class="kn-card" style="border-left-color:var(--ep-green)"><div class="kn-card-title">Namangan Pharma</div><div class="kn-card-meta">$52,000 · Karimova N.</div></div>
-        <div class="kn-card" style="border-left-color:var(--ep-green)"><div class="kn-card-title">Jizzax Sanoat</div><div class="kn-card-meta">$31,000 · Sobirov F.</div></div>
-      </div>
-      <div class="kn-col">
-        <div class="kn-col-head" style="background:var(--ep-pink)20"><span style="color:var(--ep-pink)">Yo'qotildi ✗</span><span class="badge bg-danger">6</span></div>
-        <div class="kn-card" style="border-left-color:var(--ep-pink)"><div class="kn-card-title">Xorazm Savdo</div><div class="kn-card-meta">$9,000 · Tursunov R.</div></div>
-        <div class="kn-card" style="border-left-color:var(--ep-pink)"><div class="kn-card-title">Sirdaryo Qurilish</div><div class="kn-card-meta">$14,500 · Abdullayev B.</div></div>
+      <!-- KANBAN VIEW -->
+      <div id="crm-kanban-view" class="d-none p-3">
+        <div class="kanban-page">
+          <div class="kn-col"><div class="kn-col-head"><span>Lead</span><span class="badge bg-secondary">18</span></div>
+            <div class="kn-card"><div class="kn-card-title">Toshkent Matbaa Ltd.</div><div class="kn-card-meta">$12,000 · Alijonov B.</div></div>
+            <div class="kn-card"><div class="kn-card-title">PrintZone UZ</div><div class="kn-card-meta">$8,500 · Nazarova G.</div></div>
+            <div class="kn-card"><div class="kn-card-title">Samarqand Kitob</div><div class="kn-card-meta">$6,200 · Ergashev T.</div></div>
+          </div>
+          <div class="kn-col"><div class="kn-col-head"><span>Aloqa</span><span class="badge bg-secondary">14</span></div>
+            <div class="kn-card"><div class="kn-card-title">Buxoro Packaging</div><div class="kn-card-meta">$22,000 · Holmatov K.</div></div>
+            <div class="kn-card"><div class="kn-card-title">Navoiy Pharma Pack</div><div class="kn-card-meta">$45,000 · Rashidova D.</div></div>
+            <div class="kn-card"><div class="kn-card-title">Farg'ona Food Co.</div><div class="kn-card-meta">$18,000 · Xasanov J.</div></div>
+          </div>
+          <div class="kn-col"><div class="kn-col-head"><span>Taklif</span><span class="badge bg-secondary">21</span></div>
+            <div class="kn-card"><div class="kn-card-title">Andijon Tekstil</div><div class="kn-card-meta">$34,000 · Yusupov A.</div></div>
+            <div class="kn-card"><div class="kn-card-title">Qashqadaryo Agro</div><div class="kn-card-meta">$28,500 · Toshpulatov S.</div></div>
+            <div class="kn-card"><div class="kn-card-title">Termiz Trading</div><div class="kn-card-meta">$15,000 · Mirzayev O.</div></div>
+          </div>
+          <div class="kn-col"><div class="kn-col-head" style="background:var(--ep-green)20"><span style="color:var(--ep-green)">Yutildi ✓</span><span class="badge bg-success">8</span></div>
+            <div class="kn-card" style="border-left-color:var(--ep-green)"><div class="kn-card-title">Namangan Pharma</div><div class="kn-card-meta">$52,000 · Karimova N.</div></div>
+            <div class="kn-card" style="border-left-color:var(--ep-green)"><div class="kn-card-title">Jizzax Sanoat</div><div class="kn-card-meta">$31,000 · Sobirov F.</div></div>
+          </div>
+          <div class="kn-col"><div class="kn-col-head" style="background:var(--ep-pink)20"><span style="color:var(--ep-pink)">Yo'qotildi ✗</span><span class="badge bg-danger">6</span></div>
+            <div class="kn-card" style="border-left-color:var(--ep-pink)"><div class="kn-card-title">Xorazm Savdo</div><div class="kn-card-meta">$9,000 · Tursunov R.</div></div>
+            <div class="kn-card" style="border-left-color:var(--ep-pink)"><div class="kn-card-title">Sirdaryo Qurilish</div><div class="kn-card-meta">$14,500 · Abdullayev B.</div></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -3613,246 +3772,383 @@
         </div>
       </div>
     </div>
+
+    <!-- Row: Leads by Source + Top Regions + Recent Leads -->
+    <div class="row g-3 mt-1">
+      <div class="col-lg-4">
+        <div class="ep-card h-100">
+          <div class="ep-card-header"><h6 class="mb-0">Manba bo'yicha leadlar</h6><span class="pill-btn">Bu hafta</span></div>
+          <div class="ep-card-body text-center">
+            <canvas id="analyticsSourceDonut" height="180"></canvas>
+            <div class="mt-3">
+              <div class="d-flex justify-content-between mb-2"><span class="small"><span style="color:var(--ep-primary)">●</span> Google</span><div><strong>44%</strong><div class="progress mt-1" style="height:4px;width:80px"><div class="progress-bar" style="width:44%;background:var(--ep-primary)"></div></div></div></div>
+              <div class="d-flex justify-content-between mb-2"><span class="small"><span style="color:var(--ep-cyan)">●</span> Telegram</span><div><strong>35%</strong><div class="progress mt-1" style="height:4px;width:80px"><div class="progress-bar" style="width:35%;background:var(--ep-cyan)"></div></div></div></div>
+              <div class="d-flex justify-content-between mb-2"><span class="small"><span style="color:var(--ep-green)">●</span> Tavsiya</span><div><strong>14%</strong><div class="progress mt-1" style="height:4px;width:80px"><div class="progress-bar" style="width:14%;background:var(--ep-green)"></div></div></div></div>
+              <div class="d-flex justify-content-between"><span class="small"><span style="color:var(--ep-purple)">●</span> Boshqa</span><div><strong>7%</strong><div class="progress mt-1" style="height:4px;width:80px"><div class="progress-bar" style="width:7%;background:var(--ep-purple)"></div></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <div class="ep-card h-100">
+          <div class="ep-card-header"><h6 class="mb-0">Top viloyatlar</h6><a href="#" class="kpi-link">Hammasi →</a></div>
+          <div class="ep-card-body p-0">
+            <div class="list-group list-group-flush">
+              <div class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center">
+                <div><i class="bi bi-geo-alt-fill text-primary me-2"></i><span class="small fw-semibold">Toshkent</span></div>
+                <div class="text-end"><div class="small fw-bold">248</div><div class="progress" style="height:4px;width:70px"><div class="progress-bar bg-primary" style="width:82%"></div></div></div>
+              </div>
+              <div class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center">
+                <div><i class="bi bi-geo-alt-fill text-success me-2"></i><span class="small fw-semibold">Samarqand</span></div>
+                <div class="text-end"><div class="small fw-bold">134</div><div class="progress" style="height:4px;width:70px"><div class="progress-bar bg-success" style="width:55%"></div></div></div>
+              </div>
+              <div class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center">
+                <div><i class="bi bi-geo-alt-fill text-warning me-2"></i><span class="small fw-semibold">Farg'ona</span></div>
+                <div class="text-end"><div class="small fw-bold">98</div><div class="progress" style="height:4px;width:70px"><div class="progress-bar bg-warning" style="width:40%"></div></div></div>
+              </div>
+              <div class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center">
+                <div><i class="bi bi-geo-alt-fill text-danger me-2"></i><span class="small fw-semibold">Andijon</span></div>
+                <div class="text-end"><div class="small fw-bold">87</div><div class="progress" style="height:4px;width:70px"><div class="progress-bar bg-danger" style="width:35%"></div></div></div>
+              </div>
+              <div class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center">
+                <div><i class="bi bi-geo-alt-fill text-info me-2"></i><span class="small fw-semibold">Namangan</span></div>
+                <div class="text-end"><div class="small fw-bold">76</div><div class="progress" style="height:4px;width:70px"><div class="progress-bar bg-info" style="width:30%"></div></div></div>
+              </div>
+              <div class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center">
+                <div><i class="bi bi-geo-alt-fill text-secondary me-2"></i><span class="small fw-semibold">Buxoro</span></div>
+                <div class="text-end"><div class="small fw-bold">52</div><div class="progress" style="height:4px;width:70px"><div class="progress-bar bg-secondary" style="width:22%"></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="ep-card h-100">
+          <div class="ep-card-header"><h6 class="mb-0">So'nggi leadlar</h6><a href="#" class="kpi-link">Hammasi →</a></div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead style="background:var(--bs-tertiary-bg)"><tr><th class="small">Kompaniya</th><th class="small">Bosqich</th><th class="small">Sana</th><th class="small">Mas'ul</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-cyan);color:#fff">BW</span><span class="fw-semibold small">BrightWave UZ</span></div></td>
+                  <td><span class="badge rounded-pill" style="background:rgba(0,192,135,.15);color:var(--ep-green)">Aloqa</span></td>
+                  <td class="small text-muted">14 yan 2024</td>
+                  <td class="small">William F.</td>
+                </tr>
+                <tr>
+                  <td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-primary);color:#fff">NS</span><span class="fw-semibold small">Navoiy Sanoat</span></div></td>
+                  <td><span class="badge rounded-pill" style="background:rgba(255,144,47,.15);color:var(--ep-primary)">Lead</span></td>
+                  <td class="small text-muted">27 yan 2024</td>
+                  <td class="small">Lucía T.</td>
+                </tr>
+                <tr>
+                  <td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-green);color:#fff">QA</span><span class="fw-semibold small">Quantum Agro</span></div></td>
+                  <td><span class="badge rounded-pill" style="background:rgba(0,192,135,.15);color:var(--ep-green)">Taklif</span></td>
+                  <td class="small text-muted">10 fev 2024</td>
+                  <td class="small">Frederick J.</td>
+                </tr>
+                <tr>
+                  <td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-purple);color:#fff">TM</span><span class="fw-semibold small">Termiz Med</span></div></td>
+                  <td><span class="badge rounded-pill" style="background:rgba(132,94,230,.15);color:var(--ep-purple)">Taqdimot</span></td>
+                  <td class="small text-muted">12 apr 2024</td>
+                  <td class="small">Sandra H.</td>
+                </tr>
+                <tr>
+                  <td><div class="d-flex align-items-center gap-2"><span class="av av-sm" style="background:var(--ep-pink);color:#fff">AR</span><span class="fw-semibold small">Aurora Print</span></div></td>
+                  <td><span class="badge rounded-pill" style="background:rgba(255,111,145,.15);color:var(--ep-pink)">Yangi</span></td>
+                  <td class="small text-muted">12 apr 2024</td>
+                  <td class="small">Thomas M.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
+// ============================================================
+// NAVIGATION
+// ============================================================
+const chartInited = new Set();
+
+function showPage(pageId) {
+  document.querySelectorAll('.ep-page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  if (page) {
+    page.classList.add('active');
+    // Lazy-init charts for this page
+    if (!chartInited.has(pageId)) {
+      chartInited.add(pageId);
+      initCharts(pageId);
+    }
+  }
+  document.querySelectorAll('.ep-sidebar a.nav-item').forEach(a => {
+    a.classList.toggle('active', a.dataset.page === pageId);
+  });
+  document.getElementById('sidebar').classList.remove('show');
+  window.scrollTo(0, 0);
+}
+
 document.querySelectorAll('.ep-sidebar a.nav-item[data-page]').forEach(a => {
   a.addEventListener('click', e => {
     e.preventDefault();
-    document.querySelectorAll('.ep-sidebar a.nav-item').forEach(x => x.classList.remove('active'));
-    a.classList.add('active');
-    document.querySelectorAll('.ep-page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + a.dataset.page).classList.add('active');
-    document.getElementById('sidebar').classList.remove('show');
-    window.scrollTo(0,0);
+    showPage(a.dataset.page);
   });
 });
 
 document.getElementById('themeToggle').addEventListener('click', e => {
   const html = document.documentElement;
-  const next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
-  html.setAttribute('data-bs-theme', next);
-  e.currentTarget.innerHTML = next === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+  const isDark = html.getAttribute('data-bs-theme') === 'dark';
+  html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
+  e.currentTarget.innerHTML = isDark ? '<i class="bi bi-moon-stars"></i>' : '<i class="bi bi-sun"></i>';
 });
 
-Chart.defaults.font.family = "'Inter','Segoe UI',system-ui";
+const sidebarToggle = document.getElementById('sidebarToggle');
+if (sidebarToggle) {
+  sidebarToggle.addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('show');
+  });
+}
+
+// ============================================================
+// CHART COLORS & DEFAULTS
+// ============================================================
+Chart.defaults.font.family = "'Inter','Segoe UI',system-ui,sans-serif";
 Chart.defaults.font.size = 11;
-const C_PRIM='#FF902F', C_DARK='#1B2850', C_PINK='#FF6F91', C_PURP='#845EE6', C_CYAN='#28C9E8', C_GREEN='#00C087', C_YEL='#FFC107', C_RED='#FF5252';
 
-// Departments horizontal bar
-new Chart(document.getElementById('chartDept'), {
-  type: 'bar',
-  data: { labels:['Ishlab chiq.','Sotuv','Boshqaruv','HR','QC','Marketing'],
-    datasets:[{ data:[78,18,12,6,14,9], backgroundColor:C_PRIM, borderRadius:6, barThickness:8 }] },
-  options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{display:false} },
-    scales:{ x:{ grid:{display:false}, ticks:{display:false} }, y:{ grid:{display:false} } } }
-});
+const C = {
+  primary: '#FF902F', dark: '#1B2850', pink: '#FF6F91',
+  purple: '#845EE6', cyan: '#28C9E8', green: '#00C087',
+  yellow: '#FFC107', red: '#FF5252'
+};
+const M = ['Yan','Fev','Mar','Apr','May','Iyn','Iyl','Avg','Sen','Okt','Noy','Dek'];
 
-// Attendance gauge (half donut)
-new Chart(document.getElementById('gaugeAttendance'), {
-  type:'doughnut',
-  data:{ labels:['Hozir','Kech','Ruxsat','Yo'+'’'+'q'],
-    datasets:[{ data:[59,21,2,15], backgroundColor:[C_GREEN,C_YEL,C_PURP,C_RED], borderWidth:0 }] },
-  options:{ rotation:-90, circumference:180, cutout:'70%', responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{display:false} } }
-});
+function mkLine(id, datasets, opts={}) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  return new Chart(el, {
+    type: 'line',
+    data: { labels: opts.labels || M, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: opts.legend !== false ? { position:'bottom', labels:{boxWidth:10,padding:12}} : {display:false} },
+      scales: {
+        x: { grid:{display:false} },
+        y: { grid:{color:'rgba(0,0,0,.04)'}, ticks:{ callback: opts.yFmt || undefined } }
+      }
+    }
+  });
+}
 
-// Tasks gauge
-new Chart(document.getElementById('gaugeTasks'), {
-  type:'doughnut',
-  data:{ labels:['Davom','Kutmoqda','Kechikdi','Tugadi'],
-    datasets:[{ data:[24,10,16,40], backgroundColor:[C_YEL,'#3B82F6',C_RED,C_GREEN], borderWidth:0 }] },
-  options:{ rotation:-90, circumference:180, cutout:'70%', responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{display:false} } }
-});
+function mkBar(id, labels, datasets, opts={}) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  return new Chart(el, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: opts.horizontal ? 'y' : 'x',
+      plugins: { legend: opts.legend ? { position:'bottom', labels:{boxWidth:10,padding:12}} : {display:false} },
+      scales: {
+        x: { grid:{display: opts.horizontal ? true : false}, stacked: opts.stacked },
+        y: { grid:{color:'rgba(0,0,0,.04)'}, stacked: opts.stacked,
+             ticks:{ callback: opts.yFmt || undefined } }
+      }
+    }
+  });
+}
 
-// Sales overview
-new Chart(document.getElementById('chartSales'), {
-  type:'bar',
-  data:{ labels:['Du','Se','Ch','Pa','Ju','Sh','Ya','Du','Se','Ch','Pa','Ju'],
-    datasets:[
-      { label:'Daromad', data:[40,30,45,80,90,85,75,75,75,72,15,80], backgroundColor:C_PRIM, borderRadius:6, barThickness:18 },
-      { label:'Xarajat', data:[60,80,90,98,98,98,100,98,98,90,40,98], backgroundColor:'rgba(0,0,0,.06)', borderRadius:6, barThickness:18 }
-    ]},
-  options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-    scales:{ x:{stacked:false, grid:{display:false}}, y:{stacked:false, grid:{color:'rgba(0,0,0,.04)'}} } }
-});
+function mkDonut(id, labels, data, colors, opts={}) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  return new Chart(el, {
+    type: 'doughnut',
+    data: { labels, datasets:[{ data, backgroundColor: colors, borderWidth:0 }] },
+    options: {
+      cutout: opts.cutout || '68%',
+      rotation: opts.rotation || 0,
+      circumference: opts.circumference || 360,
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: opts.legend !== false ? { position:'bottom', labels:{boxWidth:9,padding:9,font:{size:10}}} : {display:false} }
+    }
+  });
+}
 
-// HR: Leave donut
-new Chart(document.getElementById('chartLeaveDonut'), {
-  type:'doughnut',
-  data:{ labels:['Keldi','Kech','WFH','Yo\'q','Kasal'],
-    datasets:[{ data:[1254,32,658,14,68], backgroundColor:[C_PRIM,C_YEL,C_PURP,C_RED,C_GREEN], borderWidth:0 }] },
-  options:{ cutout:'70%', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
-});
+// ============================================================
+// LAZY CHART INIT PER PAGE
+// ============================================================
+function initCharts(pageId) {
+  switch(pageId) {
 
-// Punch circle
-new Chart(document.getElementById('punchCircle'), {
-  type:'doughnut',
-  data:{ datasets:[{ data:[64,36], backgroundColor:[C_GREEN,'rgba(0,192,135,.15)'], borderWidth:0 }] },
-  options:{ cutout:'80%', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{enabled:false}} }
-});
+    case 'dashboard':
+      mkBar('chartDept', ['Ishlab ch.','HR','Savdo','IT','Moliya','QC'],
+        [{ label:'Xodimlar', data:[42,18,22,12,14,8], backgroundColor:C.primary, borderRadius:4, barThickness:12 }],
+        { horizontal:true });
 
-// Performance line
-new Chart(document.getElementById('chartPerf'), {
-  type:'line',
-  data:{ labels:['Yan','Fev','Mar','Apr','May','Iyn','Iyl'],
-    datasets:[{ label:'Samaradorlik', data:[20000,20000,35000,35000,40000,60000,60000],
-      borderColor:C_GREEN, backgroundColor:'rgba(0,192,135,.15)', tension:.4, fill:true, pointRadius:0 }] },
-  options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-    scales:{ y:{ grid:{color:'rgba(0,0,0,.04)'}, ticks:{ callback:v => (v/1000)+'K' } }, x:{ grid:{display:false} } } }
-});
-</script>
-</body>
-</html>
-<script>
-// ============ NEW PAGE CHARTS ============
-const M=['Yan','Fev','Mar','Apr','May','Iyn','Iyl','Avg','Sen','Okt','Noy','Dek'];
+      mkDonut('gaugeAttendance',
+        ['Keldi','Kech','Ruxsat',"Yo'q"],
+        [59,21,2,15], [C.green,C.yellow,C.purple,C.red],
+        { cutout:'70%', rotation:-90, circumference:180, legend:false });
 
-// SALES — line chart
-new Chart(document.getElementById('salesLineChart'),{
-  type:'line',
-  data:{ labels:M,
-    datasets:[
-      { label:'Daromad', data:[320,410,380,490,520,600,580,620,700,680,750,820],
-        borderColor:'#FF902F', backgroundColor:'rgba(255,144,47,.12)', tension:.4, fill:true, pointRadius:3 },
-      { label:'Xarajatlar', data:[220,280,260,320,340,380,360,400,440,420,480,510],
-        borderColor:'#845EE6', backgroundColor:'rgba(132,94,230,.08)', tension:.4, fill:true, pointRadius:3 }
-    ]},
-  options:{ responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, padding:15 } } },
-    scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'rgba(0,0,0,.04)'}, ticks:{ callback:v=>v+'K' } } } }
-});
+      mkDonut('gaugeTasks',
+        ['Davom','Kutmoqda','Kechikdi','Tugadi'],
+        [24,10,16,40], [C.yellow,'#3B82F6',C.red,C.green],
+        { cutout:'70%', rotation:-90, circumference:180, legend:false });
 
-// SALES — donut
-new Chart(document.getElementById('salesDonutChart'),{
-  type:'doughnut',
-  data:{ labels:['Ofset bosma','Raqamli bosma','Yorliqlar','Qadoqlash','Boshqa'],
-    datasets:[{ data:[38,22,18,14,8], backgroundColor:['#FF902F','#28C9E8','#845EE6','#00C087','#FF6F91'], borderWidth:0 }] },
-  options:{ cutout:'68%', responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, padding:10 } } } }
-});
+      mkBar('chartSales', ['Du','Se','Ch','Pa','Ju','Sh','Ya','Du','Se','Ch','Pa','Ju'],
+        [
+          { label:'Daromad', data:[40,30,45,80,90,85,75,75,75,72,15,80], backgroundColor:C.primary, borderRadius:4, barThickness:14 },
+          { label:'Xarajat', data:[60,80,90,98,98,98,100,98,98,90,40,98], backgroundColor:'rgba(0,0,0,.06)', borderRadius:4, barThickness:14 }
+        ], { legend:true });
 
-// PRODUCTION — pie
-new Chart(document.getElementById('prodPieChart'),{
-  type:'doughnut',
-  data:{ labels:['Ishlamoqda','Standby','Ta\'mirlash'],
-    datasets:[{ data:[14,3,3], backgroundColor:['#00C087','#28C9E8','#FF6F91'], borderWidth:0 }] },
-  options:{ cutout:'65%', responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, padding:8, font:{ size:10 } } } } }
-});
+      mkDonut('chartLeaveDonut',
+        ['Keldi','Kech','WFH',"Yo'q",'Kasal'],
+        [1254,32,658,14,68], [C.primary,C.yellow,C.purple,C.red,C.green]);
 
-// WAREHOUSE — donut
-new Chart(document.getElementById('whsDonutChart'),{
-  type:'doughnut',
-  data:{ labels:['Qog\'oz','Kimyo','Plitalar','Boshqa'],
-    datasets:[{ data:[38,24,18,20], backgroundColor:['#FF902F','#28C9E8','#00C087','#845EE6'], borderWidth:0 }] },
-  options:{ cutout:'68%', responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ display:false } } }
-});
+      mkDonut('punchCircle',['',''],[64,36],[C.green,'rgba(0,192,135,.15)'],
+        { cutout:'80%', legend:false });
 
-// FINANCE — bar
-new Chart(document.getElementById('finBarChart'),{
-  type:'bar',
-  data:{ labels:M,
-    datasets:[
-      { label:'Daromad', data:[180,210,195,240,260,310,290,330,360,340,380,420],
-        backgroundColor:'rgba(0,192,135,.8)', borderRadius:4, barThickness:14 },
-      { label:'Xarajat', data:[130,155,140,170,185,210,200,230,245,235,260,290],
-        backgroundColor:'rgba(255,111,145,.8)', borderRadius:4, barThickness:14 }
-    ]},
-  options:{ responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, padding:15 } } },
-    scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'rgba(0,0,0,.04)'}, ticks:{ callback:v=>v+'K' } } } }
-});
+      mkLine('chartPerf',
+        [{ label:'Samaradorlik', data:[20000,20000,35000,35000,40000,60000,60000],
+          borderColor:C.green, backgroundColor:'rgba(0,192,135,.15)', tension:.4, fill:true, pointRadius:0 }],
+        { legend:false, yFmt: v=>(v/1000)+'K' });
+      break;
 
-// FINANCE — donut
-new Chart(document.getElementById('finDonutChart'),{
-  type:'doughnut',
-  data:{ labels:['HR (ish haqi)','Xomashyo','Kommunal','Ta\'mirlash','Marketing','Boshqa'],
-    datasets:[{ data:[38,28,12,8,6,8], backgroundColor:['#FF902F','#845EE6','#28C9E8','#FF6F91','#00C087','#1B2850'], borderWidth:0 }] },
-  options:{ cutout:'65%', responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:8, padding:8, font:{ size:10 } } } } }
-});
+    case 'hr':
+      // HR page charts already in dashboard (shared canvases) — no extra charts needed
+      break;
 
-// QC — bar (defect types)
-new Chart(document.getElementById('qcBarChart'),{
-  type:'bar',
-  data:{ labels:['Rang og\'ishi','Siljish','Yirtilish','Lak nuqsoni','Qirqish xatosi','Boshqa'],
-    datasets:[{ label:'Miqdor', data:[280,190,140,95,65,50],
-      backgroundColor:['#FF6F91','#FF902F','#845EE6','#28C9E8','#00C087','#1B2850'], borderRadius:4 }] },
-  options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ display:false } },
-    scales:{ x:{ grid:{color:'rgba(0,0,0,.04)'} }, y:{ grid:{display:false} } } }
-});
+    case 'sales':
+      mkLine('salesLineChart',
+        [
+          { label:'Daromad', data:[320,410,380,490,520,600,580,620,700,680,750,820],
+            borderColor:C.primary, backgroundColor:'rgba(255,144,47,.12)', tension:.4, fill:true, pointRadius:3 },
+          { label:'Xarajatlar', data:[220,280,260,320,340,380,360,400,440,420,480,510],
+            borderColor:C.purple, backgroundColor:'rgba(132,94,230,.08)', tension:.4, fill:true, pointRadius:3 }
+        ], { yFmt: v=>v+'K' });
+      mkDonut('salesDonutChart',
+        ['Ofset','Raqamli','Yorliqlar','Qadoqlash','Boshqa'],
+        [38,22,18,14,8], [C.primary,C.cyan,C.purple,C.green,C.pink]);
+      break;
 
-// MARKETING — line
-new Chart(document.getElementById('mktLineChart'),{
-  type:'line',
-  data:{ labels:['Noy','Dek','Yan','Fev','Mar','Apr'],
-    datasets:[
-      { label:'Qamrov', data:[120,145,138,168,185,248], borderColor:'#FF902F', backgroundColor:'rgba(255,144,47,.12)', tension:.4, fill:true, pointRadius:3 },
-      { label:'Leadlar', data:[42,56,48,72,88,186], borderColor:'#845EE6', backgroundColor:'rgba(132,94,230,.08)', tension:.4, fill:true, pointRadius:3 }
-    ]},
-  options:{ responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, padding:15 } } },
-    scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'rgba(0,0,0,.04)'} } } }
-});
+    case 'production':
+      mkDonut('prodPieChart',
+        ['Ishlamoqda','Standby',"Ta'mirlash"],
+        [14,3,3], [C.green,C.cyan,C.pink], { cutout:'65%' });
+      break;
 
-// MARKETING — donut
-new Chart(document.getElementById('mktDonutChart'),{
-  type:'doughnut',
-  data:{ labels:['Telegram','Google Ads','Email','Og\'zaki'],
-    datasets:[{ data:[34,26,19,21], backgroundColor:['#28C9E8','#FF6F91','#FF902F','#00C087'], borderWidth:0 }] },
-  options:{ cutout:'68%', responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, padding:8, font:{ size:11 } } } } }
-});
+    case 'warehouse':
+      mkDonut('whsDonutChart',
+        ["Qog'oz",'Kimyo','Plitalar','Boshqa'],
+        [38,24,18,20], [C.primary,C.cyan,C.green,C.purple]);
+      break;
 
-// REPORTS — line
-new Chart(document.getElementById('repLineChart'),{
-  type:'line',
-  data:{ labels:M,
-    datasets:[
-      { label:'Savdo ($K)', data:[180,210,195,240,260,310,290,330,360,340,380,420], borderColor:'#FF902F', backgroundColor:'rgba(255,144,47,.1)', tension:.4, fill:true, pointRadius:2 },
-      { label:'Foyda ($K)', data:[42,56,48,72,88,102,96,118,130,122,140,158], borderColor:'#00C087', backgroundColor:'rgba(0,192,135,.1)', tension:.4, fill:true, pointRadius:2 }
-    ]},
-  options:{ responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, padding:15 } } },
-    scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'rgba(0,0,0,.04)'}, ticks:{ callback:v=>v+'K' } } } }
-});
+    case 'finance':
+      mkBar('finBarChart', M,
+        [
+          { label:'Daromad', data:[180,210,195,240,260,310,290,330,360,340,380,420],
+            backgroundColor:'rgba(0,192,135,.8)', borderRadius:4, barThickness:12 },
+          { label:'Xarajat', data:[130,155,140,170,185,210,200,230,245,235,260,290],
+            backgroundColor:'rgba(255,111,145,.8)', borderRadius:4, barThickness:12 }
+        ], { legend:true, yFmt: v=>v+'K' });
+      mkDonut('finDonutChart',
+        ['HR','Xomashyo','Kommunal',"Ta'mirlash",'Marketing','Boshqa'],
+        [38,28,12,8,6,8], [C.primary,C.purple,C.cyan,C.pink,C.green,C.dark]);
+      break;
 
-// REPORTS — bar (departments)
-new Chart(document.getElementById('repBarChart'),{
-  type:'bar',
-  data:{ labels:['Savdo','Ishlab ch.','HR','Moliya','IT','Marketing'],
-    datasets:[{ label:'Samaradorlik (%)', data:[88,92,79,85,96,74],
-      backgroundColor:['#FF902F','#845EE6','#28C9E8','#00C087','#FF6F91','#1B2850'], borderRadius:6 }] },
-  options:{ responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ display:false } },
-    scales:{ x:{ grid:{display:false} }, y:{ max:100, grid:{color:'rgba(0,0,0,.04)'}, ticks:{ callback:v=>v+'%' } } } }
-});
+    case 'qc':
+      mkBar('qcBarChart',
+        ['Rang','Siljish','Yirtilish','Lak','Qirqish','Boshqa'],
+        [{ label:'Miqdor', data:[280,190,140,95,65,50],
+          backgroundColor:[C.pink,C.primary,C.purple,C.cyan,C.green,C.dark], borderRadius:4 }],
+        { horizontal:true });
+      break;
 
-// EQUIPMENT — donut
-new Chart(document.getElementById('eqDonutChart'),{
-  type:'doughnut',
-  data:{ labels:['Ishlamoqda','Standby','Ta\'mirlash'],
-    datasets:[{ data:[18,3,3], backgroundColor:['#00C087','#28C9E8','#FF6F91'], borderWidth:0 }] },
-  options:{ cutout:'65%', responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, padding:8, font:{ size:11 } } } } }
-});
+    case 'marketing':
+      mkLine('mktLineChart',
+        [
+          { label:'Qamrov', data:[120,145,138,168,185,248],
+            borderColor:C.primary, backgroundColor:'rgba(255,144,47,.12)', tension:.4, fill:true, pointRadius:3 },
+          { label:'Leadlar', data:[42,56,48,72,88,186],
+            borderColor:C.purple, backgroundColor:'rgba(132,94,230,.08)', tension:.4, fill:true, pointRadius:3 }
+        ], { labels:['Noy','Dek','Yan','Fev','Mar','Apr'] });
+      mkDonut('mktDonutChart',
+        ['Telegram','Google','Email',"Og'zaki"],
+        [34,26,19,21], [C.cyan,C.pink,C.primary,C.green]);
+      break;
 
-// ============ SETTINGS TAB SWITCHER ============
+    case 'reports':
+      mkLine('repLineChart',
+        [
+          { label:'Savdo ($K)', data:[180,210,195,240,260,310,290,330,360,340,380,420],
+            borderColor:C.primary, backgroundColor:'rgba(255,144,47,.1)', tension:.4, fill:true, pointRadius:2 },
+          { label:'Foyda ($K)', data:[42,56,48,72,88,102,96,118,130,122,140,158],
+            borderColor:C.green, backgroundColor:'rgba(0,192,135,.1)', tension:.4, fill:true, pointRadius:2 }
+        ], { yFmt: v=>v+'K' });
+      mkBar('repBarChart',
+        ['Savdo','Ishlab ch.','HR','Moliya','IT','Marketing'],
+        [{ label:'Samaradorlik (%)', data:[88,92,79,85,96,74],
+          backgroundColor:[C.primary,C.purple,C.cyan,C.green,C.pink,C.dark], borderRadius:5 }],
+        { yFmt: v=>v+'%' });
+      break;
+
+    case 'equipment':
+      mkDonut('eqDonutChart',
+        ['Ishlamoqda','Standby',"Ta'mirlash"],
+        [18,3,3], [C.green,C.cyan,C.pink]);
+      break;
+
+    case 'crm-analytics':
+      mkBar('chartDealStages',
+        ['Lead','Aloqa','Taklif','Taqdimot','Yutildi'],
+        [{ label:'Bitimlar', data:[18,14,21,12,8],
+          backgroundColor:[C.cyan,C.primary,C.purple,C.yellow,C.green], borderRadius:4 }]);
+      mkDonut('analyticsSourceDonut',
+        ['Google','Telegram','Tavsiya','Boshqa'],
+        [44,35,14,7], [C.primary,C.cyan,C.green,C.purple]);
+      break;
+  }
+}
+
+// ============================================================
+// SETTINGS TAB SWITCHER
+// ============================================================
 function showSettingsTab(tab) {
   document.querySelectorAll('.settings-tab').forEach(el => el.classList.add('d-none'));
   const target = document.getElementById('stab-' + tab);
   if (target) target.classList.remove('d-none');
   document.querySelectorAll('#settingsTabs .list-group-item').forEach(el => {
-    el.classList.toggle('active', el.getAttribute('onclick').includes("'" + tab + "'"));
+    el.classList.toggle('active', (el.getAttribute('onclick')||'').includes("'" + tab + "'"));
   });
 }
+
+// ============================================================
+// CRM VIEW SWITCHER
+// ============================================================
+function switchCrmView(view, btn) {
+  document.querySelectorAll('#page-crm .ep-tabs button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const listView = document.getElementById('crm-list-view');
+  const kanbanView = document.getElementById('crm-kanban-view');
+  if (listView) listView.classList.toggle('d-none', view !== 'list');
+  if (kanbanView) kanbanView.classList.toggle('d-none', view !== 'kanban');
+}
+
+// ============================================================
+// INIT: Dashboard charts on load (active page)
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  chartInited.add('dashboard');
+  initCharts('dashboard');
+});
 </script>
+</body>
+</html>

@@ -1,3 +1,8 @@
+/**
+ * @module queries-sd
+ * @description Source module. See exports for details.
+ */
+
 import { db } from '@shared/db';
 import {
   sd_customers, sd_customer_contacts, sd_customer_documents,
@@ -16,17 +21,17 @@ export async function execSdCustomerSoftDelete(cid: number): Promise<void> {
 
 export async function execSdContactDelete(kid: number, cid: number): Promise<void> {
   await db.delete(sd_customer_contacts)
-    .where(and(eq(sd_customer_contacts.id, kid), eq(sd_customer_contacts.customer_id, cid)));
+    .where(and(eq(sd_customer_contacts.id, kid), eq(sd_customer_contacts.customerId, cid)));
 }
 
 export async function execSdDocumentDelete(did: number, cid: number): Promise<void> {
   await db.delete(sd_customer_documents)
-    .where(and(eq(sd_customer_documents.id, did), eq(sd_customer_documents.customer_id, cid)));
+    .where(and(eq(sd_customer_documents.id, did), eq(sd_customer_documents.customerId, cid)));
 }
 
 export async function execSdCompetitorDelete(competitorId: number, customerId: number): Promise<void> {
   await db.delete(sd_customer_competitors)
-    .where(and(eq(sd_customer_competitors.id, competitorId), eq(sd_customer_competitors.customer_id, customerId)));
+    .where(and(eq(sd_customer_competitors.id, competitorId), eq(sd_customer_competitors.customerId, customerId)));
 }
 
 export async function execSdLeadDelete(lid: number): Promise<void> {
@@ -42,8 +47,16 @@ export async function execSdLeadConvert(lid: number): Promise<void> {
 export async function execSdSalesOrderInsert(
   orderNumber: string, status: string, companyId: unknown,
   totalAmount: unknown, createdBy: unknown,
+  /**
+   * Optional Drizzle transaction executor. When provided, the insert runs on
+   * the transaction so it shares atomicity with sibling writes (PA0-6 outbox).
+   * Typed as `unknown` to keep this shared helper agnostic of Drizzle internals;
+   * the runtime type is the same `tx` returned by `db.transaction(async tx => ...)`.
+   */
+  tx?: unknown,
 ): Promise<void> {
-  await db.insert(sd_sales_orders).values({
+  const conn = (tx as typeof db | undefined) ?? db;
+  await conn.insert(sd_sales_orders).values({
     order_number: orderNumber,
     status,
     company_id: companyId as number,

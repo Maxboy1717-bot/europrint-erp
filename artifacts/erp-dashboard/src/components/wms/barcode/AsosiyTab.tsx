@@ -1,3 +1,8 @@
+/**
+ * @module AsosiyTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -14,11 +19,13 @@ import {
   Boxes,
   FileWarning,
 } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
+import { EPErrorState } from "@/components/ep";
 import { statusRangi, statusNomi, harakatTuriNomi } from "./helpers";
 import { RecentMovement } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function AsosiyTab() {
+  const { t } = useTranslation("common");
   const [skanKod, setSkanKod] = useState("");
   const { toast } = useToast();
 
@@ -30,13 +37,24 @@ export function AsosiyTab() {
     printQueue: { pending: number };
     recentMovements?: RecentMovement[];
   }
-  const { data: dashboard, isLoading, isError, refetch} = useQuery<WMSDashboardData>({
+  const { data: dashboard, isLoading, isError, error, refetch} = useQuery<WMSDashboardData>({
     queryKey: ["/api/barcode-warehouse/dashboard"],
   });
 
-  const skanMutation = useMutation({
+  interface ScanResult {
+    materialName?: string;
+    barcode?: {
+      remainingQuantity?: number;
+      uom?: string;
+      status?: string;
+      barcodeId?: string;
+      lotNumber?: string | null;
+      currentLocation?: string | null;
+    };
+  }
+  const skanMutation = useMutation<ScanResult, Error, string>({
     mutationFn: async (barcodeId: string) => {
-      const res = await apiRequest("GET", `/api/barcode-warehouse/barcodes/scan/${encodeURIComponent(barcodeId)}`);
+      const res = await apiRequest<ScanResult>("GET", `/api/barcode-warehouse/barcodes/scan/${encodeURIComponent(barcodeId)}`);
       return res;
     },
     onSuccess: (data) => {
@@ -57,26 +75,27 @@ export function AsosiyTab() {
   };
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {
     return (
       <div className="space-y-3 p-3">
         {([1, 2, 3, 4]).map((i) => (
-          <Skeleton key={`k-${i}`} className="h-20 w-full" />
+          <Skeleton key={`k-${i}`} className="h-20 w-full rounded-lg" />
         ))}
       </div>
     );
   }
 
-  const d = dashboard || {
-    barcodes: { total: 0, available: 0, qcHold: 0, issued: 0 },
-    pickingTasks: { pending: 0 },
-    operatorDebts: { count: 0, totalDebt: 0 },
-    exitControl: { todayTotal: 0, todayBlocked: 0 },
-    printQueue: { pending: 0 },
-    recentMovements: [],
+  // Universal default — backend bo'sh `{}` qaytarsa ham crash bo'lmaydi
+  const d = {
+    barcodes:        { total: 0, available: 0, qcHold: 0, issued: 0, ...(dashboard?.barcodes ?? {}) },
+    pickingTasks:    { pending: 0, ...(dashboard?.pickingTasks ?? {}) },
+    operatorDebts:   { count: 0, totalDebt: 0, ...((dashboard as unknown as Record<string, unknown>)?.operatorDebts as Record<string, unknown> ?? {}) },
+    exitControl:     { todayTotal: 0, todayBlocked: 0, ...((dashboard as unknown as Record<string, unknown>)?.exitControl as Record<string, unknown> ?? {}) },
+    printQueue:      { pending: 0, ...((dashboard as unknown as Record<string, unknown>)?.printQueue as Record<string, unknown> ?? {}) },
+    recentMovements: Array.isArray(dashboard?.recentMovements) ? dashboard.recentMovements : [],
   };
 
   return (
@@ -86,7 +105,7 @@ export function AsosiyTab() {
           <div className="flex gap-2">
             <Input
               data-testid="input-barcode-scan"
-              placeholder="Barcode skanerlang yoki kiriting..."
+              placeholder={t("barcodeSkanerlangYokiKiriting")}
               value={skanKod}
               onChange={(e) => setSkanKod(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSkan()}
@@ -94,36 +113,36 @@ export function AsosiyTab() {
             />
             <Button data-testid="button-scan" onClick={handleSkan} disabled={skanMutation.isPending}>
               <ScanBarcode className="h-4 w-4 mr-1" />
-              Skan
+              {t("skan")}
             </Button>
           </div>
           {skanMutation.data && (
             <div className="mt-3 p-3 rounded-md border">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="font-medium">{skanMutation.data.materialName || "Material"}</span>
-                <Badge className={statusRangi(skanMutation.data.barcode?.status)}>
-                  {statusNomi(skanMutation.data.barcode?.status)}
+                <Badge className={statusRangi(skanMutation.data.barcode?.status ?? '')}>
+                  {statusNomi(skanMutation.data.barcode?.status ?? '')}
                 </Badge>
               </div>
-              <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
-                <div><span className="text-muted-foreground">Barcode:</span> {skanMutation.data.barcode?.barcodeId}</div>
-                <div><span className="text-muted-foreground">Miqdor:</span> {skanMutation.data.barcode?.remainingQuantity} {skanMutation.data.barcode?.uom}</div>
-                <div><span className="text-muted-foreground">Lot:</span> {skanMutation.data.barcode?.lotNumber || "—"}</div>
-                <div><span className="text-muted-foreground">Joylashuv:</span> {skanMutation.data.barcode?.currentLocation || "—"}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 text-sm">
+                <div><span className="text-muted-foreground">{t("barcode")}</span> {skanMutation.data.barcode?.barcodeId}</div>
+                <div><span className="text-muted-foreground">{t("miqdor")}</span> {skanMutation.data.barcode?.remainingQuantity} {skanMutation.data.barcode?.uom}</div>
+                <div><span className="text-muted-foreground">{t("lot1")}</span> {skanMutation.data.barcode?.lotNumber || "—"}</div>
+                <div><span className="text-muted-foreground">{t("joylashuv")}</span> {skanMutation.data.barcode?.currentLocation || "—"}</div>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <Card>
           <CardContent className="p-3 flex items-center gap-3">
             <div className="p-2 rounded-md bg-green-100 dark:bg-green-900">
-              <Boxes className="h-5 w-5 text-green-600" />
+              <Boxes className="h-4 w-4 text-[var(--ep-green)]" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">Mavjud</div>
+              <div className="text-xs text-muted-foreground">{t("mavjud")}</div>
               <div className="text-lg font-bold" data-testid="text-available-count">{d.barcodes.available}</div>
             </div>
           </CardContent>
@@ -132,10 +151,10 @@ export function AsosiyTab() {
         <Card>
           <CardContent className="p-3 flex items-center gap-3">
             <div className="p-2 rounded-md bg-yellow-100 dark:bg-yellow-900">
-              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              <AlertTriangle className="h-5 w-5 text-[var(--ep-yellow)]" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">QC kutilmoqda</div>
+              <div className="text-xs text-muted-foreground">{t("qcKutilmoqda")}</div>
               <div className="text-lg font-bold" data-testid="text-qchold-count">{d.barcodes.qcHold}</div>
             </div>
           </CardContent>
@@ -144,10 +163,10 @@ export function AsosiyTab() {
         <Card>
           <CardContent className="p-3 flex items-center gap-3">
             <div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900">
-              <ClipboardCheck className="h-5 w-5 text-blue-600" />
+              <ClipboardCheck className="h-5 w-5 text-[var(--ep-blue)]" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">Picking topshiriqlari</div>
+              <div className="text-xs text-muted-foreground">{t("pickingTopshiriqlari")}</div>
               <div className="text-lg font-bold" data-testid="text-picking-count">{d.pickingTasks.pending}</div>
             </div>
           </CardContent>
@@ -156,32 +175,32 @@ export function AsosiyTab() {
         <Card>
           <CardContent className="p-3 flex items-center gap-3">
             <div className="p-2 rounded-md bg-red-100 dark:bg-red-900">
-              <FileWarning className="h-5 w-5 text-red-600" />
+              <FileWarning className="h-5 w-5 text-[var(--ep-red)]" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">Operator qarzlari</div>
+              <div className="text-xs text-muted-foreground">{t("operatorQarzlari")}</div>
               <div className="text-lg font-bold" data-testid="text-debt-count">{d.operatorDebts.count}</div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         <Card>
           <CardContent className="p-2 text-center">
-            <div className="text-xs text-muted-foreground">Jami barcode</div>
+            <div className="text-xs text-muted-foreground">{t("jamiBarcode")}</div>
             <div className="text-lg font-bold" data-testid="text-total-barcodes">{d.barcodes.total}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-2 text-center">
-            <div className="text-xs text-muted-foreground">Bugun chiqish</div>
+            <div className="text-xs text-muted-foreground">{t("bugunChiqish")}</div>
             <div className="text-lg font-bold" data-testid="text-exit-today">{d.exitControl.todayTotal}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-2 text-center">
-            <div className="text-xs text-muted-foreground">Chop navbati</div>
+            <div className="text-xs text-muted-foreground">{t("chopNavbati")}</div>
             <div className="text-lg font-bold" data-testid="text-print-queue">{d.printQueue.pending}</div>
           </CardContent>
         </Card>
@@ -189,7 +208,7 @@ export function AsosiyTab() {
 
       <Card>
         <CardHeader className="p-3 pb-1">
-          <CardTitle className="text-sm">Oxirgi harakatlar</CardTitle>
+          <CardTitle className="text-sm">{t("oxirgiHarakatlar")}</CardTitle>
         </CardHeader>
         <CardContent className="p-3 pt-1">
           {d.recentMovements && d.recentMovements.length > 0 ? (
@@ -209,7 +228,7 @@ export function AsosiyTab() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">Harakatlar yo'q</p>
+            <p className="text-sm text-muted-foreground text-center py-4">{t("harakatlarYoq")}</p>
           )}
         </CardContent>
       </Card>

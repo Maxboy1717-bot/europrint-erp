@@ -1,8 +1,13 @@
+/**
+ * @module ai-marketing.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {Controller, Post, Body, UseGuards, Logger, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../../common/types/user.types';
 import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -18,7 +23,7 @@ import { unwrapOrInternal } from '@common/http-result';
 
 @ApiTags('AI — Marketing')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@AiThrottle()
 @UseInterceptors(AuditInterceptor)
 @Controller('ai/marketing')
 export class AiMarketingController {

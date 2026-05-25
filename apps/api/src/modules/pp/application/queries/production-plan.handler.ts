@@ -1,7 +1,12 @@
+/**
+ * @module production-plan.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
-import { IPpRepository } from '../../domain/repositories/pp.repository';
+import { IPpRepository, PP_REPO } from '../../domain/repositories/pp.repository';
 
 export class ProductionPlanQuery {
   constructor(public startDate: Date, public endDate: Date) {}
@@ -11,7 +16,7 @@ export class ProductionPlanQuery {
 export class ProductionPlanHandler implements IQueryHandler<ProductionPlanQuery> {
   private readonly logger = new Logger(ProductionPlanHandler.name);
   constructor(
-    @Inject('IPpRepository') private ppRepo: IPpRepository
+    @Inject(PP_REPO) private ppRepo: IPpRepository
   ) {}
 
   async execute(query: ProductionPlanQuery): Promise<Result<object[]>> {

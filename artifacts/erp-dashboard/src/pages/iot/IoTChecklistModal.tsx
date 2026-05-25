@@ -1,3 +1,8 @@
+/**
+ * @module IoTChecklistModal
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,9 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, Play, Barcode, Package, Users, CheckCircle, Clock, ScanLine, ClipboardCheck } from "lucide-react";
+import { Play, Barcode, Package, Users, CheckCircle, Clock, ScanLine, ClipboardCheck } from "lucide-react";
 import { UseMutationResult } from "@tanstack/react-query";
 import { ChecklistMaterial, Employee, CrewAssignment, ProductionSession, IotLang } from "./iot-types";
+import { EPStatusPill, EPLoader } from "@/components/ep";
 
 interface IoTChecklistModalProps {
   lang: IotLang;
@@ -34,7 +40,7 @@ export function IoTChecklistModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && activeSession) onOpenChange(false); }}>
-      <DialogContent className="max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[95vh] overflow-hidden flex flex-col p-6">
         <DialogHeader className="pb-2">
           <DialogTitle className="text-xl flex items-center gap-2">
             <ClipboardCheck className="h-6 w-6 text-primary" />
@@ -53,7 +59,7 @@ export function IoTChecklistModal({
                   </div>
                   <span className="font-mono text-lg font-bold tracking-wider">{checklistKitBarcode}</span>
                 </div>
-                <div className="mt-2 h-10 bg-surface-container-lowest flex items-center justify-center rounded">
+                <div className="mt-2 h-10 bg-card flex items-center justify-center rounded">
                   <div className="flex gap-[1px]">
                     {(checklistKitBarcode || "000000").split("").slice(0, 12).map((char, i) => (
                       <div key={`k-${i}`} className={`h-8 ${parseInt(char, 36) % 2 === 0 ? "w-1 bg-black" : "w-0.5 bg-black"}`} />
@@ -97,7 +103,7 @@ export function IoTChecklistModal({
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {material.isScanned ? (
-                            <Badge className="bg-green-500 text-white">{t("Skanlangan", "Отсканирован")}</Badge>
+                            <EPStatusPill tone="success">{t("Skanlangan", "Отсканирован")}</EPStatusPill>
                           ) : (
                             <Button
                               size="sm"
@@ -106,7 +112,7 @@ export function IoTChecklistModal({
                               className="min-w-[100px]"
                               data-testid={`button-scan-${material.id}`}
                             >
-                              {scanningItemId === material.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ScanLine className="h-4 w-4 mr-1" />}
+                              {scanningItemId === material.id ? <EPLoader className="mr-1" /> : <ScanLine className="h-4 w-4 mr-1" />}
                               {t("Skanerlash", "Сканировать")}
                             </Button>
                           )}
@@ -123,10 +129,10 @@ export function IoTChecklistModal({
 
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Users className="h-5 w-5 text-primary" />
+                <Users className="h-4 w-4 text-primary" />
                 <h3 className="font-semibold text-lg">{t("Jamoa tayinlash", "Назначение команды")}</h3>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {([
                   { key: "masterId" as const, label: t("Master", "Мастер"), required: true },
                   { key: "polmasterId" as const, label: t("Polmaster", "Полмастер"), required: false },
@@ -136,7 +142,7 @@ export function IoTChecklistModal({
                   <div key={key} className="space-y-2">
                     <Label className="flex items-center gap-1">
                       {label}
-                      {required && <span className="text-red-500">*</span>}
+                      {required && <span className="text-[var(--ep-red)]">*</span>}
                     </Label>
                     <Select
                       value={crewAssignment[key] || (required ? "" : "none")}
@@ -167,16 +173,16 @@ export function IoTChecklistModal({
 
             <Card className="bg-muted/50">
               <CardContent className="p-4">
-                <div className="grid grid-cols-2 gap-4 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
                   <div>
                     <p className="text-sm text-muted-foreground">{t("Materiallar", "Материалы")}</p>
-                    <p className={`text-xl font-bold ${allScanned ? "text-green-600" : "text-yellow-600"}`}>
+                    <p className={`text-xl font-bold ${allScanned ? "text-[var(--ep-green)]" : "text-[var(--ep-yellow)]"}`}>
                       {(Array.isArray(checklistMaterials) ? checklistMaterials : []).filter(m => m.isScanned).length} / {checklistMaterials.length}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">{t("Jamoa", "Команда")}</p>
-                    <p className={`text-xl font-bold ${crewAssignment.masterId ? "text-green-600" : "text-red-600"}`}>
+                    <p className={`text-xl font-bold ${crewAssignment.masterId ? "text-[var(--ep-green)]" : "text-[var(--ep-red)]"}`}>
                       {([crewAssignment.masterId, crewAssignment.polmasterId, crewAssignment.shogirdId, crewAssignment.roklerId]).filter(Boolean).length} / 4
                     </p>
                   </div>
@@ -193,7 +199,7 @@ export function IoTChecklistModal({
             disabled={!allScanned || !crewAssignment.masterId || startProductionFromChecklist.isPending}
             data-testid="button-start-production"
           >
-            {startProductionFromChecklist.isPending ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Play className="h-5 w-5 mr-2" />}
+            {startProductionFromChecklist.isPending ? <EPLoader size={20} className="mr-2" /> : <Play className="h-4 w-4 mr-2" />}
             {t("ISHLAB CHIQARISHNI BOSHLASH", "НАЧАТЬ ПРОИЗВОДСТВО")}
           </Button>
           {(!allScanned || !crewAssignment.masterId) && (

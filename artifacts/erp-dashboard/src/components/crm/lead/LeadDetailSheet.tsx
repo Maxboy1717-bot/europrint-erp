@@ -1,3 +1,8 @@
+/**
+ * @module LeadDetailSheet
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
@@ -23,6 +28,7 @@ import { LeadHeader } from "./LeadHeader";
 import { LeadInfo } from "./LeadInfo";
 import { LeadActions } from "./LeadActions";
 import { LeadActivities } from "./LeadActivities";
+import { useTranslation } from '@/lib/i18n';
 
 interface LeadDetailSheetProps {
   leadId: number | null;
@@ -31,6 +37,7 @@ interface LeadDetailSheetProps {
 }
 
 export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps) {
+  const { t } = useTranslation("common");
   const [isEditing, setIsEditing] = useState(false);
   const [showConvertDialog, setShowConvertDialog] = useState(false);
   const [convertOptions, setConvertOptions] = useState({
@@ -52,13 +59,13 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
 
   const { data: history = [] } = useQuery<HistoryItem[]>({
     queryKey: ["/api/crm/history", leadId, "lead"],
-    queryFn: () => fetch(`/api/crm/history?entityType=lead&entityId=${leadId}`).then(r => r.json()),
+    queryFn: () => apiRequest('GET', `/api/crm/history?entityType=lead&entityId=${leadId}`),
     enabled: !!leadId && open,
   });
 
   const { data: activities = [] } = useQuery<Activity[]>({
     queryKey: ["/api/crm/followup-activities", leadId, "lead"],
-    queryFn: () => fetch(`/api/crm/followup-activities?entityType=lead&entityId=${leadId}`).then(r => r.json()),
+    queryFn: () => apiRequest('GET', `/api/crm/followup-activities?entityType=lead&entityId=${leadId}`),
     enabled: !!leadId && open,
   });
 
@@ -79,7 +86,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
 
   const convertLeadMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", `/api/crm/leads/${leadId}/convert`, convertOptions);
+      return apiRequest<Record<string, unknown>>("POST", `/api/crm/leads/${leadId}/convert`, convertOptions);
     },
     onSuccess: (data: Record<string, unknown>) => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/leads"] });
@@ -102,7 +109,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
 
   const stageChangeMutation = useMutation({
     mutationFn: async (statusId: string) => {
-      return apiRequest("PATCH", `/api/crm/leads/${leadId}/stage`, { statusId });
+      return apiRequest<Record<string, unknown>>("PATCH", `/api/crm/leads/${leadId}/stage`, { statusId });
     },
     onSuccess: (data: Record<string, unknown>) => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/leads"] });
@@ -149,7 +156,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
           />
 
           {isLoading ? (
-            <div className="py-8 text-center text-muted-foreground">Yuklanmoqda...</div>
+            <div className="py-8 text-center text-muted-foreground">{t("Yuklanmoqda...")}</div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 pt-4">
               <div className="space-y-6">
@@ -167,7 +174,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
                     <CardTitle className="text-base flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        Lead ma'lumotlari
+                        {t("leadMalumotlari")}
                       </div>
                       {!isEditing && (
                         <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)} data-testid="button-edit-lead">
@@ -197,11 +204,11 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
       </Sheet>
 
       <Dialog open={showConvertDialog} onOpenChange={setShowConvertDialog}>
-        <DialogContent data-testid="dialog-convert-lead">
+        <DialogContent data-testid="dialog-convert-lead" className="p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-green-600" />
-              Lidni konvertatsiya qilish
+              <Zap className="h-4 w-4 text-[var(--ep-green)]" />
+              {t("lidniKonvertatsiyaQilish")}
             </DialogTitle>
             <DialogDescription>
               "{lead?.title}" lidini Deal, Kontakt va/yoki Kompaniyaga o'tkazing
@@ -210,14 +217,14 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
 
           <div className="space-y-4 py-2">
             <div className="space-y-3">
-              <Label className="text-sm font-semibold">Nima yaratilsin?</Label>
+              <Label className="text-sm font-semibold">{t("nimaYaratilsin")}</Label>
 
               <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
                 onClick={() => setConvertOptions(o => ({ ...o, createDeal: !o.createDeal }))}>
                 <Checkbox checked={convertOptions.createDeal} data-testid="checkbox-create-deal" />
                 <div>
                   <p className="font-medium text-sm">Deal (Kelishuv)</p>
-                  <p className="text-xs text-muted-foreground">CRM pipeline ga yangi deal yaratish</p>
+                  <p className="text-xs text-muted-foreground">{t("crmPipelineGaYangiDeal")}</p>
                 </div>
               </div>
 
@@ -225,7 +232,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
                 onClick={() => setConvertOptions(o => ({ ...o, createContact: !o.createContact }))}>
                 <Checkbox checked={convertOptions.createContact} data-testid="checkbox-create-contact" />
                 <div>
-                  <p className="font-medium text-sm">Kontakt</p>
+                  <p className="font-medium text-sm">{t("kontakt")}</p>
                   <p className="text-xs text-muted-foreground">
                     {([lead?.name, lead?.lastName]).filter(Boolean).join(" ") || "Ismli kontakt"} yaratish
                   </p>
@@ -237,7 +244,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
                   onClick={() => setConvertOptions(o => ({ ...o, createCompany: !o.createCompany }))}>
                   <Checkbox checked={convertOptions.createCompany} data-testid="checkbox-create-company" />
                   <div>
-                    <p className="font-medium text-sm">Kompaniya</p>
+                    <p className="font-medium text-sm">{t("company")}</p>
                     <p className="text-xs text-muted-foreground">"{lead.companyTitle}" kompaniyasi yaratish</p>
                   </div>
                 </div>
@@ -246,7 +253,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
 
             <div className="flex gap-2 pt-2">
               <Button
-                className="flex-1 bg-green-600 hover:bg-green-700"
+                className="flex-1 bg-green-600 hover:bg-[var(--ep-green)]/90"
                 onClick={() => convertLeadMutation.mutate()}
                 disabled={convertLeadMutation.isPending || (!convertOptions.createDeal && !convertOptions.createContact && !convertOptions.createCompany)}
                 data-testid="button-confirm-convert"
@@ -254,7 +261,7 @@ export function LeadDetailSheet({ leadId, open, onClose }: LeadDetailSheetProps)
                 {convertLeadMutation.isPending ? "Bajarilmoqda..." : "Konvertatsiya qilish"}
               </Button>
               <Button variant="outline" onClick={() => setShowConvertDialog(false)}>
-                Bekor qilish
+                {t("cancel")}
               </Button>
             </div>
           </div>

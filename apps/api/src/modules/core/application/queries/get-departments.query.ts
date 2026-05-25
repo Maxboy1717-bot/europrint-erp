@@ -1,3 +1,8 @@
+/**
+ * @module get-departments.query
+ * @description Source module. See exports for details.
+ */
+
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/types/result.type';

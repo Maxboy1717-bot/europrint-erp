@@ -1,3 +1,8 @@
+/**
+ * @module business-logic.test
+ * @description Jest / Vitest test suite.
+ */
+
 import { describe, it, expect } from 'vitest';
 import {
   calcGsdCompletionPct,

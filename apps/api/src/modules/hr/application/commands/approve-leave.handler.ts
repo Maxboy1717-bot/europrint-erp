@@ -1,3 +1,8 @@
+/**
+ * @module approve-leave.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -55,7 +60,10 @@ export class ApproveLeaveHandler
         leaveData['updatedAt'] as Date,
       );
 
-      leaveRequest.approve(command.approverId);
+      const approveResult = leaveRequest.approve(command.approverId);
+      if (!approveResult.ok) {
+        return Err(approveResult.error);
+      }
 
       const updateResult = await this.repo.updateLeave(command.leaveId, {
         status: leaveRequest.status,
@@ -68,12 +76,10 @@ export class ApproveLeaveHandler
         return Err(`Failed to update leave request: ${updateResult.error}`);
       }
 
-      this.eventEmitter.emit('leave.approved', {
-        leaveId: leaveRequest.id,
-        employeeId: leaveRequest.employeeId,
-        approverId: command.approverId,
-        approvedAt: leaveRequest.approvedAt,
-      });
+      for (const ev of leaveRequest.getDomainEvents()) {
+        this.eventEmitter.emit(ev.eventName, ev);
+      }
+      leaveRequest.clearDomainEvents();
 
       return Ok(leaveRequest);
   }

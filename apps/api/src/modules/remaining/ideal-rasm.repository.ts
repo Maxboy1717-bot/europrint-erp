@@ -1,12 +1,17 @@
+/**
+ * @module ideal-rasm.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { safeNum } from '@common/math';
 import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { execIdealRasmTargetInsert } from '@common/database/queries-remaining';
 
 type Row = Record<string, unknown>;
-const exec = (q: Parameters<typeof db.execute>[0]): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
+const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
 
 const DEFAULT_TARGETS = [
   { targetName: 'Haftalik Foyda', targetKey: 'weekly_profit', targetValue: '100000000', unit: 'UZS', horizonYears: 3, description: 'Haftalik sof foyda maqsadi' },

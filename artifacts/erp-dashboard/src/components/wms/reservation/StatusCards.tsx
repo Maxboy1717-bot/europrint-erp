@@ -1,3 +1,8 @@
+/**
+ * @module StatusCards
+ * @description React UI component.
+ */
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Archive, Layers, CalendarClock, Brain } from "lucide-react";
@@ -18,7 +23,7 @@ export function StatusCards({ dashboard, isLoading, t }: StatusCardsProps) {
             <div>
               <p className="text-sm text-muted-foreground">{t.dashboard.totalStock}</p>
               {isLoading ? (
-                <Skeleton className="h-8 w-20 mt-1" />
+                <Skeleton className="h-8 w-20 mt-1 rounded-lg" />
               ) : (
                 <p className="text-2xl font-bold" data-testid="text-total-stock">
                   {(dashboard?.totalBatches || 0).toLocaleString()}
@@ -36,7 +41,7 @@ export function StatusCards({ dashboard, isLoading, t }: StatusCardsProps) {
             <div>
               <p className="text-sm text-muted-foreground">{t.dashboard.reservedPct}</p>
               {isLoading ? (
-                <Skeleton className="h-8 w-20 mt-1" />
+                <Skeleton className="h-8 w-20 mt-1 rounded-lg" />
               ) : (
                 <p className="text-2xl font-bold" data-testid="text-reserved-pct">
                   {dashboard?.reservedPercent || 0}%
@@ -54,7 +59,7 @@ export function StatusCards({ dashboard, isLoading, t }: StatusCardsProps) {
             <div>
               <p className="text-sm text-muted-foreground">{t.dashboard.expiringSoon}</p>
               {isLoading ? (
-                <Skeleton className="h-8 w-20 mt-1" />
+                <Skeleton className="h-8 w-20 mt-1 rounded-lg" />
               ) : (
                 <p className="text-2xl font-bold" data-testid="text-expiring-soon">
                   {dashboard?.expiringSoon || 0}
@@ -72,7 +77,7 @@ export function StatusCards({ dashboard, isLoading, t }: StatusCardsProps) {
             <div>
               <p className="text-sm text-muted-foreground">{t.dashboard.aiConfidence}</p>
               {isLoading ? (
-                <Skeleton className="h-8 w-20 mt-1" />
+                <Skeleton className="h-8 w-20 mt-1 rounded-lg" />
               ) : (
                 <p className="text-2xl font-bold" data-testid="text-ai-confidence">
                   {dashboard?.avgConfidence || 0}%

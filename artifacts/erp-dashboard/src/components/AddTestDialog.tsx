@@ -1,3 +1,8 @@
+/**
+ * @module AddTestDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,14 +13,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+;
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface AddTestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     title: "",
@@ -113,20 +121,20 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle>Yangi test yaratish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiTestYaratish")}</DialogTitle>
           <DialogDescription>
-            Test uchun asosiy parametrlarni belgilang
+            {t("testUchunAsosiyParametrlarniBelgilang")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="testTitle">Test nomi (O'zbek) *</Label>
+          <div className="space-y-1">
+          <Label htmlFor="testTitle">{t("testNameUz")} *</Label>
             <Input
               id="testTitle"
-              placeholder="Texnika xavfsizligi testi"
+              placeholder={t("texnikaXavfsizligiTesti")}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
@@ -134,11 +142,11 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="testTitleRu">Test nomi (Rus) *</Label>
+          <div className="space-y-1">
+          <Label htmlFor="testTitleRu">{t("testNameRu")} *</Label>
             <Input
               id="testTitleRu"
-              placeholder="Тест по технике безопасности"
+              placeholder={t("safetyTestPlaceholder")}
               value={formData.titleRu}
               onChange={(e) => setFormData({ ...formData, titleRu: e.target.value })}
               required
@@ -146,14 +154,14 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="testCourse">Kurs (ixtiyoriy)</Label>
+          <div className="space-y-1">
+          <Label htmlFor="testCourse">{t("courseOptional")}</Label>
             <Select value={formData.courseId} onValueChange={(value) => setFormData({ ...formData, courseId: value })}>
-              <SelectTrigger data-testid="select-test-course">
-                <SelectValue placeholder="Kursni tanlang" />
+              <SelectTrigger data-testid="select-test-course" className="h-9">
+                <SelectValue placeholder={t("kursniTanlang")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Bog'lanmagan</SelectItem>
+                <SelectItem value="none">{t("boglanmagan")}</SelectItem>
                 {(Array.isArray(courses) ? courses : []).map(course => (
                   <SelectItem key={course.id} value={course.id}>
                     {course.title}
@@ -163,15 +171,15 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="testDepartment">Bo'lim (ixtiyoriy)</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="testDepartment">{t("departmentOptional")}</Label>
               <Select value={formData.departmentId} onValueChange={(value) => setFormData({ ...formData, departmentId: value })}>
-                <SelectTrigger data-testid="select-test-department">
-                  <SelectValue placeholder="Bo'limni tanlang" />
+                <SelectTrigger data-testid="select-test-department" className="h-9">
+                  <SelectValue placeholder={t("bolimniTanlang")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Barchasi</SelectItem>
+                  <SelectItem value="none">{t("Barchasi")}</SelectItem>
                   {(Array.isArray(departments) ? departments : []).map(dept => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}
@@ -181,14 +189,14 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="testPosition">Lavozim (ixtiyoriy)</Label>
+            <div className="space-y-1">
+          <Label htmlFor="testPosition">{t("positionOptional")}</Label>
               <Select value={formData.positionId} onValueChange={(value) => setFormData({ ...formData, positionId: value })}>
-                <SelectTrigger data-testid="select-test-position">
-                  <SelectValue placeholder="Lavozimni tanlang" />
+                <SelectTrigger data-testid="select-test-position" className="h-9">
+                  <SelectValue placeholder={t("lavozimniTanlang")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Barchasi</SelectItem>
+                  <SelectItem value="none">{t("Barchasi")}</SelectItem>
                   {(Array.isArray(positions) ? positions : []).map(pos => (
                     <SelectItem key={pos.id} value={pos.id}>
                       {pos.name}
@@ -199,9 +207,9 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="passPercentage">O'tish foizi *</Label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1">
+          <Label htmlFor="passPercentage">{t("otishFoizi")}</Label>
               <Input
                 id="passPercentage"
                 type="number"
@@ -214,8 +222,8 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="timeLimit">Vaqt (daqiqa)</Label>
+            <div className="space-y-1">
+          <Label htmlFor="timeLimit">{t("timeMinutes")}</Label>
               <Input
                 id="timeLimit"
                 type="number"
@@ -226,8 +234,8 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="maxAttempts">Urinishlar *</Label>
+            <div className="space-y-1">
+          <Label htmlFor="maxAttempts">{t("urinishlar")}</Label>
               <Input
                 id="maxAttempts"
                 type="number"
@@ -242,7 +250,7 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
 
           <div className="flex items-center justify-between space-x-2 pt-2">
             <Label htmlFor="randomize" className="cursor-pointer">
-              Savollarni aralashtirish
+              {t("savollarniAralashtirish")}
             </Label>
             <Switch
               id="randomize"
@@ -259,11 +267,11 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
               onClick={() => onOpenChange(false)}
               disabled={createMutation.isPending}
             >
-              Bekor qilish
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit-test">
-              {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Yaratish
+              {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
+              {t("create")}
             </Button>
           </DialogFooter>
         </form>

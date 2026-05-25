@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module warehouse-rental.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { WarehouseRentalRepository } from './warehouse-rental.repository';
+import { WAREHOUSE_RENTAL_REPO, type IWarehouseRentalRepo } from '../domain/repositories/i-warehouse-rental.repo';
 
 @Injectable()
 export class WarehouseRentalService {
-  constructor(private readonly repo: WarehouseRentalRepository) {}
+  constructor(@Inject(WAREHOUSE_RENTAL_REPO) private readonly repo: IWarehouseRentalRepo) {}
 
   async getRecords(status?: string): Promise<Result<object, AppError>> {
     return this.repo.getRecords(status);

@@ -1,7 +1,13 @@
+/**
+ * @module discipline-v2.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Controller, UseGuards, Get, Post, Put, Patch, Delete, Body, Param, ParseIntPipe, Logger, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 import { DisciplineV2Service } from './discipline-v2.service';
@@ -71,9 +77,11 @@ const UpdateCatalogEntrySchema = z.object({
 class UpdateCatalogEntryDto extends createZodDto(UpdateCatalogEntrySchema) {}
 
 @Roles('admin', 'manager', 'supervisor', 'hr_manager')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
+@ApiTags('Discipline V2')
+@ApiBearerAuth()
 @Controller('hr/discipline')
 export class DisciplineV2Controller {
   private readonly logger = new Logger(DisciplineV2Controller.name);
@@ -82,11 +90,16 @@ export class DisciplineV2Controller {
     private readonly absence: DisciplineV2AbsenceService,
   ) {}
 
+  @ApiOperation({ summary: 'Get catalog' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('catalog')
   async getCatalog() {
     return unwrapOrInternal(await this.svc.getViolationCatalog());
   }
 
+  @ApiOperation({ summary: 'Create catalog entry' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('catalog')
   async createCatalogEntry(@Body() body: CreateCatalogEntryDto) {
     return unwrapOrInternal(await this.svc.createCatalogEntry({
@@ -100,6 +113,10 @@ export class DisciplineV2Controller {
     }));
   }
 
+  @ApiOperation({ summary: 'Update catalog entry' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Put('catalog/:code')
   async updateCatalogEntry(@Param('code') code: string, @Body() body: UpdateCatalogEntryDto) {
     return unwrapOrInternal(await this.svc.updateCatalogEntry(code, {
@@ -113,11 +130,18 @@ export class DisciplineV2Controller {
     }));
   }
 
+  @ApiOperation({ summary: 'Delete catalog entry' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('catalog/:code')
   async deleteCatalogEntry(@Param('code') code: string) {
     return unwrapOrInternal(await this.svc.deleteCatalogEntry(code));
   }
 
+  @ApiOperation({ summary: 'Add violation' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   async addViolation(@Body() body: AddViolationDto) {
     return unwrapOrInternal(await this.svc.addViolation({
@@ -130,46 +154,78 @@ export class DisciplineV2Controller {
     }));
   }
 
+  @ApiOperation({ summary: 'Block employee' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('block/:employeeId')
   async blockEmployee(@Param('employeeId', ParseIntPipe) employeeId: number, @Body() body: BlockEmployeeDto) {
     return unwrapOrInternal(await this.svc.blockEmployee(employeeId, body.reason, body.blocked_by || 1));
   }
 
+  @ApiOperation({ summary: 'Unblock employee' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('unblock/:employeeId')
   async unblockEmployee(@Param('employeeId', ParseIntPipe) employeeId: number, @Body() body: UnblockEmployeeDto) {
     return unwrapOrInternal(await this.svc.unblockEmployee(employeeId, body.unblocked_by || 1, body.reason ?? ''));
   }
 
+  @ApiOperation({ summary: 'Record absence' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('absence/:employeeId')
   async recordAbsence(@Param('employeeId', ParseIntPipe) employeeId: number, @Body() body: RecordAbsenceDto) {
     return unwrapOrInternal(await this.absence.recordAbsence(employeeId, body.absence_date));
   }
 
+  @ApiOperation({ summary: 'Get blocked' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('blocked')
   async getBlocked() {
     return unwrapOrInternal(await this.absence.getBlockedEmployees());
   }
 
+  @ApiOperation({ summary: 'Check discipline status' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('check/:employeeId')
   async checkDisciplineStatus(@Param('employeeId', ParseIntPipe) employeeId: number) {
     return unwrapOrInternal(await this.absence.checkDisciplineStatus(employeeId));
   }
 
+  @ApiOperation({ summary: 'Get employee violations' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('employee/:id')
   async getEmployeeViolations(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.absence.getEmployeeViolations(id));
   }
 
+  @ApiOperation({ summary: 'Acknowledge violation' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/acknowledge')
   async acknowledgeViolation(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.absence.acknowledgeViolation(id));
   }
 
+  @ApiOperation({ summary: 'Approve violation' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/approve')
   async approveViolation(@Param('id', ParseIntPipe) id: number, @Body() body: ApproveViolationDto) {
     return unwrapOrInternal(await this.absence.approveViolation(id, body.approved_by));
   }
 
+  @ApiOperation({ summary: 'Excuse absence' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('absence/:id/excuse')
   async excuseAbsence(@Param('id', ParseIntPipe) id: number, @Body() body: ExcuseAbsenceDto) {
     return unwrapOrInternal(await this.absence.excuseAbsence(id, {

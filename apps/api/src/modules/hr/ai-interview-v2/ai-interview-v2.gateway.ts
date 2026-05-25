@@ -1,3 +1,8 @@
+/**
+ * @module ai-interview-v2.gateway
+ * @description NestJS WebSocket gateway. Socket.IO handlers.
+ */
+
 import { Logger, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { castTo } from '@common/db-rows';
@@ -16,21 +21,8 @@ import type { Server, Socket } from 'socket.io';
 import { AiInterviewV2Service } from './ai-interview-v2.service';
 import { AiInterviewAiService } from './ai-interview-v2-ai.service';
 import { getGreeting, getCancelMessage, getCompletionMessage, calculateResults } from './ai-interview-v2.utils';
-import type { InterviewQuestion, ScoredAnswer, SessionData } from './ai-interview-v2.types';
-
-// Mutable — populated from ConfigService in constructor before any connection is accepted
-let _aiInterviewOrigins: string[] | '*' = '*';
-
-function aiInterviewCorsOrigin(
-  origin: string | undefined,
-  callback: (err: Error | null, allow?: boolean) => void,
-): void {
-  if (!origin || _aiInterviewOrigins === '*' || _aiInterviewOrigins.includes(origin)) {
-    callback(null, true);
-  } else {
-    callback(new Error(`WebSocket CORS: origin '${origin}' ruxsat etilmagan`));
-  }
-}
+import type { InterviewQuestion, SessionData } from './ai-interview-v2.types';
+import { aiInterviewCorsOrigin, setAiInterviewOrigins } from './ai-interview-v2-cors';
 
 @WebSocketGateway({
   namespace: '/ai-interview',
@@ -54,9 +46,11 @@ export class AiInterviewGateway implements OnGatewayConnection, OnGatewayDisconn
   ) {
     const rawOrigins = cfg.get<string>('ALLOWED_ORIGINS');
     const nodeEnv = cfg.get<string>('NODE_ENV') ?? 'development';
-    _aiInterviewOrigins = rawOrigins
-      ? rawOrigins.split(',').map((o) => o.trim()).filter(Boolean)
-      : nodeEnv === 'production' ? ['https://europrint.uz'] : '*';
+    setAiInterviewOrigins(
+      rawOrigins
+        ? rawOrigins.split(',').map((o) => o.trim()).filter(Boolean)
+        : nodeEnv === 'production' ? ['https://europrint.uz'] : '*',
+    );
   }
 
   async handleConnection(client: Socket) {
@@ -97,7 +91,7 @@ export class AiInterviewGateway implements OnGatewayConnection, OnGatewayDisconn
       sessionId: validation.session_id,
       candidateName: validation.candidate_name,
       language: validation.candidate_language,
-      questions: (questions ?? []).map(q => ({
+      questions: (Array.isArray(questions) ? questions : []).map(q => ({
         id: q.id,
         question: q.question,
         maxScore: q.max_score || 10,
@@ -130,7 +124,7 @@ export class AiInterviewGateway implements OnGatewayConnection, OnGatewayDisconn
     client.emit('session.joined', {
       sessionId: session.sessionId,
       candidateName: session.candidateName,
-      questions: (questions ?? []).map(q => ({ id: q.id, question: q.question, maxScore: q.max_score || 10 })),
+      questions: (Array.isArray(questions) ? questions : []).map(q => ({ id: q.id, question: q.question, maxScore: q.max_score || 10 })),
     });
   }
 

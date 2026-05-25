@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module qc-defects-extended.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { QcDefectsExtendedRepository } from './qc-defects-extended.repository';
+import { QC_DEFECTS_EXTENDED_REPO, type IQcDefectsExtendedRepo } from '../domain/repositories/i-qc-defects-extended.repo';
 
 @Injectable()
 export class QcDefectsExtendedService {
-  constructor(private readonly repo: QcDefectsExtendedRepository) {}
+  constructor(@Inject(QC_DEFECTS_EXTENDED_REPO) private readonly repo: IQcDefectsExtendedRepo) {}
 
   async listBraks(sid: number | null, lim: number, off: number): Promise<Result<object, AppError>> {
     return this.repo.listBraks(sid, lim, off);

@@ -1,3 +1,8 @@
+/**
+ * @module TurnoverTab
+ * @description React UI component.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { TrendingUp, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +21,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatCurrency } from "@/lib/format";
 import { TurnoverData, TurnoverItem, TranslationType } from "./types";
+import { apiRequest } from '@/lib/queryClient';
 
 interface TurnoverTabProps {
   t: TranslationType;
@@ -36,21 +42,17 @@ export function TurnoverTab({
     queryKey: ["/api/warehouse/reports/turnover", dateFrom, dateTo],
     queryFn: async () => {
       const params = new URLSearchParams({ dateFrom, dateTo });
-      const res = await fetch(`/api/warehouse/reports/turnover?${params}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
+      return await apiRequest('GET', `/api/warehouse/reports/turnover?${params}`);
     },
   });
 
   if (isLoadingTurnover) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-4">
-          {([1, 2, 3]).map(i => <Skeleton key={`k-${i}`} className="h-24" />)}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {([1, 2, 3]).map(i => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}
         </div>
-        <Skeleton className="h-64" />
+        <Skeleton className="h-64 rounded-lg" />
       </div>
     );
   }
@@ -83,7 +85,7 @@ export function TurnoverTab({
         </Button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
@@ -125,7 +127,7 @@ export function TurnoverTab({
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px]">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t.turnover.material}</TableHead>
@@ -138,7 +140,7 @@ export function TurnoverTab({
               </TableHeader>
               <TableBody>
                 {turnoverData?.data?.map((item: TurnoverItem) => (
-                  <TableRow key={item.materialId} data-testid={`row-turnover-${item.materialId}`}>
+                  <TableRow key={item.materialId} data-testid={`row-turnover-${item.materialId}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.openingStock)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.totalIn)}</TableCell>
@@ -157,7 +159,7 @@ export function TurnoverTab({
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </ScrollArea>
         </CardContent>
       </Card>

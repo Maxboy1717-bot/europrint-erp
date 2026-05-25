@@ -1,6 +1,11 @@
+/**
+ * @module routing.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { AggregateRoot } from '@nestjs/cqrs';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { Err } from '@common/result';
 import { Result } from '@common/result';
 
@@ -66,7 +71,7 @@ export class Routing extends AggregateRoot {
     this.status = RoutingStatus.APPROVED;
     this.approvedAt = _time.now();
     this.approvedBy = approvedBy;
-    this.apply({
+    this.addDomainEvent({
       type: 'ROUTING_APPROVED',
       data: { routingId: this.id, approvedBy },
     });

@@ -1,6 +1,11 @@
+/**
+ * @module fi-payroll-calc
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, type AnyPgColumn, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Position, approvalRequests, departments, users } from "./core-schema";
@@ -15,7 +20,7 @@ import { customerPayments, invoicePayments, financialKPIs, insertFinancialKPISch
 
 export const payrollContracts = pgTable("payroll_contracts", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").notNull().references(() => users.id),
+  employeeId: integer("employee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   contractNumber: varchar("contract_number", { length: 50 }).notNull().unique(),
   payType: varchar("pay_type", { length: 20 }).notNull(), // fixed, hourly, piecework
   baseSalary: numericMoney("base_salary"), // For fixed salary
@@ -32,6 +37,8 @@ export const payrollContracts = pgTable("payroll_contracts", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
 }, (t) => [
+  check("payroll_contracts_pay_type_chk", sql`${t.payType} IN ('fixed','hourly','piecework')`),
+  check("payroll_contracts_status_chk", sql`${t.status} IN ('active','suspended','terminated')`),
   index("idx_payroll_contracts_employee_id").on(t.employeeId),
   index("idx_payroll_contracts_status").on(t.status),
   index("idx_payroll_contracts_pay_type").on(t.payType),
@@ -69,6 +76,7 @@ export const payrollTaxRules = pgTable("payroll_tax_rules", {
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
+  check("payroll_tax_rules_type_chk", sql`${t.taxType} IN ('income_tax','social_tax','pension')`),
   index("idx_payroll_tax_rules_tax_type").on(t.taxType),
   index("idx_payroll_tax_rules_is_active").on(t.isActive),
 ]);
@@ -91,9 +99,9 @@ export type InsertPayrollTaxRule = z.infer<typeof insertPayrollTaxRuleSchema>;
 // Enhanced Payroll Calculations (Kengaytirilgan oylik hisob-kitob)
 export const payrollCalculations = pgTable("payroll_calculations", {
   id: serial("id").primaryKey(),
-  periodId: varchar("period_id").references(() => payrollPeriods.id),
-  employeeId: integer("employee_id").notNull().references(() => users.id),
-  contractId: varchar("contract_id").references(() => payrollContracts.id),
+  periodId: varchar("period_id").references(() => payrollPeriods.id, { onDelete: "set null" }),
+  employeeId: integer("employee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  contractId: varchar("contract_id").references(() => payrollContracts.id, { onDelete: "set null" }),
   payType: varchar("pay_type", { length: 20 }).notNull(), // fixed, hourly, piecework
 
   // Time/Production data
@@ -129,12 +137,14 @@ export const payrollCalculations = pgTable("payroll_calculations", {
   // Status
   status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, calculated, approved, paid
   calculatedAt: timestamp("calculated_at"),
-  approvedBy: integer("approved_by").references(() => users.id),
+  approvedBy: integer("approved_by").references(() => users.id, { onDelete: "set null" }),
   approvedAt: timestamp("approved_at"),
   paidAt: timestamp("paid_at"),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
+  check("payroll_calc_pay_type_chk", sql`${t.payType} IN ('fixed','hourly','piecework')`),
+  check("payroll_calc_status_chk", sql`${t.status} IN ('draft','calculated','approved','paid')`),
   index("idx_payroll_calculations_employee_id").on(t.employeeId),
   index("idx_payroll_calculations_period_id").on(t.periodId),
   index("idx_payroll_calculations_status").on(t.status),
@@ -240,7 +250,7 @@ export const aiFinanceInsights = pgTable("ai_finance_insights", {
   payload: jsonb("payload"), // Qo'shimcha ma'lumotlar
   actionRequired: boolean("action_required").notNull().default(false),
   actionTaken: boolean("action_taken").notNull().default(false),
-  actionTakenBy: varchar("action_taken_by").references(() => users.id),
+  actionTakenBy: varchar("action_taken_by").references(() => users.id, { onDelete: "set null" }),
   actionTakenAt: timestamp("action_taken_at"),
   expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

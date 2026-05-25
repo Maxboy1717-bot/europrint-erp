@@ -1,7 +1,21 @@
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   COUNT(*) FILTER (WHERE ...) aggregate-filter clauses for multi-status
+ *   tallies in a single round-trip, AVG(EXTRACT(EPOCH FROM (resolved_at -
+ *   created_at)) / 86400) FILTER (WHERE resolved_at IS NOT NULL) for
+ *   conditional resolution-time average, all rolled into one stats query.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
+ * @module qc-reclamations.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertOk, unwrapOrNotFoundDefined } from '@common/http-result';
 import { Body, Controller, Get, HttpStatus, Logger, Param, Post, Query, UseGuards, UseInterceptors , BadRequestException, NotFoundException} from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -20,7 +34,8 @@ enum Role {
   SUPER_ADMIN = 'super_admin',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Qc Reclamations')
 @Controller('qc')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -29,6 +44,8 @@ export class QcReclamationsController {
 
   constructor(private readonly commandBus: CommandBus, private readonly queryBus: QueryBus) {}
 
+  @ApiOperation({ summary: 'Get reclamations' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('reclamations')
   async getReclamations(@Query() queryParams: Record<string, unknown>) {
 
@@ -40,6 +57,8 @@ export class QcReclamationsController {
     
   }
 
+  @ApiOperation({ summary: 'Get reclamation stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('reclamations/stats')
   @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async getReclamationStats() {
@@ -57,6 +76,9 @@ export class QcReclamationsController {
     return result.rows[0] ?? {};
   }
 
+  @ApiOperation({ summary: 'Get reclamation by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('reclamations/:id')
   async getReclamationById(@Param('id') id: string) {
 
@@ -65,9 +87,12 @@ export class QcReclamationsController {
     
   }
 
+  @ApiOperation({ summary: 'Create reclamation' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('reclamations')
   @Roles(Role.SALES_MANAGER, Role.QC_MANAGER, Role.SUPER_ADMIN)
-  async createReclamation(@Body() body: Record<string, unknown>) {
+  async createReclamation(@Body() body: unknown) {
 
       const parsed = CreateReclamationDtoSchema.parse(body);
       const cmd = new CreateReclamationCommand(parsed.customerName ?? '', parsed.customerId ?? null, parsed.orderId ?? null, parsed.description ?? '', parsed.severity as DefectSeverity);

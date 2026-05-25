@@ -1,5 +1,10 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards , UseInterceptors} from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+/**
+ * @module material-balance.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Patch, Post, Query, UseGuards , UseInterceptors} from '@nestjs/common';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -7,17 +12,38 @@ import { MaterialBalanceService } from './material-balance.service';
 import { MaterialBalanceBodyDto } from '../compatibility/dto/operations.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import { notImplemented } from '@common/exceptions/not-implemented';
+import {
+  MaterialBalanceOverviewAclTranslator,
+  type LegacyMaterialBalanceOverviewRow,
+  type MaterialBalanceOverviewDto,
+} from './acl/material-balance-overview-acl';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Roles('admin', 'manager', 'hr_manager', 'director', 'SUPER_ADMIN')
 @UseInterceptors(AuditInterceptor)
 @Controller('material-balance')
 export class MaterialBalanceController {
+  /** PA2-14 ACL demonstrator. Stateless - direct instantiation is fine. */
+  private readonly overviewAcl = new MaterialBalanceOverviewAclTranslator();
+
   constructor(private readonly svc: MaterialBalanceService) {}
 
   @Get('overview')
   async getOverview() {
     return unwrapOrInternal(await this.svc.getOverview());
+  }
+
+  /**
+   * PA2-14 ACL-translated variant. New BC-5 (Warehouse / WMS) consumers
+   * should target this endpoint; the legacy `/overview` route stays for
+   * backwards-compat.
+   */
+  @Get('overview/v2')
+  async getOverviewV2(): Promise<MaterialBalanceOverviewDto | null> {
+    const raw = unwrapOrInternal(await this.svc.getOverview()) as unknown as LegacyMaterialBalanceOverviewRow;
+    const r = this.overviewAcl.toDomain(raw);
+    return r.ok ? r.data : null;
   }
 
   @Get('alerts')
@@ -82,6 +108,19 @@ export class MaterialBalanceController {
   @Get(':materialId/history')
   async getHistory(@Param('materialId') materialId: string, @Query() q: Record<string, string>) {
     return unwrapOrInternal(await this.svc.getHistory(materialId, q));
+  }
+
+  /**
+   * MaterialBalance page calls GET /api/material-balance/movements as a
+   * cross-material movement feed. Real implementation will join material
+   * movements across all materials.
+   *
+   * P3-26: returns 501 until the aggregator is wired; clients can fall back to
+   * /api/material-balance/:materialId/history per-material.
+   */
+  @Get('movements')
+  async getMovements(@Query() _q: Record<string, string>) {
+    return notImplemented('GET /material-balance/movements');
   }
 
   @Get(':materialId/reconciliation')

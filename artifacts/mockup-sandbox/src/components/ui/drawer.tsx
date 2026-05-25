@@ -1,3 +1,8 @@
+/**
+ * @module drawer
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 

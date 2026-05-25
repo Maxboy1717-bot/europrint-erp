@@ -1,7 +1,13 @@
+/**
+ * @module FilesTabContent
+ * @description React page component. Route-level UI.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Upload, Eye, Download, Trash2 } from "lucide-react";
 import { getFileIcon, isImageFile } from "../kanban-types";
 import type { TaskFile } from "@shared/schema";
+import { useTranslation } from '@/lib/i18n';
 
 interface FilesTabContentProps {
   files: TaskFile[];
@@ -18,6 +24,7 @@ export function FilesTabContent({
   onDeleteFile,
   isUploading,
 }: FilesTabContentProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div
@@ -45,7 +52,7 @@ export function FilesTabContent({
           data-testid="input-file-upload"
         />
         <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground">Fayllarni shu yerga tashlang yoki</p>
+        <p className="text-sm text-muted-foreground">{t("fayllarniShuYergaTashlangYoki")}</p>
         <Button
           variant="outline"
           size="sm"
@@ -54,12 +61,12 @@ export function FilesTabContent({
           onClick={(e) => { e.stopPropagation(); document.getElementById(`file-input-${cardId}`)?.click(); }}
           data-testid="button-upload-file"
         >
-          Fayl tanlang
+          {t("faylTanlang")}
         </Button>
       </div>
 
       {files.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-3">
           {(Array.isArray(files) ? files : []).map((file) => {
             const { icon: FileIcon, color: iconColor } = getFileIcon(file.mimeType, file.fileName);
             const showThumbnail = isImageFile(file.mimeType, file.fileName);
@@ -136,7 +143,7 @@ export function FilesTabContent({
       )}
 
       {files.length === 0 && (
-        <p className="text-center text-muted-foreground py-4">Fayllar yo'q</p>
+        <p className="text-center text-muted-foreground py-4">{t("fayllarYoq")}</p>
       )}
     </div>
   );

@@ -1,3 +1,8 @@
+/**
+ * @module employee-files-compat.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { db,
   rawSql} from '@shared/db';
@@ -54,6 +59,27 @@ export class EmployeeFilesCompatService {
       const found = dbRows(r)[0];
       if (!found) throw new NotFoundException(`Fayl #${fileId} topilmadi`);
       return found;
+    });
+  }
+
+  async updateFile(fileId: string, body: Record<string, unknown>) {
+    return safeCall(async () => {
+      const check = await rawSql(sql`
+        SELECT id FROM employee_files WHERE id = ${si(fileId)} AND deleted_at IS NULL
+      `);
+      if (!dbRows(check)[0]) throw new NotFoundException(`Fayl #${fileId} topilmadi`);
+      const { file_name, file_type, file_url, file_size } = body;
+      const r = await rawSql(sql`
+        UPDATE employee_files
+        SET file_name  = COALESCE(${file_name  ?? null}, file_name),
+            file_type  = COALESCE(${file_type  ?? null}, file_type),
+            file_url   = COALESCE(${file_url   ?? null}, file_url),
+            file_size  = COALESCE(${file_size  ?? null}, file_size),
+            updated_at = NOW()
+        WHERE id = ${si(fileId)}
+        RETURNING id, file_name, file_type, file_url, file_size, updated_at
+      `);
+      return dbRows(r)[0];
     });
   }
 

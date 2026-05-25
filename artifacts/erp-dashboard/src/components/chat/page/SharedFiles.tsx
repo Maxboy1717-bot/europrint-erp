@@ -1,11 +1,18 @@
+/**
+ * @module SharedFiles
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getAuthHeaders } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Download, Image, FileText, Grid3X3, List, Loader2 } from "lucide-react";
+import { Download, Image, FileText, Grid3X3, List } from "lucide-react";
 import { format } from "date-fns";
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface SharedFile {
   id: string;
   roomId: string;
@@ -34,6 +41,7 @@ function formatBytes(bytes: number): string {
 }
 
 export function SharedFiles({ roomId }: Props) {
+  const { t } = useTranslation("common");
   const [filter, setFilter] = useState<FilterType>("all");
   const [view, setView] = useState<ViewMode>("grid");
 
@@ -41,9 +49,7 @@ export function SharedFiles({ roomId }: Props) {
     queryKey: ["chat-room-files", roomId, filter],
     queryFn: async () => {
       const url = `/api/chat/rooms/${roomId}/files${filter !== "all" ? `?type=${filter}` : ""}`;
-      const res = await fetch(url, { headers: getAuthHeaders() });
-      if (!res.ok) throw new Error("Failed to load files");
-      return res.json();
+      return apiRequest<SharedFile[]>('GET', url);
     },
     enabled: !!roomId,
     staleTime: 30_000,
@@ -88,15 +94,15 @@ export function SharedFiles({ roomId }: Props) {
       <div className="flex-1 overflow-y-auto p-3">
         {isLoading ? (
           <div className="flex items-center justify-center h-24">
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            <EPLoader tone="muted" className="w-5 h-5" />
           </div>
         ) : files.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-24 gap-2 text-muted-foreground">
             <FileText className="w-8 h-8 opacity-30" />
-            <p className="text-xs">Fayllar yo'q</p>
+            <p className="text-xs">{t("fayllarYoq")}</p>
           </div>
         ) : view === "grid" ? (
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {(Array.isArray(files) ? files : []).map((file) => (
               <div
                 key={file.id}
@@ -113,7 +119,7 @@ export function SharedFiles({ roomId }: Props) {
                   </div>
                 ) : (
                   <div className="aspect-square flex flex-col items-center justify-center gap-1 p-2">
-                    <FileText className="w-8 h-8 text-blue-500/70" />
+                    <FileText className="w-8 h-8 text-[var(--ep-blue)]/70" />
                     <p className="text-[10px] text-muted-foreground truncate w-full text-center px-1">
                       {file.fileName}
                     </p>
@@ -149,7 +155,7 @@ export function SharedFiles({ roomId }: Props) {
                   </div>
                 ) : (
                   <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-4 h-4 text-blue-500" />
+                    <FileText className="w-4 h-4 text-[var(--ep-blue)]" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">

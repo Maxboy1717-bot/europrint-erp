@@ -1,7 +1,34 @@
-import { pgTable, uuid, text, boolean, integer, jsonb, timestamp, index } from 'drizzle-orm/pg-core';
-import { stub } from './schema-compat-helpers';
+/**
+ * @module schema-admin-ext
+ * @description Source module. See exports for details.
+ */
 
-export const guidelines = stub(pgTable('guidelines', {
+import { pgTable, serial, uuid, varchar, text, boolean, integer, jsonb, timestamp, index } from 'drizzle-orm/pg-core';
+import { auditLogs } from './schema-rbac';
+
+// ============================================================================
+// Admin — Audit log (full schema, as used by admin-extra repository)
+//
+// Re-exported from schema-rbac.ts (canonical definition). The legacy name
+// `audit_logs_ext` is preserved as an alias for backwards compatibility with
+// the admin-extra repository which imports it via that alias.
+// ============================================================================
+
+export const audit_logs_ext = auditLogs;
+
+export const system_alerts = pgTable('system_alerts', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  message: text('message'),
+  level: varchar('level', { length: 20 }).notNull().default('info'),
+  sourceType: varchar('source_type', { length: 50 }),
+  sourceId: text('source_id'),
+  isRead: boolean('is_read').notNull().default(false),
+  resolvedAt: timestamp('resolved_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const guidelines = pgTable('guidelines', {
   id:          uuid('id').primaryKey().defaultRandom(),
   title:       text('title').notNull(),
   content:     text('content').notNull(),
@@ -10,9 +37,9 @@ export const guidelines = stub(pgTable('guidelines', {
   createdBy:   text('created_by'),
   createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('guidelines_category_idx').on(t.category)]));
+}, (t) => [index('guidelines_category_idx').on(t.category)]);
 
-export const contactSettings = stub(pgTable('contact_settings', {
+export const contactSettings = pgTable('contact_settings', {
   id:          integer('id').primaryKey().default(1),
   phone:       text('phone'),
   email:       text('email'),
@@ -21,9 +48,9 @@ export const contactSettings = stub(pgTable('contact_settings', {
   website:     text('website'),
   workingHours: text('working_hours'),
   updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}));
+});
 
-export const systemSettings = stub(pgTable('system_settings', {
+export const systemSettings = pgTable('system_settings', {
   id:          integer('id').primaryKey().default(1),
   companyName: text('company_name'),
   timezone:    text('timezone').notNull().default('Asia/Tashkent'),
@@ -32,9 +59,9 @@ export const systemSettings = stub(pgTable('system_settings', {
   logoUrl:     text('logo_url'),
   config:      jsonb('config').default({}),
   updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}));
+});
 
-export const adminFilters = stub(pgTable('admin_filters', {
+export const adminFilters = pgTable('admin_filters', {
   id:          uuid('id').primaryKey().defaultRandom(),
   name:        text('name').notNull(),
   filterType:  text('filter_type').notNull().default('general'),
@@ -42,9 +69,9 @@ export const adminFilters = stub(pgTable('admin_filters', {
   isActive:    boolean('is_active').notNull().default(true),
   createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}));
+});
 
-export const calendarEvents = stub(pgTable('calendar_events', {
+export const calendarEvents = pgTable('calendar_events', {
   id:          uuid('id').primaryKey().defaultRandom(),
   title:       text('title').notNull(),
   description: text('description'),
@@ -57,27 +84,12 @@ export const calendarEvents = stub(pgTable('calendar_events', {
   createdBy:   text('created_by'),
   createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('calendar_events_start_idx').on(t.startDate)]));
+}, (t) => [index('calendar_events_start_idx').on(t.startDate)]);
 
-export const assetItems = stub(pgTable('asset_items', {
-  id:            uuid('id').primaryKey().defaultRandom(),
-  name:          text('name').notNull(),
-  assetCode:     text('asset_code'),
-  category:      text('category').notNull().default('equipment'),
-  status:        text('status').notNull().default('active'),
-  purchaseDate:  timestamp('purchase_date', { withTimezone: true }),
-  purchaseValue: text('purchase_value'),
-  currentValue:  text('current_value'),
-  location:      text('location'),
-  assignedTo:    text('assigned_to'),
-  departmentId:  integer('department_id'),
-  serialNumber:  text('serial_number'),
-  notes:         text('notes'),
-  createdAt:     timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt:     timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('asset_items_status_idx').on(t.status), index('asset_items_category_idx').on(t.category)]));
+// assetItems: canonical definition in lib/db (admin-assets.ts) — identical columns.
+export { assetItems } from '@workspace/db';
 
-export const assetMaintenance = stub(pgTable('asset_maintenance', {
+export const assetMaintenance = pgTable('asset_maintenance', {
   id:          uuid('id').primaryKey().defaultRandom(),
   assetId:     uuid('asset_id').notNull(),
   maintenanceType: text('maintenance_type').notNull().default('routine'),
@@ -87,9 +99,9 @@ export const assetMaintenance = stub(pgTable('asset_maintenance', {
   notes:       text('notes'),
   status:      text('status').notNull().default('scheduled'),
   createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}));
+});
 
-export const assetDisposals = stub(pgTable('asset_disposals', {
+export const assetDisposals = pgTable('asset_disposals', {
   id:          uuid('id').primaryKey().defaultRandom(),
   assetId:     uuid('asset_id').notNull(),
   disposalType: text('disposal_type').notNull().default('retired'),
@@ -98,9 +110,9 @@ export const assetDisposals = stub(pgTable('asset_disposals', {
   reason:      text('reason'),
   approvedBy:  text('approved_by'),
   createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}));
+});
 
-export const assetTransfers = stub(pgTable('asset_transfers', {
+export const assetTransfers = pgTable('asset_transfers', {
   id:            uuid('id').primaryKey().defaultRandom(),
   assetId:       uuid('asset_id').notNull(),
   fromDeptId:    integer('from_dept_id'),
@@ -109,9 +121,9 @@ export const assetTransfers = stub(pgTable('asset_transfers', {
   reason:        text('reason'),
   approvedBy:    text('approved_by'),
   createdAt:     timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}));
+});
 
-export const saasTenants = stub(pgTable('saas_tenants', {
+export const saasTenants = pgTable('saas_tenants', {
   id:          uuid('id').primaryKey().defaultRandom(),
   name:        text('name').notNull(),
   domain:      text('domain'),
@@ -120,4 +132,4 @@ export const saasTenants = stub(pgTable('saas_tenants', {
   employeeLimit: integer('employee_limit').notNull().default(50),
   createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}));
+});

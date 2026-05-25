@@ -1,3 +1,8 @@
+/**
+ * @module WhatsAppForm
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,6 +14,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { WHATSAPP_TEMPLATES } from "./types";
 import { WhatsappIcon } from "./utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface WhatsAppFormProps {
   entityType: string;
@@ -17,6 +23,7 @@ interface WhatsAppFormProps {
 }
 
 export function WhatsAppForm({ entityType, entityId, phone }: WhatsAppFormProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [whatsappForm, setWhatsappForm] = useState({
     phone: phone || "",
@@ -53,7 +60,7 @@ export function WhatsAppForm({ entityType, entityId, phone }: WhatsAppFormProps)
   return (
     <div className="space-y-3 p-4">
       <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">Telefon</Label>
+        <Label className="text-xs text-muted-foreground">{t("phone")}</Label>
         <Input
           value={whatsappForm.phone}
           onChange={(e) => setWhatsappForm((prev) => ({ ...prev, phone: e.target.value }))}
@@ -62,10 +69,10 @@ export function WhatsAppForm({ entityType, entityId, phone }: WhatsAppFormProps)
         />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">Shablon</Label>
+        <Label className="text-xs text-muted-foreground">{t("shablon")}</Label>
         <Select value={whatsappForm.template} onValueChange={handleWhatsAppTemplateSelect}>
-          <SelectTrigger data-testid="select-whatsapp-template">
-            <SelectValue placeholder="Shablonni tanlang" />
+          <SelectTrigger data-testid="select-whatsapp-template" className="h-9">
+            <SelectValue placeholder={t("shablonniTanlang")} />
           </SelectTrigger>
           <SelectContent>
             {(Array.isArray(WHATSAPP_TEMPLATES) ? WHATSAPP_TEMPLATES : []).map((t) => (
@@ -75,23 +82,23 @@ export function WhatsAppForm({ entityType, entityId, phone }: WhatsAppFormProps)
         </Select>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">Xabar</Label>
+        <Label className="text-xs text-muted-foreground">{t("xabar")}</Label>
         <Textarea
           value={whatsappForm.message}
           onChange={(e) => setWhatsappForm((prev) => ({ ...prev, message: e.target.value }))}
           className="min-h-[100px] resize-none"
-          placeholder="Xabarni yozing..."
+          placeholder={t("xabarniYozing")}
           data-testid="input-whatsapp-message"
         />
       </div>
       <Button
-        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+        className="w-full bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white"
         onClick={() => sendWhatsAppMutation.mutate(whatsappForm)}
         disabled={!whatsappForm.message || !whatsappForm.phone || sendWhatsAppMutation.isPending}
         data-testid="button-send-whatsapp"
       >
         <WhatsappIcon className="h-4 w-4 mr-2" />
-        Yuborish
+        {t("submitBtn")}
       </Button>
     </div>
   );

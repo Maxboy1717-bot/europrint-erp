@@ -1,11 +1,16 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module spoilage.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Injectable, Inject } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeDiv, safeNum } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { PERCENT_BASIS, PERCENT_MULTIPLIER, ROUND_2DP_FACTOR } from '@common/constants/app.constants';
+import { COST_SPLIT_PAPER, COST_SPLIT_INK, COST_SPLIT_LABOR } from '@common/constants/business.constants';
 import { SPOILAGE_ALARM_MULTIPLIER } from '../../constants/qc.constants';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { IQcComputeRepository, QC_COMPUTE_REPO } from '../repositories/i-qc.repo';
 
 export interface JobSpoilageData {
   defectiveSheets: number;
@@ -50,6 +55,10 @@ export interface SpoilageResult {
  */
 @Injectable()
 export class SpoilageService {
+  constructor(
+    @Inject(QC_COMPUTE_REPO) private readonly qcRepo: IQcComputeRepository,
+  ) {}
+
   @Calculation('qc.spoilage.calculate')
   async calculate(
     defectiveSheets: number,
@@ -112,39 +121,11 @@ export class SpoilageService {
   }
 
   async getJobSpoilageData(jobId: string): Promise<JobSpoilageData> {
-    const inspRows = await runQuery<{ defective_sheets: number; total_sheets: number }>(sql`
-      SELECT
-        COALESCE(SUM(i.items_failed), 0)::int  AS defective_sheets,
-        COALESCE(SUM(i.items_checked), 1)::int AS total_sheets
-      FROM qc_inspections i
-      WHERE i.reference_id::text = ${jobId}
-        AND i.reference_type IN ('print_job', 'production_order')
-    `);
+    const inspRow = await this.qcRepo.findJobSpoilageRow(jobId);
+    const costRow = await this.qcRepo.findJobCostRow(jobId);
 
-    /* Fetch unit cost + product name defensively — columns may differ across deployments */
-    let unitCost = 0;
-    let productName = '';
-    try {
-      const costRows = await runQuery<{ unit_cost: number; product_name: string | null }>(sql`
-        SELECT
-          COALESCE(
-            NULLIF(po.actual_cost,  0),
-            NULLIF(po.planned_cost, 0),
-            0
-          ) / GREATEST(COALESCE(po.confirmed_quantity, po.planned_quantity, 1), 1) AS unit_cost,
-          mc.name AS product_name
-        FROM production_orders po
-        LEFT JOIN material_cards mc ON mc.id = po.product_id
-        WHERE po.order_number = ${jobId} OR po.id::text = ${jobId}
-        LIMIT 1
-      `);
-      unitCost    = safeNum(costRows[0]?.unit_cost   ?? 0);
-      productName = (costRows[0]?.product_name ?? '').toLowerCase();
-    } catch {
-      /* Graceful degradation: cost data unavailable — defaults to 0 / 4color */
-    }
-
-    const row = inspRows[0] ?? { defective_sheets: 0, total_sheets: 1 };
+    const unitCost    = safeNum(costRow?.unitCost    ?? 0);
+    const productName = (costRow?.productName ?? '').toLowerCase();
 
     /* Derive print type: 8-color / 8rangli in product name → '8color' */
     const printType: PrintType = /8[- ]?color|8[- ]?rangli|cmykx2/.test(productName)
@@ -153,12 +134,12 @@ export class SpoilageService {
 
     /* Industry-standard cost split: paper 40%, ink 35%, labor 25% */
     return {
-      defectiveSheets: safeNum(row.defective_sheets),
-      totalSheets:     Math.max(safeNum(row.total_sheets), 1),
+      defectiveSheets: safeNum(inspRow.defectiveSheets),
+      totalSheets:     Math.max(safeNum(inspRow.totalSheets), 1),
       printType,
-      unitCostPaper:   unitCost * 0.40,
-      unitCostInk:     unitCost * 0.35,
-      unitCostLabor:   unitCost * 0.25,
+      unitCostPaper:   unitCost * COST_SPLIT_PAPER,
+      unitCostInk:     unitCost * COST_SPLIT_INK,
+      unitCostLabor:   unitCost * COST_SPLIT_LABOR,
     };
   }
 }

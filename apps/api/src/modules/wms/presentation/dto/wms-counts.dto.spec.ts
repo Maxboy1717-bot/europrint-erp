@@ -1,3 +1,8 @@
+/**
+ * @module wms-counts.dto.spec
+ * @description Jest / Vitest test suite.
+ */
+
 
 import {
   WmsCreateInventoryCountSchema,

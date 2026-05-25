@@ -1,3 +1,8 @@
+/**
+ * @module create-material.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
@@ -5,7 +10,7 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
 import { CreateMaterialCommand } from './create-material.command';
 import { Material } from '../../domain/aggregates/material.aggregate';
-import { IMmMaterialRepository } from '../../infrastructure/repositories/drizzle-material.repo';
+import { IMmMaterialRepository, MM_MATERIAL_REPO } from '../../infrastructure/repositories/drizzle-material.repo';
 
 @Injectable()
 @CommandHandler(CreateMaterialCommand)
@@ -13,7 +18,7 @@ export class CreateMaterialHandler implements ICommandHandler<CreateMaterialComm
   private readonly logger = new Logger(CreateMaterialHandler.name);
 
   constructor(
-    @Inject('IMmMaterialRepository') private readonly materialRepository: IMmMaterialRepository,
+    @Inject(MM_MATERIAL_REPO) private readonly materialRepository: IMmMaterialRepository,
   ) {}
 
   async execute(command: CreateMaterialCommand): Promise<Result<Material>> {

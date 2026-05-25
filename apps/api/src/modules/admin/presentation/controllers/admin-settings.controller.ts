@@ -1,3 +1,8 @@
+/**
+ * @module admin-settings.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { assertOk } from '@common/http-result';
@@ -15,15 +20,16 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 
 import { RolesGuard } from '../../infrastructure/guards/roles.guard';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '../../infrastructure/decorators/roles.decorator';
 import { AuditInterceptor } from '../../infrastructure/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { isErr } from '@common/result';
 
-import { UpdateSettingsHandler } from '../../application/commands/update-settings.handler';
+import { UpdateSettingsService } from '../../application/services/update-settings.service';
 import { ISettingsRepo } from '../../domain/repositories/i-settings.repo';
 import { SETTINGS_REPO } from '../../admin.tokens';
 import { UpdateSettingsDto, UpdateSettingsSchema } from '../dto/update-settings.dto';
@@ -31,9 +37,9 @@ import { UserRole } from '../../domain/aggregates/user.aggregate';
 import { AuthenticatedUser } from '@auth/types';
 import { MAX_USERS_DEFAULT } from '@common/constants/app.constants';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('admin/settings')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @ApiBearerAuth()
 @ApiTags('Admin - Settings')
@@ -41,7 +47,7 @@ export class AdminSettingsController {
   private readonly logger = new Logger(AdminSettingsController.name);
 
   constructor(
-    private readonly updateSettingsHandler: UpdateSettingsHandler,
+    private readonly updateSettingsHandler: UpdateSettingsService,
     @Inject(SETTINGS_REPO) private readonly settingsRepo: ISettingsRepo,
   ) {}
 
@@ -79,7 +85,7 @@ export class AdminSettingsController {
       freeStorageDays:  validated.freeStorageDays,
       storageDailyRate: validated.storageDailyRate,
       updatedBy:        user.id,
-      userRole:         UserRole.SUPER_ADMIN,
+      userRole:         user.role as UserRole,
     });
     assertOk(result);
     return { message: 'Settings updated successfully' };

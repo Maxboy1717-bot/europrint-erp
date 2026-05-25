@@ -1,17 +1,21 @@
+/**
+ * @module drizzle-sensor.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { Result, Ok, Err, isErr } from '@common/result';
-import { ISensorRepo } from '../../domain/repositories/i-sensor.repo';
+import { ISensorRepo, RegisterDeviceInput } from '../../domain/repositories/i-sensor.repo';
 import { SensorDevice } from '../../domain/aggregates/sensor-device.aggregate';
 import { SensorReading } from '../../domain/aggregates/sensor-reading.aggregate';
 import { SensorStatus, SensorType } from '../../domain/enums/sensor-status.enum';
-import { sql } from 'drizzle-orm';
-
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 
@@ -25,6 +29,38 @@ export class DrizzleSensorRepo implements ISensorRepo {
       if (!r.length) return Err('Device not found');
       return Ok(this.mapToDevice(r[0]));
     } catch { this.logger.error('Find device error'); return Err('Failed to find device'); }
+  }
+
+  async existsByCode(deviceCode: string): Promise<Result<boolean>> {
+    try {
+      const r = await exec(sql`SELECT id FROM iot_sensors WHERE sensor_code = ${deviceCode} LIMIT 1`);
+      return Ok(r.length > 0);
+    } catch { this.logger.error('existsByCode error'); return Err('Failed to check device code'); }
+  }
+
+  async registerDevice(input: RegisterDeviceInput): Promise<Result<SensorDevice>> {
+    try {
+      const minT = input.thresholds?.min ?? null;
+      const maxT = input.thresholds?.max ?? null;
+      const r = await exec(sql`INSERT INTO iot_sensors (sensor_code, name, type, location, unit, min_threshold, max_threshold, is_active) VALUES (${input.deviceCode}, ${input.name}, ${input.type ?? 'generic'}, ${input.location ?? ''}, '', ${minT}, ${maxT}, true) RETURNING id, sensor_code, name, type, location, unit, is_active, min_threshold, max_threshold, created_at, 'active' AS status`);
+      if (!r.length) return Err('Failed to register device');
+      return Ok(this.mapToDevice(r[0]));
+    } catch { this.logger.error('registerDevice error'); return Err('Failed to register device'); }
+  }
+
+  async updateThresholds(
+    deviceId: string,
+    thresholds: { min?: number | null; max?: number | null },
+  ): Promise<Result<SensorDevice>> {
+    try {
+      const existing = await exec(sql`SELECT id FROM iot_sensors WHERE id = ${deviceId} LIMIT 1`);
+      if (!existing.length) return Err('Device not found');
+      const minT = thresholds.min ?? null;
+      const maxT = thresholds.max ?? null;
+      const r = await exec(sql`UPDATE iot_sensors SET min_threshold = ${minT}, max_threshold = ${maxT} WHERE id = ${deviceId} RETURNING id, sensor_code, name, type, location, unit, is_active, min_threshold, max_threshold, created_at, CASE WHEN is_active THEN 'active' ELSE 'inactive' END AS status`);
+      if (!r.length) return Err('Failed to update thresholds');
+      return Ok(this.mapToDevice(r[0]));
+    } catch { this.logger.error('updateThresholds error'); return Err('Failed to update thresholds'); }
   }
 
   async findAllDevices(filters: { status?: string; type?: string; page?: number; limit?: number }): Promise<Result<{ items: SensorDevice[]; total: number }>> {
@@ -46,7 +82,7 @@ export class DrizzleSensorRepo implements ISensorRepo {
           : exec(sql`SELECT id, sensor_code, name, type, location, unit, is_active, created_at, CASE WHEN is_active THEN 'active' ELSE 'inactive' END AS status FROM iot_sensors ORDER BY name LIMIT ${limit} OFFSET ${offset}`),
         exec(sql`SELECT COUNT(*) AS total FROM iot_sensors`),
       ]);
-      return Ok({ items: (items ?? []).map((item) => this.mapToDevice(item)), total: Number(countRows[0]?.total ?? 0) });
+      return Ok({ items: (Array.isArray(items) ? items : []).map((item) => this.mapToDevice(item)), total: Number(countRows[0]?.total ?? 0) });
     } catch { this.logger.error('Find all devices error'); return Err('Failed to find devices'); }
   }
 
@@ -99,7 +135,7 @@ export class DrizzleSensorRepo implements ISensorRepo {
         : opts.to
         ? await exec(sql`SELECT r.id, r.sensor_id AS device_id, r.value, r.status, r.recorded_at, s.unit FROM iot_sensor_readings r LEFT JOIN iot_sensors s ON s.id = r.sensor_id WHERE r.sensor_id = ${deviceId} AND r.recorded_at <= ${opts.to} ORDER BY r.recorded_at DESC LIMIT ${limit}`)
         : await exec(sql`SELECT r.id, r.sensor_id AS device_id, r.value, r.status, r.recorded_at, s.unit FROM iot_sensor_readings r LEFT JOIN iot_sensors s ON s.id = r.sensor_id WHERE r.sensor_id = ${deviceId} ORDER BY r.recorded_at DESC LIMIT ${limit}`);
-      return Ok((r ?? []).map((item) => this.mapToReading(item)));
+      return Ok((Array.isArray(r) ? r : []).map((item) => this.mapToReading(item)));
     } catch { this.logger.error('Find readings error'); return Err('Failed to find readings'); }
   }
 
@@ -112,7 +148,7 @@ export class DrizzleSensorRepo implements ISensorRepo {
         exec(sql`SELECT r.id, r.sensor_id AS device_id, r.value, r.status, r.recorded_at, s.unit, s.max_threshold FROM iot_sensor_readings r LEFT JOIN iot_sensors s ON s.id = r.sensor_id WHERE r.status = 'anomaly' OR (s.max_threshold IS NOT NULL AND r.value::float > s.max_threshold::float) ORDER BY r.recorded_at DESC LIMIT ${limit} OFFSET ${offset}`),
         exec(sql`SELECT COUNT(*) AS total FROM iot_sensor_readings r LEFT JOIN iot_sensors s ON s.id = r.sensor_id WHERE r.status = 'anomaly' OR (s.max_threshold IS NOT NULL AND r.value::float > s.max_threshold::float)`),
       ]);
-      return Ok({ items: (items ?? []).map((item) => this.mapToReading(item)), total: Number(countRows[0]?.total ?? 0) });
+      return Ok({ items: (Array.isArray(items) ? items : []).map((item) => this.mapToReading(item)), total: Number(countRows[0]?.total ?? 0) });
     } catch { this.logger.error('Find anomalies error'); return Err('Failed to find anomalies'); }
   }
 

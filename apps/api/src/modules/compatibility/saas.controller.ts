@@ -1,16 +1,30 @@
+/**
+ * @module saas.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   saas module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
+ */
 import {
-  Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put,
+  Body, Controller, Delete, Get, HttpCode, HttpException, Param, Patch, Post, Put,
   UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
+
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { unwrapOrBadRequest, unwrapOrNotFound } from '@common/http-result';
+import { unwrapOrBadRequest, unwrapOrInternal, unwrapOrNotFound } from '@common/http-result';
 import { z } from 'zod';
 import { SaasService } from './saas.service';
 import { DEFAULT_PAGE_SIZE } from '@common/constants/app.constants';
+import { notImplemented } from '@common/exceptions/not-implemented';
+import {
+  SaasTenantAclTranslator,
+  type LegacySaasTenantRow,
+  type SaasTenantDto,
+} from './acl/saas-tenant-acl';
 
 const CreateTenantSchema = z.object({
   name: z.string().min(1),
@@ -21,19 +35,46 @@ const CreateTenantSchema = z.object({
 
 const UpdateTenantStatusSchema = z.object({ status: z.enum(['active', 'suspended', 'trial', 'inactive']) });
 
+const UpdateTenantModulesSchema = z.object({
+  modules: z.array(z.string()).optional(),
+}).passthrough();
+
+const OnboardTenantSchema = z.object({
+  adminEmail: z.string().email().optional(),
+  modules: z.array(z.string()).optional(),
+}).passthrough();
+
 @ApiTags('SAAS')
 @ApiBearerAuth()
 @Roles('super_admin', 'admin')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('saas')
 export class SaasController {
+  /** PA2-14 ACL demonstrator. Stateless - direct instantiation is fine. */
+  private readonly tenantAcl = new SaasTenantAclTranslator();
+
   constructor(private readonly svc: SaasService) {}
 
   @Get('tenants')
   async getTenants() {
-    return unwrapOrBadRequest(await this.svc.getTenants());
+    return unwrapOrInternal(await this.svc.getTenants());
+  }
+
+  /**
+   * PA2-14 ACL-translated variant. New BC-10 (Platform / SaaS) consumers
+   * should target this endpoint; the legacy `/tenants` route stays for
+   * backwards-compat with the existing admin dashboard.
+   */
+  @Get('tenants/v2')
+  async getTenantsV2(): Promise<SaasTenantDto[]> {
+    const raw = unwrapOrInternal(await this.svc.getTenants()) as unknown as LegacySaasTenantRow[];
+    const list = Array.isArray(raw) ? raw : [];
+    return list
+      .map((row) => this.tenantAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: SaasTenantDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post('tenants')
@@ -45,12 +86,12 @@ export class SaasController {
 
   @Get('platform-stats')
   async getPlatformStats() {
-    return unwrapOrBadRequest(await this.svc.getPlatformStats());
+    return unwrapOrInternal(await this.svc.getPlatformStats());
   }
 
   @Get('error-logs')
   async getErrorLogs() {
-    return await this.svc.getErrorLogs().then(unwrapOrBadRequest);
+    return unwrapOrBadRequest(await this.svc.getErrorLogs());
   }
 
   @Patch('tenants/:id/status')
@@ -66,7 +107,7 @@ export class SaasController {
 
   @Get('expiry-alerts')
   async getExpiryAlerts() {
-    return unwrapOrBadRequest(await this.svc.getExpiryAlerts());
+    return unwrapOrInternal(await this.svc.getExpiryAlerts());
   }
 
   @Get('tenants/:id')
@@ -87,22 +128,37 @@ export class SaasController {
   }
 
   @Get('tenants/:id/modules')
-  async getTenantModules(@Param('id') id: string) { return { data: [], tenantId: id }; }
+  async getTenantModules(@Param('id') _id: string) {
+    return notImplemented('GET /saas/tenants/:id/modules');
+  }
+
+  @Patch('tenants/:id/modules')
+  async updateTenantModules(@Param('id') _id: string, @Body() body: unknown) {
+    UpdateTenantModulesSchema.parse(body);
+    return notImplemented('PATCH /saas/tenants/:id/modules');
+  }
 
   @Post('tenants/:id/onboard')
-  async onboardTenant(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, onboarded: true }; }
+  async onboardTenant(@Param('id') _id: string, @Body() body: unknown) {
+    OnboardTenantSchema.parse(body ?? {});
+    return notImplemented('POST /saas/tenants/:id/onboard');
+  }
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('orders-registry')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class OrdersRegistryCompatController {
   @Get()
   @Roles('admin', 'super_admin', 'manager', 'director', 'accountant', 'sales')
-  async listOrders() { return { data: [], total: 0, page: 1, limit: DEFAULT_PAGE_SIZE }; }
+  async listOrders() {
+    return notImplemented('GET /orders-registry');
+  }
 
   @Post()
   @Roles('admin', 'super_admin', 'manager', 'director', 'accountant', 'sales')
-  async createOrder(@Body() _body: unknown) { return { message: 'Order created', data: null }; }
+  async createOrder(@Body() _body: unknown) {
+    return notImplemented('POST /orders-registry');
+  }
 }

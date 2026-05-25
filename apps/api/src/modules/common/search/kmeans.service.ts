@@ -32,13 +32,13 @@ export class KMeansService {
     for (const p of safePoints) {
       for (let d = 0; d < dim; d++) sum[d] += p[d];
     }
-    return (sum ?? []).map(s => s / (safePoints.length || 1));
+    return (Array.isArray(sum) ? sum : []).map(s => s / (safePoints.length || 1));
   }
 
   private assign(points: readonly Point[], centroids: Point[]): number[] {
     const safePoints = Array.isArray(points) ? points : [];
-    return (safePoints ?? []).map(p =>
-      (centroids ?? []).reduce(
+    return (Array.isArray(safePoints) ? safePoints : []).map(p =>
+      (Array.isArray(centroids) ? centroids : []).reduce(
         (bestK, c, k) =>
           this.euclideanSq(p, c) < this.euclideanSq(p, centroids[bestK]) ? k : bestK,
         0,
@@ -53,10 +53,10 @@ export class KMeansService {
     centroids.push([...safePoints[firstIdx]]);
 
     for (let c = 1; c < k; c++) {
-      const dists = (safePoints ?? []).map(p =>
+      const dists = (Array.isArray(safePoints) ? safePoints : []).map(p =>
         Math.min(...(Array.isArray(centroids) ? centroids : []).map(center => this.euclideanSq(p, center))),
       );
-      const total = (dists ?? []).reduce((s, d) => s + d, 0);
+      const total = (Array.isArray(dists) ? dists : []).reduce((s, d) => s + d, 0);
       let rand = rng() * total;
       let chosen = 0;
       for (let i = 0; i < dists.length; i++) {
@@ -70,39 +70,41 @@ export class KMeansService {
 
   silhouette(points: readonly Point[], assignments: number[], k: number): number {
     if (k === 1) return 0;
-
     const safePoints: Point[] = Array.isArray(points) ? [...points] : [];
     const n = safePoints.length;
     let totalSil = 0;
-
     for (let i = 0; i < n; i++) {
-      const myCluster = assignments[i];
-      const sameCluster = (safePoints ?? []).filter((_, idx) => assignments[idx] === myCluster && idx !== i);
-
-      const a = sameCluster.length
-        ? (sameCluster ?? []).reduce((s: number, p: Point) => s + this.euclidean(safePoints[i], p), 0) / sameCluster.length
-        : 0;
-
-      let b = Infinity;
-      for (let c = 0; c < k; c++) {
-        if (c === myCluster) continue;
-        const clusterPts = (safePoints ?? []).filter((_, idx) => assignments[idx] === c);
-        if (!clusterPts.length) continue;
-        const avgDist = (clusterPts ?? []).reduce((s: number, p: Point) => s + this.euclidean(safePoints[i], p), 0) / clusterPts.length;
-        if (avgDist < b) b = avgDist;
-      }
-
-      if (!isFinite(b)) {
-        totalSil += -1;
-        continue;
-      }
-
-      const maxAB = Math.max(a, b);
-      const sil = maxAB > 0 ? (b - a) / maxAB : 0;
-      totalSil += Math.max(-1, Math.min(1, sil));
+      totalSil += this.pointSilhouette(safePoints, assignments, k, i);
     }
-
     return totalSil / n;
+  }
+
+  private pointSilhouette(safePoints: Point[], assignments: number[], k: number, i: number): number {
+    const myCluster = assignments[i];
+    const a = this.intraClusterDist(safePoints, assignments, myCluster, i);
+    const b = this.nearestClusterDist(safePoints, assignments, k, myCluster, i);
+    if (!isFinite(b)) return -1;
+    const maxAB = Math.max(a, b);
+    const sil = maxAB > 0 ? (b - a) / maxAB : 0;
+    return Math.max(-1, Math.min(1, sil));
+  }
+
+  private intraClusterDist(safePoints: Point[], assignments: number[], myCluster: number, i: number): number {
+    const sameCluster = (Array.isArray(safePoints) ? safePoints : []).filter((_, idx) => assignments[idx] === myCluster && idx !== i);
+    if (!sameCluster.length) return 0;
+    return sameCluster.reduce((s: number, p: Point) => s + this.euclidean(safePoints[i], p), 0) / sameCluster.length;
+  }
+
+  private nearestClusterDist(safePoints: Point[], assignments: number[], k: number, myCluster: number, i: number): number {
+    let b = Infinity;
+    for (let c = 0; c < k; c++) {
+      if (c === myCluster) continue;
+      const clusterPts = (Array.isArray(safePoints) ? safePoints : []).filter((_, idx) => assignments[idx] === c);
+      if (!clusterPts.length) continue;
+      const avgDist = clusterPts.reduce((s: number, p: Point) => s + this.euclidean(safePoints[i], p), 0) / clusterPts.length;
+      if (avgDist < b) b = avgDist;
+    }
+    return b;
   }
 
   fit(
@@ -122,7 +124,7 @@ export class KMeansService {
     }
 
     const dim = points[0].length;
-    if (!(points ?? []).every(p => p.length === dim)) {
+    if (!(Array.isArray(points) ? points : []).every(p => p.length === dim)) {
       return Err({ code: 'VALIDATION', message: 'Barcha nuqtalar bir xil o\'lchamda bo\'lishi kerak' });
     }
 

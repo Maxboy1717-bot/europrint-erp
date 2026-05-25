@@ -1,3 +1,8 @@
+/**
+ * @module create-order.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
@@ -5,9 +10,13 @@ import { Result, Ok, Err } from '@common/types/result.type';
 import { Inject, Logger } from '@nestjs/common';
 import { SalesOrder } from '../../domain/aggregates/sales-order.aggregate';
 import { SoStatus } from '../../domain/value-objects/so-status.vo';
-import { Money } from '@shared/domain/value-objects/money.vo';
-import { ISalesOrderRepository } from '../../domain/repositories/i-sales-order.repo';
+import { Money } from '@common/money/money.vo';
+import { CustomerId } from '@shared/domain/value-objects/customer-id.vo';
+import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 import { OrderCreatedEvent } from '../../domain/events/order-created.event';
+import { ERP_EVENTS } from '@common/constants/erp-events.constants';
+import { OutboxRepository } from '../../../shared/outbox/outbox.repository';
+import { db } from '@shared/db';
 
 export class CreateOrderCommand {
   constructor(public readonly companyId: number,
@@ -16,15 +25,17 @@ export class CreateOrderCommand {
     public readonly designFlag: boolean = false,
     public readonly sampleFlag: boolean = false,
     public readonly createdBy: number = 1,
-    public readonly dealId?: number) {}
+    public readonly dealId?: number,
+    public readonly customerId?: number) {}
 }
 
 @CommandHandler(CreateOrderCommand)
 export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
   private readonly logger = new Logger(CreateOrderHandler.name);
   constructor(
-    @Inject('ISalesOrderRepository') private readonly orderRepo: ISalesOrderRepository,
+    @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
     private readonly eventBus: EventBus,
+    private readonly outboxRepo: OutboxRepository,
   ) {}
 
   async execute(command: CreateOrderCommand): Promise<Result<SalesOrder>> {
@@ -41,25 +52,122 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
       return Err('Invalid status');
     }
 
-    const orderNumber = `SO-${Date.now()}`;
+    // VO validation at the handler boundary: a raw numeric customerId from
+    // the DTO is funnelled through `CustomerId.create` so the aggregate only
+    // ever holds a validated VO.
+    let customerId: CustomerId | undefined;
+    if (command.customerId !== undefined) {
+      const r = CustomerId.create(command.customerId);
+      if (!r.ok) return Err(r.error);
+      customerId = r.data;
+    }
+
+    // DB sequence orqali noyob raqam — bir millisekundda ikki buyurtma muammosini hal qiladi
+    let orderNumber: string;
+    try {
+      const seqRow = await this.orderRepo.count?.();
+      const seqNum = seqRow?.ok ? (seqRow.data ?? 0) + 1 : Date.now();
+      const year   = new Date().getFullYear();
+      const padded = String(seqNum).padStart(6, '0');
+      orderNumber  = `SO-${year}-${padded}`;
+    } catch {
+      orderNumber = `SO-${Date.now()}`;
+    }
     const order = SalesOrder.create({
       orderNumber,
       status: statusResult.data,
       companyId: command.companyId,
+      customerId,
       totalAmount: money,
       designFlag: command.designFlag,
       sampleFlag: command.sampleFlag,
       createdBy: command.createdBy,
-    } as never);
+    });
 
-    const saveResult = await this.orderRepo.save(order);
-    if (!saveResult.ok) {
-      this.logger.error({ msg: 'Failed to save order', error: saveResult.error });
+    // PA0-6: aggregate save + outbox insert share ONE transaction. If either
+    // write fails, both roll back — guaranteeing the "save without outbox"
+    // gap is impossible. The outbox publisher (every 10s) will re-emit the
+    // persisted events via EventEmitter2 after commit.
+    type TxResult = { kind: 'ok'; saved: SalesOrder } | { kind: 'err'; message: string };
+    let txOutcome: TxResult;
+    try {
+      txOutcome = await db.transaction(async (tx): Promise<TxResult> => {
+        const saveResult = await this.orderRepo.save(order, tx);
+        if (!saveResult.ok) {
+          // Throw to roll back the transaction. The outer try/catch converts
+          // this into a domain Result<Err>; no half-state can leak.
+          throw new Error(saveResult.error?.message ?? 'Failed to save order');
+        }
+        const savedOrder = saveResult.data as SalesOrder;
+
+        const aggregateEvents = savedOrder.getDomainEvents();
+        const outboxRows = aggregateEvents.map((e) => {
+          const raw = e as unknown as { eventName?: string; data?: Record<string, unknown> };
+          return {
+            aggregate_type: 'SalesOrder',
+            aggregate_id: String(savedOrder.getId()),
+            event_name: raw.eventName ?? 'UnknownEvent',
+            payload: (raw.data ?? {}) as Record<string, unknown>,
+          };
+        });
+
+        // Synthesise OrderCreated outbox entry so listeners that wait on
+        // ERP_EVENTS.ORDER_CREATED can pick it up after publisher tick.
+        outboxRows.push({
+          aggregate_type: 'SalesOrder',
+          aggregate_id: String(savedOrder.getId()),
+          event_name: ERP_EVENTS.ORDER_CREATED,
+          payload: {
+            orderId: savedOrder.getId(),
+            companyId: command.companyId,
+            orderNumber,
+            totalAmount: command.totalAmount,
+          },
+        });
+
+        if (command.designFlag) {
+          outboxRows.push({
+            aggregate_type: 'SalesOrder',
+            aggregate_id: String(savedOrder.getId()),
+            event_name: ERP_EVENTS.SO_DESIGN_REQUESTED,
+            payload: { orderId: savedOrder.getId(), at: _time.now().toISOString() },
+          });
+        }
+        if (command.sampleFlag) {
+          outboxRows.push({
+            aggregate_type: 'SalesOrder',
+            aggregate_id: String(savedOrder.getId()),
+            event_name: ERP_EVENTS.SO_SAMPLE_REQUESTED,
+            payload: { orderId: savedOrder.getId(), at: _time.now().toISOString() },
+          });
+        }
+
+        const outboxInsert = await this.outboxRepo.insertBatch(outboxRows, tx);
+        if (!outboxInsert.ok) {
+          // Roll back the order insert — the events must never go missing.
+          throw new Error(
+            `Outbox insert failed: ${outboxInsert.error.message}`,
+          );
+        }
+        savedOrder.clearDomainEvents();
+        return { kind: 'ok', saved: savedOrder };
+      });
+    } catch (err) {
+      const message = (err as Error)?.message ?? 'Transaction failed';
+      this.logger.error({ msg: 'Order save transaction rolled back', error: message });
       return Err('Failed to save order');
     }
 
-    const savedOrder = (saveResult).data as SalesOrder;
+    if (txOutcome.kind === 'err') {
+      this.logger.error({ msg: 'Failed to save order', error: txOutcome.message });
+      return Err('Failed to save order');
+    }
+    const savedOrder = txOutcome.saved;
 
+    // PA0-6 belt-and-suspenders: keep in-process CQRS emission alongside the
+    // outbox publisher tick. Listeners using @OnEvent may fire twice for a
+    // brief window (once from this direct publish via EventBridge, once from
+    // the outbox publisher tick). Handlers are expected to be idempotent.
     if (command.designFlag) {
       this.eventBus.publish({
         aggregateId: savedOrder.getId(),

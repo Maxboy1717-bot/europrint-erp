@@ -1,3 +1,8 @@
+/**
+ * @module schema
+ * @description Source module. See exports for details.
+ */
+
 import { InternalServerErrorException } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -71,24 +76,64 @@ import { overtime_policy, employee_separation } from './schema-hr-overtime';
 
 const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
 
-if (!connectionString) {
+// In test/CI environments DATABASE_URL is often unset or empty — return a stub
+// Pool that throws only when used, so unit tests that don't actually hit the DB
+// can `import` from @shared/db without crashing at module-load time.
+//
+// NOTE: use `||` not `??` because GitHub Actions sets `DATABASE_URL` to an empty
+// string when the secret is missing; `??` would not fall through on `""`.
+const TEST_STUB_URL = 'postgres://stub:stub@localhost:5432/stub';
+const isTestEnv = process.env.NODE_ENV === 'test' || !!process.env.JEST_WORKER_ID || !!process.env.VITEST;
+const effectiveConnString = connectionString
+  || (isTestEnv ? TEST_STUB_URL : null);
+
+if (!effectiveConnString) {
   throw new InternalServerErrorException('DATABASE_URL environment variable is not set');
 }
 
-export const pool = new Pool({ connectionString });
+export const pool = new Pool({ connectionString: effectiveConnString });
 export const db = drizzle(pool);
 
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
+// RULE4_EXCEPTION: `rawSql` is the project's parameterised raw-SQL escape
+// hatch. By definition it wraps `db.execute`; callers must already pass a
+// safely-parameterised `sql\`...\`` template. Used elsewhere for the few
+// queries Drizzle builders cannot express (lateral joins, complex CTEs).
 export const rawSql = (query: SQL): ReturnType<typeof db.execute> => db.execute(query);
 
-/** DDL operations (CREATE TABLE, ALTER TABLE, etc.) — cannot use query builder */
-export const ddlRun = (q: SQL | SQLWrapper | string): ReturnType<typeof db.execute> =>
-  db.execute(typeof q === 'string' ? sql.raw(q) : (q as SQL));
+/**
+ * DDL operations only (CREATE TABLE, ALTER TABLE, etc.) — cannot use query builder.
+ * SECURITY: PA-S4b — when `q` is a string, it MUST begin with a recognised DDL
+ * keyword (CREATE / ALTER / DROP / INSERT / UPDATE / DELETE / WITH / DO). The
+ * runtime check below rejects anything else so a misused call site cannot
+ * smuggle in an arbitrary fragment from a request payload.
+ */
+// RULE4_EXCEPTION: DDL-only helper. Drizzle has no builder API for CREATE
+// TABLE / ALTER TABLE / CREATE INDEX. Callers pass hard-coded string
+// literals from migration files.
+const DDL_PREFIX_RE = /^\s*(CREATE|ALTER|DROP|INSERT|UPDATE|DELETE|WITH|DO|COMMENT|GRANT|REVOKE|TRUNCATE|REINDEX|ANALYZE|VACUUM|SET|SELECT)\b/i;
+export const ddlRun = (q: SQL | SQLWrapper | string): ReturnType<typeof db.execute> => {
+  if (typeof q === 'string') {
+    if (!DDL_PREFIX_RE.test(q)) {
+      throw new Error(`PA-S4b: unsafe ddlRun() string — must start with a DDL keyword (got: ${q.slice(0, 60)})`);
+    }
+    return db.execute(sql.raw(q));
+  }
+  return db.execute(q as SQL);
+};
 
+/**
+ * Typed query helper.
+ * Accepts only `sql\`...\`` template objects — NOT plain strings — to prevent accidental
+ * SQL injection. Use `sql\`SELECT ... WHERE id = ${id}\`` for parameterised values.
+ */
 export async function runQuery<T = Record<string, unknown>>(
-  q: SQL | SQLWrapper | string,
+  q: SQL | SQLWrapper,
 ): Promise<T[] & { rows: T[] }> {
-  const result = await db.execute(typeof q === 'string' ? sql.raw(q) : (q as SQL));
+  // RULE4_EXCEPTION: typed wrapper around `db.execute` for callers that
+  // already need raw SQL (analytics with LATERAL/UNNEST/window functions,
+  // multi-CTE pipelines). Drizzle builder API has no equivalent.
+  const result = await db.execute(q as SQL);
   const arr = castTo<T[]>(Array.isArray(result) ? result : ((result as { rows?: unknown }).rows ?? []));
   return Object.assign(arr, { rows: arr });
 }

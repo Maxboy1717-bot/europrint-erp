@@ -1,3 +1,8 @@
+/**
+ * @module PosLedger
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
@@ -110,16 +115,16 @@ export default function PosLedger() {
           <table className="pos-table">
             <thead>
               <tr>
-                <th>Material</th>
+                <th>{t('common.Material')}</th>
                 <th>{t("common.qty")}</th>
                 <th>{t("ledger.issuedDate")}</th>
                 <th>{t("ledger.returnDeadline")}</th>
-                <th>Qolgan kun</th>
-                <th>Amal</th>
+                <th>{t("qolganKun")}</th>
+                <th>{t("amal")}</th>
               </tr>
             </thead>
             <tbody>
-              {(active ?? []).map(item => {
+              {(Array.isArray(active) ? active : []).map(item => {
                 const days = getDaysLeft(item.returnDeadline);
                 const daysColor = days === null ? "var(--pos-text-muted)" : days < 7 ? "var(--pos-danger)" : days < 14 ? "var(--pos-warning)" : "var(--pos-success)";
                 return (
@@ -146,9 +151,9 @@ export default function PosLedger() {
       {!loading && tab === "returned" && (
         <div className="pos-card" style={{ overflowX: "auto" }}>
           <table className="pos-table">
-            <thead><tr><th>Material</th><th>Miqdor</th><th>Qaytarilgan sana</th></tr></thead>
+            <thead><tr><th>{t('common.Material')}</th><th>{t("quantity")}</th><th>{t("qaytarilganSana")}</th></tr></thead>
             <tbody>
-              {(returned ?? []).map(item => (
+              {(Array.isArray(returned) ? returned : []).map(item => (
                 <tr key={item.id}>
                   <td>{item.materialName ?? `#${item.materialCardId}`}</td>
                   <td className="pos-mono">{item.qty}</td>
@@ -164,22 +169,22 @@ export default function PosLedger() {
       {!loading && tab === "history" && (
         <div className="pos-card" style={{ overflowX: "auto" }}>
           {histLoading && (
-            <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>Yuklanmoqda…</div>
+            <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>{t("yuklanmoqda1")}</div>
           )}
           {!histLoading && history.length === 0 && (
             <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)", fontSize: 13 }}>
-              Yakunlangan harakatlar topilmadi
+              {t("yakunlanganHarakatlarTopilmadi")}
             </div>
           )}
           {!histLoading && history.length > 0 && (
             <table className="pos-table">
               <thead>
                 <tr>
-                  <th>Doc No</th>
-                  <th>Tur</th>
-                  <th>Status</th>
-                  <th style={{ textAlign: "right" }}>Summa</th>
-                  <th>Sana</th>
+                  <th>{t('common.docNo')}</th>
+                  <th>{t("tur")}</th>
+                  <th>{t('common.status1')}</th>
+                  <th style={{ textAlign: "right" }}>{t("summa")}</th>
+                  <th>{t("date")}</th>
                 </tr>
               </thead>
               <tbody>

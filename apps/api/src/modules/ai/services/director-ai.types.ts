@@ -1,3 +1,8 @@
+/**
+ * @module director-ai.types
+ * @description Type-only exports (interfaces, type aliases, enums). No runtime code.
+ */
+
 export interface KpiExplanation {
   kpiName: string;
   currentValue: number | string;

@@ -1,3 +1,8 @@
+/**
+ * @module get-sessions.query
+ * @description Source module. See exports for details.
+ */
+
 export class GetSessionsQuery {
   constructor(public readonly filters: {
       status?: string;

@@ -1,10 +1,18 @@
-import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date, jsonb } from "drizzle-orm/pg-core";
+/**
+ * @module recruitment
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { pgTable, serial, integer, timestamp, varchar, boolean, text, decimal, date, jsonb, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { employees } from "./employees";
 
 export const vacancies = pgTable("vacancies", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy (Phase 2 / Task 2.1). See employees.ts for rationale.
+  tenantId: integer("tenant_id").notNull().default(1),
   positionId: integer("position_id"),
   departmentId: integer("department_id"),
   title: varchar("title", { length: 200 }).notNull(),
@@ -25,11 +33,18 @@ export const vacancies = pgTable("vacancies", {
   status: varchar("status", { length: 20 }).default("draft"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("vacancies_status_chk", sql`${t.status} IN ('draft','open','closed','cancelled','on_hold')`),
+  check("vacancies_priority_chk", sql`${t.priority} IN ('low','normal','high','urgent')`),
+  check("vacancies_salary_chk", sql`${t.salaryMin} IS NULL OR ${t.salaryMax} IS NULL OR ${t.salaryMin} <= ${t.salaryMax}`),
+  check("vacancies_number_of_positions_chk", sql`${t.numberOfPositions} IS NULL OR ${t.numberOfPositions} > 0`),
+]);
 
 export const candidates = pgTable("candidates", {
   id: serial("id").primaryKey(),
-  vacancyId: integer("vacancy_id").references(() => vacancies.id),
+  // Multi-tenancy (Phase 2 / Task 2.1). See employees.ts for rationale.
+  tenantId: integer("tenant_id").notNull().default(1),
+  vacancyId: integer("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }),
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
   middleName: varchar("middle_name", { length: 100 }),
@@ -48,12 +63,16 @@ export const candidates = pgTable("candidates", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("candidates_status_chk", sql`${t.status} IN ('new','screening','interview','offer','hired','rejected','withdrawn')`),
+  check("candidates_rating_chk", sql`${t.rating} IS NULL OR (${t.rating} >= 0 AND ${t.rating} <= 5)`),
+  check("candidates_expected_salary_chk", sql`${t.expectedSalary} IS NULL OR ${t.expectedSalary} >= 0`),
+]);
 
 export const interviews = pgTable("interviews", {
   id: serial("id").primaryKey(),
-  candidateId: integer("candidate_id").references(() => candidates.id).notNull(),
-  vacancyId: integer("vacancy_id").references(() => vacancies.id),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  vacancyId: integer("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }),
   interviewDate: timestamp("interview_date"),
   interviewType: varchar("interview_type", { length: 30 }),
   interviewerId: integer("interviewer_id"),
@@ -67,7 +86,11 @@ export const interviews = pgTable("interviews", {
   notes: text("notes"),
   status: varchar("status", { length: 20 }).default("scheduled"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("interviews_status_chk", sql`${t.status} IN ('scheduled','completed','cancelled','no_show')`),
+  check("interviews_recommendation_chk", sql`${t.recommendation} IS NULL OR ${t.recommendation} IN ('hire','reject','consider','next_round')`),
+  check("interviews_overall_rating_chk", sql`${t.overallRating} IS NULL OR (${t.overallRating} >= 0 AND ${t.overallRating} <= 5)`),
+]);
 
 export const jobTemplates = pgTable("job_templates", {
   id: serial("id").primaryKey(),
@@ -96,7 +119,7 @@ export const questionnaireTemplates = pgTable("questionnaire_templates", {
 
 export const questionnaireQuestions = pgTable("questionnaire_questions", {
   id: serial("id").primaryKey(),
-  templateId: integer("template_id").references(() => questionnaireTemplates.id).notNull(),
+  templateId: integer("template_id").references(() => questionnaireTemplates.id, { onDelete: "cascade" }).notNull(),
   questionText: text("question_text").notNull(),
   questionType: varchar("question_type", { length: 30 }),
   options: jsonb("options"),
@@ -109,8 +132,8 @@ export const questionnaireQuestions = pgTable("questionnaire_questions", {
 
 export const aiCvScreenings = pgTable("ai_cv_screenings", {
   id: serial("id").primaryKey(),
-  candidateId: integer("candidate_id").references(() => candidates.id).notNull(),
-  vacancyId: integer("vacancy_id").references(() => vacancies.id),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  vacancyId: integer("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }),
   resumeUrl: text("resume_url"),
   aiScore: decimal("ai_score", { precision: 5, scale: 2 }),
   matchPercentage: decimal("match_percentage", { precision: 5, scale: 2 }),
@@ -126,8 +149,8 @@ export const aiCvScreenings = pgTable("ai_cv_screenings", {
 
 export const aiInterviewSessions = pgTable("ai_interview_sessions", {
   id: serial("id").primaryKey(),
-  candidateId: integer("candidate_id").references(() => candidates.id).notNull(),
-  vacancyId: integer("vacancy_id").references(() => vacancies.id),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  vacancyId: integer("vacancy_id").references(() => vacancies.id, { onDelete: "set null" }),
   sessionToken: varchar("session_token", { length: 100 }).unique(),
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
@@ -144,7 +167,7 @@ export const aiInterviewSessions = pgTable("ai_interview_sessions", {
 
 export const aiInterviewMessages = pgTable("ai_interview_messages", {
   id: serial("id").primaryKey(),
-  sessionId: integer("session_id").references(() => aiInterviewSessions.id).notNull(),
+  sessionId: integer("session_id").references(() => aiInterviewSessions.id, { onDelete: "cascade" }).notNull(),
   role: varchar("role", { length: 20 }),
   content: text("content"),
   questionNumber: integer("question_number"),

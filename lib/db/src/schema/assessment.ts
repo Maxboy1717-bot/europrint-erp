@@ -1,11 +1,17 @@
-import { pgTable, serial, integer, timestamp, varchar, text, decimal, date, boolean, jsonb } from "drizzle-orm/pg-core";
+/**
+ * @module assessment
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { pgTable, serial, integer, timestamp, varchar, text, decimal, date, boolean, jsonb, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { employees } from "./employees";
 
 export const employee360Assessments = pgTable("employee_360_assessments", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   assessmentPeriod: varchar("assessment_period", { length: 30 }),
   assessmentYear: integer("assessment_year"),
   selfRating: decimal("self_rating", { precision: 3, scale: 1 }),
@@ -20,24 +26,15 @@ export const employee360Assessments = pgTable("employee_360_assessments", {
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("employee_360_assessments_status_chk", sql`${t.status} IN ('draft','in_progress','completed','cancelled')`),
+  check("employee_360_assessments_avg_rating_chk", sql`${t.averageRating} IS NULL OR (${t.averageRating} >= 0 AND ${t.averageRating} <= 5)`),
+]);
 
-export const employee360Responses = pgTable("employee_360_responses", {
-  id: serial("id").primaryKey(),
-  assessmentId: integer("assessment_id").references(() => employee360Assessments.id).notNull(),
-  respondentId: integer("respondent_id").references(() => employees.id),
-  respondentType: varchar("respondent_type", { length: 20 }),
-  questionCategory: varchar("question_category", { length: 50 }),
-  questionText: text("question_text"),
-  rating: decimal("rating", { precision: 3, scale: 1 }),
-  comments: text("comments"),
-  isAnonymous: boolean("is_anonymous").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
 
 export const employeeStrengthsWeaknesses = pgTable("employee_strengths_weaknesses", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   type: varchar("type", { length: 10 }).notNull(),
   category: varchar("category", { length: 50 }),
   description: text("description"),
@@ -49,14 +46,17 @@ export const employeeStrengthsWeaknesses = pgTable("employee_strengths_weaknesse
   status: varchar("status", { length: 20 }).default("identified"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("employee_sw_type_chk", sql`${t.type} IN ('strength','weakness')`),
+  check("employee_sw_status_chk", sql`${t.status} IN ('identified','in_progress','improved','resolved')`),
+]);
 
 export const successionPlans = pgTable("succession_plans", {
   id: serial("id").primaryKey(),
   positionId: integer("position_id"),
-  currentHolderId: integer("current_holder_id").references(() => employees.id),
-  candidateId: integer("candidate_id").references(() => employees.id),
-  readinessLevel: varchar("readiness_level", { length: 20 }),
+  currentHolderId: integer("current_holder_id").references(() => employees.id, { onDelete: "set null" }),
+  candidateId: integer("candidate_id").references(() => employees.id, { onDelete: "set null" }),
+  readinessLevel: varchar("readiness_level", { length: 20 }), // ready_now, 1_2_years, 3_5_years, not_ready
   developmentGaps: text("development_gaps"),
   developmentPlan: text("development_plan"),
   targetDate: date("target_date"),
@@ -64,11 +64,14 @@ export const successionPlans = pgTable("succession_plans", {
   status: varchar("status", { length: 20 }).default("draft"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  check("succession_plans_readiness_chk", sql`${t.readinessLevel} IS NULL OR ${t.readinessLevel} IN ('ready_now','1_2_years','3_5_years','not_ready')`),
+  check("succession_plans_status_chk", sql`${t.status} IN ('draft','active','completed','cancelled')`),
+]);
 
 export const employeeTransferHistory = pgTable("employee_transfer_history", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   transferDate: date("transfer_date").notNull(),
   fromDepartmentId: integer("from_department_id"),
   toDepartmentId: integer("to_department_id"),
@@ -86,7 +89,7 @@ export const employeeTransferHistory = pgTable("employee_transfer_history", {
 
 export const exitInterviews = pgTable("exit_interviews", {
   id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
   interviewDate: date("interview_date").notNull(),
   interviewedBy: integer("interviewed_by"),
   reasonForLeaving: varchar("reason_for_leaving", { length: 100 }),
@@ -110,9 +113,6 @@ export const insertEmployee360AssessmentSchema = createInsertSchema(employee360A
 export type InsertEmployee360Assessment = z.infer<typeof insertEmployee360AssessmentSchema>;
 export type Employee360Assessment = typeof employee360Assessments.$inferSelect;
 
-export const insertEmployee360ResponseSchema = createInsertSchema(employee360Responses).omit({ id: true, createdAt: true } as never);
-export type InsertEmployee360Response = z.infer<typeof insertEmployee360ResponseSchema>;
-export type Employee360Response = typeof employee360Responses.$inferSelect;
 
 export const insertEmployeeStrengthsWeaknessesSchema = createInsertSchema(employeeStrengthsWeaknesses).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type InsertEmployeeStrengthsWeaknesses = z.infer<typeof insertEmployeeStrengthsWeaknessesSchema>;

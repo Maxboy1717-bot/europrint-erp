@@ -1,5 +1,11 @@
+/**
+ * @module finance-payroll.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, Query, Logger, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -8,7 +14,8 @@ import { unwrapOrInternal } from '@common/http-result';
 
 
 @Roles('admin', 'director', 'hr_manager', 'accountant', 'FINANCE_MANAGER', 'SUPER_ADMIN')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Finance Payroll')
 @Controller('payroll')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -17,16 +24,22 @@ export class FinancePayrollController {
 
   constructor(private readonly svc: FinancePayrollService) {}
 
+  @ApiOperation({ summary: 'By department' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('by-department')
   async byDepartment(@Query('periodId') periodId?: string) {
     return unwrapOrInternal(await this.svc.byDepartment(periodId));
   }
 
+  @ApiOperation({ summary: 'By brigade' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('by-brigade')
   async byBrigade(@Query('periodId') periodId?: string) {
     return unwrapOrInternal(await this.svc.byBrigade(periodId));
   }
 
+  @ApiOperation({ summary: 'Tax summary' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('tax-summary')
   async taxSummary(@Query('periodId') periodId?: string) {
     return unwrapOrInternal(await this.svc.taxSummary(periodId));

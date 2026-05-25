@@ -1,5 +1,11 @@
+/**
+ * @module useEmployeeMutation
+ * @description React UI component.
+ */
+
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { EmployeeFormData } from "./types";
 
 interface UseEmployeeMutationProps {
@@ -11,50 +17,53 @@ interface UseEmployeeMutationProps {
 export function useEmployeeMutation({ isEdit, employeeId, onAfterSubmit }: UseEmployeeMutationProps) {
   const { toast } = useToast();
 
+  const safeToast = (title: string, description?: string, variant?: "destructive") => {
+    try {
+      toast({ title, description, variant });
+    } catch (e) {
+      // Toast hook nadir holatda bug bersa — console fallback
+      // eslint-disable-next-line no-console
+      console.warn("[useEmployeeMutation] toast failed:", e, { title, description });
+    }
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      const response = await fetch("/api/employees", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error((await response.json()).error || "Xatolik yuz berdi");
-      return response.json();
+      return await apiRequest<{ id?: string | number }>('POST', "/api/employees", data);
     },
     onSuccess: async (data) => {
-      await onAfterSubmit(data.id).catch(() => null);
-      toast({ title: "Xodim muvaffaqiyatli qo'shildi" });
+      const id = data?.id ? String(data.id) : "";
+      if (id) await onAfterSubmit(id).catch(() => null);
+      safeToast("Xodim muvaffaqiyatli qo'shildi");
     },
     onError: (error: Error) => {
-      toast({ title: "Xatolik", description: error.message, variant: "destructive" });
+      safeToast("Xatolik", error?.message ?? "Noma'lum xato", "destructive");
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      const response = await fetch(`/api/employees/${employeeId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error((await response.json()).error || "Xatolik yuz berdi");
-      return response.json();
+      return await apiRequest('PATCH', `/api/employees/${employeeId}`, data);
     },
     onSuccess: async () => {
       if (employeeId) await onAfterSubmit(employeeId).catch(() => null);
-      toast({ title: "Xodim ma'lumotlari yangilandi" });
+      safeToast("Xodim ma'lumotlari yangilandi");
     },
     onError: (error: Error) => {
-      toast({ title: "Xatolik", description: error.message, variant: "destructive" });
+      safeToast("Xatolik", error?.message ?? "Noma'lum xato", "destructive");
     },
   });
 
   const onSubmit = (data: EmployeeFormData) => {
     const cleanData: Record<string, unknown> = {};
-    const numericFields = ["age", "childrenCount", "householdSize"];
-    const floatFields = ["latitude", "longitude"];
+    // Phase 2 / Task 2.5 — managerId is an integer FK; baseSalary is a
+    // decimal stored as digit-only string from BaseSalaryInput. Both pass
+    // through with type coercion below.
+    const numericFields = ["age", "childrenCount", "householdSize", "managerId"];
+    const floatFields = ["latitude", "longitude", "baseSalary"];
     const clearableFields = [
-      "departmentId", "positionId", "shift", "salaryType", "workshopZone",
+      "departmentId", "positionId", "managerId", "baseSalary",
+      "shift", "salaryType", "workshopZone",
       "telegramChatId", "birthDate", "hireDate", "address", "attestationDate",
       "gender", "maritalStatus", "childrenEducation", "householdMembers",
       "housingType", "age", "childrenCount", "householdSize", "latitude", "longitude",

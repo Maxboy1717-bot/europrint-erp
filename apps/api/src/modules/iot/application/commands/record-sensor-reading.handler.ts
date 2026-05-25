@@ -1,10 +1,15 @@
+/**
+ * @module record-sensor-reading.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Result, Ok } from '@common/result';
 import { RecordSensorReadingCommand } from './record-sensor-reading.command';
 import { SensorReading } from '../../domain/aggregates/sensor-reading.aggregate';
 import { AnomalyDetectedEvent } from '../../domain/events';
-import { TelegramService } from '@modules/notifications/domain/services/telegram.service';
+import { ITelegramSender, TELEGRAM_SENDER } from '@modules/notifications/domain/ports/i-telegram-sender.port';
 
 @Injectable()
 @CommandHandler(RecordSensorReadingCommand)
@@ -13,7 +18,7 @@ export class RecordSensorReadingHandler implements ICommandHandler<RecordSensorR
 
   constructor(
     private readonly eventBus: EventBus,
-    private readonly telegramService: TelegramService,
+    @Inject(TELEGRAM_SENDER) private readonly telegramService: ITelegramSender,
       ) {}
 
   async execute(command: RecordSensorReadingCommand): Promise<Result<string>> {

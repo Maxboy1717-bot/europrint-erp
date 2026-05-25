@@ -1,14 +1,21 @@
+
+import { tLabel } from '@/lib/i18n/tLabel';
+/**
+ * @module helpers
+ * @description React UI component.
+ */
+
 export const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   created:     { label: "Yaratildi",    variant: "secondary" },
   released:    { label: "Chiqarildi",   variant: "default" },
-  in_progress: { label: "Jarayonda",   variant: "default" },
+  in_progress: { label: tLabel('production.helpers.jarayonda', "Jarayonda"),   variant: "default" },
   completed:   { label: "Bajarildi",   variant: "default" },
   closed:      { label: "Yopildi",     variant: "secondary" },
-  qc_hold:     { label: "QC To'xtatdi", variant: "destructive" },
+  qc_hold:     { label: tLabel('production.helpers.qcToxtatdi', "QC To'xtatdi"), variant: "destructive" },
 };
 
 export const SHIFT_STATUS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  in_progress: { label: "Jarayonda",   variant: "default" },
+  in_progress: { label: tLabel('production.helpers.jarayonda', "Jarayonda"),   variant: "default" },
   draft:       { label: "Qoralama",    variant: "secondary" },
   approved:    { label: "Tasdiqlandi", variant: "default" },
   rejected:    { label: "Rad etildi",  variant: "destructive" },
@@ -20,15 +27,15 @@ export const DOWNTIME_REASONS = [
   { value: "machine_failure", label: "Mashina nosozligi" },
   { value: "material_shortage", label: "Material kelmadi" },
   { value: "color_setup", label: "Rang sozlash" },
-  { value: "planned_maintenance", label: "Rejalashtirilgan texnik ko'rik" },
+  { value: "planned_maintenance", label: tLabel('production.helpers.rejalashtirilganTexnikKorik', "Rejalashtirilgan texnik ko'rik") },
   { value: "operator_break", label: "Operator tanaffusi" },
   { value: "quality_issue", label: "Sifat muammosi" },
   { value: "other", label: "Boshqa" },
 ];
 
 export const PRIORITY_COLORS: Record<number, string> = {
-  1: "text-red-600 font-bold",
-  2: "text-orange-500 font-semibold",
+  1: "text-[var(--ep-red)] font-bold",
+  2: "text-[var(--ep-primary)] font-semibold",
   3: "text-muted-foreground",
   4: "text-muted-foreground",
   5: "text-muted-foreground",
@@ -86,7 +93,7 @@ export function getWeekRange(offset = 0) {
 }
 
 export function oeeColor(v: number) {
-  if (v >= 85) return "text-green-600 font-bold";
-  if (v >= 65) return "text-yellow-600 font-semibold";
-  return "text-red-600 font-semibold";
+  if (v >= 85) return "text-[var(--ep-green)] font-bold";
+  if (v >= 65) return "text-[var(--ep-yellow)] font-semibold";
+  return "text-[var(--ep-red)] font-semibold";
 }

@@ -1,3 +1,8 @@
+/**
+ * @module CallForm
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -11,6 +16,7 @@ import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ACTIVITY_TYPE_OPTIONS } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface CallFormProps {
   entityType: string;
@@ -19,6 +25,7 @@ interface CallFormProps {
 }
 
 export function CallForm({ entityType, entityId, onActivityCreated }: CallFormProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [activityForm, setActivityForm] = useState({
     subject: "",
@@ -28,12 +35,16 @@ export function CallForm({ entityType, entityId, onActivityCreated }: CallFormPr
   });
 
   const createActivityMutation = useMutation({
-    mutationFn: async (data: Record<string, unknown>) => {
-      return apiRequest("POST", "/api/crm/activities", {
-        ...data,
-        entityType,
-        entityId,
-      });
+    mutationFn: async (data: typeof activityForm) => {
+      const payload: Record<string, unknown> = {
+        type:      data.type,
+        subject:   data.subject,
+        notes:     data.description || undefined,
+        due_date:  data.deadline.toISOString(),
+      };
+      if (entityType === "leads")  payload.lead_id  = entityId;
+      else if (entityType === "deals") payload.deal_id = entityId;
+      return apiRequest("POST", "/api/crm/activities", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/activities", entityType, entityId] });
@@ -49,7 +60,7 @@ export function CallForm({ entityType, entityId, onActivityCreated }: CallFormPr
   return (
     <div className="space-y-3 p-4">
       <Input
-        placeholder="Nima qilish kerak?"
+        placeholder={t("nimaQilishKerak")}
         value={activityForm.subject}
         onChange={(e) => setActivityForm((prev) => ({ ...prev, subject: e.target.value }))}
         className="border-blue-500/30 focus:border-blue-500"
@@ -77,13 +88,13 @@ export function CallForm({ entityType, entityId, onActivityCreated }: CallFormPr
           onClick={() => setActivityForm((prev) => ({ ...prev, deadline: new Date() }))}
           data-testid="button-today"
         >
-          Bugun
+          {t("today")}
         </Button>
         <Select
           value={activityForm.type}
           onValueChange={(value) => setActivityForm((prev) => ({ ...prev, type: value }))}
         >
-          <SelectTrigger className="w-[140px] h-8" data-testid="select-activity-type">
+          <SelectTrigger className="w-full sm:w-[140px] h-9" data-testid="select-activity-type">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -99,20 +110,20 @@ export function CallForm({ entityType, entityId, onActivityCreated }: CallFormPr
         </Select>
       </div>
       <Textarea
-        placeholder="Qo'shimcha ma'lumot..."
+        placeholder={t("qoshimchaMalumot")}
         value={activityForm.description}
         onChange={(e) => setActivityForm((prev) => ({ ...prev, description: e.target.value }))}
         className="min-h-[60px] resize-none"
         data-testid="input-activity-description"
       />
       <Button
-        className="w-full bg-blue-500 hover:bg-blue-600"
+        className="w-full bg-blue-500 hover:bg-[var(--ep-blue)]/90"
         onClick={() => createActivityMutation.mutate(activityForm)}
         disabled={!activityForm.subject || createActivityMutation.isPending}
         data-testid="button-save-activity"
       >
         <Plus className="h-4 w-4 mr-2" />
-        Saqlash
+        {t("Saqlash")}
       </Button>
     </div>
   );

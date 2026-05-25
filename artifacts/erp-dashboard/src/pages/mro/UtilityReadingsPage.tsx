@@ -1,3 +1,8 @@
+/**
+ * @module UtilityReadingsPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
@@ -21,10 +26,10 @@ interface UtilityReading {
 }
 
 const UTILITY_CONFIG: Record<UtilityReading["utilityType"], { label: string; icon: typeof Zap; color: string }> = {
-  electricity: { label: "Elektr",  icon: Zap,    color: "text-yellow-600" },
-  water:       { label: "Suv",     icon: Droplet, color: "text-blue-600" },
-  gas:         { label: "Gaz",     icon: Flame,   color: "text-orange-600" },
-  steam:       { label: "Bug'",    icon: Flame,   color: "text-rose-600" },
+  electricity: { label: "Elektr",  icon: Zap,    color: "text-[var(--ep-yellow)]" },
+  water:       { label: "Suv",     icon: Droplet, color: "text-[var(--ep-blue)]" },
+  gas:         { label: "Gaz",     icon: Flame,   color: "text-[var(--ep-primary)]" },
+  steam:       { label: "Bug'",    icon: Flame,   color: "text-[var(--ep-red)]" },
 };
 
 export default function UtilityReadingsPage() {
@@ -56,7 +61,7 @@ export default function UtilityReadingsPage() {
 
       <Section title={t('utility.readings', "Hisoblagichlar")}>
         {isLoading ? (
-          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12" />)}</div>
+          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t('utility.empty', "Hisoblagich yo'q")}</p>
         ) : (

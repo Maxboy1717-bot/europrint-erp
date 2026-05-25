@@ -1,6 +1,11 @@
+/**
+ * @module print.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, Post, Body, Param, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { PermissionGuard } from '@common/guards/permission.guard';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
@@ -49,7 +54,7 @@ const SpoilageDto = z.object({
 
 @ApiTags('Print Industry')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('print')
 @UseGuards(JwtAuthGuard, PermissionGuard)
 @UseInterceptors(AuditInterceptor)

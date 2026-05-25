@@ -18,13 +18,11 @@
       "@shared/db": ["src/shared/db/index.ts"],
       "@shared/db/*": ["src/shared/db/*"],
       "@shared/utils/*": ["src/shared/utils/*"],
-      "@shared/result": ["src/modules/shared/domain/result"],
       "@shared/guards/*": ["src/modules/shared/guards/*"],
       "@shared/decorators/*": ["src/modules/shared/decorators/*"],
       "@shared/interceptors/*": ["src/modules/shared/interceptors/*"],
       "@shared/infrastructure/*": ["src/modules/shared/infrastructure/*"],
       "@shared/domain/*": ["src/modules/shared/domain/*"],
-      "shared/result": ["src/modules/shared/domain/result"],
       "shared/guards/*": ["src/modules/shared/guards/*"],
       "shared/decorators/*": ["src/modules/shared/decorators/*"],
       "shared/interceptors/*": ["src/modules/shared/interceptors/*"],
@@ -36,7 +34,9 @@
       "@auth/decorators/*": ["src/modules/auth/infrastructure/decorators/*"],
       "@auth/guards/*": ["src/modules/auth/infrastructure/guards/*"],
       "@auth/types/*": ["src/modules/auth/types/*"],
-      "@workspace/math-utils": ["../../lib/math-utils/src/index.ts"]
+      "@workspace/math-utils": ["../../lib/math-utils/src/index.ts"],
+      "@workspace/db": ["../../lib/db/dist/cjs/index"],
+      "@workspace/db/*": ["../../lib/db/dist/cjs/*"]
     },
     "incremental": true,
     "allowJs": true,
@@ -48,7 +48,8 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "strict": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "preserveSymlinks": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]

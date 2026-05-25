@@ -1,3 +1,8 @@
+/**
+ * @module mes-production-sessions.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
 Controller,
   Get,
@@ -10,9 +15,10 @@ Controller,
   Logger,
   InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -26,8 +32,9 @@ import {
 const MES_ROLES = ['super_admin', 'director', 'production_manager', 'operator', 'technologist'];
 const MES_WRITE = ['super_admin', 'director', 'production_manager', 'technologist', 'operator'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Mes Production Sessions')
 @Controller('mes/production-sessions')
 @UseGuards(RolesGuard)
 @Roles(...MES_ROLES)
@@ -36,6 +43,8 @@ export class MesProductionSessionsController {
 
   constructor(private readonly svc: MesProductionSessionsService) {}
 
+  @ApiOperation({ summary: 'List' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async list(
     @Query('page') page?: string,
@@ -45,17 +54,26 @@ export class MesProductionSessionsController {
     return unwrapOrThrow(await this.svc.listSessions(safeInt(page, 1), safeInt(limit, 20), status));
   }
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @UsePipes(new ZodValidationPipe(MesCreateProductionSessionSchema))
   async create(@Body() body: MesCreateProductionSessionDto) {
     return unwrapOrThrow(await this.svc.createSession(body));
   }
 
+  @ApiOperation({ summary: 'Get session' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':sessionId')
   async getSession(@Param('sessionId') sessionId: string) {
     return unwrapOrThrow(await this.svc.getSession(safeInt(sessionId, 0)));
   }
 
+  @ApiOperation({ summary: 'Record downtime' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':sessionId/downtime')
   @UsePipes(new ZodValidationPipe(MesRecordDowntimeSchema))
   async recordDowntime(
@@ -65,6 +83,9 @@ export class MesProductionSessionsController {
     return unwrapOrThrow(await this.svc.recordDowntimeForSession(safeInt(sessionId, 0), body));
   }
 
+  @ApiOperation({ summary: 'List downtime events' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':sessionId/downtime-events')
   async listDowntimeEvents(@Param('sessionId') sessionId: string) {
     return unwrapOrThrow(await this.svc.listDowntimeEvents(safeInt(sessionId, 0)));

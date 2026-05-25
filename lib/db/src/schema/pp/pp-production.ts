@@ -1,6 +1,11 @@
+/**
+ * @module pp-production
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "../numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, doublePrecision, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { departments, users } from "../core-schema";
@@ -45,7 +50,7 @@ export const workCenters = pgTable("work_centers", {
   nameRu: text("name_ru"),
   type: varchar("type", { length: 20 }).notNull(),
   capacity: integer("capacity"),
-  departmentId: integer("department_id").references(() => departments.id),
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
   isActive: boolean("is_active").notNull().default(true),
   /**
    * §8 LMS→MES HARD BLOCK: Ushbu ish markazida ishlash uchun
@@ -65,6 +70,7 @@ export const workCenters = pgTable("work_centers", {
   index("idx_work_centers_department_id").on(t.departmentId),
   index("idx_work_centers_is_active").on(t.isActive),
   index("idx_work_centers_created_at").on(t.createdAt),
+  check("work_centers_type_chk", sql`${t.type} IN ('line','machine','workshop')`),
 ]);
 
 export const insertWorkCenterSchema = createInsertSchema(workCenters, {
@@ -124,6 +130,8 @@ export const orders = pgTable("orders", {
   index("idx_orders_priority").on(t.priority),
   index("idx_orders_created_at").on(t.createdAt),
   index("idx_orders_updated_at").on(t.updatedAt),
+  check("orders_priority_chk", sql`${t.priority} IN ('low','normal','high','urgent')`),
+  check("orders_status_chk", sql`${t.status} IN ('pending','in_production','completed','cancelled')`),
 ]);
 
 export const insertOrderSchema = createInsertSchema(orders, {
@@ -155,6 +163,8 @@ export const productionPlanHeader = pgTable("production_plan_header", {
   index("idx_production_plan_header_status").on(t.status),
   index("idx_production_plan_header_plan_date").on(t.planDate),
   index("idx_production_plan_header_created_at").on(t.createdAt),
+  check("prod_plan_header_plan_type_chk", sql`${t.planType} IN ('daily','weekly','monthly')`),
+  check("prod_plan_header_status_chk", sql`${t.status} IN ('draft','approved','in_progress','completed')`),
 ]);
 
 export const insertProductionPlanHeaderSchema = createInsertSchema(productionPlanHeader, {
@@ -232,7 +242,7 @@ export type InsertProductionFact = z.infer<typeof insertProductionFactSchema>;
 // Downtime Logs (to'xtashlar)
 export const downtimeLogs = pgTable("downtime_logs", {
   id: serial("id").primaryKey(),
-  workCenterId: varchar("work_center_id").references(() => workCenters.id),
+  workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   downtimeDate: varchar("downtime_date", { length: 10 }).notNull(),
   shift: varchar("shift", { length: 20 }),
   startTime: varchar("start_time", { length: 5 }).notNull(),
@@ -248,6 +258,7 @@ export const downtimeLogs = pgTable("downtime_logs", {
   index("idx_downtime_logs_downtime_date").on(t.downtimeDate),
   index("idx_downtime_logs_category").on(t.category),
   index("idx_downtime_logs_created_at").on(t.createdAt),
+  check("downtime_logs_category_chk", sql`${t.category} IN ('breakdown','maintenance','changeover','material_shortage','other')`),
 ]);
 
 export const insertDowntimeLogSchema = createInsertSchema(downtimeLogs, {
@@ -263,7 +274,7 @@ export type InsertDowntimeLog = z.infer<typeof insertDowntimeLogSchema>;
 export const bomHeaders = pgTable("bom_headers", {
   id: serial("id").primaryKey(),
   bomNumber: varchar("bom_number", { length: 50 }).notNull().unique(),
-  productId: integer("product_id").notNull().references(() => products.id),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "restrict" }),
   version: varchar("version", { length: 20 }).notNull().default("1.0"),
   status: varchar("status", { length: 20 }).notNull().default("draft"),
   baseQuantity: numericMoney("base_quantity").notNull().default(1),
@@ -271,7 +282,7 @@ export const bomHeaders = pgTable("bom_headers", {
   validFrom: varchar("valid_from", { length: 10 }),
   validTo: varchar("valid_to", { length: 10 }),
   description: text("description"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
@@ -280,6 +291,7 @@ export const bomHeaders = pgTable("bom_headers", {
   index("idx_bom_headers_product_id").on(t.productId),
   index("idx_bom_headers_status").on(t.status),
   index("idx_bom_headers_created_at").on(t.createdAt),
+  check("bom_headers_status_chk", sql`${t.status} IN ('draft','active','inactive','archived')`),
 ]);
 
 export const insertBomHeaderSchema = createInsertSchema(bomHeaders, {
@@ -299,7 +311,7 @@ export const bomItems = pgTable("bom_items", {
   bomId: varchar("bom_id").notNull().references(() => bomHeaders.id, { onDelete: "cascade" }),
   itemNumber: varchar("item_number", { length: 10 }).notNull(),
   componentType: varchar("component_type", { length: 20 }).notNull().default("material"),
-  componentId: varchar("component_id").notNull().references(() => products.id),
+  componentId: varchar("component_id").notNull().references(() => products.id, { onDelete: "restrict" }),
   quantity: numericMoney("quantity").notNull(),
   unit: varchar("unit", { length: 20 }).notNull().default("dona"),
   scrapPercentage: numericMoney("scrap_percentage").notNull().default(0),
@@ -313,6 +325,7 @@ export const bomItems = pgTable("bom_items", {
   index("idx_bom_items_bom_id").on(t.bomId),
   index("idx_bom_items_component_id").on(t.componentId),
   index("idx_bom_items_created_at").on(t.createdAt),
+  check("bom_items_component_type_chk", sql`${t.componentType} IN ('material','sub_assembly')`),
 ]);
 
 export const insertBomItemSchema = createInsertSchema(bomItems, {
@@ -331,13 +344,13 @@ export type InsertBomItem = z.infer<typeof insertBomItemSchema>;
 export const routings = pgTable("routings", {
   id: serial("id").primaryKey(),
   routingNumber: varchar("routing_number", { length: 50 }).notNull().unique(),
-  productId: integer("product_id").notNull().references(() => products.id),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "restrict" }),
   version: integer("version").notNull().default(1),
   status: varchar("status", { length: 20 }).notNull().default("draft"),
   validFrom: varchar("valid_from", { length: 10 }),
   validTo: varchar("valid_to", { length: 10 }),
   description: text("description"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
@@ -346,6 +359,7 @@ export const routings = pgTable("routings", {
   index("idx_routings_product_id").on(t.productId),
   index("idx_routings_status").on(t.status),
   index("idx_routings_created_at").on(t.createdAt),
+  check("routings_status_chk", sql`${t.status} IN ('draft','active','inactive')`),
 ]);
 
 export const insertRoutingSchema = createInsertSchema(routings, {
@@ -364,7 +378,7 @@ export const routingOperations = pgTable("routing_operations", {
   routingId: integer("routing_id").notNull().references(() => routings.id, { onDelete: "cascade" }),
   operationNumber: integer("operation_number").notNull(),
   operationDescription: text("operation_description"),
-  workCenterId: integer("work_center_id").notNull().references(() => workCenters.id),
+  workCenterId: integer("work_center_id").notNull().references(() => workCenters.id, { onDelete: "restrict" }),
   setupTime: numericMoney("setup_time").notNull().default(0),
   machineTime: numericMoney("machine_time").notNull().default(0),
   laborTime: numericMoney("labor_time").notNull().default(0),
@@ -399,10 +413,10 @@ export type InsertRoutingOperation = z.infer<typeof insertRoutingOperationSchema
 export const productionOrders = pgTable("production_orders", {
   id: serial("id").primaryKey(),
   orderNumber: varchar("order_number", { length: 50 }).notNull().unique(),
-  productId: integer("product_id").notNull().references(() => products.id),
-  bomId: varchar("bom_id").references(() => bomHeaders.id),
-  routingId: varchar("routing_id").references(() => routings.id),
-  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "restrict" }),
+  bomId: varchar("bom_id").references(() => bomHeaders.id, { onDelete: "set null" }),
+  routingId: varchar("routing_id").references(() => routings.id, { onDelete: "set null" }),
+  salesOrderId: varchar("sales_order_id").references(() => salesOrders.id, { onDelete: "set null" }),
   plannedQuantity: numericMoney("planned_quantity").notNull(),
   confirmedQuantity: numericMoney("confirmed_quantity").notNull().default(0),
   scrapQuantity: numericMoney("scrap_quantity").notNull().default(0),
@@ -413,16 +427,16 @@ export const productionOrders = pgTable("production_orders", {
   actualStartDate: varchar("actual_start_date", { length: 10 }),
   actualEndDate: varchar("actual_end_date", { length: 10 }),
   priority: integer("priority").notNull().default(3),
-  workCenterId: varchar("work_center_id").references(() => workCenters.id),
+  workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   productionType: varchar("production_type", { length: 30 }).default("other"),
-  defectiveQty: doublePrecision("defective_qty").notNull().default(0),
-  plannedCost: doublePrecision("planned_cost"),
-  actualCost: doublePrecision("actual_cost"),
+  defectiveQty: numericMoney("defective_qty").notNull().default(0),
+  plannedCost: numericMoney("planned_cost"),
+  actualCost: numericMoney("actual_cost"),
   responsibleManagerId: varchar("responsible_manager_id", { length: 50 }),
   shiftSupervisorId: varchar("shift_supervisor_id", { length: 50 }),
   qcInspectorId: varchar("qc_inspector_id", { length: 50 }),
   notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
@@ -433,6 +447,8 @@ export const productionOrders = pgTable("production_orders", {
   index("idx_production_orders_priority").on(t.priority),
   index("idx_production_orders_created_at").on(t.createdAt),
   index("idx_production_orders_updated_at").on(t.updatedAt),
+  check("production_orders_order_type_chk", sql`${t.orderType} IN ('standard','rework','sample')`),
+  check("production_orders_status_chk", sql`${t.status} IN ('created','released','in_progress','completed','closed','qc_hold')`),
 ]);
 
 export const insertProductionOrderSchema = createInsertSchema(productionOrders, {
@@ -453,9 +469,9 @@ export type InsertProductionOrder = z.infer<typeof insertProductionOrderSchema>;
 export const productionOrderOperations = pgTable("production_order_operations", {
   id: serial("id").primaryKey(),
   productionOrderId: varchar("production_order_id").notNull().references(() => productionOrders.id, { onDelete: "cascade" }),
-  routingOperationId: varchar("routing_operation_id").references(() => routingOperations.id),
+  routingOperationId: varchar("routing_operation_id").references(() => routingOperations.id, { onDelete: "set null" }),
   operationNumber: varchar("operation_number", { length: 10 }).notNull(),
-  workCenterId: varchar("work_center_id").references(() => workCenters.id),
+  workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   plannedDuration: numericMoney("planned_duration").notNull().default(0),
   actualDuration: numericMoney("actual_duration").notNull().default(0),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
@@ -466,6 +482,7 @@ export const productionOrderOperations = pgTable("production_order_operations", 
   index("idx_production_order_operations_production_order_id").on(t.productionOrderId),
   index("idx_production_order_operations_work_center_id").on(t.workCenterId),
   index("idx_production_order_operations_status").on(t.status),
+  check("prod_order_ops_status_chk", sql`${t.status} IN ('pending','in_progress','completed')`),
 ]);
 
 export const insertProductionOrderOperationSchema = createInsertSchema(productionOrderOperations, {
@@ -483,11 +500,11 @@ export type InsertProductionOrderOperation = z.infer<typeof insertProductionOrde
 export const productionOrderComponents = pgTable("production_order_components", {
   id: serial("id").primaryKey(),
   productionOrderId: varchar("production_order_id").notNull().references(() => productionOrders.id, { onDelete: "cascade" }),
-  rawMaterialId: varchar("raw_material_id").notNull().references(() => rawMaterials.id),
+  rawMaterialId: varchar("raw_material_id").notNull().references(() => rawMaterials.id, { onDelete: "restrict" }),
   requiredQuantity: numericMoney("required_quantity").notNull(),
   issuedQuantity: numericMoney("issued_quantity").notNull().default(0),
   unit: varchar("unit", { length: 20 }).notNull(),
-  warehouseId: varchar("warehouse_id").references(() => warehouses.id),
+  warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
 }, (t) => [
   index("idx_production_order_components_production_order_id").on(t.productionOrderId),
   index("idx_production_order_components_raw_material_id").on(t.rawMaterialId),
@@ -508,7 +525,7 @@ export type InsertProductionOrderComponent = z.infer<typeof insertProductionOrde
 // Work Center Capacity
 export const workCenterCapacity = pgTable("work_center_capacity", {
   id: serial("id").primaryKey(),
-  workCenterId: integer("work_center_id").notNull().references(() => workCenters.id),
+  workCenterId: integer("work_center_id").notNull().references(() => workCenters.id, { onDelete: "cascade" }),
   validFrom: varchar("valid_from", { length: 10 }).notNull(),
   validTo: varchar("valid_to", { length: 10 }),
   numberOfMachines: integer("number_of_machines").notNull().default(1),
@@ -544,7 +561,7 @@ export type InsertWorkCenterCapacity = z.infer<typeof insertWorkCenterCapacitySc
 export const shiftCalendars = pgTable("shift_calendars", {
   id: serial("id").primaryKey(),
   calendarName: varchar("calendar_name", { length: 100 }).notNull(),
-  workCenterId: integer("work_center_id").references(() => workCenters.id),
+  workCenterId: integer("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   year: integer("year").notNull(),
   month: integer("month").notNull(),
   day: integer("day").notNull(),
@@ -577,29 +594,8 @@ export const insertShiftCalendarSchema = createInsertSchema(shiftCalendars, {
 export type ShiftCalendar = typeof shiftCalendars.$inferSelect;
 export type InsertShiftCalendar = z.infer<typeof insertShiftCalendarSchema>;
 
-// Shift Assignments
-export const shiftAssignments = pgTable("shift_assignments", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  date: varchar("date", { length: 10 }).notNull(),
-  shift: varchar("shift", { length: 5 }).notNull(),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-}, (t) => [
-  index("idx_shift_assignments_user_id").on(t.userId),
-  index("idx_shift_assignments_date").on(t.date),
-  index("idx_shift_assignments_created_at").on(t.createdAt),
-]);
-
-export const insertShiftAssignmentSchema = createInsertSchema(shiftAssignments, {
-  userId: z.string().min(1, "Xodim tanlash kerak"),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo'lishi kerak"),
-  shift: z.string().min(1, "Smena tanlash kerak"),
-}).omit({ id: true, createdAt: true } as never);
-
-export type ShiftAssignment = typeof shiftAssignments.$inferSelect;
-export type InsertShiftAssignment = z.infer<typeof insertShiftAssignmentSchema>;
+// Shift Assignments — canonical definition lives in ../shifts
+export { shiftAssignments, insertShiftAssignmentSchema, ShiftAssignment, InsertShiftAssignment } from "../shifts";
 
 // MRP Runs
 export const mrpRuns = pgTable("mrp_runs", {
@@ -620,6 +616,7 @@ export const mrpRuns = pgTable("mrp_runs", {
   index("idx_mrp_runs_status").on(t.status),
   index("idx_mrp_runs_run_date").on(t.runDate),
   index("idx_mrp_runs_created_at").on(t.createdAt),
+  check("mrp_runs_status_chk", sql`${t.status} IN ('running','completed','failed')`),
 ]);
 
 export const insertMrpRunSchema = createInsertSchema(mrpRuns, {
@@ -636,7 +633,7 @@ export type InsertMrpRun = z.infer<typeof insertMrpRunSchema>;
 export const mrpResults = pgTable("mrp_results", {
   id: serial("id").primaryKey(),
   mrpRunId: varchar("mrp_run_id").notNull().references(() => mrpRuns.id, { onDelete: "cascade" }),
-  materialId: varchar("material_id").notNull().references(() => products.id),
+  materialId: varchar("material_id").notNull().references(() => products.id, { onDelete: "restrict" }),
   requiredDate: varchar("required_date", { length: 10 }).notNull(),
   grossRequirement: numericMoney("gross_requirement").notNull(),
   scheduledReceipts: numericMoney("scheduled_receipts").notNull().default(0),
@@ -654,6 +651,7 @@ export const mrpResults = pgTable("mrp_results", {
   index("idx_mrp_results_status").on(t.status),
   index("idx_mrp_results_required_date").on(t.requiredDate),
   index("idx_mrp_results_created_at").on(t.createdAt),
+  check("mrp_results_status_chk", sql`${t.status} IN ('pending','ordered','received')`),
 ]);
 
 export const insertMrpResultSchema = createInsertSchema(mrpResults, {
@@ -683,7 +681,7 @@ export const equipment = pgTable("equipment", {
   manufacturer: varchar("manufacturer", { length: 100 }),
   model: varchar("model", { length: 100 }),
   serialNumber: varchar("serial_number", { length: 100 }),
-  workCenterId: varchar("work_center_id").references(() => workCenters.id),
+  workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   location: text("location"),
   installationDate: varchar("installation_date", { length: 10 }),
   warrantyEndDate: varchar("warranty_end_date", { length: 10 }),
@@ -704,6 +702,8 @@ export const equipment = pgTable("equipment", {
   index("idx_equipment_status").on(t.status),
   index("idx_equipment_is_active").on(t.isActive),
   index("idx_equipment_created_at").on(t.createdAt),
+  check("equipment_category_chk", sql`${t.category} IN ('machine','conveyor','vehicle','tool','other')`),
+  check("equipment_status_chk", sql`${t.status} IN ('active','inactive','maintenance','scrapped')`),
 ]);
 
 export const insertEquipmentSchema = createInsertSchema(equipment, {

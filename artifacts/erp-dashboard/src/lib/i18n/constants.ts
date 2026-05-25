@@ -1,3 +1,8 @@
+/**
+ * @module constants
+ * @description Frontend utility / library module.
+ */
+
 export const SUPPORTED_LANGUAGES = ['uz', 'ru'] as const;
 
 export const DEFAULT_LANGUAGE = 'uz' as const;
@@ -54,6 +59,26 @@ export const TRANSLATION_MODULES = [
   'logistics',
   'pos',
   'ai',
+  'aisha',
   'coordination',
   'print',
+  // Sub-namespaces used by specific pages
+  'barcode',
+  'calc',
+  'contact',
+  'footer',
+  'glPosting',
+  'inventory',
+  'ledger',
+  'lowstock',
+  'movements',
+  'myInventory',
+  'nav',
+  'qc',
+  'offline',
+  'qcreview',
+  'quarantine',
+  'reports',
+  'requests',
+  'variance',
 ] as const;

@@ -1,6 +1,12 @@
+/**
+ * @module api-state
+ * @description React UI component.
+ */
+
 import { PageLoader } from "@/components/PageLoader";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/EmptyState";
+import { tLabel } from '@/lib/i18n/tLabel';
 
 interface ApiStateProps {
   isLoading: boolean;
@@ -19,7 +25,7 @@ export function ApiState({
   isError,
   error,
   isEmpty = false,
-  emptyMessage = "Ma'lumot topilmadi",
+  emptyMessage,
   onRetry,
   children,
 }: ApiStateProps) {
@@ -31,6 +37,7 @@ export function ApiState({
         onRetry={onRetry}
       />
     );
-  if (isEmpty) return <EmptyState title={emptyMessage} />;
+  const _emptyMessage = emptyMessage ?? tLabel("common.api-state.tsx.malumotTopilmadi", "Ma'lumot topilmadi");
+  if (isEmpty) return <EmptyState title={_emptyMessage} />;
   return <>{children}</>;
 }

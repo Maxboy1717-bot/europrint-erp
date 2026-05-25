@@ -1,3 +1,8 @@
+/**
+ * @module ShiftReportsTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -14,17 +19,18 @@ import { formatNum, formatDate, SHIFT_STATUS } from "./helpers";
 import { ShiftReport } from "./types";
 import { CreateShiftModal } from "./CreateShiftModal";
 import { ShiftDetailModal } from "./ShiftDetailModal";
+import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from '@/lib/i18n';
 
 export function ShiftReportsTab() {
+  const { t } = useTranslation("common");
   const [createOpen, setCreateOpen] = useState(false);
   const [detailId, setDetailId] = useState<number | null>(null);
 
   const { data, isLoading, refetch } = useQuery<{ reports: ShiftReport[] }>({
     queryKey: ["/api/production/shift-reports"],
     queryFn: async () => {
-      const r = await fetch("/api/production/shift-reports");
-      if (!r.ok) throw new Error("Xato");
-      return r.json();
+      return await apiRequest('GET', "/api/production/shift-reports");
     },
   });
 
@@ -35,31 +41,31 @@ export function ShiftReportsTab() {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <ClipboardList className="w-5 h-5 text-primary" />
-          Smena Xisobotlari
+          {t("smenaXisobotlari")}
         </h3>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}>
-            <RefreshCw className="w-4 h-4 mr-1" /> Yangilash
+            <RefreshCw className="w-4 h-4 mr-1" /> {t("refresh")}
           </Button>
           <Button size="sm" onClick={() => setCreateOpen(true)} data-testid="button-open-create-shift">
-            <Plus className="w-4 h-4 mr-1" /> Yangi Smena
+            <Plus className="w-4 h-4 mr-1" /> {t("yangiSmena")}
           </Button>
         </div>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-4">Raqam</TableHead>
-                <TableHead>Sana</TableHead>
-                <TableHead>Bo'lim</TableHead>
-                <TableHead>Smena</TableHead>
-                <TableHead>Holat</TableHead>
-                <TableHead className="text-right">Reja</TableHead>
-                <TableHead className="text-right">Amalda</TableHead>
-                <TableHead className="text-right">Sifat %</TableHead>
+                <TableHead className="pl-4">{t("raqam")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("bolim1")}</TableHead>
+                <TableHead>{t("smena")}</TableHead>
+                <TableHead>{t("status28")}</TableHead>
+                <TableHead className="text-right">{t("reja")}</TableHead>
+                <TableHead className="text-right">{t("amalda")}</TableHead>
+                <TableHead className="text-right">{t("sifat")}</TableHead>
                 <TableHead className="text-right">OEE</TableHead>
                 <TableHead />
               </TableRow>
@@ -67,16 +73,16 @@ export function ShiftReportsTab() {
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={`k-${i}`}>
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
                     {Array.from({ length: 10 }).map((_, j) => (
-                      <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell key={j}><Skeleton className="h-4 w-full rounded-lg" /></TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : reports.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center text-muted-foreground py-10">
-                    Smena xisobotlari yo'q
+                    {t("smenaXisobotlariYoq")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -103,7 +109,7 @@ export function ShiftReportsTab() {
                 })
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
 

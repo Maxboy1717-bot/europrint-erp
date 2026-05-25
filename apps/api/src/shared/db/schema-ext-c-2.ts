@@ -1,7 +1,14 @@
-import {
-  pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
-} from 'drizzle-orm/pg-core';
+/**
+ * @module schema-ext-c-2
+ * @description Source module. See exports for details.
+ */
 
+import {
+  pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date, varchar,
+} from 'drizzle-orm/pg-core';
+import { employee_badges as canonicalEmployeeBadges } from './schema-business-c-1';
+
+// lib/db da mavjud emas (employee_transfers != employee_transfer_history) — saqlab qolindi.
 export const employee_transfers_ext = pgTable('employee_transfers', {
   id:              serial('id').primaryKey(),
   employee_id:     integer('employee_id'),
@@ -14,24 +21,19 @@ export const employee_transfers_ext = pgTable('employee_transfers', {
   created_at:      timestamp('created_at').defaultNow(),
 });
 
-export const employee_files = pgTable('employee_files', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id'),
-  file_type:   text('file_type'),
-  file_name:   text('file_name'),
-  file_url:    text('file_url'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] employee_files: re-exported from canonical definition in
+// lib/db (hr-compensation.ts: employeeFiles, in barrel via hr-personal → hr-schema → index).
+// Previous local pgTable (5 cols) removed.
+export { employeeFiles as employee_files } from '@workspace/db';
 
-export const employee_ratings = pgTable('employee_ratings', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id'),
-  rater_id:    integer('rater_id'),
-  score:       numeric('score', { precision: 5, scale: 2 }),
-  period:      text('period'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] employee_ratings: re-exported from canonical definition in
+// lib/db (hr-performance-ext.ts: 24 cols, in barrel chain). Previous local pgTable
+// (5 cols, minimal stub) removed (callers use this symbol name from @shared/db
+// which re-exports it from schema-ext-c-2 — now forwarded to the rich canonical).
+import { employeeRatings as _employeeRatings_canon } from '@workspace/db';
+export const employee_ratings = _employeeRatings_canon;
 
+// lib/db da mavjud emas — saqlab qolindi.
 export const employee_rating_goals = pgTable('employee_rating_goals', {
   id:          serial('id').primaryKey(),
   employee_id: integer('employee_id'),
@@ -40,15 +42,10 @@ export const employee_rating_goals = pgTable('employee_rating_goals', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
-export const employee_badges_ext = pgTable('employee_badges', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id'),
-  badge_id:    integer('badge_id'),
-  reason:      text('reason'),
-  awarded_by:  integer('awarded_by'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// employee_badges: re-exported from canonical definition in schema-business-c-1.ts
+export const employee_badges_ext = canonicalEmployeeBadges;
 
+// lib/db da mavjud emas — saqlab qolindi.
 export const employee_daily_reports = pgTable('employee_daily_reports', {
   id:          serial('id').primaryKey(),
   employee_id: integer('employee_id'),
@@ -57,33 +54,23 @@ export const employee_daily_reports = pgTable('employee_daily_reports', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
-export const employee_daily_kpi = pgTable('employee_daily_kpi', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id'),
-  kpi_date:    date('kpi_date'),
-  value:       numeric('value', { precision: 15, scale: 4 }),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] employee_daily_kpi: re-exported from canonical definition in
+// lib/db (hr-performance-ext.ts: 20 cols, in barrel chain). Previous local pgTable
+// (4 cols, minimal stub) removed.
+import { employeeDailyKpi as _employeeDailyKpi_canon } from '@workspace/db';
+export const employee_daily_kpi = _employeeDailyKpi_canon;
 
-export const employee_inventory_ledger = pgTable('employee_inventory_ledger', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id'),
-  item_id:     integer('item_id'),
-  quantity:    numeric('quantity', { precision: 15, scale: 4 }),
-  type:        text('type'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] employee_inventory_ledger: re-exported from canonical definition in
+// lib/db (pos-schema-v2.ts: employeeInventoryLedger, in barrel). Previous local pgTable
+// (5 cols) removed.
+export { employeeInventoryLedger as employee_inventory_ledger } from '@workspace/db';
 
-export const employee_liability_cases = pgTable('employee_liability_cases', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id'),
-  amount:      numeric('amount', { precision: 15, scale: 2 }),
-  reason:      text('reason'),
-  status:      text('status').default('open'),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
+// [2026-05-22 dedup] employee_liability_cases: re-exported from canonical definition in
+// lib/db (pos-schema-v2.ts: employeeLiabilityCases, in barrel). Previous local pgTable
+// (6 cols) removed.
+export { employeeLiabilityCases as employee_liability_cases } from '@workspace/db';
 
+// lib/db da bor (assessment.ts: employee360Responses) lekin barrel da eksport yo'q — saqlab qolindi.
 export const employee_360_responses = pgTable('employee_360_responses', {
   id:            serial('id').primaryKey(),
   assessment_id: integer('assessment_id'),
@@ -94,19 +81,19 @@ export const employee_360_responses = pgTable('employee_360_responses', {
 
 // ─── HR Succession & Career ────────────────────────────────────────────────────
 
-export const succession_plans = pgTable('succession_plans', {
-  id:             serial('id').primaryKey(),
-  position_id:    integer('position_id'),
-  candidate_id:   integer('candidate_id'),
-  readiness:      text('readiness').default('medium'),
-  notes:          text('notes'),
-  created_at:     timestamp('created_at').defaultNow(),
-  updated_at:     timestamp('updated_at').defaultNow(),
-});
+// SHIM: Canon definition lives in @workspace/db (lib/db/src/schema/hr-safety.ts).
+// The earlier divergent local definition (snake_case position_id/candidate_id/
+// readiness) had no Drizzle callers (callers=0) — only raw-SQL service queries
+// touch this table. Both definitions point to the same physical `succession_plans`
+// table; the canonical lib/db copy is varchar PK (userId, targetPositionId,
+// targetDate, notes, status). See docs/schema-canon-map.md.
+import { successionPlans as _successionPlansCanon } from '@workspace/db';
+export const succession_plans = _successionPlansCanon;
 
 // ─── Strategic OKR ─────────────────────────────────────────────────────────────
 
 // ─── HR: Applications & Interviews ────────────────────────────────────────────
+// lib/db da mavjud emas — saqlab qolindi.
 
 export const hr_application_responses = pgTable('hr_application_responses', {
   id:             serial('id').primaryKey(),
@@ -116,29 +103,19 @@ export const hr_application_responses = pgTable('hr_application_responses', {
   created_at:     timestamp('created_at').defaultNow(),
 });
 
-export const hr_candidate_funnels = pgTable('hr_candidate_funnels', {
-  id:           serial('id').primaryKey(),
-  vacancy_id:   integer('vacancy_id'),
-  candidate_id: integer('candidate_id'),
-  stage:        text('stage').default('applied'),
-  notes:        text('notes'),
-  moved_at:     timestamp('moved_at'),
-  created_at:   timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] hr_candidate_funnels: re-exported from canonical definition in
+// lib/db (hr-recruiter.ts: hrCandidateFunnels, in barrel). Previous local pgTable
+// (6 cols) removed.
+export { hrCandidateFunnels as hr_candidate_funnels } from '@workspace/db';
 
 // ─── HR Capital ────────────────────────────────────────────────────────────────
-
-export const hr_capital_courses = pgTable('hr_capital_courses', {
-  id:          serial('id').primaryKey(),
-  title:       text('title'),
-  provider:    text('provider'),
-  cost:        numeric('cost', { precision: 15, scale: 2 }),
-  duration:    integer('duration'),
-  is_active:   boolean('is_active').default(true),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] hr_capital_courses: re-exported from canonical definition in
+// lib/db (lms-schema.ts: hrCapitalCourses, in barrel). Previous local pgTable
+// (6 cols) removed.
+export { hrCapitalCourses as hr_capital_courses } from '@workspace/db';
 
 // ─── WMS Exit & Production Supply ─────────────────────────────────────────────
+// lib/db da mavjud emas — saqlab qolindi.
 
 export const wms_exit_logs = pgTable('wms_exit_logs', {
   id:          serial('id').primaryKey(),
@@ -159,6 +136,7 @@ export const wms_production_supply = pgTable('wms_production_supply', {
 });
 
 // ─── Customs & Trade ───────────────────────────────────────────────────────────
+// lib/db da mavjud emas — saqlab qolindi.
 
 export const customs_declarations = pgTable('customs_declarations', {
   id:             serial('id').primaryKey(),
@@ -171,6 +149,7 @@ export const customs_declarations = pgTable('customs_declarations', {
 });
 
 // ─── SD Rentals & Price Formulas ───────────────────────────────────────────────
+// lib/db da mavjud emas — saqlab qolindi.
 
 export const sd_rentals = pgTable('sd_rentals', {
   id:           serial('id').primaryKey(),
@@ -184,27 +163,31 @@ export const sd_rentals = pgTable('sd_rentals', {
   updated_at:   timestamp('updated_at').defaultNow(),
 });
 
-export const sd_price_formulas = pgTable('sd_price_formulas', {
-  id:         serial('id').primaryKey(),
-  name:       text('name'),
-  formula:    text('formula'),
-  is_active:  boolean('is_active').default(true),
-  created_at: timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] sd_price_formulas: re-exported from canonical definition in
+// lib/db (sd-europrint-schema.ts: sdPriceFormulas, in barrel). Previous local pgTable
+// (4 cols) removed.
+export { sdPriceFormulas as sd_price_formulas } from '@workspace/db';
 
 // ─── HR Conflict & Sick Reports ───────────────────────────────────────────────
 
 // ─── Finance: Exception Logs ───────────────────────────────────────────────────
-
+// exceptionLogs was removed from lib/db as an orphan; local definition retained
+// here so @shared/db consumers continue to work.
 export const exception_logs = pgTable('exception_logs', {
   id:          serial('id').primaryKey(),
-  module:      text('module'),
-  error_msg:   text('error_msg'),
-  stack:       text('stack'),
-  created_at:  timestamp('created_at').defaultNow(),
+  errorCode:   varchar('error_code', { length: 50 }),
+  message:     text('message').notNull(),
+  stackTrace:  text('stack_trace'),
+  userId:      integer('user_id'),
+  entityType:  varchar('entity_type', { length: 50 }),
+  entityId:    integer('entity_id'),
+  severity:    varchar('severity', { length: 20 }).default('ERROR'),
+  resolvedAt:  timestamp('resolved_at'),
+  createdAt:   timestamp('created_at').defaultNow().notNull(),
 });
 
 // ─── MM: Design Orders ─────────────────────────────────────────────────────────
+// lib/db da mavjud emas — saqlab qolindi.
 
 export const design_order_revisions = pgTable('design_order_revisions', {
   id:          serial('id').primaryKey(),
@@ -216,16 +199,12 @@ export const design_order_revisions = pgTable('design_order_revisions', {
 });
 
 // ─── HR: Shift & Attendance ────────────────────────────────────────────────────
+// [2026-05-22 dedup] shift_swap_requests: re-exported from canonical definition in
+// lib/db (hr-safety.ts: shiftSwapRequests, in barrel via hr-extended → hr-schema → index).
+// Previous local pgTable (5 cols) removed.
+export { shiftSwapRequests as shift_swap_requests } from '@workspace/db';
 
-export const shift_swap_requests = pgTable('shift_swap_requests', {
-  id:             serial('id').primaryKey(),
-  requester_id:   integer('requester_id'),
-  target_id:      integer('target_id'),
-  shift_date:     date('shift_date'),
-  status:         text('status').default('pending'),
-  created_at:     timestamp('created_at').defaultNow(),
-});
-
+// lib/db da mavjud emas (attendanceRecords != attendance_logs) — saqlab qolindi.
 export const attendance_logs = pgTable('attendance_logs', {
   id:          serial('id').primaryKey(),
   employee_id: integer('employee_id'),
@@ -238,26 +217,17 @@ export const attendance_logs = pgTable('attendance_logs', {
 // ─── Kaizen & Improvement ─────────────────────────────────────────────────────
 
 // ─── Warehouse Rental ──────────────────────────────────────────────────────────
+// [2026-05-22 dedup] warehouse_rental_records: re-exported from canonical definition in
+// lib/db (wms-schema.ts: warehouseRentalRecords, in barrel). Previous local pgTable
+// (7 cols) removed.
+export { warehouseRentalRecords as warehouse_rental_records } from '@workspace/db';
 
-export const warehouse_rental_records = pgTable('warehouse_rental_records', {
-  id:           serial('id').primaryKey(),
-  warehouse_id: integer('warehouse_id'),
-  customer_id:  integer('customer_id'),
-  start_date:   date('start_date'),
-  end_date:     date('end_date'),
-  monthly_rate: numeric('monthly_rate', { precision: 15, scale: 2 }),
-  status:       text('status').default('active'),
-  created_at:   timestamp('created_at').defaultNow(),
-});
+// [2026-05-22 dedup] warehouse_rental_settings: re-exported from canonical definition in
+// lib/db (wms-schema.ts: warehouseRentalSettings, in barrel). Previous local pgTable
+// (4 cols) removed.
+export { warehouseRentalSettings as warehouse_rental_settings } from '@workspace/db';
 
-export const warehouse_rental_settings = pgTable('warehouse_rental_settings', {
-  id:           serial('id').primaryKey(),
-  warehouse_id: integer('warehouse_id'),
-  free_days:    integer('free_days').default(30),
-  daily_rate:   numeric('daily_rate', { precision: 15, scale: 2 }),
-  updated_at:   timestamp('updated_at').defaultNow(),
-});
-
+// lib/db da mavjud emas — saqlab qolindi.
 export const warehouse_access_grants = pgTable('warehouse_access_grants', {
   id:           serial('id').primaryKey(),
   warehouse_id: integer('warehouse_id'),
@@ -266,14 +236,12 @@ export const warehouse_access_grants = pgTable('warehouse_access_grants', {
   created_at:   timestamp('created_at').defaultNow(),
 });
 
-export const warehouse_stock = pgTable('warehouse_stock', {
-  id:           serial('id').primaryKey(),
-  warehouse_id: integer('warehouse_id'),
-  item_id:      integer('item_id'),
-  quantity:     numeric('quantity', { precision: 15, scale: 4 }).default('0'),
-  updated_at:   timestamp('updated_at').defaultNow(),
-});
+// [2026-05-22 dedup] warehouse_stock: re-exported from canonical definition in
+// lib/db (wms-schema.ts: warehouseStock, in barrel). Previous local pgTable
+// (4 cols) removed.
+export { warehouseStock as warehouse_stock } from '@workspace/db';
 
+// lib/db da mavjud emas — saqlab qolindi.
 export const warehouse_batches = pgTable('warehouse_batches', {
   id:           serial('id').primaryKey(),
   warehouse_id: integer('warehouse_id'),

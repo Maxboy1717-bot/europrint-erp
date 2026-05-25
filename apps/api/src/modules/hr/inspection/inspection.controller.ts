@@ -1,8 +1,14 @@
+/**
+ * @module inspection.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Controller, Get, Post, Param, Body, Query,
   UseGuards, UseInterceptors, Request,
   NotFoundException, InternalServerErrorException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UsePipes } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -28,6 +34,8 @@ type AuthReq = { user?: { id?: number | string } };
 @Throttle({ default: { limit: 60, ttl: 60_000 } })
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Inspection')
+@ApiBearerAuth()
 @Controller('hr/inspection')
 export class InspectionController {
   constructor(
@@ -35,6 +43,9 @@ export class InspectionController {
     private readonly repo: InspectionRepository,
   ) {}
 
+  @ApiOperation({ summary: 'Upload reference photo' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('rooms/:roomCode/reference-photo')
   @Roles(...REFERENCE_PHOTO_ROLES)
   @UsePipes(new ZodValidationPipe(UploadReferencePhotoSchema))
@@ -52,6 +63,8 @@ export class InspectionController {
     return { ok: true, data: r.data ?? {} };
   }
 
+  @ApiOperation({ summary: 'Get rooms' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms')
   @Roles(...READ_ROLES)
   async getRooms() {
@@ -60,6 +73,8 @@ export class InspectionController {
     return { items, total: items.length };
   }
 
+  @ApiOperation({ summary: 'Get room history' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms/:roomCode/history')
   @Roles(...READ_ROLES)
   async getRoomHistory(
@@ -77,6 +92,9 @@ export class InspectionController {
     return { items, total };
   }
 
+  @ApiOperation({ summary: 'Create manual inspection' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('manual')
   @Roles(...MANUAL_INSPECTION_ROLES)
   @UsePipes(new ZodValidationPipe(ManualInspectionSchema))
@@ -90,6 +108,9 @@ export class InspectionController {
     return { ok: true, data: r.data ?? {} };
   }
 
+  @ApiOperation({ summary: 'Submit checklist' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('checklist')
   @Roles(...CHECKLIST_ROLES)
   @UsePipes(new ZodValidationPipe(ChecklistSchema))
@@ -103,6 +124,9 @@ export class InspectionController {
     return { ok: true, data: r.data ?? {} };
   }
 
+  @ApiOperation({ summary: 'Get checklist pdf' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('checklist-pdf/:id')
   @Roles(...READ_ROLES)
   async getChecklistPdf(@Param('id') id: string) {
@@ -118,6 +142,8 @@ export class InspectionController {
     return { pdf_url: storedUrl, analysis_id: id };
   }
 
+  @ApiOperation({ summary: 'Get alerts' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('alerts')
   @Roles(...READ_ROLES)
   async getAlerts(@Query('hours') hours: string) {

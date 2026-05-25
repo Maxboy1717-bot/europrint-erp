@@ -1,3 +1,8 @@
+/**
+ * @module StockBalanceTab
+ * @description React UI component.
+ */
+
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Package, TrendingUp, AlertTriangle, XCircle, RefreshCw } from "lucide-react";
@@ -39,7 +44,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatCurrency } from "@/lib/format";
 import { safeArray } from "@/lib/queryClient";
 import { StockBalanceData, StockBalanceItem, TranslationType, STATUS_COLORS, PIE_COLORS } from "./types";
-
+import { apiRequest } from '@/lib/queryClient';
 interface StockBalanceTabProps {
   t: TranslationType;
   category: string;
@@ -61,16 +66,12 @@ export function StockBalanceTab({
       const params = new URLSearchParams();
       if (category !== 'all') params.set('category', category);
       if (lowStockOnly) params.set('lowStockOnly', 'true');
-      const res = await fetch(`/api/warehouse/reports/stock-balance?${params}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
+      return await apiRequest('GET', `/api/warehouse/reports/stock-balance?${params}`);
     },
   });
 
   const top10ByValue = useMemo(() => {
-    return safeArray(stockBalanceData?.data)
+    return safeArray<StockBalanceItem>(stockBalanceData?.data)
       .slice()
       .sort((a: StockBalanceItem, b: StockBalanceItem) => b.value - a.value)
       .slice(0, 10)
@@ -92,10 +93,10 @@ export function StockBalanceTab({
   if (isLoadingStock) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-4 gap-4">
-          {([1, 2, 3, 4]).map(i => <Skeleton key={`k-${i}`} className="h-24" />)}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {([1, 2, 3, 4]).map(i => <Skeleton key={`k-${i}`} className="h-24 rounded-lg" />)}
         </div>
-        <Skeleton className="h-64" />
+        <Skeleton className="h-64 rounded-lg" />
       </div>
     );
   }
@@ -106,14 +107,14 @@ export function StockBalanceTab({
         <div className="flex items-center gap-2">
           <Label>{t.common.category}</Label>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-40" data-testid="select-category">
+            <SelectTrigger className="w-40 h-9" data-testid="select-category">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t.common.allCategories}</SelectItem>
-              <SelectItem value="xom_ashyo">Xom ashyo</SelectItem>
-              <SelectItem value="tayyor_mahsulot">Tayyor mahsulot</SelectItem>
-              <SelectItem value="ehtiyot_qism">Ehtiyot qism</SelectItem>
+              <SelectItem value="xom_ashyo">{"Xom ashyo"}</SelectItem>
+              <SelectItem value="tayyor_mahsulot">{"Tayyor mahsulot"}</SelectItem>
+              <SelectItem value="ehtiyot_qism">{"Ehtiyot qism"}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -130,7 +131,7 @@ export function StockBalanceTab({
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
@@ -236,7 +237,7 @@ export function StockBalanceTab({
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px]">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t.stockBalance.material}</TableHead>
@@ -249,7 +250,7 @@ export function StockBalanceTab({
               </TableHeader>
               <TableBody>
                 {stockBalanceData?.data?.map((item: StockBalanceItem) => (
-                  <TableRow key={item.materialId} data-testid={`row-stock-${item.materialId}`}>
+                  <TableRow key={item.materialId} data-testid={`row-stock-${item.materialId}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>{item.code}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.currentStock)} {item.unitOfMeasure}</TableCell>
@@ -270,7 +271,7 @@ export function StockBalanceTab({
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </ScrollArea>
         </CardContent>
       </Card>

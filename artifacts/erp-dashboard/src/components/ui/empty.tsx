@@ -1,8 +1,15 @@
+/**
+ * @module empty
+ * @description React UI component.
+ */
+
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { useTranslation } from '@/lib/i18n';
 
 function Empty({ className, ...props }: React.ComponentProps<"div">) {
+  const { t } = useTranslation("common");
   return (
     <div
       data-slot="empty"

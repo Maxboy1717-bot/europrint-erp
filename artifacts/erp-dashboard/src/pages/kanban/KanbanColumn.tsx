@@ -1,237 +1,269 @@
+/**
+ * @module KanbanColumn
+ * @description React page component. Route-level UI.
+ */
+
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { Plus, AlertTriangle, Lock, Clock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Plus, AlertTriangle, Clock, Trash2 } from "lucide-react";
 import { SortableTaskCard } from "./KanbanCard";
 import type { CardWithOwner } from "./kanban-types";
 import type { KanbanColumn as KanbanColumnType } from "@shared/schema";
+import { useTranslation } from '@/lib/i18n';
 
-type TLang = {
-  board: { addCard: string; newBoard: string; newColumn: string; newCard: string };
-  actions: { save: string; cancel: string; delete: string; add: string; send: string; upload: string; start: string; stop: string };
-  views: Record<string, string>;
-  columns: Record<string, string>;
-  priority: Record<string, string>;
-  tabs: Record<string, string>;
-  fields: Record<string, string>;
-  table: Record<string, string>;
-  time: Record<string, string>;
-  roles: Record<string, string>;
-  filters: Record<string, string>;
-  empty: Record<string, string>;
-  chat: Record<string, string>;
-  create: Record<string, string>;
-  notifications: Record<string, string>;
-  robots: Record<string, string>;
-  templates: Record<string, string>;
-  flows: Record<string, string>;
-  allocation: Record<string, string>;
-};
-
+// ── WIP limits ─────────────────────────────────────────────────────────────
 const WIP_LIMITS: Record<string, number> = {
-  "jarayonda":    10,
-  "in_progress":  10,
-  "in progress":  10,
-  "bajarilmoqda": 10,
-  "ishda":        10,
-  "ko'rib chiqish": 5,
-  "tekshirish":   5,
-  "review":       5,
-  "checking":     5,
-  "ko'rib chiqilmoqda": 5,
+  "jarayonda": 10, "in_progress": 10, "in progress": 10,
+  "bajarilmoqda": 10, "ishda": 10,
+  "ko'rib chiqish": 5, "tekshirish": 5, "review": 5,
+  "checking": 5, "ko'rib chiqilmoqda": 5,
 };
+const INBOX_KEYWORDS = ["kiruvchi", "inbox", "yangi", "kirim"];
 
-const INBOX_COLUMN_KEYWORDS = ["kiruvchi", "inbox", "yangi", "kirim"];
-
-function getWipLimit(columnName: string): number | null {
-  const key = columnName.toLowerCase().trim();
-  return WIP_LIMITS[key] ?? null;
+function getWipLimit(name: string): number | null {
+  return WIP_LIMITS[name.toLowerCase().trim()] ?? null;
 }
-
-function isInboxColumn(columnName: string): boolean {
-  const lower = columnName.toLowerCase().trim();
-  return INBOX_COLUMN_KEYWORDS.some((kw) => lower.includes(kw));
+function isInbox(name: string): boolean {
+  const l = name.toLowerCase().trim();
+  return INBOX_KEYWORDS.some(k => l.includes(k));
 }
-
 function isOverdue24h(createdAt: string | Date | null | undefined): boolean {
   if (!createdAt) return false;
-  const created = new Date(createdAt);
-  return Date.now() - created.getTime() > 24 * 60 * 60 * 1000;
+  return Date.now() - new Date(createdAt).getTime() > 24 * 60 * 60 * 1000;
 }
 
+function hexToRgba(hex: string, alpha: number): string {
+  try {
+    if (!hex?.startsWith("#") || hex.length < 7) return `rgba(107,114,128,${alpha})`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  } catch { return `rgba(107,114,128,${alpha})`; }
+}
+
+// ── Column accent colors (light) ───────────────────────────────────────────
+function resolveAccent(column: KanbanColumnType): string {
+  const base = column.color;
+  const name = (column.name || "").toLowerCase();
+  if (base) return base;
+  if (name.includes("kiruvchi") || name.includes("inbox") || name.includes("yangi") || name.includes("new"))
+    return "#94A3B8";
+  if (name.includes("rejada") || name.includes("plan"))                                 return "#3B82F6";
+  if (name.includes("jarayon") || name.includes("progress") || name.includes("bajaril") || name.includes("ishda"))
+    return "#F59E0B";
+  if (name.includes("tekshir") || name.includes("review") || name.includes("ko'rib"))   return "#8B5CF6";
+  if (name.includes("tugat") || name.includes("done") || name.includes("completed"))    return "#10B981";
+  if (name.includes("bekor") || name.includes("cancel"))                                return "#EF4444";
+  return "#3B82F6";
+}
+
+// ── Props ──────────────────────────────────────────────────────────────────
 interface KanbanColumnProps {
-  column: KanbanColumnType;
-  cards: CardWithOwner[];
-  onCardClick: (card: CardWithOwner) => void;
-  onAddCard: () => void;
-  t: TLang;
+  column:         KanbanColumnType;
+  cards:          CardWithOwner[];
+  onCardClick:    (card: CardWithOwner) => void;
+  onAddCard:      () => void;
+  onDeleteColumn: (columnId: string) => void;
+  /**
+   * Translation bundle from parent. KanbanColumn itself only consumes
+   * `useTranslation` directly; the prop is forwarded for future use by
+   * descendants. Accept the KanbanT-shaped object plus the callable carrier
+   * variant used by KanbanBoard ancestors.
+   */
+  t:              import("../KanbanBoardTypes").KanbanT & ((key: string) => string);
 }
 
-export function KanbanColumn({ column, cards, onCardClick, onAddCard, t }: KanbanColumnProps) {
-  const { setNodeRef, isOver } = useDroppable({ id: column.id });
-  const columnName = column.name || "";
-  const wipLimit = getWipLimit(columnName);
-  const isOverWip = wipLimit !== null && cards.length > wipLimit;
-  const isAtWip   = wipLimit !== null && cards.length === wipLimit;
+export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteColumn }: KanbanColumnProps) {
+  const { t } = useTranslation("common");
+  // String() conversion — column.id integer DB'dan kelganda dnd-kit matching to'g'ri ishlashi uchun
+  const { setNodeRef, isOver } = useDroppable({ id: String(column.id) });
 
-  const isInbox = isInboxColumn(columnName);
-  const overdueCount = isInbox
-    ? (Array.isArray(cards) ? cards : []).filter((c) => isOverdue24h(c.createdAt)).length
+  const accent       = resolveAccent(column);
+  const wipLimit     = getWipLimit(column.name || "");
+  const isOverWip    = wipLimit !== null && cards.length > wipLimit;
+  const isInboxCol   = isInbox(column.name || "");
+  const overdueCount = isInboxCol
+    ? (Array.isArray(cards) ? cards : []).filter(c => isOverdue24h(c.createdAt)).length
     : 0;
 
-  const headerBg = column.color
-    ? `${column.color}22`
-    : "rgba(26,26,46,0.06)";
-
-  const borderColor = overdueCount > 0
-    ? "#ef4444"
-    : isOverWip
-    ? "#ef4444"
-    : isAtWip
-    ? "#f59e0b"
-    : isOver
-    ? "#ff5d2e"
-    : "transparent";
+  // Neumorphic shadows
+  const shadowIdle = "6px 6px 20px rgba(163,177,198,0.45), -4px -4px 12px rgba(255,255,255,0.80)";
+  const shadowOver = `inset 4px 4px 12px rgba(163,177,198,0.30), inset -2px -2px 8px rgba(255,255,255,0.60), 0 0 0 2px ${hexToRgba(accent, 0.40)}`;
 
   return (
     <div
-      ref={setNodeRef}
-      className="flex flex-col rounded-xl shrink-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm"
       style={{
-        width: 288,
-        minHeight: 120,
-        border: `2px solid ${borderColor}`,
-        transition: "border-color 0.15s",
-        boxShadow: isOver ? "0 0 0 2px #ff5d2e33" : undefined,
+        width: 280,
+        flexShrink: 0,
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        background: isOver ? "#F0F6FF" : "#FFFFFF",
+        borderRadius: 18,
+        boxShadow: isOver ? shadowOver : shadowIdle,
+        transition: "box-shadow 0.2s, background 0.2s",
       }}
-      data-testid={`kanban-column-${column.id}`}
     >
-      {/* ── Column header ────────────────────────────────────────── */}
+      {/* ── Header ─────────────────────────────────────────────────── */}
       <div
-        className="flex items-center justify-between px-3 py-2.5 rounded-t-xl"
-        style={{ background: headerBg }}
+        style={{
+          padding: "12px 14px 10px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
       >
         <div className="flex items-center gap-2 min-w-0">
-          {column.color && (
-            <div
-              className="w-2.5 h-2.5 rounded-full shrink-0"
-              style={{ background: column.color }}
-            />
-          )}
-          <span className="font-semibold text-sm truncate">{column.name}</span>
+          <span style={{
+            width: 10, height: 10, borderRadius: "50%",
+            background: accent,
+            boxShadow: `0 0 0 3px ${hexToRgba(accent, 0.15)}`,
+            flexShrink: 0,
+          }} />
+          <h3 className="truncate font-semibold" style={{ fontSize: 13, color: "#2D3748", letterSpacing: "0.01em" }}>
+            {column.name}
+          </h3>
+          {isOverWip && <AlertTriangle style={{ width: 12, height: 12, color: "#F59E0B", flexShrink: 0 }} />}
+          {isInboxCol && overdueCount > 0 && <Clock style={{ width: 11, height: 11, color: "#EF4444", flexShrink: 0 }} />}
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
-          {/* Card count badge */}
-          <Badge
-            variant="secondary"
-            className="text-[10px] px-1.5 py-0 h-4 min-w-4 text-center"
-          >
-            {cards.length}
-          </Badge>
+        <div className="flex items-center gap-1 shrink-0 ml-2">
+          <span style={{
+            fontSize: 11, fontWeight: 700,
+            color: accent, background: hexToRgba(accent, 0.12),
+            padding: "3px 9px", borderRadius: 999,
+            minWidth: 24, textAlign: "center",
+            boxShadow: `inset 1px 1px 3px ${hexToRgba(accent, 0.15)}, inset -1px -1px 2px rgba(255,255,255,0.7)`,
+          }}>
+            {cards.length}{wipLimit !== null ? `/${wipLimit}` : ""}
+          </span>
 
-          {/* 24h overdue badge for inbox columns */}
-          {isInbox && overdueCount > 0 && (
-            <Badge
-              className="text-[10px] px-1.5 py-0 h-4 flex items-center gap-0.5 bg-red-500 text-white"
-              title={`${overdueCount} ta kartochka 24 soatdan ko'proq vaqt o'tdi`}
-            >
-              <Clock className="h-2.5 w-2.5" />
-              {overdueCount}
-            </Badge>
-          )}
-
-          {/* WIP limit badge */}
-          {wipLimit !== null && (
-            <Badge
-              className={`text-[10px] px-1.5 py-0 h-4 flex items-center gap-0.5 ${
-                isOverWip
-                  ? "bg-red-500 text-white"
-                  : isAtWip
-                  ? "bg-amber-500 text-white"
-                  : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-              }`}
-            >
-              {isOverWip ? (
-                <AlertTriangle className="h-2.5 w-2.5" />
-              ) : isAtWip ? (
-                <Lock className="h-2.5 w-2.5" />
-              ) : null}
-              WIP {wipLimit}
-            </Badge>
-          )}
-
-          {/* Add card button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-5 w-5 rounded-full hover:bg-[#ff5d2e]/10 hover:text-[#ff5d2e]"
+          <button
             onClick={onAddCard}
-            data-testid={`button-add-card-${column.id}`}
             disabled={isOverWip}
-            title={isOverWip ? `WIP limit: ${wipLimit}` : t.board.addCard}
+            data-testid={`button-add-card-${column.id}`}
+            title={t("vazifaQoshish")}
+            style={{
+              width: 26, height: 26, borderRadius: 8,
+              background: "rgba(163,177,198,0.10)",
+              border: "none",
+              cursor: isOverWip ? "not-allowed" : "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              opacity: isOverWip ? 0.45 : 1,
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => { if (!isOverWip) (e.currentTarget as HTMLElement).style.background = "rgba(163,177,198,0.20)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(163,177,198,0.10)"; }}
           >
-            <Plus className="h-3 w-3" />
-          </Button>
+            <Plus style={{ width: 13, height: 13, color: "#718096" }} />
+          </button>
+
+          <button
+            onClick={() => {
+              if (window.confirm(`"${column.name}" ustunini o'chirasizmi? Barcha kartalar ham o'chadi.`))
+                onDeleteColumn(String(column.id));
+            }}
+            title={t("ustunniOchirish")}
+            data-testid={`button-delete-column-${column.id}`}
+            style={{
+              width: 26, height: 26, borderRadius: 8,
+              background: "rgba(163,177,198,0.06)",
+              border: "none",
+              cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.14)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(163,177,198,0.06)"; }}
+          >
+            <Trash2 style={{ width: 11, height: 11, color: "#94A3B8" }} />
+          </button>
         </div>
       </div>
 
-      {/* ── WIP warning banner ───────────────────────────────────── */}
-      {isOverWip && (
-        <div className="mx-2 mt-1.5 rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-2.5 py-1 flex items-center gap-1.5">
-          <AlertTriangle className="h-3 w-3 text-red-500 shrink-0" />
-          <span className="text-[10px] text-red-600 dark:text-red-400 font-medium">
-            WIP chegarasi ({wipLimit}) oshib ketdi!
+      {/* Ajratuvchi */}
+      <div className="mx-3 mb-2" style={{ height: 1, background: "rgba(0,0,0,0.05)" }} />
+
+      {/* WIP / overdue warning */}
+      {(isOverWip || (isInboxCol && overdueCount > 0)) && (
+        <div
+          className="flex items-center gap-1.5 mx-3 px-2.5 py-1.5 mb-2"
+          style={{
+            background: "rgba(254,242,242,1)",
+            borderRadius: 8,
+          }}
+        >
+          {isOverWip
+            ? <AlertTriangle style={{ width: 11, height: 11, color: "#EF4444" }} />
+            : <Clock         style={{ width: 11, height: 11, color: "#EF4444" }} />}
+          <span style={{ fontSize: 10.5, color: "#DC2626", fontWeight: 500 }}>
+            {isOverWip
+              ? `WIP chegarasi (${wipLimit}) oshdi!`
+              : `${overdueCount} ta karta 24 soatdan o'tdi!`}
           </span>
         </div>
       )}
 
-      {/* ── 24h overdue inbox warning banner ─────────────────────── */}
-      {isInbox && overdueCount > 0 && !isOverWip && (
-        <div className="mx-2 mt-1.5 rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-2.5 py-1 flex items-center gap-1.5">
-          <Clock className="h-3 w-3 text-red-500 shrink-0" />
-          <span className="text-[10px] text-red-600 dark:text-red-400 font-medium">
-            {overdueCount} ta karta 24 soatdan o'tdi!
-          </span>
-        </div>
-      )}
-
-      {/* ── Cards ────────────────────────────────────────────────── */}
-      <SortableContext items={(Array.isArray(cards) ? cards : []).map((c) => c.id!)} strategy={verticalListSortingStrategy}>
-        <div className="flex flex-col gap-2 p-2 flex-1 min-h-[60px]">
+      {/* Drop zone + cards */}
+      <div
+        ref={setNodeRef}
+        className="flex-1 flex flex-col"
+        style={{
+          padding: "0 10px 12px",
+          overflowY: "auto",
+          minHeight: 80,
+        }}
+        data-testid={`kanban-column-${column.id}`}
+      >
+        <SortableContext
+          items={(Array.isArray(cards) ? cards : []).map(c => String(c.id ?? ""))}
+          strategy={verticalListSortingStrategy}
+        >
           {cards.length === 0 ? (
-            <div
-              className={`flex-1 flex items-center justify-center rounded-lg min-h-[60px] border-2 border-dashed transition-colors ${
-                isOver
-                  ? "border-[#ff5d2e] bg-[#ff5d2e]/5"
-                  : "border-slate-200 dark:border-slate-700"
-              }`}
+            <button
+              onClick={onAddCard}
+              className="w-full flex flex-col items-center justify-center gap-2 transition-all"
+              style={{
+                minHeight: 88, borderRadius: 12,
+                border: `2px dashed ${hexToRgba(accent, 0.30)}`,
+                background: hexToRgba(accent, 0.04),
+                cursor: "pointer",
+              }}
             >
-              <span className="text-xs text-muted-foreground">
-                {isOver ? "Bu yerga tashlang" : "Karta yo'q"}
+              <div
+                className="w-7 h-7 rounded-xl flex items-center justify-center text-lg leading-none"
+                style={{
+                  background: hexToRgba(accent, 0.12), color: accent,
+                  boxShadow: `2px 2px 6px ${hexToRgba(accent, 0.18)}, -1px -1px 4px rgba(255,255,255,0.7)`,
+                }}
+              >
+                +
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 600, color: hexToRgba(accent, 0.65) }}>
+                {isOver ? "📌 Bu yerga tashlang" : "Vazifa qo'shish"}
               </span>
-            </div>
+            </button>
           ) : (
-            (Array.isArray(cards) ? cards : []).map((card) => {
-              const cardIsOverdue24h = isInbox && isOverdue24h(card.createdAt);
+            (Array.isArray(cards) ? cards : []).map(card => {
+              const overdue24 = isInboxCol && isOverdue24h(card.createdAt);
               return (
                 <div
                   key={card.id}
-                  className={cardIsOverdue24h ? "rounded-lg ring-2 ring-red-500 ring-offset-1" : undefined}
-                  title={cardIsOverdue24h ? "24 soatdan ko'proq vaqt o'tdi — 3-savat qoidasi buzildi!" : undefined}
+                  style={overdue24 ? { outline: "2px solid rgba(239,68,68,0.35)", borderRadius: 14, outlineOffset: 1 } : undefined}
+                  title={overdue24 ? "24 soatdan ko'proq vaqt o'tdi!" : undefined}
                 >
                   <SortableTaskCard
                     card={card}
                     onClick={() => onCardClick(card)}
-                    t={t}
+                    columnName={column.name}
                   />
                 </div>
               );
             })
           )}
-        </div>
-      </SortableContext>
+        </SortableContext>
+      </div>
     </div>
   );
 }

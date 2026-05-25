@@ -1,3 +1,8 @@
+/**
+ * @module use-sd
+ * @description React custom hook.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 

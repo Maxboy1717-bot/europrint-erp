@@ -1,3 +1,8 @@
+/**
+ * @module HRRequestDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -12,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Send, CheckCircle } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface HRRequestDialogProps {
   nodeId: number;
@@ -32,6 +38,7 @@ const REQUEST_TYPES = [
 export function HRRequestDialog({
   nodeId, nodeName, portretId, open, onClose,
 }: HRRequestDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const qc = useQueryClient();
   const [form, setForm] = useState({ request_type: "new_hire", priority: "normal", comment: "" });
@@ -50,18 +57,18 @@ export function HRRequestDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Send className="h-4 w-4 text-primary" />
-            HR ga so'rov yuborish
+            {t("hrGaSorovYuborish")}
           </DialogTitle>
           <p className="text-xs text-muted-foreground">{nodeName}</p>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-2">
           <div>
-            <Label className="text-xs mb-1 block">So'rov turi</Label>
+            <Label className="text-xs mb-1 block">{t("sorovTuri")}</Label>
             <Select value={form.request_type} onValueChange={v => setForm(f => ({ ...f, request_type: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -73,7 +80,7 @@ export function HRRequestDialog({
           </div>
 
           <div>
-            <Label className="text-xs mb-1 block">Muhimlik darajasi</Label>
+            <Label className="text-xs mb-1 block">{t("muhimlikDarajasi")}</Label>
             <div className="flex gap-2">
               {([
                 { value: "normal", label: "Oddiy",         color: "bg-amber-500" },
@@ -86,7 +93,7 @@ export function HRRequestDialog({
                   className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
                     form.priority === p.value
                       ? `${p.color} text-white border-transparent`
-                      : "border-border/40 text-on-surface-variant hover:border-primary/40"
+                      : "border-border/40 text-muted-foreground hover:border-primary/40"
                   }`}
                 >{p.label}</button>
               ))}
@@ -94,9 +101,9 @@ export function HRRequestDialog({
           </div>
 
           <div>
-            <Label className="text-xs mb-1 block">Izoh (ixtiyoriy)</Label>
+            <Label className="text-xs mb-1 block">{t("izohIxtiyoriy")}</Label>
             <Textarea
-              placeholder="Qo'shimcha tushuntirish, shoshilinchlik sababi..."
+              placeholder={t("qoshimchaTushuntirishShoshilinchlikSababi")}
               rows={3}
               value={form.comment}
               onChange={e => setForm(f => ({ ...f, comment: e.target.value }))}
@@ -104,18 +111,18 @@ export function HRRequestDialog({
           </div>
 
           {portretId && (
-            <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 dark:bg-green-950/30 rounded-lg p-2.5">
+            <div className="flex items-center gap-2 text-xs text-[var(--ep-green)] bg-green-50 dark:bg-green-950/30 rounded-lg p-2.5">
               <CheckCircle className="h-3.5 w-3.5 shrink-0" />
-              Portret saqlangan — so'rovga avtomatik biriktiriladi
+              {t("portretSaqlanganSorovgaAvtomatikBiriktiriladi")}
             </div>
           )}
         </div>
 
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" size="sm" onClick={onClose}>{t("Bekor")}</Button>
           <Button
             size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending}
-            className="bg-primary text-on-primary"
+            className="bg-primary text-primary-foreground"
           >
             <Send className="h-3.5 w-3.5 mr-1.5" />
             {mutation.isPending ? "Yuborilmoqda..." : "HR ga yuborish"}

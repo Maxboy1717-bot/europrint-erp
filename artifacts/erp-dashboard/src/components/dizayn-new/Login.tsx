@@ -8,19 +8,13 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import {
-  Eye,
-  EyeOff,
-  ArrowRight,
-  Loader2,
-  Users,
-  Building2,
-  Zap,
-  ShieldCheck,
-} from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Users, Building2, Zap, ShieldCheck } from "lucide-react";
 import { EuroprintLogo } from "@/components/EuroprintLogo";
-import { safeStorage } from '@/lib/safeStorage';
+import { apiRequest, HttpError } from "@/lib/queryClient";
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface LoginRedesignProps {
@@ -121,6 +115,7 @@ function FloatingInput({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
+  const { t } = useTranslation("common");
   const [form, setForm] = useState<LoginFormState>({
     username: "",
     password: "",
@@ -150,35 +145,33 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
 
     setField("isLoading", true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: form.username, password: form.password }),
-        credentials: "include",
-      });
-
-      if (res.status === 429) {
-        setField("error", "Juda ko'p urinish. 15 daqiqadan keyin qayta urinib ko'ring.");
-        return;
-      }
-
-      const data = await res.json() as {
+      // After a successful login the server sets the httpOnly access_token /
+      // refresh_token cookies on the response — the browser persists them
+      // automatically. We no longer write tokens to localStorage; reading
+      // them client-side would defeat the purpose of httpOnly cookies.
+      const data = await apiRequest<{
         accessToken?: string;
         user?: { id: string | number; username: string; role: string };
-      };
-
-      if (!res.ok) {
-        setField("error", "Login yoki parol noto'g'ri");
-        return;
-      }
+      }>('POST', "/api/auth/login", { username: form.username, password: form.password });
 
       if (data.accessToken) {
-        safeStorage.setItem("token", data.accessToken);
-        if (data.user) safeStorage.setItem("admin", JSON.stringify(data.user));
         onLoginSuccess?.(data.user?.role);
       }
-    } catch {
-      setField("error", "Server bilan ulanishda xatolik yuz berdi");
+    } catch (err) {
+      let status = 0;
+      if (err instanceof HttpError) {
+        status = err.status;
+      } else if (err instanceof Error) {
+        const m = err.message.match(/^(\d{3}):/);
+        if (m) status = Number(m[1]);
+      }
+      if (status === 429) {
+        setField("error", "Juda ko'p urinish. 15 daqiqadan keyin qayta urinib ko'ring.");
+      } else if (status > 0 && status < 500) {
+        setField("error", "Login yoki parol noto'g'ri");
+      } else {
+        setField("error", "Server bilan ulanishda xatolik yuz berdi");
+      }
     } finally {
       setField("isLoading", false);
     }
@@ -188,7 +181,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
     <div
       className="min-h-screen flex overflow-hidden"
       role="main"
-      aria-label="Tizimga kirish sahifasi"
+      aria-label={t("tizimgaKirishSahifasi")}
     >
       {/* ── LEFT PANEL: Hero (60%) ── */}
       <div
@@ -208,7 +201,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
         <div className="relative z-10">
           <div className="inline-flex items-center gap-3 bg-white/15 rounded-xl px-4 py-2 backdrop-blur-sm">
             <EuroprintLogo height={28} />
-            <span className="text-white font-semibold text-sm tracking-wide">ERP System</span>
+            <span className="text-white font-semibold text-sm tracking-wide">{t("erpSystem")}</span>
           </div>
         </div>
 
@@ -216,9 +209,9 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
         <div className="relative z-10 space-y-8">
           <div className="space-y-3">
             <h1 className="text-4xl font-bold text-white leading-tight">
-              Zamonaviy ishlab chiqarish
+              {t("zamonaviyIshlabChiqarish")}
               <br />
-              <span className="opacity-80">boshqaruv tizimi</span>
+              <span className="opacity-80">{tLabel('common.Login.boshqaruvTizimi', "boshqaruv tizimi")}</span>
             </h1>
             <p className="text-white/70 text-base max-w-sm">
               SAP darajadagi ERP — 15 modul, real-time monitoring, AI tahlil
@@ -226,7 +219,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
           </div>
 
           {/* Stats grid */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {(Array.isArray(HERO_STATS) ? HERO_STATS : []).map(({ icon: Icon, label, sublabel }) => (
               <div
                 key={label}
@@ -246,7 +239,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
 
         {/* Footer */}
         <div className="relative z-10">
-          <p className="text-white/40 text-xs">v2.0 | © 2026 Europrint LLC. Barcha huquqlar himoyalangan.</p>
+          <p className="text-white/40 text-xs">{t("v202026EuroprintLlc")}</p>
         </div>
       </div>
 
@@ -268,10 +261,10 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
           {/* Heading */}
           <div className="space-y-1">
             <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-              Tizimga kirish
+              {t("tizimgaKirish")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              EuroPrint ERP ga xush kelibsiz
+              {t("europrintErpGaXushKelibsiz")}
             </p>
           </div>
 
@@ -280,7 +273,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
             {/* Username */}
             <FloatingInput
               id="username"
-              label="Foydalanuvchi nomi"
+              label={t("username")}
               value={form.username}
               onChange={(v) => setField("username", v)}
               autoComplete="username"
@@ -290,7 +283,7 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
             {/* Password */}
             <FloatingInput
               id="password"
-              label="Parol"
+              label={t("Parol")}
               type={form.showPassword ? "text" : "password"}
               value={form.password}
               onChange={(v) => setField("password", v)}
@@ -316,10 +309,10 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
             {form.error && (
               <div
                 role="alert"
-                className="flex items-start gap-2 bg-error/10 border border-error/20 rounded-lg px-3 py-2.5"
+                className="flex items-start gap-2 bg-[var(--ep-red)]/10 border border-error/20 rounded-lg px-3 py-2.5"
               >
-                <span className="text-error text-xs mt-0.5">⚠</span>
-                <p className="text-error text-xs">{form.error}</p>
+                <span className="text-[var(--ep-red)] text-xs mt-0.5">⚠</span>
+                <p className="text-[var(--ep-red)] text-xs">{form.error}</p>
               </div>
             )}
 
@@ -339,12 +332,12 @@ export function LoginRedesign({ onLoginSuccess }: LoginRedesignProps) {
             >
               {form.isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Kirilmoqda...
+                  <EPLoader className="w-4 h-4" />
+                  {t("kirilmoqda")}
                 </>
               ) : (
                 <>
-                  Tizimga kirish
+                  {t("tizimgaKirish")}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

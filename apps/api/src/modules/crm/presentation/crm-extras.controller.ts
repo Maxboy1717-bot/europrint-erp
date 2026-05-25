@@ -1,3 +1,8 @@
+/**
+ * @module crm-extras.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertRequired } from '@common/assertions';
 import {
   AuditInterceptor } from '@common/interceptors/audit.interceptor';import { safeInt } from '../../hr/common/db-rows';import {  BadRequestException,
@@ -13,8 +18,9 @@ import {
   InternalServerErrorException,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CrmExtrasService } from '../application/crm-extras.service';
@@ -23,16 +29,19 @@ import { CreateCommentDtoSchema, CreateCommentDto, CreateTaskDtoSchema, CreateTa
 
 const CRM_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'crm_manager'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(RolesGuard)
 @Roles(...CRM_ROLES)
+@ApiTags('Crm Extras')
 @Controller('crm')
 export class CrmExtrasController {
   private readonly logger = new Logger(CrmExtrasController.name);
 
   constructor(private readonly svc: CrmExtrasService) {}
 
+  @ApiOperation({ summary: 'List comments' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('comments')
   async listComments(
     @Query('leadId') leadId?: string, @Query('dealId') dealId?: string,
@@ -47,6 +56,9 @@ export class CrmExtrasController {
     return _rListComments.data;
   }
 
+  @ApiOperation({ summary: 'Create comment' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('comments')
   @UsePipes(new ZodValidationPipe(CreateCommentDtoSchema))
   async createComment(@Body() body: CreateCommentDto) {
@@ -61,6 +73,8 @@ export class CrmExtrasController {
     return _rCreateComment.data;
   }
 
+  @ApiOperation({ summary: 'Get history' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('history')
   async getHistory(
     @Query('entityType') entityType?: string, @Query('entityId') entityId?: string,
@@ -75,16 +89,22 @@ export class CrmExtrasController {
     return _rGetHistory.data;
   }
 
+  @ApiOperation({ summary: 'Get dashboard' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard')
   async getDashboard() {
     return unwrapOrThrow(await this.svc.getDashboard());
   }
 
+  @ApiOperation({ summary: 'Get pipeline' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('pipeline')
   async getPipeline(@Query('stageId') stageId?: string) {
     return unwrapOrThrow(await this.svc.getPipeline(stageId ? safeInt(stageId, 0) : null));
   }
 
+  @ApiOperation({ summary: 'List tasks' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('tasks')
   async listTasks(
     @Query('assignedTo') assignedTo?: string, @Query('status') status?: string,
@@ -99,6 +119,9 @@ export class CrmExtrasController {
     return _rListTasks.data;
   }
 
+  @ApiOperation({ summary: 'Create task' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('tasks')
   @UsePipes(new ZodValidationPipe(CreateTaskDtoSchema))
   async createTask(@Body() body: CreateTaskDto) {
@@ -106,16 +129,22 @@ export class CrmExtrasController {
     return unwrapOrThrow(await this.svc.createTask(body));
   }
 
+  @ApiOperation({ summary: 'List proposals' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('proposals')
   async listProposals(@Query('limit') limit?: string, @Query('offset') offset?: string) {
     return unwrapOrThrow(await this.svc.listProposals(safeInt(limit, 50), safeInt(offset, 0)));
   }
 
+  @ApiOperation({ summary: 'Get nba' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('nba')
   async getNba(@Query('entityType') entityType?: string, @Query('entityId') entityId?: string) {
     return unwrapOrThrow(await this.svc.getNba(entityType ?? '', safeInt(entityId, 0)));
   }
 
+  @ApiOperation({ summary: 'Get root' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async getRoot() {
     return { module: 'crm', status: 'active' };

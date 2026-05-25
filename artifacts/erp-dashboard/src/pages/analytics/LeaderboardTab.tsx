@@ -1,3 +1,8 @@
+/**
+ * @module LeaderboardTab
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -6,7 +11,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import type { LeaderboardEmployee, DepartmentRanking, TopCourse } from "./analytics-types";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface LeaderboardTabProps {
   topEmployees: LeaderboardEmployee[];
   topEmpLoading: boolean;
@@ -21,9 +29,10 @@ export function LeaderboardTab({
   departmentRankings,
   topCourses,
 }: LeaderboardTabProps) {
+  const { t } = useTranslation("common");
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {(Array.isArray(topEmployees) ? topEmployees : []).slice(0, 3).map((employee, index) => (
@@ -33,9 +42,9 @@ export function LeaderboardTab({
             'ring-2 ring-orange-500'
           }`}>
             <div className={`absolute top-0 right-0 w-16 h-16 ${
-              index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
-              index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500' :
-              'bg-gradient-to-br from-orange-400 to-orange-600'
+              index === 0 ? 'bg-yellow-500' :
+              index === 1 ? 'bg-slate-500' :
+              'bg-primary'
             } rounded-bl-full flex items-start justify-end p-2`}>
               {index === 0 ? <Trophy className="w-6 h-6 text-white" /> :
                index === 1 ? <Medal className="w-6 h-6 text-white" /> :
@@ -44,14 +53,14 @@ export function LeaderboardTab({
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className={`flex items-center justify-center w-14 h-14 rounded-full font-bold text-2xl ${
-                  index === 0 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200' :
-                  index === 1 ? 'bg-surface-container-low text-on-surface dark:bg-gray-800 dark:text-gray-200' :
-                  'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200'
+                  index === 0 ? 'bg-yellow-100 text-[var(--ep-yellow)] dark:bg-yellow-900 dark:text-yellow-200' :
+                  index === 1 ? 'bg-muted/40 text-foreground dark:bg-gray-800 dark:text-gray-200' :
+                  'bg-orange-100 text-[var(--ep-primary)] dark:bg-orange-900 dark:text-orange-200'
                 }`}>
                   {index + 1}
                 </div>
                 <div className="flex-1">
-                  <CardTitle className="text-lg">{employee.fullName}</CardTitle>
+                  <CardTitle className="text-[14px] font-semibold">{employee.fullName}</CardTitle>
                   <CardDescription className="text-xs">{employee.positionName}</CardDescription>
                 </div>
               </div>
@@ -59,11 +68,11 @@ export function LeaderboardTab({
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Umumiy ball:</span>
+                  <span className="text-sm text-muted-foreground">{t("umumiyBall1")}</span>
                   <span className="text-2xl font-bold text-primary">{Math.round(employee.overallScore)}</span>
                 </div>
                 <Progress value={Math.min((employee.overallScore / 1000) * 100, 100)} className="h-3" />
-                <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   <div className="flex items-center gap-1">
                     <BookOpen className="w-3 h-3 text-muted-foreground" />
                     <span>{employee.completedCourses} kurs</span>
@@ -82,19 +91,19 @@ export function LeaderboardTab({
                   </div>
                 </div>
                 {index === 0 && (
-                  <Badge className="w-full justify-center bg-gradient-to-r from-yellow-400 to-yellow-600">
-                    🏆 Yilning Eng Yaxshi O'quvchisi
+                  <Badge className="w-full justify-center bg-yellow-500">
+                    {t("yilningEngYaxshiOquvchisi")}
                   </Badge>
                 )}
                 {index === 1 && (
-                  <Badge variant="secondary" className="w-full justify-center">
-                    🥈 Ikkinchi O'rin
-                  </Badge>
+                  <EPStatusPill tone="neutral" className="w-full justify-center">
+                    {t("ikkinchiOrin")}
+                  </EPStatusPill>
                 )}
                 {index === 2 && (
-                  <Badge variant="secondary" className="w-full justify-center">
-                    🥉 Uchinchi O'rin
-                  </Badge>
+                  <EPStatusPill tone="neutral" className="w-full justify-center">
+                    {t("uchinchiOrin")}
+                  </EPStatusPill>
                 )}
               </div>
             </CardContent>
@@ -104,8 +113,8 @@ export function LeaderboardTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>🏆 TOP 10 Xodimlar Reytingi</CardTitle>
-          <CardDescription>Eng yaxshi natijalar ko'rsatgan xodimlar</CardDescription>
+          <CardTitle>{t("top10XodimlarReytingi")}</CardTitle>
+          <CardDescription>{t("engYaxshiNatijalarKorsatganXodimlar")}</CardDescription>
         </CardHeader>
         <CardContent>
           {topEmployees.length > 0 ? (
@@ -140,8 +149,8 @@ export function LeaderboardTab({
               })}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              Ma'lumot topilmadi
+            <div className="text-center py-8 text-[13px] text-muted-foreground">
+              {t("noData")}
             </div>
           )}
         </CardContent>
@@ -149,17 +158,17 @@ export function LeaderboardTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>🎖️ Yutuqlar va Mukofotlar</CardTitle>
-          <CardDescription>Turli kategoriyalarda eng yaxshi natijalar</CardDescription>
+          <CardTitle>{t("yutuqlarVaMukofotlar")}</CardTitle>
+          <CardDescription>{t("turliKategoriyalardaEngYaxshiNatijalar")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-4 rounded-lg border bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
+            <div className="p-4 rounded-lg border bg-blue-500 dark:from-blue-950 dark:to-blue-900">
               <div className="flex items-center gap-2 mb-2">
-                <Brain className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <span className="font-semibold text-sm">Eng Ko'p O'rganuvchi</span>
+                <Brain className="w-5 h-5 text-[var(--ep-blue)] dark:text-blue-400" />
+                <span className="font-semibold text-sm">{t("engKopOrganuvchi")}</span>
               </div>
-              <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
+              <div className="text-lg font-bold text-[var(--ep-blue)] dark:text-blue-300">
                 {topEmployees[0]?.fullName?.split(' ')[0] || '-'}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
@@ -167,12 +176,12 @@ export function LeaderboardTab({
               </div>
             </div>
 
-            <div className="p-4 rounded-lg border bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
+            <div className="p-4 rounded-lg border bg-green-500 dark:from-green-950 dark:to-green-900">
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                <span className="font-semibold text-sm">Eng Yuqori Ball</span>
+                <CheckCircle className="w-5 h-5 text-[var(--ep-green)] dark:text-green-400" />
+                <span className="font-semibold text-sm">{t("engYuqoriBall")}</span>
               </div>
-              <div className="text-lg font-bold text-green-700 dark:text-green-300">
+              <div className="text-lg font-bold text-[var(--ep-green)] dark:text-green-300">
                 {topEmployees[0]?.fullName?.split(' ')[0] || '-'}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
@@ -180,29 +189,29 @@ export function LeaderboardTab({
               </div>
             </div>
 
-            <div className="p-4 rounded-lg border bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900">
+            <div className="p-4 rounded-lg border bg-purple-500 dark:from-purple-950 dark:to-purple-900">
               <div className="flex items-center gap-2 mb-2">
-                <Flame className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                <span className="font-semibold text-sm">Eng Tezkor</span>
+                <Flame className="w-5 h-5 text-[var(--ep-purple)] dark:text-purple-400" />
+                <span className="font-semibold text-sm">{t("engTezkor")}</span>
               </div>
-              <div className="text-lg font-bold text-purple-700 dark:text-purple-300">
+              <div className="text-lg font-bold text-[var(--ep-purple)] dark:text-purple-300">
                 {topEmployees[1]?.fullName?.split(' ')[0] || '-'}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                Minimal vaqtda tugatgan
+                {t("minimalVaqtdaTugatgan")}
               </div>
             </div>
 
-            <div className="p-4 rounded-lg border bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900">
+            <div className="p-4 rounded-lg border bg-primary dark:from-orange-950 dark:to-orange-900">
               <div className="flex items-center gap-2 mb-2">
-                <Star className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                <span className="font-semibold text-sm">Ustoz</span>
+                <Star className="w-5 h-5 text-[var(--ep-primary)] dark:text-orange-400" />
+                <span className="font-semibold text-sm">{t("ustoz")}</span>
               </div>
-              <div className="text-lg font-bold text-orange-700 dark:text-orange-300">
+              <div className="text-lg font-bold text-[var(--ep-primary)] dark:text-orange-300">
                 {topEmployees[2]?.fullName?.split(' ')[0] || '-'}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                Ko'p yordam bergan
+                {t("kopYordamBergan")}
               </div>
             </div>
           </div>
@@ -212,8 +221,8 @@ export function LeaderboardTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>🏢 Bo'limlar Reytingi</CardTitle>
-            <CardDescription>Eng samarali bo'limlar</CardDescription>
+            <CardTitle>{t("bolimlarReytingi")}</CardTitle>
+            <CardDescription>{t("engSamaraliBolimlar")}</CardDescription>
           </CardHeader>
           <CardContent>
             {departmentRankings.length > 0 ? (
@@ -241,8 +250,8 @@ export function LeaderboardTab({
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Ma'lumot topilmadi
+              <div className="text-center py-8 text-[13px] text-muted-foreground">
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -250,8 +259,8 @@ export function LeaderboardTab({
 
         <Card>
           <CardHeader>
-            <CardTitle>Bo'limlar Taqqoslash</CardTitle>
-            <CardDescription>Tugatish foizi va o'rtacha ball</CardDescription>
+            <CardTitle>{t("bolimlarTaqqoslash")}</CardTitle>
+            <CardDescription>{t("tugatishFoiziVaOrtachaBall")}</CardDescription>
           </CardHeader>
           <CardContent>
             {departmentRankings.length > 0 ? (
@@ -263,14 +272,14 @@ export function LeaderboardTab({
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="completionRate" fill="hsl(var(--primary))" name="Tugatish %" />
-                  <Bar dataKey="averageScore" fill="hsl(var(--secondary))" name="O'rtacha ball" />
+                  <Bar dataKey="completionRate" fill="hsl(var(--primary))" name={tLabel('analytics.LeaderboardTab.tugatish', "Tugatish %")} />
+                  <Bar dataKey="averageScore" fill="hsl(var(--secondary))" name={tLabel('analytics.LeaderboardTab.ortachaBall', "O'rtacha ball")} />
                 </BarChart>
               </ResponsiveContainer>
               </div>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Ma'lumot topilmadi
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -279,8 +288,8 @@ export function LeaderboardTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>📚 Eng Samarali Kurslar</CardTitle>
-          <CardDescription>Yuqori tugatish va o'tish foiziga ega kurslar</CardDescription>
+          <CardTitle>{t("engSamaraliKurslar")}</CardTitle>
+          <CardDescription>{t("yuqoriTugatishVaOtishFoiziga")}</CardDescription>
         </CardHeader>
         <CardContent>
           {topCourses.length > 0 ? (
@@ -302,15 +311,15 @@ export function LeaderboardTab({
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <div className="text-xs text-muted-foreground">Tugatish</div>
-                      <div className="font-semibold text-green-600">{course.completionRate}%</div>
+                      <div className="text-xs text-muted-foreground">{t("tugatish")}</div>
+                      <div className="font-semibold text-[var(--ep-green)]">{course.completionRate}%</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-muted-foreground">O'tish</div>
-                      <div className="font-semibold text-blue-600">{course.passRate}%</div>
+                      <div className="text-xs text-muted-foreground">{t("otish")}</div>
+                      <div className="font-semibold text-[var(--ep-blue)]">{course.passRate}%</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-muted-foreground">Samaradorlik</div>
+                      <div className="text-xs text-muted-foreground">{t("samaradorlik")}</div>
                       <Badge variant={course.effectivenessScore >= 80 ? "default" : "secondary"}>
                         {course.effectivenessScore}
                       </Badge>
@@ -320,8 +329,8 @@ export function LeaderboardTab({
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              Ma'lumot topilmadi
+            <div className="text-center py-8 text-[13px] text-muted-foreground">
+              {t("noData")}
             </div>
           )}
         </CardContent>

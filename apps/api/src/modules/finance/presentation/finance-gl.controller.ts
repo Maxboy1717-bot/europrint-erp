@@ -1,11 +1,18 @@
+/**
+ * @module finance-gl.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, Post, Body, Param, Query, UseGuards, UseInterceptors, Logger, UsePipes } from '@nestjs/common';
-import { throwFromError, assertOk } from '@common/http-result';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { throwFromError, assertOk, unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GlPostingService } from '../domain/services/gl-posting.service';
+import { GlService } from '../gl/gl.service';
 import { GetGlEntriesQuery } from '../application/queries/get-gl-entries.query';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {
@@ -20,7 +27,8 @@ enum Role {
   ACCOUNTANT = 'ACCOUNTANT',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Finance Gl')
 @Controller('finance/gl')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -29,8 +37,11 @@ export class FinanceGlController {
 
   constructor(private commandBus: CommandBus,
     private queryBus: QueryBus,
-    private glPostingService: GlPostingService) {}
+    private glPostingService: GlPostingService,
+    private glService: GlService) {}
 
+  @ApiOperation({ summary: 'List gl entries' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.ACCOUNTANT, Role.DIRECTOR, Role.SUPER_ADMIN)
   async listGlEntries(
@@ -38,9 +49,13 @@ export class FinanceGlController {
     @Query('limit') limit?: string,
     @Query('account') account?: string,
   ) {
-    return await this.queryBus.execute(new GetGlEntriesQuery({ account, page: Number(page), limit: Number(limit) }));
+    const result = await this.queryBus.execute(new GetGlEntriesQuery({ account, page: Number(page), limit: Number(limit) }));
+    return unwrapOrThrow(result);
   }
 
+  @ApiOperation({ summary: 'Post sales invoice' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('post-sales-invoice')
   @Roles(Role.ACCOUNTANT, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinancePostSalesInvoiceSchema))
@@ -53,6 +68,9 @@ export class FinanceGlController {
     
   }
 
+  @ApiOperation({ summary: 'Post payroll' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('post-payroll')
   @Roles(Role.ACCOUNTANT, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinancePostPayrollSchema))
@@ -65,19 +83,28 @@ export class FinanceGlController {
     
   }
 
+  @ApiOperation({ summary: 'Get trial balance' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('trial-balance')
   @Roles(Role.ACCOUNTANT, Role.DIRECTOR, Role.SUPER_ADMIN)
-  async getTrialBalance() {
-
-      return { data: { debit: 0, credit: 0, balanced: true } };
-    
+  async getTrialBalance(@Query('date') date?: string) {
+    const result = await this.glService.getTrialBalance(date);
+    return unwrapOrThrow(result);
   }
 
+  @ApiOperation({ summary: 'Get ledger' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('ledger/:accountCode')
   @Roles(Role.ACCOUNTANT, Role.DIRECTOR, Role.SUPER_ADMIN)
-  async getLedger(@Param('accountCode') accountCode: string) {
-
-      return { data: { accountCode, entries: [] as Record<string, unknown>[] } };
-    
+  async getLedger(
+    @Param('accountCode') accountCode: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const p = Math.max(1, Number.isFinite(Number(page))  ? Number(page)  : 1);
+    const l = Math.min(200, Math.max(1, Number.isFinite(Number(limit)) ? Number(limit) : 50));
+    const result = await this.glService.getLedger(accountCode, p, l);
+    return unwrapOrThrow(result);
   }
 }

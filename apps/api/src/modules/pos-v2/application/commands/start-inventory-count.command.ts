@@ -1,13 +1,15 @@
+/**
+ * @module start-inventory-count.command
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { createId } from '@paralleldrive/cuid2';
-import { eq , sql } from 'drizzle-orm';
-import { Result, Ok as ok, Err as err, isErr, Err } from '@common/result';
-import { db } from '@shared/db';
-import { stock_items } from '@shared/db';
+import { Result, Ok as ok, Err as err, isErr } from '@common/result';
 import {
   InventoryCount,
   CountStatus,
@@ -35,8 +37,13 @@ export class StartInventoryCountHandler implements ICommandHandler<StartInventor
       const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
       const countNumber = `CNT-${dateStr}-001`;
 
-      // Load current stock items in warehouse
-      const items = await db.select().from(stock_items).where(sql`warehouse_id = ${command.warehouseId}`);
+      // Load current stock items in warehouse (PA1-10: via repo)
+      const itemsResult = await this.repo.findStockItemsByWarehouse(command.warehouseId);
+      if (isErr(itemsResult)) {
+        this.logger.error('Failed to load stock items', itemsResult.error);
+        return err(itemsResult.error);
+      }
+      const items = itemsResult.data;
 
       if (items.length === 0) {
         return err({
@@ -66,7 +73,7 @@ export class StartInventoryCountHandler implements ICommandHandler<StartInventor
         command.warehouseId,
         countNumber,
         CountStatus.IN_PROGRESS,
-        (lines ?? []).map((l) => ({ ...l, countId: createId() })),
+        (Array.isArray(lines) ? lines : []).map((l) => ({ ...l, countId: createId() })),
         command.userId,
         null,
         null,

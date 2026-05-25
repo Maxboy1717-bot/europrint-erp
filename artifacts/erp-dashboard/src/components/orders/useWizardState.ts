@@ -1,3 +1,8 @@
+/**
+ * @module useWizardState
+ * @description React UI component.
+ */
+
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -257,6 +262,13 @@ export function useWizardState() {
   };
 
   const handleSubmit = () => {
+    // L-07: Yetarli bo'lmagan materiallar bo'lsa tasdiqlash so'rash
+    if (insufficientCount > 0) {
+      const confirmed = window.confirm(
+        `${insufficientCount} ta material yetarli emas. Shunga qaramasdan buyurtma yaratmoqchimisiz?`
+      );
+      if (!confirmed) return;
+    }
     createOrderMutation.mutate();
   };
 

@@ -1,0 +1,2730 @@
+[
+  {
+    "route": "/settings",
+    "page": "Settings",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/settings/notifications",
+    "page": "NotificationSettings",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/super-admin",
+    "page": "SuperAdminPanel",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/telegram/admin",
+    "page": "TelegramBotAdmin",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/admin/exceptions",
+    "page": "ExceptionLog",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/admin/queues",
+    "page": "QueueMonitor",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/integration/expense-management",
+    "page": "ExpenseManagement",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/integration/mro",
+    "page": "MRODashboard",
+    "fileExists": true,
+    "apiCallCount": 9,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/integration/vendor-performance",
+    "page": "VendorPerformance",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/integration/employee-rating",
+    "page": "EmployeeRating",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/integration/hr-lms",
+    "page": "HRLMSSkills",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/saas/tenant-management",
+    "page": "SaaSExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/saas/onboarding",
+    "page": "SaaSExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/saas/licensing",
+    "page": "SaaSExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/saas/module-control",
+    "page": "SaaSExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/saas/monitoring",
+    "page": "SaaSExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/saas/error-log",
+    "page": "SaaSExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/lms/test-management",
+    "page": "LMSExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/lms/course-author",
+    "page": "LMSExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/lms/operator-certification",
+    "page": "LMSExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/lms/learning-budget",
+    "page": "LMSExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/lms/leaderboard",
+    "page": "LMSExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/lms/knowledge-base",
+    "page": "KnowledgeBase",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/lms/micro-learning",
+    "page": "LMSExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/kaizen",
+    "page": "KaizenPage",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/ai/agents",
+    "page": "AIAgentsPage",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "AdminRoutes.tsx"
+  },
+  {
+    "route": "/analytics",
+    "page": "Analytics",
+    "fileExists": true,
+    "apiCallCount": 33,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/lms-dashboard",
+    "page": "LMSDashboard",
+    "fileExists": true,
+    "apiCallCount": 9,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/courses",
+    "page": "Courses",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/lessons",
+    "page": "Courses",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/courses/:id",
+    "page": "CourseDetail",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/tests",
+    "page": "Tests",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/tests/:id",
+    "page": "TestDetail",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/ai-exams",
+    "page": "AIExams",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/all-exams",
+    "page": "AllExams",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/certificates",
+    "page": "Certificates",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/goals",
+    "page": "GoalsKPI",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/kanban",
+    "page": "KanbanBoard",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/hr/recruiting-kanban",
+    "page": "RecruitingKanban",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "AnalyticsRoutes.tsx"
+  },
+  {
+    "route": "/camera-dashboard",
+    "page": "camera-dashboard",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/cameras",
+    "page": "cameras-management",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/camera-safety",
+    "page": "camera-safety",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/camera-quality",
+    "page": "camera-quality",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/camera-employees",
+    "page": "camera-employees",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/camera-machines",
+    "page": "camera-machines",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/camera-alerts",
+    "page": "camera-alerts",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/camera-reports",
+    "page": "camera-reports",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/camera-settings",
+    "page": "camera-settings",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/camera-heatmap",
+    "page": "camera-heatmap",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/camera-employee-ratings",
+    "page": "camera-employee-ratings",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/camera-live-monitoring",
+    "page": "CameraLiveMonitoring",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/camera/monitoring",
+    "page": "FaceRecognitionMonitoring",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/face-registration",
+    "page": "FaceRegistration",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/attendance-monitor",
+    "page": "AttendanceMonitorPage",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/security",
+    "page": "SecurityDashboard",
+    "fileExists": true,
+    "apiCallCount": 8,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/security/attendance",
+    "page": "SecurityExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/security/zone-access",
+    "page": "SecurityExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/security/ppe",
+    "page": "SecurityExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/security/hazmat",
+    "page": "SecurityExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/security/evacuation",
+    "page": "SecurityExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/security/visitors",
+    "page": "SecurityExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/security/rating",
+    "page": "SecurityExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CameraRoutes.tsx"
+  },
+  {
+    "route": "/ai/crm",
+    "page": "AiCrmPage",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/crm-workspace",
+    "page": "CRMWorkspace",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/dashboard",
+    "page": "SDDashboard",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/customers",
+    "page": "SDCustomers",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/sales-quotes",
+    "page": "SDSalesQuotes",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/sales-orders",
+    "page": "SDSalesOrders",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/sales-payments",
+    "page": "SDSalesPayments",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/kpi",
+    "page": "SDKpi",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/contracts",
+    "page": "SDContracts",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/settings",
+    "page": "SDSettings",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/debitors",
+    "page": "SDDebitors",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/manager-panel",
+    "page": "SDExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/warehouse-rental",
+    "page": "SDExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/advance-control",
+    "page": "SDExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/sd/quota-dashboard",
+    "page": "SDQuotaDashboard",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/dashboard",
+    "page": "MarketingDashboard",
+    "fileExists": true,
+    "apiCallCount": 9,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/campaigns",
+    "page": "MarketingCampaigns",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/content",
+    "page": "MarketingContent",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/leads",
+    "page": "MarketingLeads",
+    "fileExists": true,
+    "apiCallCount": 9,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/calendar",
+    "page": "MarketingCalendar",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/exhibitions",
+    "page": "MarketingExhibitions",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/pr",
+    "page": "MarketingPR",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/budget",
+    "page": "MarketingBudget",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/settings",
+    "page": "MarketingSettings",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/social-inbox",
+    "page": "MarketingSocialInbox",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/website-cms",
+    "page": "MarketingWebsiteCMS",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/analytics",
+    "page": "MarketingExtended",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/seo",
+    "page": "MarketingExtended",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/ab-testing",
+    "page": "MarketingExtended",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/competitors",
+    "page": "MarketingExtended",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/marketing/nps-churn",
+    "page": "MarketingExtended",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "CRMRoutes.tsx"
+  },
+  {
+    "route": "/agents",
+    "page": "agents/AgentsHub",
+    "fileExists": true,
+    "apiCallCount": 16,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/agents/production",
+    "page": "agents/ProductionDashboard",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/agents/hr-performance",
+    "page": "agents/HRPerformanceDashboard",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/agents/quality",
+    "page": "agents/QualityDashboard",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/agents/strategic",
+    "page": "agents/StrategicDashboard",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/agents/facilities",
+    "page": "agents/FacilitiesDashboard",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/agents/procurement",
+    "page": "agents/ProcurementDashboard",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/warehouse/rolls",
+    "page": "warehouse/RollManagementPage",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/agents/:id",
+    "page": "agents/AgentsHub",
+    "fileExists": true,
+    "apiCallCount": 16,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/europrint/control",
+    "page": "EuroprintControlCenter",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/europrint/auditor",
+    "page": "AuditorPanel",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/europrint/accountant",
+    "page": "AccountantView",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/europrint/strategic",
+    "page": "StrategicTasksPanel",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/strategic-tasks",
+    "page": "StrategicTasksPanel",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/europrint/employee-kpi",
+    "page": "EmployeeDailyKPIPanel",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/europrint/waste-tracking",
+    "page": "WasteTracking",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/europrint/reports-hub",
+    "page": "ReportsHub",
+    "fileExists": true,
+    "apiCallCount": 8,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/director/ai-summary",
+    "page": "DirectorExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/director/problem-points",
+    "page": "DirectorExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/ideal-rasm",
+    "page": "IdealRasmPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "DirectorRoutes.tsx"
+  },
+  {
+    "route": "/finance-dashboard",
+    "page": "FinanceDashboard",
+    "fileExists": true,
+    "apiCallCount": 11,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/finance/cashflow",
+    "page": "CashFlowManagement",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/finance/budgets",
+    "page": "BudgetManagement",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/finance/order-costing",
+    "page": "OrderCosting",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/finance/reports",
+    "page": "FinancialReports",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/finance/profitability",
+    "page": "ProductProfitability",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/finance/daily-kpi",
+    "page": "DailyKPIDashboard",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/accounting/ar",
+    "page": "AccountsReceivable",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/accounting/ap",
+    "page": "AccountsPayable",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/accounting/payroll-automation",
+    "page": "PayrollAutomation",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/accounting/materials",
+    "page": "MaterialsAccounting",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/accounting/gl-documents",
+    "page": "GLDocuments",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/accounting/chart-of-accounts",
+    "page": "ChartOfAccounts",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/accounting/period-closing",
+    "page": "PeriodClosing",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/accounting/cash-register",
+    "page": "CashRegister",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/pos/dashboard",
+    "page": "POSDashboard",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/pos/inventory",
+    "page": "POSInventoryPage",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/accounting/income-expense",
+    "page": "IncomeExpense",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/accounting/inventory-valuation",
+    "page": "InventoryValuation",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/accounting/asset-management",
+    "page": "AssetManagement",
+    "fileExists": true,
+    "apiCallCount": 9,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/fi/cost-centers",
+    "page": "FinanceExtended",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/fi/transfer-pricing",
+    "page": "FinanceExtended",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/fi/tax-management",
+    "page": "FinanceExtended",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/fi/tax-calendar",
+    "page": "FinanceExtended",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/fi/audit-log",
+    "page": "FinanceExtended",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/fi/risk-ai",
+    "page": "FinanceExtended",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/finance/gl-chart-of-accounts",
+    "page": "GLChartOfAccounts",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/ai/finance",
+    "page": "AIFinancePage",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "FinanceRoutes.tsx"
+  },
+  {
+    "route": "/employees",
+    "page": "Employees",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/employees/:id",
+    "page": "EmployeeProfile",
+    "fileExists": true,
+    "apiCallCount": 41,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr-map",
+    "page": "HRMap",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/recruiting",
+    "page": "RecruitingKanban",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/seven-functions",
+    "page": "SevenFunctionsDashboard",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/raci-matrix",
+    "page": "RACIMatrixPage",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/succession-planning",
+    "page": "HRSuccessionPlanning",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/skills-matrix",
+    "page": "SkillsMatrix",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/mentorship",
+    "page": "Mentorship",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/events-calendar",
+    "page": "EventsCalendar",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/applications",
+    "page": "Applications",
+    "fileExists": true,
+    "apiCallCount": 8,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/questionnaire",
+    "page": "Questionnaire",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/questionnaire-templates",
+    "page": "QuestionnaireTemplates",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/shift-schedule",
+    "page": "ShiftSchedule",
+    "fileExists": true,
+    "apiCallCount": 8,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/discipline",
+    "page": "Discipline",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr-dashboard",
+    "page": "HRDashboard",
+    "fileExists": true,
+    "apiCallCount": 23,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr-capital/courses",
+    "page": "HRCapitalCourses",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr-capital/tests",
+    "page": "HRCapitalTests",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/org-structure/hierarchy",
+    "page": "OrgStructureHierarchy",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/onboarding",
+    "page": "HROnboarding",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/vacation-sick",
+    "page": "HRVacationSick",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/succession",
+    "page": "HRSuccessionPlanning",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/offboarding",
+    "page": "HROffboarding",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/alumni",
+    "page": "HRAlumni",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/health-monitoring",
+    "page": "HRHealthMonitoring",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/conflict",
+    "page": "HRConflict",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/career-path",
+    "page": "HRCareerPath",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/safety",
+    "page": "HRSafety",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/gamification",
+    "page": "GamificationPage",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/reception",
+    "page": "ReceptionPage",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/daily-reports",
+    "page": "DailyReportPage",
+    "fileExists": true,
+    "apiCallCount": 8,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/pip",
+    "page": "PIPPage",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/enps",
+    "page": "ENPSPage",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/documents",
+    "page": "DocumentWorkflowPage",
+    "fileExists": true,
+    "apiCallCount": 11,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/assets",
+    "page": "HRAssetManagement",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/referrals",
+    "page": "ReferralPage",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/milestones",
+    "page": "MilestonePage",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/birthdays",
+    "page": "BirthdayWidget",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/brand",
+    "page": "HRBrandPage",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/weekly-plan",
+    "page": "WeeklyPlanPage",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/hr/inspection",
+    "page": "InspectionPage",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/ai-hr/dashboard",
+    "page": "HRAIDashboard",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/ai-hr/interviews",
+    "page": "AIInterviewPage",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "HRRoutes.tsx"
+  },
+  {
+    "route": "/production/orders",
+    "page": "ProductionReport",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/production/orders/:id",
+    "page": "ProductionOrder360",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/planning",
+    "page": "PlanningBoard",
+    "fileExists": true,
+    "apiCallCount": 11,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/ai-production-planning",
+    "page": "AIProductionPlanning",
+    "fileExists": true,
+    "apiCallCount": 12,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/ai-reservation",
+    "page": "AIReservation",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/papka-orders",
+    "page": "PapkaOrders",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/order-create",
+    "page": "OrderCreationWizard",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/dashboard",
+    "page": "PPDashboard",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/erp/pp/bom",
+    "page": "BOMManagement",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/erp/pp/routing",
+    "page": "RoutingConfiguration",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/erp/pp/capacity",
+    "page": "CapacityPlanning",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/tech-approval",
+    "page": "TechApproval",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/tech-cards",
+    "page": "TechCards",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/tech/cards",
+    "page": "TechCards",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/tech/material-alternatives",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/tech/machine-selection",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/tech/time-cost",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/tech/cost-optimization",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/tech/client-requirements",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/tech/change-history",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/tech/parallel-orders",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/shift-management",
+    "page": "ai-planning/AIShiftManagementPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/parallel-processes",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/rush-orders",
+    "page": "ai-planning/RushOrderPage",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/bottleneck",
+    "page": "ai-planning/BottleneckAnalysisPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/demand-forecast",
+    "page": "ai-planning/DemandForecastingPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/what-if",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/delivery-calculator",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/energy-optimization",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/oee-monitor",
+    "page": "ai-planning/OEELiveMonitorPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/kpi-deviation",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/pp/realtime-progress",
+    "page": "TechPPExtended",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/finance/approval",
+    "page": "FinanceApproval",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/design/approval",
+    "page": "DesignApproval",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mes/dashboard-home",
+    "page": "MESHomeDashboard",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mes/work-centers",
+    "page": "MESWorkCenters",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mes/products",
+    "page": "MESProducts",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mes/downtimes",
+    "page": "MESDowntimes",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mes/workers",
+    "page": "MESWorkerAssignments",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mes/oee-monitor",
+    "page": "MESExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mes/reason-log",
+    "page": "MESExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mes/zone-management",
+    "page": "MESExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mes/maintenance-request",
+    "page": "MESExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mes/gamification",
+    "page": "MESExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mes/machine-norms",
+    "page": "MESExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mes/smena-handover",
+    "page": "MESExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/dashboard-home",
+    "page": "QCDashboard",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc-module",
+    "page": "QCModule",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/tests",
+    "page": "QCModule",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/parameters",
+    "page": "QCModule",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/standards",
+    "page": "QCModule",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/approval",
+    "page": "QCApproval",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/final",
+    "page": "QCFinalInspection",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/lab",
+    "page": "QCExtended",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/paper-parameters",
+    "page": "qc/PaperParametersPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/vendor-quality",
+    "page": "qc/SupplierQualityPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/defect-management",
+    "page": "qc/DefectManagementPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/complaints",
+    "page": "qc/ReclamationsPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/certificates",
+    "page": "qc/QualityCertificatesPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/iso",
+    "page": "QCExtended",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/trends",
+    "page": "qc/QualityTrendPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/ai-analysis",
+    "page": "QCExtended",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/reports",
+    "page": "QCExtended",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/qc/settings",
+    "page": "QCExtended",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/design/dashboard",
+    "page": "DesignDashboard",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/design/orders",
+    "page": "DesignOrders",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/design/generator",
+    "page": "AIDesignGenerator",
+    "fileExists": true,
+    "apiCallCount": 9,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/design/ai-review",
+    "page": "DesignExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/design/3d-mockup",
+    "page": "DesignExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/design/brand-guidelines",
+    "page": "DesignExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/design/comparison",
+    "page": "DesignExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/design/templates",
+    "page": "DesignExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/design/tools",
+    "page": "DesignExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/design/costing",
+    "page": "DesignExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/design/library",
+    "page": "DesignExtended",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mro/dashboard",
+    "page": "MRODashboard",
+    "fileExists": true,
+    "apiCallCount": 9,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mro/preventive",
+    "page": "mro/PreventiveMaintenancePage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mro/spare-parts",
+    "page": "mro/SparePartsPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mro/utilities",
+    "page": "mro/UtilityReadingsPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mro/expense-control",
+    "page": "MROExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mro/kitchen",
+    "page": "mro/CanteenManagementPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mro/uniforms",
+    "page": "MROExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mro/office-inventory",
+    "page": "mro/FacilityInventoryPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mro/cleaning",
+    "page": "mro/CleaningSchedulePage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mro/sanitation",
+    "page": "MROExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/mro/building-inventory",
+    "page": "mro/FacilityInventoryPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/iot/sensor-monitoring",
+    "page": "IoTExtended",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/iot/predictive-maintenance",
+    "page": "IoTExtended",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/iot/oee-live",
+    "page": "IoTExtended",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/iot/digital-twin",
+    "page": "IoTExtended",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/iot/alerts",
+    "page": "IoTExtended",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/iot/tablet",
+    "page": "IoTTablet",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/iot/dashboard",
+    "page": "IoTDashboard",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/iot/daily-view",
+    "page": "WarehouseDailyView",
+    "fileExists": true,
+    "apiCallCount": 5,
+    "missingApis": [],
+    "file": "ProductionRoutes.tsx"
+  },
+  {
+    "route": "/ai",
+    "page": "agents/AgentsHub",
+    "fileExists": true,
+    "apiCallCount": 16,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/ai-camera",
+    "page": "CameraAIAnalytics",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/ai-exam",
+    "page": "AIExams",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/ai/hr",
+    "page": "HRAIDashboard",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/ai/marketing",
+    "page": "AiCrmPage",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/ai-planning",
+    "page": "AIProductionPlanning",
+    "fileExists": true,
+    "apiCallCount": 12,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/ai/wms",
+    "page": "WmsAnalytics",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/assignments",
+    "page": "MESWorkerAssignments",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/insights",
+    "page": "Analytics",
+    "fileExists": true,
+    "apiCallCount": 33,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/integration/requests",
+    "page": "IntegrationManagement",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/iot-enhanced",
+    "page": "IoTExtended",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/pos/mini-app",
+    "page": "POSDashboard",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/video-progress",
+    "page": "LessonPlayer",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/3way-match",
+    "page": "ThreeWayMatchPage",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/daily-attendance",
+    "page": "AttendanceMonitorPage",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/discipline-records",
+    "page": "Discipline",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/employee-zone-history",
+    "page": "EmployeeZoneHistoryPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/gl",
+    "page": "GLDocuments",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/hr/leave",
+    "page": "HRVacationSick",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/iot-sensors",
+    "page": "IotSensorsPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/machine-status-current",
+    "page": "MachineStatusPage",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/pos/movements",
+    "page": "PosMovementsPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/pos/requests",
+    "page": "PosRequestsPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/production-facts",
+    "page": "ProductionFactsPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/production/shift-reports",
+    "page": "ShiftReportsPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/quality-defects-camera",
+    "page": "QualityDefectsCameraPage",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/users",
+    "page": "UsersPage",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/waste",
+    "page": "WastePage",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/weekly-plans",
+    "page": "WeeklyPlansPage",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "StubRoutes.tsx"
+  },
+  {
+    "route": "/warehouse/hub",
+    "page": "WarehouseHub12",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/warehouse/hub/:code",
+    "page": "WarehouseHub12",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/mm/vendors",
+    "page": "MMVendors",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/mm/purchase-orders",
+    "page": "MMPurchaseOrders",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/mm/dashboard",
+    "page": "MMDashboard",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/mm/check-bot",
+    "page": "MMExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/mm/creditor-debts",
+    "page": "MMExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/mm/supplier-portal",
+    "page": "MMExtended",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/inventory",
+    "page": "InventoryCount",
+    "fileExists": true,
+    "apiCallCount": 8,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/production-balance",
+    "page": "WMSExtended",
+    "fileExists": true,
+    "apiCallCount": 8,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/transfer",
+    "page": "WMSExtended",
+    "fileExists": true,
+    "apiCallCount": 8,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/internal-requests",
+    "page": "WMSExtended",
+    "fileExists": true,
+    "apiCallCount": 8,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/rental",
+    "page": "WarehouseRental",
+    "fileExists": true,
+    "apiCallCount": 6,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/analytics",
+    "page": "WmsAnalytics",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/kpi-hub",
+    "page": "WarehouseKpiHub",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/reports",
+    "page": "WarehouseReportsAll",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/reports-all",
+    "page": "WarehouseReportsAll",
+    "fileExists": true,
+    "apiCallCount": 0,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/quarantine",
+    "page": "WarehouseQuarantine",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/barcodes-queue",
+    "page": "WarehouseBarcodeQueue",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/passports",
+    "page": "WarehouseInventoryPassport",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/qc-review",
+    "page": "WarehouseQCReview",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/employee-inventory",
+    "page": "EmployeeInventory",
+    "fileExists": true,
+    "apiCallCount": 2,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/kirim-new",
+    "page": "WarehouseKirimWizard",
+    "fileExists": true,
+    "apiCallCount": 4,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/notifications",
+    "page": "NotificationCenter",
+    "fileExists": true,
+    "apiCallCount": 3,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/audit-log",
+    "page": "WarehouseAuditLog",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/wms/material-balance",
+    "page": "MaterialBalance",
+    "fileExists": true,
+    "apiCallCount": 7,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/inventory/materials",
+    "page": "WMSMaterials",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/inventory/materials/:id",
+    "page": "WMSMaterials",
+    "fileExists": true,
+    "apiCallCount": 1,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/logistics/transport",
+    "page": "LogisticsDashboard",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/logistics/route-planning",
+    "page": "LogisticsDashboard",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/logistics/gps",
+    "page": "LogisticsDashboard",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/logistics/fuel",
+    "page": "LogisticsDashboard",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/logistics/drivers",
+    "page": "LogisticsDashboard",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  },
+  {
+    "route": "/logistics/vehicle-schedule",
+    "page": "LogisticsDashboard",
+    "fileExists": true,
+    "apiCallCount": 10,
+    "missingApis": [],
+    "file": "WarehouseRoutes.tsx"
+  }
+]

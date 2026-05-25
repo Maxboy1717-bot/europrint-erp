@@ -1,26 +1,67 @@
+/**
+ * @module crm-extended.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   crm-extended module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
+ */
 import { Controller, UseGuards, Get, Post, Body, Query, HttpCode, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CrmExtendedCompatService } from './crm-extended.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CrmCreateTaskDto, CrmChatDto, CrmAutoTasksDto, CrmChurnDto, CrmVoiceDto } from './dto/crm.dto';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  CrmInvoiceAclTranslator,
+  type LegacyCrmInvoiceRow,
+  type CrmInvoiceDto,
+} from './acl/crm-invoice-acl';
 
 @ApiTags('CRM Extended (Compat)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
 @Controller('crm')
 export class CrmExtendedCompatController {
+  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
+  private readonly invoiceAcl = new CrmInvoiceAclTranslator();
+
   constructor(private readonly svc: CrmExtendedCompatService) {}
 
   @Get('invoices')
   async getCrmInvoices(@Query('page') page?: string, @Query('limit') limit?: string) {
     return unwrapOrInternal(await this.svc.getCrmInvoices(page, limit));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of CRM invoices. Envelope-preserving:
+   * the legacy `{data, total, page}` shape is kept, but `data` is
+   * narrowed to typed `CrmInvoiceDto[]`. New BC-8 (Sales / CRM) consumers
+   * should target this route; `/invoices` stays for backwards-compat.
+   */
+  @Get('invoices/v2')
+  async getCrmInvoicesV2(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<{ data: CrmInvoiceDto[]; total: number; page: number }> {
+    const envelope = unwrapOrInternal(await this.svc.getCrmInvoices(page, limit)) as unknown as {
+      data?: LegacyCrmInvoiceRow[];
+      total?: unknown;
+      page?: unknown;
+    };
+    const rawRows = Array.isArray(envelope?.data) ? envelope.data : [];
+    const translated = rawRows
+      .map((row) => this.invoiceAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: CrmInvoiceDto } => r.ok)
+      .map((r) => r.data);
+    const total = typeof envelope?.total === 'number' ? envelope.total : Number(envelope?.total ?? 0) || 0;
+    const pageNum = typeof envelope?.page === 'number' ? envelope.page : Number(envelope?.page ?? 1) || 1;
+    return { data: translated, total, page: pageNum };
   }
 
   @Get('ai/dashboard-analysis')
@@ -52,7 +93,7 @@ export class CrmExtendedCompatController {
     return { items, total: items.length };
   }
 
-  @Post(['ai/create-task', 'ai/nba/create-task'])
+  @Post('ai/create-task')
   @HttpCode(HttpStatus.CREATED)
   async createTask(@Body() body: CrmCreateTaskDto) {
     return unwrapOrInternal(await this.svc.createTask(body));
@@ -64,7 +105,7 @@ export class CrmExtendedCompatController {
     return unwrapOrInternal(await this.svc.processChat(body));
   }
 
-  @Post(['auto-tasks', 'ai/extended/auto-tasks/suggest', 'ai/extended/auto-tasks/create'])
+  @Post('auto-tasks')
   @HttpCode(HttpStatus.OK)
   async runAutoTasks(@Body() body: CrmAutoTasksDto) {
     return unwrapOrInternal(await this.svc.runAutoTasks(body));
@@ -87,7 +128,7 @@ export class CrmExtendedCompatController {
 @ApiTags('Marketing Extended (Compat)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
 @Controller('marketing')

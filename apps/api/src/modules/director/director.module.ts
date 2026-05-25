@@ -1,5 +1,11 @@
+/**
+ * @module director.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuthModule } from '../auth/auth.module';
 
 import { APPROVAL_REPO } from './domain/repositories/i-approval.repo';
@@ -22,11 +28,11 @@ import { DashboardController } from './presentation/dashboard.controller';
 import { DirectorRootController } from './presentation/director-root.controller';
 import { DirectorExtendedController } from './presentation/director-extended.controller';
 import { DashboardQueryService } from './application/dashboard-query.service';
-import { DashboardQueryRepository } from './application/dashboard-query.repository';
+import { DashboardQueryRepository } from './infrastructure/repositories/dashboard-query.repository';
 import { DirectorDataService } from './application/director-data.service';
-import { DirectorDataRepository } from './application/director-data.repository';
+import { DirectorDataRepository } from './infrastructure/repositories/director-data.repository';
 import { DirectorStateService } from './application/director-state.service';
-import { DirectorStateRepository } from './application/director-state.repository';
+import { DirectorStateRepository } from './infrastructure/repositories/director-state.repository';
 import { OkrController } from './presentation/okr.controller';
 import { KaizenController } from './presentation/kaizen.controller';
 import { StrategicController } from './presentation/strategic.controller';
@@ -34,17 +40,34 @@ import { CoordinationController } from './presentation/coordination.controller';
 import { ZvsController } from './presentation/zvs.controller';
 import { ZnoController } from './presentation/zno.controller';
 import { CoordinationService } from './application/coordination.service';
-import { CoordinationRepository } from './application/coordination.repository';
+import { CoordinationRepository } from './infrastructure/repositories/coordination.repository';
 import { KaizenService } from './application/kaizen.service';
 import { OkrService } from './application/okr.service';
-import { OkrRepository } from './application/okr.repository';
+import { OkrRepository } from './infrastructure/repositories/okr.repository';
 import { StrategicService } from './application/strategic.service';
-import { StrategicRepository } from './application/strategic.repository';
+import { StrategicRepository } from './infrastructure/repositories/strategic.repository';
 import { ZnoService } from './application/zno.service';
-import { ZnoRepository } from './application/zno.repository';
+import { ZnoRepository } from './infrastructure/repositories/zno.repository';
 import { ZvsService } from './application/zvs.service';
-import { ZvsRepository } from './application/zvs.repository';
-import { KaizenRepository } from './application/kaizen.repository';
+import { ZvsRepository } from './infrastructure/repositories/zvs.repository';
+import { KaizenRepository } from './infrastructure/repositories/kaizen.repository';
+import { AdvanceBypassApprovedListener } from './infrastructure/event-handlers/advance-bypass-approved.listener';
+// PA3-17 Wave 6: merged from former modules/analytics/ (route prefix '/analytics' preserved)
+import { AnalyticsController } from './analytics/analytics.controller';
+import { AnalyticsExtendedController } from './analytics/analytics-extended.controller';
+import { AnalyticsService } from './analytics/analytics.service';
+import { AnalyticsExtendedService } from './analytics/analytics-extended.service';
+import { AnalyticsRepository } from './analytics/analytics.repository';
+import { AnalyticsExtendedRepository } from './analytics/analytics-extended.repository';
+import { COORDINATION_REPO } from './domain/repositories/i-coordination.repo';
+import { DASHBOARD_QUERY_REPO } from './domain/repositories/i-dashboard-query.repo';
+import { DIRECTOR_DATA_REPO } from './domain/repositories/i-director-data.repo';
+import { DIRECTOR_STATE_REPO } from './domain/repositories/i-director-state.repo';
+import { KAIZEN_REPO } from './domain/repositories/i-kaizen.repo';
+import { OKR_REPO } from './domain/repositories/i-okr.repo';
+import { STRATEGIC_REPO } from './domain/repositories/i-strategic.repo';
+import { ZNO_REPO } from './domain/repositories/i-zno.repo';
+import { ZVS_REPO } from './domain/repositories/i-zvs.repo';
 
 const CommandHandlers = [
   CreateApprovalRequestHandler,
@@ -68,7 +91,7 @@ const Repositories = [
 ];
 
 @Module({
-  imports: [CqrsModule, AuthModule],
+  imports: [CqrsModule, EventEmitterModule.forRoot(), AuthModule],
   controllers: [
     ApprovalsController,
     DashboardController,
@@ -80,11 +103,43 @@ const Repositories = [
     CoordinationController,
     ZvsController,
     ZnoController,
+    // PA3-17 Wave 6: merged from modules/analytics/
+    AnalyticsController,
+    AnalyticsExtendedController,
   ],
   providers: [
     ...CommandHandlers, ...QueryHandlers, ...Repositories,
-    DashboardQueryRepository, DashboardQueryService, DashboardService, DirectorDataService, DirectorDataRepository, DirectorStateService, DirectorStateRepository,
-    CoordinationRepository, CoordinationService, KaizenRepository, KaizenService, OkrRepository, OkrService, StrategicRepository, StrategicService, ZnoRepository, ZnoService, ZvsRepository, ZvsService,
+    DashboardQueryRepository,
+    { provide: DASHBOARD_QUERY_REPO, useClass: DashboardQueryRepository },
+    DashboardQueryService, DashboardService, DirectorDataService, DirectorDataRepository,
+    { provide: DIRECTOR_DATA_REPO, useClass: DirectorDataRepository },
+    DirectorStateService, DirectorStateRepository,
+    { provide: DIRECTOR_STATE_REPO, useClass: DirectorStateRepository },
+    CoordinationRepository,
+    { provide: COORDINATION_REPO, useClass: CoordinationRepository },
+    CoordinationService,
+    KaizenRepository,
+    { provide: KAIZEN_REPO, useClass: KaizenRepository },
+    KaizenService,
+    OkrRepository,
+    { provide: OKR_REPO, useClass: OkrRepository },
+    OkrService,
+    StrategicRepository,
+    { provide: STRATEGIC_REPO, useClass: StrategicRepository },
+    StrategicService,
+    ZnoRepository,
+    { provide: ZNO_REPO, useClass: ZnoRepository },
+    ZnoService,
+    ZvsRepository,
+    { provide: ZVS_REPO, useClass: ZvsRepository },
+    ZvsService,
+    // PA0 Trigger 20 — advance bypass audit listener
+    AdvanceBypassApprovedListener,
+    // PA3-17 Wave 6: merged from modules/analytics/
+    AnalyticsService,
+    AnalyticsExtendedService,
+    AnalyticsRepository,
+    AnalyticsExtendedRepository,
   ],
   exports: [APPROVAL_REPO, DASHBOARD_SVC_REPO, DashboardService],
 })

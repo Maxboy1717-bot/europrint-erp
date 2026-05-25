@@ -1,3 +1,8 @@
+/**
+ * @module AddModuleDialog
+ * @description React UI component.
+ */
+
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,8 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+;
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 const moduleSchema = z.object({
   title: z.string().min(1, "Modul nomi majburiy"),
   titleRu: z.string().min(1, "Modul nomi (Rus) majburiy"),
@@ -27,6 +34,8 @@ interface AddModuleDialogProps {
 }
 
 export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialogProps) {
+  const { t } = useTranslation("common");
+  const { t: tLms } = useTranslation("lms");
   const { toast } = useToast();
   const form = useForm<ModuleFormData>({
     resolver: zodResolver(moduleSchema),
@@ -50,16 +59,16 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/courses", courseId] });
       toast({
-        title: "Muvaffaqiyat",
-        description: "Modul muvaffaqiyatli yaratildi",
+        title: t("muvaffaqiyatli"),
+        description: tLms("moduleCreatedSuccessfully"),
       });
       onOpenChange(false);
       form.reset();
     },
     onError: () => {
       toast({
-        title: "Xatolik",
-        description: "Modul yaratishda xatolik yuz berdi",
+        title: t("xato"),
+        description: tLms("moduleCreateError"),
         variant: "destructive",
       });
     },
@@ -71,11 +80,11 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle>Yangi modul qo'shish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiModulQoshish")}</DialogTitle>
           <DialogDescription>
-            Kursga yangi modul qo'shish uchun ma'lumotlarni kiriting
+            {t("kursgaYangiModulQoshishUchun")}
           </DialogDescription>
         </DialogHeader>
 
@@ -86,9 +95,9 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Modul nomi (O'zbek) <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>{tLms("moduleNameUz")} <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="1-modul: Asoslar" data-testid="input-module-title" />
+                    <Input {...field} placeholder={t("k1ModulAsoslar")} data-testid="input-module-title" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -100,9 +109,9 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
               name="titleRu"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Modul nomi (Rus) <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>{tLms("moduleNameRu")} <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Модуль 1: Основы" data-testid="input-module-title-ru" />
+                    <Input {...field} placeholder={tLms("moduleNameRuPlaceholder")} data-testid="input-module-title-ru" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -114,9 +123,9 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tavsif (O'zbek)</FormLabel>
+                  <FormLabel>{tLms("descriptionUz")}</FormLabel>
                   <FormControl>
-                    <Textarea {...field} placeholder="Modul haqida qisqacha ma'lumot..." rows={2} data-testid="input-module-description" />
+                    <Textarea {...field} placeholder={t("modulHaqidaQisqachaMalumot")} rows={2} data-testid="input-module-description" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -128,9 +137,9 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
               name="descriptionRu"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tavsif (Rus)</FormLabel>
+                  <FormLabel>{tLms("descriptionRu")}</FormLabel>
                   <FormControl>
-                    <Textarea {...field} placeholder="Краткое описание модуля..." rows={2} data-testid="input-module-description-ru" />
+                    <Textarea {...field} placeholder={tLms("descriptionRuPlaceholder")} rows={2} data-testid="input-module-description-ru" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -144,11 +153,11 @@ export function AddModuleDialog({ open, onOpenChange, courseId }: AddModuleDialo
                 onClick={() => onOpenChange(false)}
                 disabled={createMutation.isPending}
               >
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit-module">
-                {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Saqlash
+                {createMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}
+                {t("save")}
               </Button>
             </DialogFooter>
           </form>

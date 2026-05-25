@@ -1,3 +1,8 @@
+/**
+ * @module lms-enrollments.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { assertRequired } from '@common/assertions';
@@ -15,10 +20,11 @@ BadRequestException,
   UseGuards,
   UseInterceptors, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -33,7 +39,9 @@ import {
   LmsCompleteEnrollmentSchema, LmsCompleteEnrollmentDto,
 } from '../dto/lms.dto';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Lms Enrollments')
+@ApiBearerAuth()
 @Controller('lms/enrollments')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -46,6 +54,8 @@ export class LmsEnrollmentsController {
     private readonly lmsRepo: LmsRepository,
   ) {}
 
+  @ApiOperation({ summary: 'Get enrollments' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async getEnrollments(@Query() query: { userId?: string; employeeId?: string; status?: string; page?: string; limit?: string }) {
@@ -60,6 +70,8 @@ export class LmsEnrollmentsController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get my enrollments' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('my')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN')
   async getMyEnrollments(@CurrentUser() user: AuthenticatedUser, @Query() query: { status?: string; page?: string; limit?: string }) {
@@ -74,6 +86,9 @@ export class LmsEnrollmentsController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Enroll employee' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @UsePipes(new ZodValidationPipe(LmsEnrollEmployeeSchema))
   @Roles('HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN')
@@ -91,6 +106,10 @@ export class LmsEnrollmentsController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Update progress' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/progress')
   @UsePipes(new ZodValidationPipe(LmsUpdateProgressSchema))
   @Roles('EMPLOYEE', 'TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN')
@@ -105,6 +124,10 @@ export class LmsEnrollmentsController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Complete enrollment' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/complete')
   @UsePipes(new ZodValidationPipe(LmsCompleteEnrollmentSchema))
   @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN')
@@ -119,6 +142,8 @@ export class LmsEnrollmentsController {
     return { message: `Kurs yakunlandi. Ball: ${body.score}`, data: result.data };
   }
 
+  @ApiOperation({ summary: 'Get enrollment stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('stats')
   @Roles('HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async getEnrollmentStats() {
@@ -132,6 +157,8 @@ export class LmsEnrollmentsController {
     };
   }
 
+  @ApiOperation({ summary: 'Get expiring certificates' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('expiring-certificates')
   @Roles('HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async getExpiringCertificates(@Query('days') days?: string) {

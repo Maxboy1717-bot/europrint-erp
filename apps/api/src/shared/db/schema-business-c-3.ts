@@ -1,38 +1,27 @@
+/**
+ * @module schema-business-c-3
+ * @description Source module. See exports for details.
+ */
+
 import {
-  pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, varchar, date,
+  pgTable, serial, text, integer, timestamp, jsonb, date,
 } from 'drizzle-orm/pg-core';
 
-export const employee_skill_scores = pgTable('employee_skill_scores', {
-  id:               serial('id').primaryKey(),
-  employee_id:      integer('employee_id').notNull(),
-  skill_code:       text('skill_code').notNull(),
-  current_level:    integer('current_level').default(0),
-  assessed_by:      integer('assessed_by'),
-  last_assessed_at: timestamp('last_assessed_at').defaultNow(),
-});
+// [dedup] employee_skill_scores → canonical employeeSkillScores in @workspace/db (hr-v2-schema → index)
+export { employeeSkillScores as employee_skill_scores } from '@workspace/db';
 
-export const position_skill_requirements = pgTable('position_skill_requirements', {
-  id:             serial('id').primaryKey(),
-  position_id:    integer('position_id').notNull(),
-  skill_code:     text('skill_code').notNull(),
-  required_level: integer('required_level').default(3),
-});
+// [dedup] position_skill_requirements → canonical positionSkillRequirements in @workspace/db
+//   (hr-performance-ext → hr-extended → hr-schema → index)
+export { positionSkillRequirements as position_skill_requirements } from '@workspace/db';
 
-export const employee_skills = pgTable('employee_skills', {
-  id:               serial('id').primaryKey(),
-  employee_id:      integer('employee_id').notNull(),
-  skill_name:       text('skill_name'),
-  proficiency_level: text('proficiency_level').default('beginner'),
-  proficiency_score: numeric('proficiency_score', { precision: 5, scale: 2 }),
-  certified_date:   date('certified_date'),
-  expiry_date:      date('expiry_date'),
-  notes:            text('notes'),
-  created_at:       timestamp('created_at').defaultNow(),
-  updated_at:       timestamp('updated_at').defaultNow(),
-});
+// [2026-05-22 dedup] employee_skills: re-exported from canonical definition in
+// lib/db (hr-performance-ext.ts: 19 cols with certifications/status/CHECK constraints,
+// in barrel chain). Previous local pgTable (11 cols, minimal stub) removed.
+import { employeeSkills as _employeeSkills_canon } from '@workspace/db';
+export const employee_skills = _employeeSkills_canon;
 
 // ─── HR: AI Interview / Test Questions ───────────────────────────────────────
-
+// hrc_iq_questions: NOT in lib/db barrel — kept as local stub.
 export const hrc_iq_questions = pgTable('hrc_iq_questions', {
   id:         serial('id').primaryKey(),
   text_uz:    text('text_uz'),
@@ -43,7 +32,7 @@ export const hrc_iq_questions = pgTable('hrc_iq_questions', {
 });
 
 // ─── HR: Adaptation Cases ─────────────────────────────────────────────────────
-
+// hr_adaptation_cases: NOT in lib/db barrel — kept as local stub.
 export const hr_adaptation_cases = pgTable('hr_adaptation_cases', {
   id:             serial('id').primaryKey(),
   employee_id:    integer('employee_id').notNull(),
@@ -57,7 +46,7 @@ export const hr_adaptation_cases = pgTable('hr_adaptation_cases', {
 });
 
 // ─── HR: Employee Contracts ───────────────────────────────────────────────────
-
+// employee_contracts: NOT in lib/db barrel (canonical is employment_contracts, different table name) — kept as local stub.
 export const employee_contracts = pgTable('employee_contracts', {
   id:              serial('id').primaryKey(),
   employee_id:     integer('employee_id').notNull(),
@@ -71,7 +60,7 @@ export const employee_contracts = pgTable('employee_contracts', {
 });
 
 // ─── PIP Goals ────────────────────────────────────────────────────────────────
-
+// pip_goals: NOT in lib/db barrel (canonical is pipPlans/pipProgressUpdates, different structure) — kept as local stub.
 export const pip_goals = pgTable('pip_goals', {
   id:          serial('id').primaryKey(),
   pip_plan_id: integer('pip_plan_id').notNull(),
@@ -83,13 +72,5 @@ export const pip_goals = pgTable('pip_goals', {
 });
 
 // ─── Currencies ───────────────────────────────────────────────────────────────
-
-export const currencies = pgTable('currencies', {
-  id:           serial('id').primaryKey(),
-  code:         varchar('code', { length: 10 }).unique().notNull(),
-  name:         text('name'),
-  symbol:       text('symbol'),
-  exchange_rate: numeric('exchange_rate', { precision: 15, scale: 6 }),
-  is_active:    boolean('is_active').default(true),
-  updated_at:   timestamp('updated_at').defaultNow(),
-});
+// [dedup] currencies → canonical currencies in @workspace/db (core-schema → core/core-ai-reports → index)
+export { currencies } from '@workspace/db';

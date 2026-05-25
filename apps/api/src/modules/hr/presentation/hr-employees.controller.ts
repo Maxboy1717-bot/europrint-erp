@@ -1,3 +1,8 @@
+/**
+ * @module hr-employees.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { assertFound } from '@common/assertions';
@@ -5,9 +10,10 @@ import {
   Body, Controller, Get, Inject, NotFoundException, Param, Patch, Post, Put,
   Query, UseGuards, UseInterceptors, InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { assertOk, throwFromError, unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -24,7 +30,8 @@ import {
 
 interface AuthenticatedUser { id: number; role: string; }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Hr Employees')
 @Controller('hr/employees')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -36,6 +43,8 @@ export class HrEmployeesController {
     @Inject(HR_REPO) private readonly hrRepo: IHrRepo,
   ) {}
 
+  @ApiOperation({ summary: 'Get employees' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR')
   async getEmployees(@Query() query: { status?: string; department?: string; search?: string; page?: string; limit?: string }) {
@@ -50,6 +59,9 @@ export class HrEmployeesController {
     return unwrapOrThrow(res);
   }
 
+  @ApiOperation({ summary: 'Get employee' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR')
   async getEmployee(@Param('id') id: string) {
@@ -59,6 +71,9 @@ export class HrEmployeesController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get employee kpi' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':employeeId/kpi')
   @Roles('HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async getEmployeeKpi(@Param('employeeId') employeeId: string) {
@@ -75,6 +90,9 @@ export class HrEmployeesController {
     };
   }
 
+  @ApiOperation({ summary: 'Create employee' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles('HR_MANAGER', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrCreateEmployeeSchema))
@@ -89,6 +107,10 @@ export class HrEmployeesController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Update employee' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Put(':id')
   @Roles('HR_MANAGER', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrUpdateEmployeeSchema))
@@ -96,6 +118,9 @@ export class HrEmployeesController {
     return unwrapOrThrow(await this.hrRepo.updateEmployee(id, body));
   }
 
+  @ApiOperation({ summary: 'Update employee status' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id/status')
   @Roles('HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrUpdateEmployeeStatusSchema))
@@ -108,6 +133,9 @@ export class HrEmployeesController {
     return { message: `Xodim holati ${body.status} ga o'zgartirildi`, data: result.data };
   }
 
+  @ApiOperation({ summary: 'Review salary' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':employeeId/salary-review')
   @Roles('DIRECTOR', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrReviewSalarySchema))

@@ -1,10 +1,17 @@
+/**
+ * @module BasicInfoSection
+ * @description React UI component.
+ */
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { FormSectionProps } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function BasicInfoSection({ form }: FormSectionProps) {
+  const { t } = useTranslation("common");
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <FormField
         control={form.control}
         name="fullName"
@@ -12,7 +19,7 @@ export function BasicInfoSection({ form }: FormSectionProps) {
           <FormItem>
             <FormLabel>F.I.SH</FormLabel>
             <FormControl>
-              <Input placeholder="To'liq ism" {...field} data-testid="input-fullName" />
+              <Input placeholder={t("toliqIsm")} {...field} data-testid="input-fullName" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -23,7 +30,7 @@ export function BasicInfoSection({ form }: FormSectionProps) {
         name="employeeId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Tabel raqami</FormLabel>
+            <FormLabel>{t("tabelRaqami")}</FormLabel>
             <FormControl>
               <Input placeholder="ID" {...field} data-testid="input-employeeId" />
             </FormControl>
@@ -36,7 +43,7 @@ export function BasicInfoSection({ form }: FormSectionProps) {
         name="phone"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Telefon</FormLabel>
+            <FormLabel>{t("phone")}</FormLabel>
             <FormControl>
               <Input placeholder="+998" {...field} data-testid="input-phone" />
             </FormControl>
@@ -49,9 +56,9 @@ export function BasicInfoSection({ form }: FormSectionProps) {
         name="telegramChatId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Telegram ID</FormLabel>
+            <FormLabel>{t("telegramId")}</FormLabel>
             <FormControl>
-              <Input placeholder="Chat ID" {...field} data-testid="input-telegramChatId" />
+              <Input placeholder={t("chatId")} {...field} data-testid="input-telegramChatId" />
             </FormControl>
             <FormMessage />
           </FormItem>

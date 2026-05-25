@@ -1,3 +1,8 @@
+/**
+ * @module CashRegister
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,7 +10,6 @@ import { ShoppingCart, ScanBarcode, CreditCard, Banknote, Building2, Shuffle, Pa
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import { ErrorState } from "@/components/ui/error-state";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,6 +25,7 @@ import { PaymentPanel } from "@/components/pos/PaymentPanel";
 import { ProductList } from "@/components/pos/ProductList";
 import { TransactionDetailDialog } from "@/components/pos/TransactionDetailDialog";
 import { useCashRegister } from "@/components/pos/hooks/useCashRegister";
+import { EPErrorState, EPStatusPill } from "@/components/ep";
 
 const paymentMethodLabels: Record<string, { uz: string; ru: string; icon: React.ComponentType<{ className?: string }> }> = {
   cash: { uz: "Naqd", ru: "Наличные", icon: Banknote },
@@ -44,13 +49,16 @@ export default function CashRegister() {
   const { t } = useTranslation('finance');
   const cr = useCashRegister();
 
+  const escHtml = (s: unknown): string =>
+    String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
   const handlePrintReceipt = () => {
     const printWindow = window.open("", "_blank", "width=400,height=600");
     if (!printWindow || !cr.receiptData) return;
     const itemsHtml = cr.receiptData.items?.map((item: TransactionItem) =>
-      `<tr><td>${item.name}</td><td style="text-align:center">${item.quantity}</td><td style="text-align:right">${formatCurrency(item.unitPrice)}</td><td style="text-align:right">${formatCurrency(item.total)}</td></tr>`
+      `<tr><td>${escHtml(item.name)}</td><td style="text-align:center">${escHtml(item.quantity)}</td><td style="text-align:right">${formatCurrency(item.unitPrice)}</td><td style="text-align:right">${formatCurrency(item.total)}</td></tr>`
     ).join("");
-    printWindow.document.write(`<!DOCTYPE html><html><head><title>Chek</title><style>body{font-family:monospace;font-size:12px;width:300px;margin:0 auto;padding:10px}.center{text-align:center}.right{text-align:right}.line{border-top:1px dashed #000;margin:5px 0}table{width:100%;border-collapse:collapse}td{padding:2px 0}h2,h3{margin:5px 0}</style></head><body><div class="center"><h2>${cr.receiptData.companyName}</h2><p>${cr.receiptData.companyAddress}</p><p>Tel: ${cr.receiptData.companyPhone}</p><p>INN: ${cr.receiptData.companyInn}</p></div><div class="line"></div><p>Chek: ${cr.receiptData.receiptNumber}</p><p>Tranzaksiya: ${cr.receiptData.transactionNumber}</p><p>Sana: ${formatDateTime(cr.receiptData.createdAt)}</p>${cr.receiptData.customerName ? `<p>Mijoz: ${cr.receiptData.customerName}</p>` : ""}<div class="line"></div><table><tr><th>Mahsulot</th><th>Soni</th><th>Narx</th><th>Jami</th></tr>${itemsHtml}</table><div class="line"></div><div class="right"><p>Jami: ${formatCurrency(cr.receiptData.subtotal)}</p>${cr.receiptData.discountAmount ? `<p>Chegirma: -${formatCurrency(cr.receiptData.discountAmount)}</p>` : ""}<p>QQS (${cr.receiptData.taxRate}%): ${formatCurrency(cr.receiptData.taxAmount)}</p><p><strong>UMUMIY: ${formatCurrency(cr.receiptData.totalAmount)}</strong></p><p>To'lov: ${paymentMethodLabels[cr.receiptData.paymentMethod]?.uz || cr.receiptData.paymentMethod}</p>${cr.receiptData.paymentDetails?.changeAmount ? `<p>Qaytim: ${formatCurrency(cr.receiptData.paymentDetails.changeAmount)}</p>` : ""}</div><div class="line"></div><div class="center"><p>Xaridingiz uchun rahmat!</p></div></body></html>`);
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>{t("chek1")}</title><style>body{font-family:monospace;font-size:12px;width:300px;margin:0 auto;padding:10px}.center{text-align:center}.right{text-align:right}.line{border-top:1px dashed #000;margin:5px 0}table{width:100%;border-collapse:collapse}td{padding:2px 0}h2,h3{margin:5px 0}</style></head><body><div class="center"><h2>${escHtml(cr.receiptData.companyName)}</h2><p>${escHtml(cr.receiptData.companyAddress)}</p><p>Tel: ${escHtml(cr.receiptData.companyPhone)}</p><p>INN: ${escHtml(cr.receiptData.companyInn)}</p></div><div class="line"></div><p>Chek: ${escHtml(cr.receiptData.receiptNumber)}</p><p>Tranzaksiya: ${escHtml(cr.receiptData.transactionNumber)}</p><p>Sana: ${formatDateTime(cr.receiptData.createdAt)}</p>${cr.receiptData.customerName ? `<p>Mijoz: ${escHtml(cr.receiptData.customerName)}</p>` : ""}<div class="line"></div><table><tr><th>{t("Mahsulot")}</th><th>{t("count")}</th><th>{t("price")}</th><th>{t("total")}</th></tr>${itemsHtml}</table><div class="line"></div><div class="right"><p>Jami: ${formatCurrency(cr.receiptData.subtotal)}</p>${cr.receiptData.discountAmount ? `<p>Chegirma: -${formatCurrency(cr.receiptData.discountAmount)}</p>` : ""}<p>QQS (${escHtml(cr.receiptData.taxRate)}%): ${formatCurrency(cr.receiptData.taxAmount)}</p><p><strong>UMUMIY: ${formatCurrency(cr.receiptData.totalAmount)}</strong></p><p>To'lov: ${escHtml(paymentMethodLabels[cr.receiptData.paymentMethod]?.uz || cr.receiptData.paymentMethod)}</p>${cr.receiptData.paymentDetails?.changeAmount ? `<p>Qaytim: ${formatCurrency(cr.receiptData.paymentDetails.changeAmount)}</p>` : ""}</div><div class="line"></div><div class="center"><p>{t("xaridingizUchunRahmat")}</p></div></body></html>`);
     printWindow.document.close(); printWindow.print();
   };
 
@@ -59,10 +67,10 @@ export default function CashRegister() {
     defaultValues: { barcode: "", name: "", nameRu: "", category: "", unitPrice: 0, unit: "dona", stockQuantity: 0, minStock: 0 },
   });
 
-  if (cr.isError) return <ErrorState onRetry={cr.refetch} />;
+  if (cr.isError) return <EPErrorState onRetry={cr.refetch} />;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between gap-2 flex-wrap p-4 pb-2">
         <div className="flex items-center gap-2">
           <ShoppingCart className="h-5 w-5 text-muted-foreground" />
@@ -70,11 +78,11 @@ export default function CashRegister() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {cr.dashboard && (
-            <Badge variant="secondary" data-testid="badge-sales-today">
+            <EPStatusPill tone="neutral" data-testid="badge-sales-today">
               Bugun: {formatCurrency(cr.dashboard.salesToday)} ({cr.dashboard.transactionsToday} ta)
-            </Badge>
+            </EPStatusPill>
           )}
-          <Button variant="ghost" size="sm" onClick={() => cr.refetch()} title="Yangilash">
+          <Button variant="ghost" size="sm" onClick={() => cr.refetch()} title={t("refresh")}>
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
@@ -85,7 +93,7 @@ export default function CashRegister() {
           <TabsTrigger value="pos" data-testid="tab-pos"><ScanBarcode className="h-4 w-4 mr-1" /> {t('cashRegister')}</TabsTrigger>
           <TabsTrigger value="products" data-testid="tab-products"><Package className="h-4 w-4 mr-1" /> {t('products')}</TabsTrigger>
           <TabsTrigger value="history" data-testid="tab-history"><History className="h-4 w-4 mr-1" /> {t('transactions')}</TabsTrigger>
-          <TabsTrigger value="dashboard" data-testid="tab-dashboard"><BarChart3 className="h-4 w-4 mr-1" /> Dashboard</TabsTrigger>
+          <TabsTrigger value="dashboard" data-testid="tab-dashboard"><BarChart3 className="h-4 w-4 mr-1" /> {t("dashboard10")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pos" className="flex-1 mt-2">

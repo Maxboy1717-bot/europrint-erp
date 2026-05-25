@@ -1,9 +1,62 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module spc.service
+ * @description Statistical Process Control (SPC) for the QC dashboard.
+ *   Builds X-bar / R control charts from production measurements and
+ *   computes process capability indices (Cp / Cpk). Used to detect when
+ *   a printing/cutting line drifts out of spec BEFORE bad units are made.
+ *
+ *   Two operations:
+ *     1. **X-bar / R chart** — for each subgroup (n samples per inspection)
+ *        compute the mean and range, then derive UCL/LCL bands using
+ *        Shewhart constants A2, D3, D4. Out-of-control points = future
+ *        defects if not corrected.
+ *     2. **Process capability** — given the natural process variation
+ *        (from σ̂ = R̄ / d2) and the customer's spec tolerance (USL−LSL),
+ *        compute:
+ *          Cp  = (USL − LSL) / (6σ)             how wide the spec is vs. process
+ *          Cpk = min((USL−μ)/3σ, (μ−LSL)/3σ)    accounts for off-centering
+ *
+ *   Capability bands (industry standard):
+ *     Cpk ≥ 1.33  Capable      (4σ from each spec limit — acceptable for B2B)
+ *     Cpk ≥ 1.67  Excellent    (5σ — automotive / 6-sigma class)
+ * @layer Domain Service (QC — pure compute, plus DB persistence of chart data)
+ *
+ * WHY SHEWHART CONSTANTS (A2, D3, D4, d2) ARE HARDCODED LOOKUP TABLES
+ *   These constants come from the 1930s Bell Labs derivation of control
+ *   charts (Shewhart). They depend on subgroup size n (we support n=2..6)
+ *   and are universal — every textbook and ISO 7870-2 publishes the same
+ *   values. We support n=2..6 because larger subgroups dilute sensitivity
+ *   to small shifts; n=4 or 5 is standard for print QC.
+ *
+ *   DO NOT TUNE these. If a different chart type is needed (X-MR for
+ *   n=1, p-chart for attribute data), implement a new method using the
+ *   chart's own constants — don't override these.
+ *
+ * WHY Cp + Cpk BOTH RETURNED (not just one)
+ *   Cp measures spread; Cpk measures spread AND centering. A process can
+ *   have great Cp (narrow distribution) but bad Cpk (centered on the spec
+ *   edge — half the parts are out). Showing both lets QC distinguish
+ *   "we need to centre the press" (Cpk < Cp) from "we need to reduce
+ *   variation" (low Cp).
+ *
+ * WHY 1.33 / 1.67 THRESHOLDS
+ *   1.33 = 4σ from each limit, parts-per-thousand defect rate. Industry
+ *   minimum for B2B contract acceptance. 1.67 = 5σ, six-sigma class
+ *   (DPMO < 233). Automotive customers (which we don't currently serve)
+ *   require 1.67 minimum. These match AIAG SPC manual conventions.
+ *
+ * WHY decimal.js FOR INTERMEDIATE MATH
+ *   Process capability is published to 3 decimal places. Float arithmetic
+ *   over hundreds of measurements accumulates ~1e-9 drift that can flip
+ *   a Cpk from 1.330 to 1.329 in the report. decimal.js preserves
+ *   precision; the final value is rounded once at the boundary.
+ */
+
+import { Injectable, Inject } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeDiv, safeNum, safeAvg } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
-import { db, qc_spc_data } from '@shared/db';
-import { eq, desc } from 'drizzle-orm';
+import { IQcComputeRepository, QC_COMPUTE_REPO } from '../repositories/i-qc.repo';
 import Decimal from 'decimal.js';
 
 export interface ControlChartData {
@@ -11,18 +64,26 @@ export interface ControlChartData {
   measurements: number[];
   mean:         number;
   stdDev:       number;
+  /** Upper Control Limit = μ + 3σ (Shewhart 3-sigma rule). */
   ucl:          number;
+  /** Lower Control Limit = μ − 3σ. */
   lcl:          number;
+  /** Indices of measurements that fell outside [LCL, UCL] — investigate these. */
   outOfControl: number[];
 }
 
 const ROUND_PRECISION = 1000;
+/** Capable threshold — 4σ from each spec limit. Customer-acceptance minimum. */
 const CP_CAPABLE   = 1.33;
+/** Excellent threshold — 5σ. Automotive / six-sigma class. */
 const CP_EXCELLENT = 1.67;
 
+// Shewhart constants for X-bar/R charts. Keyed by subgroup size n.
+// Source: ISO 7870-2 / AIAG SPC manual. NEVER tune.
 const A2: Record<number, number> = { 2: 1.880, 3: 1.023, 4: 0.729, 5: 0.577, 6: 0.483 };
 const D3: Record<number, number> = { 2: 0,     3: 0,     4: 0,     5: 0,     6: 0     };
 const D4: Record<number, number> = { 2: 3.267, 3: 2.574, 4: 2.282, 5: 2.114, 6: 2.004 };
+/** d2 converts mean-range R̄ to σ̂ estimate: σ̂ = R̄ / d2. */
 const d2: Record<number, number> = { 2: 1.128, 3: 1.693, 4: 2.059, 5: 2.326, 6: 2.534 };
 
 export interface Subgroup {
@@ -52,6 +113,10 @@ export interface CapabilityResult {
  */
 @Injectable()
 export class SpcService {
+  constructor(
+    @Inject(QC_COMPUTE_REPO) private readonly qcRepo: IQcComputeRepository,
+  ) {}
+
   @Calculation('spc.xbarR')
   async computeXbarR(
     subgroups: readonly Subgroup[],
@@ -121,20 +186,13 @@ export class SpcService {
     lastN = 30,
   ): Promise<Result<ControlChartData, AppError>> {
     try {
-      const readings = await db
-        .select({ value: qc_spc_data.value, measuredAt: qc_spc_data.measuredAt })
-        .from(qc_spc_data)
-        .where(eq(qc_spc_data.parameterId, parameterId))
-        .orderBy(desc(qc_spc_data.measuredAt))
-        .limit(lastN);
+      const readings = await this.qcRepo.findSpcReadings(parameterId, lastN);
 
       if (!readings.length) {
         return Err({ code: 'NOT_FOUND', message: 'O\'lchamlar topilmadi' });
       }
 
-      const values = (readings as { value: string | number }[])
-        .reverse()
-        .map(r => safeNum(r.value));
+      const values = readings.reverse().map(r => safeNum(r.value));
       const n = values.length;
 
       const sum = values.reduce(

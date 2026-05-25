@@ -1,3 +1,8 @@
+/**
+ * @module gl-accounts.constants
+ * @description Named-constant exports (business thresholds, enums, lookup tables).
+ */
+
 // Buxgalteriya hisoblar rejasi (Chart of Accounts) — O'zbekiston BX standartlari bo'yicha
 export const GL = {
   CASH:                     '1000', // Kassa

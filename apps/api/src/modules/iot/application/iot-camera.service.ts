@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module iot-camera.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { IotCameraRepository } from './iot-camera.repository';
+import { IOT_CAMERA_REPO, type IIotCameraRepo } from '../domain/repositories/i-iot-camera.repo';
 
 @Injectable()
 export class IotCameraService {
-  constructor(private readonly repo: IotCameraRepository) {}
+  constructor(@Inject(IOT_CAMERA_REPO) private readonly repo: IIotCameraRepo) {}
 
   async listCameras(status?: string, zone?: string): Promise<Result<object, AppError>> {
     return this.repo.listCameras(status, zone);

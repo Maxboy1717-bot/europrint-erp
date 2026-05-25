@@ -1,3 +1,8 @@
+/**
+ * @module redis.config
+ * @description Configuration loader. Wraps env vars via @nestjs/config ConfigService.
+ */
+
 import { REDIS_DEFAULT_PORT, RETRY_DELAY_MS } from '@common/constants/app.constants';
 import { registerAs } from '@nestjs/config'
 
@@ -16,9 +21,9 @@ export default registerAs('redis', () => {
     mode: 'standard',
     url: process.env.REDIS_URL || 'redis://localhost:' + String(REDIS_DEFAULT_PORT),
     host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || String(REDIS_DEFAULT_PORT)),
+    port: parseInt(process.env.REDIS_PORT || String(REDIS_DEFAULT_PORT), 10),
     password: process.env.REDIS_PASSWORD,
-    db: parseInt(process.env.REDIS_DB || '0'),
+    db: parseInt(process.env.REDIS_DB || '0', 10),
     retryStrategy: (times: number) => Math.min(times * 50, RETRY_DELAY_MS),
   }
 })

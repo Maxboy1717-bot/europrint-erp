@@ -1,3 +1,8 @@
+/**
+ * @module finance-extended.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, InternalServerErrorException, Logger, Inject } from '@nestjs/common';
 import { IFinanceExtendedRepository, FINANCE_EXTENDED_REPO } from './i-finance-extended.repo';
 import { safeCall, Result, AppError } from '@common/result';

@@ -1,3 +1,8 @@
+/**
+ * @module hr-gsd.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { employees, employee_skills, adaptation_milestones, salary_history } from '@shared/db';
@@ -99,15 +104,15 @@ export class HrGsdRepository {
       const rows = await db
         .select({
           id: employee_skills.id,
-          employee_id: employee_skills.employee_id,
-          skill_name: employee_skills.skill_name,
-          proficiency_level: employee_skills.proficiency_level,
-          proficiency_score: employee_skills.proficiency_score,
-          certified_date: employee_skills.certified_date,
-          created_at: employee_skills.created_at,
+          employee_id: employee_skills.employeeId,
+          skill_name: employee_skills.skillName,
+          proficiency_level: employee_skills.proficiencyLevel,
+          proficiency_score: employee_skills.proficiencyScore,
+          certified_date: employee_skills.certifiedDate,
+          created_at: employee_skills.createdAt,
         })
         .from(employee_skills)
-        .orderBy(desc(employee_skills.created_at))
+        .orderBy(desc(employee_skills.createdAt))
         .limit(100);
       if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
       return Ok(rows as Row[]);

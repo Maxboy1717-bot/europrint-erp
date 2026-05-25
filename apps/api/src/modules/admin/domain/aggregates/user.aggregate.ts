@@ -1,4 +1,12 @@
+/**
+ * @module user.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
+import { Ok, Err, AppErr, Result } from '@common/result';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
+import { UserDeactivatedEvent, UserRolePromotedEvent } from '../events';
 const _time = new TashkentTimeService();
 export enum UserRole {
   SUPER_ADMIN = 'super_admin',
@@ -22,7 +30,7 @@ export interface UserAggregateData {
   updatedAt: Date;
 }
 
-export class UserAggregate {
+export class UserAggregate extends AggregateRoot {
   private id: number;
   private username: string;
   private email: string;
@@ -36,6 +44,7 @@ export class UserAggregate {
   private updatedAt: Date;
 
   constructor(data: UserAggregateData) {
+    super();
     this.id = data.id;
     this.username = data.username;
     this.email = data.email;
@@ -103,9 +112,38 @@ export class UserAggregate {
     this.updatedAt = _time.now();
   }
 
-  deactivate(): void {
+  deactivate(by?: number, reason?: string): Result<void> | void {
+    // Backwards-compatible: legacy callers invoke deactivate() with no args.
+    // New behavior: deactivate(by, reason) records a domain event and enforces invariants.
+    if (typeof by === 'number' && typeof reason === 'string') {
+      if (!this.isActive) {
+        return Err(AppErr('BUSINESS_RULE_VIOLATION', 'User is already deactivated'));
+      }
+      if (reason.trim().length === 0) {
+        return Err(AppErr('VALIDATION', 'Deactivation reason is required'));
+      }
+      this.isActive = false;
+      this.updatedAt = _time.now();
+      this.addDomainEvent(new UserDeactivatedEvent(this.id, by, reason));
+      return Ok<void>();
+    }
     this.isActive = false;
     this.updatedAt = _time.now();
+  }
+
+  promoteTo(newRole: string, by: number): Result<void> {
+    const allowed = Object.values(UserRole) as string[];
+    if (!allowed.includes(newRole)) {
+      return Err(AppErr('VALIDATION', `Invalid role: ${newRole}`));
+    }
+    const oldRole = this.role;
+    if (oldRole === (newRole as UserRole)) {
+      return Err(AppErr('BUSINESS_RULE_VIOLATION', 'User already has this role'));
+    }
+    this.role = newRole as UserRole;
+    this.updatedAt = _time.now();
+    this.addDomainEvent(new UserRolePromotedEvent(this.id, oldRole, newRole, by));
+    return Ok<void>();
   }
 
   changeRole(newRole: UserRole): void {

@@ -1,0 +1,58 @@
+[
+  {
+    "file": "apps/api/src/modules/chat/push.service.ts",
+    "method": "unregister",
+    "lineStart": 52,
+    "lineEnd": 58,
+    "size": 170
+  },
+  {
+    "file": "apps/api/src/modules/core/infrastructure/repositories/drizzle-core.repo.ts",
+    "method": "findPanelByUserId",
+    "lineStart": 147,
+    "lineEnd": 155,
+    "size": 241
+  },
+  {
+    "file": "apps/api/src/modules/core/infrastructure/repositories/drizzle-core.repo.ts",
+    "method": "getDefaultPanel",
+    "lineStart": 176,
+    "lineEnd": 184,
+    "size": 242
+  },
+  {
+    "file": "apps/api/src/modules/iot/application/iot-main.service.ts",
+    "method": "getProductionMetrics",
+    "lineStart": 111,
+    "lineEnd": 118,
+    "size": 151
+  },
+  {
+    "file": "apps/api/src/modules/iot/application/iot-main.service.ts",
+    "method": "getShiftReport",
+    "lineStart": 118,
+    "lineEnd": 130,
+    "size": 451
+  },
+  {
+    "file": "apps/api/src/modules/kanban/application/kanban-boards.service.ts",
+    "method": "addColumn",
+    "lineStart": 46,
+    "lineEnd": 57,
+    "size": 370
+  },
+  {
+    "file": "apps/api/src/modules/kanban/application/kanban-boards.service.ts",
+    "method": "addCard",
+    "lineStart": 119,
+    "lineEnd": 142,
+    "size": 894
+  },
+  {
+    "file": "apps/api/src/modules/wms/infrastructure/repositories/drizzle-wms.repo.ts",
+    "method": "softDeleteStock",
+    "lineStart": 160,
+    "lineEnd": 172,
+    "size": 342
+  }
+]

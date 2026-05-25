@@ -1,3 +1,8 @@
+/**
+ * @module toast
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"

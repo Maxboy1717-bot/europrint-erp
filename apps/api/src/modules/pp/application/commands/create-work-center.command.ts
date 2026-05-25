@@ -1,3 +1,8 @@
+/**
+ * @module create-work-center.command
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
@@ -6,6 +11,7 @@ import { createId } from '@paralleldrive/cuid2';
 import { Result, Err } from '@common/result';
 import { WorkCenter, WorkCenterType } from '../../domain/aggregates/work-center.aggregate';
 import { DrizzleWorkCenterRepository } from '../../infrastructure/repositories/drizzle-work-center.repo';
+import { WORK_CENTER_REPO } from '../../domain/repositories/pp.repository';
 
 export class CreateWorkCenterCommand {
   constructor(public readonly code: string,
@@ -23,7 +29,7 @@ export class CreateWorkCenterHandler implements ICommandHandler<CreateWorkCenter
   private readonly logger = new Logger(CreateWorkCenterHandler.name);
 
   constructor(
-    @Inject('IWorkCenterRepository')
+    @Inject(WORK_CENTER_REPO)
     private readonly workCenterRepo: DrizzleWorkCenterRepository,
   ) {}
 

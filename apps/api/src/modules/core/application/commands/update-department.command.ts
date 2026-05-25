@@ -1,3 +1,8 @@
+/**
+ * @module update-department.command
+ * @description Source module. See exports for details.
+ */
+
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/types/result.type';
@@ -30,7 +35,7 @@ export class UpdateDepartmentHandler implements ICommandHandler<UpdateDepartment
         return Err('Departamentlarni topishda xato');
       }
 
-      const codeTaken = (allDepts?.data ?? []).some((d) => d.code === data.code && d.id !== id);
+      const codeTaken = (Array.isArray(allDepts?.data) ? allDepts?.data : []).some((d) => d.code === data.code && d.id !== id);
       if (codeTaken) {
         return Err('Bu kod allaqachon ishlatilgan');
       }

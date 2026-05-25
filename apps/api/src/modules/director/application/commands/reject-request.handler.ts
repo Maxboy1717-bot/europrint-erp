@@ -1,11 +1,15 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+/**
+ * @module reject-request.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
+import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AppErr, Err, isErr, Ok, Result, safeCall } from '@common/result';
 import { ApprovalRequest } from '../../domain/aggregates/approval-request.aggregate';
 import { APPROVAL_REPO, IApprovalRepo } from '../../domain/repositories/i-approval.repo';
 import { RejectRequestCommand } from './reject-request.command';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
+import { HitlRejectedEvent } from '../../domain/events/hitl-rejected.event';
 
 @CommandHandler(RejectRequestCommand)
 export class RejectRequestHandler implements ICommandHandler<RejectRequestCommand> {
@@ -13,7 +17,7 @@ export class RejectRequestHandler implements ICommandHandler<RejectRequestComman
 
   constructor(
     @Inject(APPROVAL_REPO) private readonly approvalRepo: IApprovalRepo,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly eventBus: EventBus,
   ) {}
 
   async execute(command: RejectRequestCommand): Promise<Result<ApprovalRequest>> {
@@ -33,14 +37,14 @@ export class RejectRequestHandler implements ICommandHandler<RejectRequestComman
     });
     if (!updateResult.ok) return Err(AppErr('INTERNAL', String(updateResult.error)));
 
-    this.eventEmitter.emit(ERP_EVENTS.HITL_REJECTED, {
-      id: approval.id,
-      documentType: approval.documentType,
-      documentId: approval.documentId,
-      rejectedBy: command.userId,
-      rejectedAt: approval.rejectedAt,
-      reason: command.reason,
-    });
+    await this.eventBus.publish(new HitlRejectedEvent(
+      approval.id,
+      approval.documentType,
+      approval.documentId,
+      command.userId,
+      approval.rejectedAt,
+      command.reason,
+    ));
 
     this.logger.log(`Tasdiqlash so'rovi rad etildi: ${approval.id}`);
     return Ok(updateResult.data);

@@ -1,13 +1,19 @@
+/**
+ * @module pos-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
 import {
   serial, pgTable, text, varchar, integer, boolean,
-  timestamp, jsonb, unique, uuid, pgEnum,
+  timestamp, jsonb, unique, check, index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
 import { warehouses } from "./wms-schema";
+import { posMovementLines as posMovementLinesV2 } from "./pos-schema-v2";
 
 // ─── §38 POS MODULE — 9 jadval ───────────────────────────────────────────────
 
@@ -23,7 +29,9 @@ export const posMovementTypes = pgTable("pos_movement_types", {
   requiresDocument: boolean("requires_document").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("pos_movement_types_dir_chk", sql`${t.direction} IN ('in','out','transfer','adjustment')`),
+]);
 
 export const insertPosMovementTypeSchema = createInsertSchema(posMovementTypes, {
   code: z.string().min(1),
@@ -127,66 +135,20 @@ export const inventoryBarcodeAssignments = pgTable("inventory_barcode_assignment
   printedBy: integer("printed_by").references(() => users.id, { onDelete: "set null" }),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("inventory_barcode_type_chk", sql`${t.barcodeType} IN ('qr','ean13','code128','datamatrix')`),
+]);
 
 export const insertInventoryBarcodeAssignmentSchema = createInsertSchema(inventoryBarcodeAssignments, {
   barcode: z.string().min(1),
   barcodeType: z.enum(["qr", "ean13", "code128", "datamatrix"]),
 });
 
-/**
- * 7. pos_movements — Asosiy harakatlar jurnali
- */
-export const posMovements = pgTable("pos_movements", {
-  id: serial("id").primaryKey(),
-  movementNumber: varchar("movement_number", { length: 50 }).notNull().unique(),
-  movementTypeId: integer("movement_type_id").notNull().references(() => posMovementTypes.id),
-  fromWarehouseId: varchar("from_warehouse_id", { length: 50 }).references(() => warehouses.id, { onDelete: "restrict" }),
-  toWarehouseId: varchar("to_warehouse_id", { length: 50 }).references(() => warehouses.id, { onDelete: "restrict" }),
-  status: varchar("status", { length: 20 }).notNull().default("draft"), // draft | pending | approved | completed | cancelled
-  totalAmount: numericMoney("total_amount").notNull().default(sql`'0'`),
-  currency: varchar("currency", { length: 3 }).notNull().default("UZS"),
-  referenceDoc: varchar("reference_doc", { length: 100 }), // linked order/invoice
-  notes: text("notes"),
-  telegramSent: boolean("telegram_sent").notNull().default(false),
-  createdBy: integer("created_by").notNull().references(() => users.id),
-  approvedBy: integer("approved_by").references(() => users.id, { onDelete: "set null" }),
-  approvedAt: timestamp("approved_at"),
-  completedAt: timestamp("completed_at"),
-  cancelledAt: timestamp("cancelled_at"),
-  cancelReason: text("cancel_reason"),
-  deletedAt: timestamp("deleted_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-export const insertPosMovementSchema = createInsertSchema(posMovements, {
-  movementNumber: z.string().min(1),
-  status: z.enum(["draft", "pending", "approved", "completed", "cancelled"]),
-});
-
-/**
- * 8. pos_movement_lines — Harakat qatorlari (mahsulotlar)
- */
-export const posMovementLines = pgTable("pos_movement_lines", {
-  id: serial("id").primaryKey(),
-  movementId: integer("movement_id").notNull().references(() => posMovements.id, { onDelete: "cascade" }),
-  passportId: integer("passport_id").references(() => inventoryPassports.id, { onDelete: "set null" }),
-  barcodeAssignmentId: integer("barcode_assignment_id").references(() => inventoryBarcodeAssignments.id, { onDelete: "set null" }),
-  productId: varchar("product_id", { length: 50 }).notNull(),
-  productName: text("product_name").notNull(),
-  unit: varchar("unit", { length: 20 }).notNull().default("dona"),
-  quantity: numericMoney("quantity").notNull(),
-  unitPrice: numericMoney("unit_price").notNull().default(sql`'0'`),
-  totalPrice: numericMoney("total_price").notNull().default(sql`'0'`),
-  batchNumber: varchar("batch_number", { length: 100 }),
-  notes: text("notes"),
-  sortOrder: integer("sort_order").notNull().default(0),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const insertPosMovementLineSchema = createInsertSchema(posMovementLines, {
-  productName: z.string().min(1),
+// pos_movements and pos_movement_lines are canonical in pos-schema-v2.ts (richer schema)
+// Re-exported here for backwards compatibility
+export { posMovements, posMovementLines, insertPosMovementSchema } from "./pos-schema-v2";
+// insertPosMovementLineSchema not in v2 — derived locally (import is at top of file)
+export const insertPosMovementLineSchema = createInsertSchema(posMovementLinesV2, {
   quantity: z.string().min(1),
 });
 

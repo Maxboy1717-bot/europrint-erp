@@ -1,0 +1,72 @@
+# systemd unit file for EuroPrint ERP API (non-Docker, non-PM2 deployment)
+#
+# Installation:
+#   sudo cp contrib/systemd/europrint-api.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now europrint-api.service
+#
+# Logs:
+#   journalctl -u europrint-api.service -f
+#
+# Restart:
+#   sudo systemctl restart europrint-api.service
+#
+# Reload env without restart (sends SIGHUP — app doesn't handle yet, falls back to restart):
+#   sudo systemctl reload-or-restart europrint-api.service
+
+[Unit]
+Description=EuroPrint ERP API
+Documentation=https://github.com/Maxboy1717-bot/europrint-erp/blob/main/DEPLOYMENT.md
+After=network-online.target postgresql.service redis.service
+Wants=network-online.target
+Requires=postgresql.service redis.service
+
+[Service]
+Type=simple
+User=europrint
+Group=europrint
+WorkingDirectory=/srv/europrint
+ExecStart=/usr/bin/node apps/api/dist/main.js
+Restart=on-failure
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=5
+
+# Graceful shutdown — matches Node SIGTERM handler grace period
+KillSignal=SIGTERM
+TimeoutStopSec=35s
+
+# Environment
+EnvironmentFile=/etc/europrint.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/europrint /var/backups/europrint /srv/europrint/uploads
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources @mount @cpu-emulation @debug @keyring @module @raw-io
+
+# Resource limits
+LimitNOFILE=65535
+MemoryMax=2G
+CPUWeight=100
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=europrint-api
+
+[Install]
+WantedBy=multi-user.target

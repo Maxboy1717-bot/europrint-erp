@@ -1,3 +1,8 @@
+/**
+ * @module constants
+ * @description React UI component.
+ */
+
 import { 
   ChevronLeft, 
   ChevronRight, 

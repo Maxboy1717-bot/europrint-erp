@@ -1,10 +1,16 @@
+/**
+ * @module crm-auto-lead.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertFound, assertRequired, assertAnyRequired } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { safeInt } from '../../hr/common/db-rows';
+import { safeInt } from '@common/db/db-rows';
 import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Post, UseGuards, Logger , UseInterceptors, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CrmAutoLeadService } from '../application/crm-auto-lead.service';
@@ -19,8 +25,9 @@ import {
 
 const CRM_AI_ROLES = ['sales_manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Crm Auto Lead')
 @Controller('crm')
 @UseGuards(RolesGuard)
 @Roles(...CRM_AI_ROLES)
@@ -29,6 +36,9 @@ export class CrmAutoLeadController {
 
   constructor(private readonly svc: CrmAutoLeadService) {}
 
+  @ApiOperation({ summary: 'Quick score' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('quick-score/:entityType/:id')
   async quickScore(@Param('entityType') entityType: string, @Param('id') id: string) {
     const _rQuickScore = await this.svc.quickScore(entityType, safeInt(id, 0));
@@ -38,32 +48,34 @@ export class CrmAutoLeadController {
     return r;
   }
 
+  @ApiOperation({ summary: 'Get supervisor dashboard' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('supervisor-dashboard')
   @Roles('sales_manager', 'director', 'super_admin')
   async getSupervisorDashboard() {
     return unwrapOrThrow(await this.svc.getSupervisorDashboard());
   }
 
+  @ApiOperation({ summary: 'Churn rescue' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('churn-rescue/:entityType/:id')
   @UsePipes(new ZodValidationPipe(ChurnRescueDtoSchema))
   async churnRescue(@Param('entityType') entityType: string, @Param('id') id: string, @Body() _body: ChurnRescueDto) {
-    return {
-      entity_type: entityType,
-      entity_id: safeInt(id, 0),
-      risk_level: 'medium',
-      rescue_actions: [
-        { action: 'personal_call', priority: 1 },
-        { action: 'discount_offer', priority: 2 },
-        { action: 'executive_outreach', priority: 3 },
-      ],
-    };
+    return unwrapOrThrow(await this.svc.churnRescue(entityType, safeInt(id, 0)));
   }
 
+  @ApiOperation({ summary: 'Get auto lead sources' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('auto-lead/sources')
   async getAutoLeadSources() {
     return unwrapOrThrow(await this.svc.getAutoLeadSources());
   }
 
+  @ApiOperation({ summary: 'Ingest call lead' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('auto-lead/call')
   @UsePipes(new ZodValidationPipe(IngestCallLeadDtoSchema))
   async ingestCallLead(@Body() body: IngestCallLeadDto) {
@@ -71,6 +83,9 @@ export class CrmAutoLeadController {
     return unwrapOrThrow(await this.svc.ingestCallLead(body.phone, body.first_name, body.last_name, body.notes, body.source_meta));
   }
 
+  @ApiOperation({ summary: 'Ingest form lead' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('auto-lead/form')
   @UsePipes(new ZodValidationPipe(IngestFormLeadDtoSchema))
   async ingestFormLead(@Body() body: IngestFormLeadDto) {
@@ -78,6 +93,9 @@ export class CrmAutoLeadController {
     return unwrapOrThrow(await this.svc.ingestFormLead(body.email, body.phone, body.first_name, body.last_name, body.form_name, body.notes));
   }
 
+  @ApiOperation({ summary: 'Ingest telegram lead' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('auto-lead/telegram')
   @UsePipes(new ZodValidationPipe(IngestTelegramLeadDtoSchema))
   async ingestTelegramLead(@Body() body: IngestTelegramLeadDto) {
@@ -85,6 +103,9 @@ export class CrmAutoLeadController {
     return unwrapOrThrow(await this.svc.ingestTelegramLead(body.telegram_id, body.first_name, body.last_name, body.username, body.message));
   }
 
+  @ApiOperation({ summary: 'Ingest website lead' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('auto-lead/website')
   @UsePipes(new ZodValidationPipe(IngestWebsiteLeadDtoSchema))
   async ingestWebsiteLead(@Body() body: IngestWebsiteLeadDto) {

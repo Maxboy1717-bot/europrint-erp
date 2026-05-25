@@ -1,3 +1,8 @@
+/**
+ * @module mm-materials.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertOk, unwrapOrNotFoundDefined } from '@common/http-result';
 import {
   Body,
@@ -12,8 +17,9 @@ import {
   Query,
   UseGuards,
   UseInterceptors, BadRequestException, NotFoundException} from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '@common/guards/roles.guard';
 import { Roles} from '@common/decorators/roles.decorator';
 import { AuditInterceptor} from '@common/interceptors/audit.interceptor';
@@ -31,7 +37,8 @@ enum Role {
  SUPER_ADMIN = 'super_admin',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Mm Materials')
 @Controller('mm/materials')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -42,6 +49,8 @@ export class MmMaterialsController {
  private readonly commandBus: CommandBus,
  private readonly queryBus: QueryBus) {}
 
+ @ApiOperation({ summary: 'Get materials' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get()
  async getMaterials(@Query() queryParams: Record<string, unknown>) {
 
@@ -63,6 +72,8 @@ export class MmMaterialsController {
 
 }
 
+ @ApiOperation({ summary: 'Get material stats' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('stats')
  @Roles(Role.WAREHOUSE_MANAGER, Role.SUPER_ADMIN)
  async getMaterialStats() {
@@ -79,6 +90,9 @@ export class MmMaterialsController {
 
 }
 
+ @ApiOperation({ summary: 'Get material by id' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  async getMaterialById(@Param('id') id: string) {
 
@@ -94,9 +108,12 @@ export class MmMaterialsController {
 
 }
 
+ @ApiOperation({ summary: 'Create material' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
  @Roles(Role.WAREHOUSE_MANAGER, Role.SUPER_ADMIN)
- async createMaterial(@Body() body: Record<string, unknown>) {
+ async createMaterial(@Body() body: unknown) {
 
  const parsed = CreateMaterialDtoSchema.parse(body);
  const cmd = new CreateMaterialCommand(
@@ -119,9 +136,13 @@ export class MmMaterialsController {
 
 }
 
+ @ApiOperation({ summary: 'Update material' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Put(':id')
  @Roles(Role.WAREHOUSE_MANAGER, Role.SUPER_ADMIN)
- async updateMaterial(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+ async updateMaterial(@Param('id') id: string, @Body() body: unknown) {
 
  const parsed = UpdateMaterialDtoSchema.parse(body);
  const cmd = new UpdateMaterialCommand(
@@ -145,6 +166,10 @@ export class MmMaterialsController {
 
 }
 
+ @ApiOperation({ summary: 'Toggle material active' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/toggle-active')
  @Roles(Role.SUPER_ADMIN)
  async toggleMaterialActive(@Param('id') id: string, @Body() body: { isActive: boolean}) {

@@ -1,3 +1,8 @@
+/**
+ * @module maintenance-status.enum
+ * @description Source module. See exports for details.
+ */
+
 export enum MaintenanceStatus {
   SCHEDULED = 'scheduled',
   IN_PROGRESS = 'in_progress',

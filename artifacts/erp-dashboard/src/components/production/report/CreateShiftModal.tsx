@@ -1,3 +1,8 @@
+/**
+ * @module CreateShiftModal
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -12,7 +17,9 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { DEPARTMENTS } from "./helpers";
+import { useTranslation } from '@/lib/i18n';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface CreateShiftModalProps {
   open: boolean;
   onClose: () => void;
@@ -20,6 +27,7 @@ interface CreateShiftModalProps {
 }
 
 export function CreateShiftModal({ open, onClose, onCreated }: CreateShiftModalProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [form, setForm] = useState({
     department: "",
@@ -51,17 +59,17 @@ export function CreateShiftModal({ open, onClose, onCreated }: CreateShiftModalP
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle>Yangi Smena Ochish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("yangiSmenaOchish")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label>Bo'lim *</Label>
+              <Label>{t("bolim2")}</Label>
               <Select value={form.department} onValueChange={(v) => setForm((f) => ({ ...f, department: v }))}>
-                <SelectTrigger data-testid="select-shift-dept">
-                  <SelectValue placeholder="Bo'limni tanlang" />
+                <SelectTrigger data-testid="select-shift-dept" className="h-9">
+                  <SelectValue placeholder={t("bolimniTanlang")} />
                 </SelectTrigger>
                 <SelectContent>
                   {(Array.isArray(DEPARTMENTS) ? DEPARTMENTS : []).map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
@@ -69,46 +77,46 @@ export function CreateShiftModal({ open, onClose, onCreated }: CreateShiftModalP
               </Select>
             </div>
             <div>
-              <Label>Smena *</Label>
+              <Label>{t("smena1")}</Label>
               <Select value={form.shift_number} onValueChange={(v) => setForm((f) => ({ ...f, shift_number: v }))}>
-                <SelectTrigger data-testid="select-shift-number">
+                <SelectTrigger data-testid="select-shift-number" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1-smena</SelectItem>
-                  <SelectItem value="2">2-smena</SelectItem>
-                  <SelectItem value="3">3-smena</SelectItem>
+                  <SelectItem value="1">{tLabel('common.CreateShiftModal.1Smena', "1-smena")}</SelectItem>
+                  <SelectItem value="2">{tLabel('common.CreateShiftModal.2Smena', "2-smena")}</SelectItem>
+                  <SelectItem value="3">{tLabel('common.CreateShiftModal.3Smena', "3-smena")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label>Sana *</Label>
+              <Label>{t("sana")}</Label>
               <Input type="date" value={form.shift_date} onChange={(e) => setForm((f) => ({ ...f, shift_date: e.target.value }))} data-testid="input-shift-date" />
             </div>
             <div>
-              <Label>Boshlanish vaqti *</Label>
+              <Label>{t("boshlanishVaqti")}</Label>
               <Input type="datetime-local" value={form.shift_start} onChange={(e) => setForm((f) => ({ ...f, shift_start: e.target.value }))} data-testid="input-shift-start" />
             </div>
           </div>
           <div>
-            <Label>Mashina</Label>
-            <Input placeholder="Mashina nomi" value={form.machine_name} onChange={(e) => setForm((f) => ({ ...f, machine_name: e.target.value }))} data-testid="input-machine-name" />
+            <Label>{t("mashina")}</Label>
+            <Input placeholder={t("mashinaNomi")} value={form.machine_name} onChange={(e) => setForm((f) => ({ ...f, machine_name: e.target.value }))} data-testid="input-machine-name" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Reja (dona)</Label>
               <Input type="number" placeholder="0" value={form.planned_qty} onChange={(e) => setForm((f) => ({ ...f, planned_qty: e.target.value }))} data-testid="input-planned-qty" />
             </div>
             <div>
-              <Label>Buyurtma #</Label>
-              <Input placeholder="Ixtiyoriy" value={form.production_order_id} onChange={(e) => setForm((f) => ({ ...f, production_order_id: e.target.value }))} data-testid="input-order-id" />
+              <Label>{t("buyurtma1")}</Label>
+              <Input placeholder={t("Ixtiyoriy")} value={form.production_order_id} onChange={(e) => setForm((f) => ({ ...f, production_order_id: e.target.value }))} data-testid="input-order-id" />
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button
             disabled={!form.department || !form.shift_date || !form.shift_start || mut.isPending}
             onClick={handleSubmit}

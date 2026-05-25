@@ -1,3 +1,8 @@
+/**
+ * @module TemplatesDialog
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -17,26 +22,27 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { format } from "date-fns";
 import type { KanbanColumn } from "@shared/schema";
 import { type T, type KanbanTemplate, PRIORITY_CONFIG } from "./kanban-types";
-
+import { tLabel } from '@/lib/i18n/tLabel';
 export function TemplatesDialog({
   open,
   onOpenChange,
   boardId,
   columns,
-  t,
+  t: tProp,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   boardId: string | null;
   columns: KanbanColumn[];
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string) => string) & ((key: string, params?: Record<string, string | number>) => string);
 }) {
+  const t = tProp;
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<KanbanTemplate | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", title: "", description: "", priority: "normal" });
   const itemsPerPage = 10;
 
@@ -44,8 +50,8 @@ export function TemplatesDialog({
     queryKey: ["/api/kanban/templates"],
     queryFn: async () => {
       try {
-        const res = await apiRequest("GET", "/api/kanban/templates");
-        return Array.isArray(res.data) ? res.data : [];
+        const res = await apiRequest<{ data?: unknown[] }>("GET", "/api/kanban/templates");
+        return (Array.isArray(res.data) ? res.data : []) as KanbanTemplate[];
       } catch { return []; }
     },
     enabled: open,
@@ -85,7 +91,7 @@ export function TemplatesDialog({
     onSuccess: () => {
       refetch();
       queryClient.invalidateQueries({ queryKey: ["/api/kanban/templates"] });
-      toast({ title: "Shablon o'chirildi" });
+      toast({ title: tLabel('kanban.TemplatesDialog.tsx.shablonOchirildi', "Shablon o'chirildi") });
     },
   });
 
@@ -95,7 +101,7 @@ export function TemplatesDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/kanban/boards"] });
-      toast({ title: "Shablon qo'llandi" });
+      toast({ title: tLabel('kanban.TemplatesDialog.tsx.shablonQollandi', "Shablon qo'llandi") });
     },
   });
 
@@ -137,7 +143,7 @@ export function TemplatesDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -177,7 +183,7 @@ export function TemplatesDialog({
             <div>
               <Label>{t.fields.priority}</Label>
               <Select value={formData.priority} onValueChange={(v) => setFormData({ ...formData, priority: v })}>
-                <SelectTrigger data-testid="select-template-priority">
+                <SelectTrigger data-testid="select-template-priority" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -222,21 +228,21 @@ export function TemplatesDialog({
 
             <ScrollArea className="flex-1">
               {paginatedTemplates.length > 0 ? (
-                <Table>
-                  <TableHeader>
+                <div className="ep-table-scroll"><Table>
+                  <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
                       <TableHead>{t.templates.name}</TableHead>
                       <TableHead>{t.templates.taskTitle}</TableHead>
                       <TableHead>{t.fields.priority}</TableHead>
                       <TableHead>{t.table.deadline}</TableHead>
-                      <TableHead className="text-right">Amallar</TableHead>
+                      <TableHead className="text-right">{t("Amallar")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {(Array.isArray(paginatedTemplates) ? paginatedTemplates : []).map((tpl) => {
                       const pConfig = priorityConfig[tpl.priority as keyof typeof priorityConfig] || priorityConfig.normal;
                       return (
-                        <TableRow key={tpl.id} data-testid={`template-row-${tpl.id}`}>
+                        <TableRow key={tpl.id} data-testid={`template-row-${tpl.id}`} className="hover:bg-muted/40 transition-colors">
                           <TableCell className="font-medium">{tpl.name}</TableCell>
                           <TableCell>{tpl.title}</TableCell>
                           <TableCell>
@@ -254,21 +260,21 @@ export function TemplatesDialog({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    aria-label="Tahrirlash"
+                                    aria-label={t("edit")}
                                     onClick={() => handleEdit(tpl)}
                                     data-testid={`button-edit-template-${tpl.id}`}
                                   >
                                     <Settings className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Tahrirlash</TooltipContent>
+                                <TooltipContent>{t("edit")}</TooltipContent>
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    aria-label="Qo'llash"
+                                    aria-label={t("qollash")}
                                     onClick={() => applyTemplateMutation.mutate(tpl.id)}
                                     disabled={!boardId || columns.length === 0 || applyTemplateMutation.isPending}
                                     data-testid={`button-apply-template-${tpl.id}`}
@@ -276,21 +282,21 @@ export function TemplatesDialog({
                                     <Zap className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Qo'llash</TooltipContent>
+                                <TooltipContent>{t("qollash")}</TooltipContent>
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    aria-label="O'chirish"
+                                    aria-label={t("delete")}
                                     onClick={() => setConfirmDeleteId(tpl.id)}
                                     data-testid={`button-delete-template-${tpl.id}`}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>O'chirish</TooltipContent>
+                                <TooltipContent>{t("delete")}</TooltipContent>
                               </Tooltip>
                             </div>
                           </TableCell>
@@ -298,9 +304,9 @@ export function TemplatesDialog({
                       );
                     })}
                   </TableBody>
-                </Table>
+                </Table></div>
               ) : (
-                <div className="text-center py-12 text-muted-foreground">
+                <div className="text-center py-12 text-[13px] text-muted-foreground">
                   <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>{t.templates.empty}</p>
                 </div>
@@ -318,7 +324,7 @@ export function TemplatesDialog({
                       <Button
                         variant="outline"
                         size="icon"
-                        aria-label="Oldingi sahifa"
+                        aria-label={t("previousPageAria")}
                         onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                         disabled={currentPage === 1}
                         data-testid="button-prev-page"
@@ -326,7 +332,7 @@ export function TemplatesDialog({
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Oldingi sahifa</TooltipContent>
+                    <TooltipContent>{t("previousPageAria")}</TooltipContent>
                   </Tooltip>
                   <span className="text-sm">{currentPage} / {totalPages}</span>
                   <Tooltip>
@@ -334,7 +340,7 @@ export function TemplatesDialog({
                       <Button
                         variant="outline"
                         size="icon"
-                        aria-label="Keyingi sahifa"
+                        aria-label={t("nextPageAria")}
                         onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                         disabled={currentPage === totalPages}
                         data-testid="button-next-page"
@@ -342,7 +348,7 @@ export function TemplatesDialog({
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Keyingi sahifa</TooltipContent>
+                    <TooltipContent>{t("nextPageAria")}</TooltipContent>
                   </Tooltip>
                 </div>
               </div>
@@ -355,8 +361,8 @@ export function TemplatesDialog({
     <ConfirmDialog
       open={confirmDeleteId !== null}
       onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-      title="Shablonni o'chirish"
-      description="Ushbu kanban shablonini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+      title={t("shablonniOchirish")}
+      description={t("ushbuKanbanShabloniniOchirishniTasdiqlaysizmi")}
       confirmText="O'chirish"
       cancelText="Bekor qilish"
       variant="destructive"

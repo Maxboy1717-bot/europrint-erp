@@ -1,3 +1,9 @@
+/**
+ * @module ReportsDialog
+ * @description React page component. Route-level UI.
+ */
+
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,9 +12,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TrendingUp, RefreshCw } from "lucide-react";
+import { TrendingUp, RefreshCw, FileSpreadsheet, FileText } from "lucide-react";
 import { type EmployeePerformance } from "./kanban-types";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, getAuthHeaders } from "@/lib/queryClient";
+import { apiRequest } from '@/lib/queryClient';
+import { EPStatusPill, EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export function ReportsDialog({
   open,
@@ -17,6 +26,9 @@ export function ReportsDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation("common");
+  const [exporting, setExporting] = useState<"excel" | "pdf" | null>(null);
+
   const { data: performance = [], isLoading } = useQuery<EmployeePerformance[]>({
     queryKey: ["/api/kanban/reports/employee-performance"],
     enabled: open,
@@ -28,49 +40,106 @@ export function ReportsDialog({
     return `${hours}s ${mins}d`;
   };
 
+  const handleExport = async (format: "excel" | "pdf") => {
+    setExporting(format);
+    try {
+      const res = await fetch(`/api/kanban/reports/export?format=${format}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const ext = format === "excel" ? "xlsx" : "pdf";
+      a.download = `kanban-hisobot-${new Date().toISOString().slice(0, 10)}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Export xatosi:", err);
+    } finally {
+      setExporting(null);
+    }
+  };
+
   return (
-    <>
-      <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label="Yangilash"><RefreshCw className="h-4 w-4" /></Button>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh]">
+      <DialogContent className="max-w-3xl max-h-[80vh] p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Xodimlar samaradorligi hisoboti
-          </DialogTitle>
+          <div className="flex items-center justify-between gap-2">
+            <DialogTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              {t("xodimlarSamaradorligiHisoboti")}
+            </DialogTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void queryClient.invalidateQueries({ queryKey: ["/api/kanban/reports"] })}
+                data-testid="button-refresh-report"
+              >
+                <RefreshCw className="h-4 w-4 mr-1" />
+                {t("refresh")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExport("excel")}
+                disabled={exporting !== null}
+                data-testid="button-export-excel"
+              >
+                {exporting === "excel"
+                  ? <EPLoader className="mr-1" />
+                  : <FileSpreadsheet className="h-4 w-4 mr-1" />}
+                Excel
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExport("pdf")}
+                disabled={exporting !== null}
+                data-testid="button-export-pdf"
+              >
+                {exporting === "pdf"
+                  ? <EPLoader className="mr-1" />
+                  : <FileText className="h-4 w-4 mr-1" />}
+                PDF
+              </Button>
+            </div>
+          </div>
         </DialogHeader>
 
         <ScrollArea className="h-[60vh]">
           {isLoading ? (
             <div className="space-y-2 p-4">
               {([1, 2, 3, 4, 5]).map((i) => (
-                <Skeleton key={`k-${i}`} className="h-12 w-full" />
+                <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />
               ))}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
+            <div className="ep-table-scroll"><Table>
+              <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow>
-                  <TableHead>Xodim</TableHead>
-                  <TableHead className="text-right">Vazifalar</TableHead>
-                  <TableHead className="text-right">Vaqt</TableHead>
-                  <TableHead className="text-right">Natijalar</TableHead>
+                  <TableHead>{t("xodim1")}</TableHead>
+                  <TableHead className="text-right">{t("vazifalar")}</TableHead>
+                  <TableHead className="text-right">{t("time")}</TableHead>
+                  <TableHead className="text-right">{t("natijalar")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(Array.isArray(performance) ? performance : []).map((emp) => (
-                  <TableRow key={emp.user.id} data-testid={`row-performance-${emp.user.id}`}>
+                  <TableRow key={emp.user.id} data-testid={`row-performance-${emp.user.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={emp.user.profileImageUrl || undefined} />
-                          <AvatarFallback>{emp.user.fullName?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                          <AvatarFallback>{String((emp.user as unknown as Record<string,unknown>).fullName ?? (emp.user as unknown as Record<string,unknown>).full_name ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <span className="font-medium">{emp.user.fullName}</span>
+                        <span className="font-medium">{String((emp.user as unknown as Record<string,unknown>).fullName ?? (emp.user as unknown as Record<string,unknown>).full_name ?? "Noma'lum")}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Badge variant="secondary">{emp.totalTasks}</Badge>
+                      <EPStatusPill tone="neutral">{emp.totalTasks}</EPStatusPill>
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground">
                       {formatTime(emp.totalTimeMinutes)}
@@ -82,17 +151,16 @@ export function ReportsDialog({
                 ))}
                 {performance.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                      Ma'lumotlar topilmadi
+                    <TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">
+                      {t("malumotlarTopilmadi")}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </ScrollArea>
       </DialogContent>
     </Dialog>
-    </>
   );
 }

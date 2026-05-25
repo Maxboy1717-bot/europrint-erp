@@ -1,13 +1,51 @@
 /**
- * funnel.service.ts — TZ-42: Win-Rate + Funnel Conversion + Pipeline Velocity
+ * @module funnel.service
+ * @description Sales-funnel analytics: win-rate, stage-by-stage conversion,
+ *   and pipeline velocity. Composes the data shown on the CRM Funnel
+ *   Analytics dashboard.
+ *
+ *   Three formulas:
+ *     winRate     = won / (won + lost) × 100
+ *     conversion  = movedToNext / entered × 100   (per stage)
+ *     velocity    = opportunities × winRate × avgDealSize / avgCycleDays
+ *
+ *   `velocity` answers "how many UZS of pipeline value do we convert per
+ *   day?" — the single number that managers can compare across teams and
+ *   across periods. Higher = faster cash collection.
+ * @layer Service (CRM analytics)
+ *
+ * WHY VELOCITY FORMULA INCLUDES winRate
+ *   Raw pipeline × deal size doesn't account for the fact that not every
+ *   open opportunity closes. Multiplying by historical win-rate weights
+ *   the calculation by realistic conversion. This matches the standard
+ *   "pipeline velocity" definition (Mark Roberge / Hubspot playbook).
+ *
+ * WHY avgCycleDays defaults to 30, not 1
+ *   With no `close_date` on any row, average cycle is undefined. Defaulting
+ *   to 30 days (one month) lets velocity still compute as "monthly revenue
+ *   rate"; setting it to 1 would massively over-state velocity.
+ *
+ * WHY composeFunnelData EXISTS (instead of controller orchestration)
+ *   Reviewer Rule 6 forbids the controller from chaining queries and
+ *   running formulas. This method does the orchestration so the controller
+ *   becomes a single `return service.composeFunnelData()` call.
+ *
+ *   The `unwrapResult` helper at the top of the file is local on purpose:
+ *   we want service-level "fallback on Err" behaviour without exporting an
+ *   HTTP-aware unwrap that would tempt callers to throw inside services.
+ *
+ * WHY STAGE DATA IS FILTERED BY `is_success`/`is_fail` IN SQL
+ *   Stage semantics (won/lost flags) belong to the `crm_stages` config,
+ *   not to the deal itself — same stage might be "won" for one pipeline
+ *   and a pure intermediate for another. Joining on stage keeps the
+ *   classification accurate per-pipeline.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { safeNum, safeDiv } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { CRM_ANALYTICS_REPO, ICrmAnalyticsRepo } from './repositories/i-crm-analytics.repo';
 
 /** Extract Ok data from a Result, or return fallback on Err — service-layer only (no HTTP throw) */
 function unwrapResult<T, F>(result: Result<T, AppError>, fallback: F): T | F {
@@ -70,6 +108,10 @@ export interface PipelineVelocityResult {
 
 @Injectable()
 export class FunnelService {
+  constructor(
+    @Inject(CRM_ANALYTICS_REPO) private readonly repo: ICrmAnalyticsRepo,
+  ) {}
+
   @Calculation('crm.funnel.winRate')
   async calculateWinRate(input: WinRateInput): Promise<Result<WinRateResult, AppError>> {
     const won = safeNum(input.won);
@@ -140,29 +182,7 @@ export class FunnelService {
   }
 
   async getStageData(pipelineId?: string): Promise<StageRow[]> {
-    return runQuery<StageRow>(
-      pipelineId
-        ? sql`
-          SELECT cs.name AS stage_name, COUNT(*)::int AS count,
-            COALESCE(cs.is_success, false) AS is_won,
-            COALESCE(cs.is_fail,    false) AS is_lost
-          FROM crm_deals d
-          JOIN crm_stages cs ON cs.id::text = d.stage_id
-          WHERE d.pipeline_id = ${pipelineId} AND d.deleted_at IS NULL
-          GROUP BY cs.name, cs.is_success, cs.is_fail, cs.sort_order
-          ORDER BY cs.sort_order ASC
-        `
-        : sql`
-          SELECT cs.name AS stage_name, COUNT(*)::int AS count,
-            COALESCE(cs.is_success, false) AS is_won,
-            COALESCE(cs.is_fail,    false) AS is_lost
-          FROM crm_deals d
-          JOIN crm_stages cs ON cs.id::text = d.stage_id
-          WHERE d.deleted_at IS NULL
-          GROUP BY cs.name, cs.is_success, cs.is_fail, cs.sort_order
-          ORDER BY cs.sort_order ASC
-        `,
-    );
+    return this.repo.getFunnelStageData(pipelineId);
   }
 
   /**
@@ -175,60 +195,44 @@ export class FunnelService {
     velocity: PipelineVelocityResult | { velocity: number; opportunities: number; winRateFraction: number; avgDealSize: number; avgSalesCycleDays: number; winRate: number };
     rawStages: StageRow[];
   }> {
-    const [rows, vRow] = await Promise.all([
-      this.getStageData(pipelineId),
-      this.getVelocityData(),
-    ]);
-
-    const won   = rows.filter(r => r.is_won).reduce((s, r) => s + safeNum(r.count), 0);
-    const lost  = rows.filter(r => r.is_lost).reduce((s, r) => s + safeNum(r.count), 0);
-    const total = won + lost;
-
-    const winRateData = total > 0
-      ? unwrapResult(await this.calculateWinRate({ won, lost }), { won, lost, total, winRate: 0, lossRate: 0 })
-      : { won, lost, total, winRate: 0, lossRate: 0 };
-
-    const stageRows = rows.length
-      ? rows.map((r, i) => ({
-          name:        r.stage_name,
-          entered:     safeNum(r.count),
-          movedToNext: safeNum(rows[i + 1]?.count ?? 0),
-        }))
-      : [{ name: 'Ma\'lumot yo\'q', entered: 0, movedToNext: 0 }];
-
-    const funnel = unwrapResult(await this.calculateConversion(stageRows), {
-      stages: stageRows.map(s => ({ ...s, conversionRate: 0 })),
-      overallConversion: 0,
-    });
-
-    const opportunities   = safeNum(vRow.active_deals);
-    const winRateFraction = safeNum(vRow.closed_count) > 0
-      ? safeNum(vRow.won_count) / safeNum(vRow.closed_count)
-      : 0;
-    const avgDealSize   = safeNum(vRow.avg_deal_size);
-    const avgCycleDays  = Math.max(safeNum(vRow.avg_cycle_days), 1);
-
-    const velocityInput = { opportunities, winRateFraction, avgDealSize, avgSalesCycleDays: avgCycleDays };
-    const velocity = winRateFraction > 0 && avgDealSize > 0
-      ? unwrapResult(await this.calculateVelocity(velocityInput), { velocity: 0, ...velocityInput, winRate: 0 })
-      : { velocity: 0, ...velocityInput, winRate: winRateFraction * 100 };
-
+    const [rows, vRow] = await Promise.all([this.getStageData(pipelineId), this.getVelocityData()]);
+    const winRateData = await this.computeWinRateBlock(rows);
+    const funnel = await this.computeFunnelBlock(rows);
+    const velocity = await this.computeVelocityBlock(vRow);
     return { winRate: winRateData, funnel, velocity, rawStages: rows };
   }
 
+  private async computeWinRateBlock(rows: StageRow[]) {
+    const won  = rows.filter(r => r.is_won).reduce((s, r) => s + safeNum(r.count), 0);
+    const lost = rows.filter(r => r.is_lost).reduce((s, r) => s + safeNum(r.count), 0);
+    const total = won + lost;
+    return total > 0
+      ? unwrapResult(await this.calculateWinRate({ won, lost }), { won, lost, total, winRate: 0, lossRate: 0 })
+      : { won, lost, total, winRate: 0, lossRate: 0 };
+  }
+
+  private async computeFunnelBlock(rows: StageRow[]): Promise<FunnelConversionResult> {
+    const stageRows = rows.length
+      ? rows.map((r, i) => ({ name: r.stage_name, entered: safeNum(r.count), movedToNext: safeNum(rows[i + 1]?.count ?? 0) }))
+      : [{ name: 'Ma\'lumot yo\'q', entered: 0, movedToNext: 0 }];
+    return unwrapResult(await this.calculateConversion(stageRows), {
+      stages: stageRows.map(s => ({ ...s, conversionRate: 0 })),
+      overallConversion: 0,
+    });
+  }
+
+  private async computeVelocityBlock(vRow: VelocityRow) {
+    const opportunities = safeNum(vRow.active_deals);
+    const winRateFraction = safeNum(vRow.closed_count) > 0 ? safeNum(vRow.won_count) / safeNum(vRow.closed_count) : 0;
+    const avgDealSize = safeNum(vRow.avg_deal_size);
+    const avgCycleDays = Math.max(safeNum(vRow.avg_cycle_days), 1);
+    const velocityInput = { opportunities, winRateFraction, avgDealSize, avgSalesCycleDays: avgCycleDays };
+    return winRateFraction > 0 && avgDealSize > 0
+      ? unwrapResult(await this.calculateVelocity(velocityInput), { velocity: 0, ...velocityInput, winRate: 0 })
+      : { velocity: 0, ...velocityInput, winRate: winRateFraction * 100 };
+  }
+
   async getVelocityData(): Promise<VelocityRow> {
-    const rows = await runQuery<VelocityRow>(sql`
-      SELECT
-        COUNT(*) FILTER (WHERE stage_semantic_id NOT IN ('WON','LOST') OR stage_semantic_id IS NULL)::int AS active_deals,
-        COUNT(*) FILTER (WHERE stage_semantic_id = 'WON')::int  AS won_count,
-        COUNT(*) FILTER (WHERE stage_semantic_id IN ('WON','LOST'))::int AS closed_count,
-        COALESCE(AVG(opportunity::numeric), 0)::float            AS avg_deal_size,
-        COALESCE(AVG(
-          EXTRACT(DAY FROM (close_date::timestamp - date_create))
-        ) FILTER (WHERE close_date IS NOT NULL), 30)::float      AS avg_cycle_days
-      FROM crm_deals
-      WHERE deleted_at IS NULL
-    `);
-    return rows[0] ?? { active_deals: 0, won_count: 0, closed_count: 0, avg_deal_size: 0, avg_cycle_days: 30 };
+    return this.repo.getFunnelVelocityData();
   }
 }

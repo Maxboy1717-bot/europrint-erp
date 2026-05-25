@@ -1,3 +1,8 @@
+/**
+ * @module chat-gateway-helper.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import type { Server, Socket } from 'socket.io';
@@ -51,12 +56,12 @@ export class ChatGatewayHelperService {
     const userId = client.data?.userId;
     if (!userId) return;
     const roomId = Number(data.roomId);
-    const messages = await this.chatService.getMessages(
-      roomId,
-      userId,
-      data.limit || 50,
-      data.before,
-    );
+    const result = await this.chatService.getMessages(roomId, userId, data.limit || 50, data.before);
+    // getMessages returns Result<object> — unwrap it before emitting so the
+    // frontend receives a plain array, not { ok, data }.
+    const messages = (result as { ok: boolean; data?: unknown }).ok
+      ? ((result as { ok: boolean; data?: unknown }).data ?? [])
+      : [];
     client.emit('messages_list', { roomId, messages });
   }
 

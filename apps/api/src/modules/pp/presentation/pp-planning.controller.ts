@@ -1,3 +1,8 @@
+/**
+ * @module pp-planning.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
 Controller,
   Get,
@@ -11,9 +16,10 @@ Controller,
   Logger,
   InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -24,8 +30,9 @@ import { PpCreateScheduleEntrySchema, PpCreateScheduleEntryDto, PpUpdateOperatio
 import { MS_PER_DAY } from '@common/constants/app.constants';
 const PLAN_ROLES = ['super_admin', 'director', 'production_manager', 'technologist', 'planner'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Pp Planning')
 @Controller('planning')
 @UseGuards(RolesGuard)
 @Roles(...PLAN_ROLES)
@@ -34,6 +41,8 @@ export class PpPlanningController {
 
   constructor(private readonly svc: PpPlanningService) {}
 
+  @ApiOperation({ summary: 'Get schedule' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('schedule')
   async getSchedule(
     @Query('startDate') startDate?: string,
@@ -44,12 +53,18 @@ export class PpPlanningController {
     return unwrapOrThrow(await this.svc.getSchedule(s, e));
   }
 
+  @ApiOperation({ summary: 'Create schedule entry' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('schedule')
   @UsePipes(new ZodValidationPipe(PpCreateScheduleEntrySchema))
   async createScheduleEntry(@Body() body: PpCreateScheduleEntryDto) {
     return unwrapOrThrow(await this.svc.createScheduleEntry(body));
   }
 
+  @ApiOperation({ summary: 'Update operation' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('operations/:id')
   @UsePipes(new ZodValidationPipe(PpUpdateOperationSchema))
   async updateOperation(

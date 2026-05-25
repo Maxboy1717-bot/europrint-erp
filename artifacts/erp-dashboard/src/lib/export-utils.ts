@@ -1,3 +1,8 @@
+/**
+ * @module export-utils
+ * @description Frontend utility / library module.
+ */
+
 export function exportToCSV(data: Record<string, unknown>[], filename: string, columns?: { key: string; label: string }[]) {
   if (!data || data.length === 0) return;
 
@@ -88,7 +93,7 @@ export async function exportToPDF(
   doc.text(new Date().toLocaleDateString("uz-UZ"), 14, 21);
 
   autoTable(doc, {
-    head: [(columns ?? []).map((c) => c.header)],
+    head: [(Array.isArray(columns) ? columns : []).map((c) => c.header)],
     body: (Array.isArray(data) ? data : []).map((row) =>
       (Array.isArray(columns) ? columns : []).map((c) => String(c.accessor(row) ?? ""))
     ),

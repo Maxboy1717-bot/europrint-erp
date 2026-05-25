@@ -1,3 +1,8 @@
+/**
+ * @module hr-v2-seed.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -15,16 +20,16 @@ export class HrV2SeedRepository {
 
   async insertViolationCatalogEntry(e: { code: string; category: string; name: string; nameRu: string; severity: string; finePercent: string; fineAmount: string; points: number; description: string }): Promise<void> {
     await db.insert(violation_catalog).values({
-      code:                 e.code,
-      category:             e.category,
-      name:                 e.name,
-      name_ru:              e.nameRu,
-      severity:             e.severity,
-      default_fine_percent: e.finePercent,
-      default_fine_amount:  e.fineAmount,
-      points_deducted:      e.points,
-      description:          e.description,
-      is_active:            true,
+      code:               e.code,
+      category:           e.category,
+      name:               e.name,
+      nameRu:             e.nameRu,
+      severity:           e.severity,
+      defaultFinePercent: e.finePercent,
+      defaultFineAmount:  e.fineAmount,
+      pointsDeducted:     e.points,
+      description:        e.description,
+      isActive:           true,
     }).onConflictDoNothing();
   }
 
@@ -39,13 +44,13 @@ export class HrV2SeedRepository {
     await db.insert(badge_catalog).values({
       code:         b.code,
       name:         b.name,
-      name_ru:      b.nameRu,
+      nameRu:       b.nameRu,
       icon:         b.icon,
       description:  b.desc,
       criteria:     b.criteria,
-      point_value:  b.points,
-      is_auto_award: b.auto,
-      is_active:    true,
+      pointValue:   b.points,
+      isAutoAward:  b.auto,
+      isActive:     true,
     }).onConflictDoNothing();
   }
 
@@ -63,8 +68,8 @@ export class HrV2SeedRepository {
       questions:   sql`${questions}::jsonb`,
       period:      'quarterly',
       status:      'draft',
-      start_date:  sql`CURRENT_DATE`,
-      end_date:    sql`CURRENT_DATE + INTERVAL '14 days'`,
+      startDate:   sql`CURRENT_DATE`,
+      endDate:     sql`CURRENT_DATE + INTERVAL '14 days'`,
     });
   }
 }

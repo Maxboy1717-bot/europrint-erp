@@ -1,5 +1,11 @@
+/**
+ * @module SPCChart
+ * @description React UI component.
+ */
+
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import {
   LineChart,
   Line,
@@ -34,6 +40,7 @@ export function SPCChart({
   title,
   unit = "",
 }: SPCChartProps) {
+  const { t } = useTranslation("common");
   const violations = (Array.isArray(data) ? data : []).filter((d) => d.value > ucl || d.value < lcl);
 
   return (
@@ -115,12 +122,12 @@ export function SPCChart({
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block w-3 h-0.5 bg-green-500" />
-          O'rta chiziq
+          {t("ortaChiziq")}
         </span>
         {violations.length > 0 && (
           <span className="flex items-center gap-1">
             <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" />
-            Buzilish
+            {t("buzilish")}
           </span>
         )}
       </div>

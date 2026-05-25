@@ -1,5 +1,11 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { LucideIcon } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface PortretData {
   // Blok A — Lavozim tahlili (5 savol)
   position_name_variants?: string;  // 1. Lavozim nomi variantlari
@@ -83,16 +89,16 @@ export interface Step {
 }
 
 export const TOOL_TRAITS: { key: string; label: string; description: string }[] = [
-  { key: "A", label: "A — Diqqat (Внимание)",         description: "Tafsilotlarga e'tibor, ziyraklik" },
-  { key: "B", label: "B — Strategiya (Стратегия)",     description: "Uzoqni ko'rish, rejalashtirish" },
-  { key: "C", label: "C — Nazorat (Контроль)",         description: "Emotsiyalarni boshqarish, sakin bo'lish" },
-  { key: "D", label: "D — Ishonch (Уверенность)",      description: "O'ziga va qarorlariga ishonch" },
-  { key: "E", label: "E — Energiya (Энергия)",         description: "Faollik, harakatchanlik darajasi" },
-  { key: "F", label: "F — Qat'iylik (Решительность)", description: "Tez va aniq qaror qabul qilish" },
-  { key: "G", label: "G — Bardosh (Оборона)",          description: "Tanqid va bosimga chidamlilik" },
-  { key: "H", label: "H — Taktika (Тактика)",          description: "Operativ fikrlash, moslashuvchanlik" },
-  { key: "I", label: "I — Empatiya (Эмпатия)",         description: "Oadamlarni tushunish, his qilish" },
-  { key: "J", label: "J — Muloqot (Общение)",          description: "Kommunikatsiya, aloqa o'rnatish" },
+  { key: "A", label: tLabel('common..aDiqqat', "A — Diqqat (Внимание)"),         description: tLabel('common..tafsilotlargaEtiborZiyraklik', "Tafsilotlarga e'tibor, ziyraklik") },
+  { key: "B", label: tLabel('common..bStrategiya', "B — Strategiya (Стратегия)"),     description: tLabel('common..uzoqniKorishRejalashtirish', "Uzoqni ko'rish, rejalashtirish") },
+  { key: "C", label: tLabel('common..cNazorat', "C — Nazorat (Контроль)"),         description: tLabel('common..emotsiyalarniBoshqarishSakinBolish', "Emotsiyalarni boshqarish, sakin bo'lish") },
+  { key: "D", label: tLabel('common..dIshonch', "D — Ishonch (Уверенность)"),      description: tLabel('common..ozigaVaQarorlarigaIshonch', "O'ziga va qarorlariga ishonch") },
+  { key: "E", label: tLabel('common..eEnergiya', "E — Energiya (Энергия)"),         description: "Faollik, harakatchanlik darajasi" },
+  { key: "F", label: tLabel('common..fQatiylik', "F — Qat'iylik (Решительность)"), description: "Tez va aniq qaror qabul qilish" },
+  { key: "G", label: tLabel('common..gBardosh', "G — Bardosh (Оборона)"),          description: "Tanqid va bosimga chidamlilik" },
+  { key: "H", label: tLabel('common..hTaktika', "H — Taktika (Тактика)"),          description: "Operativ fikrlash, moslashuvchanlik" },
+  { key: "I", label: tLabel('common..iEmpatiya', "I — Empatiya (Эмпатия)"),         description: "Oadamlarni tushunish, his qilish" },
+  { key: "J", label: tLabel('common..jMuloqot', "J — Muloqot (Общение)"),          description: tLabel('common..kommunikatsiyaAloqaOrnatish', "Kommunikatsiya, aloqa o'rnatish") },
 ];
 
 export const CHANNELS_LIST = [

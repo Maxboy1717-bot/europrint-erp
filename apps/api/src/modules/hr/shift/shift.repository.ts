@@ -1,3 +1,8 @@
+/**
+ * @module shift.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
@@ -19,20 +24,20 @@ export class ShiftRepository {
       const [row] = await db
         .insert(shiftSchedules)
         .values({
-          employee_id: dto.employeeId,
-          shift_date: dto.shiftDate,
-          shift_type: dto.shiftType,
-          start_time: dto.startTime,
-          end_time: dto.endTime,
+          employeeId: dto.employeeId,
+          shiftDate: dto.shiftDate,
+          shiftType: dto.shiftType,
+          startTime: dto.startTime,
+          endTime: dto.endTime,
           status: 'scheduled',
           notes: dto.notes ?? null,
         })
         .onConflictDoUpdate({
-          target: [shiftSchedules.employee_id, shiftSchedules.shift_date],
+          target: [shiftSchedules.employeeId, shiftSchedules.shiftDate],
           set: {
-            shift_type: dto.shiftType,
-            start_time: dto.startTime,
-            end_time: dto.endTime,
+            shiftType: dto.shiftType,
+            startTime: dto.startTime,
+            endTime: dto.endTime,
             status: 'scheduled',
             notes: dto.notes ?? null,
           },
@@ -106,7 +111,7 @@ export class ShiftRepository {
       const [row] = await db
         .select()
         .from(shiftSchedules)
-        .where(and(eq(shiftSchedules.employee_id, employeeId), sql`${shiftSchedules.shift_date} = ${shiftDate}`))
+        .where(and(eq(shiftSchedules.employeeId, employeeId), sql`${shiftSchedules.shiftDate} = ${shiftDate}`))
         .limit(1);
       return Ok(row ? castTo<Record<string, unknown>>(row) : null);
     } catch (_e) {
@@ -118,11 +123,11 @@ export class ShiftRepository {
     try {
       await db
         .update(shiftSchedules)
-        .set({ employee_id: toEmployeeId, status: 'scheduled', notes: null })
+        .set({ employeeId: toEmployeeId, status: 'scheduled', notes: null })
         .where(eq(shiftSchedules.id, shiftId));
       await db
         .update(shiftSchedules)
-        .set({ employee_id: fromEmployeeId as number, status: 'scheduled' })
+        .set({ employeeId: fromEmployeeId as number, status: 'scheduled' })
         .where(eq(shiftSchedules.id, toShiftId));
       return Ok(undefined);
     } catch (_e) {
@@ -134,7 +139,7 @@ export class ShiftRepository {
     try {
       await db
         .update(shiftSchedules)
-        .set({ employee_id: toEmployeeId, status: 'scheduled', notes: null })
+        .set({ employeeId: toEmployeeId, status: 'scheduled', notes: null })
         .where(eq(shiftSchedules.id, shiftId));
       return Ok(undefined);
     } catch (_e) {
@@ -159,11 +164,11 @@ export class ShiftRepository {
       const rows = await db
         .select({
           id: shiftSchedules.id,
-          employee_id: shiftSchedules.employee_id,
-          shift_date: shiftSchedules.shift_date,
-          shift_type: shiftSchedules.shift_type,
-          start_time: shiftSchedules.start_time,
-          end_time: shiftSchedules.end_time,
+          employee_id: shiftSchedules.employeeId,
+          shift_date: shiftSchedules.shiftDate,
+          shift_type: shiftSchedules.shiftType,
+          start_time: shiftSchedules.startTime,
+          end_time: shiftSchedules.endTime,
           status: shiftSchedules.status,
           notes: shiftSchedules.notes,
           employee_name: sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
@@ -171,17 +176,17 @@ export class ShiftRepository {
           department_name: hrDepartments.name,
         })
         .from(shiftSchedules)
-        .innerJoin(hrEmployees, eq(hrEmployees.id, shiftSchedules.employee_id))
+        .innerJoin(hrEmployees, eq(hrEmployees.id, shiftSchedules.employeeId))
         .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))
         .where(
           and(
-            gte(shiftSchedules.shift_date, weekStart),
-            lt(shiftSchedules.shift_date, weekEnd),
-            employeeId ? eq(shiftSchedules.employee_id, employeeId) : undefined,
+            gte(shiftSchedules.shiftDate, weekStart),
+            lt(shiftSchedules.shiftDate, weekEnd),
+            employeeId ? eq(shiftSchedules.employeeId, employeeId) : undefined,
             departmentId ? eq(hrEmployees.department_id, departmentId) : undefined,
           ),
         )
-        .orderBy(shiftSchedules.shift_date, shiftSchedules.start_time);
+        .orderBy(shiftSchedules.shiftDate, shiftSchedules.startTime);
       return Ok(castTo<Record<string, unknown>[]>(rows));
     } catch (_e) {
       return Err(String(_e));
@@ -193,17 +198,17 @@ export class ShiftRepository {
       const rows = await db
         .select({
           id: shiftSchedules.id,
-          from_employee_id: shiftSchedules.employee_id,
-          shift_date: shiftSchedules.shift_date,
+          from_employee_id: shiftSchedules.employeeId,
+          shift_date: shiftSchedules.shiftDate,
           notes: shiftSchedules.notes,
           status: sql<string>`'pending'`,
-          created_at: shiftSchedules.created_at,
+          created_at: shiftSchedules.createdAt,
           from_employee_name: sql<string>`COALESCE(${hrEmployees.first_name}, '') || ' ' || COALESCE(${hrEmployees.last_name}, '')`,
         })
         .from(shiftSchedules)
-        .leftJoin(hrEmployees, eq(hrEmployees.id, shiftSchedules.employee_id))
+        .leftJoin(hrEmployees, eq(hrEmployees.id, shiftSchedules.employeeId))
         .where(eq(shiftSchedules.status, 'swap_pending'))
-        .orderBy(sql`${shiftSchedules.created_at} DESC`)
+        .orderBy(sql`${shiftSchedules.createdAt} DESC`)
         .limit(50);
       return Ok(castTo<Record<string, unknown>[]>(rows));
     } catch (_e) {
@@ -224,20 +229,20 @@ export class ShiftRepository {
     try {
       const rows = await db
         .select({
-          employee_id: shiftSchedules.employee_id,
-          shift_type: shiftSchedules.shift_type,
-          start_time: shiftSchedules.start_time,
-          shift_date: shiftSchedules.shift_date,
+          employee_id: shiftSchedules.employeeId,
+          shift_type: shiftSchedules.shiftType,
+          start_time: shiftSchedules.startTime,
+          shift_date: shiftSchedules.shiftDate,
           telegram_chat_id: hrEmployees.telegram_chat_id,
         })
         .from(shiftSchedules)
-        .innerJoin(hrEmployees, eq(hrEmployees.id, shiftSchedules.employee_id))
+        .innerJoin(hrEmployees, eq(hrEmployees.id, shiftSchedules.employeeId))
         .where(
           and(
-            sql`${shiftSchedules.shift_date} = ${todayStr}::date`,
+            sql`${shiftSchedules.shiftDate} = ${todayStr}::date`,
             eq(shiftSchedules.status, 'scheduled'),
             isNotNull(hrEmployees.telegram_chat_id),
-            sql`(EXTRACT(hour FROM ${shiftSchedules.start_time}::time) * 60 + EXTRACT(minute FROM ${shiftSchedules.start_time}::time)) BETWEEN ${minMinutes} AND ${maxMinutes}`,
+            sql`(EXTRACT(hour FROM ${shiftSchedules.startTime}::time) * 60 + EXTRACT(minute FROM ${shiftSchedules.startTime}::time)) BETWEEN ${minMinutes} AND ${maxMinutes}`,
           ),
         );
       return Ok(castTo<Record<string, unknown>[]>(rows));
@@ -264,7 +269,7 @@ export class ShiftRepository {
       const [row] = await db
         .select({ id: shiftSchedules.id })
         .from(shiftSchedules)
-        .where(and(eq(shiftSchedules.employee_id, employeeId), sql`${shiftSchedules.shift_date} = ${shiftDate}`))
+        .where(and(eq(shiftSchedules.employeeId, employeeId), sql`${shiftSchedules.shiftDate} = ${shiftDate}`))
         .limit(1);
       return Ok(row?.id !== undefined ? Number(row.id) : undefined);
     } catch (_e) {

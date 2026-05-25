@@ -1,3 +1,8 @@
+/**
+ * @module LeadKanbanColumn
+ * @description React UI component.
+ */
+
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -8,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LeadCard } from "./LeadCard";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface Lead {
   id: number;
@@ -38,7 +44,9 @@ interface LeadKanbanColumnProps {
   onLeadClick?: (leadId: number) => void;
 }
 
-export function LeadKanbanColumn({ stage, leads, onLeadClick }: LeadKanbanColumnProps) {
+export function LeadKanbanColumn({ stage, leads = [], onLeadClick }: LeadKanbanColumnProps) {
+  const { t } = useTranslation("common");
+  const safeLeads = Array.isArray(leads) ? leads : [];
   const { setNodeRef, isOver } = useDroppable({
     id: stage.stageId,
     data: {
@@ -67,7 +75,7 @@ export function LeadKanbanColumn({ stage, leads, onLeadClick }: LeadKanbanColumn
             {stage.name}
           </CardTitle>
           <Badge variant="secondary" className="text-xs" data-testid={`badge-count-${stage.stageId}`}>
-            {leads.length}
+            {safeLeads.length}
           </Badge>
         </div>
       </CardHeader>
@@ -76,19 +84,19 @@ export function LeadKanbanColumn({ stage, leads, onLeadClick }: LeadKanbanColumn
         <ScrollArea className="h-[calc(100vh-300px)]">
           <SortableContext
             id={stage.stageId}
-            items={(Array.isArray(leads) ? leads : []).map((l) => l.id)}
+            items={safeLeads.map((l) => l.id)}
             strategy={verticalListSortingStrategy}
           >
             <div className="space-y-3">
-              {(Array.isArray(leads) ? leads : []).map((lead) => (
+              {safeLeads.map((lead) => (
                 <LeadCard key={lead.id} lead={lead} onClick={onLeadClick} />
               ))}
             </div>
           </SortableContext>
 
-          {leads.length === 0 && (
+          {safeLeads.length === 0 && (
             <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-              Bo'sh
+              {t("bosh")}
             </div>
           )}
         </ScrollArea>

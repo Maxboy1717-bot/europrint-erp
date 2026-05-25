@@ -1,0 +1,149 @@
+/**
+ * @module BatchFormDialog
+ * @description Batch create/edit form dialog.
+ * Split from BatchDialogs.tsx (Rule 16).
+ */
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import type { BatchData, MaterialCard, Warehouse } from "./barcode-types";
+import { type translations } from "./barcode-types";
+
+type TranslationType = typeof translations.uz;
+
+export interface BatchFormData {
+  batchNumber: string;
+  materialId: string;
+  warehouseId: string;
+  quantity: number;
+  remainingQuantity: number;
+  unitCost: number;
+  productionDate: string;
+  expiryDate: string;
+  supplierBatchNumber: string;
+  qcStatus: string;
+  status: string;
+  notes: string;
+}
+
+interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editingBatch: BatchData | null;
+  batchForm: BatchFormData;
+  onFormChange: (form: BatchFormData) => void;
+  onSave: () => void;
+  isSaving: boolean;
+  materials: MaterialCard[];
+  warehouses: Warehouse[];
+  t: TranslationType;
+}
+
+export function BatchFormDialog({
+  open, onOpenChange, editingBatch, batchForm, onFormChange, onSave, isSaving, materials, warehouses, t,
+}: Props) {
+  const set = (patch: Partial<BatchFormData>) => onFormChange({ ...batchForm, ...patch });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl p-6">
+        <DialogHeader>
+          <DialogTitle className="text-[18px] font-semibold">
+            {editingBatch ? t.editBatch : t.createBatch}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+          <div className="space-y-1">
+            <Label>{t.batchNumber} *</Label>
+            <Input value={batchForm.batchNumber} onChange={(e) => set({ batchNumber: e.target.value })} data-testid="input-batch-number" />
+          </div>
+          <div className="space-y-1">
+            <Label>{t.material}</Label>
+            <Select value={batchForm.materialId} onValueChange={(v) => set({ materialId: v })}>
+              <SelectTrigger data-testid="select-batch-material" className="h-9"><SelectValue placeholder={t.selectMaterial} /></SelectTrigger>
+              <SelectContent>
+                {(Array.isArray(materials) ? materials : []).map((m) => (
+                  <SelectItem key={m.id} value={m.id}>{m.kod} - {m.xomAshyo}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label>{t.warehouse}</Label>
+            <Select value={batchForm.warehouseId} onValueChange={(v) => set({ warehouseId: v })}>
+              <SelectTrigger data-testid="select-batch-warehouse" className="h-9"><SelectValue placeholder={t.selectWarehouse} /></SelectTrigger>
+              <SelectContent>
+                {(Array.isArray(warehouses) ? warehouses : []).map((w) => (
+                  <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label>{t.quantity} *</Label>
+            <Input type="number" value={batchForm.quantity} onChange={(e) => set({ quantity: parseFloat(e.target.value) || 0 })} data-testid="input-batch-quantity" />
+          </div>
+          <div className="space-y-1">
+            <Label>{t.remaining}</Label>
+            <Input type="number" value={batchForm.remainingQuantity} onChange={(e) => set({ remainingQuantity: parseFloat(e.target.value) || 0 })} data-testid="input-batch-remaining" />
+          </div>
+          <div className="space-y-1">
+            <Label>{t.unitCost}</Label>
+            <Input type="number" value={batchForm.unitCost} onChange={(e) => set({ unitCost: parseFloat(e.target.value) || 0 })} data-testid="input-batch-unit-cost" />
+          </div>
+          <div className="space-y-1">
+            <Label>{t.productionDate}</Label>
+            <Input type="date" value={batchForm.productionDate} onChange={(e) => set({ productionDate: e.target.value })} data-testid="input-batch-production-date" />
+          </div>
+          <div className="space-y-1">
+            <Label>{t.expiryDate}</Label>
+            <Input type="date" value={batchForm.expiryDate} onChange={(e) => set({ expiryDate: e.target.value })} data-testid="input-batch-expiry-date" />
+          </div>
+          <div className="space-y-1">
+            <Label>{t.supplierBatch}</Label>
+            <Input value={batchForm.supplierBatchNumber} onChange={(e) => set({ supplierBatchNumber: e.target.value })} data-testid="input-batch-supplier" />
+          </div>
+          <div className="space-y-1">
+            <Label>{t.qcStatus}</Label>
+            <Select value={batchForm.qcStatus} onValueChange={(v) => set({ qcStatus: v })}>
+              <SelectTrigger data-testid="select-batch-qc-status" className="h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">{t.qcStatuses.pending}</SelectItem>
+                <SelectItem value="approved">{t.qcStatuses.approved}</SelectItem>
+                <SelectItem value="rejected">{t.qcStatuses.rejected}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label>{t.status}</Label>
+            <Select value={batchForm.status} onValueChange={(v) => set({ status: v })}>
+              <SelectTrigger data-testid="select-batch-status" className="h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">{t.statuses.active}</SelectItem>
+                <SelectItem value="depleted">{t.statuses.depleted}</SelectItem>
+                <SelectItem value="blocked">{t.statuses.blocked}</SelectItem>
+                <SelectItem value="expired">{t.statuses.expired}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2 space-y-2">
+            <Label>{t.notes}</Label>
+            <Textarea value={batchForm.notes} onChange={(e) => set({ notes: e.target.value })} data-testid="input-batch-notes" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t.cancel}</Button>
+          <Button onClick={onSave} disabled={isSaving} data-testid="button-save-batch">{t.save}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

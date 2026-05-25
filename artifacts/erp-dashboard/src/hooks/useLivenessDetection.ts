@@ -1,4 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+/**
+ * @module useLivenessDetection
+ * @description React custom hook.
+ */
+
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { loadFaceApi } from '@/lib/faceApiLoader';
 
 export type LivenessStatus = 'idle' | 'challenging' | 'passed' | 'failed';
@@ -138,6 +143,11 @@ export function useLivenessDetection(
     setTimeRemaining(CHALLENGE_TIMEOUT / 1000);
     blinkCountRef.current = 0;
     wasBlinkingRef.current = false;
+  }, [stopChallenge]);
+
+  // Ensure intervals/timeouts are cleared when the component unmounts mid-challenge.
+  useEffect(() => {
+    return () => { stopChallenge(); };
   }, [stopChallenge]);
 
   return {

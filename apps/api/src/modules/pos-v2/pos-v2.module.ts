@@ -1,3 +1,8 @@
+/**
+ * @module pos-v2.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 
@@ -21,7 +26,7 @@ import { GetBarcodeHandler } from './application/queries/get-barcode.query';
 import {
   GetMovementReportHandler,
   GetEmployeeActivityHandler,
-  GetLowStockHandler,
+  GetPosV2LowStockHandler,
 } from './application/queries/get-movement-report.query';
 
 // Controllers
@@ -45,7 +50,7 @@ const QueryHandlers = [
   GetBarcodeHandler,
   GetMovementReportHandler,
   GetEmployeeActivityHandler,
-  GetLowStockHandler,
+  GetPosV2LowStockHandler,
 ];
 
 const Controllers = [

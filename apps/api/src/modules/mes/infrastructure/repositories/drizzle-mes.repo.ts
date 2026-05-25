@@ -1,15 +1,30 @@
+/**
+ * @module drizzle-mes.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { Err, Ok } from '@common/result';
+import { AppErr, Err, Ok } from '@common/result';
 import { Result } from '@common/result';
 import { ProductionSession } from '../../domain/aggregates/production-session.aggregate';
-import { IMesRepository } from '../../domain/repositories/mes.repository';
+import { IMesRepository, DrizzleExecutor } from '../../domain/repositories/mes.repository';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
-
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+
+/**
+ * Narrow surface of a Drizzle executor (db or tx) — just `execute()` for raw SQL.
+ */
+type ExecLike = { execute: (q: SQL | SQLWrapper) => Promise<{ rows: Row[] }> };
+
+const exec = async (q: SQL | SQLWrapper, tx?: DrizzleExecutor): Promise<Row[]> => {
+  if (tx) {
+    const txExec = tx as unknown as ExecLike;
+    const r = await txExec.execute(q);
+    return (r.rows ?? []) as Row[];
+  }
   return (await runQuery<Row>(q)).rows as Row[];
 };
 
@@ -17,9 +32,9 @@ const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
 export class DrizzleMesRepository implements IMesRepository {
   private readonly logger = new Logger(DrizzleMesRepository.name);
 
-  async saveSession(session: ProductionSession): Promise<Result<number>> {
+  async saveSession(session: ProductionSession, tx?: DrizzleExecutor): Promise<Result<number>> {
     try {
-      const r = await exec(sql`INSERT INTO production_sessions (pp_id, work_center_id, operator_id, status, certification_required, started_at, completed_at) VALUES (${session['ppId']}, ${session['workCenterId']}, ${session.getOperatorId()}, ${session.getStatus()}, ${session.getCertificationRequired()}, ${session['startedAt']}, ${session['completedAt']}) RETURNING id`);
+      const r = await exec(sql`INSERT INTO production_sessions (pp_id, work_center_id, operator_id, status, certification_required, started_at, completed_at) VALUES (${session['ppId']}, ${session['workCenterId']}, ${session.getOperatorId()}, ${session.getStatus()}, ${session.getCertificationRequired()}, ${session['startedAt']}, ${session['completedAt']}) RETURNING id`, tx);
       return Ok(Number(r[0]?.id ?? 0));
     } catch {
       this.logger.error('Failed to save production session');
@@ -27,15 +42,26 @@ export class DrizzleMesRepository implements IMesRepository {
     }
   }
 
-  async getSession(id: number): Promise<Result<ProductionSession>> {
+  async getSession(id: number, tx?: DrizzleExecutor): Promise<Result<ProductionSession>> {
     try {
-      const r = await exec(sql`SELECT * FROM production_sessions WHERE id = ${id} LIMIT 1`);
+      const r = await exec(sql`SELECT * FROM production_sessions WHERE id = ${id} LIMIT 1`, tx);
       if (!r[0]) return Err('Sessiya topilmadi');
       const row = r[0];
       return Ok(new ProductionSession(Number(row.id), Number(row.pp_id), Number(row.work_center_id), Number(row.operator_id), Boolean(row.certification_required)));
     } catch {
       this.logger.error('Failed to get session');
       return Err('Oqish xatoligi');
+    }
+  }
+
+  async withTransaction<T>(
+    work: (tx: DrizzleExecutor) => Promise<Result<T>>,
+  ): Promise<Result<T>> {
+    try {
+      return await db.transaction(async (tx) => work(tx as DrizzleExecutor));
+    } catch (e: unknown) {
+      this.logger.error('MES transaction failed');
+      return Err(AppErr('DB_ERROR', (e as Error)?.message || 'Tranzaksiya xatoligi'));
     }
   }
 

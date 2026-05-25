@@ -12,7 +12,7 @@ import { numericMoney } from './numeric-money';
 import { sql, relations } from 'drizzle-orm';
 import {
   serial, pgTable, text, varchar, integer, boolean,
-  timestamp, jsonb, unique, index, pgEnum, inet, bigserial,
+  timestamp, jsonb, unique, index, pgEnum, inet, bigserial, check,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
@@ -133,7 +133,7 @@ export const posMovements = pgTable('pos_movements', {
 export const posMovementLines = pgTable('pos_movement_lines', {
   id:                  serial('id').primaryKey(),
   movementId:          integer('movement_id').notNull(),
-  materialCardId:      integer('material_card_id').notNull(),
+  materialCardId:      integer('material_id').notNull(),
   batchId:             integer('batch_id'),
   serialNumberItemId:  integer('serial_number_item_id'),
   binId:               varchar('bin_id', { length: 50 }),
@@ -189,7 +189,7 @@ export const posMaterialRequests = pgTable('pos_material_requests', {
 export const posMaterialRequestLines = pgTable('pos_material_request_lines', {
   id:           serial('id').primaryKey(),
   requestId:    integer('request_id').notNull(),
-  materialCardId: integer('material_card_id').notNull(),
+  materialCardId: integer('material_id').notNull(),
   requestedQty: numericMoney('requested_qty').notNull(),
   approvedQty:  numericMoney('approved_qty'),
   issuedQty:    numericMoney('issued_qty').default(sql`'0'`),
@@ -207,7 +207,7 @@ export const posMaterialRequestLines = pgTable('pos_material_request_lines', {
 export const employeeIssuanceLog = pgTable('employee_issuance_log', {
   id:              serial('id').primaryKey(),
   userId:          integer('user_id').notNull(),
-  materialCardId:  integer('material_card_id').notNull(),
+  materialCardId:  integer('material_id').notNull(),
   warehouseId:     varchar('warehouse_id', { length: 50 }).notNull(),
   movementLineId:  integer('movement_line_id'),
   quantityIssued:  numericMoney('quantity_issued').notNull(),
@@ -226,7 +226,7 @@ export const employeeIssuanceLog = pgTable('employee_issuance_log', {
 export const employeeInventoryLedger = pgTable('employee_inventory_ledger', {
   id:              serial('id').primaryKey(),
   userId:          integer('user_id').notNull(),
-  materialCardId:  integer('material_card_id').notNull(),
+  materialCardId:  integer('material_id').notNull(),
   warehouseId:     varchar('warehouse_id', { length: 50 }).notNull(),
   entryType:       varchar('entry_type', { length: 10 }).notNull(),
   quantity:        numericMoney('quantity').notNull(),
@@ -245,6 +245,7 @@ export const employeeInventoryLedger = pgTable('employee_inventory_ledger', {
   index('idx_ledger_user_mat').on(t.userId, t.materialCardId),
   index('idx_ledger_txn_date').on(t.transactionDate),
   index('idx_ledger_user_id').on(t.userId),
+  check("emp_inv_ledger_entry_type_chk", sql`${t.entryType} IN ('in','out')`),
 ]);
 
 // ─── 6. EMPLOYEE_WRITE_OFF_ACTS — Hisobdan chiqarish akti ────────────────────
@@ -267,12 +268,13 @@ export const employeeWriteOffActs = pgTable('employee_write_off_acts', {
 }, (t) => [
   index('idx_write_off_user').on(t.userId),
   index('idx_write_off_status').on(t.status),
+  check("emp_write_off_acts_status_chk", sql`${t.status} IN ('DRAFT','PENDING','APPROVED','REJECTED')`),
 ]);
 
 export const employeeWriteOffActLines = pgTable('employee_write_off_act_lines', {
   id:              serial('id').primaryKey(),
   actId:           integer('act_id').notNull(),
-  materialCardId:  integer('material_card_id').notNull(),
+  materialCardId:  integer('material_id').notNull(),
   issuanceLogId:   integer('issuance_log_id'),
   quantity:        numericMoney('quantity').notNull(),
   unitPrice:       numericMoney('unit_price').notNull().default(sql`'0'`),
@@ -287,7 +289,7 @@ export const employeeLiabilityCases = pgTable('employee_liability_cases', {
   id:                   serial('id').primaryKey(),
   caseNumber:           varchar('case_number', { length: 50 }).notNull().unique(),
   userId:               integer('user_id').notNull(),
-  materialCardId:       integer('material_card_id').notNull(),
+  materialCardId:       integer('material_id').notNull(),
   serialNumberItemId:   integer('serial_number_item_id'),
   warehouseId:          varchar('warehouse_id', { length: 50 }),
   issuanceLogId:        integer('issuance_log_id'),
@@ -319,7 +321,7 @@ export const productionMaterialAllocs = pgTable('production_material_allocs', {
   id:                        serial('id').primaryKey(),
   allocationNumber:          varchar('allocation_number', { length: 50 }).notNull().unique(),
   productionOrderId:         varchar('production_order_id', { length: 50 }).notNull(),
-  materialCardId:            integer('material_card_id').notNull(),
+  materialCardId:            integer('material_id').notNull(),
   batchId:                   integer('batch_id'),
   fromWarehouseId:           varchar('from_warehouse_id', { length: 50 }).notNull(),
   toWarehouseId:             varchar('to_warehouse_id', { length: 50 }).notNull(),
@@ -342,15 +344,16 @@ export const productionMaterialAllocs = pgTable('production_material_allocs', {
   index('idx_prod_alloc_order').on(t.productionOrderId),
   index('idx_prod_alloc_mat').on(t.materialCardId),
   index('idx_prod_alloc_status').on(t.status),
+  check("prod_material_allocs_status_chk", sql`${t.status} IN ('ACTIVE','COMPLETED','RETURNED')`),
 ]);
 
 // ─── 9. STOCK_RESERVATIONS — AI bron tizimi ───────────────────────────────────
 
-export const posStockReservations = pgTable('stock_reservations', {
+export const posStockReservations = pgTable('pos_stock_reservations', {
   id:                 serial('id').primaryKey(),
   reservationNumber:  varchar('reservation_number', { length: 50 }).notNull().unique(),
   productionOrderId:  varchar('production_order_id', { length: 50 }).notNull(),
-  materialCardId:     integer('material_card_id').notNull(),
+  materialCardId:     integer('material_id').notNull(),
   warehouseId:        varchar('warehouse_id', { length: 50 }).notNull(),
   batchId:            integer('batch_id'),
   reservedQty:        numericMoney('reserved_qty').notNull(),
@@ -373,7 +376,7 @@ export const posStockReservations = pgTable('stock_reservations', {
 
 export const posSerialNumberItems = pgTable('pos_serial_number_items', {
   id:                  serial('id').primaryKey(),
-  materialCardId:      integer('material_card_id').notNull(),
+  materialCardId:      integer('material_id').notNull(),
   serialNumber:        varchar('serial_number', { length: 100 }).notNull(),
   barcode:             varchar('barcode', { length: 200 }).unique(),
   warehouseId:         varchar('warehouse_id', { length: 50 }),
@@ -391,6 +394,7 @@ export const posSerialNumberItems = pgTable('pos_serial_number_items', {
   index('idx_serial_mat').on(t.materialCardId),
   index('idx_serial_user').on(t.assignedToUserId),
   index('idx_serial_status').on(t.status),
+  check("pos_serial_items_status_chk", sql`${t.status} IN ('IN_WAREHOUSE','ISSUED','RETURNED','DAMAGED','WRITTEN_OFF')`),
 ]);
 
 // ─── 11. POS_INVENTORY_COUNTS — Inventarizatsiya ─────────────────────────────
@@ -420,7 +424,7 @@ export const posInventoryCounts = pgTable('pos_inventory_counts', {
 export const posInventoryCountLines = pgTable('pos_inventory_count_lines', {
   id:             serial('id').primaryKey(),
   countId:        integer('count_id').notNull(),
-  materialCardId: integer('material_card_id').notNull(),
+  materialCardId: integer('material_id').notNull(),
   batchId:        integer('batch_id'),
   binLocation:    varchar('bin_location', { length: 100 }),
   systemQty:      numericMoney('system_qty').notNull(),
@@ -456,13 +460,14 @@ export const posOfflineQueue = pgTable('pos_offline_queue', {
 }, (t) => [
   index('idx_offline_sync').on(t.syncStatus),
   index('idx_offline_terminal').on(t.terminalId),
+  check("pos_offline_queue_sync_status_chk", sql`${t.syncStatus} IN ('PENDING','SYNCED','FAILED','CONFLICT')`),
 ]);
 
 // ─── 13. POS_BARCODE_PRINT_QUEUE — Chop etish navbati ────────────────────────
 
 export const posBarcodePrintQueue = pgTable('pos_barcode_print_queue', {
   id:                   serial('id').primaryKey(),
-  materialCardId:       integer('material_card_id').notNull(),
+  materialCardId:       integer('material_id').notNull(),
   batchId:              integer('batch_id'),
   serialNumberItemId:   integer('serial_number_item_id'),
   posMovementId:        integer('pos_movement_id'),
@@ -478,6 +483,8 @@ export const posBarcodePrintQueue = pgTable('pos_barcode_print_queue', {
 }, (t) => [
   index('idx_print_status').on(t.status),
   index('idx_print_mat').on(t.materialCardId),
+  check("pos_barcode_print_format_chk", sql`${t.printFormat} IN ('ZPL','PDF','EPL')`),
+  check("pos_barcode_print_trigger_chk", sql`${t.triggerType} IN ('AUTO','MANUAL')`),
 ]);
 
 // ─── 14. POS_DAMAGE_QC_LINKS — Zarar → QC ────────────────────────────────────
@@ -485,7 +492,7 @@ export const posBarcodePrintQueue = pgTable('pos_barcode_print_queue', {
 export const posDamageQcLinks = pgTable('pos_damage_qc_links', {
   id:                     serial('id').primaryKey(),
   posMovementId:          integer('pos_movement_id').notNull(),
-  materialCardId:         integer('material_card_id').notNull(),
+  materialCardId:         integer('material_id').notNull(),
   damagedQty:             numericMoney('damaged_qty').notNull(),
   unitCost:               numericMoney('unit_cost').notNull().default(sql`'0'`),
   totalValue:             numericMoney('total_value').notNull().default(sql`'0'`),
@@ -502,6 +509,7 @@ export const posDamageQcLinks = pgTable('pos_damage_qc_links', {
 }, (t) => [
   index('idx_damage_qc_movement').on(t.posMovementId),
   index('idx_damage_qc_decision').on(t.qcDecision),
+  check("pos_damage_qc_decision_chk", sql`${t.qcDecision} IN ('PENDING_QC','REPAIR','RETURN_TO_SUPPLIER','WRITE_OFF','USE_AS_IS')`),
 ]);
 
 // ─── 15. DEPARTMENT_WAREHOUSE_MAP ─────────────────────────────────────────────
@@ -559,6 +567,7 @@ export const materialCardSuggestions = pgTable('material_card_suggestions', {
 }, (t) => [
   index('idx_mc_suggest_status').on(t.status),
   index('idx_mc_suggest_barcode').on(t.unknownBarcode),
+  check("mc_suggestions_status_chk", sql`${t.status} IN ('PENDING','APPROVED','REJECTED')`),
 ]);
 
 // ─── 18. POS_THREE_WAY_MATCH — 3-way match ───────────────────────────────────

@@ -1,11 +1,42 @@
+/**
+ * @module run-mrp.handler
+ * @description Material Requirements Planning (MRP) runner. Takes a Master
+ *   Production Schedule (MPS) and explodes it through the Bill of Materials
+ *   to produce planned purchase/production orders for every component.
+ *
+ *   Inputs:
+ *     - MPS rows: which finished products need to be ready in which period
+ *     - BOM edges: parent→child component relationships with quantity per
+ *     - Material policies: lot-sizing method (L4L / EOQ / POQ / Wagner-Whitin),
+ *       lead time, safety stock per material
+ *     - Current on-hand and scheduled-receipts per material per period
+ *
+ *   Output: a flat list of `PlannedOrder` entries. Each one carries:
+ *     - quantity to procure / produce
+ *     - the period the demand falls in
+ *     - the period to **release** the order so it arrives on time (period - leadTime)
+ * @layer CQRS Command Handler (PP)
+ *
+ * WHY THIS LIVES IN A SINGLE HANDLER, NOT A SERVICE
+ *   MRP is a transactional, idempotent compute over a snapshot of demand.
+ *   Treating it as a Command (handle once, persist result) matches the
+ *   user-visible workflow ("run MRP for week 42"). The result is written
+ *   atomically by the calling queue processor — no partial states.
+ *
+ * Lot-sizing primitives (wagnerWhitin, leadTimePeriodOffset, LotSizingMethod)
+ * live in `./run-mrp-lot-sizing.ts` so this file stays under 300 lines.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum } from '@common/math/math-utils';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { BomExplosionService } from '../../domain/services/bom-explosion.service';
 import type { BomEdge } from '../../domain/services/bom-explosion.service';
+import { wagnerWhitin, leadTimePeriodOffset, LotSizingMethod } from './run-mrp-lot-sizing';
 
-export type LotSizingMethod = 'L4L' | 'EOQ' | 'POQ' | 'WAGNER_WHITIN';
+// Re-export for downstream importers that pulled `LotSizingMethod` from this module.
+export type { LotSizingMethod };
 
 export interface MpsRow {
   productId: string;
@@ -37,67 +68,6 @@ export interface MrpRunResult {
 
 function makeMrpErr(msg: string): AppError {
   return { code: 'VALIDATION', message: msg };
-}
-
-/**
- * Wagner-Whitin lot sizing — standart DP O(n²)
- *
- * Holding cost for ordering in period t to cover through period k:
- *   HC(t,k) = h × Σ_{i=t+1}^{k} (i - t) × r[i]
- *   (r[t] used immediately = 0 holding; r[t+1] held 1 period; etc.)
- *
- * DP:
- *   f[n] = 0
- *   f[t] = min_{k=t}^{n-1} { K + HC(t,k) + f[k+1] }
- *
- * Lot sizes: reconstruct from split[] array
- */
-function wagnerWhitin(
-  netRequirements: number[],
-  orderingCost: number = 100,
-  holdingCostPerUnit: number = 1,
-): number[] {
-  const n = netRequirements.length;
-  if (n === 0) return [];
-
-  const INF = Infinity;
-  const cost = new Array<number>(n + 1).fill(0);
-  const split = new Array<number>(n).fill(0);
-
-  for (let t = n - 1; t >= 0; t--) {
-    cost[t] = INF;
-    let holdingCost = 0;
-
-    for (let k = t; k < n; k++) {
-      // Holding cost for r[k]: held (k-t) periods at h per unit per period
-      holdingCost += (k - t) * safeNum(netRequirements[k]) * holdingCostPerUnit;
-
-      const totalCost = orderingCost + holdingCost + cost[k + 1];
-      if (totalCost < cost[t]) {
-        cost[t] = totalCost;
-        split[t] = k + 1;
-      }
-    }
-  }
-
-  // Reconstruct: lot placed at period t covers periods t..split[t]-1
-  const lotSizes = new Array<number>(n).fill(0);
-  let t = 0;
-  while (t < n) {
-    const end = split[t];
-    let lotQty = 0;
-    for (let k = t; k < end; k++) {
-      lotQty += safeNum(netRequirements[k]);
-    }
-    if (lotQty > 0) lotSizes[t] = lotQty;
-    t = end;
-  }
-
-  return lotSizes;
-}
-
-function leadTimePeriodOffset(leadTimeDays: number): number {
-  return Math.max(0, Math.ceil(safeNum(leadTimeDays) / 7));
 }
 
 @Injectable()
@@ -146,7 +116,7 @@ export class RunMrpHandler {
     // Ba'zi standartlarda SS = qo'shimcha talab sifatida qo'shiladi (GR+SS-OH-SR).
     // Domain egasi bilan kelishuv asosida bu formula tanlanadi.
 
-    const policyMap = new Map((policies ?? []).map((p) => [p.materialId, p]));
+    const policyMap = new Map((Array.isArray(policies) ? policies : []).map((p) => [p.materialId, p]));
     const grossByMaterial = new Map<string, number[]>();
 
     for (const mps of mpsRows) {

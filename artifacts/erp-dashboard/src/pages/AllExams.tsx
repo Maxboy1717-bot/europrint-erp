@@ -1,3 +1,8 @@
+/**
+ * @module AllExams
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,11 +12,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Download, FileText, Trophy, Clock, ClipboardList, CheckCircle } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { format } from "date-fns";
-import { ErrorState } from "@/components/ui/error-state";
 import { apiRequest } from "@/lib/queryClient";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 
+import { useTranslation } from '@/lib/i18n';
 export default function AllExams() {
-  const { data: regularAttempts = [], isLoading: isLoadingRegular, isError, refetch} = useQuery<Array<{
+  const { t } = useTranslation('common');
+  const { data: regularAttempts = [], isLoading: isLoadingRegular, isError, error, refetch} = useQuery<Array<{
     id: string;
     userName: string;
     testName: string;
@@ -49,38 +56,38 @@ export default function AllExams() {
   const isLoading = isLoadingRegular || isLoadingAI;
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
         <div>
-          <Skeleton className="h-9 w-64" />
-          <Skeleton className="h-5 w-96 mt-2" />
+          <Skeleton className="h-9 w-64 rounded-lg" />
+          <Skeleton className="h-5 w-96 mt-2 rounded-lg" />
         </div>
         <Card>
           <CardHeader>
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-64 mt-2" />
+            <Skeleton className="h-6 w-48 rounded-lg" />
+            <Skeleton className="h-4 w-64 mt-2 rounded-lg" />
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {([1, 2, 3, 4, 5]).map((i) => (
-                <Skeleton key={`k-${i}`} className="h-12 w-full" />
+                <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />
               ))}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-64 mt-2" />
+            <Skeleton className="h-6 w-48 rounded-lg" />
+            <Skeleton className="h-4 w-64 mt-2 rounded-lg" />
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {([1, 2, 3, 4, 5]).map((i) => (
-                <Skeleton key={`k-${i}`} className="h-12 w-full" />
+                <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />
               ))}
             </div>
           </CardContent>
@@ -114,15 +121,15 @@ export default function AllExams() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Barcha Imtihonlar</h1>
-          <p className="text-muted-foreground">Xodimlarning barcha imtihon natijalari</p>
+          <h1 className="ep-h1">{t("barchaImtihonlar")}</h1>
+          <p className="text-muted-foreground">{t("xodimlarningBarchaImtihonNatijalari")}</p>
         </div>
         <Card>
           <CardContent className="pt-6">
             <EmptyState
               icon={ClipboardList}
-              title="Imtihonlar topilmadi"
-              description="Hozircha hech qanday imtihon urinishi mavjud emas. Xodimlar imtihon topshirganidan keyin natijalar shu yerda ko'rsatiladi."
+              title={t("imtihonlarTopilmadi")}
+              description={t("hozirchaHechQandayImtihonUrinishi")}
             />
           </CardContent>
         </Card>
@@ -133,64 +140,65 @@ export default function AllExams() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-4xl font-light tracking-tight text-on-surface">
-          Barcha <span className="font-bold text-primary">Imtihonlar</span>
-        </h1>
-        <p className="text-on-surface-variant mt-2">Xodimlarning barcha imtihon natijalari</p>
+        <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("barchaImtihonlar")}</b></>}
+        title={t("barchaImtihonlar")}
+        subtitle={t("xodimlarningBarchaImtihonNatijalari")}
+      />
       </div>
 
       {/* Regular Test Attempts */}
-      <Card className="bg-surface-container-lowest border-outline-variant shadow-none">
+      <Card className="bg-card border-border shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-on-surface">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <FileText className="w-5 h-5 text-primary" />
-            Oddiy Test Imtihonlari
+            {t("oddiyTestImtihonlari")}
           </CardTitle>
-          <CardDescription className="text-on-surface-variant">
-            Barcha test urinishlari va ularning natijalari
+          <CardDescription className="text-muted-foreground">
+            {t("barchaTestUrinishlariVaUlarning")}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow className="border-none hover:bg-transparent">
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 rounded-l-lg">Xodim</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Test</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Boshlangan</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Tugatilgan</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Davomiyligi</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Ball</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Status</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 rounded-r-lg">Amallar</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 rounded-l-lg">{t("xodim1")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("test")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("boshlangan")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("progress.completed")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("davomiyligi")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("ball")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t('status4')}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 rounded-r-lg">{t("Amallar")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {regularAttempts.length === 0 ? (
                 <TableRow className="hover:bg-transparent border-none">
-                  <TableCell colSpan={8} className="text-center py-8 text-on-surface-variant">
-                    Imtihon urinishlari topilmadi
+                  <TableCell colSpan={8} className="text-center py-8 text-[13px] text-muted-foreground">
+                    {t("imtihonUrinishlariTopilmadi")}
                   </TableCell>
                 </TableRow>
               ) : (
                 (Array.isArray(regularAttempts) ? regularAttempts : []).map((attempt) => (
-                  <TableRow key={attempt.id} className="border-none hover:bg-surface-container-low transition-colors">
-                    <TableCell className="font-medium px-6 text-on-surface">{attempt.userName}</TableCell>
-                    <TableCell className="px-6 text-on-surface">{attempt.testName}</TableCell>
-                    <TableCell className="px-6 text-on-surface">
+                  <TableRow key={attempt.id} className="border-none hover:bg-muted/40 transition-colors">
+                    <TableCell className="font-medium px-6 text-foreground">{attempt.userName}</TableCell>
+                    <TableCell className="px-6 text-foreground">{attempt.testName}</TableCell>
+                    <TableCell className="px-6 text-foreground">
                       {format(new Date(attempt.startedAt), "dd.MM.yyyy HH:mm")}
                     </TableCell>
-                    <TableCell className="px-6 text-on-surface">
+                    <TableCell className="px-6 text-foreground">
                       {attempt.finishedAt
                         ? format(new Date(attempt.finishedAt), "dd.MM.yyyy HH:mm")
                         : "—"}
                     </TableCell>
-                    <TableCell className="px-6 text-on-surface">
+                    <TableCell className="px-6 text-foreground">
                       <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-on-surface-variant" />
+                        <Clock className="w-3 h-3 text-muted-foreground" />
                         {formatDuration(attempt.startedAt, attempt.finishedAt)}
                       </div>
                     </TableCell>
-                    <TableCell className="px-6 text-on-surface">
+                    <TableCell className="px-6 text-foreground">
                       <span className="font-bold">{attempt.score || "—"}</span>
                     </TableCell>
                     <TableCell className="px-6">
@@ -207,7 +215,7 @@ export default function AllExams() {
                             onClick={() => submitAttemptMutation.mutate(attempt.id)}
                             disabled={submitAttemptMutation.isPending}
                             data-testid={`button-submit-attempt-${attempt.id}`}
-                            className="hover:bg-surface-container-high text-on-surface"
+                            className="hover:bg-muted text-foreground"
                           >
                             <CheckCircle className="w-4 h-4" />
                           </Button>
@@ -217,7 +225,7 @@ export default function AllExams() {
                           size="sm"
                           onClick={() => downloadExamData(attempt, "regular")}
                           data-testid={`button-download-regular-${attempt.id}`}
-                          className="hover:bg-surface-container-high text-on-surface"
+                          className="hover:bg-muted text-foreground"
                         >
                           <Download className="w-4 h-4" />
                         </Button>
@@ -227,61 +235,61 @@ export default function AllExams() {
                 ))
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
 
       {/* AI Exam Attempts */}
-      <Card className="bg-surface-container-lowest border-outline-variant shadow-none">
+      <Card className="bg-card border-border shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-on-surface">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <Trophy className="w-5 h-5 text-primary" />
             AI Imtihonlar (35 savollik)
           </CardTitle>
-          <CardDescription className="text-on-surface-variant">
+          <CardDescription className="text-muted-foreground">
             GPT tomonidan yaratilgan va tahlil qilingan imtihonlar
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow className="border-none hover:bg-transparent">
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 rounded-l-lg">Xodim</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Lavozim</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Boshlangan</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Tugatilgan</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Tahlil qilingan</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Ball</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6">Status</TableHead>
-                <TableHead className="bg-surface-container text-xs font-semibold uppercase tracking-wider text-on-surface-variant py-3 px-6 rounded-r-lg">Amallar</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 rounded-l-lg">{t("xodim1")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("lavozim1")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("boshlangan")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("progress.completed")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("tahlilQilingan")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("ball")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t('status3')}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 rounded-r-lg">{t("Amallar")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {aiAttempts.length === 0 ? (
                 <TableRow className="hover:bg-transparent border-none">
-                  <TableCell colSpan={8} className="text-center py-8 text-on-surface-variant">
+                  <TableCell colSpan={8} className="text-center py-8 text-[13px] text-muted-foreground">
                     AI imtihon urinishlari topilmadi
                   </TableCell>
                 </TableRow>
               ) : (
                 (Array.isArray(aiAttempts) ? aiAttempts : []).map((attempt) => (
-                  <TableRow key={attempt.id} className="border-none hover:bg-surface-container-low transition-colors">
-                    <TableCell className="font-medium px-6 text-on-surface">{attempt.userName}</TableCell>
-                    <TableCell className="px-6 text-on-surface">{attempt.positionName}</TableCell>
-                    <TableCell className="px-6 text-on-surface">
+                  <TableRow key={attempt.id} className="border-none hover:bg-muted/40 transition-colors">
+                    <TableCell className="font-medium px-6 text-foreground">{attempt.userName}</TableCell>
+                    <TableCell className="px-6 text-foreground">{attempt.positionName}</TableCell>
+                    <TableCell className="px-6 text-foreground">
                       {format(new Date(attempt.startedAt), "dd.MM.yyyy HH:mm")}
                     </TableCell>
-                    <TableCell className="px-6 text-on-surface">
+                    <TableCell className="px-6 text-foreground">
                       {attempt.completedAt
                         ? format(new Date(attempt.completedAt), "dd.MM.yyyy HH:mm")
                         : "—"}
                     </TableCell>
-                    <TableCell className="px-6 text-on-surface">
+                    <TableCell className="px-6 text-foreground">
                       {attempt.analyzedAt
                         ? format(new Date(attempt.analyzedAt), "dd.MM.yyyy HH:mm")
                         : "—"}
                     </TableCell>
-                    <TableCell className="px-6 text-on-surface">
+                    <TableCell className="px-6 text-foreground">
                       <span className="font-bold">{attempt.score || "—"}</span>
                     </TableCell>
                     <TableCell className="px-6">
@@ -290,7 +298,7 @@ export default function AllExams() {
                           attempt.status === "analyzed"
                             ? "bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none border-none"
                             : attempt.status === "completed"
-                            ? "bg-primary-container text-on-primary-container rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none border-none"
+                            ? "bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none border-none"
                             : "bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none border-none"
                         }
                       >
@@ -307,7 +315,7 @@ export default function AllExams() {
                         size="sm"
                         onClick={() => downloadExamData(attempt, "ai")}
                         data-testid={`button-download-ai-${attempt.id}`}
-                        className="hover:bg-surface-container-high text-on-surface"
+                        className="hover:bg-muted text-foreground"
                       >
                         <Download className="w-4 h-4" />
                       </Button>
@@ -316,7 +324,7 @@ export default function AllExams() {
                 ))
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
     </div>

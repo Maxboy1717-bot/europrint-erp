@@ -1,3 +1,8 @@
+/**
+ * @module TransactionHistory
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -8,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, RotateCcw } from "lucide-react";
 import { PosTransaction } from "./types";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { tLabel } from '@/lib/i18n/tLabel';
 
 interface TransactionHistoryProps {
   transactions: PosTransaction[];
@@ -20,20 +26,21 @@ interface TransactionHistoryProps {
 }
 
 export function TransactionHistory({
-  transactions,
+  transactions = [],
   setViewTransaction,
   refundMutation,
   paymentMethodLabels,
 }: TransactionHistoryProps) {
   const { t } = useTranslation('finance');
   const { t: tCommon } = useTranslation('common');
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
   const [confirmRefundId, setConfirmRefundId] = useState<string | null>(null);
 
   return (
     <>
     <Card>
       <CardContent className="p-0">
-        <Table>
+        <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>{t('transactions')} #</TableHead>
@@ -46,15 +53,15 @@ export function TransactionHistory({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.length === 0 ? (
+            {safeTransactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  Tranzaksiyalar mavjud emas
+                <TableCell colSpan={7} className="text-center py-8 text-[13px] text-muted-foreground">
+                  {t("tranzaksiyalarMavjudEmas")}
                 </TableCell>
               </TableRow>
             ) : (
-              (Array.isArray(transactions) ? transactions : []).map((tx) => (
-                <TableRow key={tx.id} data-testid={`row-transaction-${tx.id}`}>
+              safeTransactions.map((tx) => (
+                <TableRow key={tx.id} data-testid={`row-transaction-${tx.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-mono text-xs">{tx.transactionNumber}</TableCell>
                   <TableCell className="text-xs">{formatDateTime(tx.createdAt)}</TableCell>
                   <TableCell className="text-sm">{tx.customerName || "-"}</TableCell>
@@ -96,16 +103,16 @@ export function TransactionHistory({
               ))
             )}
           </TableBody>
-        </Table>
+        </Table></div>
       </CardContent>
     </Card>
     <ConfirmDialog
       open={confirmRefundId !== null}
       onOpenChange={(open) => { if (!open) setConfirmRefundId(null); }}
-      title="Tranzaksiyani qaytarish"
-      description="Ushbu tranzaksiyani qaytarishni tasdiqlaysizmi?"
-      confirmText="Qaytarish"
-      cancelText="Bekor qilish"
+      title={t("tranzaksiyaniQaytarish")}
+      description={t("ushbuTranzaksiyaniQaytarishniTasdiqlaysizmi")}
+      confirmText={tLabel("common.TransactionHistory.tsx.qaytarish", "Qaytarish")}
+      cancelText={tLabel("common.TransactionHistory.tsx.bekorQilish", "Bekor qilish")}
       variant="destructive"
       onConfirm={() => { if (confirmRefundId !== null) refundMutation.mutate(confirmRefundId); }}
     />

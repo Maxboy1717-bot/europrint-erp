@@ -1,6 +1,12 @@
+/**
+ * @module ecommerce.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { db } from '../../infrastructure/database/database';
 import {
   customerOrders, customerAccounts, publicProducts, documentSequences, sdLeads, insertCustomerOrderSchema,
@@ -10,6 +16,8 @@ import { safeCall, Result } from '@common/result';
 
 @Injectable()
 export class EcommerceRepository {
+  constructor(private readonly i18n: I18nService) {}
+
   async listCustomers(whereClause: ReturnType<typeof and> | undefined, limit: number, offset: number) : Promise<Result<Record<string, unknown>>>{
     return safeCall(async () => {
       const [customers, totalResult] = await Promise.all([
@@ -30,7 +38,7 @@ export class EcommerceRepository {
   async getCustomer(id: number) : Promise<Result<Record<string, unknown>>>{
     return safeCall(async () => {
       const [customer] = await db.select().from(customerAccounts).where(eq(customerAccounts.id, id)).limit(1);
-      if (!customer) throw new NotFoundException('Mijoz topilmadi');
+      if (!customer) throw new NotFoundException(await this.i18n.t('errors.customerNotFound'));
       return customer;
       }, 'DB_ERROR');
   }
@@ -51,7 +59,7 @@ export class EcommerceRepository {
   async updateCustomer(id: number, updateData: Record<string, unknown>) : Promise<Result<Record<string, unknown>>>{
     return safeCall(async () => {
       const [updated] = await db.update(customerAccounts).set(updateData as Partial<typeof customerAccounts.$inferInsert>).where(eq(customerAccounts.id, id)).returning();
-      if (!updated) throw new NotFoundException('Mijoz topilmadi');
+      if (!updated) throw new NotFoundException(await this.i18n.t('errors.customerNotFound'));
       return updated;
       }, 'DB_ERROR');
   }
@@ -99,7 +107,7 @@ export class EcommerceRepository {
           .offset(offset),
         db.select({ count: count() }).from(customerOrders).where(whereClause),
       ]);
-      return { orders: (orders ?? []).map((o) => ({ ...o.order, customer: o.customer })), total: totalResult[0]?.count || 0 };
+      return { orders: (Array.isArray(orders) ? orders : []).map((o) => ({ ...o.order, customer: o.customer })), total: totalResult[0]?.count || 0 };
       }, 'DB_ERROR');
   }
 
@@ -110,7 +118,7 @@ export class EcommerceRepository {
         .leftJoin(customerAccounts, eq(customerOrders.customerId, customerAccounts.id))
         .where(eq(customerOrders.id, id))
         .limit(1);
-      if (!result) throw new NotFoundException('Buyurtma topilmadi');
+      if (!result) throw new NotFoundException(await this.i18n.t('errors.orderNotFound'));
       return { ...result.order, customer: result.customer };
       }, 'DB_ERROR');
   }
@@ -118,7 +126,7 @@ export class EcommerceRepository {
   async updateOrderStatus(id: number, updateData: Record<string, unknown>) : Promise<Result<Record<string, unknown>>>{
     return safeCall(async () => {
       const [updated] = await db.update(customerOrders).set(updateData as Partial<typeof customerOrders.$inferInsert>).where(eq(customerOrders.id, id)).returning();
-      if (!updated) throw new NotFoundException('Buyurtma topilmadi');
+      if (!updated) throw new NotFoundException(await this.i18n.t('errors.orderNotFound'));
       return updated;
       }, 'DB_ERROR');
   }
@@ -127,7 +135,7 @@ export class EcommerceRepository {
     return safeCall(async () => {
       const validatedData = insertCustomerOrderSchema.partial().parse(body);
       const [updated] = await db.update(customerOrders).set({ ...validatedData, updatedAt: _time.now() } as Partial<typeof customerOrders.$inferInsert>).where(eq(customerOrders.id, id)).returning();
-      if (!updated) throw new NotFoundException('Buyurtma topilmadi');
+      if (!updated) throw new NotFoundException(await this.i18n.t('errors.orderNotFound'));
       return updated;
       }, 'DB_ERROR');
   }
@@ -141,11 +149,10 @@ export class EcommerceRepository {
 
   async insertLeadAsync(firstName: string, lastName: string, phone: string, loggerRef: { error: (msg: string, ctx: unknown) => void }) : Promise<Result<void>>{
     return safeCall(async () => {
+      // sd_leads canonical schema: contactName (text), contactPhone (varchar), status.
       db.insert(sdLeads).values({
-        id: sql`DEFAULT`,
-        firstName,
-        lastName,
-        phone,
+        contactName: `${firstName} ${lastName}`.trim(),
+        contactPhone: phone,
         status: 'new',
       }).catch((e: Error) => loggerRef.error('CRM lead creation failed', { error: (e as Error).message }));
       }, 'DB_ERROR');

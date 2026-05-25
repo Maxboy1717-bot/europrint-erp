@@ -1,3 +1,8 @@
+/**
+ * @module schema-misc
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, uuid, text, boolean, timestamp, decimal, integer,
   index, uniqueIndex, date, jsonb,
@@ -9,7 +14,6 @@ import {
   kanbanTaskStatusEnum, kanbanPriorityEnum,
   campaignStatusEnum, campaignTypeEnum,
   securityIncidentSeverityEnum, securityIncidentStatusEnum,
-  notificationTypeEnum,
 } from './schema-enums';
 import { users, sales_orders } from './schema-core';
 
@@ -95,6 +99,7 @@ export const kanban_tasks = pgTable('kanban_tasks', {
   created_by: uuid('created_by').notNull().references(() => users.id, { onDelete: 'restrict' }),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deleted_at: timestamp('deleted_at', { withTimezone: true }),
 }, (table) => [
   index('kanban_tasks_status_idx').on(table.status),
   index('kanban_tasks_assigned_to_idx').on(table.assigned_to),
@@ -139,21 +144,9 @@ export const security_incidents = pgTable('security_incidents', {
   index('security_incidents_assigned_to_idx').on(table.assigned_to),
 ]);
 
-export const notifications = pgTable('notifications', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  title: text('title').notNull(),
-  body: text('body').notNull(),
-  type: notificationTypeEnum('type').notNull(),
-  is_read: boolean('is_read').notNull().default(false),
-  reference_id: uuid('reference_id'),
-  reference_type: text('reference_type'),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => [
-  index('notifications_user_id_idx').on(table.user_id),
-  index('notifications_is_read_idx').on(table.is_read),
-  index('notifications_created_at_idx').on(table.created_at),
-]);
+// notifications: re-exported from schema-compat-3.ts (integer PK, camelCase, matches DB migration).
+// The uuid PK version in this file was incorrect — DB migration shows serial integer PK.
+export { notifications } from './schema-compat-3';
 
 export const employee_assets = pgTable('employee_assets', {
   id: uuid('id').primaryKey().$defaultFn(() => createId()),

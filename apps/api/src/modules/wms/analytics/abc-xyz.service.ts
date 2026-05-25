@@ -1,3 +1,8 @@
+/**
+ * @module abc-xyz.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { Ok, Err, Result, AppError } from '@common/result';
@@ -52,16 +57,16 @@ export class AbcXyzService {
   analyzeInMemory(
     rows: Array<{ materialId: number | string; annualValue: number; demandValues: number[] }>,
   ): Result<AbcXyzReport, AppError> {
-    const totalValue = (rows ?? []).reduce((s, r) => s + r.annualValue, 0);
+    const totalValue = (Array.isArray(rows) ? rows : []).reduce((s, r) => s + r.annualValue, 0);
 
     const sorted = [...rows].sort((a, b) => b.annualValue - a.annualValue);
 
     let cumValue = 0;
-    const items: AbcXyzItem[] = (sorted ?? []).map((r) => {
+    const items: AbcXyzItem[] = (Array.isArray(sorted) ? sorted : []).map((r) => {
       cumValue += r.annualValue;
       const cumPct = safeDiv(cumValue * 100, totalValue);
-      const avg = safeDiv((r?.demandValues ?? []).reduce((s, v) => s + v, 0), r.demandValues.length || 1);
-      const variance = (r?.demandValues ?? []).reduce((s, v) => s + (v - avg) ** 2, 0);
+      const avg = safeDiv((Array.isArray(r?.demandValues) ? r?.demandValues : []).reduce((s, v) => s + v, 0), r.demandValues.length || 1);
+      const variance = (Array.isArray(r?.demandValues) ? r?.demandValues : []).reduce((s, v) => s + (v - avg) ** 2, 0);
       const sigma = Math.sqrt(safeDiv(variance, r.demandValues.length || 1));
       const cv = safeDiv(sigma, avg);
 
@@ -140,7 +145,7 @@ export class AbcXyzService {
         xyzMap.set(String(r['material_id']), Number(r['cv'] ?? 0));
       }
 
-      const items: AbcXyzItem[] = (abcRows?.rows ?? []).map((r) => {
+      const items: AbcXyzItem[] = (Array.isArray(abcRows?.rows) ? abcRows?.rows : []).map((r) => {
         const cumPct = Number(r['cum_pct'] ?? 0);
         const cv = xyzMap.get(String(r['material_id'])) ?? 0;
         const abcClass = this.classifyAbc(cumPct);

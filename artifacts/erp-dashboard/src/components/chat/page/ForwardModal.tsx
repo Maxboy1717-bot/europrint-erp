@@ -1,10 +1,16 @@
+/**
+ * @module ForwardModal
+ * @description React UI component.
+ */
+
 import { useState, useCallback } from "react";
 import { X, Search, CornerUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatStore, ChatMessage } from "@/store/chatStore";
 import { ChatAvatar } from "./ChatAvatar";
 import { getChatApiBase } from "@/lib/apiBase";
-import { safeStorage } from '@/lib/safeStorage';
+import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface Props {
   message: ChatMessage;
@@ -12,6 +18,7 @@ interface Props {
 }
 
 export function ForwardModal({ message, onClose }: Props) {
+  const { t } = useTranslation("common");
   const rooms = useChatStore((s) => s.rooms);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
@@ -27,17 +34,13 @@ export function ForwardModal({ message, onClose }: Props) {
     if (!selected || loading) return;
     setLoading(true);
     try {
-      const token = safeStorage.getItem("access_token");
-      await fetch(`${getChatApiBase()}/messages/${message.id}/forward`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ targetRoomId: selected }),
+      await apiRequest('POST', `${getChatApiBase()}/messages/${message.id}/forward`, {
+        targetRoomId: selected,
       });
       setDone(true);
       setTimeout(onClose, 800);
+    } catch {
+      // Swallow — UI keeps the modal open so user can retry
     } finally {
       setLoading(false);
     }
@@ -46,11 +49,11 @@ export function ForwardModal({ message, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
+      <div className="relative bg-card border border-border rounded-lg shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
           <div className="flex items-center gap-2">
             <CornerUpRight className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-semibold">Xabarni yuborish</h3>
+            <h3 className="text-sm font-semibold">{t("xabarniYuborish")}</h3>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 rounded">
             <X className="w-4 h-4" />
@@ -71,7 +74,7 @@ export function ForwardModal({ message, onClose }: Props) {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Xona qidiring..."
+              placeholder={t("xonaQidiring")}
               className="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground/50"
             />
           </div>
@@ -80,7 +83,7 @@ export function ForwardModal({ message, onClose }: Props) {
         {/* Room list */}
         <div className="max-h-[240px] overflow-y-auto px-2 py-2">
           {filtered.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-4">Xona topilmadi</p>
+            <p className="text-xs text-muted-foreground text-center py-4">{t("xonaTopilmadi")}</p>
           ) : (
             (Array.isArray(filtered) ? filtered : []).map((room) => (
               <button
@@ -112,7 +115,7 @@ export function ForwardModal({ message, onClose }: Props) {
             className={cn(
               "w-full py-2 rounded-xl text-sm font-medium transition-colors",
               done
-                ? "bg-green-500 text-white"
+                ? "bg-[var(--ep-green)] text-white"
                 : "bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             )}
           >

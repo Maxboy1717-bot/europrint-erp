@@ -1,3 +1,8 @@
+/**
+ * @module QCBolimi
+ * @description React UI component.
+ */
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,23 +11,25 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { ClipboardCheck, CheckCircle2, XCircle } from "lucide-react";
 import { QcBarcodeItem } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function QCBolimi() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
 
   const { data: qcMateriallar, isLoading } = useQuery<QcBarcodeItem[]>({
     queryKey: ["/api/barcode-warehouse/barcodes", { status: "QC_HOLD" }],
     queryFn: async () => {
-      const res = await fetch("/api/barcode-warehouse/barcodes?status=QC_HOLD", { credentials: "include" });
-      if (!res.ok) return [];
-      const data = await res.json();
+      let data;
+      try { data = await apiRequest('GET', "/api/barcode-warehouse/barcodes?status=QC_HOLD"); }
+      catch { return []; }
       return Array.isArray(data) ? data : [];
     },
   });
 
   const qcMutation = useMutation({
     mutationFn: async ({ id, passed, notes }: { id: string | number; passed: boolean; notes?: string }) => {
-      const res = await apiRequest("PATCH", `/api/barcode-warehouse/qc/${id}`, { passed, notes });
+      const res = await apiRequest<{ status?: string; message?: string }>("PATCH", `/api/barcode-warehouse/qc/${id}`, { passed, notes });
       return res;
     },
     onSuccess: (data) => {
@@ -38,7 +45,7 @@ export function QCBolimi() {
     },
   });
 
-  if (isLoading) return <Skeleton className="h-40 w-full" />;
+  if (isLoading) return <Skeleton className="h-40 w-full rounded-lg" />;
 
   return (
     <Card>
@@ -50,7 +57,7 @@ export function QCBolimi() {
       </CardHeader>
       <CardContent className="p-3 pt-1">
         {!qcMateriallar || qcMateriallar.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">QC kutayotgan material yo'q</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("qcKutayotganMaterialYoq")}</p>
         ) : (
           <div className="space-y-2">
             {(Array.isArray(qcMateriallar) ? qcMateriallar : []).map((item: QcBarcodeItem) => (
@@ -70,7 +77,7 @@ export function QCBolimi() {
                       disabled={qcMutation.isPending}
                     >
                       <CheckCircle2 className="h-3 w-3 mr-1" />
-                      Tasdiqlash
+                      {t("verify")}
                     </Button>
                     <Button
                       data-testid={`button-qc-reject-${item.barcode.id}`}
@@ -80,7 +87,7 @@ export function QCBolimi() {
                       disabled={qcMutation.isPending}
                     >
                       <XCircle className="h-3 w-3 mr-1" />
-                      Rad
+                      {t("rad")}
                     </Button>
                   </div>
                 </div>

@@ -1,24 +1,42 @@
+/**
+ * @module employee-files-compat.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   employee-files module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
+ */
 import {
-  Controller, Get, Post, Delete, Param, Query, Body,
-  UseGuards, UseInterceptors, InternalServerErrorException,
+  Controller, Get, Patch, Post, Delete, Param, Query, Body,
+  UseGuards, UseInterceptors,
 } from '@nestjs/common';
-import { throwFromError, unwrapOrThrow } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { unwrapOrThrow } from '@common/http-result';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { EmployeeFilesCompatService } from './employee-files-compat.service';
 import { CompatBodyDto } from './dto/compat-body.dto';
+import {
+  EmployeeFileAclTranslator,
+  type LegacyEmployeeFileRow,
+  type EmployeeFileDto,
+} from './acl/employee-file-acl';
 
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('employee-files')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Roles(...HR_ROLES)
 export class EmployeeFilesCompatController {
+  /**
+   * PA2-14 ACL demonstrator. Stateless — direct instantiation is fine; promote
+   * to a DI provider when more endpoints adopt the pattern.
+   */
+  private readonly acl = new EmployeeFileAclTranslator();
+
   constructor(private readonly svc: EmployeeFilesCompatService) {}
 
   @Get()
@@ -27,6 +45,24 @@ export class EmployeeFilesCompatController {
     @Query('type') type?: string,
   ) {
     return unwrapOrThrow(await this.svc.listFiles(employeeId, type));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of `GET /employee-files`. New BC-3 (HR)
+   * consumers should target this route; the original endpoint stays for
+   * backwards-compat.
+   */
+  @Get('v2')
+  async listFilesV2(
+    @Query('employeeId') employeeId?: string,
+    @Query('type') type?: string,
+  ): Promise<EmployeeFileDto[]> {
+    const rows = unwrapOrThrow(await this.svc.listFiles(employeeId, type)) as unknown as LegacyEmployeeFileRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.acl.toDomain(row))
+      .filter((r): r is { ok: true; data: EmployeeFileDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post()
@@ -40,6 +76,11 @@ export class EmployeeFilesCompatController {
   @Get(':id')
   async getFile(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getFile(id));
+  }
+
+  @Patch(':id')
+  async updateFile(@Param('id') id: string, @Body() body: CompatBodyDto) {
+    return unwrapOrThrow(await this.svc.updateFile(id, body as Record<string, unknown>));
   }
 
   @Delete(':id')

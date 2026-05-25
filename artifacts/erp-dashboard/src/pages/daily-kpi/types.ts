@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React page component. Route-level UI.
+ */
+
 import { AlertCircle, Lightbulb, LineChart, Brain } from "lucide-react";
 
 export interface DailyMetrics {

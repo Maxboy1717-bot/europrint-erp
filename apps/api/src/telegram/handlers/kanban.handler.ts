@@ -1,4 +1,10 @@
+/**
+ * @module kanban.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common'
+import { I18nService } from 'nestjs-i18n'
 import { TelegramService } from '../telegram.service'
 
 interface Task {
@@ -15,7 +21,10 @@ interface Task {
 export class KanbanHandler {
   private readonly logger = new Logger(KanbanHandler.name)
 
-  constructor(private telegramService: TelegramService) {}
+  constructor(
+    private telegramService: TelegramService,
+    private readonly i18n: I18nService,
+  ) {}
 
   async onTaskAssigned(task: Task): Promise<void> {
     try {
@@ -26,16 +35,16 @@ export class KanbanHandler {
       }
       const emoji = priorityEmoji[task.priority as keyof typeof priorityEmoji] || '⚪'
 
-      const text = `
-${emoji} <b>Vazifa Tayinlandi!</b>
-
-📝 <b>Vazifa:</b> ${task.title}
-👤 <b>Mas'ul:</b> ${task.assignee_name}
-📅 <b>Muddati:</b> ${task.due_date}
-🎯 <b>Prioritet:</b> ${task.priority}
-
-ID: <code>${task.id}</code>
-      `
+      const text = await this.i18n.t('telegram.kanban.taskAssigned', {
+        args: {
+          emoji,
+          title: task.title,
+          assigneeName: task.assignee_name,
+          dueDate: task.due_date,
+          priority: task.priority,
+          id: task.id,
+        },
+      })
       await this.telegramService.sendMessage(task.assignee_chat_id, text)
       this.logger.log(`Task assigned notified: ${task.id}`)
     } catch (err) {
@@ -45,15 +54,13 @@ ID: <code>${task.id}</code>
 
   async onTaskDueSoon(task: Task): Promise<void> {
     try {
-      const text = `
-⏰ <b>Vazifa Muddati Yaqinlashdi!</b>
-
-📝 <b>Vazifa:</b> ${task.title}
-📅 <b>Muddati:</b> ${task.due_date}
-⏳ <b>Qolgan:</b> ${task.days_until_due} kun
-
-Tezda tugatishni boshlang!
-      `
+      const text = await this.i18n.t('telegram.kanban.taskDueSoon', {
+        args: {
+          title: task.title,
+          dueDate: task.due_date,
+          daysUntilDue: task.days_until_due,
+        },
+      })
       await this.telegramService.sendMessage(task.assignee_chat_id, text)
       this.logger.log(`Task due soon reminder: ${task.id}`)
     } catch (err) {

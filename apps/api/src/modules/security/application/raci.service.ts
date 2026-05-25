@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module raci.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { RaciRepository } from './raci.repository';
+import { RACI_REPO, type IRaciRepo } from '../domain/repositories/i-raci.repo';
 
 @Injectable()
 export class RaciService {
-  constructor(private readonly repo: RaciRepository) {}
+  constructor(@Inject(RACI_REPO) private readonly repo: IRaciRepo) {}
 
   async listTasks(status: string | null): Promise<Result<object, AppError>> {
     return this.repo.listTasks(status);

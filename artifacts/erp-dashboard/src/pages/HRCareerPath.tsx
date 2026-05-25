@@ -1,3 +1,8 @@
+/**
+ * @module HRCareerPath
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +25,8 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface CareerPlan {
   id: string;
@@ -41,6 +48,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 };
 
 function PlanCard({ plan }: { plan: CareerPlan }) {
+  const { t } = useTranslation("common");
   const st = STATUS_MAP[plan.status || "active"] || STATUS_MAP.active;
   const pct = plan.progress_percent ?? 0;
   const daysLeft = plan.target_date
@@ -55,7 +63,7 @@ function PlanCard({ plan }: { plan: CareerPlan }) {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="font-semibold text-sm truncate flex items-center gap-1.5">
-              <Star className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              <Star className="h-3.5 w-3.5 text-[var(--ep-yellow)] shrink-0" />
               {plan.employee_name || "—"}
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
@@ -69,7 +77,7 @@ function PlanCard({ plan }: { plan: CareerPlan }) {
 
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Taraqqiyot</span>
+            <span>{t("taraqqiyot")}</span>
             <span className="font-medium text-foreground">{pct}%</span>
           </div>
           <Progress value={pct} className="h-1.5" />
@@ -77,17 +85,17 @@ function PlanCard({ plan }: { plan: CareerPlan }) {
 
         <div className="flex items-center justify-between text-xs text-muted-foreground pt-0.5">
           {plan.mentor_name
-            ? <span>Mentor: <span className="text-foreground">{plan.mentor_name}</span></span>
-            : <span>Mentor tayinlanmagan</span>}
+            ? <span>{t("mentor1")}<span className="text-foreground">{plan.mentor_name}</span></span>
+            : <span>{t("mentorTayinlanmagan")}</span>}
           {daysLeft !== null ? (
-            <span className={overdue ? "text-red-500 font-medium" : soon ? "text-orange-500 font-medium" : ""}>
+            <span className={overdue ? "text-[var(--ep-red)] font-medium" : soon ? "text-[var(--ep-primary)] font-medium" : ""}>
               {overdue
                 ? `${Math.abs(daysLeft)} kun kechikdi`
                 : daysLeft === 0 ? "Bugun muddati"
                 : `${daysLeft} kun qoldi`}
             </span>
           ) : (
-            <span>Muddat yo'q</span>
+            <span>{t("muddatYoq")}</span>
           )}
         </div>
       </CardContent>
@@ -96,6 +104,7 @@ function PlanCard({ plan }: { plan: CareerPlan }) {
 }
 
 function NewPlanDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
@@ -127,38 +136,38 @@ function NewPlanDialog({ open, onClose }: { open: boolean; onClose: () => void }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Yangi Kasbiy Rivojlanish Rejasi</DialogTitle></DialogHeader>
+      <DialogContent className="max-w-md p-6">
+        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiKasbiyRivojlanishRejasi")}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-1">
           <div>
-            <Label>Xodim ismi *</Label>
-            <Input value={form.employeeName} onChange={e => f("employeeName", e.target.value)} placeholder="To'liq ismi" className="mt-1" />
+            <Label>{t("xodimIsmi1")}</Label>
+            <Input value={form.employeeName} onChange={e => f("employeeName", e.target.value)} placeholder={t("toliqIsmi")} className="mt-1" />
           </div>
           <div>
-            <Label>Joriy lavozim</Label>
-            <Input value={form.currentPosition} onChange={e => f("currentPosition", e.target.value)} placeholder="Hozirgi lavozim" className="mt-1" />
+            <Label>{t("joriyLavozim")}</Label>
+            <Input value={form.currentPosition} onChange={e => f("currentPosition", e.target.value)} placeholder={t("hozirgiLavozim")} className="mt-1" />
           </div>
           <div>
-            <Label>Maqsad lavozim *</Label>
-            <Input value={form.targetPosition} onChange={e => f("targetPosition", e.target.value)} placeholder="Erishmochi bo'lgan lavozim" className="mt-1" />
+            <Label>{t("maqsadLavozim")}</Label>
+            <Input value={form.targetPosition} onChange={e => f("targetPosition", e.target.value)} placeholder={t("erishmochiBolganLavozim")} className="mt-1" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label>Muddat</Label>
+              <Label>{t("muddat")}</Label>
               <Input type="date" value={form.targetDate} onChange={e => f("targetDate", e.target.value)} className="mt-1" />
             </div>
             <div>
-              <Label>Mentor</Label>
-              <Input value={form.mentorName} onChange={e => f("mentorName", e.target.value)} placeholder="Mentor ismi" className="mt-1" />
+              <Label>{t("mentor")}</Label>
+              <Input value={form.mentorName} onChange={e => f("mentorName", e.target.value)} placeholder={t("mentorIsmi")} className="mt-1" />
             </div>
           </div>
           <div>
-            <Label>Izoh</Label>
-            <Input value={form.notes} onChange={e => f("notes", e.target.value)} placeholder="Qo'shimcha ma'lumot" className="mt-1" />
+            <Label>{t("Izoh")}</Label>
+            <Input value={form.notes} onChange={e => f("notes", e.target.value)} placeholder={t("qoshimchaMalumot1")} className="mt-1" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button
             onClick={() => create.mutate()}
             disabled={!form.employeeName || !form.targetPosition || create.isPending}
@@ -172,6 +181,7 @@ function NewPlanDialog({ open, onClose }: { open: boolean; onClose: () => void }
 }
 
 export default function HRCareerPath() {
+  const { t } = useTranslation("common");
   const [view, setView] = useState<"cards" | "table">("cards");
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -203,27 +213,27 @@ export default function HRCareerPath() {
     : 0;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       {/* Header */}
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <TrendingUp className="h-5 w-5 text-indigo-600" />
-          <h1 className="font-semibold text-base">HR — Kasbiy O'sish</h1>
-          <Badge variant="secondary">{counts.total} reja</Badge>
+          <TrendingUp className="h-4 w-4 text-[var(--ep-blue)]" />
+          <h1 className="font-semibold text-base">{t("hrKasbiyOsish")}</h1>
+          <EPStatusPill tone="neutral">{counts.total} reja</EPStatusPill>
         </div>
         <Button size="sm" onClick={() => setNewOpen(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1" />Yangi reja
+          <Plus className="h-3.5 w-3.5 mr-1" />{t("yangiReja")}
         </Button>
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-5">
         {/* Stats row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {([
-            { label: "Jami rejalar",        value: counts.total,     color: "text-blue-600" },
-            { label: "Faol",                value: counts.active,    color: "text-green-600" },
-            { label: "Bajarilgan",          value: counts.completed, color: "text-purple-600" },
-            { label: "O'rtacha taraqqiyot", value: `${avgProgress}%`, color: "text-amber-600" },
+            { label: "Jami rejalar",        value: counts.total,     color: "text-[var(--ep-blue)]" },
+            { label: "Faol",                value: counts.active,    color: "text-[var(--ep-green)]" },
+            { label: "Bajarilgan",          value: counts.completed, color: "text-[var(--ep-purple)]" },
+            { label: "O'rtacha taraqqiyot", value: `${avgProgress}%`, color: "text-[var(--ep-yellow)]" },
           ]).map(s => (
             <Card key={s.label}>
               <CardContent className="pt-4 pb-3">
@@ -239,22 +249,22 @@ export default function HRCareerPath() {
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Xodim yoki lavozim qidiring..."
-              className="pl-8 h-8 text-sm"
+              placeholder={t("xodimYokiLavozimQidiring")}
+              className="pl-8 h-9 text-sm"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[160px] h-8 text-sm">
-              <SelectValue placeholder="Holat" />
+            <SelectTrigger className="w-full sm:w-[160px] h-9 text-sm">
+              <SelectValue placeholder={t("status28")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Barcha holatlar</SelectItem>
-              <SelectItem value="active">Faol</SelectItem>
-              <SelectItem value="completed">Bajarilgan</SelectItem>
-              <SelectItem value="on_hold">To'xtatilgan</SelectItem>
-              <SelectItem value="cancelled">Bekor</SelectItem>
+              <SelectItem value="all">{t("barchaHolatlar")}</SelectItem>
+              <SelectItem value="active">{t("active")}</SelectItem>
+              <SelectItem value="completed">{t("bajarilgan")}</SelectItem>
+              <SelectItem value="on_hold">{t("paused")}</SelectItem>
+              <SelectItem value="cancelled">{t("Bekor")}</SelectItem>
             </SelectContent>
           </Select>
           <div className="flex border rounded-md overflow-hidden h-8">
@@ -279,7 +289,7 @@ export default function HRCareerPath() {
         {/* Content */}
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff5d2e]" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
@@ -289,7 +299,7 @@ export default function HRCareerPath() {
             </p>
             {all.length === 0 && (
               <Button size="sm" variant="outline" onClick={() => setNewOpen(true)}>
-                <Plus className="h-3.5 w-3.5 mr-1" />Birinchi reja yarating
+                <Plus className="h-3.5 w-3.5 mr-1" />{t("birinchiRejaYarating")}
               </Button>
             )}
           </div>
@@ -300,16 +310,16 @@ export default function HRCareerPath() {
         ) : (
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
+              <div className="ep-table-scroll"><Table>
+                <TableHeader className="sticky top-0 z-10 bg-card">
                   <TableRow>
-                    <TableHead>Xodim</TableHead>
-                    <TableHead>Joriy lavozim</TableHead>
-                    <TableHead>Maqsad</TableHead>
-                    <TableHead>Taraqqiyot</TableHead>
-                    <TableHead>Mentor</TableHead>
-                    <TableHead>Muddat</TableHead>
-                    <TableHead>Holat</TableHead>
+                    <TableHead>{t("xodim1")}</TableHead>
+                    <TableHead>{t("joriyLavozim")}</TableHead>
+                    <TableHead>{t("Maqsad")}</TableHead>
+                    <TableHead>{t("taraqqiyot")}</TableHead>
+                    <TableHead>{t("mentor")}</TableHead>
+                    <TableHead>{t("muddat")}</TableHead>
+                    <TableHead>{t("status28")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -317,7 +327,7 @@ export default function HRCareerPath() {
                     const st = STATUS_MAP[plan.status || "active"] || STATUS_MAP.active;
                     const pct = plan.progress_percent ?? 0;
                     return (
-                      <TableRow key={plan.id} data-testid={`row-career-plan-${plan.id}`}>
+                      <TableRow key={plan.id} data-testid={`row-career-plan-${plan.id}`} className="hover:bg-muted/40 transition-colors">
                         <TableCell className="font-medium">{plan.employee_name || "—"}</TableCell>
                         <TableCell className="text-muted-foreground text-sm">{plan.current_position_title || "—"}</TableCell>
                         <TableCell className="text-sm">{plan.target_position_title || "—"}</TableCell>
@@ -338,7 +348,7 @@ export default function HRCareerPath() {
                     );
                   })}
                 </TableBody>
-              </Table>
+              </Table></div>
             </CardContent>
           </Card>
         )}

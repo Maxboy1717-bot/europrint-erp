@@ -1,3 +1,8 @@
+/**
+ * @module ConflictSection
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +14,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, MessageSquareWarning, ShieldAlert, AlertTriangle } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { ConflictReport } from "./types";
+
+const ConflictReportSchema = z.object({
+  party1:      z.string().min(1, "1-tomon majburiy"),
+  party2:      z.string().min(1, "2-tomon majburiy"),
+  description: z.string().min(3, "Tavsif majburiy"),
+  severity:    z.enum(["low", "medium", "high"]),
+});
+type ConflictReportData = z.infer<typeof ConflictReportSchema>;
 import { UseMutationResult } from "@tanstack/react-query";
 import { safeArray } from "@/lib/queryClient";
+import { useTranslation } from '@/lib/i18n';
 
 interface ConflictSectionProps {
   conflictReports: ConflictReport[];
@@ -24,9 +40,11 @@ export function ConflictSection({
   conflictLoading,
   createConflictReport,
 }: ConflictSectionProps) {
+  const { t } = useTranslation("common");
   const [showConflictDialog, setShowConflictDialog] = useState(false);
-  const conflictForm = useForm({
-    defaultValues: { party1: "", party2: "", description: "", severity: "low" }
+  const conflictForm = useForm<ConflictReportData>({
+    resolver: zodResolver(ConflictReportSchema),
+    defaultValues: { party1: "", party2: "", description: "", severity: "low" },
   });
 
   const getSeverityLabel = (severity: string) => {
@@ -44,16 +62,16 @@ export function ConflictSection({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Konflikt Boshqaruvi va Intizom</h2>
+        <h2 className="text-lg font-semibold">{t("konfliktBoshqaruviVaIntizom")}</h2>
         <Button onClick={() => setShowConflictDialog(true)} data-testid="button-add-conflict">
-          <Plus className="h-4 w-4 mr-2" />Hodisa qayd etish
+          <Plus className="h-4 w-4 mr-2" />{t("hodisaQaydEtish")}
         </Button>
       </div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
-          { l: "Ochiq holatlar", v: (Array.isArray(reports) ? reports : []).filter(r => r.status === "open").length, c: "text-red-600", i: AlertTriangle },
-          { l: "Ko'rib chiqilmoqda", v: (Array.isArray(reports) ? reports : []).filter(r => r.status === "investigating").length, c: "text-orange-600", i: MessageSquareWarning },
-          { l: "Hal etilganlar", v: (Array.isArray(reports) ? reports : []).filter(r => r.status === "resolved").length, c: "text-green-600", i: ShieldAlert },
+          { l: "Ochiq holatlar", v: (Array.isArray(reports) ? reports : []).filter(r => r.status === "open").length, c: "text-[var(--ep-red)]", i: AlertTriangle },
+          { l: "Ko'rib chiqilmoqda", v: (Array.isArray(reports) ? reports : []).filter(r => r.status === "investigating").length, c: "text-[var(--ep-primary)]", i: MessageSquareWarning },
+          { l: "Hal etilganlar", v: (Array.isArray(reports) ? reports : []).filter(r => r.status === "resolved").length, c: "text-[var(--ep-green)]", i: ShieldAlert },
           { l: "Oylik tahlil", v: "82%", c: "text-primary", i: MessageSquareWarning },
         ]).map(s => (
           <Card key={s.l}><CardContent className="pt-4 pb-3 flex items-start justify-between">
@@ -66,21 +84,21 @@ export function ConflictSection({
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Konflikt va Intizom Hodisalari</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("konfliktVaIntizomHodisalari")}</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Tomonlar</TableHead><TableHead>Tavsif</TableHead>
-              <TableHead>Og'irlik</TableHead><TableHead>Sana</TableHead>
-              <TableHead>Holati</TableHead>
+              <TableHead>{t("tomonlar")}</TableHead><TableHead>{t("progress.description")}</TableHead>
+              <TableHead>{t("weight")}</TableHead><TableHead>{t("date")}</TableHead>
+              <TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {conflictLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-6">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-6">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : reports.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Konfliktlar mavjud emas</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">{t("konfliktlarMavjudEmas")}</TableCell></TableRow>
               ) : (Array.isArray(reports) ? reports : []).map((report) => (
-                <TableRow key={report.id}>
+                <TableRow key={report.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{report.party1} vs {report.party2}</TableCell>
                   <TableCell className="text-muted-foreground text-sm max-w-[300px] truncate">{report.description}</TableCell>
                   <TableCell>
@@ -99,38 +117,47 @@ export function ConflictSection({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
 
       <Dialog open={showConflictDialog} onOpenChange={setShowConflictDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Konflikt yoki Intizom Buzilishini Qayd Etish</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("konfliktYokiIntizomBuzilishiniQayd")}</DialogTitle></DialogHeader>
           <form onSubmit={conflictForm.handleSubmit(d => createConflictReport.mutate(d as Record<string, unknown>))} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>1-tomon</Label><Input {...conflictForm.register("party1", { required: true })} placeholder="Ismi-sharifi" /></div>
-              <div className="space-y-2"><Label>2-tomon</Label><Input {...conflictForm.register("party2", { required: true })} placeholder="Ismi-sharifi" /></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+          <Label>1-tomon</Label>
+                <Input {...conflictForm.register("party1")} placeholder={t("ismiSharifi")} />
+                {conflictForm.formState.errors.party1 && <p className="text-xs text-destructive">{conflictForm.formState.errors.party1.message}</p>}
+              </div>
+              <div className="space-y-1">
+          <Label>2-tomon</Label>
+                <Input {...conflictForm.register("party2")} placeholder={t("ismiSharifi")} />
+                {conflictForm.formState.errors.party2 && <p className="text-xs text-destructive">{conflictForm.formState.errors.party2.message}</p>}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Tavsif</Label>
-              <Input {...conflictForm.register("description", { required: true })} placeholder="Nima sodir bo'ldi?" />
+            <div className="space-y-1">
+          <Label>{t("progress.description")}</Label>
+              <Input {...conflictForm.register("description")} placeholder={t("nimaSodirBoldi")} />
+              {conflictForm.formState.errors.description && <p className="text-xs text-destructive">{conflictForm.formState.errors.description.message}</p>}
             </div>
-            <div className="space-y-2">
-              <Label>Og'irlik darajasi</Label>
+            <div className="space-y-1">
+          <Label>{t("ogirlikDarajasi")}</Label>
               <Controller control={conflictForm.control} name="severity" render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Past</SelectItem>
-                    <SelectItem value="medium">O'rta</SelectItem>
-                    <SelectItem value="high">Yuqori (Kritik)</SelectItem>
+                    <SelectItem value="low">{t("low")}</SelectItem>
+                    <SelectItem value="medium">{t("medium")}</SelectItem>
+                    <SelectItem value="high">{t("yuqoriKritik")}</SelectItem>
                   </SelectContent>
                 </Select>
               )} />
             </div>
             <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setShowConflictDialog(false)}>Bekor qilish</Button>
-              <Button type="submit" disabled={createConflictReport.isPending}>Saqlash</Button>
+              <Button variant="outline" type="button" onClick={() => setShowConflictDialog(false)}>{t("cancel")}</Button>
+              <Button type="submit" disabled={createConflictReport.isPending}>{t("Saqlash")}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

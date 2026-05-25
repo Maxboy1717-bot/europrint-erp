@@ -1,0 +1,15 @@
+{
+  "name": "@workspace/types",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Canonical TypeScript types shared between BE and FE.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "publishConfig": {
+    "workspace": "./src/index.ts"
+  }
+}

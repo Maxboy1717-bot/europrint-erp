@@ -1,3 +1,8 @@
+/**
+ * @module LanguageSwitcher
+ * @description React UI component.
+ */
+
 import { useLanguageSetter } from '@/lib/i18n';
 import type { Language } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
@@ -9,15 +14,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Globe, Check } from 'lucide-react';
 
+import { tLabel } from '@/lib/i18n/tLabel';
 const languages: { code: Language; label: string; shortCode: string }[] = [
-  { code: 'uz', label: "O'zbekcha", shortCode: 'UZ' },
-  { code: 'ru', label: 'Русский', shortCode: 'RU' },
+  { code: 'uz', label: tLabel('common.LanguageSwitcher.tsx.ozbekcha', "O'zbekcha"), shortCode: 'UZ' },
+  { code: 'ru', label: tLabel('common.LanguageSwitcher.tsx.untitled', 'Русский'), shortCode: 'RU' },
 ];
 
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguageSetter();
 
-  const currentLanguage = (languages ?? []).find((l) => l.code === language) || languages[0];
+  const currentLanguage = (Array.isArray(languages) ? languages : []).find((l) => l.code === language) || languages[0];
 
   return (
     <DropdownMenu>

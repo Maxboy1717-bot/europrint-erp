@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 export interface DirectorSummary {
   revenue: { value: number; formatted: string; change: string; trend: string };
   orders: { value: number; formatted: string; change: string; trend: string };
@@ -9,6 +14,7 @@ export interface DirDashboard {
   production: { oee: string | null };
   hr: { present: number; total: number; active: number; late: number; attendanceRate: number };
   alerts: { minStock: number; iot: number };
+  criticalStock?: number;
 }
 export interface DirSummary {
   orders: { today: number; monthTotal: number; monthRevenue: number; activeProduction: number; pending: number; overdue: number };
@@ -20,11 +26,14 @@ export interface ProductionData {
   sessionsToday: Array<{ id: number; equipmentId: string; status: string; targetQty: number; producedQty: number; defectQty: number; oee: number }>;
   oeeToday: { avg: string | null; min: string | null; max: string | null; snapshots: number };
   overdueOrders: Array<{ id: number; papkaNo: string; tayyorBolishSanasi: string; status: string }>;
+  delayedOrders?: number;
+  defectPct?: number;
 }
 export interface HRData {
   employees: Record<string, number> & { total: number };
   attendance: { date: string; present: number; absent: number; late: number; earlyLeave: number; attendanceRate: number };
   byDepartment: Array<{ department: string; count: number }>;
+  absentToday?: number;
 }
 export interface FinanceData {
   invoices: Record<string, { count: number; amount: number }>;
@@ -39,6 +48,7 @@ export interface AlertItem {
 export interface AISummary {
   summary: string; generatedAt: string; aiGenerated?: boolean;
   stats: { totalOrders: number; totalRevenue?: number; completedOrders: number; overdueOrders: number; oee: string | null; attendance: { present: number; total: number; rate: number }; overdueInvoices?: { count: number; amount: number }; stockAlerts?: number };
+  cc?: { inboxOverdue?: number };
 }
 export interface WMSRentalItem {
   warehouseId: string | null; warehouseName: string; warehouseType: string;

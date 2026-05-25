@@ -3,11 +3,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { safeCall, Result, AppError } from '@common/result';
+import { SYSTEM_USER_ID } from '@common/constants/app.constants';
 import { TashkentTimeService } from '@common/time';
-import { db } from '@shared/db';
-import { discipline_records } from '@shared/db';
 import { NotificationBotService } from '../telegram-bots/notification-bot.service';
 import { DocumentWorkflowService } from '../document-workflow/document-workflow.service';
+import { DisciplineRecordRepository } from './discipline-record.repository';
 
 export interface LateArrivalPayload {
   employee_id:  string;
@@ -24,7 +24,6 @@ interface PendingReason {
 }
 
 const REASON_TIMEOUT_MS = 30 * 60 * 1_000;
-const SYSTEM_USER_ID    = 1;
 
 @Injectable()
 export class LateArrivalService {
@@ -37,8 +36,9 @@ export class LateArrivalService {
   private readonly _pending  = new Map<string, PendingReason>();
 
   constructor(
-    private readonly notificationBot:  NotificationBotService,
-    private readonly documentWorkflow: DocumentWorkflowService,
+    private readonly notificationBot:    NotificationBotService,
+    private readonly documentWorkflow:   DocumentWorkflowService,
+    private readonly disciplineRepo:     DisciplineRecordRepository,
   ) {}
 
   @OnEvent('attendance.territory_enter')
@@ -241,18 +241,18 @@ export class LateArrivalService {
 
   private async _applyLatenessPenalty(employeeId: number, minutesLate: number): Promise<void> {
     const today = this.time.formatDate(this.time.today());
-    await db.insert(discipline_records).values({
-      employee_id:    employeeId,
-      violation_type: 'LATE_ARRIVAL',
-      discipline_type: 'FINE',
-      violation_name: `Kech kelganlik — ${minutesLate} daqiqa`,
+    const r = await this.disciplineRepo.insert({
+      employeeId:     employeeId,
+      violationType:  'LATE_ARRIVAL',
+      disciplineType: 'FINE',
       description:    `Avtomatik jarima: ${minutesLate} daqiqa kech kelganlik, sababnomasi rad etildi`,
-      violation_date: today,
-      issued_date:    today,
+      violationDate:  today,
+      issuedDate:     today,
       severity:       'low',
-      issued_by:      SYSTEM_USER_ID,
+      issuedBy:       SYSTEM_USER_ID,
       status:         'approved',
     });
+    if (!r.ok) this.logger.warn?.(`disciplineRepo.insert failed: ${r.error.message}`);
   }
 
   async getLateArrivalsToday(): Promise<Result<{ employee_id: string; date: string }[], AppError>> {

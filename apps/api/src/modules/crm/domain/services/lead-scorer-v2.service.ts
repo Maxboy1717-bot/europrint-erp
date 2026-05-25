@@ -1,18 +1,54 @@
 /**
- * lead-scorer-v2.service.ts — TZ-D12: Bayesian Lead Scorer + Temporal Decay
+ * @module lead-scorer-v2.service
+ * @description Probabilistic lead-quality scorer — a sibling to the heuristic
+ *   `lead-scorer.service.ts` that uses a *trained* logistic-regression model
+ *   plus an exponential time-decay factor. Use whichever fits your data
+ *   regime (see WHY BOTH below).
  *
- * Formula:
- *   P(convert | x) = σ(β^T x)     (logistic regression)
- *   σ(z) = 1 / (1 + e^{-z})
+ *   Formula:
+ *     P(convert | x)     = σ(β·x)           where σ(z) = 1 / (1 + e^(−z))
+ *     decay(daysInactive) = e^(−λ × days)   λ = ln(2) / HALF_LIFE_DAYS
+ *     score              = P × decay × 100  (0..100, percentage-style)
  *
- *   Temporal decay (vaqt o'tishi bilan lead "sovishi"):
- *   w(t) = e^{-λt}
- *   λ = ln(2) / T_{1/2}   (T_{1/2} = 30 kun)
+ *   Features fed to the model:
+ *     log1p(budget)         — UZS, log-scaled so huge budgets don't dominate
+ *     sourceEncoded         — integer encoding of lead source channel
+ *     min(interactionCount, 20) — capped to avoid over-weighting a single chatty lead
+ *     min(daysActive, 365)  — capped: anything older than a year is "ancient"
  *
- *   Yakuniy score:
- *   score = σ(β·x) × e^{-λ × daysInactive} × 100
+ *   Training: stochastic gradient descent on `LeadTrainingData[]`, requires
+ *   ≥ 50 labelled examples (convert / no-convert). Until then, model weights
+ *   are all zeros and the score collapses to the decay factor × 50 — a
+ *   conservative "we don't know yet, decay the cold leads" behaviour.
+ * @layer Domain Service (CRM — pure compute, no DB)
  *
- *   Training: SGD logistic regression (min 50 sample)
+ * WHY BOTH `lead-scorer` (V1 heuristic) AND `lead-scorer-v2` (logistic)
+ *   V1 is rules-based: explainable, no training data needed, useful from
+ *   day 1. V2 needs labelled outcomes (which leads actually converted) to
+ *   train. We run both:
+ *     - V1 score → shown to SDRs immediately (triage)
+ *     - V2 score → shown in analytics + dashboards (model retrained nightly)
+ *   When V2 has >500 samples and stable AUC > 0.7, the dashboard will
+ *   switch to V2 as the primary score. Until then, V1 is authoritative.
+ *
+ * WHY 30-DAY HALF-LIFE
+ *   Our average B2B sales cycle is ~30-45 days (see lead-scorer V1 docs).
+ *   With λ = ln(2)/30, a lead inactive for 30 days has its score halved.
+ *   Sales managers wanted a clear "second month = half priority" rule
+ *   rather than a more aggressive 14-day decay (would kill warm leads
+ *   too fast) or slower 90-day (would keep dead leads alive).
+ *
+ * WHY log1p ON BUDGET
+ *   Budgets span 4 orders of magnitude (100k UZS .. 1B UZS). Linear scale
+ *   would have the model effectively ignore non-100M+ budgets. log1p
+ *   compresses the range while keeping 0 = 0 (no-budget leads are
+ *   correctly treated as low signal, not negative).
+ *
+ * WHY HARD CAPS ON interactionCount AND daysActive
+ *   A lead with 100 emails over 2 years isn't 100× more likely to convert
+ *   than one with 10 emails. Capping limits the leverage any single
+ *   feature can have on the linear logistic combination; without caps,
+ *   one outlier training sample can flip the model.
  */
 
 import { Injectable } from '@nestjs/common';
@@ -92,15 +128,18 @@ export class LeadScorerV2Service {
     if (trainingData.length < 50) {
       return Err({ code: 'BAD_REQUEST', message: `Model o'qitish uchun kamida 50 ta lead kerak, ${trainingData.length} ta berildi` });
     }
-
     const features = (Array.isArray(trainingData) ? trainingData : []).map(d => this.buildFeatureVector(d.features));
     const labels = (Array.isArray(trainingData) ? trainingData : []).map(d => (d.converted ? 1 : 0));
+    const { weights, bias } = this.runSgd(features, labels);
+    this.model = { weights, bias, samplesCount: trainingData.length, trainedAt: new Date() };
+    return Ok({ ...this.model });
+  }
 
+  private runSgd(features: number[][], labels: number[]): { weights: number[]; bias: number } {
     const weights = new Array(FEATURE_DIM).fill(0);
     let bias = 0;
     const LR = 0.01;
     const EPOCHS = 200;
-
     for (let epoch = 0; epoch < EPOCHS; epoch++) {
       for (let i = 0; i < features.length; i++) {
         const pred = this.sigmoid(this.dotProduct(weights, features[i]) + bias);
@@ -111,15 +150,7 @@ export class LeadScorerV2Service {
         bias -= LR * error;
       }
     }
-
-    this.model = {
-      weights,
-      bias,
-      samplesCount: trainingData.length,
-      trainedAt: new Date(),
-    };
-
-    return Ok({ ...this.model });
+    return { weights, bias };
   }
 
   @Calculation('crm.leadScore.compute')

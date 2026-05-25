@@ -1,5 +1,11 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import { Phone, Calendar as CalendarIcon, ListTodo, FileText, Video, Mail, Smartphone, MessageCircle, MessageSquare, PhoneIncoming, PhoneOutgoing } from "lucide-react";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export interface Activity {
   id: number;
   type: "call" | "meeting" | "task" | "note" | "email" | "sms" | "whatsapp";
@@ -42,23 +48,23 @@ export interface BitrixActivityPanelProps {
 }
 
 export const ACTIVITY_TYPE_OPTIONS = [
-  { value: "call", label: "Qo'ng'iroq", icon: Phone },
+  { value: "call", label: tLabel('common..qongiroq', "Qo'ng'iroq"), icon: Phone },
   { value: "meeting", label: "Uchrashuv", icon: CalendarIcon },
   { value: "task", label: "Vazifa", icon: ListTodo },
   { value: "note", label: "Eslatma", icon: FileText },
 ];
 
 export const PRIORITY_OPTIONS = [
-  { value: "low", label: "Past", color: "text-green-500" },
-  { value: "medium", label: "O'rta", color: "text-yellow-500" },
-  { value: "high", label: "Yuqori", color: "text-red-500" },
+  { value: "low", label: "Past", color: "text-[var(--ep-green)]" },
+  { value: "medium", label: tLabel('common..orta', "O'rta"), color: "text-[var(--ep-yellow)]" },
+  { value: "high", label: "Yuqori", color: "text-[var(--ep-red)]" },
 ];
 
 export const WHATSAPP_TEMPLATES = [
   { id: "greeting", label: "Salom xabari", text: "Assalomu alaykum! Qanday yordam bera olaman?" },
-  { id: "followup", label: "Kuzatuv", text: "Oldingi suhbatimiz bo'yicha xabar berishni istedim..." },
-  { id: "offer", label: "Taklif", text: "Sizga maxsus taklifimiz bor..." },
-  { id: "reminder", label: "Eslatma", text: "Uchrashuvimiz haqida eslatib o'tmoqchiman..." },
+  { id: "followup", label: "Kuzatuv", text: tLabel('common..oldingiSuhbatimizBoyichaXabarBerishni', "Oldingi suhbatimiz bo'yicha xabar berishni istedim...") },
+  { id: "offer", label: "Taklif", text: tLabel('common..sizgaMaxsusTaklifimizBor', "Sizga maxsus taklifimiz bor...") },
+  { id: "reminder", label: "Eslatma", text: tLabel('common..uchrashuvimizHaqidaEslatibOtmoqchiman', "Uchrashuvimiz haqida eslatib o'tmoqchiman...") },
 ];
 
 export const MEETING_DURATIONS = [

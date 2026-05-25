@@ -1,0 +1,17 @@
+{
+  "targetWarehouse": "Maqsadli ombor",
+  "priority": "Muhimlik",
+  "needDate": "Kerakli sana",
+  "lines": "Qatorlar soni",
+  "addLine": "Qo'shish Line",
+  "notePlaceholder": "Izoh Placeholder",
+  "submit": "Yuborish",
+  "newRequest": "new Request",
+  "title": "Sarlavha",
+  "myRequests": "my Requests",
+  "toApprove": "To Tasdiqlash",
+  "toFulfill": "to Fulfill",
+  "approve": "Tasdiqlash",
+  "reject": "Rad etish",
+  "fulfill": "Bajarish"
+}

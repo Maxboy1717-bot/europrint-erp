@@ -1,7 +1,14 @@
+/**
+ * @module approval-workflow.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   approval-workflow module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
+ */
 import {
   Body, Controller, Get, HttpCode, Param, Post, Query, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -10,6 +17,11 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { unwrapOrBadRequest, unwrapOrNotFound } from '@common/http-result';
 import { z } from 'zod';
 import { ApprovalWorkflowService } from './approval-workflow.service';
+import {
+  ApprovalRequestAclTranslator,
+  type LegacyApprovalRow,
+  type ApprovalRequestDto,
+} from './acl/approval-request-acl';
 
 const ApproveSchema = z.object({ notes: z.string().optional() });
 const RejectSchema  = z.object({ rejectionReason: z.string().min(1) });
@@ -31,16 +43,33 @@ type TokenUser = { id: string; sub?: string };
 @ApiTags('Approval Workflow')
 @ApiBearerAuth()
 @Roles('super_admin', 'admin', 'director', 'manager', 'accountant')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('approval-workflow')
 export class ApprovalWorkflowController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly acl = new ApprovalRequestAclTranslator();
+
   constructor(private readonly svc: ApprovalWorkflowService) {}
 
   @Get()
   async getAll() {
     return unwrapOrBadRequest(await this.svc.getPending());
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of pending approvals. New BC-7 (Finance)
+   * consumers should target this route; `/pending` stays for backwards-compat.
+   */
+  @Get('pending/v2')
+  async getPendingV2(): Promise<ApprovalRequestDto[]> {
+    const rows = unwrapOrBadRequest(await this.svc.getPending()) as unknown as LegacyApprovalRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.acl.toDomain(row))
+      .filter((r): r is { ok: true; data: ApprovalRequestDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Get('dashboard')

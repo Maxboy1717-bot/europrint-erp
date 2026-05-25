@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module sd-payments.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Injectable, Inject } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { SdPaymentsRepository } from './sd-payments.repository';
+import { ISdPaymentsRepo, SD_PAYMENTS_REPO } from '../domain/repositories/i-sd-payments.repo';
 
 @Injectable()
 export class SdPaymentsService {
-  constructor(private readonly repo: SdPaymentsRepository) {}
+  constructor(@Inject(SD_PAYMENTS_REPO) private readonly repo: ISdPaymentsRepo) {}
 
   async list(customerId: number | null, status: string | null, lim: number, off: number): Promise<Result<object, AppError>> {
     return this.repo.list(customerId, status, lim, off);

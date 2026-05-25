@@ -1,12 +1,17 @@
+/**
+ * @module drizzle-leave.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { db , runQuery, leaveRequests } from '@shared/db';
+import { SQL, SQLWrapper, and, count, eq, gte, lte, sql } from 'drizzle-orm';
 import { Result, Err, Ok } from '@common/types/result.type';
 
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 
@@ -25,6 +30,9 @@ export class LeaveRepository {
     }
   }
 
+  // NOTE: Raw SQL retained — dynamic WHERE with multi-filter conditionals (employeeId × status × leaveType ⇒ 8 branches),
+  // plus the Drizzle `leaveRequests` stub in schema-compat-2 omits real columns (manager_status, hr_status, director_status,
+  // manager_notes, hr_notes, director_notes) that `lr.*` returns. Converting would silently drop those fields.
   async findLeaves(filters: { employeeId?: string; status?: string; leaveType?: string; page?: number; limit?: number }): Promise<Result<{ items: unknown[]; total: number }>> {
     try {
       const page = filters.page ?? 1;
@@ -75,6 +83,7 @@ export class LeaveRepository {
     }
   }
 
+  // NOTE: Raw SQL retained — uses EXTRACT(YEAR FROM start_date::date), which Drizzle does not express idiomatically.
   async getLeaveBalance(employeeId: string): Promise<Result<{ annual: { used: number; remaining: number; total: number }; sick: { used: number }; maternity: { used: number } }>> {
     const ANNUAL_TOTAL = 24;
     const currentYear = _time.now().getFullYear();
@@ -94,9 +103,19 @@ export class LeaveRepository {
     try {
       const today = _time.now().toISOString().split('T')[0];
       const [statusRows, typeRows, currentRows] = await Promise.all([
-        exec(sql`SELECT status, COUNT(*) AS cnt FROM leave_requests GROUP BY status`),
-        exec(sql`SELECT leave_type, COUNT(*) AS cnt FROM leave_requests GROUP BY leave_type`),
-        exec(sql`SELECT COUNT(*) AS cnt FROM leave_requests WHERE status = 'approved' AND start_date::date <= ${today}::date AND end_date::date >= ${today}::date`),
+        db.select({ status: leaveRequests.status, cnt: count() })
+          .from(leaveRequests)
+          .groupBy(leaveRequests.status),
+        db.select({ leave_type: leaveRequests.leaveType, cnt: count() })
+          .from(leaveRequests)
+          .groupBy(leaveRequests.leaveType),
+        db.select({ cnt: count() })
+          .from(leaveRequests)
+          .where(and(
+            eq(leaveRequests.status, 'approved'),
+            lte(leaveRequests.startDate, today),
+            gte(leaveRequests.endDate, today),
+          )),
       ]);
       return { ok: true, data: { byStatus: Object.fromEntries(statusRows.map((r) => [String(r.status), Number(r.cnt)])), byType: Object.fromEntries(typeRows.map((r) => [String(r.leave_type), Number(r.cnt)])), currentlyOnLeave: Number(currentRows[0]?.cnt ?? 0) } };
     } catch (error: unknown) {

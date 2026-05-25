@@ -1,3 +1,8 @@
+/**
+ * @module ContactDetailSheet
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
@@ -12,6 +17,7 @@ import { ContactHeader } from "./ContactHeader";
 import { ContactEditForm } from "./ContactEditForm";
 import { ContactView } from "./ContactView";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface ContactDetailSheetProps {
   contactId: number;
   open: boolean;
@@ -46,7 +52,7 @@ export function ContactDetailSheet({
       setIsEditing(false);
       toast({
         title: "Saqlandi",
-        description: "Kontakt muvaffaqiyatli yangilandi",
+        description: tLabel('common.ContactDetailSheet.tsx.kontaktMuvaffaqiyatliYangilandi', "Kontakt muvaffaqiyatli yangilandi"),
       });
     },
     onError: () => {
@@ -69,7 +75,7 @@ export function ContactDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-[600px] overflow-y-auto">
+      <SheetContent className="sm:max-w-[600px] overflow-y-auto p-6">
         <ContactHeader
           contact={contact || null}
           isLoading={isLoading}
@@ -80,7 +86,7 @@ export function ContactDetailSheet({
         {isLoading ? (
           <div className="space-y-4 mt-6">
             {([...Array(6)]).map((_, i) => (
-              <Skeleton key={`k-${i}`} className="h-16 w-full" />
+              <Skeleton key={`k-${i}`} className="h-16 w-full rounded-lg" />
             ))}
           </div>
         ) : isEditing ? (

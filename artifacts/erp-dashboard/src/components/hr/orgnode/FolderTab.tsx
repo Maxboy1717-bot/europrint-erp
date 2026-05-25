@@ -1,6 +1,11 @@
+/**
+ * @module FolderTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { FolderOpen, Plus, Loader2, FileText, Video, ClipboardList, X } from "lucide-react";
+import { FolderOpen, Plus, FileText, Video, ClipboardList, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,17 +15,25 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
+  AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { FolderItem } from "./types";
 
+import { useTranslation } from '@/lib/i18n';
+import { EPLoader } from "@/components/ep";
 interface FolderTabProps {
   nodeId: string | number;
 }
 
-export function FolderTab({ nodeId }: FolderTabProps) {
+export function FolderTab({nodeId }: FolderTabProps) {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [addFolderOpen, setAddFolderOpen] = useState(false);
   const [folderForm, setFolderForm] = useState({
@@ -58,7 +71,7 @@ export function FolderTab({ nodeId }: FolderTabProps) {
   if (folderLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <EPLoader size={32} tone="muted" />
       </div>
     );
   }
@@ -68,15 +81,15 @@ export function FolderTab({ nodeId }: FolderTabProps) {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-semibold text-sm flex items-center gap-2">
-            <FolderOpen className="h-4 w-4 text-[#ff5d2e]" />
-            Lavozim Papkasi
+            <FolderOpen className="h-4 w-4 text-primary" />
+            {t("lavozimPapkasi")}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Bu lavozimga biriktirilgan hujjatlar, videolar va testlar
+            {t("buLavozimgaBiriktirilganHujjatlarVideolar")}
           </p>
         </div>
         <Button size="sm" onClick={() => setAddFolderOpen(true)} data-testid="button-add-folder-item">
-          <Plus className="h-3.5 w-3.5 mr-1" />Qo'shish
+          <Plus className="h-3.5 w-3.5 mr-1" />{t("add")}
         </Button>
       </div>
 
@@ -86,11 +99,11 @@ export function FolderTab({ nodeId }: FolderTabProps) {
             <FolderOpen className="h-8 w-8" />
           </div>
           <div className="text-center">
-            <p className="font-medium text-foreground">Papka bo'sh</p>
-            <p className="text-sm mt-1">Bu lavozim uchun hujjat, video yoki test qo'shing</p>
+            <p className="font-medium text-foreground">{t("papkaBosh")}</p>
+            <p className="text-sm mt-1">{t("buLavozimUchunHujjatVideo")}</p>
           </div>
           <Button size="sm" onClick={() => setAddFolderOpen(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1" />Birinchi elementni qo'shish
+            <Plus className="h-3.5 w-3.5 mr-1" />{t("birinchiElementniQoshish")}
           </Button>
         </div>
       ) : (
@@ -130,7 +143,7 @@ export function FolderTab({ nodeId }: FolderTabProps) {
                               href={item.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-blue-600 hover:underline truncate block"
+                              className="text-xs text-[var(--ep-blue)] hover:underline truncate block"
                             >
                               {item.url}
                             </a>
@@ -140,16 +153,29 @@ export function FolderTab({ nodeId }: FolderTabProps) {
                           <span className="text-xs text-muted-foreground hidden sm:block">
                             {new Date(item.createdAt).toLocaleDateString("uz-UZ")}
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            onClick={() => removeFolderItemMutation.mutate(item.id)}
-                            disabled={removeFolderItemMutation.isPending}
-                            data-testid={`button-remove-folder-item-${item.id}`}
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                disabled={removeFolderItemMutation.isPending}
+                                data-testid={`button-remove-folder-item-${item.id}`}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t("ochirishniTasdiqlang")}</AlertDialogTitle>
+                                <AlertDialogDescription>{t("ushbuElementPapkadanOlibTashlanadi")}</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => removeFolderItemMutation.mutate(item.id)}>{t("delete")}</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </CardContent>
                     </Card>
@@ -162,47 +188,47 @@ export function FolderTab({ nodeId }: FolderTabProps) {
       )}
 
       <Dialog open={addFolderOpen} onOpenChange={setAddFolderOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FolderOpen className="h-4 w-4 text-[#ff5d2e]" />
-              Papkaga element qo'shish
+              <FolderOpen className="h-4 w-4 text-primary" />
+              {t("papkagaElementQoshish")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div>
-              <Label>Tur</Label>
+              <Label>{t("tur")}</Label>
               <Select
                 value={folderForm.itemType}
                 onValueChange={(v) => setFolderForm((f) => ({ ...f, itemType: v as "document" | "video" | "test" }))}
               >
-                <SelectTrigger data-testid="select-folder-item-type">
+                <SelectTrigger data-testid="select-folder-item-type" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="document">
-                    <span className="flex items-center gap-2"><FileText className="h-3.5 w-3.5" />Hujjat</span>
+                    <span className="flex items-center gap-2"><FileText className="h-3.5 w-3.5" />{t("hujjat")}</span>
                   </SelectItem>
                   <SelectItem value="video">
-                    <span className="flex items-center gap-2"><Video className="h-3.5 w-3.5" />Video</span>
+                    <span className="flex items-center gap-2"><Video className="h-3.5 w-3.5" />{t('video')}</span>
                   </SelectItem>
                   <SelectItem value="test">
-                    <span className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5" />Test / LMS kurs</span>
+                    <span className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5" />{t("testLmsKurs")}</span>
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Nomi *</Label>
+              <Label>{t("nomi")}</Label>
               <Input
                 value={folderForm.title}
                 onChange={(e) => setFolderForm((f) => ({ ...f, title: e.target.value }))}
-                placeholder="Masalan: Texnika xavfsizligi bo'yicha yo'riqnoma"
+                placeholder={t("masalanTexnikaXavfsizligiBoyichaYoriqnoma")}
                 data-testid="input-folder-item-title"
               />
             </div>
             <div>
-              <Label>URL / Havola</Label>
+              <Label>{t("urlHavola")}</Label>
               <Input
                 value={folderForm.url}
                 onChange={(e) => setFolderForm((f) => ({ ...f, url: e.target.value }))}
@@ -211,17 +237,17 @@ export function FolderTab({ nodeId }: FolderTabProps) {
               />
             </div>
             <div>
-              <Label>Tavsif</Label>
+              <Label>{t("progress.description")}</Label>
               <Input
                 value={folderForm.description}
                 onChange={(e) => setFolderForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Qisqacha tavsif..."
+                placeholder={t("qisqachaTavsif")}
                 data-testid="input-folder-item-description"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddFolderOpen(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setAddFolderOpen(false)}>{t("Bekor")}</Button>
             <Button
               onClick={() => addFolderItemMutation.mutate(folderForm)}
               disabled={!folderForm.title || addFolderItemMutation.isPending}

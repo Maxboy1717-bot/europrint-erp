@@ -1,8 +1,16 @@
+/**
+ * @module kanban-boards.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ *              Umbrella facade implementing {@link IKanbanBoardsRepo}: board-level methods
+ *              are handled inline; column and card concerns delegate to dedicated
+ *              {@link KanbanColumnsRepository} and {@link KanbanCardsRepository}.
+ *              Split out as part of Rule 13/16 (file size + single concern).
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
-import { sql } from 'drizzle-orm';
-import { db , runQuery } from '@shared/db';
-import { execKanbanColumnSoftDelete, execKanbanCardSoftDelete } from '@common/database/queries-kanban';
+import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { db, runQuery } from '@shared/db';
 import { Result, Ok, Err } from '@common/result';
 import {
   IKanbanBoardsRepo,
@@ -13,22 +21,39 @@ import {
   CreateBoardInput,
   CreateCardInput,
   CreateColumnInput,
+  CreateKanbanForOrderInput,
   MoveCardInput,
   UpdateCardInput,
   UpdateColumnInput,
 } from '../../domain/repositories/i-kanban-boards.repo';
+import { kanbanBoards } from '../kanban-tables';
+import { KanbanColumnsRepository } from './kanban-columns.repo';
+import { KanbanCardsRepository } from './kanban-cards.repo';
 
 @Injectable()
 export class KanbanBoardsRepository implements IKanbanBoardsRepo {
   private readonly logger = new Logger(KanbanBoardsRepository.name);
 
+  constructor(
+    private readonly columnsRepo: KanbanColumnsRepository,
+    private readonly cardsRepo:   KanbanCardsRepository,
+  ) {}
+
   async getBoards(): Promise<Result<KanbanBoard[]>> {
     try {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT id, name, type, description, created_at, updated_at
-        FROM kanban_boards WHERE deleted_at IS NULL ORDER BY created_at DESC
-      `);
-      return Ok(castTo<KanbanBoard[]>(rows.rows));
+      const rows = await db
+        .select({
+          id:          kanbanBoards.id,
+          name:        kanbanBoards.name,
+          type:        kanbanBoards.type,
+          description: kanbanBoards.description,
+          created_at:  kanbanBoards.created_at,
+          updated_at:  kanbanBoards.updated_at,
+        })
+        .from(kanbanBoards)
+        .where(isNull(kanbanBoards.deleted_at))
+        .orderBy(desc(kanbanBoards.created_at));
+      return Ok(castTo<KanbanBoard[]>(rows));
     } catch (error) {
       this.logger.error('getBoards: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
@@ -52,7 +77,11 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
         db.execute<Record<string, unknown>>(sql`
           SELECT id, board_id, column_id, title, description, priority, due_date,
                  sort_order, owner_user_id, related_type, related_id, source,
-                 start_date, estimated_time, created_at, updated_at
+                 start_date, estimated_time, accepted_at, completed_at,
+                 created_at, updated_at,
+                 (SELECT row_to_json(t) FROM kanban_time_tracks t
+                  WHERE t.card_id = kanban_cards.id::text AND t.is_running = true
+                  LIMIT 1) AS active_time_track
           FROM kanban_cards WHERE board_id = ${boardId} AND deleted_at IS NULL ORDER BY sort_order ASC
         `),
       ]);
@@ -66,118 +95,67 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
 
   async createBoard(input: CreateBoardInput): Promise<Result<KanbanBoard>> {
     try {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        INSERT INTO kanban_boards (name, type, description) VALUES (${input.name}, ${input.type}, ${input.description}) RETURNING *
-      `);
-      return Ok(castTo<KanbanBoard>(rows.rows[0]));
+      const rows = await db
+        .insert(kanbanBoards)
+        .values({
+          name:        input.name,
+          type:        input.type,
+          description: input.description,
+        })
+        .returning();
+      const row = rows[0];
+      if (!row) return Err({ message: 'Board yaratilmadi', code: 'DB_ERROR' });
+      return Ok(castTo<KanbanBoard>(row));
     } catch (error) {
       this.logger.error('createBoard: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
     }
   }
 
-  async getMaxColumnOrder(boardId: string): Promise<Result<number>> {
+  async deleteBoard(boardId: string): Promise<Result<void>> {
     try {
-      const rows = await runQuery<{ max: string }>(sql`
-        SELECT COALESCE(MAX(sort_order), 0) AS max FROM kanban_columns WHERE board_id = ${boardId} AND deleted_at IS NULL
-      `);
-      return Ok(Number(rows.rows[0]?.max ?? 0));
-    } catch (error) {
-      this.logger.error('getMaxColumnOrder: ' + (error as Error).message);
-      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
-    }
-  }
-
-  async addColumn(input: CreateColumnInput): Promise<Result<KanbanColumn>> {
-    try {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        INSERT INTO kanban_columns (board_id, name, sort_order, color) VALUES (${input.board_id}, ${input.name}, ${input.sort_order}, ${input.color}) RETURNING *
-      `);
-      return Ok(castTo<KanbanColumn>(rows.rows[0]));
-    } catch (error) {
-      this.logger.error('addColumn: ' + (error as Error).message);
-      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
-    }
-  }
-
-  async updateColumn(boardId: string, columnId: string, input: UpdateColumnInput): Promise<Result<KanbanColumn>> {
-    try {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        UPDATE kanban_columns
-        SET name = COALESCE(${input.name ?? null}, name), color = COALESCE(${input.color ?? null}, color),
-            sort_order = COALESCE(${input.sort_order ?? null}, sort_order), updated_at = NOW()
-        WHERE id = ${columnId} AND board_id = ${boardId} AND deleted_at IS NULL RETURNING *
-      `);
-      if (!rows.rows[0]) return Err({ message: `Column ${columnId} topilmadi`, code: 'NOT_FOUND' });
-      return Ok(castTo<KanbanColumn>(rows.rows[0]));
-    } catch (error) {
-      this.logger.error('updateColumn: ' + (error as Error).message);
-      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
-    }
-  }
-
-  async deleteColumn(boardId: string, columnId: string): Promise<Result<void>> {
-    try {
-      await execKanbanColumnSoftDelete(columnId, boardId);
+      await db
+        .update(kanbanBoards)
+        .set({ deleted_at: sql`NOW()` })
+        .where(and(eq(kanbanBoards.id, Number(boardId)), isNull(kanbanBoards.deleted_at)));
       return Ok(undefined);
     } catch (error) {
-      this.logger.error('deleteColumn: ' + (error as Error).message);
+      this.logger.error('deleteBoard: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
     }
   }
 
-  async addCard(input: CreateCardInput): Promise<Result<KanbanCard>> {
-    try {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        INSERT INTO kanban_cards (board_id, column_id, title, description, priority, due_date, owner_user_id, sort_order)
-        VALUES (${input.board_id}, ${input.column_id}, ${input.title}, ${input.description}, ${input.priority}, ${input.due_date}, ${input.owner_user_id}, 0)
-        RETURNING *
-      `);
-      return Ok(castTo<KanbanCard>(rows.rows[0]));
-    } catch (error) {
-      this.logger.error('addCard: ' + (error as Error).message);
-      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
-    }
+  // ── Column concerns — delegated to KanbanColumnsRepository ──────────────────
+  getMaxColumnOrder(boardId: string): Promise<Result<number>> {
+    return this.columnsRepo.getMaxColumnOrder(boardId);
+  }
+  addColumn(input: CreateColumnInput): Promise<Result<KanbanColumn>> {
+    return this.columnsRepo.addColumn(input);
+  }
+  updateColumn(boardId: string, columnId: string, input: UpdateColumnInput): Promise<Result<KanbanColumn>> {
+    return this.columnsRepo.updateColumn(boardId, columnId, input);
+  }
+  deleteColumn(boardId: string, columnId: string): Promise<Result<void>> {
+    return this.columnsRepo.deleteColumn(boardId, columnId);
   }
 
-  async updateCard(id: string, input: UpdateCardInput): Promise<Result<KanbanCard>> {
-    try {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        UPDATE kanban_cards
-        SET title = COALESCE(${input.title ?? null}, title), description = COALESCE(${input.description ?? null}, description),
-            priority = COALESCE(${input.priority ?? null}, priority), due_date = COALESCE(${input.due_date ?? null}, due_date),
-            owner_user_id = COALESCE(${input.owner_user_id ?? null}, owner_user_id), updated_at = NOW()
-        WHERE id = ${id} AND deleted_at IS NULL RETURNING *
-      `);
-      if (!rows.rows[0]) return Err({ message: `Card ${id} topilmadi`, code: 'NOT_FOUND' });
-      return Ok(castTo<KanbanCard>(rows.rows[0]));
-    } catch (error) {
-      this.logger.error('updateCard: ' + (error as Error).message);
-      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
-    }
+  // ── Card concerns — delegated to KanbanCardsRepository ──────────────────────
+  addCard(input: CreateCardInput): Promise<Result<KanbanCard>> {
+    return this.cardsRepo.addCard(input);
   }
-
-  async moveCard(id: string, input: MoveCardInput): Promise<Result<KanbanCard>> {
-    try {
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        UPDATE kanban_cards SET column_id = ${input.column_id}, sort_order = COALESCE(${input.sort_order ?? null}, sort_order), updated_at = NOW()
-        WHERE id = ${id} AND deleted_at IS NULL RETURNING *
-      `);
-      if (!rows.rows[0]) return Err({ message: `Card ${id} topilmadi`, code: 'NOT_FOUND' });
-      return Ok(castTo<KanbanCard>(rows.rows[0]));
-    } catch (error) {
-      this.logger.error('moveCard: ' + (error as Error).message);
-      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
-    }
+  updateCard(id: string, input: UpdateCardInput): Promise<Result<KanbanCard>> {
+    return this.cardsRepo.updateCard(id, input);
   }
-
-  async deleteCard(id: string): Promise<Result<void>> {
-    try {
-      await execKanbanCardSoftDelete(id);
-      return Ok(undefined);
-    } catch (error) {
-      this.logger.error('deleteCard: ' + (error as Error).message);
-      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
-    }
+  moveCard(id: string, input: MoveCardInput): Promise<Result<KanbanCard>> {
+    return this.cardsRepo.moveCard(id, input);
+  }
+  deleteCard(id: string): Promise<Result<void>> {
+    return this.cardsRepo.deleteCard(id);
+  }
+  createKanbanForOrder(input: CreateKanbanForOrderInput): Promise<Result<void>> {
+    return this.cardsRepo.createKanbanForOrder(input);
+  }
+  moveOrderCardToCancelled(orderId: number, orderNumber: string): Promise<Result<void>> {
+    return this.cardsRepo.moveOrderCardToCancelled(orderId, orderNumber);
   }
 }

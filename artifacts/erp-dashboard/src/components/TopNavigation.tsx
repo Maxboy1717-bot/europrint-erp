@@ -1,3 +1,8 @@
+/**
+ * @module TopNavigation
+ * @description React UI component.
+ */
+
 import {
   LayoutDashboard,
   BookOpen,
@@ -62,6 +67,7 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 import {
   Sheet,
   SheetContent,
@@ -169,12 +175,9 @@ const menuGroups = {
     items: [
       { title: "HR Dashboard", url: "hr-dashboard", icon: BarChart3 },
       { title: "Xodimlar", url: "employees", icon: Users },
-      { title: "Bo'limlar", url: "departments", icon: Building2 },
-      { title: "Lavozimlar", url: "positions", icon: Briefcase },
       { title: "Adaptatsiya", url: "adaptation", icon: GraduationCap },
-      { title: "Org Tuzilma", url: "org-structure/hierarchy", icon: Network },
+      { title: "Tashkiliy Tuzilma", url: "org-structure/hierarchy", icon: Network },
       { title: "Tuzilma Yaratish", url: "org-structure/builder", icon: Settings },
-      { title: "Tashkiliy Tuzilma", url: "org-chart", icon: Network },
       { title: "7 Funksiya", url: "seven-functions", icon: Crown },
       { title: "RACI Matritsasi", url: "raci-matrix", icon: Grid3X3 },
       { title: "Biznes Salomatligi", url: "business-health", icon: Heart },
@@ -309,11 +312,11 @@ const moduleColors: Record<string, { icon: string; bg: string; hover: string; bo
     activeItem: "bg-module-warehouse text-white"
   },
   buxgalteriya: {
-    icon: "text-indigo-600 dark:text-indigo-400",
+    icon: "text-[var(--ep-blue)] dark:text-indigo-400",
     bg: "bg-indigo-50 dark:bg-indigo-500/10",
     hover: "hover:bg-indigo-100 dark:hover:bg-indigo-500/20",
     border: "border-indigo-200 dark:border-indigo-500/30",
-    activeItem: "bg-indigo-500 text-white"
+    activeItem: "bg-[var(--ep-blue)] text-white"
   },
   moliya: {
     icon: "text-module-fi",
@@ -330,11 +333,11 @@ const moduleColors: Record<string, { icon: string; bg: string; hover: string; bo
     activeItem: "bg-module-hr text-white"
   },
   lms: {
-    icon: "text-purple-600 dark:text-purple-400",
+    icon: "text-[var(--ep-purple)] dark:text-purple-400",
     bg: "bg-purple-50 dark:bg-purple-500/10",
     hover: "hover:bg-purple-100 dark:hover:bg-purple-500/20",
     border: "border-purple-300/30 dark:border-purple-500/30",
-    activeItem: "bg-purple-500 text-white"
+    activeItem: "bg-[var(--ep-purple)] text-white"
   },
   ai: {
     icon: "text-primary",
@@ -354,6 +357,7 @@ const moduleColors: Record<string, { icon: string; bg: string; hover: string; bo
 
 export function TopNavigation({ activePage = "analytics", onNavigate }: TopNavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useTranslation("navigation");
 
   return (
     <div className="flex items-center w-full">
@@ -374,14 +378,14 @@ export function TopNavigation({ activePage = "analytics", onNavigate }: TopNavig
                   )}
                   data-testid={`dropdown-${key}`}
                 >
-                  <group.icon className={cn("h-5 w-5 shrink-0", colors.icon)} />
-                  <span className="truncate">{group.title}</span>
+                  <group.icon className={cn("h-4 w-4 shrink-0", colors.icon)} />
+                  <span className="truncate">{t(group.title)}</span>
                   <ChevronDown className="h-4 w-4 opacity-60 shrink-0" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[280px] max-h-[70vh] overflow-y-auto">
+              <DropdownMenuContent align="start" className="w-full sm:w-[280px] max-h-[70vh] overflow-y-auto">
                 <div className={cn("px-3 py-2 mb-1 border-b border-border/50", colors.bg)}>
-                  <span className={cn("text-xs font-semibold", colors.icon)}>{group.title}</span>
+                  <span className={cn("text-xs font-semibold", colors.icon)}>{t(group.title)}</span>
                 </div>
                 {(Array.isArray(group.items) ? group.items : []).map((item) => (
                   <DropdownMenuItem key={item.url} asChild>
@@ -397,7 +401,7 @@ export function TopNavigation({ activePage = "analytics", onNavigate }: TopNavig
                         "h-4 w-4 flex-shrink-0",
                         activePage === item.url ? "text-inherit" : colors.icon
                       )} />
-                      <span className="text-sm">{item.title}</span>
+                      <span className="text-sm">{t(item.title)}</span>
                     </a>
                   </DropdownMenuItem>
                 ))}
@@ -428,7 +432,7 @@ export function TopNavigation({ activePage = "analytics", onNavigate }: TopNavig
                       )}>
                         <group.icon className={cn("h-4 w-4", colors.icon)} />
                         <h3 className="text-xs font-semibold uppercase tracking-wider">
-                          {group.title}
+                          {t(group.title)}
                         </h3>
                       </div>
                       <div className="space-y-0.5">
@@ -449,7 +453,7 @@ export function TopNavigation({ activePage = "analytics", onNavigate }: TopNavig
                               "h-4 w-4 flex-shrink-0",
                               activePage === item.url ? "text-inherit" : colors.icon
                             )} />
-                            <span>{item.title}</span>
+                            <span>{t(item.title)}</span>
                           </a>
                         ))}
                       </div>

@@ -1,13 +1,18 @@
+/**
+ * @module get-inspection-stats.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { PERCENT_BASIS } from '@common/constants/app.constants';
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { GetInspectionStatsQuery } from './get-inspection-stats.query';
 
 type StatsResponse = { ok: boolean; data: { total_inspections: number; total_checked: number; total_passed: number; total_failed: number; pass_rate: number; fail_rate: number } };
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 

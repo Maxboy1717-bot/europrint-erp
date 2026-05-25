@@ -1,3 +1,8 @@
+/**
+ * @module hover-card
+ * @description Source module. See exports for details.
+ */
+
 import * as React from "react"
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card"
 

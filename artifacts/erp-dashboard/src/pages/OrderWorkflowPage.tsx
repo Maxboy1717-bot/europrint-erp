@@ -1,19 +1,29 @@
-import { useEffect, useState, useCallback } from 'react';
+/**
+ * @module OrderWorkflowPage
+ * @description React page component. Route-level UI.
+ */
 
+import { useEffect, useState, useCallback } from 'react';
+import { RefreshCw, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { apiRequest } from '@/lib/queryClient';
+
+import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 const BASE = (import.meta.env.BASE_URL ?? '/erp-dashboard/').replace(/\/$/, '');
 function getApiUrl(path: string) { return `${BASE}/api/${path}`; }
 
-function getAuthToken(): string {
-  try { return localStorage.getItem('token') ?? ''; } catch { return ''; }
-}
-
 interface OrderItem {
-  id:          string;
-  orderNumber: string;
-  status:      string;
-  customerId:  number | null;
-  totalAmount: number;
-  currency:    string;
+  id:           string;
+  orderNumber:  string;
+  status:       string;
+  customerId:   number | null;
+  totalAmount:  number;
+  currency:     string;
   stateVersion: number;
 }
 
@@ -25,18 +35,18 @@ interface SagaTrack {
 }
 
 interface SagaDetail {
-  orderId:     string;
-  status:      string;
-  tracks:      SagaTrack[];
-  paymentPlan: Array<{ sequence: number; dueType: string; percent: string; status: string }>;
+  orderId:       string;
+  status:        string;
+  tracks:        SagaTrack[];
+  paymentPlan:   Array<{ sequence: number; dueType: string; percent: string; status: string }>;
   statusHistory: Array<{ from: string | null; to: string; changedAt: string | null }>;
 }
 
 const PHASE_GROUPS = [
-  { label: 'F1 Savdo', statuses: ['DRAFT', 'LEAD_INTAKE', 'PRICING'] },
-  { label: 'F2 Namuna', statuses: ['SAMPLE_REQUESTED', 'SAMPLE_PRODUCTION', 'DESIGN_IN_PROGRESS'] },
-  { label: 'F3 Shartnoma', statuses: ['CONTRACT_DRAFT', 'PAYMENT_PENDING', 'ORDER_CONFIRMED'] },
-  { label: 'F4 Texnologiya', statuses: ['TECH_INTAKE', 'PREPRESS', 'MOLDS_ORDERED', 'CLICHE_ORDERED', 'TECHCARD_REVIEW', 'SPELL_CHECK', 'TECHCARD_CONFIRMED', 'CUSTOMER_APPROVED'] },
+  { label: 'F1 Savdo',          statuses: ['DRAFT', 'LEAD_INTAKE', 'PRICING'] },
+  { label: 'F2 Namuna',         statuses: ['SAMPLE_REQUESTED', 'SAMPLE_PRODUCTION', 'DESIGN_IN_PROGRESS'] },
+  { label: 'F3 Shartnoma',      statuses: ['CONTRACT_DRAFT', 'PAYMENT_PENDING', 'ORDER_CONFIRMED'] },
+  { label: 'F4 Texnologiya',    statuses: ['TECH_INTAKE', 'PREPRESS', 'MOLDS_ORDERED', 'CLICHE_ORDERED', 'TECHCARD_REVIEW', 'SPELL_CHECK', 'TECHCARD_CONFIRMED', 'CUSTOMER_APPROVED'] },
   { label: 'F5 Ishlab chiqarish', statuses: ['PLANNING', 'MATERIAL_WAIT', 'LAB_WAIT', 'PRODUCTION_SCHEDULED', 'IN_PRODUCTION', 'FINISHED_AWAITING_QC'] },
   { label: 'F6 Yetkazib berish', statuses: ['PACKAGED', 'IN_FG_WAREHOUSE', 'SHIPPING_READY', 'SHIPPING', 'SHIPPED', 'DELIVERED', 'CLOSED'] },
 ];
@@ -69,24 +79,35 @@ function formatAmount(amount: number, currency: string): string {
 
 function ProgressBar({ pct, color }: { pct: number; color: string }) {
   return (
-    <div style={{ background: '#1e293b', borderRadius: 4, height: 6, overflow: 'hidden' }}>
-      <div style={{ width: `${pct}%`, background: color, height: '100%', transition: 'width 0.4s' }} />
+    <div className="rounded bg-muted h-1.5 overflow-hidden">
+      <div style={{ width: `${pct}%`, background: color }} className="h-full transition-[width] duration-300" />
     </div>
   );
 }
 
 function SagaTracker({ detail }: { detail: SagaDetail }) {
+  const { t } = useTranslation("common");
   const trackColors = ['#60a5fa', '#a78bfa', '#34d399'];
   return (
-    <div style={{ display: 'flex', gap: 12 }}>
-      {(detail.tracks ?? []).map((t, i) => (
-        <div key={t.name} style={{ flex: 1, background: '#0f172a', borderRadius: 8, padding: '12px', border: t.isBottleneck ? '1.5px solid #ef4444' : '1px solid #334155' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: 13 }}>{t.name}</span>
-            {t.isBottleneck && <span style={{ color: '#ef4444', fontSize: 11 }}>⚠ Bottleneck</span>}
+    <div className="flex gap-3">
+      {(Array.isArray(detail.tracks) ? detail.tracks : []).map((t, i) => (
+        <div
+          key={t.name}
+          className={cn(
+            'flex-1 bg-muted/50 rounded-lg p-3 border',
+            t.isBottleneck ? 'border-destructive' : 'border-border',
+          )}
+        >
+          <div className="flex justify-between mb-1.5">
+            <span className="text-[13px] font-semibold text-foreground">{t.name}</span>
+            {t.isBottleneck && (
+              <span className="text-[11px] text-destructive">{tLabel("orders.bottleneck", "Bottleneck")}</span>
+            )}
           </div>
           <ProgressBar pct={t.progressPct} color={trackColors[i] ?? '#60a5fa'} />
-          <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 4 }}>{t.progressPct}% — {t.status}</div>
+          <div className="text-[12px] text-muted-foreground mt-1">
+            {t.progressPct}% — {t.status}
+          </div>
         </div>
       ))}
     </div>
@@ -96,15 +117,25 @@ function SagaTracker({ detail }: { detail: SagaDetail }) {
 function PhaseBar({ status }: { status: string }) {
   const phaseIdx = PHASE_GROUPS.findIndex((g) => g.statuses.includes(status));
   return (
-    <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
+    <div className="flex gap-1 mb-3">
       {PHASE_GROUPS.map((g, i) => (
-        <div key={g.label} style={{ flex: 1, height: 6, borderRadius: 3, background: i < phaseIdx ? '#4ade80' : i === phaseIdx ? '#60a5fa' : '#1e293b' }} title={g.label} />
+        <div
+          key={g.label}
+          title={g.label}
+          className={cn(
+            'flex-1 h-1.5 rounded',
+            i < phaseIdx  ? 'bg-success'
+            : i === phaseIdx ? 'bg-primary'
+            : 'bg-muted',
+          )}
+        />
       ))}
     </div>
   );
 }
 
 export default function OrderWorkflowPage() {
+  const { t } = useTranslation('common');
   const [orders, setOrders]       = useState<OrderItem[]>([]);
   const [selected, setSelected]   = useState<SagaDetail | null>(null);
   const [loading, setLoading]     = useState(false);
@@ -117,91 +148,107 @@ export default function OrderWorkflowPage() {
     const url = filterStatus
       ? getApiUrl(`order-workflow/orders?status=${filterStatus}&limit=100`)
       : getApiUrl('order-workflow/orders?limit=100');
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
-    if (!res.ok) { setError('Buyurtmalar yuklanmadi'); setLoading(false); return; }
-    const data = await res.json();
-    setOrders((data.items ?? []) as OrderItem[]);
-    setLoading(false);
+    try {
+      const data = await apiRequest<{ items?: OrderItem[] }>('GET', url);
+      setOrders((data?.items ?? []) as OrderItem[]);
+    } catch {
+      setError('Buyurtmalar yuklanmadi');
+    } finally {
+      setLoading(false);
+    }
   }, [filterStatus]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   const openSaga = async (id: string) => {
-    const res = await fetch(getApiUrl(`order-workflow/orders/${id}/saga-status`), {
-      headers: { Authorization: `Bearer ${getAuthToken()}` },
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    setSelected(data as SagaDetail);
+    try {
+      const data = await apiRequest<SagaDetail>('GET', getApiUrl(`order-workflow/orders/${id}/saga-status`));
+      setSelected(data);
+    } catch {
+      // ignore
+    }
   };
 
   const grouped = PHASE_GROUPS.map((g) => ({
     ...g,
-    items: (orders ?? []).filter((o) => g.statuses.includes(o.status)),
+    items: (Array.isArray(orders) ? orders : []).filter((o) => g.statuses.includes(o.status)),
   }));
 
+  const allStatuses = PHASE_GROUPS.flatMap((g) => g.statuses);
+
   return (
-    <div style={{ background: '#0f172a', minHeight: '100vh', padding: 20, color: '#e2e8f0', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f5f9', margin: 0 }}>
-            Order-to-Cash Workflow
-          </h1>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilter(e.target.value)}
-              style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 6, color: '#e2e8f0', padding: '6px 12px', fontSize: 13 }}
-            >
-              <option value="">Barcha holatlar</option>
-              {PHASE_GROUPS.flatMap((g) => g.statuses).map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-            <button
-              onClick={fetchOrders}
-              style={{ background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: 'pointer', fontSize: 13 }}
-            >
-              Yangilash
-            </button>
+    <div className="space-y-5">
+
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-[22px] font-bold text-foreground">{t('orderToCashWorkflow')}</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">{t("buyurtmaJarayoniniKuzatish")}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={filterStatus || "all"} onValueChange={(v) => setFilter(v === "all" ? "" : v)}>
+              <SelectTrigger className="w-48 h-9 text-[13px]">
+                <SelectValue placeholder={t("barchaHolatlar")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("barchaHolatlar")}</SelectItem>
+                {allStatuses.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={fetchOrders} disabled={loading}>
+              <RefreshCw className={cn('h-4 w-4 mr-1.5', loading && 'animate-spin')} />
+              {t("refresh")}
+            </Button>
           </div>
         </div>
 
+        {/* Error */}
         {error && (
-          <div style={{ background: '#7f1d1d', border: '1px solid #ef4444', borderRadius: 8, padding: 12, marginBottom: 16, color: '#fca5a5' }}>
+          <div className="flex items-center gap-2 bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-destructive text-sm">
+            <AlertCircle className="h-4 w-4 shrink-0" />
             {error}
           </div>
         )}
 
+        {/* Loading */}
         {loading && (
-          <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>Yuklanmoqda...</div>
+          <div className="text-center py-12 text-muted-foreground text-sm">{t("Yuklanmoqda...")}</div>
         )}
 
+        {/* Kanban board */}
         {!loading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5">
             {grouped.map((g) => (
-              <div key={g.label} style={{ background: '#1e293b', borderRadius: 10, padding: 10, minHeight: 200 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-                  {g.label}
-                  <span style={{ marginLeft: 6, background: '#334155', borderRadius: 9, padding: '1px 7px', fontSize: 10, color: '#94a3b8' }}>
+              <div key={g.label} className="bg-card rounded-xl border border-border p-2.5 min-h-48">
+                <div className="flex items-center gap-1.5 mb-2.5">
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                    {g.label}
+                  </span>
+                  <span className="bg-muted text-muted-foreground rounded-full px-1.5 py-px text-[10px] font-semibold">
                     {g.items.length}
                   </span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {(g.items ?? []).map((o) => (
+                <div className="flex flex-col gap-2">
+                  {(Array.isArray(g.items) ? g.items : []).map((o) => (
                     <button
                       key={o.id}
                       onClick={() => openSaga(o.id)}
-                      style={{
-                        background: '#0f172a', border: `1.5px solid ${STATUS_COLOR[o.status] ?? '#334155'}`,
-                        borderRadius: 8, padding: 10, cursor: 'pointer', textAlign: 'left', width: '100%',
-                      }}
+                      className="bg-background rounded-lg p-2.5 cursor-pointer text-left w-full hover:shadow-sm transition-shadow"
+                      style={{ border: `1.5px solid ${STATUS_COLOR[o.status] ?? 'hsl(var(--border))'}` }}
                     >
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9', marginBottom: 2 }}>{o.orderNumber}</div>
-                      <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>ID: {o.customerId ?? '—'}</div>
-                      <div style={{ fontSize: 12, color: '#60a5fa', fontWeight: 600 }}>{formatAmount(o.totalAmount, o.currency)}</div>
-                      <div style={{ marginTop: 6 }}>
-                        <span style={{ background: STATUS_COLOR[o.status] ?? '#334155', color: '#0f172a', fontSize: 10, borderRadius: 4, padding: '1px 6px', fontWeight: 700 }}>
+                      <div className="text-[12px] font-bold text-foreground mb-0.5">{o.orderNumber}</div>
+                      <div className="text-[11px] text-muted-foreground mb-1">ID: {o.customerId ?? '—'}</div>
+                      <div className="text-[12px] text-primary font-semibold">{formatAmount(o.totalAmount, o.currency)}</div>
+                      <div className="mt-1.5">
+                        <span
+                          className="text-[10px] rounded px-1.5 py-px font-bold"
+                          style={{
+                            background: STATUS_COLOR[o.status] ?? 'hsl(var(--muted))',
+                            color: '#0f172a',
+                          }}
+                        >
                           {o.status}
                         </span>
                       </div>
@@ -213,65 +260,96 @@ export default function OrderWorkflowPage() {
           </div>
         )}
 
+        {/* Saga detail modal */}
         {selected && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-            <div style={{ background: '#1e293b', borderRadius: 14, padding: 28, width: 640, maxHeight: '85vh', overflow: 'auto', border: '1px solid #334155' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f5f9', margin: 0 }}>{selected.orderId.slice(0, 8)}... Saga</h2>
-                <button onClick={() => setSelected(null)} style={{ background: '#334155', border: 'none', borderRadius: 6, color: '#94a3b8', padding: '4px 10px', cursor: 'pointer' }}>✕</button>
-              </div>
-
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Holat progressi (6 faza)</div>
-                <PhaseBar status={selected.status} />
-                <span style={{ background: STATUS_COLOR[selected.status] ?? '#334155', color: '#0f172a', fontSize: 12, borderRadius: 4, padding: '2px 8px', fontWeight: 700 }}>
-                  {selected.status}
-                </span>
-              </div>
-
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>Parallel Saga Tracker</div>
-                <SagaTracker detail={selected} />
-              </div>
-
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>To'lov rejasi</div>
-                {(selected.paymentPlan ?? []).length === 0 && (
-                  <div style={{ color: '#475569', fontSize: 13 }}>Hali to'lov rejasi yo'q</div>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {(selected.paymentPlan ?? []).map((p) => (
-                    <div key={p.sequence} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', borderRadius: 6, padding: '6px 10px' }}>
-                      <span style={{ color: '#94a3b8', fontSize: 12 }}>#{p.sequence} {p.dueType}</span>
-                      <span style={{ color: '#60a5fa', fontSize: 12 }}>{p.percent}%</span>
-                      <span style={{
-                        background: PAY_STATUS_COLOR[p.status] ?? '#334155',
-                        color: '#0f172a', fontSize: 10, borderRadius: 4, padding: '1px 6px', fontWeight: 700,
-                      }}>
-                        {p.status}
-                      </span>
-                    </div>
-                  ))}
+          <div
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+            onClick={() => setSelected(null)}
+          >
+            <Card
+              className="w-full max-w-[640px] max-h-[85vh] overflow-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-[18px]">{selected.orderId.slice(0, 8)}... Saga</CardTitle>
+                  <Button variant="ghost" size="sm" onClick={() => setSelected(null)}>✕</Button>
                 </div>
-              </div>
+              </CardHeader>
+              <CardContent className="space-y-5">
 
-              <div>
-                <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>Holat tarixi</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 180, overflow: 'auto' }}>
-                  {(selected.statusHistory ?? []).map((h) => (
-                    <div key={`${h.from ?? 'start'}-${h.to}-${h.changedAt ?? ''}`} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12 }}>
-                      <span style={{ color: '#475569' }}>{h.from ?? '—'}</span>
-                      <span style={{ color: '#334155' }}>→</span>
-                      <span style={{ color: '#60a5fa', fontWeight: 600 }}>{h.to}</span>
-                      <span style={{ color: '#334155', marginLeft: 'auto' }}>{h.changedAt ? new Date(h.changedAt).toLocaleString('uz-UZ') : ''}</span>
-                    </div>
-                  ))}
+                {/* Phase progress */}
+                <div>
+                  <p className="text-[12px] text-muted-foreground mb-1.5">{t("holatProgressi6Faza")}</p>
+                  <PhaseBar status={selected.status} />
+                  <span
+                    className="text-[12px] rounded px-2 py-0.5 font-bold"
+                    style={{
+                      background: STATUS_COLOR[selected.status] ?? 'hsl(var(--muted))',
+                      color: '#0f172a',
+                    }}
+                  >
+                    {selected.status}
+                  </span>
                 </div>
-              </div>
-            </div>
+
+                {/* Saga tracker */}
+                <div>
+                  <p className="text-[12px] text-muted-foreground mb-2">{t("parallelSagaTracker")}</p>
+                  <SagaTracker detail={selected} />
+                </div>
+
+                {/* Payment plan */}
+                <div>
+                  <p className="text-[12px] text-muted-foreground mb-2">{t("tolovRejasi")}</p>
+                  {(selected.paymentPlan ?? []).length === 0 ? (
+                    <p className="text-[13px] text-muted-foreground">{t("haliTolovRejasiYoq")}</p>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      {(Array.isArray(selected.paymentPlan) ? selected.paymentPlan : []).map((p) => (
+                        <div key={p.sequence} className="flex justify-between items-center bg-muted/40 rounded-lg px-3 py-2">
+                          <span className="text-[12px] text-muted-foreground">#{p.sequence} {p.dueType}</span>
+                          <span className="text-[12px] text-primary font-medium">{p.percent}%</span>
+                          <span
+                            className="text-[10px] rounded px-1.5 py-px font-bold"
+                            style={{
+                              background: PAY_STATUS_COLOR[p.status] ?? 'hsl(var(--muted))',
+                              color: '#0f172a',
+                            }}
+                          >
+                            {p.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Status history */}
+                <div>
+                  <p className="text-[12px] text-muted-foreground mb-2">{t("holatTarixi")}</p>
+                  <div className="flex flex-col gap-1.5 max-h-44 overflow-auto">
+                    {(Array.isArray(selected.statusHistory) ? selected.statusHistory : []).map((h) => (
+                      <div
+                        key={`${h.from ?? 'start'}-${h.to}-${h.changedAt ?? ''}`}
+                        className="flex items-center gap-2 text-[12px]"
+                      >
+                        <span className="text-muted-foreground">{h.from ?? '—'}</span>
+                        <span className="text-border">→</span>
+                        <span className="text-primary font-semibold">{h.to}</span>
+                        <span className="text-muted-foreground ml-auto">
+                          {h.changedAt ? new Date(h.changedAt).toLocaleString('uz-UZ') : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </CardContent>
+            </Card>
           </div>
         )}
-      </div>
+
     </div>
   );
 }

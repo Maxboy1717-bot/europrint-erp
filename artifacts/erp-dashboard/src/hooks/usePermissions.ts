@@ -1,4 +1,17 @@
+/**
+ * @module usePermissions
+ * @description Canonical frontend RBAC hook. Source of truth is the backend
+ * `/api/auth/me/permissions` (the position_permissions table). When a legacy
+ * user has no position_id, a hardcoded role-based map is used as fallback
+ * (see ARCHITECTURE.md §7.7).
+ *
+ * @example
+ *   const { hasPermission, hasFeature, canAccess, isAdmin } = usePermissions();
+ *   if (hasPermission('CRM', 'WRITE')) { ... }
+ *   if (hasFeature('crm.leads.export')) { ... }
+ */
 import { useAuth } from "@/hooks/useAuth";
+import { usePositionPermissions } from "@/hooks/usePositionPermissions";
 import {
   hasPermission as checkPermission,
   hasAnyPermission,
@@ -9,112 +22,143 @@ import type { Permission } from "@/lib/permissions";
 
 type ModuleAction = "READ" | "WRITE" | "DELETE" | "APPROVE" | "MANAGE" | "RELEASE" | "COMPLETE" | "PAYROLL";
 
-const MODULE_PERMISSION_MAP: Record<string, Record<ModuleAction, Permission>> = {
-  CRM:        { READ: "crm:read",        WRITE: "crm:write",        DELETE: "crm:delete",        APPROVE: "crm:write",        MANAGE: "crm:write",        RELEASE: "crm:write",        COMPLETE: "crm:write",        PAYROLL: "crm:write"        },
-  HR:         { READ: "hr:read",         WRITE: "hr:write",         DELETE: "hr:write",           APPROVE: "hr:write",         MANAGE: "hr:write",         RELEASE: "hr:write",         COMPLETE: "hr:write",         PAYROLL: "hr:payroll"       },
-  FINANCE:    { READ: "finance:read",    WRITE: "finance:write",    DELETE: "finance:write",      APPROVE: "finance:approve",  MANAGE: "finance:write",    RELEASE: "finance:write",    COMPLETE: "finance:write",    PAYROLL: "finance:write"    },
-  PRODUCTION: { READ: "production:read", WRITE: "production:write", DELETE: "production:write",   APPROVE: "production:write", MANAGE: "production:write", RELEASE: "production:release", COMPLETE: "production:complete", PAYROLL: "production:write" },
-  WAREHOUSE:  { READ: "warehouse:read",  WRITE: "warehouse:write",  DELETE: "warehouse:write",    APPROVE: "warehouse:approve", MANAGE: "warehouse:write", RELEASE: "warehouse:write",  COMPLETE: "warehouse:write",  PAYROLL: "warehouse:write"  },
-  QC:         { READ: "qc:read",         WRITE: "qc:write",         DELETE: "qc:write",           APPROVE: "qc:approve",       MANAGE: "qc:write",         RELEASE: "qc:write",         COMPLETE: "qc:write",         PAYROLL: "qc:write"         },
-  LMS:        { READ: "lms:read",        WRITE: "lms:write",        DELETE: "lms:write",          APPROVE: "lms:write",        MANAGE: "lms:manage",       RELEASE: "lms:write",        COMPLETE: "lms:write",        PAYROLL: "lms:write"        },
-  MARKETING:  { READ: "marketing:read",  WRITE: "marketing:write",  DELETE: "marketing:write",    APPROVE: "marketing:write",  MANAGE: "marketing:write",  RELEASE: "marketing:write",  COMPLETE: "marketing:write",  PAYROLL: "marketing:write"  },
-  DESIGN:     { READ: "design:read",     WRITE: "design:write",     DELETE: "design:write",       APPROVE: "design:write",     MANAGE: "design:write",     RELEASE: "design:write",     COMPLETE: "design:write",     PAYROLL: "design:write"     },
-  SECURITY:   { READ: "security:read",   WRITE: "security:write",   DELETE: "security:write",     APPROVE: "security:write",   MANAGE: "security:write",   RELEASE: "security:write",   COMPLETE: "security:write",   PAYROLL: "security:write"   },
-  IOT:        { READ: "iot:read",        WRITE: "iot:write",        DELETE: "iot:write",          APPROVE: "iot:write",        MANAGE: "iot:write",        RELEASE: "iot:write",        COMPLETE: "iot:write",        PAYROLL: "iot:write"        },
-  LOGISTICS:  { READ: "logistics:read",  WRITE: "logistics:write",  DELETE: "logistics:write",    APPROVE: "logistics:write",  MANAGE: "logistics:write",  RELEASE: "logistics:write",  COMPLETE: "logistics:write",  PAYROLL: "logistics:write"  },
-  MRO:        { READ: "mro:read",        WRITE: "mro:write",        DELETE: "mro:write",          APPROVE: "mro:write",        MANAGE: "mro:write",        RELEASE: "mro:write",        COMPLETE: "mro:write",        PAYROLL: "mro:write"        },
-  SETTINGS:   { READ: "settings:read",   WRITE: "settings:write",   DELETE: "settings:write",     APPROVE: "settings:write",   MANAGE: "settings:write",   RELEASE: "settings:write",   COMPLETE: "settings:write",   PAYROLL: "settings:write"   },
-  OKR:        { READ: "okr:read",        WRITE: "okr:write",        DELETE: "okr:write",          APPROVE: "okr:write",        MANAGE: "okr:write",        RELEASE: "okr:write",        COMPLETE: "okr:write",        PAYROLL: "okr:write"        },
-  REPORTS:    { READ: "reports:read",    WRITE: "reports:read",     DELETE: "reports:read",       APPROVE: "reports:read",     MANAGE: "reports:read",     RELEASE: "reports:read",     COMPLETE: "reports:read",     PAYROLL: "reports:read"     },
-  DIRECTOR:   { READ: "reports:read",    WRITE: "okr:write",        DELETE: "reports:read",       APPROVE: "reports:read",     MANAGE: "reports:read",     RELEASE: "reports:read",     COMPLETE: "reports:read",     PAYROLL: "reports:read"     },
-  AUDIT:      { READ: "audit:read",      WRITE: "audit:read",       DELETE: "audit:read",         APPROVE: "audit:read",       MANAGE: "audit:read",       RELEASE: "audit:read",       COMPLETE: "audit:read",       PAYROLL: "audit:read"       },
-  USERS:      { READ: "users:manage",    WRITE: "users:manage",     DELETE: "users:manage",       APPROVE: "users:manage",     MANAGE: "users:manage",     RELEASE: "users:manage",     COMPLETE: "users:manage",     PAYROLL: "users:manage"     },
+// ModuleAction → backend access_level mapping
+const ACTION_TO_LEVEL: Record<ModuleAction, string> = {
+  READ: "READ",
+  WRITE: "FULL",
+  DELETE: "FULL",
+  APPROVE: "READ_PLUS",
+  MANAGE: "FULL",
+  RELEASE: "FULL",
+  COMPLETE: "FULL",
+  PAYROLL: "FULL",
 };
 
-const FEATURE_MAP: Record<string, Permission> = {
-  "crm.leads.export":           "crm:read",
-  "crm.leads.create":           "crm:write",
-  "crm.leads.delete":           "crm:delete",
-  "crm.contracts.approve":      "crm:write",
-  "hr.employees.create":        "hr:write",
-  "hr.employees.delete":        "hr:write",
-  "hr.payroll.view":            "hr:payroll",
-  "hr.payroll.process":         "hr:payroll",
-  "finance.reports.export":     "finance:read",
-  "finance.budget.approve":     "finance:approve",
-  "finance.cashflow.view":      "finance:read",
-  "production.orders.release":  "production:release",
-  "production.orders.complete": "production:complete",
-  "production.planning.edit":   "production:write",
-  "warehouse.inventory.export": "warehouse:read",
-  "warehouse.grn.approve":      "warehouse:approve",
-  "qc.inspection.approve":      "qc:approve",
-  "qc.defect.create":           "qc:write",
-  "lms.courses.create":         "lms:write",
-  "lms.tests.manage":           "lms:manage",
-  "lms.certificates.issue":     "lms:write",
-  "marketing.campaigns.create": "marketing:write",
-  "marketing.budget.view":      "marketing:read",
-  "design.artwork.create":      "design:write",
-  "design.approval.submit":     "design:write",
-  "security.zones.manage":      "security:write",
-  "iot.sensors.view":           "iot:read",
-  "logistics.routes.plan":      "logistics:write",
-  "mro.maintenance.create":     "mro:write",
-  "settings.users.manage":      "users:manage",
-  "settings.system.edit":       "settings:write",
-  "reports.view":               "reports:read",
-  "audit.log.view":             "audit:read",
+// Module name aliases (frontend → backend)
+const MODULE_ALIAS: Record<string, string> = {
+  CRM: "CRM",
+  HR: "HR",
+  FINANCE: "FI",
+  PRODUCTION: "PP",
+  WAREHOUSE: "WMS",
+  QC: "QC",
+  LMS: "LMS",
+  MARKETING: "ECOMMERCE",
+  DESIGN: "DESIGN",
+  SECURITY: "security",
+  IOT: "iot",
+  LOGISTICS: "LOGISTICS",
+  MRO: "MM",
+  SETTINGS: "MDM",
+  OKR: "BI",
+  REPORTS: "BI",
+  DIRECTOR: "BI",
+  AUDIT: "MDM",
+  USERS: "MDM",
+  SD: "SD",
+  MM: "MM",
+  POS: "POS",
+  ECOMMERCE: "ECOMMERCE",
+  BI: "BI",
+  MDM: "MDM",
+};
+
+// Access level hierarchy (yuqori darajalar pastki amallarni qoplaydi)
+const LEVEL_HIERARCHY: Record<string, number> = {
+  NONE: 0,
+  LIMITED: 1,
+  READ: 2,
+  READ_PLUS: 3,
+  FULL: 4,
+};
+
+function levelMeets(actual: string | undefined, required: string): boolean {
+  const actualScore = LEVEL_HIERARCHY[(actual ?? "NONE").toUpperCase()] ?? 0;
+  const requiredScore = LEVEL_HIERARCHY[required.toUpperCase()] ?? 0;
+  return actualScore >= requiredScore;
+}
+
+// Mirror of ROLE_ALIASES from useAuth.tsx — keep in sync with backend
+const ROLE_ALIASES: Record<string, string> = {
+  admin: "super_admin", superadmin: "super_admin", super_admin: "super_admin",
+  director: "director", ceo: "director", manager: "director",
+  sales: "sales_manager", sales_manager: "sales_manager", crm_manager: "sales_manager", marketing: "sales_manager",
+  designer: "designer",
+  technologist: "technologist", technolog: "technologist",
+  pp_manager: "pp_viewer", pp_viewer: "pp_viewer", production_manager: "pp_viewer",
+  operator: "operator",
+  warehouse: "warehouse_manager", warehouse_manager: "warehouse_manager", wm_manager: "warehouse_manager", logistics_manager: "warehouse_manager",
+  qc: "qc_manager", qc_manager: "qc_manager",
+  finance: "finance_manager", finance_manager: "finance_manager", cfo: "finance_manager", accountant: "finance_manager",
+  hr: "hr_manager", hr_manager: "hr_manager", lms_admin: "hr_manager",
+  department_head: "department_head",
 };
 
 function normalizeRole(role: string | undefined | null): string | null {
   if (!role) return null;
-  return role;
+  return ROLE_ALIASES[role.toLowerCase()] ?? role.toLowerCase();
 }
 
 export function usePermissions() {
   const { user } = useAuth();
-  const rawRole = user?.role;
-  const role = normalizeRole(rawRole);
-  const isAdmin = role === "admin" || role === "super_admin" || role === "superadmin";
+  const { permissions: serverPerms } = usePositionPermissions();
+
+  const role = normalizeRole(user?.role);
+  const isAdmin = serverPerms?.isAdmin === true || role === "admin" || role === "super_admin" || role === "superadmin";
   const isKnownRole = role ? isRoleInMatrix(role) : false;
+
+  // Backend modulesdan moduleCode → level Map yaratish
+  const safeModules = Array.isArray(serverPerms?.modules) ? serverPerms.modules : [];
+  const modulesMap: Record<string, string> = {};
+  for (const m of safeModules) {
+    modulesMap[m.module.toUpperCase()] = m.level;
+  }
+
+  const safeFlags = Array.isArray(serverPerms?.featureFlags) ? serverPerms.featureFlags : [];
+  const featureFlagsSet = new Set(safeFlags);
 
   const hasPermission = (module: string, action: ModuleAction = "READ"): boolean => {
     if (isAdmin) return true;
-    if (!role) return false;
-    if (!isKnownRole) return false;
 
-    const moduleUpper = module.toUpperCase() as keyof typeof MODULE_PERMISSION_MAP;
-    const moduleMap = MODULE_PERMISSION_MAP[moduleUpper];
-    if (!moduleMap) return false;
+    // 1. Avval BACKEND'dan o'qish (yangi position-based)
+    if (serverPerms !== null && serverPerms !== undefined) {
+      const backendModule = MODULE_ALIAS[module.toUpperCase()] ?? module.toUpperCase();
+      const requiredLevel = ACTION_TO_LEVEL[action] ?? "READ";
+      const actualLevel = modulesMap[backendModule];
+      if (actualLevel !== undefined) {
+        return levelMeets(actualLevel, requiredLevel);
+      }
+    }
 
-    const permission = moduleMap[action];
-    return checkPermission(role, permission);
+    // 2. Fallback: hardcoded role map (legacy)
+    if (!role || !isKnownRole) return false;
+    const fallbackPerm = `${module.toLowerCase()}:${action.toLowerCase()}` as Permission;
+    return checkPermission(role, fallbackPerm);
   };
 
   const hasFeature = (featureKey: string): boolean => {
     if (isAdmin) return true;
-    if (!role) return false;
-    if (!isKnownRole) return false;
 
-    const permission = FEATURE_MAP[featureKey];
-    if (!permission) return false;
+    // 1. Backend feature flags
+    if (featureFlagsSet.has(featureKey)) return true;
 
-    return checkPermission(role, permission);
+    // 2. Fallback: legacy role-based feature map
+    if (!role || !isKnownRole) return false;
+    // Legacy fallback - keep working old feature names
+    return false;
   };
 
   const canAccess = (permission: Permission): boolean => {
     if (isAdmin) return true;
-    if (!role) return false;
-    if (!isKnownRole) return false;
+    if (!role || !isKnownRole) return false;
     return checkPermission(role, permission);
   };
 
-  const canAccessAny = (permissions: Permission[]): boolean => {
+  const canAccessAny = (perms: Permission[]): boolean => {
     if (isAdmin) return true;
-    if (!role) return false;
-    if (!isKnownRole) return false;
-    return hasAnyPermission(role, permissions);
+    if (!role || !isKnownRole) return false;
+    const safe = Array.isArray(perms) ? perms : [];
+    return hasAnyPermission(role, safe);
   };
 
   const permissions = role ? getPermissionsForRole(role) : [];
@@ -128,5 +172,10 @@ export function usePermissions() {
     role,
     isAdmin,
     isKnownRole,
+    // Yangi: backend'dan kelgan position ma'lumotlari
+    positionCode: serverPerms?.positionCode ?? null,
+    positionNameUz: serverPerms?.positionNameUz ?? null,
+    departmentCode: serverPerms?.departmentCode ?? null,
+    rbacTier: serverPerms?.rbacTier ?? null,
   };
 }

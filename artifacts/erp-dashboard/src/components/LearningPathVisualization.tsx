@@ -1,8 +1,14 @@
+/**
+ * @module LearningPathVisualization
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Circle, Lock, TrendingUp, Clock, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from '@/lib/i18n';
 
 interface LearningStep {
   id: string;
@@ -24,10 +30,11 @@ interface LearningPathProps {
 }
 
 export function LearningPathVisualization({ userId, userName, position, steps, overallProgress }: LearningPathProps) {
+  const { t } = useTranslation("common");
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />;
+        return <CheckCircle className="h-5 w-5 text-[var(--ep-green)] dark:text-green-400" />;
       case "in_progress":
         return <Circle className="h-5 w-5 text-primary animate-pulse" />;
       case "locked":
@@ -72,13 +79,13 @@ export function LearningPathVisualization({ userId, userName, position, steps, o
   const getTypeColor = (type: string) => {
     switch (type) {
       case "course":
-        return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
+        return "bg-blue-500/10 text-[var(--ep-blue)] dark:text-blue-400 border-blue-500/20";
       case "test":
-        return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20";
+        return "bg-purple-500/10 text-[var(--ep-purple)] dark:text-purple-400 border-purple-500/20";
       case "certificate":
-        return "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20";
+        return "bg-orange-500/10 text-[var(--ep-primary)] dark:text-orange-400 border-orange-500/20";
       case "skill":
-        return "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20";
+        return "bg-green-500/10 text-[var(--ep-green)] dark:text-green-400 border-green-500/20";
       default:
         return "bg-muted/10 text-muted-foreground border-muted/20";
     }
@@ -89,12 +96,12 @@ export function LearningPathVisualization({ userId, userName, position, steps, o
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle className="text-xl">{userName} - O'quv yo'li</CardTitle>
+            <CardTitle className="text-[14px] font-semibold">{userName} - O'quv yo'li</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">{position}</p>
           </div>
           <div className="text-right">
             <div className="text-3xl font-bold text-primary">{overallProgress}%</div>
-            <div className="text-xs text-muted-foreground">Umumiy progress</div>
+            <div className="text-xs text-muted-foreground">{t("umumiyProgress")}</div>
           </div>
         </div>
         <Progress value={overallProgress} className="mt-4" />
@@ -130,7 +137,7 @@ export function LearningPathVisualization({ userId, userName, position, steps, o
                             {getTypeLabel(step.type)}
                           </Badge>
                           {step.status === "completed" && step.score && (
-                            <Badge variant="default" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
+                            <Badge variant="default" className="bg-green-500/10 text-[var(--ep-green)] dark:text-green-400 border-green-500/20">
                               <Award className="h-3 w-3 mr-1" />
                               {step.score}%
                             </Badge>
@@ -140,7 +147,7 @@ export function LearningPathVisualization({ userId, userName, position, steps, o
                         {step.progress !== undefined && step.status === "in_progress" && (
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground">Jarayon</span>
+                              <span className="text-muted-foreground">{t("jarayon")}</span>
                               <span className="font-medium">{step.progress}%</span>
                             </div>
                             <Progress value={step.progress} className="h-1.5" />
@@ -178,24 +185,24 @@ export function LearningPathVisualization({ userId, userName, position, steps, o
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <div className="text-2xl font-bold text-[var(--ep-green)] dark:text-green-400">
               {(Array.isArray(steps) ? steps : []).filter(s => s.status === "completed").length}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">Yakunlangan</div>
+            <div className="text-xs text-muted-foreground mt-1">{t("yakunlangan")}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-primary">
               {(Array.isArray(steps) ? steps : []).filter(s => s.status === "in_progress").length}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">Jarayonda</div>
+            <div className="text-xs text-muted-foreground mt-1">{t("inProgress")}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-muted-foreground">
               {(Array.isArray(steps) ? steps : []).filter(s => s.status === "available" || s.status === "locked").length}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">Qolgan</div>
+            <div className="text-xs text-muted-foreground mt-1">{t("qolgan")}</div>
           </div>
         </div>
       </CardContent>

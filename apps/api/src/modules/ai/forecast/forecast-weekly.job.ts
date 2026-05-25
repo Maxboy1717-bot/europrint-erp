@@ -1,3 +1,8 @@
+/**
+ * @module forecast-weekly.job
+ * @description Source module. See exports for details.
+ */
+
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
@@ -156,7 +161,7 @@ export class ForecastWeeklyJob implements OnModuleInit, OnModuleDestroy {
 
     // 3. OLS Linear Regression — ≥6 nuqta bo'lsa (trend bashorat)
     if (history.length >= 6) {
-      const x = (history ?? []).map((_, i) => i);
+      const x = (Array.isArray(history) ? history : []).map((_, i) => i);
       const olsRes = await this.forecastSvc.fitLinear(x, history);
       if (olsRes.ok) {
         const { slope, intercept } = olsRes.data;
@@ -190,7 +195,7 @@ export class ForecastWeeklyJob implements OnModuleInit, OnModuleDestroy {
         WHERE is_active = TRUE
         LIMIT 1000
       `);
-      return (result?.rows ?? []).map((r) => String(r['material_id'] ?? '')).filter(Boolean);
+      return (Array.isArray(result?.rows) ? result?.rows : []).map((r) => String(r['material_id'] ?? '')).filter(Boolean);
     } catch {
       return [];
     }

@@ -1,4 +1,10 @@
+/**
+ * @module lms.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { Injectable, Logger } from '@nestjs/common'
+import { I18nService } from 'nestjs-i18n'
 import { TelegramService } from '../telegram.service'
 
 interface Enrollment {
@@ -23,18 +29,16 @@ interface Certificate {
 export class LmsHandler {
   private readonly logger = new Logger(LmsHandler.name)
 
-  constructor(private telegramService: TelegramService) {}
+  constructor(
+    private telegramService: TelegramService,
+    private readonly i18n: I18nService,
+  ) {}
 
   async onCourseCompleted(enrollment: Enrollment): Promise<void> {
     try {
-      const text = `
-🎓 <b>Kurs Yakunlandi!</b>
-
-📚 <b>Kurs Nomi:</b> ${enrollment.course_name}
-✅ <b>Status:</b> Muvaffaqiyatli tugallandi
-
-Sertifikat olish uchun portal'ga o'ting.
-      `
+      const text = await this.i18n.t('telegram.lms.courseCompleted', {
+        args: { courseName: enrollment.course_name },
+      })
       await this.telegramService.sendMessage(enrollment.employee_chat_id, text)
       this.logger.log(`Course completed notified: ${enrollment.id}`)
     } catch (err) {
@@ -44,15 +48,14 @@ Sertifikat olish uchun portal'ga o'ting.
 
   async onCertificateIssued(certificate: Certificate): Promise<void> {
     try {
-      const text = `
-🏆 <b>Sertifikat Berildi!</b>
-
-📚 <b>Kurs:</b> ${certificate.course_name}
-📅 <b>Muddati Tugaydi:</b> ${certificate.expiry_date}
-⏰ <b>Qolgan Kun:</b> ${certificate.days_remaining} kun
-
-Sertifikatni yuklab oling: ${process.env.LMS_PORTAL_URL}
-      `
+      const text = await this.i18n.t('telegram.lms.certificateIssued', {
+        args: {
+          courseName: certificate.course_name,
+          expiryDate: certificate.expiry_date,
+          daysRemaining: certificate.days_remaining,
+          portalUrl: process.env.LMS_PORTAL_URL ?? '',
+        },
+      })
       await this.telegramService.sendMessage(certificate.employee_chat_id, text)
       await this.telegramService.sendMessage(certificate.hr_chat_id, text)
       this.logger.log(`Certificate issued notified: ${certificate.id}`)
@@ -63,15 +66,13 @@ Sertifikatni yuklab oling: ${process.env.LMS_PORTAL_URL}
 
   async onCertificateExpiringSoon(certificate: Certificate): Promise<void> {
     try {
-      const text = `
-⏰ <b>Sertifikat Muddati Yakunlanmoqda!</b>
-
-📚 <b>Kurs:</b> ${certificate.course_name}
-📅 <b>Tugashi:</b> ${certificate.expiry_date}
-⚠️ <b>Qolgan:</b> ${certificate.days_remaining} kun
-
-Yangilash uchun tezda ro'yxatdan o'ting!
-      `
+      const text = await this.i18n.t('telegram.lms.certificateExpiringSoon', {
+        args: {
+          courseName: certificate.course_name,
+          expiryDate: certificate.expiry_date,
+          daysRemaining: certificate.days_remaining,
+        },
+      })
       await this.telegramService.sendMessage(certificate.employee_chat_id, text)
       await this.telegramService.sendMessage(certificate.hr_chat_id, text)
       this.logger.log(`Certificate expiry warning: ${certificate.id}`)

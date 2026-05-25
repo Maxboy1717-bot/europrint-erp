@@ -1,3 +1,8 @@
+/**
+ * @module TransfersTab
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -49,9 +54,7 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
       const params = new URLSearchParams();
       if (statusFilter) params.append("status", statusFilter);
       if (params.toString()) url += `?${params.toString()}`;
-      const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch transfers");
-      return res.json();
+      return await apiRequest<TransferData[]>('GET', url);
     },
   });
 
@@ -85,11 +88,9 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
 
   const handleViewTransfer = async (transfer: TransferData) => {
     try {
-      const res = await fetch(`/api/warehouse/transfers/${transfer.id}`, { credentials: "include" });
-      if (res.ok) {
-        setSelectedTransfer(await res.json());
-        setIsDetailOpen(true);
-      }
+      const res = await apiRequest<TransferData>('GET', `/api/warehouse/transfers/${transfer.id}`);
+      setSelectedTransfer(res);
+      setIsDetailOpen(true);
     } catch {
       toast({ title: lang === "uz" ? "Xatolik yuz berdi" : "Произошла ошибка", variant: "destructive" });
     }
@@ -116,7 +117,7 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
     <>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <Select value={statusFilter || "__all__"} onValueChange={v => setStatusFilter(v === "__all__" ? "" : v)}>
-          <SelectTrigger className="w-[200px]" data-testid="select-status-filter"><SelectValue placeholder={t.allStatuses} /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[200px] h-9" data-testid="select-status-filter"><SelectValue placeholder={t.allStatuses} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="__all__">{t.allStatuses}</SelectItem>
             {Object.entries(t.transferStatuses).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
@@ -129,7 +130,7 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
 
       <Card>
         <ScrollArea className="h-[500px]">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{t.transferNumber}</TableHead>
@@ -145,7 +146,7 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={`k-${i}`}>{Array.from({ length: 8 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>)}</TableRow>
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">{Array.from({ length: 8 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-16 rounded-lg" /></TableCell>)}</TableRow>
                 ))
               ) : transfers.length === 0 ? (
                 <TableRow>
@@ -156,7 +157,7 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
                 </TableRow>
               ) : (
                 (Array.isArray(transfers) ? transfers : []).map(transfer => (
-                  <TableRow key={transfer.id} data-testid={`row-transfer-${transfer.id}`}>
+                  <TableRow key={transfer.id} data-testid={`row-transfer-${transfer.id}`} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-mono font-medium">{transfer.transferNumber}</TableCell>
                     <TableCell>{transfer.transferDate}</TableCell>
                     <TableCell>{getWarehouseName(transfer.fromWarehouseId) || "-"}</TableCell>
@@ -172,13 +173,13 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
                       <div className="flex items-center justify-end gap-1">
                         <Button size="icon" variant="ghost" onClick={() => handleViewTransfer(transfer)} data-testid={`btn-view-transfer-${transfer.id}`}><Eye className="h-4 w-4" /></Button>
                         {transfer.status === "draft" && (
-                          <Button size="icon" variant="ghost" onClick={() => statusMutation.mutate({ id: transfer.id, status: "pending" })} data-testid={`btn-submit-transfer-${transfer.id}`}><Send className="h-4 w-4 text-blue-500" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => statusMutation.mutate({ id: transfer.id, status: "pending" })} data-testid={`btn-submit-transfer-${transfer.id}`}><Send className="h-4 w-4 text-[var(--ep-blue)]" /></Button>
                         )}
                         {transfer.status === "pending" && (
-                          <Button size="icon" variant="ghost" onClick={() => statusMutation.mutate({ id: transfer.id, status: "in_transit" })} data-testid={`btn-ship-transfer-${transfer.id}`}><ArrowRightLeft className="h-4 w-4 text-yellow-500" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => statusMutation.mutate({ id: transfer.id, status: "in_transit" })} data-testid={`btn-ship-transfer-${transfer.id}`}><ArrowRightLeft className="h-4 w-4 text-[var(--ep-yellow)]" /></Button>
                         )}
                         {transfer.status === "in_transit" && (
-                          <Button size="icon" variant="ghost" onClick={() => statusMutation.mutate({ id: transfer.id, status: "received" })} data-testid={`btn-receive-transfer-${transfer.id}`}><Check className="h-4 w-4 text-green-500" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => statusMutation.mutate({ id: transfer.id, status: "received" })} data-testid={`btn-receive-transfer-${transfer.id}`}><Check className="h-4 w-4 text-[var(--ep-green)]" /></Button>
                         )}
                       </div>
                     </TableCell>
@@ -186,38 +187,38 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
                 ))
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </ScrollArea>
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle>{t.createTransfer}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-2xl p-6">
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t.createTransfer}</DialogTitle></DialogHeader>
           {transferStep === 1 ? (
             <div className="space-y-4">
               <h3 className="font-medium">{t.step1}</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t.sourceWarehouse}</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+          <Label>{t.sourceWarehouse}</Label>
                   <Select value={transferForm.fromWarehouseId} onValueChange={v => setTransferForm(p => ({ ...p, fromWarehouseId: v }))}>
-                    <SelectTrigger data-testid="select-transfer-from"><SelectValue placeholder={t.selectWarehouse} /></SelectTrigger>
+                    <SelectTrigger data-testid="select-transfer-from" className="h-9"><SelectValue placeholder={t.selectWarehouse} /></SelectTrigger>
                     <SelectContent>{(Array.isArray(warehouses) ? warehouses : []).filter(w => w.isActive).map(wh => <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>{t.targetWarehouse}</Label>
+                <div className="space-y-1">
+          <Label>{t.targetWarehouse}</Label>
                   <Select value={transferForm.toWarehouseId} onValueChange={v => setTransferForm(p => ({ ...p, toWarehouseId: v }))}>
-                    <SelectTrigger data-testid="select-transfer-to"><SelectValue placeholder={t.selectWarehouse} /></SelectTrigger>
+                    <SelectTrigger data-testid="select-transfer-to" className="h-9"><SelectValue placeholder={t.selectWarehouse} /></SelectTrigger>
                     <SelectContent>{(Array.isArray(warehouses) ? warehouses : []).filter(w => w.isActive && w.id !== transferForm.fromWarehouseId).map(wh => <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>{t.date}</Label>
+              <div className="space-y-1">
+          <Label>{t.date}</Label>
                 <Input type="date" value={transferForm.transferDate} onChange={e => setTransferForm(p => ({ ...p, transferDate: e.target.value }))} data-testid="input-transfer-date" />
               </div>
-              <div className="space-y-2">
-                <Label>{t.notes}</Label>
+              <div className="space-y-1">
+          <Label>{t.notes}</Label>
                 <Textarea value={transferForm.notes} onChange={e => setTransferForm(p => ({ ...p, notes: e.target.value }))} data-testid="input-transfer-notes" />
               </div>
             </div>
@@ -228,15 +229,15 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
                 {(Array.isArray(transferLines) ? transferLines : []).map((line, index) => (
                   <div key={`k-${index}`} className="flex items-center gap-2 p-2 border rounded-md">
                     <Select value={line.materialCardId} onValueChange={v => updateTransferLine(index, "materialCardId", v)}>
-                      <SelectTrigger className="flex-1" data-testid={`select-transfer-material-${index}`}><SelectValue placeholder={t.material} /></SelectTrigger>
+                      <SelectTrigger className="flex-1 h-9" data-testid={`select-transfer-material-${index}`}><SelectValue placeholder={t.material} /></SelectTrigger>
                       <SelectContent>{(Array.isArray(materials) ? materials : []).map(m => <SelectItem key={m.id} value={m.id}>{m.xomAshyo} ({m.kod})</SelectItem>)}</SelectContent>
                     </Select>
                     <Input type="number" placeholder={t.quantity} className="w-24" value={line.requestedQuantity || ""} onChange={e => updateTransferLine(index, "requestedQuantity", parseFloat(e.target.value) || 0)} data-testid={`input-transfer-qty-${index}`} />
-                    <Button size="icon" variant="ghost" onClick={() => setTransferLines(prev => (prev ?? []).filter((_, i) => i !== index))} data-testid={`btn-remove-line-${index}`}><X className="h-4 w-4 text-red-500" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => setTransferLines(prev => (Array.isArray(prev) ? prev : []).filter((_, i) => i !== index))} data-testid={`btn-remove-line-${index}`}><X className="h-4 w-4 text-[var(--ep-red)]" /></Button>
                   </div>
                 ))}
-                <Button variant="outline" className="w-full" onClick={addTransferLine} data-testid="btn-add-transfer-line">
-                  <Plus className="h-4 w-4 mr-2" />{t.addMaterial}
+                <Button variant="outline" className="w-full gap-2" onClick={addTransferLine} data-testid="btn-add-transfer-line">
+                  <Plus className="h-4 w-4" />{t.addMaterial}
                 </Button>
               </div>
             </div>
@@ -262,11 +263,11 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
       </Dialog>
 
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle>{t.transferDetails}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-2xl p-6">
+          <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t.transferDetails}</DialogTitle></DialogHeader>
           {selectedTransfer && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div><span className="text-muted-foreground">{t.transferNumber}:</span><span className="ml-2 font-mono">{selectedTransfer.transferNumber}</span></div>
                 <div><span className="text-muted-foreground">{t.date}:</span><span className="ml-2">{selectedTransfer.transferDate}</span></div>
                 <div><span className="text-muted-foreground">{t.from}:</span><span className="ml-2">{getWarehouseName(selectedTransfer.fromWarehouseId)}</span></div>
@@ -282,7 +283,7 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
               {selectedTransfer.lines && selectedTransfer.lines.length > 0 && (
                 <div>
                   <h4 className="font-medium mb-2">{t.items}</h4>
-                  <Table>
+                  <div className="ep-table-scroll"><Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>{t.material}</TableHead>
@@ -292,7 +293,7 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
                     </TableHeader>
                     <TableBody>
                       {(Array.isArray(selectedTransfer.lines) ? selectedTransfer.lines : []).map(line => (
-                        <TableRow key={line.id}>
+                        <TableRow key={line.id} className="hover:bg-muted/40 transition-colors">
                           <TableCell>
                             <div className="font-medium">{line.materialName}</div>
                             <div className="text-xs text-muted-foreground">{line.materialCode}</div>
@@ -302,7 +303,7 @@ export function TransfersTab({ lang, t }: TransfersTabProps) {
                         </TableRow>
                       ))}
                     </TableBody>
-                  </Table>
+                  </Table></div>
                 </div>
               )}
               {selectedTransfer.notes && (

@@ -1,3 +1,8 @@
+/**
+ * @module website-lead.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Result, Ok, Err, AppErr, isErr } from '@common/result';
@@ -36,8 +41,16 @@ export class WebsiteLeadService {
     const managerR = await this.repo.pickNextSalesManager();
     if (isErr(managerR)) return Err(managerR.error);
     const managerId = managerR.data;
+    const insertR = await this.repo.insertWebsiteLead(this.buildOrderInsertPayload(event, managerId));
+    if (isErr(insertR)) return Err(insertR.error);
+    if (insertR.data.created && managerId !== null) {
+      await this.notifySalesGroup({ kind: 'order', leadId: insertR.data.leadId, managerId, event });
+    }
+    return Ok({ leadId: insertR.data.leadId, created: insertR.data.created, managerId });
+  }
 
-    const insertR = await this.repo.insertWebsiteLead({
+  private buildOrderInsertPayload(event: WebsiteOrderEvent, managerId: number | null) {
+    return {
       contactName: event.customerName ?? 'Sayt mehmon',
       contactPhone: event.customerPhone,
       contactEmail: event.customerEmail ?? null,
@@ -52,19 +65,7 @@ export class WebsiteLeadService {
         deliveryCity: event.deliveryCity ?? null,
         paymentMethod: event.paymentMethod ?? null,
       },
-    });
-    if (isErr(insertR)) return Err(insertR.error);
-
-    if (insertR.data.created && managerId !== null) {
-      await this.notifySalesGroup({
-        kind: 'order',
-        leadId: insertR.data.leadId,
-        managerId,
-        event,
-      });
-    }
-
-    return Ok({ leadId: insertR.data.leadId, created: insertR.data.created, managerId });
+    };
   }
 
   /**
@@ -74,32 +75,25 @@ export class WebsiteLeadService {
     const managerR = await this.repo.pickNextSalesManager();
     if (isErr(managerR)) return Err(managerR.error);
     const managerId = managerR.data;
+    const insertR = await this.repo.insertWebsiteLead(this.buildContactInsertPayload(event, managerId));
+    if (isErr(insertR)) return Err(insertR.error);
+    if (insertR.data.created && managerId !== null) {
+      await this.notifySalesGroup({ kind: 'contact', leadId: insertR.data.leadId, managerId, event });
+    }
+    return Ok({ leadId: insertR.data.leadId, created: insertR.data.created, managerId });
+  }
 
-    const insertR = await this.repo.insertWebsiteLead({
+  private buildContactInsertPayload(event: WebsiteContactEvent, managerId: number | null) {
+    return {
       contactName: event.name,
       contactPhone: event.phone,
       contactEmail: event.email ?? null,
-      productInterest: event.message
-        ? `Aloqa formasi: ${event.message.slice(0, 200)}`
-        : 'Aloqa formasi',
+      productInterest: event.message ? `Aloqa formasi: ${event.message.slice(0, 200)}` : 'Aloqa formasi',
       estimatedValue: null,
       managerId,
-      subSource:
-        event.channel === 'chatbot' ? 'chatbot' as const : 'website_contact' as const,
+      subSource: event.channel === 'chatbot' ? 'chatbot' as const : 'website_contact' as const,
       metadata: { channel: event.channel },
-    });
-    if (isErr(insertR)) return Err(insertR.error);
-
-    if (insertR.data.created && managerId !== null) {
-      await this.notifySalesGroup({
-        kind: 'contact',
-        leadId: insertR.data.leadId,
-        managerId,
-        event,
-      });
-    }
-
-    return Ok({ leadId: insertR.data.leadId, created: insertR.data.created, managerId });
+    };
   }
 
   private async notifySalesGroup(args:

@@ -1,3 +1,8 @@
+/**
+ * @module sd.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -9,11 +14,15 @@ import { SdCustomersController } from './presentation/sd-customers.controller';
 import { SdLeadsController } from './presentation/sd-leads.controller';
 import { SdPaymentsController } from './presentation/sd-payments.controller';
 import { SdQuotationsController } from './presentation/sd-quotations.controller';
+import { SdContractsController } from './presentation/sd-contracts.controller';
 import { SdPaymentsService } from './application/sd-payments.service';
-import { SdPaymentsRepository } from './application/sd-payments.repository';
-import { SdDashboardRepository } from './application/sd-dashboard.repository';
+import { SdPaymentsRepository } from './infrastructure/repositories/sd-payments.repository';
+import { SD_PAYMENTS_REPO } from './domain/repositories/i-sd-payments.repo';
+import { SdDashboardRepository } from './infrastructure/repositories/sd-dashboard.repository';
+import { SD_DASHBOARD_REPO } from './domain/repositories/i-sd-dashboard.repo';
 import { SdQuotationsService } from './application/sd-quotations.service';
-import { SdQuotationsRepository } from './application/sd-quotations.repository';
+import { SdQuotationsRepository } from './infrastructure/repositories/sd-quotations.repository';
+import { SD_QUOTATIONS_REPO } from './domain/repositories/i-sd-quotations.repo';
 import { CreateOrderHandler } from './application/commands/create-order.handler';
 import { UpdateOrderStatusHandler } from './application/commands/update-order-status.handler';
 import { ApproveAdvanceBypassHandler } from './application/commands/approve-advance-bypass.handler';
@@ -26,6 +35,7 @@ import { PendingAdvanceOrdersHandler } from './application/queries/pending-advan
 import { GetInvoicesHandler } from './application/queries/get-invoices.handler';
 import { GetInvoiceHandler } from './application/queries/get-invoice.handler';
 import { DrizzleSalesOrderRepository } from './infrastructure/repositories/drizzle-sales-order.repo';
+import { SALES_ORDER_REPO } from './domain/repositories/i-sales-order.repo';
 import { DealWonListener } from './infrastructure/event-handlers/deal-won.listener';
 import { PaymentReceivedListener } from './infrastructure/event-handlers/payment-received.listener';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
@@ -42,7 +52,14 @@ import { SdDashboardService } from './application/sd-dashboard.service';
 import { SdCustomersService } from './application/sd-customers.service';
 import { DrizzleSdCustomersRepository } from './infrastructure/repositories/drizzle-sd-customers.repo';
 import { SdLeadsService } from './application/sd-leads.service';
-import { SdLeadsRepository } from './application/sd-leads.repository';
+import { SdLeadsRepository } from './infrastructure/repositories/sd-leads.repository';
+import { SD_LEADS_REPO } from './domain/repositories/i-sd-leads.repo';
+import { QUOTATION_REPO } from './domain/repositories/i-quotation.repo';
+import { DrizzleQuotationRepo } from './infrastructure/repositories/drizzle-quotation.repo';
+// PA3-17 Wave 3: merged from former modules/sales/
+import { SalesController } from './sales/sales.controller';
+import { SalesService } from './sales/sales.service';
+import { SalesRepository } from './sales/sales.repository';
 
 const commandHandlers = [
   CreateOrderHandler,
@@ -65,7 +82,7 @@ const eventListeners = [DealWonListener, PaymentReceivedListener];
 
 const repositories = [
   {
-    provide: 'ISalesOrderRepository',
+    provide: SALES_ORDER_REPO,
     useClass: DrizzleSalesOrderRepository,
   },
 ];
@@ -75,7 +92,8 @@ const repositories = [
   controllers: [
     SdOrdersController, SdInvoicesController, SdDeliveriesController,
     SdDashboardController, SdCustomersController, SdLeadsController,
-    SdPaymentsController, SdQuotationsController,
+    SdPaymentsController, SdQuotationsController, SdContractsController,
+    SalesController,
   ],
   providers: [
     loggerProvider,
@@ -92,14 +110,18 @@ const repositories = [
     SdDashboardService,
     SdCustomersService,
     DrizzleSdCustomersRepository,
-    SdLeadsRepository,
+    { provide: SD_LEADS_REPO, useClass: SdLeadsRepository },
     SdLeadsService,
-    SdPaymentsRepository,
+    { provide: SD_PAYMENTS_REPO, useClass: SdPaymentsRepository },
     SdPaymentsService,
-    SdDashboardRepository,
-    SdQuotationsRepository,
+    { provide: SD_DASHBOARD_REPO, useClass: SdDashboardRepository },
+    { provide: SD_QUOTATIONS_REPO, useClass: SdQuotationsRepository },
     SdQuotationsService,
+    { provide: QUOTATION_REPO, useClass: DrizzleQuotationRepo },
+    // PA3-17 Wave 3: merged from former modules/sales/
+    SalesRepository,
+    SalesService,
   ],
-  exports: ['ISalesOrderRepository'],
+  exports: [SALES_ORDER_REPO, SalesService],
 })
 export class SdModule {}

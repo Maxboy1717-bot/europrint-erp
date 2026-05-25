@@ -1,3 +1,8 @@
+/**
+ * @module ChecklistTabContent
+ * @description React page component. Route-level UI.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -6,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { Plus, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import type { ChecklistWithItems } from "../kanban-types";
+import { useTranslation } from '@/lib/i18n';
 
 interface ChecklistTabContentProps {
   checklists: ChecklistWithItems[];
@@ -42,11 +48,12 @@ export function ChecklistTabContent({
   onDeleteChecklist,
   isDeleting,
 }: ChecklistTabContentProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
         <Input
-          placeholder="Yangi chek-list..."
+          placeholder={t("yangiChekList")}
           value={newChecklistTitle}
           onChange={(e) => onNewChecklistTitleChange(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && newChecklistTitle.trim() && onAddChecklist(newChecklistTitle)}
@@ -80,8 +87,8 @@ export function ChecklistTabContent({
                     </span>
                     <Progress value={progress} className="w-16 h-1.5" />
                     <DeleteConfirmDialog
-                      title="Checklistni o'chirish"
-                      description="Bu amalni qaytarib bo'lmaydi."
+                      title={t("checklistniOchirish")}
+                      description={t("buAmalniQaytaribBolmaydi")}
                       onConfirm={() => onDeleteChecklist(checklist.id)}
                       isPending={isDeleting}
                     >
@@ -109,7 +116,7 @@ export function ChecklistTabContent({
                 ))}
                 <div className="flex gap-2 pl-6">
                   <Input
-                    placeholder="Yangi element..."
+                    placeholder={t("yangiElement")}
                     value={newChecklistItemTitle[checklist.id] || ""}
                     onChange={(e) => onNewItemTitleChange(checklist.id, e.target.value)}
                     onKeyDown={(e) => {
@@ -134,7 +141,7 @@ export function ChecklistTabContent({
       })}
 
       {checklists.length === 0 && (
-        <p className="text-center text-muted-foreground py-8">Chek-listlar yo'q</p>
+        <p className="text-center text-muted-foreground py-8">{t("chekListlarYoq")}</p>
       )}
     </div>
   );

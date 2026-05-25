@@ -1,3 +1,8 @@
+/**
+ * @module types
+ * @description React UI component.
+ */
+
 import {
   type KanbanBoard as KanbanBoardType,
   type KanbanCard,

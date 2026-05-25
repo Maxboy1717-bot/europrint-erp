@@ -5,16 +5,15 @@
 import { useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import {
-  Eye, EyeOff, ArrowRight, Loader2,
-  Users, Building2, Zap, ShieldCheck,
-} from "lucide-react";
+import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { EuroprintLogo } from "@/components/EuroprintLogo";
-import { setAuthToken } from "@/lib/queryClient";
+import { apiRequest, HttpError, setAuthToken } from "@/lib/queryClient";
 import { safeStorage } from '@/lib/safeStorage';
+import { FloatingInput, LoginHeroPanel } from "./LoginSections";
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface LoginProps {
@@ -36,79 +35,10 @@ const loginSchema = z.object({
   password: z.string().min(1, "Parol kiritilishi shart"),
 });
 
-// ─── Hero stats ───────────────────────────────────────────────────────────────
-
-const HERO_STATS = [
-  { icon: Users,       label: "400+ xodim",    sublabel: "tizimda faol"     },
-  { icon: Building2,   label: "Bosmachilik №1", sublabel: "O'zbekistonda"    },
-  { icon: Zap,         label: "Real-time ERP",  sublabel: "barcha jarayonlar"},
-  { icon: ShieldCheck, label: "100% xavfsiz",   sublabel: "RBAC + audit"     },
-];
-
-// ─── Floating Label Input ──────────────────────────────────────────────────────
-
-interface FloatingInputProps {
-  id: string;
-  label: string;
-  type?: string;
-  value: string;
-  onChange: (v: string) => void;
-  autoComplete?: string;
-  "data-testid"?: string;
-  rightElement?: React.ReactNode;
-}
-
-function FloatingInput({
-  id, label, type = "text", value, onChange,
-  autoComplete, "data-testid": testId, rightElement,
-}: FloatingInputProps) {
-  const [focused, setFocused] = useState(false);
-  const isFloated = focused || value.length > 0;
-
-  return (
-    <div className="relative">
-      <Input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        autoComplete={autoComplete}
-        data-testid={testId}
-        aria-label={label}
-        className={cn(
-          "h-14 px-4 pt-5 pb-2 text-sm",
-          "border border-border rounded-xl bg-card",
-          "transition-all duration-150 ease-in-out",
-          "focus:ring-2 focus:ring-primary focus:border-primary",
-          rightElement && "pr-12"
-        )}
-      />
-      <label
-        htmlFor={id}
-        className={cn(
-          "absolute left-4 pointer-events-none select-none",
-          "transition-all duration-150 ease-in-out text-muted-foreground",
-          isFloated
-            ? "top-2 text-[10px] font-medium text-primary"
-            : "top-1/2 -translate-y-1/2 text-sm"
-        )}
-      >
-        {label}
-      </label>
-      {rightElement && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-          {rightElement}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export default function Login({ onLoginSuccess }: LoginProps) {
+  const { t } = useTranslation("common");
   const [form, setForm] = useState<LoginFormState>({
     username: "",
     password: "",
@@ -121,14 +51,20 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     key: K, value: LoginFormState[K]
   ) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setField("error", null);
 
-    const parsed = loginSchema.safeParse({
-      username: form.username,
-      password: form.password,
-    });
+    // Browser autofill does not always fire onChange on controlled inputs.
+    // Read directly from DOM as the authoritative source so autofilled
+    // values are never silently lost.
+    const formEl = e.currentTarget;
+    const domUsername = (formEl.querySelector('#username') as HTMLInputElement | null)?.value ?? '';
+    const domPassword = (formEl.querySelector('#password') as HTMLInputElement | null)?.value ?? '';
+    const username = domUsername || form.username;
+    const password = domPassword || form.password;
+
+    const parsed = loginSchema.safeParse({ username, password });
 
     if (!parsed.success) {
       setField("error", parsed.error.errors[0].message);
@@ -137,40 +73,44 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
     setField("isLoading", true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: form.username.trim().toLowerCase(), password: form.password }),
-        credentials: "include",
-      });
-
-      if (res.status === 429) {
-        setField("error", "Juda ko'p urinish. 15 daqiqadan keyin qayta urinib ko'ring.");
-        return;
-      }
-
-      if (!res.ok) {
-        if (res.status >= 500) {
-          setField("error", "Server vaqtinchalik ishlamayapti. Iltimos, biroz kutib qayta urinib ko'ring.");
-        } else {
-          setField("error", "Login yoki parol noto'g'ri");
-        }
-        return;
-      }
-
-      const data = await res.json() as {
+      const data = await apiRequest<{
         accessToken?: string;
         user?: { id: string | number; username: string; role: string };
-      };
+      }>('POST', "/api/auth/login", {
+        username: username.trim().toLowerCase(),
+        password,
+      });
 
       if (data.accessToken) {
+        // setAuthToken is a no-op post-cookie migration — httpOnly cookies
+        // are set by the server's Set-Cookie header. Call retained for clarity
+        // and forward compatibility.
         setAuthToken(data.accessToken, undefined);
+        // Optional UX cache of non-sensitive user fields (role, name) so
+        // routing decisions don't have to await /api/auth/me on first paint.
+        // No token is persisted here.
         if (data.user) safeStorage.setItem("admin", JSON.stringify(data.user));
         onLoginSuccess(data.user?.role);
       }
     } catch (err) {
-      void err;
-      setField("error", "Server bilan ulanishda xatolik yuz berdi. Sahifani yangilab qayta urinib ko'ring.");
+      // apiRequest throws Error("<status>: <body>") for non-2xx HTTP responses,
+      // or HttpError(500, ...) for envelope-level failures.
+      let status = 0;
+      if (err instanceof HttpError) {
+        status = err.status;
+      } else if (err instanceof Error) {
+        const m = err.message.match(/^(\d{3}):/);
+        if (m) status = Number(m[1]);
+      }
+      if (status === 429) {
+        setField("error", "Juda ko'p urinish. 15 daqiqadan keyin qayta urinib ko'ring.");
+      } else if (status >= 500) {
+        setField("error", "Server vaqtinchalik ishlamayapti. Iltimos, biroz kutib qayta urinib ko'ring.");
+      } else if (status > 0) {
+        setField("error", "Login yoki parol noto'g'ri");
+      } else {
+        setField("error", "Server bilan ulanishda xatolik yuz berdi. Sahifani yangilab qayta urinib ko'ring.");
+      }
     } finally {
       setField("isLoading", false);
     }
@@ -180,59 +120,10 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     <div
       className="erp-auth-root min-h-screen flex overflow-hidden"
       role="main"
-      aria-label="Tizimga kirish sahifasi"
+      aria-label={t("tizimgaKirishSahifasi")}
     >
       {/* ── LEFT PANEL: Hero (60%) ── */}
-      <div
-        className="erp-auth-hero-panel hidden lg:flex lg:w-[60%] relative flex-col justify-between p-12"
-        aria-hidden="true"
-      >
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10 -translate-y-1/3 translate-x-1/3"
-          style={{ background: "radial-gradient(circle, white 0%, transparent 70%)" }} />
-        <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-10 translate-y-1/3 -translate-x-1/3"
-          style={{ background: "radial-gradient(circle, white 0%, transparent 70%)" }} />
-
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-3 bg-white/15 rounded-xl px-4 py-2 backdrop-blur-sm">
-            <EuroprintLogo height={28} />
-            <span className="text-white font-semibold text-sm tracking-wide">ERP System</span>
-          </div>
-        </div>
-
-        <div className="relative z-10 space-y-8">
-          <div className="space-y-3">
-            <h1 className="text-4xl font-bold text-white leading-tight">
-              Zamonaviy ishlab chiqarish
-              <br />
-              <span className="opacity-80">boshqaruv tizimi</span>
-            </h1>
-            <p className="text-white/70 text-base max-w-sm">
-              SAP darajadagi ERP — 15 modul, real-time monitoring, AI tahlil
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {(Array.isArray(HERO_STATS) ? HERO_STATS : []).map(({ icon: Icon, label, sublabel }) => (
-              <div
-                key={label}
-                className="flex items-center gap-3 bg-white/10 rounded-xl p-4 backdrop-blur-sm border border-white/10"
-              >
-                <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <p className="text-white font-semibold text-sm">{label}</p>
-                  <p className="text-white/60 text-xs">{sublabel}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="relative z-10">
-          <p className="text-white/40 text-xs">v2.0 | © 2026 Europrint LLC. Barcha huquqlar himoyalangan.</p>
-        </div>
-      </div>
+      <LoginHeroPanel />
 
       {/* ── RIGHT PANEL: Form (40%) ── */}
       <div
@@ -249,26 +140,27 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         <div className="w-full max-w-sm space-y-8">
           <div className="space-y-1">
             <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-              Tizimga kirish
+              {t("tizimgaKirish")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              EuroPrint ERP ga xush kelibsiz
+              {t("europrintErpGaXushKelibsiz")}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <FloatingInput
               id="username"
-              label="Foydalanuvchi nomi"
+              name="email"
+              label={t("username")}
               value={form.username}
               onChange={(v) => setField("username", v)}
-              autoComplete="username"
+              autoComplete="username email"
               data-testid="input-username"
             />
 
             <FloatingInput
               id="password"
-              label="Parol"
+              label={t("Parol")}
               type={form.showPassword ? "text" : "password"}
               value={form.password}
               onChange={(v) => setField("password", v)}
@@ -305,12 +197,12 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             >
               {form.isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Kirilmoqda...
+                  <EPLoader className="w-4 h-4" />
+                  {t("kirilmoqda")}
                 </>
               ) : (
                 <>
-                  Tizimga kirish
+                  {t("tizimgaKirish")}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

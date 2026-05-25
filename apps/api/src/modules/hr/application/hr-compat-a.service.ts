@@ -1,13 +1,18 @@
+/**
+ * @module hr-compat-a.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Inject, InternalServerErrorException } from '@nestjs/common';
 import { HR_REPO, IHrRepo } from '../domain/repositories/i-hr.repo';
+import { HR_COMPAT_A_REPO, type IHrCompatARepo } from '../domain/repositories/i-hr-compat-a.repo';
 import { safeCall, Result, AppError } from '@common/result';
-import { HrCompatARepository } from './hr-compat-a.repository';
 
 @Injectable()
 export class HrCompatAService {
   constructor(
     @Inject(HR_REPO) private readonly hrRepo: IHrRepo,
-    private readonly repo: HrCompatARepository,
+    @Inject(HR_COMPAT_A_REPO) private readonly repo: IHrCompatARepo,
   ) {}
 
   async get360Reviews(employeeId?: string): Promise<Result<object, AppError>> {
@@ -96,5 +101,17 @@ export class HrCompatAService {
       if (!result.ok) throw new InternalServerErrorException(result.error);
       return result.data;
     });
+  }
+
+  async getDepartments(isActive?: boolean) {
+    return this.repo.getDepartments(isActive);
+  }
+
+  async getPositions(departmentId?: number, isActive?: boolean) {
+    return this.repo.getPositions(departmentId, isActive);
+  }
+
+  async getVacancies(status?: string, isActive?: boolean) {
+    return this.repo.getVacancies(status, isActive);
   }
 }

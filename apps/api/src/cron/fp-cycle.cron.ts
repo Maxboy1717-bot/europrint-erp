@@ -1,3 +1,8 @@
+/**
+ * @module fp-cycle.cron
+ * @description Scheduled cron job. @nestjs/schedule registered task.
+ */
+
 import { Injectable, Logger, Optional } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import { db, hrEmployees, hrDepartments } from '@shared/db'
@@ -16,11 +21,13 @@ export class FpCycleCron {
   async sendZvsReminder(): Promise<void> {
     const jobName = 'FpCycle.sendZvsReminder'
     try {
+      // hrDepartments canonical schema uses headId (text) instead of manager_id.
+      // Cast to number[] for the existing query path (employee.id is integer).
       const deptManagers = await db
-        .select({ manager_id: hrDepartments.manager_id })
+        .select({ manager_id: hrDepartments.headId })
         .from(hrDepartments)
-        .where(isNotNull(hrDepartments.manager_id))
-      const mgrIds = [...new Set((deptManagers ?? []).map(r => r.manager_id).filter((id): id is NonNullable<typeof id> => id != null))]
+        .where(isNotNull(hrDepartments.headId))
+      const mgrIds = [...new Set((Array.isArray(deptManagers) ? deptManagers : []).map(r => Number(r.manager_id)).filter((id): id is number => Number.isFinite(id)))]
       const managers: ManagerRow[] = mgrIds.length > 0
         ? await db
             .select({ id: hrEmployees.id, first_name: hrEmployees.first_name, last_name: hrEmployees.last_name, telegram_chat_id: hrEmployees.telegram_chat_id })

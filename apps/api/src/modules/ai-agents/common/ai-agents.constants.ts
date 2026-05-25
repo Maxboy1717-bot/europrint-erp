@@ -1,3 +1,8 @@
+/**
+ * @module ai-agents.constants
+ * @description Named-constant exports (business thresholds, enums, lookup tables).
+ */
+
 export const AI_AUTO_CONFIDENCE_THRESHOLD = 0.85;
 export const AI_VISION_PASS_THRESHOLD     = 2.0;
 export const AI_VISION_SCRAP_THRESHOLD    = 5.0;

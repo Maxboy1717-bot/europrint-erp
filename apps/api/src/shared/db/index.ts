@@ -1,3 +1,8 @@
+/**
+ * @module index
+ * @description Barrel re-export file. Surfaces the public API of this folder.
+ */
+
 import { db, runQuery } from '@shared/db';
 export * from './schema';
 export { db, rawSql, runQuery, ddlRun } from './schema';
@@ -52,6 +57,11 @@ export {
 export { aiDecisionLog } from './schema-ai-agents';
 export type { AiDecisionLogRow, AiDecisionLogInsert } from './schema-ai-agents';
 
+// schema-aisha: AIsha voice assistant (conversations, tool calls, audit, approvals)
+export {
+  aishaConversations, aishaToolCalls, aishaVoiceAudit, aishaPendingApprovals,
+} from './schema-aisha';
+
 // schema-forecast: Talab prognozi (TZ-06/07/08)
 export { forecast_series } from './schema-forecast';
 
@@ -59,10 +69,28 @@ export { forecast_series } from './schema-forecast';
 export { control_chart_point } from './schema-qc-spc';
 export { overtime_policy, employee_separation } from './schema-hr-overtime';
 
-// schema-kanban: Kanban tables
+// schema-misc-app-a: App-level stubs (users, org_departments, employees, etc.)
 export {
+  appUsers, hrEmployees,
+  hrDepartments, hrPositions,
+  orgDepartments, employeeOrgDepartments,
+  shiftSchedules, leaveRequestsApp,
+} from './schema-misc-app-a';
+
+// schema-admin-ext: Admin-module specific tables (audit log full schema, alerts)
+export { audit_logs_ext, system_alerts } from './schema-admin-ext';
+
+// schema-pp: PP module canonical tables (extracted from infra per P3-27)
+export { ppWorkCenters } from './schema-pp';
+
+// schema-kanban: Kanban tables (including canonical kanbanBoards / kanbanColumns / kanbanCards)
+export {
+  kanbanBoards, kanbanColumns, kanbanCards,
   kanbanFlows, kanbanRobots, kanbanChecklists, kanbanChecklistItems,
   kanbanCardComments, kanbanCardWatchers,
+  kanbanNotifications, kanbanTemplates, kanbanTimeTracks,
+  kanbanTags, kanbanCardTags, kanbanResults, kanbanResultFiles,
+  kanbanObservers, kanbanCoExecutors, kanbanFiles,
 } from './schema-kanban';
 
 // schema-ext: Extended/stub tables for Drizzle builder usage
@@ -89,7 +117,7 @@ export {
   wms_warehouses, wms_transfers, wms_internal_requests, wms_inventory_counts,
   // MM Extended
   mm_goods_receipt_lines, mm_purchase_orders_int,
-  mm_materials_int, mm_goods_receipts_int, mm_purchase_orders_ext, mm_vendors_ext2,
+  mm_materials_int,
   // Finance Core (new tables not in other schemas)
   income_expense_transactions, stock_moves, raw_materials,
   expense_reports, fi_invoices,
@@ -104,9 +132,9 @@ export {
   qc_standards, qc_final_inspections, qc_in_process_inspections,
   // LMS Extended (new tables)
   lms_test_attempts, lms_certificates,
-  lms_modules, lms_exams, lms_exam_attempts,
+  lms_modules, lms_exams,
+  // lms_exam_attempts: aiExamAttempts in schema-ai.ts is the live canonical (uuid PK)
   lms_knowledge, lms_achievements, lms_user_achievements, lms_tests_ext,
-  lms_assignments,
   // MES Extended
   mes_maintenance_requests, mes_maintenance_tasks, mes_production_sessions, mes_shift_stats,
   equipment, machine_tasks,
@@ -121,8 +149,8 @@ export {
   hr_application_responses, hr_candidate_funnels,
   hr_capital_courses,
   adaptation_feedback,
-  // Finance Extended
-  budgets, budget_lines, advances,
+  // Finance Extended (budget_lines comes from export * from './schema' above)
+  budgets, advances,
   fp_cycles, payroll_entries, finance_invoices, finance_invoice_lines,
   // IoT Extended
   iot_sensor_readings, iot_alerts,
@@ -187,3 +215,6 @@ export {
   hr_tz2_room_reference_photos,
   hr_tz2_ai_room_analysis,
 } from './schema-hr-tz2';
+
+// schema-outbox: Domain events outbox table (PA0-6)
+export { domain_events } from './schema-outbox';

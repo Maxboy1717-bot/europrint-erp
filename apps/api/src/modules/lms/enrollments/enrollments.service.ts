@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, ConflictException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+/**
+ * @module enrollments.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Injectable, NotFoundException, ConflictException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ILmsEnrollmentsRepository, LMS_ENROLLMENTS_REPO } from './i-lms-enrollments.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -6,9 +12,13 @@ import { safeCall, Result, AppError } from '@common/result';
 export class EnrollmentsService {
   private readonly logger = new Logger(EnrollmentsService.name);
 
-  constructor(@Inject(LMS_ENROLLMENTS_REPO) private readonly lmsEnrollmentsRepo: ILmsEnrollmentsRepository) {}
+  constructor(
+    @Inject(LMS_ENROLLMENTS_REPO) private readonly lmsEnrollmentsRepo: ILmsEnrollmentsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async enroll(userId: number, courseId: number, dueAt?: Date | null): Promise<Result<object, AppError>> {
+    const alreadyEnrolledMsg = await this.i18n.t('errors.alreadyEnrolled');
     return safeCall(async () => {
     const courseResult = await this.lmsEnrollmentsRepo.findCourseById(courseId);
     if (!courseResult.ok) throw new InternalServerErrorException(courseResult.error);
@@ -16,12 +26,12 @@ export class EnrollmentsService {
 
     const existResult = await this.lmsEnrollmentsRepo.findExistingEnrollment(userId, courseId);
     if (!existResult.ok) throw new InternalServerErrorException(existResult.error);
-    if (existResult.data) throw new ConflictException("Foydalanuvchi allaqachon ushbu kursga yozilgan");
+    if (existResult.data) throw new ConflictException(alreadyEnrolledMsg);
 
     const result = await this.lmsEnrollmentsRepo.enroll({ userId, courseId, dueAt });
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
-  
+
     });}
 
   async findAll(query: Record<string, unknown> = {}){

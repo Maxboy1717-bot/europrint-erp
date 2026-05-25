@@ -1,12 +1,17 @@
+/**
+ * @module get-reclamations.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { GetReclamationsQuery } from './get-reclamations.query';
 
 type ReclamationsResponse = { ok: boolean; data: { data: Record<string, unknown>[]; pagination: { page: number; limit: number; total: number; totalPages: number } } };
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 

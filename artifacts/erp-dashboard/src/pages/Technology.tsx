@@ -1,14 +1,22 @@
+/**
+ * @module Technology
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Clock, CheckCircle, XCircle, BarChart3,
   FileText, Layers, ArrowRight, Cpu, Package,
   AlertTriangle, RefreshCw,
 } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 interface DashboardStats {
   pendingCount: number;
@@ -62,7 +70,7 @@ function KpiCard({
           <div className="min-w-0">
             <p className="text-xs text-muted-foreground font-medium truncate">{title}</p>
             {loading ? (
-              <Skeleton className="h-8 w-20 mt-1" />
+              <Skeleton className="h-8 w-20 mt-1 rounded-lg" />
             ) : error ? (
               <p className="text-2xl font-bold mt-1 text-muted-foreground">—</p>
             ) : (
@@ -80,17 +88,18 @@ function KpiCard({
 }
 
 function InlineError({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-3">
       <AlertTriangle className="w-8 h-8 text-destructive/60" />
       <div className="text-center">
-        <p className="text-sm font-medium text-foreground">Ma'lumotlarni yuklashda xatolik</p>
+        <p className="text-sm font-medium text-foreground">{t("malumotlarniYuklashdaXatolik")}</p>
         <p className="text-xs mt-1 opacity-70">{message}</p>
       </div>
       {onRetry && (
         <Button size="sm" variant="outline" onClick={onRetry} className="gap-1.5">
           <RefreshCw className="w-3.5 h-3.5" />
-          Qayta urinish
+          {t("qaytaUrinish")}
         </Button>
       )}
     </div>
@@ -107,6 +116,7 @@ const QUICK_LINKS = [
 ];
 
 export default function Technology() {
+  const { t } = useTranslation("common");
   const {
     data: stats,
     isLoading: statsLoading,
@@ -125,12 +135,7 @@ export default function Technology() {
   } = useQuery<TechOrder[]>({
     queryKey: ["/api/technology/orders", "pending_tech"],
     queryFn: async () => {
-      const res = await fetch("/api/technology/orders?status=pending_tech", { credentials: "include" });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({})) as { error?: string };
-        throw new Error(body.error ?? `Server xatosi: ${res.status}`);
-      }
-      const data: unknown = await res.json();
+      const data: unknown = await apiRequest<unknown>('GET', "/api/technology/orders?status=pending_tech");
       if (typeof data === "object" && data !== null && "success" in data && !(data as { success: boolean }).success) {
         const err = (data as { error?: string }).error ?? "Server xatosi";
         throw new Error(err);
@@ -147,53 +152,53 @@ export default function Technology() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Texnologiya Bo'limi</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("texnologiyaBolimi")}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Buyurtmalar texnologik nazorat, texnologik kartalar va material tahlili
+            {t("buyurtmalarTexnologikNazoratTexnologikKartalar")}
           </p>
         </div>
         <Link href="/tech-approval">
           <Button className="gap-2">
             <Cpu className="w-4 h-4" />
-            Tasdiqlash Paneli
+            {t("tasdiqlashPaneli")}
           </Button>
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4">
         <KpiCard
-          title="Kutayotgan Buyurtmalar"
+          title={t("kutayotganBuyurtmalar")}
           value={stats?.pendingCount ?? 0}
           sub="Texnolog tasdig'ini kutmoqda"
           icon={Clock}
-          color="text-amber-600"
+          color="text-[var(--ep-yellow)]"
           loading={statsLoading}
           error={statsError}
         />
         <KpiCard
-          title="Bugun Tasdiqlangan"
+          title={t("bugunTasdiqlangan")}
           value={stats?.approvedToday ?? 0}
           sub="Bugungi ish kuni"
           icon={CheckCircle}
-          color="text-green-600"
+          color="text-[var(--ep-green)]"
           loading={statsLoading}
           error={statsError}
         />
         <KpiCard
-          title="Bugun Rad Etilgan"
+          title={t("bugunRadEtilgan")}
           value={stats?.rejectedToday ?? 0}
           sub="Qayta ishlashga qaytarildi"
           icon={XCircle}
-          color="text-red-600"
+          color="text-[var(--ep-red)]"
           loading={statsLoading}
           error={statsError}
         />
         <KpiCard
-          title="O'rtacha Ishlash Vaqti"
+          title={t("ortachaIshlashVaqti")}
           value={`${stats?.avgProcessingHours ?? 0}h`}
           sub="Bir buyurtma uchun"
           icon={BarChart3}
-          color="text-blue-600"
+          color="text-[var(--ep-blue)]"
           loading={statsLoading}
           error={statsError}
         />
@@ -202,10 +207,10 @@ export default function Technology() {
       {statsError && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 flex items-center gap-3 text-sm text-destructive">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>Dashboard statistikalarini yuklab bo'lmadi.</span>
+          <span>{t("dashboardStatistikalariniYuklabBolmadi")}</span>
           <Button size="sm" variant="ghost" onClick={() => refetchStats()} className="ml-auto gap-1.5 text-destructive hover:text-destructive">
             <RefreshCw className="w-3.5 h-3.5" />
-            Qayta
+            {t("qayta")}
           </Button>
         </div>
       )}
@@ -215,10 +220,10 @@ export default function Technology() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-600" />
+                <Clock className="w-4 h-4 text-[var(--ep-yellow)]" />
                 Kutayotgan Buyurtmalar
                 {!ordersLoading && !ordersError && orderList.length > 0 && (
-                  <Badge variant="secondary" className="ml-auto">{orderList.length}</Badge>
+                  <EPStatusPill tone="neutral" className="ml-auto">{orderList.length}</EPStatusPill>
                 )}
               </CardTitle>
             </CardHeader>
@@ -241,8 +246,8 @@ export default function Technology() {
               {!ordersLoading && !ordersError && orderList.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
                   <CheckCircle className="w-10 h-10 mb-3 opacity-20" />
-                  <p className="text-sm font-medium">Kutayotgan buyurtmalar yo'q</p>
-                  <p className="text-xs mt-1 opacity-70">Barcha buyurtmalar ko'rib chiqilgan</p>
+                  <p className="text-sm font-medium">{t("kutayotganBuyurtmalarYoq")}</p>
+                  <p className="text-xs mt-1 opacity-70">{t("barchaBuyurtmalarKoribChiqilgan")}</p>
                 </div>
               )}
 
@@ -297,7 +302,7 @@ export default function Technology() {
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Tezkor Havolalar</CardTitle>
+              <CardTitle className="text-base font-semibold">{t("tezkorHavolalar1")}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border/50">

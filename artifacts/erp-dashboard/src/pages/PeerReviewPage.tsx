@@ -1,3 +1,8 @@
+/**
+ * @module PeerReviewPage
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -8,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Star, Users, TrendingUp, BarChart3, CheckCircle2 } from "lucide-react";
+import { EPStatusPill } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const CURRENT_USER_ID = 1;
 
@@ -37,6 +44,7 @@ interface ReviewableEmployee { id: number; full_name: string; department_name?: 
 interface DeptSummary { department_name: string; review_count: number; avg_rating: string; }
 
 export default function PeerReviewPage() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const qc = useQueryClient();
   const [selected, setSelected] = useState<ReviewableEmployee | null>(null);
@@ -54,7 +62,7 @@ export default function PeerReviewPage() {
   });
 
   const submitMut = useMutation({
-    mutationFn: (body: Record<string, unknown>) => apiRequest("POST", "/api/hr/360/review", body),
+    mutationFn: (body: Record<string, unknown>) => apiRequest<Record<string, unknown>>("POST", "/api/hr/360/review", body),
     onSuccess: (data: Record<string, unknown>) => {
       if (data?.error) {
         toast({ title: "Xato", description: String(data.error), variant: "destructive" });
@@ -89,36 +97,36 @@ export default function PeerReviewPage() {
   return (
     <div className="flex flex-col h-full">
       <div className="border-b border-border/50 px-6 py-3 flex items-center gap-3">
-        <Star className="h-5 w-5 text-yellow-500" />
-        <h1 className="font-semibold text-base">360° Kunlik Baholash</h1>
-        <Badge variant="secondary">{pending.length} kutilmoqda</Badge>
+        <Star className="h-5 w-5 text-[var(--ep-yellow)]" />
+        <h1 className="font-semibold text-base">{t("k360KunlikBaholash")}</h1>
+        <EPStatusPill tone="neutral">{pending.length} kutilmoqda</EPStatusPill>
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-5">
         <Tabs defaultValue="review">
           <TabsList>
-            <TabsTrigger value="review">⭐ Baholash</TabsTrigger>
-            <TabsTrigger value="stats">📊 Bo'lim statistikasi</TabsTrigger>
+            <TabsTrigger value="review">{t("baholash1")}</TabsTrigger>
+            <TabsTrigger value="stats">{t("bolimStatistikasi")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="review" className="mt-4 space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="pt-4 pb-3">
-                  <div className="text-2xl font-bold text-blue-600">{reviewable.length}</div>
-                  <div className="text-xs text-muted-foreground">Jami xodimlar</div>
+                  <div className="text-2xl font-bold text-[var(--ep-blue)]">{reviewable.length}</div>
+                  <div className="text-xs text-muted-foreground">{t("jamiXodimlar1")}</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-4 pb-3">
-                  <div className="text-2xl font-bold text-green-600">{reviewed.length}</div>
-                  <div className="text-xs text-muted-foreground">Baholangan (bugun)</div>
+                  <div className="text-2xl font-bold text-[var(--ep-green)]">{reviewed.length}</div>
+                  <div className="text-xs text-muted-foreground">{t("baholanganBugun")}</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-4 pb-3">
-                  <div className="text-2xl font-bold text-orange-600">{pending.length}</div>
-                  <div className="text-xs text-muted-foreground">Baholanmagan</div>
+                  <div className="text-2xl font-bold text-[var(--ep-primary)]">{pending.length}</div>
+                  <div className="text-xs text-muted-foreground">{t("baholanmagan")}</div>
                 </CardContent>
               </Card>
             </div>
@@ -127,27 +135,27 @@ export default function PeerReviewPage() {
               <Card className="border-primary/40 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <Star className="h-4 w-4 text-yellow-500" />
+                    <Star className="h-4 w-4 text-[var(--ep-yellow)]" />
                     {selected.full_name} ni baholash
                     <Badge variant="outline" className="ml-auto">{selected.department_name || "—"}</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-sm font-medium mb-2">Baho (1-5 yulduz)</p>
+                    <p className="text-sm font-medium mb-2">{t("baho15Yulduz")}</p>
                     <StarRating value={rating} onChange={setRating} />
                   </div>
                   <div>
                     <p className="text-sm font-medium mb-1">
                       Sabab (kamida 30 belgi)
-                      <span className={`ml-2 text-xs ${reason.length >= 30 ? "text-green-600" : "text-orange-500"}`}>
+                      <span className={`ml-2 text-xs ${reason.length >= 30 ? "text-[var(--ep-green)]" : "text-[var(--ep-primary)]"}`}>
                         {reason.length}/30
                       </span>
                     </p>
                     <Textarea
                       value={reason}
                       onChange={e => setReasonText(e.target.value)}
-                      placeholder="Bu xodim nima uchun bunday bahoga arziydi? Aniq misol keltiring..."
+                      placeholder={t("buXodimNimaUchunBunday")}
                       rows={3}
                     />
                   </div>
@@ -160,7 +168,7 @@ export default function PeerReviewPage() {
                       {submitMut.isPending ? "Yuborilmoqda..." : "✅ Baholashni yuborish"}
                     </Button>
                     <Button variant="outline" onClick={() => { setSelected(null); setRating(0); setReasonText(""); }}>
-                      Bekor
+                      {t("Bekor")}
                     </Button>
                   </div>
                 </CardContent>
@@ -169,11 +177,11 @@ export default function PeerReviewPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Xodimlar ro'yxati</CardTitle>
+                <CardTitle className="text-base">{t("xodimlarRoyxati")}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 {isLoading ? (
-                  <div className="py-8 text-center text-muted-foreground">Yuklanmoqda...</div>
+                  <div className="py-8 text-center text-muted-foreground">{t("Yuklanmoqda...")}</div>
                 ) : (
                   <div className="divide-y">
                     {(Array.isArray(pending) ? pending : []).map((emp) => (
@@ -192,14 +200,14 @@ export default function PeerReviewPage() {
                           variant={selected?.id === emp.id ? "default" : "outline"}
                           onClick={() => setSelected(emp)}
                         >
-                          <Star className="h-3.5 w-3.5 mr-1" />Baholash
+                          <Star className="h-3.5 w-3.5 mr-1" />{t("baholash")}
                         </Button>
                       </div>
                     ))}
                     {(Array.isArray(reviewed) ? reviewed : []).map((emp) => (
                       <div key={emp.id} className="flex items-center justify-between px-4 py-3 opacity-50">
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-green-600">
+                          <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-[var(--ep-green)]">
                             {emp.full_name?.charAt(0)}
                           </div>
                           <div>
@@ -207,15 +215,15 @@ export default function PeerReviewPage() {
                             <p className="text-xs text-muted-foreground">{emp.department_name || "—"}</p>
                           </div>
                         </div>
-                        <Badge variant="secondary" className="text-green-600">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />Baholangan
+                        <Badge variant="secondary" className="text-[var(--ep-green)]">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />{t("baholangan")}
                         </Badge>
                       </div>
                     ))}
                     {reviewable.length === 0 && (
                       <div className="py-10 text-center text-muted-foreground">
                         <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                        <p className="text-sm">Xodimlar mavjud emas</p>
+                        <p className="text-sm">{t("xodimlarMavjudEmas")}</p>
                       </div>
                     )}
                   </div>
@@ -228,7 +236,7 @@ export default function PeerReviewPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-blue-500" />
+                  <BarChart3 className="h-4 w-4 text-[var(--ep-blue)]" />
                   Bo'lim bo'yicha o'rtacha baho (so'nggi 30 kun)
                 </CardTitle>
               </CardHeader>
@@ -236,7 +244,7 @@ export default function PeerReviewPage() {
                 {deptSummary.length === 0 ? (
                   <div className="py-8 text-center text-muted-foreground">
                     <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">Hali baholash ma'lumotlari yo'q</p>
+                    <p className="text-sm">{t("haliBaholashMalumotlariYoq")}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -246,12 +254,12 @@ export default function PeerReviewPage() {
                           <span className="font-medium">{dept.department_name || "Noma'lum bo'lim"}</span>
                           <div className="flex items-center gap-3">
                             <span className="text-muted-foreground text-xs">{dept.review_count} ta baho</span>
-                            <span className="font-bold text-yellow-600">{parseFloat(dept.avg_rating).toFixed(1)} ⭐</span>
+                            <span className="font-bold text-[var(--ep-yellow)]">{parseFloat(dept.avg_rating).toFixed(1)} ⭐</span>
                           </div>
                         </div>
                         <div className="h-2 bg-muted rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full"
+                            className="h-full bg-yellow-500 rounded-full"
                             style={{ width: `${(parseFloat(dept.avg_rating) / 5) * 100}%` }}
                           />
                         </div>

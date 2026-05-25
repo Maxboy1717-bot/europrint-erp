@@ -151,5 +151,11 @@
   "abbreviationHigh": "выс",
   "abbreviationMed": "сред",
   "statusIn": "ВОШЁЛ",
-  "statusOut": "ВЫШЕЛ"
+  "statusOut": "ВЫШЕЛ",
+  "tabAttendance": "Посещаемость",
+  "tabRooms": "Помещения",
+  "tabHealth": "Здоровье",
+  "dashboard1": "Панель управления",
+  "dashboard9": "Дашборд 9",
+  "tabMaintenance": "Обслуживание"
 }

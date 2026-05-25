@@ -1,22 +1,50 @@
+/**
+ * @module waste.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query, UseGuards , UseInterceptors, HttpStatus } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { WasteService } from './waste.service';
 import { WasteBodyDto, WasteRecycleDto } from '../compatibility/dto/operations.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import {
+  WasteRecordAclTranslator,
+  type LegacyWasteRecordRow,
+  type WasteRecordDto,
+} from './acl/waste-record-acl';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Roles('admin', 'manager', 'hr_manager', 'director', 'SUPER_ADMIN')
 @UseInterceptors(AuditInterceptor)
 @Controller('waste')
 export class WasteController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly acl = new WasteRecordAclTranslator();
+
   constructor(private readonly svc: WasteService) {}
 
   @Get('records')
   async getRecords(@Query() q: Record<string, string>) {
     return unwrapOrInternal(await this.svc.getRecords(q));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of waste records. New BC-2 (Manufacturing
+   * / Quality) consumers should target this endpoint; the legacy `/records`
+   * route stays for backwards-compat.
+   */
+  @Get('records/v2')
+  async getRecordsV2(@Query() q: Record<string, string>): Promise<WasteRecordDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getRecords(q)) as unknown as LegacyWasteRecordRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.acl.toDomain(row))
+      .filter((r): r is { ok: true; data: WasteRecordDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post('records')

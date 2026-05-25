@@ -1,3 +1,8 @@
+/**
+ * @module PricingTiers
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -8,10 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Plus, Tag, Calculator } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { EPPageHeader, EPStatusPill } from "@/components/ep";
 
 interface PriceTier {
   id: string;
@@ -58,7 +63,7 @@ export default function PricingTiers() {
 
   const { data: tiers, isLoading: tiersLoading } = useQuery<PriceTier[]>({
     queryKey: ["price-tiers", searchKey],
-    queryFn: () => apiRequest(`/pricing/tiers/${encodeURIComponent(searchKey)}`),
+    queryFn: () => apiRequest("GET", `/api/pricing/tiers/${encodeURIComponent(searchKey)}`),
     enabled: searchKey.length > 0,
     retry: false,
   });
@@ -69,12 +74,9 @@ export default function PricingTiers() {
     setCalcError("");
     setCalcResult(null);
     try {
-      const result = await apiRequest("/pricing/calculate", {
-        method: "POST",
-        body: JSON.stringify({
-          productName: calcForm.productName,
-          quantity:    Number(calcForm.quantity),
-        }),
+      const result = await apiRequest("POST", "/api/pricing/calculate", {
+        productName: calcForm.productName,
+        quantity:    Number(calcForm.quantity),
       }) as PriceCalculationResult;
       setCalcResult(result);
     } catch (err) {
@@ -86,17 +88,14 @@ export default function PricingTiers() {
 
   const addTierMut = useMutation({
     mutationFn: (body: typeof DEFAULT_TIER_FORM) =>
-      apiRequest("/pricing/tiers", {
-        method: "POST",
-        body: JSON.stringify({
-          productName: body.productName,
-          tierName:    body.tierName,
-          minQty:      Number(body.minQty),
-          maxQty:      body.maxQty ? Number(body.maxQty) : undefined,
-          priceUzs:    Number(body.priceUzs),
-          validFrom:   body.validFrom,
-          validTo:     body.validTo || undefined,
-        }),
+      apiRequest("POST", "/api/pricing/tiers", {
+        productName: body.productName,
+        tierName:    body.tierName,
+        minQty:      Number(body.minQty),
+        maxQty:      body.maxQty ? Number(body.maxQty) : undefined,
+        priceUzs:    Number(body.priceUzs),
+        validFrom:   body.validFrom,
+        validTo:     body.validTo || undefined,
       }),
     onSuccess: () => {
       toast({ title: t('saveBtn') });
@@ -111,7 +110,11 @@ export default function PricingTiers() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <PageHeader title={t('pricingTiers')} subtitle={t('pricingSubtitle')} />
+      <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t('pricingTiers')}</b></>}
+        title={t('pricingTiers')}
+        subtitle={t('pricingSubtitle')}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -133,7 +136,7 @@ export default function PricingTiers() {
               </Button>
             </div>
 
-            {tiersLoading && <Skeleton className="h-32 w-full" />}
+            {tiersLoading && <Skeleton className="h-32 w-full rounded-lg" />}
 
             {tiers && tiers.length === 0 && (
               <p className="text-sm text-muted-foreground py-4 text-center">{t('noTiersFound')}</p>
@@ -154,7 +157,7 @@ export default function PricingTiers() {
                     </div>
                     <div className="text-right">
                       <div className="font-semibold text-sm">{formatCurrency(tier.priceUzs)}</div>
-                      <div className="text-xs text-muted-foreground">/birlik</div>
+                      <div className="text-xs text-muted-foreground">{t("birlik")}</div>
                     </div>
                   </div>
                 ))}
@@ -170,11 +173,11 @@ export default function PricingTiers() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>{t('productNameLabel')}</Label>
                 <Input
-                  placeholder="Offset A4"
+                  placeholder={t("offsetA4")}
                   value={calcForm.productName}
                   onChange={e => setCalcForm(f => ({ ...f, productName: e.target.value }))}
                 />
@@ -192,9 +195,9 @@ export default function PricingTiers() {
             <Button
               onClick={handleCalc}
               disabled={!calcForm.productName || !calcForm.quantity || calcLoading}
-              className="w-full"
+              className="w-full gap-2"
             >
-              <Calculator className="h-4 w-4 mr-2" />
+              <Calculator className="h-4 w-4" />
               {calcLoading ? t('calculatingBtn') : t('priceCalculationTitle')}
             </Button>
 
@@ -204,7 +207,7 @@ export default function PricingTiers() {
               <div className="mt-4 border rounded-lg p-4 bg-muted/20 space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">{t('appliedTierLabel')}</span>
-                  <Badge variant="secondary">{calcResult.tierName}</Badge>
+                  <EPStatusPill tone="neutral">{calcResult.tierName}</EPStatusPill>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">{t('unitPriceLabel')}</span>
@@ -213,12 +216,12 @@ export default function PricingTiers() {
                 {calcResult.savingsVsListPct !== null && calcResult.savingsVsListPct > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">{t('savingsLabel')}</span>
-                    <span className="text-emerald-600 font-medium">{calcResult.savingsVsListPct.toFixed(1)}%</span>
+                    <span className="text-[var(--ep-green)] font-medium">{calcResult.savingsVsListPct.toFixed(1)}%</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center border-t pt-3">
                   <span className="font-medium">{t('totalLabel')} ({calcResult.quantity.toLocaleString()} dona)</span>
-                  <span className="text-xl font-bold text-emerald-600">{formatCurrency(calcResult.totalUzs)}</span>
+                  <span className="text-xl font-bold text-[var(--ep-green)]">{formatCurrency(calcResult.totalUzs)}</span>
                 </div>
               </div>
             )}
@@ -238,14 +241,14 @@ export default function PricingTiers() {
         </CardHeader>
         {showAddForm && (
           <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
               <div>
                 <Label>{t('productNameLabel')} *</Label>
-                <Input value={tierForm.productName} onChange={e => setTierForm(f => ({ ...f, productName: e.target.value }))} placeholder="Offset A4" />
+                <Input value={tierForm.productName} onChange={e => setTierForm(f => ({ ...f, productName: e.target.value }))} placeholder={t("offsetA4")} />
               </div>
               <div>
                 <Label>{t('tierNameLabel')} *</Label>
-                <Input value={tierForm.tierName} onChange={e => setTierForm(f => ({ ...f, tierName: e.target.value }))} placeholder="Ulgurji" />
+                <Input value={tierForm.tierName} onChange={e => setTierForm(f => ({ ...f, tierName: e.target.value }))} placeholder={t("ulgurji")} />
               </div>
               <div>
                 <Label>{t('priceUzsLabel')} *</Label>

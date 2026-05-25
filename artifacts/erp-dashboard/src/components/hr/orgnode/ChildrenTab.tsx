@@ -1,20 +1,27 @@
+/**
+ * @module ChildrenTab
+ * @description React UI component.
+ */
+
 import { useLocation } from "wouter";
 import { Network, Users, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { NodeDetail, NODE_TYPE_LABELS } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface ChildrenTabProps {
   node: NodeDetail;
 }
 
 export function ChildrenTab({ node }: ChildrenTabProps) {
+  const { t } = useTranslation("common");
   const [, navigate] = useLocation();
 
   if (node.children.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
         <Network className="h-10 w-10" />
-        <p>Farzand bo'limlar yo'q</p>
+        <p>{t("farzandBolimlarYoq")}</p>
       </div>
     );
   }

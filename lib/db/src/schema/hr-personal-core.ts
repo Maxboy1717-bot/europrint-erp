@@ -1,3 +1,8 @@
+/**
+ * @module hr-personal-core
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, index } from "drizzle-orm/pg-core";
@@ -116,46 +121,15 @@ export type BusinessTrip = typeof businessTrips.$inferSelect;
 export type InsertBusinessTrip = z.infer<typeof insertBusinessTripSchema>;
 
 
-// Position Required Courses (lavozim bo'yicha majburiy kurslar)
-export const positionRequiredCourses = pgTable("position_required_courses", {
-  id: serial("id").primaryKey(),
-  positionId: varchar("position_id").notNull().references(() => positions.id, { onDelete: "cascade" }),
-  courseId: varchar("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
-  isOnboarding: boolean("is_onboarding").notNull().default(false), // Is this an onboarding course?
-  daysToComplete: integer("days_to_complete"), // How many days to complete after hire
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+// positionRequiredCourses — canonical: lms.ts
+export { positionRequiredCourses } from "./lms";
+
+// disciplineRecords — canonical: discipline.ts
+export { disciplineRecords } from "./discipline";
 
 
-// Discipline Records (hayfsan/mukofot)
-export const disciplineRecords = pgTable("discipline_records", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  type: varchar("type", { length: 20 }).notNull(), // warning, penalty, reward
-  amount: numericMoney("amount"), // Bonus or penalty amount
-  reason: text("reason").notNull(),
-  reasonRu: text("reason_ru"),
-  givenBy: integer("given_by").references(() => users.id, { onDelete: 'set null' }), // Admin/HR who issued
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-});
-
-
-// Attendance (davomat)
-export const attendance = pgTable("attendance", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
-  checkIn: varchar("check_in", { length: 8 }), // HH:MM:SS
-  checkOut: varchar("check_out", { length: 8 }), // HH:MM:SS
-  isLate: boolean("is_late").notNull().default(false),
-  isEarlyLeave: boolean("is_early_leave").notNull().default(false),
-  minutesLate: integer("minutes_late").default(0),
-  minutesEarly: integer("minutes_early").default(0),
-  status: varchar("status", { length: 20 }).notNull().default("present"), // present, absent, leave, sick
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+// Attendance (davomat) — canonical: attendance.ts
+export { attendance } from "./attendance";
 
 
 // ABC Performance Analysis

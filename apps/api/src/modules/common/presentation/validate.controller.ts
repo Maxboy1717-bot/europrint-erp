@@ -1,6 +1,11 @@
+/**
+ * @module validate.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Post, Body, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { PermissionGuard } from '@common/guards/permission.guard';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
@@ -18,7 +23,7 @@ const LuhnDto = z.object({
 
 @ApiTags('Validators')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('validate')
 @UseGuards(JwtAuthGuard, PermissionGuard)
 @UseInterceptors(AuditInterceptor)

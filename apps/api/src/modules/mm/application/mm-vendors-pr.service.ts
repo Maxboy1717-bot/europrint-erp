@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+/**
+ * @module mm-vendors-pr.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { MmVendorsPrRepository } from './mm-vendors-pr.repository';
+import { MM_VENDORS_PR_REPO, type IMmVendorsPrRepo } from '../domain/repositories/i-mm-vendors-pr.repo';
 
 @Injectable()
 export class MmVendorsPrService {
-  constructor(private readonly repo: MmVendorsPrRepository) {}
+  constructor(@Inject(MM_VENDORS_PR_REPO) private readonly repo: IMmVendorsPrRepo) {}
 
   async listVendors(search: string | undefined, lim: number, off: number): Promise<Result<object, AppError>> {
     return safeCall(async () => {

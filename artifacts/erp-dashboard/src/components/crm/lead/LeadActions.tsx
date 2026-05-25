@@ -1,7 +1,13 @@
+/**
+ * @module LeadActions
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Zap, CheckCircle2, X, AlertTriangle } from "lucide-react";
 import { Lead, STAGE_CONFIG } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 interface LeadActionsProps {
   lead: Lead | null;
@@ -13,6 +19,7 @@ interface LeadActionsProps {
 }
 
 export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChange, isStagePending }: LeadActionsProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="space-y-6">
       {/* Quick Actions */}
@@ -22,32 +29,32 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white"
                 onClick={onConvert}
                 data-testid="button-convert-lead"
               >
                 <Zap className="h-3.5 w-3.5 mr-1.5" />
-                Dealga o'tkazish
+                {t("dealgaOtkazish")}
               </Button>
               <Button
                 size="sm"
                 variant="outline"
-                className="border-green-300 text-green-700"
+                className="border-green-300 text-[var(--ep-green)]"
                 onClick={() => onStageChange("WON")}
                 data-testid="button-won-lead"
               >
                 <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                Yutildi
+                {t("yutildi")}
               </Button>
               <Button
                 size="sm"
                 variant="outline"
-                className="border-red-300 text-red-600"
+                className="border-red-300 text-[var(--ep-red)]"
                 onClick={() => onStageChange("LOST")}
                 data-testid="button-lost-lead"
               >
                 <X className="h-3.5 w-3.5 mr-1.5" />
-                Yo'qotildi
+                {t("yoqotildi")}
               </Button>
             </div>
           </CardContent>
@@ -57,9 +64,9 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
       {isConverted && (
         <Card className="border-green-300 bg-green-50">
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 text-green-700">
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="font-semibold">Bu lid konvertatsiya qilingan!</span>
+            <div className="flex items-center gap-2 text-[var(--ep-green)]">
+              <CheckCircle2 className="h-4 w-4" />
+              <span className="font-semibold">{t("buLidKonvertatsiyaQilingan")}</span>
             </div>
           </CardContent>
         </Card>
@@ -68,9 +75,9 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
       {isLost && (
         <Card className="border-red-300 bg-red-50">
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 text-red-700">
+            <div className="flex items-center gap-2 text-[var(--ep-red)]">
               <AlertTriangle className="h-5 w-5" />
-              <span className="font-semibold">Bu lid yo'qotilgan.</span>
+              <span className="font-semibold">{t("buLidYoqotilgan")}</span>
             </div>
           </CardContent>
         </Card>
@@ -81,11 +88,11 @@ export function LeadActions({ lead, isConverted, isLost, onConvert, onStageChang
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <ArrowRight className="h-4 w-4" />
-            Bosqichni o'zgartirish
+            {t("bosqichniOzgartirish")}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {Object.entries(STAGE_CONFIG).map(([stageId, config]) => (
               <Button
                 key={stageId}

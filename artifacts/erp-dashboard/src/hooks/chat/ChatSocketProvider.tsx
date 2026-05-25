@@ -1,9 +1,13 @@
+/**
+ * @module ChatSocketProvider
+ * @description React custom hook.
+ */
+
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { io } from "socket.io-client";
 import { useChatStore, ChatRoom, ChatMessage, ChatReaction } from "@/store/chatStore";
 import { useAuth } from "@/hooks/useAuth";
 import { setSharedSocket } from "./useChatSocket";
-import { safeStorage } from '@/lib/safeStorage';
 
 const ChatSocketContext = createContext<{ connected: boolean }>({ connected: false });
 
@@ -14,15 +18,19 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    const token = safeStorage.getItem("access_token");
-    if (!token) return;
 
     const wsUrl = `${window.location.protocol}//${window.location.host}`;
     const basePath = (import.meta.env.BASE_URL ?? "/erp-dashboard/").replace(/\/$/, "");
     const socketPath = `${basePath}/socket.io`;
 
+    // Socket.io: auth is delivered via the httpOnly access_token cookie
+    // attached to the WebSocket handshake when `withCredentials: true`.
+    // The server gateway extracts it via @WsCookies() (or equivalent) and
+    // performs the same JWT verification as REST routes. We keep the
+    // `auth` callback as a forward-compat hook for clients still passing
+    // a token — both flows are valid during the migration.
     const s = io(`${wsUrl}/chat`, {
-      auth: { token },
+      withCredentials: true,
       transports: ["websocket", "polling"],
       path: socketPath,
       reconnection: true,
@@ -53,15 +61,19 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
     const normalizeRooms = (rooms: Array<Record<string, unknown>>): ChatRoom[] =>
       (Array.isArray(rooms) ? rooms : []).map((r) => ({ ...r, id: String(r.id) } as ChatRoom));
 
-    s.on("connected", ({ rooms }: { userId: number; rooms: Array<Record<string, unknown>> }) => {
+    s.on("connected", ({ rooms, onlineUserIds }: { userId: number; rooms: Array<Record<string, unknown>>; onlineUserIds?: number[] }) => {
       useChatStore.getState().setRooms(normalizeRooms(rooms));
+      if (Array.isArray(onlineUserIds)) {
+        useChatStore.getState().setOnlineUserIds(onlineUserIds);
+      }
     });
 
     s.on("rooms_list", (rooms: Array<Record<string, unknown>>) => {
       useChatStore.getState().setRooms(normalizeRooms(rooms));
     });
 
-    // New direct room created — prepend to rooms list and auto-select
+    // New direct room created — prepend to rooms list, auto-select, and load messages
+    // (single handler — the duplicate at the bottom of this file was removed)
     s.on("direct_room", (rawRoom: Record<string, unknown>) => {
       const room = { ...rawRoom, id: String(rawRoom.id) } as ChatRoom;
       const st = useChatStore.getState();
@@ -70,16 +82,29 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
         st.setRooms([room, ...st.rooms]);
       }
       st.setActiveRoomId(room.id);
+      st.markRoomRead(room.id);
       s.emit("join_room", { roomId: room.id });
+      s.emit("get_messages", { roomId: room.id });
+      s.emit("mark_read", { roomId: room.id });
+      s.emit("get_rooms");
     });
 
     s.on("unread_count", ({ count }: { count: number }) => {
       useChatStore.getState().setTotalUnread(count);
     });
 
-    s.on("messages_list", ({ roomId, messages }: { roomId: string | number; messages: Array<Record<string, unknown>> }) => {
+    s.on("messages_list", ({ roomId, messages: rawMessages }: { roomId: string | number; messages: unknown }) => {
       const rId = String(roomId);
-      const normalized = (Array.isArray(messages) ? messages : []).map((m) => ({
+      // Defensive unwrap: backend may send { ok, data } Result wrapper instead of plain array
+      let msgArr: Array<Record<string, unknown>>;
+      if (Array.isArray(rawMessages)) {
+        msgArr = rawMessages as Array<Record<string, unknown>>;
+      } else if (rawMessages && typeof rawMessages === "object" && (rawMessages as Record<string, unknown>).ok) {
+        msgArr = ((rawMessages as Record<string, unknown>).data as Array<Record<string, unknown>>) ?? [];
+      } else {
+        msgArr = [];
+      }
+      const normalized = msgArr.map((m) => ({
         ...m,
         id: String(m.id),
         roomId: rId,
@@ -221,21 +246,11 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    s.on("direct_room", (room: { id: number | string; type: string; name?: string }) => {
-      const roomId = String(room.id);
-      const st = useChatStore.getState();
-      st.setActiveRoomId(roomId);
-      s.emit("join_room", { roomId: room.id });
-      s.emit("get_messages", { roomId: room.id });
-      s.emit("mark_read", { roomId: room.id });
-      s.emit("get_rooms");
-      st.markRoomRead(roomId);
-    });
-
     return () => {
       s.disconnect();
       setSharedSocket(null);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   return (

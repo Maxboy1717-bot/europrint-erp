@@ -5,15 +5,8 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, timeout, catchError, throwError } from 'rxjs';
-import { isNotNull, eq, and } from 'drizzle-orm';
 import { safeCall, Result, AppError } from '@common/result';
-import { TashkentTimeService } from '@common/time';
-import { db } from '@shared/db';
 import { IAttendanceRepository, ATTENDANCE_REPO } from './i-attendance.repo';
-
-import { hrEmployees, face_embeddings } from '@shared/db';
-
-const _time = new TashkentTimeService();
 
 const FACE_AI_URL          = process.env['FACE_AI_SERVICE_URL'] ?? 'http://hr-face-ai:5001';
 const TIMEOUT_MS           = 5_000;
@@ -77,7 +70,7 @@ export class FaceRecognitionService {
         .split(',')
         .map((h) => h.trim().toLowerCase())
         .filter(Boolean);
-      return (allowed ?? []).some((h) => hostname === h || hostname.endsWith(`.${h}`));
+      return (Array.isArray(allowed) ? allowed : []).some((h) => hostname === h || hostname.endsWith(`.${h}`));
     } catch { return false; }
   }
 
@@ -138,10 +131,7 @@ export class FaceRecognitionService {
   }
 
   private async _matchInProcess(embedding: number[]): Promise<MatchResult> {
-    const rows = await db
-      .select({ id: hrEmployees.id, face_embedding: hrEmployees.face_embedding })
-      .from(hrEmployees)
-      .where(isNotNull(hrEmployees.face_embedding));
+    const rows = await this.attendanceRepo.findAllWithEmbeddings();
 
     let bestId:  number | null = null;
     let bestSim  = -1;
@@ -188,11 +178,11 @@ export class FaceRecognitionService {
           continue;
         }
         const faces = recResult.data.faces ?? [];
-        if (faces.length === 0) {
+        const face = faces[0];
+        if (!face) {
           this.logger.warn('Enrollment image #%d: no faces detected for employee %s', idx + 1, employeeId);
           continue;
         }
-        const face = faces[0]!;
         embeddings.push(face.embedding);
         if (face.confidence > maxConfidence) maxConfidence = face.confidence;
       }
@@ -203,7 +193,7 @@ export class FaceRecognitionService {
 
       const dims = (embeddings[0] ?? []).length;
       const avg  = Array.from({ length: dims }, (_, i) =>
-        (embeddings ?? []).reduce((sum, e) => sum + (e[i] ?? 0), 0) / embeddings.length,
+        (Array.isArray(embeddings) ? embeddings : []).reduce((sum, e) => sum + (e[i] ?? 0), 0) / embeddings.length,
       );
       const normalized = this._l2Normalize(avg);
 
@@ -251,54 +241,7 @@ export class FaceRecognitionService {
     imageUrl?:    string,
   ): Promise<{ id: number }> {
     const numericId = parseInt(employeeId, 10);
-
-    const [existing] = await db
-      .select({ face_embedding: hrEmployees.face_embedding })
-      .from(hrEmployees)
-      .where(eq(hrEmployees.id, numericId))
-      .limit(1);
-
-    let finalEmbedding = newEmbedding;
-
-    if (existing?.face_embedding) {
-      const old = existing.face_embedding;
-      if (Array.isArray(old) && old.length === newEmbedding.length) {
-        const weighted = (old ?? []).map((v, i) => 0.7 * v + 0.3 * (newEmbedding[i] ?? 0));
-        finalEmbedding  = this._l2Normalize(weighted);
-      }
-    }
-
-    await db
-      .update(hrEmployees)
-      .set({
-        face_embedding:            finalEmbedding,
-        face_embedding_updated_at: _time.now(),
-      })
-      .where(eq(hrEmployees.id, numericId));
-
-    await db
-      .update(face_embeddings)
-      .set({ is_active: false })
-      .where(
-        and(
-          eq(face_embeddings.employee_id, numericId),
-          eq(face_embeddings.is_active, true),
-        ),
-      );
-
-    const [inserted] = await db
-      .insert(face_embeddings)
-      .values({
-        employee_id: numericId,
-        embedding:   finalEmbedding,
-        is_active:   true,
-        confidence:  String(confidence),
-        image_url:   imageUrl ?? null,
-      })
-      .returning({ id: face_embeddings.id });
-
-    if (!inserted) throw new Error('Failed to insert face_embedding record');
-    return { id: inserted.id };
+    return this.attendanceRepo.saveEmployeeFaceEmbedding(numericId, newEmbedding, confidence, imageUrl);
   }
 
   async healthCheck(): Promise<Result<{ status: string; model_mode: string }, AppError>> {
@@ -343,7 +286,7 @@ export class FaceRecognitionService {
   }
 
   private _l2Normalize(v: number[]): number[] {
-    const norm = Math.sqrt((v ?? []).reduce((s, x) => s + x * x, 0));
-    return norm > 0 ? (v ?? []).map((x) => x / norm) : v;
+    const norm = Math.sqrt((Array.isArray(v) ? v : []).reduce((s, x) => s + x * x, 0));
+    return norm > 0 ? (Array.isArray(v) ? v : []).map((x) => x / norm) : v;
   }
 }

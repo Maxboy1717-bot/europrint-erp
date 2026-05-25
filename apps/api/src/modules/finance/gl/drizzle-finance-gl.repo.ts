@@ -1,7 +1,12 @@
+/**
+ * @module drizzle-finance-gl.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { glDocuments, accounts } from '@europrint/schemas';
-import { eq, isNull, desc, count } from 'drizzle-orm';
+import { glDocuments, accounts, entries } from '@europrint/schemas';
+import { eq, or, desc, count, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IFinanceGlRepository } from './i-finance-gl.repo';
 
@@ -50,5 +55,32 @@ export class DrizzleFinanceGlRepository implements IFinanceGlRepository {
         .returning();
       return Ok(results);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Hisoblarni seed qilishda xatolik'); }
+  }
+
+  async getTrialBalance(date?: string): Promise<Result<{ debit: number; credit: number; balanced: boolean; date: string }>> {
+    try {
+      const targetDate = date ?? new Date().toISOString().slice(0, 10);
+      const rows = await db.select({
+        totalDebit:  sql<number>`COALESCE(SUM(CASE WHEN ${entries.debitAccountId}  IS NOT NULL THEN ${entries.amount}::numeric ELSE 0 END), 0)`,
+        totalCredit: sql<number>`COALESCE(SUM(CASE WHEN ${entries.creditAccountId} IS NOT NULL THEN ${entries.amount}::numeric ELSE 0 END), 0)`,
+      }).from(entries)
+        .where(sql`${entries.entryDate} <= ${targetDate}`);
+      const debit  = Number(rows[0]?.totalDebit  ?? 0);
+      const credit = Number(rows[0]?.totalCredit ?? 0);
+      return Ok({ debit, credit, balanced: Math.abs(debit - credit) < 0.01, date: targetDate });
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Trial balance xatolik'); }
+  }
+
+  async getLedger(accountCode: string, limit = 50, offset = 0): Promise<Result<Row[]>> {
+    try {
+      const rows = await db.select().from(entries)
+        .where(or(
+          eq(entries.debitAccountId,  accountCode),
+          eq(entries.creditAccountId, accountCode),
+        ))
+        .orderBy(desc(entries.entryDate))
+        .limit(limit).offset(offset);
+      return Ok(rows as Row[]);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Ledger xatolik'); }
   }
 }

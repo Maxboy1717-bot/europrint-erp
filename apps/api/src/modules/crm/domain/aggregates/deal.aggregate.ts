@@ -1,8 +1,14 @@
+/**
+ * @module deal.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { AggregateRoot } from 'shared/domain/aggregate-root.base';
 import { DealStatus } from '../value-objects/deal-status.vo';
 import { Money } from 'shared/domain/value-objects/money.vo';
+import { Result, Ok, Err } from '@common/types/result.type';
 
 export interface DealCreateProps {
   leadId: number;
@@ -63,37 +69,60 @@ export class Deal extends AggregateRoot {
     });
   }
 
-  markAsWon(): boolean {
+  // Sprint 2 A.6 — markAsWon must transition only from proposal/negotiation and
+  // returns Result<void> per Rule 1. Domain event publishing is the handler's
+  // job (event bus is application concern, not domain).
+  markAsWon(actualAmount?: number): Result<void> {
     if (!this.canMarkAsWon()) {
-      return false;
+      return Err(`Cannot mark deal as won from status '${this.status.getValue()}'`);
     }
     const statusResult = DealStatus.create('won');
-    if (!statusResult.ok) return false;
+    if (!statusResult.ok) return Err('Invalid status transition: won');
     this.status = statusResult.data;
     this.closedAt = _time.now();
-    return true;
+    if (actualAmount != null) {
+      const moneyR = Money.of(actualAmount, this.currency);
+      if (!moneyR.ok) {
+        return Err('Invalid actual amount');
+      }
+      this.totalAmount = moneyR.data;
+    }
+    this.addDomainEvent({ aggregateId: this.id, eventName: 'DealWon', data: { dealId: this.id, companyId: this.companyId, totalAmount: this.totalAmount.getAmount() } });
+    return Ok();
   }
 
-  markAsLost(_reason: string): boolean {
+  // Sprint 2 A.7 — markAsLost cannot be called once already lost or won.
+  markAsLost(reason: string): Result<void> {
     if (this.status.getValue() === 'lost' || this.status.getValue() === 'won') {
-      return false;
+      return Err(`Cannot mark deal as lost from terminal status '${this.status.getValue()}'`);
+    }
+    if (!reason || reason.trim().length === 0) {
+      return Err('Loss reason is required');
     }
     const statusResult = DealStatus.create('lost');
-    if (!statusResult.ok) return false;
+    if (!statusResult.ok) return Err('Invalid status transition: lost');
     this.status = statusResult.data;
     this.closedAt = _time.now();
-    return true;
+    this.addDomainEvent({ aggregateId: this.id, eventName: 'DealLost', data: { dealId: this.id, companyId: this.companyId, reason } });
+    return Ok();
   }
 
-  updateStatus(newStatus: string): boolean {
-    const validStatuses = ['qualification', 'proposal', 'negotiation', 'won', 'lost'];
+  // updateStatus is the non-terminal-transition path (qualification → proposal →
+  // negotiation). It is INTENTIONALLY forbidden from transitioning to 'won' or
+  // 'lost' — those must go through markAsWon() / markAsLost() so the invariants
+  // (closedAt, domain events, business rules) are enforced.
+  updateStatus(newStatus: string): Result<void> {
+    if (newStatus === 'won' || newStatus === 'lost') {
+      return Err(`Use markAsWon()/markAsLost() to transition to '${newStatus}', not updateStatus()`);
+    }
+    const validStatuses = ['qualification', 'proposal', 'negotiation'];
     if (!validStatuses.includes(newStatus)) {
-      return false;
+      return Err(`Invalid deal status '${newStatus}'`);
     }
     const statusResult = DealStatus.create(newStatus);
-    if (!statusResult.ok) return false;
+    if (!statusResult.ok) return Err('Invalid status value');
     this.status = statusResult.data;
-    return true;
+    return Ok();
   }
 
   private canMarkAsWon(): boolean {

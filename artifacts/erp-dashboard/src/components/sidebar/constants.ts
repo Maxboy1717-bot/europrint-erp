@@ -101,6 +101,8 @@ import { LayoutDashboard, X,
   Megaphone
   } from "lucide-react";
   import { MenuGroup } from "./types";
+  import { translateHrModule } from "./hrNavI18n";
+  import { FEATURE_MARKETING } from "@/lib/feature-flags";
 
   export const menuGroups = {
   tz01: {
@@ -331,6 +333,8 @@ import { LayoutDashboard, X,
       { title: "IJARA", url: "", icon: DollarSign, separator: true },
       { title: "Tayyor Mahsulot Ijara", url: "wms/rental", icon: DollarSign },
       { title: "Chiqindilar", url: "warehouse/hub/SCRAP", icon: Recycle },
+      { title: "INTEGRATSIYA", url: "", icon: GitBranch, separator: true },
+      { title: "PP/MM/FI Integratsiya", url: "warehouse/integrations", icon: GitBranch },
     ]
   },
   tz09: {
@@ -388,6 +392,13 @@ import { LayoutDashboard, X,
       { title: "POS Kassa", url: "pos/dashboard", icon: ShoppingCart },
       { title: "Inventar Boshqaruvi", url: "pos/inventory", icon: Package },
       { title: "POS Monitor", url: "pos-monitor", icon: MonitorDot },
+      { title: "POS Zaxirasi", url: "pos/stock", icon: Layers },
+      { title: "POS Harakatlar", url: "pos/movements", icon: TrendingUp },
+      { title: "POS So'rovlar", url: "pos/requests", icon: MessageSquare },
+      { title: "POS Barkod", url: "pos/barcode", icon: Barcode },
+      { title: "POS Inventarizatsiya", url: "pos/inventory-counts", icon: ClipboardCheck },
+      { title: "POS Ombor", url: "pos/warehouse", icon: Package },
+      { title: "POS Sinxronizatsiya", url: "pos/sync", icon: RotateCcw },
       { title: "Ish Haqi", url: "accounting/payroll-automation", icon: Calculator },
       { title: "TANNARX", url: "", icon: Calculator, separator: true },
       { title: "Buyurtma Tannarxi", url: "finance/order-costing", icon: Calculator },
@@ -437,6 +448,8 @@ import { LayoutDashboard, X,
       { title: "Intizom", url: "discipline", icon: FileText },
       { title: "BAHOLASH", url: "", icon: Award, separator: true },
       { title: "Xodim Baholash", url: "integration/employee-rating", icon: Award },
+      { title: "Ko'nikmalar Matritsasi", url: "skills-matrix", icon: Target },
+      { title: "Mentorlik", url: "mentorship", icon: UserCheck },
       { title: "Succession Planning", url: "hr/succession", icon: RotateCcw },
       { title: "ONBOARDING", url: "", icon: UserPlus, separator: true },
       { title: "Onboarding", url: "hr/onboarding", icon: UserPlus },
@@ -595,6 +608,13 @@ import { LayoutDashboard, X,
       { title: "Hisobotlar Markazi", url: "europrint/reports-hub", icon: FileText },
       { title: "AI Xulosa", url: "director/ai-summary", icon: BrainCircuit },
       { title: "Muammoli Nuqtalar", url: "director/problem-points", icon: AlertTriangle },
+      { title: "AI AGENTLAR", url: "", icon: BrainCircuit, separator: true },
+      { title: "14 AI Agent Hub", url: "agents", icon: BrainCircuit },
+      { title: "Ishlab Chiqarish Agent", url: "agents/production", icon: Factory },
+      { title: "HR Agent", url: "agents/hr-performance", icon: Users },
+      { title: "Sifat Agent", url: "agents/quality", icon: CheckCircle },
+      { title: "Strategik Agent", url: "agents/strategic", icon: Target },
+      { title: "Xo'jalik Agent", url: "agents/facilities", icon: Wrench },
       { title: "IDEAL RASM", url: "", icon: Target, separator: true },
       { title: "Ideal Rasm", url: "ideal-rasm", icon: Target },
     ]
@@ -640,9 +660,18 @@ import { LayoutDashboard, X,
     defaultUrl: "coordination",
     items: [
       { title: "KOORDINATSIYA", url: "", icon: Network, separator: true },
-      { title: "5 Kengash Tizimi", url: "coordination", icon: Network },
-      { title: "Доклад Yuborish", url: "coordination", icon: Rocket },
-      { title: "Распоряжение Berish", url: "coordination", icon: Crown },
+      { title: "Kommunikatsiya Markazi", url: "coordination?tab=baskets", icon: Inbox },
+      { title: "5 Kengash Tizimi", url: "coordination?tab=councils", icon: Network },
+      { title: "Hisobot Yuborish", url: "coordination?tab=dokla", icon: Rocket },
+      { title: "Ko'rsatma Berish", url: "coordination?tab=raspo", icon: Crown },
+      { title: "AI AGENTLAR", url: "", icon: BrainCircuit, separator: true },
+      { title: "AI Agentlar (14 ta)", url: "agents", icon: BrainCircuit },
+      { title: "Production AI", url: "agents/production", icon: Factory },
+      { title: "HR AI", url: "agents/hr-performance", icon: Users },
+      { title: "Quality AI", url: "agents/quality", icon: CheckCircle },
+      { title: "Strategic AI", url: "agents/strategic", icon: Target },
+      { title: "Facilities AI", url: "agents/facilities", icon: Wrench },
+      { title: "Procurement AI", url: "agents/procurement", icon: Truck },
     ]
   },
   chat: {
@@ -714,8 +743,21 @@ import { LayoutDashboard, X,
   coordination: "bg-sky-600", chat: "bg-blue-600",
 };
 
-  export function getTranslatedMenuGroups(_t: (key: string) => string): Record<string, MenuGroup> {
-    return menuGroups as Record<string, MenuGroup>;
+  export function getTranslatedMenuGroups(t: (key: string) => string): Record<string, MenuGroup> {
+    const groups = menuGroups as Record<string, MenuGroup>;
+    const hrModule = groups.tz11;
+
+    // Marketing (tz02) backend has ~60/99 endpoints returning 501. Hide the
+    // entire module from the sidebar unless the build explicitly opts in via
+    // VITE_FEATURE_MARKETING=true. See artifacts/erp-dashboard/src/lib/feature-flags.ts.
+    let next: Record<string, MenuGroup> = groups;
+    if (!FEATURE_MARKETING) {
+      const { tz02: _omitted, ...rest } = next;
+      void _omitted;
+      next = rest;
+    }
+    if (!hrModule) return next;
+    return { ...next, tz11: translateHrModule(t, hrModule) };
   }
 
   export function findModuleByPath(path: string): string | null {

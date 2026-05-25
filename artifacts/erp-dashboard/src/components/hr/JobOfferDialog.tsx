@@ -1,3 +1,8 @@
+/**
+ * @module JobOfferDialog
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -11,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Printer, Send, Briefcase } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 
 interface JobOfferFormData {
   position: string;
@@ -49,6 +55,7 @@ export function JobOfferDialog({
   funnelId,
   vacancyTitle,
 }: JobOfferDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const [saved, setSaved] = useState(false);
   const [savedData, setSavedData] = useState<JobOfferFormData | null>(null);
@@ -99,7 +106,7 @@ export function JobOfferDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Briefcase className="w-5 h-5 text-orange-400" />
@@ -109,30 +116,30 @@ export function JobOfferDialog({
 
         {!saved ? (
           <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs mb-1 block">Lavozim <span className="text-red-400">*</span></Label>
+                <Label className="text-xs mb-1 block">{t("lavozim1")}<span className="text-red-400">*</span></Label>
                 <Input
                   value={form.position}
                   onChange={(e) => set("position")(e.target.value)}
-                  placeholder="Masalan: Marketing menejer"
+                  placeholder={t("masalanMarketingMenejer")}
                   data-testid="input-offer-position"
                 />
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Bo'linma / Departament</Label>
+                <Label className="text-xs mb-1 block">{t("boLinmaDepartament")}</Label>
                 <Input
                   value={form.department}
                   onChange={(e) => set("department")(e.target.value)}
-                  placeholder="Masalan: Savdo bo'limi"
+                  placeholder={t("masalanSavdoBolimi")}
                   data-testid="input-offer-department"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs mb-1 block">Ishga kirish sanasi <span className="text-red-400">*</span></Label>
+                <Label className="text-xs mb-1 block">{t("ishgaKirishSanasi")}<span className="text-red-400">*</span></Label>
                 <Input
                   type="date"
                   value={form.start_date}
@@ -141,49 +148,49 @@ export function JobOfferDialog({
                 />
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Sinov muddati (oy)</Label>
+                <Label className="text-xs mb-1 block">{t("sinovMuddatiOy")}</Label>
                 <Select value={form.probation_months} onValueChange={set("probation_months")}>
-                  <SelectTrigger data-testid="select-offer-probation">
+                  <SelectTrigger data-testid="select-offer-probation" className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1 oy</SelectItem>
-                    <SelectItem value="2">2 oy</SelectItem>
-                    <SelectItem value="3">3 oy</SelectItem>
-                    <SelectItem value="6">6 oy</SelectItem>
+                    <SelectItem value="1">{t("k1Oy")}</SelectItem>
+                    <SelectItem value="2">{t("k2Oy")}</SelectItem>
+                    <SelectItem value="3">{t("k3Oy")}</SelectItem>
+                    <SelectItem value="6">{t("k6Oy")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs mb-1 block">Maosh (sinov muddati, UZS)</Label>
+                <Label className="text-xs mb-1 block">{t("maoshSinovMuddatiUzs")}</Label>
                 <Input
                   type="number"
                   value={form.salary_probation}
                   onChange={(e) => set("salary_probation")(e.target.value)}
-                  placeholder="Masalan: 4000000"
+                  placeholder={t("masalan4000000")}
                   data-testid="input-offer-salary-probation"
                 />
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Maosh (asosiy, UZS)</Label>
+                <Label className="text-xs mb-1 block">{t("maoshAsosiyUzs")}</Label>
                 <Input
                   type="number"
                   value={form.salary_main}
                   onChange={(e) => set("salary_main")(e.target.value)}
-                  placeholder="Masalan: 6000000"
+                  placeholder={t("masalan6000000")}
                   data-testid="input-offer-salary-main"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs mb-1 block">Ish tartibi (grafik)</Label>
+                <Label className="text-xs mb-1 block">{t("ishTartibiGrafik")}</Label>
                 <Select value={form.work_schedule} onValueChange={set("work_schedule")}>
-                  <SelectTrigger data-testid="select-offer-schedule">
+                  <SelectTrigger data-testid="select-offer-schedule" className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -194,7 +201,7 @@ export function JobOfferDialog({
                 </Select>
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Taklif amal qilish muddati</Label>
+                <Label className="text-xs mb-1 block">{t("taklifAmalQilishMuddati")}</Label>
                 <Input
                   type="date"
                   value={form.offer_valid_until}
@@ -205,11 +212,11 @@ export function JobOfferDialog({
             </div>
 
             <div>
-              <Label className="text-xs mb-1 block">Qo'shimcha shartlar</Label>
+              <Label className="text-xs mb-1 block">{t("qoshimchaShartlar")}</Label>
               <Textarea
                 value={form.additional_conditions}
                 onChange={(e) => set("additional_conditions")(e.target.value)}
-                placeholder="Ijtimoiy paket, transport, sog'liqni saqlash, bonus..."
+                placeholder={t("ijtimoiyPaketTransportSogliqniSaqlash")}
                 rows={3}
                 data-testid="textarea-offer-conditions"
               />
@@ -223,14 +230,14 @@ export function JobOfferDialog({
               className="border border-gray-300 rounded-lg p-6 bg-white text-gray-800 print:border-0 print:p-0"
             >
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold uppercase tracking-wide">ISH TAKLIFI</h2>
+                <h2 className="text-2xl font-bold uppercase tracking-wide">{t("ishTaklifi")}</h2>
                 <p className="text-sm text-gray-500">{printDate}</p>
               </div>
               <p className="text-sm mb-4">
-                Hurmatli <strong>{candidateName}</strong>,
+                {t("hurmatli")}<strong>{candidateName}</strong>,
               </p>
               <p className="text-sm mb-6">
-                Sizni <strong>EuroPrint</strong> kompaniyasiga quyidagi shartlarda taklif qilishdan mamnunmiz:
+                {t("sizni")}<strong>{t("europrint1")}</strong> kompaniyasiga quyidagi shartlarda taklif qilishdan mamnunmiz:
               </p>
 
               <table className="w-full text-sm border-collapse mb-6">
@@ -255,21 +262,21 @@ export function JobOfferDialog({
 
               {savedData?.additional_conditions && (
                 <div className="mb-6">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Qo'shimcha shartlar:</p>
+                  <p className="text-sm font-semibold text-gray-700 mb-1">{t("qoshimchaShartlar1")}</p>
                   <p className="text-sm text-gray-700 bg-gray-50 rounded p-3">{savedData.additional_conditions}</p>
                 </div>
               )}
 
               <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
                 <div>
-                  <p className="text-xs text-gray-500">Nomzod imzosi</p>
+                  <p className="text-xs text-gray-500">{t("nomzodImzosi")}</p>
                   <div className="mt-4 border-b border-gray-400 w-40" />
                   <p className="text-xs text-gray-500 mt-1">{candidateName}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">HR menejer imzosi</p>
+                  <p className="text-xs text-gray-500">{t("hrMenejerImzosi")}</p>
                   <div className="mt-4 border-b border-gray-400 w-40" />
-                  <p className="text-xs text-gray-500 mt-1">EuroPrint HR</p>
+                  <p className="text-xs text-gray-500 mt-1">{t("europrintHr")}</p>
                 </div>
               </div>
             </div>
@@ -279,7 +286,7 @@ export function JobOfferDialog({
         <DialogFooter className="gap-2">
           {!saved ? (
             <>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Bekor</Button>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
               <Button
                 onClick={() => submitMutation.mutate()}
                 disabled={!form.position.trim() || !form.start_date || submitMutation.isPending}
@@ -292,8 +299,8 @@ export function JobOfferDialog({
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={() => { setSaved(false); }}>Tahrirlash</Button>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Yopish</Button>
+              <Button variant="outline" onClick={() => { setSaved(false); }}>{t("edit")}</Button>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>{t("close2")}</Button>
               <Button className="gap-2" onClick={handlePrint} data-testid="button-print-offer">
                 <Printer className="w-4 h-4" />
                 PDF / Chop etish

@@ -1,6 +1,11 @@
+/**
+ * @module mm-raw-materials
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, pgSequence, index } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, pgSequence, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -22,19 +27,24 @@ export const rawMaterials = pgTable("raw_materials", {
   currentStock: numericMoney("current_stock").notNull().default(0), // Joriy zaxira
   unitPrice: numericMoney("unit_price").notNull().default(0), // Birlik narxi
   supplierName: text("supplier_name"),
-  vendorId: varchar("vendor_id").references(() => vendors.id),
-  warehouseId: varchar("warehouse_id").references(() => warehouses.id),
+  vendorId: varchar("vendor_id").references(() => vendors.id, { onDelete: "set null" }),
+  warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   description: text("description"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 }, (t) => [
+  check("raw_materials_minimum_stock_chk", sql`${t.minimumStock} >= 0`),
+  check("raw_materials_current_stock_chk", sql`${t.currentStock} >= 0`),
+  check("raw_materials_unit_price_chk", sql`${t.unitPrice} >= 0`),
   index("idx_raw_materials_vendor_id").on(t.vendorId),
   index("idx_raw_materials_warehouse_id").on(t.warehouseId),
   index("idx_raw_materials_category").on(t.category),
   index("idx_raw_materials_is_active").on(t.isActive),
   index("idx_raw_materials_created_at").on(t.createdAt),
+  check("raw_materials_category_chk", sql`${t.category} IN ('paperboard','glue','ink','packaging','other')`),
+  check("raw_materials_unit_chk", sql`${t.unit} IN ('kg','meter','liter','piece','roll','box')`),
 ]);
 
 
@@ -60,16 +70,19 @@ export const purchaseInvoices = pgTable("purchase_invoices", {
   invoiceNumber: varchar("invoice_number", { length: 50 }).notNull().unique(),
   invoiceDate: varchar("invoice_date", { length: 10 }).notNull(), // YYYY-MM-DD
   supplierName: text("supplier_name").notNull(),
-  vendorId: varchar("vendor_id").references(() => vendors.id),
+  vendorId: varchar("vendor_id").references(() => vendors.id, { onDelete: "set null" }),
   totalAmount: numericMoney("total_amount").notNull(),
   paidAmount: numericMoney("paid_amount").notNull().default(0),
   paymentStatus: varchar("payment_status", { length: 20 }).notNull().default("unpaid"), // unpaid, partial, paid
   dueDate: varchar("due_date", { length: 10 }), // YYYY-MM-DD
   notes: text("notes"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
+  check("purchase_invoices_payment_status_chk", sql`${t.paymentStatus} IN ('unpaid','partial','paid')`),
+  check("purchase_invoices_total_amount_chk", sql`${t.totalAmount} >= 0`),
+  check("purchase_invoices_paid_amount_chk", sql`${t.paidAmount} >= 0`),
   index("idx_purchase_invoices_vendor_id").on(t.vendorId),
   index("idx_purchase_invoices_payment_status").on(t.paymentStatus),
   index("idx_purchase_invoices_invoice_date").on(t.invoiceDate),
@@ -103,8 +116,8 @@ export const purchaseRequisitionSeq = pgSequence("purchase_requisition_seq", {
 export const purchaseRequisitions = pgTable("purchase_requisitions", {
   id: serial("id").primaryKey(),
   requisitionNumber: varchar("requisition_number", { length: 50 }).notNull().unique(), // PR-2025-001
-  mrpResultId: varchar("mrp_result_id").references(() => mrpResults.id), // MRP natijasiga bog'liq (optional)
-  mrpRunId: varchar("mrp_run_id").references(() => mrpRuns.id), // MRP run'ga bog'liq (idempotency uchun)
+  mrpResultId: varchar("mrp_result_id").references(() => mrpResults.id, { onDelete: "set null" }), // MRP natijasiga bog'liq (optional)
+  mrpRunId: varchar("mrp_run_id").references(() => mrpRuns.id, { onDelete: "set null" }), // MRP run'ga bog'liq (idempotency uchun)
   materialId: integer("material_id").notNull(), // Xom ashyo
   requiredQuantity: numericMoney("required_quantity").notNull(), // Kerakli miqdor
   requiredDate: varchar("required_date", { length: 10 }).notNull(), // Kerakli sana
@@ -127,6 +140,8 @@ export const purchaseRequisitions = pgTable("purchase_requisitions", {
   index("idx_purchase_requisitions_priority").on(t.priority),
   index("idx_purchase_requisitions_required_date").on(t.requiredDate),
   index("idx_purchase_requisitions_created_at").on(t.createdAt),
+  check("purchase_requisitions_priority_chk", sql`${t.priority} IN ('low','normal','high','urgent')`),
+  check("purchase_requisitions_status_chk", sql`${t.status} IN ('pending','approved','ordered','received','cancelled')`),
 ]);
 
 
@@ -186,19 +201,27 @@ export type InsertVendor = z.infer<typeof insertVendorSchema>;
 // Purchase Orders (Xarid buyurtmalari)
 export const purchaseOrders = pgTable("purchase_orders", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column. DEFAULT 1 is intentional — every row backfilled to
+  // tenant 1 on migration; future writers MUST set this from TenantContext.
+  tenantId: integer("tenant_id").notNull().default(1),
   poNumber: varchar("po_number", { length: 50 }).notNull().unique(),
-  vendorId: integer("vendor_id").references(() => vendors.id).notNull(),
+  vendorId: integer("vendor_id").references(() => vendors.id, { onDelete: "restrict" }).notNull(),
   orderDate: varchar("order_date", { length: 10 }).notNull(), // YYYY-MM-DD
   deliveryDate: varchar("delivery_date", { length: 10 }), // YYYY-MM-DD
   status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, sent, confirmed, received, cancelled
   totalAmount: numericMoney("total_amount").default(0),
   currency: varchar("currency", { length: 10 }).default("UZS"),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 }, (t) => [
   index("idx_purchase_orders_vendor_id").on(t.vendorId),
   index("idx_purchase_orders_status").on(t.status),
   index("idx_purchase_orders_created_at").on(t.createdAt),
+  index("idx_purchase_orders_tenant_id").on(t.tenantId),
+  index("idx_purchase_orders_created_by").on(t.createdBy),
+  index("idx_purchase_orders_deleted_at").on(t.deletedAt),
+  check("purchase_orders_status_chk", sql`${t.status} IN ('draft','sent','confirmed','received','cancelled')`),
+  check("purchase_orders_total_amount_chk", sql`${t.totalAmount} IS NULL OR ${t.totalAmount} >= 0`),
 ]);
 

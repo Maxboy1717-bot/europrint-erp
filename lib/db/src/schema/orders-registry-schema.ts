@@ -1,4 +1,10 @@
-import { pgTable, serial, varchar, text, timestamp, jsonb } from "drizzle-orm/pg-core";
+/**
+ * @module orders-registry-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { sql } from "drizzle-orm";
+import { pgTable, serial, varchar, text, timestamp, jsonb, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -13,12 +19,15 @@ export const ordersRegistry = pgTable("orders_registry", {
   category: varchar("category", { length: 10 }).notNull(),
   title: varchar("title", { length: 500 }).notNull(),
   content: text("content").notNull(),
-  issuedBy: varchar("issued_by").references(() => users.id),
+  issuedBy: varchar("issued_by").references(() => users.id, { onDelete: "set null" }),
   issuedDate: varchar("issued_date", { length: 10 }).notNull(),
   status: varchar("status", { length: 20 }).notNull().default("active"),
   departmentIds: jsonb("department_ids").$type<number[]>().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("orders_registry_category_chk", sql`${t.category} IN ('OT','OM','OR','OP','OX')`),
+  check("orders_registry_status_chk", sql`${t.status} IN ('active','cancelled','expired')`),
+]);
 
 export const insertOrdersRegistrySchema = createInsertSchema(ordersRegistry, {
   category: z.enum(["OT", "OM", "OR", "OP", "OX"]),

@@ -1,13 +1,18 @@
+/**
+ * @module erp-extra.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
+import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 
 import { SECONDS_PER_HOUR, MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 type Row = Record<string, unknown>;
-const exec = (q: Parameters<typeof db.execute>[0]): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
+const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
 
 @Injectable()
 export class ErpExtraRepository {
@@ -121,11 +126,42 @@ export class ErpExtraRepository {
   }
 
   async listDashboardStats(): Promise<Result<Row>>  {
-  try {  
+  try {
       const r = await exec(sql`SELECT (SELECT COUNT(*) FROM production_orders WHERE status = 'active') AS active_orders, (SELECT COUNT(*) FROM production_orders WHERE DATE(created_at) = CURRENT_DATE) AS today_orders, (SELECT COUNT(*) FROM work_centers) AS total_work_centers, (SELECT COUNT(*) FROM material_cards WHERE is_active = true) AS active_materials`);
       return r.ok ? Ok(r.data[0] ?? {}) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
 
+  }
+
+  async createOrder(body: Row): Promise<Result<Row | null>> {
+  try {
+    const orderNumber = body.orderNumber ?? `PO-${Date.now()}`;
+    const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, customer_name, due_date, priority, status, notes) VALUES (${orderNumber}, ${body.productId ?? null}, ${body.quantity ?? 1}, ${body.customerName ?? null}, ${body.dueDate ?? null}, ${body.priority ?? 'normal'}, ${body.status ?? 'pending'}, ${body.notes ?? null}) RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
+  }
+
+  async deleteOrder(id: number): Promise<Result<Row | null>> {
+  try {
+    const r = await exec(sql`DELETE FROM production_orders WHERE id = ${id} RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? { id, deleted: true }) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
+  }
+
+  async createWorkCenter(body: Row): Promise<Result<Row | null>> {
+  try {
+    const code = body.code ?? `WC-${Date.now()}`;
+    const type = ['line','machine','workshop'].includes(String(body.type)) ? body.type : 'machine';
+    const r = await exec(sql`INSERT INTO work_centers (code, name, name_ru, type, hours_per_day) VALUES (${code}, ${body.name ?? 'Yangi ish markazi'}, ${body.nameRu ?? null}, ${type}, ${body.hoursPerDay ?? body.capacityPerHour ?? 8}) RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
+  }
+
+  async deleteWorkCenter(id: number): Promise<Result<Row | null>> {
+  try {
+    const r = await exec(sql`UPDATE work_centers SET deleted_at = NOW() WHERE id = ${id} RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? { id, deleted: true }) : Err(r.error);
+  } catch (_e) { return Err(String(_e)); }
   }
 }

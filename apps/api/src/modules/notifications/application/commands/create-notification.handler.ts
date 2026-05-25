@@ -1,12 +1,17 @@
+/**
+ * @module create-notification.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/types/result.type';
 import { CreateNotificationCommand } from './create-notification.command';
 import { Notification } from '../../domain/aggregates/notification.aggregate';
 import { INotificationRepo, NOTIFICATION_REPO } from '../../domain/repositories/i-notification.repo';
-import { TelegramService } from '../../domain/services/telegram.service';
-import { EmailNotificationService } from '../../domain/services/email-notification.service';
-import { SmsService } from '../../domain/services/sms.service';
+import { ISmsSender, SMS_SENDER } from '../../domain/ports/i-sms-sender.port';
+import { IEmailSender, EMAIL_SENDER } from '../../domain/ports/i-email-sender.port';
+import { ITelegramSender, TELEGRAM_SENDER } from '../../domain/ports/i-telegram-sender.port';
 
 export interface ExtendedCreateNotificationCommand extends CreateNotificationCommand {
   recipientEmail?: string;
@@ -22,9 +27,9 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
 
   constructor(
     @Inject(NOTIFICATION_REPO) private readonly notificationRepo: INotificationRepo,
-    private readonly telegramService: TelegramService,
-    private readonly emailService: EmailNotificationService,
-    private readonly smsService: SmsService,
+    @Inject(TELEGRAM_SENDER) private readonly telegramService: ITelegramSender,
+    @Inject(EMAIL_SENDER) private readonly emailService: IEmailSender,
+    @Inject(SMS_SENDER) private readonly smsService: ISmsSender,
       ) {}
 
   async execute(command: CreateNotificationCommand): Promise<Result<Notification>> {
@@ -74,7 +79,7 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
     if (channels.includes('sms') && ext.recipientPhone) {
       const smsText = `${command.title}: ${command.body}`.slice(0, 160);
       deliveries.push(
-        this.smsService.send(ext.recipientPhone, smsText).then((): void => { /* void */ }).catch((): void => {
+        this.smsService.send({ to: ext.recipientPhone, text: smsText }).then((): void => { /* void */ }).catch((): void => {
           this.logger.warn('SMS notification yuborilmadi');
         }),
       );

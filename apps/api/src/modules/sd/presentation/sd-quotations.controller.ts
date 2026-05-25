@@ -1,147 +1,213 @@
+/**
+ * @module sd-quotations.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { safeInt } from '../../hr/common/db-rows';
 import {
-  AuditInterceptor } from '@common/interceptors/audit.interceptor';import { safeInt } from '../../hr/common/db-rows';import {
-Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Logger,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-  UseInterceptors,
-  InternalServerErrorException, UsePipes,
+  Body, Controller, Delete, Get, HttpCode, HttpStatus,
+  Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {
   SdCreateQuotationSchema, SdCreateQuotationDto,
   SdCreateContractSchema, SdCreateContractDto,
   SdCalculatePriceSchema, SdCalculatePriceDto,
 } from './dto/sd-quotations.dto';
-import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { unwrapOrThrow, assertOk } from '@common/http-result';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { SdQuotationsService } from '../application/sd-quotations.service';
 
 const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+type Body_ = Record<string, unknown>;
+
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(...SD_ROLES)
+@ApiTags('Sd Quotations')
+@ApiBearerAuth()
 @Controller('sd')
 export class SdQuotationsController {
-  private readonly logger = new Logger(SdQuotationsController.name);
-
   constructor(private readonly svc: SdQuotationsService) {}
 
+  @ApiOperation({ summary: 'List quotations' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('quotations')
   async listQuotations(
     @Query('customerId') customerId?: string, @Query('status') status?: string,
     @Query('limit') limit?: string, @Query('offset') offset?: string,
   ) {
-    const _rListQuotations = await this.svc.listQuotations(
-      customerId ? safeInt(customerId, 0) : null,
-      status ?? null,
+    const r = await this.svc.listQuotations(
+      customerId ? safeInt(customerId, 0) : null, status ?? null,
       safeInt(limit, 50), safeInt(offset, 0),
     );
-    assertOk(_rListQuotations);
-    return _rListQuotations.data;
+    assertOk(r);
+    return r.data;
   }
 
-  @Post('quotations')
-  @UsePipes(new ZodValidationPipe(SdCreateQuotationSchema))
-  async createQuotation(@Body() body: SdCreateQuotationDto) {
-    return unwrapOrThrow(await this.svc.createQuotation(body));
-  }
+  @ApiOperation({ summary: 'Create quotation' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('quotations') @UsePipes(new ZodValidationPipe(SdCreateQuotationSchema))
+  async createQuotation(@Body() body: SdCreateQuotationDto) { return unwrapOrThrow(await this.svc.createQuotation(body)); }
 
-  @Get('contracts')
-  async listContracts(
-    @Query('customerId') customerId?: string, @Query('status') status?: string,
-    @Query('limit') limit?: string, @Query('offset') offset?: string,
-  ) {
-    const _rListContracts = await this.svc.listContracts(
-      customerId ? safeInt(customerId, 0) : null,
-      status ?? null,
-      safeInt(limit, 50), safeInt(offset, 0),
-    );
-    assertOk(_rListContracts);
-    return _rListContracts.data;
-  }
+  // NOTE: GET /sd/contracts olib tashlandi — SdContractsController ushlab turadi.
 
-  @Post('contracts')
-  @UsePipes(new ZodValidationPipe(SdCreateContractSchema))
-  async createContract(@Body() body: SdCreateContractDto) {
-    return unwrapOrThrow(await this.svc.createContract(body));
-  }
+  @ApiOperation({ summary: 'Create contract' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('contracts') @UsePipes(new ZodValidationPipe(SdCreateContractSchema))
+  async createContract(@Body() body: SdCreateContractDto) { return unwrapOrThrow(await this.svc.createContract(body)); }
 
+  @ApiOperation({ summary: 'List price formulas' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('price-formulas')
   async listPriceFormulas(@Query('limit') limit?: string, @Query('offset') offset?: string) {
     return unwrapOrThrow(await this.svc.listPriceFormulas(safeInt(limit, 50), safeInt(offset, 0)));
   }
 
-  @Post('calculate-price')
-  @UsePipes(new ZodValidationPipe(SdCalculatePriceSchema))
+  @ApiOperation({ summary: 'Calculate price' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('calculate-price') @UsePipes(new ZodValidationPipe(SdCalculatePriceSchema))
   async calculatePrice(@Body() body: SdCalculatePriceDto) {
-    const _rCalculatePrice = await this.svc.calculatePrice(
-      safeInt(body.product_id, 0),
-      safeInt(body.quantity, 1),
+    const r = await this.svc.calculatePrice(
+      safeInt(body.product_id, 0), safeInt(body.quantity, 1),
       body.formula_id ? safeInt(body.formula_id, 0) : null,
     );
-    assertOk(_rCalculatePrice);
-    return _rCalculatePrice.data;
+    assertOk(r);
+    return r.data;
   }
 
+  @ApiOperation({ summary: 'Get kpi team' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('kpi/team')
-  async getKpiTeam(@Query('period') period?: string) {
-    return unwrapOrThrow(await this.svc.getKpiTeam(period ?? null));
-  }
+  async getKpiTeam(@Query('period') period?: string) { return unwrapOrThrow(await this.svc.getKpiTeam(period ?? null)); }
 
+  @ApiOperation({ summary: 'Get kpi targets' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('kpi-targets')
   async getKpiTargets(@Query('managerId') managerId?: string) {
     return unwrapOrThrow(await this.svc.getKpiTargets(managerId ? safeInt(managerId, 0) : null));
   }
 
+  @ApiOperation({ summary: 'Get funnel report' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('reports/funnel')
-  async getFunnelReport(@Query('period') period?: string) {
-    return unwrapOrThrow(await this.svc.getFunnelReport(period ?? null));
-  }
+  async getFunnelReport(@Query('period') period?: string) { return unwrapOrThrow(await this.svc.getFunnelReport(period ?? null)); }
 
-  @Post('quotations/:id/convert-to-order')
-  @HttpCode(HttpStatus.OK)
-  @UseInterceptors(AuditInterceptor)
-  async convertToOrder(@Param('id') id: string) {
-    return unwrapOrThrow(await this.svc.convertToOrder(id));
-  }
+  @ApiOperation({ summary: 'Convert to order' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post('quotations/:id/convert-to-order') @HttpCode(HttpStatus.OK) @UseInterceptors(AuditInterceptor)
+  async convertToOrder(@Param('id') id: string) { return unwrapOrThrow(await this.svc.convertToOrder(id)); }
 
-  @Post('quotations/:id/convert')
-  @HttpCode(HttpStatus.OK)
-  @UseInterceptors(AuditInterceptor)
-  async convertQuotation(@Param('id') id: string) {
-    return unwrapOrThrow(await this.svc.convertToOrder(id));
-  }
+  @ApiOperation({ summary: 'Convert quotation' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post('quotations/:id/convert') @HttpCode(HttpStatus.OK) @UseInterceptors(AuditInterceptor)
+  async convertQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.convertToOrder(id)); }
 
+  // ── Status-transition routes (delegated to SdQuotationsService) ──────────────
+
+  @ApiOperation({ summary: 'Send quotation' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('quotations/:id/send')
-  async sendQuotation(@Param('id') id: string) { return { id, sent: true }; }
+  async sendQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.sendQuotation(id)); }
 
+  @ApiOperation({ summary: 'Put send quotation' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Put('quotations/:id/send')
+  async putSendQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.sendQuotation(id)); }
+
+  @ApiOperation({ summary: 'Approve quotation' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('quotations/:id/approve')
-  async approveQuotation(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, approved: true }; }
+  async approveQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.approveQuotation(id)); }
 
+  @ApiOperation({ summary: 'Put approve quotation' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Put('quotations/:id/approve')
+  async putApproveQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.approveQuotation(id)); }
+
+  @ApiOperation({ summary: 'Update quotation' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('quotations/:id')
-  async updateQuotation(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, ...body }; }
+  async updateQuotation(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.updateQuotation(id, body)); }
 
-  @Patch('contracts/:id/sign')
-  async signContract(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, signed: true }; }
+  @ApiOperation({ summary: 'Delete quotation' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Delete('quotations/:id')
+  async deleteQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.deleteQuotation(id)); }
 
+  // NOTE: PATCH /sd/contracts/:id/sign olib tashlandi — SdContractsController.sign() ushlab turadi.
+
+  @ApiOperation({ summary: 'Update kpi target' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('kpi-targets/:id')
-  async updateKpiTarget(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, ...body }; }
+  async updateKpiTarget(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.updateKpiTarget(id, body)); }
 
+  @ApiOperation({ summary: 'Cancel order' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('orders/:id/cancel')
-  async cancelOrder(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, cancelled: true }; }
+  async cancelOrder(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.cancelOrder(id, body)); }
 
+  @ApiOperation({ summary: 'Post cancel order' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post('orders/:id/cancel')
+  async postCancelOrder(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.cancelOrder(id, body)); }
+
+  @ApiOperation({ summary: 'Mark payment paid' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('payments/:id/mark-paid')
-  async markPaymentPaid(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, paid: true }; }
+  async markPaymentPaid(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.markPaymentPaid(id, body)); }
+
+  @ApiOperation({ summary: 'Put mark payment paid' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Put('payments/:id/mark-paid')
+  async putMarkPaymentPaid(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.markPaymentPaid(id, body)); }
+
+  @ApiOperation({ summary: 'Put sign contract' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Put('contracts/:id/sign')
+  async putSignContract(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.signContract(id, body)); }
+
+  @ApiOperation({ summary: 'Put price formulas' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Put('price-formulas')
+  async putPriceFormulas(@Body() body: Body_) { return unwrapOrThrow(await this.svc.upsertPriceFormula(body)); }
 }

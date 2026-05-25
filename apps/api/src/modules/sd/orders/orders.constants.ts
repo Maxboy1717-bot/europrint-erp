@@ -1,3 +1,8 @@
+/**
+ * @module orders.constants
+ * @description Named-constant exports (business thresholds, enums, lookup tables).
+ */
+
 
 export const ORDER_STATUS_MACHINE: Record<string, string[]> = {
   draft: ['confirmed'],
@@ -13,12 +18,13 @@ export const ORDER_STATUS_MACHINE: Record<string, string[]> = {
 
 export const VALID_TRANSITIONS: Record<string, string[]> = {
   draft: ['confirmed', 'cancelled'],
-  confirmed: ['pending_advance', 'cancelled'],
-  pending_advance: ['ready_for_planning', 'cancelled'],
-  ready_for_planning: ['in_production', 'cancelled'],
-  in_production: ['in_delivery'],
+  confirmed: ['pending_advance', 'cancelled', 'on_hold'],
+  pending_advance: ['ready_for_planning', 'cancelled', 'on_hold'],
+  ready_for_planning: ['in_production', 'cancelled', 'on_hold'],
+  in_production: ['in_delivery', 'on_hold'],
   in_delivery: ['delivered'],
   delivered: ['closed'],
   closed: [],
   cancelled: [],
+  on_hold: ['confirmed', 'cancelled'],
 };

@@ -1,3 +1,8 @@
+/**
+ * @module EmployeeStats
+ * @description React page component. Route-level UI.
+ */
+
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -10,8 +15,6 @@ import { AddAttendanceDialog } from "@/components/AddAttendanceDialog";
 import { AddDisciplineDialog } from "@/components/AddDisciplineDialog";
 import { AbcAnalysisCard } from "@/components/AbcAnalysisCard";
 import { EditPersonalInfoDialog } from "@/components/EditPersonalInfoDialog";
-import { ErrorState } from "@/components/ui/error-state";
-
 import { EmployeeHeader } from "@/components/hr/stats/EmployeeHeader";
 import { OrganizationalStructure } from "@/components/hr/stats/OrganizationalStructure";
 import { StatsOverview } from "@/components/hr/stats/StatsOverview";
@@ -40,8 +43,11 @@ import {
   EmployeeFile,
   AbcAnalysis as LocalAbcAnalysis,
 } from "@/components/hr/stats/types";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 export default function EmployeeStats() {
+  const { t } = useTranslation("common");
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -49,7 +55,7 @@ export default function EmployeeStats() {
   const [isDisciplineDialogOpen, setIsDisciplineDialogOpen] = useState(false);
   const [isPersonalInfoDialogOpen, setIsPersonalInfoDialogOpen] = useState(false);
 
-  const { data: employee, isLoading: employeeLoading, isError, refetch } = useQuery<Employee>({
+  const { data: employee, isLoading: employeeLoading, isError, error, refetch } = useQuery<Employee>({
     queryKey: ["/api/employees", id],
   });
 
@@ -134,22 +140,22 @@ export default function EmployeeStats() {
   if (employeeLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-muted-foreground">Yuklanmoqda...</div>
+        <div className="text-muted-foreground">{t("Yuklanmoqda...")}</div>
       </div>
     );
   }
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   if (!employee) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
-        <div className="text-muted-foreground">Xodim topilmadi</div>
+        <div className="text-muted-foreground">{t("xodimTopilmadi")}</div>
         <Button onClick={() => navigate("/employees")} data-testid="button-back">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Orqaga
+          {t("back")}
         </Button>
       </div>
     );
@@ -160,16 +166,15 @@ export default function EmployeeStats() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/employees")} data-testid="button-back-icon" className="rounded-full hover:bg-surface-container-high">
-          <ArrowLeft className="w-5 h-5 text-on-surface" />
+        <Button variant="ghost" size="icon" onClick={() => navigate("/employees")} data-testid="button-back-icon" className="rounded-full hover:bg-muted">
+          <ArrowLeft className="w-5 h-5 text-foreground" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-4xl font-light tracking-tight text-on-surface">
-            Xodim <span className="font-bold text-primary">Statistikasi</span>
-          </h1>
-          <p className="text-on-surface-variant">
-            To'liq ma'lumotlar va o'qish jarayoni
-          </p>
+          <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xodimStatistikasi")}</b></>}
+        title={t("xodimStatistikasi")}
+        subtitle={t("toliqMalumotlarVaOqishJarayoni")}
+      />
         </div>
       </div>
 
@@ -201,12 +206,12 @@ export default function EmployeeStats() {
       />
 
       <Tabs defaultValue="activity" className="space-y-4">
-        <TabsList className="bg-surface-container rounded-lg p-1">
-          <TabsTrigger value="activity">Faoliyat</TabsTrigger>
-          <TabsTrigger value="learning">O'quv jarayoni</TabsTrigger>
-          <TabsTrigger value="files">Fayllar</TabsTrigger>
-          <TabsTrigger value="abc">ABC Analiz</TabsTrigger>
-          <TabsTrigger value="hierarchy">Tuzilma</TabsTrigger>
+        <TabsList className="bg-muted/60 rounded-lg p-1">
+          <TabsTrigger value="activity">{t("faoliyat")}</TabsTrigger>
+          <TabsTrigger value="learning">{t("oquvJarayoni")}</TabsTrigger>
+          <TabsTrigger value="files">{t("fayllar")}</TabsTrigger>
+          <TabsTrigger value="abc">{t("abcAnaliz")}</TabsTrigger>
+          <TabsTrigger value="hierarchy">{t("tuzilma")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="activity" className="space-y-4">

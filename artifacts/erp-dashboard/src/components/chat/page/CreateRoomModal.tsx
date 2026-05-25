@@ -1,15 +1,23 @@
+/**
+ * @module CreateRoomModal
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Search, X, Loader2 } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { getAuthHeaders } from "@/lib/queryClient";
-import { useChatStore } from "@/store/chatStore";
+import { useChatStore, type ChatRoom } from "@/store/chatStore";
 import { useEmployeeSearch } from "@/hooks/chat/useRooms";
 import { ChatAvatar } from "./ChatAvatar";
+import { apiRequest } from '@/lib/queryClient';
 
+import { EPLoader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -24,6 +32,7 @@ interface Employee {
 }
 
 export function CreateRoomModal({ open, onClose }: Props) {
+  const { t } = useTranslation("common");
   const [name, setName] = useState("");
   const [type, setType] = useState<"GROUP" | "CHANNEL">("GROUP");
   const [search, setSearch] = useState("");
@@ -35,8 +44,8 @@ export function CreateRoomModal({ open, onClose }: Props) {
 
   const toggleEmployee = (emp: Employee) => {
     setSelected((prev) =>
-      (prev ?? []).find((e) => e.id === emp.id)
-        ? (prev ?? []).filter((e) => e.id !== emp.id)
+      (Array.isArray(prev) ? prev : []).find((e) => e.id === emp.id)
+        ? (Array.isArray(prev) ? prev : []).filter((e) => e.id !== emp.id)
         : [...prev, emp]
     );
   };
@@ -45,26 +54,31 @@ export function CreateRoomModal({ open, onClose }: Props) {
     if (!name.trim() || selected.length === 0) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/chat/rooms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        credentials: "include",
-        body: JSON.stringify({
+      const room = await apiRequest<ChatRoom>(
+        'POST',
+        "/api/chat/rooms/group",
+        {
           name: name.trim(),
-          type,
           memberIds: (Array.isArray(selected) ? selected : []).map((e) => e.id),
-        }),
-      });
-      if (res.ok) {
-        const room = await res.json();
+        },
+      );
+      // Refresh full room list so the new room appears with correct member data
+      try {
+        const allRooms = await apiRequest<unknown>('GET', "/api/chat/rooms");
+        useChatStore.getState().setRooms(Array.isArray(allRooms) ? (allRooms as ChatRoom[]) : []);
+      } catch {
+        // fallback: prepend the new room
         const rooms = useChatStore.getState().rooms;
         useChatStore.getState().setRooms([room, ...rooms]);
-        useChatStore.getState().setActiveRoomId(room.id);
-        onClose();
-        setName("");
-        setSelected([]);
-        setSearch("");
       }
+      useChatStore.getState().setActiveRoomId(room.id);
+      onClose();
+      setName("");
+      setSelected([]);
+      setSearch("");
+    } catch (e) {
+      const msg = (e as { message?: string })?.message;
+      alert(msg || "Xato yuz berdi");
     } finally {
       setLoading(false);
     }
@@ -79,9 +93,9 @@ export function CreateRoomModal({ open, onClose }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle>Yangi guruh yaratish</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{type === "CHANNEL" ? "Yangi kanal yaratish" : "Yangi guruh yaratish"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -102,11 +116,11 @@ export function CreateRoomModal({ open, onClose }: Props) {
           </div>
 
           <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Guruh nomi</Label>
+            <Label className="text-xs text-muted-foreground mb-1 block">{type === "CHANNEL" ? "Kanal nomi" : "Guruh nomi"}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Masalan: Marketing jamoasi"
+              placeholder={t("masalanMarketingJamoasi")}
               className="h-9"
             />
           </div>
@@ -125,13 +139,13 @@ export function CreateRoomModal({ open, onClose }: Props) {
           )}
 
           <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">A'zolar qo'shish</Label>
+            <Label className="text-xs text-muted-foreground mb-1 block">{t("azolarQoshish")}</Label>
             <div className="relative mb-2">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Xodimni qidirish..."
+                placeholder={t("xodimniQidirish")}
                 className="pl-8 h-8 text-sm"
               />
             </div>
@@ -156,19 +170,19 @@ export function CreateRoomModal({ open, onClose }: Props) {
                 );
               })}
               {(employees as Employee[]).length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">Xodim topilmadi</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t("xodimTopilmadi")}</p>
               )}
             </div>
           </div>
 
           <div className="flex gap-2 pt-1">
-            <Button variant="outline" onClick={handleClose} className="flex-1">Bekor</Button>
+            <Button variant="outline" onClick={handleClose} className="flex-1">{t("Bekor")}</Button>
             <Button
               onClick={handleCreate}
               disabled={!name.trim() || selected.length === 0 || loading}
               className="flex-1"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {loading ? <EPLoader className="w-4 h-4 mr-2" /> : null}
               Yaratish
             </Button>
           </div>

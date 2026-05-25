@@ -1,3 +1,8 @@
+/**
+ * @module erp-events.constants
+ * @description Named-constant exports (business thresholds, enums, lookup tables).
+ */
+
 export const ERP_EVENTS = {
   // §10 - 20 ta majburiy trigger
   LEAD_ACCEPTED: 'crm.lead.accepted',
@@ -45,6 +50,13 @@ export const ERP_EVENTS = {
   LAB_TEST_PASSED:          'qc.lab.passed',
   WMS_GOODS_ISSUE:          'wms.goods.issue',
   LMS_CERT_EXPIRED_LIVE:    'lms.certificate.expired.live',
+
+  // PA0 event-bridge fix (Trigger 15, 20) — see EventBridgeService
+  INVOICE_FULLY_PAID:        'fi.invoice.fully_paid',
+  ADVANCE_BYPASS_APPROVED:   'sd.advance.bypass_approved',
+
+  // Wave 11 P1 — IoT tablet safety SOS button
+  IOT_SOS_RAISED:            'iot.sos.raised',
 } as const
 
 export type ErpEventKey = keyof typeof ERP_EVENTS

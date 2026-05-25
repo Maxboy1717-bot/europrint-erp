@@ -1,9 +1,47 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+/**
+ * @module break-even.service
+ * @description Break-even and operating-leverage analysis per product per
+ *   period. Reads `cost_structure` (fixed cost, variable cost per unit,
+ *   selling price) and joins with `production_orders` to compute:
+ *
+ *     contribution margin (CM) = price − variable cost per unit
+ *     break-even qty          = fixed cost / CM            (units to cover FC)
+ *     break-even revenue      = fixed cost × price / CM   (UZS at BE)
+ *     margin of safety (qty)  = actual qty − break-even qty
+ *     margin of safety (%)    = MOS qty / actual qty
+ *     degree of operating
+ *       leverage (DOL)        = (CM × qty) / (CM × qty − FC)
+ *
+ *   DOL > 1 means a 1% change in sales produces > 1% change in operating
+ *   income — the higher, the more sensitive profit is to volume. Useful
+ *   for capacity planning conversations.
+ * @layer Domain Service (Finance / CFO dashboard)
+ *
+ * Domain-layer service — MUST NOT import Drizzle / @shared/db. Persistence
+ * is delegated to IFinanceRepo (see P0-2 DDD audit).
+ *
+ * WHY 10% MOS WARNING THRESHOLD
+ *   Industry rule of thumb: <10% margin of safety means a single bad month
+ *   can push a product line into operating loss. We flag this so the CFO
+ *   can prioritise pricing or cost actions before it actually happens.
+ *
+ * WHY CONTRIBUTION MARGIN <= 0 IS A HARD ERROR (not just warning)
+ *   A product whose unit selling price doesn't cover its variable cost is
+ *   guaranteed to lose money on every unit — fixed costs aren't even
+ *   covered yet. Break-even math literally divides by CM, so we reject the
+ *   input rather than return a nonsensical infinite break-even quantity.
+ *
+ * WHY DOL DEFAULTS TO 0 WHEN OP-INCOME IS 0
+ *   At exact break-even, op-income = 0 and DOL = CM / 0 → undefined. We
+ *   return 0 so callers can format it without special-casing; the UI shows
+ *   "N/A" when DOL=0 AND mosPct<1% as a safe heuristic.
+ */
+
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Ok, Err, AppErr, Result, AppError } from '@common/result';
-import { safeDiv, safeNum, roundTo } from '@common/math/math-utils';
+import { safeDiv, roundTo } from '@common/math/math-utils';
 import { Calculation } from '@common/decorators/calculation.decorator';
+import { FINANCE_REPO, IFinanceRepo } from '../repositories/i-finance.repo';
 
 const BREAK_EVEN_WARN_MOS_PCT = 10;
 
@@ -23,40 +61,24 @@ export interface BreakEvenDto {
   warning: string | null;
 }
 
-type Row = Record<string, unknown>;
-
 @Injectable()
 export class BreakEvenService {
   private readonly logger = new Logger(BreakEvenService.name);
 
+  constructor(@Inject(FINANCE_REPO) private readonly repo: IFinanceRepo) {}
+
   @Calculation('break-even-analyze')
   async analyze(productName: string, period: string): Promise<Result<BreakEvenDto, AppError>> {
     try {
-      const [structRows, salesRows] = await Promise.all([
-        runQuery<Row>(sql`
-          SELECT fixed_cost_uzs, variable_cost_uzs, selling_price_uzs
-          FROM cost_structure
-          WHERE product_name = ${productName} AND period = ${period}
-          LIMIT 1
-        `),
-        runQuery<Row>(sql`
-          SELECT COALESCE(SUM(po.planned_quantity), 0)::numeric AS actual_qty
-          FROM production_orders po
-          JOIN products p ON p.id = po.product_id
-          WHERE p.name = ${productName}
-            AND po.status::text = 'completed'
-            AND TO_CHAR(po.created_at, 'YYYY-MM') = ${period}
-        `),
-      ]);
+      const inputs = await this.repo.fetchBreakEvenInputs(productName, period);
 
-      const struct = structRows[0];
-      if (!struct) {
+      if (!inputs.costStructure) {
         return Err(AppErr('NOT_FOUND', `Xarajat tuzilmasi topilmadi: ${productName} / ${period}. Avval cost_structure yozing.`));
       }
 
-      const fc = safeNum(struct['fixed_cost_uzs'], 0);
-      const vc = safeNum(struct['variable_cost_uzs'], 0);
-      const p  = safeNum(struct['selling_price_uzs'], 0);
+      const fc = inputs.costStructure.fixedCostUzs;
+      const vc = inputs.costStructure.variableCostUzs;
+      const p  = inputs.costStructure.sellingPriceUzs;
 
       if (p <= 0) return Err(AppErr('BAD_REQUEST', 'Sotuv narxi 0 dan katta bo\'lishi kerak'));
 
@@ -65,7 +87,7 @@ export class BreakEvenService {
         return Err(AppErr('BAD_REQUEST', 'Contribution margin manfiy — bu mahsulot sotuv narxi VC dan past'));
       }
 
-      const actualQty = safeNum(salesRows[0]?.['actual_qty'], 0);
+      const actualQty = inputs.actualQty;
       const bepQty    = roundTo(safeDiv(fc, cm), 2);
       const bepRev    = roundTo(safeDiv(fc * p, cm), 2);
       const mosQty    = roundTo(actualQty - bepQty, 2);
@@ -107,16 +129,7 @@ export class BreakEvenService {
     sellingPriceUzs: number;
   }): Promise<Result<void, AppError>> {
     try {
-      const { productName, period, fixedCostUzs, variableCostUzs, sellingPriceUzs } = dto;
-      await runQuery(sql`
-        INSERT INTO cost_structure (product_name, period, fixed_cost_uzs, variable_cost_uzs, selling_price_uzs)
-        VALUES (${productName}, ${period}, ${fixedCostUzs}, ${variableCostUzs}, ${sellingPriceUzs})
-        ON CONFLICT (product_name, period) DO UPDATE
-          SET fixed_cost_uzs    = EXCLUDED.fixed_cost_uzs,
-              variable_cost_uzs = EXCLUDED.variable_cost_uzs,
-              selling_price_uzs = EXCLUDED.selling_price_uzs,
-              updated_at        = now()
-      `);
+      await this.repo.upsertCostStructure(dto);
       return Ok(undefined);
     } catch (err) {
       this.logger.error(`BreakEvenService.upsertCostStructure xato: ${String(err)}`);

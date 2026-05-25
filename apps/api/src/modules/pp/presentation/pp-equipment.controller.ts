@@ -1,3 +1,8 @@
+/**
+ * @module pp-equipment.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
 Controller,
   Get,
@@ -11,9 +16,10 @@ Controller,
   Logger,
   InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -23,8 +29,9 @@ import { PpCreateEquipmentSchema, PpCreateEquipmentDto, PpUpdateEquipmentSchema,
 
 const EQ_ROLES = ['super_admin', 'director', 'production_manager', 'technologist', 'maintenance'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Pp Equipment')
 @Controller('equipment')
 @UseGuards(RolesGuard)
 @Roles(...EQ_ROLES)
@@ -33,6 +40,8 @@ export class PpEquipmentController {
 
   constructor(private readonly svc: PpEquipmentService) {}
 
+  @ApiOperation({ summary: 'List' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async list(
     @Query('status') status?: string,
@@ -41,17 +50,27 @@ export class PpEquipmentController {
     return unwrapOrThrow(await this.svc.listEquipment(status ?? null, safeInt(limit, 100)));
   }
 
+  @ApiOperation({ summary: 'Get by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   async getById(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getEquipment(safeInt(id, 0)));
   }
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @UsePipes(new ZodValidationPipe(PpCreateEquipmentSchema))
   async create(@Body() body: PpCreateEquipmentDto) {
     return unwrapOrThrow(await this.svc.createEquipment(body));
   }
 
+  @ApiOperation({ summary: 'Update' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id')
   @UsePipes(new ZodValidationPipe(PpUpdateEquipmentSchema))
   async update(@Param('id') id: string, @Body() body: PpUpdateEquipmentDto) {

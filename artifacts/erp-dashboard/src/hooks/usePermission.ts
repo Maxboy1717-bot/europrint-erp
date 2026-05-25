@@ -1,15 +1,23 @@
-import { useAuth } from "@/hooks/useAuth";
-import { hasPermission, hasAnyPermission, hasAllPermissions, type Permission } from "@/lib/permissions";
+/**
+ * usePermission — thin shim over usePermissions.
+ * Delegates to the canonical backend-aware RBAC hook so PermissionGuard
+ * and PermissionButton use real position-based permissions, not the
+ * hardcoded role map.
+ *
+ * New code should use usePermissions() directly for the full API.
+ */
+import { usePermissions } from "./usePermissions";
+import type { Permission } from "@/lib/permissions";
 
 export function usePermission() {
-  const { user } = useAuth();
-  const role = user?.role;
+  const { canAccess, canAccessAny, role, isAdmin } = usePermissions();
 
   return {
-    can: (permission: Permission): boolean => hasPermission(role, permission),
-    canAny: (permissions: Permission[]): boolean => hasAnyPermission(role, permissions),
-    canAll: (permissions: Permission[]): boolean => hasAllPermissions(role, permissions),
+    can: (permission: Permission) => canAccess(permission),
+    canAny: (permissions: Permission[]) => canAccessAny(permissions),
+    canAll: (permissions: Permission[]) =>
+      (Array.isArray(permissions) ? permissions : []).every((p) => canAccess(p)),
     role,
-    isAdmin: role === "admin" || role === "super_admin",
+    isAdmin,
   };
 }

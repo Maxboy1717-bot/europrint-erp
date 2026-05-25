@@ -1,3 +1,8 @@
+/**
+ * @module vite.config
+ * @description Configuration loader. Wraps env vars via @nestjs/config ConfigService.
+ */
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -5,6 +10,7 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { VitePWA } from "vite-plugin-pwa";
 import http from "http";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 const rawPort = process.env.PORT;
 const port = rawPort && !Number.isNaN(Number(rawPort)) && Number(rawPort) > 0
@@ -14,10 +20,16 @@ const port = rawPort && !Number.isNaN(Number(rawPort)) && Number(rawPort) > 0
 const basePath = process.env.BASE_PATH || "/erp-dashboard/";
 const basePrefix = basePath.replace(/\/$/, "");
 
-const apiUrl = process.env.API_URL ?? "http://localhost:3005";
-const nestApiUrl = process.env.NEST_API_URL ?? "http://localhost:8080";
+// Backend NestJS port — apps/api/.env'da PORT=3000 (Windows 8080 EACCES sababli)
+const apiUrl = process.env.API_URL ?? "http://localhost:3000";
+const nestApiUrl = process.env.NEST_API_URL ?? "http://localhost:3000";
 
 function posAuthDirectPlugin(nestUrl: string, prefix: string) {
+  // nestUrl'dan host/port chiqarib olish — hard-coded 8080 emas
+  const parsedUrl = new URL(nestUrl);
+  const targetHost = parsedUrl.hostname || "localhost";
+  const targetPort = parsedUrl.port ? Number(parsedUrl.port) : 80;
+
   return {
     name: "pos-auth-direct",
     configureServer(server: { middlewares: { use: (fn: (req: http.IncomingMessage, res: http.ServerResponse, next: () => void) => void) => void } }) {
@@ -33,10 +45,10 @@ function posAuthDirectPlugin(nestUrl: string, prefix: string) {
             const body = Buffer.concat(chunks);
             let username = "?";
             try { username = (JSON.parse(body.toString()) as { username?: string }).username ?? "?"; } catch { /* noop */ }
-            process.stdout.write(`[pos-auth-direct] intercepted login for user="${username}" url=${req.url ?? ""} bodyLen=${body.length}\n`);
+            process.stdout.write(`[pos-auth-direct] intercepted login for user="${username}" url=${req.url ?? ""} bodyLen=${body.length} → ${targetHost}:${targetPort}\n`);
             const forwarded = req.headers["x-forwarded-for"] ?? req.socket?.remoteAddress ?? "";
             const nestReq = http.request(
-              { host: "localhost", port: 8080, path: "/api/pos/auth/login", method: "POST",
+              { host: targetHost, port: targetPort, path: "/api/pos/auth/login", method: "POST",
                 headers: { "content-type": "application/json", "content-length": body.length, "x-forwarded-for": forwarded } },
               (nestRes) => {
                 const parts: Buffer[] = [];
@@ -70,13 +82,40 @@ function posAuthDirectPlugin(nestUrl: string, prefix: string) {
   };
 }
 
+// Sentry source-map upload is enabled ONLY when SENTRY_AUTH_TOKEN is set.
+// Without the token, the plugin would throw at build time — keep it optional
+// so local builds and CI without Sentry secrets continue to work.
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN?.trim();
+const sentryOrg = process.env.SENTRY_ORG?.trim() || "europrint";
+const sentryProject = process.env.SENTRY_PROJECT?.trim() || "erp-dashboard";
+const sentryRelease = process.env.SENTRY_RELEASE?.trim();
+
 export default defineConfig({
   base: basePath,
+  // sourcemap must be enabled for Sentry to symbolicate stack traces.
+  // Hidden source-maps are uploaded to Sentry but not served to the browser.
+  build: {
+    sourcemap: sentryAuthToken ? "hidden" : false,
+    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    emptyOutDir: true,
+  },
   plugins: [
     posAuthDirectPlugin(nestApiUrl, basePrefix),
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),
+    ...(sentryAuthToken
+      ? [
+          sentryVitePlugin({
+            authToken: sentryAuthToken,
+            org: sentryOrg,
+            project: sentryProject,
+            release: sentryRelease ? { name: sentryRelease } : undefined,
+            // Only upload during real production builds (not dev server).
+            disable: process.env.NODE_ENV !== "production",
+          }),
+        ]
+      : []),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
@@ -262,10 +301,6 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   root: path.resolve(import.meta.dirname),
-  build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
-    emptyOutDir: true,
-  },
   server: {
     port,
     host: "0.0.0.0",
@@ -281,6 +316,12 @@ export default defineConfig({
         target: nestApiUrl,
         changeOrigin: true,
         ws: true,
+      },
+      // Fayl yuklash/ko'rish: /storage/... → nestjs /api/storage/...
+      "/storage": {
+        target: nestApiUrl,
+        changeOrigin: true,
+        rewrite: (path: string) => `/api${path}`,
       },
       "/socket.io": {
         target: nestApiUrl,

@@ -1,7 +1,12 @@
+/**
+ * @module campaign.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { v4 as uuid } from 'uuid';
-import { AggregateRoot } from '@nestjs/cqrs';
+import { AggregateRoot } from '@shared/domain/aggregate-root.base';
 import { CampaignStatus, CampaignType } from '../enums/campaign-status.enum';
 
 export class Campaign extends AggregateRoot {

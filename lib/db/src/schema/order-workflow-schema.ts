@@ -1,3 +1,8 @@
+/**
+ * @module order-workflow-schema
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import {
   pgTable, uuid, text, numeric, integer, boolean,
   timestamp, jsonb, index, uniqueIndex, check,
@@ -19,6 +24,8 @@ export const owOrders = pgTable('ow_orders', {
   actualDeliveryAt:    timestamp('actual_delivery_at', { withTimezone: true }),
   tenantId:            uuid('tenant_id'),
   customerApproved:    boolean('customer_approved').notNull().default(false),
+  techCardConfirmedAt:   timestamp('tech_card_confirmed_at', { withTimezone: true }),
+  customerSignatureUrl:  text('customer_signature_url'),
   createdAt:           timestamp('created_at', { withTimezone: true }).default(sql`now()`),
   updatedAt:           timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
 }, (t) => [
@@ -48,7 +55,7 @@ export const owOrderLines = pgTable('ow_order_lines', {
 // ─── 3. ow_order_surveys ─────────────────────────────────────────────────────
 export const owOrderSurveys = pgTable('ow_order_surveys', {
   id:                   uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:              uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:              uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   fields:               jsonb('fields').notNull().default({}),
   aiAutofillConfidence: numeric('ai_autofill_confidence', { precision: 4, scale: 3 }),
   completenessScore:    numeric('completeness_score', { precision: 4, scale: 3 }).notNull().default('0'),
@@ -61,7 +68,7 @@ export const owOrderSurveys = pgTable('ow_order_surveys', {
 // ─── 4. ow_order_samples ─────────────────────────────────────────────────────
 export const owOrderSamples = pgTable('ow_order_samples', {
   id:               uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:          uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:          uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   iteration:        integer('iteration').notNull().default(1),
   requestedAt:      timestamp('requested_at', { withTimezone: true }).default(sql`now()`),
   producedAt:       timestamp('produced_at', { withTimezone: true }),
@@ -75,7 +82,7 @@ export const owOrderSamples = pgTable('ow_order_samples', {
 // ─── 5. ow_contracts ─────────────────────────────────────────────────────────
 export const owContracts = pgTable('ow_contracts', {
   id:                 uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:            uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:            uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   contractNumber:     text('contract_number').notNull().unique(),
   signedAt:           timestamp('signed_at', { withTimezone: true }),
   fileUrl:            text('file_url'),
@@ -89,7 +96,7 @@ export const owContracts = pgTable('ow_contracts', {
 // ─── 6. ow_tech_cards ────────────────────────────────────────────────────────
 export const owTechCards = pgTable('ow_tech_cards', {
   id:                     uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:                uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:                uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   orderLineId:            uuid('order_line_id'),
   version:                integer('version').notNull().default(1),
   parentId:               uuid('parent_id'),
@@ -107,7 +114,7 @@ export const owTechCards = pgTable('ow_tech_cards', {
 // ─── 7. ow_molds ─────────────────────────────────────────────────────────────
 export const owMolds = pgTable('ow_molds', {
   id:            uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:       uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:       uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   vendor:        text('vendor').notNull(),
   orderSentAt:   timestamp('order_sent_at', { withTimezone: true }),
   expectedAt:    timestamp('expected_at', { withTimezone: true }),
@@ -123,7 +130,7 @@ export const owMolds = pgTable('ow_molds', {
 // ─── 8. ow_cliches ───────────────────────────────────────────────────────────
 export const owCliches = pgTable('ow_cliches', {
   id:               uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:          uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:          uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   clicheType:       text('cliche_type').notNull(),
   vendor:           text('vendor').notNull(),
   orderSentAt:      timestamp('order_sent_at', { withTimezone: true }),
@@ -138,7 +145,7 @@ export const owCliches = pgTable('ow_cliches', {
 // ─── 9. ow_material_requirements ─────────────────────────────────────────────
 export const owMaterialRequirements = pgTable('ow_material_requirements', {
   id:          uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:     uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:     uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   materialId:  text('material_id').notNull(),
   qtyRequired: numeric('qty_required', { precision: 14, scale: 3 }).notNull(),
   qtyReserved: numeric('qty_reserved', { precision: 14, scale: 3 }).notNull().default('0'),
@@ -154,7 +161,7 @@ export const owMaterialRequirements = pgTable('ow_material_requirements', {
 // ─── 10. ow_production_plans ─────────────────────────────────────────────────
 export const owProductionPlans = pgTable('ow_production_plans', {
   id:                 uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:            uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:            uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   machineId:          text('machine_id').notNull(),
   plannedStart:       timestamp('planned_start', { withTimezone: true }).notNull(),
   plannedEnd:         timestamp('planned_end',   { withTimezone: true }).notNull(),
@@ -169,7 +176,7 @@ export const owProductionPlans = pgTable('ow_production_plans', {
 // ─── 11. ow_work_orders ──────────────────────────────────────────────────────
 export const owWorkOrders = pgTable('ow_work_orders', {
   id:               uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  productionPlanId: uuid('production_plan_id').notNull().references(() => owProductionPlans.id),
+  productionPlanId: uuid('production_plan_id').notNull().references(() => owProductionPlans.id, { onDelete: 'cascade' }),
   orderLineId:      uuid('order_line_id'),
   machineId:        text('machine_id').notNull(),
   operatorId:       integer('operator_id'),
@@ -187,7 +194,7 @@ export const owWorkOrders = pgTable('ow_work_orders', {
 // ─── 12. ow_qc_results ───────────────────────────────────────────────────────
 export const owQcResults = pgTable('ow_qc_results', {
   id:            uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  workOrderId:   uuid('work_order_id').notNull().references(() => owWorkOrders.id),
+  workOrderId:   uuid('work_order_id').notNull().references(() => owWorkOrders.id, { onDelete: 'cascade' }),
   inspectorId:   integer('inspector_id'),
   aiVisionAgent: text('ai_vision_agent'),
   verdict:       text('verdict').notNull(),
@@ -205,7 +212,7 @@ export const owQcResults = pgTable('ow_qc_results', {
 // ─── 13. ow_packaging_records ────────────────────────────────────────────────
 export const owPackagingRecords = pgTable('ow_packaging_records', {
   id:            uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  workOrderId:   uuid('work_order_id').notNull().references(() => owWorkOrders.id),
+  workOrderId:   uuid('work_order_id').notNull().references(() => owWorkOrders.id, { onDelete: 'cascade' }),
   palletBarcode: text('pallet_barcode').notNull().unique(),
   qty:           numeric('qty', { precision: 14, scale: 3 }).notNull(),
   packagingType: text('packaging_type'),
@@ -216,7 +223,7 @@ export const owPackagingRecords = pgTable('ow_packaging_records', {
 // ─── 14. ow_fg_transfers ─────────────────────────────────────────────────────
 export const owFgTransfers = pgTable('ow_fg_transfers', {
   id:                 uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:            uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:            uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   fromLocation:       text('from_location').notNull().default('PRODUCTION'),
   toLocation:         text('to_location').notNull().default('FG_WAREHOUSE'),
   approvedByProdHead: integer('approved_by_prod_head'),
@@ -227,7 +234,7 @@ export const owFgTransfers = pgTable('ow_fg_transfers', {
 // ─── 15. ow_shipping_requests ────────────────────────────────────────────────
 export const owShippingRequests = pgTable('ow_shipping_requests', {
   id:              uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:         uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:         uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   requestedBy:     integer('requested_by'),
   requestedAt:     timestamp('requested_at', { withTimezone: true }).default(sql`now()`),
   approvedBy:      integer('approved_by'),
@@ -239,7 +246,7 @@ export const owShippingRequests = pgTable('ow_shipping_requests', {
 // ─── 16. ow_deliveries ───────────────────────────────────────────────────────
 export const owDeliveries = pgTable('ow_deliveries', {
   id:                   uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  shippingRequestId:    uuid('shipping_request_id').notNull().references(() => owShippingRequests.id),
+  shippingRequestId:    uuid('shipping_request_id').notNull().references(() => owShippingRequests.id, { onDelete: 'cascade' }),
   truckId:              text('truck_id'),
   driverId:             integer('driver_id'),
   routePlan:            jsonb('route_plan'),
@@ -255,7 +262,7 @@ export const owDeliveries = pgTable('ow_deliveries', {
 // ─── 17. ow_rework_events ────────────────────────────────────────────────────
 export const owReworkEvents = pgTable('ow_rework_events', {
   id:          uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:     uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:     uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   workOrderId: uuid('work_order_id'),
   trigger:     text('trigger').notNull(),
   rootCause:   text('root_cause'),
@@ -270,7 +277,7 @@ export const owReworkEvents = pgTable('ow_rework_events', {
 export const owPalletRecoveries = pgTable('ow_pallet_recoveries', {
   id:             uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   palletBarcode:  text('pallet_barcode').notNull(),
-  orderId:        uuid('order_id').references(() => owOrders.id),
+  orderId:        uuid('order_id').references(() => owOrders.id, { onDelete: 'set null' }),
   recoverableQty: numeric('recoverable_qty', { precision: 14, scale: 3 }),
   scrapQty:       numeric('scrap_qty',       { precision: 14, scale: 3 }),
   recoveredAt:    timestamp('recovered_at',  { withTimezone: true }),
@@ -295,7 +302,7 @@ export const owCreditLimits = pgTable('ow_credit_limits', {
 // ─── Extra: ow_payment_plan_entries ──────────────────────────────────────────
 export const owPaymentPlanEntries = pgTable('ow_payment_plan_entries', {
   id:           uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:      uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:      uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   sequence:     integer('sequence').notNull(),
   dueType:      text('due_type').notNull(),
   dueCondition: jsonb('due_condition'),
@@ -328,7 +335,7 @@ export const owDocumentWorkflowInstances = pgTable('ow_document_workflow_instanc
 // ─── State history ───────────────────────────────────────────────────────────
 export const owOrderStatusHistory = pgTable('ow_order_status_history', {
   id:           uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  orderId:      uuid('order_id').notNull().references(() => owOrders.id),
+  orderId:      uuid('order_id').notNull().references(() => owOrders.id, { onDelete: 'cascade' }),
   fromStatus:   text('from_status'),
   toStatus:     text('to_status').notNull(),
   changedBy:    integer('changed_by'),

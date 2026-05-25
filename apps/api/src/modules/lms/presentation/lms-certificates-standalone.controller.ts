@@ -1,3 +1,8 @@
+/**
+ * @module lms-certificates-standalone.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
@@ -13,7 +18,7 @@ import {
   UseInterceptors
 } from '@nestjs/common';
 import { unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -25,7 +30,7 @@ import { LmsCertificatesStandaloneService } from '../application/services/lms-ce
 import { CreateCertificateSchema, CreateCertificateDto } from './dto/lms-questionnaire.dto';
 import type { FastifyReply } from 'fastify';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('certificates')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -59,6 +64,16 @@ export class LmsCertificatesStandaloneController {
     const result = await this.svc.createCertificate(dto, String(user?.id ?? 0));
     const data = unwrapOrInternal(result);
     return { message: 'Sertifikat yaratildi', data };
+  }
+
+  @Get(':id')
+  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async getCertificateById(@Param('id') id: string) {
+    // The Certificates page expects GET /api/certificates/:id for the detail
+    // view. Service-level retrieval lands once the repo has a findById helper;
+    // for now return a typed placeholder so the page can render the empty
+    // detail card instead of 404.
+    return { id, status: 'unknown', issuedAt: null, expiresAt: null };
   }
 
   @Get(':id/download')

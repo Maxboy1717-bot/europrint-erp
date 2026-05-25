@@ -1,3 +1,8 @@
+/**
+ * @module PaymentsTab
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -10,12 +15,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, CheckCircle } from "lucide-react";
+import { useTranslation } from '@/lib/i18n';
 import { 
   SdPayment, SdOrder, 
   fmt, PAYMENT_STATUS_COLORS 
 } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function PaymentsTab() {
+  const { t } = useTranslation("common");
   const [tab, setTab] = useState<"all" | "overdue" | "debitors">("all");
   const [isNew, setIsNew] = useState(false);
   const [form, setForm] = useState({ orderId: "", customerId: "", amount: "", type: "advance", dueDate: "", notes: "" });
@@ -70,17 +78,17 @@ export function PaymentsTab() {
         </div>
         <Dialog open={isNew} onOpenChange={setIsNew}>
           <DialogTrigger asChild>
-            <Button size="sm" data-testid="button-add-payment"><Plus className="w-4 h-4 mr-1" />To'lov kiritish</Button>
+            <Button size="sm" data-testid="button-add-payment"><Plus className="w-4 h-4 mr-1" />{t("tolovKiritish")}</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>To'lov kiritish</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("tolovKiritish")}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label>Buyurtma</Label>
+              <div><Label>{t("Buyurtma")}</Label>
                 <Select value={form.orderId} onValueChange={v => {
                   const o = orders?.data?.find((o: SdOrder) => String(o.id) === v);
                   setForm({ ...form, orderId: v, customerId: String(o?.customerId || "") });
                 }}>
-                  <SelectTrigger data-testid="select-payment-order"><SelectValue placeholder="Tanlang" /></SelectTrigger>
+                  <SelectTrigger data-testid="select-payment-order" className="h-9"><SelectValue placeholder={t("tanlang")} /></SelectTrigger>
                   <SelectContent>
                     {orders?.data?.map((o: SdOrder) => (
                       <SelectItem key={o.id} value={String(o.id)}>{o.orderNumber} — {fmt(o.totalAmount)} so'm</SelectItem>
@@ -88,22 +96,22 @@ export function PaymentsTab() {
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Summa (so'm)</Label>
+              <div><Label>{tLabel('common.PaymentsTab.summaSom', "Summa (so'm)")}</Label>
                 <Input data-testid="input-payment-amount" type="number" value={form.amount}
                   onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
-              <div><Label>Tur</Label>
+              <div><Label>{t("tur")}</Label>
                 <Select value={form.type} onValueChange={v => setForm({ ...form, type: v })}>
-                  <SelectTrigger data-testid="select-payment-type"><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-testid="select-payment-type" className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="advance">Avans</SelectItem>
-                    <SelectItem value="balance">Qoldiq</SelectItem>
-                    <SelectItem value="partial">Qisman</SelectItem>
+                    <SelectItem value="advance">{t("avans")}</SelectItem>
+                    <SelectItem value="balance">{t("qoldiq")}</SelectItem>
+                    <SelectItem value="partial">{t("qisman")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Muddat</Label>
+              <div><Label>{t("muddat")}</Label>
                 <Input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} /></div>
-              <div><Label>Izoh</Label>
+              <div><Label>{t("Izoh")}</Label>
                 <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
               <Button data-testid="button-save-payment" className="w-full"
                 onClick={() => createMut.mutate({ ...form, amount: parseFloat(form.amount) || 0 })}
@@ -117,7 +125,7 @@ export function PaymentsTab() {
 
       {tab === "debitors" ? (
         <div className="space-y-2">
-          {isLoading && <div className="text-sm text-muted-foreground">Yuklanmoqda...</div>}
+          {isLoading && <div className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</div>}
           {(Array.isArray(payments) ? payments : []).map((d: SdPayment, i: number) => (
             <Card key={`k-${i}`} data-testid={`card-debitor-${d.customerId}`}>
               <CardContent className="p-4 flex items-center justify-between flex-wrap gap-3">
@@ -128,17 +136,17 @@ export function PaymentsTab() {
                   <div><span className="text-muted-foreground">61-90:</span> <strong>{fmt(d["61-90"] ?? 0)} so'm</strong></div>
                   <div><span className="text-muted-foreground">90+:</span> <strong>{fmt(d["90+"] ?? 0)} so'm</strong></div>
                 </div>
-                <div className="font-bold text-red-600">{fmt(d.total ?? 0)} so'm</div>
+                <div className="font-bold text-[var(--ep-red)]">{fmt(d.total ?? 0)} so'm</div>
               </CardContent>
             </Card>
           ))}
           {!isLoading && payments.length === 0 && (
-            <div className="text-center text-muted-foreground py-8 text-sm">Debitorlar yo'q</div>
+            <div className="text-center text-muted-foreground py-8 text-sm">{t("debitorlarYoq")}</div>
           )}
         </div>
       ) : (
         <div className="space-y-2">
-          {isLoading && <div className="text-sm text-muted-foreground">Yuklanmoqda...</div>}
+          {isLoading && <div className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</div>}
           {(Array.isArray(payments) ? payments : []).map((p: SdPayment) => (
             <Card key={p.id} data-testid={`card-payment-${p.id}`}>
               <CardContent className="p-4 flex items-center justify-between flex-wrap gap-3">
@@ -148,7 +156,7 @@ export function PaymentsTab() {
                   </div>
                   {p.dueDate && <div className="text-xs text-muted-foreground">Muddat: {p.dueDate}</div>}
                   {p.overdueDays && p.overdueDays > 0 && (
-                    <div className="text-xs text-red-600 font-medium">{p.overdueDays} kun kechikdi</div>
+                    <div className="text-xs text-[var(--ep-red)] font-medium">{p.overdueDays} kun kechikdi</div>
                   )}
                 </div>
                 <div className="font-bold text-lg">{fmt(p.amount || 0)} so'm</div>
@@ -158,14 +166,14 @@ export function PaymentsTab() {
                 {p.status === "pending" && (
                   <Button size="sm" data-testid={`button-mark-paid-${p.id}`}
                     onClick={() => markPaidMut.mutate(p.id)} disabled={markPaidMut.isPending}>
-                    <CheckCircle className="w-3 h-3 mr-1" />To'landi
+                    <CheckCircle className="w-3 h-3 mr-1" />{t("tolandi1")}
                   </Button>
                 )}
               </CardContent>
             </Card>
           ))}
           {!isLoading && payments.length === 0 && (
-            <div className="text-center text-muted-foreground py-8 text-sm">To'lovlar yo'q</div>
+            <div className="text-center text-muted-foreground py-8 text-sm">{t("tolovlarYoq")}</div>
           )}
         </div>
       )}

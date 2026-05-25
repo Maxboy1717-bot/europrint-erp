@@ -2,6 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UserCheck, Hash, AlertTriangle, AlertCircle, CheckCircle } from "lucide-react";
 import { Employee, AbcAnalysis, OrgStructureAssignment, EmploymentContract, Certificate, SalaryHistoryRecord } from "@/pages/employee-profile/profile-types";
+import { RoleGate, PII_VIEWER_ROLES } from "@/components/RoleGate";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 interface ProfileHeaderProps {
   employee: Employee;
@@ -14,6 +16,12 @@ interface ProfileHeaderProps {
   expiredCerts: Certificate[];
   expiringSoonCerts: Certificate[];
   getInitials: (name: string) => string;
+  /** Optional callback to open the edit-profile dialog. */
+  onEdit?: () => void;
+  /** Optional attendance summary used by the header's quick stats. */
+  attendanceStats?: unknown;
+  /** Optional raw attendance records passed through for downstream widgets. */
+  attendanceData?: unknown;
 }
 
 export function ProfileHeader({
@@ -129,7 +137,7 @@ export function ProfileHeader({
                       <UserCheck className="h-3 w-3" /> Faol
                     </Badge>
                   ) : employee.status === "on_leave" ? (
-                    <Badge className="bg-blue-100 text-blue-800 border-none">Ta'tilda</Badge>
+                    <Badge className="bg-blue-100 text-blue-800 border-none">{tLabel("employee.status.on_leave", "Ta'tilda")}</Badge>
                   ) : employee.status === "sick" ? (
                     <Badge className="bg-purple-100 text-purple-800 border-none">Kasalxonada</Badge>
                   ) : (
@@ -147,33 +155,44 @@ export function ProfileHeader({
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="text-right">
-                  {payrollSummary?.totalSalary ? (
-                    <>
-                      <div className="flex items-end gap-1">
-                        <span className="text-2xl font-black text-emerald-700 leading-none">
-                          {(Math.round(Number(payrollSummary.totalSalary)) / 1000000).toFixed(1)}M
-                        </span>
-                        <span className="text-sm text-emerald-400 mb-0.5">UZS</span>
-                      </div>
-                      <p className="text-xs text-emerald-400 mt-1">{payrollSummary.periodName || "So'nggi davr"}</p>
-                    </>
-                  ) : salaryHistory && salaryHistory.length > 0 ? (
-                    <>
-                      <div className="flex items-end gap-1">
-                        <span className="text-2xl font-black text-emerald-700 leading-none">
-                          {(Math.round(Number(salaryHistory[0].newSalary)) / 1000000).toFixed(1)}M
-                        </span>
-                        <span className="text-sm text-emerald-400 mb-0.5">UZS</span>
-                      </div>
-                      <p className="text-xs text-emerald-400 mt-1">Maosh tarixi</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-2xl font-black text-muted-foreground leading-none">—</p>
-                      <p className="text-xs text-emerald-400 mt-1">Ma'lumot yo'q</p>
-                    </>
-                  )}
+                <div className="text-right" data-testid="profile-header-salary">
+                  <RoleGate
+                    roles={PII_VIEWER_ROLES}
+                    ownerUserId={employee.id}
+                    fallback={
+                      <>
+                        <p className="text-2xl font-black text-muted-foreground leading-none" data-testid="salary-masked">•••••</p>
+                        <p className="text-xs text-emerald-400 mt-1">Maxfiy</p>
+                      </>
+                    }
+                  >
+                    {payrollSummary?.totalSalary ? (
+                      <>
+                        <div className="flex items-end gap-1">
+                          <span className="text-2xl font-black text-emerald-700 leading-none">
+                            {(Math.round(Number(payrollSummary.totalSalary)) / 1000000).toFixed(1)}M
+                          </span>
+                          <span className="text-sm text-emerald-400 mb-0.5">UZS</span>
+                        </div>
+                        <p className="text-xs text-emerald-400 mt-1">{payrollSummary.periodName || "So'nggi davr"}</p>
+                      </>
+                    ) : salaryHistory && salaryHistory.length > 0 ? (
+                      <>
+                        <div className="flex items-end gap-1">
+                          <span className="text-2xl font-black text-emerald-700 leading-none">
+                            {(Math.round(Number(salaryHistory[0].newSalary)) / 1000000).toFixed(1)}M
+                          </span>
+                          <span className="text-sm text-emerald-400 mb-0.5">UZS</span>
+                        </div>
+                        <p className="text-xs text-emerald-400 mt-1">Maosh tarixi</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-2xl font-black text-muted-foreground leading-none">—</p>
+                        <p className="text-xs text-emerald-400 mt-1">{tLabel("employee.salary.no_data", "Ma'lumot yo'q")}</p>
+                      </>
+                    )}
+                  </RoleGate>
                 </div>
               </div>
             </div>

@@ -1,3 +1,8 @@
+/**
+ * @module iot-sensors.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
@@ -13,9 +18,10 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -33,7 +39,8 @@ enum Role {
   SUPER_ADMIN = 'super_admin',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Iot Sensors')
 @Controller('iot')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -45,6 +52,8 @@ export class IotSensorsController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Get devices' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('devices')
   @Roles(Role.OPERATOR, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
   async getDevices(
@@ -57,6 +66,9 @@ export class IotSensorsController {
     return unwrapOrThrow(await this.queryBus.execute(query));
   }
 
+  @ApiOperation({ summary: 'Get device' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('devices/:id')
   @Roles(Role.OPERATOR, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
   async getDevice(@Param('id') deviceId: string) {
@@ -64,6 +76,9 @@ export class IotSensorsController {
     return { statusCode: HttpStatus.OK, data: { id: deviceId } };
   }
 
+  @ApiOperation({ summary: 'Register device' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('devices')
   @Roles(Role.SUPER_ADMIN)
   async registerDevice(@Body() dto: Record<string, unknown>) {
@@ -81,6 +96,10 @@ export class IotSensorsController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Update thresholds' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('devices/:id/thresholds')
   @Roles(Role.SUPER_ADMIN)
   async updateThresholds(@Param('id') deviceId: string, @Body() dto: Record<string, unknown>) {
@@ -92,6 +111,10 @@ export class IotSensorsController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Record reading' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('devices/:id/readings')
   @Roles(Role.OPERATOR, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
   async recordReading(@Param('id') deviceId: string, @Body() dto: Record<string, unknown>) {
@@ -103,6 +126,8 @@ export class IotSensorsController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Get readings' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('devices/:id/readings')
   @Roles(Role.OPERATOR, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
   async getReadings(
@@ -120,6 +145,8 @@ export class IotSensorsController {
     return unwrapOrThrow(await this.queryBus.execute(query));
   }
 
+  @ApiOperation({ summary: 'Get anomalies' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('anomalies')
   @Roles(Role.OPERATOR, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
   async getAnomalies(
@@ -130,6 +157,9 @@ export class IotSensorsController {
     return unwrapOrThrow(await this.queryBus.execute(query));
   }
 
+  @ApiOperation({ summary: 'Get o e e' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('sensors/:id/oee')
   @Roles(Role.OPERATOR, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
   async getOEE(@Param('id') sensorId: string) {

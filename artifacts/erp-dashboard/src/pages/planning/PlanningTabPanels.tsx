@@ -1,3 +1,8 @@
+/**
+ * @module PlanningTabPanels
+ * @description React page component. Route-level UI.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -61,13 +66,13 @@ export function PlanningTabPanels({
           </CardHeader>
           <CardContent>
             {isLoadingSchedule ? (
-              <div className="text-center py-8 text-muted-foreground">{t.loading}</div>
+              <div className="text-center py-8 text-[13px] text-muted-foreground">{t.loading}</div>
             ) : (
               <div className="overflow-x-auto">
                 <Table className="border rounded-md">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[200px] sticky left-0 bg-background z-10">{t.workCenter}</TableHead>
+                      <TableHead className="w-full sm:w-[200px] sticky left-0 bg-background z-10">{t.workCenter}</TableHead>
                       {eachDayOfInterval({ start: new Date(filters.startDate), end: new Date(filters.endDate) }).map(date => (
                         <TableHead key={date.toISOString()} className="min-w-[120px] text-center">{format(date, "dd.MM")}</TableHead>
                       ))}
@@ -75,7 +80,7 @@ export function PlanningTabPanels({
                   </TableHeader>
                   <TableBody>
                     {(Array.isArray(equipmentList) ? equipmentList : []).filter((e: Equipment) => e.category === "machine").map((machine: Equipment) => (
-                      <TableRow key={machine.id}>
+                      <TableRow key={machine.id} className="hover:bg-muted/40 transition-colors">
                         <TableCell className="font-medium sticky left-0 bg-background z-10 border-r">{machine.name}</TableCell>
                         {eachDayOfInterval({ start: new Date(filters.startDate), end: new Date(filters.endDate) }).map(date => {
                           const dateStr = format(date, "yyyy-MM-dd");
@@ -116,10 +121,10 @@ export function PlanningTabPanels({
             </div>
           </CardHeader>
           <CardContent>
-            {loadingPlans ? (<div className="text-center py-8 text-muted-foreground">{t.loading}</div>
-            ) : !productionPlans.length ? (<div className="text-center py-8 text-muted-foreground">{t.noData}</div>
+            {loadingPlans ? (<div className="text-center py-8 text-[13px] text-muted-foreground">{t.loading}</div>
+            ) : !productionPlans.length ? (<div className="text-center py-8 text-[13px] text-muted-foreground">{t.noData}</div>
             ) : (
-              <Table>
+              <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>{lang === "uz" ? "Reja raqami" : "№ плана"}</TableHead>
@@ -133,7 +138,7 @@ export function PlanningTabPanels({
                 </TableHeader>
                 <TableBody>
                   {(Array.isArray(productionPlans) ? productionPlans : []).map((plan: ProductionPlanRow) => (
-                    <TableRow key={plan.id} data-testid={`row-plan-${plan.id}`}>
+                    <TableRow key={plan.id} data-testid={`row-plan-${plan.id}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell className="font-medium">{plan.planNumber}</TableCell>
                       <TableCell>{plan.planDate}</TableCell>
                       <TableCell>{plan.workCenterName || "—"}</TableCell>
@@ -159,7 +164,7 @@ export function PlanningTabPanels({
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
             )}
           </CardContent>
         </Card>
@@ -177,10 +182,10 @@ export function PlanningTabPanels({
             </div>
           </CardHeader>
           <CardContent>
-            {loadingFacts ? (<div className="text-center py-8 text-muted-foreground">{t.loading}</div>
-            ) : !productionFacts.length ? (<div className="text-center py-8 text-muted-foreground">{t.noData}</div>
+            {loadingFacts ? (<div className="text-center py-8 text-[13px] text-muted-foreground">{t.loading}</div>
+            ) : !productionFacts.length ? (<div className="text-center py-8 text-[13px] text-muted-foreground">{t.noData}</div>
             ) : (
-              <Table>
+              <div className="ep-table-scroll"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>{lang === "uz" ? "Sana" : "Дата"}</TableHead>
@@ -194,18 +199,18 @@ export function PlanningTabPanels({
                 </TableHeader>
                 <TableBody>
                   {(Array.isArray(productionFacts) ? productionFacts : []).map((fact: ProductionFactRow) => (
-                    <TableRow key={fact.id} data-testid={`row-fact-${fact.id}`}>
+                    <TableRow key={fact.id} data-testid={`row-fact-${fact.id}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell>{fact.factDate}</TableCell>
                       <TableCell>{fact.shift || "—"}</TableCell>
                       <TableCell>{fact.workCenterName || "—"}</TableCell>
                       <TableCell>{fact.productName || "—"}</TableCell>
                       <TableCell className="font-medium">{fact.factQuantity}</TableCell>
-                      <TableCell className="text-green-600">{fact.goodQuantity}</TableCell>
-                      <TableCell className="text-red-600">{fact.scrapQuantity}</TableCell>
+                      <TableCell className="text-[var(--ep-green)]">{fact.goodQuantity}</TableCell>
+                      <TableCell className="text-[var(--ep-red)]">{fact.scrapQuantity}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
             )}
           </CardContent>
         </Card>
@@ -218,7 +223,7 @@ export function PlanningTabPanels({
             <CardDescription>{lang === "uz" ? "Reja va haqiqiy natijalarni solishtirish" : "Сравнение плана и факта"}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-12 text-[13px] text-muted-foreground">
               {lang === "uz" ? "Reja va haqiqiy natijalar grafigi" : "График сравнения плана и факта"}
               <div className="mt-4"><BarChart3 className="h-16 w-16 mx-auto opacity-30" /></div>
             </div>
@@ -290,7 +295,7 @@ export function PlanningTabPanels({
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div><p className="text-muted-foreground">{lang === "uz" ? "Mahsulotlar" : "Продукты"}</p><p className="font-medium">{run.totalProducts || 0}</p></div>
                     <div><p className="text-muted-foreground">{lang === "uz" ? "Talablar" : "Требования"}</p><p className="font-medium">{run.totalRequirements || 0}</p></div>
                     <div><p className="text-muted-foreground">{lang === "uz" ? "Kamomadlar" : "Дефициты"}</p><p className="font-medium text-destructive">{run.totalShortages || 0}</p></div>

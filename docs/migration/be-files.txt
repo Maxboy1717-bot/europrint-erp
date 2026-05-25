@@ -1,0 +1,13 @@
+apps/api/src/database/seeds/master-data.seed.ts
+apps/api/src/modules/admin/position-permissions/position-permissions.repository.ts
+apps/api/src/modules/admin/position-permissions/position-permissions.service.ts
+apps/api/src/modules/core/core.module.ts
+apps/api/src/modules/core/departments/departments.repository.ts
+apps/api/src/modules/core/departments/departments.service.ts
+apps/api/src/modules/core/infrastructure/repositories/drizzle-core.repo.ts
+apps/api/src/modules/core/positions/positions.repository.ts
+apps/api/src/modules/core/positions/positions.service.ts
+apps/api/src/modules/core/presentation/departments.controller.ts
+apps/api/src/modules/core/presentation/positions.controller.ts
+apps/api/src/shared/db/schema-compat-2.ts
+apps/api/src/shared/db/schema-misc-app-a.ts

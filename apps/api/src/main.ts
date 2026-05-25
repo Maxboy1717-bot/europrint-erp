@@ -1,141 +1,47 @@
+/**
+ * @module main
+ * @description Entry point. Bootstraps the NestJS+Fastify app, registers
+ *   security headers / CSRF / rate-limit / Swagger / health routes via the
+ *   helpers in `main-bootstrap.ts`, and runs the post-listen DB seed jobs.
+ *
+ *   Helpers were extracted to `main-bootstrap.ts` to keep this file under
+ *   the 300-line cap (Rule 16).
+ */
+
 import 'module-alias/register';
 import 'reflect-metadata';
-import { register as promRegister } from 'prom-client';
+import { initSentry } from './common/monitoring/sentry.config';
 import { NestFactory } from '@nestjs/core';
 import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
-import { HttpStatus, Logger, RequestMethod } from '@nestjs/common';
-import { ZodValidationPipe } from '@anatine/zod-nestjs';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { AppModule } from './app.module';
-import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ChatService } from './modules/chat/chat.service';
 import { ensureDbInvariants, ensureSchemaAdditions } from './shared/db/invariants';
+import { seedPosMovementTypes } from './shared/db/seed-pos-movement-types';
 
-import { DEFAULT_PORT, SECONDS_PER_YEAR, MS_PER_SECOND, MAX_FILE_SIZE } from '@common/constants/app.constants';
+import { DEFAULT_PORT, MAX_FILE_SIZE } from '@common/constants/app.constants';
+import {
+  configureSecurityHeaders,
+  configureBlockedMethods,
+  configureCsrfOriginCheck,
+  configureLoginRateLimit,
+  configureAppMiddleware,
+  configureSwagger,
+  configureHealthRoutes,
+  registerBufferParsers,
+  RawFastify,
+} from './main-bootstrap';
 
-const BLOCKED_HTTP_METHODS = ['CONNECT', 'TRACE', 'PROPFIND'] as const;
-type RawFastify = {
-  addHook: (event: string, fn: (req: RawReq, reply: RawReply, done?: () => void) => unknown) => void;
-  get: (path: string, fn: (req: unknown, reply: RawReply) => void | Promise<void>) => void;
-};
-type RawReq = { method?: string; url?: string; headers: Record<string, string | string[] | undefined>; ip?: string };
-type RawReply = { code: (n: number) => RawReply; header: (k: string, v: string) => RawReply; send: (b: unknown) => void };
+// Initialise Sentry as early as possible — its `process.on('uncaughtException')`
+// hook must be attached BEFORE bootstrap() runs.  `initSentry()` is a no-op
+// (with warn log) when SENTRY_DSN is empty (graceful degradation, matches
+// AishaConfig).  Module-level call runs synchronously on first import.
+initSentry();
 
-async function configureSecurityHeaders(app: NestFastifyApplication): Promise<void> {
-  await app.register(require('@fastify/helmet'), {
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'"], scriptSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'https:'], connectSrc: ["'self'"], fontSrc: ["'self'"],
-        objectSrc: ["'none'"], upgradeInsecureRequests: [],
-      },
-    },
-    crossOriginEmbedderPolicy: false,
-    frameguard: { action: 'deny' },
-    noSniff: true,
-    hsts: { maxAge: SECONDS_PER_YEAR, includeSubDomains: true },
-  });
-}
-
-function configureBlockedMethods(app: NestFastifyApplication): void {
-  const raw = app.getHttpAdapter().getInstance() as RawFastify;
-  raw.addHook('onRequest', (req: RawReq, reply: RawReply, done?: () => void) => {
-    if (BLOCKED_HTTP_METHODS.includes(req.method as (typeof BLOCKED_HTTP_METHODS)[number])) {
-      reply.code(HttpStatus.METHOD_NOT_ALLOWED).header('Allow', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
-        .send({ statusCode: HttpStatus.METHOD_NOT_ALLOWED, error: 'Method Not Allowed', message: `${req.method} metodi taqiqlangan` });
-      return;
-    }
-    done?.();
-  });
-
-  const CONNECT_RESPONSE =
-    'HTTP/1.1 405 Method Not Allowed\r\n' +
-    'Allow: GET, POST, PUT, PATCH, DELETE, OPTIONS\r\n' +
-    'Content-Length: 0\r\n' +
-    'Connection: close\r\n\r\n';
-
-  const httpServer = app.getHttpServer() as import('net').Server;
-  httpServer.on('connect', (_req: unknown, socket: import('net').Socket) => {
-    socket.write(CONNECT_RESPONSE);
-    socket.destroy();
-  });
-}
-
-function configureLoginRateLimit(app: NestFastifyApplication): void {
-  const loginBucket = new Map<string, { count: number; resetAt: number }>();
-  const LOGIN_LIMIT = 5;
-  const LOGIN_TTL_MS = 60_000;
-  const raw = app.getHttpAdapter().getInstance() as RawFastify;
-  raw.addHook('onRequest', async (req: RawReq, reply: RawReply) => {
-    if (req.method !== 'POST' || !req.url?.startsWith('/api/auth/login')) return;
-    const fwd = req.headers['x-forwarded-for'];
-    const ip = (Array.isArray(fwd) ? fwd[0] : fwd?.split(',')[0]?.trim()) ?? req.ip ?? 'unknown';
-    const now = Date.now();
-    let entry = loginBucket.get(ip);
-    if (!entry || now > entry.resetAt) { entry = { count: 0, resetAt: now + LOGIN_TTL_MS }; loginBucket.set(ip, entry); }
-    entry.count++;
-    if (entry.count > LOGIN_LIMIT) {
-      const retryAfter = Math.ceil((entry.resetAt - now) / MS_PER_SECOND);
-      reply.code(HttpStatus.TOO_MANY_REQUESTS).header('Retry-After', String(retryAfter))
-        .send({ statusCode: HttpStatus.TOO_MANY_REQUESTS, error: 'Too Many Requests', message: `Login uchun juda ko'p urinish. ${retryAfter}s dan keyin qayta urinib ko'ring.` });
-    }
-  });
-}
-
-function configureAppMiddleware(app: NestFastifyApplication): void {
-  app.setGlobalPrefix('api', {
-    exclude: [{ path: 'health', method: RequestMethod.GET }, { path: 'api/health', method: RequestMethod.GET }],
-  });
-  const origins = (process.env.ALLOWED_ORIGINS ?? '').split(',').map((o) => o.trim()).filter(Boolean);
-  const isDev = process.env.NODE_ENV !== 'production';
-  const isReplitOrigin = (o: string) =>
-    o.endsWith('.replit.dev') || o.endsWith('.repl.co') || o.endsWith('.replit.app');
-  app.enableCors({
-    origin: (origin, cb) => {
-      if (!origin) { cb(null, true); return; }
-      if ((origins ?? []).some((a) => origin === a)) { cb(null, true); return; }
-      if (isReplitOrigin(origin)) { cb(null, true); return; }
-      cb(new Error(`CORS: origin '${origin}' ruxsat etilmagan`), false);
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'x-tg-session'],
-  });
-  // ZodValidationPipe validates only createZodDto-backed classes; unknown keys are
-  // stripped (Zod default) rather than rejected — all DTO schemas are fully migrated.
-  // class-validator/class-transformer packages are retained as @nestjs/swagger peer deps.
-  app.useGlobalPipes(new ZodValidationPipe());
-  app.useGlobalFilters(new GlobalExceptionFilter());
-}
-
-function configureSwagger(app: NestFastifyApplication, fastify: RawFastify, port: number, logger: Logger): void {
-  if (process.env.NODE_ENV === 'production') return;
-  const secret = process.env.SWAGGER_SECRET;
-  if (!secret) { logger.warn('SWAGGER_SECRET not set — Swagger UI is disabled'); return; }
-  fastify.addHook('onRequest', (req: RawReq, reply: RawReply, done?: () => void) => {
-    if (req.url?.startsWith('/api/docs')) {
-      const params = new URLSearchParams(req.url.split('?')[1] ?? '');
-      if (params.get('secret') !== secret) { reply.code(HttpStatus.FORBIDDEN).send({ error: 'Forbidden' }); return; }
-    }
-    done?.();
-  });
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('EuroPrint ERP API v2')
-    .setDescription('NestJS + Fastify + DDD + CQRS | ARCHITECTURE.md muvofiq')
-    .setVersion('2.0').addBearerAuth().build();
-  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, swaggerConfig));
-  logger.log(`Swagger: http://localhost:${port}/api/docs?secret=${secret}`);
-}
-
-function configureHealthRoutes(fastify: RawFastify): void {
-  fastify.get('/', (_req, reply) => reply.code(200).send({ status: 'ok', service: 'europrint-api' }));
-  fastify.get('/health', (_req, reply) => reply.code(200).send({ status: 'ok' }));
-  fastify.get('/metrics', async (_req, reply) => {
-    const metrics = await promRegister.metrics();
-    reply.code(200).header('content-type', promRegister.contentType).send(metrics);
-  });
-}
+// Eslatma: 404 handling NestJS Global Exception Filter ichida amalga oshiriladi
+// (apps/api/src/common/filters/global-exception.filter.ts). Fastify'ning
+// `setNotFoundHandler` ni alohida o'rnatib bo'lmaydi — Nest o'zi o'rnatadi.
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -148,41 +54,70 @@ async function bootstrap(): Promise<void> {
   const port = Number(process.env.PORT ?? DEFAULT_PORT);
 
   await configureSecurityHeaders(app);
+  // @fastify/cookie — enables httpOnly cookie auth (access_token / refresh_token).
+  // Registered before other plugins so cookies are parsed on every request, and
+  // are available via `request.cookies` in NestJS guards / controllers.
+  // The COOKIE_SECRET env var is OPTIONAL: cookies are httpOnly + sameSite=strict
+  // already, so signing them is defense-in-depth, not required for MVP.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const fastifyCookie = require('@fastify/cookie');
+    await app.register(fastifyCookie.default ?? fastifyCookie, {
+      secret: process.env.COOKIE_SECRET, // optional — undefined disables signing
+      parseOptions: {},
+    });
+  } catch (e: unknown) {
+    new Logger('Bootstrap').warn(
+      `@fastify/cookie ro'yxatdan o'tmadi — Bearer token rejimi ishlatiladi: ${String(e)}`,
+    );
+  }
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   await app.register(require('@fastify/multipart'), { limits: { fileSize: MAX_FILE_SIZE, files: 1 } });
+
+  // Parse raw binary uploads as Buffer. Registered AFTER multipart so
+  // multipart/form-data is still handled by @fastify/multipart.
+  registerBufferParsers(app);
+
   configureBlockedMethods(app);
+  configureCsrfOriginCheck(app, logger);
   configureLoginRateLimit(app);
   configureAppMiddleware(app);
   const fastify = app.getHttpAdapter().getInstance() as RawFastify;
   configureSwagger(app, fastify, port, logger);
   configureHealthRoutes(fastify);
 
-  // Start listening FIRST so health checks pass within Replit's 60s timeout.
-  // Heavy DB operations run in the background after the port is open.
+  // TZ-D06: SD schema additions (version column, idempotency table)
+  try {
+    await ensureDbInvariants();
+    logger.log('DB invariantlar muvaffaqiyatli tekshirildi');
+  } catch (e: unknown) {
+    logger.warn(`DB invariantlar tekshiruvida xato: ${String(e)}`);
+  }
+
+  // TZ-D16: DB CHECK constraintlarini tekshirish va qo'llash
+  try {
+    await ensureSchemaAdditions();
+    logger.log('Schema additions muvaffaqiyatli qo\'llandi');
+  } catch (e: unknown) {
+    logger.warn(`Schema additions xato: ${String(e)}`);
+  }
+
+  // POS Monitor — 7 ta harakat turini seed qilish (idempotent, Drizzle ORM)
+  try {
+    await seedPosMovementTypes();
+  } catch (e: unknown) {
+    logger.warn(`pos_movement_types seed xato: ${String(e)}`);
+  }
+
   await app.listen(port, '0.0.0.0');
   logger.log(`EuroPrint NestJS API v2 ishga tushdi: http://localhost:${port}/api/v2`);
 
-  // Background initialization — runs after listen() so health check never times out
+  // Background initialization — chat tables are non-critical, run after listen
   (async () => {
     try {
       await app.get(ChatService).ensureTables();
     } catch (e: unknown) {
       logger.warn(`Chat tables init: ${e}`);
-    }
-
-    // TZ-D06: SD schema additions (version column, idempotency table)
-    try {
-      await ensureSchemaAdditions();
-      logger.log('Schema additions muvaffaqiyatli qo\'llandi');
-    } catch (e: unknown) {
-      logger.warn(`Schema additions xato: ${String(e)}`);
-    }
-
-    // TZ-D16: DB CHECK constraintlarini tekshirish va qo'llash
-    try {
-      await ensureDbInvariants();
-      logger.log('DB invariantlar muvaffaqiyatli tekshirildi');
-    } catch (e: unknown) {
-      logger.warn(`DB invariantlar tekshiruvida xato: ${String(e)}`);
     }
   })().catch((e: unknown) => logger.warn(`Background init xato: ${String(e)}`));
 }

@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-hr-base.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Logger } from '@nestjs/common';
@@ -39,7 +44,7 @@ export class HrBaseRepository {
         email_work:      hrEmployees.email_work,
         photo_url:       hrEmployees.photo_url,
         department_name: hrDepartments.name,
-        position_name:   hrPositions.name,
+        position_name:   hrPositions.title,
       })
         .from(hrEmployees)
         .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))
@@ -83,7 +88,7 @@ export class HrBaseRepository {
           email_work:      hrEmployees.email_work,
           photo_url:       hrEmployees.photo_url,
           department_name: hrDepartments.name,
-          position_name:   hrPositions.name,
+          position_name:   hrPositions.title,
         })
           .from(hrEmployees)
           .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))
@@ -103,6 +108,22 @@ export class HrBaseRepository {
     }
   }
 
+  /**
+   * Phase 2 / Task 2.4 — Add Employee transaction.
+   *
+   * Wraps the employee INSERT in `db.transaction(...)` so multi-table writes
+   * (employee row + the per-create audit row written inline) commit together
+   * or roll back together. The existing global AuditInterceptor still writes
+   * its envelope-level audit AFTER the controller returns, but that row can
+   * appear without a matching employee if the INSERT throws at the DB layer
+   * (constraint violation, timeout) — the inline audit closes that gap.
+   *
+   * If a parallel module ever links the new employee to a `users` row inside
+   * Add Employee (today the controller does not), the user INSERT lands here
+   * too — adding another statement inside the same `tx.transaction` callback.
+   * Any failure throws inside the callback, which rolls back every prior
+   * statement in the same transaction.
+   */
   async saveEmployee(employee: HrRow): Promise<Result<HrRow>> {
     try {
       const empPayload: Omit<typeof hrEmployees.$inferInsert, 'id'> = {
@@ -121,9 +142,50 @@ export class HrBaseRepository {
         gender:          (employee.gender ?? null) as string,
         date_of_birth:   (employee.dateOfBirth ?? employee.date_of_birth ?? null) as string,
       };
-      const rows = await db.insert(hrEmployees).values(empPayload as typeof hrEmployees.$inferInsert).returning();
-      return { ok: true, data: castTo<HrRow>((rows[0] ?? {}))};
+
+      type TxOutcome =
+        | { kind: 'ok'; saved: typeof hrEmployees.$inferSelect }
+        | { kind: 'err'; message: string };
+
+      const outcome: TxOutcome = await db.transaction(async (tx): Promise<TxOutcome> => {
+        // 1) Employee row — the primary write.
+        const inserted = await tx
+          .insert(hrEmployees)
+          .values(empPayload as typeof hrEmployees.$inferInsert)
+          .returning();
+        const saved = inserted[0];
+        if (!saved) {
+          // Throwing inside the callback rolls back the whole tx.
+          throw new Error('saveEmployee: INSERT returned no row');
+        }
+
+        // 2) Inline audit envelope — recorded in the same tx so the audit
+        //    row cannot exist without the employee row (and vice versa).
+        //    The global AuditInterceptor still writes the request-level
+        //    audit envelope AFTER the controller returns; this row is the
+        //    transactional, machine-readable counterpart.
+        await tx.execute(sql`
+          INSERT INTO audit_logs (id, table_name, record_id, action, new_values, created_at)
+          VALUES (
+            gen_random_uuid()::text,
+            'employees',
+            ${String((saved as { id: number }).id)},
+            'CREATE',
+            ${JSON.stringify(empPayload)}::jsonb,
+            NOW()
+          )
+        `);
+
+        return { kind: 'ok', saved };
+      });
+
+      if (outcome.kind === 'err') {
+        return Err(outcome.message);
+      }
+      return { ok: true, data: castTo<HrRow>(outcome.saved) };
     } catch (error: unknown) {
+      // Any throw inside the tx callback bubbles up here with the rollback
+      // already complete — no half-state in the DB.
       this.logger.error(`saveEmployee: ${(error as Error).message}`);
       return Err((error as Error).message);
     }

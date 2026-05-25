@@ -1,15 +1,20 @@
+/**
+ * @module MentionInput
+ * @description React UI component.
+ */
+
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Send, X, Smile, AtSign, Mic, Paperclip } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Send, X, Smile, AtSign, Mic, Paperclip, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatMessage } from "@/store/chatStore";
 import { VoiceRecorder } from "./VoiceRecorder";
+import { useTranslation } from '@/lib/i18n';
 
 interface RoomMember {
   userId: string;
   fullName: string;
-  employeeId?: string;
-  avatarUrl?: string;
+  employeeId?: string | number | null;
+  avatarUrl?: string | null;
 }
 
 interface Props {
@@ -30,6 +35,7 @@ export function MentionInput({
   roomId, replyTo, onCancelReply, onSend, onTypingStart, onTypingStop,
   members = [], isChannelReadOnly = false, onUploadFile, onCreatePoll, onVoiceMessage,
 }: Props) {
+  const { t } = useTranslation("common");
   const [text, setText] = useState("");
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,7 +52,7 @@ export function MentionInput({
   const filteredMembers = mentionSearch !== null
     ? (Array.isArray(members) ? members : []).filter(m =>
         m.fullName.toLowerCase().includes(mentionSearch.toLowerCase()) ||
-        (m.employeeId || "").toLowerCase().includes(mentionSearch.toLowerCase())
+        String(m.employeeId ?? "").toLowerCase().includes(mentionSearch.toLowerCase())
       ).slice(0, 6)
     : [];
 
@@ -58,11 +64,21 @@ export function MentionInput({
     ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
   }, [text]);
 
+  // Cancel any pending typing-stop timeout when the component unmounts so we
+  // don't fire onTypingStop on a stale closure after unmount.
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
     setText(val);
 
-    // Check for @mention trigger
     const cursor = e.target.selectionStart;
     const beforeCursor = val.slice(0, cursor);
     const atIdx = beforeCursor.lastIndexOf("@");
@@ -161,17 +177,18 @@ export function MentionInput({
     }
   }, [mentionSearch, filteredMembers, dropdownIndex, insertMention, handleSend]);
 
-  // Focus when room changes
   useEffect(() => {
     textareaRef.current?.focus();
   }, [roomId]);
 
   if (isChannelReadOnly) {
     return (
-      <div className="flex-shrink-0 border-t border-border/60 bg-background/95 px-4 py-3">
-        <p className="text-sm text-muted-foreground text-center py-2">
-          Bu kanal — faqat adminlar yozishi mumkin
-        </p>
+      <div className="flex-shrink-0 bg-[var(--tg-chat-bg)] px-4 py-3">
+        <div className="flex items-center justify-center py-3 px-4 bg-[var(--tg-action-bar-bg)]/80 rounded-xl">
+          <p className="text-[14px] text-[var(--tg-text-secondary)]">
+            {t("buKanalFaqatAdminlarYozishi")}
+          </p>
+        </div>
       </div>
     );
   }
@@ -182,8 +199,10 @@ export function MentionInput({
     e.target.value = "";
   }, [onUploadFile]);
 
+  const hasText = text.trim().length > 0;
+
   return (
-    <div className="flex-shrink-0 border-t border-border/60 bg-background/95 px-4 py-3 relative">
+    <div className="flex-shrink-0 bg-[var(--tg-chat-bg)] px-3 py-2 relative">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -208,14 +227,14 @@ export function MentionInput({
 
       {/* Reply preview */}
       {replyTo && (
-        <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-muted/50 rounded-lg border-l-2 border-primary">
+        <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-[var(--tg-action-bar-bg)] rounded-xl border-l-2 border-[var(--tg-sidebar-active)] shadow-sm">
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-primary">{replyTo.senderName}</p>
-            <p className="text-xs text-muted-foreground truncate">{replyTo.content}</p>
+            <p className="text-[13px] font-semibold text-[var(--tg-sidebar-active)]">{replyTo.senderName}</p>
+            <p className="text-[13px] text-[var(--tg-text-secondary)] truncate">{replyTo.content}</p>
           </div>
           {onCancelReply && (
-            <button onClick={onCancelReply} className="text-muted-foreground hover:text-foreground">
-              <X className="w-3.5 h-3.5" />
+            <button onClick={onCancelReply} className="text-[var(--tg-text-secondary)] hover:text-[var(--tg-text-primary)] p-1 rounded-full hover:bg-[var(--tg-hover)] transition-colors">
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -223,27 +242,27 @@ export function MentionInput({
 
       {/* Mention dropdown */}
       {mentionSearch !== null && filteredMembers.length > 0 && (
-        <div className="absolute bottom-full left-4 right-4 mb-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-50">
-          <div className="px-3 py-1.5 text-[10px] text-muted-foreground border-b border-border/50 flex items-center gap-1">
-            <AtSign className="w-3 h-3" />
-            Mention
+        <div className="absolute bottom-full left-3 right-3 mb-1 bg-[var(--tg-action-bar-bg)] rounded-xl shadow-lg overflow-hidden z-50 border border-[var(--tg-border)]">
+          <div className="px-3 py-1.5 text-[12px] text-[var(--tg-text-secondary)] border-b border-[var(--tg-border)] flex items-center gap-1">
+            <AtSign className="w-3.5 h-3.5" />
+            {t("mention")}
           </div>
           {(Array.isArray(filteredMembers) ? filteredMembers : []).map((member, idx) => (
             <button
               key={member.userId}
               className={cn(
-                "w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/60 transition-colors",
-                idx === dropdownIndex && "bg-primary/10"
+                "w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-[var(--tg-sidebar-hover)] transition-colors",
+                idx === dropdownIndex && "bg-[var(--tg-sidebar-active)]/10"
               )}
               onMouseDown={e => { e.preventDefault(); insertMention(member); }}
             >
-              <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[var(--tg-sidebar-active)] flex items-center justify-center text-[13px] font-bold text-white flex-shrink-0">
                 {(member.fullName || "?")[0]}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium truncate">{member.fullName}</p>
+                <p className="text-[14px] font-medium truncate text-[var(--tg-text-primary)]">{member.fullName}</p>
                 {member.employeeId && (
-                  <p className="text-[10px] text-muted-foreground">{member.employeeId}</p>
+                  <p className="text-[12px] text-[var(--tg-text-secondary)]">{member.employeeId}</p>
                 )}
               </div>
             </button>
@@ -251,73 +270,68 @@ export function MentionInput({
         </div>
       )}
 
-      <div className="flex items-end gap-2">
+      {/* ── Telegram-style input bar ── */}
+      <div className="flex items-end gap-1.5 bg-[var(--tg-action-bar-bg)] rounded-[22px] shadow-sm border border-[var(--tg-border)] pl-2 pr-1.5 py-1">
+        {/* Emoji button */}
         <button
-          className="flex-shrink-0 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors mb-0.5"
-          title="Emoji (tez orada)"
+          className="flex-shrink-0 p-1.5 rounded-full text-[var(--tg-text-placeholder)] hover:text-[var(--tg-text-secondary)] transition-colors mb-[2px]"
+          title={t("emoji")}
         >
-          <Smile className="w-5 h-5" />
+          <Smile className="w-[22px] h-[22px]" />
         </button>
 
+        {/* Text input */}
         <textarea
           ref={textareaRef}
           value={text}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder="Xabar yozing... @ mention uchun"
+          placeholder={t("xabarYozing")}
           rows={1}
           className={cn(
-            "flex-1 resize-none rounded-xl border border-border/60 bg-muted/30",
-            "px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/60",
-            "placeholder:text-muted-foreground/50 transition-all",
+            "flex-1 resize-none bg-transparent",
+            "px-1 py-[7px] text-[15px] leading-[1.3125] text-[var(--tg-text-primary)]",
+            "border-0 border-none outline-none ring-0 focus:outline-none focus:ring-0 focus:border-0",
+            "placeholder:text-[var(--tg-text-placeholder)] caret-[var(--tg-text-primary)] transition-all",
             "scrollbar-thin max-h-[120px] overflow-y-auto"
           )}
-          style={{ minHeight: "40px" }}
+          style={{ minHeight: "34px", boxShadow: "none" }}
         />
 
-        {/* File upload button */}
+        {/* File upload */}
         {onUploadFile && (
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex-shrink-0 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors mb-0.5"
-            title="Fayl yuklash"
+            className="flex-shrink-0 p-1.5 rounded-full text-[var(--tg-text-placeholder)] hover:text-[var(--tg-text-secondary)] transition-colors mb-[2px]"
+            title={t("fayl")}
           >
-            <Paperclip className="w-5 h-5" />
+            <Paperclip className="w-[22px] h-[22px]" />
           </button>
         )}
 
-        {/* Voice recorder toggle */}
-        <button
-          onClick={() => setShowVoiceRecorder((v) => !v)}
-          className={cn(
-            "flex-shrink-0 p-2 rounded-xl transition-colors mb-0.5",
-            showVoiceRecorder
-              ? "text-primary bg-primary/10 hover:bg-primary/20"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted"
-          )}
-          title="Ovozli xabar"
-        >
-          <Mic className="w-5 h-5" />
-        </button>
-
-        <Button
-          onClick={handleSend}
-          disabled={!text.trim()}
-          size="icon"
-          className={cn(
-            "flex-shrink-0 w-10 h-10 rounded-xl transition-all mb-0.5",
-            text.trim()
-              ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-              : "bg-muted text-muted-foreground cursor-not-allowed"
-          )}
-        >
-          <Send className="w-4 h-4" />
-        </Button>
+        {/* Send / Voice toggle */}
+        {hasText ? (
+          <button
+            onClick={handleSend}
+            className="flex-shrink-0 w-[38px] h-[38px] rounded-full bg-[var(--tg-sidebar-active)] hover:bg-[#2b7ed8] text-white flex items-center justify-center transition-all mb-[1px] shadow-sm active:scale-95"
+          >
+            <Send className="w-[18px] h-[18px] ml-0.5" />
+          </button>
+        ) : (
+          <button
+            onClick={() => setShowVoiceRecorder((v) => !v)}
+            className={cn(
+              "flex-shrink-0 w-[38px] h-[38px] rounded-full flex items-center justify-center transition-all mb-[1px]",
+              showVoiceRecorder
+                ? "bg-[var(--tg-sidebar-active)] text-white shadow-sm"
+                : "text-[var(--tg-text-placeholder)] hover:text-[var(--tg-text-secondary)]"
+            )}
+            title={t("ovozliXabar")}
+          >
+            <Mic className="w-[22px] h-[22px]" />
+          </button>
+        )}
       </div>
-
-      <p className="text-[10px] text-muted-foreground/40 mt-1.5 pl-10">
-        Enter — yuborish · Shift+Enter — yangi qator · @ — mention
-      </p>
     </div>
   );
 }

@@ -1,7 +1,12 @@
+/**
+ * @module drizzle-iot-main.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
-import { sql, eq, and, gte, desc, count, inArray } from 'drizzle-orm';
+import { SQL, SQLWrapper, and, count, desc, eq, gte, inArray, sql } from 'drizzle-orm';
 import {
   db, runQuery,
   cameras, camera_events, camera_zones,
@@ -11,7 +16,7 @@ import { Ok, Err } from '@common/result';
 
 import { MS_PER_DAY, MS_PER_HOUR } from '@common/constants/app.constants';
 type Row = Record<string, unknown>;
-const exec = async (q: Parameters<typeof db.execute>[0]): Promise<Row[]> => {
+const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 

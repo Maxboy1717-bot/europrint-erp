@@ -1,4 +1,9 @@
-import { getAuthHeaders } from '@/lib/queryClient';
+/**
+ * @module upload
+ * @description React UI component.
+ */
+
+import { apiRequest } from '@/lib/queryClient';
 
 export interface UploadResult {
   publicUrl:    string;
@@ -10,24 +15,31 @@ export async function uploadFile(
   file: File,
   purpose: 'file' | 'image' | 'voice' | 'video' = 'file',
 ): Promise<UploadResult> {
-  const res = await fetch('/api/chat/upload/request-url', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-    body: JSON.stringify({
-      fileName: file.name,
-      fileMime: file.type || 'application/octet-stream',
-      fileSize: file.size,
-      purpose,
-    }),
+  // Step 1 — ask our backend for an S3 presigned upload URL.
+  // Goes through apiRequest so auth + Result-envelope unwrapping happen
+  // exactly like every other ERP call.
+  const data = await apiRequest<{
+    uploadUrl:    string;
+    publicUrl:    string;
+    fileKey:      string;
+    thumbnailUrl: string | null;
+  }>('POST', '/api/chat/upload/request-url', {
+    fileName: file.name,
+    fileMime: file.type || 'application/octet-stream',
+    fileSize: file.size,
+    purpose,
   });
-  if (!res.ok) throw new Error(`Upload URL request failed: HTTP ${res.status}`);
-  const data = (await res.json()) as { uploadUrl: string; publicUrl: string; fileKey: string; thumbnailUrl: string | null };
 
+  // Step 2 — PUT the file directly to S3 using the presigned URL. This MUST
+  // be a raw fetch — apiRequest would attach our JWT, which invalidates the
+  // S3 signature and trips a 403. Send as multipart/form-data; the browser
+  // sets the Content-Type header (with boundary) automatically when we omit
+  // it. @fastify/multipart handles this natively on the receiving end.
+  const formData = new FormData();
+  formData.append('file', file, file.name);
   const uploadRes = await fetch(data.uploadUrl, {
     method: 'PUT',
-    headers: { 'Content-Type': file.type || 'application/octet-stream' },
-    body: file,
+    body: formData,
   });
   if (!uploadRes.ok) throw new Error(`Upload failed: HTTP ${uploadRes.status}`);
 

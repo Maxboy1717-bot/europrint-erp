@@ -1,3 +1,8 @@
+/**
+ * @module ProductList
+ * @description React UI component.
+ */
+
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,29 +34,29 @@ export function ProductList({
         </Button>
       </CardHeader>
       <CardContent className="p-0">
-        <Table>
+        <div className="ep-table-scroll"><Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Shtrix-kod</TableHead>
-              <TableHead>Nomi</TableHead>
-              <TableHead>Kategoriya</TableHead>
-              <TableHead className="text-right">Narxi</TableHead>
-              <TableHead className="text-right">Zaxira</TableHead>
-              <TableHead>Birlik</TableHead>
+              <TableHead>{t("shtrixKod")}</TableHead>
+              <TableHead>{t("name")}</TableHead>
+              <TableHead>{t("category")}</TableHead>
+              <TableHead className="text-right">{t("narxi")}</TableHead>
+              <TableHead className="text-right">{t("zaxira1")}</TableHead>
+              <TableHead>{t("unit")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">Yuklanmoqda...</TableCell>
+                <TableCell colSpan={6} className="text-center py-8">{t("Yuklanmoqda...")}</TableCell>
               </TableRow>
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Mahsulotlar mavjud emas</TableCell>
+                <TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">{t("mahsulotlarMavjudEmas")}</TableCell>
               </TableRow>
             ) : (
               (Array.isArray(products) ? products : []).map((p) => (
-                <TableRow key={p.id}>
+                <TableRow key={p.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-mono text-xs">{p.barcode}</TableCell>
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{p.category || "-"}</TableCell>
@@ -66,7 +71,7 @@ export function ProductList({
               ))
             )}
           </TableBody>
-        </Table>
+        </Table></div>
       </CardContent>
     </Card>
   );

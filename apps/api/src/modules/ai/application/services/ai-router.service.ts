@@ -1,3 +1,8 @@
+/**
+ * @module ai-router.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Err, isErr, Ok, safeCall } from '@common/result';
@@ -20,7 +25,8 @@ import {
 } from '../../domain/types/ai.types';
 import { aiUsageLogsTable } from '../../infrastructure/db/ai-usage-logs.table';
 import { DrizzleService } from '@common/services/drizzle.service';
-import { AiRouterRepository } from '../ai-router.repository';
+import { Inject } from '@nestjs/common';
+import { AI_ROUTER_REPO, type IAiRouterRepo } from '../../domain/repositories/i-ai-router.repo';
 
 import { MAX_NAME_LENGTH, AI_DEFAULT_MAX_TOKENS, AI_TOKENS_PER_UNIT } from '@common/constants/app.constants';
 export type { UsageStats };
@@ -32,44 +38,44 @@ export class AiRouterService {
   constructor(private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
     private readonly drizzle: DrizzleService,
-    private readonly aiRouterRepo: AiRouterRepository) {}
+    @Inject(AI_ROUTER_REPO) private readonly aiRouterRepo: IAiRouterRepo) {}
 
   async call(req: AiRequest): Promise<Result<AiResponse>> {
     const startTime = Date.now();
+    const budgetErr = await this.checkBudget();
+    if (budgetErr) return budgetErr;
+    const providers = this.buildProviderOrder(req);
+    return this.tryProviders(providers, req, startTime);
+  }
 
-    // 1. Check daily budget
+  private async checkBudget(): Promise<Result<AiResponse> | null> {
     const spentResult = await this.getTodaySpent();
     if (isErr(spentResult)) return Err(spentResult.error);
-
     if (spentResult.data >= DAILY_BUDGET_USD) {
       const msg = `AI kunlik byudjet oshdi: $${spentResult.data.toFixed(2)}/$${DAILY_BUDGET_USD}`;
       this.logger.warn(msg);
       return Err(msg);
     }
+    return null;
+  }
 
-    // 2. Build provider order: preferred → fallbacks
+  private buildProviderOrder(req: AiRequest): AiProvider[] {
     const preferred = req.provider ?? TASK_PROVIDER_MAP[req.taskType] ?? 'gemini';
-    const providers: AiProvider[] = [preferred, ...PROVIDER_FALLBACK.filter((p) => p !== preferred)];
+    return [preferred, ...PROVIDER_FALLBACK.filter((p) => p !== preferred)];
+  }
 
-    // 3. Try each provider
+  private async tryProviders(providers: AiProvider[], req: AiRequest, startTime: number): Promise<Result<AiResponse>> {
     for (const provider of providers) {
       const result = await this.callProvider(provider, req);
       if (isErr(result)) {
         this.logger.warn(`[AI] ${provider} xato: ${result.error.message} — fallback...`);
         continue;
       }
-      const latencyMs = Date.now() - startTime;
-      const response: AiResponse = {
-        ...result.data,
-        latencyMs,
-      };
+      const response: AiResponse = { ...result.data, latencyMs: Date.now() - startTime };
       await this.logUsage(provider, req, response);
-      this.logger.log(
-        `[AI] ${req.taskType} | ${provider} | $${response.estimatedCostUsd.toFixed(6)} | ${response.latencyMs}ms`,
-      );
+      this.logger.log(`[AI] ${req.taskType} | ${provider} | $${response.estimatedCostUsd.toFixed(6)} | ${response.latencyMs}ms`);
       return { ok: true, data: response };
     }
-
     return Err('Barcha AI provayderlar ishlamaydi');
   }
 
@@ -80,57 +86,66 @@ export class AiRouterService {
   }
 
   async getUsageStats(): Promise<Result<UsageStats>> {
-    const EMPTY: UsageStats = {
-      today: { spent: 0, remaining: DAILY_BUDGET_USD, budget: DAILY_BUDGET_USD, requestCount: 0 },
-      byProvider: { openai: { spent: 0, requestCount: 0 }, gemini: { spent: 0, requestCount: 0 }, claude: { spent: 0, requestCount: 0 } },
-      topTaskTypes: [],
-    };
+    const EMPTY = this.emptyUsageStats();
     try {
-      const db = this.drizzle.db;
       const today = _time.now();
       today.setHours(0, 0, 0, 0);
-
       const todaySpentResult = await this.getTodaySpent();
       const todaySpentValue = isErr(todaySpentResult) ? 0 : todaySpentResult.data;
-
-      let byProviderRows: Array<{ provider: string; spent: string; requestCount: number }> = [];
-      try {
-        byProviderRows = await db
-          .select({
-            provider: aiUsageLogsTable.provider,
-            spent: sql<string>`COALESCE(SUM(CAST(${aiUsageLogsTable.estimatedCostUsd} AS FLOAT)), 0)`,
-            requestCount: sql<number>`COUNT(*)`,
-          })
-          .from(aiUsageLogsTable)
-          .where(gte(aiUsageLogsTable.createdAt, today))
-          .groupBy(aiUsageLogsTable.provider);
-      } catch { this.logger.warn('getUsageStats: byProvider query failed'); }
-
-      const providerStats: Record<AiProvider, { spent: number; requestCount: number }> = {
-        openai: { spent: 0, requestCount: 0 },
-        gemini: { spent: 0, requestCount: 0 },
-        claude: { spent: 0, requestCount: 0 },
-      };
-      for (const row of byProviderRows) {
-        const provider = row.provider as AiProvider;
-        if (provider in providerStats) providerStats[provider] = { spent: parseFloat(row.spent), requestCount: row.requestCount };
-      }
-
-      let topTasks: Array<{ taskType: string | null; spent: string; count: number }> = [];
-      try {
-        const topTasksResult = await this.aiRouterRepo.getTopTasksBySpend(today, 10);
-        if (topTasksResult.ok) topTasks = topTasksResult.data as typeof topTasks;
-      } catch { this.logger.warn('getUsageStats: topTasks query failed'); }
-
+      const providerStats = await this.collectProviderStats(today);
+      const topTasks = await this.collectTopTasks(today);
+      const requestCount = Object.values(providerStats).reduce((sum, p) => sum + p.requestCount, 0);
       return Ok({
-        today: { spent: todaySpentValue, remaining: DAILY_BUDGET_USD - todaySpentValue, budget: DAILY_BUDGET_USD, requestCount: Object.values(providerStats).reduce((sum, p) => sum + p.requestCount, 0) },
+        today: { spent: todaySpentValue, remaining: DAILY_BUDGET_USD - todaySpentValue, budget: DAILY_BUDGET_USD, requestCount },
         byProvider: providerStats,
-        topTaskTypes: (topTasks ?? []).map((row) => ({ taskType: row.taskType as AiTaskType, spent: parseFloat(row.spent), count: row.count })),
+        topTaskTypes: (Array.isArray(topTasks) ? topTasks : []).map((row) => ({ taskType: row.taskType as AiTaskType, spent: parseFloat(row.spent), count: row.count })),
       });
     } catch (e) {
       this.logger.warn(`getUsageStats: fallback due to error: ${e}`);
       return Ok(EMPTY);
     }
+  }
+
+  private emptyUsageStats(): UsageStats {
+    return {
+      today: { spent: 0, remaining: DAILY_BUDGET_USD, budget: DAILY_BUDGET_USD, requestCount: 0 },
+      byProvider: { openai: { spent: 0, requestCount: 0 }, gemini: { spent: 0, requestCount: 0 }, claude: { spent: 0, requestCount: 0 } },
+      topTaskTypes: [],
+    };
+  }
+
+  private async collectProviderStats(today: Date): Promise<Record<AiProvider, { spent: number; requestCount: number }>> {
+    const providerStats: Record<AiProvider, { spent: number; requestCount: number }> = {
+      openai: { spent: 0, requestCount: 0 },
+      gemini: { spent: 0, requestCount: 0 },
+      claude: { spent: 0, requestCount: 0 },
+    };
+    let byProviderRows: Array<{ provider: string | null; spent: string; requestCount: number }> = [];
+    try {
+      const db = this.drizzle.db;
+      byProviderRows = await db
+        .select({
+          provider: aiUsageLogsTable.provider,
+          spent: sql<string>`COALESCE(SUM(CAST(${aiUsageLogsTable.estimatedCost} AS FLOAT)), 0)`,
+          requestCount: sql<number>`COUNT(*)`,
+        })
+        .from(aiUsageLogsTable)
+        .where(gte(aiUsageLogsTable.createdAt, today))
+        .groupBy(aiUsageLogsTable.provider);
+    } catch { this.logger.warn('getUsageStats: byProvider query failed'); }
+    for (const row of byProviderRows) {
+      const provider = row.provider as AiProvider;
+      if (provider in providerStats) providerStats[provider] = { spent: parseFloat(row.spent), requestCount: row.requestCount };
+    }
+    return providerStats;
+  }
+
+  private async collectTopTasks(today: Date): Promise<Array<{ taskType: string | null; spent: string; count: number }>> {
+    try {
+      const topTasksResult = await this.aiRouterRepo.getTopTasksBySpend(today, 10);
+      if (topTasksResult.ok) return topTasksResult.data as Array<{ taskType: string | null; spent: string; count: number }>;
+    } catch { this.logger.warn('getUsageStats: topTasks query failed'); }
+    return [];
   }
 
   private async callProvider(provider: AiProvider, req: AiRequest): Promise<Result<AiResponse>> {
@@ -174,35 +189,34 @@ export class AiRouterService {
     });
   }
 
+  private async invokeGemini(apiKey: string, req: AiRequest) {
+    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    const client = new GoogleGenerativeAI(apiKey);
+    const model = PROVIDER_MODELS.gemini;
+    const genModel = client.getGenerativeModel({ model });
+    const systemPromptPart = req.systemPrompt ? `${req.systemPrompt}\n\n` : '';
+    const fullPrompt = systemPromptPart + req.prompt;
+    const response = await genModel.generateContent({
+      contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+      generationConfig: {
+        maxOutputTokens: req.maxTokens ?? AI_DEFAULT_MAX_TOKENS,
+        temperature: req.temperature ?? 0.7,
+      },
+    });
+    return { response, model };
+  }
+
   private async callGemini(req: AiRequest): Promise<Result<AiResponse>> {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
     if (!apiKey) return Err('GEMINI_API_KEY konfiguratsiyasi yo`q');
-
     return safeCall(async () => {
-      const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      const client = new GoogleGenerativeAI(apiKey);
-      const model = PROVIDER_MODELS.gemini;
-      const genModel = client.getGenerativeModel({ model });
-
-      const systemPromptPart = req.systemPrompt ? `${req.systemPrompt}\n\n` : '';
-      const fullPrompt = systemPromptPart + req.prompt;
-
-      const response = await genModel.generateContent({
-        contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-        generationConfig: {
-          maxOutputTokens: req.maxTokens ?? AI_DEFAULT_MAX_TOKENS,
-          temperature: req.temperature ?? 0.7,
-        },
-      });
-
+      const { response, model } = await this.invokeGemini(apiKey, req);
       if (!response.response?.text()) throw new InternalServerErrorException('Gemini javob bo`sh');
-
       const text = response.response.text();
       const usageMetadata = response.response.usageMetadata;
       const inputTokens = usageMetadata?.promptTokenCount ?? 0;
       const outputTokens = usageMetadata?.candidatesTokenCount ?? 0;
       const estimatedCostUsd = this.estimateCost('gemini', inputTokens, outputTokens);
-
       return { text, provider: 'gemini' as AiProvider, model, inputTokens, outputTokens, estimatedCostUsd, latencyMs: 0 };
     });
   }
@@ -243,28 +257,29 @@ export class AiRouterService {
   }
 
   private async logUsage(provider: AiProvider, req: AiRequest, result: AiResponse): Promise<void> {
-    const requestSummary = req.prompt.substring(0, MAX_NAME_LENGTH);
-    const responseSummary = result.text.substring(0, MAX_NAME_LENGTH);
-
     const logResult = await safeCall(async () => {
-      await this.aiRouterRepo.insertUsageLog({
-        provider,
-        taskType: req.taskType,
-        model: result.model,
-        inputTokens: result.inputTokens,
-        outputTokens: result.outputTokens,
-        totalTokens: result.inputTokens + result.outputTokens,
-        estimatedCostUsd: result.estimatedCostUsd.toFixed(6),
-        userId: req.userId ? Number(req.userId) : undefined,
-        sessionId: req.sessionId != null ? String(req.sessionId) : undefined,
-        requestSummary,
-        responseSummary,
-        latencyMs: result.latencyMs,
-        status: 'success',
-      });
+      await this.aiRouterRepo.insertUsageLog(this.buildUsageLogPayload(provider, req, result));
     });
     if (isErr(logResult)) {
       this.logger.warn(`[AI] logUsage xato: ${logResult.error.message}`);
     }
+  }
+
+  private buildUsageLogPayload(provider: AiProvider, req: AiRequest, result: AiResponse) {
+    return {
+      provider,
+      taskType: req.taskType,
+      model: result.model,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+      totalTokens: result.inputTokens + result.outputTokens,
+      estimatedCost: result.estimatedCostUsd.toFixed(6),
+      userId: req.userId != null ? String(req.userId) : undefined,
+      sessionId: req.sessionId != null ? String(req.sessionId) : undefined,
+      requestSummary: req.prompt.substring(0, MAX_NAME_LENGTH),
+      responseSummary: result.text.substring(0, MAX_NAME_LENGTH),
+      latencyMs: result.latencyMs,
+      status: 'success' as const,
+    };
   }
 }

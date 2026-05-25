@@ -1,9 +1,15 @@
+/**
+ * @module courses.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Body,
   Controller,
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -11,8 +17,9 @@ import {
   UseGuards,
   UseInterceptors
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -22,13 +29,18 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { LmsCoursesExtendedService } from '../application/services/lms-courses-extended.service';
 import { CreateCourseSchema, CreateCourseDto, UpdateCourseSchema, UpdateCourseDto } from './dto/courses.dto';
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Courses')
+@ApiBearerAuth()
 @Controller('courses')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class CoursesController {
   constructor(private readonly svc: LmsCoursesExtendedService) {}
 
+  @ApiOperation({ summary: 'Completion trend lang' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('completion-trend/:lang')
   @Roles('HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async completionTrendLang(@Param('lang') _lang: string, @Query('months') months?: string) {
@@ -36,6 +48,8 @@ export class CoursesController {
     return unwrapOrInternal(result);
   }
 
+  @ApiOperation({ summary: 'Completion trend' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('completion-trend')
   @Roles('HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async completionTrend(@Query('months') months?: string) {
@@ -43,6 +57,8 @@ export class CoursesController {
     return unwrapOrInternal(result);
   }
 
+  @ApiOperation({ summary: 'List courses' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async listCourses(
@@ -57,6 +73,9 @@ export class CoursesController {
     return unwrapOrInternal(result);
   }
 
+  @ApiOperation({ summary: 'Create course' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   @UsePipes(new ZodValidationPipe(CreateCourseSchema))
@@ -66,6 +85,9 @@ export class CoursesController {
     return { message: 'Kurs yaratildi', data };
   }
 
+  @ApiOperation({ summary: 'Get course' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async getCourse(@Param('id') id: string) {
@@ -73,6 +95,10 @@ export class CoursesController {
     return unwrapOrInternal(result);
   }
 
+  @ApiOperation({ summary: 'Update course' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Put(':id')
   @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   @UsePipes(new ZodValidationPipe(UpdateCourseSchema))
@@ -82,11 +108,28 @@ export class CoursesController {
     return { message: 'Kurs yangilandi', data };
   }
 
+  @ApiOperation({ summary: 'Delete course' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete(':id')
   @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async deleteCourse(@Param('id') id: string) {
     const result = await this.svc.deleteCourse(id);
     unwrapOrInternal(result);
     return { message: "Kurs o'chirildi" };
+  }
+
+  @ApiOperation({ summary: 'Patch course' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':id')
+  @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  @UsePipes(new ZodValidationPipe(UpdateCourseSchema))
+  async patchCourse(@Param('id') id: string, @Body() dto: UpdateCourseDto) {
+    const result = await this.svc.updateCourse(id, dto);
+    const data = unwrapOrInternal(result);
+    return { message: 'Kurs yangilandi', data };
   }
 }

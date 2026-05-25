@@ -1,156 +1,178 @@
+/**
+ * @module drizzle-sd-customers.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries.
+ *   Customer 360 builder/helpers and contact/NPS/docs/competitor sub-ops live
+ *   in ./drizzle-sd-customers/ to satisfy Rule 16 (file size).
+ */
+
 import { Injectable } from '@nestjs/common';
-import { db , runQuery } from '@shared/db';
+import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
-import {
-  execSdCustomerSoftDelete, execSdContactDelete,
-  execSdDocumentDelete, execSdCompetitorDelete,
-} from '@common/database/queries-sd';
+import { execSdCustomerSoftDelete } from '@common/database/queries-sd';
+import { mapSegment } from './drizzle-sd-customers/customer-360.helpers';
+import { buildCustomer360View } from './drizzle-sd-customers/customer-360.builder';
+import * as subOps from './drizzle-sd-customers/contacts-nps.repo';
 
 type Row = Record<string, unknown>;
 
 @Injectable()
 export class DrizzleSdCustomersRepository {
+  private mapSegment(status: string | null | undefined): string { return mapSegment(status); }
+
   async list(pat: string | null, status: string | undefined, lim: number, off: number): Promise<Row[]> {
+    const dbStatus = status === 'regular' ? 'active' : status === 'vip' ? 'vip' : status === 'potential' ? 'at_risk' : status === 'new' ? 'new' : status;
     const rows = await runQuery<Row>(sql`
-      SELECT c.*, COUNT(DISTINCT o.id)::int AS order_count,
-             COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS lifetime_value
+      SELECT c.id, c.name, c.stir, c.status, c.actual_address, c.notes,
+             c.credit_limit, c.payment_terms_days, c.industry, c.website,
+             COUNT(DISTINCT o.id)::int AS "totalOrders",
+             COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS "totalRevenue"
       FROM sd_customers c LEFT JOIN sales_orders o ON o.customer_id = c.id
-      WHERE (${pat}::text IS NULL OR c.name ILIKE ${pat} OR c.stir ILIKE ${pat})
-        AND (${status ?? null}::text IS NULL OR c.status = ${status ?? null})
-      GROUP BY c.id ORDER BY c.name LIMIT ${lim} OFFSET ${off}
+      WHERE c.status != 'deleted'
+        AND (${pat}::text IS NULL OR c.name ILIKE ${pat} OR c.stir ILIKE ${pat})
+        AND (${dbStatus ?? null}::text IS NULL OR c.status = ${dbStatus ?? null})
+      GROUP BY c.id, c.name, c.stir, c.status, c.actual_address, c.notes,
+               c.credit_limit, c.payment_terms_days, c.industry, c.website
+      ORDER BY c.name LIMIT ${lim} OFFSET ${off}
     `);
-    return rows.rows as Row[];
+    return (rows.rows as Row[]).map(r => ({
+      ...r,
+      totalOrders: Number(r.totalOrders ?? 0),
+      totalRevenue: Number(r.totalRevenue ?? 0),
+      creditLimit: Number(r.credit_limit ?? 0),
+      actualAddress: r.actual_address ?? null,
+      segment: this.mapSegment(String(r.status ?? '')),
+    }));
   }
 
   async getById(cid: number): Promise<Row[]> {
-    const rows = await runQuery<Row>(sql`SELECT * FROM sd_customers WHERE id = ${cid}`);
-    return rows.rows as Row[];
+    const rows = await runQuery<Row>(sql`
+      SELECT c.*, c.actual_address,
+             COUNT(DISTINCT o.id)::int AS "totalOrders",
+             COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS "totalRevenue"
+      FROM sd_customers c
+      LEFT JOIN sales_orders o ON o.customer_id = c.id
+      WHERE c.id = ${cid} AND c.status != 'deleted'
+      GROUP BY c.id
+    `);
+    return (rows.rows as Row[]).map(r => ({
+      ...r,
+      totalOrders: Number(r.totalOrders ?? 0),
+      totalRevenue: Number(r.totalRevenue ?? 0),
+      creditLimit: Number(r.credit_limit ?? 0),
+      actualAddress: r.actual_address ?? null,
+      segment: this.mapSegment(String(r.status ?? '')),
+    }));
   }
 
-  async get360View(cid: number): Promise<{ customer: unknown; recent_orders: unknown[]; contacts: unknown[]; documents: unknown[] }> {
-    const [customerRows, ordersRows, contactsRows, documentsRows] = await Promise.all([
-      runQuery<Row>(sql`SELECT * FROM sd_customers WHERE id = ${cid}`),
-      runQuery<Row>(sql`SELECT id, order_number, status, total_amount, created_at FROM sales_orders WHERE customer_id = ${cid} ORDER BY created_at DESC LIMIT 10`),
-      runQuery<Row>(sql`SELECT * FROM sd_customer_contacts WHERE customer_id = ${cid}`),
-      runQuery<Row>(sql`SELECT * FROM sd_customer_documents WHERE customer_id = ${cid} ORDER BY created_at DESC LIMIT 5`),
+  async get360View(cid: number): Promise<Record<string, unknown>> {
+    const safe = async (q: ReturnType<typeof runQuery<Row>>) =>
+      q.then(r => r.rows as Row[]).catch(() => [] as Row[]);
+
+    const [customerRows, ordersRows, contactsRows, documentsRows, interactionsRows, competitorsRows, paymentsRows, npsRows] = await Promise.all([
+      safe(runQuery<Row>(sql`SELECT * FROM sd_customers WHERE id = ${cid} AND deleted_at IS NULL`)),
+      safe(runQuery<Row>(sql`
+        SELECT id, order_number, status, total_amount, currency, created_at, delivery_date,
+               EXTRACT(YEAR FROM created_at)::int AS order_year,
+               EXTRACT(MONTH FROM created_at)::int AS order_month
+        FROM sales_orders WHERE customer_id = ${cid} AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 100
+      `)),
+      safe(runQuery<Row>(sql`
+        SELECT id, customer_id, full_name, position, phone, email, telegram,
+               is_primary, department, influence_level, is_decision_maker,
+               linkedin_url, role_note, created_at
+        FROM sd_customer_contacts WHERE customer_id = ${cid}
+        ORDER BY is_decision_maker DESC, influence_level DESC, is_primary DESC, full_name
+      `)),
+      safe(runQuery<Row>(sql`SELECT * FROM sd_customer_documents WHERE customer_id = ${cid} ORDER BY created_at DESC LIMIT 30`)),
+      safe(runQuery<Row>(sql`
+        SELECT i.id, i.type, i.notes, i.direction, i.subject, i.outcome,
+               i.next_action, i.next_action_date, i.interaction_date, i.created_at,
+               i.satisfaction_rating, i.sentiment_score,
+               COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_name
+        FROM sd_customer_interactions i
+        LEFT JOIN employees e ON e.id::text = i.employee_id::text
+        WHERE i.customer_id = ${cid} ORDER BY i.created_at DESC LIMIT 50
+      `)),
+      safe(runQuery<Row>(sql`SELECT * FROM sd_customer_competitors WHERE customer_id = ${cid} ORDER BY competitor_name`)),
+      safe(runQuery<Row>(sql`SELECT * FROM sd_payments WHERE customer_id = ${cid} ORDER BY payment_date DESC LIMIT 50`)),
+      safe(runQuery<Row>(sql`
+        SELECT id, score, comment, created_at,
+               CASE WHEN score >= 9 THEN 'promoter' WHEN score >= 7 THEN 'passive' ELSE 'detractor' END AS category
+        FROM nps_responses WHERE customer_id = ${cid} ORDER BY created_at DESC LIMIT 20
+      `)),
     ]);
-    return {
-      customer: customerRows.rows[0],
-      recent_orders: ordersRows.rows as Row[],
-      contacts: contactsRows.rows as Row[],
-      documents: documentsRows.rows as Row[],
-    };
+
+    return buildCustomer360View({
+      customerRows, ordersRows, contactsRows, documentsRows,
+      interactionsRows, competitorsRows, paymentsRows, npsRows,
+    });
   }
 
   async update(cid: number, body: Row): Promise<Row[]> {
-    const { name, stir, legal_address, actual_address, segment, status, notes, is_blocked, block_reason, credit_limit } = body;
+    const { name, title, stir, inn, phone, email, address, status, notes } = body;
+    const finalName = name ?? title ?? null;
+    const finalStir = stir ?? inn ?? null;
     const rows = await runQuery<Row>(sql`
       UPDATE sd_customers
-      SET name = COALESCE(${name ?? null}, name),
-          stir = COALESCE(${stir ?? null}, stir),
-          legal_address = COALESCE(${legal_address ?? null}, legal_address),
-          actual_address = COALESCE(${actual_address ?? null}, actual_address),
-          segment = COALESCE(${segment ?? null}, segment),
+      SET name = COALESCE(${finalName}, name),
+          stir = COALESCE(${finalStir}, stir),
+          inn = COALESCE(${finalStir}, inn),
+          phone = COALESCE(${phone ?? null}, phone),
+          email = COALESCE(${email ?? null}, email),
+          address = COALESCE(${address ?? null}, address),
           status = COALESCE(${status ?? null}, status),
           notes = COALESCE(${notes ?? null}, notes),
-          is_blocked = COALESCE(${is_blocked ?? null}, is_blocked),
-          block_reason = COALESCE(${block_reason ?? null}, block_reason),
-          credit_limit = COALESCE(${credit_limit ?? null}, credit_limit),
           updated_at = NOW()
       WHERE id = ${cid} RETURNING *
     `);
     return rows.rows as Row[];
   }
 
-  async softDelete(cid: number): Promise<void> {
-    await execSdCustomerSoftDelete(cid);
-  }
-
-  async getContacts(cid: number): Promise<Row[]> {
-    const rows = await runQuery<Row>(sql`SELECT * FROM sd_customer_contacts WHERE customer_id = ${cid} ORDER BY is_primary DESC, full_name`);
-    return rows.rows as Row[];
-  }
-
-  async addContact(cid: number, full_name: unknown, phone: unknown, email: unknown, position: unknown, is_primary: unknown): Promise<Row> {
+  async create(body: Row): Promise<Row> {
+    const { name, title, stir, inn, phone, email, address, notes } = body;
+    const finalName = name ?? title ?? 'Nomsiz';
+    const finalStir = stir ?? inn ?? null;
+    const seg = String(body.segment ?? 'new');
+    const dbStatus = seg === 'vip' ? 'vip' : seg === 'regular' ? 'active' : seg === 'potential' ? 'at_risk' : 'new';
+    const actualAddress = body.actualAddress ?? body.actual_address ?? address ?? null;
     const rows = await runQuery<Row>(sql`
-      INSERT INTO sd_customer_contacts (customer_id, full_name, phone, email, position, is_primary)
-      VALUES (${cid}, ${full_name}, ${phone ?? null}, ${email ?? null}, ${position ?? null}, ${is_primary ?? false})
+      INSERT INTO sd_customers (name, stir, inn, phone, email, address, actual_address, notes, status, created_at, updated_at)
+      VALUES (${finalName}, ${finalStir}, ${finalStir}, ${phone ?? null}, ${email ?? null},
+              ${actualAddress}, ${actualAddress},
+              ${notes ?? null}, ${dbStatus}, NOW(), NOW())
       RETURNING *
     `);
-    return rows.rows[0] as Row;
+    const row = (rows.rows[0] ?? {}) as Row;
+    return { ...row, segment: this.mapSegment(String(row.status ?? '')), creditLimit: Number(row.credit_limit ?? 0), actualAddress: row.actual_address ?? null };
   }
 
-  async updateContact(kid: number, cid: number, full_name: unknown, phone: unknown, email: unknown, position: unknown): Promise<Row[]> {
+  async softDelete(cid: number): Promise<void> { await execSdCustomerSoftDelete(cid); }
+
+  async getRecentOrders(cid: number): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
-      UPDATE sd_customer_contacts
-      SET full_name = COALESCE(${full_name ?? null}, full_name), phone = COALESCE(${phone ?? null}, phone),
-          email = COALESCE(${email ?? null}, email), position = COALESCE(${position ?? null}, position), updated_at = NOW()
-      WHERE id = ${kid} AND customer_id = ${cid} RETURNING *
+      SELECT id, order_number, status, total_amount, created_at, delivery_date
+      FROM sales_orders WHERE customer_id = ${cid} AND deleted_at IS NULL
+      ORDER BY created_at DESC LIMIT 10
     `);
     return rows.rows as Row[];
   }
 
-  async deleteContact(kid: number, cid: number): Promise<void> {
-    await execSdContactDelete(kid, cid);
-  }
-
-  async getInteractions(cid: number): Promise<Row[]> {
-    const rows = await runQuery<Row>(sql`
-      SELECT i.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_name
-      FROM sd_customer_interactions i LEFT JOIN employees e ON e.id::text = i.employee_id::text
-      WHERE i.customer_id = ${cid} ORDER BY i.created_at DESC LIMIT 20
-    `);
-    return rows.rows as Row[];
-  }
-
-  async addInteraction(cid: number, type: unknown, notes: unknown, employee_id: unknown): Promise<Row> {
-    const rows = await runQuery<Row>(sql`
-      INSERT INTO sd_customer_interactions (customer_id, type, notes, employee_id)
-      VALUES (${cid}, ${type}, ${notes ?? null}, ${employee_id ?? null}) RETURNING *
-    `);
-    return rows.rows[0] as Row;
-  }
-
-  async getDocuments(cid: number): Promise<Row[]> {
-    const rows = await runQuery<Row>(sql`SELECT * FROM sd_customer_documents WHERE customer_id = ${cid} ORDER BY created_at DESC`);
-    return rows.rows as Row[];
-  }
-
-  async addDocument(cid: number, type: unknown, name: unknown, url: unknown, notes: unknown): Promise<Row> {
-    const rows = await runQuery<Row>(sql`
-      INSERT INTO sd_customer_documents (customer_id, type, name, url, notes)
-      VALUES (${cid}, ${type}, ${name}, ${url ?? null}, ${notes ?? null}) RETURNING *
-    `);
-    return rows.rows[0] as Row;
-  }
-
-  async deleteDocument(cid: number, did: number): Promise<void> {
-    await execSdDocumentDelete(did, cid);
-  }
-
-  async getCompetitors(cid: number): Promise<Row[]> {
-    const rows = await runQuery<Row>(sql`SELECT * FROM sd_customer_competitors WHERE customer_id = ${cid} ORDER BY name`);
-    return rows.rows as Row[];
-  }
-
-  async deleteCompetitor(customerId: number, competitorId: number): Promise<void> {
-    await execSdCompetitorDelete(competitorId, customerId);
-  }
-
-  async getComplaints(cid: number): Promise<Row[]> {
-    const rows = await runQuery<Row>(sql`
-      SELECT cp.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS resolved_by_name
-      FROM sd_customer_complaints cp LEFT JOIN employees e ON e.id = cp.resolved_by
-      WHERE cp.customer_id = ${cid} ORDER BY cp.created_at DESC
-    `);
-    return rows.rows as Row[];
-  }
-
-  async resolveComplaint(customerId: number, complaintId: number, resolution: string, resolvedBy: number | null): Promise<Row | null> {
-    const rows = await runQuery<Row>(sql`
-      UPDATE sd_customer_complaints SET status = 'resolved', resolution = ${resolution}, resolved_by = ${resolvedBy}, resolved_at = NOW()
-      WHERE id = ${complaintId} AND customer_id = ${customerId} RETURNING *
-    `);
-    return (rows.rows[0] ?? null) as Row | null;
-  }
+  // ─── Delegated sub-operations (see ./drizzle-sd-customers/contacts-nps.repo) ───
+  getContacts          = subOps.getContacts;
+  addContact           = subOps.addContact;
+  updateContact        = subOps.updateContact;
+  deleteContact        = subOps.deleteContact;
+  getNps               = subOps.getNps;
+  addNps               = subOps.addNps;
+  getInteractions      = subOps.getInteractions;
+  addInteraction       = subOps.addInteraction;
+  getDocuments         = subOps.getDocuments;
+  addDocument          = subOps.addDocument;
+  deleteDocument       = subOps.deleteDocument;
+  getCompetitors       = subOps.getCompetitors;
+  addCompetitor        = subOps.addCompetitor;
+  deleteCompetitor     = subOps.deleteCompetitor;
+  getComplaints        = subOps.getComplaints;
+  resolveComplaint     = subOps.resolveComplaint;
+  updateInternalNotes  = subOps.updateInternalNotes;
 }

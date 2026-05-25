@@ -1,66 +1,108 @@
+/**
+ * @module QuickCreateModal
+ * @description Animated modal for quickly creating a CRM entity (lead, deal,
+ * contact, or company). Owns mutation + form state; delegates form rendering
+ * to QuickCreateModalSections.
+ */
+
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, User, Building2 } from "lucide-react";
+import {
+  User, Building2, X, DollarSign, Sparkles,
+} from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/lib/i18n";
 import type { QuickCreateModalProps, EntityType } from "./crm-types";
+import type { DuplicateEntry, QuickCreateFormState } from "./QuickCreateModalTypes";
+import { INITIAL_FORM_STATE } from "./QuickCreateModalTypes";
+import { DuplicateWarning, QuickCreateForm } from "./QuickCreateModalSections";
 
-interface DuplicateEntry {
-  id: number;
-  name?: string;
-  title?: string;
+const ENTITY_LABELS: Partial<Record<EntityType, string>> = {
+  leads:     "Lid",
+  deals:     "Bitim",
+  contacts:  "Kontakt",
+  companies: "Kompaniya",
+};
+
+const ENTITY_ICONS: Partial<Record<EntityType, React.ElementType>> = {
+  leads:     Sparkles,
+  deals:     DollarSign,
+  contacts:  User,
+  companies: Building2,
+};
+
+function buildPayload(entityType: EntityType, form: QuickCreateFormState, force: boolean) {
+  const phones = form.phone ? [{ value: form.phone, type: "WORK" }] : [];
+  const emails = form.email ? [{ value: form.email, type: "WORK" }] : [];
+  const map: Record<string, Record<string, unknown>> = {
+    leads: {
+      title: form.title,
+      phones,
+      emails,
+      ...(form.source ? { sourceId: form.source } : {}),
+      ...(form.description ? { comments: form.description } : {}),
+      ...(form.amount ? { opportunity: parseFloat(form.amount) || 0, currencyId: form.currency } : {}),
+    },
+    deals: {
+      title: form.title,
+      opportunity: parseFloat(form.amount) || 0,
+      currencyId: form.currency,
+      ...(form.description ? { comments: form.description } : {}),
+    },
+    contacts: { name: form.title, phones, emails, force },
+    companies: {
+      title: form.title,
+      phones,
+      emails,
+      stir: form.stir || undefined,
+      ...(form.description ? { comments: form.description } : {}),
+      force,
+    },
+  };
+  return map[entityType];
 }
 
+const ENDPOINTS: Partial<Record<EntityType, string>> = {
+  leads:     "/api/crm/leads",
+  deals:     "/api/crm/deals",
+  contacts:  "/api/crm/contacts",
+  companies: "/api/crm/companies",
+};
+
 export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
-  const [title, setTitle] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [stir, setStir] = useState("");
+  const [form, setForm] = useState<QuickCreateFormState>(INITIAL_FORM_STATE);
   const [duplicates, setDuplicates] = useState<DuplicateEntry[]>([]);
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
 
   const createMutation = useMutation<unknown, Error, boolean>({
     mutationFn: async (force: boolean) => {
-      const endpoints: Partial<Record<EntityType, string>> = {
-        leads: "/api/crm/leads",
-        deals: "/api/crm/deals",
-        contacts: "/api/crm/contacts",
-        companies: "/api/crm/companies",
-      };
-      const phones = phone ? [{ value: phone, type: "WORK" }] : [];
-      const emails = email ? [{ value: email, type: "WORK" }] : [];
-      const payloads: Record<string, Record<string, unknown>> = {
-        leads: { title, phones, emails },
-        deals: { title, opportunity: 0, currencyId: "UZS" },
-        contacts: { name: title, phones, emails, force },
-        companies: { title, phones, emails, stir: stir || undefined, force },
-      };
-      const endpoint = endpoints[entityType];
+      const endpoint = ENDPOINTS[entityType];
       if (!endpoint) throw new Error("Unknown entity type");
-      return apiRequest("POST", endpoint, payloads[entityType]);
+      return apiRequest("POST", endpoint, buildPayload(entityType, form, force));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/crm/${entityType}`] });
       toast({ title: "Yaratildi" });
       onClose();
     },
-    onError: async (error: unknown) => {
+    onError: (error: unknown) => {
       const errMsg = (error as Error)?.message || "";
       if (errMsg.startsWith("409:")) {
         try {
-          const jsonStr = errMsg.slice(4).trim();
-          const data = JSON.parse(jsonStr);
+          const data = JSON.parse(errMsg.slice(4).trim());
           if (data.code === "DUPLICATE_DETECTED") {
             setDuplicates(data.duplicates || []);
             setShowDuplicateWarning(true);
             return;
           }
-        } catch {}
+        } catch {
+          // WHY: error message is not JSON — fall through to generic toast below.
+        }
       }
       toast({ title: "Xatolik", variant: "destructive" });
     },
@@ -68,7 +110,7 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
+    if (!form.title.trim()) {
       toast({ title: "Nom kerak", variant: "destructive" });
       return;
     }
@@ -82,120 +124,70 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
     createMutation.mutate(true);
   };
 
-  const entityLabels: Partial<Record<EntityType, string>> = {
-    leads: "Lid",
-    deals: "Bitim",
-    contacts: "Kontakt",
-    companies: "Kompaniya",
-  };
-
-  const showStir = entityType === "companies";
+  const EntityIcon = ENTITY_ICONS[entityType] ?? Sparkles;
+  const entityLabel = ENTITY_LABELS[entityType] ?? "Yangi";
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={onClose}>
-      <Card className="w-full max-w-md" onClick={e => e.stopPropagation()} data-testid="quick-create-modal">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Tez {entityLabels[entityType]} yaratish</h3>
-
-          {showDuplicateWarning ? (
-            <div className="space-y-4">
-              <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 shrink-0" />
-                <div>
-                  <div className="font-medium text-yellow-700 text-sm">Duplikat topildi</div>
-                  <div className="text-xs text-yellow-600 mt-1">
-                    Xuddi shunday {entityLabels[entityType]?.toLowerCase()} mavjud:
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                {(Array.isArray(duplicates) ? duplicates : []).map((d) => (
-                  <div key={d.id} className="flex items-center gap-2 p-2 rounded border text-sm">
-                    {entityType === "contacts" ? (
-                      <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                    ) : (
-                      <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                    )}
-                    <span className="flex-1 truncate">{d.name || d.title || `ID: ${d.id}`}</span>
-                    <Badge variant="outline" className="text-xs">ID: {d.id}</Badge>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowDuplicateWarning(false)} className="flex-1">
-                  Orqaga
-                </Button>
-                <Button
-                  variant="default"
-                  onClick={handleForceCreate}
-                  disabled={createMutation.isPending}
-                  className="flex-1"
-                  data-testid="button-force-create"
-                >
-                  {createMutation.isPending ? "..." : "Baribir yaratish"}
-                </Button>
-              </div>
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+          className="w-full max-w-md bg-card border border-border/60 rounded-lg shadow-lg overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+          data-testid="quick-create-modal"
+        >
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-border/50 bg-muted/30">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+              <EntityIcon className="h-4 w-4 text-primary" />
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nomi *</label>
-                <Input
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  placeholder={`${entityLabels[entityType]} nomi`}
-                  data-testid="input-quick-title"
-                  autoFocus
-                />
-              </div>
-              {entityType !== "deals" && (
-                <>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Telefon</label>
-                    <Input
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      placeholder="+998 90 123 45 67"
-                      data-testid="input-quick-phone"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Email</label>
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="email@example.com"
-                      data-testid="input-quick-email"
-                    />
-                  </div>
-                  {showStir && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">STIR (INN)</label>
-                      <Input
-                        value={stir}
-                        onChange={e => setStir(e.target.value)}
-                        placeholder="123456789"
-                        data-testid="input-quick-stir"
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-              <div className="flex gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-                  Bekor qilish
-                </Button>
-                <Button type="submit" disabled={createMutation.isPending} className="flex-1">
-                  {createMutation.isPending ? "..." : "Yaratish"}
-                </Button>
-              </div>
-            </form>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold">{entityLabel} yaratish</h3>
+              <p className="text-[11px] text-muted-foreground">{t("asosiyMalumotlarniKiriting")}</p>
+            </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 shrink-0"
+              onClick={onClose}
+              data-testid="button-close-modal"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="p-5">
+            {showDuplicateWarning ? (
+              <DuplicateWarning
+                entityType={entityType}
+                entityLabel={entityLabel}
+                duplicates={duplicates}
+                onBack={() => setShowDuplicateWarning(false)}
+                onForceCreate={handleForceCreate}
+                isPending={createMutation.isPending}
+              />
+            ) : (
+              <QuickCreateForm
+                entityType={entityType}
+                entityLabel={entityLabel}
+                form={form}
+                setForm={setForm}
+                onSubmit={handleSubmit}
+                onCancel={onClose}
+                isPending={createMutation.isPending}
+              />
+            )}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

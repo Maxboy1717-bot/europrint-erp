@@ -1,8 +1,15 @@
+/**
+ * @module settings-admin.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   settings-admin module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
+ */
 import {
   Body, Controller, Delete, Get, HttpCode, Param, Post, Put,
   UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -10,6 +17,11 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrBadRequest, unwrapOrNotFound } from '@common/http-result';
 import { z } from 'zod';
 import { SettingsAdminService } from './settings-admin.service';
+import {
+  GuidelineAclTranslator,
+  type LegacyGuidelineRow,
+  type GuidelineDto,
+} from './acl/guideline-acl';
 
 const GuidelineSchema = z.object({
   title:     z.string().min(1),
@@ -29,17 +41,35 @@ const FilterSchema = z.object({
 @ApiTags('Settings — Admin')
 @ApiBearerAuth()
 @Roles('super_admin', 'admin')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller()
 export class SettingsAdminController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly guidelineAcl = new GuidelineAclTranslator();
+
   constructor(private readonly svc: SettingsAdminService) {}
 
   @Get('guidelines')
   @Roles('super_admin', 'admin', 'manager', 'director')
   async getGuidelines() {
     return unwrapOrBadRequest(await this.svc.getGuidelines());
+  }
+
+  /**
+   * PA2-14 ACL-translated variant of guidelines. New BC-6 (Platform / Admin)
+   * consumers should target this route; `/guidelines` stays for backwards-compat.
+   */
+  @Get('guidelines/v2')
+  @Roles('super_admin', 'admin', 'manager', 'director')
+  async getGuidelinesV2(): Promise<GuidelineDto[]> {
+    const rows = unwrapOrBadRequest(await this.svc.getGuidelines()) as unknown as LegacyGuidelineRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.guidelineAcl.toDomain(row))
+      .filter((r): r is { ok: true; data: GuidelineDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Post('guidelines')

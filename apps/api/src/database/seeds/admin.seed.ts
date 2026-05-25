@@ -1,12 +1,24 @@
+/**
+ * @module admin.seed
+ * @description Database seeder. Runs idempotent fixture inserts.
+ */
+
 import 'dotenv/config';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
+// SECURITY: PA-S5 — share the bcrypt cost factor with the runtime hasher
+// (`apps/api/src/modules/auth/infrastructure/security/bcrypt-password-hasher.ts`).
+import { BCRYPT_ROUNDS } from '../../common/constants/security.constants';
 
 const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_SEED_PASSWORD ?? 'Admin123!';
+// SECURITY: PA-S1 — no fallback default password. Hard-fail if env is missing.
+const RAW_ADMIN_PASSWORD = process.env.ADMIN_SEED_PASSWORD;
+if (!RAW_ADMIN_PASSWORD) {
+  throw new Error('ADMIN_SEED_PASSWORD env required — set it in .env before seeding');
+}
+const ADMIN_PASSWORD: string = RAW_ADMIN_PASSWORD;
 const ADMIN_ROLE = 'super_admin';
 const ADMIN_EMAIL = 'admin@europrint.uz';
-const BCRYPT_ROUNDS = 12;
 
 const log   = (msg: string) => process.stdout.write(msg + '\n');
 const logErr = (msg: string, err: unknown) => process.stderr.write(`${msg} ${String(err)}\n`);

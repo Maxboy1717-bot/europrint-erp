@@ -1,5 +1,10 @@
-import { TashkentTimeService } from '@common/time';
-const _time = new TashkentTimeService();
+/**
+ * @module notification-bot.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ *
+ *   Event-message builders live in notification-bot-event-builders.ts (Rule 16 — 300 line cap).
+ */
+
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -7,7 +12,9 @@ import { Result, AppError, safeCall } from '@common/result';
 import { errMsg } from "../hr-v2-error";
 import { TelegramBotsRepository } from './telegram-bots.repository';
 import { NOTIFICATION_TEMPLATES, NotificationTemplateKey, renderTemplate } from './notification-templates';
+import { buildEventMessage } from './notification-bot-event-builders';
 import type { Telegraf, Context } from 'telegraf';
+import { message } from 'telegraf/filters';
 
 export interface ErpEventPayload {
   event: string;
@@ -23,7 +30,6 @@ export interface SendNotificationDto {
 }
 
 type TCtxWithChat = Context & { chat?: { id?: number } };
-type D = Record<string, unknown>;
 
 @Injectable()
 export class NotificationBotService implements OnModuleInit, OnModuleDestroy {
@@ -42,7 +48,7 @@ export class NotificationBotService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void { this._initBackground().catch((e) => this.logger.warn('[notification-bot.service] init failed: ' + e)); }
   private async _initBackground(): Promise<void> {
-    return safeCall(async () => {
+    await safeCall(async () => {
       if (!this.token) {
         this.logger.warn('Notification Bot token not configured (TELEGRAM_NOTIFICATION_BOT_TOKEN missing) — skipping');
         return;
@@ -131,7 +137,7 @@ export class NotificationBotService implements OnModuleInit, OnModuleDestroy {
   }
 
   private registerInboundTextHandler(bot: Telegraf<Context>): void {
-    bot.on('text', async (ctx: Context) => {
+    bot.on(message('text' as never), async (ctx: Context) => {
       const chatId = String((ctx as TCtxWithChat).chat?.id ?? '');
       if (!chatId) return;
       const employeeId = this.pendingLateReasons.get(chatId);
@@ -190,116 +196,9 @@ export class NotificationBotService implements OnModuleInit, OnModuleDestroy {
     let chatId: string | undefined = payload.chatId ? String(payload.chatId) : undefined;
     if (!chatId && employeeId) chatId = await this.getEmployeeChatId(employeeId);
     if (!chatId) { this.logger.debug(`handleErpEvent: no chatId for event=${event}`); return undefined; }
-    const message = this.buildEventMessage(event, data ?? {});
+    const message = buildEventMessage(event, data ?? {});
     if (message) await this.sendNotificationRaw(chatId, message);
     return chatId;
-  }
-
-  private buildDocumentEventMessage(event: string, d: D): string | undefined {
-    const link = '<a href="https://erp.europrint.uz">erp.europrint.uz</a>';
-    if (event === 'document.step.notify' || event === 'document.submitted')
-      return renderTemplate(NOTIFICATION_TEMPLATES.APPROVAL_PENDING.template_uz, {
-        document_title: String(d['documentTitle'] ?? 'Hujjat'),
-        submitter_name: String(d['submitterName'] ?? 'Xodim'),
-        submitted_at: String(d['submittedAt'] ?? _time.now().toLocaleString('uz')),
-        url: 'https://erp.europrint.uz',
-      });
-    if (event === 'document.approved')
-      return renderTemplate(NOTIFICATION_TEMPLATES.DOC_SIGNED.template_uz, {
-        document_title: String(d['documentTitle'] ?? 'Hujjat'),
-        signer_name: String(d['approverName'] ?? 'HR'),
-        signed_at: String(d['approvedAt'] ?? _time.now().toLocaleString('uz')),
-        url: 'https://erp.europrint.uz',
-      });
-    if (event === 'document.rejected')
-      return renderTemplate(NOTIFICATION_TEMPLATES.DOC_REJECTED.template_uz, {
-        document_title: String(d['documentTitle'] ?? 'Hujjat'),
-        approver_name: String(d['approverName'] ?? 'HR'),
-        rejection_reason: String(d['rejectionReason'] ?? 'Sabab ko\'rsatilmagan'),
-        url: 'https://erp.europrint.uz',
-      });
-    if (event === 'document.overdue')
-      return `⚠️ <b>Hujjat muddati o'tgan!</b>\n\nHujjat: ${String(d['documentTitle'] ?? 'Hujjat')}\nDeadline: ${String(d['deadline'] ?? 'Belgilanmagan')}\n\nImzolash uchun: ${link}`;
-    return;
-  }
-
-  private buildPipEventMessage(event: string, d: D): string | undefined {
-    const link = '<a href="https://erp.europrint.uz">erp.europrint.uz</a>';
-    if (event === 'pip.progress.reminder' || event === 'pip.progress_updated')
-      return `📋 <b>PIP eslatma</b>\n\nBajarish muddati: ${String(d['dueDate'] ?? 'Belgilanmagan')}\nQolgan maqsadlar: ${String(d['pendingGoals'] ?? 0)} ta\n\nMaqsadlaringizni bajarishni davom eting!\n${link}`;
-    if (event === 'pip.started')
-      return `📋 <b>Ishlash yaxshilash rejasi (PIP) boshlandi</b>\n\nDavomiyligi: ${String(d['durationDays'] ?? 30)} kun\nMaqsadlar soni: ${String(d['goalsCount'] ?? 0)} ta\n\nBatafsil: ${link}`;
-    if (event === 'pip.completed')
-      return `✅ <b>PIP muvaffaqiyatli yakunlandi!</b>\n\nBarcha maqsadlar bajarildi.\nRahmat, siz yaxshi natijalarga erishdingiz!🎉`;
-    if (event === 'pip.failed')
-      return `❌ <b>PIP yakunlandi — maqsadlar bajarilmadi</b>\n\nHR bo'limi bilan muloqot o'tkaziladi.\nBatafsil: ${link}`;
-    return;
-  }
-
-  private buildHrEventMessage(event: string, d: D): string | undefined {
-    const link = '<a href="https://erp.europrint.uz">erp.europrint.uz</a>';
-    if (event === 'attendance.late')
-      return renderTemplate(NOTIFICATION_TEMPLATES.LATE_ARRIVAL_REASON.template_uz, {
-        late_minutes: String(d['lateMinutes'] ?? 0),
-        arrival_time: String(d['arrivalTime'] ?? 'Noma\'lum'),
-        date: String(d['date'] ?? _time.now().toISOString().split('T')[0]),
-      });
-    if (event === 'adaptation.at_risk')
-      return `⚠️ <b>Adaptatsiya xavfi!</b>\n\nXodim: ${String(d['employeeName'] ?? 'Xodim')}\nAdaptatsiya kuni: ${String(d['adaptationDay'] ?? '')}\nXavf darajasi: <b>${String(d['riskLevel'] ?? 'o\'rta')}</b>\nSabab: ${String(d['reason'] ?? 'Adaptatsiya ko\'rsatkichlari past')}\n\nBatafsil: ${link}`;
-    if (event === 'discipline.issued')
-      return `⚠️ <b>Intizom chorasi qo'llanildi</b>\n\nTur: ${String(d['disciplineType'] ?? 'Ogohlantirishlar')}\nSabab: ${String(d['reason'] ?? 'Ko\'rsatilmagan')}\n\nBatafsil: ${link}`;
-    if (event === 'employee.blocked')
-      return renderTemplate(NOTIFICATION_TEMPLATES.ABSENCE_BLOCKED.template_uz, {
-        hr_phone: String(d['hrPhone'] ?? '+998900000000'),
-      });
-    if (event === 'employee.unblocked')
-      return `✅ <b>Kirish tiklandi</b>\n\nERP kirishingiz qayta tiklandi.\n${link}`;
-    return;
-  }
-
-  private buildMiscEventMessage(event: string, d: D): string | undefined {
-    const link = '<a href="https://erp.europrint.uz">erp.europrint.uz</a>';
-    if (event === 'gamification.badge.awarded')
-      return `🏆 <b>Yangi nishon!</b>\n\n${String(d['badgeName'] ?? 'Nishon')} oldingi nishon qo'lga kiritildi!\n${String(d['badgeDescription'] ?? '')}\n\nTabriklaymiz!🎉`;
-    if (event === 'gamification.points.awarded')
-      return `⭐ <b>+${String(d['points'] ?? 0)} ball!</b>\n\n${String(d['reason'] ?? 'Ball berildi')}\n\nUmumiy ball: ${String(d['totalPoints'] ?? '')}`;
-    if (event === 'shift.assigned')
-      return `🕐 <b>Smena belgilandi</b>\n\nSana: ${String(d['date'] ?? '')}\nTur: ${String(d['shiftType'] ?? '')}\nVaqt: ${String(d['startTime'] ?? '')} – ${String(d['endTime'] ?? '')}`;
-    if (event === 'offboarding.started')
-      return `📋 <b>Ishdan chiqish jarayoni boshlandi</b>\n\nOxirgi ish kuni: ${String(d['lastWorkingDay'] ?? 'Belgilanmagan')}\n\nHR bilan yuzlashuv sanasi kelishiladi.`;
-    if (event === 'recruitment.candidate_hired')
-      return renderTemplate(NOTIFICATION_TEMPLATES.OFFER_ACCEPTED.template_uz, {
-        name: String(d['name'] ?? 'Hurmatli nomzod'),
-        start_date: String(d['startDate'] ?? 'Kelishiladi'),
-      });
-    if (event === 'chat.new_message')
-      return `💬 <b>Yangi xabar</b>\n\nKim: ${String(d['senderName'] ?? 'Xodim')}\nChat: ${String(d['roomName'] ?? 'Guruh')}\nXabar: ${String(d['preview'] ?? '')}\n\nKo'rish: ${link}`;
-    if (event === 'penalty.assigned')
-      return renderTemplate(NOTIFICATION_TEMPLATES.PENALTY_ASSIGNED.template_uz, {
-        name: String(d['name'] ?? ''),
-        penalty_type: String(d['penaltyType'] ?? 'Jarima'),
-        amount: String(d['amount'] ?? ''),
-        reason: String(d['reason'] ?? ''),
-        appeal_deadline: String(d['appealDeadline'] ?? ''),
-        url: 'https://erp.europrint.uz',
-      });
-    if (event === 'reward.given')
-      return renderTemplate(NOTIFICATION_TEMPLATES.REWARD_GIVEN.template_uz, {
-        name: String(d['name'] ?? ''),
-        reward_title: String(d['rewardTitle'] ?? 'Mukofot'),
-        reward_value: String(d['rewardValue'] ?? ''),
-        reason: String(d['reason'] ?? ''),
-      });
-    return;
-  }
-
-  private buildEventMessage(event: string, data: D): string | undefined {
-    return (
-      this.buildDocumentEventMessage(event, data) ??
-      this.buildPipEventMessage(event, data) ??
-      this.buildHrEventMessage(event, data) ??
-      this.buildMiscEventMessage(event, data)
-    );
   }
 
   getInstance(): Telegraf<Context> | null { return this.bot; }

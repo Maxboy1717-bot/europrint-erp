@@ -57,10 +57,28 @@ tmp/
 temp/
 /tmp/
 
+# Backup va vaqtinchalik fayllar (P2-8, P2-13)
+*.bak
+*.old
+_archive/
+
+# PostgreSQL backups (avto-yaratiladi backup.sh tomonidan)
+backups/
+*.sql.gz
+
 # Coverage
 coverage/
 .nyc_output/
 
+# Mutation testing temp (Stryker)
+.stryker-tmp/
+
+# Claude agent worktrees (created on-the-fly by parallel agents)
+.claude/worktrees/
+.claude/projects/
+# NOTE: .claude/agents/, .claude/hooks/, .claude/plugins/ ARE tracked (project config)
+
 # Misc
 *.tsbuildinfo
 .eslintcache
+.claude/settings.local.json

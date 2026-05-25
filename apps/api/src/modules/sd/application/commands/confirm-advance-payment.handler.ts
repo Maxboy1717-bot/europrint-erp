@@ -1,10 +1,14 @@
+/**
+ * @module confirm-advance-payment.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { AppErr, Err, Ok, Result } from '@common/result';
-import { ConcurrencyConflictException } from '@common/exceptions/concurrency-conflict.exception';
-import { ISalesOrderRepository } from '../../domain/repositories/i-sales-order.repo';
+import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 
 export class ConfirmAdvancePaymentCommand {
   constructor(
@@ -26,7 +30,7 @@ export class ConfirmAdvancePaymentHandler implements ICommandHandler<ConfirmAdva
   private readonly logger = new Logger(ConfirmAdvancePaymentHandler.name);
 
   constructor(
-    @Inject('ISalesOrderRepository') private readonly orderRepo: ISalesOrderRepository,
+    @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
   ) {}
 
   async execute(command: ConfirmAdvancePaymentCommand): Promise<Result<ConfirmAdvancePaymentResult>> {
@@ -70,9 +74,7 @@ export class ConfirmAdvancePaymentHandler implements ICommandHandler<ConfirmAdva
         expectedVersion,
         error: atomicResult.error?.message,
       });
-      throw new ConcurrencyConflictException(
-        atomicResult.error?.message ?? 'Bir vaqtda yangilash konflikti: versiya mos kelmadi',
-      );
+      return Err(AppErr('CONFLICT', atomicResult.error?.message ?? 'Bir vaqtda yangilash konflikti: versiya mos kelmadi'));
     }
 
     if (atomicResult.data.duplicate) {

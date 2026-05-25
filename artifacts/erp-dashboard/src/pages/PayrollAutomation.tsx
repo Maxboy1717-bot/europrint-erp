@@ -1,10 +1,14 @@
+/**
+ * @module PayrollAutomation
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from "@/lib/i18n";
 import { Calculator, FileText, Plus, Sparkles } from "lucide-react";
-import { ErrorState } from "@/components/ui/error-state";
 import type { PayrollContract, PayrollCalculation, PayrollTaxRule, PayrollUser } from "./payroll/types";
 import { AIPayrollDialog } from "./payroll/AIPayrollDialog";
 import { CalculatePayrollDialog } from "./payroll/CalculatePayrollDialog";
@@ -12,6 +16,7 @@ import { PayrollStatsCards } from "./payroll/PayrollStatsCards";
 import { ContractsTab } from "./payroll/ContractsTab";
 import { CalculationsTab } from "./payroll/CalculationsTab";
 import { TaxRulesSidebar } from "./payroll/TaxRulesSidebar";
+import { EPErrorState } from "@/components/ep";
 
 export default function PayrollAutomation() {
   const { t } = useTranslation('hr');
@@ -19,17 +24,17 @@ export default function PayrollAutomation() {
   const [activeTab, setActiveTab] = useState("contracts");
   const [isCalculateDialogOpen, setIsCalculateDialogOpen] = useState(false);
 
-  const { data: sysSettings } = useQuery<{ inpsRate?: number; minWage?: number; qqsRate?: number }>({
+  const { data: sysSettings } = useQuery<{ inpsRate?: number; jshdRate?: number; jshirdRate?: number; minWage?: number; qqsRate?: number }>({
     queryKey: ["/api/system-settings"],
   });
 
-  const TAX_CONSTANTS = {
-    INPS_RATE: sysSettings?.inpsRate ?? 0.12,
-    JSHD_RATE: sysSettings?.inpsRate ?? 0.12,
+  const TAX_CONSTANTS = useMemo(() => ({
+    INPS_RATE: sysSettings?.inpsRate ?? 0.08,
+    JSHD_RATE: sysSettings?.jshdRate ?? sysSettings?.jshirdRate ?? 0.12,
     MIN_WAGE: sysSettings?.minWage ?? 1120000,
-  };
+  }), [sysSettings]);
 
-  const { data: contracts = [], isLoading: contractsLoading, isError, refetch } = useQuery<PayrollContract[]>({
+  const { data: contracts = [], isLoading: contractsLoading, isError, error, refetch } = useQuery<PayrollContract[]>({
     queryKey: ["/api/finance-extended/payroll-contracts"],
   });
 
@@ -62,19 +67,19 @@ export default function PayrollAutomation() {
   }, [contracts, calculations]);
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
 
   return (
-    <div className="min-h-screen bg-background" data-testid="payroll-automation-page">
-      <div className="border-b bg-gradient-to-r from-indigo-600 to-indigo-500 text-white">
-        <div className="container mx-auto px-4 py-4">
+    <div data-testid="payroll-automation-page">
+      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
+        <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <Calculator className="h-8 w-8" />
               <div>
                 <h1 className="text-2xl font-bold">{tFinance('payrollCalculation')}</h1>
-                <p className="text-indigo-100 text-sm">{tFinance('payrollAutomation')}</p>
+                <p className="text-white/75 text-sm">{tFinance('payrollAutomation')}</p>
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
@@ -82,8 +87,8 @@ export default function PayrollAutomation() {
                 contracts={contracts}
                 employeeMap={employeeMap}
                 trigger={
-                  <Button variant="secondary" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0" data-testid="button-ai-calculation">
-                    <Sparkles className="h-4 w-4 mr-2" />
+                  <Button variant="secondary" className="bg-[var(--ep-purple)] hover:from-purple-600 hover:to-pink-600 text-white border-0 gap-2" data-testid="button-ai-calculation">
+                    <Sparkles className="h-4 w-4" />
                     {tFinance('aiCalculation')}
                   </Button>
                 }
@@ -96,8 +101,8 @@ export default function PayrollAutomation() {
                 open={isCalculateDialogOpen}
                 onOpenChange={setIsCalculateDialogOpen}
                 trigger={
-                  <Button variant="secondary" className="bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 text-white border-white/30" data-testid="button-new-calculation">
-                    <Plus className="h-4 w-4 mr-2" />
+                  <Button variant="secondary" className="bg-card/10 hover:bg-card/20 text-white border-white/30 gap-2" data-testid="button-new-calculation">
+                    <Plus className="h-4 w-4" />
                     {tFinance('newCalculation')}
                   </Button>
                 }
@@ -107,7 +112,7 @@ export default function PayrollAutomation() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      <div className="space-y-6 pt-6">
         <PayrollStatsCards
           activeContracts={kpiStats.activeContracts}
           pendingCalcs={kpiStats.pendingCalcs}

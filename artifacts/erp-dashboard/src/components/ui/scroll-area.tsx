@@ -1,3 +1,8 @@
+/**
+ * @module scroll-area
+ * @description React UI component.
+ */
+
 import * as React from "react"
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area"
 

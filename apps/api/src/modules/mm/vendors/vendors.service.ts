@@ -1,4 +1,10 @@
+/**
+ * @module vendors.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { vendors } from '@europrint/schemas';
 import { safeCall, Result, AppError } from '@common/result';
 import { VendorsRepository } from './vendors.repository';
@@ -7,7 +13,10 @@ import { VendorsRepository } from './vendors.repository';
 export class VendorsService {
   private readonly logger = new Logger(VendorsService.name);
 
-  constructor(private readonly repo: VendorsRepository) {}
+  constructor(
+    private readonly repo: VendorsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -20,7 +29,7 @@ export class VendorsService {
 
   async findOne(id: number) {
     const row = await this.repo.findOne(id);
-    if (!row) throw new NotFoundException(`#${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.notFound'));
     return row;
   }
 

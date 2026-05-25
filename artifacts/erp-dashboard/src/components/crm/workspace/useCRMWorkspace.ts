@@ -1,3 +1,8 @@
+/**
+ * @module useCRMWorkspace
+ * @description React UI component.
+ */
+
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useSearch } from "wouter";
@@ -36,6 +41,11 @@ import {
   getActiveFilterCount,
 } from "@/pages/crm/crm-types";
 import { CrmActivity, CrmEntityLike, FilterableEntity } from "./types";
+
+import { tLabel } from '@/lib/i18n/tLabel';
+const BITRIX_ENTITY_TYPES = new Set<EntityType>(["proposals", "invoices", "robots"]);
+const entityApiBase = (entity: EntityType) =>
+  BITRIX_ENTITY_TYPES.has(entity) ? `/api/crm-bitrix/${entity}` : `/api/crm/${entity}`;
 
 export function useCRMWorkspace() {
   const [, setLocation] = useLocation();
@@ -132,7 +142,7 @@ export function useCRMWorkspace() {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/followup-activities"] });
       setShowActivityDialog(false);
       setActivityForm({ type: "call", subject: "", note: "", dueDate: "", entityType: "lead", entityId: "" });
-      toast({ title: "Faoliyat qo'shildi" });
+      toast({ title: tLabel('common.useCRMWorkspace.faoliyatQoshildi', "Faoliyat qo'shildi") });
     },
   });
 
@@ -148,41 +158,57 @@ export function useCRMWorkspace() {
 
   const moveItemMutation = useMutation({
     mutationFn: async ({ itemId, stageId }: { itemId: number; stageId: string }) => {
-      let endpoint = "/api/crm/leads";
-      let field = "statusId";
-      if (activeEntity === "deals") { endpoint = "/api/crm/deals"; field = "stageId"; }
-      else if (activeEntity === "proposals") { endpoint = "/api/crm-bitrix/proposals"; field = "status"; }
-      else if (activeEntity === "invoices") { endpoint = "/api/crm-bitrix/invoices"; field = "stageId"; }
-      return apiRequest("PATCH", `${endpoint}/${itemId}/stage`, { [field]: stageId });
+      type MoveResult = { autoOrder?: { documentNumber: string } } | null;
+      // B.9 — consistent snake_case `stage_id` body across all entity types.
+      // Backend schemas accept stage_id / stageId / statusId / status, but the
+      // canonical contract going forward is stage_id.
+      if (activeEntity === "leads") {
+        return apiRequest<MoveResult>("PATCH", `/api/crm/leads/${itemId}/stage`, { stage_id: stageId });
+      } else if (activeEntity === "deals") {
+        return apiRequest<MoveResult>("PATCH", `/api/crm/deals/${itemId}/stage`, { stage_id: stageId });
+      } else if (activeEntity === "proposals") {
+        return apiRequest<MoveResult>("PATCH", `/api/crm-bitrix/proposals/${itemId}/stage`, { stage_id: stageId });
+      } else if (activeEntity === "invoices") {
+        return apiRequest<MoveResult>("PATCH", `/api/crm-bitrix/invoices/${itemId}/stage`, { stage_id: stageId });
+      }
+      return null;
     },
     onSuccess: (data: { autoOrder?: { documentNumber: string } } | null) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/crm/${activeEntity}`] });
+      queryClient.invalidateQueries({ queryKey: [entityApiBase(activeEntity)] });
       queryClient.invalidateQueries({ queryKey: ["/api/sd/orders"] });
       if (data?.autoOrder) {
-        toast({ title: "Lid yutildi — SD buyurtma yaratildi", description: `Buyurtma raqami: ${data.autoOrder.documentNumber}.`, duration: 6000 });
+        toast({ title: tLabel('common.useCRMWorkspace.lidYutildiSdBuyurtmaYaratildi', "Lid yutildi — SD buyurtma yaratildi"), description: `Buyurtma raqami: ${data.autoOrder.documentNumber}.`, duration: 6000 });
       } else {
-        toast({ title: "Ko'chirildi" });
+        toast({ title: tLabel('common.useCRMWorkspace.kochirildi', "Ko'chirildi") });
       }
     },
   });
 
   const deleteItemsMutation = useMutation({
     mutationFn: async (ids: number[]) => {
-      const endpoint = `/api/crm/${activeEntity}`;
-      return Promise.all((ids ?? []).map(id => apiRequest("DELETE", `${endpoint}/${id}`))).catch((err: unknown) => {
-        console.error('CRM element o\'chirish xatosi:', err);
-        return Promise.reject(err);
-      });
+      const endpoint = entityApiBase(activeEntity);
+      const results = await Promise.allSettled((Array.isArray(ids) ? ids : []).map(id => apiRequest("DELETE", `${endpoint}/${id}`)));
+      const failed = results.filter(r => r.status === 'rejected');
+      if (failed.length > 0) {
+        throw new Error(`${failed.length} ta element o'chirishda xatolik yuz berdi`);
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/crm/${activeEntity}`] });
+      queryClient.invalidateQueries({ queryKey: [entityApiBase(activeEntity)] });
       setSelectedItems(new Set());
-      toast({ title: "O'chirildi" });
+      toast({ title: tLabel('common.useCRMWorkspace.ochirildi', "O'chirildi") });
+    },
+    onError: (err: Error) => {
+      queryClient.invalidateQueries({ queryKey: [entityApiBase(activeEntity)] });
+      setSelectedItems(new Set());
+      toast({ title: tLabel('common.useCRMWorkspace.qismanOchirildi', "Qisman o'chirildi"), description: err.message, variant: "destructive" });
     },
   });
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-  const handleDragStart = (event: DragStartEvent) => setActiveItemId(event.active.id as number);
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveItemId(event.active.id as number);
+  }, []);
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveItemId(null);
@@ -190,16 +216,27 @@ export function useCRMWorkspace() {
     const itemId = active.id as number;
     const newStageId = (over.data.current?.sortable?.containerId ?? over.data.current?.stageId ?? over.id) as string;
     if (!newStageId || typeof newStageId !== "string") return;
-    const items = activeEntity === "leads" ? leads : deals;
-    const item = (items ?? []).find(i => i.id === itemId);
-    const currentStageId = activeEntity === "leads" ? (item as Lead)?.statusId : (item as Deal)?.stageId;
+    const stages = activeEntity === "leads" ? LEAD_STAGES : activeEntity === "deals" ? DEAL_STAGES : activeEntity === "proposals" ? PROPOSAL_STAGES : activeEntity === "invoices" ? INVOICE_STAGES : LEAD_STAGES;
+    if (!stages.some(s => s.stageId === newStageId)) return;
+    const items = safeArray<FilterableEntity>(
+      activeEntity === "leads" ? leads :
+      activeEntity === "proposals" ? proposals :
+      activeEntity === "invoices" ? invoices :
+      deals
+    );
+    const item = items.find((i: FilterableEntity) => i.id === itemId);
+    const currentStageId =
+      activeEntity === "leads" ? (item as Lead)?.statusId :
+      activeEntity === "proposals" ? (item as Proposal)?.status :
+      activeEntity === "invoices" ? (item as Invoice)?.status :
+      (item as Deal)?.stageId;
     if (!item || currentStageId === newStageId) return;
     moveItemMutation.mutate({ itemId, stageId: newStageId });
   };
 
   const getFilteredItems = useCallback((): FilterableEntity[] => {
     let items: FilterableEntity[] = [];
-    const toArr = <T>(v: unknown) => safeArray<T>(v) as unknown as FilterableEntity[];
+    const toArr = <T extends FilterableEntity>(v: unknown) => safeArray<T>(v) as FilterableEntity[];
     if (activeEntity === "leads") items = toArr<Lead>(leads);
     else if (activeEntity === "deals") items = toArr<Deal>(deals);
     else if (activeEntity === "contacts") items = toArr<Contact>(contacts);
@@ -209,7 +246,7 @@ export function useCRMWorkspace() {
     else if (activeEntity === "robots") items = toArr<Robot>(robots);
 
     if (quickFilter !== "all") {
-      items = (items ?? []).filter(item => {
+      items = (Array.isArray(items) ? items : []).filter(item => {
         const rec = item as CrmEntityLike;
         const dateCreate = rec.dateCreate || rec.createdAt;
         if (quickFilter === "today" && dateCreate) return isToday(new Date(dateCreate));
@@ -221,23 +258,23 @@ export function useCRMWorkspace() {
 
     if (advancedFilters.dateFrom) {
       const from = startOfDay(new Date(advancedFilters.dateFrom));
-      items = (items ?? []).filter(item => new Date((item as CrmEntityLike).dateCreate || (item as CrmEntityLike).createdAt || "") >= from);
+      items = (Array.isArray(items) ? items : []).filter(item => new Date((item as CrmEntityLike).dateCreate || (item as CrmEntityLike).createdAt || "") >= from);
     }
     if (advancedFilters.dateTo) {
       const to = endOfDay(new Date(advancedFilters.dateTo));
-      items = (items ?? []).filter(item => new Date((item as CrmEntityLike).dateCreate || (item as CrmEntityLike).createdAt || "") <= to);
+      items = (Array.isArray(items) ? items : []).filter(item => new Date((item as CrmEntityLike).dateCreate || (item as CrmEntityLike).createdAt || "") <= to);
     }
     if (advancedFilters.stageId) {
-      items = (items ?? []).filter(item => ((item as CrmEntityLike).statusId || (item as CrmEntityLike).stageId || (item as CrmEntityLike).status) === advancedFilters.stageId);
+      items = (Array.isArray(items) ? items : []).filter(item => ((item as CrmEntityLike).statusId || (item as CrmEntityLike).stageId || (item as CrmEntityLike).status) === advancedFilters.stageId);
     }
-    if (advancedFilters.assignedById) items = (items ?? []).filter(item => (item as CrmEntityLike).assignedById === advancedFilters.assignedById);
-    if (advancedFilters.sourceId) items = (items ?? []).filter(item => ((item as CrmEntityLike).sourceId || (item as CrmEntityLike).source) === advancedFilters.sourceId);
-    if (advancedFilters.amountFrom !== null) items = (items ?? []).filter(item => ((item as CrmEntityLike).opportunity || (item as CrmEntityLike).totalAmount || 0) >= (advancedFilters.amountFrom || 0));
-    if (advancedFilters.amountTo !== null) items = (items ?? []).filter(item => ((item as CrmEntityLike).opportunity || (item as CrmEntityLike).totalAmount || 0) <= (advancedFilters.amountTo || Infinity));
+    if (advancedFilters.assignedById) items = (Array.isArray(items) ? items : []).filter(item => (item as CrmEntityLike).assignedById === advancedFilters.assignedById);
+    if (advancedFilters.sourceId) items = (Array.isArray(items) ? items : []).filter(item => ((item as CrmEntityLike).sourceId || (item as CrmEntityLike).source) === advancedFilters.sourceId);
+    if (advancedFilters.amountFrom !== null) items = (Array.isArray(items) ? items : []).filter(item => ((item as CrmEntityLike).opportunity || (item as CrmEntityLike).totalAmount || 0) >= (advancedFilters.amountFrom || 0));
+    if (advancedFilters.amountTo !== null) items = (Array.isArray(items) ? items : []).filter(item => ((item as CrmEntityLike).opportunity || (item as CrmEntityLike).totalAmount || 0) <= (advancedFilters.amountTo || Infinity));
 
     if (debouncedSearchQuery) {
       const q = debouncedSearchQuery.toLowerCase();
-      items = (items ?? []).filter(item => {
+      items = (Array.isArray(items) ? items : []).filter(item => {
         const rec = item as CrmEntityLike;
         const title = rec.title || rec.name || ([rec.lastName, rec.name]).filter(Boolean).join(" ");
         return title?.toLowerCase().includes(q) || rec.phones?.[0]?.value?.includes(q) || rec.number?.includes(q);
@@ -260,7 +297,7 @@ export function useCRMWorkspace() {
     if (!["leads", "deals", "proposals", "invoices"].includes(activeEntity)) return {};
     return (Array.isArray(stages) ? stages : []).reduce((acc, stage) => {
       acc[stage.stageId] = (Array.isArray(filteredItems) ? filteredItems : []).filter((item: FilterableEntity) => {
-        const i = item as unknown as Record<string, unknown>;
+        const i = item as CrmEntityLike;
         if (activeEntity === "proposals") return (PROPOSAL_STATUS_MAP[i.status as string] || i.status) === stage.stageId;
         if (activeEntity === "invoices") return (INVOICE_STATUS_MAP[i.status as string] || i.stageId || i.status) === stage.stageId;
         return (i.statusId || i.stageId) === stage.stageId;
@@ -273,7 +310,7 @@ export function useCRMWorkspace() {
     if (!["deals", "proposals", "invoices"].includes(activeEntity)) return {};
     return (Array.isArray(stages) ? stages : []).reduce((acc, stage) => {
       const items = itemsByStage[stage.stageId] || [];
-      acc[stage.stageId] = (items ?? []).reduce((sum, d: FilterableEntity) => sum + ((d as unknown as Record<string, unknown>).opportunity as number || (d as unknown as Record<string, unknown>).totalAmount as number || 0), 0);
+      acc[stage.stageId] = (Array.isArray(items) ? items : []).reduce((sum, d: FilterableEntity) => sum + ((d as CrmEntityLike).opportunity ?? (d as CrmEntityLike).totalAmount ?? 0), 0);
       return acc;
     }, {} as Record<string, number>);
   }, [itemsByStage, activeEntity, stages]);

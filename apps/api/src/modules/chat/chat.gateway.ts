@@ -1,3 +1,8 @@
+/**
+ * @module chat.gateway
+ * @description NestJS WebSocket gateway. Socket.IO handlers.
+ */
+
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -14,25 +19,16 @@ import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
 import { NotificationBotService } from '../hr/telegram-bots/notification-bot.service';
 import { ChatGatewayHelperService } from './chat-gateway-helper.service';
+import {
+  setChatServer,
+  getChatServer as _getChatServer,
+  broadcastToRoom as _broadcastToRoom,
+  configureChatWsCors,
+  chatWsCorsAllowed,
+} from './chat-gateway.cors';
 
-
-// Expose server ref for REST controllers to broadcast
-let _chatServer: Server | null = null;
-export function getChatServer(): Server | null { return _chatServer; }
-export function broadcastToRoom(roomId: string | number, event: string, data: unknown): void {
-  _chatServer?.to(`room:${roomId}`).emit(event, data);
-}
-
-// Mutable — populated from ConfigService in constructor before any connection is accepted
-let _chatWsAllowedOrigins: string[] = [];
-let _chatWsIsDev = true;
-
-function chatWsCorsAllowed(origin: string): boolean {
-  if (!origin) return true;
-  if (_chatWsAllowedOrigins.includes(origin)) return true;
-  if (_chatWsIsDev && (origin.endsWith('.replit.dev') || origin.endsWith('.repl.co'))) return true;
-  return false;
-}
+// Re-export for back-compat
+export { _getChatServer as getChatServer, _broadcastToRoom as broadcastToRoom };
 
 @WebSocketGateway({
   namespace: '/chat',
@@ -62,13 +58,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly helper: ChatGatewayHelperService,
     cfg: ConfigService,
   ) {
-    const raw = cfg.get<string>('ALLOWED_ORIGINS') ?? '';
-    _chatWsAllowedOrigins = raw.split(',').map((o) => o.trim()).filter(Boolean);
-    _chatWsIsDev = cfg.get<string>('NODE_ENV') !== 'production';
+    configureChatWsCors(cfg.get<string>('ALLOWED_ORIGINS') ?? '', cfg.get<string>('NODE_ENV'));
   }
 
   afterInit(server: Server) {
-    _chatServer = server;
+    setChatServer(server);
     this.helper.setContext(server, this.userSockets);
   }
 
@@ -108,7 +102,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.join(`room:${room.id}`);
       }
 
-      client.emit('connected', { userId, rooms });
+      client.emit('connected', { userId, rooms, onlineUserIds: Array.from(this.userSockets.keys()) });
 
       const unread = await this.chatService.getTotalUnreadCount(userId);
       client.emit('unread_count', { count: unread });

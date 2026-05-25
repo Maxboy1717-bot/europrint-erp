@@ -1,9 +1,15 @@
+/**
+ * @module ActivityLogPanel
+ * @description React UI component.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckSquare, Plus, Clock, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ActivityLogPanelProps } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 export function ActivityLogPanel({
   activityFilter,
@@ -14,6 +20,7 @@ export function ActivityLogPanel({
   onDoneActivity,
   onDeleteActivity,
 }: ActivityLogPanelProps) {
+  const { t } = useTranslation("common");
   const ACTIVITY_TYPES = [
     { value: "call", label: "Qo'ng'iroq" },
     { value: "meeting", label: "Uchrashuv" },
@@ -23,11 +30,11 @@ export function ActivityLogPanel({
   ];
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-surface p-4">
+    <div className="flex-1 flex flex-col min-h-0 bg-background p-4">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <CheckSquare className="h-5 w-5 text-primary" />
-          Mening faoliyatlarim
+          {t("meningFaoliyatlarim")}
         </h2>
         <div className="flex items-center gap-2">
           <Button
@@ -36,7 +43,7 @@ export function ActivityLogPanel({
             onClick={() => setActivityFilter("today")}
             data-testid="button-filter-today"
           >
-            Bugun
+            {t("today")}
           </Button>
           <Button
             variant={activityFilter === "all" ? "default" : "outline"}
@@ -44,7 +51,7 @@ export function ActivityLogPanel({
             onClick={() => setActivityFilter("all")}
             data-testid="button-filter-all"
           >
-            Barchasi
+            {t("Barchasi")}
           </Button>
           <Button
             size="sm"
@@ -52,7 +59,7 @@ export function ActivityLogPanel({
             onClick={onAddActivity}
             data-testid="button-add-activity"
           >
-            <Plus className="h-4 w-4" /> Faoliyat qo'shish
+            <Plus className="h-4 w-4" /> {t("faoliyatQoshish")}
           </Button>
         </div>
       </div>
@@ -66,7 +73,7 @@ export function ActivityLogPanel({
       )}
 
       {!isLoading && activities.length === 0 && (
-        <div className="flex-1 flex items-center justify-center text-on-surface-variant">
+        <div className="flex-1 flex items-center justify-center text-muted-foreground">
           <div className="text-center">
             <CheckSquare className="h-10 w-10 mx-auto mb-2 opacity-40" />
             <p className="text-sm">
@@ -85,8 +92,8 @@ export function ActivityLogPanel({
             data-testid={`card-activity-${activity.id}`}
             className={`flex items-start gap-3 p-3 rounded-lg border ${
               activity.isDone
-                ? "opacity-60 bg-surface-container"
-                : "bg-surface-container-lowest"
+                ? "opacity-60 bg-muted/60"
+                : "bg-card"
             }`}
           >
             <Button
@@ -98,27 +105,27 @@ export function ActivityLogPanel({
             >
               <CheckSquare
                 className={`h-4 w-4 ${
-                  activity.isDone ? "text-green-600" : "text-on-surface-variant"
+                  activity.isDone ? "text-[var(--ep-green)]" : "text-muted-foreground"
                 }`}
               />
             </Button>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-medium text-on-surface">
+                <span className="text-sm font-medium text-foreground">
                   {activity.subject}
                 </span>
                 <Badge variant="outline" className="text-xs shrink-0">
-                  {(ACTIVITY_TYPES ?? []).find((t) => t.value === activity.type)?.label ||
+                  {(Array.isArray(ACTIVITY_TYPES) ? ACTIVITY_TYPES : []).find((t) => t.value === activity.type)?.label ||
                     activity.type}
                 </Badge>
                 {activity.isDone && (
                   <Badge className="text-xs shrink-0 bg-green-100 text-green-800 no-default-hover-elevate">
-                    Bajarildi
+                    {t("Bajarildi")}
                   </Badge>
                 )}
               </div>
               {activity.note && (
-                <p className="text-xs text-on-surface-variant mt-0.5 truncate">
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">
                   {activity.note}
                 </p>
               )}
@@ -127,8 +134,8 @@ export function ActivityLogPanel({
                   <span
                     className={`text-xs flex items-center gap-1 ${
                       new Date(activity.dueDate) < new Date() && !activity.isDone
-                        ? "text-red-600"
-                        : "text-on-surface-variant"
+                        ? "text-[var(--ep-red)]"
+                        : "text-muted-foreground"
                     }`}
                   >
                     <Clock className="h-3 w-3" />{" "}
@@ -136,7 +143,7 @@ export function ActivityLogPanel({
                   </span>
                 )}
                 {activity.entityType && (
-                  <span className="text-xs text-on-surface-variant">
+                  <span className="text-xs text-muted-foreground">
                     {activity.entityType} #{activity.entityId}
                   </span>
                 )}
@@ -149,7 +156,7 @@ export function ActivityLogPanel({
               onClick={() => onDeleteActivity(activity.id)}
               data-testid={`button-delete-activity-${activity.id}`}
             >
-              <Trash2 className="h-3.5 w-3.5 text-on-surface-variant" />
+              <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
             </Button>
           </div>
         ))}

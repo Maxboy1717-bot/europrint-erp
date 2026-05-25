@@ -150,7 +150,7 @@ export class FuzzySearchService {
     const rows = parseResult.data;
 
     return Ok(
-      (rows ?? []).map(r => ({
+      (Array.isArray(rows) ? rows : []).map(r => ({
         id: r.id,
         name: r.name,
         similarity: r.similarity,
@@ -203,7 +203,7 @@ export class FuzzySearchService {
     const rows = parseResult.data;
 
     return Ok(
-      (rows ?? []).map(r => ({
+      (Array.isArray(rows) ? rows : []).map(r => ({
         id: r.id,
         name: r.name,
         rank: r.rank,

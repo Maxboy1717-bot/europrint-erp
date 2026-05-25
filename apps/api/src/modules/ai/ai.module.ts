@@ -1,11 +1,18 @@
+/**
+ * @module ai.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '../auth/auth.module';
 import { AiRouterService }          from './application/services/ai-router.service';
 import { AiRouterCallService }       from './application/services/ai-router-call.service';
-import { AiRouterRepository }       from './application/ai-router.repository';
+import { AiRouterRepository }       from './infrastructure/repositories/ai-router.repository';
+import { AI_ROUTER_REPO }            from './domain/repositories/i-ai-router.repo';
 import { AiExamService }             from './application/services/ai-exam.service';
 import { AiHrNewService }            from './application/services/ai-hr-new.service';
 import { AiPlanningService }         from './application/services/ai-planning.service';
@@ -32,8 +39,14 @@ import { DirectorAiStrategyService } from './services/director-ai-strategy.servi
 import { MarketingAiService }        from './services/marketing-ai.service';
 import { AiAutomationService }       from './services/ai-automation.service';
 import { AiAutomationRepository }   from './services/ai-automation.repository';
+import { AiDataRepository }         from './services/ai-data.repository';
 import { AiAutomationDailyService }  from './services/ai-automation-daily.service';
-import { AiAutomationEventsService } from './services/ai-automation-events.service';
+import {
+  AiAutomationEventsService,
+  AiLeadScoreHandler,
+  AiCandidateScreeningHandler,
+  AiInvoiceClassifyHandler,
+} from './services/ai-automation-events.service';
 import { AiHrController }            from './presentation/ai-hr.controller';
 import { AiCrmController }           from './presentation/ai-crm.controller';
 import { AiFinanceController }       from './presentation/ai-finance.controller';
@@ -59,12 +72,14 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
 @Module({
   imports: [
     ConfigModule,
+    CqrsModule,
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     AuthModule,
   ],
   providers: [
     AiRouterRepository,
+    { provide: AI_ROUTER_REPO, useClass: AiRouterRepository },
     AiRouterService,
     AiRouterCallService,
     DrizzleService,
@@ -80,9 +95,14 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
     DirectorAiStrategyService,
     MarketingAiService,
     AiAutomationRepository,
+    AiDataRepository,
     AiAutomationService,
     AiAutomationDailyService,
     AiAutomationEventsService,
+    // PA2-18 Wave 4 round-3: canonical @EventsHandler split
+    AiLeadScoreHandler,
+    AiCandidateScreeningHandler,
+    AiInvoiceClassifyHandler,
     DrizzleAiExamRepo,
     DrizzleAiHrNewRepo,
     DrizzleInsightsRepo,

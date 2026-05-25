@@ -1,3 +1,8 @@
+/**
+ * @module Calculator
+ * @description React UI component.
+ */
+
 import { useState } from 'react';
 import { ArrowRight, ArrowLeft, Package, Layers, Hash, CheckCircle } from 'lucide-react';
 import { useLanguage } from '@/lib/public/i18n';
@@ -20,7 +25,7 @@ export default function Calculator() {
   const [material, setMaterial] = useState('3layer');
 
   const calculatePrice = () => {
-    const selectedMaterial = (materials ?? []).find(m => m.id === material);
+    const selectedMaterial = (Array.isArray(materials) ? materials : []).find(m => m.id === material);
     const area = 2 * (length * width + length * height + width * height);
     const basePrice = area * 0.5;
     const materialPrice = basePrice * (selectedMaterial?.priceMultiplier || 1);
@@ -75,7 +80,7 @@ export default function Calculator() {
         ))}
       </div>
 
-      <div className="bg-surface-container-lowest rounded-2xl p-8 md:p-10" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+      <div className="bg-card rounded-xl p-8 md:p-10" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
         {step === 1 && (
           <div className="animate-fadeIn">
             <div className="flex items-center gap-3 mb-8">
@@ -106,7 +111,7 @@ export default function Calculator() {
                     type="number"
                     value={field.value}
                     onChange={(e) => field.setValue(Number(e.target.value))}
-                    className="w-full px-5 py-4 rounded-xl text-lg font-medium transition-all duration-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-5 py-4 rounded-xl text-lg font-medium transition-all duration-200 focus:ring-2 focus:ring-primary focus:border-transparent"
                     style={{ 
                       border: '2px solid #E5E7EB', 
                       color: '#2C3E50',
@@ -212,7 +217,7 @@ export default function Calculator() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 md:grid-cols-6 gap-3 mb-6">
               {(Array.isArray(quantities) ? quantities : []).map((q) => (
                 <button
                   key={q}
@@ -238,7 +243,7 @@ export default function Calculator() {
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-full px-5 py-4 rounded-xl text-lg font-medium transition-all duration-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-5 py-4 rounded-xl text-lg font-medium transition-all duration-200 focus:ring-2 focus:ring-primary focus:border-transparent"
                 style={{ border: '2px solid #E5E7EB', color: '#2C3E50', outline: 'none' }}
                 min="1"
                 data-testid="input-custom-quantity"
@@ -257,11 +262,11 @@ export default function Calculator() {
                     )}
                   </p>
                   <p className="text-4xl font-bold mt-1" style={{ color: '#F97316', fontFamily: "'Montserrat', sans-serif" }}>
-                    {formatPrice(calculatePrice())} <span className="text-lg font-medium" style={{ color: '#6B7280' }}>so'm</span>
+                    {formatPrice(calculatePrice())} <span className="text-lg font-medium" style={{ color: '#6B7280' }}>{t("som")}</span>
                   </p>
                 </div>
                 <div className="text-sm" style={{ color: '#6B7280' }}>
-                  <p>{length}×{width}×{height} sm • {language === 'ru' ? (materials ?? []).find(m => m.id === material)?.nameRu : materials.find(m => m.id === material)?.name}</p>
+                  <p>{length}×{width}×{height} sm • {language === 'ru' ? (Array.isArray(materials) ? materials : []).find(m => m.id === material)?.nameRu : materials.find(m => m.id === material)?.name}</p>
                   <p>{formatPrice(quantity)} {language === 'ru' ? 'шт.' : 'dona'}</p>
                 </div>
               </div>

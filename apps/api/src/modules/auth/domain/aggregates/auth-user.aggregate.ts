@@ -1,6 +1,12 @@
+/**
+ * @module auth-user.aggregate
+ * @description Source module. See exports for details.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { PasswordValueObject } from '../value-objects/password.vo';
+import { IPasswordHasher } from '../ports/i-password-hasher.port';
 
 export interface AuthUserData {
   id: number;
@@ -70,8 +76,8 @@ export class AuthUserAggregate {
     return this.isActive;
   }
 
-  async verifyPassword(plainPassword: string): Promise<boolean> {
-    return this.password.verify(plainPassword);
+  async verifyPassword(plainPassword: string, hasher: IPasswordHasher): Promise<boolean> {
+    return hasher.verify(plainPassword, this.password.getHash());
   }
 
   getFailedLoginAttempts(): number {
@@ -106,8 +112,12 @@ export class AuthUserAggregate {
     return this.lastLogin;
   }
 
-  async changePassword(oldPassword: string, newPassword: PasswordValueObject): Promise<boolean> {
-    const isValid = await this.password.verify(oldPassword);
+  async changePassword(
+    oldPassword: string,
+    newPassword: PasswordValueObject,
+    hasher: IPasswordHasher,
+  ): Promise<boolean> {
+    const isValid = await hasher.verify(oldPassword, this.password.getHash());
     if (!isValid) {
       return false;
     }

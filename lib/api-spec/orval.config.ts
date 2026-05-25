@@ -1,3 +1,8 @@
+/**
+ * @module orval.config
+ * @description Configuration loader. Wraps env vars via @nestjs/config ConfigService.
+ */
+
 import { defineConfig, InputTransformerFn } from "orval";
 import path from "path";
 

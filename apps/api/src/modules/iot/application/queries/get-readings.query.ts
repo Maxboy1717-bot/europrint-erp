@@ -1,3 +1,8 @@
+/**
+ * @module get-readings.query
+ * @description Source module. See exports for details.
+ */
+
 export class GetReadingsQuery {
   constructor(readonly deviceId: string,
     readonly from?: Date,

@@ -1,3 +1,8 @@
+/**
+ * @module DesignOrderDetail
+ * @description React page component. Route-level UI.
+ */
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,8 +16,8 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Send, Paperclip, ExternalLink, Package } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { format } from "date-fns";
-import { ErrorState } from "@/components/ui/error-state";
-
+import { EPErrorState } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 interface DesignOrder {
   order: {
     id: string;
@@ -51,13 +56,14 @@ interface DesignOrderMessage {
 }
 
 export default function DesignOrderDetail() {
+  const { t } = useTranslation('common');
   const [, params] = useRoute("/design-orders/:id");
   const orderId = params?.id;
   const { toast } = useToast();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { data: orderData, isLoading: orderLoading, isError, refetch} = useQuery<DesignOrder>({
+  const { data: orderData, isLoading: orderLoading, isError, error, refetch} = useQuery<DesignOrder>({
     queryKey: ["/api/design/orders", orderId],
     enabled: !!orderId,
   });
@@ -103,12 +109,12 @@ export default function DesignOrderDetail() {
 
   if (!orderId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-gray-50 to-orange-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
+      <div className="min-h-screen from-orange-50 via-gray-50 to-orange-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
         <div className="max-w-7xl mx-auto">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Package className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Buyurtma topilmadi</p>
+              <p className="text-muted-foreground">{t("buyurtmaTopilmadi")}</p>
             </CardContent>
           </Card>
         </div>
@@ -121,7 +127,7 @@ export default function DesignOrderDetail() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Yuklanmoqda...</p>
+          <p className="mt-4 text-muted-foreground">{t("Yuklanmoqda...")}</p>
         </div>
       </div>
     );
@@ -129,7 +135,7 @@ export default function DesignOrderDetail() {
 
 
   if (isError) {
-    return <ErrorState onRetry={refetch} />;
+    return <EPErrorState onRetry={refetch}  error={error} />;
   }
   if (!orderData) {
     return null;
@@ -137,18 +143,18 @@ export default function DesignOrderDetail() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      'yangi': 'bg-blue-100 text-blue-700',
-      'jarayonda': 'bg-orange-100 text-orange-700',
-      'tasdiq-kutilmoqda': 'bg-purple-100 text-purple-700',
-      'tasdiqlangan': 'bg-green-100 text-green-700',
-      'ishlab-chiqarish': 'bg-teal-100 text-teal-700',
-      'yakunlangan': 'bg-emerald-100 text-emerald-700',
+      'yangi': 'bg-blue-100 text-[var(--ep-blue)]',
+      'jarayonda': 'bg-orange-100 text-[var(--ep-primary)]',
+      'tasdiq-kutilmoqda': 'bg-purple-100 text-[var(--ep-purple)]',
+      'tasdiqlangan': 'bg-green-100 text-[var(--ep-green)]',
+      'ishlab-chiqarish': 'bg-teal-100 text-[var(--ep-cyan)]',
+      'yakunlangan': 'bg-emerald-100 text-[var(--ep-green)]',
     };
-    return styles[status as keyof typeof styles] || 'bg-surface-container-low text-on-surface';
+    return styles[status as keyof typeof styles] || 'bg-muted/40 text-foreground';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-gray-50 to-orange-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
+    <div className="min-h-screen from-orange-50 via-gray-50 to-orange-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Link href="/design/orders">
@@ -157,7 +163,7 @@ export default function DesignOrderDetail() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent" data-testid="text-order-number">
+            <h1 className="ep-h1 bg-primary bg-clip-text text-transparent" data-testid="text-order-number">
               {orderData.order.orderNumber}
             </h1>
             <p className="text-muted-foreground mt-1">
@@ -170,11 +176,11 @@ export default function DesignOrderDetail() {
           <div className="lg:col-span-1 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Buyurtma Tafsilotlari</CardTitle>
+                <CardTitle>{t("buyurtmaTafsilotlari1")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-muted-foreground">Holat</Label>
+                  <Label className="text-muted-foreground">{t("status28")}</Label>
                   <div className="mt-1">
                     <Badge className={getStatusBadge(orderData.order.status)}>
                       {orderData.order.status}
@@ -183,56 +189,56 @@ export default function DesignOrderDetail() {
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground">Mahsulot</Label>
+                  <Label className="text-muted-foreground">{t("Mahsulot")}</Label>
                   <p className="font-medium">{orderData.order.productName}</p>
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground">Turi</Label>
+                  <Label className="text-muted-foreground">{t("type")}</Label>
                   <p className="capitalize">{orderData.order.productType}</p>
                 </div>
 
                 {orderData.order.brandName && (
                   <div>
-                    <Label className="text-muted-foreground">Brend</Label>
+                    <Label className="text-muted-foreground">{t("brend")}</Label>
                     <p>{orderData.order.brandName}</p>
                   </div>
                 )}
 
                 <div>
-                  <Label className="text-muted-foreground">Miqdor</Label>
+                  <Label className="text-muted-foreground">{t("quantity")}</Label>
                   <p>{orderData.order.quantity.toLocaleString()}</p>
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground">Ustuvorlik</Label>
+                  <Label className="text-muted-foreground">{t("ustuvorlik")}</Label>
                   <Badge variant="outline" className="capitalize">{orderData.order.priority}</Badge>
                 </div>
 
                 {orderData.order.deadline && (
                   <div>
-                    <Label className="text-muted-foreground">Muddat</Label>
+                    <Label className="text-muted-foreground">{t("muddat")}</Label>
                     <p>{orderData.order.deadline}</p>
                   </div>
                 )}
 
                 {orderData.designer && (
                   <div>
-                    <Label className="text-muted-foreground">Dizayner</Label>
+                    <Label className="text-muted-foreground">{t("designer")}</Label>
                     <p>{orderData.designer.fullName}</p>
                   </div>
                 )}
 
                 {orderData.order.description && (
                   <div>
-                    <Label className="text-muted-foreground">Tavsif</Label>
+                    <Label className="text-muted-foreground">{t("progress.description")}</Label>
                     <p className="text-sm">{orderData.order.description}</p>
                   </div>
                 )}
 
                 {orderData.order.requirements && (
                   <div>
-                    <Label className="text-muted-foreground">Maxsus Talablar</Label>
+                    <Label className="text-muted-foreground">{t("maxsusTalablar")}</Label>
                     <p className="text-sm">{orderData.order.requirements}</p>
                   </div>
                 )}
@@ -241,41 +247,41 @@ export default function DesignOrderDetail() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Mijoz Ma'lumotlari</CardTitle>
+                <CardTitle>{t("mijozMalumotlari")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <Label className="text-muted-foreground">Ism</Label>
+                  <Label className="text-muted-foreground">{t("ism1")}</Label>
                   <p>{orderData.order.clientName}</p>
                 </div>
 
                 {orderData.order.clientCompany && (
                   <div>
-                    <Label className="text-muted-foreground">Kompaniya</Label>
+                    <Label className="text-muted-foreground">{t("company")}</Label>
                     <p>{orderData.order.clientCompany}</p>
                   </div>
                 )}
 
                 {orderData.order.clientPhone && (
                   <div>
-                    <Label className="text-muted-foreground">Telefon</Label>
+                    <Label className="text-muted-foreground">{t("phone")}</Label>
                     <p>{orderData.order.clientPhone}</p>
                   </div>
                 )}
 
                 {orderData.order.clientEmail && (
                   <div>
-                    <Label className="text-muted-foreground">Email</Label>
+                    <Label className="text-muted-foreground">{t('email1')}</Label>
                     <p>{orderData.order.clientEmail}</p>
                   </div>
                 )}
 
                 {orderData.order.dealId && (
                   <div className="pt-2 border-t">
-                    <Label className="text-muted-foreground">CRM Deal</Label>
+                    <Label className="text-muted-foreground">{t('crmDeal')}</Label>
                     <Link href="/crm">
                       <Button variant="ghost" size="sm" className="p-0 h-auto mt-1" data-testid="link-crm-deal">
-                        CRM'ga o'tish
+                        {t("crmgaOtish")}
                         <ExternalLink className="ml-1 h-3 w-3" />
                       </Button>
                     </Link>
@@ -288,18 +294,18 @@ export default function DesignOrderDetail() {
           <div className="lg:col-span-2">
             <Card className="h-[calc(100vh-12rem)] flex flex-col">
               <CardHeader>
-                <CardTitle>Chat (Savdo ⇄ Dizayn)</CardTitle>
+                <CardTitle>{t("chatSavdoDizayn")}</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
                 <div className="flex-1 overflow-y-auto p-4 space-y-4" data-testid="chat-messages">
                   {messagesLoading ? (
                     <div className="text-center text-muted-foreground">
-                      <p>Xabarlar yuklanmoqda...</p>
+                      <p>{t("xabarlarYuklanmoqda")}</p>
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="text-center text-muted-foreground py-8">
-                      <p>Hozircha xabarlar yo'q</p>
-                      <p className="text-sm">Birinchi xabarni yuboring!</p>
+                      <p>{t("hozirchaXabarlarYoq")}</p>
+                      <p className="text-sm">{t("birinchiXabarniYuboring")}</p>
                     </div>
                   ) : (
                     (Array.isArray(messages) ? messages : []).map((msg) => (
@@ -311,10 +317,10 @@ export default function DesignOrderDetail() {
                         <div
                           className={`max-w-[70%] rounded-lg p-3 ${
                             msg.senderRole === 'sales'
-                              ? 'bg-orange-500 text-white'
+                              ? 'bg-[var(--ep-primary)] text-white'
                               : msg.senderRole === 'design'
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-surface-container text-on-surface'
+                              ? 'bg-[var(--ep-blue)] text-white'
+                              : 'bg-muted/60 text-foreground'
                           }`}
                         >
                           <div className="flex items-baseline gap-2 mb-1">
@@ -337,7 +343,7 @@ export default function DesignOrderDetail() {
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyDown={handleKeyPress}
-                      placeholder="Xabar yozing..."
+                      placeholder={t("xabarYozing")}
                       className="resize-none"
                       rows={2}
                       data-testid="input-message"
@@ -362,7 +368,7 @@ export default function DesignOrderDetail() {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Enter - yuborish, Shift+Enter - yangi qator
+                    {t("enterYuborishShiftEnterYangi1")}
                   </p>
                 </div>
               </CardContent>

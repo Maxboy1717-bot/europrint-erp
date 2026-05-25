@@ -1,3 +1,8 @@
+/**
+ * @module website-lead.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { sdLeads } from '@europrint/schemas';
@@ -101,10 +106,11 @@ export class WebsiteLeadRepository {
    * Mavjud lead'ga sotuv menejerini biriktiradi (manager bo'sh bo'lsa).
    */
   async assignManagerIfMissing(leadId: number, managerId: number): Promise<Result<boolean>> {
+    // sd_leads canonical schema uses `managerId` (integer).
     return safeCall(async () => {
       const updated = await db
         .update(sdLeads)
-        .set({ managerId })
+        .set({ managerId: managerId })
         .where(sql`${sdLeads.id} = ${leadId} AND ${sdLeads.managerId} IS NULL`)
         .returning({ id: sdLeads.id });
       return Array.isArray(updated) && updated.length > 0;

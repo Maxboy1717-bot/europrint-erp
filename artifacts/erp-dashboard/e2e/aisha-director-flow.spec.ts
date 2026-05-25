@@ -1,0 +1,123 @@
+/**
+ * @module aisha-director-flow.spec
+ * @description End-to-end happy path. We don't actually invoke the wake
+ * word from a real microphone — we drive the AishaPanel through its
+ * Zustand store using `evaluate()`, then assert that the SSE response
+ * surfaces in the TransparencyPanel exactly as a real session would.
+ */
+
+import { test, expect, Page } from '@playwright/test';
+
+async function loginAsDirector(page: Page): Promise<void> {
+  // Inject the mock auth cookie before navigation so the app sees it on first load.
+  // This avoids the React-controlled-input / Playwright timing issue where the Login
+  // form's inputs get detached from the DOM during useAuth() loading re-renders.
+  await page.context().addCookies([{
+    name: 'access_token',
+    value: 'e2e-mock-access-token-valid',
+    domain: 'localhost',
+    path: '/',
+    httpOnly: true,
+    sameSite: 'Lax',
+  }]);
+  // Navigate directly to the director dashboard root.
+  // RoleRoute shows a spinner while /api/auth/me resolves; admin ∈ DIRECTOR_ROLES.
+  await page.goto('/');
+  // URL is already '/' (not '/login') so this resolves immediately once loaded.
+  await page.waitForURL(url => !url.href.includes('/login'), { timeout: 15_000 });
+  // Wait for DirectorDashboard (including AishaPanel) to fully mount.
+  // This guarantees: (1) window.__AISHA_STORE__ is exposed for driveStore(),
+  // (2) the F4 keydown listener inside AishaPanel's useEffect is registered.
+  // Without this wait, tests that call driveStore() or keyboard.press('F4')
+  // immediately after navigation hit a race where the component isn't ready yet.
+  await expect(page.getByTestId('aisha-panel')).toBeVisible({ timeout: 15_000 });
+}
+
+async function driveStore(page: Page, mutator: string): Promise<void> {
+  // Belt-and-suspenders: wait for the store to be exposed before driving state.
+  // loginAsDirector() already waits for aisha-panel, but this guards against
+  // any future caller that skips that step.
+  await page.waitForFunction(
+    () => !!(window as unknown as { __AISHA_STORE__?: unknown }).__AISHA_STORE__,
+    { timeout: 10_000 },
+  );
+  await page.evaluate((m) => {
+    const store = (window as unknown as { __AISHA_STORE__?: { setState(p: unknown): void } }).__AISHA_STORE__;
+    if (!store) return;
+    store.setState(JSON.parse(m));
+  }, mutator);
+}
+
+test.describe('AIsha — Director happy path', () => {
+  test('director sees AishaPanel + TransparencyPanel after wake', async ({ page }) => {
+    await loginAsDirector(page);
+    await expect(page.getByTestId('aisha-panel')).toBeVisible();
+
+    await driveStore(page, JSON.stringify({ status: 'listening' }));
+    await expect(page.getByTestId('aisha-status')).toContainText(/listening|tinglay/i);
+
+    await driveStore(page, JSON.stringify({
+      history: [{ id: '1', transcript: 'sex-3 holati qanday?', at: Date.now() }],
+    }));
+    await expect(page.getByText(/sex-3/i)).toBeVisible();
+
+    await driveStore(page, JSON.stringify({
+      lastResponse: {
+        text: 'Sex-3 OEE is 65%',
+        provenance: {
+          sources: [{ type: 'database', identifier: 'iot.machine_registry', queriedAt: new Date().toISOString(), latencyMs: 12, freshness: 'live' }],
+          confidence: 0.95,
+          citations: [{ label: 'Sex-3' }],
+          cameraSnapshots: [{ cameraId: 'c1', cameraName: 'Sex-3 Cam', snapshotUrl: '/test.jpg', capturedAt: new Date().toISOString() }],
+        },
+      },
+    }));
+    await expect(page.getByTestId('aisha-transparency')).toBeVisible();
+    await expect(page.getByTestId('aisha-cameras')).toBeVisible();
+    await expect(page.getByTestId('aisha-confidence')).toContainText('95');
+  });
+
+  test('mute toggle hides idle status', async ({ page }) => {
+    await loginAsDirector(page);
+    await page.getByTestId('aisha-mute').click();
+    await expect(page.getByTestId('aisha-status')).toContainText(/muted|ovozsiz/i);
+  });
+
+  test('high-stake action prompts approval before send', async ({ page }) => {
+    await loginAsDirector(page);
+    await driveStore(page, JSON.stringify({
+      lastResponse: {
+        text: '4pm yig\'ilish haqida jamoaga xabar yuborilsinmi?',
+        provenance: {
+          sources: [{ type: 'api', identifier: 'telegram.bot', queriedAt: new Date().toISOString(), latencyMs: 5, freshness: 'live' }],
+          confidence: 0.9, citations: [],
+        },
+      },
+    }));
+    await expect(page.getByTestId('aisha-transparency')).toBeVisible();
+  });
+
+  test('F4 toggles mute', async ({ page }) => {
+    await loginAsDirector(page);
+    await page.keyboard.press('F4');
+    await expect(page.getByTestId('aisha-status')).toContainText(/muted|ovozsiz/i);
+  });
+
+  test('transparency renders every source row', async ({ page }) => {
+    await loginAsDirector(page);
+    await driveStore(page, JSON.stringify({
+      lastResponse: {
+        text: 'Bugungi holat',
+        provenance: {
+          sources: [
+            { type: 'database', identifier: 'sd.sales_orders', queriedAt: new Date().toISOString(), latencyMs: 8, freshness: 'live' },
+            { type: 'database', identifier: 'pp.production_orders', queriedAt: new Date().toISOString(), latencyMs: 5, freshness: 'live' },
+          ],
+          confidence: 0.88, citations: [],
+        },
+      },
+    }));
+    await expect(page.getByText('sd.sales_orders')).toBeVisible();
+    await expect(page.getByText('pp.production_orders')).toBeVisible();
+  });
+});

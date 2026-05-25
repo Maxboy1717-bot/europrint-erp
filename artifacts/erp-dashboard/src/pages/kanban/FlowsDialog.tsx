@@ -1,3 +1,8 @@
+/**
+ * @module FlowsDialog
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -13,7 +18,9 @@ import { GitBranch, Plus, Check, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type T, type Employee, type TaskFlowWithUsers } from "./kanban-types";
+import { EPStatusPill } from "@/components/ep";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 export function FlowsDialog({
   open,
   onOpenChange,
@@ -25,13 +32,13 @@ export function FlowsDialog({
   onOpenChange: (open: boolean) => void;
   boardId: string | null;
   employees: Employee[];
-  t: typeof T.uz;
+  t: typeof T.uz & ((key: string) => string);
 }) {
   const { toast } = useToast();
   const [flowName, setFlowName] = useState("");
   const [flowType, setFlowType] = useState<"round_robin" | "least_busy" | "random">("round_robin");
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const { data: flows = [], refetch } = useQuery<TaskFlowWithUsers[]>({
     queryKey: ['/api/kanban/flows', boardId],
@@ -47,10 +54,10 @@ export function FlowsDialog({
       refetch();
       setFlowName("");
       setSelectedUserIds([]);
-      toast({ title: "Oqim yaratildi", description: "Yangi oqim muvaffaqiyatli qo'shildi" });
+      toast({ title: "Oqim yaratildi", description: tLabel('kanban.FlowsDialog.tsx.yangiOqimMuvaffaqiyatliQoshildi', "Yangi oqim muvaffaqiyatli qo'shildi") });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Oqimni yaratib bo'lmadi", variant: "destructive" });
+      toast({ title: "Xatolik", description: tLabel('kanban.FlowsDialog.tsx.oqimniYaratibBolmadi', "Oqimni yaratib bo'lmadi"), variant: "destructive" });
     },
   });
 
@@ -61,10 +68,10 @@ export function FlowsDialog({
     },
     onSuccess: () => {
       refetch();
-      toast({ title: "O'chirildi", description: "Oqim muvaffaqiyatli o'chirildi" });
+      toast({ title: tLabel('kanban.FlowsDialog.tsx.ochirildi', "O'chirildi"), description: tLabel('kanban.FlowsDialog.tsx.oqimMuvaffaqiyatliOchirildi', "Oqim muvaffaqiyatli o'chirildi") });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Oqimni o'chirib bo'lmadi", variant: "destructive" });
+      toast({ title: "Xatolik", description: tLabel('kanban.FlowsDialog.tsx.oqimniOchiribBolmadi', "Oqimni o'chirib bo'lmadi"), variant: "destructive" });
     },
   });
 
@@ -75,13 +82,13 @@ export function FlowsDialog({
   };
 
   const toggleUser = (userId: string) => {
-    setSelectedUserIds(prev => prev.includes(userId) ? (prev ?? []).filter(id => id !== userId) : [...prev, userId]);
+    setSelectedUserIds(prev => prev.includes(userId) ? (Array.isArray(prev) ? prev : []).filter(id => id !== userId) : [...prev, userId]);
   };
 
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <GitBranch className="h-5 w-5" />
@@ -92,7 +99,7 @@ export function FlowsDialog({
         <div className="space-y-4">
           <div className="rounded-lg border p-4 space-y-3 bg-muted/20">
             <h3 className="font-medium">{t.flows.addFlow}</h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>{t.flows.name}</Label>
                 <Input
@@ -105,7 +112,7 @@ export function FlowsDialog({
               <div>
                 <Label>{t.flows.type}</Label>
                 <Select value={flowType} onValueChange={(v) => setFlowType(v as typeof flowType)}>
-                  <SelectTrigger data-testid="select-flow-type">
+                  <SelectTrigger data-testid="select-flow-type" className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -159,13 +166,13 @@ export function FlowsDialog({
                   data-testid={`flow-item-${flow.id}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                      <GitBranch className="h-5 w-5 text-primary" />
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <GitBranch className="h-4 w-4 text-primary" />
                     </div>
                     <div>
                       <p className="font-medium">{flow.name}</p>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Badge variant="secondary" className="text-xs">{typeLabels[flow.assignmentType]}</Badge>
+                        <EPStatusPill tone="neutral" className="text-xs">{typeLabels[flow.assignmentType]}</EPStatusPill>
                         <span>{flow.users.length} {t.flows.users.toLowerCase()}</span>
                       </div>
                     </div>
@@ -175,7 +182,7 @@ export function FlowsDialog({
                       {flow.users.slice(0, 4).map((u) => (
                         <Avatar key={u.id} className="h-6 w-6 border-2 border-background">
                           <AvatarImage src={u.profileImageUrl || undefined} />
-                          <AvatarFallback className="text-[8px]">{u.fullName.split(" ").map(n => n[0]).join("").substring(0, 2)}</AvatarFallback>
+                          <AvatarFallback className="text-[8px]">{String((u as unknown as Record<string,unknown>).fullName ?? (u as unknown as Record<string,unknown>).full_name ?? "?").split(" ").map(n => n[0] ?? "").join("").substring(0, 2).toUpperCase() || "?"}</AvatarFallback>
                         </Avatar>
                       ))}
                       {flow.users.length > 4 && (
@@ -189,14 +196,14 @@ export function FlowsDialog({
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label="O'chirish"
+                          aria-label={t("delete")}
                           onClick={() => setConfirmDeleteId(flow.id)}
                           data-testid={`button-delete-flow-${flow.id}`}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>O'chirish</TooltipContent>
+                      <TooltipContent>{t("delete")}</TooltipContent>
                     </Tooltip>
                   </div>
                 </div>
@@ -210,8 +217,8 @@ export function FlowsDialog({
     <ConfirmDialog
       open={confirmDeleteId !== null}
       onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-      title="Oqimni o'chirish"
-      description="Ushbu tayinlash oqimini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi."
+      title={t("oqimniOchirish")}
+      description={t("ushbuTayinlashOqiminiOchirishniTasdiqlaysizmi")}
       confirmText="O'chirish"
       cancelText="Bekor qilish"
       variant="destructive"

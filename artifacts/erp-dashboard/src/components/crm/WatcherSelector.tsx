@@ -1,3 +1,8 @@
+/**
+ * @module WatcherSelector
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -12,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, Eye, Plus, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface User {
   id: string;
   firstName: string;
@@ -62,7 +68,7 @@ export function WatcherSelector({
     >
       <div className="flex items-center gap-2">
         <Eye className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">Наблюдатели</span>
+        <span className="text-sm font-medium">{tLabel('common.WatcherSelector.untitled', "Наблюдатели")}</span>
         <span className="text-xs text-muted-foreground">({watchers.length})</span>
       </div>
 
@@ -74,7 +80,7 @@ export function WatcherSelector({
             data-testid={`watcher-badge-${watcher.id}`}
           >
             <Avatar className="h-5 w-5">
-              <AvatarFallback className="text-[10px] bg-blue-500 text-white">
+              <AvatarFallback className="text-[10px] bg-[var(--ep-blue)] text-white">
                 {getInitials(watcher)}
               </AvatarFallback>
             </Avatar>
@@ -107,7 +113,7 @@ export function WatcherSelector({
             <div className="flex items-center gap-2 px-2 pb-2 border-b">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Поиск сотрудников..."
+                placeholder={tLabel('common.WatcherSelector.untitled', "Поиск сотрудников...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-8 border-0 p-0 focus-visible:ring-0"
@@ -145,7 +151,7 @@ export function WatcherSelector({
                           <AvatarFallback
                             className={cn(
                               "text-xs",
-                              isSelected ? "bg-blue-500 text-white" : "bg-muted"
+                              isSelected ? "bg-[var(--ep-blue)] text-white" : "bg-muted"
                             )}
                           >
                             {getInitials(user)}
@@ -162,7 +168,7 @@ export function WatcherSelector({
                           )}
                         </div>
                         {isSelected && (
-                          <Check className="h-4 w-4 text-blue-500 shrink-0" />
+                          <Check className="h-4 w-4 text-[var(--ep-blue)] shrink-0" />
                         )}
                       </button>
                     );

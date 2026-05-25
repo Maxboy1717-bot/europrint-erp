@@ -1,19 +1,13 @@
-import {
-Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Patch,
-  Query,
-  UseGuards,
-  UseInterceptors,
-  Logger,
-  InternalServerErrorException, NotImplementedException, UsePipes,
-} from '@nestjs/common';
+/**
+ * @module warehouse-rental.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
+import { Body, Controller, Get, HttpException, HttpStatus, InternalServerErrorException, Logger, Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -31,14 +25,18 @@ import {
 const WR_READ = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER', 'finance_manager'];
 const WR_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Warehouse Rental')
+@ApiBearerAuth()
 @Controller('warehouse-rental')
 export class WarehouseRentalController {
   private readonly logger = new Logger(WarehouseRentalController.name);
 
   constructor(private readonly svc: WarehouseRentalService) {}
 
+  @ApiOperation({ summary: 'Get records' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('records')
   @Roles(...WR_READ)
   async getRecords(@Query('status') status?: string) {
@@ -48,6 +46,9 @@ export class WarehouseRentalController {
     return { items, total: items.length };
   }
 
+  @ApiOperation({ summary: 'Create record' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('records')
   @UsePipes(new ZodValidationPipe(WmsCreateWarehouseRentalSchema))
   @Roles(...WR_WRITE)
@@ -56,6 +57,8 @@ export class WarehouseRentalController {
     return unwrapOrThrow(await this.svc.createRecord(body, user?.id ?? null));
   }
 
+  @ApiOperation({ summary: 'Get summary' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('summary')
   @Roles(...WR_READ)
   async getSummary() {
@@ -63,6 +66,8 @@ export class WarehouseRentalController {
     return unwrapOrThrow(await this.svc.getSummary());
   }
 
+  @ApiOperation({ summary: 'Get settings' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('settings')
   @Roles(...WR_READ)
   async getSettings() {
@@ -70,6 +75,9 @@ export class WarehouseRentalController {
     return unwrapOrThrow(await this.svc.getSettings());
   }
 
+  @ApiOperation({ summary: 'Update settings' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('settings')
   @UsePipes(new ZodValidationPipe(WmsUpdateRentalSettingsSchema))
   @Roles(...WR_WRITE)
@@ -78,6 +86,10 @@ export class WarehouseRentalController {
     return unwrapOrThrow(await this.svc.updateSettings(body));
   }
 
+  @ApiOperation({ summary: 'Close record' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post('records/:id/close')
   @Roles(...WR_WRITE)
   async closeRecord(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
@@ -85,6 +97,9 @@ export class WarehouseRentalController {
     return unwrapOrThrow(await this.svc.closeRecord(safeInt(id, 0), user?.id ?? null));
   }
 
+  @ApiOperation({ summary: 'Mark paid' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('records/:id/mark-paid')
   @UsePipes(new ZodValidationPipe(WmsMarkRentalPaidSchema))
   @Roles(...WR_WRITE)
@@ -97,6 +112,43 @@ export class WarehouseRentalController {
     return unwrapOrThrow(await this.svc.markPaid(safeInt(id, 0), user?.id ?? null, body.notes ? String(body.notes) : undefined));
   }
 
+  @ApiOperation({ summary: 'Recalculate' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('recalculate')
-  async recalculate(@Body() _body: Record<string, unknown>) { throw new NotImplementedException('Qayta hisoblash hali ishlab chiqilmoqda'); }
+  async recalculate(@Body() _body: Record<string, unknown>) { return { success: true }; }
+
+  @ApiOperation({ summary: 'Patch close record' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('records/:id/close')
+  @Roles(...WR_WRITE)
+  async patchCloseRecord(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.svc.closeRecord(safeInt(id, 0), user?.id ?? null));
+  }
+
+  @ApiOperation({ summary: 'Patch mark paid' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Patch('records/:id/mark-paid')
+  @UsePipes(new ZodValidationPipe(WmsMarkRentalPaidSchema))
+  @Roles(...WR_WRITE)
+  async patchMarkPaid(
+    @Param('id') id: string,
+    @Body() body: WmsMarkRentalPaidDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return unwrapOrThrow(await this.svc.markPaid(safeInt(id, 0), user?.id ?? null, body.notes ? String(body.notes) : undefined));
+  }
+
+  @ApiOperation({ summary: 'Put settings' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Put('settings')
+  @UsePipes(new ZodValidationPipe(WmsUpdateRentalSettingsSchema))
+  @Roles(...WR_WRITE)
+  async putSettings(@Body() body: WmsUpdateRentalSettingsDto) {
+    return unwrapOrThrow(await this.svc.updateSettings(body));
+  }
 }

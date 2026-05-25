@@ -1,3 +1,8 @@
+/**
+ * @module schema-pos-ext
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable,
   uuid,
@@ -11,47 +16,13 @@ import { createId } from '@paralleldrive/cuid2';
 // ============================================================================
 // POS — Warehouse Movements
 // ============================================================================
-
-export const pos_movement_types = pgTable('pos_movement_types', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  code: text('code').unique().notNull(),
-  name: text('name').notNull(),
-  direction: text('direction').notNull(),
-  requiresDocument: boolean('requires_document').default(false),
-  isActive: boolean('is_active').default(true),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
-
-export const pos_movements = pgTable('pos_movements', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  movementTypeId: uuid('movement_type_id').references(() => pos_movement_types.id),
-  warehouseId: uuid('warehouse_id').notNull(),
-  status: text('status').notNull().default('draft'),
-  direction: text('direction').notNull(),
-  documentRef: text('document_ref'),
-  notes: text('notes'),
-  createdBy: text('created_by').notNull(),
-  approvedBy: text('approved_by'),
-  approvedAt: timestamp('approved_at', { withTimezone: true }),
-  completedBy: text('completed_by'),
-  completedAt: timestamp('completed_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
-
-export const pos_movement_lines = pgTable('pos_movement_lines', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  movementId: uuid('movement_id').references(() => pos_movements.id),
-  stockItemId: uuid('stock_item_id').notNull(),
-  stockItemName: text('stock_item_name').notNull(),
-  sku: text('sku').notNull(),
-  quantity: decimal('quantity', { precision: 12, scale: 3 }).notNull(),
-  unit: text('unit').notNull(),
-  unitPrice: decimal('unit_price', { precision: 18, scale: 2 }).notNull().default('0'),
-  lotNumber: text('lot_number'),
-  expiryDate: timestamp('expiry_date', { withTimezone: true }),
-  notes: text('notes'),
-});
+// pos_movement_types, pos_movements, pos_movement_lines are canonically defined
+// in lib/db and re-exported here (with snake_case aliases) for backwards compat.
+export {
+  posMovementTypes as pos_movement_types,
+  posMovements as pos_movements,
+  posMovementLines as pos_movement_lines,
+} from '@workspace/db';
 
 export const pos_warehouse_access = pgTable('pos_warehouse_access', {
   id: uuid('id').primaryKey().$defaultFn(() => createId()),

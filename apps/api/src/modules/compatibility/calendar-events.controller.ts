@@ -1,15 +1,27 @@
+/**
+ * @module calendar-events.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ * @deprecated Legacy compatibility shim. New consumers should target the canonical
+ *   calendar-events module endpoints (see docs/B5-compat-endpoints.md). Existing routes
+ *   remain functional but receive no new features. Removal target: post-PA3 cutover.
+ */
 import {
-  Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query,
+  Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query,
   UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { unwrapOrBadRequest, unwrapOrNotFound } from '@common/http-result';
+import { unwrapOrBadRequest, unwrapOrInternal, unwrapOrNotFound } from '@common/http-result';
 import { z } from 'zod';
 import { CalendarEventsService } from './calendar-events.service';
+import {
+  CalendarEventAclTranslator,
+  type LegacyCalendarEventRow,
+  type CalendarEventDto,
+} from './acl/calendar-event-acl';
 
 const EventSchema = z.object({
   title:       z.string().min(1),
@@ -26,21 +38,38 @@ const EventSchema = z.object({
 @ApiTags('Calendar Events')
 @ApiBearerAuth()
 @Roles('super_admin', 'admin', 'director', 'manager', 'hr_manager')
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('calendar-events')
 export class CalendarEventsController {
+  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
+  private readonly acl = new CalendarEventAclTranslator();
+
   constructor(private readonly svc: CalendarEventsService) {}
 
   @Get()
   async getAll(@Query('type') type?: string) {
-    return unwrapOrBadRequest(await this.svc.getAll(type));
+    return unwrapOrInternal(await this.svc.getAll(type));
+  }
+
+  /**
+   * PA2-14 ACL-translated variant. New consumers should hit `/v2`; the
+   * legacy `/` endpoint stays for backwards-compat.
+   */
+  @Get('v2')
+  async getAllV2(@Query('type') type?: string): Promise<CalendarEventDto[]> {
+    const rows = unwrapOrInternal(await this.svc.getAll(type)) as unknown as LegacyCalendarEventRow[];
+    const list = Array.isArray(rows) ? rows : [];
+    return list
+      .map((row) => this.acl.toDomain(row))
+      .filter((r): r is { ok: true; data: CalendarEventDto } => r.ok)
+      .map((r) => r.data);
   }
 
   @Get('upcoming')
   async getUpcoming() {
-    return unwrapOrBadRequest(await this.svc.getUpcoming());
+    return unwrapOrInternal(await this.svc.getUpcoming());
   }
 
   @Post()
@@ -65,5 +94,11 @@ export class CalendarEventsController {
   @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: string) {
     return unwrapOrNotFound(await this.svc.delete(id));
+  }
+
+  @Patch(':id')
+  async patch(@Param('id') id: string, @Body() body: unknown) {
+    const dto = EventSchema.partial().parse(body);
+    return unwrapOrNotFound(await this.svc.update(id, dto));
   }
 }

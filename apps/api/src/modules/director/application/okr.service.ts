@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module okr.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { OkrRepository } from './okr.repository';
+import { OKR_REPO, type IOkrRepo } from '../domain/repositories/i-okr.repo';
 
 @Injectable()
 export class OkrService {
-  constructor(private readonly repo: OkrRepository) {}
+  constructor(@Inject(OKR_REPO) private readonly repo: IOkrRepo) {}
 
   async listObjectives(type: string | null, year: number | null, quarter: string | null, status: string | null): Promise<Result<object, AppError>> {
     return this.repo.listObjectives(type, year, quarter, status);

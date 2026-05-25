@@ -1,9 +1,66 @@
+/**
+ * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
+ *   parameterised INTERVAL cast (NOW() - (${DEDUP_WINDOW})::interval) for
+ *   24-hour idempotency window, and the WITH new_req AS (INSERT ...
+ *   RETURNING id) INSERT INTO ... SELECT id, ... FROM new_req chained CTE
+ *   that creates the requisition header and one item in a single statement
+ *   to keep the operation atomic without an explicit transaction.
+ *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ */
+/**
+ * @module rop-trigger.handler
+ * @description Reorder-Point trigger: listens for stock-level changes and
+ *   automatically creates a purchase requisition when a material drops
+ *   below its configured reorder point (ROP). Suggested quantity = the
+ *   material's EOQ (computed elsewhere; see `wms-eoq.service.ts`).
+ *
+ *   Trigger logic:
+ *     1. Stock movement fires `STOCK_UPDATED` event with new on-hand
+ *     2. Load material policy: { reorder_point, eoq }
+ *     3. If newOnHand < reorder_point AND no recent requisition exists:
+ *          create requisition with qty = EOQ, source = AUTO_ROP_TRIGGER
+ *     4. Else: no-op
+ * @layer Event Handler (WMS)
+ *
+ * WHY EVENT-DRIVEN (not polled)
+ *   Polling every material every minute = O(materials × frequency) and
+ *   gives the buyer no real-time signal. Event-driven means the requisition
+ *   is created within seconds of the stock crossing the threshold —
+ *   buyer sees it on their dashboard before next refresh, can act ASAP.
+ *
+ *   The cost is one DB query per movement (for the policy lookup) which
+ *   is trivially indexed.
+ *
+ * WHY 24-HOUR DEDUP WINDOW
+ *   Without dedup, every subsequent stock movement (each issue, each
+ *   small write-off) would create a NEW requisition for the same shortage —
+ *   spamming the buyer's inbox with duplicates. The 24h window matches
+ *   one business day: if buyer hasn't acted on yesterday's req, today's
+ *   shortage doesn't need another one.
+ *
+ *   24 hours is a SQL interval literal because we need PostgreSQL to
+ *   compute the cutoff with its timezone-aware time math (consistent
+ *   with `pos_movements.created_at` semantics).
+ *
+ * WHY AUTO_ROP_SOURCE TAG ON THE REQUISITION
+ *   Buyers need to know which reqs are auto-generated vs hand-entered —
+ *   auto reqs get bulk-approval workflows, manual reqs are reviewed
+ *   one-by-one. The `source` column on `purchase_requisitions` lets the
+ *   approval dashboard filter.
+ *
+ * WHY NO Result<T> RETURN HERE
+ *   Event handlers are fire-and-forget — they don't return values to a
+ *   caller. The try/catch wraps the failure into a log entry so we
+ *   don't crash the event emitter loop. If buyers report missing
+ *   auto-reqs, check the logs for this handler's errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { safeNum } from '@common/math/math-utils';
-import { ERP_EVENTS } from '@common/constants/erp-events.constants';
+import { StockUpdatedEvent } from '@modules/wms/application/events/stock-updated.event';
 
 const AUTO_ROP_SOURCE = 'AUTO_ROP_TRIGGER';
 // Idempotency window: 24 hours per spec (prevents duplicate requisitions within one business day)
@@ -31,16 +88,22 @@ interface MaterialRow {
   min_order_qty: number;
 }
 
+/**
+ * PA2-18 Wave 6: converted from `@OnEvent(ERP_EVENTS.STOCK_UPDATED)` to canonical
+ *   `@EventsHandler(StockUpdatedEvent)`. The event class lives in
+ *   wms/application/events/stock-updated.event.ts; EventBridge re-emits to any
+ *   straggler @OnEvent listeners during the migration window.
+ */
 @Injectable()
-export class RopTriggerHandler {
+@EventsHandler(StockUpdatedEvent)
+export class RopTriggerHandler implements IEventHandler<StockUpdatedEvent> {
   private readonly logger = new Logger(RopTriggerHandler.name);
 
-  @OnEvent(ERP_EVENTS.STOCK_UPDATED)
-  async handleStockLevelUpdated(payload: StockLevelUpdatedPayload): Promise<void> {
+  async handle(event: StockUpdatedEvent): Promise<void> {
     try {
-      await this.checkAndTrigger(payload.materialId);
+      await this.checkAndTrigger(event.materialId);
     } catch (e) {
-      this.logger.error(`ROP trigger error for material ${payload.materialId}: ${String(e)}`);
+      this.logger.error(`ROP trigger error for material ${event.materialId}: ${String(e)}`);
     }
   }
 
@@ -81,7 +144,7 @@ export class RopTriggerHandler {
       JOIN mm_purchase_requisition_items pri ON pri.requisition_id = pr.id
       WHERE pri.material_id = ${materialId}
         AND pr.status IN ('pending', 'approved')
-        AND pr.created_at > NOW() - INTERVAL ${sql.raw(`'${DEDUP_WINDOW}'`)}
+        AND pr.created_at > NOW() - (${DEDUP_WINDOW})::interval
       LIMIT 1
     `);
 

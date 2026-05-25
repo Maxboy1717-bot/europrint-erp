@@ -1,6 +1,11 @@
+/**
+ * @module crm-activities
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, date, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, numeric, unique, date, uuid, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -69,7 +74,9 @@ export const crmComments = pgTable("crm_comments", {
   authorId: varchar("author_id").references(() => users.id, { onDelete: 'restrict' }).notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("crm_comments_entity_type_chk", sql`${t.entityType} IN ('deal','lead','contact','company','proposal','invoice')`),
+]);
 
 
 export const insertCrmCommentSchema = createInsertSchema(crmComments, {
@@ -104,7 +111,9 @@ export const crmEntityHistory = pgTable("crm_entity_history", {
   
   userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("crm_entity_history_action_chk", sql`${t.action} IN ('created','updated','stage_changed','deleted','restored')`),
+]);
 
 
 export const insertCrmEntityHistorySchema = createInsertSchema(crmEntityHistory, {
@@ -159,7 +168,10 @@ export const crmFollowupActivities = pgTable("crm_followup_activities", {
   entityId: integer("entity_id"),
   createdById: integer("created_by_id").references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  check("crm_followup_type_chk", sql`${t.type} IN ('call','meeting','email','follow_up','other')`),
+  check("crm_followup_entity_chk", sql`${t.entityType} IS NULL OR ${t.entityType} IN ('lead','deal','contact','company')`),
+]);
 
 export const insertCrmFollowupActivitySchema = createInsertSchema(crmFollowupActivities, {
   type: z.enum(["call", "meeting", "email", "follow_up", "other"]).default("call"),

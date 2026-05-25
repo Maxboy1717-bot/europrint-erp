@@ -1,3 +1,8 @@
+/**
+ * @module ItemCountForm
+ * @description React UI component.
+ */
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -30,7 +35,7 @@ export function ItemCountForm({ countDetail, isLoading, lineUpdates, onLineChang
       <Card>
         <CardContent className="pt-6 space-y-2">
           {([...Array(5)]).map((_, i) => (
-            <Skeleton key={`k-${i}`} className="h-12 w-full" />
+            <Skeleton key={`k-${i}`} className="h-12 w-full rounded-lg" />
           ))}
         </CardContent>
       </Card>
@@ -49,7 +54,7 @@ export function ItemCountForm({ countDetail, isLoading, lineUpdates, onLineChang
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[500px]">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{t.detail.materialCode}</TableHead>
@@ -70,11 +75,11 @@ export function ItemCountForm({ countDetail, isLoading, lineUpdates, onLineChang
                 const variancePercent = line.variancePercent ?? 0;
 
                 return (
-                  <TableRow key={line.id}>
+                  <TableRow key={line.id} className="hover:bg-muted/40 transition-colors">
                     <TableCell className="font-medium">{line.materialCode}</TableCell>
                     <TableCell>{line.materialName}</TableCell>
                     <TableCell className="text-right font-medium">{line.bookQuantity}</TableCell>
-                    <TableCell className="text-right w-[120px]">
+                    <TableCell className="text-right w-full sm:w-[120px]">
                       {isEditable ? (
                         <Input
                           type="number"
@@ -87,10 +92,10 @@ export function ItemCountForm({ countDetail, isLoading, lineUpdates, onLineChang
                         line.countedQuantity ?? "-"
                       )}
                     </TableCell>
-                    <TableCell className={`text-right font-medium ${variance < 0 ? "text-red-500" : variance > 0 ? "text-green-500" : ""}`}>
+                    <TableCell className={`text-right font-medium ${variance < 0 ? "text-[var(--ep-red)]" : variance > 0 ? "text-[var(--ep-green)]" : ""}`}>
                       {variance > 0 ? "+" : ""}{variance}
                     </TableCell>
-                    <TableCell className={`text-right font-medium ${variance < 0 ? "text-red-500" : variance > 0 ? "text-green-500" : ""}`}>
+                    <TableCell className={`text-right font-medium ${variance < 0 ? "text-[var(--ep-red)]" : variance > 0 ? "text-[var(--ep-green)]" : ""}`}>
                       {variancePercent > 0 ? "+" : ""}{variancePercent}%
                     </TableCell>
                     <TableCell>
@@ -110,7 +115,7 @@ export function ItemCountForm({ countDetail, isLoading, lineUpdates, onLineChang
                 );
               })}
             </TableBody>
-          </Table>
+          </Table></div>
         </ScrollArea>
       </CardContent>
     </Card>

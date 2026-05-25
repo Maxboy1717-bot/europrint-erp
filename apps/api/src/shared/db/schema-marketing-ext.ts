@@ -1,7 +1,11 @@
-import { pgTable, uuid, text, boolean, integer, timestamp, index } from 'drizzle-orm/pg-core';
-import { stub } from './schema-compat-helpers';
+/**
+ * @module schema-marketing-ext
+ * @description Source module. See exports for details.
+ */
 
-export const marketingContentPosts = stub(pgTable('marketing_content_posts', {
+import { pgTable, uuid, text, boolean, integer, timestamp, index } from 'drizzle-orm/pg-core';
+
+export const marketingContentPosts = pgTable('marketing_content_posts', {
   id:           uuid('id').primaryKey().defaultRandom(),
   title:        text('title').notNull(),
   content:      text('content'),
@@ -14,18 +18,19 @@ export const marketingContentPosts = stub(pgTable('marketing_content_posts', {
   category:     text('category'),
   createdAt:    timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt:    timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('mkt_posts_status_idx').on(t.status)]));
+}, (t) => [index('mkt_posts_status_idx').on(t.status)]);
 
-export const marketingSocialAccounts = stub(pgTable('marketing_social_accounts', {
+export const marketingSocialAccounts = pgTable('marketing_social_accounts', {
   id:           uuid('id').primaryKey().defaultRandom(),
   platform:     text('platform').notNull(),
   accountName:  text('account_name').notNull(),
   accountId:    text('account_id'),
   isActive:     boolean('is_active').notNull().default(true),
+  accessToken:  text('access_token'),
   createdAt:    timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}));
+});
 
-export const marketingSocialPosts = stub(pgTable('marketing_social_posts', {
+export const marketingSocialPosts = pgTable('marketing_social_posts', {
   id:         uuid('id').primaryKey().defaultRandom(),
   accountId:  text('account_id'),
   content:    text('content').notNull(),
@@ -34,9 +39,9 @@ export const marketingSocialPosts = stub(pgTable('marketing_social_posts', {
   scheduledAt: timestamp('scheduled_at', { withTimezone: true }),
   postedAt:   timestamp('posted_at', { withTimezone: true }),
   createdAt:  timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('mkt_social_posts_status_idx').on(t.status)]));
+}, (t) => [index('mkt_social_posts_status_idx').on(t.status)]);
 
-export const marketingEmailTemplates = stub(pgTable('marketing_email_templates', {
+export const marketingEmailTemplates = pgTable('marketing_email_templates', {
   id:          uuid('id').primaryKey().defaultRandom(),
   name:        text('name').notNull(),
   subject:     text('subject').notNull(),
@@ -45,4 +50,4 @@ export const marketingEmailTemplates = stub(pgTable('marketing_email_templates',
   isActive:    boolean('is_active').notNull().default(true),
   createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}));
+});

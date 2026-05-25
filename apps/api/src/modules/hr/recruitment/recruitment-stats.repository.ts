@@ -1,3 +1,8 @@
+/**
+ * @module recruitment-stats.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { candidates, vacancies, hrCandidateFunnels, hrToolTestResults } from '@europrint/schemas';

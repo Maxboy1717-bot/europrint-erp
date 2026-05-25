@@ -1,9 +1,15 @@
+/**
+ * @module approve-advance-bypass.handler
+ * @description CQRS command/query handler. execute() applies one use-case; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { AppErr, Err, Ok, Result } from '@common/result';
-import { ISalesOrderRepository } from '../../domain/repositories/i-sales-order.repo';
+import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
+import { AdvanceBypassApprovedEvent } from '../../domain/events/advance-bypass-approved.event';
 
 export class ApproveAdvanceBypassCommand {
   private readonly logger = new Logger(ApproveAdvanceBypassCommand.name);
@@ -17,7 +23,7 @@ export class ApproveAdvanceBypassHandler implements ICommandHandler<ApproveAdvan
   private readonly logger = new Logger(ApproveAdvanceBypassHandler.name);
 
   constructor(
-    @Inject('ISalesOrderRepository') private readonly orderRepo: ISalesOrderRepository,
+    @Inject(SALES_ORDER_REPO) private readonly orderRepo: ISalesOrderRepository,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -45,16 +51,12 @@ export class ApproveAdvanceBypassHandler implements ICommandHandler<ApproveAdvan
       return Err(AppErr('INTERNAL', 'Failed to update order'));
     }
 
-    this.eventBus.publish({
-      aggregateId: order.getId(),
-      eventName: 'AdvanceBypassApproved',
-      timestamp: _time.now(),
-      data: {
-        orderId: order.getId(),
-        bypassBy: command.bypassBy,
-        reason: command.reason,
-      },
-    });
+    // PA2-18: publish typed domain event via CQRS bus. EventBridgeService
+    // re-emits to EventEmitter2 under ERP_EVENTS.ADVANCE_BYPASS_APPROVED so
+    // any remaining string-based listeners still fire.
+    this.eventBus.publish(
+      new AdvanceBypassApprovedEvent(order.getId(), command.bypassBy, command.reason),
+    );
 
     // §20: Audit log
     this.logger.log({

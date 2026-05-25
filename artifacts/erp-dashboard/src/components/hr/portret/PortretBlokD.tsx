@@ -1,7 +1,13 @@
+/**
+ * @module PortretBlokD
+ * @description React UI component.
+ */
+
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ToolTestReqs } from "./types";
+import { useTranslation } from '@/lib/i18n';
 
 const TOOL_TRAITS = [
   { key: "A", label: "A — Diqqat (Внимание)",         description: "Tafsilotlarga e'tibor, ziyraklik" },
@@ -23,11 +29,12 @@ interface PortretBlokDProps {
 }
 
 export function PortretBlokD({ toolReqs, onTraitChange, onOtherChange }: PortretBlokDProps) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <h4 className="font-semibold text-sm text-primary">Blok D: TOOL TEST Talablari</h4>
-        <Badge variant="outline" className="text-[9px]">Material №25-42</Badge>
+        <h4 className="font-semibold text-sm text-primary">{t("blokDToolTestTalablari")}</h4>
+        <Badge variant="outline" className="text-[9px]">{t("material2542")}</Badge>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
@@ -47,23 +54,23 @@ export function PortretBlokD({ toolReqs, onTraitChange, onOtherChange }: Portret
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-3 pt-2 border-t">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t">
         <div>
-          <Label className="text-[10px] mb-1 block">IQ (min)</Label>
+          <Label className="text-[10px] mb-1 block">{t("iqMin")}</Label>
           <Slider min={1} max={10} step={1}
             value={[toolReqs.iq_min ?? 4]}
             onValueChange={([v]) => onOtherChange("iq_min", v)} />
           <div className="text-center text-[10px] font-bold mt-1">{toolReqs.iq_min ?? 4}</div>
         </div>
         <div>
-          <Label className="text-[10px] mb-1 block">Liderlik (min %)</Label>
+          <Label className="text-[10px] mb-1 block">{t("liderlikMin")}</Label>
           <Slider min={0} max={100} step={5}
             value={[toolReqs.leadership_min ?? 70]}
             onValueChange={([v]) => onOtherChange("leadership_min", v)} />
           <div className="text-center text-[10px] font-bold mt-1">{toolReqs.leadership_min ?? 70}%</div>
         </div>
         <div>
-          <Label className="text-[10px] mb-1 block">Takrorlash (min %)</Label>
+          <Label className="text-[10px] mb-1 block">{t("takrorlashMin")}</Label>
           <Slider min={0} max={100} step={5}
             value={[toolReqs.replication_min ?? 70]}
             onValueChange={([v]) => onOtherChange("replication_min", v)} />

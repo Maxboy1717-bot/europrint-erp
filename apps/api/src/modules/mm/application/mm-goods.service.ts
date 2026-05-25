@@ -1,19 +1,29 @@
+/**
+ * @module mm-goods.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { DrizzleMmGoodsRepository } from '../infrastructure/repositories/drizzle-mm-goods.repo';
 
 @Injectable()
 export class MmGoodsService {
-  constructor(private readonly repo: DrizzleMmGoodsRepository) {}
+  constructor(
+    private readonly repo: DrizzleMmGoodsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async listGoodsReceipts(pid: number | null, status: string | undefined, lim: number, off: number): Promise<Result<object, AppError>> {
     return safeCall(async () => this.repo.listGoodsReceipts(pid, status, lim, off));
   }
 
   async getGoodsReceipt(gid: number) {
+    const notFoundMsg = await this.i18n.t('errors.notFound');
     return safeCall(async () => {
       const { receipt, items } = await this.repo.getGoodsReceipt(gid);
-      if (!receipt) throw new NotFoundException(`Qabul #${gid} topilmadi`);
+      if (!receipt) throw new NotFoundException(notFoundMsg);
       return { ...receipt, items };
     });
   }
@@ -21,9 +31,10 @@ export class MmGoodsService {
   async createGoodsReceipt(purchase_order_id: unknown, received_by: unknown, items: Array<Record<string, unknown>>, notes: unknown, delivery_note: unknown) {
     return safeCall(async () => {
       const receipt = await this.repo.createGoodsReceipt(purchase_order_id, received_by, notes, delivery_note);
-      for (const item of items) {
-        await this.repo.insertGoodsReceiptItem(receipt.id, item.material_id, item.ordered_qty, item.received_qty, item.batch_number);
-      }
+      // Pattern 2: line-item inserts are independent — run in parallel rather than serial N+1
+      await Promise.all(items.map(item =>
+        this.repo.insertGoodsReceiptItem(receipt.id, item.material_id, item.ordered_qty, item.received_qty, item.batch_number),
+      ));
       return receipt;
     });
   }
@@ -41,9 +52,10 @@ export class MmGoodsService {
   }
 
   async getGoodsIssue(gid: number) {
+    const notFoundMsg = await this.i18n.t('errors.notFound');
     return safeCall(async () => {
       const { issue, items } = await this.repo.getGoodsIssue(gid);
-      if (!issue) throw new NotFoundException(`Berilish #${gid} topilmadi`);
+      if (!issue) throw new NotFoundException(notFoundMsg);
       return { ...issue, items };
     });
   }
@@ -51,9 +63,10 @@ export class MmGoodsService {
   async createGoodsIssue(issued_by: unknown, cost_center: unknown, work_order_id: unknown, items: Array<Record<string, unknown>>, notes: unknown) {
     return safeCall(async () => {
       const issue = await this.repo.createGoodsIssue(issued_by, cost_center, work_order_id, notes);
-      for (const item of items) {
-        await this.repo.insertGoodsIssueItem(issue.id, item.material_id, item.quantity, item.batch_number);
-      }
+      // Pattern 2: line-item inserts are independent — run in parallel rather than serial N+1
+      await Promise.all(items.map(item =>
+        this.repo.insertGoodsIssueItem(issue.id, item.material_id, item.quantity, item.batch_number),
+      ));
       return issue;
     });
   }

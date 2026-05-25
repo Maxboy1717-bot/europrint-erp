@@ -1,3 +1,8 @@
+/**
+ * @module schema-ext-b-3
+ * @description Source module. See exports for details.
+ */
+
 import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
@@ -91,16 +96,8 @@ export const camera_logs = pgTable('camera_logs', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
-export const face_embeddings = pgTable('face_embeddings', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id'),
-  embedding:   jsonb('embedding'),
-  is_active:   boolean('is_active').default(true),
-  confidence:  text('confidence'),
-  image_url:   text('image_url'),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
+// face_embeddings: canonical definition in lib/db (hr-transfers.ts → hr-performance → hr-schema).
+export { faceEmbeddings as face_embeddings } from '@workspace/db';
 
 export const hr_tz2_security_alerts = pgTable('hr_tz2_security_alerts', {
   id:          serial('id').primaryKey(),

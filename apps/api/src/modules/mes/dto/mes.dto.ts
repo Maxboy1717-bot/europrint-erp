@@ -1,3 +1,8 @@
+/**
+ * @module mes.dto
+ * @description DTO + Zod schema definition. Zod schema validates request bodies; DTO type is inferred via z.infer.
+ */
+
 import { z } from 'zod';
 import { MES_REASON_MAX_LENGTH, MES_TITLE_MAX_LENGTH, MES_SCORE_MAX } from '../constants/mes.constants';
 
@@ -31,6 +36,7 @@ export const MesStartSessionSchema = z.object({
   notes:         z.string().optional(),
   workCenterId:  z.number().int().positive().optional(),
   operatorId:    z.number().int().positive().optional(),
+  courseId:      z.number().int().positive().optional(),
 });
 export type MesStartSessionDto = z.infer<typeof MesStartSessionSchema>;
 

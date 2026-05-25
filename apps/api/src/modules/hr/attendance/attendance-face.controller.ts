@@ -1,3 +1,8 @@
+/**
+ * @module attendance-face.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Controller,
   Get,
@@ -11,6 +16,7 @@ import {
   HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -19,31 +25,35 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { FaceRecognitionService } from './face-recognition.service';
 import { TerritoryLogService, CameraEventDto } from './territory-log.service';
 import { LateArrivalService } from './late-arrival.service';
+import { z } from 'zod';
 
-class RegisterFaceDto {
-  employee_id!: string;
-  /** Preferred: send 3 images for enrollment with automatic embedding averaging */
-  images?: string[];
-  /** Legacy single-embedding path (backward compat) */
-  embedding?: number[];
-  confidence?: number;
-  image_url?: string;
-}
+// ─── Zod DTOs (Rule 3) ──────────────────────────────────────────────────────
+const RegisterFaceSchema = z.object({
+  employee_id: z.string().min(1),
+  images: z.array(z.string()).optional(),
+  embedding: z.array(z.number()).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  image_url: z.string().optional(),
+});
+type RegisterFaceDto = z.infer<typeof RegisterFaceSchema>;
 
-class CameraEventBodyDto implements CameraEventDto {
-  image_base64?: string;
-  embedding?: number[];
-  event_type!: 'enter' | 'exit' | 'detected' | 'absent_check';
-  camera_id?: string;
-  room_code?: string;
-  face_confidence?: number;
-  ts?: string;
-}
+const CameraEventBodySchema = z.object({
+  image_base64: z.string().optional(),
+  embedding: z.array(z.number()).optional(),
+  event_type: z.enum(['enter', 'exit', 'detected', 'absent_check']),
+  camera_id: z.string().optional(),
+  room_code: z.string().optional(),
+  face_confidence: z.number().optional(),
+  ts: z.string().optional(),
+});
+type CameraEventBodyDto = z.infer<typeof CameraEventBodySchema>;
 
 @Throttle({ default: { limit: 200, ttl: 60_000 } })
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'admin', 'security', 'SECURITY')
 @UseInterceptors(AuditInterceptor)
+@ApiTags('Attendance Face')
+@ApiBearerAuth()
 @Controller('hr/attendance')
 export class AttendanceFaceController {
   private readonly logger = new Logger(AttendanceFaceController.name);
@@ -54,18 +64,23 @@ export class AttendanceFaceController {
     private readonly lateArrival: LateArrivalService,
   ) {}
 
+  @ApiOperation({ summary: 'Register face' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('face/register')
   @HttpCode(HttpStatus.OK)
-  async registerFace(@Body() dto: RegisterFaceDto) {
-    if ((dto.images ?? []).length > 0) {
-      if (dto.images!.length !== 3) {
+  async registerFace(@Body() raw: unknown) {
+    const dto: RegisterFaceDto = RegisterFaceSchema.parse(raw);
+    const images = dto.images ?? [];
+    if (images.length > 0) {
+      if (images.length !== 3) {
         throw new BadRequestException(
-          `Face enrollment requires exactly 3 images; received ${dto.images!.length}`,
+          `Face enrollment requires exactly 3 images; received ${images.length}`,
         );
       }
       const result = await this.faceRec.registerEmbeddingFromImages(
         dto.employee_id,
-        dto.images!,
+        images,
       );
       if (!result.ok) {
         return { ok: false, error: String(result.error) };
@@ -85,9 +100,13 @@ export class AttendanceFaceController {
     return { ok: true, face_id: result.data.id, method: 'single-embedding' };
   }
 
+  @ApiOperation({ summary: 'Camera event' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('territory')
   @HttpCode(HttpStatus.OK)
-  async cameraEvent(@Body() dto: CameraEventBodyDto) {
+  async cameraEvent(@Body() raw: unknown) {
+    const dto: CameraEventBodyDto = CameraEventBodySchema.parse(raw);
     const result = await this.territory.handleCameraEvent(dto);
     if (!result.ok) {
       return { ok: false, error: String(result.error) };
@@ -100,6 +119,8 @@ export class AttendanceFaceController {
     };
   }
 
+  @ApiOperation({ summary: 'Get live status' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('live')
   async getLiveStatus() {
     const result = await this.territory.getLiveStatus();
@@ -109,6 +130,8 @@ export class AttendanceFaceController {
     return { ok: true, ...result.data };
   }
 
+  @ApiOperation({ summary: 'Get territory logs' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('territory/logs')
   async getTerritoryLogs(
     @Query('date')        date?: string,
@@ -123,6 +146,8 @@ export class AttendanceFaceController {
     return { ok: true, ...result.data };
   }
 
+  @ApiOperation({ summary: 'Face ai health' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('face/health')
   async faceAiHealth() {
     const result = await this.faceRec.healthCheck();
@@ -132,6 +157,8 @@ export class AttendanceFaceController {
     return { ok: true, ...result.data };
   }
 
+  @ApiOperation({ summary: 'Late arrivals today' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('late-arrivals/today')
   async lateArrivalsToday() {
     const result = await this.lateArrival.getLateArrivalsToday();

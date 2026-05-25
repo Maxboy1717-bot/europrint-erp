@@ -1,3 +1,8 @@
+/**
+ * @module drizzle-ai-planning.repo
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -73,7 +78,7 @@ export class DrizzleAiPlanningRepo {
         .from(aiPlanningPlans)
         .orderBy(desc(aiPlanningPlans.createdAt))
         .limit(50);
-      return (rows ?? []).map((r) => this.toRecord(r));
+      return (Array.isArray(rows) ? rows : []).map((r) => this.toRecord(r));
     });
   }
 

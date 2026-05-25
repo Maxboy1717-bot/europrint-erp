@@ -1,3 +1,8 @@
+/**
+ * @module order-status.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { Ok, Result, safeCall } from '@common/result';
 import { OrderStatusRepository } from './order-status.repository';

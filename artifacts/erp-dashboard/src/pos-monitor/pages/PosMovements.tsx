@@ -1,158 +1,291 @@
-import { useState, useEffect, useCallback } from "react";
+/**
+ * POS Harakatlar — Kitchen Display uslubida
+ * Card + status maps split to companion files so this page stays under
+ * the 300-line file budget.
+ */
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { movementsApi } from "../api/pos-monitor.api";
-
-interface Movement { id: number; movementNumber?: string; movementType: string; status: string; fromWarehouseId?: string; toWarehouseId?: string; totalAmount?: number; createdAt: string; createdBy?: number; }
-
-const STATUS_BADGE: Record<string, string> = {
-  draft: "pos-badge-gray", pending: "pos-badge-yellow", approved: "pos-badge-green",
-  completed: "pos-badge-green", cancelled: "pos-badge-red", qc_pending: "pos-badge-yellow",
-  qc_approved: "pos-badge-green", ai_processing: "pos-badge-blue",
-};
-
-const TYPE_COLOR: Record<string, string> = {
-  EXTERNAL_IN: "#00FF94", EXTERNAL_OUT: "#FF4757", INTERNAL_ISSUE: "#FFB800",
-  INTERNAL_RETURN: "#00D4FF", INTERNAL_TRANSFER: "#9B59B6", DAMAGE: "#FF4757",
-};
+import type { Movement, MovementTab } from "./PosMovements.types";
+import { STATUS_CFG, TYPE_ICON, TYPE_LABEL, TYPE_LIST } from "./PosMovements.types";
+import { MovementCard } from "./PosMovements.card";
 
 export default function PosMovements() {
   const [, navigate] = useLocation();
   const { t } = usePosI18n();
-  const [movements, setMovements]   = useState<Movement[]>([]);
-  const [loading, setLoading]       = useState(true);
-  const [search, setSearch]         = useState("");
+  const [movements, setMovements] = useState<Movement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<MovementTab>("all");
   const [filterType, setFilterType] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
   const [showFilter, setShowFilter] = useState(false);
-  const [expanded, setExpanded]     = useState<number[]>([]);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
     try {
       const data = await movementsApi.getAll();
       setMovements((Array.isArray(data) ? data : []) as Movement[]);
-    } catch { /* noop */ } finally { setLoading(false); }
+    } catch {
+      /* noop */
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { void loadData(); }, [loadData]);
+  useEffect(() => {
+    void loadData();
+    pollRef.current = setInterval(() => {
+      void loadData();
+    }, 30_000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [loadData]);
 
-  const filtered = (movements ?? []).filter(m => {
-    if (search && !(m.movementNumber ?? "").toLowerCase().includes(search.toLowerCase())) return false;
+  const tabCounts = {
+    new: movements.filter((m) => STATUS_CFG[m.status]?.tab === "new").length,
+    process: movements.filter((m) => STATUS_CFG[m.status]?.tab === "process").length,
+    done: movements.filter((m) => STATUS_CFG[m.status]?.tab === "done").length,
+  };
+
+  const displayed = movements.filter((m) => {
+    if (activeTab !== "all" && STATUS_CFG[m.status]?.tab !== activeTab) return false;
     if (filterType && m.movementType !== filterType) return false;
-    if (filterStatus && m.status !== filterStatus) return false;
     return true;
   });
 
-  function toggleExpand(id: number) {
-    setExpanded(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  async function handleAction(id: number, newStatus: string) {
+    setActionLoading(id);
+    try {
+      await movementsApi.updateStatus(id, newStatus);
+      await loadData();
+    } catch {
+      /* noop */
+    } finally {
+      setActionLoading(null);
+    }
   }
 
-  const TYPES = ["EXTERNAL_IN","EXTERNAL_OUT","INTERNAL_ISSUE","INTERNAL_RETURN","INTERNAL_TRANSFER","DAMAGE"];
-  const STATUSES = ["draft","pending","approved","completed","cancelled","qc_pending"];
+  function handlePrint(id: number) {
+    window.open(movementsApi.getPdf(id), "_blank");
+  }
 
   return (
-    <div>
-      {/* Toolbar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t("movements.title")}</h2>
+    <div style={{ minHeight: "100vh", background: "#F8FAFC", padding: "0 0 32px 0" }}>
+      <div
+        style={{
+          background: "#FFF",
+          borderBottom: "1px solid #E5E7EB",
+          padding: "14px 20px",
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+        }}
+      >
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1F2937" }}>{t("actions")}</h2>
+        <span style={{ fontSize: 12, color: "#9CA3AF" }}>{movements.length} ta jami</span>
         <div style={{ flex: 1 }} />
-        <input className="pos-input" style={{ width: 220 }} placeholder="Doc No qidirish..." value={search} onChange={e => setSearch(e.target.value)} />
-        <button className="pos-btn pos-btn-ghost" onClick={() => setShowFilter(f => !f)}>🔽 {t("common.filter")}</button>
-        <button className="pos-btn pos-btn-ghost" onClick={() => void loadData()}>🔄</button>
-        <button className="pos-btn pos-btn-primary" onClick={() => navigate("/pos-monitor/movements/new")}>
-          ➕ {t("movements.newMovement")}
+        <button
+          className="pos-btn pos-btn-ghost"
+          style={{ fontSize: 12 }}
+          onClick={() => setShowFilter((f) => !f)}
+        >
+          {t("turBoyichaFiltr")}
+        </button>
+        <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12 }} onClick={() => void loadData()}>
+          {t("yangilash")}
+        </button>
+        <button
+          onClick={() => navigate("/pos-monitor/movements/new")}
+          style={{
+            background: "#F59E0B",
+            color: "#FFF",
+            border: "none",
+            borderRadius: 8,
+            padding: "8px 16px",
+            fontWeight: 700,
+            fontSize: 13,
+            cursor: "pointer",
+          }}
+        >
+          {t("yangiHarakat")}
         </button>
       </div>
 
-      {/* Filter panel */}
       {showFilter && (
-        <div className="pos-card pos-fade-in" style={{ marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <div>
-            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>{t("movements.movementType")}</label>
-            <select className="pos-input" style={{ width: 180 }} value={filterType} onChange={e => setFilterType(e.target.value)}>
-              <option value="">Barchasi</option>
-              {TYPES.map(tp => <option key={tp} value={tp}>{t(`movType.${tp}`)}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={{ fontSize: 11, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>{t("common.status")}</label>
-            <select className="pos-input" style={{ width: 160 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-              <option value="">Barchasi</option>
-              {STATUSES.map(s => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
-            </select>
-          </div>
-          <button className="pos-btn pos-btn-ghost" style={{ alignSelf: "flex-end" }} onClick={() => { setFilterType(""); setFilterStatus(""); }}>
-            ✕ Tozalash
+        <div
+          style={{
+            background: "#FFF",
+            borderBottom: "1px solid #E5E7EB",
+            padding: "10px 20px",
+            display: "flex",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            onClick={() => setFilterType("")}
+            style={{
+              padding: "5px 14px",
+              borderRadius: 20,
+              border: "1px solid #E5E7EB",
+              background: !filterType ? "#F59E0B" : "#F9FAFB",
+              color: !filterType ? "#FFF" : "#374151",
+              fontWeight: 600,
+              fontSize: 12,
+              cursor: "pointer",
+            }}
+          >
+            {t("Barchasi")}
           </button>
+          {TYPE_LIST.map((tp) => (
+            <button
+              key={tp}
+              onClick={() => setFilterType(tp)}
+              style={{
+                padding: "5px 14px",
+                borderRadius: 20,
+                border: "1px solid #E5E7EB",
+                background: filterType === tp ? "#F59E0B" : "#F9FAFB",
+                color: filterType === tp ? "#FFF" : "#374151",
+                fontWeight: 600,
+                fontSize: 12,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              {TYPE_ICON[tp]} {TYPE_LABEL[tp]}
+            </button>
+          ))}
         </div>
       )}
 
-      {loading && <div style={{ textAlign: "center", padding: 40, color: "var(--pos-text-muted)" }}>{t("common.loading")}</div>}
+      <div
+        style={{
+          background: "#FFF",
+          borderBottom: "1px solid #E5E7EB",
+          padding: "0 20px",
+          display: "flex",
+          gap: 4,
+        }}
+      >
+        {(
+          [
+            ["all", "Hammasi", movements.length],
+            ["new", "Yangi", tabCounts.new],
+            ["process", "Jarayonda", tabCounts.process],
+            ["done", "Yakunlangan", tabCounts.done],
+          ] as const
+        ).map(([key, label, count]) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            style={{
+              padding: "12px 4px",
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: activeTab === key ? 700 : 500,
+              color: activeTab === key ? "#1F2937" : "#9CA3AF",
+              borderBottom: activeTab === key ? "2px solid #F59E0B" : "2px solid transparent",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              marginRight: 12,
+            }}
+          >
+            {label}
+            {count > 0 && (
+              <span
+                style={{
+                  background: key === "new" ? "#F59E0B" : key === "process" ? "#059669" : "#6B7280",
+                  color: "#FFF",
+                  borderRadius: 20,
+                  padding: "1px 7px",
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}
+              >
+                {count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
-      {!loading && (
-        <div className="pos-card" style={{ overflowX: "auto" }}>
-          <table className="pos-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th>№</th>
-                <th>{t("movements.movementType")}</th>
-                <th>{t("common.status")}</th>
-                <th>Kimdan</th>
-                <th>Qayerga</th>
-                <th>{t("common.amount")}</th>
-                <th>{t("common.date")}</th>
-                <th>Amallar</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(filtered ?? []).map(m => (
-                <>
-                  <tr
-                    key={m.id}
-                    style={{ cursor: "pointer" }}
-                    onClick={() => navigate(`/pos-monitor/movements/${m.id}`)}
-                  >
-                    <td onClick={e => { e.stopPropagation(); toggleExpand(m.id); }}>
-                      <span style={{ cursor: "pointer", fontSize: 10 }}>{expanded.includes(m.id) ? "▼" : "▶"}</span>
-                    </td>
-                    <td className="pos-mono" style={{ color: "var(--pos-accent)", fontWeight: 600 }}>{m.movementNumber ?? `#${m.id}`}</td>
-                    <td>
-                      <span className="pos-badge pos-badge-blue" style={{ fontSize: 10, borderColor: TYPE_COLOR[m.movementType] ?? "var(--pos-border)", color: TYPE_COLOR[m.movementType] ?? "var(--pos-accent)" }}>
-                        {t(`movType.${m.movementType}`)}
-                      </span>
-                    </td>
-                    <td><span className={`pos-badge ${STATUS_BADGE[m.status] ?? "pos-badge-gray"}`} style={{ fontSize: 10 }}>{t(`status.${m.status}`)}</span></td>
-                    <td style={{ color: "var(--pos-text-muted)", fontSize: 12 }}>{m.fromWarehouseId ?? "—"}</td>
-                    <td style={{ color: "var(--pos-text-muted)", fontSize: 12 }}>{m.toWarehouseId ?? "—"}</td>
-                    <td className="pos-mono">{m.totalAmount?.toFixed(0) ?? "0"}</td>
-                    <td style={{ color: "var(--pos-text-muted)", fontSize: 12 }}>{new Date(m.createdAt).toLocaleDateString("uz-UZ")}</td>
-                    <td onClick={e => e.stopPropagation()}>
-                      <button className="pos-btn pos-btn-ghost" style={{ fontSize: 11, padding: "3px 8px" }} onClick={() => navigate(`/pos-monitor/movements/${m.id}`)}>👁</button>
-                    </td>
-                  </tr>
-                  {expanded.includes(m.id) && (
-                    <tr key={`expand-${m.id}`} style={{ background: "rgba(0,212,255,0.03)" }}>
-                      <td colSpan={9} style={{ padding: "12px 24px" }}>
-                        <div style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>
-                          Harakat #{m.id} tafsilotlari · Sana: {new Date(m.createdAt).toLocaleString("uz-UZ")} ·
-                          <button className="pos-btn pos-btn-ghost" style={{ fontSize: 11, padding: "2px 8px", marginLeft: 8 }} onClick={() => navigate(`/pos-monitor/movements/${m.id}`)}>
-                            To'liq ko'rish →
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </>
-              ))}
-            </tbody>
-          </table>
-          {filtered.length === 0 && (
-            <div style={{ textAlign: "center", padding: 32, color: "var(--pos-text-muted)" }}>{t("common.noData")}</div>
-          )}
-        </div>
-      )}
+      <div style={{ padding: "20px" }}>
+        {loading && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+            {Array.from({ length: 9 }).map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "#FFF",
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  border: "1px solid #E5E7EB",
+                  animation: "pos-pulse 1.4s ease-in-out infinite",
+                  animationDelay: `${i * 80}ms`,
+                }}
+              >
+                <div style={{ height: 52, background: "#E5E7EB" }} />
+                <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ height: 14, width: "60%", borderRadius: 4, background: "#F3F4F6" }} />
+                  <div style={{ height: 12, width: "80%", borderRadius: 4, background: "#F3F4F6" }} />
+                  <div style={{ height: 12, width: "50%", borderRadius: 4, background: "#F3F4F6" }} />
+                </div>
+                <div style={{ height: 50, borderTop: "1px solid #F3F4F6", background: "#FAFAFA" }} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && displayed.length === 0 && (
+          <div style={{ textAlign: "center", padding: "80px 20px", color: "#9CA3AF" }}>
+            <div style={{ fontSize: 56, marginBottom: 16 }}>📋</div>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: "#374151" }}>{t("harakatlarYoq")}</div>
+            <div style={{ fontSize: 13, marginBottom: 24 }}>
+              {activeTab === "all" ? "Hali hech qanday harakat yaratilmagan" : "Bu toifada harakatlar yo'q"}
+            </div>
+            <button
+              onClick={() => navigate("/pos-monitor/movements/new")}
+              style={{
+                background: "#F59E0B",
+                color: "#FFF",
+                border: "none",
+                borderRadius: 8,
+                padding: "10px 24px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              {t("yangiHarakatYaratish")}
+            </button>
+          </div>
+        )}
+
+        {!loading && displayed.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+            {displayed.map((mov) => (
+              <MovementCard
+                key={mov.id}
+                mov={mov}
+                onAction={handleAction}
+                onPrint={handlePrint}
+                actionLoading={actionLoading}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

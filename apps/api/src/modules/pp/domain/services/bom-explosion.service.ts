@@ -1,9 +1,58 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module bom-explosion.service
+ * @description "Explodes" a multi-level Bill of Materials into a flat list of
+ *   total material requirements. Given a finished product and the qty to
+ *   build, walks the parent→child graph and sums up every component's net
+ *   requirement (handling diamond dependencies and shared sub-assemblies).
+ *
+ *   Used by:
+ *     - MRP (`run-mrp.handler.ts`) — gross requirements per material per period
+ *     - Quotation costing — total raw material cost of a quoted job
+ *     - Shop-floor pick lists — what to deliver to the production line
+ *
+ *   Algorithm:
+ *     1. Build adjacency map from the BOM edges
+ *     2. BFS from `productId` to find the *reachable* subgraph
+ *     3. Kahn topological sort on that subgraph (in-degree 0 first)
+ *     4. Single forward pass, accumulating each node's qty into its children
+ *
+ *   Complexity: O(V + E) where V = unique materials reachable, E = BOM edges
+ *   in the subgraph. Diamond dependencies (A→B→D and A→C→D) are correctly
+ *   accumulated because each child's contribution is added per parent traversal.
+ * @layer Domain Service (PP — pure compute over in-memory BOM graph)
+ *
+ * WHY KAHN TOPOLOGICAL + MEMOIZATION
+ *   Naive recursive multiplication would re-traverse shared sub-assemblies
+ *   exponentially (D in the diamond above visited twice). Kahn's algorithm
+ *   guarantees each node is processed exactly once — critical for our larger
+ *   BOMs (some assemblies have 50+ components 5 levels deep).
+ *
+ * WHY CYCLE DETECTION IS SUBGRAPH-SCOPED
+ *   A cycle anywhere in the *global* BOM doesn't necessarily affect this
+ *   product — it might be in an unrelated assembly. We only refuse if the
+ *   cycle is reachable from `productId`. This matters because the BOM table
+ *   is shared across products; one bad row shouldn't block all explosions.
+ *
+ * WHY MISSING productId IS NOT_FOUND, NOT EMPTY RESULT
+ *   Calling explode on a leaf material (no children) is almost always a bug
+ *   in the caller. Returning empty would mask it; NOT_FOUND surfaces the
+ *   error so the planner sees it. If you genuinely need to explode a leaf,
+ *   wrap with a try/catch in the caller and treat NOT_FOUND as empty there.
+ *
+ * DIAMOND DEPENDENCY TEST CASE (worth knowing)
+ *   Edges: A→B(2), A→C(3), B→D(4), C→D(5)
+ *   Explode(A, qty=1):
+ *     A=1, B=2, C=3
+ *     D = 2×4 (from B) + 3×5 (from C) = 23
+ *   This is what the tests in `bom-explosion.spec.ts` verify.
+ */
+
+import { Injectable, Inject } from '@nestjs/common';
 import { Calculation } from '@common/decorators/calculation.decorator';
 import { safeNum } from '@common/math/math-utils';
 import { Ok, Err, Result, AppError } from '@common/result';
-import { runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import type { IPpRepository } from '../repositories/pp.repository';
+import { PP_REPO } from '../repositories/pp.repository';
 
 export interface BomEdge {
   parentId: string;
@@ -22,6 +71,10 @@ function makeBomErr(code: AppError['code'], message: string): AppError {
 
 @Injectable()
 export class BomExplosionService {
+  constructor(
+    @Inject(PP_REPO) private readonly repo: IPpRepository,
+  ) {}
+
   /**
    * TZ-D09: BOM Explosion — Kahn topologik tartib + Memoization
    * Murakkablik: O(V+E) — bitta traversal
@@ -158,28 +211,22 @@ export class BomExplosionService {
 
   /**
    * DB-dan BOM yuklab, keyin explodeInMemory() chaqiradi.
+   * Repository orqali so'rov yuboradi — domain SQL bilmaydi.
    */
   @Calculation('pp.bom.explodeFromDb')
   async explodeFromDb(
     productId: string,
     qty: number,
   ): Promise<Result<BomExplosionResult, AppError>> {
-    try {
-      const result = await runQuery<Record<string, unknown>>(sql`
-        SELECT parent_id AS "parentId", child_id AS "childId",
-               qty_per_unit AS "qtyPerUnit"
-        FROM bom_components
-        WHERE is_active = true
-      `);
-      const rawRows = result?.rows ?? [];
-      const components: BomEdge[] = (rawRows ?? []).map((r) => ({
-        parentId: String(r['parentId'] ?? ''),
-        childId: String(r['childId'] ?? ''),
-        qtyPerUnit: safeNum(r['qtyPerUnit'], 1),
-      }));
-      return this.explodeInMemory(productId, qty, components);
-    } catch (_e) {
-      return Err(makeBomErr('DB_ERROR', String(_e)));
+    const componentsResult = await this.repo.findActiveBomComponents();
+    if (!componentsResult.ok) {
+      return Err(makeBomErr('DB_ERROR', componentsResult.error.message));
     }
+    const components: BomEdge[] = (Array.isArray(componentsResult.data) ? componentsResult.data : []).map((r) => ({
+      parentId: r.parentId,
+      childId: r.childId,
+      qtyPerUnit: safeNum(r.qtyPerUnit, 1),
+    }));
+    return this.explodeInMemory(productId, qty, components);
   }
 }

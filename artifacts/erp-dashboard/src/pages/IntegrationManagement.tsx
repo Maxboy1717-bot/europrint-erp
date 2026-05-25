@@ -1,8 +1,12 @@
+/**
+ * @module IntegrationManagement
+ * @description React page component. Route-level UI.
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
 import {
   CheckCircle, XCircle, AlertTriangle, Zap, Shield,
   Database, MessageSquare, Brain, Camera, Lock, Server,
@@ -10,6 +14,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import { EPPageHeader } from "@/components/ep";
+import { useTranslation } from '@/lib/i18n';
 
 const INTEGRATION_ICONS: Record<string, any> = {
   telegram: MessageSquare,
@@ -37,6 +43,7 @@ const INTEGRATION_DESCRIPTIONS: Record<string, string> = {
 
 interface IntegrationItem { key: string; status: string; name: string; type: string; [key: string]: unknown }
 function IntegrationCard({ intg }: { intg: IntegrationItem }) {
+  const { t } = useTranslation("common");
   const Icon = INTEGRATION_ICONS[intg.key] || Zap;
   const isConnected = intg.status === "connected" || intg.status === "active";
   const isWarning = ["warning", "in_memory", "default", "default_key"].includes(intg.status);
@@ -47,7 +54,7 @@ function IntegrationCard({ intg }: { intg: IntegrationItem }) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             <div className={`p-2 rounded-md ${isConnected ? "bg-green-500/10" : isWarning ? "bg-yellow-500/10" : "bg-red-500/10"}`}>
-              <Icon className={`w-5 h-5 ${isConnected ? "text-green-600 dark:text-green-400" : isWarning ? "text-yellow-600 dark:text-yellow-400" : "text-red-600"}`} />
+              <Icon className={`w-5 h-5 ${isConnected ? "text-[var(--ep-green)] dark:text-green-400" : isWarning ? "text-[var(--ep-yellow)] dark:text-yellow-400" : "text-[var(--ep-red)]"}`} />
             </div>
             <div className="min-w-0">
               <h3 className="font-semibold text-sm">{intg.name}</h3>
@@ -58,10 +65,10 @@ function IntegrationCard({ intg }: { intg: IntegrationItem }) {
             </div>
           </div>
           {isConnected
-            ? <Badge className="shrink-0 bg-green-500/10 text-green-700 dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />Ulangan</Badge>
+            ? <Badge className="shrink-0 bg-green-500/10 text-[var(--ep-green)] dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />{t("connected")}</Badge>
             : isWarning
-              ? <Badge className="shrink-0 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"><AlertTriangle className="w-3 h-3 mr-1" />{intg.status === "in_memory" ? "Xotirada" : "Ogohlantirish"}</Badge>
-              : <Badge variant="destructive" className="shrink-0"><XCircle className="w-3 h-3 mr-1" />Ulanmagan</Badge>
+              ? <Badge className="shrink-0 bg-yellow-500/10 text-[var(--ep-yellow)] dark:text-yellow-400"><AlertTriangle className="w-3 h-3 mr-1" />{intg.status === "in_memory" ? "Xotirada" : "Ogohlantirish"}</Badge>
+              : <Badge variant="destructive" className="shrink-0"><XCircle className="w-3 h-3 mr-1" />{t("ulanmagan")}</Badge>
           }
         </div>
       </CardContent>
@@ -70,6 +77,7 @@ function IntegrationCard({ intg }: { intg: IntegrationItem }) {
 }
 
 export default function IntegrationManagement() {
+  const { t } = useTranslation("common");
   const { data: integrations, isLoading } = useQuery<any[]>({
     queryKey: ["/api/system/integrations"],
     refetchInterval: 60000,
@@ -83,35 +91,36 @@ export default function IntegrationManagement() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <PageHeader
-        title="Integratsiyalar boshqaruvi"
-        description="Tashqi tizimlar va API ulanishlar holati"
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+      <EPPageHeader
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("integratsiyalarBoshqaruvi")}</b></>}
+        title={t("integratsiyalarBoshqaruvi")}
+        subtitle={t("tashqiTizimlarVaApiUlanishlar")}
         actions={
           <Button variant="outline" size="default" onClick={handleRefresh} data-testid="button-refresh-integrations">
-            <RefreshCw className="w-4 h-4 mr-2" />Yangilash
+            <RefreshCw className="w-4 h-4 mr-2" />{t("refresh")}
           </Button>
         }
       />
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-4">
-            <div className="text-muted-foreground text-sm mb-1">Jami integratsiyalar</div>
+            <div className="text-muted-foreground text-sm mb-1">{t("jamiIntegratsiyalar")}</div>
             <div className="text-3xl font-bold">{total}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-muted-foreground text-sm mb-1">Ulangan</div>
-            <div className="text-3xl font-bold text-green-600 dark:text-green-400">{connected}</div>
+            <div className="text-muted-foreground text-sm mb-1">{t("connected")}</div>
+            <div className="text-3xl font-bold text-[var(--ep-green)] dark:text-green-400">{connected}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-muted-foreground text-sm mb-1">Muammo bor</div>
-            <div className="text-3xl font-bold text-red-600">{total - connected}</div>
+            <div className="text-muted-foreground text-sm mb-1">{t("muammoBor")}</div>
+            <div className="text-3xl font-bold text-[var(--ep-red)]">{total - connected}</div>
           </CardContent>
         </Card>
       </div>
@@ -119,7 +128,7 @@ export default function IntegrationManagement() {
       {/* Integration Cards */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array(9).fill(0).map((_, i) => <Skeleton key={`k-${i}`} className="h-32" />)}
+          {Array(9).fill(0).map((_, i) => <Skeleton key={`k-${i}`} className="h-32 rounded-lg" />)}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -132,19 +141,19 @@ export default function IntegrationManagement() {
       {/* Instructions */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Integratsiyani ulash</CardTitle>
+          <CardTitle className="text-base">{t("integratsiyaniUlash")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2 text-sm text-muted-foreground">
-            <p>Har bir integratsiya uchun tegishli muhit o'zgaruvchisi (env variable) kerak:</p>
+            <p>{t("harBirIntegratsiyaUchunTegishliMuhit")}</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li><code className="text-xs bg-muted px-1 py-0.5 rounded">TELEGRAM_BOT_TOKEN</code> — Telegram bot ulanishi uchun</li>
-              <li><code className="text-xs bg-muted px-1 py-0.5 rounded">AI_INTEGRATIONS_OPENAI_API_KEY</code> — OpenAI AI funksiyalari uchun</li>
-              <li><code className="text-xs bg-muted px-1 py-0.5 rounded">AI_INTEGRATIONS_GEMINI_API_KEY</code> — Gemini AI funksiyalari uchun</li>
-              <li><code className="text-xs bg-muted px-1 py-0.5 rounded">FACE_ENCRYPTION_KEY</code> — Yuz izi shifrlash uchun</li>
+              <li><code className="text-xs bg-muted px-1 py-0.5 rounded">TELEGRAM_BOT_TOKEN</code> {t("telegramBotUlanishiUchun")}</li>
+              <li><code className="text-xs bg-muted px-1 py-0.5 rounded">AI_INTEGRATIONS_OPENAI_API_KEY</code> {t("openaiAiFunksiyalariUchun")}</li>
+              <li><code className="text-xs bg-muted px-1 py-0.5 rounded">AI_INTEGRATIONS_GEMINI_API_KEY</code> {t("geminiAiFunksiyalariUchun")}</li>
+              <li><code className="text-xs bg-muted px-1 py-0.5 rounded">FACE_ENCRYPTION_KEY</code> {t("yuzIziShifrlashUchun")}</li>
               <li><code className="text-xs bg-muted px-1 py-0.5 rounded">REDIS_URL</code> — Redis kesh uchun (ixtiyoriy)</li>
             </ul>
-            <p className="mt-3">Muhit o'zgaruvchilarni Replit Secrets orqali sozlang.</p>
+            <p className="mt-3">{t("muhitOzgaruvchilarniReplitSecretsOrqali")}</p>
           </div>
         </CardContent>
       </Card>

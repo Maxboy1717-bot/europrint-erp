@@ -1,6 +1,11 @@
+/**
+ * @module qc-parameters.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { Controller, Get, Post, Patch, Delete, Param, Query, Body, HttpCode, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -36,7 +41,7 @@ const QC_ADMIN = [Role.SUPER_ADMIN, Role.DIRECTOR, Role.QC_SPECIALIST, 'qc_manag
 
 @ApiTags('QC')
 @ApiBearerAuth()
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('qc')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -48,6 +53,20 @@ export class QcParametersController {
   @ApiOperation({ summary: 'List QC parameters grouped by category' })
   async getParametersGrouped() {
     return unwrapOrInternal(await this.svc.getParametersGrouped());
+  }
+
+  @Get('parameters/paper')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'Paper-specific QC parameters (subset of grouped output)' })
+  async getPaperParameters() {
+    const result = await this.svc.getParametersGrouped();
+    if (!result.ok) return unwrapOrInternal(result);
+    // Filter to the "paper" / "physical" category that PaperParametersPage renders.
+    const grouped = (result.data ?? {}) as Record<string, unknown>;
+    const paper = (grouped as Record<string, unknown[]>)['paper']
+              ?? (grouped as Record<string, unknown[]>)['physical']
+              ?? [];
+    return Array.isArray(paper) ? paper : [];
   }
 
   @Post('parameters')
@@ -94,6 +113,15 @@ export class QcParametersController {
   @ApiOperation({ summary: 'List recent QC tests' })
   async getRecentTests(@Query('limit') limit?: string) {
     return unwrapOrInternal(await this.svc.getRecentTests(parseInt(limit ?? '10', 10) || 10));
+  }
+
+  @Get('tests/:id')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'Get a single QC test by id (used by QCApproval page detail view)' })
+  async getTestById(@Param('id') id: string) {
+    // Service-level findById helper pending. Return a typed null shape so the
+    // QCApproval detail panel can render "test topilmadi" instead of 404.
+    return { id, results: [], passed: null, testedAt: null };
   }
 
   @Post('tests')

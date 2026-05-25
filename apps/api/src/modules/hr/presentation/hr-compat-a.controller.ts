@@ -1,3 +1,8 @@
+﻿/**
+ * @module hr-compat-a.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
@@ -5,6 +10,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -13,13 +20,16 @@ import {
   UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
+
 import { throwFromError, unwrapOrThrow, assertOk, unwrapOrInternal } from '@common/http-result';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { HrCompatAService } from '../application/hr-compat-a.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
+import { z } from 'zod';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   Hr360ReviewSchema, Hr360ReviewDto,
   HrConflictReportSchema, HrConflictReportDto,
@@ -28,9 +38,29 @@ import {
   HrDisciplineRecordSchema, HrDisciplineRecordDto,
 } from './dto/hr.dto';
 
+const TestQuestionUpdateSchema = z.object({
+  question: z.string().max(2000).optional(),
+  category: z.string().max(100).optional(),
+  weight: z.number().optional(),
+  answers: z.array(z.record(z.unknown())).optional(),
+}).passthrough();
+
+const HrcSessionSchema = z.object({
+  employeeId: z.union([z.string(), z.number()]).optional(),
+  testType: z.string().max(100).optional(),
+  startedAt: z.string().optional(),
+}).passthrough();
+
+const HrcQuestionSchema = z.object({
+  question: z.string().max(2000).optional(),
+  category: z.string().max(100).optional(),
+  weight: z.number().optional(),
+  answers: z.array(z.record(z.unknown())).optional(),
+}).passthrough();
+
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
 @Controller('hr')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -131,18 +161,28 @@ export class HrCompatAController {
   }
 
   @Get('vacancies')
-  getVacancies(@Query() _query: Record<string, unknown>) {
-    return { data: [], total: 0 };
+  async getVacancies(@Query('status') status?: string, @Query('isActive') isActiveRaw?: string) {
+    const isActive = isActiveRaw === 'true' ? true : isActiveRaw === 'false' ? false : undefined;
+    const result = await this.svc.getVacancies(status, isActive);
+    const data = result.ok ? (result.data ?? []) : [];
+    return { data, total: data.length };
   }
 
   @Get('departments')
-  getDepartments(@Query() _query: Record<string, unknown>) {
-    return { data: [], total: 0 };
+  async getDepartments(@Query('isActive') isActiveRaw?: string) {
+    const isActive = isActiveRaw === 'true' ? true : isActiveRaw === 'false' ? false : undefined;
+    const result = await this.svc.getDepartments(isActive);
+    const data = result.ok ? (result.data ?? []) : [];
+    return { data, total: data.length };
   }
 
   @Get('positions')
-  getPositions(@Query() _query: Record<string, unknown>) {
-    return { data: [], total: 0 };
+  async getPositions(@Query('departmentId') deptIdRaw?: string, @Query('isActive') isActiveRaw?: string) {
+    const departmentId = deptIdRaw ? parseInt(deptIdRaw, 10) || undefined : undefined;
+    const isActive = isActiveRaw === 'true' ? true : isActiveRaw === 'false' ? false : undefined;
+    const result = await this.svc.getPositions(departmentId, isActive);
+    const data = result.ok ? (result.data ?? []) : [];
+    return { data, total: data.length };
   }
 
   @Get('payroll-runs')
@@ -156,11 +196,35 @@ export class HrCompatAController {
   }
 
   @Patch('hrc-tests/tool-test/questions/:id')
-  async updateTestQuestion(@Param('id') id: string, @Body() body: Record<string, unknown>) { return { id, ...body }; }
+  async updateTestQuestion(@Param('id') _id: string, @Body() body: unknown) {
+    TestQuestionUpdateSchema.parse(body);
+    return notImplemented('PATCH /hr/hrc-tests/tool-test/questions/:id');
+  }
 
   @Delete('hrc-tests/tool-test/questions/:id')
-  async deleteTestQuestion(@Param('id') id: string) { return { deleted: true, id }; }
+  async deleteTestQuestion(@Param('id') _id: string) {
+    return notImplemented('DELETE /hr/hrc-tests/tool-test/questions/:id');
+  }
 
   @Get('hrc-tests/employee/:employeeId/results')
-  async getEmployeeTestResults(@Param('employeeId') employeeId: string) { return { data: [], employeeId }; }
+  async getEmployeeTestResults(@Param('employeeId') _employeeId: string) {
+    return notImplemented('GET /hr/hrc-tests/employee/:employeeId/results');
+  }
+
+  @Delete('employee-skills/:id')
+  async deleteEmployeeSkill(@Param('id') _id: string) {
+    return notImplemented('DELETE /hr/employee-skills/:id');
+  }
+
+  @Post('hrc-tests/sessions')
+  async createHrcTestSession(@Body() body: unknown) {
+    HrcSessionSchema.parse(body);
+    return notImplemented('POST /hr/hrc-tests/sessions');
+  }
+
+  @Post('hrc-tests/tool-test/questions')
+  async createHrcTestQuestion(@Body() body: unknown) {
+    HrcQuestionSchema.parse(body);
+    return notImplemented('POST /hr/hrc-tests/tool-test/questions');
+  }
 }

@@ -1,3 +1,8 @@
+/**
+ * @module upload.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Result, safeCall } from '@common/result';
@@ -32,7 +37,7 @@ export class UploadService {
     input: { fileName: string; fileMime: string; fileSize: number; purpose: 'file' | 'image' | 'voice' | 'video' },
   ): Promise<Result<UploadUrlInfo>> {
     return safeCall(async () => {
-      const objectStorageBase = this.config.get<string>('OBJECT_STORAGE_BASE_URL') ?? '/storage';
+      const objectStorageBase = this.config.get<string>('OBJECT_STORAGE_BASE_URL') ?? '/api/storage';
       const uploadEndpoint    = this.config.get<string>('OBJECT_STORAGE_UPLOAD_URL') ?? `${objectStorageBase}/upload`;
       const random = randomBytes(16).toString('hex');
       const safeName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);

@@ -1,11 +1,18 @@
+/**
+ * @module wms-warehouses.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import { assertRequired } from '@common/assertions';
 import {
   Controller, Get, Post, Patch, Delete, Body, Param,
   UseGuards, UseInterceptors, Query, Logger, BadRequestException, NotFoundException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { assertOk, throwFromError, unwrapOrNotFound, unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -15,15 +22,19 @@ import { CreateWarehouseCommand } from '../application/commands/create-warehouse
 import { GetWarehousesQuery } from '../application/queries/get-warehouses.query';
 import { CreateWarehouseDtoSchema, CreateWarehouseDto } from './dto/wms-extended.dto';
 import { WmsCrudService } from '../application/wms-crud.service';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 enum Role {
   SUPER_ADMIN = 'super_admin',
   WAREHOUSE_MANAGER = 'warehouse_manager',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Wms Warehouses')
+@ApiBearerAuth()
 @Controller('wms/warehouses')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class WmsWarehousesController {
   private readonly logger = new Logger(WmsWarehousesController.name);
@@ -34,6 +45,8 @@ export class WmsWarehousesController {
     private readonly crudSvc: WmsCrudService,
   ) {}
 
+  @ApiOperation({ summary: 'Get all' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
   async getAll(@Query() query?: Record<string, unknown>) {
@@ -43,6 +56,9 @@ export class WmsWarehousesController {
     return { items: Array.isArray(items) ? items : [], total: Array.isArray(items) ? items.length : 0 };
   }
 
+  @ApiOperation({ summary: 'Get by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
   async getById(@Param('id') id: string) {
@@ -55,35 +71,85 @@ export class WmsWarehousesController {
     return warehouse;
   }
 
+  @ApiOperation({ summary: 'Create' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
-  async create(@Body() dto: CreateWarehouseDto) {
-    const validatedDto = CreateWarehouseDtoSchema.parse(dto);
+  async create(@Body() dto: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
     this.logger.log('Creating warehouse');
-    const command = new CreateWarehouseCommand(
-      validatedDto.name,
-      validatedDto.address,
-      validatedDto.isFreeStorage,
-      validatedDto.freeStorageDays,
-      validatedDto.monthlyRate,
-    );
-    return unwrapOrThrow(await this.commandBus.execute(command));
+    try {
+      const name = String(dto.name ?? 'Nomsiz ombor');
+      const code = dto.code
+        ? String(dto.code)
+        : name.toUpperCase().replace(/[^A-Z0-9]/g, '_').substring(0, 10) + '_' + Date.now().toString().slice(-4);
+      const warehouseType = String(dto.type ?? dto.warehouse_type ?? 'main');
+      const nameRu = dto.name_ru ? String(dto.name_ru) : null;
+      const location = (dto.location ?? dto.address) ? String(dto.location ?? dto.address) : null;
+      const r = await rawSql(sql`
+        INSERT INTO warehouses (code, name, name_ru, type, location, is_active, manager_id)
+        VALUES (${code}, ${name}, ${nameRu}, ${warehouseType}, ${location}, true, ${user?.id ?? null})
+        RETURNING id, code, name, name_ru, type, location, is_active, manager_id, created_at
+      `);
+      const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
+      return row ?? {};
+    } catch (e) {
+      throw new BadRequestException(`Ombor yaratishda xatolik: ${String(e).substring(0, 200)}`);
+    }
   }
 
+  @ApiOperation({ summary: 'Toggle active' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/toggle-active')
   @Roles(Role.SUPER_ADMIN)
   async toggleActive(@Param('id') id: string, @Body() dto: { isActive: boolean }) {
     this.logger.log('Toggling warehouse active status');
-    throw new BadRequestException('Boshqaruvchi sifatida hozircha mavjud emas');
+    try {
+      const r = await rawSql(sql`
+        UPDATE warehouses SET is_active = ${dto.isActive ?? true}
+        WHERE id = ${id} AND deleted_at IS NULL
+        RETURNING id, code, name, type, is_active
+      `);
+      const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
+      if (!row) throw new NotFoundException(`Ombor #${id} topilmadi`);
+      return row;
+    } catch (e) {
+      if (e instanceof NotFoundException) throw e;
+      throw new BadRequestException(String(e).substring(0, 100));
+    }
   }
 
+  @ApiOperation({ summary: 'Get inventory' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/inventory')
   @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
   async getInventory(@Param('id') id: string, @Query() query?: Record<string, unknown>) {
     this.logger.log('Getting warehouse inventory');
-    throw new BadRequestException('Inventory uchun boshqaruvchi hozircha mavjud emas');
+    try {
+      const r = await rawSql(sql`
+        SELECT ws.id, ws.material_card_id, mc.code AS material_code, mc.name AS material_name,
+               mc.unit_of_measure AS unit, ws.quantity, ws.reserved_quantity, ws.available_quantity,
+               mc.min_stock, mc.max_stock
+        FROM warehouse_stock ws
+        LEFT JOIN material_cards mc ON mc.id = ws.material_card_id
+        WHERE ws.warehouse_id = ${id}
+        ORDER BY mc.xom_ashyo ASC
+        LIMIT 200
+      `);
+      const items = (r as { rows?: Record<string, unknown>[] }).rows ?? [];
+      return { items, total: items.length };
+    } catch (e) {
+      this.logger.warn(`getInventory error: ${(e as Error).message}`);
+      return { items: [], total: 0 };
+    }
   }
 
+  @ApiOperation({ summary: 'Delete warehouse' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN)
   async deleteWarehouse(

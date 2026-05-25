@@ -1,6 +1,15 @@
-import React from "react";
+/**
+ * @module ui/empty-state
+ * @description Thin adapter over canonical EmptyState.
+ * Canonical source: components/EmptyState.tsx  →  components/dizayn-new/EmptyState.tsx
+ *
+ * Keeps the old `action: { label, onClick }` API and icon-as-component API
+ * that existing consumers (BOMManagement, CapacityPlanningSections,
+ * CapacityPlanningTabs, ProgramsTabTable, AllExams, HRMap) use.
+ */
 import { Button } from "@/components/ui/button";
-import { LucideIcon } from "lucide-react";
+import { Plus, type LucideIcon } from "lucide-react";
+import { EmptyState as CanonicalEmptyState } from "@/components/EmptyState";
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -13,18 +22,21 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+  const iconNode = <Icon className="w-7 h-7" />;
+
+  const actionNode = action ? (
+    <Button onClick={action.onClick} data-testid="button-empty-state-action">
+      <Plus className="w-4 h-4 mr-2" />
+      {action.label}
+    </Button>
+  ) : undefined;
+
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-4 text-center" data-testid="empty-state">
-      <div className="mb-6 rounded-full bg-muted p-4 text-muted-foreground">
-        <Icon className="h-8 w-8" />
-      </div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-sm text-muted-foreground mb-6 max-w-md">{description}</p>
-      {action && (
-        <Button onClick={action.onClick} data-testid="button-empty-state-action">
-          {action.label}
-        </Button>
-      )}
-    </div>
+    <CanonicalEmptyState
+      icon={iconNode}
+      title={title}
+      description={description}
+      action={actionNode}
+    />
   );
 }

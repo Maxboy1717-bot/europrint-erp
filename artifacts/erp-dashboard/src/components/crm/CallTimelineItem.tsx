@@ -1,3 +1,8 @@
+/**
+ * @module CallTimelineItem
+ * @description React UI component.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface Call {
   id: number;
   direction: "incoming" | "outgoing";
@@ -35,10 +41,10 @@ const STATUS_CONFIG: Record<
   Call["status"],
   { label: string; variant: "success" | "error" | "warning" | "secondary" }
 > = {
-  answered: { label: "Отвечен", variant: "success" },
-  missed: { label: "Пропущен", variant: "error" },
-  busy: { label: "Занято", variant: "warning" },
-  voicemail: { label: "Голосовая почта", variant: "secondary" },
+  answered: { label: tLabel('common.CallTimelineItem.tsx.untitled', "Отвечен"), variant: "success" },
+  missed: { label: tLabel('common.CallTimelineItem.tsx.untitled', "Пропущен"), variant: "error" },
+  busy: { label: tLabel('common.CallTimelineItem.tsx.untitled', "Занято"), variant: "warning" },
+  voicemail: { label: tLabel('common.CallTimelineItem.tsx.untitled', "Голосовая почта"), variant: "secondary" },
 };
 
 function formatDuration(seconds: number): string {
@@ -74,10 +80,10 @@ export function CallTimelineItem({
       : PhoneOutgoing;
 
   const iconColorClass = isMissed
-    ? "text-red-500"
+    ? "text-[var(--ep-red)]"
     : isIncoming
-      ? "text-green-500"
-      : "text-blue-500";
+      ? "text-[var(--ep-green)]"
+      : "text-[var(--ep-blue)]";
 
   return (
     <Card
@@ -118,7 +124,7 @@ export function CallTimelineItem({
             <div className="flex items-center gap-3 flex-wrap">
               <a
                 href={`tel:${call.phone}`}
-                className="text-blue-500 hover:underline font-medium"
+                className="text-[var(--ep-blue)] hover:underline font-medium"
                 data-testid="call-phone-link"
               >
                 {call.phone}
@@ -140,7 +146,7 @@ export function CallTimelineItem({
                 <Button
                   size="sm"
                   variant="secondary"
-                  onClick={() => onPlayRecording?.(call.recording!)}
+                  onClick={() => onPlayRecording?.(call.recording ?? '')}
                   data-testid="button-play-recording"
                 >
                   <Play className="h-3.5 w-3.5 mr-1.5" />

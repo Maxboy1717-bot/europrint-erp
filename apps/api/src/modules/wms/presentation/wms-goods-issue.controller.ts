@@ -1,10 +1,16 @@
+/**
+ * @module wms-goods-issue.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
   Controller, Post, Delete, Patch, Body, Param, ParseIntPipe,
   UseGuards, UseInterceptors, Logger, NotFoundException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrNotFound } from '@common/http-result';
 import { CommandBus } from '@nestjs/cqrs';
-import { Throttle } from '@nestjs/throttler';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -21,7 +27,8 @@ enum Role {
   DIRECTOR = 'director',
 }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Wms Goods Issue')
 @Controller('wms/goods-issue')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -33,6 +40,9 @@ export class WmsGoodsIssueController {
     private readonly crudSvc: WmsCrudService,
   ) {}
 
+  @ApiOperation({ summary: 'Issue goods' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async issueGoods(
@@ -54,6 +64,9 @@ export class WmsGoodsIssueController {
     return (Array.isArray(result) ? result[0] : result) as Result<void>;
   }
 
+  @ApiOperation({ summary: 'Patch goods issue' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async patchGoodsIssue(
@@ -64,6 +77,9 @@ export class WmsGoodsIssueController {
     return { data: unwrapOrNotFound(r) };
   }
 
+  @ApiOperation({ summary: 'Delete goods issue' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Delete(':id')
   @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async deleteGoodsIssue(

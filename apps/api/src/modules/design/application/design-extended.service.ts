@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+/**
+ * @module design-extended.service
+ * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ */
+
+import { Inject, Injectable } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
-import { DesignExtendedRepository } from './design-extended.repository';
+import { DESIGN_EXTENDED_REPO, type IDesignExtendedRepo } from '../domain/repositories/i-design-extended.repo';
 
 @Injectable()
 export class DesignExtendedService {
-  constructor(private readonly repo: DesignExtendedRepository) {}
+  constructor(@Inject(DESIGN_EXTENDED_REPO) private readonly repo: IDesignExtendedRepo) {}
 
   async getOrdersList(): Promise<Result<object, AppError>> { return this.repo.findOrdersList(); }
   async getDashboardSummary() { return this.repo.findDashboardSummary(); }

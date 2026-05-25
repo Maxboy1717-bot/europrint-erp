@@ -1,3 +1,8 @@
+/**
+ * @module ImageLightbox
+ * @description React UI component.
+ */
+
 import { useEffect } from "react";
 import { X, Download } from "lucide-react";
 

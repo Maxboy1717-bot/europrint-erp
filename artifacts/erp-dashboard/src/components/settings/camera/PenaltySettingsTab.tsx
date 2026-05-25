@@ -1,9 +1,13 @@
+/**
+ * @module PenaltySettingsTab
+ * @description React UI component.
+ */
+
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
-
 interface PenaltySettingsTabProps {
   language: "uz" | "ru";
   autoPenalty: boolean;
@@ -22,19 +26,19 @@ export function PenaltySettingsTab({
   t
 }: PenaltySettingsTabProps) {
   return (
-    <Card className="bg-surface-container-lowest border-none rounded-lg overflow-hidden shadow-none">
-      <CardHeader className="bg-surface-container-low/50 py-4 px-6">
-        <CardTitle className="text-lg font-bold flex items-center gap-2 text-on-surface">
-          <AlertTriangle className="h-5 w-5 text-red-500" />
+    <Card className="bg-card border-none rounded-lg overflow-hidden shadow-none">
+      <CardHeader className="bg-muted/40/50 py-4 px-6">
+        <CardTitle className="text-[14px] font-semibold font-bold flex items-center gap-2 text-foreground">
+          <AlertTriangle className="h-5 w-5 text-[var(--ep-red)]" />
           {t.penaltySettings}
         </CardTitle>
-        <CardDescription className="text-on-surface-variant">
+        <CardDescription className="text-muted-foreground">
           {language === "uz" ? "Xavfsizlik buzilishlari uchun avtomatik jarima" : "Автоматические штрафы за нарушения безопасности"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 p-6">
-        <div className="flex items-center justify-between p-4 rounded-lg bg-surface border border-outline-variant">
-          <Label htmlFor="auto-penalty" className="font-bold text-on-surface">{t.autoPenalty}</Label>
+        <div className="flex items-center justify-between p-4 rounded-lg bg-background border border-border">
+          <Label htmlFor="auto-penalty" className="font-bold text-foreground">{t.autoPenalty}</Label>
           <Switch
             id="auto-penalty"
             checked={autoPenalty}
@@ -44,19 +48,19 @@ export function PenaltySettingsTab({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="penalty-amount" className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{t.penaltyAmount}</Label>
+        <div className="space-y-1">
+          <Label htmlFor="penalty-amount" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t.penaltyAmount}</Label>
           <div className="relative">
             <Input
               id="penalty-amount"
               type="number"
               value={penaltyAmount}
               onChange={(e) => setPenaltyAmount(parseInt(e.target.value))}
-              className="bg-surface border-outline-variant rounded-lg h-10 pl-4 pr-16 font-bold w-full md:w-64"
+              className="bg-background border-border rounded-lg h-10 pl-4 pr-16 font-bold w-full md:w-64"
               disabled={!autoPenalty}
               data-testid="input-penalty-amount"
             />
-            <div className="absolute left-40 md:left-52 top-1/2 -translate-y-1/2 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">SO'M</div>
+            <div className="absolute left-40 md:left-52 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{"so'm"}</div>
           </div>
         </div>
       </CardContent>

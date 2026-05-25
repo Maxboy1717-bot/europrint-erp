@@ -1,3 +1,8 @@
+/**
+ * @module BitrixActivityPanel
+ * @description React UI component.
+ */
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,13 +32,13 @@ export function BitrixActivityPanel({
 
   // Build timeline
   const timeline: TimelineItem[] = [
-    ...(activities ?? []).map((a) => ({
+    ...(Array.isArray(activities) ? activities : []).map((a) => ({
       id: a.id,
       type: (a.type === "call" ? "call" : "activity") as "call" | "activity",
       data: a,
       createdAt: a.createdAt,
     })),
-    ...(comments ?? []).map((c) => ({
+    ...(Array.isArray(comments) ? comments : []).map((c) => ({
       id: c.id + 10000,
       type: "comment" as const,
       data: c,
@@ -41,7 +46,7 @@ export function BitrixActivityPanel({
     })),
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  const filteredTimeline = (timeline ?? []).filter((item) => {
+  const filteredTimeline = (Array.isArray(timeline) ? timeline : []).filter((item) => {
     if (timelineFilter === "all") return true;
     if (item.type === "comment") return true;
     const activity = item.data as Activity;

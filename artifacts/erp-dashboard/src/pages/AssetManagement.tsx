@@ -1,3 +1,8 @@
+/**
+ * @module AssetManagement
+ * @description React page component. Route-level UI.
+ */
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -88,8 +93,8 @@ export default function AssetManagement() {
   });
 
   const depreciateMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("POST", `/api/asset-management/assets/${id}/depreciate`, {}),
-    onSuccess: (data: { asset: AssetInventoryItem; monthlyDepreciation: number; accumulatedDepreciation: number }) => {
+    mutationFn: (id: number) => apiRequest<{ asset: AssetInventoryItem; monthlyDepreciation: number; accumulatedDepreciation: number }>("PUT", `/api/asset-management/assets/${id}/depreciate`, {}),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/asset-management/assets"] });
       queryClient.invalidateQueries({ queryKey: ["/api/asset-management/assets/summary"] });
       toast({ title: t("depreciationCalculated"), description: `${t("monthlyDepreciationLabel")}: ${formatCurrency(data.monthlyDepreciation)}` });
@@ -111,7 +116,7 @@ export default function AssetManagement() {
 
   const completeMaintenanceMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: typeof completeMaintenanceForm }) =>
-      apiRequest("PATCH", `/api/asset-management/maintenance/${id}/complete`, data),
+      apiRequest("PUT", `/api/asset-management/maintenance/${id}/complete`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/asset-management/maintenance"] });
       toast({ title: t("maintenanceCompleted") });
@@ -182,15 +187,15 @@ export default function AssetManagement() {
   const handleRefresh = () => { refetchAssets(); refetchSummary(); refetchMaintenance(); refetchDisposals(); refetchTransfers(); refetchInsurance(); };
 
   return (
-    <div className="min-h-screen bg-background" data-testid="asset-management-page">
-      <div className="border-b bg-gradient-to-r from-violet-600 to-violet-500 text-white">
-        <div className="container mx-auto px-4 py-4">
+    <div data-testid="asset-management-page">
+      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
+        <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <Building2 className="h-8 w-8" />
               <div>
                 <h1 className="text-2xl font-bold" data-testid="text-page-title">{t("pageTitle")}</h1>
-                <p className="text-violet-100 text-sm">{t("pageDesc")}</p>
+                <p className="text-white/75 text-sm">{t("pageDesc")}</p>
               </div>
             </div>
             <Button variant="secondary" size="sm" onClick={handleRefresh} data-testid="button-refresh">
@@ -200,7 +205,7 @@ export default function AssetManagement() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      <div className="space-y-6 pt-6">
         <AssetSummaryCards assetSummary={assetSummary} summaryLoading={summaryLoading} totalDepreciationPercent={totalDepreciationPercent} />
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>

@@ -1,3 +1,8 @@
+/**
+ * @module OnboardingSection
+ * @description React UI component.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +11,7 @@ import { Plus, CheckCircle2 } from "lucide-react";
 import { HREmployee, ChecklistItem } from "./types";
 import { UseMutationResult } from "@tanstack/react-query";
 
+import { useTranslation } from '@/lib/i18n';
 interface OnboardingSectionProps {
   empLoading: boolean;
   newEmployees: HREmployee[];
@@ -13,23 +19,23 @@ interface OnboardingSectionProps {
   updateChecklist: UseMutationResult<any, any, { id: string; completedItems: number }>;
 }
 
-export function OnboardingSection({
-  empLoading,
+export function OnboardingSection({empLoading,
   newEmployees,
   onboardingChecklists,
   updateChecklist,
 }: OnboardingSectionProps) {
+  const { t } = useTranslation('common');
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Yangi Xodim Onboarding</h2>
-        <Button data-testid="button-add-onboarding"><Plus className="h-4 w-4 mr-2" />Onboarding Boshlash</Button>
+        <h2 className="text-lg font-semibold">{t("yangiXodimOnboarding")}</h2>
+        <Button data-testid="button-add-onboarding"><Plus className="h-4 w-4 mr-2" />{t("onboardingBoshlash")}</Button>
       </div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
-          { l: "Faol onboarding", v: empLoading ? "..." : newEmployees.length, c: "text-blue-600" },
-          { l: "Bajarildi (bu oy)", v: "0", c: "text-green-600" },
-          { l: "O'rtacha muddati", v: "30 kun", c: "text-orange-600" },
+          { l: "Faol onboarding", v: empLoading ? "..." : newEmployees.length, c: "text-[var(--ep-blue)]" },
+          { l: "Bajarildi (bu oy)", v: "0", c: "text-[var(--ep-green)]" },
+          { l: "O'rtacha muddati", v: "30 kun", c: "text-[var(--ep-primary)]" },
           { l: "Yangi xodimlar", v: empLoading ? "..." : newEmployees.length, c: "text-primary" },
         ]).map(s => (
           <Card key={s.l}><CardContent className="pt-4 pb-3">
@@ -39,45 +45,45 @@ export function OnboardingSection({
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Onboarding Bosqichlari</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("onboardingBosqichlari")}</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <div className="ep-table-scroll"><Table>
             <TableHeader><TableRow>
-              <TableHead>Xodim</TableHead><TableHead>Lavozim</TableHead>
-              <TableHead>Ishga kirish sanasi</TableHead><TableHead>Bo'lim</TableHead>
-              <TableHead>Holati</TableHead>
+              <TableHead>{t("xodim1")}</TableHead><TableHead>{t("lavozim1")}</TableHead>
+              <TableHead>{t("ishgaKirishSanasi")}</TableHead><TableHead>{t("bolim1")}</TableHead>
+              <TableHead>{t("holati")}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {empLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">Yuklanmoqda...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
               ) : newEmployees.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    Faol onboarding jarayonlari mavjud emas
+                  <TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground">
+                    {t("faolOnboardingJarayonlariMavjudEmas")}
                   </TableCell>
                 </TableRow>
               ) : (Array.isArray(newEmployees) ? newEmployees : []).map((emp: HREmployee) => (
-                <TableRow key={emp.id} data-testid={`row-onboarding-${emp.id}`}>
+                <TableRow key={emp.id} data-testid={`row-onboarding-${emp.id}`} className="hover:bg-muted/40 transition-colors">
                   <TableCell className="font-medium">{emp.fullName || `${emp.firstName || ""} ${emp.lastName || ""}`.trim() || emp.name || `#${emp.id}`}</TableCell>
                   <TableCell className="text-muted-foreground">{emp.positionName || emp.position || "—"}</TableCell>
                   <TableCell>{emp.hireDate ? new Date(emp.hireDate).toLocaleDateString("uz-UZ") : "—"}</TableCell>
                   <TableCell>{emp.departmentName || emp.department || "—"}</TableCell>
-                  <TableCell><Badge variant="secondary">Onboarding</Badge></TableCell>
+                  <TableCell><Badge variant="secondary">{t("onboarding")}</Badge></TableCell>
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
       {onboardingChecklists.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-base">Onboarding Checklist Holati</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("onboardingChecklistHolati")}</CardTitle></CardHeader>
           <CardContent className="p-0">
-            <Table>
+            <div className="ep-table-scroll"><Table>
               <TableHeader><TableRow>
-                <TableHead>Xodim</TableHead>
-                <TableHead>Bajarilish</TableHead>
-                <TableHead>Progress</TableHead>
+                <TableHead>{t("xodim1")}</TableHead>
+                <TableHead>{t("progress5")}</TableHead>
+                <TableHead>{t('progress')}</TableHead>
                 <TableHead></TableHead>
               </TableRow></TableHeader>
               <TableBody>
@@ -86,7 +92,7 @@ export function OnboardingSection({
                   const total = item.totalItems ?? 12;
                   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
                   return (
-                    <TableRow key={item.id} data-testid={`row-onboarding-checklist-${item.id}`}>
+                    <TableRow key={item.id} data-testid={`row-onboarding-checklist-${item.id}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell className="font-medium">{item.fullName || `Xodim #${item.userId}`}</TableCell>
                       <TableCell className="text-sm">{completed}/{total} modda</TableCell>
                       <TableCell className="w-40">
@@ -111,7 +117,7 @@ export function OnboardingSection({
                   );
                 })}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
       )}

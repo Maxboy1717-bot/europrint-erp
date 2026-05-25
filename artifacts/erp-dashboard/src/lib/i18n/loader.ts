@@ -1,3 +1,8 @@
+/**
+ * @module loader
+ * @description Frontend utility / library module.
+ */
+
 import type { Language, TranslationModule, TranslationModuleName, AllTranslations } from './types';
 import { DEFAULT_LANGUAGE } from './constants';
 
@@ -31,8 +36,26 @@ import uzDesign        from '../../locales/uz/design.json';
 import uzLogistics     from '../../locales/uz/logistics.json';
 import uzPos           from '../../locales/uz/pos.json';
 import uzAi            from '../../locales/uz/ai.json';
+import uzAisha         from '../../locales/uz/aisha.json';
 import uzCoordination  from '../../locales/uz/coordination.json';
 import uzPrint         from '../../locales/uz/print.json';
+import uzBarcode       from '../../locales/uz/barcode.json';
+import uzCalc          from '../../locales/uz/calc.json';
+import uzContact       from '../../locales/uz/contact.json';
+import uzFooter        from '../../locales/uz/footer.json';
+import uzGlPosting     from '../../locales/uz/glPosting.json';
+import uzInventory     from '../../locales/uz/inventory.json';
+import uzLedger        from '../../locales/uz/ledger.json';
+import uzLowstock      from '../../locales/uz/lowstock.json';
+import uzMovements     from '../../locales/uz/movements.json';
+import uzMyInventory   from '../../locales/uz/myInventory.json';
+import uzNav           from '../../locales/uz/nav.json';
+import uzOffline       from '../../locales/uz/offline.json';
+import uzQcreview      from '../../locales/uz/qcreview.json';
+import uzQuarantine    from '../../locales/uz/quarantine.json';
+import uzReports       from '../../locales/uz/reports.json';
+import uzRequests      from '../../locales/uz/requests.json';
+import uzVariance      from '../../locales/uz/variance.json';
 
 // ─── RU tarjimalari ───────────────────────────────────────────────────────────
 import ruCommon        from '../../locales/ru/common.json';
@@ -64,94 +87,181 @@ import ruDesign        from '../../locales/ru/design.json';
 import ruLogistics     from '../../locales/ru/logistics.json';
 import ruPos           from '../../locales/ru/pos.json';
 import ruAi            from '../../locales/ru/ai.json';
+import ruAisha         from '../../locales/ru/aisha.json';
 import ruCoordination  from '../../locales/ru/coordination.json';
 import ruPrint         from '../../locales/ru/print.json';
+import ruBarcode       from '../../locales/ru/barcode.json';
+import ruCalc          from '../../locales/ru/calc.json';
+import ruContact       from '../../locales/ru/contact.json';
+import ruFooter        from '../../locales/ru/footer.json';
+import ruGlPosting     from '../../locales/ru/glPosting.json';
+import ruInventory     from '../../locales/ru/inventory.json';
+import ruLedger        from '../../locales/ru/ledger.json';
+import ruLowstock      from '../../locales/ru/lowstock.json';
+import ruMovements     from '../../locales/ru/movements.json';
+import ruMyInventory   from '../../locales/ru/myInventory.json';
+import ruNav           from '../../locales/ru/nav.json';
+import ruOffline       from '../../locales/ru/offline.json';
+import ruQcreview      from '../../locales/ru/qcreview.json';
+import ruQuarantine    from '../../locales/ru/quarantine.json';
+import ruReports       from '../../locales/ru/reports.json';
+import ruRequests      from '../../locales/ru/requests.json';
+import ruVariance      from '../../locales/ru/variance.json';
 
 // ─── To'liq tarjima ob'ekti ───────────────────────────────────────────────────
 export const ALL_TRANSLATIONS: AllTranslations = {
   uz: {
-    common:        uzCommon        as TranslationModule,
-    auth:          uzAuth          as TranslationModule,
-    dashboard:     uzDashboard     as TranslationModule,
-    hr:            uzHR            as TranslationModule,
-    finance:       uzFinance       as TranslationModule,
-    production:    uzProduction    as TranslationModule,
-    warehouse:     uzWarehouse     as TranslationModule,
-    wms:           uzWms           as TranslationModule,
-    crm:           uzCRM           as TranslationModule,
-    lms:           uzLMS           as TranslationModule,
-    settings:      uzSettings      as TranslationModule,
-    errors:        uzErrors        as TranslationModule,
-    validation:    uzValidation    as TranslationModule,
-    marketing:     uzMarketing     as TranslationModule,
-    navigation:    uzNavigation    as TranslationModule,
-    public:        uzPublic        as TranslationModule,
-    sd:            uzSd            as TranslationModule,
-    mes:           uzMes           as TranslationModule,
-    kanban:        uzKanban        as TranslationModule,
-    director:      uzDirector      as TranslationModule,
-    security:      uzSecurity      as TranslationModule,
-    notifications: uzNotifications as TranslationModule,
-    iot:           uzIot           as TranslationModule,
-    admin:         uzAdmin         as TranslationModule,
-    mro:           uzMro           as TranslationModule,
-    design:        uzDesign        as TranslationModule,
-    logistics:     uzLogistics     as TranslationModule,
-    pos:           uzPos           as TranslationModule,
-    ai:            uzAi            as TranslationModule,
-    coordination:  uzCoordination  as TranslationModule,
-    print:         uzPrint         as TranslationModule,
+    common:        uzCommon        as unknown as TranslationModule,
+    auth:          uzAuth          as unknown as TranslationModule,
+    dashboard:     uzDashboard     as unknown as TranslationModule,
+    hr:            uzHR            as unknown as TranslationModule,
+    finance:       uzFinance       as unknown as TranslationModule,
+    production:    uzProduction    as unknown as TranslationModule,
+    warehouse:     uzWarehouse     as unknown as TranslationModule,
+    wms:           uzWms           as unknown as TranslationModule,
+    crm:           uzCRM           as unknown as TranslationModule,
+    lms:           uzLMS           as unknown as TranslationModule,
+    settings:      uzSettings      as unknown as TranslationModule,
+    errors:        uzErrors        as unknown as TranslationModule,
+    validation:    uzValidation    as unknown as TranslationModule,
+    marketing:     uzMarketing     as unknown as TranslationModule,
+    navigation:    uzNavigation    as unknown as TranslationModule,
+    public:        uzPublic        as unknown as TranslationModule,
+    sd:            uzSd            as unknown as TranslationModule,
+    mes:           uzMes           as unknown as TranslationModule,
+    kanban:        uzKanban        as unknown as TranslationModule,
+    director:      uzDirector      as unknown as TranslationModule,
+    security:      uzSecurity      as unknown as TranslationModule,
+    notifications: uzNotifications as unknown as TranslationModule,
+    iot:           uzIot           as unknown as TranslationModule,
+    admin:         uzAdmin         as unknown as TranslationModule,
+    mro:           uzMro           as unknown as TranslationModule,
+    design:        uzDesign        as unknown as TranslationModule,
+    logistics:     uzLogistics     as unknown as TranslationModule,
+    pos:           uzPos           as unknown as TranslationModule,
+    ai:            uzAi            as unknown as TranslationModule,
+    aisha:         uzAisha         as unknown as TranslationModule,
+    coordination:  uzCoordination  as unknown as TranslationModule,
+    print:         uzPrint         as unknown as TranslationModule,
+    barcode:       uzBarcode       as unknown as TranslationModule,
+    calc:          uzCalc          as unknown as TranslationModule,
+    contact:       uzContact       as unknown as TranslationModule,
+    footer:        uzFooter        as unknown as TranslationModule,
+    glPosting:     uzGlPosting     as unknown as TranslationModule,
+    inventory:     uzInventory     as unknown as TranslationModule,
+    ledger:        uzLedger        as unknown as TranslationModule,
+    lowstock:      uzLowstock      as unknown as TranslationModule,
+    movements:     uzMovements     as unknown as TranslationModule,
+    myInventory:   uzMyInventory   as unknown as TranslationModule,
+    nav:           uzNav           as unknown as TranslationModule,
+    offline:       uzOffline       as unknown as TranslationModule,
+    qcreview:      uzQcreview      as unknown as TranslationModule,
+    qc:            uzQcreview      as unknown as TranslationModule,
+    quarantine:    uzQuarantine    as unknown as TranslationModule,
+    reports:       uzReports       as unknown as TranslationModule,
+    requests:      uzRequests      as unknown as TranslationModule,
+    variance:      uzVariance      as unknown as TranslationModule,
   },
   ru: {
-    common:        ruCommon        as TranslationModule,
-    auth:          ruAuth          as TranslationModule,
-    dashboard:     ruDashboard     as TranslationModule,
-    hr:            ruHR            as TranslationModule,
-    finance:       ruFinance       as TranslationModule,
-    production:    ruProduction    as TranslationModule,
-    warehouse:     ruWarehouse     as TranslationModule,
-    wms:           ruWms           as TranslationModule,
-    crm:           ruCRM           as TranslationModule,
-    lms:           ruLMS           as TranslationModule,
-    settings:      ruSettings      as TranslationModule,
-    errors:        ruErrors        as TranslationModule,
-    validation:    ruValidation    as TranslationModule,
-    marketing:     ruMarketing     as TranslationModule,
-    navigation:    ruNavigation    as TranslationModule,
-    public:        ruPublic        as TranslationModule,
-    sd:            ruSd            as TranslationModule,
-    mes:           ruMes           as TranslationModule,
-    kanban:        ruKanban        as TranslationModule,
-    director:      ruDirector      as TranslationModule,
-    security:      ruSecurity      as TranslationModule,
-    notifications: ruNotifications as TranslationModule,
-    iot:           ruIot           as TranslationModule,
-    admin:         ruAdmin         as TranslationModule,
-    mro:           ruMro           as TranslationModule,
-    design:        ruDesign        as TranslationModule,
-    logistics:     ruLogistics     as TranslationModule,
-    pos:           ruPos           as TranslationModule,
-    ai:            ruAi            as TranslationModule,
-    coordination:  ruCoordination  as TranslationModule,
-    print:         ruPrint         as TranslationModule,
+    common:        ruCommon        as unknown as TranslationModule,
+    auth:          ruAuth          as unknown as TranslationModule,
+    dashboard:     ruDashboard     as unknown as TranslationModule,
+    hr:            ruHR            as unknown as TranslationModule,
+    finance:       ruFinance       as unknown as TranslationModule,
+    production:    ruProduction    as unknown as TranslationModule,
+    warehouse:     ruWarehouse     as unknown as TranslationModule,
+    wms:           ruWms           as unknown as TranslationModule,
+    crm:           ruCRM           as unknown as TranslationModule,
+    lms:           ruLMS           as unknown as TranslationModule,
+    settings:      ruSettings      as unknown as TranslationModule,
+    errors:        ruErrors        as unknown as TranslationModule,
+    validation:    ruValidation    as unknown as TranslationModule,
+    marketing:     ruMarketing     as unknown as TranslationModule,
+    navigation:    ruNavigation    as unknown as TranslationModule,
+    public:        ruPublic        as unknown as TranslationModule,
+    sd:            ruSd            as unknown as TranslationModule,
+    mes:           ruMes           as unknown as TranslationModule,
+    kanban:        ruKanban        as unknown as TranslationModule,
+    director:      ruDirector      as unknown as TranslationModule,
+    security:      ruSecurity      as unknown as TranslationModule,
+    notifications: ruNotifications as unknown as TranslationModule,
+    iot:           ruIot           as unknown as TranslationModule,
+    admin:         ruAdmin         as unknown as TranslationModule,
+    mro:           ruMro           as unknown as TranslationModule,
+    design:        ruDesign        as unknown as TranslationModule,
+    logistics:     ruLogistics     as unknown as TranslationModule,
+    pos:           ruPos           as unknown as TranslationModule,
+    ai:            ruAi            as unknown as TranslationModule,
+    aisha:         ruAisha         as unknown as TranslationModule,
+    coordination:  ruCoordination  as unknown as TranslationModule,
+    print:         ruPrint         as unknown as TranslationModule,
+    barcode:       ruBarcode       as unknown as TranslationModule,
+    calc:          ruCalc          as unknown as TranslationModule,
+    contact:       ruContact       as unknown as TranslationModule,
+    footer:        ruFooter        as unknown as TranslationModule,
+    glPosting:     ruGlPosting     as unknown as TranslationModule,
+    inventory:     ruInventory     as unknown as TranslationModule,
+    ledger:        ruLedger        as unknown as TranslationModule,
+    lowstock:      ruLowstock      as unknown as TranslationModule,
+    movements:     ruMovements     as unknown as TranslationModule,
+    myInventory:   ruMyInventory   as unknown as TranslationModule,
+    nav:           ruNav           as unknown as TranslationModule,
+    offline:       ruOffline       as unknown as TranslationModule,
+    qcreview:      ruQcreview      as unknown as TranslationModule,
+    qc:            ruQcreview      as unknown as TranslationModule,
+    quarantine:    ruQuarantine    as unknown as TranslationModule,
+    reports:       ruReports       as unknown as TranslationModule,
+    requests:      ruRequests      as unknown as TranslationModule,
+    variance:      ruVariance      as unknown as TranslationModule,
   },
 };
 
 // ─── In-memory cache ─────────────────────────────────────────────────────────
 type Cache = Partial<Record<Language, Partial<Record<TranslationModuleName, TranslationModule>>>>;
+// In-memory translation cache. Keyed by lang → module → flat key dictionary.
+// First access for a (lang, module) pair loads from ALL_TRANSLATIONS; subsequent
+// reads return the cached reference. There's no eviction — translation data is
+// tiny (~5k keys total) and never changes at runtime.
 const _cache: Cache = {};
 
+/**
+ * @description Lazy-load a translation module from the static bundle.
+ *   Falls back to `{}` if the module name is unknown — keeps `t('key')`
+ *   returning the literal key instead of crashing.
+ *
+ *   WHY caching despite the static bundle:
+ *     ALL_TRANSLATIONS is loaded once at module init, but JS engines
+ *     re-resolve object key lookups on every access. The cache locks the
+ *     module reference once so hot-path translations are a single map
+ *     lookup, not a chain through optional chaining.
+ */
 function getCachedModule(lang: Language, module: TranslationModuleName): TranslationModule {
   if (!_cache[lang]) _cache[lang] = {};
-  if (!_cache[lang]![module]) {
-    _cache[lang]![module] = ALL_TRANSLATIONS[lang]?.[module] ?? {};
+  // After the guard above, _cache[lang] is guaranteed to be defined.
+  // Use a local reference to avoid non-null assertion operators.
+  const langCache = _cache[lang] as Record<TranslationModuleName, TranslationModule>;
+  if (!langCache[module]) {
+    langCache[module] = ALL_TRANSLATIONS[lang]?.[module] ?? {};
   }
-  return _cache[lang]![module]!;
+  return langCache[module];
 }
 
 /**
- * Kalit bo'yicha tarjimani qaytaradi.
- * Yetishmasa: development da console.warn, production da raw key.
+ * @description Resolve a key to its translated string. Three-level fallback:
+ *     1. moduleData[key]           current language
+ *     2. fallback parameter         caller-provided default
+ *     3. defaultModule[key]         UZ (DEFAULT_LANGUAGE) version
+ *     4. literal `key`              last resort — shown verbatim to the user
+ *
+ *   In development, missing keys emit a `[i18n] Missing key` console
+ *   warning so the developer notices and adds the translation. In
+ *   production we silently fall through to the literal key — better than
+ *   crashing a page over a missing string.
+ *
+ *   The literal-key fallback is why our key naming convention matters:
+ *   keys should be human-readable enough that "shown verbatim" is at
+ *   least understandable (`t('common.save')` → "common.save" is OK as
+ *   a degraded fallback; `t('x42')` would be cryptic).
  */
 export function getTranslation(
   lang: Language,
@@ -168,6 +278,12 @@ export function getTranslation(
     fallback ??
     getCachedModule(DEFAULT_LANGUAGE, module)[key] ??
     key;
+
+  if (process.env.NODE_ENV === 'development') {
+    console.warn(
+      `[i18n] Missing key '${key}' in ${lang}/${module} — falling back to: "${fallbackValue}"`,
+    );
+  }
 
   return fallbackValue;
 }
@@ -189,7 +305,7 @@ export function interpolate(
  * Development rejimida barcha tillar uchun kalit to'liqligini tekshiradi.
  */
 export function validateTranslationCompleteness(): void {
-  if (!import.meta.env.DEV) return;
+  if (process.env.NODE_ENV !== 'development') return;
 
   const base = ALL_TRANSLATIONS[DEFAULT_LANGUAGE];
 

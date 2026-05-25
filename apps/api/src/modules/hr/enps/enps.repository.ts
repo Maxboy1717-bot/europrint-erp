@@ -1,3 +1,8 @@
+/**
+ * @module enps.repository
+ * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db , runQuery } from '@shared/db';
@@ -15,9 +20,9 @@ export class EnpsRepository {
         title:       dto.title,
         description: dto.description ?? null,
         period:      dto.period,
-        start_date:  (dto.startDate ?? null) as string,
-        end_date:    dto.endDate,
-        created_by:  dto.createdBy ?? null,
+        startDate:  (dto.startDate ?? null) as string,
+        endDate:    dto.endDate,
+        createdBy:  dto.createdBy ?? null,
         status:      'draft',
       }).returning();
       return castTo<Row>((rows[0] ?? {}));
@@ -27,7 +32,7 @@ export class EnpsRepository {
   async launchSurvey(surveyId: number): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(enps_surveys)
-        .set({ status: 'active', start_date: sql`CURRENT_DATE` })
+        .set({ status: 'active', startDate: sql`CURRENT_DATE` })
         .where(eq(enps_surveys.id, surveyId))
         .returning();
       return castTo<Row>((rows[0] ?? {}));
@@ -37,7 +42,7 @@ export class EnpsRepository {
   async closeSurvey(surveyId: number): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(enps_surveys)
-        .set({ status: 'closed', end_date: sql`CURRENT_DATE` })
+        .set({ status: 'closed', endDate: sql`CURRENT_DATE` })
         .where(eq(enps_surveys.id, surveyId))
         .returning();
       return castTo<Row>((rows[0] ?? {}));

@@ -1,14 +1,23 @@
+﻿/**
+ * @module hr-employees-ext.controller
+ * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
+ */
+
 import {
-  Body, Controller, Delete, Get, Param, Post, Query,
+  Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Query,
   UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+
+// P3-26: employee-documents endpoints aren't yet wired; return 501 so the
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { HrEmployeesExtService } from '../application/hr-employees-ext.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
+import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   HrUpdateProfileImageSchema, HrUpdateProfileImageDto,
   HrAssignOrgFunctionsSchema, HrAssignOrgFunctionsDto,
@@ -19,7 +28,8 @@ import {
 
 interface AuthenticatedUser { id: number; role: string; }
 
-@Throttle({ default: { limit: 100, ttl: 60_000 } })
+@ApiThrottle()
+@ApiTags('Hr Employees Ext')
 @Controller('hr/employees')
 @UseGuards(RolesGuard)
 @UseInterceptors(AuditInterceptor)
@@ -27,6 +37,9 @@ interface AuthenticatedUser { id: number; role: string; }
 export class HrEmployeesExtController {
   constructor(private readonly svc: HrEmployeesExtService) {}
 
+  @ApiOperation({ summary: 'Update profile image' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':id/profile-image')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'EMPLOYEE')
   @UsePipes(new ZodValidationPipe(HrUpdateProfileImageSchema))
@@ -39,6 +52,9 @@ export class HrEmployeesExtController {
     return { data, updatedBy: user?.id };
   }
 
+  @ApiOperation({ summary: 'Assign org functions' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':id/assign-org-functions')
   @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   @UsePipes(new ZodValidationPipe(HrAssignOrgFunctionsSchema))
@@ -50,6 +66,9 @@ export class HrEmployeesExtController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Import employees' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('import')
   @Roles('HR_MANAGER', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrImportEmployeesSchema))
@@ -63,6 +82,9 @@ export class HrEmployeesExtController {
     return { imported, total: list.length };
   }
 
+  @ApiOperation({ summary: 'Get employee assets' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/assets')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR')
   async getEmployeeAssets(@Param('id') id: string) {
@@ -70,6 +92,10 @@ export class HrEmployeesExtController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Assign asset' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post(':id/assets')
   @Roles('HR_MANAGER', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrAssignAssetSchema))
@@ -79,6 +105,9 @@ export class HrEmployeesExtController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Get employee swap requests' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':employeeId/swap-requests')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'MANAGER')
   async getEmployeeSwapRequests(@Param('employeeId') employeeId: string, @Query('status') status?: string) {
@@ -86,6 +115,9 @@ export class HrEmployeesExtController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Get employee complaints' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':employeeId/complaints')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR')
   async getEmployeeComplaints(@Param('employeeId') employeeId: string) {
@@ -93,6 +125,10 @@ export class HrEmployeesExtController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Create complaint' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Post(':employeeId/complaints')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrCreateComplaintSchema))
@@ -102,6 +138,9 @@ export class HrEmployeesExtController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Get assessment skips' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':employeeId/assessment-skips')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR')
   async getAssessmentSkips(@Param('employeeId') employeeId: string) {
@@ -109,6 +148,8 @@ export class HrEmployeesExtController {
     return { data };
   }
 
+  @ApiOperation({ summary: 'Get employees for face' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('list/for-face')
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'admin')
   async getEmployeesForFace(@Query('page') page?: string, @Query('limit') limit?: string) {
@@ -119,15 +160,37 @@ export class HrEmployeesExtController {
     return { items, total: items.length };
   }
 
+  @ApiOperation({ summary: 'Get employee documents' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get(':employeeId/documents')
-  async getEmployeeDocuments(@Param('employeeId') employeeId: string) { return { data: [], employeeId }; }
+  async getEmployeeDocuments(@Param('employeeId') _employeeId: string) {
+    return notImplemented('GET /hr/employees/:employeeId/documents');
+  }
 
+  @ApiOperation({ summary: 'Get employee document by id' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get(':employeeId/documents/:docId')
-  async getEmployeeDocumentById(@Param('employeeId') employeeId: string, @Param('docId') docId: string) { return { employeeId, docId }; }
+  async getEmployeeDocumentById(@Param('employeeId') _employeeId: string, @Param('docId') _docId: string) {
+    return notImplemented('GET /hr/employees/:employeeId/documents/:docId');
+  }
 
+  @ApiOperation({ summary: 'Delete employee document' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Delete(':employeeId/documents/:docId')
-  async deleteEmployeeDocument(@Param('employeeId') employeeId: string, @Param('docId') docId: string) { return { deleted: true }; }
+  async deleteEmployeeDocument(@Param('employeeId') _employeeId: string, @Param('docId') _docId: string) {
+    return notImplemented('DELETE /hr/employees/:employeeId/documents/:docId');
+  }
 
+  @ApiOperation({ summary: 'Get operator stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':employeeId/operator-stats')
   async getOperatorStats(@Param('employeeId') employeeId: string) { return { employeeId, totalOps: 0 }; }
 }

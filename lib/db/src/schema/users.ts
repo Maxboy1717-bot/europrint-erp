@@ -1,4 +1,10 @@
-import { pgTable, serial, varchar, integer, boolean, timestamp, text } from "drizzle-orm/pg-core";
+/**
+ * @module users
+ * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
+ */
+
+import { pgTable, serial, varchar, integer, boolean, timestamp, text, index, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { positions } from "./positions";
@@ -12,8 +18,8 @@ export const users = pgTable("users", {
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
   middleName: varchar("middle_name", { length: 100 }),
-  positionId: integer("position_id").references(() => positions.id),
-  departmentId: integer("department_id").references(() => departments.id),
+  positionId: integer("position_id").references(() => positions.id, { onDelete: "set null" }),
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
   phone: varchar("phone", { length: 20 }),
   avatarUrl: text("avatar_url"),
   telegramChatId: varchar("telegram_chat_id", { length: 50 }),
@@ -22,7 +28,12 @@ export const users = pgTable("users", {
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_users_position_id").on(t.positionId),
+  index("idx_users_department_id").on(t.departmentId),
+  index("idx_users_is_active").on(t.isActive),
+  check("users_language_chk", sql`${t.language} IS NULL OR ${t.language} IN ('uz','ru','en')`),
+]);
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type InsertUser = z.infer<typeof insertUserSchema>;

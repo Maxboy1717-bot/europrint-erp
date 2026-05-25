@@ -1,9 +1,15 @@
+/**
+ * @module useEmployeeFiles
+ * @description React UI component.
+ */
+
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { EmployeeFile } from "./types";
 
+import { tLabel } from '@/lib/i18n/tLabel';
 interface FilesTabProps {
   id: string | undefined;
   employeeFiles: EmployeeFile[];
@@ -18,14 +24,7 @@ export function useEmployeeFiles(id: string | undefined) {
   const [fileDescription, setFileDescription] = useState("");
 
   const uploadFileMutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      const response = await fetch(`/api/employees/${id}/files`, {
-        method: "POST",
-        body: data,
-      });
-      if (!response.ok) throw new Error("Failed to upload file");
-      return response.json();
-    },
+    mutationFn: (data: FormData) => apiRequest<unknown>('POST', `/api/employees/${id}/files`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees", id, "files"] });
       toast({
@@ -39,7 +38,7 @@ export function useEmployeeFiles(id: string | undefined) {
     onError: () => {
       toast({
         title: "Xatolik",
-        description: "Faylni yuklab bo'lmadi",
+        description: tLabel('hr.useEmployeeFiles.faylniYuklabBolmadi', "Faylni yuklab bo'lmadi"),
         variant: "destructive",
       });
     },
@@ -53,13 +52,13 @@ export function useEmployeeFiles(id: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ["/api/employees", id, "files"] });
       toast({
         title: "Muvaffaqiyat",
-        description: "Fayl o'chirildi",
+        description: tLabel('hr.useEmployeeFiles.faylOchirildi', "Fayl o'chirildi"),
       });
     },
     onError: () => {
       toast({
         title: "Xatolik",
-        description: "Faylni o'chirib bo'lmadi",
+        description: tLabel('hr.useEmployeeFiles.faylniOchiribBolmadi', "Faylni o'chirib bo'lmadi"),
         variant: "destructive",
       });
     },

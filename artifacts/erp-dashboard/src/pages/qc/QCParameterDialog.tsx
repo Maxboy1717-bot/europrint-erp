@@ -1,3 +1,8 @@
+/**
+ * @module QCParameterDialog
+ * @description React page component. Route-level UI.
+ */
+
 import { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -5,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2 } from "lucide-react";
+;
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useUndoDelete } from "@/components/undo-toast";
@@ -14,6 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "@/lib/i18n";
 
+import { EPLoader } from "@/components/ep";
 interface QcParameter {
   id: string;
   code: string;
@@ -61,6 +67,7 @@ interface QCParameterDialogProps {
 }
 
 export function QCParameterDialog({ open, onClose, category, editingParameter }: QCParameterDialogProps) {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { showUndoToast } = useUndoDelete();
   const { t: tCommon } = useTranslation('common');
@@ -138,14 +145,14 @@ export function QCParameterDialog({ open, onClose, category, editingParameter }:
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle>{editingParameter ? tCommon('edit') : tCommon('add')}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{editingParameter ? tCommon('edit') : tCommon('add')}</DialogTitle>
           <DialogDescription>{categoryLabel}</DialogDescription>
         </DialogHeader>
         <Form {...parameterForm}>
           <form onSubmit={parameterForm.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={parameterForm.control} name="code" render={({ field }) => (
                 <FormItem>
                   <FormLabel>{tCommon('code')}</FormLabel>
@@ -180,13 +187,13 @@ export function QCParameterDialog({ open, onClose, category, editingParameter }:
               <FormItem>
                 <FormLabel>{tCommon('name')} (RU)</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Граммаж" data-testid="input-param-name-ru" />
+                  <Input {...field} placeholder={t("untitled")} data-testid="input-param-name-ru" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={parameterForm.control} name="minValue" render={({ field }) => (
                 <FormItem>
                   <FormLabel>{tCommon('minimum')}</FormLabel>
@@ -241,7 +248,7 @@ export function QCParameterDialog({ open, onClose, category, editingParameter }:
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
-                Bekor qilish
+                {t("cancel")}
               </Button>
               <Button
                 type="submit"
@@ -249,7 +256,7 @@ export function QCParameterDialog({ open, onClose, category, editingParameter }:
                 data-testid="button-submit-parameter"
               >
                 {(createParameterMutation.isPending || updateParameterMutation.isPending) && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <EPLoader className="w-4 h-4 mr-2" />
                 )}
                 {editingParameter ? tCommon('save') : tCommon('add')}
               </Button>

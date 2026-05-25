@@ -1,3 +1,8 @@
+/**
+ * @module iot.module
+ * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
+ */
+
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { RecordSensorReadingHandler } from './application/commands/record-sensor-reading.handler';
@@ -37,16 +42,22 @@ import {
   QualityDefectsCameraController,
 } from './presentation/camera-alerts.controller';
 import { IotMainController } from './presentation/iot-main.controller';
+import { IotAlertsController } from './presentation/iot-alerts.controller';
+import { IotTabletController } from './presentation/iot-tablet.controller';
 import { IotSensorsMainController } from './presentation/iot-sensors-main.controller';
 import { IotCameraService } from './application/iot-camera.service';
-import { IotCameraRepository } from './application/iot-camera.repository';
+import { IotCameraRepository } from './infrastructure/repositories/iot-camera.repository';
+import { IOT_CAMERA_REPO } from './domain/repositories/i-iot-camera.repo';
 import { IotCameraEventsService } from './application/iot-camera-events.service';
-import { IotCameraEventsRepository } from './application/iot-camera-events.repository';
+import { IotCameraEventsRepository } from './infrastructure/repositories/iot-camera-events.repository';
+import { IOT_CAMERA_EVENTS_REPO } from './domain/repositories/i-iot-camera-events.repo';
 import { CameraAiService } from './application/camera-ai.service';
 import { CameraExtendedService } from './application/camera-extended.service';
 import { CameraDashboardService } from './application/camera-dashboard.service';
 import { IotMainService } from './application/iot-main.service';
 import { IotSensorsExtendedService } from './application/iot-sensors-extended.service';
+import { IotTabletService } from './application/iot-tablet.service';
+import { DrizzleIotTabletRepo } from './infrastructure/repositories/drizzle-iot-tablet.repo';
 
 const commandHandlers = [RecordSensorReadingHandler, RegisterDeviceHandler, UpdateDeviceThresholdsHandler];
 const eventHandlers = [AnomalyDetectedHandler];
@@ -68,6 +79,8 @@ const newControllers = [
   EmployeeProductivityController,
   QualityDefectsCameraController,
   IotMainController,
+  IotAlertsController,
+  IotTabletController,
   IotSensorsMainController,
 ];
 
@@ -78,6 +91,7 @@ const newRepositories = [
   DrizzleCameraDashboardRepo,
   DrizzleIotSensorsRepo,
   DrizzleCameraAiRepo,
+  DrizzleIotTabletRepo,
 ];
 
 @Module({
@@ -96,14 +110,17 @@ const newRepositories = [
     { provide: SENSOR_REPO, useClass: DrizzleSensorRepo },
     ...newRepositories,
     IotCameraRepository,
+    { provide: IOT_CAMERA_REPO, useClass: IotCameraRepository },
     IotCameraService,
     IotCameraEventsRepository,
+    { provide: IOT_CAMERA_EVENTS_REPO, useClass: IotCameraEventsRepository },
     IotCameraEventsService,
     CameraAiService,
     CameraExtendedService,
     CameraDashboardService,
     IotMainService,
     IotSensorsExtendedService,
+    IotTabletService,
   ],
   exports: [SENSOR_REPO],
 })
