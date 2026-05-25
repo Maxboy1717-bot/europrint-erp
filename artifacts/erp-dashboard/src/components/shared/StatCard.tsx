@@ -66,20 +66,24 @@ function variantColorClass(variant: StatCardProps["variant"]): string {
 
 /**
  * Normalize the icon prop:
- * - If it's a React component (function), render it with className/style.
- * - If it's already a ReactNode (e.g. `<Users />`), use it directly.
+ * - If it's already a rendered JSX element (`<Users />`), use it directly.
+ * - Otherwise treat it as a component reference (function OR forwardRef object)
+ *   and render it — Lucide icons are forwardRef objects, so `typeof` is not
+ *   reliable here; `React.isValidElement` correctly distinguishes rendered
+ *   JSX from unrendered component references.
  */
 function renderIcon(
   icon: StatCardProps["icon"],
   className?: string,
   style?: React.CSSProperties,
 ): React.ReactNode {
-  if (typeof icon === "function") {
-    const IconComp = icon as React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-    return <IconComp className={className} style={style} />;
+  if (React.isValidElement(icon)) {
+    // Already rendered (e.g. `icon={<Users className="h-4 w-4" />}`)
+    return icon;
   }
-  // Already a ReactNode
-  return icon as React.ReactNode;
+  // Component reference (function or forwardRef like Lucide icons)
+  const IconComp = icon as React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  return <IconComp className={className} style={style} />;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────

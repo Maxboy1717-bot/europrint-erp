@@ -570,5 +570,10 @@
   "reasonRuPlaceholder": "Причина и подробности...",
   "selectHrAdmin": "Выберите HR/Admin",
   "jshd12": "JSHD (12%):",
-  "inps12": "INPS (12%):"
+  "inps12": "INPS (12%):",
+  "faolProvayderlar": "Активные провайдеры",
+  "jamiAiVazifalar": "Всего AI-задач",
+  "umumiyXarajat": "Общие расходы",
+  "xatolikYuzBerdi": "Произошла ошибка",
+  "yakunlanganIntervyular": "Завершённые собеседования"
 }

@@ -6,8 +6,10 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
-const pool = new Pool({
-  connectionString: process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || 'postgresql://postgres:password@helium:5432/heliumdb',
-});
+const connectionString = process.env.NEON_DATABASE_URL ?? process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL yoki NEON_DATABASE_URL muhit o'zgaruvchisi o'rnatilmagan");
+}
+const pool = new Pool({ connectionString });
 
 export const db = drizzle(pool);

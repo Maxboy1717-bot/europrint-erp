@@ -69,7 +69,7 @@ export class GeneralLegacyBController {
       }
 
       const completed = Array.isArray(enrollments)
-        ? enrollments.filter((e: { status: string }) => e.status === 'completed').length
+        ? (enrollments as Array<{ status: string }>).filter(e => e.status === 'completed').length
         : 0;
       const total = Array.isArray(courses) ? courses.length : 0;
       const progress = total > 0 ? Math.round((completed / total) * 100) : 0;

@@ -4,6 +4,7 @@
  */
 
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -31,7 +32,12 @@ const ALLOWED_ORIGINS = [
 export class TerritoryGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(TerritoryGateway.name);
-  private readonly jwtSecret = process.env['JWT_SECRET'] ?? '';
+
+  constructor(private readonly configService: ConfigService) {}
+
+  private get jwtSecret(): string {
+    return this.configService.get<string>('JWT_SECRET') ?? '';
+  }
 
   @WebSocketServer()
   server!: Server;

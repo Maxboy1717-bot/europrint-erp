@@ -5,17 +5,12 @@
 
 import {
   Controller, Get, Post, Delete, Put, Param, Query, Body,
-  UploadedFile, InternalServerErrorException,
+  UploadedFile,
   UseGuards,
 } from '@nestjs/common';
 import { LegacyService } from '../services/legacy.service';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
-
-function assertOk<T>(r: { ok: true; data: T } | { ok: false; error: unknown }): T {
-  if (!r.ok) throw new InternalServerErrorException((r as { ok: false; error: { message?: string } }).error?.message ?? 'Xato');
-  return r.data;
-}
 
 @Controller('legacy')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -25,8 +20,9 @@ export class GeneralLegacyAController {
   // ─── Face Embeddings ────────────────────────────────────────────────────────
 
   @Get('face-embeddings')
-  async getFaceEmbeddings() {
-    return assertOk(await this.svc.getFaceEmbeddings());
+  getFaceEmbeddings() {
+    // Returns Record<string,unknown>[] directly — helper handles errors internally
+    return this.svc.getFaceEmbeddings();
   }
 
   @Delete('face-embeddings/:id')
@@ -38,13 +34,13 @@ export class GeneralLegacyAController {
   // ─── Attendance ─────────────────────────────────────────────────────────────
 
   @Get('attendance')
-  async getAttendance(@Query() _query: Record<string, unknown>) {
-    return assertOk(await this.svc.getAttendance());
+  getAttendance(@Query() _query: Record<string, unknown>) {
+    return this.svc.getAttendance();
   }
 
   @Get('my-attendance')
-  async getMyAttendance(@Param('employeeId') employeeId: string) {
-    return assertOk(await this.svc.getMyAttendance(employeeId));
+  getMyAttendance(@Param('employeeId') employeeId: string) {
+    return this.svc.getMyAttendance(employeeId);
   }
 
   // ─── Papka Orders ───────────────────────────────────────────────────────────
@@ -73,7 +69,7 @@ export class GeneralLegacyAController {
   // ─── File Upload ────────────────────────────────────────────────────────────
 
   @Post('upload')
-  async uploadFile(@UploadedFile() _file: Express.Multer.File) {
+  async uploadFile(@UploadedFile() _file: unknown) {
     return { url: '', filename: '', message: 'Fayl yuklandi' };
   }
 

@@ -23,6 +23,7 @@ const _time = new TashkentTimeService();
 import { AppError, AppErr, Err } from '@common/result';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { I18nService } from 'nestjs-i18n';
 import { IAuthRepo } from '../../domain/repositories/i-auth.repo';
 import { AUTH_REPO } from '../../auth.tokens';
@@ -76,6 +77,7 @@ export class LoginService {
     @Inject(AUTH_REPO) private readonly authRepo: IAuthRepo,
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: IPasswordHasher,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -186,7 +188,7 @@ export class LoginService {
     const accessToken  = this.jwtService.sign(payload, { expiresIn: '8h' });
     const refreshToken = this.jwtService.sign(payload, {
       expiresIn: '30d',
-      secret: process.env['JWT_REFRESH_SECRET'],
+      secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
     });
     return {
       accessToken,
