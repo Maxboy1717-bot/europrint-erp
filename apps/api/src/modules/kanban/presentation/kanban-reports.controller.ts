@@ -115,7 +115,7 @@ export class KanbanReportsController {
               widths: ['*', 60, 60, 60, 60],
               body: [
                 ['Xodim', 'Jami', 'Bajarildi', 'Kechikdi', '%'],
-                ...(team as Record<string, unknown>[]).map(e => [
+                ...(Array.isArray(team) ? (team as Record<string, unknown>[]) : []).map(e => [
                   String(e.fullName ?? ''), String(e.total ?? 0),
                   String(e.completed ?? 0), String(e.overdue ?? 0),
                   String(e.rate ?? 0) + '%',

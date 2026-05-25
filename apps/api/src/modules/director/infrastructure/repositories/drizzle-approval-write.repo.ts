@@ -28,8 +28,7 @@ export class DrizzleApprovalWriteRepo {
   async save(approval: Partial<ApprovalRequest>): Promise<Result<ApprovalRequest>> {
     try {
       const now = _time.now();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await db.insert(approvalRequestsTable).values({ documentType: approval.documentType, documentId: approval.documentId, documentNumber: approval.documentNumber || null, amount: approval.amount?.toString() || '0', currency: approval.currency || 'UZS', status: approval.status || ApprovalStatus.PENDING, requestedBy: approval.requestedBy, approvedBy: approval.approvedBy || null, approvedAt: approval.approvedAt || null, rejectedBy: approval.rejectedBy || null, rejectedAt: approval.rejectedAt || null, rejectionReason: approval.rejectionReason || null, notes: approval.notes || null, createdAt: approval.createdAt || now, updatedAt: approval.updatedAt || now } as any).returning();
+      const result = await db.insert(approvalRequestsTable).values({ documentType: approval.documentType, documentId: approval.documentId, documentNumber: approval.documentNumber || null, amount: approval.amount?.toString() || '0', currency: approval.currency || 'UZS', status: approval.status || ApprovalStatus.PENDING, requestedBy: approval.requestedBy, approvedBy: approval.approvedBy || null, approvedAt: approval.approvedAt || null, rejectedBy: approval.rejectedBy || null, rejectedAt: approval.rejectedAt || null, rejectionReason: approval.rejectionReason || null, notes: approval.notes || null, createdAt: approval.createdAt || now, updatedAt: approval.updatedAt || now } as any).returning(); // eslint-disable-line @typescript-eslint/no-explicit-any
       if (result.length === 0) return Err('Tasdiqlash so\'rovi saqlashida xatolik');
       return Ok(mapApprovalRow(result[0]));
     } catch (err) { this.logger.error(`save error: ${err}`); return Err('Tasdiqlash so\'rovi saqlashida xatolik'); }

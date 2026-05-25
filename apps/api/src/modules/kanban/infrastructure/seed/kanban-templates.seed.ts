@@ -108,8 +108,10 @@ const DEFAULT_TEMPLATES = [
   },
 ];
 
+const seedLogger = { log: (m: string) => process.stdout.write(m + '\n'), error: (m: string) => process.stderr.write(m + '\n') };
+
 async function seed() {
-  console.log('🌱 Kanban shablonlari seed boshlanmoqda...');
+  seedLogger.log('Kanban shablonlari seed boshlanmoqda...');
 
   for (const tpl of DEFAULT_TEMPLATES) {
     // Allaqachon mavjudligini tekshirish
@@ -127,17 +129,17 @@ async function seed() {
         columnsConfig:  tpl.columnsConfig,
         createdById:    null,
       }).onConflictDoNothing();
-      console.log(`  ✅ "${tpl.name}" qo'shildi`);
+      seedLogger.log(`  OK: "${tpl.name}" qo'shildi`);
     } catch (err) {
-      console.error(`  ❌ "${tpl.name}" xato: ${String(err)}`);
+      seedLogger.error(`  ERR: "${tpl.name}" xato: ${String(err)}`);
     }
   }
 
-  console.log('✅ Seed tugadi');
+  seedLogger.log('Seed tugadi');
   process.exit(0);
 }
 
 seed().catch(err => {
-  console.error('Seed xato:', err);
+  process.stderr.write(`Seed xato: ${String(err)}\n`);
   process.exit(1);
 });

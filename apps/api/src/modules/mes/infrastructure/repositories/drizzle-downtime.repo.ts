@@ -115,7 +115,7 @@ export class DrizzleDowntimeRepository {
         reportedBy: event.reportedBy,
         notes: event.notes,
         createdAt: event.createdAt,
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       return Ok(event);
     } catch (error: unknown) {

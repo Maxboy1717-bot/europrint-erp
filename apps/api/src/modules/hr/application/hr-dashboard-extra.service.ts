@@ -111,12 +111,12 @@ export class HrDashboardExtraService {
     if (!r.ok) return r as Result<never, AppError>;
     const rows = (Array.isArray(r.data) ? r.data : []) as Record<string, unknown>[];
     if (rows.length === 0) {
-      return Ok([{ reason: "Ma'lumot yo'q", count: 0, color: COLORS[0]! }]);
+      return Ok([{ reason: "Ma'lumot yo'q", count: 0, color: COLORS[0] ?? '#94a3b8' }]);
     }
     return Ok(rows.map((row, i) => ({
       reason: String(row.reason),
       count: Number(row.count),
-      color: COLORS[i % COLORS.length]!,
+      color: COLORS[i % COLORS.length] ?? '#94a3b8',
     })));
   }
 
