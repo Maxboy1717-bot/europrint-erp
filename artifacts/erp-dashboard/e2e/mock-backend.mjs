@@ -285,6 +285,16 @@ createServer(async (req, res) => {
   }
   json(res, 200, { data: [], total: 0, ok: true });
 
+// Gracefully reject WebSocket upgrade requests so vite's ws proxy does not
+// get EPIPE errors when the mock backend is used in CI (no real NestJS/Socket.IO).
+}).on('upgrade', (req, socket) => {
+  // Send a proper HTTP 426 Upgrade Required rejection and close cleanly.
+  // Without this handler vite's proxy writes to the socket after the server
+  // closes it, producing hundreds of EPIPE/ECONNRESET log lines.
+  socket.write(
+    'HTTP/1.1 426 Upgrade Required\r\nContent-Length: 0\r\nConnection: close\r\n\r\n',
+    () => socket.destroy(),
+  );
 }).listen(PORT, '0.0.0.0', () => {
   process.stdout.write(`[mock-backend] Listening on http://localhost:${PORT}\n`);
 });
