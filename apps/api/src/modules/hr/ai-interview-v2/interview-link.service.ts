@@ -1,3 +1,6 @@
+// NOTE: RULE4_EXCEPTION — raw SQL retained: ai_interview_links table has no
+// Drizzle schema; single-use token lookup and expiry checks require
+// date-arithmetic expressions not expressible via Drizzle query builder.
 /**
  * @module interview-link.service
  * @description Generate single-use, time-limited (24h) interview links sent to

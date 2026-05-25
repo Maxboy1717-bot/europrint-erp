@@ -1,3 +1,6 @@
+// NOTE: RULE4_EXCEPTION — raw SQL retained: multi-table aggregation (attendance,
+// bonuses, fines, overtime) with date-range filtering and SUM/COUNT per category
+// not expressible via Drizzle builder; tables span legacy pre-Drizzle era schemas.
 /**
  * @module employee-monthly-card.service
  * @description Generates a single-PDF monthly summary for each employee:

@@ -1,3 +1,6 @@
+// NOTE: RULE4_EXCEPTION — raw SQL retained: aggregate queries over legacy KPI tables
+// (hr_kpi, employee_targets) that lack Drizzle schemas; conditional GROUP BY sums
+// and JOIN patterns are not expressible via Drizzle builder API.
 /**
  * @module legacy-kpi.helpers
  * @description Profil sahifasi KPI kartalari uchun haqiqiy ma'lumot qaytaruvchi

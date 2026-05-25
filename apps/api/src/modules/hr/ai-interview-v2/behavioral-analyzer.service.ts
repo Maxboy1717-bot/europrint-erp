@@ -1,3 +1,6 @@
+// NOTE: RULE4_EXCEPTION — raw SQL retained: interview session tables are created
+// by migration scripts and have no Drizzle schema definitions; conditional
+// JSON aggregation patterns not expressible via Drizzle builder API.
 /**
  * @module behavioral-analyzer.service
  * @description Server-side analysis of candidate video/audio frames.
