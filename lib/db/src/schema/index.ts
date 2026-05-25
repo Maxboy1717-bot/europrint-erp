@@ -77,3 +77,8 @@ export * from "./chat-schema";
 export * from "./hr-overtime-schema";
 export * from "./mes-schema";
 export * from "./agent-schema";
+// Selective re-export from employees.ts — EmployeeFile/EmploymentContract etc.
+// are already exported via hr-schema chain; only export the core employees table here.
+export { employees, insertEmployeeSchema } from "./employees";
+export type { Employee, InsertEmployee } from "./employees";
+// users, User, InsertUser, insertUserSchema already exported via core-schema → core-users → users
