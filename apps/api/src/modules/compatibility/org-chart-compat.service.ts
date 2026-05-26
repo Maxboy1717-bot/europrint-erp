@@ -1,6 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { db,
-  rawSql} from '@shared/db';
+import { Injectable } from '@nestjs/common';
+import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
 import { safeCall, Result } from '@common/result';
@@ -64,7 +63,7 @@ export function buildTree(
 @Injectable()
 export class OrgChartCompatService {
 
-  async getOrgTree(departmentId?: string): Promise<Result<Record<string, unknown>>>{
+  async getOrgTree(departmentId?: string): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const [depts, emps] = await this.fetchOrgTreeRaw(departmentId);
       const deptList = dbRows(depts);
@@ -76,41 +75,52 @@ export class OrgChartCompatService {
 
   private async fetchOrgTreeRaw(departmentId?: string) {
     const deptFilter = departmentId
-      ? sql`WHERE d.id = ${parseInt(departmentId, 10)}`
+      ? sql`WHERE od.id = ${parseInt(departmentId, 10)}`
       : sql``;
     return Promise.all([
       rawSql(sql`
-        SELECT d.id, d.name, d.name_uz, d.parent_id, d.manager_id,
-               COUNT(e.id) AS employee_count
-        FROM departments d
-        LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
+        SELECT od.id, od.name_uz AS name, od.name_uz, od.parent_id, od.manager_id,
+               COUNT(DISTINCT eod.user_id) AS employee_count
+        FROM org_departments od
+        LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id
+          AND eod.is_primary = true
         ${deptFilter}
-        GROUP BY d.id, d.name, d.name_uz, d.parent_id, d.manager_id
-        ORDER BY d.parent_id NULLS FIRST, d.name
+        GROUP BY od.id, od.name_uz, od.parent_id, od.manager_id
+        ORDER BY od.parent_id NULLS FIRST, od.name_uz
       `),
       rawSql(sql`
         SELECT e.id, e.first_name || ' ' || e.last_name AS full_name,
-               e.department_id, e.photo_url, e.employee_code,
-               COALESCE(p.name, p.name_uz) AS position_name
+               primary_org.dept_id AS department_id, e.photo_url, e.employee_code,
+               COALESCE(primary_org.pos_name, '') AS position_name
         FROM employees e
-        LEFT JOIN positions p ON p.id = e.position_id
-        WHERE e.status = 'active'
+        JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        JOIN LATERAL (
+          SELECT eod.org_department_id AS dept_id,
+                 COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
+        WHERE e.status = 'active' AND e.deleted_at IS NULL
         ORDER BY e.first_name
       `),
     ]);
   }
 
-  async getOrgFlat(_departmentId?: string){
+  async getOrgFlat(_departmentId?: string) {
     return safeCall(async () => {
-    const r = await rawSql(sql`
-      SELECT d.id, d.name, d.name_uz, d.parent_id, d.manager_id,
-             COUNT(e.id) AS employee_count
-      FROM departments d
-      LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
-      GROUP BY d.id, d.name, d.name_uz, d.parent_id, d.manager_id
-      ORDER BY d.name
-    `);
-    return { ok: true, data: dbRows(r) };
-  
-    });}
+      const r = await rawSql(sql`
+        SELECT od.id, od.name_uz AS name, od.name_uz, od.parent_id, od.manager_id,
+               COUNT(DISTINCT eod.user_id) AS employee_count
+        FROM org_departments od
+        LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id
+          AND eod.is_primary = true
+        GROUP BY od.id, od.name_uz, od.parent_id, od.manager_id
+        ORDER BY od.name_uz
+      `);
+      return { ok: true, data: dbRows(r) };
+    });
+  }
 }
