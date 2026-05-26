@@ -493,5 +493,17 @@
     "parallelJarayonlar": "Параллел Жараёнлар",
     "yetkazishKalk": "Йетказиш Калк.",
     "kpiOgish": "KPI Оғиш"
-  }
+  },
+  "CandidateChecklist.cvQabulQilindiVaRoyxatga": "CV қабул қилинди ва рўйхатга киритилди",
+  "CandidateChecklist.cvSkriningOtkazildiMaterial52": "CV скрининг ўтказилди (Материал №52)",
+  "CandidateChecklist.telefonSuhbatiOtkazildiMaterial53": "Телефон суҳбати ўтказилди (Материал №53)",
+  "CandidateChecklist.mahsuldorlikAnketaToldirildi": "Маҳсулдорлик анкета тўлдирилди",
+  "CandidateChecklist.fonTekshiruviIjtimoiyTarmoqlarMat": "Фон текшируви (ижтимоий тармоқлар, Мат. №54)",
+  "CandidateChecklist.asosiySuhbatOtkazildiMaterial11": "Асосий суҳбат ўтказилди (Материал №11)",
+  "CandidateChecklist.hrCapitalToolTestOtkazildi": "HR Капитал TOOL TEST ўтказилди (А-Ж)",
+  "CandidateChecklist.aiSuhbatErpTizimidaOtkazildi": "AI Суҳбат (ERP тизимида) ўтказилди",
+  "CandidateChecklist.material46MahsuldorlikShakliToldirildi": "Материал №46 — Маҳсулдорлик шакли тўлдирилди",
+  "CandidateChecklist.tavsiyalarTekshirildiReferenceCheck": "Тавсиялар текширилди (Референке чекк)",
+  "CandidateChecklist.taklifYuborildiOgzakiTaklifBerildi": "Таклиф юборилди / оғзаки таклиф берилди",
+  "CandidateChecklist.30KunBaholashSuhbatiOtkazildi": "30-кун баҳолаш суҳбати ўтказилди"
 }

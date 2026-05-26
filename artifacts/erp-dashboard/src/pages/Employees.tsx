@@ -45,11 +45,10 @@ interface EmployeeRow {
   hireDate: string | null;
   address: string | null;
   attestationDate: string | null;
+  /** org_departments.id — used as filter key */
+  orgDepartmentId: string | null;
   orgDepartmentName: string | null;
-  departmentName: string | null;
   orgPositionName: string | null;
-  positionName: string | null;
-  departmentId: string | null;
   phone: string | null;
   coursesTotal: number | null;
   rating: number | null;
@@ -130,7 +129,7 @@ export default function Employees() {
           !user.phone?.toLowerCase().includes(s)
         ) return false;
       }
-      if (departmentFilter !== "all" && user.departmentId !== departmentFilter) {
+      if (departmentFilter !== "all" && user.orgDepartmentId !== departmentFilter) {
         return false;
       }
       return true;
@@ -143,9 +142,9 @@ export default function Employees() {
 
   const transformedEmployees: Employee[] = (Array.isArray(employees) ? employees : []).map(
     (emp) => {
-      const deptName = emp.orgDepartmentName || emp.departmentName;
-      const posName = emp.orgPositionName || emp.positionName;
-      const orgStructure = deptName && posName ? `${deptName} → ${posName}` : undefined;
+      const deptName = emp.orgDepartmentName;
+      const posName = emp.orgPositionName;
+      const orgStructure = deptName && posName ? `${deptName} → ${posName}` : deptName || undefined;
       return {
         id: emp.id,
         fullName: emp.fullName || "",

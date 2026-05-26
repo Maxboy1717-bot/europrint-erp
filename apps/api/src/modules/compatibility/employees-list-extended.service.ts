@@ -3,12 +3,12 @@
  *
  * Maqsad: `Employees.tsx` /api/employees ga so'rov yuboradi va kutadi:
  *   id, fullName, employeeId, telegramChatId, birthDate, hireDate, address,
- *   attestationDate, orgDepartmentName, departmentName, orgPositionName,
- *   positionName, departmentId, phone, coursesTotal, rating, bonusAmount,
+ *   attestationDate, orgDepartmentName, orgPositionName,
+ *   orgDepartmentId, phone, coursesTotal, rating, bonusAmount,
  *   status, failedTests, disciplineCount, profileImageUrl
  *
- * Ushbu service `employees + departments + positions + org_departments + org_functions`
- * JOIN qilib barcha kerakli maydonlarni alias bilan qaytaradi.
+ * Ushbu service `employees + employee_org_departments + org_departments + org_functions`
+ * LATERAL JOIN qilib barcha kerakli maydonlarni alias bilan qaytaradi.
  *
  * Statistik maydonlar (coursesTotal, rating, ...) hozircha 0 — kelajakda LMS, KPI,
  * payroll modullari sub-query orqali qo'shadi.
@@ -41,10 +41,8 @@ export interface EmployeeListRow extends DbRow {
   telegramChatId: string | null;
   profileImageUrl: string | null;
   attestationDate: string | null;
-  departmentId: string | null;
-  positionId: string | null;
-  departmentName: string | null;
-  positionName: string | null;
+  /** org_departments.id — used as filter key in frontend dept select */
+  orgDepartmentId: string | null;
   orgDepartmentName: string | null;
   orgPositionName: string | null;
   coursesTotal: number;
@@ -73,7 +71,10 @@ export class EmployeesListExtendedService {
       const lim = Math.min(safeInt(limit, DEFAULT_LIMIT), MAX_QUERY_LIMIT);
       const off = safeInt(offset, DEFAULT_OFFSET);
       const statusFilter = status ? sql`AND e.status = ${status}` : sql``;
-      const deptFilter = departmentId ? sql`AND e.department_id = ${safeInt(departmentId, 0)}` : sql``;
+      // Filter by org_departments.id (new system), not legacy department_id
+      const deptFilter = departmentId
+        ? sql`AND primary_org.dept_id = ${String(safeInt(departmentId, 0))}`
+        : sql``;
       const searchPattern = search ? `%${search}%` : null;
       const searchFilter = searchPattern
         ? sql`AND (
@@ -98,24 +99,34 @@ export class EmployeesListExtendedService {
           e.telegram_chat_id                                             AS "telegramChatId",
           e.photo_url                                                    AS "profileImageUrl",
           NULL::text                                                     AS "attestationDate",
-          e.department_id::text                                          AS "departmentId",
-          e.position_id::text                                            AS "positionId",
-          d.name_uz                                                      AS "departmentName",
-          COALESCE(p.name_uz, '')                                        AS "positionName",
-          NULL::text                                                     AS "orgDepartmentName",
-          NULL::text                                                     AS "orgPositionName",
+          primary_org.dept_id                                            AS "orgDepartmentId",
+          primary_org.dept_name                                          AS "orgDepartmentName",
+          primary_org.pos_name                                           AS "orgPositionName",
           0                                                              AS "coursesTotal",
           0                                                              AS "rating",
           0                                                              AS "bonusAmount",
           0                                                              AS "failedTests",
           0                                                              AS "disciplineCount"
         FROM employees e
-        LEFT JOIN departments d ON d.id = e.department_id
-        LEFT JOIN positions p   ON p.id = e.position_id
+        -- Resolve user_id for this employee (users.employee_id FK)
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        -- Primary org department + position via junction table
+        LEFT JOIN LATERAL (
+          SELECT
+            eod.org_department_id::text        AS dept_id,
+            od.name_uz                         AS dept_name,
+            COALESCE(of2.position_name, '')    AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         WHERE e.deleted_at IS NULL
           ${statusFilter}
-          ${deptFilter}
           ${searchFilter}
+          ${deptFilter}
         ORDER BY e.first_name ASC, e.last_name ASC
         LIMIT ${lim} OFFSET ${off}
       `);
@@ -155,17 +166,25 @@ export class EmployeesListExtendedService {
         e.telegram_chat_id                                             AS "telegramChatId",
         e.photo_url                                                    AS "profileImageUrl",
         NULL::text                                                     AS "attestationDate",
-        e.department_id::text                                          AS "departmentId",
-        e.position_id::text                                            AS "positionId",
-        COALESCE(d.name_uz, d.name)                                    AS "departmentName",
-        COALESCE(p.name_uz, p.name, '')                                AS "positionName",
-        NULL::text                                                     AS "orgDepartmentName",
-        NULL::text                                                     AS "orgPositionName",
+        primary_org.dept_id                                            AS "orgDepartmentId",
+        primary_org.dept_name                                          AS "orgDepartmentName",
+        primary_org.pos_name                                           AS "orgPositionName",
         0 AS "coursesTotal", 0 AS "rating", 0 AS "bonusAmount",
         0 AS "failedTests", 0 AS "disciplineCount"
       FROM employees e
-      LEFT JOIN departments d ON d.id = e.department_id
-      LEFT JOIN positions p   ON p.id = e.position_id
+      LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+      LEFT JOIN LATERAL (
+        SELECT
+          eod.org_department_id::text        AS dept_id,
+          od.name_uz                         AS dept_name,
+          COALESCE(of2.position_name, '')    AS pos_name
+        FROM employee_org_departments eod
+        JOIN org_departments od ON od.id = eod.org_department_id
+        LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+        WHERE eod.user_id = u.id AND eod.is_primary = true
+        ORDER BY eod.assigned_at DESC
+        LIMIT 1
+      ) primary_org ON true
       WHERE e.id = ${numericId} AND e.deleted_at IS NULL
       LIMIT 1
     `);
@@ -182,7 +201,15 @@ export class EmployeesListExtendedService {
   ): Promise<Result<number, AppError>> {
     return safeCall(async () => {
       const statusFilter = status ? sql`AND e.status = ${status}` : sql``;
-      const deptFilter = departmentId ? sql`AND e.department_id = ${safeInt(departmentId, 0)}` : sql``;
+      // Filter by org_departments.id via junction, not legacy department_id
+      const deptFilter = departmentId
+        ? sql`AND EXISTS (
+            SELECT 1 FROM users u2
+            JOIN employee_org_departments eod2 ON eod2.user_id = u2.id AND eod2.is_primary = true
+            WHERE u2.employee_id = e.id AND u2.deleted_at IS NULL
+              AND eod2.org_department_id = ${safeInt(departmentId, 0)}
+          )`
+        : sql``;
       const searchPattern = search ? `%${search}%` : null;
       const searchFilter = searchPattern
         ? sql`AND (

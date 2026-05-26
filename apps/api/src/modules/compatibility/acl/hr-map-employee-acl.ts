@@ -21,9 +21,9 @@ export interface LegacyHrMapEmployeeRow {
   full_name?: unknown;
   status?: unknown;
   employee_code?: unknown;
-  department_name?: unknown;
-  position_name?: unknown;
-  department_id?: unknown;
+  org_department_name?: unknown;
+  org_position_name?: unknown;
+  org_department_id?: unknown;
 }
 
 export interface HrMapEmployeeDto {
@@ -31,9 +31,9 @@ export interface HrMapEmployeeDto {
   fullName: string;
   status: string;
   employeeCode: string | null;
-  departmentId: string | null;
-  departmentName: string | null;
-  positionName: string | null;
+  orgDepartmentId: string | null;
+  orgDepartmentName: string | null;
+  orgPositionName: string | null;
 }
 
 function toStr(v: unknown): string | null {
@@ -56,9 +56,9 @@ export class HrMapEmployeeAclTranslator
       fullName: toStr(legacy.full_name) ?? '',
       status: toStr(legacy.status) ?? 'active',
       employeeCode: toStr(legacy.employee_code),
-      departmentId: toStr(legacy.department_id),
-      departmentName: toStr(legacy.department_name),
-      positionName: toStr(legacy.position_name),
+      orgDepartmentId: toStr(legacy.org_department_id),
+      orgDepartmentName: toStr(legacy.org_department_name),
+      orgPositionName: toStr(legacy.org_position_name),
     });
   }
 
@@ -68,9 +68,9 @@ export class HrMapEmployeeAclTranslator
       full_name: domain.fullName,
       status: domain.status,
       employee_code: domain.employeeCode,
-      department_id: domain.departmentId,
-      department_name: domain.departmentName,
-      position_name: domain.positionName,
+      org_department_id: domain.orgDepartmentId,
+      org_department_name: domain.orgDepartmentName,
+      org_position_name: domain.orgPositionName,
     };
   }
 }

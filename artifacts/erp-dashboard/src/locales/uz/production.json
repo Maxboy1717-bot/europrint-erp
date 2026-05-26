@@ -454,5 +454,17 @@
   "ushbuSifatParametriniOchirishniTasdiqlaysizmi": "Ushbu sifat parametrini ochirishni tasdiqlaysizmi",
   "ushbuXodimTayinlashiniOchirishniTasdiqlaysizmi": "Ushbu xodim tayinlashini ochirishni tasdiqlaysizmi",
   "yangiBuyurtma": "Yangi buyurtma",
-  "untitled": "Картонная коробка"
+  "untitled": "Картонная коробка",
+  "CandidateChecklist.cvQabulQilindiVaRoyxatga": "CV qabul qilindi va ro'yxatga kiritildi",
+  "CandidateChecklist.cvSkriningOtkazildiMaterial52": "CV skrining o'tkazildi (Material №52)",
+  "CandidateChecklist.telefonSuhbatiOtkazildiMaterial53": "Telefon suhbati o'tkazildi (Material №53)",
+  "CandidateChecklist.mahsuldorlikAnketaToldirildi": "Mahsuldorlik anketa to'ldirildi",
+  "CandidateChecklist.fonTekshiruviIjtimoiyTarmoqlarMat": "Fon tekshiruvi (ijtimoiy tarmoqlar, Mat. №54)",
+  "CandidateChecklist.asosiySuhbatOtkazildiMaterial11": "Asosiy suhbat o'tkazildi (Material №11)",
+  "CandidateChecklist.hrCapitalToolTestOtkazildi": "HR Capital TOOL TEST o'tkazildi (A-J)",
+  "CandidateChecklist.aiSuhbatErpTizimidaOtkazildi": "AI Suhbat (ERP tizimida) o'tkazildi",
+  "CandidateChecklist.material46MahsuldorlikShakliToldirildi": "Material №46 — Mahsuldorlik shakli to'ldirildi",
+  "CandidateChecklist.tavsiyalarTekshirildiReferenceCheck": "Tavsiyalar tekshirildi (Reference check)",
+  "CandidateChecklist.taklifYuborildiOgzakiTaklifBerildi": "Taklif yuborildi / og'zaki taklif berildi",
+  "CandidateChecklist.30KunBaholashSuhbatiOtkazildi": "30-kun baholash suhbati o'tkazildi"
 }

@@ -659,5 +659,26 @@
     "kutilmoqda": "Кутилмоқда",
     "tasdiqlangan": "Тасдиқланган",
     "ortacha": "Ўртача"
-  }
+  },
+  ".alertlar": "Алертлар",
+  ".kadrlar": "Кадрлар",
+  ".xavfsizlik": "Хавфсизлик",
+  ".ogohlantirish": "Огоҳлантириш",
+  ".malumot": "Маълумот",
+  ".orta": "Ўрта",
+  "HRDashboard.hujjatOqimi": "Ҳужжат Оқими",
+  "HRDashboard.kunlikHisobot": "Кунлик Ҳисобот",
+  "HRDashboard.pipRejalar": "PIP Режалар",
+  "HRDashboard.enpsSorov": "еНПС Сўров",
+  "HRDashboard.malakalarMatritsasi": "Малакалар Матрицаси",
+  "MarketHeatBadge.tsx.qizginBozor": "Қизғин бозор",
+  "MarketHeatBadge.tsx.ortachaBozor": "Ўртача бозор",
+  "qadamTartibi": "Қадам тартиби",
+  "marshrutlashTuri": "Маршрутлаш тури",
+  "darajaYuqoriga": "Даража (юқорига)",
+  "masalanHrMenejerDirektorBosh": "Масалан: HR менежер, директор, бош...",
+  "muddatSoat": "Муддат (соат)",
+  "k1EslatmaSoatQolgunicha": "1-еслатма (неча соат қолганда)",
+  "k2EslatmaSoatQolgunicha": "2-еслатма (неча соат қолганда)",
+  "haliMarshrutlashQoidasiYoqYuqoridagi": "Ҳали маршрутлаш қоидаси йўқ. Юқоридаги шакл орқали қўшинг."
 }

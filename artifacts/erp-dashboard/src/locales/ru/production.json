@@ -454,5 +454,17 @@
   "ushbuSifatParametriniOchirishniTasdiqlaysizmi": "Подтверждаете удаление этого параметра качества?",
   "ushbuXodimTayinlashiniOchirishniTasdiqlaysizmi": "Подтверждаете удаление назначения этого сотрудника?",
   "yangiBuyurtma": "Новый заказ",
-  "untitled": "Картонная коробка"
+  "untitled": "Картонная коробка",
+  "CandidateChecklist.cvQabulQilindiVaRoyxatga": "CV принято и зарегистрировано",
+  "CandidateChecklist.cvSkriningOtkazildiMaterial52": "Проведён скрининг CV (Материал №52)",
+  "CandidateChecklist.telefonSuhbatiOtkazildiMaterial53": "Проведено телефонное интервью (Материал №53)",
+  "CandidateChecklist.mahsuldorlikAnketaToldirildi": "Анкета продуктивности заполнена",
+  "CandidateChecklist.fonTekshiruviIjtimoiyTarmoqlarMat": "Фоновая проверка (соцсети, Мат. №54)",
+  "CandidateChecklist.asosiySuhbatOtkazildiMaterial11": "Проведено основное собеседование (Материал №11)",
+  "CandidateChecklist.hrCapitalToolTestOtkazildi": "Проведён HR Capital TOOL TEST (A-J)",
+  "CandidateChecklist.aiSuhbatErpTizimidaOtkazildi": "Проведено AI-собеседование (в системе ERP)",
+  "CandidateChecklist.material46MahsuldorlikShakliToldirildi": "Материал №46 — Форма продуктивности заполнена",
+  "CandidateChecklist.tavsiyalarTekshirildiReferenceCheck": "Рекомендации проверены (Reference check)",
+  "CandidateChecklist.taklifYuborildiOgzakiTaklifBerildi": "Оффер отправлен / устный оффер сделан",
+  "CandidateChecklist.30KunBaholashSuhbatiOtkazildi": "Проведено оценочное интервью 30-го дня"
 }

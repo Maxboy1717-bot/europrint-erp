@@ -26,10 +26,10 @@ export interface LegacyEmployeeListRow {
   email?: unknown;
   phone?: unknown;
   status?: unknown;
-  department_id?: unknown;
-  department_name?: unknown;
-  position_id?: unknown;
-  position_name?: unknown;
+  /** org_departments.id — new system */
+  org_department_id?: unknown;
+  org_department_name?: unknown;
+  org_position_name?: unknown;
   salary?: unknown;
   hire_date?: unknown;
   created_at?: unknown;
@@ -42,10 +42,10 @@ export interface EmployeeListItemDto {
   email: string | null;
   phone: string | null;
   status: string;
-  departmentId: string | null;
-  departmentName: string | null;
-  positionId: string | null;
-  positionName: string | null;
+  /** org_departments.id — used as filter key */
+  orgDepartmentId: string | null;
+  orgDepartmentName: string | null;
+  orgPositionName: string | null;
   salary: number | null;
   hireDate: Date | null;
   createdAt: Date | null;
@@ -98,10 +98,9 @@ export class EmployeeListAclTranslator
       email: toStr(legacy.email),
       phone: toStr(legacy.phone),
       status: toStr(legacy.status) ?? 'active',
-      departmentId: toStr(legacy.department_id),
-      departmentName: toStr(legacy.department_name),
-      positionId: toStr(legacy.position_id),
-      positionName: toStr(legacy.position_name),
+      orgDepartmentId: toStr(legacy.org_department_id),
+      orgDepartmentName: toStr(legacy.org_department_name),
+      orgPositionName: toStr(legacy.org_position_name),
       salary: toMoney(legacy.salary),
       hireDate: toDate(legacy.hire_date),
       createdAt: toDate(legacy.created_at),
@@ -116,10 +115,9 @@ export class EmployeeListAclTranslator
       email: domain.email,
       phone: domain.phone,
       status: domain.status,
-      department_id: domain.departmentId,
-      department_name: domain.departmentName,
-      position_id: domain.positionId,
-      position_name: domain.positionName,
+      org_department_id: domain.orgDepartmentId,
+      org_department_name: domain.orgDepartmentName,
+      org_position_name: domain.orgPositionName,
       salary: domain.salary != null ? String(domain.salary) : null,
       hire_date: domain.hireDate ? domain.hireDate.toISOString() : null,
       created_at: domain.createdAt ? domain.createdAt.toISOString() : null,

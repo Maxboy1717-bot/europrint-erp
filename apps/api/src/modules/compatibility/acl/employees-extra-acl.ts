@@ -33,10 +33,9 @@ export interface LegacyEmployeeExtraRow {
   phone?: unknown;
   hire_date?: unknown;
   photo_url?: unknown;
-  department_id?: unknown;
-  position_id?: unknown;
-  department_name?: unknown;
-  position_name?: unknown;
+  org_department_id?: unknown;
+  org_department_name?: unknown;
+  org_position_name?: unknown;
 }
 
 export interface EmployeeExtraDto {
@@ -50,10 +49,9 @@ export interface EmployeeExtraDto {
   phone: string | null;
   hireDate: Date | null;
   photoUrl: string | null;
-  departmentId: string | null;
-  positionId: string | null;
-  departmentName: string | null;
-  positionName: string | null;
+  orgDepartmentId: string | null;
+  orgDepartmentName: string | null;
+  orgPositionName: string | null;
 }
 
 function toStr(v: unknown): string | null {
@@ -94,10 +92,9 @@ export class EmployeesExtraAclTranslator
       phone: toStr(legacy.phone),
       hireDate: toDate(legacy.hire_date),
       photoUrl: toStr(legacy.photo_url),
-      departmentId: toStr(legacy.department_id),
-      positionId: toStr(legacy.position_id),
-      departmentName: toStr(legacy.department_name),
-      positionName: toStr(legacy.position_name),
+      orgDepartmentId: toStr(legacy.org_department_id),
+      orgDepartmentName: toStr(legacy.org_department_name),
+      orgPositionName: toStr(legacy.org_position_name),
     });
   }
 
@@ -112,10 +109,9 @@ export class EmployeesExtraAclTranslator
       phone: domain.phone,
       hire_date: domain.hireDate ? domain.hireDate.toISOString() : null,
       photo_url: domain.photoUrl,
-      department_id: domain.departmentId,
-      position_id: domain.positionId,
-      department_name: domain.departmentName,
-      position_name: domain.positionName,
+      org_department_id: domain.orgDepartmentId,
+      org_department_name: domain.orgDepartmentName,
+      org_position_name: domain.orgPositionName,
     };
   }
 }
