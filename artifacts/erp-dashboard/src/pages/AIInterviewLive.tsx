@@ -85,6 +85,7 @@ export default function AIInterviewLive() {
   }, []);
 
   // ── UI ────────────────────────────────────────────────────────────────
+  const safeTranscript = Array.isArray(transcript) ? transcript : [];
   return (
     <div style={{
       minHeight: '100vh', background: '#0a0a0a', color: '#fff',
@@ -135,9 +136,9 @@ export default function AIInterviewLive() {
             </div>
 
             <div style={{ marginTop: 16, maxHeight: 200, overflowY: 'auto', background: '#1f2937', padding: 16, borderRadius: 8 }}>
-              {transcript.length === 0
+              {safeTranscript.length === 0
                 ? <p style={{ color: '#94a3b8', fontSize: 13 }}>{tLabel('common.suhbatTranscriptiShuYerdaPaydoBoladi', "Suhbat transcripti shu yerda paydo bo'ladi...")}</p>
-                : transcript.map((line, i) => (
+                : safeTranscript.map((line, i) => (
                     <div key={i} style={{ marginBottom: 6, fontSize: 13 }}>{line}</div>
                   ))
               }
