@@ -24,6 +24,9 @@ export interface Employee {
   telegramChatId?: string;
   positionId?: string;
   departmentId?: string;
+  orgDepartmentId?: string;
+  orgDepartmentName?: string;
+  orgPositionName?: string;
   managerId?: string;
   managerName?: string;
   managerEmployeeId?: string;
@@ -57,6 +60,8 @@ export interface Employee {
     employeeId: string;
     positionName?: string;
     departmentName?: string;
+    orgPositionName?: string;
+    orgDepartmentName?: string;
     status: string;
     profileImageUrl?: string | null;
   }>;

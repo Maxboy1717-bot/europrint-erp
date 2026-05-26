@@ -19,20 +19,33 @@ export class HrMapCompatService {
 
   async getMapEmployees(departmentId?: string, status?: string): Promise<Result<object, AppError>> {
     return safeCall(async () => {
-    const deptFilter = departmentId ? sql`AND e.department_id = ${si(departmentId)}` : sql``;
+    const deptFilter = departmentId ? sql`AND primary_org.dept_id = ${String(si(departmentId))}` : sql``;
     const statusFilter = status ? sql`AND e.status = ${status}` : sql``;
     const r = await rawSql(sql`
       SELECT e.id, e.first_name || ' ' || e.last_name AS full_name, e.status,
-             e.employee_code, d.name AS department_name,
-             COALESCE(p.name, p.name_uz) AS position_name, d.id AS department_id
+             e.employee_code,
+             primary_org.dept_name AS org_department_name,
+             primary_org.pos_name  AS org_position_name,
+             primary_org.dept_id   AS org_department_id
       FROM employees e
-      LEFT JOIN departments d ON d.id = e.department_id
-      LEFT JOIN positions p ON p.id = e.position_id
+      LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+      LEFT JOIN LATERAL (
+        SELECT
+          eod.org_department_id::text        AS dept_id,
+          od.name_uz                         AS dept_name,
+          COALESCE(of2.position_name, '')    AS pos_name
+        FROM employee_org_departments eod
+        JOIN org_departments od ON od.id = eod.org_department_id
+        LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+        WHERE eod.user_id = u.id AND eod.is_primary = true
+        ORDER BY eod.assigned_at DESC
+        LIMIT 1
+      ) primary_org ON true
       WHERE e.status != 'terminated' ${deptFilter} ${statusFilter}
-      ORDER BY d.name, e.first_name LIMIT ${MAX_LARGE_QUERY_LIMIT}
+      ORDER BY primary_org.dept_name, e.first_name LIMIT ${MAX_LARGE_QUERY_LIMIT}
     `);
     return dbRows(r);
-  
+
     });}
 
   async getMapStats(){
@@ -41,14 +54,16 @@ export class HrMapCompatService {
       rawSql(sql`
         SELECT COUNT(*) AS total_employees,
                COUNT(*) FILTER (WHERE e.status = 'active') AS active_employees,
-               COUNT(DISTINCT e.department_id) AS total_departments
+               (SELECT COUNT(DISTINCT eod2.org_department_id) FROM employee_org_departments eod2)::int AS total_departments
         FROM employees e WHERE e.status != 'terminated'
       `),
       rawSql(sql`
-        SELECT d.id, d.name AS department_name, COUNT(e.id) AS employee_count
-        FROM departments d
-        LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
-        GROUP BY d.id, d.name ORDER BY employee_count DESC
+        SELECT od.id::text AS id, od.name_uz AS org_department_name, COUNT(DISTINCT e.id) AS employee_count
+        FROM org_departments od
+        LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true
+        LEFT JOIN users u2 ON u2.id = eod.user_id AND u2.deleted_at IS NULL
+        LEFT JOIN employees e ON e.id = u2.employee_id AND e.status = 'active'
+        GROUP BY od.id, od.name_uz ORDER BY employee_count DESC
       `),
     ]);
     const statsRow = dbRows(r1)[0] ?? {};
@@ -58,20 +73,22 @@ export class HrMapCompatService {
       totalDepartments: statsRow['total_departments'] ?? 0,
       byDepartment: dbRows(r2),
     };
-  
+
     });}
 
   async getTransportGroups(){
     return safeCall(async () => {
     const r = await rawSql(sql`
-      SELECT d.id, d.name AS department_name, COUNT(e.id) AS employee_count,
+      SELECT od.id::text AS id, od.name_uz AS org_department_name, COUNT(DISTINCT e.id) AS employee_count,
              STRING_AGG(e.first_name || ' ' || e.last_name, ', ' ORDER BY e.first_name) AS employees
-      FROM departments d
-      LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
-      GROUP BY d.id, d.name ORDER BY d.name LIMIT 50
+      FROM org_departments od
+      LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true
+      LEFT JOIN users u ON u.id = eod.user_id AND u.deleted_at IS NULL
+      LEFT JOIN employees e ON e.id = u.employee_id AND e.status = 'active'
+      GROUP BY od.id, od.name_uz ORDER BY od.name_uz LIMIT 50
     `);
     return dbRows(r);
-  
+
     });}
 
   async getCourses(status?: string, limit = '50'){
@@ -131,40 +148,57 @@ export class HrMapCompatService {
     const r = await rawSql(sql`
       SELECT ss.id, ss.employee_id, ss.shift_date, ss.shift_type,
              ss.start_time, ss.end_time, ss.status,
-             e.first_name || ' ' || e.last_name AS employee_name, d.name AS department_name
+             e.first_name || ' ' || e.last_name AS employee_name,
+             primary_org.dept_name AS org_department_name
       FROM shift_schedules ss
       JOIN employees e ON e.id = ss.employee_id
-      LEFT JOIN departments d ON d.id = e.department_id
+      LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+      LEFT JOIN LATERAL (
+        SELECT
+          eod.org_department_id::text        AS dept_id,
+          od.name_uz                         AS dept_name,
+          COALESCE(of2.position_name, '')    AS pos_name
+        FROM employee_org_departments eod
+        JOIN org_departments od ON od.id = eod.org_department_id
+        LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+        WHERE eod.user_id = u.id AND eod.is_primary = true
+        ORDER BY eod.assigned_at DESC
+        LIMIT 1
+      ) primary_org ON true
       WHERE ss.shift_date >= NOW()::date - INTERVAL '7 days' ${statusFilter}
       ORDER BY ss.shift_date DESC LIMIT ${lim}
     `);
     return dbRows(r);
-  
+
     });}
 
   async getDepartments(){
     return safeCall(async () => {
     const r = await rawSql(sql`
-      SELECT d.id, d.name, COUNT(e.id) AS employee_count
-      FROM departments d
-      LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
-      GROUP BY d.id, d.name ORDER BY d.name
+      SELECT od.id::text AS id, od.name_uz AS name, COUNT(DISTINCT e.id) AS employee_count
+      FROM org_departments od
+      LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true
+      LEFT JOIN users u ON u.id = eod.user_id AND u.deleted_at IS NULL
+      LEFT JOIN employees e ON e.id = u.employee_id AND e.status = 'active'
+      GROUP BY od.id, od.name_uz ORDER BY od.name_uz
     `);
     return dbRows(r);
-  
+
     });}
 
   async getHeatmap(metric?: string){
     return safeCall(async () => {
-    const col = metric === 'salary' ? sql`COALESCE(AVG(e.salary), 0)` : sql`COUNT(e.id)`;
+    const col = metric === 'salary' ? sql`COALESCE(AVG(e.salary), 0)` : sql`COUNT(DISTINCT e.id)`;
     const r = await rawSql(sql`
-      SELECT d.id, d.name AS department_name, ${col} AS value
-      FROM departments d
-      LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
-      GROUP BY d.id, d.name ORDER BY value DESC
+      SELECT od.id::text AS id, od.name_uz AS org_department_name, ${col} AS value
+      FROM org_departments od
+      LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true
+      LEFT JOIN users u ON u.id = eod.user_id AND u.deleted_at IS NULL
+      LEFT JOIN employees e ON e.id = u.employee_id AND e.status = 'active'
+      GROUP BY od.id, od.name_uz ORDER BY value DESC
     `);
     return dbRows(r);
-  
+
     });}
 
   async getAttendanceToday(){
@@ -194,20 +228,31 @@ export class HrMapCompatService {
 
   async filterMap(body: Record<string, unknown>){
     return safeCall(async () => {
-    const { departmentId, status, positionId } = body;
-    const deptFilter = departmentId ? sql`AND e.department_id = ${si(departmentId)}` : sql``;
+    const { departmentId, status } = body;
+    const deptFilter = departmentId ? sql`AND primary_org.dept_id = ${String(si(departmentId))}` : sql``;
     const statusFilter = status ? sql`AND e.status = ${status}` : sql``;
-    const posFilter = positionId ? sql`AND e.position_id = ${si(positionId)}` : sql``;
     const r = await rawSql(sql`
       SELECT e.id, e.first_name || ' ' || e.last_name AS full_name, e.status,
-             d.name AS department_name, p.name AS position_name
+             primary_org.dept_name AS org_department_name,
+             primary_org.pos_name  AS org_position_name
       FROM employees e
-      LEFT JOIN departments d ON d.id = e.department_id
-      LEFT JOIN positions p ON p.id = e.position_id
-      WHERE e.status != 'terminated' ${deptFilter} ${statusFilter} ${posFilter}
-      ORDER BY d.name, e.first_name LIMIT ${MAX_LARGE_QUERY_LIMIT}
+      LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+      LEFT JOIN LATERAL (
+        SELECT
+          eod.org_department_id::text        AS dept_id,
+          od.name_uz                         AS dept_name,
+          COALESCE(of2.position_name, '')    AS pos_name
+        FROM employee_org_departments eod
+        JOIN org_departments od ON od.id = eod.org_department_id
+        LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+        WHERE eod.user_id = u.id AND eod.is_primary = true
+        ORDER BY eod.assigned_at DESC
+        LIMIT 1
+      ) primary_org ON true
+      WHERE e.status != 'terminated' ${deptFilter} ${statusFilter}
+      ORDER BY primary_org.dept_name, e.first_name LIMIT ${MAX_LARGE_QUERY_LIMIT}
     `);
     return dbRows(r);
-  
+
     });}
 }

@@ -10,7 +10,7 @@ import { db , runQuery } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
 import {
-  hrEmployees, hrPositions, hrDepartments,
+  hrEmployees,
   discipline_records, pip_plans, enps_surveys, shiftSchedules,
   hr_daily_reports,
 } from '@shared/db';
@@ -28,10 +28,17 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         SELECT e.id,
                COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
                e.birth_date,
-               p.name AS position, d.name AS department
+               primary_org.pos_name AS position, primary_org.dept_name AS department
         FROM employees e
-        LEFT JOIN positions p ON p.id = e.position_id
-        LEFT JOIN departments d ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC LIMIT 1
+        ) primary_org ON true
         WHERE e.status = 'active'
           AND e.birth_date IS NOT NULL
           AND EXTRACT(MONTH FROM e.birth_date) = EXTRACT(MONTH FROM NOW())
@@ -48,13 +55,20 @@ export class HrDashboardRepository implements IHrDashboardRepo {
       const rows = await runQuery<Row>(sql`
         SELECT e.id,
                COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
-               p.name AS position, dept.name AS department,
+               primary_org.pos_name AS position, primary_org.dept_name AS department,
                e.birth_date,
                EXTRACT(MONTH FROM e.birth_date)::int AS birth_month,
                EXTRACT(DAY FROM e.birth_date)::int AS birth_day
         FROM employees e
-        LEFT JOIN positions p ON p.id = e.position_id
-        LEFT JOIN departments dept ON dept.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC LIMIT 1
+        ) primary_org ON true
         WHERE e.status = 'active'
           AND e.birth_date IS NOT NULL
           AND MAKE_DATE(EXTRACT(YEAR FROM NOW())::int, EXTRACT(MONTH FROM e.birth_date)::int, EXTRACT(DAY FROM e.birth_date)::int)
@@ -71,12 +85,19 @@ export class HrDashboardRepository implements IHrDashboardRepo {
       const rows = await runQuery<Row>(sql`
         SELECT e.id,
                COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_name,
-               p.name AS position, dept.name AS department, e.hire_date,
+               primary_org.pos_name AS position, primary_org.dept_name AS department, e.hire_date,
                (EXTRACT(YEAR FROM AGE(NOW(), e.hire_date))::int + 1) * 12 AS milestone_months,
                MAKE_DATE(EXTRACT(YEAR FROM NOW())::int, EXTRACT(MONTH FROM e.hire_date)::int, EXTRACT(DAY FROM e.hire_date)::int) AS due_date
         FROM employees e
-        LEFT JOIN positions p ON p.id = e.position_id
-        LEFT JOIN departments dept ON dept.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC LIMIT 1
+        ) primary_org ON true
         WHERE e.status = 'active'
           AND EXTRACT(YEAR FROM AGE(NOW(), e.hire_date)) IN (0,1,2,4,9,14,19,24)
           AND MAKE_DATE(EXTRACT(YEAR FROM NOW())::int, EXTRACT(MONTH FROM e.hire_date)::int, EXTRACT(DAY FROM e.hire_date)::int)
@@ -108,15 +129,22 @@ export class HrDashboardRepository implements IHrDashboardRepo {
       const rows = await runQuery<Row>(sql`
         SELECT e.id,
                COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
-               p.name AS position, d.name AS department,
+               primary_org.pos_name AS position, primary_org.dept_name AS department,
                COALESCE(e.vysotskiy_category, 'B') AS category,
                CASE COALESCE(e.vysotskiy_category, 'B')
                     WHEN 'A' THEN 90
                     WHEN 'B' THEN 65
                     ELSE 40 END AS performance_score
         FROM employees e
-        LEFT JOIN positions p ON p.id = e.position_id
-        LEFT JOIN departments d ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC LIMIT 1
+        ) primary_org ON true
         WHERE e.status = 'active'
         ORDER BY category ASC, e.last_name
         LIMIT 100
@@ -130,9 +158,17 @@ export class HrDashboardRepository implements IHrDashboardRepo {
       const rows = await runQuery<Row>(sql`
         SELECT e.id,
                COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
-               dept.name AS department, e.hire_date
+               primary_org.dept_name AS department, e.hire_date
         FROM employees e
-        LEFT JOIN departments dept ON dept.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC LIMIT 1
+        ) primary_org ON true
         WHERE e.status = 'active' AND e.hire_date <= NOW() - INTERVAL '5 years'
         ORDER BY e.hire_date ASC
         LIMIT 20
@@ -204,10 +240,18 @@ export class HrDashboardRepository implements IHrDashboardRepo {
       const rows = await runQuery<Row>(sql`
         SELECT e.id,
                COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
-               d.name AS department, e.hire_date,
+               primary_org.dept_name AS department, e.hire_date,
                EXTRACT(DAY FROM NOW() - e.hire_date)::int AS days_employed
         FROM employees e
-        LEFT JOIN departments d ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC LIMIT 1
+        ) primary_org ON true
         WHERE e.status = 'active' AND e.hire_date >= NOW() - INTERVAL '90 days'
         ORDER BY e.hire_date DESC
         LIMIT 20
@@ -237,8 +281,8 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         SELECT
           e.id,
           COALESCE(e.first_name, '') || ' ' || COALESCE(e.last_name, '') AS "fullName",
-          COALESCE(p.name, '—')                                          AS "lastPosition",
-          COALESCE(d.name, '—')                                          AS department,
+          COALESCE(primary_org.pos_name, '—')                            AS "lastPosition",
+          COALESCE(primary_org.dept_name, '—')                          AS department,
           COALESCE(oc.last_working_day::text, e.updated_at::text, '')    AS "exitDate",
           COALESCE(oc.dismissal_type, e.employment_status, '—')          AS "exitReason",
           COALESCE(oc.dismissal_type, 'resignation')                     AS "exitType",
@@ -249,8 +293,15 @@ export class HrDashboardRepository implements IHrDashboardRepo {
           'unknown'                                                      AS "networkStatus",
           NULL                                                           AS "lastContactDate"
         FROM employees e
-        LEFT JOIN positions p    ON p.id = e.position_id
-        LEFT JOIN departments d  ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC LIMIT 1
+        ) primary_org ON true
         LEFT JOIN offboarding_cases oc ON oc.employee_id = e.id
         WHERE e.is_active = false
            OR e.status NOT IN ('active', 'on_leave', 'probation')

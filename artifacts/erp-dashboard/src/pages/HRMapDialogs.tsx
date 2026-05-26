@@ -154,8 +154,8 @@ export function LeftPanel({
           </CardHeader>
           <CardContent className="space-y-2">
             {(stats?.byDepartment || []).map((d, i) => (
-              <div key={d.departmentName ?? `dept-${i}`} className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{d.departmentName}</span>
+              <div key={d.orgDepartmentName ?? `dept-${i}`} className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{d.orgDepartmentName}</span>
                 <EPStatusPill tone="neutral">{d.count}</EPStatusPill>
               </div>
             ))}

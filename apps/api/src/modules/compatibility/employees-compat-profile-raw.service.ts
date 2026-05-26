@@ -75,21 +75,31 @@ export class EmployeesCompatProfileRawService {
 
   async getOrgStructure(id: string): Promise<Result<{ manager: Row | null; subordinates: Row[]; peers: Row[] }, AppError>> {
     return safeCall(async () => {
-      const empR = await rawSql(sql`
-        SELECT e.department_id FROM employees e WHERE e.id = ${si(id)} LIMIT 1
+      // Find the primary org department of this employee via their user record
+      const orgDeptR = await rawSql(sql`
+        SELECT eod.org_department_id
+        FROM users u
+        JOIN employee_org_departments eod ON eod.user_id = u.id AND eod.is_primary = true
+        WHERE u.employee_id = ${si(id)} AND u.deleted_at IS NULL
+        ORDER BY eod.assigned_at DESC
+        LIMIT 1
       `);
-      const emp = dbRows(empR)[0] as Row | undefined;
-      const deptId = emp?.['department_id'];
-      const peersR = deptId
+      const orgDeptRow = dbRows(orgDeptR)[0] as Row | undefined;
+      const orgDeptId = orgDeptRow?.['org_department_id'];
+
+      const peersR = orgDeptId
         ? await rawSql(sql`
             SELECT e.id, e.first_name, e.last_name, e.employee_code,
-                   COALESCE(p.name, p.name_uz) AS position_name
+                   COALESCE(of2.position_name, '') AS position_name
             FROM employees e
-            LEFT JOIN positions p ON p.id = e.position_id
-            WHERE e.department_id = ${deptId} AND e.id != ${si(id)} AND e.status = 'active'
+            JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+            JOIN employee_org_departments eod ON eod.user_id = u.id AND eod.is_primary = true
+            LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+            WHERE eod.org_department_id = ${orgDeptId} AND e.id != ${si(id)} AND e.status = 'active'
             ORDER BY e.first_name LIMIT 20
           `)
         : null;
+
       return {
         manager:      null,
         subordinates: [],

@@ -11,7 +11,7 @@ import { db , runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
 import {
-  safety_incidents, offboarding_cases, employee_contracts, hrEmployees, hrDepartments, hrPositions,
+  safety_incidents, offboarding_cases, employee_contracts, hrEmployees,
 } from '@shared/db';
 import type { IHrDashboardExtraRepo } from '../../domain/repositories/i-hr-dashboard-extra.repo';
 
@@ -37,8 +37,8 @@ export class HrDashboardExtraRepository implements IHrDashboardExtraRepo {
       const rows = await runQuery<Row>(sql`
         SELECT e.id,
                COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
-               COALESCE(d.name, '') AS department_name,
-               COALESCE(p.name, '') AS position_name,
+               COALESCE(primary_org.dept_name, '') AS org_department_name,
+               COALESCE(primary_org.pos_name, '')  AS org_position_name,
                e.base_salary,
                CASE WHEN e.base_salary IS NULL THEN 'high'
                     WHEN e.base_salary::numeric < ${HR_SALARY_MEDIUM_UZS} THEN 'medium'
@@ -47,8 +47,15 @@ export class HrDashboardExtraRepository implements IHrDashboardExtraRepo {
                     WHEN e.base_salary::numeric < ${HR_SALARY_MEDIUM_UZS} THEN 50
                     ELSE 80 END AS overall_score
         FROM employees e
-        LEFT JOIN departments d ON d.id = e.department_id
-        LEFT JOIN positions p ON p.id = e.position_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC LIMIT 1
+        ) primary_org ON true
         WHERE e.status = 'active'
         LIMIT 100
       `);

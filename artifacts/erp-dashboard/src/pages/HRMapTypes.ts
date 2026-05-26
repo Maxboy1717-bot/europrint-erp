@@ -18,8 +18,8 @@ export const GROUP_COLORS = [
 export interface Employee {
   id: string;
   fullName: string;
-  departmentName: string;
-  positionName: string;
+  orgDepartmentName: string;
+  orgPositionName: string;
   latitude: number | null;
   longitude: number | null;
   lat: number | null;
@@ -64,7 +64,7 @@ export interface TransportResult {
 
 export interface MapStats {
   total: { employees: number };
-  byDepartment: Array<{ departmentName: string; count: number }>;
+  byDepartment: Array<{ orgDepartmentName: string; count: number }>;
   byShift: Array<{ shift: string; count: number }>;
   byDistrict: Array<{ district: string; count: number }>;
   factoryLat?: number;

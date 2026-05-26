@@ -38,12 +38,12 @@ export default function HRMap() {
     queryKey: [
       selectedDepartment === "all"
         ? "/api/hr-map/employees"
-        : `/api/hr-map/employees?departmentId=${selectedDepartment}`
+        : `/api/hr-map/employees?orgDepartmentId=${selectedDepartment}`
     ],
   });
 
   const { data: departments = [] } = useQuery<Array<{ id: string; name: string }>>({
-    queryKey: ["/api/departments"],
+    queryKey: ["/api/org-departments"],
   });
 
   const { data: stats, isLoading: statsLoading } = useQuery<MapStats>({

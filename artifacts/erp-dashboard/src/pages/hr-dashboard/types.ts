@@ -29,8 +29,8 @@ export type AlertsResponse = {
 export type RiskEmployee = {
   id: string;
   fullName: string;
-  departmentName: string;
-  positionName: string;
+  orgDepartmentName: string;
+  orgPositionName: string;
   overallScore: number;
   riskLevel: "low" | "medium" | "high" | "critical";
   factors: Record<string, number>;

@@ -100,7 +100,7 @@ export function RiskTab({riskEmployees, riskSummary, isLoading }: RiskTabProps) 
                   return (
                     <TableRow key={emp.id} data-testid={`risk-row-${emp.id}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell className="text-sm font-medium text-foreground px-4">{emp.fullName}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground px-4">{emp.departmentName || "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground px-4">{emp.orgDepartmentName || "—"}</TableCell>
                       <TableCell className="text-sm font-bold px-4 tabular-nums"><span className={cfg.color}>{emp.overallScore}</span></TableCell>
                       <TableCell className="px-4"><span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.bg} ${cfg.color}`}>{cfg.label}</span></TableCell>
                       <TableCell className="px-4">

@@ -23,9 +23,24 @@ export class UsersCompatService {
       SELECT u.id, u.username, u.email, NULL::text AS role, u.created_at, u.updated_at,
         COALESCE(NULLIF(TRIM(COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'')), ''), (u.first_name || ' ' || u.last_name)) AS full_name,
         COALESCE(NULLIF(TRIM(COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'')), ''), (u.first_name || ' ' || u.last_name)) AS "fullName",
-        e.department_id AS "departmentId", e.position_id AS "positionId", e.id AS employee_id
+        primary_org.dept_id   AS "orgDepartmentId",
+        primary_org.dept_name AS "orgDepartmentName",
+        primary_org.pos_name  AS "orgPositionName",
+        e.id AS employee_id
       FROM users u
       LEFT JOIN employees e ON e.user_id = u.id
+      LEFT JOIN LATERAL (
+        SELECT
+          eod.org_department_id::text        AS dept_id,
+          od.name_uz                         AS dept_name,
+          COALESCE(of2.position_name, '')    AS pos_name
+        FROM employee_org_departments eod
+        JOIN org_departments od ON od.id = eod.org_department_id
+        LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+        WHERE eod.user_id = u.id AND eod.is_primary = true
+        ORDER BY eod.assigned_at DESC
+        LIMIT 1
+      ) primary_org ON true
       WHERE (${search} = '' OR (u.first_name || ' ' || u.last_name) ILIKE ${searchPattern} OR u.email ILIKE ${searchPattern} OR u.username ILIKE ${searchPattern})
       ORDER BY u.created_at DESC
       LIMIT ${limitNum} OFFSET ${offset}

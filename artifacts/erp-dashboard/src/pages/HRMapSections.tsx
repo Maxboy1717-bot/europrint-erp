@@ -98,8 +98,8 @@ export function MarkersLayer({ employees }: { employees: Employee[] }) {
           <Popup>
             <div className="space-y-1 min-w-[180px]">
               <div className="font-semibold">{emp.fullName}</div>
-              <div className="text-sm text-gray-600">{emp.departmentName}</div>
-              <div className="text-sm text-gray-600">{emp.positionName}</div>
+              <div className="text-sm text-gray-600">{emp.orgDepartmentName}</div>
+              <div className="text-sm text-gray-600">{emp.orgPositionName}</div>
               {emp.address && <div className="text-xs text-gray-500">{emp.address}</div>}
             </div>
           </Popup>
