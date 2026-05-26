@@ -8,6 +8,10 @@
  *   the 300-line cap (Rule 16).
  */
 
+// MUST run first: @workspace/db (lib/db) reads process.env.DATABASE_URL at
+// import time and throws if unset — this happens before ConfigModule.forRoot()
+// due to import hoisting. Loading .env here (CWD = apps/api) populates it in time.
+import 'dotenv/config';
 import 'module-alias/register';
 import 'reflect-metadata';
 import { initSentry } from './common/monitoring/sentry.config';

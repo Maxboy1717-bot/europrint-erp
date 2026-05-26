@@ -20,9 +20,9 @@ const port = rawPort && !Number.isNaN(Number(rawPort)) && Number(rawPort) > 0
 const basePath = process.env.BASE_PATH || "/erp-dashboard/";
 const basePrefix = basePath.replace(/\/$/, "");
 
-// Backend NestJS port — apps/api/.env'da PORT=3000 (Windows 8080 EACCES sababli)
-const apiUrl = process.env.API_URL ?? "http://localhost:3000";
-const nestApiUrl = process.env.NEST_API_URL ?? "http://localhost:3000";
+// Backend NestJS port — apps/api/.env'da PORT=3030. Env var berilmasa shu default ishlatiladi.
+const apiUrl = process.env.API_URL ?? "http://localhost:3030";
+const nestApiUrl = process.env.NEST_API_URL ?? "http://localhost:3030";
 
 function posAuthDirectPlugin(nestUrl: string, prefix: string) {
   // nestUrl'dan host/port chiqarib olish — hard-coded 8080 emas
