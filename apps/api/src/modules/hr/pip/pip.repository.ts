@@ -139,10 +139,21 @@ export class PipRepository {
   async getActivePips(): Promise<Result<Row[]>> {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
-        SELECT pp.*, e.first_name || ' ' || e.last_name AS employee_name, d.name AS department_name
+        SELECT pp.*, e.first_name || ' ' || e.last_name AS employee_name, primary_org.dept_name AS department_name
         FROM pip_plans pp
         JOIN employees e ON e.id = pp.employee_id
-        LEFT JOIN departments d ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT eod.org_department_id AS dept_id,
+                 od.name_uz AS dept_name,
+                 COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         WHERE pp.status = 'active'
         ORDER BY pp.end_date ASC
       `);
@@ -153,10 +164,21 @@ export class PipRepository {
   async listAll(): Promise<Result<Row[]>> {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
-        SELECT pp.*, e.first_name || ' ' || e.last_name AS employee_name, d.name AS department_name
+        SELECT pp.*, e.first_name || ' ' || e.last_name AS employee_name, primary_org.dept_name AS department_name
         FROM pip_plans pp
         JOIN employees e ON e.id = pp.employee_id
-        LEFT JOIN departments d ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT eod.org_department_id AS dept_id,
+                 od.name_uz AS dept_name,
+                 COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         ORDER BY pp.created_at DESC
         LIMIT ${MAX_QUERY_LIMIT}
       `);

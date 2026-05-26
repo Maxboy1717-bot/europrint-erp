@@ -9,7 +9,7 @@ import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db , runQuery } from '@shared/db';
 import { sql, eq } from 'drizzle-orm';
-import { hr_daily_reports, hr_daily_report_audit, hrEmployees, hrDepartments, hrPositions } from '@shared/db';
+import { hr_daily_reports, hr_daily_report_audit, hrEmployees } from '@shared/db';
 import { execDailyReportMarkAbsent } from '@common/database/queries-remaining';
 import { safeCall, Result } from '@common/result';
 
@@ -98,10 +98,21 @@ export class DailyReportRepository {
                e.employee_code,
                COALESCE(e.is_machine_operator, false) AS is_machine_operator,
                COALESCE(dr.is_machine_operator_report, false) AS is_machine_operator_report,
-               d.name AS department_name
+               primary_org.dept_name AS department_name
         FROM hr_daily_reports dr
         JOIN employees e ON e.id = dr.employee_id
-        LEFT JOIN departments d ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT eod.org_department_id AS dept_id,
+                 od.name_uz AS dept_name,
+                 COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         WHERE dr.report_date::date = ${date}::date
           AND (
             ${type}::text = 'all'
@@ -137,8 +148,13 @@ export class DailyReportRepository {
         JOIN hr_daily_reports dr
           ON dr.employee_id = e.id
          AND dr.report_date::date = ${date}::date
-        WHERE e.department_id = ${departmentId}
-          AND e.status = 'active'
+        WHERE EXISTS (
+          SELECT 1 FROM users u2
+          JOIN employee_org_departments eod2 ON eod2.user_id = u2.id
+          WHERE u2.employee_id = e.id AND u2.deleted_at IS NULL
+            AND eod2.org_department_id = ${departmentId} AND eod2.is_primary = true
+        )
+        AND e.status = 'active'
         ORDER BY e.last_name
       `);
 
@@ -149,8 +165,13 @@ export class DailyReportRepository {
                e.employee_code,
                COALESCE(e.is_machine_operator, false) AS is_machine_operator
         FROM employees e
-        WHERE e.department_id = ${departmentId}
-          AND e.status = 'active'
+        WHERE EXISTS (
+          SELECT 1 FROM users u2
+          JOIN employee_org_departments eod2 ON eod2.user_id = u2.id
+          WHERE u2.employee_id = e.id AND u2.deleted_at IS NULL
+            AND eod2.org_department_id = ${departmentId} AND eod2.is_primary = true
+        )
+        AND e.status = 'active'
           AND NOT EXISTS (
             SELECT 1 FROM hr_daily_reports dr
             WHERE dr.employee_id = e.id
@@ -168,11 +189,19 @@ export class DailyReportRepository {
       const rows = await runQuery<Row>(sql`
         SELECT e.id
         FROM employees e
-        LEFT JOIN positions p ON p.id = e.position_id
+        LEFT JOIN users u_pos ON u_pos.employee_id = e.id AND u_pos.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u_pos.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) pname ON true
         WHERE e.status = 'active'
-          AND COALESCE(p.name, '') NOT ILIKE '%mashina operator%'
-          AND COALESCE(p.name, '') NOT ILIKE '%mashin operator%'
-          AND COALESCE(p.name, '') NOT ILIKE '%machine operator%'
+          AND COALESCE(pname.pos_name, '') NOT ILIKE '%mashina operator%'
+          AND COALESCE(pname.pos_name, '') NOT ILIKE '%mashin operator%'
+          AND COALESCE(pname.pos_name, '') NOT ILIKE '%machine operator%'
           AND NOT EXISTS (SELECT 1 FROM hr_daily_reports dr WHERE dr.employee_id = e.id AND dr.report_date::date = ${today}::date)
         ORDER BY e.id
         LIMIT ${batchSize} OFFSET ${offset}
@@ -192,12 +221,22 @@ export class DailyReportRepository {
           dr.*,
           e.first_name, e.last_name,
           e.first_name || ' ' || e.last_name AS employee_name,
-          p.name AS position_name,
-          d.name AS department_name
+          primary_org.pos_name AS position_name,
+          primary_org.dept_name AS department_name
         FROM hr_daily_reports dr
         JOIN employees e ON e.id = dr.employee_id
-        LEFT JOIN positions p ON p.id = e.position_id
-        LEFT JOIN departments d ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT eod.org_department_id AS dept_id,
+                 od.name_uz AS dept_name,
+                 COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         WHERE dr.id = ${reportId}
         LIMIT 1
       `);

@@ -69,15 +69,25 @@ export class AdaptationRepository {
           ar.current_milestone AS "currentPhase", ar.hr_notes AS notes,
           ar.is_extended, ar.tasks_completed AS "tasksCompleted",
           COALESCE(e.full_name, '') AS "employeeName",
-          d.name AS "employeeDepartment",
-          pos.name AS "employeePosition",
+          primary_org.dept_name AS "employeeDepartment",
+          primary_org.pos_name AS "employeePosition",
           ap.program_name AS "programTitle",
           COALESCE(m.full_name, '') AS "mentorName"
         FROM adaptation_records ar
         LEFT JOIN employees e   ON e.id = ar.employee_id
         LEFT JOIN employees m   ON m.id = ar.mentor_id
-        LEFT JOIN departments d ON d.id = e.department_id
-        LEFT JOIN positions pos ON pos.id = e.position_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT eod.org_department_id AS dept_id,
+                 od.name_uz AS dept_name,
+                 COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         LEFT JOIN adaptation_programs ap ON ap.id = ar.program_id
         ORDER BY ar.created_at DESC
         LIMIT ${limit} OFFSET ${offset}

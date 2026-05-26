@@ -6,7 +6,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql, eq } from 'drizzle-orm';
-import { hrEmployees, hrPositions, hr_daily_reports, gamification_points, gamification_totals } from '@shared/db';
+import { hrEmployees, hr_daily_reports, gamification_points, gamification_totals } from '@shared/db';
 import { execGamificationTotalsUpsert } from '@common/database/queries-remaining';
 import { safeCall, Result } from '@common/result';
 
@@ -19,13 +19,21 @@ export class ReportBotDataRepository {
   async getEmployeeInfo(chatId: number): Promise<Result<{ id: number; first_name: string; position?: string } | null>> {
     return safeCall(async () => {
       const rows = await runQuery<{ id: number; first_name: string; position?: string }>(sql`
-        SELECT e.id, e.first_name, p.name AS position
+        SELECT e.id, e.first_name, pname.pos_name AS position
         FROM employees e
-        LEFT JOIN positions p ON p.id = e.position_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) pname ON true
         WHERE e.telegram_chat_id = ${String(chatId)}
           AND e.status = 'active'
-          AND LOWER(COALESCE(p.name, '')) NOT LIKE '%mashin%operator%'
-          AND LOWER(COALESCE(p.name, '')) NOT LIKE '%machine operator%'
+          AND LOWER(COALESCE(pname.pos_name, '')) NOT LIKE '%mashin%operator%'
+          AND LOWER(COALESCE(pname.pos_name, '')) NOT LIKE '%machine operator%'
         LIMIT 1
       `);
       return rows.rows[0] ?? null;

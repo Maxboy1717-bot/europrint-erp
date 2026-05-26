@@ -64,15 +64,26 @@ export class GamificationRepository {
 
       const rows = await runQuery<Row>(sql`
         SELECT gt.employee_id, gt.total_points, gt.monthly_points, gt.quarterly_points,
-               e.first_name, e.last_name, e.employee_code, d.name AS department_name,
+               e.first_name, e.last_name, e.employee_code, primary_org.dept_name AS department_name,
                ROW_NUMBER() OVER (ORDER BY ${pointsCol} DESC) AS rank,
                COUNT(eb.id) AS badge_count
         FROM gamification_totals gt
         JOIN employees e ON e.id = gt.employee_id
-        LEFT JOIN departments d ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT eod.org_department_id AS dept_id,
+                 od.name_uz AS dept_name,
+                 COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         LEFT JOIN employee_badges eb ON eb.employee_id = gt.employee_id
         GROUP BY gt.employee_id, gt.total_points, gt.monthly_points, gt.quarterly_points,
-                 e.first_name, e.last_name, e.employee_code, d.name
+                 e.first_name, e.last_name, e.employee_code, primary_org.dept_name
         ORDER BY ${pointsCol} DESC
         LIMIT 50
       `);

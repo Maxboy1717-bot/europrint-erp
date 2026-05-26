@@ -45,13 +45,23 @@ export class TelegramBotsProfileRepo {
         SELECT e.id, e.first_name, e.last_name, e.middle_name,
                e.employee_code, e.phone_number, e.corporate_email,
                e.hire_date, e.status, e.is_department_head,
-               p.name_uz AS position_name,
-               d.name    AS department_name,
+               primary_org.pos_name  AS position_name,
+               primary_org.dept_name AS department_name,
                COALESCE(gt.total_points, 0)   AS total_points,
                COALESCE(gt.monthly_points, 0) AS monthly_points
         FROM employees e
-        LEFT JOIN positions   p  ON p.id = e.position_id
-        LEFT JOIN departments d  ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT eod.org_department_id AS dept_id,
+                 od.name_uz AS dept_name,
+                 COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         LEFT JOIN gamification_totals gt ON gt.employee_id = e.id
         WHERE e.telegram_chat_id = ${String(chatId)}
           AND e.status = 'active'
@@ -65,13 +75,24 @@ export class TelegramBotsProfileRepo {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
         SELECT e.id, e.first_name, e.last_name, e.employee_code,
-               d.name AS department_name,
+               primary_org.dept_name AS department_name,
                COALESCE(gt.monthly_points, 0) AS monthly_points,
                COALESCE(gt.total_points,   0) AS total_points,
                COALESCE(gt.badge_count,    0) AS badge_count
         FROM gamification_totals gt
         JOIN employees e ON e.id = gt.employee_id
-        LEFT JOIN departments d ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT eod.org_department_id AS dept_id,
+                 od.name_uz AS dept_name,
+                 COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         WHERE e.status = 'active'
         ORDER BY gt.monthly_points DESC NULLS LAST
         LIMIT ${limit}

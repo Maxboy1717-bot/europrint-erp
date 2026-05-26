@@ -49,10 +49,22 @@ export class TelegramBotsManagerRepo {
   async getManagerByChatId(chatId: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
-        SELECT e.id, e.first_name, e.last_name, e.department_id,
-               d.name AS department_name
+        SELECT e.id, e.first_name, e.last_name,
+               primary_org.dept_id AS department_id,
+               primary_org.dept_name AS department_name
         FROM employees e
-        LEFT JOIN departments d ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT eod.org_department_id AS dept_id,
+                 od.name_uz AS dept_name,
+                 COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         WHERE e.telegram_chat_id = ${String(chatId)}
           AND e.status = 'active'
           AND (e.is_department_head = true OR EXISTS (

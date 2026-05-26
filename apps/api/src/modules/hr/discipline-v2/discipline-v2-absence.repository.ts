@@ -41,11 +41,22 @@ export class DisciplineV2AbsenceRepository {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
         SELECT e.id, e.first_name, e.last_name, e.employee_code,
-               d.name AS department_name,
+               primary_org.dept_name AS department_name,
                eb.reason, eb.blocked_at, eb.blocked_by
         FROM employees e
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT eod.org_department_id AS dept_id,
+                 od.name_uz AS dept_name,
+                 COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         JOIN employee_blocks eb ON eb.employee_id = e.id AND eb.is_active = true
-        LEFT JOIN departments d ON d.id = e.department_id
         WHERE e.is_blocked = true
         ORDER BY eb.blocked_at DESC
       `);
