@@ -25,6 +25,7 @@ import { DefectDetectorService } from '../src/modules/qc/domain/services/defect-
 import { SpcService } from '../src/modules/qc/domain/services/spc.service';
 import { FmeaService } from '../src/modules/qc/domain/services/fmea.service';
 import { InkConsumptionService } from '../src/modules/qc/domain/services/ink-consumption.service';
+import type { IQcComputeRepository } from '../src/modules/qc/domain/repositories/i-qc.repo';
 import { ImpositionService } from '../src/modules/qc/domain/services/imposition.service';
 import { SpoilageService } from '../src/modules/qc/domain/services/spoilage.service';
 import { DeltaEService } from '../src/modules/qc/domain/services/delta-e.service';
@@ -270,7 +271,17 @@ describe('FmeaService — TZ-31/32/33', () => {
 // ============================================================================
 describe('InkConsumptionService — TZ-34', () => {
   let svc: InkConsumptionService;
-  beforeEach(() => { svc = new InkConsumptionService(); });
+  beforeEach(() => {
+    const mockQcRepo = {
+      findInkInventory: jest.fn().mockResolvedValue([]),
+      findSpcReadings: jest.fn(),
+      findProcessDpmoData: jest.fn(),
+      findJobSpoilageRow: jest.fn(),
+      findJobCostRow: jest.fn(),
+      saveImpositionLayout: jest.fn(),
+    } as jest.Mocked<IQcComputeRepository>;
+    svc = new InkConsumptionService(mockQcRepo as unknown as IQcComputeRepository);
+  });
 
   it('normal holat: TAC < 280% (kitob)', async () => {
     const r = await svc.estimateInkConsumption({ c: 0.3, m: 0.3, y: 0.3, k: 0.3 }, 1000, 0.25, 'book');

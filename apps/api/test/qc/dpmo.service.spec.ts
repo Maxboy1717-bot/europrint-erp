@@ -11,12 +11,14 @@
 jest.mock('@shared/db', () => ({ runQuery: jest.fn() }));
 
 import { DpmoService } from '../../src/modules/qc/domain/services/dpmo.service';
-import { runQuery } from '@shared/db';
+import type { IQcComputeRepository } from '../../src/modules/qc/domain/repositories/i-qc.repo';
+import { QC_COMPUTE_REPO } from '../../src/modules/qc/domain/repositories/i-qc.repo';
 
-const mockRun = runQuery as jest.Mock;
+// Minimal repo stub for the stateless calculate tests
+const nullRepo = {} as unknown as IQcComputeRepository;
 
 describe('DpmoService.calculate', () => {
-  const svc = new DpmoService();
+  const svc = new DpmoService(nullRepo);
 
   it('rejects negative defects with VALIDATION', async () => {
     const r = await svc.calculate({ defects: -1, opportunities: 1, units: 1 });
@@ -69,20 +71,25 @@ describe('DpmoService.calculate', () => {
 });
 
 describe('DpmoService.getProcessDpmoData', () => {
-  beforeEach(() => mockRun.mockReset());
+  let mockRepo: jest.Mocked<Pick<IQcComputeRepository, 'findProcessDpmoData'>>;
+  let svc: DpmoService;
+
+  beforeEach(() => {
+    mockRepo = { findProcessDpmoData: jest.fn() };
+    svc = new DpmoService(mockRepo as unknown as IQcComputeRepository);
+  });
 
   it('returns sums from qc_inspections aggregation', async () => {
-    mockRun.mockResolvedValueOnce([{ defects: 4, items_checked: 200 }]);
-    const svc = new DpmoService();
+    mockRepo.findProcessDpmoData.mockResolvedValueOnce({ defects: 4, itemsChecked: 200 });
 
     const data = await svc.getProcessDpmoData('PO-1');
 
     expect(data).toEqual({ defects: 4, itemsChecked: 200 });
+    expect(mockRepo.findProcessDpmoData).toHaveBeenCalledWith('PO-1');
   });
 
   it('floors itemsChecked at 1 to avoid div-by-zero downstream', async () => {
-    mockRun.mockResolvedValueOnce([{ defects: 0, items_checked: 0 }]);
-    const svc = new DpmoService();
+    mockRepo.findProcessDpmoData.mockResolvedValueOnce({ defects: 0, itemsChecked: 0 });
 
     const data = await svc.getProcessDpmoData('PO-2');
 

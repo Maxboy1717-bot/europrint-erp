@@ -38,13 +38,13 @@ describe('PushService', () => {
     const svc = new PushService(configStub as never, pushRepoStub as never);
     await svc.register('user-2', { channel: 'apns' });
     expect(pushRepoStub.insert).toHaveBeenCalledWith('user-2', expect.objectContaining({
-      channel:     'apns',
-      endpoint:    null,
-      p256dh:      null,
-      auth:        null,
-      fcm_token:   null,
-      apns_token:  null,
-      device_info: null,
+      channel:    'apns',
+      endpoint:   null,
+      p256dh:     null,
+      auth:       null,
+      fcmToken:   null,
+      apnsToken:  null,
+      deviceInfo: null,
     }));
   });
 });

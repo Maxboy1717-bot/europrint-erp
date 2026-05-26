@@ -16,7 +16,7 @@ import { EventBus } from '@nestjs/cqrs';
 import { DispatchDeliveryHandler } from '../../src/modules/logistics/application/commands/dispatch-delivery.handler';
 import { DispatchDeliveryCommand } from '../../src/modules/logistics/application/commands/dispatch-delivery.command';
 import { DeliveryDispatchedEvent } from '../../src/modules/logistics/domain/events';
-import { TelegramService } from '../../src/modules/notifications/domain/services/telegram.service';
+import { TELEGRAM_SENDER } from '../../src/modules/notifications/domain/ports/i-telegram-sender.port';
 
 interface BusMock { publish: jest.Mock }
 interface TgMock { sendAlert: jest.Mock; sendMessage?: jest.Mock }
@@ -37,7 +37,7 @@ describe('DispatchDeliveryHandler', () => {
       providers: [
         DispatchDeliveryHandler,
         { provide: EventBus, useValue: bus },
-        { provide: TelegramService, useValue: tg },
+        { provide: TELEGRAM_SENDER, useValue: tg },
       ],
     }).compile();
     handler = moduleRef.get(DispatchDeliveryHandler);

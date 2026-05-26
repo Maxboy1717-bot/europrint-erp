@@ -40,6 +40,19 @@ jest.mock('../../../lib/db/dist/cjs/index.js', () => {
   };
 }, { virtual: true });
 
+// ─── @shared/db mock — helpers import `db` from @shared/db (resolved by jest config) ─
+jest.mock('@shared/db', () => ({
+  db: {
+    select:  mockDbSelect,
+    update:  mockDbUpdate,
+    execute: mockDbExecute,
+  },
+  eq:  jest.fn(() => ({})),
+  sql: jest.fn((strings: TemplateStringsArray, ...values: unknown[]) => ({ strings, values })),
+  posMaterialRequests:     {},
+  posMaterialRequestLines: { requestId: 'requestId' },
+}));
+
 // ─── TashkentTimeService mock ─────────────────────────────────────────────────
 // The service file imports: import { TashkentTimeService } from '@common/time'
 // jest.config maps  ^@common/(.*)$  →  <rootDir>/src/common/$1
@@ -62,6 +75,7 @@ import { PosMovementService }            from '../src/modules/pos/application/se
 import { PosNotificationsService }       from '../src/modules/pos/application/services/pos-notifications.service';
 import { EmployeeLedgerService }         from '../src/modules/pos/employee-ledger.service';
 import { PosRequestExtRepository }       from '../src/modules/pos/pos-request-ext.repository';
+import { PosEmployeeBalanceRepository }  from '../src/modules/pos/infrastructure/repositories/pos-employee-balance.repository';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -165,6 +179,17 @@ describe('PosRequisitionWorkflowService', () => {
         { provide: EmployeeLedgerService,    useValue: employeeLedger   },
         { provide: PosRequestExtRepository,  useValue: requestExtRepo   },
         { provide: EventEmitter2,            useValue: emitter          },
+        { provide: PosEmployeeBalanceRepository, useValue: {
+          // Each reserveStock/releaseStock call mirrors what db.execute would do so
+          // existing assertions on mockDbExecute continue to hold.
+          reserveStock: jest.fn().mockImplementation(async () => {
+            await mockDbExecute({ sql: 'UPDATE pos_employee_balances SET reserved_qty', params: [] });
+          }),
+          releaseStock: jest.fn().mockImplementation(async () => {
+            await mockDbExecute({ sql: 'UPDATE pos_employee_balances SET reserved_qty', params: [] });
+          }),
+          barcodeExists: jest.fn().mockResolvedValue(false),
+        } },
       ],
     }).compile();
 

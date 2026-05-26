@@ -11,6 +11,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { PaymentReceivedListener } from '../../../src/modules/sd/infrastructure/event-handlers/payment-received.listener';
 import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../../src/modules/sd/domain/repositories/i-sales-order.repo';
 import { UpdateOrderStatusCommand } from '../../../src/modules/sd/application/commands/update-order-status.handler';
+import { InvoiceFullyPaidEvent } from '../../../src/modules/finance/domain/events/invoice-fully-paid.event';
 import { Ok, Err, AppErr } from '../../../src/common/result';
 
 type CommandBusMock = { execute: jest.Mock };
@@ -36,6 +37,16 @@ function makeRepo(order: OrderLike | null): jest.Mocked<ISalesOrderRepository> {
     delete: jest.fn(),
     count: jest.fn(),
   } as unknown as jest.Mocked<ISalesOrderRepository>;
+}
+
+/** Build a typed InvoiceFullyPaidEvent from legacy {orderId, amount} shape */
+function makeEvent(orderId: number, amount: number): InvoiceFullyPaidEvent {
+  return new InvoiceFullyPaidEvent({
+    invoiceId:  orderId,
+    customerId: 1,
+    totalAmount: amount,
+    paidAt: new Date(),
+  });
 }
 
 async function buildListener(
@@ -64,7 +75,7 @@ describe('Trigger 15: PaymentFull -> SalesOrder closed', () => {
     const repo = makeRepo(order);
     const listener = await buildListener(repo, commandBus);
 
-    await listener.handlePaymentFull({ orderId: 42, amount: 1_500_000 });
+    await listener.handle(makeEvent(42, 1_500_000));
 
     expect(commandBus.execute).toHaveBeenCalledTimes(1);
     const cmd: UpdateOrderStatusCommand = commandBus.execute.mock.calls[0][0];
@@ -78,7 +89,7 @@ describe('Trigger 15: PaymentFull -> SalesOrder closed', () => {
     const repo = makeRepo(order);
     const listener = await buildListener(repo, commandBus);
 
-    await listener.handlePaymentFull({ orderId: 43, amount: 1_000_000 });
+    await listener.handle(makeEvent(43, 1_000_000));
 
     expect(commandBus.execute).not.toHaveBeenCalled();
     expect(repo.findById).toHaveBeenCalledWith(43);
@@ -88,7 +99,7 @@ describe('Trigger 15: PaymentFull -> SalesOrder closed', () => {
     const repo = makeRepo(null);
     const listener = await buildListener(repo, commandBus);
 
-    await listener.handlePaymentFull({ orderId: 999, amount: 500_000 });
+    await listener.handle(makeEvent(999, 500_000));
 
     expect(commandBus.execute).not.toHaveBeenCalled();
   });
@@ -98,7 +109,7 @@ describe('Trigger 15: PaymentFull -> SalesOrder closed', () => {
     const repo = makeRepo(order);
     const listener = await buildListener(repo, commandBus);
 
-    await listener.handlePaymentFull({ orderId: 44, amount: 700_000 });
+    await listener.handle(makeEvent(44, 700_000));
 
     expect(commandBus.execute).not.toHaveBeenCalled();
   });
@@ -110,7 +121,7 @@ describe('Trigger 15: PaymentFull -> SalesOrder closed', () => {
     const listener = await buildListener(repo, commandBus);
 
     await expect(
-      listener.handlePaymentFull({ orderId: 45, amount: 800_000 }),
+      listener.handle(makeEvent(45, 800_000)),
     ).resolves.toBeUndefined();
     expect(commandBus.execute).toHaveBeenCalledTimes(1);
   });

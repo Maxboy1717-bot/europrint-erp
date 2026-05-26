@@ -21,9 +21,13 @@ import { Ok, Err, AppErr } from '../../src/common/result';
 
 interface RepoMock {
   save: jest.Mock; findById: jest.Mock; findAll: jest.Mock;
+  replacePaymentPlanEntries: jest.Mock;
 }
 function makeRepo(): RepoMock {
-  return { save: jest.fn(), findById: jest.fn(), findAll: jest.fn() };
+  return {
+    save: jest.fn(), findById: jest.fn(), findAll: jest.fn(),
+    replacePaymentPlanEntries: jest.fn().mockResolvedValue(Ok(2)),
+  };
 }
 
 function makeOrder(): OrderAggregate {

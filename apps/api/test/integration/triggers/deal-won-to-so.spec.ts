@@ -53,7 +53,7 @@ describe('Trigger 2: DealWon -> SalesOrder', () => {
       data: { getId: () => 555 },
     });
 
-    await listener.handleDealWon(makeEvent({ companyId: 42, totalAmount: 2_500_000 }));
+    await listener.handle(makeEvent({ companyId: 42, totalAmount: 2_500_000 }));
 
     expect(commandBus.execute).toHaveBeenCalledTimes(1);
     const cmd: CreateOrderCommand = commandBus.execute.mock.calls[0][0];
@@ -69,7 +69,7 @@ describe('Trigger 2: DealWon -> SalesOrder', () => {
       data: { getId: () => 1 },
     });
 
-    await listener.handleDealWon(makeEvent({ dealId: 909, assignedTo: 13 }));
+    await listener.handle(makeEvent({ dealId: 909, assignedTo: 13 }));
 
     const cmd: CreateOrderCommand = commandBus.execute.mock.calls[0][0];
     expect(cmd.dealId).toBe(909);
@@ -83,7 +83,7 @@ describe('Trigger 2: DealWon -> SalesOrder', () => {
     // Force-undefined currency simulates legacy publishers
     (evt as unknown as { currency: string | undefined }).currency = undefined;
 
-    await listener.handleDealWon(evt);
+    await listener.handle(evt);
 
     const cmd: CreateOrderCommand = commandBus.execute.mock.calls[0][0];
     expect(cmd.currency).toBe('UZS');
@@ -92,7 +92,7 @@ describe('Trigger 2: DealWon -> SalesOrder', () => {
   it('swallows CommandBus exception when execute rejects', async () => {
     commandBus.execute.mockRejectedValue(new Error('DB down'));
 
-    await expect(listener.handleDealWon(makeEvent())).resolves.toBeUndefined();
+    await expect(listener.handle(makeEvent())).resolves.toBeUndefined();
     expect(commandBus.execute).toHaveBeenCalledTimes(1);
   });
 
@@ -102,7 +102,7 @@ describe('Trigger 2: DealWon -> SalesOrder', () => {
       error: { code: 'DB_ERROR', message: 'save failed' },
     });
 
-    await listener.handleDealWon(makeEvent({ dealId: 77 }));
+    await listener.handle(makeEvent({ dealId: 77 }));
 
     expect(commandBus.execute).toHaveBeenCalledTimes(1);
     // EventEmitter2 is injected but listener only uses CommandBus on this path —

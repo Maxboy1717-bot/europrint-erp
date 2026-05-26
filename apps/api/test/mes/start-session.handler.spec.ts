@@ -6,7 +6,6 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException } from '@nestjs/common';
 import {
   StartSessionCommand,
   StartSessionHandler,
@@ -77,7 +76,7 @@ describe('StartSessionHandler', () => {
     expect(repo.checkOperatorCertification).toHaveBeenCalledWith(3, 9);
   });
 
-  it('throws ForbiddenException when certification is missing or invalid', async () => {
+  it('returns FORBIDDEN Err when certification is missing or invalid', async () => {
     const session = new ProductionSession(1, 10, 2, 3, true);
     const repo = makeRepo({
       getSession: jest.fn().mockResolvedValue(Ok(session)),
@@ -85,9 +84,9 @@ describe('StartSessionHandler', () => {
     });
     const handler = await buildHandler(repo);
 
-    await expect(
-      handler.execute(new StartSessionCommand(1, 2, 3, 9)),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    const r = await handler.execute(new StartSessionCommand(1, 2, 3, 9));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('FORBIDDEN');
     expect(repo.saveSession).not.toHaveBeenCalled();
   });
 

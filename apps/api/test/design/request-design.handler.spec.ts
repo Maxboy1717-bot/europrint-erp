@@ -16,7 +16,7 @@ import { EventBus } from '@nestjs/cqrs';
 import { RequestDesignHandler } from '../../src/modules/design/application/commands/request-design.handler';
 import { RequestDesignCommand } from '../../src/modules/design/application/commands/request-design.command';
 import { DesignRequestedEvent } from '../../src/modules/design/domain/events';
-import { TelegramService } from '../../src/modules/notifications/domain/services/telegram.service';
+import { TELEGRAM_SENDER } from '../../src/modules/notifications/domain/ports/i-telegram-sender.port';
 
 interface BusMock { publish: jest.Mock }
 interface TgMock { sendAlert: jest.Mock }
@@ -35,7 +35,7 @@ describe('RequestDesignHandler', () => {
       providers: [
         RequestDesignHandler,
         { provide: EventBus, useValue: bus },
-        { provide: TelegramService, useValue: tg },
+        { provide: TELEGRAM_SENDER, useValue: tg },
       ],
     }).compile();
     handler = moduleRef.get(RequestDesignHandler);

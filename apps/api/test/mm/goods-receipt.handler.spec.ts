@@ -26,7 +26,7 @@ type RepoMock = Partial<Record<keyof IMmRepository, jest.Mock>> & {
 };
 
 function makeRepo(): RepoMock {
-  return {
+  const repo: RepoMock = {
     saveMaterial: jest.fn(),
     getMaterial: jest.fn(),
     getMaterialByCode: jest.fn(),
@@ -37,7 +37,12 @@ function makeRepo(): RepoMock {
     recordInvoice: jest.fn(),
     validateThreeWayMatch: jest.fn().mockResolvedValue(Ok({ matched: true, difference: 0 })),
     updateVendorRating: jest.fn(),
+    withTransaction: jest.fn(),
   };
+  (repo.withTransaction as jest.Mock).mockImplementation(
+    async (cb: (tx: unknown) => unknown) => cb(null),
+  );
+  return repo;
 }
 
 function makeApprovedPo(qty: number): PurchaseOrder {
@@ -97,7 +102,7 @@ describe('GoodsReceiptHandler', () => {
 
     expect(r.ok).toBe(true);
     expect(po.getStatus()).toBe(PoStatus.RECEIVED);
-    expect(repo.savePurchaseOrder).toHaveBeenCalledWith(po);
+    expect(repo.savePurchaseOrder).toHaveBeenCalledWith(po, null);
   });
 
   it('returns err from aggregate when recording receipt is invalid', async () => {

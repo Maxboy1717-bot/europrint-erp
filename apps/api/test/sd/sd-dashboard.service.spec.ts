@@ -7,7 +7,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { SdDashboardService } from '../../src/modules/sd/application/sd-dashboard.service';
-import { SdDashboardRepository } from '../../src/modules/sd/application/sd-dashboard.repository';
+import { SD_DASHBOARD_REPO } from '../../src/modules/sd/domain/repositories/i-sd-dashboard.repo';
 import { Ok, Err, AppErr } from '../../src/common/result';
 
 type RepoMock = {
@@ -37,7 +37,7 @@ describe('SdDashboardService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SdDashboardService,
-        { provide: SdDashboardRepository, useValue: repo },
+        { provide: SD_DASHBOARD_REPO, useValue: repo },
       ],
     }).compile();
     svc = module.get(SdDashboardService);

@@ -8,6 +8,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { FinanceAccountingController } from '../src/modules/finance/presentation/finance-accounting.controller';
 import { FinanceAccountingService } from '../src/modules/finance/application/finance-accounting.service';
+import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
+import { RolesGuard } from '../src/common/guards/roles.guard';
+import { I18nService } from 'nestjs-i18n';
 
 const ok = (data: unknown) => ({ ok: true, data });
 
@@ -33,8 +36,12 @@ describe('Finance Accounting – SQL injection prevention', () => {
       controllers: [FinanceAccountingController],
       providers: [
         { provide: FinanceAccountingService, useValue: mockSvc },
+        { provide: I18nService, useValue: { t: jest.fn((key: string) => key) } },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard).useValue({ canActivate: () => true })
+      .compile();
 
     ctrl = module.get(FinanceAccountingController);
     jest.clearAllMocks();

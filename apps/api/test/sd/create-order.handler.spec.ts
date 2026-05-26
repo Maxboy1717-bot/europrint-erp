@@ -5,6 +5,16 @@
  * mocked; the SalesOrder aggregate factory runs for real.
  */
 
+// Must be before imports so Jest hoists the factory above require() calls.
+jest.mock('@shared/db', () => ({
+  db: {
+    transaction: jest.fn().mockImplementation(
+      async (cb: (tx: unknown) => unknown) => cb(null),
+    ),
+  },
+  domain_events: {},
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventBus } from '@nestjs/cqrs';
 import {
@@ -14,6 +24,7 @@ import {
 import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../src/modules/sd/domain/repositories/i-sales-order.repo';
 import { SalesOrder } from '../../src/modules/sd/domain/aggregates/sales-order.aggregate';
 import { Ok, Err, AppErr } from '../../src/common/result';
+import { OutboxRepository } from '../../src/modules/shared/outbox/outbox.repository';
 
 function makeRepo(saveOk = true, count = 5): jest.Mocked<ISalesOrderRepository> {
   return {
@@ -46,6 +57,7 @@ async function buildHandler(
       CreateOrderHandler,
       { provide: SALES_ORDER_REPO, useValue: repo },
       { provide: EventBus, useValue: bus },
+      { provide: OutboxRepository, useValue: { insertBatch: jest.fn().mockResolvedValue(Ok(1)) } },
     ],
   }).compile();
   return module.get(CreateOrderHandler);

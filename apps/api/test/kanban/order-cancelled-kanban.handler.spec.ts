@@ -1,66 +1,63 @@
 /**
  * test/kanban/order-cancelled-kanban.handler.spec.ts
  *
- * Unit tests for OrderCancelledKanbanHandler. Mocks runQuery from @shared/db
- * to exercise both the "cancel column found" and "soft-delete fallback" paths.
+ * Unit tests for OrderCancelledKanbanHandler. IKanbanBoardsRepo is mocked.
  */
-
-interface QueryResult { rows: Array<Record<string, unknown>> }
-
-const runQueryMock = jest.fn();
-
-jest.mock('@shared/db', () => ({
-  runQuery: runQueryMock,
-}));
 
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   OrderCancelledKanbanHandler,
   OrderCancelledEvent,
 } from '../../src/modules/kanban/application/event-handlers/order-cancelled-kanban.handler';
+import { KANBAN_BOARDS_REPO } from '../../src/modules/kanban/domain/repositories/i-kanban-boards.repo';
+import { Ok, Err, AppErr } from '../../src/common/result';
 
-async function build(): Promise<OrderCancelledKanbanHandler> {
+function makeRepo(moveOk = true) {
+  return {
+    moveOrderCardToCancelled: jest.fn().mockResolvedValue(
+      moveOk ? Ok(undefined) : Err(AppErr('DB_ERROR', 'move failed')),
+    ),
+    createKanbanForOrder: jest.fn(),
+    findById: jest.fn(),
+    findAll: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    getColumns: jest.fn(),
+    getCards: jest.fn(),
+  };
+}
+
+async function build(repo: ReturnType<typeof makeRepo>): Promise<OrderCancelledKanbanHandler> {
   const module: TestingModule = await Test.createTestingModule({
-    providers: [OrderCancelledKanbanHandler],
+    providers: [
+      OrderCancelledKanbanHandler,
+      { provide: KANBAN_BOARDS_REPO, useValue: repo },
+    ],
   }).compile();
   return module.get(OrderCancelledKanbanHandler);
 }
 
-function queue(...replies: QueryResult[]): void {
-  runQueryMock.mockReset();
-  let i = 0;
-  runQueryMock.mockImplementation(() => Promise.resolve(replies[i++] ?? { rows: [] }));
-}
-
 describe('OrderCancelledKanbanHandler', () => {
-  it('moves cards into the cancel column when one exists', async () => {
-    queue(
-      { rows: [{ id: 50 }] },
-      { rows: [] },
-    );
-    const handler = await build();
+  it('calls moveOrderCardToCancelled with orderId and orderNumber', async () => {
+    const repo = makeRepo();
+    const handler = await build(repo);
 
     await handler.handle(new OrderCancelledEvent(7, 'SO-7'));
 
-    expect(runQueryMock).toHaveBeenCalledTimes(2);
+    expect(repo.moveOrderCardToCancelled).toHaveBeenCalledWith(7, 'SO-7');
   });
 
-  it('soft-deletes related cards when cancel column is missing', async () => {
-    queue(
-      { rows: [] },
-      { rows: [] },
-    );
-    const handler = await build();
+  it('resolves without throwing when repo succeeds', async () => {
+    const repo = makeRepo(true);
+    const handler = await build(repo);
 
-    await handler.handle(new OrderCancelledEvent(7, 'SO-7'));
-
-    expect(runQueryMock).toHaveBeenCalledTimes(2);
+    await expect(handler.handle(new OrderCancelledEvent(7, 'SO-7'))).resolves.toBeUndefined();
   });
 
   it('swallows database errors gracefully', async () => {
-    runQueryMock.mockReset();
-    runQueryMock.mockRejectedValue(new Error('db gone'));
-    const handler = await build();
+    const repo = makeRepo(false);
+    const handler = await build(repo);
 
     await expect(
       handler.handle(new OrderCancelledEvent(7, 'SO-7')),

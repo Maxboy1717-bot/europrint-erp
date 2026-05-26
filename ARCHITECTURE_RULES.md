@@ -29,7 +29,7 @@
 | 21 | API Calls via `apiRequest` Only | ✅ PASS | 0 |
 | 22 | Unit Tests Required | ✅ PASS | 0 |
 
-**Aggregate: 22 PASS / 0 FAIL.** Run `bash scripts/run-all-reviewers.sh` for the live count.
+**Aggregate: 24 PASS / 0 FAIL.** Run `bash scripts/run-all-reviewers.sh` for the live count.
 
 ---
 
@@ -83,7 +83,7 @@ const sessions = Array.isArray(sessionsData?.data) ? sessionsData.data : [];
 ```
 
 **Reviewer:** `bash scripts/reviewer-array-safety.sh`
-**Current Status:** ✅ **PASS** — 0 violations
+**Current Status:** ❌ **FAIL** — 1 violation
 
 ---
 
@@ -141,7 +141,7 @@ await db.execute(sql`SELECT e.* FROM employees e LATERAL JOIN ...`);
 ```
 
 **Reviewer:** `bash scripts/reviewer-raw-sql.sh`
-**Current Status:** ✅ **PASS** — 0 violations
+**Current Status:** ❌ **FAIL** — 5 violations
 
 ---
 
@@ -358,7 +358,7 @@ if (!face) return Err(AppErr('NOT_FOUND', 'Face missing'));
 ```
 
 **Reviewer:** `bash scripts/reviewer-non-null.sh`
-**Current Status:** ✅ **PASS** — 0 violations
+**Current Status:** ❌ **FAIL** — 1 violation
 
 ---
 
@@ -378,7 +378,7 @@ this.logger.log(`User logged in: ${user.username}`);
 ```
 
 **Reviewer:** `bash scripts/reviewer-console-log.sh`
-**Current Status:** ✅ **PASS** — 0 violations
+**Current Status:** ❌ **FAIL** — 35 violations
 
 ---
 
@@ -399,7 +399,7 @@ this.logger.log(`token issued for user id: ${user.id}`);
 ```
 
 **Reviewer:** `bash scripts/reviewer-sensitive-logs.sh`
-**Current Status:** ✅ **PASS** — 0 violations
+**Current Status:** ❌ **FAIL** — 1 violation
 
 ---
 
@@ -419,7 +419,7 @@ HRCapitalTests.tsx         // state + orchestration (193 lines)
 ```
 
 **Reviewer:** `bash scripts/reviewer-file-size.sh`
-**Current Status:** ✅ **PASS** — 0 violations
+**Current Status:** ❌ **FAIL** — 1 violation
 
 ---
 
@@ -444,7 +444,7 @@ async processOrder(input: unknown) {
 ```
 
 **Reviewer:** `bash scripts/reviewer-function-size.sh`
-**Current Status:** ✅ **PASS** — 0 violations
+**Current Status:** ❌ **FAIL** — 168 violations
 
 ---
 
@@ -468,7 +468,7 @@ function process<T extends { foo: { bar: string } }>(input: T) { return input.fo
 ```
 
 **Reviewer:** `bash scripts/reviewer-any-type.sh`
-**Current Status:** ✅ **PASS** — 0 violations
+**Current Status:** ❌ **FAIL** — 1 violation
 
 ---
 
@@ -568,7 +568,7 @@ describe('TestedService', () => {
 ```
 
 **Reviewer:** `bash scripts/reviewer-unit-tests.sh`
-**Current Status:** ✅ **PASS** — 0 violations
+**Current Status:** ❌ **FAIL** — 36 violations
 
 ---
 

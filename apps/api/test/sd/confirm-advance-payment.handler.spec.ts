@@ -10,7 +10,6 @@ import {
   ConfirmAdvancePaymentHandler,
   ConfirmAdvancePaymentCommand,
 } from '../../src/modules/sd/application/commands/confirm-advance-payment.handler';
-import { ConcurrencyConflictException } from '../../src/common/exceptions/concurrency-conflict.exception';
 import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../src/modules/sd/domain/repositories/i-sales-order.repo';
 import { SalesOrder } from '../../src/modules/sd/domain/aggregates/sales-order.aggregate';
 import { Ok, Err, AppErr } from '../../src/common/result';
@@ -120,8 +119,11 @@ describe('ConfirmAdvancePaymentHandler', () => {
     const repo = makeRepo(order, new Error('version mismatch'));
     const handler = await buildHandler(repo);
 
-    await expect(
-      handler.execute(new ConfirmAdvancePaymentCommand(order.getId(), 1000, 'k')),
-    ).rejects.toBeInstanceOf(ConcurrencyConflictException);
+    // Handler follows Result pattern — returns Err(CONFLICT) instead of throwing
+    const result = await handler.execute(
+      new ConfirmAdvancePaymentCommand(order.getId(), 1000, 'k'),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('CONFLICT');
   });
 });

@@ -17,6 +17,7 @@ import { CrmAutoLeadService } from '../src/modules/crm/application/crm-auto-lead
 import { JwtAuthGuard } from 'shared/guards/jwt-auth.guard';
 import { RolesGuard } from 'shared/guards/roles.guard';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 
 const ok = (data: unknown) => ({ ok: true, data });
 const fail = () => ({ ok: false, code: 'DB_ERROR', error: new Error('fail') });
@@ -33,6 +34,7 @@ describe('CRM Extended Controllers — Behavioral Integration Tests', () => {
   let mockActivitiesSvc: jest.Mocked<Partial<CrmActivitiesService>>;
   let mockAiSvc: jest.Mocked<Partial<CrmAiService>>;
   let mockAutoLeadSvc: jest.Mocked<Partial<CrmAutoLeadService>>;
+  let commandBusMock: { execute: jest.Mock };
 
   const mockGuard = { canActivate: () => true };
 
@@ -90,6 +92,7 @@ describe('CRM Extended Controllers — Behavioral Integration Tests', () => {
         { provide: CrmActivitiesService, useValue: mockActivitiesSvc },
         { provide: CrmAiService, useValue: mockAiSvc },
         { provide: CrmAutoLeadService, useValue: mockAutoLeadSvc },
+        { provide: CommandBus, useValue: (commandBusMock = { execute: jest.fn() }) },
       ],
     })
       .overrideGuard(JwtAuthGuard).useValue(mockGuard)
@@ -167,7 +170,7 @@ describe('CRM Extended Controllers — Behavioral Integration Tests', () => {
       it('soft-deletes contact and returns success', async () => {
         (mockContactsSvc.deleteContact as jest.Mock).mockResolvedValue(undefined);
         const result = await contactsController.deleteContact('5');
-        expect(result).toEqual({ success: true });
+        expect(result).toEqual({ deleted: true, id: 5 });
       });
     });
   });
@@ -178,13 +181,13 @@ describe('CRM Extended Controllers — Behavioral Integration Tests', () => {
     describe('update()', () => {
       it('updates and returns lead', async () => {
         const updated = { id: 3, status: 'qualified', assigned_to: 7 };
-        (mockLeadsOpsSvc.update as jest.Mock).mockResolvedValue(ok([updated]));
+        commandBusMock.execute.mockResolvedValue(ok(updated));
         const result = await leadsOpsController.update('3', { status: 'qualified', assigned_to: 7 });
         expect(result).toEqual(updated);
       });
 
       it('throws NotFoundException for missing lead', async () => {
-        (mockLeadsOpsSvc.update as jest.Mock).mockResolvedValue(ok([]));
+        commandBusMock.execute.mockResolvedValue({ ok: false, error: { code: 'NOT_FOUND', message: 'Lead not found' } });
         await expect(leadsOpsController.update('0', { status: 'lost' })).rejects.toThrow(NotFoundException);
       });
     });
@@ -192,7 +195,7 @@ describe('CRM Extended Controllers — Behavioral Integration Tests', () => {
     describe('updateStage()', () => {
       it('updates stage_id and returns lead', async () => {
         const updated = { id: 3, stage_id: 2 };
-        (mockLeadsOpsSvc.updateStage as jest.Mock).mockResolvedValue(ok([updated]));
+        commandBusMock.execute.mockResolvedValue(ok(updated));
         const result = await leadsOpsController.updateStage('3', { stage_id: 2 });
         expect(result).toEqual(updated);
       });
@@ -200,9 +203,9 @@ describe('CRM Extended Controllers — Behavioral Integration Tests', () => {
 
     describe('delete()', () => {
       it('returns success: true on delete', async () => {
-        (mockLeadsOpsSvc.delete as jest.Mock).mockResolvedValue(ok({ deleted: true }));
+        commandBusMock.execute.mockResolvedValue(ok({ deleted: true, id: 3 }));
         const result = await leadsOpsController.delete('3');
-        expect(result).toEqual({ success: true });
+        expect(result).toEqual({ deleted: true, id: 3 });
       });
     });
   });

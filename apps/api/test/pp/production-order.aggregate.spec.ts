@@ -20,7 +20,7 @@ describe('ProductionOrder — error codes (DDD C.23)', () => {
     const po = newOrder();
     const r = po.release();
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toBe('CHECKPOINT_REQUIRED');
+    if (!r.ok) expect(r.error.message).toBe('CHECKPOINT_REQUIRED');
   });
 
   it('release() returns INVALID_STATUS_FOR_RELEASE when status is not PLANNED', () => {
@@ -29,21 +29,21 @@ describe('ProductionOrder — error codes (DDD C.23)', () => {
     expect(po.release().ok).toBe(true);
     const r = po.release();
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toBe('INVALID_STATUS_FOR_RELEASE');
+    if (!r.ok) expect(r.error.message).toBe('INVALID_STATUS_FOR_RELEASE');
   });
 
   it('startProduction() returns NOT_RELEASED when status is PLANNED', () => {
     const po = newOrder();
     const r = po.startProduction();
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toBe('NOT_RELEASED');
+    if (!r.ok) expect(r.error.message).toBe('NOT_RELEASED');
   });
 
   it('complete() returns NOT_IN_PROGRESS when status is PLANNED', () => {
     const po = newOrder();
     const r = po.complete();
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toBe('NOT_IN_PROGRESS');
+    if (!r.ok) expect(r.error.message).toBe('NOT_IN_PROGRESS');
   });
 
   it('addMaterialRequirement returns MATERIAL_ALREADY_ADDED on duplicate', () => {
@@ -51,7 +51,7 @@ describe('ProductionOrder — error codes (DDD C.23)', () => {
     expect(po.addMaterialRequirement(new MaterialRequirement(1, 10)).ok).toBe(true);
     const r = po.addMaterialRequirement(new MaterialRequirement(1, 5));
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toBe('MATERIAL_ALREADY_ADDED');
+    if (!r.ok) expect(r.error.message).toBe('MATERIAL_ALREADY_ADDED');
   });
 
   it('happy path: PLANNED -> RELEASED -> IN_PROGRESS -> COMPLETED', () => {

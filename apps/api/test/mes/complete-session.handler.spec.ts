@@ -17,6 +17,8 @@ import {
 } from '../../src/modules/mes/domain/aggregates/production-session.aggregate';
 import { IMesRepository, MES_REPO } from '../../src/modules/mes/domain/repositories/mes.repository';
 import { Ok, Err } from '../../src/common/result';
+import { MesCompletedEvent } from '../../src/modules/mes/domain/events/mes-completed.event';
+import { MesToHr360Event } from '../../src/modules/mes/domain/events/mes-to-hr-360.event';
 
 function readyToComplete(): ProductionSession {
   const s = new ProductionSession(7, 12, 4, 88, false);
@@ -26,13 +28,18 @@ function readyToComplete(): ProductionSession {
 }
 
 function makeRepo(getSession: jest.Mock): jest.Mocked<IMesRepository> {
-  return {
+  const repo = {
     getSession,
     getSessionByPpId: jest.fn(),
     getAllSessionsByStatus: jest.fn(),
     saveSession: jest.fn().mockResolvedValue(Ok(7)),
     checkOperatorCertification: jest.fn(),
+    withTransaction: jest.fn(),
   } as jest.Mocked<IMesRepository>;
+  (repo.withTransaction as jest.Mock).mockImplementation(
+    async (cb: (tx: unknown) => unknown) => cb(null),
+  );
+  return repo;
 }
 
 async function build(repo: IMesRepository, bus: EventBus): Promise<CompleteSessionHandler> {
@@ -68,7 +75,7 @@ describe('CompleteSessionHandler', () => {
 
     expect(r.ok).toBe(true);
     expect(session.getStatus()).toBe(MesStatus.SENT_TO_QC);
-    expect(repo.saveSession).toHaveBeenCalledWith(session);
+    expect(repo.saveSession).toHaveBeenCalledWith(session, null);
   });
 
   it('publishes MES_COMPLETED and MES_TO_HR_360 events on success', async () => {
@@ -81,8 +88,8 @@ describe('CompleteSessionHandler', () => {
     await handler.execute(new CompleteSessionCommand(7));
 
     expect(publish).toHaveBeenCalledTimes(2);
-    expect(publish.mock.calls[0][0]).toBe('MES_COMPLETED');
-    expect(publish.mock.calls[1][0]).toBe('MES_TO_HR_360');
+    expect(publish.mock.calls[0][0]).toBeInstanceOf(MesCompletedEvent);
+    expect(publish.mock.calls[1][0]).toBeInstanceOf(MesToHr360Event);
   });
 
   it('returns Err when session is still READY (cannot complete)', async () => {

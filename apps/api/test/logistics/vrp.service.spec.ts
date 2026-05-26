@@ -61,7 +61,9 @@ describe('VrpService', () => {
         { id: 'd1', lat: 41.31, lon: 69.26, weight: 60 },
         { id: 'd2', lat: 41.32, lon: 69.27, weight: 60 },
       ],
-      [{ id: 'v1', capacity: 80 }],
+      // Two vehicles each with capacity 80 — combined load 120 > 80, so each
+      // delivery must land on its own route rather than being merged.
+      [{ id: 'v1', capacity: 80 }, { id: 'v2', capacity: 80 }],
     );
     expect(res.ok).toBe(true);
     if (res.ok) {

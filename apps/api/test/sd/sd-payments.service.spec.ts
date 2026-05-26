@@ -7,7 +7,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { SdPaymentsService } from '../../src/modules/sd/application/sd-payments.service';
-import { SdPaymentsRepository } from '../../src/modules/sd/application/sd-payments.repository';
+import { SD_PAYMENTS_REPO } from '../../src/modules/sd/domain/repositories/i-sd-payments.repo';
 import { Ok, Err, AppErr } from '../../src/common/result';
 
 type RepoMock = {
@@ -37,7 +37,7 @@ describe('SdPaymentsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SdPaymentsService,
-        { provide: SdPaymentsRepository, useValue: repo },
+        { provide: SD_PAYMENTS_REPO, useValue: repo },
       ],
     }).compile();
     svc = module.get(SdPaymentsService);

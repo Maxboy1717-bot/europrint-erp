@@ -5,6 +5,8 @@
  *   min(t1,t2) on M1 → goes to front of order
  *   min(t1,t2) on M2 → goes to back of order
  *   makespan derived by walking M1/M2 with the constraint M2 cannot start until M1 finishes.
+ *
+ * Note: @Calculation decorator wraps methods in async, so all calls must be awaited.
  */
 
 import { SchedulingJohnsonService } from '../../src/modules/pp/domain/services/scheduling-johnson.service';
@@ -12,8 +14,8 @@ import { SchedulingJohnsonService } from '../../src/modules/pp/domain/services/s
 describe('SchedulingJohnsonService', () => {
   const svc = new SchedulingJohnsonService();
 
-  it('returns empty result for an empty job list', () => {
-    const r = svc.johnsonRule([]);
+  it('returns empty result for an empty job list', async () => {
+    const r = await svc.johnsonRule([]);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.data.order).toEqual([]);
@@ -22,8 +24,8 @@ describe('SchedulingJohnsonService', () => {
     expect(r.data.machine2Timeline).toEqual([]);
   });
 
-  it('places fast-on-M1 jobs at the front and fast-on-M2 jobs at the back', () => {
-    const r = svc.johnsonRule([
+  it('places fast-on-M1 jobs at the front and fast-on-M2 jobs at the back', async () => {
+    const r = await svc.johnsonRule([
       { id: 'A', t1: 1, t2: 9 }, // min on M1 → front
       { id: 'B', t1: 9, t2: 1 }, // min on M2 → back
     ]);
@@ -33,8 +35,8 @@ describe('SchedulingJohnsonService', () => {
     expect(r.data.order[1]).toBe('B');
   });
 
-  it('computes makespan = t1 + t2 for a single job', () => {
-    const r = svc.johnsonRule([{ id: 'only', t1: 3, t2: 4 }]);
+  it('computes makespan = t1 + t2 for a single job', async () => {
+    const r = await svc.johnsonRule([{ id: 'only', t1: 3, t2: 4 }]);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.data.makespan).toBe(7);
@@ -42,15 +44,15 @@ describe('SchedulingJohnsonService', () => {
     expect(r.data.machine2Timeline[0]).toEqual({ jobId: 'only', start: 3, end: 7 });
   });
 
-  it('rejects jobs with negative processing times', () => {
-    const r = svc.johnsonRule([{ id: 'bad', t1: -1, t2: 2 }]);
+  it('rejects jobs with negative processing times', async () => {
+    const r = await svc.johnsonRule([{ id: 'bad', t1: -1, t2: 2 }]);
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.error.code).toBe('VALIDATION');
   });
 
-  it('produces a non-decreasing M2 timeline (M2 waits for M1)', () => {
-    const r = svc.johnsonRule([
+  it('produces a non-decreasing M2 timeline (M2 waits for M1)', async () => {
+    const r = await svc.johnsonRule([
       { id: 'J1', t1: 3, t2: 2 },
       { id: 'J2', t1: 2, t2: 6 },
       { id: 'J3', t1: 5, t2: 4 },
@@ -65,14 +67,14 @@ describe('SchedulingJohnsonService', () => {
     expect(m2[0].start).toBe(r.data.machine1Timeline[0].end);
   });
 
-  it('keeps the order length identical to input job count', () => {
+  it('keeps the order length identical to input job count', async () => {
     const jobs = [
       { id: 'A', t1: 2, t2: 8 },
       { id: 'B', t1: 6, t2: 3 },
       { id: 'C', t1: 4, t2: 5 },
       { id: 'D', t1: 9, t2: 7 },
     ];
-    const r = svc.johnsonRule(jobs);
+    const r = await svc.johnsonRule(jobs);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.data.order).toHaveLength(jobs.length);

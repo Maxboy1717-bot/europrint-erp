@@ -8,7 +8,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { I18nService } from 'nestjs-i18n';
 import { SdLeadsService } from '../../src/modules/sd/application/sd-leads.service';
-import { SdLeadsRepository } from '../../src/modules/sd/application/sd-leads.repository';
+import { SD_LEADS_REPO } from '../../src/modules/sd/domain/repositories/i-sd-leads.repo';
 import { Ok, Err, AppErr } from '../../src/common/result';
 
 type RepoMock = {
@@ -58,7 +58,7 @@ describe('SdLeadsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SdLeadsService,
-        { provide: SdLeadsRepository, useValue: repo },
+        { provide: SD_LEADS_REPO, useValue: repo },
         { provide: I18nService, useValue: i18n },
       ],
     }).compile();

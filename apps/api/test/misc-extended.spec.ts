@@ -27,6 +27,8 @@ import { RaciService } from '../src/modules/security/application/raci.service';
 import { SevenFunctionsService } from '../src/modules/core/application/seven-functions.service';
 import { JwtAuthGuard } from 'shared/guards/jwt-auth.guard';
 import { RolesGuard } from 'shared/guards/roles.guard';
+import { I18nService } from 'nestjs-i18n';
+const mockI18n = { t: jest.fn((key: string) => key) };
 
 const ok = (data: unknown) => ({ ok: true, data });
 const forbidden = (msg = 'Forbidden') => ({ ok: false, error: { code: 'FORBIDDEN', message: msg } });
@@ -401,7 +403,10 @@ describe('IotCameraController', () => {
     };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [IotCameraController],
-      providers: [{ provide: IotCameraService, useValue: mockSvc }],
+      providers: [
+        { provide: IotCameraService, useValue: mockSvc },
+        { provide: I18nService, useValue: mockI18n },
+      ],
     }).overrideGuard(RolesGuard).useValue(mockGuard).overrideGuard(JwtAuthGuard).useValue(mockGuard).compile();
     ctrl = module.get(IotCameraController);
   });

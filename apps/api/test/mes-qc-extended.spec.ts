@@ -21,6 +21,7 @@ import { SdLeadsService } from '../src/modules/sd/application/sd-leads.service';
 import { JwtAuthGuard } from 'shared/guards/jwt-auth.guard';
 import { RolesGuard } from 'shared/guards/roles.guard';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 
 const ok = (data: unknown) => ({ ok: true, data });
 const mockGuard = { canActivate: () => true };
@@ -105,7 +106,8 @@ describe('MES, QC, and SD Extended Controllers — Behavioral Integration Tests'
       get360View: jest.fn(),
       update: jest.fn(),
       softDelete: jest.fn(),
-      getContacts: jest.fn(),
+      getContacts: jest.fn().mockResolvedValue({ ok: true, data: [] }),
+      getRecentOrders: jest.fn().mockResolvedValue({ ok: true, data: [] }),
       addContact: jest.fn(),
       updateContact: jest.fn(),
       deleteContact: jest.fn(),
@@ -144,6 +146,7 @@ describe('MES, QC, and SD Extended Controllers — Behavioral Integration Tests'
         { provide: SdDashboardService, useValue: mockSdDashSvc },
         { provide: SdCustomersService, useValue: mockSdCustSvc },
         { provide: SdLeadsService, useValue: mockSdLeadsSvc },
+        { provide: I18nService, useValue: { t: jest.fn((key: string) => key) } },
       ],
     })
       .overrideGuard(JwtAuthGuard).useValue(mockGuard)
@@ -381,14 +384,16 @@ describe('MES, QC, and SD Extended Controllers — Behavioral Integration Tests'
     it('list() returns customers', async () => {
       const customers = [{ id: 1, name: 'Hamkor Print', status: 'active' }];
       (mockSdCustSvc.list as jest.Mock).mockResolvedValue(ok(customers));
-      expect(await sdCustCtrl.list()).toEqual(customers);
+      // Controller wraps result in { data, total } for frontend compatibility
+      expect(await sdCustCtrl.list()).toEqual({ data: customers, total: 1 });
     });
 
     it('getById() returns single customer', async () => {
       const customer = { id: 3, name: 'Polygon Print', status: 'active' };
       (mockSdCustSvc.getById as jest.Mock).mockResolvedValue(ok([customer]));
+      // Controller enriches result with contacts/orders from parallel calls
       const result = await sdCustCtrl.getById('3');
-      expect(result).toEqual(customer);
+      expect(result).toMatchObject(customer);
     });
 
     it('getById() throws NotFoundException when missing', async () => {
@@ -402,8 +407,9 @@ describe('MES, QC, and SD Extended Controllers — Behavioral Integration Tests'
       expect(await sdCustCtrl.get360View('3')).toBeDefined();
     });
 
-    it('create() throws ForbiddenException as per business rule', async () => {
-      await expect(sdCustCtrl.create()).rejects.toThrow(ForbiddenException);
+    it('create() throws on missing name (Zod/validation)', async () => {
+      // Controller validates body with Zod; calling with no body triggers a validation error
+      await expect(sdCustCtrl.create()).rejects.toThrow();
     });
 
     it('getContacts() returns customer contacts', async () => {
@@ -477,7 +483,7 @@ describe('MES, QC, and SD Extended Controllers — Behavioral Integration Tests'
 
     it('delete() removes lead', async () => {
       (mockSdLeadsSvc.delete as jest.Mock).mockResolvedValue(undefined);
-      expect(await sdLeadsCtrl.delete('5')).toEqual({ success: true });
+      expect(await sdLeadsCtrl.delete('5')).toEqual({ deleted: true, id: 5 });
     });
 
     it('convert() converts lead to customer', async () => {

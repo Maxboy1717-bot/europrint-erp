@@ -4,6 +4,8 @@
  * TZ-14 CPM + PERT (network scheduling). Pure compute.
  *   CPM: ES/EF forward pass, LS/LF backward pass, totalFloat = LS − ES.
  *   PERT: d̄ = (o + 4m + p)/6 ; σ² = ((p−o)/6)²
+ *
+ * Note: @Calculation decorator wraps methods in async, so all calls must be awaited.
  */
 
 import { SchedulingNetworkService } from '../../src/modules/pp/domain/services/scheduling-network.service';
@@ -11,8 +13,8 @@ import { SchedulingNetworkService } from '../../src/modules/pp/domain/services/s
 describe('SchedulingNetworkService — CPM', () => {
   const svc = new SchedulingNetworkService();
 
-  it('computes a single-path project duration as the sum of durations', () => {
-    const r = svc.calculateCpm([
+  it('computes a single-path project duration as the sum of durations', async () => {
+    const r = await svc.calculateCpm([
       { id: 'A', duration: 4, predecessors: [] },
       { id: 'B', duration: 6, predecessors: ['A'] },
       { id: 'C', duration: 3, predecessors: ['B'] },
@@ -24,8 +26,8 @@ describe('SchedulingNetworkService — CPM', () => {
     expect(r.data.activities.every(a => a.isCritical)).toBe(true);
   });
 
-  it('selects the longer of two parallel paths as the critical path', () => {
-    const r = svc.calculateCpm([
+  it('selects the longer of two parallel paths as the critical path', async () => {
+    const r = await svc.calculateCpm([
       { id: 'S', duration: 0, predecessors: [] },
       { id: 'LONG', duration: 8, predecessors: ['S'] },
       { id: 'SHORT', duration: 5, predecessors: ['S'] },
@@ -41,15 +43,15 @@ describe('SchedulingNetworkService — CPM', () => {
     expect(shortAct?.isCritical).toBe(false);
   });
 
-  it('rejects an empty activity list', () => {
-    const r = svc.calculateCpm([]);
+  it('rejects an empty activity list', async () => {
+    const r = await svc.calculateCpm([]);
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.error.code).toBe('VALIDATION');
   });
 
-  it('rejects an unknown predecessor reference', () => {
-    const r = svc.calculateCpm([
+  it('rejects an unknown predecessor reference', async () => {
+    const r = await svc.calculateCpm([
       { id: 'A', duration: 2, predecessors: ['GHOST'] },
     ]);
     expect(r.ok).toBe(false);
@@ -57,8 +59,8 @@ describe('SchedulingNetworkService — CPM', () => {
     expect(r.error.code).toBe('VALIDATION');
   });
 
-  it('detects a cycle in the activity graph', () => {
-    const r = svc.calculateCpm([
+  it('detects a cycle in the activity graph', async () => {
+    const r = await svc.calculateCpm([
       { id: 'A', duration: 1, predecessors: ['C'] },
       { id: 'B', duration: 1, predecessors: ['A'] },
       { id: 'C', duration: 1, predecessors: ['B'] },

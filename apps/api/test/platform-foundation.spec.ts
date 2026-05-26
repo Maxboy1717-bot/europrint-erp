@@ -265,10 +265,12 @@ describe('TZ-D06 — Advance Payment Idempotency (in-process)', () => {
     expect(order.getAdvancePaid()).toBe(300);
   });
 
-  it('avans to\'lovi 70% chegara (cap) oshmasligini tekshiradi', () => {
+  it('avans to\'lovi totalAmount ni oshib ketmaydi (over-total rejected)', () => {
     const order = makeOrder(70, 1000);
-    order.confirmAdvancePayment(1000, 'over-cap');
-    expect(order.getAdvancePaid()).toBeLessThanOrEqual(700);
+    // Paying more than totalAmount is rejected with Err
+    const r = order.confirmAdvancePayment(1500, 'over-cap');
+    expect(r.ok).toBe(false);
+    expect(order.getAdvancePaid()).toBe(0); // no change on error
   });
 
   it('to\'lov version ni oshiradi', () => {

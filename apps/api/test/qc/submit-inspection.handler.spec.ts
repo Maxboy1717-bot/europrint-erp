@@ -24,15 +24,19 @@ type RepoMock = {
   findById: jest.Mock<Promise<Inspection | null>, [string]>;
   findByOrderId: jest.Mock;
   delete: jest.Mock;
+  withTransaction: jest.Mock;
 };
 
 function makeRepo(): RepoMock {
-  return {
+  const repo: RepoMock = {
     save: jest.fn().mockResolvedValue(undefined),
     findById: jest.fn(),
     findByOrderId: jest.fn(),
     delete: jest.fn(),
+    withTransaction: jest.fn(),
   };
+  repo.withTransaction.mockImplementation(async (cb: (tx: unknown) => unknown) => cb(null));
+  return repo;
 }
 
 function makeInspection(): Inspection {
@@ -108,7 +112,7 @@ describe('SubmitInspectionHandler', () => {
 
     const r = await handler.execute(new SubmitInspectionCommand(insp.id, 7, true, ''));
 
-    expect(repo.save).toHaveBeenCalledWith(insp);
+    expect(repo.save).toHaveBeenCalledWith(insp, null);
     if (r.ok) expect(r.data).toBe(insp.id);
   });
 });

@@ -9,6 +9,7 @@ import { PosWarehouseIntegrationService } from '../../src/modules/compatibility/
 import { JwtAuthGuard } from '../../src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../src/common/guards/roles.guard';
 import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 
 const ok = <T>(data: T) => ({ ok: true as const, data });
 const err = (code = 'DB_ERROR', message = 'fail') => ({ ok: false as const, error: { code, message } });
@@ -27,7 +28,10 @@ describe('PosWarehouseIntegrationController', () => {
     };
     const mod = await Test.createTestingModule({
       controllers: [PosWarehouseIntegrationController],
-      providers: [{ provide: PosWarehouseIntegrationService, useValue: svc }],
+      providers: [
+        { provide: PosWarehouseIntegrationService, useValue: svc },
+        { provide: I18nService, useValue: { t: jest.fn((key: string) => key) } },
+      ],
     })
       .overrideGuard(JwtAuthGuard).useValue(allow)
       .overrideGuard(RolesGuard).useValue(allow)

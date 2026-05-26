@@ -7,7 +7,8 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { SdQuotationsService } from '../../src/modules/sd/application/sd-quotations.service';
-import { SdQuotationsRepository } from '../../src/modules/sd/application/sd-quotations.repository';
+import { SD_QUOTATIONS_REPO } from '../../src/modules/sd/domain/repositories/i-sd-quotations.repo';
+import { QUOTATION_REPO } from '../../src/modules/sd/domain/repositories/i-quotation.repo';
 import { Ok, Err, AppErr } from '../../src/common/result';
 import {
   BULK_DISCOUNT_LARGE,
@@ -50,7 +51,8 @@ describe('SdQuotationsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SdQuotationsService,
-        { provide: SdQuotationsRepository, useValue: repo },
+        { provide: SD_QUOTATIONS_REPO, useValue: repo },
+        { provide: QUOTATION_REPO, useValue: repo },
       ],
     }).compile();
     svc = module.get(SdQuotationsService);

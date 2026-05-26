@@ -44,7 +44,7 @@ describe('CertExpiryHandler', () => {
   });
 
   it('updates certificate status to "expired" when handling CertificateExpired event', async () => {
-    await handler.handleCertExpiry(makeEvent());
+    await handler.handle(makeEvent());
 
     expect(repo.updateCertificateStatus).toHaveBeenCalledWith(11, 'expired');
   });
@@ -55,14 +55,14 @@ describe('CertExpiryHandler', () => {
       courseName: 'X', expiredAt: new Date('2026-06-01'),
     });
 
-    await handler.handleCertExpiry(ev);
+    await handler.handle(ev);
 
     expect(repo.updateCertificateStatus).toHaveBeenCalledWith(4242, 'expired');
   });
 
   it('does not call sendAlert when no telegram service is wired up', async () => {
     // No telegramService attached — handler must not crash.
-    await expect(handler.handleCertExpiry(makeEvent())).resolves.not.toThrow();
+    await expect(handler.handle(makeEvent())).resolves.not.toThrow();
   });
 
   it('runs daily expiry cron without touching the repo', async () => {

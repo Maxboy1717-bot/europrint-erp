@@ -6,6 +6,7 @@
 import { Test } from '@nestjs/testing';
 import { EmployeesExtraController } from '../../src/modules/compatibility/employees-extra.controller';
 import { EmployeesCompatService } from '../../src/modules/compatibility/employees-compat.service';
+import { JwtAuthGuard } from '../../src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../src/common/guards/roles.guard';
 import { InternalServerErrorException } from '@nestjs/common';
 
@@ -24,6 +25,7 @@ describe('EmployeesExtraController', () => {
       controllers: [EmployeesExtraController],
       providers: [{ provide: EmployeesCompatService, useValue: svc }],
     })
+      .overrideGuard(JwtAuthGuard).useValue(allow)
       .overrideGuard(RolesGuard).useValue(allow)
       .compile();
     ctrl = mod.get(EmployeesExtraController);

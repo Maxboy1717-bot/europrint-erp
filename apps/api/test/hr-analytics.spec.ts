@@ -23,6 +23,8 @@ jest.mock('../src/shared/db', () => {
 import { AttritionService } from '../src/modules/hr/analytics/attrition.service';
 import { UtilizationService } from '../src/modules/hr/analytics/utilization.service';
 import { OvertimeCalculatorService, OvertimePolicy } from '../src/modules/hr/domain/services/overtime-calculator.service';
+import { Ok, Err, AppErr } from '../src/common/result';
+import type { IHrRepo, OvertimePolicyRow } from '../src/modules/hr/domain/repositories/i-hr.repo';
 
 const runQueryMock = jest.requireMock('../src/shared/db').runQuery as jest.Mock;
 
@@ -253,6 +255,7 @@ describe('UtilizationService — TZ-45', () => {
 // ============================================================================
 describe('OvertimeCalculatorService — TZ-46', () => {
   let svc: OvertimeCalculatorService;
+  let mockRepo: jest.Mocked<Pick<IHrRepo, 'findActiveOvertimePolicy'>>;
 
   const defaultPolicy: OvertimePolicy = {
     regularOvertimeHours: 2,
@@ -265,22 +268,21 @@ describe('OvertimeCalculatorService — TZ-46', () => {
   };
 
   beforeEach(() => {
-    svc = new OvertimeCalculatorService();
+    mockRepo = { findActiveOvertimePolicy: jest.fn() };
+    svc = new OvertimeCalculatorService(mockRepo as unknown as IHrRepo);
     runQueryMock.mockReset();
   });
 
   it('loadActivePolicy: overtime_policy jadvalidan faol siyosat olinadi', async () => {
-    runQueryMock.mockResolvedValueOnce([{
-      regularOvertimeHours: '2',
-      regularMultiplier: '1.5',
-      extendedMultiplier: '2.0',
-      weekendMultiplier: '2.0',
-      nightShiftBonus: '0.5',
+    mockRepo.findActiveOvertimePolicy.mockResolvedValueOnce(Ok({
+      regularOvertimeHours: 2,
+      regularMultiplier: 1.5,
+      extendedMultiplier: 2.0,
+      weekendMultiplier: 2.0,
+      nightShiftBonus: 0.5,
       nightShiftStartHour: 22,
       nightShiftEndHour: 6,
-      isActive: true,
-      effectiveFrom: new Date(),
-    }]);
+    } as OvertimePolicyRow));
     const r = await svc.loadActivePolicy();
     expect(r.ok).toBe(true);
     if (r.ok) {
@@ -290,7 +292,7 @@ describe('OvertimeCalculatorService — TZ-46', () => {
   });
 
   it('loadActivePolicy: faol siyosat yo\'q → NOT_FOUND xato', async () => {
-    runQueryMock.mockResolvedValueOnce([]);
+    mockRepo.findActiveOvertimePolicy.mockResolvedValueOnce(Ok(null));
     const r = await svc.loadActivePolicy();
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('NOT_FOUND');
@@ -300,11 +302,11 @@ describe('OvertimeCalculatorService — TZ-46', () => {
     const grossMonthly = 5000000;
     const wh = 176;
     const baseRate = grossMonthly / wh;
-    runQueryMock.mockResolvedValueOnce([{
-      regularOvertimeHours: '2', regularMultiplier: '1.5',
-      extendedMultiplier: '2.0', weekendMultiplier: '2.0',
-      nightShiftBonus: '0.5', nightShiftStartHour: 22, nightShiftEndHour: 6,
-    }]);
+    mockRepo.findActiveOvertimePolicy.mockResolvedValueOnce(Ok({
+      regularOvertimeHours: 2, regularMultiplier: 1.5,
+      extendedMultiplier: 2.0, weekendMultiplier: 2.0,
+      nightShiftBonus: 0.5, nightShiftStartHour: 22, nightShiftEndHour: 6,
+    } as OvertimePolicyRow));
     const r = await svc.calculateOtPay({
       grossMonthly,
       workingHoursPerMonth: wh,
@@ -318,7 +320,7 @@ describe('OvertimeCalculatorService — TZ-46', () => {
   });
 
   it('calculateOtPay: DB da siyosat yo\'q → xato', async () => {
-    runQueryMock.mockResolvedValueOnce([]);
+    mockRepo.findActiveOvertimePolicy.mockResolvedValueOnce(Ok(null));
     const r = await svc.calculateOtPay({
       grossMonthly: 5000000,
       workingHoursPerMonth: 176,
@@ -333,11 +335,11 @@ describe('OvertimeCalculatorService — TZ-46', () => {
     const wh = 176;
     const baseRate = grossMonthly / wh;
 
-    runQueryMock.mockResolvedValueOnce([{
-      regularOvertimeHours: '2', regularMultiplier: '2.0',
-      extendedMultiplier: '3.0', weekendMultiplier: '2.5',
-      nightShiftBonus: '0.5', nightShiftStartHour: 22, nightShiftEndHour: 6,
-    }]);
+    mockRepo.findActiveOvertimePolicy.mockResolvedValueOnce(Ok({
+      regularOvertimeHours: 2, regularMultiplier: 2.0,
+      extendedMultiplier: 3.0, weekendMultiplier: 2.5,
+      nightShiftBonus: 0.5, nightShiftStartHour: 22, nightShiftEndHour: 6,
+    } as OvertimePolicyRow));
     const r = await svc.calculateOtPay({
       grossMonthly,
       workingHoursPerMonth: wh,

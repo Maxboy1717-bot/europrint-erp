@@ -90,15 +90,13 @@ describe('Trigger 20: AdvanceBypassApproved audit trail', () => {
     );
 
     const published = bus.publish.mock.calls[0][0];
-    expect(published.data).toEqual(
-      expect.objectContaining({
-        orderId: order.getId(),
-        bypassBy: 42,
-        reason: 'special customer',
-      }),
-    );
-    expect(published.aggregateId).toBe(order.getId());
-    expect(published.timestamp).toBeInstanceOf(Date);
+    expect(published).toMatchObject({
+      orderId:     order.getId(),
+      bypassBy:    42,
+      reason:      'special customer',
+      aggregateId: order.getId(),
+    });
+    expect(published.occurredAt).toBeInstanceOf(Date);
   });
 
   it('writes audit log entry when bypass succeeds', async () => {

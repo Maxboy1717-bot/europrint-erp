@@ -1,13 +1,13 @@
 /**
  * pos-gl-auto.service.spec.ts
  *
- * Unit tests for PosGlAutoService.
+ * Unit tests for PosGlAutoListener (extracted from PosGlAutoService in Wave 4).
  * @workspace/db (drizzle) and GlPostingLogRepository are fully mocked.
  */
 
 // ─── Mock @workspace/db ───────────────────────────────────────────────────────
 // jest.config maps  ^@workspace/db$  →  <rootDir>/../../lib/db/dist/cjs/index.js
-// We mock that resolved path so the service's import is intercepted.
+// We mock that resolved path so the listener's import is intercepted.
 
 const mockSelect = jest.fn();
 const mockFrom   = jest.fn();
@@ -24,8 +24,9 @@ jest.mock('../../../lib/db/dist/cjs/index.js', () => {
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { PosGlAutoService } from '../src/modules/pos/application/services/pos-gl-auto.service';
+import { PosGlAutoListener } from '../src/modules/pos/application/event-handlers/pos-gl-auto.listener';
 import { GlPostingLogRepository } from '../src/modules/pos/infrastructure/repositories/gl-posting-log.repository';
+import { PosMovementCompletedEvent } from '../src/modules/pos/domain/events/pos-movement-completed.event';
 
 // ─── Helper types ─────────────────────────────────────────────────────────────
 
@@ -51,9 +52,9 @@ const BASE_PAYLOAD = {
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe('PosGlAutoService', () => {
-  let service: PosGlAutoService;
-  let glRepo:  jest.Mocked<GlPostingLogRepository>;
-  let emitter: jest.Mocked<EventEmitter2>;
+  let listener: PosGlAutoListener;
+  let glRepo:   jest.Mocked<GlPostingLogRepository>;
+  let emitter:  jest.Mocked<EventEmitter2>;
 
   // Drizzle fluent chain mocks are reset each test
   function mockDb(movementType: string, lines: Array<{ quantity: number; unitPrice: number }>) {
@@ -86,13 +87,13 @@ describe('PosGlAutoService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        PosGlAutoService,
+        PosGlAutoListener,
         { provide: GlPostingLogRepository, useValue: glRepo },
         { provide: EventEmitter2,          useValue: emitter },
       ],
     }).compile();
 
-    service = module.get<PosGlAutoService>(PosGlAutoService);
+    listener = module.get<PosGlAutoListener>(PosGlAutoListener);
   });
 
   // ─── GL entry count per movement type ──────────────────────────────────────
@@ -101,7 +102,7 @@ describe('PosGlAutoService', () => {
     mockDb('EXTERNAL_IN', [{ quantity: 10, unitPrice: 100 }]);
     glRepo.insertLog.mockResolvedValue({ ok: true, data: { id: 1 } } as never);
 
-    await service.onMovementCompleted({ ...BASE_PAYLOAD });
+    await listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }));
 
     expect(glRepo.insertLog).toHaveBeenCalledTimes(1);
     const arg = glRepo.insertLog.mock.calls[0][0] as GlLogInsertData;
@@ -116,7 +117,7 @@ describe('PosGlAutoService', () => {
     mockDb('EXTERNAL_OUT', [{ quantity: 5, unitPrice: 200 }]);
     glRepo.insertLog.mockResolvedValue({ ok: true, data: { id: 2 } } as never);
 
-    await service.onMovementCompleted({ ...BASE_PAYLOAD });
+    await listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }));
 
     const arg = glRepo.insertLog.mock.calls[0][0] as GlLogInsertData;
     expect(arg.glEntries).toHaveLength(4);
@@ -129,7 +130,7 @@ describe('PosGlAutoService', () => {
     mockDb('INTERNAL_ISSUE', [{ quantity: 3, unitPrice: 50 }]);
     glRepo.insertLog.mockResolvedValue({ ok: true, data: { id: 3 } } as never);
 
-    await service.onMovementCompleted({ ...BASE_PAYLOAD });
+    await listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }));
 
     const arg = glRepo.insertLog.mock.calls[0][0] as GlLogInsertData;
     expect(arg.glEntries).toHaveLength(2);
@@ -141,7 +142,7 @@ describe('PosGlAutoService', () => {
     mockDb('DAMAGE', [{ quantity: 2, unitPrice: 75 }]);
     glRepo.insertLog.mockResolvedValue({ ok: true, data: { id: 4 } } as never);
 
-    await service.onMovementCompleted({ ...BASE_PAYLOAD });
+    await listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }));
 
     const arg = glRepo.insertLog.mock.calls[0][0] as GlLogInsertData;
     expect(arg.glEntries).toHaveLength(2);
@@ -153,7 +154,7 @@ describe('PosGlAutoService', () => {
     mockDb('INTERNAL_RETURN', [{ quantity: 4, unitPrice: 25 }]);
     glRepo.insertLog.mockResolvedValue({ ok: true, data: { id: 5 } } as never);
 
-    await service.onMovementCompleted({ ...BASE_PAYLOAD });
+    await listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }));
 
     const arg = glRepo.insertLog.mock.calls[0][0] as GlLogInsertData;
     expect(arg.glEntries).toHaveLength(2);
@@ -172,7 +173,7 @@ describe('PosGlAutoService', () => {
     ]);
     glRepo.insertLog.mockResolvedValue({ ok: true, data: { id: 6 } } as never);
 
-    await service.onMovementCompleted({ ...BASE_PAYLOAD });
+    await listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }));
 
     const arg = glRepo.insertLog.mock.calls[0][0] as GlLogInsertData;
     // Every GL entry for INTERNAL_ISSUE should carry the total of 650
@@ -186,7 +187,7 @@ describe('PosGlAutoService', () => {
     ]);
     glRepo.insertLog.mockResolvedValue({ ok: true, data: { id: 7 } } as never);
 
-    await service.onMovementCompleted({ ...BASE_PAYLOAD });
+    await listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }));
 
     const arg = glRepo.insertLog.mock.calls[0][0] as GlLogInsertData;
     expect(isFinite(arg.glEntries[0].debit)).toBe(true);
@@ -199,7 +200,7 @@ describe('PosGlAutoService', () => {
     mockDb('INTERNAL_ISSUE', [{ quantity: 1, unitPrice: 10 }]);
     glRepo.insertLog.mockResolvedValue({ ok: true, data: { id: 8 } } as never);
 
-    await service.onMovementCompleted({ ...BASE_PAYLOAD });
+    await listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }));
 
     const arg = glRepo.insertLog.mock.calls[0][0] as GlLogInsertData;
     expect(arg.status).toBe('AWAITING_REVIEW');
@@ -213,7 +214,7 @@ describe('PosGlAutoService', () => {
     mockDb('INTERNAL_ISSUE', [{ quantity: 10, unitPrice: 50 }]);
     glRepo.insertLog.mockResolvedValue({ ok: true, data: { id: 99 } } as never);
 
-    await service.onMovementCompleted({ ...BASE_PAYLOAD });
+    await listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }));
 
     expect(emitter.emit).toHaveBeenCalledWith('pos.gl.auto_posted', expect.objectContaining({
       movementId:   BASE_PAYLOAD.movementId,
@@ -227,7 +228,7 @@ describe('PosGlAutoService', () => {
     mockDb('INTERNAL_ISSUE', [{ quantity: 1, unitPrice: 10 }]);
     glRepo.insertLog.mockResolvedValue({ ok: false, error: { code: 'DB_ERROR', message: 'insert failed' } } as never);
 
-    await service.onMovementCompleted({ ...BASE_PAYLOAD });
+    await listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }));
 
     expect(emitter.emit).not.toHaveBeenCalled();
   });
@@ -239,7 +240,7 @@ describe('PosGlAutoService', () => {
     mockSelect.mockImplementationOnce(() => { throw new Error('Unexpected DB crash'); });
 
     // Must resolve without throwing
-    await expect(service.onMovementCompleted({ ...BASE_PAYLOAD })).resolves.toBeUndefined();
+    await expect(listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }))).resolves.toBeUndefined();
     expect(glRepo.insertLog).not.toHaveBeenCalled();
   });
 
@@ -249,7 +250,7 @@ describe('PosGlAutoService', () => {
       where: jest.fn().mockResolvedValue([]),  // no movement found
     }) });
 
-    await expect(service.onMovementCompleted({ ...BASE_PAYLOAD })).resolves.toBeUndefined();
+    await expect(listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }))).resolves.toBeUndefined();
     expect(glRepo.insertLog).not.toHaveBeenCalled();
     expect(emitter.emit).not.toHaveBeenCalled();
   });
@@ -259,7 +260,7 @@ describe('PosGlAutoService', () => {
   it('should skip if movement type has no GL mapping', async () => {
     mockDb('UNKNOWN_TYPE', [{ quantity: 5, unitPrice: 10 }]);
 
-    await service.onMovementCompleted({ ...BASE_PAYLOAD });
+    await listener.handle(new PosMovementCompletedEvent({ ...BASE_PAYLOAD }));
 
     // No insertLog call because no GL pair found for UNKNOWN_TYPE
     expect(glRepo.insertLog).not.toHaveBeenCalled();

@@ -6,8 +6,11 @@
 
 process.env.DATABASE_URL = process.env.DATABASE_URL ?? 'postgres://test:test@localhost:5432/test';
 
-jest.mock('../../src/modules/pos/pos.gateway', () => ({
+jest.mock('../../src/modules/pos/presentation/pos.gateway', () => ({
   broadcastPosEvent: jest.fn(),
+  broadcastToUser: jest.fn(),
+  broadcastToDept: jest.fn(),
+  broadcastToWarehouse: jest.fn(),
 }));
 
 // Stub heavy POS service modules so we don't pull DB/Telegram clients.
@@ -29,7 +32,7 @@ import { PosSecondaryEventsHandler } from '../../src/modules/pos/application/eve
 import { PosTelegramService } from '../../src/modules/pos/application/services/pos-telegram.service';
 import { PosNotificationsService } from '../../src/modules/pos/application/services/pos-notifications.service';
 import { PosEventRepository } from '../../src/modules/pos/infrastructure/repositories/pos-event.repository';
-import { broadcastPosEvent } from '../../src/modules/pos/pos.gateway';
+import { broadcastPosEvent } from '../../src/modules/pos/presentation/pos.gateway';
 
 interface TgMock {
   sendNotification: jest.Mock; notifyRequestPending: jest.Mock;

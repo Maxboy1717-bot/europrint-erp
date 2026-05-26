@@ -6,7 +6,6 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { EventBus } from '@nestjs/cqrs';
 import {
   UpdateOrderStatusHandler,
@@ -58,21 +57,21 @@ async function buildHandler(
 }
 
 describe('UpdateOrderStatusHandler', () => {
-  it('throws BadRequest when order is missing', async () => {
+  it('returns BAD_REQUEST Err when order is missing', async () => {
     const handler = await buildHandler(makeRepo(null), makeBus());
 
-    await expect(
-      handler.execute(new UpdateOrderStatusCommand(99, 'approved')),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    const r = await handler.execute(new UpdateOrderStatusCommand(99, 'approved'));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('BAD_REQUEST');
   });
 
-  it('throws Forbidden on illegal status transition', async () => {
+  it('returns FORBIDDEN Err on illegal status transition', async () => {
     const order = buildSalesOrder({ status: 'draft' });
     const handler = await buildHandler(makeRepo(order), makeBus());
 
-    await expect(
-      handler.execute(new UpdateOrderStatusCommand(order.getId(), 'shipped')),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    const r = await handler.execute(new UpdateOrderStatusCommand(order.getId(), 'shipped'));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('FORBIDDEN');
   });
 
   it('blocks ready_for_planning when advance is insufficient', async () => {
@@ -85,9 +84,11 @@ describe('UpdateOrderStatusHandler', () => {
     const bus = makeBus();
     const handler = await buildHandler(makeRepo(order), bus);
 
-    await expect(
-      handler.execute(new UpdateOrderStatusCommand(order.getId(), 'ready_for_planning')),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    const r = await handler.execute(
+      new UpdateOrderStatusCommand(order.getId(), 'ready_for_planning'),
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('FORBIDDEN');
     const names = (bus.publish as jest.Mock).mock.calls.map(c => c[0]?.constructor?.name);
     expect(names).toContain('AdvanceCheckFailedEvent');
   });

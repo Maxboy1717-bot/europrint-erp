@@ -1,38 +1,63 @@
 /**
  * test/sd/create-invoice.handler.spec.ts
  *
- * Unit tests for sd CreateInvoiceHandler. The shared db module (runQuery + db)
- * is mocked so no real DB is touched. Math + business rules are real.
+ * Unit tests for sd CreateInvoiceHandler. ISdInvoicesRepository is mocked
+ * via SD_INVOICES_REPO token. Math + business rules are real.
  */
 
-jest.mock('@shared/db', () => {
-  const insert = jest.fn().mockReturnValue({ values: jest.fn().mockResolvedValue(undefined) });
-  return {
-    runQuery: jest.fn(),
-    db: { insert },
-    invoices: { id: 'invoices.id' },
-  };
-});
-
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
 import { EventBus } from '@nestjs/cqrs';
-import { runQuery, db } from '@shared/db';
 import { CreateInvoiceHandler } from '../../src/modules/sd/application/commands/create-invoice.handler';
 import {
   CreateInvoiceCommand,
   InvoiceItem,
 } from '../../src/modules/sd/application/commands/create-invoice.command';
+import {
+  ISdInvoicesRepository,
+  SD_INVOICES_REPO,
+  OrderForInvoice,
+  InvoiceRow,
+} from '../../src/modules/sd/invoices/i-sd-invoices.repo';
+import { Ok, Err, AppErr } from '../../src/common/result';
 
 function makeBus(): jest.Mocked<EventBus> {
   return { publish: jest.fn() } as unknown as jest.Mocked<EventBus>;
 }
 
-async function buildHandler(bus: EventBus): Promise<CreateInvoiceHandler> {
+/** Build a repo mock whose withTransaction runs the work fn directly */
+function makeRepo(orderResult: OrderForInvoice | null | 'not_found', invoiceRow?: Partial<InvoiceRow>): jest.Mocked<ISdInvoicesRepository> {
+  const resolvedInvoiceRow: InvoiceRow = {
+    invoiceNumber: `INV-${Date.now()}`,
+    subtotal: '900000',
+    taxAmount: '108000',
+    totalAmount: '1008000',
+    status: 'draft',
+    ...invoiceRow,
+  };
+
+  return {
+    findAll: jest.fn(),
+    findById: jest.fn(),
+    findByInvoiceNumber: jest.fn(),
+    create: jest.fn(),
+    findOrderForInvoicing: jest.fn().mockResolvedValue(
+      orderResult === 'not_found'
+        ? Ok(null)
+        : orderResult === null
+          ? Err(AppErr('NOT_FOUND', 'not found'))
+          : Ok(orderResult),
+    ),
+    createInvoice: jest.fn().mockResolvedValue(Ok(resolvedInvoiceRow)),
+    withTransaction: jest.fn().mockImplementation(async (work) => work(null)),
+  } as unknown as jest.Mocked<ISdInvoicesRepository>;
+}
+
+async function buildHandler(repo: ISdInvoicesRepository): Promise<CreateInvoiceHandler> {
   const module: TestingModule = await Test.createTestingModule({
     providers: [
       CreateInvoiceHandler,
-      { provide: EventBus, useValue: bus },
+      { provide: EventBus, useValue: makeBus() },
+      { provide: SD_INVOICES_REPO, useValue: repo },
     ],
   }).compile();
   return module.get(CreateInvoiceHandler);
@@ -46,52 +71,39 @@ function items(): InvoiceItem[] {
 }
 
 describe('CreateInvoiceHandler (sd)', () => {
-  beforeEach(() => {
-    (runQuery as jest.Mock).mockReset();
-    ((db.insert as jest.Mock)).mockClear();
-  });
-
-  it('throws BadRequest when sales order is not found', async () => {
-    (runQuery as jest.Mock).mockResolvedValue({ rows: [] });
-    const handler = await buildHandler(makeBus());
+  it('returns BAD_REQUEST when sales order is not found', async () => {
+    const handler = await buildHandler(makeRepo('not_found'));
     const cmd = new CreateInvoiceCommand(
       '500', 'Acme', items(), new Date('2026-06-01'), null, 'user-1',
     );
 
-    await expect(handler.execute(cmd)).rejects.toBeInstanceOf(BadRequestException);
+    const result = await handler.execute(cmd);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('BAD_REQUEST');
   });
 
-  it('throws BadRequest when sales order is in draft status', async () => {
-    (runQuery as jest.Mock).mockResolvedValue({
-      rows: [{ status: 'draft', deleted_at: null }],
-    });
-    const handler = await buildHandler(makeBus());
+  it('returns BAD_REQUEST when sales order is in draft status', async () => {
+    const handler = await buildHandler(makeRepo({ id: '500', status: 'draft', deletedAt: null }));
 
-    await expect(
-      handler.execute(new CreateInvoiceCommand(
-        '500', 'Acme', items(), new Date('2026-06-01'), null, 'user-1',
-      )),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    const result = await handler.execute(new CreateInvoiceCommand(
+      '500', 'Acme', items(), new Date('2026-06-01'), null, 'user-1',
+    ));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('BAD_REQUEST');
   });
 
-  it('throws BadRequest when sales order is soft-deleted', async () => {
-    (runQuery as jest.Mock).mockResolvedValue({
-      rows: [{ status: 'approved', deleted_at: new Date() }],
-    });
-    const handler = await buildHandler(makeBus());
+  it('returns BAD_REQUEST when sales order is soft-deleted', async () => {
+    const handler = await buildHandler(makeRepo({ id: '500', status: 'approved', deletedAt: new Date() }));
 
-    await expect(
-      handler.execute(new CreateInvoiceCommand(
-        '500', 'Acme', items(), new Date('2026-06-01'), null, 'user-1',
-      )),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    const result = await handler.execute(new CreateInvoiceCommand(
+      '500', 'Acme', items(), new Date('2026-06-01'), null, 'user-1',
+    ));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('BAD_REQUEST');
   });
 
   it('computes subtotal, tax and total in draft status when order is approved', async () => {
-    (runQuery as jest.Mock).mockResolvedValue({
-      rows: [{ status: 'approved', deleted_at: null }],
-    });
-    const handler = await buildHandler(makeBus());
+    const handler = await buildHandler(makeRepo({ id: '500', status: 'approved', deletedAt: null }));
 
     const result = await handler.execute(new CreateInvoiceCommand(
       '500', 'Acme', items(), new Date('2026-06-01'), null, 'user-1',
@@ -108,10 +120,7 @@ describe('CreateInvoiceHandler (sd)', () => {
   });
 
   it('returns generated invoice number with INV- prefix', async () => {
-    (runQuery as jest.Mock).mockResolvedValue({
-      rows: [{ status: 'in_production', deleted_at: null }],
-    });
-    const handler = await buildHandler(makeBus());
+    const handler = await buildHandler(makeRepo({ id: '500', status: 'in_production', deletedAt: null }));
 
     const result = await handler.execute(new CreateInvoiceCommand(
       '500', 'Acme', items(), new Date('2026-06-01'), null, 'user-1',
