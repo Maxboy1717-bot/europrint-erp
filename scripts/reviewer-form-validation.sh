@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Reviewer for Rule 20: every frontend form uses zodResolver.
+# PERFORMANCE: Two-pass bulk grep instead of per-file loops over ~2562 FE files on Windows.
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -14,16 +15,23 @@ echo -e "${BOLD}═════════════════════�
 if [ ! -d "$FE" ]; then echo "frontend dir not found"; exit 0; fi
 
 violations=0
-while IFS= read -r file; do
-  # File uses useForm() but doesn't import zodResolver
-  if grep -qE '\buseForm\s*\(' "$file" 2>/dev/null; then
-    if ! grep -qE 'zodResolver' "$file" 2>/dev/null; then
-      rel="${file#$ROOT_DIR/}"
-      echo -e "${RED}✗${NC} $rel — useForm without zodResolver"
-      violations=$((violations+1))
-    fi
+
+# Pass 1: find files that use useForm() (bulk, 1 process)
+mapfile -t CANDIDATES < <(
+  grep -rlE '\buseForm\s*\(' \
+    "$FE" --include="*.tsx" --include="*.ts" \
+    --exclude="*.test.ts" --exclude="*.test.tsx" \
+    2>/dev/null || true
+)
+
+# Pass 2: from candidates, check which ones lack zodResolver
+for fp in "${CANDIDATES[@]}"; do
+  if ! grep -qE 'zodResolver' "$fp" 2>/dev/null; then
+    rel="${fp#$ROOT_DIR/}"
+    echo -e "${RED}✗${NC} $rel — useForm without zodResolver"
+    violations=$((violations+1))
   fi
-done < <(find "$FE" \( -name "*.tsx" -o -name "*.ts" \) -not -path "*/node_modules/*" -not -path "*/dist/*" -not -name "*.test.ts" -not -name "*.test.tsx" 2>/dev/null)
+done
 
 echo ""
 if [ "$violations" -eq 0 ]; then

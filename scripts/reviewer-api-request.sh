@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Reviewer for Rule 21: all frontend API calls go through apiRequest helper.
+# PERFORMANCE: Bulk grep instead of per-file loops over ~2562 FE files on Windows.
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -13,41 +14,35 @@ echo -e "${BOLD}═════════════════════�
 
 if [ ! -d "$FE" ]; then echo "frontend dir not found"; exit 0; fi
 
+# Bulk grep for bare fetch/axios/XHR calls (1 process)
+violations_raw=$(grep -rnE "\bfetch\(['\"]?/api|\baxios\.[a-z]+\(|new XMLHttpRequest" \
+  "$FE" --include="*.tsx" --include="*.ts" \
+  2>/dev/null \
+  | grep -vE '\.test\.ts:|\.test\.tsx:' \
+  | grep -vE ':[0-9]+:\s*//' \
+  | grep -vE 'queryClient\.ts:|api-request\.ts:|fetchWithAuth|api-client' \
+  | grep -vE '/queryClient\.ts|/api-request\.ts|/auth-refresh\.ts|/useAuth\.tsx|/errorLogger\.ts|/upload\.ts|/webPush\.ts' \
+  | grep -vE '/Login\.tsx|/useIoTTabletAuth\.ts|/useIoTTablet\.ts|/useIoTTabletAlerts\.ts|/useIoTTabletData\.ts' \
+  | grep -vE '/OrgChartPage\.tsx|/ManualInspectionForm\.tsx|/PosLotTraceability\.tsx|/PosReservations\.tsx|/HRSafety\.tsx' \
+  || true)
+
 violations=0
-while IFS= read -r file; do
-  # Skip files that ARE the apiRequest plumbing (would be circular):
-  #   queryClient.ts, api-request.ts, auth-refresh.ts, useAuth.tsx,
-  #   errorLogger.ts (log endpoint must not retry through itself),
-  #   upload.ts (multipart upload needs raw fetch),
-  #   webPush.ts (service-worker registration uses fetch directly).
-  case "$file" in
-    */queryClient.ts|*/api-request.ts|*/auth-refresh.ts|*/useAuth.tsx|*/errorLogger.ts|*/upload.ts|*/webPush.ts) continue ;;
-    # Bootstrap auth pages: pre-token, so apiRequest (which expects token) doesn't apply
-    */Login.tsx|*/useIoTTabletAuth.ts) continue ;;
-    # IoT tablet pages use custom `x-tablet-token` header, not Bearer JWT —
-    # apiRequest helper assumes Bearer; raw fetch is the correct path here.
-    */useIoTTablet.ts|*/useIoTTabletAlerts.ts|*/useIoTTabletData.ts) continue ;;
-    # OrgChartPage downloads binary blobs (xlsx/pdf/png) — apiRequest is
-    # JSON-only and would rebind the response; raw fetch is correct for blobs.
-    */OrgChartPage.tsx) continue ;;
-    # ManualInspectionForm sets Authorization header inline (impersonation flow)
-    */ManualInspectionForm.tsx) continue ;;
-    # POS pages use pos_session token (not main JWT) — apiRequest helper uses Bearer JWT
-    */PosLotTraceability.tsx|*/PosReservations.tsx) continue ;;
-    # HRSafety exports a binary PDF blob — apiRequest is JSON-only
-    */HRSafety.tsx) continue ;;
-  esac
-  # Match bare fetch('/api or axios(  or new XMLHttpRequest()
-  hits=$(grep -nE "\bfetch\(['\"]?/api|\baxios\.[a-z]+\(|new XMLHttpRequest" "$file" 2>/dev/null \
-    | grep -vE 'queryClient\.ts|api-request\.ts|fetchWithAuth|api-client' \
-    | head -3)
-  if [ -n "$hits" ]; then
-    rel="${file#$ROOT_DIR/}"
-    count=$(echo "$hits" | wc -l | tr -d ' ')
-    echo -e "${RED}✗${NC} $rel — $count direct HTTP call(s)"
-    violations=$((violations+count))
-  fi
-done < <(find "$FE" \( -name "*.tsx" -o -name "*.ts" \) -not -path "*/node_modules/*" -not -path "*/dist/*" 2>/dev/null)
+
+if [ -n "$violations_raw" ]; then
+  # Group by file and display
+  mapfile -t VIOL_FILES < <(echo "$violations_raw" | awk -F: '{print $1}' | sort -u)
+  for fp in "${VIOL_FILES[@]}"; do
+    rel="${fp#$ROOT_DIR/}"
+    mapfile -t FILE_HITS < <(echo "$violations_raw" | grep -F "${fp}:")
+    cnt=${#FILE_HITS[@]}
+    violations=$((violations + cnt))
+    echo -e "${RED}✗${NC} $rel — $cnt direct HTTP call(s)"
+    for i in "${!FILE_HITS[@]}"; do
+      [ "$i" -ge 3 ] && break
+      echo "    ${FILE_HITS[$i]#*:}"
+    done
+  done
+fi
 
 echo ""
 if [ "$violations" -eq 0 ]; then

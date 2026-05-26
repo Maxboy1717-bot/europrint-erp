@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Reviewer for Rule 19: delete/approve/reject mutations must be guarded by AlertDialog.
+# PERFORMANCE: Two-pass bulk grep (find violating candidates, then check for guard)
+#   instead of per-file loops over ~2035 tsx files on Windows.
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -14,18 +16,21 @@ echo -e "${BOLD}═════════════════════�
 if [ ! -d "$FE" ]; then echo "frontend dir not found"; exit 0; fi
 
 violations=0
-# Flag direct delete/approve/reject/cancel mutate() calls inside onClick without AlertDialog in the file
-while IFS= read -r file; do
-  # Check that an onClick lambda calls a destructive verb mutation directly,
-  # AND the file has no AlertDialog/ConfirmDialog component.
-  if grep -qE 'onClick=\{?\s*\(?[^)]*\)?\s*=>\s*(delete|approve|reject|cancel|remove|destroy)[A-Z][a-zA-Z]*Mutation\.mutate\(' "$file" 2>/dev/null; then
-    if ! grep -qE 'AlertDialog|ConfirmDialog' "$file" 2>/dev/null; then
-      rel="${file#$ROOT_DIR/}"
-      echo -e "${RED}✗${NC} $rel — destructive mutate without AlertDialog"
-      violations=$((violations+1))
-    fi
+
+# Pass 1: find files that have destructive onClick mutations (bulk, 1 process)
+mapfile -t CANDIDATES < <(
+  grep -rlE 'onClick=\{?\s*\(?[^)]*\)?\s*=>\s*(delete|approve|reject|cancel|remove|destroy)[A-Z][a-zA-Z]*Mutation\.mutate\(' \
+    "$FE" --include="*.tsx" 2>/dev/null || true
+)
+
+# Pass 2: from candidates, check which ones lack AlertDialog/ConfirmDialog
+for fp in "${CANDIDATES[@]}"; do
+  if ! grep -qE 'AlertDialog|ConfirmDialog' "$fp" 2>/dev/null; then
+    rel="${fp#$ROOT_DIR/}"
+    echo -e "${RED}✗${NC} $rel — destructive mutate without AlertDialog"
+    violations=$((violations+1))
   fi
-done < <(find "$FE" -name "*.tsx" -not -path "*/node_modules/*" -not -path "*/dist/*" 2>/dev/null)
+done
 
 echo ""
 if [ "$violations" -eq 0 ]; then
