@@ -17,7 +17,6 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { HrEmployeesExtService } from '../application/hr-employees-ext.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   HrUpdateProfileImageSchema, HrUpdateProfileImageDto,
   HrAssignOrgFunctionsSchema, HrAssignOrgFunctionsDto,
@@ -163,29 +162,33 @@ export class HrEmployeesExtController {
   @ApiOperation({ summary: 'Get employee documents' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get(':employeeId/documents')
-  async getEmployeeDocuments(@Param('employeeId') _employeeId: string) {
-    return notImplemented('GET /hr/employees/:employeeId/documents');
+  async getEmployeeDocuments(@Param('employeeId') employeeId: string) {
+    // P3-26: hr_documents table has employee_id FK. Returns docs for this employee.
+    const result = await this.svc.getEmployeeDocuments(employeeId);
+    if (!result || !result.ok) return { data: [] };
+    return { data: Array.isArray(result.data) ? result.data : [] };
   }
 
   @ApiOperation({ summary: 'Get employee document by id' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get(':employeeId/documents/:docId')
-  async getEmployeeDocumentById(@Param('employeeId') _employeeId: string, @Param('docId') _docId: string) {
-    return notImplemented('GET /hr/employees/:employeeId/documents/:docId');
+  async getEmployeeDocumentById(@Param('employeeId') employeeId: string, @Param('docId') docId: string) {
+    const result = await this.svc.getEmployeeDocumentById(employeeId, docId);
+    if (!result || !result.ok || !result.data) return { data: null };
+    return { data: result.data };
   }
 
   @ApiOperation({ summary: 'Delete employee document' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Delete(':employeeId/documents/:docId')
-  async deleteEmployeeDocument(@Param('employeeId') _employeeId: string, @Param('docId') _docId: string) {
-    return notImplemented('DELETE /hr/employees/:employeeId/documents/:docId');
+  async deleteEmployeeDocument(@Param('employeeId') employeeId: string, @Param('docId') docId: string) {
+    const result = await this.svc.deleteEmployeeDocument(employeeId, docId);
+    if (!result || !result.ok) return { message: 'Document not found or already deleted', deleted: false };
+    return { message: "Hujjat o'chirildi", deleted: true };
   }
 
   @ApiOperation({ summary: 'Get operator stats' })

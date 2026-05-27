@@ -4,10 +4,10 @@
  */
 
 import { GL } from "../constants/gl-accounts.constants";
-import { Injectable, Logger } from '@nestjs/common';
-import { Result, Ok, Err } from '@common/result';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Result, Ok, Err, AppErr } from '@common/result';
+import { IGlPostingRepository, GL_POSTING_REPO } from '../repositories/i-gl-posting.repo';
 
-import { FINANCE_RANDOM_REF_RANGE } from '@common/constants/app.constants';
 export interface JournalLine {
   accountCode: string;
   accountName: string;
@@ -18,6 +18,10 @@ export interface JournalLine {
 @Injectable()
 export class GlPostingService {
   private readonly logger = new Logger(GlPostingService.name);
+
+  constructor(
+    @Inject(GL_POSTING_REPO) private readonly glPostingRepo: IGlPostingRepository,
+  ) {}
 
   async postSalesInvoice(invoiceId: number, amount: number, tax: number): Promise<Result<number>> {
     this.logger.debug(`Posting Sales Invoice - ID: ${invoiceId}, Amount: ${amount}, Tax: ${tax}`);
@@ -73,20 +77,45 @@ export class GlPostingService {
       { accountCode: GL.SALARY_PAYABLE, accountName: 'Salary Payable', debit: 0, credit: gross - inps - jshd },
       { accountCode: GL.EMPLOYEE_DEDUCTIONS, accountName: 'Employee Deductions', debit: 0, credit: inps + jshd },
     ];
-    const result = this.createJournalEntry(lines, `PR-${payrollId}`);
+    const result = await this.createJournalEntry(lines, `PR-${payrollId}`);
     if (result.ok) this.logger.log(`Payroll posted - Entry ID: ${result.data}`);
     return result;
   }
 
-  private createJournalEntry(lines: JournalLine[], reference: string): Result<number> {
-    const totalDebit = (Array.isArray(lines) ? lines : []).reduce((sum, line) => sum + line.debit, 0);
-    const totalCredit = (Array.isArray(lines) ? lines : []).reduce((sum, line) => sum + line.credit, 0);
+  private async createJournalEntry(lines: JournalLine[], reference: string): Promise<Result<number>> {
+    const safeLines = Array.isArray(lines) ? lines : [];
+    const totalDebit  = safeLines.reduce((sum, line) => sum + line.debit, 0);
+    const totalCredit = safeLines.reduce((sum, line) => sum + line.credit, 0);
 
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
       return Err(`Double-entry validation failed: Debit ${totalDebit} != Credit ${totalCredit}`);
     }
 
+    const entryDate = new Date().toISOString().slice(0, 10);
+    let firstId: number | undefined;
+
+    for (const line of safeLines) {
+      const amount = line.debit > 0 ? line.debit : line.credit;
+      if (amount <= 0) continue;
+
+      const entryNumber = `${reference}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const insertResult = await this.glPostingRepo.insertEntry({
+        entryNumber,
+        entryDate,
+        documentType: 'journal',
+        debitAccountId:  line.debit  > 0 ? line.accountCode : 'OFFSET',
+        creditAccountId: line.credit > 0 ? line.accountCode : 'OFFSET',
+        amount,
+        description: `${reference} — ${line.accountName}`,
+      });
+
+      if (!insertResult.ok) {
+        return Err(AppErr('DB_ERROR', `Failed to insert GL line for ${line.accountName}: ${insertResult.error.message}`));
+      }
+      if (firstId === undefined) firstId = insertResult.data;
+    }
+
     this.logger.debug(`Journal entry created - Reference: ${reference}, Debit/Credit: ${totalDebit}`);
-    return Ok(Math.floor(Math.random() * FINANCE_RANDOM_REF_RANGE));
+    return Ok(firstId ?? 0);
   }
 }

@@ -3,8 +3,8 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Get, HttpCode, HttpStatus, Post, Body, Param, Query, UseGuards, UseInterceptors, Logger, UsePipes } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, HttpCode, HttpStatus, Post, Body, Param, Query, UseGuards, UseInterceptors, Logger, UsePipes, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
@@ -18,6 +18,7 @@ import {
   FinanceCreateInvoiceSchema, FinanceCreateInvoiceDto,
   FinancePostInvoiceSchema, FinancePostInvoiceDto,
 } from './dto/finance.dto';
+import { FinanceInvoiceRepo } from '../infrastructure/repositories/drizzle-finance-invoice.repo';
 
 const CreateInvoiceRootSchema = z.object({
   customerId: z.union([z.string(), z.number()]).optional(),
@@ -29,7 +30,6 @@ const CreateInvoiceRootSchema = z.object({
   notes: z.string().max(2000).optional(),
 }).passthrough();
 
-import { FINANCE_RANDOM_REF_RANGE } from '@common/constants/app.constants';
 enum Role {
   FINANCE_OFFICER = 'FINANCE_OFFICER',
   SUPER_ADMIN = 'SUPER_ADMIN',
@@ -44,8 +44,11 @@ enum Role {
 export class FinanceInvoicesController {
   private readonly logger = new Logger(FinanceInvoicesController.name);
 
-  constructor(private commandBus: CommandBus,
-    private queryBus: QueryBus) {}
+  constructor(
+    private commandBus: CommandBus,
+    private queryBus: QueryBus,
+    private readonly invoiceRepo: FinanceInvoiceRepo,
+  ) {}
 
   @ApiOperation({ summary: 'List invoices' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -69,7 +72,23 @@ export class FinanceInvoicesController {
   async createInvoiceRoot(@Body() body: unknown) {
     const dto = CreateInvoiceRootSchema.parse(body);
     this.logger.log(`Creating invoice (root POST)`);
-    return { invoiceId: Date.now(), invoiceNumber: `INV-${Date.now()}`, ...dto, created: true };
+    const invoiceNumber = `INV-${Date.now()}`;
+    const result = await this.invoiceRepo.saveInvoice({
+      customer_id: dto.customerId ?? null,
+      source_type: 'manual',
+      source_id: null,
+      status: 'draft',
+      total_amount: dto.amount ?? 0,
+      paid_amount: 0,
+      due_date: dto.dueDate ?? null,
+      notes: dto.notes ?? null,
+      created_at: new Date(),
+    } as Record<string, unknown>);
+    if (!result.ok) {
+      throw new InternalServerErrorException('Invoice yaratilmadi');
+    }
+    const row = result.data as Record<string, unknown>;
+    return { invoiceId: row['id'], invoiceNumber, ...dto, created: true };
   }
 
   @ApiOperation({ summary: 'Create invoice' })
@@ -79,13 +98,24 @@ export class FinanceInvoicesController {
   @Roles(Role.FINANCE_OFFICER, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinanceCreateInvoiceSchema))
   async createInvoice(@Body() body: FinanceCreateInvoiceDto) {
-
-      this.logger.log(`Creating invoice for customer ${body.customerId}, Amount: ${body.amount}`);
-      return {
-        invoiceId: Math.floor(Math.random() * FINANCE_RANDOM_REF_RANGE),
-        invoiceNumber: `INV-${Date.now()}`,
-      };
-    
+    this.logger.log(`Creating invoice for customer ${body.customerId}, Amount: ${body.amount}`);
+    const invoiceNumber = `INV-${Date.now()}`;
+    const result = await this.invoiceRepo.saveInvoice({
+      customer_id: body.customerId,
+      source_type: 'manual',
+      source_id: null,
+      status: 'draft',
+      total_amount: body.amount,
+      paid_amount: 0,
+      due_date: body.dueDate,
+      notes: body.description,
+      created_at: new Date(),
+    } as Record<string, unknown>);
+    if (!result.ok) {
+      throw new InternalServerErrorException('Invoice yaratilmadi');
+    }
+    const row = result.data as Record<string, unknown>;
+    return { invoiceId: row['id'], invoiceNumber };
   }
 
   @ApiOperation({ summary: 'Post invoice' })
@@ -98,9 +128,14 @@ export class FinanceInvoicesController {
     @Param('invoiceId') invoiceId: number,
     @Body() body: FinancePostInvoiceDto
   ) {
-
-      return { message: 'Invoice posted to GL', invoiceId };
-    
+    const result = await this.invoiceRepo.updateInvoice(String(invoiceId), {
+      status: 'posted',
+      updated_at: new Date(),
+    } as Record<string, unknown>);
+    if (!result.ok) {
+      throw new InternalServerErrorException('Invoice postlanmadi');
+    }
+    return { message: 'Invoice posted to GL', invoiceId };
   }
 
   @ApiOperation({ summary: 'Get invoice' })
@@ -109,8 +144,13 @@ export class FinanceInvoicesController {
   @Get(':invoiceId')
   @Roles(Role.FINANCE_OFFICER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async getInvoice(@Param('invoiceId') invoiceId: number) {
-
-      return { data: { invoiceId, status: 'posted' } };
-    
+    const result = await this.invoiceRepo.findInvoiceById(String(invoiceId));
+    if (!result.ok) {
+      throw new InternalServerErrorException('Invoice topishda xatolik');
+    }
+    if (!result.data) {
+      throw new NotFoundException(`Invoice ${invoiceId} topilmadi`);
+    }
+    return { data: result.data };
   }
 }

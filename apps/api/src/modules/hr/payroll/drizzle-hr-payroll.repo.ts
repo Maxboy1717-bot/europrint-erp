@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { db } from '@shared/db';
 import { salaryHistory, payrollPeriods, payrollRows } from '@europrint/schemas';
+import { gl_journal_entries } from '@shared/db';
 import { eq, and, count, desc, gte, lte } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IHrPayrollRepository } from './i-hr-payroll.repo';
@@ -88,11 +89,26 @@ export class DrizzleHrPayrollRepository implements IHrPayrollRepository {
     lines: ReadonlyArray<{ account: string; debit: number; credit: number; memo: string }>,
   ): Promise<Result<{ inserted: number }>> {
     try {
-      // GL journals are typically stored in gl_documents / gl_lines. We log here as a
-      // structural hook so finance team can subscribe via the GL_POSTED event. Actual
-      // wiring to finance GL tables is owned by the finance module (Phase 8).
-      this.logger.log(`GL journal: period #${periodId} → ${Array.isArray(lines) ? lines.length : 0} lines (deferred to finance)`);
-      return Ok({ inserted: Array.isArray(lines) ? lines.length : 0 });
+      const safeLines = Array.isArray(lines) ? lines : [];
+      if (safeLines.length === 0) {
+        this.logger.log(`GL journal: period #${periodId} → 0 lines, skipping insert`);
+        return Ok({ inserted: 0 });
+      }
+      await db.insert(gl_journal_entries).values(
+        safeLines.map(line => ({
+          document_type: 'payroll',
+          document_id:   periodId,
+          debit_account: line.account,
+          credit_account: line.account,
+          amount:        String(line.debit !== 0 ? line.debit : line.credit),
+          currency:      'UZS',
+          description:   line.memo ?? 'Payroll GL entry',
+          posted_at:     new Date(),
+          created_at:    new Date(),
+        }))
+      );
+      this.logger.log(`GL journal: period #${periodId} → ${safeLines.length} lines inserted`);
+      return Ok({ inserted: safeLines.length });
     } catch (e: unknown) {
       return Err((e as Error)?.message || `GL journal yozishda xatolik: #${periodId}`);
     }

@@ -20,6 +20,10 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { LegacyService } from '../services/legacy.service';
 import { LegacyIotService } from '../services/legacy-iot.service';
 import { LmsRepository } from '../../lms/infrastructure/repositories/drizzle-lms.repo';
+import {
+  getAbcAnalysisForUserRaw,
+  getCourseProgressForUserRaw,
+} from '../services/legacy-kpi.helpers';
 
 import { z } from 'zod';
 
@@ -92,15 +96,18 @@ export class GeneralLegacyBController {
   @Get('progress/user')
   async getProgressUser(@Query('employee_id') empId?: string) {
     const userId = empId ?? '0';
-    const [coursesResult, enrollmentsResult] = await Promise.all([
+    const [coursesResult, enrollmentsResult, courseProgress] = await Promise.all([
       this.lmsRepo.findAllCourses({ limit: DEFAULT_PAGE_SIZE }),
       this.lmsRepo.findEnrollmentsByUser(userId, { limit: DEFAULT_PAGE_SIZE }),
+      getCourseProgressForUserRaw(userId).catch(() => []),
     ]);
     const courses = coursesResult.ok && Array.isArray(coursesResult.data?.items) ? coursesResult.data.items : [];
     const enrollments = enrollmentsResult.ok && Array.isArray(enrollmentsResult.data?.items) ? enrollmentsResult.data.items : [];
     const completedCount = (Array.isArray(enrollments) ? enrollments : []).filter((e) => e.status === 'completed').length;
     const progress = enrollments.length > 0 ? Math.round((completedCount / enrollments.length) * 100) : 0;
-    return { courses, enrollments, progress, skills: [] };
+    // skills = course progress rows (real DB data from enrollments + courses JOIN)
+    const skills = Array.isArray(courseProgress) ? courseProgress : [];
+    return { courses, enrollments, progress, skills };
   }
 
   @Get('certificates/user')
@@ -114,8 +121,16 @@ export class GeneralLegacyBController {
   }
 
   @Get('abc-analysis/user')
-  async getAbcAnalysisUser(@Query('employee_id') _empId?: string) {
-    return { category: 'A', score: 85 };
+  async getAbcAnalysisUser(@Query('employee_id') empId?: string) {
+    if (!empId) {
+      return { grade: 'N/A', score: 0, performanceRate: 0, punctualityRate: 0, attendanceRate: 0, courseCompletionRate: 0, error: 'employee_id required' };
+    }
+    try {
+      return await getAbcAnalysisForUserRaw(empId);
+    } catch (e) {
+      this.logger.error('ABC analysis error', e);
+      return { grade: 'C', score: 0, performanceRate: 0, punctualityRate: 0, attendanceRate: 0, courseCompletionRate: 0, error: String(e) };
+    }
   }
 
   @Get('discipline/user')

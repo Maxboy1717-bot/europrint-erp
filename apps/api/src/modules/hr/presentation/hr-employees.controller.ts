@@ -139,16 +139,46 @@ export class HrEmployeesController {
   @Post(':employeeId/salary-review')
   @Roles('DIRECTOR', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrReviewSalarySchema))
-  reviewSalary(
+  async reviewSalary(
     @Param('employeeId') employeeId: string,
     @Body() body: HrReviewSalaryDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
+    // 1. Read current employee to get existing base_salary
+    const empResult = await this.hrRepo.findEmployeeById(employeeId);
+    assertOk(empResult);
+    const emp = empResult.data;
+
+    const currentSalary = emp ? Number(emp['base_salary'] ?? 0) : 0;
+    const newSalary      = currentSalary + body.proposedIncrease;
+    const today          = _time.now().toISOString().split('T')[0];
+
+    // 2. INSERT into salary_history: record the salary-review entry
+    const histResult = await this.hrRepo.savePayroll({
+      employeeId:  parseInt(employeeId, 10),
+      employee_id: parseInt(employeeId, 10),
+      periodStart: today,
+      periodEnd:   today,
+      baseSalary:  newSalary,
+      gross:       newSalary,
+      // Carry review metadata in other_bonuses field (0) and notes via reason
+      otherBonuses: 0,
+      netSalary:    newSalary,
+    });
+    assertOk(histResult);
+
+    // 3. UPDATE employees.base_salary with the new salary
+    const updateResult = await this.hrRepo.updateEmployee(employeeId, { baseSalary: newSalary });
+    assertOk(updateResult);
+
     return {
-      message:          "Maosh ko'rib chiqish yozildi",
+      message:          "Maosh muvaffaqiyatli yangilandi",
       employeeId,
+      previousSalary:   currentSalary,
+      newSalary,
       proposedIncrease: body.proposedIncrease,
-      reviewedBy:       user?.id,
+      reason:           body.reason ?? null,
+      reviewedBy:       user?.id ?? null,
       reviewedAt:       _time.now().toISOString(),
     };
   }

@@ -9,7 +9,7 @@ import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { ar_aging_buckets, sales_invoices } from '@shared/db';
 import { safeCall, Result } from '@common/result';
-import type { IFinanceArRepo, ArBucket } from '../../domain/repositories/i-finance-ar.repo';
+import type { IFinanceArRepo, ArBucket, CreateArEntryDto } from '../../domain/repositories/i-finance-ar.repo';
 
 type Row = Record<string, unknown>;
 
@@ -94,5 +94,24 @@ export class FinanceArRepository implements IFinanceArRepo {
         );
       }
     });
+  }
+
+  async createArEntry(dto: CreateArEntryDto): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const invoiceNumber = `AR-${Date.now()}`;
+      const rows = await db.insert(sales_invoices).values({
+        customer_id:    dto.customerId != null ? String(dto.customerId) : null,
+        customer_name:  null,
+        invoice_number: invoiceNumber,
+        sales_order_id: null,
+        total_amount:   String(dto.amount),
+        paid_amount:    '0',
+        currency:       'UZS',
+        status:         'draft',
+        payment_status: 'unpaid',
+        due_date:       dto.dueDate ?? null,
+      } as typeof sales_invoices.$inferInsert).returning();
+      return (rows[0] ?? {}) as Row;
+    }, 'DB_ERROR');
   }
 }

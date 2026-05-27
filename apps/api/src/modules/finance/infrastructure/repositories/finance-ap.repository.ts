@@ -7,10 +7,10 @@
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
-import { eq, ne, sql, lt } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { ap_aging_buckets, purchase_invoices } from '@shared/db';
 import { safeCall, Result } from '@common/result';
-import type { IFinanceApRepo, ApBucket } from '../../domain/repositories/i-finance-ap.repo';
+import type { IFinanceApRepo, ApBucket, CreateApEntryDto } from '../../domain/repositories/i-finance-ap.repo';
 
 type Row = Record<string, unknown>;
 
@@ -93,5 +93,25 @@ export class FinanceApRepository implements IFinanceApRepo {
         );
       }
     });
+  }
+
+  async createApEntry(dto: CreateApEntryDto): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const invoiceNo = `AP-${Date.now()}`;
+      const rows = await db.insert(purchase_invoices).values({
+        vendor_id:      dto.vendorId != null ? Number(dto.vendorId) : null,
+        supplier_name:  null,
+        invoice_no:     invoiceNo,
+        total_amount:   String(dto.amount),
+        paid_amount:    '0',
+        amount:         String(dto.amount),
+        currency:       'UZS',
+        due_date:       dto.dueDate ?? null,
+        status:         'pending',
+        payment_status: 'unpaid',
+        notes:          dto.description ?? null,
+      } as typeof purchase_invoices.$inferInsert).returning();
+      return (rows[0] ?? {}) as Row;
+    }, 'DB_ERROR');
   }
 }

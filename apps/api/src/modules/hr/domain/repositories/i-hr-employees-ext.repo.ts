@@ -39,6 +39,9 @@ export interface IHrEmployeesExtRepo {
   ): Promise<Result<Row>>;
   getAssessmentSkips(id: number): Promise<Result<Row[]>>;
   getEmployeesList(limit?: number, offset?: number): Promise<Result<Row[]>>;
+  getEmployeeDocuments(employeeId: number): Promise<Result<Row[]>>;
+  getEmployeeDocumentById(employeeId: number, docId: number): Promise<Result<Row | null>>;
+  deleteEmployeeDocument(employeeId: number, docId: number): Promise<Result<boolean>>;
 }
 
 export const HR_EMPLOYEES_EXT_REPO = Symbol('HR_EMPLOYEES_EXT_REPO');

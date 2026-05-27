@@ -7,7 +7,7 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { FINANCE_AP_REPO, type IFinanceApRepo, type ApBucket } from '../domain/repositories/i-finance-ap.repo';
+import { FINANCE_AP_REPO, type IFinanceApRepo, type ApBucket, type CreateApEntryDto } from '../domain/repositories/i-finance-ap.repo';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
 @Injectable()
@@ -29,6 +29,10 @@ export class FinanceApService {
   async getOverdue() {
     const today = _time.now().toISOString().split('T')[0];
     return this.repo.getOverduePurchaseInvoices(today);
+  }
+
+  async createEntry(dto: CreateApEntryDto) {
+    return this.repo.createApEntry(dto);
   }
 
   async recalculateAging() {

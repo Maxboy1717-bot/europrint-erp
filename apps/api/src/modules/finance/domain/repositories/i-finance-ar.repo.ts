@@ -21,6 +21,13 @@ export type ArBucket = {
   total_outstanding: number;
 };
 
+export type CreateArEntryDto = {
+  customerId?: string | number | null;
+  amount: number;
+  dueDate?: string | null;
+  description?: string | null;
+};
+
 export interface IFinanceArRepo {
   getArAgingBuckets(): Promise<Result<Row[]>>;
   getArAgingTotals(): Promise<Result<Row>>;
@@ -29,6 +36,7 @@ export interface IFinanceArRepo {
   clearArAgingBuckets(): Promise<void>;
   insertArAgingBucket(b: ArBucket): Promise<void>;
   replaceArAgingBuckets(rows: ArBucket[]): Promise<void>;
+  createArEntry(dto: CreateArEntryDto): Promise<Result<Row>>;
 }
 
 export const FINANCE_AR_REPO = Symbol('FINANCE_AR_REPO');

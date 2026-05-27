@@ -54,4 +54,16 @@ export class HrEmployeesExtService {
     const r = await this.repo.getEmployeesList(limit, offset);
     return r.ok && Array.isArray(r.data) ? r.data : [];
   }
+
+  async getEmployeeDocuments(employeeId: string) {
+    return this.repo.getEmployeeDocuments(safeInt(employeeId, 0));
+  }
+
+  async getEmployeeDocumentById(employeeId: string, docId: string) {
+    return this.repo.getEmployeeDocumentById(safeInt(employeeId, 0), safeInt(docId, 0));
+  }
+
+  async deleteEmployeeDocument(employeeId: string, docId: string) {
+    return this.repo.deleteEmployeeDocument(safeInt(employeeId, 0), safeInt(docId, 0));
+  }
 }

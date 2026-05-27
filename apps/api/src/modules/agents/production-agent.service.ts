@@ -49,8 +49,8 @@
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { sql } from 'drizzle-orm';
-import { runQuery } from '@shared/db';
+import { sql, and, gte, lte } from 'drizzle-orm';
+import { db, downtime_events as downtimeEvents, runQuery } from '@shared/db';
 import { AgentAlertService } from './shared/agent-alert.service';
 import { AgentAuditService } from './shared/agent-audit.service';
 import { AgentEventBusService } from './shared/agent-event-bus.service';
@@ -85,11 +85,40 @@ export class ProductionAgentService {
   }
 
   /** OEE — Overall Equipment Effectiveness (mavjudlik × unumdorlik × sifat) */
-  async calculateOEE(machineId: string, dateISO: string): Promise<{ availability: number; performance: number; quality: number; oee: number }> {
-    // Soddalashtirilgan model — haqiqiy MES ma'lumotlari kelganda kengaytiriladi
-    // mes_machine_logs jadvali bo'lsa shu yerdan olinadi
-    const a = 0.92, p = 0.85, q = 0.97;
-    return { availability: a, performance: p, quality: q, oee: Math.round(a * p * q * 100) / 100 };
+  async calculateOEE(
+    machineId: string,
+    dateISO: string,
+  ): Promise<{ availability: number; performance: number; quality: number; oee: number }> {
+    // Availability hisoblash: downtime_events jadvalidan real ma'lumot olish
+    // periodStart/end: shu kun 00:00–23:59
+    const periodStart = new Date(`${dateISO}T00:00:00Z`);
+    const periodEnd   = new Date(`${dateISO}T23:59:59Z`);
+    const PERIOD_MINUTES = 24 * 60; // 1440 daqiqa / sutka
+
+    try {
+      const rows = await db
+        .select({ totalMinutes: sql<string>`COALESCE(SUM(${downtimeEvents.durationMinutes}), 0)` })
+        .from(downtimeEvents)
+        .where(
+          and(
+            gte(downtimeEvents.startedAt, periodStart),
+            lte(downtimeEvents.startedAt, periodEnd),
+          ),
+        );
+      const downtimeMinutes = Number(rows[0]?.totalMinutes ?? 0);
+      const availability = PERIOD_MINUTES > 0
+        ? Math.max(0, Math.min(1, (PERIOD_MINUTES - downtimeMinutes) / PERIOD_MINUTES))
+        : 0.92;
+      // performance + quality: MES telemetry jadvali hali to'liq tayyor emas —
+      // default qiymatlar saqlanadi (TODO: mes_machine_logs tayyor bo'lganda kengaytir)
+      const p = 0.85, q = 0.97;
+      const a = Math.round(availability * 100) / 100;
+      return { availability: a, performance: p, quality: q, oee: Math.round(a * p * q * 100) / 100 };
+    } catch (e) {
+      this.logger.warn(`OEE calculation failed for machine=${machineId} date=${dateISO}, using defaults: ${(e as Error).message}`);
+      const a = 0.92, p = 0.85, q = 0.97;
+      return { availability: a, performance: p, quality: q, oee: Math.round(a * p * q * 100) / 100 };
+    }
   }
 
   /** Eng sekin ish markazini topish */

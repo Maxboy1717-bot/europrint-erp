@@ -7,7 +7,7 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { FINANCE_AR_REPO, type IFinanceArRepo, type ArBucket } from '../domain/repositories/i-finance-ar.repo';
+import { FINANCE_AR_REPO, type IFinanceArRepo, type ArBucket, type CreateArEntryDto } from '../domain/repositories/i-finance-ar.repo';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
 @Injectable()
@@ -29,6 +29,10 @@ export class FinanceArService {
   async getOverdue() {
     const today = _time.now().toISOString().split('T')[0];
     return this.repo.getOverdueInvoices(today);
+  }
+
+  async createEntry(dto: CreateArEntryDto) {
+    return this.repo.createArEntry(dto);
   }
 
   async recalculateAging() {

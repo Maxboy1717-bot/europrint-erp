@@ -20,6 +20,13 @@ export type ApBucket = {
   total_outstanding: number;
 };
 
+export type CreateApEntryDto = {
+  vendorId?: string | number | null;
+  amount: number;
+  dueDate?: string | null;
+  description?: string | null;
+};
+
 export interface IFinanceApRepo {
   getApAgingBuckets(): Promise<Result<Row[]>>;
   getApAgingTotals(): Promise<Result<Row>>;
@@ -28,6 +35,7 @@ export interface IFinanceApRepo {
   clearApAgingBuckets(): Promise<void>;
   insertApAgingBucket(b: ApBucket): Promise<void>;
   replaceApAgingBuckets(rows: ApBucket[]): Promise<void>;
+  createApEntry(dto: CreateApEntryDto): Promise<Result<Row>>;
 }
 
 export const FINANCE_AP_REPO = Symbol('FINANCE_AP_REPO');

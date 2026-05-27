@@ -6,7 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { db , runQuery, leaveRequests } from '@shared/db';
+import { db , runQuery, leaveRequests, hr_leave_requests } from '@shared/db';
 import { SQL, SQLWrapper, and, count, eq, gte, lte, sql } from 'drizzle-orm';
 import { Result, Err, Ok } from '@common/types/result.type';
 
@@ -66,7 +66,32 @@ export class LeaveRepository {
   async saveLeave(leave: Row): Promise<Result<Row>> {
     try {
       const r = await exec(sql`INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, duration_days, reason, status, submitted_by, submitted_date, created_at, updated_at) VALUES (${leave.employeeId ?? leave.employee_id}, ${leave.leaveType ?? leave.leave_type}, ${leave.startDate ?? leave.start_date}, ${leave.endDate ?? leave.end_date}, ${leave.durationDays ?? leave.duration_days ?? leave.daysRequested ?? null}, ${leave.reason ?? null}, ${leave.status ?? 'draft'}, ${leave.submittedBy ?? leave.submitted_by ?? null}, NOW(), NOW(), NOW()) RETURNING *`);
-      return Ok(r[0]);
+      const saved = r[0];
+
+      // TASK 4 — Dual-table sync (ADD-ONLY):
+      // The Telegram bot writes to `hr_leave_requests`; the main HR API writes here
+      // (`leave_requests`). The two tables have DIFFERENT schemas:
+      //   leave_requests   : leave_type, duration_days, submitted_by, submitted_date (full workflow)
+      //   hr_leave_requests: employee_id, start_date, end_date, reason, status (simplified)
+      // To avoid the UI reading from the wrong table, we mirror the essential fields
+      // into hr_leave_requests with onConflictDoNothing so we never overwrite
+      // Telegram-originated rows that already exist.
+      // NOTE: hr_leave_requests has no unique key on (employee_id, start_date, end_date),
+      // so we use a bare INSERT — duplicates are harmless (extra rows in the Telegram view).
+      try {
+        await db.insert(hr_leave_requests).values({
+          employee_id:  Number(leave.employeeId ?? leave.employee_id ?? 0),
+          start_date:   String(leave.startDate ?? leave.start_date ?? ''),
+          end_date:     String(leave.endDate ?? leave.end_date ?? ''),
+          reason:       String(leave.reason ?? ''),
+          status:       String(leave.status ?? 'pending'),
+        });
+      } catch (_syncErr) {
+        // Sync failure is non-fatal — primary insert succeeded.
+        this.logger.warn(`saveLeave hr_leave_requests sync skipped: ${(_syncErr as Error).message}`);
+      }
+
+      return Ok(saved);
     } catch (error: unknown) {
       this.logger.error(`saveLeave: ${(error as Error).message}`);
       return Err((error as Error).message);

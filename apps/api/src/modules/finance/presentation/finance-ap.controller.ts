@@ -4,13 +4,21 @@
  */
 
 import { Body, Controller, Get, Post, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { assertOk, unwrapOrInternal } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { FinanceApService } from '../application/finance-ap.service';
+import { z } from 'zod';
+
+const CreateApEntrySchema = z.object({
+  vendorId: z.union([z.string(), z.number()]).optional().nullable(),
+  amount: z.number().positive(),
+  dueDate: z.string().optional().nullable(),
+  description: z.string().max(2000).optional().nullable(),
+});
 
 
 @ApiThrottle()
@@ -59,5 +67,20 @@ export class FinanceApController {
   async recalculateAging() {
     const bucketsUpdated = await this.svc.recalculateAging();
     return { bucketsUpdated };
+  }
+
+  @ApiOperation({ summary: 'Create AP entry' })
+  @ApiResponse({ status: 201, description: 'Created' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('entries')
+  async createApEntry(@Body() body: unknown) {
+    const dto = CreateApEntrySchema.parse(body);
+    const result = await this.svc.createEntry({
+      vendorId:    dto.vendorId ?? null,
+      amount:      dto.amount,
+      dueDate:     dto.dueDate ?? null,
+      description: dto.description ?? null,
+    });
+    return unwrapOrInternal(result);
   }
 }
