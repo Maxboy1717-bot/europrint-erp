@@ -172,7 +172,5 @@
   "security_incidents": 2,
   "pos_warehouse_access": 2,
   "inventory_count_lines": 2,
-  "retail_pos_products": 2,
-  "retail_pos_transactions": 2,
   "purchase_orders": 2
 }
