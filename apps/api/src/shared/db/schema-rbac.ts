@@ -42,16 +42,5 @@ export const auditLogs = pgTable('audit_logs', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-export const positionFeatureFlags = pgTable(
-  'position_feature_flags',
-  {
-    id: serial('id').primaryKey(),
-    positionId: integer('position_id').notNull(),
-    featureKey: varchar('feature_key', { length: 100 }).notNull(),
-    isAllowed: boolean('is_allowed').default(false).notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-  },
-  (table) => [
-    uniqueIndex('uq_pos_ff_position_feature').on(table.positionId, table.featureKey),
-  ],
-);
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { positionFeatureFlags } from '@workspace/db';

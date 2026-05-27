@@ -1,12 +1,8 @@
 {
   "system_alerts": 2,
   "guidelines": 2,
-  "contact_settings": 2,
   "system_settings": 2,
   "calendar_events": 2,
-  "asset_maintenance": 2,
-  "asset_disposals": 2,
-  "asset_transfers": 2,
   "saas_tenants": 2,
   "ai_insights": 2,
   "ai_planning_config": 2,
@@ -190,6 +186,5 @@
   "inventory_count_lines": 2,
   "retail_pos_products": 2,
   "retail_pos_transactions": 2,
-  "position_feature_flags": 2,
   "purchase_orders": 2
 }

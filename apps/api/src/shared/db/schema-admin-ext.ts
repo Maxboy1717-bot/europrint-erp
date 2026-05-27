@@ -39,16 +39,8 @@ export const guidelines = pgTable('guidelines', {
   updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [index('guidelines_category_idx').on(t.category)]);
 
-export const contactSettings = pgTable('contact_settings', {
-  id:          integer('id').primaryKey().default(1),
-  phone:       text('phone'),
-  email:       text('email'),
-  address:     text('address'),
-  telegram:    text('telegram'),
-  website:     text('website'),
-  workingHours: text('working_hours'),
-  updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { contactSettings } from '@workspace/db';
 
 export const systemSettings = pgTable('system_settings', {
   id:          integer('id').primaryKey().default(1),
@@ -89,39 +81,8 @@ export const calendarEvents = pgTable('calendar_events', {
 // assetItems: canonical definition in lib/db (admin-assets.ts) — identical columns.
 export { assetItems } from '@workspace/db';
 
-export const assetMaintenance = pgTable('asset_maintenance', {
-  id:          uuid('id').primaryKey().defaultRandom(),
-  assetId:     uuid('asset_id').notNull(),
-  maintenanceType: text('maintenance_type').notNull().default('routine'),
-  scheduledAt: timestamp('scheduled_at', { withTimezone: true }),
-  completedAt: timestamp('completed_at', { withTimezone: true }),
-  cost:        text('cost'),
-  notes:       text('notes'),
-  status:      text('status').notNull().default('scheduled'),
-  createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
-
-export const assetDisposals = pgTable('asset_disposals', {
-  id:          uuid('id').primaryKey().defaultRandom(),
-  assetId:     uuid('asset_id').notNull(),
-  disposalType: text('disposal_type').notNull().default('retired'),
-  disposalDate: timestamp('disposal_date', { withTimezone: true }),
-  saleValue:   text('sale_value'),
-  reason:      text('reason'),
-  approvedBy:  text('approved_by'),
-  createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
-
-export const assetTransfers = pgTable('asset_transfers', {
-  id:            uuid('id').primaryKey().defaultRandom(),
-  assetId:       uuid('asset_id').notNull(),
-  fromDeptId:    integer('from_dept_id'),
-  toDeptId:      integer('to_dept_id'),
-  transferDate:  timestamp('transfer_date', { withTimezone: true }),
-  reason:        text('reason'),
-  approvedBy:    text('approved_by'),
-  createdAt:     timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { assetMaintenance, assetDisposals, assetTransfers } from '@workspace/db';
 
 export const saasTenants = pgTable('saas_tenants', {
   id:          uuid('id').primaryKey().defaultRandom(),
