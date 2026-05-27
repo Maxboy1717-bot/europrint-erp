@@ -1,0 +1,4963 @@
+[
+ {
+  "table": "daily_financial_metrics",
+  "verdict": "CLEAN",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-payroll-calc.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-extended.ts"
+  ]
+ },
+ {
+  "table": "downtime_reason_codes",
+  "verdict": "CLEAN",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/pp/pp-iot.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "financial_kpis",
+  "verdict": "CLEAN",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-budgets.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-extended.ts"
+  ]
+ },
+ {
+  "table": "hr_job_descriptions",
+  "verdict": "CLEAN",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/hr-recruiter.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1b.ts"
+  ]
+ },
+ {
+  "table": "hr_job_offers",
+  "verdict": "CLEAN",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/hr-recruiter.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1b.ts"
+  ]
+ },
+ {
+  "table": "order_costings",
+  "verdict": "CLEAN",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-budgets.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-extended.ts"
+  ]
+ },
+ {
+  "table": "website_settings",
+  "verdict": "CLEAN",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/ecommerce-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "hr_references_checks",
+  "verdict": "CLEAN",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/hr-recruiter.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1b.ts"
+  ]
+ },
+ {
+  "table": "retail_pos_products",
+  "verdict": "CLEAN",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "string"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/pos-retail.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-pos-retail.ts"
+  ]
+ },
+ {
+  "table": "system_settings",
+  "verdict": "CLEAN",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/core-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-admin-ext.ts"
+  ]
+ },
+ {
+  "table": "approval_requests",
+  "verdict": "CLEAN",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/core/core-ai-reports.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts"
+  ]
+ },
+ {
+  "table": "retail_pos_transactions",
+  "verdict": "CLEAN",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "string"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/pos-retail.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-pos-retail.ts"
+  ]
+ },
+ {
+  "table": "hr_tool_test_results",
+  "verdict": "CLEAN",
+  "cons": 5,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/hr-recruiter.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1b.ts"
+  ]
+ },
+ {
+  "table": "cfo_config",
+  "verdict": "CLEAN",
+  "cons": 7,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-gl.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-extended.ts"
+  ]
+ },
+ {
+  "table": "entries",
+  "verdict": "CLEAN",
+  "cons": 64,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-gl.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-extended.ts"
+  ]
+ },
+ {
+  "table": "employee_badges",
+  "verdict": "RECONCILE",
+  "cons": 0,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "employee_id",
+   "badge_id",
+   "badge_code",
+   "awarded_by",
+   "awarded_at"
+  ],
+  "libFile": "lib/db/src/schema/hr-v2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-1.ts"
+  ]
+ },
+ {
+  "table": "enps_responses",
+  "verdict": "RECONCILE",
+  "cons": 0,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "survey_id",
+   "employee_id",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/hr-v2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-misc.ts"
+  ]
+ },
+ {
+  "table": "hr_documents",
+  "verdict": "RECONCILE",
+  "cons": 0,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "content",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-ext-a-2.ts"
+   }
+  ],
+  "missing": [
+   "employee_id",
+   "document_type",
+   "pdf_url",
+   "initiated_by",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/hr-v2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-ext-a-2.ts"
+  ]
+ },
+ {
+  "table": "sensor_devices",
+  "verdict": "RECONCILE",
+  "cons": 0,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "device_code",
+   "location",
+   "type",
+   "last_reading_at",
+   "thresholds",
+   "created_at",
+   "device_id",
+   "value",
+   "unit",
+   "is_anomaly",
+   "anomaly_reason",
+   "recorded_at",
+   "code",
+   "name_ru",
+   "ip_address",
+   "rtsp_url",
+   "stream_url",
+   "work_center_id",
+   "is_active",
+   "ai_enabled",
+   "ai_sensitivity",
+   "deleted_at",
+   "camera_id",
+   "zone_name",
+   "zone_type",
+   "event_type",
+   "description",
+   "severity",
+   "ai_confidence",
+   "screenshot_url",
+   "telegram_sent",
+   "resolved_at"
+  ],
+  "libFile": "lib/db/src/schema/pp/pp-iot.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-iot.ts"
+  ]
+ },
+ {
+  "table": "adaptation_programs",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "program_name",
+   "duration_days",
+   "is_active",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/adaptation.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-safety.ts"
+  ]
+ },
+ {
+  "table": "adaptation_records",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "employee_id",
+   "program_id",
+   "started_at",
+   "completed_at",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/adaptation.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-safety.ts"
+  ]
+ },
+ {
+  "table": "advance_payments",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "employee_id",
+   "request_date",
+   "document_id",
+   "approved_at",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/fi-expenses.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-1.ts"
+  ]
+ },
+ {
+  "table": "ai_usage_logs",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "userId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-4.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/ai-providers-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts"
+  ]
+ },
+ {
+  "table": "ap_aging_buckets",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "vendor_id",
+   "current_amount",
+   "days_31_60",
+   "days_61_90",
+   "days_91_120",
+   "over_120",
+   "total_outstanding",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/fi-budgets.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "ar_aging_buckets",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "customer_id",
+   "customer_type",
+   "current_amount",
+   "days_31_60",
+   "days_61_90",
+   "days_91_120",
+   "over_120",
+   "total_outstanding",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/fi-budgets.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "bom_headers",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "productId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/pp/pp-production.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "crm_comments",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "lead_id",
+   "deal_id",
+   "text",
+   "author_id",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/crm-activities.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "crm_custom_fields",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "entity_type",
+   "field_name",
+   "field_label",
+   "field_type",
+   "is_required",
+   "is_active",
+   "order_index",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/crm-docs.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "crm_pipelines",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "createdAt"
+  ],
+  "libFile": "lib/db/src/schema/crm-pipelines.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1a.ts"
+  ]
+ },
+ {
+  "table": "crm_robots",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "trigger_type",
+   "action_type",
+   "config",
+   "is_active",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/crm-docs.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "crm_stages",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "createdAt"
+  ],
+  "libFile": "lib/db/src/schema/crm-pipelines.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1a.ts"
+  ]
+ },
+ {
+  "table": "customer_orders",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "deletedAt"
+  ],
+  "libFile": "lib/db/src/schema/ecommerce-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts"
+  ]
+ },
+ {
+  "table": "equipment_maintenance",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "workCenterId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   }
+  ],
+  "missing": [
+   "scheduledAt",
+   "completedAt",
+   "updatedAt",
+   "deletedAt"
+  ],
+  "libFile": "lib/db/src/schema/pp/pp-enhanced.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "expense_requests",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "title",
+   "description",
+   "requested_by",
+   "comments",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/fi-expenses.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-1.ts"
+  ]
+ },
+ {
+  "table": "finance_categories",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "parentId",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-finance-extended.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-kassa.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-extended.ts"
+  ]
+ },
+ {
+  "table": "hr_motivation_plans",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "targets",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-compat-1b.ts"
+   }
+  ],
+  "missing": [
+   "startDate",
+   "endDate"
+  ],
+  "libFile": "lib/db/src/schema/hr-recruiter.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1b.ts"
+  ]
+ },
+ {
+  "table": "hr_productivity_interviews",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "productivityInterview",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-compat-1b.ts"
+   },
+   {
+    "col": "referenceCheck",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-compat-1b.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/hr-recruiter.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1b.ts"
+  ]
+ },
+ {
+  "table": "hr_tz2_territory_logs",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "string"
+  ],
+  "conflicts": [],
+  "missing": [
+   "employee_id",
+   "event_type",
+   "camera_id",
+   "face_confidence",
+   "room_code",
+   "created_at",
+   "updated_at",
+   "photo_url",
+   "taken_at",
+   "analysis_result",
+   "room_name",
+   "department_code",
+   "description",
+   "last_updated_at",
+   "updated_by"
+  ],
+  "libFile": "lib/db/src/schema/hr-tz2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-hr-tz2.ts"
+  ]
+ },
+ {
+  "table": "income_expense_transactions",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "categoryId",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-finance-extended.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-kassa.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-extended.ts"
+  ]
+ },
+ {
+  "table": "invoice_payments",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "vendorId",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-finance-extended.ts"
+   },
+   {
+    "col": "paymentDate",
+    "stub": "date",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-finance-extended.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-ap-core.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-extended.ts"
+  ]
+ },
+ {
+  "table": "iot_alerts",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "created_at",
+   "resolved_at"
+  ],
+  "libFile": "lib/db/src/schema/iot-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "machine_crews",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "workCenterId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   },
+   {
+    "col": "employeeId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/pp/pp-enhanced.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "mm_deliveries",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "purchaseOrderId",
+   "vendorId"
+  ],
+  "libFile": "lib/db/src/schema/mm-logistics.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts"
+  ]
+ },
+ {
+  "table": "order_costing_lines",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "orderCostingId",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-finance-extended.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-budgets.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-extended.ts"
+  ]
+ },
+ {
+  "table": "portfolio_items",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "deletedAt"
+  ],
+  "libFile": "lib/db/src/schema/ecommerce-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts"
+  ]
+ },
+ {
+  "table": "ppe_compliance",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "employee_id",
+   "ppe_type",
+   "issue_date",
+   "expiry_date",
+   "is_compliant",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/safety.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-safety.ts"
+  ]
+ },
+ {
+  "table": "product_categories",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "updatedAt"
+  ],
+  "libFile": "lib/db/src/schema/pp/pp-enhanced.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "purchase_order_items",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "materialId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/mm-purchase.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-2.ts"
+  ]
+ },
+ {
+  "table": "routing_operations",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "workCenterId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/pp/pp-production.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "rpt_ishlab_chiqarish",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "reportDate",
+    "stub": "string",
+    "lib": "date",
+    "file": "apps/api/src/shared/db/schema-finance-reports.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-financial-reports.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-reports.ts"
+  ]
+ },
+ {
+  "table": "rpt_kassa_transactions",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "reportDate",
+    "stub": "string",
+    "lib": "date",
+    "file": "apps/api/src/shared/db/schema-finance-reports.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-financial-reports.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-reports.ts"
+  ]
+ },
+ {
+  "table": "rpt_ombor_qoldiq",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "reportDate",
+    "stub": "string",
+    "lib": "date",
+    "file": "apps/api/src/shared/db/schema-finance-reports.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-financial-reports.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-reports.ts"
+  ]
+ },
+ {
+  "table": "safety_training_records",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "training_id",
+   "employee_id",
+   "completed_date",
+   "expiry_date",
+   "is_passed",
+   "certificate_url",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/safety.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-safety.ts"
+  ]
+ },
+ {
+  "table": "sd_orders",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "createdBy"
+  ],
+  "libFile": "lib/db/src/schema/sd-europrint-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts"
+  ]
+ },
+ {
+  "table": "sensor_readings",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "device_id",
+   "value",
+   "unit",
+   "is_anomaly",
+   "anomaly_reason",
+   "recorded_at",
+   "code",
+   "name",
+   "name_ru",
+   "location",
+   "ip_address",
+   "port",
+   "rtsp_url",
+   "stream_url",
+   "work_center_id",
+   "is_active",
+   "ai_enabled",
+   "ai_sensitivity",
+   "created_at",
+   "deleted_at",
+   "camera_id",
+   "zone_name",
+   "zone_type",
+   "event_type",
+   "description",
+   "severity",
+   "status",
+   "ai_confidence",
+   "screenshot_url",
+   "telegram_sent",
+   "resolved_at",
+   "camera_event_id",
+   "alert_type",
+   "title",
+   "title_ru",
+   "message",
+   "is_acknowledged",
+   "is_resolved",
+   "resolution_notes"
+  ],
+  "libFile": "lib/db/src/schema/pp/pp-iot.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-iot.ts"
+  ]
+ },
+ {
+  "table": "stock_transfer_lines",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "transferId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-4.ts"
+   }
+  ],
+  "missing": [
+   "materialId"
+  ],
+  "libFile": "lib/db/src/schema/wms-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts"
+  ]
+ },
+ {
+  "table": "visitor_log",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "visitor_name",
+   "visitor_phone",
+   "visitor_company",
+   "host_employee_id",
+   "badge_number",
+   "check_in_at",
+   "check_out_at",
+   "registered_by",
+   "id_document",
+   "id_document_type"
+  ],
+  "libFile": "lib/db/src/schema/hr-v2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-misc.ts"
+  ]
+ },
+ {
+  "table": "warehouse_stock",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "warehouseId",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   }
+  ],
+  "missing": [
+   "materialId"
+  ],
+  "libFile": "lib/db/src/schema/wms-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-2.ts"
+  ]
+ },
+ {
+  "table": "warehouse_transactions",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "warehouseId",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-finance-extended.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/wms-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-extended.ts"
+  ]
+ },
+ {
+  "table": "website_banners",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "updatedAt"
+  ],
+  "libFile": "lib/db/src/schema/ecommerce-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "website_pages",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "deletedAt"
+  ],
+  "libFile": "lib/db/src/schema/ecommerce-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts"
+  ]
+ },
+ {
+  "table": "workflow_route_configs",
+  "verdict": "RECONCILE",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "document_type",
+   "is_active",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/hr-v2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-safety.ts"
+  ]
+ },
+ {
+  "table": "accounting_periods",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 3,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "is_closed",
+   "closed_at",
+   "closed_by",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/fi-gl.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-1.ts",
+   "apps/api/src/shared/db/schema-finance-extended.ts"
+  ]
+ },
+ {
+  "table": "application_responses",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "application_id",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/core-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "camera_alerts",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "camera_id",
+   "camera_event_id",
+   "alert_type",
+   "title_ru",
+   "is_acknowledged",
+   "is_resolved",
+   "resolved_at",
+   "resolution_notes",
+   "created_at",
+   "violation_type",
+   "status",
+   "description",
+   "employee_id",
+   "detected_at",
+   "defect_type",
+   "camera_name",
+   "detection_types",
+   "zone",
+   "alert_threshold",
+   "is_active",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/iot-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-iot.ts"
+  ]
+ },
+ {
+  "table": "crm_proposals",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "contact_id",
+   "amount",
+   "valid_until",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/crm-proposals.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "gamification_points",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "employee_id",
+   "event_type",
+   "reference_id",
+   "reason",
+   "given_by",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/hr-v2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-1.ts"
+  ]
+ },
+ {
+  "table": "hazard_zones",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "zone_name",
+   "zone_code",
+   "department_id",
+   "hazard_level",
+   "required_ppe",
+   "max_occupancy",
+   "is_active",
+   "last_inspection_date",
+   "next_inspection_date",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/safety.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-safety.ts"
+  ]
+ },
+ {
+  "table": "hr_employee_onboardings",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "planId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-1b.ts"
+   },
+   {
+    "col": "weeklyProgress",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-compat-1b.ts"
+   },
+   {
+    "col": "probationScore",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-1b.ts"
+   }
+  ],
+  "missing": [
+   "endDate"
+  ],
+  "libFile": "lib/db/src/schema/hr-recruiter.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1b.ts"
+  ]
+ },
+ {
+  "table": "hr_onboarding_plans",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "tasks",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-compat-1b.ts"
+   },
+   {
+    "col": "departmentId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-1b.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/hr-recruiter.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1b.ts"
+  ]
+ },
+ {
+  "table": "hr_tz2_attendance_photos",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "string"
+  ],
+  "conflicts": [],
+  "missing": [
+   "employee_id",
+   "photo_url",
+   "taken_at",
+   "room_code",
+   "analysis_result",
+   "created_at",
+   "updated_at",
+   "room_name",
+   "department_code",
+   "last_updated_at",
+   "updated_by",
+   "reference_photo_id",
+   "current_photo_url",
+   "analyzed_at",
+   "cleanliness_score",
+   "order_score",
+   "equipment_ok",
+   "issues",
+   "anomalies",
+   "pdf_url",
+   "notified_hr"
+  ],
+  "libFile": "lib/db/src/schema/hr-tz2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-hr-tz2.ts"
+  ]
+ },
+ {
+  "table": "iot_sensors",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "thresholds",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-compat-4.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/iot-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts"
+  ]
+ },
+ {
+  "table": "kanban_cards",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "board_id",
+   "column_id",
+   "related_type",
+   "related_id",
+   "sort_order",
+   "created_at",
+   "updated_at",
+   "deleted_at"
+  ],
+  "libFile": "lib/db/src/schema/kanban/kanban-core.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-kanban.ts"
+  ]
+ },
+ {
+  "table": "mro_budgets",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "year",
+   "month",
+   "category",
+   "budget_amount",
+   "spent_amount",
+   "notes",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/mm-mro.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "offboarding_checklist_items",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "case_id",
+   "item_key",
+   "order_num"
+  ],
+  "libFile": "lib/db/src/schema/hr-v2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-1.ts"
+  ]
+ },
+ {
+  "table": "papka_orders",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "from_user_id",
+   "to_user_ids",
+   "subject",
+   "body",
+   "files",
+   "is_deleted",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/pp/pp-papka.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-1.ts"
+  ]
+ },
+ {
+  "table": "profit_centers",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "name_ru",
+   "is_active",
+   "created_at",
+   "updated_at",
+   "deleted_at"
+  ],
+  "libFile": "lib/db/src/schema/fi-gl.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-1.ts"
+  ]
+ },
+ {
+  "table": "public_products",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "updatedAt",
+   "deletedAt"
+  ],
+  "libFile": "lib/db/src/schema/ecommerce-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts"
+  ]
+ },
+ {
+  "table": "qc_braks",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "quantity",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/qc-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "qc_standards",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "parameters"
+  ],
+  "libFile": "lib/db/src/schema/qc-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-qc.ts"
+  ]
+ },
+ {
+  "table": "qc_supplier_quality",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "vendorId",
+   "receiptId",
+   "materialId",
+   "batchNumber",
+   "sampleSize",
+   "defectsFound",
+   "status"
+  ],
+  "libFile": "lib/db/src/schema/qc-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-qc.ts"
+  ]
+ },
+ {
+  "table": "rpt_debitorlar",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "reportDate",
+    "stub": "string",
+    "lib": "date",
+    "file": "apps/api/src/shared/db/schema-finance-reports.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-financial-reports.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-reports.ts"
+  ]
+ },
+ {
+  "table": "rpt_kreditorlar",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "reportDate",
+    "stub": "string",
+    "lib": "date",
+    "file": "apps/api/src/shared/db/schema-finance-reports.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-financial-reports.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-reports.ts"
+  ]
+ },
+ {
+  "table": "skill_catalog",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "name_ru",
+   "is_active",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/hr-v2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-misc.ts"
+  ]
+ },
+ {
+  "table": "survey_responses",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "survey_id",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/core-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "three_way_match_results",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "invoice_id",
+   "tolerance_percent",
+   "status",
+   "match_details",
+   "matched_at",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/mm-mro.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "user_skills",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "skill_id",
+   "employee_id",
+   "user_id",
+   "verified",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/lms-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "vendor_invoices",
+  "verdict": "RECONCILE",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "vendor_id",
+   "invoice_no",
+   "amount",
+   "match_status",
+   "po_id",
+   "gr_id",
+   "invoice_date",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/mm-mro.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "bom_items",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "bomId",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   },
+   {
+    "col": "materialId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/pp/pp-production.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "camera_ai_configs",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "camera_id",
+   "camera_name",
+   "detection_types",
+   "alert_threshold",
+   "is_active",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/iot-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-iot.ts"
+  ]
+ },
+ {
+  "table": "cost_centers",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "name_ru",
+   "description",
+   "is_active",
+   "created_at",
+   "updated_at",
+   "deleted_at"
+  ],
+  "libFile": "lib/db/src/schema/fi-gl.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-1.ts"
+  ]
+ },
+ {
+  "table": "crm_companies",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "website",
+   "inn",
+   "credit_limit",
+   "used_credit",
+   "created_at",
+   "deleted_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/crm-contacts.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1a.ts"
+  ]
+ },
+ {
+  "table": "crm_invoices",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "customer_id",
+   "amount",
+   "due_date",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/crm-proposals.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "crm_lead_stages",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "order_index",
+   "is_active"
+  ],
+  "libFile": "lib/db/src/schema/crm-deal-products.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "guidelines",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "createdBy",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-admin-ext.ts"
+   }
+  ],
+  "missing": [
+   "companyName",
+   "timezone",
+   "language",
+   "currency",
+   "logoUrl",
+   "config"
+  ],
+  "libFile": "lib/db/src/schema/lms-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-admin-ext.ts"
+  ]
+ },
+ {
+  "table": "hr_conflict_reports",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "resolved_at",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/hr-safety.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts"
+  ]
+ },
+ {
+  "table": "hr_funnel_history",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "funnelId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-1b.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/hr-recruiter.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1b.ts"
+  ]
+ },
+ {
+  "table": "hr_health_checkups",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "department_id",
+   "department_name",
+   "total_employees",
+   "examined_count",
+   "last_checkup_date",
+   "next_checkup_date",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/core-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts"
+  ]
+ },
+ {
+  "table": "hr_interview_sessions",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "transcript",
+    "stub": "json",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-business-c-1.ts"
+   }
+  ],
+  "missing": [
+   "candidate_id",
+   "vacancy_id",
+   "interviewer_id",
+   "session_type",
+   "scheduled_at",
+   "started_at",
+   "completed_at",
+   "score",
+   "overall_score",
+   "communication_score",
+   "confidence_score",
+   "problem_solving_score",
+   "body_language_score",
+   "emotional_state_score",
+   "professional_appearance_score",
+   "ai_summary",
+   "notes",
+   "expires_at",
+   "candidate_name",
+   "candidate_language",
+   "camera_rejections",
+   "created_by",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/hr-v2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-1.ts"
+  ]
+ },
+ {
+  "table": "kanban_boards",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "created_at",
+   "updated_at",
+   "deleted_at"
+  ],
+  "libFile": "lib/db/src/schema/kanban/kanban-core.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-kanban.ts"
+  ]
+ },
+ {
+  "table": "kanban_columns",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "board_id",
+   "sort_order",
+   "created_at",
+   "updated_at",
+   "deleted_at"
+  ],
+  "libFile": "lib/db/src/schema/kanban/kanban-core.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-kanban.ts"
+  ]
+ },
+ {
+  "table": "payroll_rows",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "periodId",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-gl.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-2.ts"
+  ]
+ },
+ {
+  "table": "production_sessions",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "productionOrderId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-4.ts"
+   },
+   {
+    "col": "workCenterId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-4.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/pp/pp-iot.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts"
+  ]
+ },
+ {
+  "table": "safety_incidents",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "incident_type",
+   "location_description",
+   "department_id",
+   "incident_date",
+   "investigation_status",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/safety.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-safety.ts"
+  ]
+ },
+ {
+  "table": "sd_contracts",
+  "verdict": "RECONCILE",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "contract_number",
+   "order_id",
+   "order_number",
+   "customer_id",
+   "template_type",
+   "papka_no",
+   "signed_at",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/sd-europrint-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-misc.ts"
+  ]
+ },
+ {
+  "table": "broadcasts",
+  "verdict": "RECONCILE",
+  "cons": 4,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "recipients_count",
+   "success_count",
+   "failed_count",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/core-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "employee_org_departments",
+  "verdict": "RECONCILE",
+  "cons": 4,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "user_id",
+   "org_department_id",
+   "is_primary",
+   "assigned_at"
+  ],
+  "libFile": "lib/db/src/schema/core-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-app-a.ts"
+  ]
+ },
+ {
+  "table": "gamification_totals",
+  "verdict": "RECONCILE",
+  "cons": 4,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "employee_id",
+   "total_points",
+   "monthly_points",
+   "quarterly_points",
+   "badge_count",
+   "rank",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/hr-v2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-1.ts"
+  ]
+ },
+ {
+  "table": "goods_receipts",
+  "verdict": "RECONCILE",
+  "cons": 4,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "purchase_order_id",
+   "received_by",
+   "received_at",
+   "completed_by",
+   "completed_at",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/mm-purchase.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-ext-c-3.ts"
+  ]
+ },
+ {
+  "table": "leave_requests",
+  "verdict": "RECONCILE",
+  "cons": 4,
+  "nDefs": 3,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "employeeId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   },
+   {
+    "col": "startDate",
+    "stub": "string",
+    "lib": "date",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   },
+   {
+    "col": "endDate",
+    "stub": "string",
+    "lib": "date",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   },
+   {
+    "col": "approvedBy",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   }
+  ],
+  "missing": [
+   "employee_id",
+   "leave_type",
+   "start_date",
+   "end_date",
+   "duration_days",
+   "user_id",
+   "submitted_by",
+   "submitted_date",
+   "manager_status",
+   "manager_notes",
+   "hr_status",
+   "hr_notes",
+   "director_status",
+   "director_notes",
+   "created_at",
+   "updated_at",
+   "deleted_at"
+  ],
+  "libFile": "lib/db/src/schema/leave.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-2.ts",
+   "apps/api/src/shared/db/schema-misc-app-a.ts"
+  ]
+ },
+ {
+  "table": "org_departments",
+  "verdict": "RECONCILE",
+  "cons": 4,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "name_ru",
+   "parent_id",
+   "level",
+   "head_user_id",
+   "sort_order",
+   "is_active",
+   "created_at",
+   "description_ru",
+   "tskp_ru",
+   "node_type"
+  ],
+  "libFile": "lib/db/src/schema/core-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-app-a.ts"
+  ]
+ },
+ {
+  "table": "payroll_periods",
+  "verdict": "RECONCILE",
+  "cons": 4,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "period_name",
+   "period_start_date",
+   "period_end_date",
+   "total_payroll_amount",
+   "employee_count",
+   "closed_at",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/fi-gl.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts"
+  ]
+ },
+ {
+  "table": "crm_contacts",
+  "verdict": "RECONCILE",
+  "cons": 5,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "company_id",
+   "first_name",
+   "last_name",
+   "created_at",
+   "updated_at",
+   "deleted_at"
+  ],
+  "libFile": "lib/db/src/schema/crm-contacts.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1a.ts"
+  ]
+ },
+ {
+  "table": "employee_360_assessments",
+  "verdict": "RECONCILE",
+  "cons": 5,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "employee_id",
+   "assessment_period",
+   "assessment_year",
+   "self_rating",
+   "manager_rating",
+   "peer_rating",
+   "average_rating",
+   "areas_for_improvement",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/assessment.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts"
+  ]
+ },
+ {
+  "table": "gl_documents",
+  "verdict": "RECONCILE",
+  "cons": 5,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "metadata",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   },
+   {
+    "col": "createdBy",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-gl.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-2.ts"
+  ]
+ },
+ {
+  "table": "camera_zones",
+  "verdict": "RECONCILE",
+  "cons": 6,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "camera_id",
+   "zone_name",
+   "zone_type",
+   "is_active",
+   "created_at",
+   "event_type",
+   "ai_confidence",
+   "screenshot_url",
+   "telegram_sent",
+   "resolved_at",
+   "camera_event_id",
+   "alert_type",
+   "title",
+   "title_ru",
+   "message",
+   "is_acknowledged",
+   "is_resolved",
+   "resolution_notes",
+   "violation_type",
+   "employee_id",
+   "detected_at",
+   "defect_type"
+  ],
+  "libFile": "lib/db/src/schema/iot-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-iot.ts"
+  ]
+ },
+ {
+  "table": "crm_activities",
+  "verdict": "RECONCILE",
+  "cons": 6,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "entity_type",
+   "entity_id",
+   "type",
+   "notes",
+   "outcome",
+   "scheduled_at",
+   "completed_at",
+   "due_date",
+   "lead_id",
+   "deal_id",
+   "assigned_to",
+   "created_by",
+   "assignee_id",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/crm-deal-products.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "customer_payments",
+  "verdict": "RECONCILE",
+  "cons": 6,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "payment_number",
+   "payment_date",
+   "customer_id",
+   "sales_invoice_id",
+   "payment_method",
+   "bank_account",
+   "exchange_rate",
+   "applied_at",
+   "approved_by",
+   "approved_at",
+   "created_by",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/fi-ap-core.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-5.ts"
+  ]
+ },
+ {
+  "table": "offboarding_cases",
+  "verdict": "RECONCILE",
+  "cons": 6,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "employee_id",
+   "dismissal_type",
+   "last_working_day",
+   "dismiss_order_doc_id",
+   "total_items",
+   "completed_items",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/hr-v2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-1.ts"
+  ]
+ },
+ {
+  "table": "purchase_invoices",
+  "verdict": "RECONCILE",
+  "cons": 6,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "vendor_id",
+   "supplier_name",
+   "invoice_no",
+   "total_amount",
+   "paid_amount",
+   "amount",
+   "currency",
+   "invoice_date",
+   "due_date",
+   "status",
+   "payment_status",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/mm-raw-materials.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-1.ts"
+  ]
+ },
+ {
+  "table": "shift_schedules",
+  "verdict": "RECONCILE",
+  "cons": 6,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "employee_id",
+   "shift_date",
+   "shift_type",
+   "start_time",
+   "end_time",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/hr-v2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-safety.ts"
+  ]
+ },
+ {
+  "table": "surveys",
+  "verdict": "RECONCILE",
+  "cons": 6,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/core-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "system_alerts",
+  "verdict": "RECONCILE",
+  "cons": 6,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "level"
+  ],
+  "libFile": "lib/db/src/schema/core/core-rules.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-admin-ext.ts"
+  ]
+ },
+ {
+  "table": "hr_candidate_funnels",
+  "verdict": "RECONCILE",
+  "cons": 7,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "metadata",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-compat-1a.ts"
+   },
+   {
+    "col": "screeningScore",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-1a.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/hr-recruiter.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1a.ts"
+  ]
+ },
+ {
+  "table": "rpt_balans",
+  "verdict": "RECONCILE",
+  "cons": 7,
+  "nDefs": 2,
+  "idTypes": [
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "reportDate",
+    "stub": "string",
+    "lib": "date",
+    "file": "apps/api/src/shared/db/schema-finance-reports.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-financial-reports.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-reports.ts"
+  ]
+ },
+ {
+  "table": "audit_logs",
+  "verdict": "RECONCILE",
+  "cons": 8,
+  "nDefs": 3,
+  "idTypes": [
+   "string"
+  ],
+  "conflicts": [],
+  "missing": [
+   "user_id",
+   "module",
+   "entity_id",
+   "before_value",
+   "after_value",
+   "ip_address",
+   "created_at",
+   "key",
+   "value",
+   "updated_by",
+   "updated_at",
+   "full_name",
+   "phone",
+   "email",
+   "source",
+   "status",
+   "ai_score",
+   "assigned_to",
+   "notes",
+   "lead_id",
+   "title",
+   "amount",
+   "currency",
+   "probability",
+   "won_at",
+   "lost_reason",
+   "created_by"
+  ],
+  "libFile": "lib/db/src/schema/core/core-ai-reports.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-core.ts",
+   "apps/api/src/shared/db/schema-rbac.ts"
+  ]
+ },
+ {
+  "table": "crm_deals",
+  "verdict": "RECONCILE",
+  "cons": 8,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "metadata",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-compat-1a.ts"
+   }
+  ],
+  "missing": [
+   "lead_id",
+   "company_id",
+   "name",
+   "expected_amount",
+   "assigned_to",
+   "created_by",
+   "created_at",
+   "updated_at",
+   "deleted_at",
+   "stage_id"
+  ],
+  "libFile": "lib/db/src/schema/crm-pipelines.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1a.ts"
+  ]
+ },
+ {
+  "table": "downtime_events",
+  "verdict": "RECONCILE",
+  "cons": 8,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "workCenterId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-manufacturing.ts"
+   },
+   {
+    "col": "reasonCodeId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-manufacturing.ts"
+   },
+   {
+    "col": "durationMin",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-manufacturing.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/pp/pp-iot.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-manufacturing.ts"
+  ]
+ },
+ {
+  "table": "sales_invoices",
+  "verdict": "RECONCILE",
+  "cons": 8,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "customer_id",
+   "customer_name",
+   "invoice_number",
+   "sales_order_id",
+   "total_amount",
+   "paid_amount",
+   "payment_status",
+   "due_date",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/sd-orders.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-misc.ts"
+  ]
+ },
+ {
+  "table": "camera_events",
+  "verdict": "RECONCILE",
+  "cons": 9,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "camera_id",
+   "event_type",
+   "ai_confidence",
+   "screenshot_url",
+   "telegram_sent",
+   "created_at",
+   "resolved_at",
+   "camera_event_id",
+   "alert_type",
+   "title",
+   "title_ru",
+   "message",
+   "is_acknowledged",
+   "is_resolved",
+   "resolution_notes",
+   "violation_type",
+   "employee_id",
+   "detected_at",
+   "defect_type",
+   "camera_name"
+  ],
+  "libFile": "lib/db/src/schema/iot-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-iot.ts"
+  ]
+ },
+ {
+  "table": "crm_leads",
+  "verdict": "RECONCILE",
+  "cons": 9,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "customer_id",
+   "manager_id",
+   "status_description",
+   "contact_name",
+   "contact_phone",
+   "contact_email",
+   "deleted_at",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/crm-contacts.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1a.ts"
+  ]
+ },
+ {
+  "table": "mentorships",
+  "verdict": "RECONCILE",
+  "cons": 9,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "mentor_id",
+   "mentee_id",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/lms-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "salary_history",
+  "verdict": "RECONCILE",
+  "cons": 9,
+  "nDefs": 3,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "createdBy",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-5.ts"
+   }
+  ],
+  "missing": [
+   "employee_id",
+   "salary_period_start",
+   "salary_period_end",
+   "base_salary",
+   "salary_earned",
+   "total_bonuses",
+   "other_bonuses",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/payroll.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts",
+   "apps/api/src/shared/db/schema-compat-5.ts"
+  ]
+ },
+ {
+  "table": "sd_customers",
+  "verdict": "RECONCILE",
+  "cons": 10,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "full_name",
+   "company",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/sd-europrint-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-b-2.ts"
+  ]
+ },
+ {
+  "table": "applications",
+  "verdict": "RECONCILE",
+  "cons": 12,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "status",
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/core-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "certificates",
+  "verdict": "RECONCILE",
+  "cons": 18,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "is_active",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/hr-questionnaire.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-ext-a-1.ts"
+  ]
+ },
+ {
+  "table": "vacancies",
+  "verdict": "RECONCILE",
+  "cons": 18,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "department_id",
+   "closing_date"
+  ],
+  "libFile": "lib/db/src/schema/recruitment.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1a.ts"
+  ]
+ },
+ {
+  "table": "cameras",
+  "verdict": "RECONCILE",
+  "cons": 19,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "name_ru",
+   "ip_address",
+   "rtsp_url",
+   "stream_url",
+   "work_center_id",
+   "is_active",
+   "ai_enabled",
+   "ai_sensitivity",
+   "created_at",
+   "deleted_at",
+   "camera_id",
+   "zone_name",
+   "zone_type",
+   "event_type",
+   "description",
+   "severity",
+   "status",
+   "ai_confidence",
+   "screenshot_url",
+   "telegram_sent",
+   "resolved_at",
+   "camera_event_id",
+   "alert_type",
+   "title",
+   "title_ru",
+   "message",
+   "is_acknowledged",
+   "is_resolved",
+   "resolution_notes",
+   "violation_type",
+   "employee_id"
+  ],
+  "libFile": "lib/db/src/schema/iot-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-iot.ts"
+  ]
+ },
+ {
+  "table": "candidates",
+  "verdict": "RECONCILE",
+  "cons": 27,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "rating",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-compat-1a.ts"
+   }
+  ],
+  "missing": [
+   "vacancy_id",
+   "first_name",
+   "last_name",
+   "full_name",
+   "is_archived",
+   "resume_url",
+   "created_at",
+   "updated_at",
+   "deleted_at"
+  ],
+  "libFile": "lib/db/src/schema/recruitment.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1a.ts"
+  ]
+ },
+ {
+  "table": "skills",
+  "verdict": "RECONCILE",
+  "cons": 28,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/lms-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "courses",
+  "verdict": "RECONCILE",
+  "cons": 32,
+  "nDefs": 3,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "instructorId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-4.ts"
+   }
+  ],
+  "missing": [
+   "is_active",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/lms-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts",
+   "apps/api/src/shared/db/schema-ext-a-1.ts"
+  ]
+ },
+ {
+  "table": "notifications",
+  "verdict": "RECONCILE",
+  "cons": 54,
+  "nDefs": 2,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "userId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/core/core-users.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "ai_planning_config",
+  "verdict": "PK-CONFLICT",
+  "cons": 0,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-ai.ts"
+   },
+   {
+    "col": "autoApprovalThreshold",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-ai.ts"
+   },
+   {
+    "col": "maxShiftHours",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-ai.ts"
+   },
+   {
+    "col": "energyOptimizationWeight",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-ai.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/pp/pp-enhanced.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-ai.ts"
+  ]
+ },
+ {
+  "table": "pos_warehouse_access",
+  "verdict": "PK-CONFLICT",
+  "cons": 0,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-pos-ext.ts"
+   },
+   {
+    "col": "userId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-pos-ext.ts"
+   },
+   {
+    "col": "grantedBy",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-pos-ext.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/pos-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-pos-ext.ts"
+  ]
+ },
+ {
+  "table": "ai_insights",
+  "verdict": "PK-CONFLICT",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-ai.ts"
+   }
+  ],
+  "missing": [
+   "planNumber",
+   "planDate",
+   "planType",
+   "status",
+   "confidenceScore",
+   "autoApproved",
+   "autoApprovalThreshold",
+   "totalOrders",
+   "totalMachineHours",
+   "estimatedCompletion",
+   "planData",
+   "optimizationMetrics",
+   "aiRecommendations",
+   "maxShiftHours",
+   "batchGroupingEnabled",
+   "energyOptimizationWeight",
+   "changeoverMinutes",
+   "updatedAt"
+  ],
+  "libFile": "lib/db/src/schema/core/core-ai.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-ai.ts"
+  ]
+ },
+ {
+  "table": "ai_reservation_requests",
+  "verdict": "PK-CONFLICT",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-ai.ts"
+   },
+   {
+    "col": "quantity",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-ai.ts"
+   }
+  ],
+  "missing": [
+   "items",
+   "scheduledAt"
+  ],
+  "libFile": "lib/db/src/schema/mm-inventory.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-ai.ts"
+  ]
+ },
+ {
+  "table": "calendar_events",
+  "verdict": "PK-CONFLICT",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-admin-ext.ts"
+   },
+   {
+    "col": "startDate",
+    "stub": "date",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-admin-ext.ts"
+   },
+   {
+    "col": "endDate",
+    "stub": "date",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-admin-ext.ts"
+   }
+  ],
+  "missing": [
+   "name",
+   "domain",
+   "plan",
+   "employeeLimit"
+  ],
+  "libFile": "lib/db/src/schema/core-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-admin-ext.ts"
+  ]
+ },
+ {
+  "table": "document_sequences",
+  "verdict": "PK-CONFLICT",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/core/core-ai-reports.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-2.ts"
+  ]
+ },
+ {
+  "table": "hr_tz2_ai_room_analysis",
+  "verdict": "PK-CONFLICT",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-hr-tz2.ts"
+   }
+  ],
+  "missing": [
+   "room_code",
+   "reference_photo_id",
+   "current_photo_url",
+   "analyzed_at",
+   "cleanliness_score",
+   "order_score",
+   "equipment_ok",
+   "pdf_url",
+   "notified_hr",
+   "created_at",
+   "updated_at",
+   "employee_id",
+   "date",
+   "check_in_territory",
+   "check_out_territory"
+  ],
+  "libFile": "lib/db/src/schema/hr-tz2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-hr-tz2.ts"
+  ]
+ },
+ {
+  "table": "hr_tz2_room_reference_photos",
+  "verdict": "PK-CONFLICT",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-hr-tz2.ts"
+   }
+  ],
+  "missing": [
+   "room_code",
+   "room_name",
+   "department_code",
+   "photo_url",
+   "last_updated_at",
+   "updated_by",
+   "created_at",
+   "updated_at",
+   "reference_photo_id",
+   "current_photo_url",
+   "analyzed_at",
+   "cleanliness_score",
+   "order_score",
+   "equipment_ok",
+   "pdf_url",
+   "notified_hr",
+   "employee_id",
+   "date",
+   "check_in_territory",
+   "check_out_territory"
+  ],
+  "libFile": "lib/db/src/schema/hr-tz2-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-hr-tz2.ts"
+  ]
+ },
+ {
+  "table": "marketing_content_posts",
+  "verdict": "PK-CONFLICT",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-marketing-ext.ts"
+   }
+  ],
+  "missing": [
+   "accountName",
+   "accountId",
+   "isActive",
+   "accessToken"
+  ],
+  "libFile": "lib/db/src/schema/kanban-extended.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-marketing-ext.ts"
+  ]
+ },
+ {
+  "table": "marketing_social_accounts",
+  "verdict": "PK-CONFLICT",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-marketing-ext.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/kanban-extended.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-marketing-ext.ts"
+  ]
+ },
+ {
+  "table": "security_incidents",
+  "verdict": "PK-CONFLICT",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-misc.ts"
+   }
+  ],
+  "missing": [
+   "title",
+   "reported_by",
+   "assigned_to",
+   "resolved_at",
+   "resolution_notes",
+   "created_at",
+   "updated_at",
+   "asset_id",
+   "employee_id",
+   "assigned_date",
+   "return_date",
+   "condition_on_assign",
+   "condition_on_return",
+   "papka_order_id",
+   "action",
+   "bom_approved",
+   "routing_approved",
+   "tech_card_approved",
+   "approved_by_id",
+   "approved_at",
+   "is_rejected"
+  ],
+  "libFile": "lib/db/src/schema/security-ops-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc.ts"
+  ]
+ },
+ {
+  "table": "warehouse_zones",
+  "verdict": "PK-CONFLICT",
+  "cons": 1,
+  "nDefs": 2,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   },
+   {
+    "col": "warehouseId",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/wms-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-2.ts"
+  ]
+ },
+ {
+  "table": "asset_items",
+  "verdict": "PK-CONFLICT",
+  "cons": 2,
+  "nDefs": 2,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-business-c-1.ts"
+   }
+  ],
+  "missing": [
+   "assigned_to",
+   "department_id",
+   "serial_number",
+   "purchase_date",
+   "purchase_price",
+   "is_active",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/admin-assets.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-1.ts"
+  ]
+ },
+ {
+  "table": "position_permissions",
+  "verdict": "PK-CONFLICT",
+  "cons": 2,
+  "nDefs": 3,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-rbac.ts"
+   }
+  ],
+  "missing": [
+   "tableName",
+   "recordId",
+   "action",
+   "oldValues",
+   "newValues",
+   "changedFields",
+   "reason",
+   "transactionId",
+   "userId",
+   "userFullName",
+   "userRole",
+   "ipAddress",
+   "userAgent"
+  ],
+  "libFile": "lib/db/src/schema/position-permissions.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-2.ts",
+   "apps/api/src/shared/db/schema-rbac.ts"
+  ]
+ },
+ {
+  "table": "design_orders",
+  "verdict": "PK-CONFLICT",
+  "cons": 3,
+  "nDefs": 3,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "assignedTo",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-4.ts"
+   },
+   {
+    "col": "files",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-compat-4.ts"
+   },
+   {
+    "col": "createdBy",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-4.ts"
+   },
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-misc.ts"
+   },
+   {
+    "col": "deadline",
+    "stub": "date",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-misc.ts"
+   }
+  ],
+  "missing": [
+   "order_number",
+   "client_name",
+   "product_type",
+   "assigned_to",
+   "ai_prompt",
+   "file_urls",
+   "created_by",
+   "approved_by",
+   "approved_at",
+   "deal_id",
+   "papka_order_id",
+   "client_company",
+   "client_phone",
+   "client_email",
+   "product_name",
+   "created_at",
+   "updated_at",
+   "equipment_id",
+   "equipment_name",
+   "issue_description",
+   "started_at",
+   "completed_at",
+   "production_order_affected",
+   "due_date",
+   "tags",
+   "deleted_at"
+  ],
+  "libFile": "lib/db/src/schema/pp/pp-design.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-4.ts",
+   "apps/api/src/shared/db/schema-misc.ts"
+  ]
+ },
+ {
+  "table": "marketing_campaigns",
+  "verdict": "PK-CONFLICT",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/marketing-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "marketing_leads",
+  "verdict": "PK-CONFLICT",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/marketing-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts"
+  ]
+ },
+ {
+  "table": "saas_tenants",
+  "verdict": "PK-CONFLICT",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-admin-ext.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/saas-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-admin-ext.ts"
+  ]
+ },
+ {
+  "table": "budget_lines",
+  "verdict": "PK-CONFLICT",
+  "cons": 4,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-finance-budgets.ts"
+   }
+  ],
+  "missing": [
+   "category",
+   "description"
+  ],
+  "libFile": "lib/db/src/schema/fi-budgets.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-budgets.ts"
+  ]
+ },
+ {
+  "table": "admins",
+  "verdict": "PK-CONFLICT",
+  "cons": 6,
+  "nDefs": 2,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-misc-app-b.ts"
+   }
+  ],
+  "missing": [
+   "created_at"
+  ],
+  "libFile": "lib/db/src/schema/core/core-users.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "inventory_count_lines",
+  "verdict": "PK-CONFLICT",
+  "cons": 6,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-pos-ext.ts"
+   },
+   {
+    "col": "countId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-pos-ext.ts"
+   }
+  ],
+  "missing": [
+   "stockItemId",
+   "sku",
+   "itemName",
+   "systemQuantity",
+   "location"
+  ],
+  "libFile": "lib/db/src/schema/mm-inventory.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-pos-ext.ts"
+  ]
+ },
+ {
+  "table": "qc_reclamations",
+  "verdict": "PK-CONFLICT",
+  "cons": 6,
+  "nDefs": 3,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-misc-qc.ts"
+   },
+   {
+    "col": "customerId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-misc-qc.ts"
+   },
+   {
+    "col": "reportedDate",
+    "stub": "date",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-misc-qc.ts"
+   },
+   {
+    "col": "assignedTo",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-misc-qc.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/qc-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts",
+   "apps/api/src/shared/db/schema-misc-qc.ts"
+  ]
+ },
+ {
+  "table": "purchase_orders",
+  "verdict": "PK-CONFLICT",
+  "cons": 7,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-wms.ts"
+   },
+   {
+    "col": "items",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-wms.ts"
+   }
+  ],
+  "missing": [
+   "po_number",
+   "vendor_name",
+   "vendor_id",
+   "total_amount",
+   "created_by",
+   "approved_by",
+   "approved_at",
+   "goods_received_by",
+   "goods_received_at",
+   "invoice_matched",
+   "three_way_matched",
+   "created_at",
+   "updated_at",
+   "reference_id",
+   "reference_type",
+   "inspector_id",
+   "items_checked",
+   "items_passed",
+   "items_failed",
+   "attachments"
+  ],
+  "libFile": "lib/db/src/schema/mm-raw-materials.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-wms.ts"
+  ]
+ },
+ {
+  "table": "inventory_counts",
+  "verdict": "PK-CONFLICT",
+  "cons": 9,
+  "nDefs": 3,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "materialId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-finance-extended.ts"
+   },
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-pos-ext.ts"
+   },
+   {
+    "col": "startedBy",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-pos-ext.ts"
+   },
+   {
+    "col": "approvedBy",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-pos-ext.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/mm-inventory.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-extended.ts",
+   "apps/api/src/shared/db/schema-pos-ext.ts"
+  ]
+ },
+ {
+  "table": "vendors",
+  "verdict": "PK-CONFLICT",
+  "cons": 12,
+  "nDefs": 3,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-wms.ts"
+   },
+   {
+    "col": "items",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-wms.ts"
+   }
+  ],
+  "missing": [
+   "payment_terms",
+   "is_active",
+   "created_at",
+   "po_number",
+   "vendor_name",
+   "vendor_id",
+   "total_amount",
+   "created_by",
+   "approved_by",
+   "approved_at",
+   "goods_received_by",
+   "goods_received_at",
+   "invoice_matched",
+   "three_way_matched",
+   "updated_at",
+   "reference_id",
+   "reference_type",
+   "inspector_id",
+   "items_checked",
+   "items_passed",
+   "items_failed",
+   "attachments"
+  ],
+  "libFile": "lib/db/src/schema/mm-raw-materials.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-2.ts",
+   "apps/api/src/shared/db/schema-wms.ts"
+  ]
+ },
+ {
+  "table": "routings",
+  "verdict": "PK-CONFLICT",
+  "cons": 14,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-manufacturing.ts"
+   },
+   {
+    "col": "steps",
+    "stub": "string",
+    "lib": "json",
+    "file": "apps/api/src/shared/db/schema-manufacturing.ts"
+   }
+  ],
+  "missing": [
+   "work_centers",
+   "is_active",
+   "created_by",
+   "created_at",
+   "sales_order_id",
+   "order_number",
+   "product_name",
+   "quantity",
+   "unit",
+   "scheduled_start",
+   "scheduled_end",
+   "actual_start",
+   "actual_end",
+   "bom_id",
+   "routing_id",
+   "updated_at",
+   "production_order_id",
+   "operator_id",
+   "work_center_id",
+   "started_at",
+   "completed_at",
+   "quality_passed",
+   "defect_qty"
+  ],
+  "libFile": "lib/db/src/schema/pp/pp-production.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-manufacturing.ts"
+  ]
+ },
+ {
+  "table": "budgets",
+  "verdict": "PK-CONFLICT",
+  "cons": 20,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-finance-budgets.ts"
+   },
+   {
+    "col": "createdBy",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-finance-budgets.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/fi-ap-core.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-budgets.ts"
+  ]
+ },
+ {
+  "table": "work_centers",
+  "verdict": "PK-CONFLICT",
+  "cons": 20,
+  "nDefs": 3,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-manufacturing.ts"
+   },
+   {
+    "col": "capacity",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-manufacturing.ts"
+   },
+   {
+    "col": "certificationLmsCourseId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-manufacturing.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/pp/pp-production.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-manufacturing.ts",
+   "apps/api/src/shared/db/schema-pp.ts"
+  ]
+ },
+ {
+  "table": "deliveries",
+  "verdict": "PK-CONFLICT",
+  "cons": 24,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-misc.ts"
+   }
+  ],
+  "missing": [
+   "sales_order_id",
+   "delivery_number",
+   "customer_name",
+   "delivery_address",
+   "status",
+   "driver_id",
+   "vehicle_number",
+   "dispatched_at",
+   "delivered_at",
+   "notes",
+   "created_at",
+   "updated_at",
+   "order_number",
+   "client_name",
+   "product_type",
+   "priority",
+   "deadline",
+   "assigned_to",
+   "description",
+   "ai_prompt",
+   "file_urls",
+   "created_by",
+   "approved_by",
+   "approved_at",
+   "deal_id",
+   "papka_order_id",
+   "client_company",
+   "client_phone",
+   "client_email",
+   "product_name",
+   "equipment_id",
+   "equipment_name",
+   "issue_description",
+   "started_at",
+   "completed_at",
+   "production_order_affected"
+  ],
+  "libFile": "lib/db/src/schema/sd-delivery.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-misc.ts"
+  ]
+ },
+ {
+  "table": "departments",
+  "verdict": "PK-CONFLICT",
+  "cons": 30,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-hr-lms.ts"
+   },
+   {
+    "col": "headId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-hr-lms.ts"
+   },
+   {
+    "col": "parentId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-hr-lms.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/departments.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-hr-lms.ts"
+  ]
+ },
+ {
+  "table": "positions",
+  "verdict": "PK-CONFLICT",
+  "cons": 30,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-hr-lms.ts"
+   },
+   {
+    "col": "departmentId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-hr-lms.ts"
+   },
+   {
+    "col": "minSalary",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-hr-lms.ts"
+   },
+   {
+    "col": "maxSalary",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-hr-lms.ts"
+   }
+  ],
+  "missing": [],
+  "libFile": "lib/db/src/schema/positions.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-hr-lms.ts"
+  ]
+ },
+ {
+  "table": "production_orders",
+  "verdict": "PK-CONFLICT",
+  "cons": 30,
+  "nDefs": 3,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "productId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   },
+   {
+    "col": "createdBy",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-3.ts"
+   },
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-manufacturing.ts"
+   },
+   {
+    "col": "quantity",
+    "stub": "number",
+    "lib": "string",
+    "file": "apps/api/src/shared/db/schema-manufacturing.ts"
+   }
+  ],
+  "missing": [
+   "plannedStart",
+   "plannedEnd",
+   "sales_order_id",
+   "order_number",
+   "product_name",
+   "scheduled_start",
+   "scheduled_end",
+   "actual_start",
+   "actual_end",
+   "bom_id",
+   "routing_id",
+   "created_by",
+   "created_at",
+   "updated_at",
+   "production_order_id",
+   "operator_id",
+   "work_center_id",
+   "started_at",
+   "completed_at",
+   "quality_passed",
+   "defect_qty",
+   "code",
+   "name",
+   "type",
+   "capacity"
+  ],
+  "libFile": "lib/db/src/schema/pp/pp-production.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-3.ts",
+   "apps/api/src/shared/db/schema-manufacturing.ts"
+  ]
+ },
+ {
+  "table": "sales_orders",
+  "verdict": "PK-CONFLICT",
+  "cons": 44,
+  "nDefs": 3,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "customerId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   },
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-core.ts"
+   }
+  ],
+  "missing": [
+   "status",
+   "totalAmount",
+   "notes",
+   "createdBy",
+   "createdAt",
+   "updatedAt",
+   "deletedAt",
+   "deal_id",
+   "order_number",
+   "customer_name",
+   "customer_id",
+   "advance_percent",
+   "advance_bypass_by",
+   "advance_bypass_reason",
+   "bom_checked",
+   "routing_checked",
+   "tech_card_checked",
+   "total_amount",
+   "created_by",
+   "assigned_to",
+   "created_at",
+   "updated_at"
+  ],
+  "libFile": "lib/db/src/schema/sd-orders.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-2.ts",
+   "apps/api/src/shared/db/schema-core.ts"
+  ]
+ },
+ {
+  "table": "warehouses",
+  "verdict": "PK-CONFLICT",
+  "cons": 53,
+  "nDefs": 3,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-wms.ts"
+   }
+  ],
+  "missing": [
+   "is_free_storage",
+   "free_storage_days",
+   "monthly_rate",
+   "deleted_at",
+   "deleted_by",
+   "created_at",
+   "sku",
+   "category",
+   "quantity",
+   "unit",
+   "cost_price",
+   "sell_price",
+   "expiry_date",
+   "received_at",
+   "lot_number",
+   "supplier_id",
+   "is_active",
+   "updated_at",
+   "stock_item_id",
+   "movement_type",
+   "reference_id",
+   "reference_type",
+   "performed_by",
+   "tin",
+   "phone",
+   "email"
+  ],
+  "libFile": "lib/db/src/schema/wms-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-2.ts",
+   "apps/api/src/shared/db/schema-wms.ts"
+  ]
+ },
+ {
+  "table": "attendance",
+  "verdict": "PK-CONFLICT",
+  "cons": 67,
+  "nDefs": 5,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "employeeId",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   },
+   {
+    "col": "date",
+    "stub": "string",
+    "lib": "date",
+    "file": "apps/api/src/shared/db/schema-compat-2.ts"
+   },
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-hr-lms.ts"
+   }
+  ],
+  "missing": [
+   "employee_id",
+   "attendance_date",
+   "check_in_time",
+   "check_out_time",
+   "late_minutes",
+   "early_leave_minutes",
+   "overtime_minutes",
+   "created_at",
+   "updated_at",
+   "check_in",
+   "check_out",
+   "hours_worked",
+   "period",
+   "gross_salary",
+   "inps_deduction",
+   "jshd_deduction",
+   "net_salary",
+   "paid_at",
+   "title",
+   "description",
+   "category",
+   "is_mandatory",
+   "passing_score",
+   "created_by",
+   "course_id",
+   "user_id",
+   "score",
+   "completed_at",
+   "certificate_expires_at"
+  ],
+  "libFile": "lib/db/src/schema/attendance.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts",
+   "apps/api/src/shared/db/schema-compat-2.ts",
+   "apps/api/src/shared/db/schema-hr-lms.ts",
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "users",
+  "verdict": "PK-CONFLICT",
+  "cons": 126,
+  "nDefs": 4,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-core.ts"
+   }
+  ],
+  "missing": [
+   "lockUntil",
+   "password_hash",
+   "full_name",
+   "is_active",
+   "last_login_at",
+   "failed_login_attempts",
+   "locked_until",
+   "created_at",
+   "updated_at",
+   "user_id",
+   "token",
+   "expires_at",
+   "is_revoked",
+   "action",
+   "module",
+   "entity_id",
+   "before_value",
+   "after_value",
+   "ip_address",
+   "key",
+   "value",
+   "updated_by",
+   "source",
+   "ai_score",
+   "first_name",
+   "last_name",
+   "profile_image_url",
+   "department_id",
+   "position_id",
+   "employee_id",
+   "birth_date",
+   "deleted_at"
+  ],
+  "libFile": "lib/db/src/schema/users.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-1a.ts",
+   "apps/api/src/shared/db/schema-core.ts",
+   "apps/api/src/shared/db/schema-misc-app-a.ts"
+  ]
+ },
+ {
+  "table": "employees",
+  "verdict": "PK-CONFLICT",
+  "cons": 200,
+  "nDefs": 3,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-hr-lms.ts"
+   }
+  ],
+  "missing": [
+   "user_id",
+   "full_name",
+   "position",
+   "department",
+   "salary_base",
+   "hire_date",
+   "inps_rate",
+   "jshd_rate",
+   "performance_score",
+   "created_at",
+   "updated_at",
+   "employee_id",
+   "date",
+   "check_in",
+   "check_out",
+   "hours_worked",
+   "period",
+   "gross_salary",
+   "inps_deduction",
+   "jshd_deduction",
+   "net_salary",
+   "paid_at",
+   "title",
+   "description",
+   "category",
+   "employee_code",
+   "first_name",
+   "last_name",
+   "middle_name",
+   "department_id",
+   "position_id",
+   "employment_status",
+   "employment_type",
+   "is_active",
+   "is_blocked",
+   "blocked_reason",
+   "telegram_chat_id",
+   "base_salary",
+   "phone_number",
+   "email_work",
+   "date_of_birth",
+   "birth_date",
+   "manager_id",
+   "photo_url",
+   "role",
+   "total_points",
+   "face_embedding",
+   "face_embedding_updated_at",
+   "deleted_at"
+  ],
+  "libFile": "lib/db/src/schema/employees.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-hr-lms.ts",
+   "apps/api/src/shared/db/schema-misc-app-a.ts"
+  ]
+ },
+ {
+  "table": "lms_courses",
+  "verdict": "NO-LIB-CANON",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-hr-lms.ts",
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "lms_enrollments",
+  "verdict": "NO-LIB-CANON",
+  "cons": 4,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-hr-lms.ts",
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "boms",
+  "verdict": "NO-LIB-CANON",
+  "cons": 8,
+  "nDefs": 2,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-ext-a-3.ts",
+   "apps/api/src/shared/db/schema-manufacturing.ts"
+  ]
+ },
+ {
+  "table": "lms_tests",
+  "verdict": "NO-LIB-CANON",
+  "cons": 40,
+  "nDefs": 3,
+  "idTypes": [
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-business-c-1.ts",
+   "apps/api/src/shared/db/schema-compat-4.ts",
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "invoices",
+  "verdict": "NO-LIB-CANON",
+  "cons": 45,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-finance-invoicing.ts",
+   "apps/api/src/shared/db/schema-misc-app-b.ts"
+  ]
+ },
+ {
+  "table": "materials",
+  "verdict": "NO-LIB-CANON",
+  "cons": 52,
+  "nDefs": 3,
+  "idTypes": [
+   "number",
+   "string"
+  ],
+  "conflicts": [],
+  "missing": [],
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-compat-2.ts",
+   "apps/api/src/shared/db/schema-ext-a-2.ts",
+   "apps/api/src/shared/db/schema-pos-ext.ts"
+  ]
+ }
+]
