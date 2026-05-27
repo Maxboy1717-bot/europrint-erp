@@ -22,13 +22,7 @@ import { GetPositionsHandler } from './application/queries/get-positions.query';
 import { GetOrgChartHandler } from './application/queries/get-org-chart.query';
 import { GetMyPanelHandler } from './application/queries/get-my-panel.query';
 
-import { DepartmentsController } from './presentation/departments.controller';
-import { PositionsController } from './presentation/positions.controller';
 import { PanelsController } from './presentation/panels.controller';
-import { SevenFunctionsController } from './presentation/seven-functions.controller';
-import { SevenFunctionsService } from './application/seven-functions.service';
-import { SevenFunctionsRepository } from './infrastructure/repositories/seven-functions.repository';
-import { SEVEN_FUNCTIONS_REPO } from './domain/repositories/i-seven-functions.repo';
 
 const commandHandlers = [
   CreateDepartmentHandler,
@@ -49,7 +43,7 @@ const queryHandlers = [
 
 @Module({
   imports: [CqrsModule],
-  controllers: [DepartmentsController, PositionsController, PanelsController, SevenFunctionsController],
+  controllers: [PanelsController],
   providers: [
     ...commandHandlers,
     ...queryHandlers,
@@ -57,9 +51,6 @@ const queryHandlers = [
       provide: CORE_REPO,
       useClass: DrizzleCoreRepo,
     },
-    SevenFunctionsRepository,
-    { provide: SEVEN_FUNCTIONS_REPO, useClass: SevenFunctionsRepository },
-    SevenFunctionsService,
   ],
   exports: [CORE_REPO],
 })

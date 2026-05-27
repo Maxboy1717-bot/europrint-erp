@@ -25,7 +25,6 @@ const AnalyticsPage            = lazy(() => import("@/pages/Analytics"));
 const POSInventoryPage         = lazy(() => import("@/pages/POSInventoryPage"));
 
 // ── Real pages (prior sessions) ───────────────────────────────────────────────
-const DisciplinePage      = lazy(() => import("@/pages/Discipline"));
 const HRVacationPage      = lazy(() => import("@/pages/HRVacationSick"));
 const GLDocumentsPage     = lazy(() => import("@/pages/GLDocuments"));
 const AttendancePage      = lazy(() => import("@/pages/AttendanceMonitorPage"));
@@ -67,7 +66,6 @@ const ApplicationResponsesPage  = lazy(() => import("@/pages/ApplicationResponse
 const QuestionsPage             = lazy(() => import("@/pages/QuestionsPage"));
 const AttemptsPage              = lazy(() => import("@/pages/AttemptsPage"));
 const EmployeeZoneHistoryPage   = lazy(() => import("@/pages/EmployeeZoneHistoryPage"));
-const QuestionnaireQuestionsPage = lazy(() => import("@/pages/QuestionnaireQuestionsPage"));
 
 export const STUB_ROUTES: [string, React.ComponentType][] = [
   // ── Previously Stub → now real ─────────────────────────────────────────────
@@ -108,7 +106,6 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/candidates',                CandidatesPage],
   ['/company-state',             CompanyStatePage],
   ['/daily-attendance',          AttendancePage],
-  ['/discipline-records',        DisciplinePage],
   ['/employee-files',            EmployeeFilesPage],
   ['/employee-productivity',     EmployeeProductivityPage],
   ['/employee-zone-history',     EmployeeZoneHistoryPage],
@@ -133,7 +130,6 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/production-facts',          ProductionFactsPage],
   ['/production/shift-reports',  ShiftReportsPage],
   ['/quality-defects-camera',    QualityDefectsCameraPage],
-  ['/questionnaire-questions',   QuestionnaireQuestionsPage],
   ['/questions',                 QuestionsPage],
   ['/raci-crisis',               RaciCrisisPage],
   ['/raw-materials',             RawMaterialsPage],

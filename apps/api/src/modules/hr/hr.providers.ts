@@ -124,9 +124,6 @@ import { HrGsdService } from './presentation/hr-gsd.service';
 import { HrGsdRepository } from './presentation/hr-gsd.repository';
 import { EmployeesForFaceController } from './presentation/employees-for-face.controller';
 import { HrEmployeeGoalsController } from './presentation/hr-employee-goals.controller';
-import { AdaptationController } from './adaptation/adaptation.controller';
-import { AdaptationService } from './adaptation/adaptation.service';
-import { AdaptationRepository } from './adaptation/adaptation.repo';
 import { ValidateController } from '../common/presentation/validate.controller';
 import { Feedback360Controller } from './feedback-360/feedback-360.controller';
 import { Feedback360Service } from './feedback-360/feedback-360.service';
@@ -195,8 +192,7 @@ export const hrControllers = [
   EmployeesForFaceController,
   AttendanceFaceController,
   HrEmployeeGoalsController,
-  // PA3-17 Wave 3: merged from modules/adaptation, feedback-360, hr-assets
-  AdaptationController,
+  // PA3-17 Wave 3: merged from feedback-360, hr-assets
   ValidateController,
   Feedback360Controller,
   HrAssetsController,
@@ -269,9 +265,6 @@ export const hrProviders = [
   DisciplineRecordRepository,
   RoomSnapshotCron,
   TerritoryGateway,
-  // PA3-17 Wave 3: merged from modules/adaptation/
-  AdaptationService,
-  AdaptationRepository,
   // PA3-17 Wave 3: merged from modules/feedback-360/
   Feedback360Service,
   Feedback360Repository,
@@ -288,5 +281,5 @@ export const hrProviders = [
 export const hrExports = [
   HR_REPO, Record360FeedbackHandler, LeaveRepository,
   TaxCalculatorService, AttritionService, UtilizationService, OvertimeCalculatorService,
-  AdaptationService, Feedback360Service, ApplicationsService,
+  Feedback360Service, ApplicationsService,
 ];

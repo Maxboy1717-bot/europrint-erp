@@ -13,7 +13,6 @@ import { LmsCertRepo } from './infrastructure/repositories/drizzle-lms-cert.repo
 import { LmsExamsRepository } from './infrastructure/repositories/drizzle-lms-exams.repo';
 import { LmsTestsRepository } from './infrastructure/repositories/drizzle-lms-tests.repo';
 import { LmsMiscRepository } from './infrastructure/repositories/drizzle-lms-misc.repo';
-import { LmsQuestionnaireRepository } from './infrastructure/repositories/drizzle-lms-questionnaire.repo';
 import { LmsCoursesExtendedRepository } from './infrastructure/repositories/drizzle-lms-courses-extended.repo';
 import { LmsCoreService } from './application/services/lms-core.service';
 import { LmsExamsService } from './application/services/lms-exams.service';
@@ -21,7 +20,6 @@ import { LmsCoursesExtendedService } from './application/services/lms-courses-ex
 import { LmsTestsService } from './application/services/lms-tests.service';
 import { LmsCertificatesStandaloneService } from './application/services/lms-certificates-standalone.service';
 import { LmsMiscService } from './application/services/lms-misc.service';
-import { LmsQuestionnaireService } from './application/services/lms-questionnaire.service';
 import { CertificationService } from './domain/services/certification.service';
 import { IssueCertificateHandler } from './application/commands/issue-certificate.handler';
 import { EnrollCourseHandler } from './application/commands/enroll-course.handler';
@@ -49,11 +47,6 @@ import {
 import { KnowledgeBaseController } from './presentation/knowledge-base.controller';
 import { KnowledgeBaseService } from './application/services/knowledge-base.service';
 import { KnowledgeBaseRepository } from './infrastructure/repositories/drizzle-knowledge-base.repo';
-import {
-  LmsQuestionnaireController,
-  LmsQuestionnaireTemplatesController,
-  LmsQuestionnaireQuestionsController,
-} from './presentation/lms-questionnaire.controller';
 import { LMS_REPO } from './domain/repositories/i-lms.repo';
 import { LMS_COURSES_REPO } from './courses/i-lms-courses.repo';
 import { DrizzleLmsCoursesRepository } from './courses/drizzle-lms-courses.repo';
@@ -86,9 +79,6 @@ const appControllers = [
   LmsAchievementsController,
   LmsMentorsController,
   LmsProgressCompatController,
-  LmsQuestionnaireController,
-  LmsQuestionnaireTemplatesController,
-  LmsQuestionnaireQuestionsController,
   KnowledgeBaseController,
 ];
 
@@ -100,7 +90,6 @@ const appServices = [
   LmsTestsService,
   LmsCertificatesStandaloneService,
   LmsMiscService,
-  LmsQuestionnaireService,
   CoursesService,
   EnrollmentsService,
   KnowledgeBaseService,
@@ -111,7 +100,6 @@ const appRepos = [
   LmsExamsRepository,
   LmsTestsRepository,
   LmsMiscRepository,
-  LmsQuestionnaireRepository,
   LmsCoursesExtendedRepository,
   LmsRepository,
   KnowledgeBaseRepository,

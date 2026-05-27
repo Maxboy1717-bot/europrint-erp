@@ -121,7 +121,7 @@ export function AppRouter() {
 
       {/* ── Redirect aliases ── */}
       <Route path="/orgstructure"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
-      <Route path="/org-structure/builder"><RoleRoute roles={HR_ROLES}><Redirect to="/org-chart" /></RoleRoute></Route>
+      <Route path="/org-structure/builder"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
       <Route path="/org-structure/view"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
       <Route path="/erp-analytics"><RoleRoute roles={ADMIN_ROLES}><Redirect to="/analytics" /></RoleRoute></Route>
       <Route path="/erp-roles"><RoleRoute roles={ADMIN_ROLES}><Redirect to="/settings" /></RoleRoute></Route>

@@ -35,7 +35,6 @@ import {
 import { DisciplineRecordsCompatController } from './discipline-records-compat.controller';
 import { HrMapCompatController }         from './hr-map-compat.controller';
 import { GoalsCompatController }         from './goals-compat.controller';
-import { OrgChartCompatController }      from './org-chart-compat.controller';
 import { EmployeeFilesCompatController } from './employee-files-compat.controller';
 import { SaasController, OrdersRegistryCompatController } from './saas.controller';
 import { TelegramAdminController }       from './telegram-admin.controller';
@@ -76,7 +75,6 @@ import { EmployeeKpiCompatService }      from './employee-kpi-compat.service';
 import { DisciplineRecordsCompatService } from './discipline-records-compat.service';
 import { HrMapCompatService }            from './hr-map-compat.service';
 import { GoalsCompatService }            from './goals-compat.service';
-import { OrgChartCompatService }         from './org-chart-compat.service';
 import { EmployeeFilesCompatService }    from './employee-files-compat.service';
 import { SaasService }                   from './saas.service';
 import { TelegramAdminService }          from './telegram-admin.service';
@@ -126,7 +124,6 @@ import { AuthModule }                 from '../auth/auth.module';
     DisciplineRecordsCompatController,
     HrMapCompatController,
     GoalsCompatController,
-    OrgChartCompatController,
     EmployeeFilesCompatController,
     SaasController,
     OrdersRegistryCompatController,
@@ -170,7 +167,6 @@ import { AuthModule }                 from '../auth/auth.module';
     DisciplineRecordsCompatService,
     HrMapCompatService,
     GoalsCompatService,
-    OrgChartCompatService,
     EmployeeFilesCompatService,
     SaasService,
     TelegramAdminService,

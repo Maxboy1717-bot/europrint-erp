@@ -6,7 +6,6 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { DocumentWorkflowService } from './document-workflow.service';
-import { DocumentWorkflowController } from './document-workflow.controller';
 import {
   DocumentWorkflowProcessor,
   DocumentSubmittedHandler,
@@ -17,7 +16,7 @@ import { DocumentWorkflowRepository } from './document-workflow.repository';
 
 @Module({
   imports: [CqrsModule],
-  controllers: [DocumentWorkflowController],
+  controllers: [],
   providers: [
     DocumentWorkflowService,
     DocumentWorkflowProcessor,

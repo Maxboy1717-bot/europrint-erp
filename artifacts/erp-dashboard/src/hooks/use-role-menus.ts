@@ -58,7 +58,7 @@ const ROLE_MODULE_MAP: Record<string, string[]> = {
   cfo:          ["fi/", "accounting/", "finance/", "budget", "cash-flow", "gl-", "payroll", "director"],
 
   // TZ-11: HR
-  hr:           ["hr/", "employees", "departments", "positions", "orgstructure", "recruiting", "shift-schedule", "discipline", "adaptation", "goals"],
+  hr:           ["hr/", "employees", "orgstructure", "recruiting", "shift-schedule", "goals"],
 
   // TZ-12: Ta'lim (LMS)
   lms:          ["lms", "courses", "tests", "ai-exams", "certificates", "skills", "knowledge", "mentorship"],
