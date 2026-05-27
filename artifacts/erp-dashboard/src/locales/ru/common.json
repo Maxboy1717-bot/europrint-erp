@@ -8492,5 +8492,6 @@
   "KanbanColumn.tsx.yuklanmoqda": "Загрузка...",
   "KanbanColumn.tsx.bosh": "Пусто",
   "CandidateCard.tsx.radEtish": "Отклонить",
-  "CandidateCard.tsx.bekorQilish": "Отменить"
+  "CandidateCard.tsx.bekorQilish": "Отменить",
+  "importQilish": "Импортировать"
 }

@@ -63,6 +63,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
   const { t } = useTranslation("common");
   const { toast } = useToast();
   const [confirmDeleteEmployee, setConfirmDeleteEmployee] = useState<{ id: string; name: string } | null>(null);
+  const [confirmResignEmployee, setConfirmResignEmployee] = useState<{ id: string; name: string } | null>(null);
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -314,10 +315,10 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
                       </DropdownMenuItem>
                     )}
                     {employee.status !== "resigned" && (
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation();
-                          updateStatusMutation.mutate({ id: employee.id, status: "resigned" });
+                          setConfirmResignEmployee({ id: employee.id, name: employee.fullName });
                         }}
                         data-testid={`action-set-resigned-${employee.id}`}
                       >
@@ -355,6 +356,22 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
       cancelText="Bekor qilish"
       variant="destructive"
       onConfirm={() => { if (confirmDeleteEmployee) deleteMutation.mutate(confirmDeleteEmployee.id); }}
+    />
+
+    <ConfirmDialog
+      open={confirmResignEmployee !== null}
+      onOpenChange={(open) => { if (!open) setConfirmResignEmployee(null); }}
+      title={t("ishdanKetgan")}
+      description={`${confirmResignEmployee?.name ?? ''} xodimini "Ishdan ketgan" deb belgilamoqchimisiz?`}
+      confirmText={t("ishdanKetgan")}
+      cancelText="Bekor qilish"
+      variant="destructive"
+      onConfirm={() => {
+        if (confirmResignEmployee) {
+          updateStatusMutation.mutate({ id: confirmResignEmployee.id, status: "resigned" });
+          setConfirmResignEmployee(null);
+        }
+      }}
     />
     </>
   );

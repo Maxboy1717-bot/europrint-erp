@@ -12,6 +12,8 @@ import { safeCall, Result, AppError } from '@common/result';
 
 type Row = Record<string, unknown>;
 const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
+/** Prefix used when employee_code is missing in the CSV row */
+const IMPORT_CODE_PREFIX = 'IMP';
 
 @Injectable()
 export class EmployeesCompatSubService {
@@ -21,16 +23,17 @@ export class EmployeesCompatSubService {
       const errors: string[] = [];
       for (const emp of employees) {
         try {
+          const code = emp['employee_code'] || `${IMPORT_CODE_PREFIX}-${Date.now()}-${imported}`;
           await rawSql(sql`
-            INSERT INTO employees (first_name, last_name, email, department_id, position_id, employee_code, status)
-            VALUES (${emp['first_name'] ?? ''}, ${emp['last_name'] ?? ''}, ${emp['email'] ?? null},
-                    ${emp['department_id'] ?? null}, ${emp['position_id'] ?? null},
-                    ${emp['employee_code'] ?? `IMP-${Date.now()}-${imported}`}, 'active')
-            ON CONFLICT (email) DO NOTHING
+            INSERT INTO employees (first_name, last_name, phone, birth_date, hire_date, address, employee_code, status)
+            VALUES (${emp['first_name'] ?? ''}, ${emp['last_name'] ?? ''}, ${emp['phone'] ?? null},
+                    ${emp['birth_date'] ?? null}, ${emp['hire_date'] ?? null}, ${emp['address'] ?? null},
+                    ${code}, 'active')
+            ON CONFLICT (employee_code) DO NOTHING
           `);
           imported++;
         } catch (e: unknown) {
-          errors.push(`${emp['email'] ?? '?'}: ${(e as Error).message}`);
+          errors.push(`${emp['first_name'] ?? '?'} ${emp['last_name'] ?? ''}: ${(e as Error).message}`);
         }
       }
       return { imported, total: employees.length, errors };

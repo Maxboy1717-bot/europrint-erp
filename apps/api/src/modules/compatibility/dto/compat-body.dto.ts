@@ -42,10 +42,30 @@ const PrintJobSchema = z.object({
 });
 export class PrintJobDto extends createZodDto(PrintJobSchema) {}
 
-const ImportEmployeesSchema = z.object({ employees: z.array(z.record(z.string(), z.unknown())) });
+const ImportEmployeeRowSchema = z.object({
+  employee_code: z.string().max(50).optional(),
+  first_name:    z.string().min(1).max(100),
+  last_name:     z.string().min(1).max(100),
+  birth_date:    z.string().optional(),
+  hire_date:     z.string().optional(),
+  address:       z.string().max(500).optional(),
+  phone:         z.string().max(20).optional(),
+});
+const ImportEmployeesSchema = z.object({
+  employees: z.array(ImportEmployeeRowSchema).min(1),
+});
 export class ImportEmployeesDto extends createZodDto(ImportEmployeesSchema) {}
 
-const ProfileImageSchema = z.object({ url: z.string().optional() });
+// Must be a full URL (https://…) or a server-relative path (/uploads/…)
+const ProfileImageSchema = z.object({
+  url: z.string()
+         .max(500)
+         .refine(
+           (v) => v.startsWith('/') || v.startsWith('http://') || v.startsWith('https://'),
+           { message: 'URL should start with /, http://, or https://' },
+         )
+         .optional(),
+});
 export class ProfileImageDto extends createZodDto(ProfileImageSchema) {}
 
 // z.union([z.string(), z.number()]) Swagger uchun aylanma yaratadi.
