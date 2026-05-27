@@ -7,7 +7,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -18,14 +17,24 @@ import { useTranslation } from "@/lib/i18n";
 
 interface PipPlan {
   id: string | number;
-  employee_id: string | number;
-  goal: string;
-  actions?: string;
+  /** Drizzle ORM returns camelCase; raw SQL returns snake_case */
+  employee_id?: string | number;
+  employeeId?: string | number;
+  /** goals (Drizzle) or goal (alias) */
+  goals?: string;
+  goal?: string;
+  successCriteria?: string;
+  success_criteria?: string;
   start_date?: string;
+  startDate?: string;
   end_date?: string;
-  status: "active" | "completed" | "failed";
-  progress_percent?: number;
-  manager_id?: string | number;
+  endDate?: string;
+  durationDays?: number;
+  duration_days?: number;
+  status: "draft" | "active" | "completed" | "failed" | "cancelled";
+  outcome?: string;
+  createdAt?: string;
+  created_at?: string;
 }
 
 interface Employee {
@@ -36,13 +45,29 @@ interface Employee {
   lastName?: string;
 }
 
-type StatusFilter = "all" | "active" | "completed" | "failed";
+type StatusFilter = "all" | "draft" | "active" | "completed" | "failed" | "cancelled";
 
-const STATUS_CONFIG: Record<string, { label: string; variant: "info" | "success" | "danger" }> = {
+const STATUS_CONFIG: Record<string, { label: string; variant: "info" | "success" | "danger" | "secondary" }> = {
+  draft:     { label: "Qoralama",         variant: "secondary" },
   active:    { label: "Faol",             variant: "info" },
   completed: { label: "Bajarilgan",       variant: "success" },
   failed:    { label: "Muvaffaqiyatsiz",  variant: "danger" },
+  cancelled: { label: "Bekor qilingan",   variant: "secondary" },
 };
+
+/** Normalize a pip plan record regardless of camelCase or snake_case */
+function normalizePip(p: PipPlan) {
+  return {
+    id: p.id,
+    employeeId: p.employeeId ?? p.employee_id,
+    goal: p.goals ?? p.goal ?? "—",
+    successCriteria: p.successCriteria ?? p.success_criteria,
+    startDate: p.startDate ?? p.start_date,
+    endDate: p.endDate ?? p.end_date,
+    status: p.status,
+    outcome: p.outcome,
+  };
+}
 
 function getEmployeeName(employeeId: string | number, employees: Employee[]): string {
   const emp = (Array.isArray(employees) ? employees : []).find(
@@ -99,6 +124,7 @@ function TableSkeleton() {
 
 const TABS: { value: StatusFilter; label: string }[] = [
   { value: "all",       label: "Barchasi" },
+  { value: "draft",     label: "Qoralama" },
   { value: "active",    label: "Faol" },
   { value: "completed", label: "Bajarilgan" },
   { value: "failed",    label: "Muvaffaqiyatsiz" },
@@ -218,7 +244,7 @@ export default function HRPip() {
                       <TableHead>Maqsad</TableHead>
                       <TableHead>Boshlanish</TableHead>
                       <TableHead>Tugash</TableHead>
-                      <TableHead className="min-w-[140px]">Progress</TableHead>
+                      <TableHead className="min-w-[180px]">Muvaffaqiyat mezoni</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -237,32 +263,27 @@ export default function HRPip() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      (Array.isArray(filtered) ? filtered : []).map((plan) => {
+                      (Array.isArray(filtered) ? filtered : []).map((rawPlan) => {
+                        const plan = normalizePip(rawPlan);
                         const cfg = STATUS_CONFIG[plan.status] ?? STATUS_CONFIG.active;
-                        const pct = Math.min(100, Math.max(0, plan.progress_percent ?? 0));
-                        const empName = getEmployeeName(plan.employee_id, employees);
+                        const empName = getEmployeeName(plan.employeeId ?? 0, employees);
                         return (
                           <TableRow key={plan.id} className="hover:bg-muted/40 transition-colors">
                             <TableCell className="font-medium text-sm">{empName}</TableCell>
                             <TableCell className="text-sm max-w-[220px] truncate" title={plan.goal}>
-                              {plan.goal || "—"}
+                              {plan.goal}
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground">
-                              {formatDate(plan.start_date)}
+                              {formatDate(plan.startDate)}
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground">
-                              {formatDate(plan.end_date)}
+                              {formatDate(plan.endDate)}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">
+                              {plan.successCriteria ?? "—"}
                             </TableCell>
                             <TableCell>
-                              <div className="flex items-center gap-2 min-w-[120px]">
-                                <Progress value={pct} className="h-1.5 flex-1" />
-                                <span className="text-xs text-muted-foreground w-9 shrink-0 text-right">
-                                  {pct}%
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={cfg.variant} className="text-xs">
+                              <Badge variant={cfg.variant as "info" | "success" | "danger" | "secondary"} className="text-xs">
                                 {cfg.label}
                               </Badge>
                             </TableCell>
