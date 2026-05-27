@@ -19,10 +19,10 @@ export function CorporateInventoryTab({ employeeId, isHr }: CorporateInventoryTa
   const [form, setForm] = useState<InventoryFormState>(INITIAL_INVENTORY_FORM);
 
   const { data: items, isLoading } = useQuery<CorporateInventoryItem[]>({
-    queryKey: ["/api/employees", employeeId, "corporate-inventory"],
+    queryKey: ["/api/hr/employees", employeeId, "corporate-inventory"],
     queryFn: async () => {
       let json: unknown;
-      try { json = await apiRequest<unknown>('GET', `/api/employees/${employeeId}/corporate-inventory`); }
+      try { json = await apiRequest<unknown>('GET', `/api/hr/employees/${employeeId}/corporate-inventory`); }
       catch { return []; }
       if (Array.isArray(json)) return json as CorporateInventoryItem[];
       const obj = json as { data?: unknown };
@@ -33,10 +33,10 @@ export function CorporateInventoryTab({ employeeId, isHr }: CorporateInventoryTa
 
   const addMutation = useMutation({
     mutationFn: async (data: InventoryFormState) => {
-      return await apiRequest("POST", `/api/employees/${employeeId}/corporate-inventory`, data);
+      return await apiRequest("POST", `/api/hr/employees/${employeeId}/corporate-inventory`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/employees", employeeId, "corporate-inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/employees", employeeId, "corporate-inventory"] });
       setAddDialogOpen(false);
       setForm(INITIAL_INVENTORY_FORM);
       toast({ title: tLabel('common.CorporateInventoryTab.tsx.inventarQoshildi', "Inventar qo'shildi") });
@@ -46,20 +46,20 @@ export function CorporateInventoryTab({ employeeId, isHr }: CorporateInventoryTa
 
   const signMutation = useMutation({
     mutationFn: async (itemId: number) => {
-      return await apiRequest("PATCH", `/api/employees/${employeeId}/corporate-inventory/${itemId}/sign`, {});
+      return await apiRequest("PATCH", `/api/hr/employees/${employeeId}/corporate-inventory/${itemId}/sign`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/employees", employeeId, "corporate-inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/employees", employeeId, "corporate-inventory"] });
       toast({ title: "Imzo tasdiqlandi" });
     },
   });
 
   const returnMutation = useMutation({
     mutationFn: async (itemId: number) => {
-      return await apiRequest("PATCH", `/api/employees/${employeeId}/corporate-inventory/${itemId}/return`, {});
+      return await apiRequest("PATCH", `/api/hr/employees/${employeeId}/corporate-inventory/${itemId}/return`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/employees", employeeId, "corporate-inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/employees", employeeId, "corporate-inventory"] });
       toast({ title: "Qaytarildi deb belgilandi" });
     },
   });

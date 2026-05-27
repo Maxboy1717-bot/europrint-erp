@@ -50,7 +50,7 @@ export default function HRDashboardMockup() {
   const { data: birthdaysRaw } = useQuery({ queryKey: ["/api/hr/birthdays/today"] });
   const birthdays = toArray<BirthdayItem>(birthdaysRaw);
 
-  const { data: hiresRaw } = useQuery({ queryKey: ["/api/employees", { limit: "5" }] });
+  const { data: hiresRaw } = useQuery({ queryKey: ["/api/hr/employees", { limit: "5" }] });
   const recentHires = toArray<RecentHire>(hiresRaw).slice(0, 5);
 
   return (

@@ -35,7 +35,7 @@ export default function Mentorship() {
   });
 
   const { data: employees } = useQuery<Employee[]>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
   });
 
   const { data: courses } = useQuery<Course[]>({

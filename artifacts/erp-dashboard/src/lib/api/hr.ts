@@ -177,21 +177,21 @@ export const hrApi = {
   importEmployeesCompat: (data: Record<string, unknown>) =>
     apiRequest("POST", "/api/hr/employees/import", data),
   updateEmployeeCompat: (id: number | string, data: Record<string, unknown>) =>
-    apiRequest("PUT", `/api/employees/${id}`, data),
+    apiRequest("PUT", `/api/hr/employees/${id}`, data),
   deleteEmployeeCompat: (id: number | string) =>
-    apiRequest("DELETE", `/api/employees/${id}`),
+    apiRequest("DELETE", `/api/hr/employees/${id}`),
   updateProfileImageCompat: (id: number | string, data: Record<string, unknown>) =>
-    apiRequest("PATCH", `/api/employees/${id}/profile-image`, data),
+    apiRequest("PATCH", `/api/hr/employees/${id}/profile-image`, data),
   putProfileImageCompat: (id: number | string, data: Record<string, unknown>) =>
-    apiRequest("PUT", `/api/employees/${id}/profile-image`, data),
+    apiRequest("PUT", `/api/hr/employees/${id}/profile-image`, data),
   assignOrgFunctions: (id: number | string, data: Record<string, unknown>) =>
-    apiRequest("POST", `/api/employees/${id}/assign-org-functions`, data),
+    apiRequest("POST", `/api/hr/employees/${id}/assign-org-functions`, data),
   signCorpInventory: (id: number | string, itemId: number | string) =>
-    apiRequest("POST", `/api/employees/${id}/corporate-inventory/${itemId}/sign`),
+    apiRequest("POST", `/api/hr/employees/${id}/corporate-inventory/${itemId}/sign`),
   returnCorpInventory: (id: number | string, itemId: number | string) =>
-    apiRequest("POST", `/api/employees/${id}/corporate-inventory/${itemId}/return`),
+    apiRequest("POST", `/api/hr/employees/${id}/corporate-inventory/${itemId}/return`),
   deleteEmployeeFile: (id: number | string, fileId: number | string) =>
-    apiRequest("DELETE", `/api/employees/${id}/files/${fileId}`),
+    apiRequest("DELETE", `/api/hr/employees/${id}/files/${fileId}`),
   deleteEmployeeFileCompat: (id: number | string) =>
     apiRequest("DELETE", `/api/employee-files/${id}`),
   deleteHrDocument: (id: number | string) =>

@@ -66,7 +66,7 @@ export default function EmployeeDailyKPIPanel() {
   const topPerformers = topResponse?.topPerformers || [];
 
   const { data: employeesResponse } = useQuery<EmployeesApiResponse>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
   });
   const employees = employeesResponse?.data || [];
 

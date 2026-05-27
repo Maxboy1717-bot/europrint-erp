@@ -68,7 +68,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
   // Edit rejimida: xodim allaqachon biriktirilgan funksiyalarni olamiz
   // (rahbar bo'lgan + ishlovchi bo'lgan barcha funksiyalar)
   const { data: assignedDeptsData } = useQuery<{ orgDepartmentIds: string[] }>({
-    queryKey: [`/api/employees/${employee?.id}/org-departments`],
+    queryKey: [`/api/hr/employees/${employee?.id}/org-departments`],
     enabled: open === true && !!employee?.id,
   });
 

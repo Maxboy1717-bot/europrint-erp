@@ -36,7 +36,7 @@ export default function GoalsKPI() {
   });
 
   const { data: employeesResponse } = useQuery<{ data: Array<{ id: string; fullName: string }> }>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
   });
   const employees = employeesResponse?.data || [];
 

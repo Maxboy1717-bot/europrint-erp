@@ -269,11 +269,8 @@ export class HrDashboardController {
 
   // NOTE: contracts/expiring served by HrDashboardExtraController (dup removed).
 
-  /** Attendance summary from daily_attendance_summary (last N days, default 30) */
-  @Get('attendance')
-  async getAttendanceSummary(@Query('days') days?: string) {
-    return unwrapOrInternal(await this.svc.getAttendanceSummary(Math.min(parseInt(days ?? '30', 10) || 30, 90)));
-  }
+  // NOTE: `GET /api/hr/attendance` is served by HrAttendanceController
+  // (@Controller('hr/attendance') root). The duplicate here collided at boot — removed.
 
   /** Gamification leaderboard (period: monthly | quarterly | total) */
   @Get('gamification/leaderboard')

@@ -78,10 +78,10 @@ export default function HRAssetManagement() {
   const assets = Array.isArray(rawAssets) ? rawAssets : [];
 
   const { data: employees } = useQuery<Employee[]>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
     queryFn: async () => {
       let data: unknown;
-      try { data = await apiRequest('GET', "/api/employees?limit=500"); }
+      try { data = await apiRequest('GET', "/api/hr/employees?limit=500"); }
       catch { return []; }
       return Array.isArray(data)
         ? (data as Employee[])

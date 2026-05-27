@@ -40,7 +40,7 @@ export default function EmployeeProfileMockup() {
   const [alertVisible, setAlertVisible] = useState(true);
 
   const { data, isLoading } = useQuery<EmployeeProfile>({
-    queryKey: [`/api/employees/${id ?? "1"}`],
+    queryKey: [`/api/hr/employees/${id ?? "1"}`],
     enabled: !!id,
   });
 

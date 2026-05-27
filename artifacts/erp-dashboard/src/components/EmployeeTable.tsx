@@ -67,8 +67,8 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      // Backend: PATCH /api/employees/:id/status
-      return await apiRequest("PATCH", `/api/employees/${id}/status`, { status });
+      // Backend: PATCH /api/hr/employees/:id/status
+      return await apiRequest("PATCH", `/api/hr/employees/${id}/status`, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/employees"] });
@@ -90,8 +90,8 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      // Backend: DELETE /api/employees/:id (employees-compat.controller.ts)
-      return await apiRequest("DELETE", `/api/employees/${id}`);
+      // Backend: DELETE /api/hr/employees/:id (employees-compat.controller.ts)
+      return await apiRequest("DELETE", `/api/hr/employees/${id}`);
     },
     onSuccess: () => {
       // Canonical key (canonical: /api/hr/employees)

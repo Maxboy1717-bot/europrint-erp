@@ -59,7 +59,7 @@ export default function EmployeeStats() {
   const [isPersonalInfoDialogOpen, setIsPersonalInfoDialogOpen] = useState(false);
 
   const { data: employee, isLoading: employeeLoading, isError, error, refetch } = useQuery<Employee>({
-    queryKey: ["/api/employees", id],
+    queryKey: ["/api/hr/employees", id],
   });
 
   const { data: assignments = [] } = useQuery<Assignment[]>({
@@ -87,7 +87,7 @@ export default function EmployeeStats() {
   });
 
   const { data: employeeFiles = [], isLoading: filesLoading } = useQuery<EmployeeFile[]>({
-    queryKey: ["/api/employees", id, "files"],
+    queryKey: ["/api/hr/employees", id, "files"],
   });
 
   const { data: abcAnalysis } = useQuery<LocalAbcAnalysis>({

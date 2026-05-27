@@ -126,10 +126,10 @@ export function useIoTTabletData({
 
   // ── Employees (for crew checklist) ────────────────────────────────────────
   const { data: employeesData = { data: [] } } = useQuery({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
     queryFn: async () => {
       try {
-        return await apiRequest('GET', "/api/employees");
+        return await apiRequest('GET', "/api/hr/employees");
       } catch {
         return { data: [] };
       }

@@ -102,5 +102,5 @@ export const operationsApi = {
 
   // Employee status (compat route)
   updateEmployeeStatusCompat: (id: number | string, status: string) =>
-    apiRequest("PATCH", `/api/employees/${id}/status`, { status }),
+    apiRequest("PATCH", `/api/hr/employees/${id}/status`, { status }),
 };

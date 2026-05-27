@@ -70,13 +70,13 @@ export const employeeKpiApi = {
 
 export const employeesExtApi = {
   addAsset: (id: number | string, data: Record<string, unknown>) =>
-    apiRequest("POST", `/api/employees/${id}/assets`, data),
+    apiRequest("POST", `/api/hr/employees/${id}/assets`, data),
   addComplaint: (id: number | string, data: Record<string, unknown>) =>
-    apiRequest("POST", `/api/employees/${id}/complaints`, data),
+    apiRequest("POST", `/api/hr/employees/${id}/complaints`, data),
   updateOrgFunctions: (id: number | string, data: Record<string, unknown>) =>
-    apiRequest("PATCH", `/api/employees/${id}/org-functions`, data),
+    apiRequest("PATCH", `/api/hr/employees/${id}/org-functions`, data),
   removeAsset: (id: number | string, assetId: number | string) =>
-    apiRequest("DELETE", `/api/employees/${id}/assets/${assetId}`),
+    apiRequest("DELETE", `/api/hr/employees/${id}/assets/${assetId}`),
 };
 
 export const europrintControlApi = {

@@ -51,7 +51,7 @@ export function ERPEmployeeTab() {
   });
 
   const { data: employeesResponse } = useQuery<{ data: Employee[] }>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
   });
   const employees = employeesResponse?.data || [];
 

@@ -43,7 +43,7 @@ export function useEmployeeMutation({ isEdit, employeeId, onAfterSubmit }: UseEm
 
   const updateMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      return await apiRequest('PATCH', `/api/employees/${employeeId}`, data);
+      return await apiRequest('PATCH', `/api/hr/employees/${employeeId}`, data);
     },
     onSuccess: async () => {
       if (employeeId) await onAfterSubmit(employeeId).catch(() => null);

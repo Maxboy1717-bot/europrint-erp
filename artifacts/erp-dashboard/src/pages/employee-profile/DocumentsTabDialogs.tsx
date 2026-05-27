@@ -66,8 +66,8 @@ export function UploadDialog({ open, onOpenChange, employeeId }: UploadDialogPro
       formData.append("category", uploadCategory);
       if (uploadDescription) formData.append("description", uploadDescription);
 
-      await apiRequest('POST', `/api/employees/${employeeId}/files`);
-      await qc.invalidateQueries({ queryKey: ["/api/employees", employeeId, "files"] });
+      await apiRequest('POST', `/api/hr/employees/${employeeId}/files`);
+      await qc.invalidateQueries({ queryKey: ["/api/hr/employees", employeeId, "files"] });
       toast({ title: "Fayl muvaffaqiyatli yuklandi" });
       handleClose();
     } catch (err: unknown) {

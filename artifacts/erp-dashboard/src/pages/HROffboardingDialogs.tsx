@@ -189,10 +189,10 @@ export function CreateCaseDialog({
   });
 
   const { data: employees = [] } = useQuery<Employee[]>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
     queryFn: async () => {
       let d: unknown;
-      try { d = await apiRequest('GET', "/api/employees?limit=500"); }
+      try { d = await apiRequest('GET', "/api/hr/employees?limit=500"); }
       catch { return []; }
       return Array.isArray(d)
         ? (d as Employee[])
