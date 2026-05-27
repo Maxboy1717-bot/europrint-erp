@@ -1,10 +1,464 @@
 {
   "summary": {
-    "totalLeaks": 0,
-    "filesWithLeaks": 0,
-    "byKind": {},
-    "byLocale": {},
-    "topFiles": []
+    "totalLeaks": 57,
+    "filesWithLeaks": 12,
+    "byKind": {
+      "JSX_TEXT": 44,
+      "PROP": 13
+    },
+    "byLocale": {
+      "uz": 57
+    },
+    "topFiles": [
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
+        "count": 11
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\HRAlumni.tsx",
+        "count": 9
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\HRMilestones.tsx",
+        "count": 7
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
+        "count": 6
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\HRPip.tsx",
+        "count": 5
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\Questionnaire.tsx",
+        "count": 5
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\HRConflict.tsx",
+        "count": 4
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\HRGamification.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\SevenFunctions.tsx",
+        "count": 3
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\RaciMatrix.tsx",
+        "count": 2
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\HRBirthdays.tsx",
+        "count": 1
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\QuestionnaireTemplates.tsx",
+        "count": 1
+      }
+    ]
   },
-  "leaks": []
+  "leaks": [
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
+      "line": 181,
+      "text": "Qoidabuzarliklar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
+      "line": 191,
+      "text": "Xodim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
+      "line": 192,
+      "text": "Bo'lim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
+      "line": 193,
+      "text": "Qoidabuzarlik turi",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
+      "line": 195,
+      "text": "Sana",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
+      "line": 243,
+      "text": "Xodim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
+      "line": 244,
+      "text": "Bo'lim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
+      "line": 245,
+      "text": "Bloklangan sana",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
+      "line": 149,
+      "text": "Jami qoidabuzarliklar",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
+      "line": 161,
+      "text": "Bloklangan xodimlar",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
+      "line": 172,
+      "text": "Xodim bo'yicha qidirish...",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRAlumni.tsx",
+      "line": 136,
+      "text": "(Sobiq xodimlar)",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRAlumni.tsx",
+      "line": 177,
+      "text": "Xodim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRAlumni.tsx",
+      "line": 178,
+      "text": "Bo'lim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRAlumni.tsx",
+      "line": 179,
+      "text": "Lavozim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRAlumni.tsx",
+      "line": 181,
+      "text": "Ishdan chiqqan",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRAlumni.tsx",
+      "line": 213,
+      "text": "Yo'q",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRAlumni.tsx",
+      "line": 143,
+      "text": "Jami alumni",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRAlumni.tsx",
+      "line": 155,
+      "text": "Bu yil ketganlar",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRAlumni.tsx",
+      "line": 166,
+      "text": "Ism bo'yicha qidirish...",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRBirthdays.tsx",
+      "line": 139,
+      "text": "Tug&apos;ilgan Kunlar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRConflict.tsx",
+      "line": 171,
+      "text": "Ochiq",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRConflict.tsx",
+      "line": 187,
+      "text": "Sana",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRConflict.tsx",
+      "line": 188,
+      "text": "Tavsif",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRConflict.tsx",
+      "line": 145,
+      "text": "Ochiq",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
+      "line": 170,
+      "text": "eNPS So'rov",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
+      "line": 195,
+      "text": "So'rovlar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
+      "line": 196,
+      "text": "Natijalar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
+      "line": 214,
+      "text": "Tavsif",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
+      "line": 217,
+      "text": "Holat",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
+      "line": 218,
+      "text": "Javoblar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRGamification.tsx",
+      "line": 100,
+      "text": "Ishtirokchilar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRGamification.tsx",
+      "line": 157,
+      "text": "Xodim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRGamification.tsx",
+      "line": 161,
+      "text": "Nishonlar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRMilestones.tsx",
+      "line": 72,
+      "text": "Yo'q",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRMilestones.tsx",
+      "line": 169,
+      "text": "Xodim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRMilestones.tsx",
+      "line": 170,
+      "text": "Bo'lim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRMilestones.tsx",
+      "line": 172,
+      "text": "Sana",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRMilestones.tsx",
+      "line": 173,
+      "text": "Tavsif",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRMilestones.tsx",
+      "line": 147,
+      "text": "Tur bo'yicha filter",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRMilestones.tsx",
+      "line": 231,
+      "text": "Xodimlarning muhim yutuqlari va hodisalarini kuzatish",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRPip.tsx",
+      "line": 136,
+      "text": "PIP Rejalar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRPip.tsx",
+      "line": 150,
+      "text": "Jami",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRPip.tsx",
+      "line": 161,
+      "text": "Faol",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRPip.tsx",
+      "line": 183,
+      "text": "Muvaffaqiyatsiz",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\HRPip.tsx",
+      "line": 217,
+      "text": "Xodim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Questionnaire.tsx",
+      "line": 171,
+      "text": "Savollar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Questionnaire.tsx",
+      "line": 172,
+      "text": "Javoblar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Questionnaire.tsx",
+      "line": 173,
+      "text": "Holat",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Questionnaire.tsx",
+      "line": 143,
+      "text": "Jami",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\Questionnaire.tsx",
+      "line": 144,
+      "text": "Faol",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\QuestionnaireTemplates.tsx",
+      "line": 141,
+      "text": "Anketa Shablonlar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\RaciMatrix.tsx",
+      "line": 261,
+      "text": "Qo'llanma",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\RaciMatrix.tsx",
+      "line": 159,
+      "text": "Javobgarlik va vakolatlar taqsimoti",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\SevenFunctions.tsx",
+      "line": 250,
+      "text": "Xodim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\SevenFunctions.tsx",
+      "line": 251,
+      "text": "Lavozim",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\SevenFunctions.tsx",
+      "line": 160,
+      "text": "PAEI+ modeli asosida boshqaruv funktsiyalari tahlili",
+      "kind": "PROP",
+      "locale": "uz"
+    }
+  ]
 }

@@ -38,6 +38,18 @@ const InternalJobBoard = lazy(() => import("@/pages/InternalJobBoard"));
 const HRBrandPage = lazy(() => import("@/pages/HRBrandPage"));
 const WeeklyPlanPage = lazy(() => import("@/pages/WeeklyPlanPage"));
 const InspectionPage = lazy(() => import("@/pages/InspectionPage"));
+const HRPip = lazy(() => import("@/pages/HRPip"));
+const HRGamification = lazy(() => import("@/pages/HRGamification"));
+const HRBirthdays = lazy(() => import("@/pages/HRBirthdays"));
+const Discipline = lazy(() => import("@/pages/Discipline"));
+const HRConflict = lazy(() => import("@/pages/HRConflict"));
+const HRAlumni = lazy(() => import("@/pages/HRAlumni"));
+const HREnps = lazy(() => import("@/pages/HREnps"));
+const Questionnaire = lazy(() => import("@/pages/Questionnaire"));
+const QuestionnaireTemplates = lazy(() => import("@/pages/QuestionnaireTemplates"));
+const SevenFunctions = lazy(() => import("@/pages/SevenFunctions"));
+const RaciMatrix = lazy(() => import("@/pages/RaciMatrix"));
+const HRMilestones = lazy(() => import("@/pages/HRMilestones"));
 
 export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/employees',                        Employees],
@@ -70,6 +82,19 @@ export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/hr/brand',                         HRBrandPage],
   ['/weekly-plan',                      WeeklyPlanPage],
   ['/hr/inspection',                    InspectionPage],
+  // ── Newly implemented HR pages ────────────────────────────────────────────
+  ['/hr/pip',                           HRPip],
+  ['/hr/gamification',                  HRGamification],
+  ['/hr/birthdays',                     HRBirthdays],
+  ['/discipline',                       Discipline],
+  ['/hr/conflict',                      HRConflict],
+  ['/hr/alumni',                        HRAlumni],
+  ['/hr/enps',                          HREnps],
+  ['/questionnaire',                    Questionnaire],
+  ['/questionnaire-templates',          QuestionnaireTemplates],
+  ['/seven-functions',                  SevenFunctions],
+  ['/raci-matrix',                      RaciMatrix],
+  ['/hr/milestones',                    HRMilestones],
 ];
 
 export const AI_HR_ROUTES: [string, React.ComponentType][] = [

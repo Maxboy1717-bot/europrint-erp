@@ -136,6 +136,7 @@ import { ApplicationsController } from './applications/applications.controller';
 import { ApplicationResponsesController } from './applications/application-responses.controller';
 import { ApplicationsService } from './applications/applications.service';
 import { ApplicationsRepository } from './applications/applications.repository';
+import { HrQuestionnaireController } from './presentation/hr-questionnaire.controller';
 
 export const hrCommandHandlers = [
   RecordAttendanceHandler, CalculatePayrollHandler, ApproveLeaveHandler,
@@ -198,6 +199,7 @@ export const hrControllers = [
   // PA3-17 Wave 5: merged from modules/applications/
   ApplicationsController,
   ApplicationResponsesController,
+  HrQuestionnaireController,
 ];
 
 export const hrProviders = [
