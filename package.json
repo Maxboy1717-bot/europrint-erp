@@ -7,7 +7,7 @@
     "build": "pnpm --filter @europrint/api run build",
     "build:erp": "pnpm --filter @workspace/erp-dashboard run build",
     "build:site": "pnpm --filter @workspace/europrint-site run build",
-    "build:all": "pnpm run build && pnpm run build:erp && pnpm run build:site",
+    "build:all": "pnpm --filter @workspace/db run build && pnpm run build && pnpm run build:erp && pnpm run build:site",
     "start": "pnpm --filter @europrint/api run start",
     "dev:api": "pnpm --filter @europrint/api run dev:unsafe",
     "dev:erp": "pnpm --filter @workspace/erp-dashboard run dev",

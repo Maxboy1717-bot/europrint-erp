@@ -83,7 +83,7 @@ jobs:
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - name: Run Vitest
-        run: pnpm --filter erp-dashboard run test -- --coverage
+        run: pnpm --filter @workspace/erp-dashboard run test -- --coverage
       - uses: codecov/codecov-action@v3
         with:
           files: ./artifacts/erp-dashboard/coverage/lcov.info
@@ -137,9 +137,9 @@ jobs:
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - name: Install Playwright browsers
-        run: pnpm --filter erp-dashboard exec playwright install --with-deps chromium
+        run: pnpm --filter @workspace/erp-dashboard exec playwright install --with-deps chromium
       - name: Run E2E
-        run: pnpm --filter erp-dashboard run test:e2e
+        run: pnpm --filter @workspace/erp-dashboard run test:e2e
         env:
           CI: "1"
       - uses: actions/upload-artifact@v4

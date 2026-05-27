@@ -40,6 +40,15 @@ audit-result.txt
 .env.local
 .env.*.local
 .env.production
+apps/api/.env
+apps/api/.env.production
+
+# Build outputs (scoped)
+artifacts/erp-dashboard/dist/
+apps/api/dist/
+
+# Stale backup files
+*.bak.t2c
 
 # IDE
 .idea/

@@ -17,7 +17,12 @@ module.exports = {
   transform: {
     '^.+\\.(t|j)s$': ['ts-jest', {
       tsconfig: '<rootDir>/tsconfig.json',
-      diagnostics: false,
+      // Enable type-checking but suppress the most common false-positive codes.
+      // diagnostics: false was hiding real TS errors in test files — see Task 9.
+      // If adding new codes causes unexpected failures, add their code to ignoreCodes.
+      diagnostics: {
+        ignoreCodes: [2322, 2345, 7006],
+      },
       isolatedModules: true,
     }],
   },
