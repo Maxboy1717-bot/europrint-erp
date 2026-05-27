@@ -186,11 +186,6 @@ export class HrGsdController {
     return { data: { id, deleted: true } };
   }
 
-  @ApiOperation({ summary: 'Delete employee skill' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Delete('employee-skills/:id')
-  @HttpCode(HttpStatus.OK)
-  async deleteEmployeeSkill(@Param('id', ParseIntPipe) id: number) {
-    return { data: { id, deleted: true } };
-  }
+  // NOTE: DELETE /api/hr/employee-skills/:id is served by HrCompatAController —
+  // duplicate declaration removed here (Fastify boot collision).
 }
