@@ -5,6 +5,8 @@
 
 import { Stock } from '../aggregates/stock.aggregate';
 import { Result, Ok, Err } from '@common/result';
+import type { DrizzleExecutor } from '../../../../common/types/drizzle.types';
+export type { DrizzleExecutor };
 
 export interface CreateWarehouseInput {
   id: string;
@@ -15,14 +17,6 @@ export interface CreateWarehouseInput {
   monthly_rate: string | null;
   created_at: Date;
 }
-
-/**
- * Optional transaction handle. Drizzle's `db.transaction(async (tx) => ...)`
- * supplies a `tx` whose select/insert/update API mirrors `db`. We accept it as
- * an opaque value so callers can pin reads + writes to the same transaction
- * without leaking Drizzle types into the domain interface.
- */
-export type DrizzleExecutor = unknown;
 
 export interface IWmsRepository {
   saveStock(stock: Stock, tx?: DrizzleExecutor): Promise<Result<number>>;

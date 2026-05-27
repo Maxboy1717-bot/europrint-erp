@@ -5,14 +5,8 @@
 
 import { ProductionSession } from '../aggregates/production-session.aggregate';
 import { Result, Ok, Err } from '@common/result';
-
-/**
- * Optional transaction handle. Drizzle's `db.transaction(async (tx) => ...)`
- * supplies a `tx` whose API mirrors `db`. We accept it as an opaque value so
- * callers can pin reads + writes to the same transaction without leaking
- * Drizzle types into the domain interface.
- */
-export type DrizzleExecutor = unknown;
+import type { DrizzleExecutor } from '../../../../common/types/drizzle.types';
+export type { DrizzleExecutor };
 
 export interface IMesRepository {
   saveSession(session: ProductionSession, tx?: DrizzleExecutor): Promise<Result<number>>;

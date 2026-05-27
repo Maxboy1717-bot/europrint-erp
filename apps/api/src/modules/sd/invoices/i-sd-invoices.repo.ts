@@ -4,6 +4,8 @@
  */
 
 import { Result } from '@common/result';
+import type { DrizzleExecutor } from '../../../common/types/drizzle.types';
+export type { DrizzleExecutor };
 type Row = Record<string, unknown>;
 
 export interface OrderForInvoice {
@@ -36,14 +38,6 @@ export interface InvoiceRow {
   totalAmount: string;
   status: string;
 }
-
-/**
- * Optional transaction handle. Drizzle's `db.transaction(async (tx) => ...)`
- * supplies a `tx` whose select/insert API mirrors `db`. We accept it as an
- * opaque value so callers can pin a read + write to the same transaction
- * without leaking Drizzle types into the domain interface.
- */
-export type DrizzleExecutor = unknown;
 
 export interface ISdInvoicesRepository {
   findAll(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>>;

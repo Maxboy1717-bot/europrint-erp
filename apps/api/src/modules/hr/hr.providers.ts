@@ -44,7 +44,6 @@ import { HrAttendanceController } from './presentation/hr-attendance.controller'
 import { HrPayrollController } from './presentation/hr-payroll.controller';
 import { HrLeaveController } from './presentation/hr-leave.controller';
 import { HrDashboardController } from './presentation/hr-dashboard.controller';
-import { HrDashboardStubsController, HrDashboardStubsWriteController } from './presentation/hr-dashboard-stubs.controller';
 import { HrDashboardExtraController, HrCapitalController } from './presentation/hr-dashboard-extra.controller';
 import { HrShiftsCompatController } from './presentation/hr-shifts-compat.controller';
 import { HrCompatAController } from './presentation/hr-compat-a.controller';

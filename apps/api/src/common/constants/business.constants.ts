@@ -51,10 +51,9 @@ export const COGS_MATERIAL_RATIO = 0.6;
 export const FORECAST_CONFIDENCE_DEFAULT = 0.72;
 
 // ---------------------------------------------------------------------------
-// Time
+// Time (re-exported from app.constants for backward compatibility)
 // ---------------------------------------------------------------------------
-export const MS_PER_DAY      = 86_400_000;
-export const SECONDS_PER_DAY = 86_400;
+export { MS_PER_DAY, SECONDS_PER_DAY } from './app.constants';
 
 // ---------------------------------------------------------------------------
 // AI / forecast parameters

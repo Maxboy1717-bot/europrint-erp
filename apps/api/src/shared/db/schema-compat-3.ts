@@ -110,17 +110,9 @@ export const equipmentMaintenance = pgTable('equipment_maintenance', {
   deletedAt: ts('deleted_at'),
 });
 
-export const qcReclamations = pgTable('qc_reclamations', {
-  id: integer('id').primaryKey(),
-  productionOrderId: text('production_order_id'),
-  type: text('type').notNull(),
-  severity: text('severity').notNull().default('low'),
-  description: text('description'),
-  status: text('status').notNull().default('open'),
-  resolvedAt: ts('resolved_at'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-});
+// qcReclamations: converged to canonical lib/db definition (superset of 9-col stub).
+// Consumers importing qcReclamations from this module get the richer canonical schema.
+export { qcReclamations } from '@workspace/db';
 
 export const qcBraks = pgTable('qc_braks', {
   id: integer('id').primaryKey(),

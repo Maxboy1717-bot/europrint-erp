@@ -184,20 +184,9 @@ export const approvalRequests = pgTable('approval_requests', {
   updatedAt: ts('updated_at').defaultNow(),
 });
 
-export const designOrders = pgTable('design_orders', {
-  id: integer('id').primaryKey(),
-  salesOrderId: text('sales_order_id'),
-  title: text('title').notNull(),
-  description: text('description'),
-  status: text('status').notNull().default('pending'),
-  assignedTo: text('assigned_to'),
-  files: text('files').default('[]'),
-  completedAt: ts('completed_at'),
-  createdBy: text('created_by').notNull(),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-});
+// designOrders: converged to canonical lib/db definition (pp/pp-design.ts superset).
+// Consumers importing designOrders from this module get the richer canonical schema.
+export { designOrders } from '@workspace/db';
 
 export const stockTransferLines = pgTable('stock_transfer_lines', {
   id: integer('id').primaryKey(),
