@@ -21,11 +21,17 @@ interface EnpsSurvey {
   id: number | string;
   title: string;
   description?: string;
-  start_date: string;
-  end_date: string;
+  /** Drizzle ORM returns camelCase; raw SQL may return snake_case */
+  start_date?: string;
+  startDate?: string;
+  end_date?: string;
+  endDate?: string;
   status: string;
-  response_count: number;
-  target_count: number;
+  period?: string;
+  /** Not in DB schema — may be absent */
+  response_count?: number;
+  target_count?: number;
+  questions?: unknown;
 }
 
 interface EnpsResult {
@@ -66,7 +72,7 @@ function npsLabel(score: number): string {
   return "Yomon";
 }
 
-function fmtDate(d: string): string {
+function fmtDate(d: string | undefined): string {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
@@ -237,15 +243,15 @@ export default function HREnps() {
                         <TableCell className="max-w-[200px] truncate text-muted-foreground text-sm">
                           {s.description ?? "—"}
                         </TableCell>
-                        <TableCell>{fmtDate(s.start_date)}</TableCell>
-                        <TableCell>{fmtDate(s.end_date)}</TableCell>
+                        <TableCell>{fmtDate(s.startDate ?? s.start_date)}</TableCell>
+                        <TableCell>{fmtDate(s.endDate ?? s.end_date)}</TableCell>
                         <TableCell>
                           <Badge variant={statusVariant(s.status)}>
                             {statusLabel(s.status)}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
-                          {s.response_count} / {s.target_count}
+                          {s.response_count ?? "—"} / {s.target_count ?? "—"}
                         </TableCell>
                       </TableRow>
                     ))}
