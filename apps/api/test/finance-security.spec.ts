@@ -57,15 +57,6 @@ describe('Finance Accounting – SQL injection prevention', () => {
       expect(source).not.toContain('sql.raw(');
     });
 
-    it('does NOT call sql.raw() in gamification.service.ts', () => {
-      const filePath = path.join(
-        __dirname,
-        '../src/modules/hr/gamification/gamification.service.ts',
-      );
-      const source = fs.readFileSync(filePath, 'utf8');
-      expect(source).not.toContain('sql.raw(');
-    });
-
     it('does NOT call sql.raw() in finance-accounting.service.ts', () => {
       const filePath = path.join(
         __dirname,

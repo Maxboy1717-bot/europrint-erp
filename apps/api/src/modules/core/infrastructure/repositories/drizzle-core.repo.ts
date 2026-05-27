@@ -6,13 +6,10 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { castTo } from '@common/db-rows';
-import { eq, sql } from 'drizzle-orm';
-import { db, user_panels as userPanels, departments, positions } from '@shared/db';
+import { eq } from 'drizzle-orm';
+import { db, user_panels as userPanels } from '@shared/db';
 import { Result, Err, Ok } from '@common/types/result.type';
 import { ICoreRepo } from '../../domain/repositories/i-core.repo';
-import { Department } from '../../domain/aggregates/department.aggregate';
-import { Position } from '../../domain/aggregates/position.aggregate';
 import { Panel, PanelLayout } from '../../domain/aggregates/panel.aggregate';
 import { createId } from '@paralleldrive/cuid2';
 
@@ -33,109 +30,6 @@ function errMsg(e: unknown): string {
 @Injectable()
 export class DrizzleCoreRepo implements ICoreRepo {
   private readonly logger = new Logger(DrizzleCoreRepo.name);
-
-  async findDepartmentById(id: string): Promise<Result<Department>> {
-    try {
-      const r = await db.select().from(departments).where(eq(departments.id, id)).limit(1).then(r => castTo<DbRow[]>(r));
-      if (!r[0]) return Err('Departament topilmadi');
-      return Ok(this.mapToDepartment(r[0]));
-    } catch (e: unknown) { return Err(errMsg(e)); }
-  }
-
-  async findAllDepartments(_filters?: { isActive?: boolean; parentId?: string }): Promise<Result<Department[]>> {
-    try {
-      const r = await db.select().from(departments).orderBy(sql`${departments.id}`).then(r => castTo<DbRow[]>(r));
-      return Ok((Array.isArray(r) ? r : []).map((row) => this.mapToDepartment(row)));
-    } catch (e: unknown) {
-      this.logger.error(`findAllDepartments error: ${errMsg(e)}`);
-      return Err(errMsg(e));
-    }
-  }
-
-  async saveDepartment(dept: Partial<Department>): Promise<Result<Department>> {
-    try {
-      const d = dept as DbRow;
-      const rows = await db.insert(departments).values({
-        name:        dept.name || '',
-        code:        dept.code || '',
-        headId:      (d['headId'] as string) || null,
-        parentId:    (d['parentId'] as string) || null,
-        description: dept.description || null,
-        isActive:    dept.isActive ?? true,
-      }).returning();
-      if (!rows[0]) return Err('Departamentni saqlashda xato');
-      return Ok(this.mapToDepartment(rows[0] as DbRow));
-    } catch (e: unknown) { return Err(errMsg(e)); }
-  }
-
-  async updateDepartment(id: string, data: Partial<Department>): Promise<Result<Department>> {
-    try {
-      const rows = await db.update(departments).set({
-        name:      sql`COALESCE(${data.name || null}, ${departments.name})`,
-        updatedAt: _time.now(),
-      }).where(eq(departments.id, id)).returning();
-      if (!rows[0]) return Err('Departament topilmadi');
-      return Ok(this.mapToDepartment(rows[0] as DbRow));
-    } catch (e: unknown) { return Err(errMsg(e)); }
-  }
-
-  async deleteDepartment(id: string): Promise<Result<void>> {
-    try {
-      await db.delete(departments).where(eq(departments.id, id));
-      return Ok(undefined);
-    } catch (e: unknown) { return Err(errMsg(e)); }
-  }
-
-  async findPositionById(id: string): Promise<Result<Position>> {
-    try {
-      const r = await db.select().from(positions).where(eq(positions.id, id)).limit(1).then(r => castTo<DbRow[]>(r));
-      if (!r[0]) return Err('Lavoza topilmadi');
-      return Ok(this.mapToPosition(r[0]));
-    } catch (e: unknown) { return Err(errMsg(e)); }
-  }
-
-  async findAllPositions(_filters?: { departmentId?: string; isActive?: boolean }): Promise<Result<Position[]>> {
-    try {
-      const r = await db.select().from(positions).orderBy(sql`${positions.id}`).then(r => castTo<DbRow[]>(r));
-      return Ok((Array.isArray(r) ? r : []).map((row) => this.mapToPosition(row)));
-    } catch (e: unknown) {
-      this.logger.error(`findAllPositions error: ${errMsg(e)}`);
-      return Err(errMsg(e));
-    }
-  }
-
-  async savePosition(pos: Partial<Position>): Promise<Result<Position>> {
-    try {
-      const posData = pos as DbRow;
-      const rows = await db.insert(positions).values({
-        title:        String(posData['title'] || posData['name'] || ''),
-        code:         pos.code || '',
-        departmentId: (posData['departmentId'] as string) || null,
-        level:        pos.level || 1,
-        minSalary:    String(posData['minSalary'] || 0),
-        maxSalary:    String(posData['maxSalary'] || 0),
-        isActive:     pos.isActive ?? true,
-      }).returning();
-      if (!rows[0]) return Err('Lavozani saqlashda xato');
-      return Ok(this.mapToPosition(rows[0] as DbRow));
-    } catch (e: unknown) { return Err(errMsg(e)); }
-  }
-
-  async updatePosition(id: string, _data: Partial<Position>): Promise<Result<Position>> {
-    try {
-      const rows = await db.update(positions).set({ updatedAt: _time.now() })
-        .where(eq(positions.id, id)).returning();
-      if (!rows[0]) return Err('Lavoza topilmadi');
-      return Ok(this.mapToPosition(rows[0] as DbRow));
-    } catch (e: unknown) { return Err(errMsg(e)); }
-  }
-
-  async deletePosition(id: string): Promise<Result<void>> {
-    try {
-      await db.delete(positions).where(eq(positions.id, id));
-      return Ok(undefined);
-    } catch (e: unknown) { return Err(errMsg(e)); }
-  }
 
   async findPanelByUserId(userId: string): Promise<Result<Panel | null>> {
     try {
@@ -184,25 +78,6 @@ export class DrizzleCoreRepo implements ICoreRepo {
       );
       return Err(`Failed to fetch default panel: ${(error as Error).message}`);
     }
-  }
-
-  private mapToDepartment(row: DbRow): Department {
-    return new Department(
-      String(row['id'] ?? ''), String(row['name_uz'] || row['name'] || row['code'] || ''),
-      String(row['code'] ?? ''), (row['manager_id'] as string | null) ?? null,
-      (row['parent_id'] as string | null) ?? null, (row['description'] as string | null) ?? null,
-      Boolean(row['is_active'] ?? true), new Date(String(row['created_at'] ?? _time.now())),
-      new Date(String(row['updated_at'] ?? _time.now())),
-    );
-  }
-
-  private mapToPosition(row: DbRow): Position {
-    return new Position(
-      String(row['id'] ?? ''), String(row['name_uz'] || row['name'] || row['code'] || ''),
-      String(row['code'] ?? ''), String(row['department_id'] ?? ''), Number(row['level'] ?? 1),
-      Number(row['min_salary'] ?? 0), Number(row['max_salary'] ?? 0), Boolean(row['is_active'] ?? true),
-      new Date(String(row['created_at'] ?? _time.now())), new Date(String(row['updated_at'] ?? _time.now())),
-    );
   }
 
   private mapToPanel(row: UserPanelRow | DbRow): Panel {

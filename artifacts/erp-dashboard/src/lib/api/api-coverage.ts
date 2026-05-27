@@ -99,11 +99,6 @@ export const hrMapApi = {
     apiRequest("POST", "/api/hr-map/filter", data),
 };
 
-export const orgChartApi = {
-  getFlat: () =>
-    apiRequest("GET", "/api/org-chart/flat"),
-};
-
 export const materialCardsApi = {
   getById: (id: number | string) =>
     apiRequest("GET", `/api/material-cards/${id}`),
@@ -141,8 +136,6 @@ export const financeExtendedApi = {
 export const hrV2Api = {
   getAiInterviewSession: (id: number | string) =>
     apiRequest("GET", `/api/hr-v2/ai-interview/sessions/${id}`),
-  getPip: (id: number | string) =>
-    apiRequest("GET", `/api/hr-v2/pip/${id}`),
   getSkillsCatalog: () =>
     apiRequest("GET", "/api/hr-v2/skills-matrix/catalog"),
   getSkillsGapAnalysis: (employeeId: number | string) =>

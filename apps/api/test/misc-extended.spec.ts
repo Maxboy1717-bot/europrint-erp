@@ -14,7 +14,6 @@ import { ZnoController } from '../src/modules/director/presentation/zno.controll
 import { IotCameraController } from '../src/modules/iot/presentation/iot-camera.controller';
 import { CameraAiController } from '../src/modules/iot/presentation/camera-ai.controller';
 import { RaciController } from '../src/modules/security/presentation/raci.controller';
-import { SevenFunctionsController } from '../src/modules/core/presentation/seven-functions.controller';
 import { OkrService } from '../src/modules/director/application/okr.service';
 import { KaizenService } from '../src/modules/director/application/kaizen.service';
 import { StrategicService } from '../src/modules/director/application/strategic.service';
@@ -24,7 +23,6 @@ import { ZnoService } from '../src/modules/director/application/zno.service';
 import { IotCameraService } from '../src/modules/iot/application/iot-camera.service';
 import { CameraAiService } from '../src/modules/iot/application/camera-ai.service';
 import { RaciService } from '../src/modules/security/application/raci.service';
-import { SevenFunctionsService } from '../src/modules/core/application/seven-functions.service';
 import { JwtAuthGuard } from 'shared/guards/jwt-auth.guard';
 import { RolesGuard } from 'shared/guards/roles.guard';
 import { I18nService } from 'nestjs-i18n';
@@ -515,55 +513,6 @@ describe('RaciController', () => {
   describe('createAssessment()', () => {
     it('throws BadRequestException when title missing', async () => {
       await expect(ctrl.createAssessment({}, adminUser)).rejects.toThrow(BadRequestException);
-    });
-  });
-});
-
-// ─── Seven Functions ──────────────────────────────────────────────────────────
-
-describe('SevenFunctionsController', () => {
-  let ctrl: SevenFunctionsController;
-  let mockSvc: jest.Mocked<Partial<SevenFunctionsService>>;
-
-  beforeEach(async () => {
-    mockSvc = {
-      listFunctions: jest.fn(),
-      createFunction: jest.fn(),
-      createKpi: jest.fn(),
-    };
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [SevenFunctionsController],
-      providers: [{ provide: SevenFunctionsService, useValue: mockSvc }],
-    }).overrideGuard(RolesGuard).useValue(mockGuard).overrideGuard(JwtAuthGuard).useValue(mockGuard).compile();
-    ctrl = module.get(SevenFunctionsController);
-  });
-
-  describe('listFunctions()', () => {
-    it('returns seven functions list', async () => {
-      const fns = [{ id: 1, name: 'Sotish', order_index: 1 }];
-      (mockSvc.listFunctions as jest.Mock).mockResolvedValue(ok(fns));
-      const result = await ctrl.listFunctions();
-      expect(result).toEqual(fns);
-    });
-  });
-
-  describe('createFunction()', () => {
-    it('throws BadRequestException when name missing', async () => {
-      await expect(ctrl.createFunction({}, adminUser)).rejects.toThrow(BadRequestException);
-    });
-
-    it('creates function with valid name', async () => {
-      const created = { id: 2, name: 'Marketing', order_index: 2 };
-      (mockSvc.createFunction as jest.Mock).mockResolvedValue(ok(created));
-      const result = await ctrl.createFunction({ name: 'Marketing', description: 'Marketing funksiya' }, adminUser);
-      expect(result).toEqual(created);
-    });
-  });
-
-  describe('createKpi()', () => {
-    it('throws BadRequestException when function_id or name missing', async () => {
-      await expect(ctrl.createKpi({ function_id: 1 })).rejects.toThrow(BadRequestException);
-      await expect(ctrl.createKpi({ name: 'KPI' })).rejects.toThrow(BadRequestException);
     });
   });
 });

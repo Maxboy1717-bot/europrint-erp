@@ -23,7 +23,6 @@ import {
 import { WarehouseCatalogController }    from './warehouse-catalog.controller';
 import { WarehouseBarcodeOpsController } from './warehouse-barcode-ops.controller';
 import { WarehouseLabelController }      from './warehouse-label.controller';
-// AdaptationCompatController olib tashlandi: AdaptationController (modules/adaptation) bilan duplicate edi
 import { SuccessionCompatController }    from './succession-compat.controller';
 import { MentorshipsCompatController }   from './mentorships-compat.controller';
 import { CandidatesCompatController }    from './candidates-compat.controller';
@@ -67,7 +66,6 @@ import { ResourcesCompatService }        from './resources.service';
 import { WarehouseCatalogService }       from './warehouse-catalog.service';
 import { WarehouseBarcodeOpsService }    from './warehouse-barcode-ops.service';
 import { WarehouseLabelCompatService }   from './warehouse-label.service';
-import { AdaptationCompatService }       from './adaptation-compat.service';
 import { SuccessionCompatService }       from './succession-compat.service';
 import { MentorshipsCompatService }      from './mentorships-compat.service';
 import { CandidatesCompatService }       from './candidates-compat.service';
@@ -159,7 +157,6 @@ import { AuthModule }                 from '../auth/auth.module';
     WarehouseCatalogService,
     WarehouseBarcodeOpsService,
     WarehouseLabelCompatService,
-    AdaptationCompatService,
     SuccessionCompatService,
     MentorshipsCompatService,
     CandidatesCompatService,
