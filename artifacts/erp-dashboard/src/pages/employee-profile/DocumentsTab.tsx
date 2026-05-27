@@ -40,10 +40,10 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
 
   // ── Queries ──────────────────────────────────────────────────────────────────
   const { data: contracts, isLoading: loadingContracts } = useQuery<EmploymentContract[]>({
-    queryKey: ["/api/hr/employees", employeeId, "contracts"],
+    queryKey: ["/api/employees", employeeId, "contracts"],
     queryFn: async () => {
       try {
-        const json = await apiRequest('GET', `/api/hr/employees/${employeeId}/contracts`) as unknown;
+        const json = await apiRequest('GET', `/api/employees/${employeeId}/contracts`) as unknown;
         const arr = Array.isArray(json) ? json : (Array.isArray((json as { data?: unknown[] })?.data) ? (json as { data: unknown[] }).data : []);
         return arr as EmploymentContract[];
       } catch {
@@ -68,10 +68,10 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   });
 
   const { data: employeeFiles, isLoading: loadingFiles } = useQuery<EmployeeFile[]>({
-    queryKey: ["/api/hr/employees", employeeId, "files"],
+    queryKey: ["/api/employees", employeeId, "files"],
     queryFn: async () => {
       try {
-        const json = await apiRequest('GET', `/api/hr/employees/${employeeId}/files`) as unknown;
+        const json = await apiRequest('GET', `/api/employees/${employeeId}/files`) as unknown;
         const arr = Array.isArray(json) ? json : (Array.isArray((json as { data?: unknown[] })?.data) ? (json as { data: unknown[] }).data : []);
         return arr as EmployeeFile[];
       } catch {
@@ -108,8 +108,8 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   async function handleDelete(fileId: number) {
     setDeletingId(fileId);
     try {
-      await apiRequest('DELETE', `/api/hr/employees/${employeeId}/files/${fileId}`);
-      await qc.invalidateQueries({ queryKey: ["/api/hr/employees", employeeId, "files"] });
+      await apiRequest('DELETE', `/api/employees/${employeeId}/files/${fileId}`);
+      await qc.invalidateQueries({ queryKey: ["/api/employees", employeeId, "files"] });
       toast({ title: "Fayl o'chirildi" });
     } catch {
       toast({ title: "Xatolik", description: "Faylni o'chirib bo'lmadi", variant: "destructive" });

@@ -74,10 +74,10 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
   });
 
   const { data: assessments = [], isLoading } = useQuery<Assessment[]>({
-    queryKey: ["/api/hr/employees", employeeId, "assessments"],
+    queryKey: ["/api/employees", employeeId, "assessments"],
     queryFn: async () => {
       let json: unknown;
-      try { json = await apiRequest<unknown>('GET', `/api/hr/employees/${employeeId}/assessments`); }
+      try { json = await apiRequest<unknown>('GET', `/api/employees/${employeeId}/assessments`); }
       catch { return []; }
       if (Array.isArray(json)) return json as Assessment[];
       const obj = json as { data?: unknown };
@@ -88,13 +88,13 @@ export function AssessmentTab({employeeId }: AssessmentTabProps) {
 
   const addMutation = useMutation({
     mutationFn: async (data: typeof form) => {
-      return apiRequest("POST", `/api/hr/employees/${employeeId}/assessments`, {
+      return apiRequest("POST", `/api/employees/${employeeId}/assessments`, {
         ...data,
         reviewerName: data.isAnonymous ? undefined : data.reviewerName,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hr/employees", employeeId, "assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/employees", employeeId, "assessments"] });
       setDialogOpen(false);
       setForm({ reviewerType: "manager", reviewerName: "", score: 3, comment: "", isAnonymous: false });
       toast({ title: "Baho muvaffaqiyatli qo'shildi" });

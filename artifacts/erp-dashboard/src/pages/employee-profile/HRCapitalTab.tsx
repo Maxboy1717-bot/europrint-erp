@@ -24,10 +24,10 @@ export function HRCapitalTab({ employeeId }: HRCapitalTabProps) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   const { data: profile, isLoading } = useQuery<HRCapitalProfile | null>({
-    queryKey: ["/api/hr/employees", employeeId, "capital-profile"],
+    queryKey: ["/api/employees", employeeId, "capital-profile"],
     queryFn: async () => {
       try {
-        return await apiRequest('GET', `/api/hr/employees/${employeeId}/capital-profile`);
+        return await apiRequest('GET', `/api/employees/${employeeId}/capital-profile`);
       } catch {
         return null;
       }
@@ -43,9 +43,9 @@ export function HRCapitalTab({ employeeId }: HRCapitalTabProps) {
 
   const saveMutation = useMutation({
     mutationFn: async (data: FormState) =>
-      apiRequest("POST", `/api/hr/employees/${employeeId}/capital-profile`, data),
+      apiRequest("POST", `/api/employees/${employeeId}/capital-profile`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hr/employees", employeeId, "capital-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/employees", employeeId, "capital-profile"] });
       setEditing(false);
       toast({ title: "HR Kapital profili saqlandi" });
     },

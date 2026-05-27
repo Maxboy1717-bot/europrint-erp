@@ -39,9 +39,9 @@ export function CareerTab({ employeeId }: CareerTabProps) {
   const [form, setForm] = useState<CareerFormState>(INITIAL_FORM);
 
   const { data: careerData, isLoading } = useQuery<CareerData>({
-    queryKey: ["/api/hr/employees", employeeId, "career"],
+    queryKey: ["/api/employees", employeeId, "career"],
     queryFn: async () => {
-      return await apiRequest('GET', `/api/hr/employees/${employeeId}/career`);
+      return await apiRequest('GET', `/api/employees/${employeeId}/career`);
     },
     enabled: !!employeeId,
   });
@@ -54,10 +54,10 @@ export function CareerTab({ employeeId }: CareerTabProps) {
 
   const saveMutation = useMutation({
     mutationFn: async (data: CareerFormState) => {
-      return apiRequest("POST", `/api/hr/employees/${employeeId}/career`, data);
+      return apiRequest("POST", `/api/employees/${employeeId}/career`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hr/employees", employeeId, "career"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/employees", employeeId, "career"] });
       setEditing(false);
       toast({ title: "Karera profili saqlandi" });
     },

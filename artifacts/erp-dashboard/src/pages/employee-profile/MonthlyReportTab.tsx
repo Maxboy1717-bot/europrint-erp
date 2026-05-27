@@ -25,9 +25,9 @@ export function MonthlyReportTab({ employeeId }: MonthlyReportTabProps) {
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
 
   const { data: report, isLoading, isError } = useQuery<MonthlyReport>({
-    queryKey: ["/api/hr/employees", employeeId, "monthly-report", selectedMonth],
+    queryKey: ["/api/employees", employeeId, "monthly-report", selectedMonth],
     queryFn: async () => {
-      const json = await apiRequest<unknown>("GET", `/api/hr/employees/${employeeId}/monthly-report?month=${selectedMonth}`);
+      const json = await apiRequest<unknown>("GET", `/api/employees/${employeeId}/monthly-report?month=${selectedMonth}`);
       const wrapped = json as { ok?: boolean; data?: unknown };
       const innerRaw: unknown = (wrapped?.ok === true && wrapped?.data != null) ? wrapped.data : (wrapped?.data ?? json);
       if (!innerRaw || typeof innerRaw !== "object" || !(innerRaw as { employee?: unknown }).employee) return null as unknown as MonthlyReport;

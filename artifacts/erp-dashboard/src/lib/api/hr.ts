@@ -187,11 +187,11 @@ export const hrApi = {
   assignOrgFunctions: (id: number | string, data: Record<string, unknown>) =>
     apiRequest("POST", `/api/hr/employees/${id}/assign-org-functions`, data),
   signCorpInventory: (id: number | string, itemId: number | string) =>
-    apiRequest("POST", `/api/hr/employees/${id}/corporate-inventory/${itemId}/sign`),
+    apiRequest("POST", `/api/employees/${id}/corporate-inventory/${itemId}/sign`),
   returnCorpInventory: (id: number | string, itemId: number | string) =>
-    apiRequest("POST", `/api/hr/employees/${id}/corporate-inventory/${itemId}/return`),
+    apiRequest("POST", `/api/employees/${id}/corporate-inventory/${itemId}/return`),
   deleteEmployeeFile: (id: number | string, fileId: number | string) =>
-    apiRequest("DELETE", `/api/hr/employees/${id}/files/${fileId}`),
+    apiRequest("DELETE", `/api/employees/${id}/files/${fileId}`),
   deleteEmployeeFileCompat: (id: number | string) =>
     apiRequest("DELETE", `/api/employee-files/${id}`),
   deleteHrDocument: (id: number | string) =>
