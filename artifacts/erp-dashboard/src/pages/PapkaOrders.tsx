@@ -21,6 +21,35 @@ import { OrderDialog } from "./PapkaOrdersDialogs";
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+// The /api/papka-orders list endpoint is a shared legacy shim that returns raw
+// snake_case rows. Normalize each row to the camelCase PapkaOrder shape the table
+// renders (accepting either casing so it keeps working if the BE shape changes).
+function normalizePapkaOrder(r: Record<string, unknown>): PapkaOrder {
+  const pick = (...keys: string[]): unknown => {
+    for (const k of keys) {
+      const v = r[k];
+      if (v !== undefined && v !== null) return v;
+    }
+    return undefined;
+  };
+  return {
+    ...r,
+    id: String(pick("id") ?? ""),
+    papkaNo: String(pick("papkaNo", "papka_no") ?? ""),
+    mijozNomi: String(pick("mijozNomi", "mijoz_nomi", "customer_name") ?? ""),
+    mahsulotNomi: String(pick("mahsulotNomi", "mahsulot_nomi", "product_name") ?? ""),
+    mahsulotTuri: String(pick("mahsulotTuri", "mahsulot_turi") ?? ""),
+    tiraj: Number(pick("tiraj", "quantity") ?? 0),
+    listSoni: Number(pick("listSoni", "list_soni") ?? 0),
+    formatA: Number(pick("formatA", "format_a") ?? 0),
+    formatB: Number(pick("formatB", "format_b") ?? 0),
+    status: String(pick("status") ?? "new"),
+    sana: String(pick("sana") ?? ""),
+    tayyorBolishSanasi: String(pick("tayyorBolishSanasi", "tayyor_bolish_sanasi") ?? ""),
+    notes: String(pick("notes") ?? ""),
+  } as PapkaOrder;
+}
+
 export default function PapkaOrders() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -31,14 +60,31 @@ export default function PapkaOrders() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const { data: ordersResponse, isLoading, isError, error, refetch } = useQuery<{
-    items: PapkaOrder[];
-    total: number;
-  }>({
-    queryKey: ["/api/papka-orders", { search: searchQuery || undefined, status: statusFilter === "all" ? undefined : statusFilter }],
+  const { data: ordersResponse, isLoading, isError, error, refetch } = useQuery<
+    PapkaOrder[] | { items?: PapkaOrder[]; total?: number }
+  >({
+    queryKey: ["/api/papka-orders"],
   });
 
-  const orders = ordersResponse?.items || [];
+  const rawOrders: Record<string, unknown>[] = Array.isArray(ordersResponse)
+    ? (ordersResponse as unknown as Record<string, unknown>[])
+    : Array.isArray(ordersResponse?.items)
+      ? (ordersResponse.items as unknown as Record<string, unknown>[])
+      : [];
+  const allOrders: PapkaOrder[] = rawOrders.map(normalizePapkaOrder);
+
+  // Search + status filter run client-side — the shared list endpoint does not
+  // filter on these params, so filtering here makes the toolbar actually work.
+  const orders = allOrders.filter((o) => {
+    const matchesStatus = statusFilter === "all" || o.status === statusFilter;
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      [o.papkaNo, o.mijozNomi, o.mahsulotNomi].some((v) =>
+        (v ?? "").toString().toLowerCase().includes(q),
+      );
+    return matchesStatus && matchesSearch;
+  });
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -84,7 +130,7 @@ export default function PapkaOrders() {
     },
     onSuccess: (id) => {
       queryClient.invalidateQueries({ queryKey: ["/api/papka-orders"] });
-      const order = (Array.isArray(orders) ? orders : []).find(o => o.id === id);
+      const order = allOrders.find(o => o.id === id);
       showUndoToast("papka_orders", id, order?.papkaNo || id, () => {
         queryClient.invalidateQueries({ queryKey: ["/api/papka-orders"] });
       });
@@ -124,8 +170,8 @@ export default function PapkaOrders() {
     }
   };
 
-  const activeCount = (Array.isArray(orders) ? orders : []).filter(o => ["new", "planning", "production"].includes(o.status)).length;
-  const completedCount = (Array.isArray(orders) ? orders : []).filter(o => o.status === "completed").length;
+  const activeCount = allOrders.filter(o => ["new", "planning", "production"].includes(o.status)).length;
+  const completedCount = allOrders.filter(o => o.status === "completed").length;
 
   const tr = TRANSLATIONS[lang];
 
@@ -169,7 +215,7 @@ export default function PapkaOrders() {
       </div>
 
       <StatsRow
-        totalCount={orders.length}
+        totalCount={allOrders.length}
         activeCount={activeCount}
         completedCount={completedCount}
         lang={lang}

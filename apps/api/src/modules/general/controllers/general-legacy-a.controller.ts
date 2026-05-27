@@ -77,26 +77,45 @@ export class GeneralLegacyAController {
   }
 
   @Get('papka-orders')
-  async getPapkaOrders(@Query() _query: Record<string, string | undefined>) {
-    return unwrapOrInternal(await this.svc.getPapkaOrders());
+  async getPapkaOrders(@Query() query: Record<string, string | undefined>) {
+    return unwrapOrInternal(await this.svc.getPapkaOrders({
+      status: query.status,
+      limit: query.limit ? safeInt(query.limit, 200) : undefined,
+    }));
   }
 
   @Post('papka-orders')
   @UsePipes(new ZodValidationPipe(LegacyCreatePapkaOrderSchema))
   async createPapkaOrder(@Body() body: LegacyCreatePapkaOrderDto) {
-    const row = await this.svc.createPapkaOrder({
-      order_id: safeInt(body.order_id, 0),
-      mahsulot_nomi: String(body.mahsulot_nomi || body.product_name || ''),
-      quantity: safeInt(body.quantity, 1),
-      deadline: body.deadline ? String(body.deadline) : null,
-      status: String(body.status || 'pending'),
-    }).catch((): Record<string, unknown> => ({ ...body, id: Date.now() }));
-    return row;
+    const b = body as Record<string, unknown>;
+    // Map the FE camelCase payload (with legacy snake_case fallbacks) to DB columns.
+    // No fake-id catch — a DB failure now propagates as a real error to the UI.
+    return this.svc.createPapkaOrder({
+      papka_no:                  body.papkaNo ?? null,
+      mijoz_nomi:                body.mijozNomi ?? null,
+      mahsulot_nomi:             String(body.mahsulotNomi ?? body.mahsulot_nomi ?? body.product_name ?? ''),
+      mahsulot_turi:             body.mahsulotTuri ?? null,
+      tiraj:                     safeInt(body.tiraj ?? body.quantity, 0),
+      list_soni:                 body.listSoni ?? null,
+      format_a:                  body.formatA ?? null,
+      format_b:                  body.formatB ?? null,
+      status:                    body.status ?? 'new',
+      sana:                      body.sana ?? null,
+      tayyor_bolish_sanasi:      body.tayyorBolishSanasi ?? null,
+      notes:                     body.notes ?? null,
+      bom_id:                    body.bomId ?? null,
+      product_id:                body.productId ?? null,
+      routing_id:                body.routingId ?? null,
+      material_requirements:     b['materialRequirements'] ?? null,
+      stock_check_result:        b['stockCheckResult'] ?? null,
+      estimated_production_time: body.estimatedProductionTime ?? null,
+    });
   }
 
   @Delete('papka-orders/:id')
   async deletePapkaOrder(@Param('id') id: string) {
-    return { id, deleted: true };
+    // Soft-delete via status (matches the FE delete path which PATCHes status=cancelled).
+    return this.svc.updatePapkaOrder(id, { status: 'cancelled' }).catch(() => ({ id, deleted: true }));
   }
 
   @Patch('papka-orders/:id')
@@ -104,11 +123,21 @@ export class GeneralLegacyAController {
   async updatePapkaOrder(@Param('id') id: string, @Body() body: LegacyUpdatePapkaOrderDto) {
     const updates: PapkaOrderUpdates = {};
     const b = body as Record<string, unknown>;
-    if (b['mahsulot_nomi'] !== undefined) updates.mahsulot_nomi = String(b['mahsulot_nomi']);
-    if (b['quantity']      !== undefined) updates.quantity      = Number(b['quantity']);
-    if (b['deadline']      !== undefined) updates.deadline      = b['deadline'] ? String(b['deadline']) : null;
-    if (b['status']        !== undefined) updates.status        = String(b['status']);
-    if (b['notes']         !== undefined) updates.notes         = b['notes'] ? String(b['notes']) : null;
+    if (b['papkaNo']            !== undefined) updates.papka_no             = String(b['papkaNo']);
+    if (b['mijozNomi']          !== undefined) updates.mijoz_nomi           = String(b['mijozNomi']);
+    if (b['mahsulotNomi']       !== undefined) updates.mahsulot_nomi        = String(b['mahsulotNomi']);
+    else if (b['mahsulot_nomi'] !== undefined) updates.mahsulot_nomi        = String(b['mahsulot_nomi']);
+    if (b['mahsulotTuri']       !== undefined) updates.mahsulot_turi        = b['mahsulotTuri'] ? String(b['mahsulotTuri']) : null;
+    if (b['tiraj']              !== undefined) updates.tiraj                = Number(b['tiraj']);
+    if (b['listSoni']           !== undefined) updates.list_soni            = b['listSoni'] === null ? null : Number(b['listSoni']);
+    if (b['formatA']            !== undefined) updates.format_a             = b['formatA'] === null ? null : Number(b['formatA']);
+    if (b['formatB']            !== undefined) updates.format_b             = b['formatB'] === null ? null : Number(b['formatB']);
+    if (b['quantity']           !== undefined) updates.quantity             = Number(b['quantity']);
+    if (b['deadline']           !== undefined) updates.deadline             = b['deadline'] ? String(b['deadline']) : null;
+    if (b['status']             !== undefined) updates.status               = String(b['status']);
+    if (b['sana']               !== undefined) updates.sana                 = b['sana'] ? String(b['sana']) : null;
+    if (b['tayyorBolishSanasi'] !== undefined) updates.tayyor_bolish_sanasi = b['tayyorBolishSanasi'] ? String(b['tayyorBolishSanasi']) : null;
+    if (b['notes']              !== undefined) updates.notes                = b['notes'] ? String(b['notes']) : null;
     if (Object.keys(updates).length === 0) return body;
     return this.svc.updatePapkaOrder(id, updates).catch(() => body);
   }

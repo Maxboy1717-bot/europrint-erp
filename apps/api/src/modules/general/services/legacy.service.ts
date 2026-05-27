@@ -72,7 +72,7 @@ export class LegacyService {
   async getAttendanceStats()                  { return getAttendanceStatsRaw(); }
 
   // ─── Papka Orders / Machine Tasks ───────────────────────────────────────────
-  async getPapkaOrders()                                                 { return getPapkaOrdersRaw(); }
+  async getPapkaOrders(opts?: Parameters<typeof getPapkaOrdersRaw>[0])    { return getPapkaOrdersRaw(opts); }
   async createPapkaOrder(params: Parameters<typeof createPapkaOrderRaw>[0]) { return createPapkaOrderRaw(params); }
   async updatePapkaOrder(id: string, updates: Parameters<typeof updatePapkaOrderRaw>[1]) { return updatePapkaOrderRaw(id, updates); }
   async getMachineTasks()                                                { return getMachineTasksRaw(); }

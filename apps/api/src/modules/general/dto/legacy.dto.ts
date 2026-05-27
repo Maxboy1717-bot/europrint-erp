@@ -22,23 +22,54 @@ export type AdminRefreshTokenDto = z.infer<typeof AdminRefreshTokenSchema>;
 export const LegacyRefreshTokenSchema = AdminRefreshTokenSchema;
 export type LegacyRefreshTokenDto = AdminRefreshTokenDto;
 
+// Accepts the rich camelCase payload sent by the PapkaOrders page and the
+// Order-Creation Wizard. Status is a free string (the DB column is varchar(30)
+// with no CHECK), so 'new'/'planning'/'production'/etc. all pass. `.passthrough()`
+// lets jsonb extras (materialRequirements, stockCheckResult) flow to the helper.
 export const LegacyCreatePapkaOrderSchema = z.object({
-  order_id:      z.number().int().positive().optional(),
-  mahsulot_nomi: z.string().min(1).max(255),
+  papkaNo:            z.string().max(50).optional(),
+  mijozNomi:          z.string().optional(),
+  mahsulotNomi:       z.string().max(255).optional(),
+  mahsulotTuri:       z.string().max(50).optional(),
+  tiraj:              z.coerce.number().int().nonnegative().optional(),
+  listSoni:           z.coerce.number().int().optional(),
+  formatA:            z.coerce.number().optional(),
+  formatB:            z.coerce.number().optional(),
+  sana:               z.string().optional(),
+  tayyorBolishSanasi: z.string().optional(),
+  status:             z.string().max(30).optional(),
+  notes:              z.string().optional(),
+  bomId:              z.coerce.number().int().nullable().optional(),
+  productId:          z.coerce.number().int().nullable().optional(),
+  routingId:          z.coerce.number().int().nullable().optional(),
+  estimatedProductionTime: z.coerce.number().nullable().optional(),
+  // Legacy snake_case (back-compat)
+  order_id:      z.coerce.number().int().positive().optional(),
+  mahsulot_nomi: z.string().max(255).optional(),
   product_name:  z.string().max(255).optional(),
-  quantity:      z.number().int().positive().optional(),
+  quantity:      z.coerce.number().int().optional(),
   deadline:      z.string().optional(),
-  status:        z.enum(['pending', 'in_progress', 'completed', 'cancelled']).optional(),
-});
+}).passthrough();
 export type LegacyCreatePapkaOrderDto = z.infer<typeof LegacyCreatePapkaOrderSchema>;
 
 export const LegacyUpdatePapkaOrderSchema = z.object({
-  mahsulot_nomi: z.string().min(1).max(255).optional(),
-  quantity:      z.number().int().positive().optional(),
+  papkaNo:            z.string().max(50).optional(),
+  mijozNomi:          z.string().optional(),
+  mahsulotNomi:       z.string().max(255).optional(),
+  mahsulotTuri:       z.string().max(50).optional(),
+  tiraj:              z.coerce.number().int().nonnegative().optional(),
+  listSoni:           z.coerce.number().int().optional(),
+  formatA:            z.coerce.number().optional(),
+  formatB:            z.coerce.number().optional(),
+  sana:               z.string().optional(),
+  tayyorBolishSanasi: z.string().optional(),
+  status:             z.string().max(30).optional(),
+  notes:              z.string().optional(),
+  // Legacy snake_case (back-compat)
+  mahsulot_nomi: z.string().max(255).optional(),
+  quantity:      z.coerce.number().int().optional(),
   deadline:      z.string().optional(),
-  status:        z.enum(['pending', 'in_progress', 'completed', 'cancelled']).optional(),
-  notes:         z.string().optional(),
-});
+}).passthrough();
 export type LegacyUpdatePapkaOrderDto = z.infer<typeof LegacyUpdatePapkaOrderSchema>;
 
 export const LegacyCreateMachineTaskSchema = z.object({
