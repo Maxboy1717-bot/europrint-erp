@@ -17,7 +17,7 @@
 
 | Modul | Status | Hujjat | Mas'ul |
 |-------|--------|--------|--------|
-| HR Employees (Xodimlar) | 🔵 INVENTORY (6/7 BLESSED) | [hr-employees.md](hr-employees.md) | @Maxboy1717-bot |
+| HR Employees (Xodimlar) | 🟢 **BLESSED** 2026-05-27 | [hr-employees.md](hr-employees.md) | @Maxboy1717-bot |
 | HR Leave & Attendance | ⚪ NOT_YET | — | — |
 | HR Payroll | ⚪ NOT_YET | — | — |
 | HR Recruitment | ⚪ NOT_YET | — | — |
@@ -106,7 +106,7 @@ Batafsil: [hr-employees.md](hr-employees.md#-ochiq-muammolar-blessed-bolishdan-o
 
 | Sana | Modul | Status | Kim |
 |------|-------|--------|-----|
-| 2026-05-27 | HR Employees | INVENTORY | @Maxboy1717-bot |
+| 2026-05-27 | HR Employees (Xodimlar) | 🟢 BLESSED | @Maxboy1717-bot |
 | — | — | — | — |
 
 ---

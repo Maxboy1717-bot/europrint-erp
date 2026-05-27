@@ -235,16 +235,68 @@ route('GET', '/api/coordination/rasporyazhenie', (req, res) => {
   json(res, 200, []);
 });
 
-// ── Employees ─────────────────────────────────────────────────────────────────
+// ── Employees (legacy + canonical) ───────────────────────────────────────────
 
+// Shared mock data — reused by both /api/employees and /api/hr/employees
+const MOCK_EMPLOYEES = [
+  { id: 1, first_name: 'Alisher', last_name: 'Umarov',   fullName: 'Alisher Umarov',   status: 'active',   position_name: 'Muhandis',  department_name: 'Ishlab chiqarish', employee_code: 'EMP-001', hire_date: '2023-01-15', role: 'employee' },
+  { id: 2, first_name: 'Zulfiya', last_name: 'Karimova',  fullName: 'Zulfiya Karimova',  status: 'active',   position_name: 'Buxgalter', department_name: 'Moliya',            employee_code: 'EMP-002', hire_date: '2022-06-01', role: 'employee' },
+  { id: 3, first_name: 'Bobur',   last_name: 'Toshmatov', fullName: 'Bobur Toshmatov',   status: 'inactive', position_name: 'Operator',  department_name: 'Ishlab chiqarish', employee_code: 'EMP-003', hire_date: '2021-03-10', role: 'employee' },
+];
+let employeeNextId = 4;
+const employeeStore = [...MOCK_EMPLOYEES];
+
+// Legacy routes (compat shim — still active)
 route('GET', /^\/api\/employees(\?.*)?$/, (req, res) => {
   if (!isAuthenticated(req)) return json(res, 401, { error: 'Unauthorized' });
-  json(res, 200, { data: [{ id: 1, fullName: 'Test Employee', status: 'active' }], total: 1 });
+  json(res, 200, { data: employeeStore, total: employeeStore.length });
 });
-
 route('GET', /^\/api\/employees\/\d+/, (req, res) => {
   if (!isAuthenticated(req)) return json(res, 401, { error: 'Unauthorized' });
-  json(res, 200, { id: 1, fullName: 'Test Employee', status: 'active' });
+  const id = parseInt((req.url ?? '').match(/\/employees\/(\d+)/)?.[1] ?? '1', 10);
+  const emp = employeeStore.find(e => e.id === id) ?? employeeStore[0];
+  json(res, 200, emp);
+});
+
+// Canonical routes — /api/hr/employees
+route('GET', /^\/api\/hr\/employees(\?.*)?$/, (req, res) => {
+  if (!isAuthenticated(req)) return json(res, 401, { error: 'Unauthorized' });
+  json(res, 200, { data: employeeStore, total: employeeStore.length });
+});
+route('POST', /^\/api\/hr\/employees$/, async (req, res) => {
+  if (!isAuthenticated(req)) return json(res, 401, { error: 'Unauthorized' });
+  const body = await readBody(req);
+  const newEmp = { id: employeeNextId++, fullName: `${body.firstName ?? ''} ${body.lastName ?? ''}`.trim() || 'Yangi Xodim', status: body.status ?? 'active', first_name: body.firstName ?? '', last_name: body.lastName ?? '', employee_code: `EMP-${String(employeeNextId).padStart(3,'0')}`, hire_date: body.hireDate ?? new Date().toISOString().slice(0,10), position_name: '', department_name: '', role: 'employee' };
+  employeeStore.push(newEmp);
+  json(res, 201, newEmp);
+});
+route('GET', /^\/api\/hr\/employees\/\d+$/, (req, res) => {
+  if (!isAuthenticated(req)) return json(res, 401, { error: 'Unauthorized' });
+  const id = parseInt((req.url ?? '').match(/\/hr\/employees\/(\d+)/)?.[1] ?? '1', 10);
+  const emp = employeeStore.find(e => e.id === id) ?? employeeStore[0];
+  json(res, 200, emp);
+});
+route('PUT', /^\/api\/hr\/employees\/\d+$/, async (req, res) => {
+  if (!isAuthenticated(req)) return json(res, 401, { error: 'Unauthorized' });
+  const id = parseInt((req.url ?? '').match(/\/hr\/employees\/(\d+)/)?.[1] ?? '1', 10);
+  const body = await readBody(req);
+  const idx = employeeStore.findIndex(e => e.id === id);
+  if (idx !== -1) Object.assign(employeeStore[idx], body);
+  json(res, 200, employeeStore[idx] ?? employeeStore[0]);
+});
+route('PATCH', /^\/api\/hr\/employees\/\d+\/status$/, async (req, res) => {
+  if (!isAuthenticated(req)) return json(res, 401, { error: 'Unauthorized' });
+  const id = parseInt((req.url ?? '').match(/\/hr\/employees\/(\d+)/)?.[1] ?? '1', 10);
+  const body = await readBody(req);
+  const emp = employeeStore.find(e => e.id === id);
+  if (emp) emp.status = body.status ?? emp.status;
+  json(res, 200, emp ?? employeeStore[0]);
+});
+
+// Supporting routes used by EmployeeDialog
+route('GET', /^\/api\/org-departments(\?.*)?$/, (req, res) => {
+  if (!isAuthenticated(req)) return json(res, 401, { error: 'Unauthorized' });
+  json(res, 200, [{ id: 1, name: 'Ishlab chiqarish' }, { id: 2, name: 'Moliya' }]);
 });
 
 route('GET', /^\/api\/departments(\?.*)?$/, (req, res) => {

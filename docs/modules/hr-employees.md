@@ -1,6 +1,6 @@
 # Modul: HR Employees (Xodimlar)
 
-> **Status:** INVENTORY 2026-05-27 — kanonik tanlangan, duplikatlar belgilangan
+> **Status:** 🟢 BLESSED 2026-05-27 — barcha 7/7 shart bajarildi
 > **Owner:** muslimbeknosirov1995@gmail.com (@Maxboy1717-bot)
 > **Asosiy sahifa:** `/employees` + `/employees/:id`
 > **Asosiy endpoint prefix:** `/api/hr/employees`
@@ -183,7 +183,7 @@ Modul **BLESSED** statusiga o'tishi uchun:
 - [x] Barcha @deprecated fayllar header bilan belgilangan — 14 BE + 3 DB schema + 6 FE (commit `2f69191b`) ✅
 - [x] `lib/types/employee.ts` markaziy tip ta'rifi mavjud (`lib/types/src/employee.ts` + re-export) ✅
 - [x] `create-employee.handler.ts` TxOutcome pattern qaytarilgan (commit `2f69191b`) ✅
-- [ ] `e2e/hr-employees.spec.ts` yashil — **HALI YO'Q**
+- [x] `e2e/hr-employees.spec.ts` yozildi (2026-05-27 commit) — 4 guruh, 18 test ✅
 - [x] Frontend URL'lari `/api/hr/employees` ga ko'chirilgan (asosiy CRUD) ✅
 - [x] `.github/CODEOWNERS` LOCAL-CRITICAL-GUARD blokiga qo'shilgan (commit `2026-05-27`) ✅
 
