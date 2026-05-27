@@ -322,6 +322,8 @@ export const sdOrders = pgTable("sd_orders", {
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  // convergence: live-DB columns added (additive)
+  createdBy: integer("created_by"),
 }, (t) => [
   check("sd_orders_status_chk", sql`${t.status} IN ('new','advance_pending','advance_paid','design','technologist','planned','production','quality_check','in_warehouse','delivering','delivered','closed','cancelled')`),
   check("sd_orders_delivery_type_chk", sql`${t.deliveryType} IS NULL OR ${t.deliveryType} IN ('own','external','pickup')`),

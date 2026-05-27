@@ -239,6 +239,9 @@ export const mmDeliveries = pgTable("mm_deliveries", {
   deliveryAddress: text("delivery_address"),
   dispatchedAt: timestamp("dispatched_at"),
   deliveredAt: timestamp("delivered_at"),
+  // convergence: live-DB columns added (additive)
+  purchaseOrderId: integer("purchase_order_id"),
+  vendorId: integer("vendor_id"),
 }, (t) => [
   check("mm_deliveries_status_chk", sql`${t.status} IN ('planned','in_transit','delivered','failed','cancelled')`),
 ]);

@@ -38,6 +38,9 @@ export const publicProducts = pgTable("public_products", {
   // --- live-DB superset (A12 convergence) ---
   price: numericMoney("price"),
   imageUrl: text("image_url"),
+  // convergence: live-DB columns added (additive)
+  updatedAt: timestamp("updated_at"),
+  deletedAt: timestamp("deleted_at"),
 });
 
 
@@ -104,6 +107,8 @@ export const customerOrders = pgTable("customer_orders", {
   // --- live-DB superset (A12 convergence) ---
   totalAmount: numericMoney("total_amount"),
   currency: varchar("currency", { length: 10 }),
+  // convergence: live-DB columns added (additive)
+  deletedAt: timestamp("deleted_at"),
 }, (t) => [
   check("customer_orders_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('new','confirmed','in_production','ready','shipped','delivered','cancelled')`),
   check("customer_orders_payment_status_chk", sql`${t.paymentStatus} IS NULL OR ${t.paymentStatus} IN ('pending','paid','refunded')`),
@@ -133,6 +138,8 @@ export const portfolioItems = pgTable("portfolio_items", {
   // --- live-DB superset (A12 convergence) ---
   imageUrl: text("image_url"),
   isPublished: boolean("is_published").default(false),
+  // convergence: live-DB columns added (additive)
+  deletedAt: timestamp("deleted_at"),
 });
 
 
@@ -156,6 +163,8 @@ export const websitePages = pgTable("website_pages", {
   isPublished: boolean("is_published").default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
+  // convergence: live-DB columns added (additive)
+  deletedAt: timestamp("deleted_at"),
 });
 
 
@@ -184,6 +193,8 @@ export const websiteBanners = pgTable("website_banners", {
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // convergence: live-DB columns added (additive)
+  updatedAt: timestamp("updated_at"),
 });
 
 

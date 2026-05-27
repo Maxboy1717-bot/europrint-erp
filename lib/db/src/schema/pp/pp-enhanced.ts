@@ -296,6 +296,8 @@ export const productCategories = pgTable("product_categories", {
   active: boolean("active"),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // convergence: live-DB columns added (additive)
+  updatedAt: timestamp("updated_at"),
 });
 
 export const insertProductCategorySchema = createInsertSchema(productCategories).omit({ id: true, createdAt: true } as never);
