@@ -48,10 +48,10 @@ export default defineConfig({
       // land without blocking CI today. See docs/TESTING_PROMPT.md §2 for the
       // step-up plan.
       thresholds: {
-        lines: 5,
-        functions: 5,
-        branches: 5,
-        statements: 5,
+        lines: 15,
+        functions: 15,
+        branches: 10,
+        statements: 15,
       },
     },
   },

@@ -92,7 +92,7 @@
   "noBoards": "Doskalar yo'q",
   "selectBoard": "Doska tanlang",
   "createFirstBoard": "Birinchi doska yarating",
-  "threeBasketsSystem": "3-Savat hujjat tizimi (Система 3-х корзин)",
+  "threeBasketsSystem": "3-Savat hujjat tizimi (Sistema 3-x korzin)",
   "incomingBasket": "Kiruvchi savat",
   "pendingBasket": "Kutilmoqda savati",
   "outgoingBasket": "Chiquvchi savat",
@@ -101,6 +101,6 @@
   "moveToProcessing": "Ko'rib chiqishga o'tkazish",
   "moveToOutgoing": "Chiquvchiga o'tkazish",
   "archiveDocument": "Arxivga topshirish",
-  "personalProgram": "Shaxsiy dastur (Персональная программа)",
+  "personalProgram": "Shaxsiy dastur (Personalnaya programma)",
   "dailyTaskList": "Kunlik vazifalar ro'yxati"
 }

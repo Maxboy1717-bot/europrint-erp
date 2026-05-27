@@ -67,6 +67,8 @@ const REDIRECT_PATHS = [
   '/hr/succession-planning', '/hr/leave',
   '/feedback', '/logout',
   '/order-workflow', '/sales',
+  // Dead sidebar links → canonical redirects
+  '/assets', '/notifications', '/hr/documents', '/cfo', '/org-chart',
 ];
 
 function pathMatches(pattern: string, loc: string): boolean {
@@ -105,7 +107,7 @@ export function AppRouter() {
       <ModuleGroup roles={SALES_ROLES}        routes={SALES_ROUTES}        />
       <ModuleGroup roles={PRODUCTION_ROLES}   routes={PRODUCTION_ROUTES}   />
       <ModuleGroup roles={DIRECTOR_ROLES}     routes={DIRECTOR_ROUTES}     />
-      <ModuleGroup roles={IOT_ROLES}          routes={MES_ROUTES}          />
+      <ModuleGroup roles={PRODUCTION_ROLES}   routes={MES_ROUTES}          />
       <ModuleGroup roles={QC_ROLES}           routes={QC_ROUTES}           />
       <ModuleGroup roles={DESIGN_ROLES}       routes={DESIGN_ROUTES}       />
       <ModuleGroup roles={MRO_ROLES}          routes={MRO_ROUTES}          />
@@ -166,6 +168,13 @@ export function AppRouter() {
       <Route path="/hr/leave"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/vacation-sick" /></RoleRoute></Route>
       <Route path="/feedback"><Redirect to="/kanban" /></Route>
       <Route path="/logout"><Redirect to="/login" /></Route>
+
+      {/* ── Dead sidebar links → canonical redirects ── */}
+      <Route path="/assets"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/assets" /></RoleRoute></Route>
+      <Route path="/notifications"><RoleRoute roles={ALL_AUTHENTICATED}><Redirect to="/settings/notifications" /></RoleRoute></Route>
+      <Route path="/hr/documents"><RoleRoute roles={HR_ROLES}><Redirect to="/employee-files" /></RoleRoute></Route>
+      <Route path="/cfo"><RoleRoute roles={FINANCE_ROLES}><Redirect to="/cfo/dashboard" /></RoleRoute></Route>
+      <Route path="/org-chart"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
 
       {/* ── Order Workflow (Sprint 4) ── */}
       <Route path="/order-workflow">

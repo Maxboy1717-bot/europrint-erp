@@ -14,6 +14,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
+import { useAuth } from "@/hooks/useAuth";
 import { Calculator, Plus, Check, CheckCircle2, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import type { PayrollCalculation, PayrollUser } from "./types";
 import { payTypeKeys, statusKeys, statusVariants } from "./types";
@@ -60,10 +61,12 @@ export function CalculationsTab({ calculations, employeeMap, loading, onNewCalcu
   const { t: tFinance } = useTranslation('finance');
   const { t: tCommon } = useTranslation('common');
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest("PATCH", `/api/finance-extended/payroll-calculations/${id}/approve`, { approvedBy: "admin" });
+      const approvedBy = user?.id?.toString() ?? user?.username ?? user?.email ?? 'admin';
+      return apiRequest("PATCH", `/api/finance-extended/payroll-calculations/${id}/approve`, { approvedBy });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/finance-extended/payroll-calculations"] });

@@ -17,7 +17,8 @@
     "useUnknownInCatchVariables": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@shared/schema": ["./src/shared-schema.ts"]
+      "@shared/schema": ["./src/shared-schema.ts"],
+      "@assets/*": ["../../attached_assets/*"]
     }
   },
   "references": []

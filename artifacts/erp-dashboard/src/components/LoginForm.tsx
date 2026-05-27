@@ -26,19 +26,38 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   const [otp, setOtp] = useState("");
   const [employeeId, setEmployeeId] = useState("");
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  // sessionId is returned by /api/auth/resend-otp and required by /api/auth/verify-otp
+  const [sessionId, setSessionId] = useState<string>("");
 
   const requestOtpMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/auth/otp/request", { phone }),
-    onSuccess: () => {
+    // POST /api/auth/resend-otp — creates an OTP session identified by the
+    // caller's IP address and returns { sessionId, expiresIn }.
+    // Phone is included in the body for future SMS routing but the current
+    // backend derives the identifier from req.ip.
+    mutationFn: () =>
+      apiRequest<{ sessionId: string; expiresIn: number }>(
+        "POST",
+        "/api/auth/resend-otp",
+        { phone },
+      ),
+    onSuccess: (data) => {
+      // Store the sessionId so the verify step can submit it to the backend.
+      setSessionId(data?.sessionId ?? "");
       setStep("otp");
     },
   });
 
   const verifyOtpMutation = useMutation({
-    // Server sets the httpOnly access_token cookie on /otp/verify success.
+    // POST /api/auth/verify-otp — validates { code, sessionId }.
+    // Server sets the httpOnly access_token cookie on success.
     // Frontend doesn't store the token — `credentials: 'include'` in
     // apiRequest sends the cookie back on every subsequent call.
-    mutationFn: () => apiRequest<{ token?: string }>("POST", "/api/auth/otp/verify", { phone, otp }),
+    mutationFn: () =>
+      apiRequest<{ success: boolean; message: string }>(
+        "POST",
+        "/api/auth/verify-otp",
+        { code: otp, sessionId },
+      ),
     onSuccess: () => {
       setStep("employeeId");
     },

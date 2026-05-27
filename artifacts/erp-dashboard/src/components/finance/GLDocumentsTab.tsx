@@ -49,7 +49,7 @@ export function GLDocumentsTab() {
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const { data: glDocuments = [], isLoading } = useQuery<GlDocument[]>({
-    queryKey: ["/api/fi/gl-documents"],
+    queryKey: ["/api/accounting/gl-documents"],
   });
 
   const form = useForm<GlDocumentFormValues>({
@@ -65,9 +65,9 @@ export function GLDocumentsTab() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: GlDocumentFormValues) => apiRequest("POST", "/api/fi/gl-documents", data),
+    mutationFn: (data: GlDocumentFormValues) => apiRequest("POST", "/api/accounting/gl-documents", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/fi/gl-documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/accounting/gl-documents"] });
       toast({ title: "Muvaffaqiyatli", description: "Hujjat yaratildi" });
       setIsAddOpen(false);
       form.reset();
@@ -78,9 +78,9 @@ export function GLDocumentsTab() {
   });
 
   const postMutation = useMutation({
-    mutationFn: (id: string) => apiRequest("POST", `/api/fi/gl-documents/${id}/post`),
+    mutationFn: (id: string) => apiRequest("POST", `/api/accounting/gl-documents/${id}/post`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/fi/gl-documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/accounting/gl-documents"] });
       toast({ title: "Muvaffaqiyatli", description: "Hujjat joylashtirildi" });
     },
     onError: () => {
