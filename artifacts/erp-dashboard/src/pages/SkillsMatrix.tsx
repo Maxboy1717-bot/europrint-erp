@@ -34,7 +34,13 @@ export default function SkillsMatrix() {
   const [confirmDeleteEmpSkillId, setConfirmDeleteEmpSkillId] = useState<string | null>(null);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
 
-  const { data: skills, isLoading: loadingSkills, isError, error, refetch } = useQuery({ queryKey: ["/api/hr/skills"] });
+  const { data: skillsRaw, isLoading: loadingSkills, isError, error, refetch } = useQuery({ queryKey: ["/api/hr/skills"] });
+  // Backend returns { items: Skill[], total: number } — extract the array safely
+  const skills: Skill[] = Array.isArray(skillsRaw)
+    ? (skillsRaw as Skill[])
+    : Array.isArray((skillsRaw as { items?: Skill[] })?.items)
+    ? (skillsRaw as { items: Skill[] }).items
+    : [];
   const { data: employees } = useQuery({ queryKey: ["/api/hr/employees"] });
   const { data: employeeSkills, isLoading: loadingEmployeeSkills } = useQuery({ queryKey: ["/api/hr/employee-skills"] });
 
@@ -93,13 +99,13 @@ export default function SkillsMatrix() {
           <p className="text-muted-foreground">{t("skills.subtitle")}</p>
         </div>
         <div className="flex gap-2">
-          <EmployeeSkillDialog open={isEmployeeSkillDialogOpen} onOpenChange={setIsEmployeeSkillDialogOpen} form={employeeSkillForm} employees={employees as Employee[] | undefined} skills={skills as Skill[] | undefined} onSubmit={onEmployeeSkillSubmit} isPending={createEmployeeSkillMutation.isPending} onCancel={() => { setIsEmployeeSkillDialogOpen(false); employeeSkillForm.reset(); }} />
+          <EmployeeSkillDialog open={isEmployeeSkillDialogOpen} onOpenChange={setIsEmployeeSkillDialogOpen} form={employeeSkillForm} employees={Array.isArray(employees) ? (employees as Employee[]) : []} skills={skills} onSubmit={onEmployeeSkillSubmit} isPending={createEmployeeSkillMutation.isPending} onCancel={() => { setIsEmployeeSkillDialogOpen(false); employeeSkillForm.reset(); }} />
           <SkillDialog open={isSkillDialogOpen} onOpenChange={setIsSkillDialogOpen} form={skillForm} editingSkill={editingSkill} onSubmit={onSkillSubmit} isPending={createSkillMutation.isPending || updateSkillMutation.isPending} onCancel={() => { setIsSkillDialogOpen(false); setEditingSkill(null); skillForm.reset(); }} />
         </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("skills.totalSkills")}</CardTitle><Target className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{(skills as Skill[] | undefined)?.length || 0}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("skills.totalSkills")}</CardTitle><Target className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{skills.length || 0}</div></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("skills.skilledEmployees")}</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{new Set((employeeSkills as EmployeeSkillRecord[] | undefined)?.map((es: EmployeeSkillRecord) => es.userId)).size || 0}</div></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t("skills.totalAssigned")}</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{(employeeSkills as EmployeeSkillRecord[] | undefined)?.length || 0}</div></CardContent></Card>
       </div>
@@ -110,13 +116,13 @@ export default function SkillsMatrix() {
           <CardContent>
             {loadingSkills ? (
               <div className="space-y-4">{([1,2,3,4,5]).map(i => <div key={`k-${i}`} className="flex items-center gap-4 py-2"><Skeleton className="h-6 w-20 rounded-lg" /><Skeleton className="h-6 w-40 rounded-lg" /><Skeleton className="h-6 w-24 rounded-lg" /><Skeleton className="h-8 w-16 ml-auto rounded-lg" /></div>)}</div>
-            ) : !(skills as Skill[] | undefined)?.length ? (
+            ) : !skills.length ? (
               <EmptyState icon={<Target className="h-8 w-8" />} title={t("skills.emptySkillsTitle")} description={t("skills.emptySkillsDesc")} actionLabel={t("skills.createSkill")} onAction={() => setIsSkillDialogOpen(true)} />
             ) : (
               <div className="ep-table-scroll"><Table>
                 <TableHeader><TableRow><TableHead>{t("departments.code")}</TableHead><TableHead>{t("skills.name")}</TableHead><TableHead>{t("skills.category")}</TableHead><TableHead className="text-right">{t("departments.actions")}</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {(skills as Skill[]).map((skill: Skill) => (
+                  {skills.map((skill: Skill) => (
                     <TableRow key={skill.id} data-testid={`row-skill-${skill.id}`} className="hover:bg-muted/40 transition-colors">
                       <TableCell className="font-mono text-sm" data-testid={`text-skill-code-${skill.id}`}>{skill.code}</TableCell>
                       <TableCell data-testid={`text-skill-name-${skill.id}`}>{skill.name}</TableCell>
@@ -145,8 +151,8 @@ export default function SkillsMatrix() {
             ) : (
               <div className="space-y-3">
                 {(employeeSkills as EmployeeSkillRecord[]).slice(0, 10).map((es: EmployeeSkillRecord) => {
-                  const employee = (employees as Employee[] | undefined)?.find((e: Employee) => e.id === es.userId);
-                  const skill = (skills as Skill[] | undefined)?.find((s: Skill) => s.id === es.skillId);
+                  const employee = (Array.isArray(employees) ? (employees as Employee[]) : []).find((e: Employee) => e.id === es.userId);
+                  const skill = skills.find((s: Skill) => s.id === es.skillId);
                   const levelInfo = getLevelBadge(es.level);
                   return (
                     <div key={es.id} className="flex items-center justify-between py-2 border-b" data-testid={`row-employee-skill-${es.id}`}>

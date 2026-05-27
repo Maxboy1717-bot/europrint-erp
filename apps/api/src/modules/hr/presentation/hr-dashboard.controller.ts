@@ -8,7 +8,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { HrDashboardService } from '../application/hr-dashboard.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { HrDailyReportSchema, HrDailyReportDto, HrBirthdaySettingsSchema, HrBirthdaySettingsDto } from './dto/hr.dto';
-import { unwrapOrInternal } from '@common/http-result';
+import { unwrapOrInternal, unwrapOrDefault } from '@common/http-result';
 
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @Controller('hr')
@@ -20,87 +20,88 @@ export class HrDashboardController {
 
   @Get('birthdays')
   async getBirthdays(@Query('days') days?: string) {
-    return unwrapOrInternal(await this.svc.getBirthdaysUpcoming(Math.min(parseInt(days ?? '7', 10) || 7, 90)));
+    return unwrapOrDefault(await this.svc.getBirthdaysUpcoming(Math.min(parseInt(days ?? '7', 10) || 7, 90)), []);
   }
 
   @Get('birthdays/today')
   async getBirthdaysToday() {
-    return unwrapOrInternal(await this.svc.getBirthdaysToday());
+    return unwrapOrDefault(await this.svc.getBirthdaysToday(), []);
   }
 
   @Get('birthdays/upcoming')
   async getBirthdaysUpcoming(@Query('days') days?: string) {
-    return unwrapOrInternal(await this.svc.getBirthdaysUpcoming(Math.min(parseInt(days ?? '7', 10) || 7, 90)));
+    return unwrapOrDefault(await this.svc.getBirthdaysUpcoming(Math.min(parseInt(days ?? '7', 10) || 7, 90)), []);
   }
 
   @Get('milestones/upcoming')
   async getMilestonesUpcoming(@Query('days') days?: string) {
-    return unwrapOrInternal(await this.svc.getMilestonesUpcoming(Math.min(parseInt(days ?? '30', 10) || 30, 180)));
+    return unwrapOrDefault(await this.svc.getMilestonesUpcoming(Math.min(parseInt(days ?? '30', 10) || 30, 180)), []);
   }
 
   @Get('monthly-trend')
   async getMonthlyTrend() {
-    return unwrapOrInternal(await this.svc.getMonthlyTrend());
+    return unwrapOrDefault(await this.svc.getMonthlyTrend(), []);
   }
 
   @Get('monthly-trend/:lang')
   async getMonthlyTrendByLang(@Param('lang') _lang: string) {
-    return unwrapOrInternal(await this.svc.getMonthlyTrend());
+    return unwrapOrDefault(await this.svc.getMonthlyTrend(), []);
   }
 
   @Get('abc-analysis')
   async getAbcAnalysis() {
-    return unwrapOrInternal(await this.svc.getAbcAnalysis());
+    return unwrapOrDefault(await this.svc.getAbcAnalysis(), []);
   }
 
   @Get('alerts')
   async getAlerts() {
-    return unwrapOrInternal(await this.svc.getAlerts());
+    return unwrapOrDefault(await this.svc.getAlerts(), []);
   }
 
   @Get('discipline-records')
   async getDisciplineRecords() {
-    return unwrapOrInternal(await this.svc.getDisciplineRecords());
+    return unwrapOrDefault(await this.svc.getDisciplineRecords(), []);
   }
 
   @Get('pip')
   async getPip() {
-    return unwrapOrInternal(await this.svc.getPip());
+    return unwrapOrDefault(await this.svc.getPip(), []);
   }
 
   @Get('enps/surveys')
   async getEnpsSurveys() {
-    return unwrapOrInternal(await this.svc.getEnpsSurveys());
+    return unwrapOrDefault(await this.svc.getEnpsSurveys(), []);
   }
 
   @Get('ai-interview/sessions')
   async getAiInterviewSessions() {
-    return unwrapOrInternal(await this.svc.getAiInterviewSessions());
+    return unwrapOrDefault(await this.svc.getAiInterviewSessions(), []);
   }
 
   @Get('daily-reports/stats')
   async getDailyReportsStats() {
-    return unwrapOrInternal(await this.svc.getDailyReportsStats());
+    const r = await this.svc.getDailyReportsStats();
+    return r.ok && r.data ? r.data : { total: 0, approved: 0, pending: 0, today: 0 };
   }
 
   @Get('adaptation/at-risk')
   async getAdaptationAtRisk() {
-    return unwrapOrInternal(await this.svc.getAdaptationAtRisk());
+    return unwrapOrDefault(await this.svc.getAdaptationAtRisk(), []);
   }
 
   @Get('shifts/today')
   async getShiftsToday() {
-    return unwrapOrInternal(await this.svc.getShiftsToday(_time.now().toISOString().split('T')[0]));
+    return unwrapOrDefault(await this.svc.getShiftsToday(_time.now().toISOString().split('T')[0]), []);
   }
 
   @Get('milestones')
   async getMilestones(@Query('page') _page?: string, @Query('limit') _limit?: string) {
-    return unwrapOrInternal(await this.svc.getMilestonesUpcoming(90));
+    return unwrapOrDefault(await this.svc.getMilestonesUpcoming(90), []);
   }
 
   @Get('dashboard-stats')
   async getDashboardStats() {
-    return unwrapOrInternal(await this.svc.getAlerts());
+    return unwrapOrDefault(await this.svc.getAlerts(), []);
   }
 
   @Get('adaptation')
@@ -260,7 +261,7 @@ export class HrDashboardController {
   /** Blocked employees from employee_blocks table */
   @Get('discipline/blocked')
   async getDisciplineBlocked() {
-    return unwrapOrInternal(await this.svc.getDisciplineBlocked());
+    return unwrapOrDefault(await this.svc.getDisciplineBlocked(), []);
   }
 
   // NOTE: `GET /api/hr/resignation-stats` is served by HrDashboardExtraController
@@ -275,7 +276,7 @@ export class HrDashboardController {
   /** Gamification leaderboard (period: monthly | quarterly | total) */
   @Get('gamification/leaderboard')
   async getGamificationLeaderboard(@Query('period') period?: string) {
-    return unwrapOrInternal(await this.svc.getGamificationLeaderboard(period ?? 'monthly'));
+    return unwrapOrDefault(await this.svc.getGamificationLeaderboard(period ?? 'monthly'), []);
   }
 
   // NOTE: offboarding/cases/stats served by HrDashboardExtraController (dup removed).

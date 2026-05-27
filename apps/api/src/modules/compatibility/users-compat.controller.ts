@@ -11,7 +11,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { UsersCompatService } from './users-compat.service';
-import { unwrapOrInternal } from '@common/http-result';
+import { unwrapOrInternal, unwrapOrDefault } from '@common/http-result';
 import { UserAclTranslator, type LegacyUserRow, type UserDto } from './acl/user-acl';
 
 @ApiThrottle()
@@ -35,7 +35,8 @@ export class UsersCompatController {
    */
   @Get()
   async listUsers(@Query('page') page?: string, @Query('limit') limit?: string, @Query('search') search?: string) {
-    return unwrapOrInternal(await this.svc.listUsers(page, limit, search));
+    const r = await this.svc.listUsers(page, limit, search);
+    return r.ok && r.data ? r.data : [];
   }
 
   /**

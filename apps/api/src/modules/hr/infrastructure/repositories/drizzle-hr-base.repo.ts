@@ -126,21 +126,32 @@ export class HrBaseRepository {
    */
   async saveEmployee(employee: HrRow): Promise<Result<HrRow>> {
     try {
+      // Convert 0 FK references to null (0 is not a valid FK, would cause constraint error)
+      const deptId  = (employee.departmentId  ?? employee.department_id  ?? null);
+      const posId   = (employee.positionId    ?? employee.position_id    ?? null);
+      const mgrId   = (employee.managerId     ?? employee.manager_id     ?? null);
+
       const empPayload: Omit<typeof hrEmployees.$inferInsert, 'id'> = {
-        employee_code:   (employee.employeeCode ?? employee.employee_code ?? null) as string,
-        first_name:      (employee.firstName ?? employee.first_name ?? '') as string,
-        last_name:       (employee.lastName ?? employee.last_name ?? '') as string,
-        middle_name:     (employee.middleName ?? employee.middle_name ?? null) as string,
-        department_id:   (employee.departmentId ?? employee.department_id ?? null) as number,
-        position_id:     (employee.positionId ?? employee.position_id ?? null) as number,
-        hire_date:       (employee.hireDate ?? employee.hire_date ?? _time.now().toISOString().split('T')[0]) as string,
-        base_salary:     String(employee.baseSalary ?? employee.base_salary ?? 0),
-        employment_type: (employee.employmentType ?? employee.employment_type ?? 'full_time') as string,
-        status:          (employee.status ?? 'active') as string,
-        phone_number:    (employee.phoneNumber ?? employee.phone_number ?? null) as string,
-        email_work:      (employee.emailWork ?? employee.email_work ?? null) as string,
-        gender:          (employee.gender ?? null) as string,
-        date_of_birth:   (employee.dateOfBirth ?? employee.date_of_birth ?? null) as string,
+        employee_code:     (employee.employeeCode ?? employee.employee_code ?? null) as string,
+        first_name:        (employee.firstName ?? employee.first_name ?? '') as string,
+        last_name:         (employee.lastName ?? employee.last_name ?? '') as string,
+        middle_name:       (employee.middleName ?? employee.middle_name ?? null) as string,
+        department_id:     (deptId  && Number(deptId)  > 0 ? Number(deptId)  : null) as number | null,
+        position_id:       (posId   && Number(posId)   > 0 ? Number(posId)   : null) as number | null,
+        manager_id:        (mgrId   && Number(mgrId)   > 0 ? Number(mgrId)   : null) as number | null,
+        hire_date:         (employee.hireDate ?? employee.hire_date ?? _time.now().toISOString().split('T')[0]) as string,
+        base_salary:       String(employee.baseSalary ?? employee.base_salary ?? 0),
+        employment_type:   (employee.employmentType ?? employee.employment_type ?? 'full_time') as string,
+        employment_status: (employee.employmentStatus ?? employee.employment_status ?? 'active') as string,
+        status:            (employee.status ?? 'active') as string,
+        is_active:         true,
+        phone_number:      (employee.phoneNumber ?? employee.phone_number ?? null) as string,
+        email_work:        (employee.emailWork ?? employee.email_work ?? null) as string,
+        telegram_chat_id:  (employee.telegramChatId ?? employee.telegram_chat_id ?? null) as string,
+        gender:            (employee.gender ?? null) as string,
+        date_of_birth:     (employee.dateOfBirth ?? employee.date_of_birth ?? null) as string,
+        birth_date:        (employee.birthDate ?? employee.birth_date ?? null) as string,
+        photo_url:         (employee.photoUrl ?? employee.photo_url ?? null) as string,
       };
 
       const saved = await db.transaction(async (tx): Promise<typeof hrEmployees.$inferSelect> => {

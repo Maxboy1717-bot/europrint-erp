@@ -5,7 +5,7 @@
 
 import { Controller, Get, HttpException, HttpStatus, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { unwrapOrInternal } from '@common/http-result';
+import { unwrapOrInternal, unwrapOrDefault } from '@common/http-result';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -28,7 +28,8 @@ export class HrDashboardExtraController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('resignation-stats')
   async getResignationStats() {
-    return { data: unwrapOrInternal(await this.svc.getResignationStatsProjected()) };
+    const r = await this.svc.getResignationStatsProjected();
+    return { data: r.ok && r.data ? r.data : [] };
   }
 
   @ApiOperation({ summary: 'Get resignation stats by lang' })
@@ -42,35 +43,40 @@ export class HrDashboardExtraController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('risk-scores')
   async getRiskScores() {
-    return { data: unwrapOrInternal(await this.svc.getRiskScoresProjected()) };
+    const r = await this.svc.getRiskScoresProjected();
+    return { data: r.ok && r.data ? r.data : { scores: [], stats: {} } };
   }
 
   @ApiOperation({ summary: 'Get safety summary' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('safety/summary')
   async getSafetySummary() {
-    return unwrapOrInternal(await this.svc.getSafetySummaryProjected());
+    const r = await this.svc.getSafetySummaryProjected();
+    return r.ok && r.data ? r.data : { incidentsThisMonth: 0, ppeCompliancePercent: 0, expiringTrainings: 0, openIncidents: 0 };
   }
 
   @ApiOperation({ summary: 'Get safety incidents' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('safety/incidents')
   async getSafetyIncidents() {
-    return unwrapOrInternal(await this.svc.getSafetyIncidentsRaw());
+    const r = await this.svc.getSafetyIncidentsRaw();
+    return r.ok && Array.isArray(r.data) ? r.data : [];
   }
 
   @ApiOperation({ summary: 'Get offboarding stats' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('offboarding/cases/stats')
   async getOffboardingStats() {
-    return unwrapOrInternal(await this.svc.getOffboardingStats());
+    const r = await this.svc.getOffboardingStats();
+    return r.ok && r.data ? r.data : { total: 0, completed: 0, inProgress: 0 };
   }
 
   @ApiOperation({ summary: 'Get safety overview' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('safety')
   async getSafetyOverview() {
-    return { data: unwrapOrInternal(await this.svc.getSafetyOverview()) };
+    const r = await this.svc.getSafetyOverview();
+    return { data: r.ok && r.data ? r.data : { incidents: [], summary: {} } };
   }
 
   @ApiOperation({ summary: 'Get contracts' })
@@ -85,7 +91,8 @@ export class HrDashboardExtraController {
   @Get('contracts/expiring')
   async getContractsExpiring(@Query('days') days?: string) {
     const d = Math.min(parseInt(days ?? '30', 10) || 30, 365);
-    return { data: unwrapOrInternal(await this.svc.getContractsExpiringProjected(d)) };
+    const r = await this.svc.getContractsExpiringProjected(d);
+    return { data: r.ok && Array.isArray(r.data) ? r.data : [] };
   }
 }
 
