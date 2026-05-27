@@ -134,19 +134,26 @@ Ushbu fayllar **o'chirilmaydi** (Git history saqlanadi, mavjud consumer'lar buzi
 | PATCH | `/api/employees/:id` | employees-extra | `/api/hr/employees/:id` |
 | ... | (~25 ta legacy sub-route) | employees-compat-sub | `/api/hr/employees/:id/*` |
 
-### ⚠️ Frontend ↔ Backend URL drift
+### ✅ Frontend ↔ Backend URL — 2026-05-28 to'liq migratsiya tugallandi
 
-Frontend hozir `apiRequest('GET', '/api/employees')` chaqiradi (legacy). Backend kanonik route `/api/hr/employees`. **Ikkita variant ishlaydi** (compat shim hali faol), lekin yangi kod faqat `/api/hr/employees` ishlatishi kerak.
+**Kanonik URL (`/api/hr/employees`)** — 45+ fayl migradildi (kommitlar `12979572`, `90e45d83`):
+- Employee list, create, edit, status, kpi, salary-review → `/api/hr/employees`
+- Profile main GET, org-structure, salary-history, sick-leaves, payroll-summary → `/api/hr/employees/${id}/...`
+- Canonical sub-routes: assets, swap-requests, complaints, documents, profile-image, assign-org-functions → `/api/hr/employees/${id}/...`
 
-**Action:** Sahifalardagi URL'larni asta-sekin (PR review orqali) `/api/hr/employees`'ga ko'chirish. **Bu modulning BLESSED bo'lishidan oldin ham, keyin ham bajariladi.**
+**Compat shim (`/api/employees`)** — kanonizatsiya qilinmagan sub-routes (kelajakda canonical backend endpoint qo'shilgandan keyin migratsiya qilinadi):
+- passport, bank-accounts, emergency-contacts, contracts, files → `/api/employees/${id}/...`
+- assessments, career, corporate-inventory, capital-profile, monthly-report → `/api/employees/${id}/...`
+- bonuses, fines, overtime, cash-advances, leave-requests → `/api/employees/${id}/...`
+
+> ⚠️ Compat sub-routes ishlash uchun `employees-compat-sub.controller.ts` faol bo'lishi kerak (hali @deprecated, o'chirilmaydi).
 
 ---
 
 ## 🔧 Ochiq Muammolar (BLESSED bo'lishdan oldin hal qilinishi kerak)
 
 1. ~~**`create-employee.handler.ts` TxOutcome regress**~~ ✅ **2026-05-27 commit `2f69191b` da tuzatildi** — `type TxOutcome` qayta qo'shildi, `return { kind: 'err' }` tiklandi.
-2. ~~**FE URL drift**~~ ✅ **2026-05-27 commit `2f69191b` da tuzatildi** — `Employees.tsx`, `EmployeeProfile.tsx` (main GET), `EmployeeDialog.tsx` (profile-image, assign-org-functions, invalidateQueries) → `/api/hr/employees`.
-   > ⚠️ EmployeeProfile.tsx sub-routes (`/api/employees/${id}/passport`, `/bank-accounts`, vs.) hali compat orqali ishlaydi — BLESSED uchun zarur emas (compat hali faol).
+2. ~~**FE URL drift**~~ ✅ **2026-05-28 to'liq migratsiya** — 45+ FE fayl canonical URL'ga ko'chirildi (kommitlar `2f69191b`, `12979572`, `90e45d83`, `b6eff78c`). Compat sub-routes (passport/bank-accounts/contracts/files/assessments/career/corporate-inventory/capital-profile/monthly-report/bonuses/fines/overtime/cash-advances/leave-requests) hali `/api/employees/${id}/...` dan ishlaydi (compat shim faol) — canonical BE endpoint qo'shilgandan keyin migratsiya qilinadi.
 3. **EmployeeProfile.tsx 365 qator** — Hozircha qabul qilinadi (300 qator chegarasidan oshgan lekin katta refactor kerak emas).
 4. ~~**Type definitions tarqalgan**~~ ✅ **2026-05-27 commit `2f69191b`** — `lib/types/src/employee.ts` mavjud (canonical); `lib/types/employee.ts` re-export qo'shildi.
 5. **E2E test yo'q** — `e2e/hr-employees.spec.ts` yaratish: login → list → add → edit → delete oqimi. **BLOCKED (hali).**
