@@ -49,26 +49,28 @@ export class InterviewLinkService {
   }
 
   async validateToken(tokenId: string): Promise<Result<InterviewLink>> {
-    return safeCall(async () => {
+    const queryResult = await safeCall(async () => {
       const rows = await db.execute(sql`
         SELECT token_id, candidate_id, expires_at, used
         FROM ai_interview_links
         WHERE token_id = ${tokenId}
         LIMIT 1
       `);
-      const row = (rows as unknown as { rows: Array<{
+      return (rows as unknown as { rows: Array<{
         token_id: string; candidate_id: number; expires_at: Date; used: boolean;
-      }> }).rows[0];
-      if (!row) throw new Error('Token not found');
-      if (row.used) throw new Error('Token already used');
-      if (new Date(row.expires_at) < new Date()) throw new Error('Token expired');
-      const baseUrl = this.cfg.get<string>('FRONTEND_URL') ?? 'http://localhost:5173';
-      return {
-        tokenId: row.token_id, candidateId: row.candidate_id,
-        expiresAt: row.expires_at, used: row.used,
-        url: `${baseUrl}/interview/${row.token_id}`,
-      };
+      }> }).rows[0] ?? null;
     }, 'NOT_FOUND');
+    if (!queryResult.ok) return Err(queryResult.error);
+    const row = queryResult.data;
+    if (!row) return Err({ code: 'NOT_FOUND', message: 'Token not found' });
+    if (row.used) return Err({ code: 'CONFLICT', message: 'Token already used' });
+    if (new Date(row.expires_at) < new Date()) return Err({ code: 'NOT_FOUND', message: 'Token expired' });
+    const baseUrl = this.cfg.get<string>('FRONTEND_URL') ?? 'http://localhost:5173';
+    return Ok({
+      tokenId: row.token_id, candidateId: row.candidate_id,
+      expiresAt: row.expires_at, used: row.used,
+      url: `${baseUrl}/interview/${row.token_id}`,
+    });
   }
 
   async markUsed(tokenId: string): Promise<Result<void>> {

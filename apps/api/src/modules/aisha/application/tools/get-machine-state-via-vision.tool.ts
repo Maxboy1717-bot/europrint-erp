@@ -12,7 +12,7 @@
 // architectural rationale.
 
 import { Injectable, Inject, Optional } from '@nestjs/common';
-import { Result, Err, AppErr, safeCall } from '@common/result';
+import { Result, Ok, Err, AppErr } from '@common/result';
 import { sql } from 'drizzle-orm';
 import { db } from '@shared/db';
 import type { IAishaTool, ToolResult } from '../../domain/tool.interface';
@@ -51,12 +51,12 @@ export class GetMachineStateViaVisionTool implements IAishaTool {
     const machineId = String(input['machineId'] ?? '');
     if (!machineId) return Err(AppErr('VALIDATION', 'machineId majburiy'));
 
-    return safeCall<ToolResult<VisionMachineState>>(async () => {
+    try {
       const start = Date.now();
       const sensor = rowsOf<{ state: string; camera_id: string | null }>(await db.execute(sql`
         SELECT current_state AS state, camera_id FROM iot_machine_registry WHERE id = ${machineId} LIMIT 1
       `))[0];
-      if (!sensor) throw new Error(`Mashina topilmadi: ${machineId}`);
+      if (!sensor) return Err(AppErr('NOT_FOUND', `Mashina topilmadi: ${machineId}`));
 
       let visualState: VisionMachineState['visualState'] = 'unknown';
       let cameraName: string | null = null;
@@ -93,12 +93,15 @@ export class GetMachineStateViaVisionTool implements IAishaTool {
       }
 
       const match = visualState !== 'unknown' && visualState === sensor.state;
-      return provResult<VisionMachineState>({
+      return Ok(provResult<VisionMachineState>({
         data: { machineId, visualState, sensorState: sensor.state, match, cameraName },
         sources,
         confidence: visualState === 'unknown' ? 0.5 : 0.85,
         cameraSnapshots,
-      });
-    });
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return Err(AppErr('EXTERNAL_SERVICE', msg));
+    }
   }
 }

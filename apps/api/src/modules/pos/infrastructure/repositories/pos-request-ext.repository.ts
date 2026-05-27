@@ -37,18 +37,14 @@ export class PosRequestExtRepository {
   }
 
   async paginateWithFilter(filter: RequestFilter, limit: number, offset: number): Promise<Result<{ items: unknown[]; total: number }>> {
-    return safeCall(async () => {
-      const conditions = [];
-      if (filter.status)         conditions.push(eq(posMaterialRequests.status, filter.status as 'DRAFT' | 'REJECTED' | 'APPROVED' | 'SUBMITTED' | 'PARTIALLY_ISSUED' | 'FULLY_ISSUED' | 'CANCELLED'));
-      if (filter.departmentCode) conditions.push(eq(posMaterialRequests.departmentCode, filter.departmentCode));
-      if (filter.priority)       conditions.push(eq(posMaterialRequests.priority, filter.priority));
-      if (filter.dateFrom)       conditions.push(gte(posMaterialRequests.createdAt, new Date(filter.dateFrom)));
-      if (filter.dateTo)         conditions.push(lte(posMaterialRequests.createdAt, new Date(filter.dateTo)));
-      if (filter.requestedBy)    conditions.push(eq(posMaterialRequests.requestedBy, filter.requestedBy));
-      const where = conditions.length ? and(...conditions) : undefined;
-      const result = await this.paginateRequests(where, limit, offset);
-      if (!result.ok) throw new Error(result.error?.message ?? 'DB_ERROR');
-      return result.data;
-      }, 'DB_ERROR');
+    const conditions = [];
+    if (filter.status)         conditions.push(eq(posMaterialRequests.status, filter.status as 'DRAFT' | 'REJECTED' | 'APPROVED' | 'SUBMITTED' | 'PARTIALLY_ISSUED' | 'FULLY_ISSUED' | 'CANCELLED'));
+    if (filter.departmentCode) conditions.push(eq(posMaterialRequests.departmentCode, filter.departmentCode));
+    if (filter.priority)       conditions.push(eq(posMaterialRequests.priority, filter.priority));
+    if (filter.dateFrom)       conditions.push(gte(posMaterialRequests.createdAt, new Date(filter.dateFrom)));
+    if (filter.dateTo)         conditions.push(lte(posMaterialRequests.createdAt, new Date(filter.dateTo)));
+    if (filter.requestedBy)    conditions.push(eq(posMaterialRequests.requestedBy, filter.requestedBy));
+    const where = conditions.length ? and(...conditions) : undefined;
+    return this.paginateRequests(where, limit, offset);
   }
 }

@@ -5,7 +5,7 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, timeout, catchError, throwError } from 'rxjs';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Result, AppError, Ok, Err } from '@common/result';
 import { IAttendanceRepository, ATTENDANCE_REPO } from './i-attendance.repo';
 
 const FACE_AI_URL          = process.env['FACE_AI_SERVICE_URL'] ?? 'http://hr-face-ai:5001';
@@ -75,10 +75,10 @@ export class FaceRecognitionService {
   }
 
   async recognizeFromUrl(imageUrl: string, roomId?: string): Promise<Result<RecognizeResult, AppError>> {
-    return safeCall(async () => {
-      if (!this._isAllowedImageHost(imageUrl)) {
-        throw new Error(`recognizeFromUrl: host not in CAMERA_SNAPSHOT_HOSTS allowlist — ${imageUrl}`);
-      }
+    if (!this._isAllowedImageHost(imageUrl)) {
+      return Err(`recognizeFromUrl: host not in CAMERA_SNAPSHOT_HOSTS allowlist — ${imageUrl}`);
+    }
+    try {
       const imgResp$ = this.http
         .get<Buffer>(imageUrl, { responseType: 'arraybuffer' })
         .pipe(
@@ -92,9 +92,12 @@ export class FaceRecognitionService {
       const imgResp = await firstValueFrom(imgResp$) as { data: Buffer };
       const base64  = Buffer.from(imgResp.data).toString('base64');
       const recResult = await this.recognize(base64, roomId);
-      if (!recResult.ok) throw new Error(String(recResult.error));
-      return recResult.data;
-    });
+      if (!recResult.ok) return Err(recResult.error);
+      return Ok(recResult.data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(message);
+    }
   }
 
   /** pgvector <=> primary (threshold 0.85); in-process cosine fallback. */
@@ -162,43 +165,42 @@ export class FaceRecognitionService {
     employeeId: string,
     images:     string[],
   ): Promise<Result<{ id: number }, AppError>> {
-    return safeCall(async () => {
-      const embeddings:  number[][] = [];
-      let   maxConfidence           = 0;
+    const embeddings:  number[][] = [];
+    let   maxConfidence           = 0;
 
-      for (const [idx, imageBase64] of images.entries()) {
-        const recResult = await this.recognize(imageBase64);
-        if (!recResult.ok) {
-          this.logger.warn(
-            'Enrollment image #%d recognition failed for employee %s: %s',
-            idx + 1,
-            employeeId,
-            String(recResult.error),
-          );
-          continue;
-        }
-        const faces = recResult.data.faces ?? [];
-        const face = faces[0];
-        if (!face) {
-          this.logger.warn('Enrollment image #%d: no faces detected for employee %s', idx + 1, employeeId);
-          continue;
-        }
-        embeddings.push(face.embedding);
-        if (face.confidence > maxConfidence) maxConfidence = face.confidence;
+    for (const [idx, imageBase64] of images.entries()) {
+      const recResult = await this.recognize(imageBase64);
+      if (!recResult.ok) {
+        this.logger.warn(
+          'Enrollment image #%d recognition failed for employee %s: %s',
+          idx + 1,
+          employeeId,
+          String(recResult.error),
+        );
+        continue;
       }
-
-      if (embeddings.length === 0) {
-        throw new Error('No faces detected in any of the provided images');
+      const faces = recResult.data.faces ?? [];
+      const face = faces[0];
+      if (!face) {
+        this.logger.warn('Enrollment image #%d: no faces detected for employee %s', idx + 1, employeeId);
+        continue;
       }
+      embeddings.push(face.embedding);
+      if (face.confidence > maxConfidence) maxConfidence = face.confidence;
+    }
 
-      const dims = (embeddings[0] ?? []).length;
-      const avg  = Array.from({ length: dims }, (_, i) =>
-        (Array.isArray(embeddings) ? embeddings : []).reduce((sum, e) => sum + (e[i] ?? 0), 0) / embeddings.length,
-      );
-      const normalized = this._l2Normalize(avg);
+    if (embeddings.length === 0) {
+      return Err('No faces detected in any of the provided images');
+    }
 
-      return this._saveEmbedding(employeeId, normalized, maxConfidence);
-    });
+    const dims = (embeddings[0] ?? []).length;
+    const avg  = Array.from({ length: dims }, (_, i) =>
+      (Array.isArray(embeddings) ? embeddings : []).reduce((sum, e) => sum + (e[i] ?? 0), 0) / embeddings.length,
+    );
+    const normalized = this._l2Normalize(avg);
+
+    const saved = await this._saveEmbedding(employeeId, normalized, maxConfidence);
+    return saved;
   }
 
   async registerEmbedding(
@@ -207,31 +209,29 @@ export class FaceRecognitionService {
     confidence: number,
     imageUrl?:  string,
   ): Promise<Result<{ id: number }, AppError>> {
-    return safeCall(async () => {
-      let normalized = this._l2Normalize(embedding);
+    let normalized = this._l2Normalize(embedding);
 
-      try {
-        const res$ = this.http
-          .post<{ embedding: number[]; dims: number }>(
-            `${FACE_AI_URL}/register-embedding`,
-            { employee_id: employeeId, embedding, confidence },
-          )
-          .pipe(
-            timeout(TIMEOUT_MS),
-            catchError((err) => {
-              this.logger.warn('Face AI /register-embedding unavailable — using raw embedding: %s', String(err?.message ?? err));
-              return throwError(() => new Error('register_embedding_unavailable'));
-            }),
-          );
+    try {
+      const res$ = this.http
+        .post<{ embedding: number[]; dims: number }>(
+          `${FACE_AI_URL}/register-embedding`,
+          { employee_id: employeeId, embedding, confidence },
+        )
+        .pipe(
+          timeout(TIMEOUT_MS),
+          catchError((err) => {
+            this.logger.warn('Face AI /register-embedding unavailable — using raw embedding: %s', String(err?.message ?? err));
+            return throwError(() => new Error('register_embedding_unavailable'));
+          }),
+        );
 
-        const resp = await firstValueFrom(res$) as { data: { embedding: number[]; dims: number } };
-        normalized = this._l2Normalize(resp.data.embedding ?? embedding);
-      } catch {
-        this.logger.warn('Face AI normalisation skipped — using raw embedding');
-      }
+      const resp = await firstValueFrom(res$) as { data: { embedding: number[]; dims: number } };
+      normalized = this._l2Normalize(resp.data.embedding ?? embedding);
+    } catch {
+      this.logger.warn('Face AI normalisation skipped — using raw embedding');
+    }
 
-      return this._saveEmbedding(employeeId, normalized, confidence, imageUrl);
-    });
+    return this._saveEmbedding(employeeId, normalized, confidence, imageUrl);
   }
 
   private async _saveEmbedding(
@@ -239,7 +239,7 @@ export class FaceRecognitionService {
     newEmbedding: number[],
     confidence:   number,
     imageUrl?:    string,
-  ): Promise<{ id: number }> {
+  ): Promise<Result<{ id: number }>> {
     const numericId = parseInt(employeeId, 10);
     return this.attendanceRepo.saveEmployeeFaceEmbedding(numericId, newEmbedding, confidence, imageUrl);
   }

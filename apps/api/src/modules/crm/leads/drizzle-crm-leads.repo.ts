@@ -63,20 +63,35 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
 
   async create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Record<string, unknown>>> {
     try {
-      const firstName = (dto.firstName as string | undefined) ?? '';
-      const lastName  = (dto.lastName as string | undefined) ?? '';
-      const contactName = [firstName, lastName].filter(Boolean).join(' ') || null;
+      const firstName   = (dto.firstName as string | undefined) ?? '';
+      const lastNameVal = (dto.lastName as string | undefined) ?? '';
+      const contactName = [firstName, lastNameVal].filter(Boolean).join(' ') || null;
+      // CRM-1: title is NOT NULL — derive from dto.title, companyTitle, or name
+      const titleValue = String(
+        (dto.title as string | undefined) ||
+        (dto.companyTitle as string | undefined) ||
+        contactName ||
+        'Yangi lid',
+      );
       const row = {
+        title:         titleValue,                                              // NOT NULL fix
+        name:          (dto.name as string | undefined) || firstName || null,
+        lastName:      (dto.lastName as string | undefined) || null,
+        companyTitle:  (dto.companyTitle as string | undefined) || null,
+        phones:        dto.phones ?? (dto.phone ? [{ value: dto.phone, type: 'WORK' }] : []),
+        emails:        dto.emails ?? (dto.email ? [{ value: dto.email, type: 'WORK' }] : []),
+        statusId:      (dto.statusId as string | undefined) || (dto.status as string | undefined) || 'NEW',
+        sourceId:      (dto.sourceId as string | undefined) || (dto.source as string | undefined) || null,
+        assignedById:  (dto.assignedById as string | undefined) || (dto.assignedTo ? String(dto.assignedTo) : null) || (createdBy ? String(createdBy) : null),
+        budget:        (dto.budget as number | undefined) ?? null,
+        opportunityAmount: (dto.opportunityAmount as number | undefined) ?? null,
+        comments:      (dto.comments as string | undefined) || null,
+        // Legacy columns (backward compat — kept for existing DB rows):
         contact_name:  contactName,
-        contact_phone: (dto.phone as string | undefined) || null,
-        contact_email: (dto.email as string | undefined) || null,
         status:        (dto.status as string | undefined) ?? 'new',
         source:        (dto.source as string | undefined) || null,
-        notes:         (dto.notes as string | undefined) || null,
-        customer_id:   (dto.companyId as number | undefined) || null,
-        manager_id:    (dto.assignedTo as number | undefined) || (createdBy ?? null),
       };
-      const result = await db.insert(crmLeads).values(row as typeof crmLeads.$inferInsert).returning();
+      const result = await db.insert(crmLeads).values(row as unknown as typeof crmLeads.$inferInsert).returning();
       return Ok(mapLeadRow(result[0] as Row));
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yaratishda xatolik'); }
   }

@@ -4,7 +4,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { safeCall, Result, AppError } from '@common/result';
+import { Ok, Result, AppError } from '@common/result';
 import { ApplicationsRepository } from './applications.repository';
 
 @Injectable()
@@ -27,12 +27,10 @@ export class ApplicationsService {
     return this.repo.update(id, body);
   }
 
-  async delete(id: number) {
-    return safeCall(async () => {
-      const r = await this.repo.delete(id);
-      if (!r.ok) throw new Error(String(r.error));
-      return { deleted: true };
-    });
+  async delete(id: number): Promise<Result<void>> {
+    const r = await this.repo.delete(id);
+    if (!r.ok) return r as Result<void>;
+    return Ok();
   }
 
   async listResponses(applicationId: number | null, lim: number, off: number) {

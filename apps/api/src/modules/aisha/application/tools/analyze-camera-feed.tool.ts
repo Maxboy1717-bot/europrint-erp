@@ -7,7 +7,7 @@
  */
 
 import { Injectable, Inject, Optional } from '@nestjs/common';
-import { Result, Err, AppErr, safeCall } from '@common/result';
+import { Result, Ok, Err, AppErr } from '@common/result';
 import type { IAishaTool, ToolResult } from '../../domain/tool.interface';
 import { provSource, provResult } from './_helpers';
 import type { CameraSnapshot } from '../../domain/value-objects/tool-call.vo';
@@ -52,10 +52,10 @@ export class AnalyzeCameraFeedTool implements IAishaTool {
     const provider = this.provider;
     if (!provider) return Err(AppErr('EXTERNAL_SERVICE', 'CameraSnapshotProvider ulanmagan'));
 
-    return safeCall<ToolResult<VisionAnalysis>>(async () => {
+    try {
       const start = Date.now();
       const frame = await provider.captureFrame(cameraId);
-      if (!frame.base64) throw new Error('Kamera kadri base64 formatida qaytarmadi');
+      if (!frame.base64) return Err(AppErr('EXTERNAL_SERVICE', 'Kamera kadri base64 formatida qaytarmadi'));
 
       const messages = [{
         role: 'user' as const,
@@ -65,13 +65,13 @@ export class AnalyzeCameraFeedTool implements IAishaTool {
         ],
       }];
       const r = await this.claude.sendOneShot({ messages, maxTokens: 512 });
-      if (!r.ok) throw new Error(r.error.message);
+      if (!r.ok) return Err(AppErr('EXTERNAL_SERVICE', r.error.message));
 
       const snapshot: CameraSnapshot = {
         cameraId, cameraName: frame.name,
         snapshotUrl: frame.url, capturedAt: frame.capturedAt,
       };
-      return provResult<VisionAnalysis>({
+      return Ok(provResult<VisionAnalysis>({
         data: { description: r.data, cameraId, cameraName: frame.name },
         sources: [
           provSource({ type: 'camera', identifier: `camera.${cameraId}`, startMs: start }),
@@ -80,8 +80,11 @@ export class AnalyzeCameraFeedTool implements IAishaTool {
         confidence: 0.85,
         citations: [{ label: frame.name, url: `/iot/cameras/${cameraId}` }],
         cameraSnapshots: [snapshot],
-      });
-    });
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return Err(AppErr('EXTERNAL_SERVICE', msg));
+    }
   }
 }
 

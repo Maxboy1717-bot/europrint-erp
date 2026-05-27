@@ -8,7 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { eq, desc } from 'drizzle-orm';
 import { DrizzleService } from '@common/services/drizzle.service';
-import { safeCall, Ok, Result } from '@common/result';
+import { safeCall, Ok, Err, Result } from '@common/result';
 import { aiReservationRequests, aiReservationBatches } from '@europrint/schemas';
 
 export interface ReservationRequest {
@@ -91,14 +91,15 @@ export class DrizzleAiReservationRepo {
     materialType: string, quantity: number, unit: string,
     neededBy: string | null, priority: string, notes: string | null,
   ): Promise<Result<ReservationRequest>> {
-    return safeCall(async () => {
-      const [row] = await this.drizzle.db
+    const insertR = await safeCall(async () =>
+      this.drizzle.db
         .insert(aiReservationRequests)
         .values({ materialType, quantity, unit, neededBy, priority, notes, status: 'pending' })
-        .returning();
-      if (!row) throw new Error('Rezervatsiya so\'rovi yaratishda xato: natija qaytmadi');
-      return this.toRequest(row);
-    });
+        .returning(), 'DB_ERROR');
+    if (!insertR.ok) return Err(insertR.error);
+    const row = Array.isArray(insertR.data) ? insertR.data[0] : undefined;
+    if (!row) return Err({ code: 'DB_ERROR', message: 'Rezervatsiya so\'rovi yaratishda xato: natija qaytmadi' });
+    return Ok(this.toRequest(row));
   }
 
   async updateRequestStatus(id: string, status: string): Promise<Result<ReservationRequest>> {
@@ -127,13 +128,14 @@ export class DrizzleAiReservationRepo {
   }
 
   async createBatch(materialType: string, items: unknown[], scheduledAt: string | null): Promise<Result<ReservationBatch>> {
-    return safeCall(async () => {
-      const [row] = await this.drizzle.db
+    const insertR = await safeCall(async () =>
+      this.drizzle.db
         .insert(aiReservationBatches)
         .values({ materialType, items, scheduledAt: scheduledAt ? new Date(scheduledAt) : null, status: 'scheduled' })
-        .returning();
-      if (!row) throw new Error('Rezervatsiya partiyasi yaratishda xato: natija qaytmadi');
-      return this.toBatch(row);
-    });
+        .returning(), 'DB_ERROR');
+    if (!insertR.ok) return Err(insertR.error);
+    const row = Array.isArray(insertR.data) ? insertR.data[0] : undefined;
+    if (!row) return Err({ code: 'DB_ERROR', message: 'Rezervatsiya partiyasi yaratishda xato: natija qaytmadi' });
+    return Ok(this.toBatch(row));
   }
 }

@@ -11,6 +11,7 @@ import { QUEUE_NAMES, backoffDelay } from '../queue.constants';
 import { ForecastService } from '../../ai/forecast/forecast.service';
 import { ForecastPersistenceService } from '../../ai/forecast/forecast-persistence.service';
 import { safeNum } from '@common/math/math-utils';
+import { Result, Ok, Err } from '@common/types/result.type';
 
 export interface ForecastRecalcJobData {
   modelId: string;
@@ -40,7 +41,10 @@ export class ForecastRecalcProcessor extends WorkerHost {
     );
 
     try {
-      await this.recalcForecast(job.data);
+      const result = await this.recalcForecast(job.data);
+      if (!result.ok) {
+        throw new Error(result.error.message);
+      }
       this.logger.log(`[forecast] Job #${job.id} bashorat qayta hisoblandi`);
     } catch (err) {
       this.logger.error(`[forecast] Job #${job.id} xato: ${String(err)}`);
@@ -48,11 +52,11 @@ export class ForecastRecalcProcessor extends WorkerHost {
     }
   }
 
-  private async recalcForecast(data: ForecastRecalcJobData): Promise<void> {
+  private async recalcForecast(data: ForecastRecalcJobData): Promise<Result<void>> {
     const productIds = Array.isArray(data.productIds) ? data.productIds : [];
 
     if (productIds.length === 0) {
-      throw new Error('[forecast] productIds bo\'sh — bashorat hisoblash uchun kamida bitta mahsulot talab qilinadi');
+      return Err('[forecast] productIds bo\'sh — bashorat hisoblash uchun kamida bitta mahsulot talab qilinadi');
     }
 
     const horizon = data.periodMonths * WEEKS_PER_MONTH;
@@ -110,10 +114,11 @@ export class ForecastRecalcProcessor extends WorkerHost {
     );
 
     if (failed > 0) {
-      throw new Error(
+      return Err(
         `[forecast] ${failed}/${productIds.length} mahsulot uchun bashorat muvaffaqiyatsiz ` +
         `(model=${data.modelId}, muvaffaqiyat=${succeeded}, skip=${skipped})`,
       );
     }
+    return Ok();
   }
 }

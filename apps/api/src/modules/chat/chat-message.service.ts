@@ -5,7 +5,7 @@
 
 import { Injectable, Logger, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
-import { Result, AppError, safeCall } from '@common/result';
+import { Result, AppError, Ok, Err, safeCall } from '@common/result';
 import { ChatMessageRepository } from './repositories/chat-message.repository';
 
 @Injectable()
@@ -35,34 +35,32 @@ export class ChatMessageService {
 
   async getMessages(roomId: string | number, userId: number, limit = 50, before?: string): Promise<Result<object, AppError>>{
     const notGroupMember = await this.i18n.t('errors.notGroupMember');
-    return safeCall(async () => {
-      const roomIdStr = String(roomId);
-      const userIdStr = String(userId);
-      const isMemberResult = await this.msgRepo.checkMembership(roomIdStr, userIdStr);
-      const isMember = isMemberResult.ok && isMemberResult.data;
-      if (!isMember) throw new ForbiddenException(notGroupMember);
-      const rowsResult = await this.msgRepo.fetchMessages(roomIdStr, userIdStr, limit, before);
-      if (!rowsResult.ok) throw new Error(rowsResult.error.message);
-      return (rowsResult.data as Record<string, unknown>[]).reverse();
-    });
+    const roomIdStr = String(roomId);
+    const userIdStr = String(userId);
+    const isMemberResult = await this.msgRepo.checkMembership(roomIdStr, userIdStr);
+    const isMember = isMemberResult.ok && isMemberResult.data;
+    if (!isMember) throw new ForbiddenException(notGroupMember);
+    const rowsResult = await this.msgRepo.fetchMessages(roomIdStr, userIdStr, limit, before);
+    if (!rowsResult.ok) return Err(rowsResult.error.message);
+    return Ok((rowsResult.data as Record<string, unknown>[]).reverse());
   }
 
   async sendMessage(
     roomId: string | number, senderId: number, content: string,
     fileUrl?: string, fileName?: string, fileType?: string, replyToId?: number,
-  ): Promise<Record<string, unknown>> {
+  ): Promise<Result<Record<string, unknown>, AppError>> {
     const roomIdStr = String(roomId);
     const senderIdStr = String(senderId);
     const replyToIdStr = replyToId ? String(replyToId) : null;
     const isMemberResult = await this.msgRepo.checkMembership(roomIdStr, senderIdStr);
     const isMember = isMemberResult.ok && isMemberResult.data;
-    if (!isMember) throw new Error('Not a member of this room');
+    if (!isMember) return Err('Not a member of this room');
     const messageType = fileUrl ? (fileType?.startsWith('image/') ? 'IMAGE' : 'FILE') : 'TEXT';
     const msgResult = await this.msgRepo.insertMessage(
       roomIdStr, senderIdStr, content || null, fileUrl || null,
       fileName || null, fileType || null, messageType, replyToIdStr,
     );
-    if (!msgResult.ok) throw new Error(msgResult.error.message);
+    if (!msgResult.ok) return Err(msgResult.error.message);
     const msg = msgResult.data as Record<string, unknown>;
     const userResult = await this.msgRepo.findUserInfo(senderId);
     const user = (userResult.ok ? userResult.data : undefined) as Record<string, unknown> | undefined;
@@ -71,7 +69,7 @@ export class ChatMessageService {
       const replyResult = await this.msgRepo.findReplyMessage(String(replyToId));
       replyToMessage = (replyResult.ok ? replyResult.data : null) as Record<string, unknown> | null;
     }
-    return this.buildSentMessage(msg, user, replyToMessage);
+    return Ok(this.buildSentMessage(msg, user, replyToMessage));
   }
 
   async editMessage(messageId: string | number, userId: number, content: string): Promise<Record<string, unknown> | null> {

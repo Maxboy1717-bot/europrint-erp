@@ -244,6 +244,48 @@ export class CashRegisterRepository implements ICashRegisterRepository {
     }
   }
 
+  /** POS-1: Sotuv va stock kamaytirish — bitta DB transaction ichida (atomik) */
+  async insertTransactionAtomic(
+    data: CreateTransactionInput,
+    items: { productId: string; quantity: number }[],
+    cashierId?: string,
+  ): Promise<Result<RetailTransaction>> {
+    try {
+      return safeCall(async () => {
+        return db.transaction(async (tx) => {
+          const now = _time.now();
+          const txNum = `TXN-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${createId().slice(0, 6).toUpperCase()}`;
+          const receiptNum = `REC-${txNum.slice(4)}`;
+          const rows = await tx.insert(retail_pos_transactions).values({
+            transaction_number: txNum,
+            receipt_number:     receiptNum,
+            cashier_id:         cashierId ?? data.cashierId ?? null,
+            customer_name:      data.customerName ?? null,
+            customer_id:        data.customerId ?? null,
+            items:              data.items,
+            subtotal:           String(data.subtotal),
+            discount_amount:    String(data.discountAmount ?? 0),
+            tax_rate:           String(data.taxRate ?? 12),
+            tax_amount:         String(data.taxAmount ?? 0),
+            total_amount:       String(data.totalAmount),
+            payment_method:     data.paymentMethod,
+            payment_details:    data.paymentDetails ?? {},
+            notes:              data.notes ?? null,
+            status:             'completed',
+          }).returning();
+          for (const item of items) {
+            await tx.update(retail_pos_products)
+              .set({ stock_quantity: sql`GREATEST(0, stock_quantity::numeric - ${item.quantity})` })
+              .where(eq(retail_pos_products.id, item.productId));
+          }
+          return rows[0];
+        });
+      });
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
   async decrementStock(productId: string, quantity: number): Promise<Result<void>> {
     try {
     return safeCall(async () => {

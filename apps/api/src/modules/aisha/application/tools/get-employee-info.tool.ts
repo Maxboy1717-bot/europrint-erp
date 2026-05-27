@@ -12,7 +12,7 @@
 // architectural rationale.
 
 import { Injectable } from '@nestjs/common';
-import { Result, Err, AppErr, safeCall } from '@common/result';
+import { Result, Ok, Err, AppErr } from '@common/result';
 import { sql } from 'drizzle-orm';
 import { db } from '@shared/db';
 import type { IAishaTool, ToolResult } from '../../domain/tool.interface';
@@ -41,14 +41,14 @@ export class GetEmployeeInfoTool implements IAishaTool {
     const q = String(input['employeeName'] ?? '');
     if (!q) return Err(AppErr('VALIDATION', 'employeeName majburiy'));
 
-    return safeCall<ToolResult<EmployeeInfo>>(async () => {
+    try {
       const start = Date.now();
       const emp = rowsOf<{ id: number; full_name: string; position: string }>(await db.execute(sql`
         SELECT id, full_name, position FROM hr_employees
         WHERE LOWER(full_name) LIKE LOWER('%' || ${q} || '%') OR id::text = ${q}
         LIMIT 1
       `))[0];
-      if (!emp) throw new Error(`Xodim topilmadi: ${q}`);
+      if (!emp) return Err(AppErr('NOT_FOUND', `Xodim topilmadi: ${q}`));
 
       const att = rowsOf<{ status: string; location: string | null }>(await db.execute(sql`
         SELECT status, location FROM hr_attendance
@@ -60,7 +60,7 @@ export class GetEmployeeInfoTool implements IAishaTool {
         WHERE employee_id = ${emp.id} ORDER BY period_end DESC LIMIT 1
       `))[0]?.score ?? null;
 
-      return provResult<EmployeeInfo>({
+      return Ok(provResult<EmployeeInfo>({
         data: {
           employeeId: emp.id, fullName: emp.full_name, position: emp.position,
           attendanceToday: att?.status ?? null, location: att?.location ?? null,
@@ -72,7 +72,10 @@ export class GetEmployeeInfoTool implements IAishaTool {
           provSource({ type: 'database', identifier: 'hr.kpi', startMs: start, rowCount: kpi === null ? 0 : 1 }),
         ],
         citations: [{ label: emp.full_name, url: `/hr/employees/${emp.id}` }],
-      });
-    });
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return Err(AppErr('EXTERNAL_SERVICE', msg));
+    }
   }
 }

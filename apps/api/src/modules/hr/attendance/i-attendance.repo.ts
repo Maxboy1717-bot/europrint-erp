@@ -13,7 +13,7 @@ export interface IAttendanceRepository {
   checkOut(userId: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   findEmployeeByEmbedding(vectorLiteral: string, threshold: number): Promise<Result<{ id: number | null; distance: number }>>;
   findAllWithEmbeddings(): Promise<{ id: number; face_embedding: number[] | null }[]>;
-  saveEmployeeFaceEmbedding(employeeId: number, embedding: number[], confidence: number, imageUrl?: string): Promise<{ id: number }>;
+  saveEmployeeFaceEmbedding(employeeId: number, embedding: number[], confidence: number, imageUrl?: string): Promise<Result<{ id: number }>>;
 }
 
 export const ATTENDANCE_REPO = 'IAttendanceRepository';

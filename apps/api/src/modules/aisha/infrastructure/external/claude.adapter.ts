@@ -130,17 +130,17 @@ export class ClaudeAdapter implements IClaudePort {
    */
   async sendOneShot(request: ClaudeRequest): Promise<Result<string>> {
     try {
-      const text = await withRetry<string>(async () => {
+      const result = await withRetry<Result<string>>(async () => {
         let acc = '';
         let streamError: string | null = null;
         for await (const ev of this.streamWithToolsRaw(request)) {
           if (ev.kind === 'text_delta') acc += ev.text;
           else if (ev.kind === 'error') streamError = ev.message;
         }
-        if (streamError) throw new Error(streamError);
-        return acc;
+        if (streamError !== null) return Err(AppErr('EXTERNAL_SERVICE', streamError));
+        return Ok(acc);
       });
-      return Ok(text);
+      return result;
     } catch (err) {
       const code = classifyRetryError(err);
       const msg = err instanceof Error ? err.message : String(err);

@@ -79,3 +79,31 @@ export function formatNumber(num: number | null | undefined): string {
   if (num === null || num === undefined) return "0";
   return new Intl.NumberFormat("uz-UZ").format(num);
 }
+
+// ────────────────────────────────────────────────────────────────
+// Compact display helpers — P3-4 canonical location.
+// Previously duplicated inside each module's helpers.tsx.
+// Use these instead of re-defining fmtNum / fmtMoney / fmtDate.
+// ────────────────────────────────────────────────────────────────
+
+/** Parse any value to a safe number; returns 0 for null/undefined/NaN. */
+export const fmtNum = (n: unknown): number => parseFloat(String(n || 0)) || 0;
+
+/**
+ * Compact UZS amount with K/M/B abbreviation.
+ * @example fmtMoney(1_500_000) // "1.5M UZS"
+ */
+export const fmtMoney = (n: unknown, currency = "UZS"): string => {
+  const v = fmtNum(n);
+  if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B ${currency}`;
+  if (v >= 1_000_000)     return `${(v / 1_000_000).toFixed(1)}M ${currency}`;
+  if (v >= 1_000)         return `${(v / 1_000).toFixed(0)}K ${currency}`;
+  return `${v.toLocaleString()} ${currency}`;
+};
+
+/**
+ * Compact date — "dd.mm.yyyy" or "—" for null/undefined.
+ * Identical to the fmtDate in most module helpers.tsx files.
+ */
+export const fmtDate = (d: string | Date | null | undefined): string =>
+  d ? new Date(d).toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";

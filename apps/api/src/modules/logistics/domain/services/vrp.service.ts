@@ -46,16 +46,19 @@ export class VrpService {
     depot: GeoPoint,
   ): number {
     if (!stops.length) return 0;
-    const pt = (id: string): GeoPoint => {
-      const d = deliveryMap.get(id);
-      if (!d) throw new Error(`VRP invariant: delivery ${id} not in deliveryMap`);
-      return d;
-    };
-    let d = this.distBetween(depot, pt(stops[0]));
+    const pt = (id: string): GeoPoint | null => deliveryMap.get(id) ?? null;
+    const p0 = pt(stops[0]);
+    if (!p0) return 999999;
+    let d = this.distBetween(depot, p0);
     for (let i = 0; i < stops.length - 1; i++) {
-      d += this.distBetween(pt(stops[i]), pt(stops[i + 1]));
+      const a = pt(stops[i]);
+      const b = pt(stops[i + 1]);
+      if (!a || !b) return 999999;
+      d += this.distBetween(a, b);
     }
-    d += this.distBetween(pt(stops[stops.length - 1]), depot);
+    const last = pt(stops[stops.length - 1]);
+    if (!last) return 999999;
+    d += this.distBetween(last, depot);
     return d;
   }
 

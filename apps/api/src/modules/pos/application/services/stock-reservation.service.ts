@@ -42,10 +42,10 @@ export class StockReservationService {
    */
 
   async reserve(dto: CreateReservationDto, reservedById: number): Promise<Result<object, AppError>> {
+    // Mavjud stock tekshiruv
+    const stockData = await this.stockReservationRepo.getAvailableStock(dto.materialCardId, dto.warehouseId);
+    if (!stockData.ok) return stockData;
     return safeCall(async () => {
-      // Mavjud stock tekshiruv
-      const stockData = await this.stockReservationRepo.getAvailableStock(dto.materialCardId, dto.warehouseId);
-      if (!stockData.ok) throw new Error(stockData.error.message);
       const onHand     = stockData.data.on_hand;
       const reserved   = stockData.data.already_reserved;
       const available  = onHand - reserved;

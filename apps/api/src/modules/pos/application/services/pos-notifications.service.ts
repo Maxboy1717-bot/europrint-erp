@@ -4,7 +4,7 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { Result, AppError, safeCall } from '@common/result';
+import { Ok, Err, Result, AppError, safeCall } from '@common/result';
 import { PosNotificationsRepository } from '../../infrastructure/repositories/pos-notifications.repository';
 import { broadcastPosEvent } from '../../presentation/pos.gateway';
 import { posNotifications } from '@workspace/db';
@@ -18,26 +18,21 @@ export class PosNotificationsService {
   constructor(private readonly repo: PosNotificationsRepository) {}
 
   async getForUser(userId: number): Promise<Result<PosNotif[], AppError>> {
-    return safeCall(async () => {
-      const r = await this.repo.getForUser(userId, 50);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data ?? [];
-    });
+    const r = await this.repo.getForUser(userId, 50);
+    if (!r.ok) return Err(r.error);
+    return Ok(r.data ?? []);
   }
 
   async markRead(id: number, userId: number): Promise<Result<PosNotif, AppError>> {
-    return safeCall(async () => {
-      const r = await this.repo.markRead(id, userId);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data;
-    });
+    const r = await this.repo.markRead(id, userId);
+    if (!r.ok) return Err(r.error);
+    return Ok(r.data);
   }
 
   async markAllRead(userId: number): Promise<Result<void, AppError>> {
-    return safeCall(async () => {
-      const r = await this.repo.markAllRead(userId);
-      if (!r.ok) throw new Error(r.error.message);
-    });
+    const r = await this.repo.markAllRead(userId);
+    if (!r.ok) return Err(r.error);
+    return Ok();
   }
 
   async sendNotification(
@@ -49,20 +44,18 @@ export class PosNotificationsService {
     entityId?: number,
     metadata?: object,
   ): Promise<Result<PosNotif, AppError>> {
-    return safeCall(async () => {
-      const r = await this.repo.insert({
-        userId,
-        notificationType: type,
-        title,
-        body,
-        entityType,
-        entityId,
-        metadata: metadata ?? {},
-      });
-      if (!r.ok) throw new Error(r.error.message);
-      this.logger.log(`[NOTIF] Sent ${type} to user ${userId}`);
-      return r.data;
+    const r = await this.repo.insert({
+      userId,
+      notificationType: type,
+      title,
+      body,
+      entityType,
+      entityId,
+      metadata: metadata ?? {},
     });
+    if (!r.ok) return Err(r.error);
+    this.logger.log(`[NOTIF] Sent ${type} to user ${userId}`);
+    return Ok(r.data);
   }
 
   /**

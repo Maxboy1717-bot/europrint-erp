@@ -9,6 +9,7 @@ import { posMaterialRequests, posMaterialRequestLines } from '@workspace/db';
 import { db } from '@shared/db';
 import { eq } from 'drizzle-orm';
 import { TashkentTimeService } from '@common/time';
+import { Result, Ok, Err } from '@common/result';
 import type { PosEmployeeBalanceRepository } from '../../../infrastructure/repositories/pos-employee-balance.repository';
 
 const _time = new TashkentTimeService();
@@ -54,13 +55,15 @@ export async function reserveStock(
   warehouseId: string,
   balanceRepo: PosEmployeeBalanceRepository,
   logger: Logger,
-): Promise<void> {
+): Promise<Result<void>> {
   const lines = await fetchLines(requestId);
   for (const line of lines) {
     const qty = Number(line.approvedQty ?? line.requestedQty);
-    await balanceRepo.reserveStock(warehouseId, Number(line.materialCardId), qty);
+    const r = await balanceRepo.reserveStock(warehouseId, Number(line.materialCardId), qty);
+    if (!r.ok) return Err(r.error);
   }
   logger.debug(`Stock reserved for request ${requestId} in warehouse ${warehouseId}`);
+  return Ok();
 }
 
 export async function releaseReservedStock(
@@ -68,21 +71,25 @@ export async function releaseReservedStock(
   warehouseId: string,
   balanceRepo: PosEmployeeBalanceRepository,
   logger: Logger,
-): Promise<void> {
+): Promise<Result<void>> {
   const lines = await fetchLines(requestId);
   for (const line of lines) {
     const qty = Number(line.approvedQty ?? line.requestedQty);
-    await balanceRepo.releaseStock(warehouseId, Number(line.materialCardId), qty);
+    const r = await balanceRepo.releaseStock(warehouseId, Number(line.materialCardId), qty);
+    if (!r.ok) return Err(r.error);
   }
   logger.debug(`Stock reservation released for request ${requestId}`);
+  return Ok();
 }
 
 export async function validateBarcodes(
   barcodes: string[],
   balanceRepo: PosEmployeeBalanceRepository,
-): Promise<void> {
+): Promise<Result<void>> {
   for (const barcode of barcodes) {
-    const exists = await balanceRepo.barcodeExists(barcode);
-    if (!exists) throw new BadRequestException(`Barcode topilmadi: ${barcode}`);
+    const r = await balanceRepo.barcodeExists(barcode);
+    if (!r.ok) return Err(r.error);
+    if (!r.data) return Err({ code: 'BAD_REQUEST', message: `Barcode topilmadi: ${barcode}` });
   }
+  return Ok();
 }

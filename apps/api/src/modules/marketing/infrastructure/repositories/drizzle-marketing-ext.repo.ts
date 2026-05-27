@@ -8,7 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { and, eq, desc, isNull, sql } from 'drizzle-orm';
 import { db } from '@shared/db';
-import { safeCall, Result } from '@common/result';
+import { safeCall, Result, Err } from '@common/result';
 import {
   marketingContentPosts, marketingSocialAccounts,
   marketingSocialPosts, marketingEmailTemplates,
@@ -64,7 +64,7 @@ export class DrizzleMarketingExtRepository {
         postType: String(data.postType ?? 'blog'),
         authorId: data.authorId ? Number(data.authorId) : null,
       }).returning();
-      if (!row) throw new Error('Post yaratishda xato: natija qaytmadi');
+      if (!row) return Err('Post yaratishda xato: natija qaytmadi');
       return row;
     });
   }
@@ -120,7 +120,7 @@ export class DrizzleMarketingExtRepository {
       const [row] = await db.insert(marketingSocialAccounts)
         .values({ platform: String(data.platform ?? ''), accountName: String(data.accountName ?? '') })
         .returning();
-      if (!row) throw new Error('Ijtimoiy tarmoq akkaunt yaratishda xato: natija qaytmadi');
+      if (!row) return Err('Ijtimoiy tarmoq akkaunt yaratishda xato: natija qaytmadi');
       return row;
     });
   }
@@ -144,7 +144,7 @@ export class DrizzleMarketingExtRepository {
       const [row] = await db.insert(marketingSocialPosts)
         .values({ content: String(data.content ?? ''), platform: String(data.platform ?? 'instagram'), accountId: data.accountId as string })
         .returning();
-      if (!row) throw new Error('Ijtimoiy post yaratishda xato: natija qaytmadi');
+      if (!row) return Err('Ijtimoiy post yaratishda xato: natija qaytmadi');
       return row;
     });
   }
@@ -172,7 +172,7 @@ export class DrizzleMarketingExtRepository {
       const [row] = await db.insert(marketingEmailTemplates)
         .values({ name: String(data.name ?? ''), subject: String(data.subject ?? ''), body: String(data.body ?? '') })
         .returning();
-      if (!row) throw new Error('Email shablon yaratishda xato: natija qaytmadi');
+      if (!row) return Err('Email shablon yaratishda xato: natija qaytmadi');
       return row;
     });
   }

@@ -8,7 +8,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventBus } from '@nestjs/cqrs';
-import { Result, AppError, safeCall } from '@common/result';
+import { Ok, Err, Result, AppError, AppErr } from '@common/result';
 import { StockLedgerRepository } from '../../infrastructure/repositories/stock-ledger.repository';
 import { movementConfirmations, posStockLedger as stockLedger, stockAlerts } from '@workspace/db';
 import { StockUpdatedEvent } from '@modules/wms/application/events/stock-updated.event';
@@ -39,7 +39,7 @@ export class StockLedgerService {
     reason?: string,
     batchId?: number,
   ): Promise<Result<LedgerRow, AppError>> {
-    return safeCall(async () => {
+    try {
       const balanceR = await this.repo.getBalance(materialCardId, warehouseId);
       const prevBalance = balanceR.ok && balanceR.data ? balanceR.data.balance : 0;
       const balanceAfter = prevBalance + qtyChange;
@@ -54,7 +54,7 @@ export class StockLedgerService {
         reason,
         ts: new Date(),
       });
-      if (!entryR.ok) throw new Error(entryR.error.message);
+      if (!entryR.ok) return Err(entryR.error);
       const entry = entryR.data;
 
       if (balanceAfter <= MIN_LOW_STOCK_THRESHOLD && balanceAfter > 0) {
@@ -80,32 +80,44 @@ export class StockLedgerService {
       // @OnEvent(ERP_EVENTS.STOCK_UPDATED) listeners (e.g. wms ROP trigger).
       this.eventBus.publish(new StockUpdatedEvent(materialCardId, balanceAfter));
 
-      return entry;
-    });
+      return Ok(entry);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   async getBalance(materialCardId: number, warehouseId: string): Promise<Result<number, AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.getBalance(materialCardId, warehouseId);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data ? r.data.balance : 0;
-    });
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data ? r.data.balance : 0);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   async getAllSummary(): Promise<Result<{ materialCardId: number; warehouseId: string; balance: number }[], AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.getAllStockSummary();
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data ?? [];
-    });
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data ?? []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   async getLowAlerts(): Promise<Result<AlertRow[], AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.getUnresolvedAlerts(undefined, ['LOW_STOCK', 'OUT_OF_STOCK']);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data ?? [];
-    });
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data ?? []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   @Cron('0 * * * *', { timeZone: 'Asia/Tashkent' })
@@ -129,11 +141,14 @@ export class StockLedgerService {
   }
 
   async getExpiryAlerts(daysAhead: number = 7): Promise<Result<{ materialCardId: number; warehouseId: string; balance: number }[], AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.getExpiryAlerts(daysAhead);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data ?? [];
-    });
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data ?? []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   async adjustStock(
@@ -142,23 +157,29 @@ export class StockLedgerService {
     newQty: number,
     adjustedBy: number,
   ): Promise<Result<LedgerRow, AppError>> {
-    return safeCall(async () => {
+    try {
       const balanceR = await this.repo.getBalance(materialCardId, warehouseId);
       const current = balanceR.ok && balanceR.data ? balanceR.data.balance : 0;
       const delta = newQty - current;
       this.logger.log(`[STOCK] Adjust: mat=${materialCardId} wh=${warehouseId} delta=${delta} by=${adjustedBy}`);
       const r = await this.recordEntry(materialCardId, warehouseId, delta, 0, `Manual adjustment by ${adjustedBy}`);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data;
-    });
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   async getConfirmations(movementId: number): Promise<Result<ConfirmRow[], AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.getMovementConfirmations(movementId);
-      if (!r.ok) throw new Error(r.error.message ?? String(r.error));
-      return r.data ?? [];
-    });
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data ?? []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   /**
@@ -174,7 +195,7 @@ export class StockLedgerService {
     comment?: string,
     ip?: string,
   ): Promise<Result<ConfirmRow, AppError>> {
-    return safeCall(async () => {
+    try {
       const signedAt = new Date();
       const signaturePayload = `${userId}:${movementId}:${decision}:${signedAt.toISOString()}`;
       const signatureHash = createHash('sha256').update(signaturePayload).digest('hex');
@@ -189,9 +210,12 @@ export class StockLedgerService {
         signatureHash,
         ip,
       });
-      if (!r.ok) throw new Error(r.error.message);
+      if (!r.ok) return Err(r.error);
       this.logger.log(`[CONFIRM] movement=${movementId} step=${step} decision=${decision} user=${userId} hash=${signatureHash.slice(0, 12)}...`);
-      return r.data;
-    });
+      return Ok(r.data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 }

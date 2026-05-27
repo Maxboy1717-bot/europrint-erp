@@ -15,15 +15,20 @@ import type { IAishaTool, ToolDefinition } from '../../domain/tool.interface';
 export class ToolRegistry {
   private readonly tools = new Map<string, IAishaTool>();
 
-  register(tool: IAishaTool): void {
+  register(tool: IAishaTool): Result<void> {
     if (this.tools.has(tool.definition.name)) {
-      throw new Error(`ToolRegistry: duplicate tool "${tool.definition.name}"`);
+      return Err(AppErr('CONFLICT', `ToolRegistry: duplicate tool "${tool.definition.name}"`));
     }
     this.tools.set(tool.definition.name, tool);
+    return Ok();
   }
 
-  registerAll(tools: IAishaTool[]): void {
-    for (const t of tools) this.register(t);
+  registerAll(tools: IAishaTool[]): Result<void> {
+    for (const t of tools) {
+      const r = this.register(t);
+      if (!r.ok) return r;
+    }
+    return Ok();
   }
 
   getDefinitions(): ToolDefinition[] {

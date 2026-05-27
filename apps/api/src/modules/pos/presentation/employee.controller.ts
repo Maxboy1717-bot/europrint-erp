@@ -199,7 +199,7 @@ export class EmployeeController {
   @RequirePermission('pos.employee.read_own')
   @ApiOperation({ summary: 'Xodim chiqish cheklovi — qaytarish kerak bo\'lgan materiallar' })
   async getMyChecklist(@CurrentUser() user: AuthenticatedUser) {
-    return this.employeeBalanceSvc.getHRChecklist(user.id);
+    return unwrapOrInternal(await this.employeeBalanceSvc.getHRChecklist(user.id));
   }
 
   // ─── Material qaytarish so'rovi ───────────────────────────────────────────

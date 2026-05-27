@@ -5,7 +5,7 @@
 
 import { safeNum } from '@common/math';
 import { Inject, Injectable } from '@nestjs/common';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Result, AppError, Err, Ok } from '@common/result';
 import { WMS_EXTENDED_REPO, type IWmsExtendedRepo } from '../domain/repositories/i-wms-extended.repo';
 
 @Injectable()
@@ -37,21 +37,19 @@ export class WmsExtendedService {
     return this.repo.getAlerts(wid, type);
   }
 
-  async checkAlerts() {
-    return safeCall(async () => {
-      const itemsResult = await this.repo.getLowStockItems();
-      if (!itemsResult.ok) throw new Error(itemsResult.error.message);
-      const items = (itemsResult.data as Record<string, unknown>[]);
-      const batchResult = await this.repo.batchInsertLowStockAlerts(
-        (Array.isArray(items) ? items : []).map((i) => ({
-          material_id: safeNum(i['material_id']),
-          warehouse_id: safeNum(i['warehouse_id']),
-          material_name: String(i['material_name'] ?? ''),
-        })),
-      );
-      if (!batchResult.ok) throw new Error(batchResult.error?.message ?? 'Low stock batch insert xatosi');
-      return { alerts_checked: items.length, new_alerts: batchResult.data.inserted };
-    });
+  async checkAlerts(): Promise<Result<{ alerts_checked: number; new_alerts: unknown }, AppError>> {
+    const itemsResult = await this.repo.getLowStockItems();
+    if (!itemsResult.ok) return Err(itemsResult.error);
+    const items = (itemsResult.data as Record<string, unknown>[]);
+    const batchResult = await this.repo.batchInsertLowStockAlerts(
+      (Array.isArray(items) ? items : []).map((i) => ({
+        material_id: safeNum(i['material_id']),
+        warehouse_id: safeNum(i['warehouse_id']),
+        material_name: String(i['material_name'] ?? ''),
+      })),
+    );
+    if (!batchResult.ok) return Err(batchResult.error ?? { code: 'INTERNAL' as const, message: 'Low stock batch insert xatosi' });
+    return Ok({ alerts_checked: items.length, new_alerts: (batchResult.data as Record<string, unknown>)['inserted'] });
   }
 
   async getReplenishmentSuggestions(wid: number | null) {

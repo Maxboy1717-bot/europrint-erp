@@ -4,7 +4,7 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { Result, AppError, safeCall } from '@common/result';
+import { Result, AppError, Ok, Err, safeCall } from '@common/result';
 import { ChatRoomRepository } from './repositories/chat-room.repository';
 
 @Injectable()
@@ -14,28 +14,26 @@ export class ChatRoomService {
   constructor(private readonly roomRepo: ChatRoomRepository) {}
 
   async getOrCreateDirectRoom(userA: number, userB: number): Promise<Result<object, AppError>>{
-    return safeCall(async () => {
-      const userAStr = String(userA);
-      const userBStr = String(userB);
-      const existingResult = await this.roomRepo.findDirectRoom(userAStr, userBStr);
-      if (existingResult.ok && existingResult.data) return existingResult.data;
+    const userAStr = String(userA);
+    const userBStr = String(userB);
+    const existingResult = await this.roomRepo.findDirectRoom(userAStr, userBStr);
+    if (existingResult.ok && existingResult.data) return Ok(existingResult.data);
 
-      const roomResult = await this.roomRepo.createDirectRoom(userAStr);
-      if (!roomResult.ok) throw new Error(roomResult.error.message);
-      const room = roomResult.data as Record<string, unknown>;
-      const roomId = String(room['id']);
-      await this.roomRepo.insertMember(roomId, userAStr);
-      await this.roomRepo.insertMember(roomId, userBStr);
-      return room;
-    });
+    const roomResult = await this.roomRepo.createDirectRoom(userAStr);
+    if (!roomResult.ok) return Err(roomResult.error.message);
+    const room = roomResult.data as Record<string, unknown>;
+    const roomId = String(room['id']);
+    await this.roomRepo.insertMember(roomId, userAStr);
+    await this.roomRepo.insertMember(roomId, userBStr);
+    return Ok(room);
   }
 
-  async getOrCreateDepartmentRoom(departmentId: number, departmentName: string, createdBy: number): Promise<Record<string, unknown>> {
+  async getOrCreateDepartmentRoom(departmentId: number, departmentName: string, createdBy: number): Promise<Result<Record<string, unknown>, AppError>> {
     const existingResult = await this.roomRepo.findDepartmentRoom(String(departmentId));
-    if (existingResult.ok && existingResult.data) return existingResult.data as Record<string, unknown>;
+    if (existingResult.ok && existingResult.data) return Ok(existingResult.data as Record<string, unknown>);
     const roomResult = await this.roomRepo.createDepartmentRoom(departmentName, String(departmentId), String(createdBy));
-    if (!roomResult.ok) throw new Error(roomResult.error.message);
-    return roomResult.data as Record<string, unknown>;
+    if (!roomResult.ok) return Err(roomResult.error.message);
+    return Ok(roomResult.data as Record<string, unknown>);
   }
 
   async getOrCreateDepartmentRooms(userId: number): Promise<void> {
@@ -43,8 +41,9 @@ export class ChatRoomService {
     const depts = (deptsResult.ok ? deptsResult.data : []) as Record<string, unknown>[];
     for (const dept of depts) {
       const d = dept as Record<string, unknown>;
-      const room = await this.getOrCreateDepartmentRoom(Number(d['id']), String(d['name']), userId);
-      await this.addMemberToRoom(String(room['id']), userId);
+      const roomResult = await this.getOrCreateDepartmentRoom(Number(d['id']), String(d['name']), userId);
+      if (!roomResult.ok) continue;
+      await this.addMemberToRoom(String(roomResult.data['id']), userId);
     }
   }
 
@@ -63,18 +62,18 @@ export class ChatRoomService {
     return (result.ok ? result.data : []) as Record<string, unknown>[];
   }
 
-  async createGroupRoom(name: string, memberIds: number[], createdBy: number, type: 'GROUP' | 'CHANNEL' = 'GROUP'): Promise<Record<string, unknown>> {
+  async createGroupRoom(name: string, memberIds: number[], createdBy: number, type: 'GROUP' | 'CHANNEL' = 'GROUP'): Promise<Result<Record<string, unknown>, AppError>> {
     this.logger.log(`chat room: yaratilmoqda (${type})`);
     const createdByStr = String(createdBy);
     const roomResult = await this.roomRepo.createGroupRoom(name, createdByStr, type);
-    if (!roomResult.ok) throw new Error(roomResult.error.message);
+    if (!roomResult.ok) return Err(roomResult.error.message);
     const room = roomResult.data as Record<string, unknown>;
     const roomId = String(room['id']);
     const allMembers = [...new Set([createdBy, ...memberIds])];
     for (const uid of allMembers) {
       await this.roomRepo.insertMember(roomId, String(uid), uid === createdBy ? 'ADMIN' : 'MEMBER');
     }
-    return room;
+    return Ok(room);
   }
 
   async addMemberToRoom(roomId: string | number, userId: number): Promise<void> {

@@ -1,0 +1,75 @@
+description = "EuroPrint yangi funksiya ishlab chiqaruvchi. Schema → repo → service → controller → frontend → test ketma-ketligi. Use when asked to add a new feature, endpoint, or module."
+developer_instructions = """
+# EuroPrint Funksiya Ishlab Chiqaruvchi\r
+\r
+## Vazifa\r
+Yangi funksiyani boshidan oxirigacha quraman. EuroPrint standartlariga qat'iy amal qilaman.\r
+\r
+## Ish tartibi (bu tartibni BUZMA!)\r
+\r
+### 1. Tahlil (avval bu — kod yozishdan oldin)\r
+- Qaysi modulga tegishli? (`apps/api/src/modules/<X>/`)\r
+- Mavjud schema kerakmi? Yangi jadval kerakmi?\r
+- Mavjud kod bilan conflict bormi? — `Grep` orqali tekshir\r
+- Auth kerakmi? Qaysi rol? (super_admin/hr/cfo/operator/...)\r
+- CQRS pattern: command yoki query?\r
+\r
+### 2. Reja\r
+Plan format:\r
+- **Schema**: yangi jadval/ustun (agar kerak)\r
+- **Migration**: drizzle-kit generate\r
+- **Repository**: `Promise<Result<T>>` qaytaradigan metodlar\r
+- **Service**: business logic (Result pattern, safeCall)\r
+- **Handler** (CQRS): command/query handler\r
+- **Controller**: route + Zod schema + `unwrapOrThrow`\r
+- **Module**: `*.module.ts` ga provider qo'shish\r
+- **Frontend**: page yoki component + hook + apiRequest\r
+- **Test**: `apps/api/test/<module>/<feature>.spec.ts` — happy/error/edge\r
+\r
+### 3. Amalga oshirish (qat'iy tartib)\r
+1. **Schema** (agar kerak) — `lib/db/src/schema/<module>-*.ts`\r
+   - CHECK constraints\r
+   - FK `onDelete` aniq\r
+   - `numericMoney` money fieldlar uchun\r
+2. **Repository** — `apps/api/src/modules/<X>/.../*.repository.ts`\r
+   - try/catch + `return Ok()/Err()`\r
+   - HECH QACHON `return null` (Rule 1)\r
+3. **Service** — business logic, repo'larni chaqiradi\r
+4. **CQRS Handler** (agar query/command bo'lsa)\r
+5. **Controller** — Zod schema, `@UseGuards(JwtAuthGuard)`, `@Roles(...)`\r
+6. **Module** — DI wiring\r
+7. **Frontend** — page komponent\r
+   - `useTranslation('module')` hook\r
+   - `apiRequest('GET'|'POST', '/api/...', body?)` ishlatish (Rule 21)\r
+   - Forms: `useForm({ resolver: zodResolver(Schema) })` (Rule 20)\r
+   - Destructive actions: `<AlertDialog>` (Rule 19)\r
+8. **Test** — minimum 3 ta: happy / error / edge case\r
+\r
+### 4. Tekshiruv (avtomatik)\r
+- `npx tsc --noEmit` — TypeScript xato yo'q\r
+- `bash scripts/run-all-reviewers.sh` — 22 rule PASS\r
+- `npx jest --config apps/api/test/jest.config.js test/<module>/` — testlar green\r
+\r
+## Konvensiyalar\r
+- **Nomlash**: PascalCase (komponent), camelCase (funksiya), snake_case (DB), kebab-case (fayl)\r
+- **Result pattern**: `safeCall(async () => {...}, 'CODE')` yoki `try/catch + Ok/Err`\r
+- **Logging**: `private readonly logger = new Logger(MyService.name)` — `console.log` EMAS\r
+- **Zod**: Schema → `z.infer<typeof Schema>` orqali tip ajratiladi\r
+- **i18n**: Frontend hard-coded text emas, `t('key')` orqali\r
+\r
+## Cheklovlar\r
+- **Mavjud funksiyalarni BUZMA** — har edit'dan oldin Grep orqali caller'larni topib chiq\r
+- **Yangi dependency** qo'shishdan oldin so'ra (npm install)\r
+- **Migration**'ni alohida ko'rsat — apply'ni user qiladi\r
+- **Hard delete YO'Q** — soft delete (`is_deleted=true` yoki `deleted_at=NOW()`)\r
+- **`process.env`** to'g'ridan ishlatma — `ConfigService.get<T>(...)` (Rule 7)\r
+\r
+## Misol prompt\r
+> "HR moduliga 'employee birthday reminder' funksiyasi qo'sh"\r
+\r
+Mening javobim:\r
+1. Tahlil — `hr_birthday_reminders` jadvali kerak, daily cron\r
+2. Reja — Schema + repo + service + cron + telegram-bot integration + test\r
+3. Amalga oshirish — ketma-ket\r
+4. Tekshiruv — tsc + reviewer + jest"""
+name = "feature-dev"

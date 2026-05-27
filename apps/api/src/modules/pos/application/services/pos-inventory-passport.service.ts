@@ -4,7 +4,7 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { safeCall, Result, AppError } from '@common/result';
+import { Ok, Err, Result, AppError } from '@common/result';
 import { PosInventoryPassportRepository, CreatePassportDto, PassportRow } from '../../infrastructure/repositories/pos-inventory-passport.repository';
 import { PosAuditService } from './pos-audit.service';
 import { PosTelegramService } from './pos-telegram.service';
@@ -20,54 +20,44 @@ export class PosInventoryPassportService {
   ) {}
 
   async createPassport(dto: CreatePassportDto, userId: number): Promise<Result<PassportRow, AppError>> {
-    return safeCall(async () => {
-      const r = await this.repo.create(dto);
-      if (!r.ok) throw new Error(r.error.message);
-      await this.audit.log({
-        userId, action: 'pos.passport.created', entityType: 'pos_inventory_passport',
-        entityId: r.data.id, newValue: dto as unknown as Record<string, unknown>,
-      });
-      return r.data;
+    const r = await this.repo.create(dto);
+    if (!r.ok) return Err(r.error);
+    await this.audit.log({
+      userId, action: 'pos.passport.created', entityType: 'pos_inventory_passport',
+      entityId: r.data.id, newValue: dto as unknown as Record<string, unknown>,
     });
+    return Ok(r.data);
   }
 
   async getPassport(movementId: number): Promise<Result<PassportRow | null, AppError>> {
-    return safeCall(async () => {
-      const r = await this.repo.findByMovement(movementId);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data;
-    });
+    const r = await this.repo.findByMovement(movementId);
+    if (!r.ok) return Err(r.error);
+    return Ok(r.data);
   }
 
   async listPassports(opts: { fromDate?: string; toDate?: string; qcResult?: string; limit?: number; offset?: number }): Promise<Result<{ rows: PassportRow[]; total: number }, AppError>> {
-    return safeCall(async () => {
-      const r = await this.repo.findAll(opts);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data;
-    });
+    const r = await this.repo.findAll(opts);
+    if (!r.ok) return Err(r.error);
+    return Ok(r.data);
   }
 
   async recordQcDecision(movementId: number, qcResult: 'QABUL' | 'REWORK' | 'CHIQARISH', qcNote: string | undefined, userId: number): Promise<Result<PassportRow, AppError>> {
-    return safeCall(async () => {
-      const r = await this.repo.updateQcResult(movementId, qcResult, qcNote);
-      if (!r.ok) throw new Error(r.error.message);
-      if (qcResult === 'REWORK' || qcResult === 'CHIQARISH') {
-        await this.telegram.sendAlert({ title: `QC: ${qcResult}`, body: `Harakat #${movementId} — ${qcResult}. ${qcNote ?? ''}`, severity: 'warning' }).catch(() => null);
-      }
-      await this.audit.log({
-        userId, action: 'pos.passport.qc_decision', entityType: 'pos_inventory_passport',
-        entityId: r.data.id, newValue: { qcResult, qcNote },
-      });
-      return r.data;
+    const r = await this.repo.updateQcResult(movementId, qcResult, qcNote);
+    if (!r.ok) return Err(r.error);
+    if (qcResult === 'REWORK' || qcResult === 'CHIQARISH') {
+      await this.telegram.sendAlert({ title: `QC: ${qcResult}`, body: `Harakat #${movementId} — ${qcResult}. ${qcNote ?? ''}`, severity: 'warning' }).catch(() => null);
+    }
+    await this.audit.log({
+      userId, action: 'pos.passport.qc_decision', entityType: 'pos_inventory_passport',
+      entityId: r.data.id, newValue: { qcResult, qcNote },
     });
+    return Ok(r.data);
   }
 
   async getQuarantineList(): Promise<Result<PassportRow[], AppError>> {
-    return safeCall(async () => {
-      const r = await this.repo.getQuarantineList();
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data;
-    });
+    const r = await this.repo.getQuarantineList();
+    if (!r.ok) return Err(r.error);
+    return Ok(r.data);
   }
 
   async checkExpiredQuarantine(): Promise<void> {

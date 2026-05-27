@@ -35,6 +35,12 @@ export interface ICashRegisterRepository {
   findTransactions(): Promise<Result<RetailTransaction[]>>;
   findTransactionById(id: string): Promise<Result<RetailTransaction | null>>;
   insertTransaction(data: CreateTransactionInput, cashierId?: string): Promise<Result<RetailTransaction>>;
+  /** POS-1: Sotuv va stock kamaytirish bitta atomik DB transaction ichida */
+  insertTransactionAtomic(
+    data: CreateTransactionInput,
+    items: { productId: string; quantity: number }[],
+    cashierId?: string,
+  ): Promise<Result<RetailTransaction>>;
   refundTransaction(id: string, refundedBy?: string): Promise<Result<RetailTransaction>>;
   getDashboard(): Promise<Result<CashRegisterDashboard>>;
   decrementStock(productId: string, quantity: number): Promise<Result<void>>;

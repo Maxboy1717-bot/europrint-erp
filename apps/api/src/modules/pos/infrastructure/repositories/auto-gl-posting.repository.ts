@@ -21,6 +21,7 @@ import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { typedExecute } from '@shared/db/typed-execute';
+import { safeCall, Result } from '@common/result';
 
 interface GlPostingInsert {
   movementId:    number;
@@ -69,8 +70,8 @@ export class AutoGlPostingRepository {
     return rows[0]?.cnt ?? 0;
   }
 
-  async insertPosting(entry: GlPostingInsert): Promise<void> {
-    try {
+  async insertPosting(entry: GlPostingInsert): Promise<Result<void>> {
+    return safeCall(async () => {
       await db.execute(sql`
         INSERT INTO pos_gl_postings
           (movement_id, debit_account, credit_account, amount, currency,
@@ -80,9 +81,7 @@ export class AutoGlPostingRepository {
            ${entry.currency}, ${entry.exchangeRate}, ${entry.amountBase},
            ${entry.description}, 'AI', CURRENT_DATE, NOW())
       `);
-    } catch (e) {
-      throw new Error(`auto_gl_posting.insertPosting: ${String(e)}`);
-    }
+    }, 'DB_ERROR');
   }
 
   async listForMovement(movementId: number): Promise<unknown[]> {

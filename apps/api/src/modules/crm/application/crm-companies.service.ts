@@ -3,8 +3,8 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
-import { safeCall, Result, AppError } from '@common/result';
+import { Injectable, Inject } from '@nestjs/common';
+import { Result, AppError, Err, AppErr } from '@common/result';
 import { CRM_COMPANIES_REPO, type ICrmCompaniesRepo } from '../domain/repositories/i-crm-companies.repo';
 
 @Injectable()
@@ -16,14 +16,10 @@ export class CrmCompaniesService {
   }
 
   async getCompany(cid: number) {
-    return safeCall(async () => {
-      const rowResult = await this.repo.getCompany(cid);
-
-      if (!rowResult.ok) throw new Error(rowResult.error.message);
-      if (!rowResult.data) throw new NotFoundException(`Kompaniya #${cid} topilmadi`);
-
-      return rowResult.data;
-    });
+    const rowResult = await this.repo.getCompany(cid);
+    if (!rowResult.ok) return rowResult;
+    if (!rowResult.data) return Err(AppErr('NOT_FOUND', `Kompaniya #${cid} topilmadi`));
+    return rowResult;
   }
 
   async getCompanyContacts(cid: number) {
@@ -35,14 +31,10 @@ export class CrmCompaniesService {
   }
 
   async getCompanyCredit(cid: number) {
-    return safeCall(async () => {
-      const rowResult = await this.repo.getCompanyCredit(cid);
-
-      if (!rowResult.ok) throw new Error(rowResult.error.message);
-      if (!rowResult.data) throw new NotFoundException(`Kompaniya #${cid} topilmadi`);
-
-      return rowResult.data;
-    });
+    const rowResult = await this.repo.getCompanyCredit(cid);
+    if (!rowResult.ok) return rowResult;
+    if (!rowResult.data) return Err(AppErr('NOT_FOUND', `Kompaniya #${cid} topilmadi`));
+    return rowResult;
   }
 
   async checkDuplicates(name?: string, inn?: string) {
@@ -54,25 +46,17 @@ export class CrmCompaniesService {
   }
 
   async updateCompany(cid: number, body: Record<string, unknown>) {
-    return safeCall(async () => {
-      const rowResult = await this.repo.updateCompany(cid, body);
-
-      if (!rowResult.ok) throw new Error(rowResult.error.message);
-      if (!rowResult.data) throw new NotFoundException(`Kompaniya #${cid} topilmadi`);
-
-      return rowResult.data;
-    });
+    const rowResult = await this.repo.updateCompany(cid, body);
+    if (!rowResult.ok) return rowResult;
+    if (!rowResult.data) return Err(AppErr('NOT_FOUND', `Kompaniya #${cid} topilmadi`));
+    return rowResult;
   }
 
   async updateCreditLimit(cid: number, credit_limit: number) {
-    return safeCall(async () => {
-      const rowResult = await this.repo.updateCreditLimit(cid, credit_limit);
-
-      if (!rowResult.ok) throw new Error(rowResult.error.message);
-      if (!rowResult.data) throw new NotFoundException(`Kompaniya #${cid} topilmadi`);
-
-      return rowResult.data;
-    });
+    const rowResult = await this.repo.updateCreditLimit(cid, credit_limit);
+    if (!rowResult.ok) return rowResult;
+    if (!rowResult.data) return Err(AppErr('NOT_FOUND', `Kompaniya #${cid} topilmadi`));
+    return rowResult;
   }
 
   async listLeadStages() {
@@ -80,14 +64,10 @@ export class CrmCompaniesService {
   }
 
   async getLeadStage(sid: number) {
-    return safeCall(async () => {
-      const rowResult = await this.repo.getLeadStage(sid);
-
-      if (!rowResult.ok) throw new Error(rowResult.error.message);
-      if (!rowResult.data) throw new NotFoundException(`Lead stage #${sid} topilmadi`);
-
-      return rowResult.data;
-    });
+    const rowResult = await this.repo.getLeadStage(sid);
+    if (!rowResult.ok) return rowResult;
+    if (!rowResult.data) return Err(AppErr('NOT_FOUND', `Lead stage #${sid} topilmadi`));
+    return rowResult;
   }
 
   async createLeadStage(name: string, color?: string, sort_order?: number) {
@@ -95,14 +75,10 @@ export class CrmCompaniesService {
   }
 
   async updateLeadStage(sid: number, body: Record<string, unknown>) {
-    return safeCall(async () => {
-      const rowResult = await this.repo.updateLeadStage(sid, body);
-
-      if (!rowResult.ok) throw new Error(rowResult.error.message);
-      if (!rowResult.data) throw new NotFoundException(`Lead stage #${sid} topilmadi`);
-
-      return rowResult.data;
-    });
+    const rowResult = await this.repo.updateLeadStage(sid, body);
+    if (!rowResult.ok) return rowResult;
+    if (!rowResult.data) return Err(AppErr('NOT_FOUND', `Lead stage #${sid} topilmadi`));
+    return rowResult;
   }
 
   async deleteCompany(cid: number) {

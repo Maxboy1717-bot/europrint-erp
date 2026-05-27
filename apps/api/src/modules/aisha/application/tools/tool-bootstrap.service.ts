@@ -75,20 +75,20 @@ export class AishaToolBootstrap implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    try {
-      this.registry.registerAll([
-        this.t01, this.t02, this.t03, this.t04, this.t05,
-        this.t06, this.t07, this.t08, this.t09, this.t10,
-        this.t11, this.t12, this.t13, this.t14, this.t15,
-        this.t16, this.t17, this.t18, this.t19, this.t20,
-        this.t21, this.t22, this.t23, this.t24, this.t25,
-      ]);
-      this.logger.log(`Registered ${this.registry.size()} AIsha tools`);
-    } catch (err) {
+    const r = this.registry.registerAll([
+      this.t01, this.t02, this.t03, this.t04, this.t05,
+      this.t06, this.t07, this.t08, this.t09, this.t10,
+      this.t11, this.t12, this.t13, this.t14, this.t15,
+      this.t16, this.t17, this.t18, this.t19, this.t20,
+      this.t21, this.t22, this.t23, this.t24, this.t25,
+    ]);
+    if (!r.ok) {
       this.logger.error(
-        { error: (err as Error).message },
+        { error: r.error.message },
         'AIsha tool registration failed — chat will fall back to no-tools mode',
       );
+      return;
     }
+    this.logger.log(`Registered ${this.registry.size()} AIsha tools`);
   }
 }

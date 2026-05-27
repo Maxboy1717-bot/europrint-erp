@@ -14,6 +14,7 @@ import { DB_CONSTRAINTS } from './invariants/constraints-data';
 import { SCHEMA_MIGRATIONS } from './invariants/migrations-schema';
 import { TRIGGER_MIGRATIONS } from './invariants/migrations-triggers';
 import { CRM_MIGRATIONS } from './invariants/migrations-crm';
+import { DRIFT_MIGRATIONS } from './invariants/migrations-drift';
 
 const logger = new Logger('DbInvariants');
 
@@ -65,7 +66,7 @@ export async function ensureDbInvariants(): Promise<void> {
 }
 
 export async function ensureSchemaAdditions(): Promise<void> {
-  const migrations = [...SCHEMA_MIGRATIONS, ...TRIGGER_MIGRATIONS, ...CRM_MIGRATIONS];
+  const migrations = [...SCHEMA_MIGRATIONS, ...TRIGGER_MIGRATIONS, ...CRM_MIGRATIONS, ...DRIFT_MIGRATIONS];
   for (const m of migrations) {
     try {
       // RULE4_EXCEPTION: idempotent DDL/trigger/function migrations.

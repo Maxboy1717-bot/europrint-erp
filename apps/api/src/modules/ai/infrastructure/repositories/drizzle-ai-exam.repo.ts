@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { DrizzleService } from '@common/services/drizzle.service';
 import { safeCall, Result } from '@common/result';
@@ -74,7 +74,7 @@ export class DrizzleAiExamRepo {
         .insert(aiExamAttempts)
         .values({ employeeId: userId, status: 'assigned', questions: [] })
         .returning();
-      if (!row) throw new Error('Imtihon tayinlashda xato: natija qaytmadi');
+      if (!row) throw new InternalServerErrorException('Imtihon tayinlashda xato: natija qaytmadi');
       return { id: row.id, userId, positionId, status: 'assigned' };
     });
   }

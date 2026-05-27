@@ -71,8 +71,6 @@ export class LeadsService {
   }
 
   async getLossAnalysis() {
-    const r = await this.repo.getLossAnalysis();
-    if (!r.ok) throw new Error(String(r.error));
-    return r.data;
+    return this.repo.getLossAnalysis();
   }
 }

@@ -11,7 +11,7 @@ import { Injectable } from '@nestjs/common';
 import { and, eq, desc, isNull } from 'drizzle-orm';
 import { db } from '@shared/db';
 import { kanbanResults, kanbanResultFiles, kanbanFiles } from '@shared/db';
-import { safeCall, Result } from '@common/result';
+import { safeCall, Result, Err, Ok } from '@common/result';
 
 @Injectable()
 export class DrizzleKanbanResultsFilesRepository {
@@ -27,15 +27,17 @@ export class DrizzleKanbanResultsFilesRepository {
   }
 
   async createResult(cardId: string, createdById: number, description?: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanResults).values({
+    const rows = await safeCall(async () =>
+      db.insert(kanbanResults).values({
         cardId,
         createdById,
         description: description ?? null,
-      }).returning();
-      if (!row) throw new Error('Natija yaratishda xato');
-      return row;
-    });
+      }).returning(),
+    );
+    if (!rows.ok) return Err(rows.error);
+    const row = rows.data[0];
+    if (!row) return Err('Natija yaratishda xato');
+    return Ok(row);
   }
 
   async getResultFiles(resultId: string): Promise<Result<Record<string, unknown>[]>> {
@@ -55,17 +57,19 @@ export class DrizzleKanbanResultsFilesRepository {
   async addResultFile(resultId: string, data: {
     fileName: string; fileUrl: string; fileSize?: number; mimeType?: string;
   }): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanResultFiles).values({
+    const rows = await safeCall(async () =>
+      db.insert(kanbanResultFiles).values({
         resultId,
         fileName: data.fileName,
         fileUrl:  data.fileUrl,
         fileSize: data.fileSize ?? null,
         mimeType: data.mimeType ?? null,
-      }).returning();
-      if (!row) throw new Error('Natija faylini saqlashda xato');
-      return row;
-    });
+      }).returning(),
+    );
+    if (!rows.ok) return Err(rows.error);
+    const row = rows.data[0];
+    if (!row) return Err('Natija faylini saqlashda xato');
+    return Ok(row);
   }
 
   // ─── Files ────────────────────────────────────────────────────────────────
@@ -82,18 +86,20 @@ export class DrizzleKanbanResultsFilesRepository {
     cardId: string; fileName: string; fileUrl: string;
     fileSize?: number; mimeType?: string; uploadedById?: number;
   }): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanFiles).values({
+    const rows = await safeCall(async () =>
+      db.insert(kanbanFiles).values({
         cardId: data.cardId,
         fileName: data.fileName,
         fileUrl: data.fileUrl,
         fileSize: data.fileSize ?? null,
         mimeType: data.mimeType ?? null,
         uploadedById: data.uploadedById ?? null,
-      }).returning();
-      if (!row) throw new Error('Fayl saqlashda xato');
-      return row;
-    });
+      }).returning(),
+    );
+    if (!rows.ok) return Err(rows.error);
+    const row = rows.data[0];
+    if (!row) return Err('Fayl saqlashda xato');
+    return Ok(row);
   }
 
   async deleteFile(fileId: string): Promise<Result<void>> {

@@ -3,8 +3,8 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
-import { safeCall, Result, AppError, Err } from '@common/result';
+import { Injectable, Inject } from '@nestjs/common';
+import { safeCall, Result, AppError, Err, Ok } from '@common/result';
 import { CRM_AI_REPO, type ICrmAiRepo } from '../domain/repositories/i-crm-ai.repo';
 
 import { MS_PER_DAY, CRM_LARGE_DEAL_THRESHOLD } from '@common/constants/app.constants';
@@ -13,23 +13,21 @@ export class CrmAiService {
   constructor(@Inject(CRM_AI_REPO) private readonly repo: ICrmAiRepo) {}
 
   async analyzeLeadAi(lid: number): Promise<Result<object, AppError>> {
-    return safeCall(async () => {
-      const leadResult = await this.repo.getLeadWithActivity(lid);
-      if (!leadResult.ok) throw new Error(leadResult.error.message);
-      if (!leadResult.data) throw new NotFoundException(`Lead #${lid} topilmadi`);
-      const lead = leadResult.data as Record<string, unknown>;
-      const score = this.scoreLead(lead);
-      await this.repo.updateLeadScore(lid, score);
-      const activityCount = Number(lead['activity_count'] ?? 0);
-      return {
-        lead_id: lid,
-        score,
-        analysis: {
-          activity_level: activityCount > 5 ? 'high' : activityCount > 2 ? 'medium' : 'low',
-          recommendation: score >= 70 ? 'qualify' : score >= 40 ? 'nurture' : 'low_priority',
-          stage: lead['stage_name'],
-        },
-      };
+    const leadResult = await this.repo.getLeadWithActivity(lid);
+    if (!leadResult.ok) return Err(leadResult.error);
+    if (!leadResult.data) return Err({ code: 'NOT_FOUND' as const, message: `Lead #${lid} topilmadi` });
+    const lead = leadResult.data as Record<string, unknown>;
+    const score = this.scoreLead(lead);
+    await this.repo.updateLeadScore(lid, score);
+    const activityCount = Number(lead['activity_count'] ?? 0);
+    return Ok({
+      lead_id: lid,
+      score,
+      analysis: {
+        activity_level: activityCount > 5 ? 'high' : activityCount > 2 ? 'medium' : 'low',
+        recommendation: score >= 70 ? 'qualify' : score >= 40 ? 'nurture' : 'low_priority',
+        stage: lead['stage_name'],
+      },
     });
   }
 
@@ -63,23 +61,21 @@ export class CrmAiService {
     });
   }
 
-  async forecastDeal(did: number) {
-    return safeCall(async () => {
-      const dealResult = await this.repo.getDealWithActivity(did);
-      if (!dealResult.ok) throw new Error(dealResult.error.message);
-      if (!dealResult.data) throw new NotFoundException(`Deal #${did} topilmadi`);
-      const deal = dealResult.data as Record<string, unknown>;
-      let probability = 30;
-      if (Number(deal['activities'] ?? 0) > 3) probability += 20;
-      if (Number(deal['age_days'] ?? 0) < 30) probability += 15;
-      if (Number(deal['expected_amount'] ?? 0) > CRM_LARGE_DEAL_THRESHOLD) probability -= 10;
-      probability = Math.min(95, Math.max(5, probability));
-      return {
-        deal_id: did,
-        win_probability: probability,
-        forecast_amount: (Number(deal['expected_amount'] ?? 0) * probability) / 100,
-        confidence: probability > 60 ? 'high' : probability > 30 ? 'medium' : 'low',
-      };
+  async forecastDeal(did: number): Promise<Result<object, AppError>> {
+    const dealResult = await this.repo.getDealWithActivity(did);
+    if (!dealResult.ok) return Err(dealResult.error);
+    if (!dealResult.data) return Err({ code: 'NOT_FOUND' as const, message: `Deal #${did} topilmadi` });
+    const deal = dealResult.data as Record<string, unknown>;
+    let probability = 30;
+    if (Number(deal['activities'] ?? 0) > 3) probability += 20;
+    if (Number(deal['age_days'] ?? 0) < 30) probability += 15;
+    if (Number(deal['expected_amount'] ?? 0) > CRM_LARGE_DEAL_THRESHOLD) probability -= 10;
+    probability = Math.min(95, Math.max(5, probability));
+    return Ok({
+      deal_id: did,
+      win_probability: probability,
+      forecast_amount: (Number(deal['expected_amount'] ?? 0) * probability) / 100,
+      confidence: probability > 60 ? 'high' : probability > 30 ? 'medium' : 'low',
     });
   }
 

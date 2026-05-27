@@ -4,7 +4,7 @@
  */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Result, AppError, safeCall } from '@common/result';
+import { Ok, Err, Result, AppError, AppErr } from '@common/result';
 import { GlPostingLogRepository } from '../../infrastructure/repositories/gl-posting-log.repository';
 import { glPostingLog } from '@workspace/db';
 
@@ -24,54 +24,72 @@ export class GlPostingLogService {
   constructor(private readonly repo: GlPostingLogRepository) {}
 
   async getByMovement(movementId: number): Promise<Result<GlLog[], AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.getByMovement(movementId);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data ?? [];
-    });
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data ?? []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   async getPending(): Promise<Result<GlLog[], AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.getPendingEntries();
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data ?? [];
-    });
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data ?? []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   async getJournal(): Promise<Result<GlLog[], AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.getJournal(200);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data ?? [];
-    });
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data ?? []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   async approveEntry(id: number, approvedBy: number): Promise<Result<GlLog, AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.approveEntry(id, approvedBy);
-      if (!r.ok) throw new Error(r.error.message);
+      if (!r.ok) return Err(r.error);
       this.logger.log(`[GL] Entry ${id} approved by ${approvedBy}`);
-      return r.data;
-    });
+      return Ok(r.data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   async rejectEntry(id: number, approvedBy: number): Promise<Result<GlLog, AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.rejectEntry(id, approvedBy);
-      if (!r.ok) throw new Error(r.error.message);
+      if (!r.ok) return Err(r.error);
       this.logger.log(`[GL] Entry ${id} rejected by ${approvedBy}`);
-      return r.data;
-    });
+      return Ok(r.data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   async approveByMovement(movementId: number, approvedBy: number): Promise<Result<GlLog[], AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.approveByMovement(movementId, approvedBy);
-      if (!r.ok) throw new Error(r.error.message);
+      if (!r.ok) return Err(r.error);
       this.logger.log(`[GL] Movement ${movementId}: ${r.data.length} entries approved by ${approvedBy}`);
-      return r.data;
-    });
+      return Ok(r.data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 
   async recordStage(
@@ -83,7 +101,7 @@ export class GlPostingLogService {
     aiConfidence?: number,
     errorMessage?: string,
   ): Promise<Result<GlLog, AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.insertLog({
         movementId,
         stage,
@@ -94,9 +112,12 @@ export class GlPostingLogService {
         errorMessage,
         processedAt: new Date(),
       });
-      if (!r.ok) throw new Error(r.error.message);
+      if (!r.ok) return Err(r.error);
       this.logger.log(`[GL] Stage ${stageName} recorded for movement ${movementId}`);
-      return r.data;
-    });
+      return Ok(r.data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
   }
 }

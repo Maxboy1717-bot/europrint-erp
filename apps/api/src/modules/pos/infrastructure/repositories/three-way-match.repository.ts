@@ -22,18 +22,17 @@ import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { typedExecute } from '@shared/db/typed-execute';
+import { safeCall, Result } from '@common/result';
 
 @Injectable()
 export class ThreeWayMatchRepository {
-  async findByMovement(movementId: number): Promise<{ id: number } | null> {
-    try {
+  async findByMovement(movementId: number): Promise<Result<{ id: number } | null>> {
+    return safeCall(async () => {
       const rows = await typedExecute<{ id: number }>(sql`
         SELECT id FROM three_way_match_log WHERE movement_id = ${movementId} LIMIT 1
       `);
       return rows[0] ?? null;
-    } catch (e) {
-      throw new Error(`threeWayMatch.findByMovement: ${String(e)}`);
-    }
+    }, 'DB_ERROR');
   }
 
   async update(id: number, data: {

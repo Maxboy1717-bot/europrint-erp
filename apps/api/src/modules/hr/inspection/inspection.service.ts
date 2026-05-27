@@ -9,7 +9,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom, timeout, catchError, of } from 'rxjs';
-import { safeCall, Result, AppError } from '@common/result';
+import { Result, AppError, Err, Ok } from '@common/result';
 import { TashkentTimeService } from '@common/time';
 import { randomUUID } from 'crypto';
 import { InspectionRepository } from './inspection.repository';
@@ -58,26 +58,31 @@ export class InspectionService {
     uploadedBy?:  string,
     description?: string,
   ): Promise<Result<Row, AppError>> {
-    return safeCall(async () => {
-      const photoUrl = await storeImage(roomCode, imageBase64, 'reference');
-      const result   = await this.repo.upsertRoomReference({
+    try {
+      const storeResult = await storeImage(roomCode, imageBase64, 'reference');
+      if (!storeResult.ok) return Err(storeResult.error);
+      const result = await this.repo.upsertRoomReference({
         room_code:  roomCode,
         room_name:  roomName,
-        photo_url:  photoUrl,
+        photo_url:  storeResult.data,
         description,
         updated_by: uploadedBy,
       });
-      if (!result.ok) throw new Error(String(result.error));
-      return result.data as Row;
-    });
+      if (!result.ok) return Err(result.error);
+      return Ok(result.data as Row);
+    } catch (e: unknown) {
+      return Err(e instanceof Error ? e.message : String(e));
+    }
   }
 
   async getRooms(): Promise<Result<Row[], AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.findAllRooms();
-      if (!r.ok) throw new Error(String(r.error));
-      return r.data as Row[];
-    });
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data as Row[]);
+    } catch (e: unknown) {
+      return Err(e instanceof Error ? e.message : String(e));
+    }
   }
 
   async getRoomHistory(
@@ -86,32 +91,34 @@ export class InspectionService {
     limit     = 50,
     offset    = 0,
   ): Promise<Result<{ items: Row[]; total: number }, AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.findAnalysisHistory(roomCode, days, limit, offset);
-      if (!r.ok) throw new Error(String(r.error));
-      return r.data as { items: Row[]; total: number };
-    });
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data as { items: Row[]; total: number });
+    } catch (e: unknown) {
+      return Err(e instanceof Error ? e.message : String(e));
+    }
   }
 
   async runRoomComparison(
     roomCode:        string,
     currentPhotoUrl: string,
   ): Promise<Result<Row, AppError>> {
-    return safeCall(async () => {
+    try {
       const refResult   = await this.repo.findRoomByCode(roomCode);
       const ref         = refResult.ok ? (refResult.data as Row | null) : null;
       const refPhotoUrl = ref ? String(ref['photo_url'] ?? '') : null;
 
       if (!refPhotoUrl) {
         this.logger.debug('runRoomComparison: no reference photo for room=%s — skipped', roomCode);
-        return { room_code: roomCode, status: 'no_reference', current_photo_url: currentPhotoUrl } as Row;
+        return Ok({ room_code: roomCode, status: 'no_reference', current_photo_url: currentPhotoUrl } as Row);
       }
 
       const scores = await this._callAiComparison(refPhotoUrl, currentPhotoUrl, roomCode);
 
       if (!scores) {
         this.logger.warn('runRoomComparison: AI unavailable for room=%s — skipped insertion', roomCode);
-        return { room_code: roomCode, status: 'ai_unavailable', current_photo_url: currentPhotoUrl } as Row;
+        return Ok({ room_code: roomCode, status: 'ai_unavailable', current_photo_url: currentPhotoUrl } as Row);
       }
 
       const insertResult = await this.repo.insertAnalysisResult({
@@ -126,13 +133,15 @@ export class InspectionService {
         anomalies:          scores.anomalies,
         notified_hr:        false,
       });
-      if (!insertResult.ok) throw new Error(String(insertResult.error));
-      return insertResult.data as Row;
-    });
+      if (!insertResult.ok) return Err(insertResult.error);
+      return Ok(insertResult.data as Row);
+    } catch (e: unknown) {
+      return Err(e instanceof Error ? e.message : String(e));
+    }
   }
 
   async createManualInspection(dto: ManualInspectionDto, inspectorId?: string): Promise<Result<Row, AppError>> {
-    return safeCall(async () => {
+    try {
       const cleanlinessScore = dto.cleanliness / 5;
       const orderScore       = dto.order_score / 5;
       const issues: string[] = [];
@@ -160,7 +169,9 @@ export class InspectionService {
 
       let currentPhotoUrl: string;
       if (dto.evidence_photo_url && (dto.evidence_photo_url.startsWith('data:') || dto.evidence_photo_url.startsWith('/9j') || dto.evidence_photo_url.length > 200)) {
-        currentPhotoUrl = await storeImage(dto.room_code, dto.evidence_photo_url, `manual-${Date.now()}`);
+        const storeResult = await storeImage(dto.room_code, dto.evidence_photo_url, `manual-${Date.now()}`);
+        if (!storeResult.ok) return Err(storeResult.error);
+        currentPhotoUrl = storeResult.data;
       } else if (dto.evidence_photo_url) {
         currentPhotoUrl = dto.evidence_photo_url;
       } else {
@@ -180,9 +191,9 @@ export class InspectionService {
         notified_hr:        false,
         pdf_url:            null,
       });
-      if (!insertResult.ok) throw new Error(String(insertResult.error));
+      if (!insertResult.ok) return Err(insertResult.error);
 
-      const record    = insertResult.data as Row;
+      const record     = insertResult.data as Row;
       const analysisId = String(record['id']);
 
       const pdfResult = await this.generateChecklistPdf(analysisId, dto, inspectorId);
@@ -198,13 +209,15 @@ export class InspectionService {
         );
       }
 
-      return {
+      return Ok({
         ...record,
         pdf_url:      pdfResult.ok ? pdfResult.data : null,
         inspector_id: inspectorId ?? null,
         notes:        dto.notes ?? null,
-      };
-    });
+      });
+    } catch (e: unknown) {
+      return Err(e instanceof Error ? e.message : String(e));
+    }
   }
 
   private async _notifyRoles(message: string): Promise<void> {
@@ -232,11 +245,13 @@ export class InspectionService {
   }
 
   async getAlerts(hours = 48): Promise<Result<Row[], AppError>> {
-    return safeCall(async () => {
+    try {
       const r = await this.repo.findRecentAlerts(hours);
-      if (!r.ok) throw new Error(String(r.error));
-      return r.data as Row[];
-    });
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data as Row[]);
+    } catch (e: unknown) {
+      return Err(e instanceof Error ? e.message : String(e));
+    }
   }
 
   async generateChecklistPdf(

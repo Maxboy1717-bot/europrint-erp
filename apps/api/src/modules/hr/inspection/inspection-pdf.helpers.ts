@@ -4,7 +4,7 @@
  */
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
-import { safeCall, Result, AppError } from '@common/result';
+import { Result, AppError, Err, Ok } from '@common/result';
 import { TashkentTimeService } from '@common/time';
 import { objectStorageClient } from '../../../lib/objectStorage';
 import { randomUUID } from 'crypto';
@@ -13,21 +13,23 @@ import type { ManualInspectionDto } from './dto/inspection.dto';
 const _time = new TashkentTimeService();
 
 /** Parse `/bucket/object/path` or `gs://bucket/path` into { bucketName, objectName } */
-export function parseBucketPath(fullPath: string): { bucketName: string; objectName: string } {
+export function parseBucketPath(fullPath: string): Result<{ bucketName: string; objectName: string }> {
   let normalized = fullPath.startsWith('gs://') ? fullPath.replace(/^gs:\/\//, '/') : fullPath;
   if (!normalized.startsWith('/')) normalized = `/${normalized}`;
   const parts      = normalized.split('/');
   const bucketName = parts[1] ?? '';
   const objectPath = parts.slice(2).join('/');
-  if (!bucketName) throw new Error(`Noto'g'ri Object Storage path: "${fullPath}"`);
-  return { bucketName, objectName: objectPath };
+  if (!bucketName) return Err(`Noto'g'ri Object Storage path: "${fullPath}"`);
+  return Ok({ bucketName, objectName: objectPath });
 }
 
-export async function storeImage(roomCode: string, imageBase64: string, suffix: string): Promise<string> {
+export async function storeImage(roomCode: string, imageBase64: string, suffix: string): Promise<Result<string>> {
   const privateDir = process.env['PRIVATE_OBJECT_DIR'] ?? '';
-  if (!privateDir) throw new Error('PRIVATE_OBJECT_DIR sozlanmagan — Object Storage kerak');
+  if (!privateDir) return Err('PRIVATE_OBJECT_DIR sozlanmagan — Object Storage kerak');
 
-  const { bucketName, objectName: objPrefix } = parseBucketPath(privateDir);
+  const pathResult = parseBucketPath(privateDir);
+  if (!pathResult.ok) return Err(pathResult.error);
+  const { bucketName, objectName: objPrefix } = pathResult.data;
   const objectName  = `${objPrefix}/inspection/rooms/${roomCode}/${suffix}-${randomUUID()}.jpg`;
   const base64Data  = imageBase64.includes(',') ? imageBase64.split(',')[1]! : imageBase64;
   const buffer      = Buffer.from(base64Data, 'base64');
@@ -35,20 +37,22 @@ export async function storeImage(roomCode: string, imageBase64: string, suffix: 
   await objectStorageClient.bucket(bucketName).file(objectName).save(buffer, {
     metadata: { contentType: 'image/jpeg' },
   });
-  return `https://storage.googleapis.com/${bucketName}/${objectName}`;
+  return Ok(`https://storage.googleapis.com/${bucketName}/${objectName}`);
 }
 
-export async function storePdfBuffer(buffer: Buffer, analysisId: string): Promise<string> {
+export async function storePdfBuffer(buffer: Buffer, analysisId: string): Promise<Result<string>> {
   const privateDir = process.env['PRIVATE_OBJECT_DIR'] ?? '';
-  if (!privateDir) throw new Error('PRIVATE_OBJECT_DIR sozlanmagan — Object Storage kerak');
+  if (!privateDir) return Err('PRIVATE_OBJECT_DIR sozlanmagan — Object Storage kerak');
 
-  const { bucketName, objectName: objPrefix } = parseBucketPath(privateDir);
+  const pathResult = parseBucketPath(privateDir);
+  if (!pathResult.ok) return Err(pathResult.error);
+  const { bucketName, objectName: objPrefix } = pathResult.data;
   const objectName = `${objPrefix}/inspection/checklists/${analysisId}.pdf`;
 
   await objectStorageClient.bucket(bucketName).file(objectName).save(buffer, {
     metadata: { contentType: 'application/pdf' },
   });
-  return `https://storage.googleapis.com/${bucketName}/${objectName}`;
+  return Ok(`https://storage.googleapis.com/${bucketName}/${objectName}`);
 }
 
 export async function generateChecklistPdf(
@@ -56,7 +60,7 @@ export async function generateChecklistPdf(
   dto: ManualInspectionDto,
   inspectorId?: string,
 ): Promise<Result<string, AppError>> {
-  return safeCall(async () => {
+  try {
     const pdfDoc   = await PDFDocument.create();
     const page     = pdfDoc.addPage([595, 842]);
     const font     = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -113,8 +117,11 @@ export async function generateChecklistPdf(
       x: 40, y: 30, size: 8, font, color: rgb(0.6, 0.6, 0.6),
     });
 
-    const pdfBytes = await pdfDoc.save();
-    const pdfUrl   = await storePdfBuffer(Buffer.from(pdfBytes), analysisId);
-    return pdfUrl;
-  });
+    const pdfBytes  = await pdfDoc.save();
+    const pdfResult = await storePdfBuffer(Buffer.from(pdfBytes), analysisId);
+    if (!pdfResult.ok) return Err(pdfResult.error);
+    return Ok(pdfResult.data);
+  } catch (e: unknown) {
+    return Err(e instanceof Error ? e.message : String(e));
+  }
 }

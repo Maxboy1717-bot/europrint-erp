@@ -1,35 +1,24 @@
 # Schema Convergence Ledger (v2 — column-type aware)
 
-Generated 2026-05-27. 185 duplicated tables.
+Generated 2026-05-27. 174 duplicated tables.
 
 | verdict | count | meaning |
 |---|---|---|
-| CLEAN | 15 | safe stub→re-export (lib/db ⊇ stub, compatible types) |
-| RECONCILE | 127 | column type conflict / missing col — fix lib/db or consumers first |
-| PK-CONFLICT | 37 | uuid ↔ integer id — hard, per-table |
+| CLEAN | 4 | safe stub→re-export (lib/db ⊇ stub, compatible types) |
+| RECONCILE | 126 | column type conflict / missing col — fix lib/db or consumers first |
+| PK-CONFLICT | 38 | uuid ↔ integer id — hard, per-table |
 | NO-LIB-CANON | 6 | no lib/db def — different strategy |
 
-## CLEAN (15)
+## CLEAN (4)
 
 | table | consumers | id types | conflicts / missing | api def files |
 |---|---|---|---|---|
-| daily_financial_metrics | 1 | number | — | schema-finance-extended.ts |
-| downtime_reason_codes | 1 | number | — | schema-compat-3.ts |
-| financial_kpis | 1 | number | — | schema-finance-extended.ts |
-| hr_job_descriptions | 1 | number | — | schema-compat-1b.ts |
-| hr_job_offers | 1 | number | — | schema-compat-1b.ts |
 | order_costings | 1 | number | — | schema-finance-extended.ts |
-| website_settings | 1 | number | — | schema-compat-3.ts |
-| hr_references_checks | 2 | number | — | schema-compat-1b.ts |
-| retail_pos_products | 2 | string | — | schema-pos-retail.ts |
-| system_settings | 2 | number | — | schema-admin-ext.ts |
 | approval_requests | 3 | number | — | schema-compat-4.ts |
-| retail_pos_transactions | 3 | string | — | schema-pos-retail.ts |
-| hr_tool_test_results | 5 | number | — | schema-compat-1b.ts |
 | cfo_config | 7 | number | — | schema-finance-extended.ts |
 | entries | 64 | number | — | schema-finance-extended.ts |
 
-## RECONCILE (127)
+## RECONCILE (126)
 
 | table | consumers | id types | conflicts / missing | api def files |
 |---|---|---|---|---|
@@ -112,7 +101,6 @@ Generated 2026-05-27. 185 duplicated tables.
 | crm_companies | 3 | number | +website?, +inn?, +credit_limit?, +used_credit?, +created_at?, +deleted_at? | schema-compat-1a.ts |
 | crm_invoices | 3 | number | +customer_id?, +amount?, +due_date?, +created_at?, +updated_at? | schema-business-b-2.ts |
 | crm_lead_stages | 3 | number | +order_index?, +is_active? | schema-business-b-2.ts |
-| guidelines | 3 | number | createdBy:string≠number, +companyName?, +timezone?, +language?, +currency?, +logoUrl? | schema-admin-ext.ts |
 | hr_conflict_reports | 3 | number | +resolved_at?, +created_at? | schema-business-c-2-hr-payroll.ts |
 | hr_funnel_history | 3 | number | funnelId:string≠number | schema-compat-1b.ts |
 | hr_health_checkups | 3 | number | +department_id?, +department_name?, +total_employees?, +examined_count?, +last_checkup_date?, +next_checkup_date? | schema-business-c-2-hr-payroll.ts |
@@ -161,7 +149,7 @@ Generated 2026-05-27. 185 duplicated tables.
 | courses | 32 | number | instructorId:string≠number, +is_active?, +updated_at? | schema-compat-4.ts, schema-ext-a-1.ts |
 | notifications | 54 | number | userId:string≠number | schema-compat-3.ts |
 
-## PK-CONFLICT (37)
+## PK-CONFLICT (38)
 
 | table | consumers | id types | conflicts / missing | api def files |
 |---|---|---|---|---|
@@ -180,6 +168,7 @@ Generated 2026-05-27. 185 duplicated tables.
 | asset_items | 2 | number/string | id:number≠string, +assigned_to?, +department_id?, +serial_number?, +purchase_date?, +purchase_price? | schema-business-c-1.ts |
 | position_permissions | 2 | number/string | id:string≠number, +tableName?, +recordId?, +action?, +oldValues?, +newValues? | schema-compat-2.ts, schema-rbac.ts |
 | design_orders | 3 | number/string | assignedTo:string≠number, files:string≠json, createdBy:string≠number, id:string≠number, deadline:date≠string, +order_number? | schema-compat-4.ts, schema-misc.ts |
+| guidelines | 3 | string/number | id:string≠number, createdBy:string≠number, +name?, +filterType?, +config? | schema-admin-ext.ts |
 | marketing_campaigns | 3 | number/string | id:number≠string | schema-compat-3.ts |
 | marketing_leads | 3 | number/string | id:number≠string | schema-compat-3.ts |
 | saas_tenants | 3 | string/number | id:string≠number | schema-admin-ext.ts |

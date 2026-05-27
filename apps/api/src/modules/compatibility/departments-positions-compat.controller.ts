@@ -8,18 +8,22 @@
  *   SQL queries are delegated to org-compat.repository.ts (PA2-14: no raw SQL in controllers).
  */
 
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, InternalServerErrorException } from '@nestjs/common';
 import { getCompatDepartments, getCompatPositions } from './org-compat.repository';
 
 @Controller()
 export class DepartmentsPositionsCompatController {
   @Get('departments')
   async getDepartments() {
-    return { data: await getCompatDepartments() };
+    const result = await getCompatDepartments();
+    if (!result.ok) throw new InternalServerErrorException(result.error.message);
+    return { data: result.data };
   }
 
   @Get('positions')
   async getPositions() {
-    return { data: await getCompatPositions() };
+    const result = await getCompatPositions();
+    if (!result.ok) throw new InternalServerErrorException(result.error.message);
+    return { data: result.data };
   }
 }

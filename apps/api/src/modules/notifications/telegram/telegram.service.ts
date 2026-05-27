@@ -19,7 +19,7 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ITelegramSvcRepository, TELEGRAM_SVC_REPO } from './i-telegram-svc.repo';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Err, Result, AppError } from '@common/result';
 
 interface SendMessageDto {
   userId: string;
@@ -60,33 +60,26 @@ export class TelegramSvc {
    * the caller exactly what happened.
    */
   async sendMessage(dto: SendMessageDto): Promise<Result<SendMessageResult, AppError>> {
+    const userId = parseInt(dto.userId, 10);
+    if (!Number.isFinite(userId) || userId <= 0) {
+      return Err({ code: 'BAD_REQUEST', message: 'invalid userId' });
+    }
+
+    // 1) Always persist — DB is the source of truth, Telegram is best-effort.
+    const insertResult = await this.telegramSvcRepo.insertNotification({
+      userId,
+      title: dto.title ?? 'Telegram',
+      message: dto.message,
+      type: 'telegram',
+      read: false,
+    });
+    if (!insertResult.ok) {
+      this.logger.error(`Failed to persist notification for user=${userId}: ${insertResult.error?.message ?? 'unknown'}`);
+      return Err(insertResult.error ?? { code: 'DB_ERROR', message: 'DB insert failed' });
+    }
+
     return safeCall(async () => {
-      const userId = parseInt(dto.userId, 10);
-      if (!Number.isFinite(userId) || userId <= 0) {
-        return {
-          status: 'failed',
-          message: dto.message,
-          messageId: this.makeId(),
-          recipient: dto.userId,
-          groupId: dto.groupId ?? null,
-          reason: 'invalid userId',
-        };
-      }
-
       const messageId = this.makeId();
-
-      // 1) Always persist — DB is the source of truth, Telegram is best-effort.
-      const insertResult = await this.telegramSvcRepo.insertNotification({
-        userId,
-        title: dto.title ?? 'Telegram',
-        message: dto.message,
-        type: 'telegram',
-        read: false,
-      });
-      if (!insertResult.ok) {
-        this.logger.error(`Failed to persist notification for user=${userId}: ${insertResult.error?.message ?? 'unknown'}`);
-        throw new Error(insertResult.error?.message ?? 'DB insert failed');
-      }
 
       // 2) Resolve the user's Telegram chat_id from the repo.
       const chatIdResult = await this.telegramSvcRepo.getUserChatId?.(userId);
@@ -166,15 +159,13 @@ export class TelegramSvc {
    * Service health probe. Returns true bot status (not a hardcoded `true`).
    */
   async getStatus(): Promise<Result<{ isActive: boolean; connectedUsers: number; tokenConfigured: boolean }, AppError>> {
-    return safeCall(async () => {
-      const result = await this.telegramSvcRepo.countAll();
-      if (!result.ok) throw new Error(result.error?.message ?? 'count failed');
-      return {
-        isActive: !!this.botToken,
-        connectedUsers: Number(result.data ?? 0),
-        tokenConfigured: !!this.botToken,
-      };
-    });
+    const result = await this.telegramSvcRepo.countAll();
+    if (!result.ok) return Err(result.error ?? { code: 'DB_ERROR', message: 'count failed' });
+    return safeCall(async () => ({
+      isActive: !!this.botToken,
+      connectedUsers: Number(result.data ?? 0),
+      tokenConfigured: !!this.botToken,
+    }));
   }
 
   /**

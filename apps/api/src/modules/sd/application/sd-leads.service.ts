@@ -3,9 +3,9 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
-import { safeCall, Result, AppError } from '@common/result';
+import { Result, AppError, Err, Ok } from '@common/result';
 import { ISdLeadsRepo, SD_LEADS_REPO } from '../domain/repositories/i-sd-leads.repo';
 
 @Injectable()
@@ -47,24 +47,22 @@ export class SdLeadsService {
     return this.repo.delete(lid);
   }
 
-  async convert(lid: number, notesVal: unknown) {
+  async convert(lid: number, notesVal: unknown): Promise<Result<{ lead_id: number; order: unknown }, AppError>> {
     const leadNotFoundMsg = await this.i18n.t('errors.leadNotFound');
-    return safeCall(async () => {
-      const leadResult = await this.repo.getLeadForConvert(lid);
-      if (!leadResult.ok) throw new Error(leadResult.error.message);
-      const lead = leadResult.data;
-      if (!lead) throw new NotFoundException(leadNotFoundMsg);
-      // Atomic: order INSERT + lead status UPDATE in one tx (was: 2 separate writes,
-      // partial failure left orphan order + lead still re-convertible = duplicate orders)
-      const orderResult = await this.repo.convertLeadToOrderAtomic(
-        (lead as Record<string, unknown>).customer_id,
-        (lead as Record<string, unknown>).expected_amount,
-        lid,
-        notesVal,
-      );
-      if (!orderResult.ok) throw new Error(orderResult.error.message);
-      return { lead_id: lid, order: orderResult.data };
-    });
+    const leadResult = await this.repo.getLeadForConvert(lid);
+    if (!leadResult.ok) return Err(leadResult.error);
+    const lead = leadResult.data;
+    if (!lead) return Err({ code: 'NOT_FOUND', message: leadNotFoundMsg });
+    // Atomic: order INSERT + lead status UPDATE in one tx (was: 2 separate writes,
+    // partial failure left orphan order + lead still re-convertible = duplicate orders)
+    const orderResult = await this.repo.convertLeadToOrderAtomic(
+      (lead as Record<string, unknown>).customer_id,
+      (lead as Record<string, unknown>).expected_amount,
+      lid,
+      notesVal,
+    );
+    if (!orderResult.ok) return Err(orderResult.error);
+    return Ok({ lead_id: lid, order: orderResult.data });
   }
 
   async addActivity(lid: number, type: unknown, subject: unknown, notes: unknown, employee_id: unknown) {

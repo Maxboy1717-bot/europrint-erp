@@ -12,7 +12,7 @@
 // architectural rationale.
 
 import { Injectable } from '@nestjs/common';
-import { Result, Err, AppErr, safeCall } from '@common/result';
+import { Result, Ok, Err, AppErr } from '@common/result';
 import { sql } from 'drizzle-orm';
 import { db } from '@shared/db';
 import type { IAishaTool, ToolResult } from '../../domain/tool.interface';
@@ -42,13 +42,13 @@ export class GetCustomerInfoTool implements IAishaTool {
     const name = String(input['customerName'] ?? '');
     if (!name) return Err(AppErr('VALIDATION', 'customerName majburiy'));
 
-    return safeCall<ToolResult<CustomerInfo>>(async () => {
+    try {
       const start = Date.now();
       const cust = rowsOf<{ id: string; name: string }>(await db.execute(sql`
         SELECT id, name FROM crm_companies
         WHERE LOWER(name) LIKE LOWER('%' || ${name} || '%') LIMIT 1
       `))[0];
-      if (!cust) throw new Error(`Mijoz topilmadi: ${name}`);
+      if (!cust) return Err(AppErr('NOT_FOUND', `Mijoz topilmadi: ${name}`));
 
       const agg = rowsOf<{ cnt: number; total: number }>(await db.execute(sql`
         SELECT COUNT(*)::int AS cnt, COALESCE(SUM(total),0)::float AS total
@@ -64,7 +64,7 @@ export class GetCustomerInfoTool implements IAishaTool {
       const clv = deals + agg.total;
       const rfm = agg.cnt > 10 ? 'A' : agg.cnt > 3 ? 'B' : 'C';
 
-      return provResult<CustomerInfo>({
+      return Ok(provResult<CustomerInfo>({
         data: {
           customerId: cust.id, name: cust.name, clv,
           orders6mCount: agg.cnt, orders6mTotal: agg.total, rfmScore: rfm,
@@ -75,7 +75,10 @@ export class GetCustomerInfoTool implements IAishaTool {
           provSource({ type: 'database', identifier: 'crm.deals', startMs: start, rowCount: 1 }),
         ],
         citations: [{ label: cust.name, url: `/crm/companies/${cust.id}` }],
-      });
-    });
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return Err(AppErr('EXTERNAL_SERVICE', msg));
+    }
   }
 }

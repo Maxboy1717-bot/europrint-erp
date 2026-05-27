@@ -19,7 +19,7 @@ import { Injectable } from '@nestjs/common';
 import { and, eq, desc, sql } from 'drizzle-orm';
 import { db, runQuery } from '@shared/db';
 import { kanbanFlows, kanbanRobots } from '@shared/db';
-import { safeCall, Result } from '@common/result';
+import { safeCall, Result, Err, Ok } from '@common/result';
 
 @Injectable()
 export class DrizzleKanbanFlowsRobotsRepository {
@@ -38,16 +38,18 @@ export class DrizzleKanbanFlowsRobotsRepository {
     boardId: string; name: string; description?: string;
     assignmentType?: string; userIds?: string[];
   }): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanFlows).values({
+    const rows = await safeCall(async () =>
+      db.insert(kanbanFlows).values({
         boardId: data.boardId,
         name: data.name,
         description: data.description ?? null,
         config: { assignmentType: data.assignmentType ?? 'round_robin', userIds: data.userIds ?? [], lastIndex: 0 },
-      }).returning();
-      if (!row) throw new Error('Flow yaratishda xato');
-      return row;
-    });
+      }).returning(),
+    );
+    if (!rows.ok) return Err(rows.error);
+    const row = rows.data[0];
+    if (!row) return Err('Flow yaratishda xato');
+    return Ok(row);
   }
 
   async getFlowById(id: string): Promise<Result<Record<string, unknown> | null>> {
@@ -84,17 +86,19 @@ export class DrizzleKanbanFlowsRobotsRepository {
   async createRobot(data: {
     boardId: string; name: string; trigger: string; actions: unknown[];
   }): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanRobots).values({
+    const rows = await safeCall(async () =>
+      db.insert(kanbanRobots).values({
         boardId: data.boardId,
         name: data.name,
         trigger: data.trigger ?? 'card_moved',
         actions: data.actions ?? [],
         isActive: true,
-      }).returning();
-      if (!row) throw new Error('Robot yaratishda xato');
-      return row;
-    });
+      }).returning(),
+    );
+    if (!rows.ok) return Err(rows.error);
+    const row = rows.data[0];
+    if (!row) return Err('Robot yaratishda xato');
+    return Ok(row);
   }
 
   async getRobotById(id: string): Promise<Result<Record<string, unknown> | null>> {

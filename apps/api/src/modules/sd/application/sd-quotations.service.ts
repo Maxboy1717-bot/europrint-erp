@@ -107,12 +107,10 @@ export class SdQuotationsService {
     });
   }
 
-  async getKpiTeam(period: string | null) {
-    return safeCall(async () => {
-      const r = await this.repo.getKpiTeam();
-      if (!r.ok) throw new Error(r.error.message);
-      return { team_kpi: r.data, period: period ?? 'monthly' };
-    });
+  async getKpiTeam(period: string | null): Promise<Result<{ team_kpi: Row[]; period: string }, AppError>> {
+    const r = await this.repo.getKpiTeam();
+    if (!r.ok) return Err(r.error);
+    return Ok({ team_kpi: r.data, period: period ?? 'monthly' });
   }
 
   async getKpiTargets(managerId: number | null) {
@@ -120,33 +118,29 @@ export class SdQuotationsService {
   }
 
   async getFunnelReport(period: string | null) {
-    return safeCall(async () => {
-      const r = await this.repo.getFunnelReport();
-      if (!r.ok) throw new Error(r.error.message);
-      const data = r.data;
-      return {
-        ...data,
-        conversion_rate: data['total_leads'] ? Number(data['won_deals'] ?? 0) / Number(data['total_leads'] ?? 1) * 100 : 0,
-        period: period ?? 'monthly',
-      };
+    const r = await this.repo.getFunnelReport();
+    if (!r.ok) return r;
+    const data = r.data;
+    return Ok({
+      ...data,
+      conversion_rate: data['total_leads'] ? Number(data['won_deals'] ?? 0) / Number(data['total_leads'] ?? 1) * 100 : 0,
+      period: period ?? 'monthly',
     });
   }
 
   async convertToOrder(id: string): Promise<Result<{ order: { id: unknown; documentNumber: string } }, AppError>> {
-    return safeCall(async () => {
-      const result = await this.repo.convertQuotationToOrder(id);
-      if (!result.ok) throw new Error(result.error.message);
-      if ('error' in result.data) throw new Error(result.data.error);
-      const orderRow = (result.data as { order: Record<string, unknown> }).order;
-      return {
-        order: {
-          id: orderRow['id'],
-          documentNumber: String(orderRow['order_number'] ?? `QO-${id}`),
-          status: orderRow['status'],
-          totalAmount: orderRow['total_amount'],
-          createdAt: orderRow['created_at'],
-        },
-      };
+    const result = await this.repo.convertQuotationToOrder(id);
+    if (!result.ok) return result as Result<{ order: { id: unknown; documentNumber: string } }, AppError>;
+    if ('error' in result.data) return Err(AppErr('INTERNAL', result.data.error));
+    const orderRow = (result.data as { order: Record<string, unknown> }).order;
+    return Ok({
+      order: {
+        id: orderRow['id'],
+        documentNumber: String(orderRow['order_number'] ?? `QO-${id}`),
+        status: orderRow['status'],
+        totalAmount: orderRow['total_amount'],
+        createdAt: orderRow['created_at'],
+      },
     });
   }
 

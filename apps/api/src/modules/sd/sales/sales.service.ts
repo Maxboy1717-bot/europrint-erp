@@ -52,20 +52,18 @@ export class SalesService {
   }
 
   async generateForecast(managerId: number | null, period: string | null) {
-    return safeCall(async () => {
-      const pipelineR = await this.repo.getPipelineForecast();
-      if (!pipelineR.ok) throw new Error(pipelineR.error.message);
-      const pipeline = pipelineR.data as Record<string, unknown>;
-      return {
-        manager_id: managerId,
-        period: period ?? 'monthly',
-        forecast_revenue: Number(pipeline['pipeline_value'] ?? 0) * FORECAST.pipeline_conversion,
-        pipeline_value: pipeline['pipeline_value'] ?? 0,
-        deal_count: pipeline['deal_count'] ?? 0,
-        confidence: FORECAST_CONFIDENCE_DEFAULT,
-        generated_at: _time.now(),
-      };
-    });
+    const pipelineR = await this.repo.getPipelineForecast();
+    if (!pipelineR.ok) return pipelineR;
+    const pipeline = pipelineR.data as Record<string, unknown>;
+    return safeCall(async () => ({
+      manager_id: managerId,
+      period: period ?? 'monthly',
+      forecast_revenue: Number(pipeline['pipeline_value'] ?? 0) * FORECAST.pipeline_conversion,
+      pipeline_value: pipeline['pipeline_value'] ?? 0,
+      deal_count: pipeline['deal_count'] ?? 0,
+      confidence: FORECAST_CONFIDENCE_DEFAULT,
+      generated_at: _time.now(),
+    }));
   }
 
   async getForecastHistory(managerId: number | null, lim: number) {

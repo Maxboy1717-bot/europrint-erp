@@ -9,7 +9,7 @@ import { Injectable } from '@nestjs/common';
 import { and, eq, desc, isNull, sql } from 'drizzle-orm';
 import { db } from '@shared/db';
 import { kanbanNotifications, kanbanTemplates } from '@shared/db';
-import { safeCall, Result } from '@common/result';
+import { safeCall, Result, Err, Ok } from '@common/result';
 
 export const COUNT_EXPR = sql<number>`count(*)::int`;
 
@@ -57,18 +57,20 @@ export class DrizzleKanbanEngagementBaseRepository {
     userId: number; cardId?: string; boardId?: string;
     type: string; title: string; message?: string;
   }): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanNotifications).values({
+    const rows = await safeCall(async () =>
+      db.insert(kanbanNotifications).values({
         userId: data.userId,
         cardId: data.cardId ?? null,
         boardId: data.boardId ?? null,
         type: data.type,
         title: data.title,
         message: data.message ?? null,
-      }).returning();
-      if (!row) throw new Error('Bildirishnoma yaratishda xato');
-      return row;
-    });
+      }).returning(),
+    );
+    if (!rows.ok) return Err(rows.error);
+    const row = rows.data[0];
+    if (!row) return Err('Bildirishnoma yaratishda xato');
+    return Ok(row);
   }
 
   // ─── Templates ────────────────────────────────────────────────────────────
@@ -88,8 +90,8 @@ export class DrizzleKanbanEngagementBaseRepository {
     boardId?: string; checklistItems?: unknown[]; columnsConfig?: unknown[];
     createdById?: number;
   }): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.insert(kanbanTemplates).values({
+    const rows = await safeCall(async () =>
+      db.insert(kanbanTemplates).values({
         name: data.name,
         description: data.description ?? null,
         priority: data.priority ?? 'normal',
@@ -97,10 +99,12 @@ export class DrizzleKanbanEngagementBaseRepository {
         checklistItems: data.checklistItems ?? [],
         columnsConfig: data.columnsConfig ?? [],
         createdById: data.createdById ?? null,
-      }).returning();
-      if (!row) throw new Error('Shablon yaratishda xato');
-      return row;
-    });
+      }).returning(),
+    );
+    if (!rows.ok) return Err(rows.error);
+    const row = rows.data[0];
+    if (!row) return Err('Shablon yaratishda xato');
+    return Ok(row);
   }
 
   async updateTemplate(id: string, data: {

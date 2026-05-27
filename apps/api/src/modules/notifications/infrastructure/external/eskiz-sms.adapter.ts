@@ -62,17 +62,21 @@ export class EskizSmsAdapter implements ISmsSender {
 
   private async sendViaEskiz(phone: string, message: string): Promise<Result<void>> {
     try {
-      await withRetry<void>(async () => {
-        const res = await fetch('https://notify.eskiz.uz/api/message/sms/send', {
+      const res = await withRetry<Response>(async () =>
+        fetch('https://notify.eskiz.uz/api/message/sms/send', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${this.eskizToken}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ mobile_phone: phone, message, from: 'EuroPrint' }),
-        });
-        if (!res.ok) throw new Error(`Eskiz HTTP ${res.status}`);
-      });
+        }),
+      );
+      if (!res.ok) {
+        const msg = `Eskiz HTTP ${res.status}`;
+        this.logger.error(`Eskiz SMS xatolik (EXTERNAL_5XX): ${phone} — ${msg}`);
+        return Err(AppErr('EXTERNAL_5XX', `Eskiz SMS xatolik: ${msg}`));
+      }
     } catch (err) {
       const code = classifyRetryError(err);
       const msg  = err instanceof Error ? err.message : String(err);
@@ -85,8 +89,8 @@ export class EskizSmsAdapter implements ISmsSender {
 
   private async sendViaInfobip(phone: string, message: string): Promise<Result<void>> {
     try {
-      await withRetry<void>(async () => {
-        const res = await fetch(`${this.infobipBaseUrl}/sms/2/text/advanced`, {
+      const res = await withRetry<Response>(async () =>
+        fetch(`${this.infobipBaseUrl}/sms/2/text/advanced`, {
           method: 'POST',
           headers: {
             'Authorization': `App ${this.infobipApiKey}`,
@@ -96,9 +100,13 @@ export class EskizSmsAdapter implements ISmsSender {
           body: JSON.stringify({
             messages: [{ from: 'EuroPrint', destinations: [{ to: phone }], text: message }],
           }),
-        });
-        if (!res.ok) throw new Error(`Infobip HTTP ${res.status}`);
-      });
+        }),
+      );
+      if (!res.ok) {
+        const msg = `Infobip HTTP ${res.status}`;
+        this.logger.error(`Infobip SMS xatolik (EXTERNAL_5XX): ${phone} — ${msg}`);
+        return Err(AppErr('EXTERNAL_5XX', `Infobip SMS xatolik: ${msg}`));
+      }
     } catch (err) {
       const code = classifyRetryError(err);
       const msg  = err instanceof Error ? err.message : String(err);

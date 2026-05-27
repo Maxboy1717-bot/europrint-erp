@@ -76,7 +76,8 @@ export class PosRequisitionWorkflowService {
         throw new BadRequestException(`approveRequisition: so'rov PENDING/SUBMITTED holatida emas — joriy holat: ${req.status}`);
       }
       if (req.targetWarehouseId) {
-        await reserveStock(requestId, String(req.targetWarehouseId), this.balanceRepo, this.logger);
+        const reserveR = await reserveStock(requestId, String(req.targetWarehouseId), this.balanceRepo, this.logger);
+        if (!reserveR.ok) throw new BadRequestException(reserveR.error.message);
       }
       const updated = await setStatus(requestId, 'APPROVED', {
         approvedBy: approverId,
@@ -136,7 +137,8 @@ export class PosRequisitionWorkflowService {
         throw new BadRequestException(`fulfillRequisition: so'rov APPROVED holatida emas — joriy holat: ${req.status}`);
       }
       if (barcodes && barcodes.length > 0) {
-        await validateBarcodes(barcodes, this.balanceRepo);
+        const validateR = await validateBarcodes(barcodes, this.balanceRepo);
+        if (!validateR.ok) throw new BadRequestException(validateR.error.message);
       }
       const requestLines = await fetchLines(requestId);
 
@@ -169,7 +171,8 @@ export class PosRequisitionWorkflowService {
       const movement = movementR.data as { id: number };
 
       if (req.targetWarehouseId) {
-        await releaseReservedStock(requestId, String(req.targetWarehouseId), this.balanceRepo, this.logger);
+        const releaseR = await releaseReservedStock(requestId, String(req.targetWarehouseId), this.balanceRepo, this.logger);
+        if (!releaseR.ok) this.logger.warn(`releaseReservedStock failed (fulfillment): ${releaseR.error.message}`);
       }
 
       for (const line of requestLines) {
@@ -215,7 +218,8 @@ export class PosRequisitionWorkflowService {
         throw new BadRequestException(`cancelRequisition: so'rov bekor qilib bo'lmaydi — joriy holat: ${req.status}`);
       }
       if (req.status === 'APPROVED' && req.targetWarehouseId) {
-        await releaseReservedStock(requestId, String(req.targetWarehouseId), this.balanceRepo, this.logger);
+        const releaseR = await releaseReservedStock(requestId, String(req.targetWarehouseId), this.balanceRepo, this.logger);
+        if (!releaseR.ok) this.logger.warn(`releaseReservedStock failed (cancellation): ${releaseR.error.message}`);
       }
       const updated = await setStatus(requestId, 'CANCELLED', {
         rejectionReason: reason,

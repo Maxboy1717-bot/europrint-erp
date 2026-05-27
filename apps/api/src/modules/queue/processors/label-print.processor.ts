@@ -10,6 +10,7 @@ import { Job } from 'bullmq';
 import { ConfigService } from '@nestjs/config';
 import * as net from 'net';
 import { QUEUE_NAMES, backoffDelay } from '../queue.constants';
+import { Result, Ok, Err } from '@common/types/result.type';
 
 export interface LabelPrintJobData {
   printerId: string;
@@ -36,7 +37,11 @@ export class LabelPrintProcessor extends WorkerHost {
     );
 
     try {
-      await this.printLabels(job.data);
+      const result = await this.printLabels(job.data);
+      if (!result.ok) {
+        this.logger.error(`[label] Job #${job.id} xato: ${result.error.message}`);
+        throw new Error(result.error.message);
+      }
       this.logger.log(
         `[label] Job #${job.id} muvaffaqiyatli: ${job.data.items.length} label chiqarildi`,
       );
@@ -46,17 +51,17 @@ export class LabelPrintProcessor extends WorkerHost {
     }
   }
 
-  private async printLabels(data: LabelPrintJobData): Promise<void> {
+  private async printLabels(data: LabelPrintJobData): Promise<Result<void>> {
     const printerHost = this.cfg.get<string>('PRINTER_HOST');
     const printerPort = Number(this.cfg.get<string>('PRINTER_PORT') ?? String(DEFAULT_PRINTER_PORT));
 
     if (!printerHost) {
-      throw new Error('[label] PRINTER_HOST muhit o\'zgaruvchisi sozlanmagan — TCP printer ulanishi uchun talab qilinadi');
+      return Err('[label] PRINTER_HOST muhit o\'zgaruvchisi sozlanmagan — TCP printer ulanishi uchun talab qilinadi');
     }
 
     const items = Array.isArray(data.items) ? data.items : [];
     if (items.length === 0) {
-      throw new Error('[label] items bo\'sh — chiqarish uchun kamida bitta label talab qilinadi');
+      return Err('[label] items bo\'sh — chiqarish uchun kamida bitta label talab qilinadi');
     }
 
     const zpl = this.buildZpl(data);
@@ -65,6 +70,7 @@ export class LabelPrintProcessor extends WorkerHost {
     this.logger.log(
       `[label] ${items.length} label yuborildi: ${printerHost}:${printerPort}`,
     );
+    return Ok();
   }
 
   /**

@@ -6,6 +6,7 @@
  */
 
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { unwrapOrThrow } from '@common/http-result';
 import { assertFound, assertRequired, assertValidated, assertDefined } from '@common/assertions';
 import { Controller, Get, Post, Patch, Body, Param, UseGuards, Logger, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ChatService } from './chat.service';
@@ -74,7 +75,7 @@ export class ChatAdvancedController {
   ) {
     assertRequired(body.emoji, 'emoji is required');
 
-    const reactions = await this.chatService.toggleReaction(messageId, user.id, body.emoji);
+    const reactions = unwrapOrThrow(await this.chatService.toggleReaction(messageId, user.id, body.emoji));
 
     this.chatGateway.server?.emit('reaction:updated', {
       messageId,
@@ -130,14 +131,14 @@ export class ChatAdvancedController {
     );
 
     const roomId = String(body.roomId);
-    const message = await this.chatService.createPoll(
+    const message = unwrapOrThrow(await this.chatService.createPoll(
       roomId,
       user.id,
       body.question.trim(),
       (Array.isArray(body?.options) ? body?.options : []).filter((o) => o.trim()),
       body.isMultiple ?? false,
       body.isAnonymous ?? false,
-    );
+    ));
 
     this.chatGateway.server?.to(`room:${roomId}`).emit('new_message', message);
 
@@ -164,9 +165,9 @@ export class ChatAdvancedController {
     assertDefined(body.optionIndex, 'optionIndex is required');
 
     const indices = Array.isArray(body.optionIndex) ? body.optionIndex : [body.optionIndex];
-    const voteData = await this.chatService.votePoll(pollId, user.id, indices);
+    const voteData = unwrapOrThrow(await this.chatService.votePoll(pollId, user.id, indices));
 
-    this.chatGateway.server?.to(`room:${voteData.roomId}`).emit('poll:updated', voteData);
+    this.chatGateway.server?.to(`room:${(voteData as Record<string, unknown>)['roomId']}`).emit('poll:updated', voteData);
 
     return voteData;
   }

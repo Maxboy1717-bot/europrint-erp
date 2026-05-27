@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { eq, desc } from 'drizzle-orm';
 import { DrizzleService } from '@common/services/drizzle.service';
 import { safeCall, Result } from '@common/result';
@@ -109,7 +109,7 @@ export class DrizzleAiPlanningRepo {
           aiRecommendations:   [{ type: 'info', message: 'AI reja yaratildi' }],
         })
         .returning();
-      if (!row) throw new Error('AI reja yaratishda xato: natija qaytmadi');
+      if (!row) throw new InternalServerErrorException('AI reja yaratishda xato: natija qaytmadi');
       return this.toRecord(row);
     });
   }

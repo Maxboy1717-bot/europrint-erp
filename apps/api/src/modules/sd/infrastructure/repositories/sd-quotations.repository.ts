@@ -12,10 +12,10 @@ import { ISdQuotationsRepo } from '../../domain/repositories/i-sd-quotations.rep
 
 type Row = Record<string, unknown>;
 const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
-const execOne = async (q: SQL | SQLWrapper): Promise<Row | null> => {
+const execOne = async (q: SQL | SQLWrapper): Promise<Result<Row | null>> => {
   const rows = await exec(q);
-  if (!rows.ok) throw new Error(rows.error.message);
-  return rows.data[0] ?? null;
+  if (!rows.ok) return rows as Result<Row | null>;
+  return Ok(rows.data[0] ?? null);
 };
 
 @Injectable()
@@ -31,11 +31,9 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
   }
 
   async createQuotation(body: Row): Promise<Result<Row | null>> {
-    return safeCall(async () => {
-      const r = await exec(sql`INSERT INTO sd_quotations (customer_id, title, total_amount, currency, valid_until, status, notes, items) VALUES (${body.customer_id ?? null}, ${body.title ?? 'Quotation'}, ${body.total_amount ?? 0}, ${body.currency ?? 'UZS'}, ${body.valid_until ?? null}, ${body.status ?? 'draft'}, ${body.notes ?? null}, ${body.items ? JSON.stringify(body.items) : null}) RETURNING *`);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data[0] ?? null;
-    }, 'DB_ERROR');
+    const r = await exec(sql`INSERT INTO sd_quotations (customer_id, title, total_amount, currency, valid_until, status, notes, items) VALUES (${body.customer_id ?? null}, ${body.title ?? 'Quotation'}, ${body.total_amount ?? 0}, ${body.currency ?? 'UZS'}, ${body.valid_until ?? null}, ${body.status ?? 'draft'}, ${body.notes ?? null}, ${body.items ? JSON.stringify(body.items) : null}) RETURNING *`);
+    if (!r.ok) return r as Result<Row | null>;
+    return Ok(r.data[0] ?? null);
   }
 
   async listContracts(customerId: number | null, status: string | null, lim: number, off: number): Promise<Result<Row[]>> {
@@ -53,11 +51,9 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
   }
 
   async createContract(body: Row): Promise<Result<Row | null>> {
-    return safeCall(async () => {
-      const r = await exec(sql`INSERT INTO sd_contracts (order_id, contract_number, template_type, status, valid_until, notes) VALUES (${body.order_id ?? null}, ${body.contract_number ?? `CNT-${Date.now()}`}, ${body.template_type ?? 'standard'}, ${body.status ?? 'draft'}, ${body.valid_until ?? null}, ${body.notes ?? null}) RETURNING *`);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data[0] ?? null;
-    }, 'DB_ERROR');
+    const r = await exec(sql`INSERT INTO sd_contracts (order_id, contract_number, template_type, status, valid_until, notes) VALUES (${body.order_id ?? null}, ${body.contract_number ?? `CNT-${Date.now()}`}, ${body.template_type ?? 'standard'}, ${body.status ?? 'draft'}, ${body.valid_until ?? null}, ${body.notes ?? null}) RETURNING *`);
+    if (!r.ok) return r as Result<Row | null>;
+    return Ok(r.data[0] ?? null);
   }
 
   async listPriceFormulas(lim: number, off: number): Promise<Result<Row[]>> {
@@ -81,36 +77,35 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
   }
 
   async getFunnelReport(): Promise<Result<Row>> {
-    return safeCall(async () => {
-      const rows = await exec(sql`SELECT COUNT(DISTINCT l.id)::int AS total_leads, COUNT(DISTINCT CASE WHEN l.status_description ILIKE '%active%' OR l.status_description ILIKE '%new%' THEN l.id END)::int AS active_leads, COUNT(DISTINCT d.id)::int AS total_deals, COUNT(DISTINCT CASE WHEN d.stage_semantic_id = 'won' THEN d.id END)::int AS won_deals, COALESCE(SUM(CASE WHEN d.stage_semantic_id = 'won' THEN d.opportunity END), 0)::numeric(15,2) AS won_revenue FROM crm_leads l LEFT JOIN crm_deals d ON d.lead_id = l.id`);
-      if (!rows.ok) throw new Error(rows.error.message);
-      return (rows.data[0] ?? {}) as Row;
-    }, 'DB_ERROR');
+    const rows = await exec(sql`SELECT COUNT(DISTINCT l.id)::int AS total_leads, COUNT(DISTINCT CASE WHEN l.status_description ILIKE '%active%' OR l.status_description ILIKE '%new%' THEN l.id END)::int AS active_leads, COUNT(DISTINCT d.id)::int AS total_deals, COUNT(DISTINCT CASE WHEN d.stage_semantic_id = 'won' THEN d.id END)::int AS won_deals, COALESCE(SUM(CASE WHEN d.stage_semantic_id = 'won' THEN d.opportunity END), 0)::numeric(15,2) AS won_revenue FROM crm_leads l LEFT JOIN crm_deals d ON d.lead_id = l.id`);
+    if (!rows.ok) return rows as Result<Row>;
+    return Ok((rows.data[0] ?? {}) as Row);
   }
 
   async getQuotationById(id: string): Promise<Result<Row | null>> {
-    return safeCall(async () => {
-      const r = await exec(sql`
-        SELECT q.*, c.name AS customer_name, c.id AS customer_record_id
-        FROM sd_quotations q
-        LEFT JOIN sd_customers c ON c.id = q.customer_id
-        WHERE q.id = ${id} AND q.deleted_at IS NULL LIMIT 1
-      `);
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data[0] ?? null;
-    }, 'DB_ERROR');
+    const r = await exec(sql`
+      SELECT q.*, c.name AS customer_name, c.id AS customer_record_id
+      FROM sd_quotations q
+      LEFT JOIN sd_customers c ON c.id = q.customer_id
+      WHERE q.id = ${id} AND q.deleted_at IS NULL LIMIT 1
+    `);
+    if (!r.ok) return r as Result<Row | null>;
+    return Ok(r.data[0] ?? null);
   }
 
   async convertQuotationToOrder(id: string): Promise<Result<{ error: string } | { order: Row }>> {
     return safeCall(async () => {
       const quotationResult = await this.getQuotationById(id);
-      if (!quotationResult.ok) throw new Error(quotationResult.error.message);
+      if (!quotationResult.ok) return Promise.reject(quotationResult.error);
       const quotation = quotationResult.data;
       if (!quotation) return { error: `Quotation ${id} not found` };
       if (quotation['status'] === 'converted') {
-        const existingOrder = quotation['order_id']
-          ? await execOne(sql`SELECT id, order_number FROM sales_orders WHERE id = ${quotation['order_id']} LIMIT 1`)
-          : null;
+        let existingOrder: Row | null = null;
+        if (quotation['order_id']) {
+          const orderResult = await execOne(sql`SELECT id, order_number FROM sales_orders WHERE id = ${quotation['order_id']} LIMIT 1`);
+          if (!orderResult.ok) return Promise.reject(orderResult.error);
+          existingOrder = orderResult.data;
+        }
         return { order: existingOrder ?? { id: quotation['order_id'], order_number: `QO-${id}` } };
       }
       const orderNumber = `QO-${id}-${Date.now().toString(36).toUpperCase()}`;

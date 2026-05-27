@@ -228,13 +228,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.data.userId as number;
     if (!userId) return;
     try {
-      const result = await this.chatService.toggleReaction(data.messageId, userId, data.emoji);
+      const toggleResult = await this.chatService.toggleReaction(data.messageId, userId, data.emoji);
+      const reactions = (toggleResult && typeof toggleResult === 'object' && 'ok' in toggleResult && toggleResult.ok) ? (toggleResult as { ok: true; data: unknown }).data : toggleResult;
       this.server.to(`room:${data.roomId}`).emit('reaction:updated', {
         messageId: String(data.messageId),
         roomId: String(data.roomId),
         userId,
         emoji: data.emoji,
-        ...result,
+        reactions,
       });
     } catch (err) {
       this.logger.warn(`reaction:toggle xato: ${err}`);

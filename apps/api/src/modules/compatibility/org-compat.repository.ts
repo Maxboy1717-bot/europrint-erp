@@ -9,8 +9,9 @@
 
 import { sql } from 'drizzle-orm';
 import { db } from '@shared/db';
+import { Result, Ok, Err } from '@common/result';
 
-export async function getCompatDepartments(): Promise<unknown[]> {
+export async function getCompatDepartments(): Promise<Result<unknown[]>> {
   // NOTE: RULE4_EXCEPTION — computed alias `'D'||id::text` + COALESCE(otdeleniye_code)
   // not expressible via Drizzle ORM builders.
   try {
@@ -23,13 +24,13 @@ export async function getCompatDepartments(): Promise<unknown[]> {
          AND COALESCE(is_active, true) = true
        ORDER BY COALESCE(level, 0), COALESCE(sort_order, 0), name
     `);
-    return ((result as { rows?: unknown[] }).rows ?? result) as unknown[];
+    return Ok(((result as { rows?: unknown[] }).rows ?? result) as unknown[]);
   } catch (err) {
-    throw new Error(`getCompatDepartments failed: ${String(err)}`);
+    return Err(`getCompatDepartments failed: ${String(err)}`);
   }
 }
 
-export async function getCompatPositions(): Promise<unknown[]> {
+export async function getCompatPositions(): Promise<Result<unknown[]>> {
   // NOTE: RULE4_EXCEPTION — org_functions has no Drizzle schema;
   // computed alias `'P'||id::text` not expressible via Drizzle query builder.
   try {
@@ -41,8 +42,8 @@ export async function getCompatPositions(): Promise<unknown[]> {
        WHERE COALESCE(is_active, true) = true
        ORDER BY department_id, COALESCE(display_order, 0), position_name
     `);
-    return ((result as { rows?: unknown[] }).rows ?? result) as unknown[];
+    return Ok(((result as { rows?: unknown[] }).rows ?? result) as unknown[]);
   } catch (err) {
-    throw new Error(`getCompatPositions failed: ${String(err)}`);
+    return Err(`getCompatPositions failed: ${String(err)}`);
   }
 }

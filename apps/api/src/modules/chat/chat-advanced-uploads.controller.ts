@@ -7,7 +7,7 @@
 
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { assertRequired } from '@common/assertions';
-import { assertOk, unwrapOrInternal } from '@common/http-result';
+import { assertOk, unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { Controller, Get, Post, Body, Param, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { safeCall } from '@common/result';
 import { ChatService } from './chat.service';
@@ -62,19 +62,19 @@ export class ChatAdvancedUploadsController {
   ) {
     assertRequired(body.content?.trim(), 'content is required');
 
-    const result = await this.chatService.sendThreadMessage(
+    const result = unwrapOrThrow(await this.chatService.sendThreadMessage(
       messageId,
       user.id,
       body.content.trim(),
-    );
+    ));
 
-    this.chatGateway.server?.to(`room:${result.roomId}`).emit('thread:new_reply', result.msg);
-    this.chatGateway.server?.to(`room:${result.roomId}`).emit('thread:count_updated', {
+    this.chatGateway.server?.to(`room:${result['roomId']}`).emit('thread:new_reply', result['msg']);
+    this.chatGateway.server?.to(`room:${result['roomId']}`).emit('thread:count_updated', {
       messageId,
-      threadCount: result.threadCount,
+      threadCount: result['threadCount'],
     });
 
-    return result.msg;
+    return result['msg'];
   }
 
   // ── FORWARD ────────────────────────────────────────────────────────────────
@@ -91,11 +91,11 @@ export class ChatAdvancedUploadsController {
   ) {
     const targetRoomId = String(body.targetRoomId);
 
-    const message = await this.chatService.forwardMessage(
+    const message = unwrapOrThrow(await this.chatService.forwardMessage(
       messageId,
       targetRoomId,
       user.id,
-    );
+    ));
 
     this.chatGateway.server?.to(`room:${targetRoomId}`).emit('new_message', message);
 
@@ -151,14 +151,14 @@ export class ChatAdvancedUploadsController {
   ) {
     const roomId = String(body.roomId);
 
-    const message = await this.chatService.uploadFileAndSendMessage(
+    const message = unwrapOrThrow(await this.chatService.uploadFileAndSendMessage(
       roomId,
       user.id,
       body.fileUrl,
       body.fileName,
       body.fileType,
       body.fileSize,
-    );
+    ));
 
     this.chatGateway.server?.to(`room:${roomId}`).emit('new_message', message);
 

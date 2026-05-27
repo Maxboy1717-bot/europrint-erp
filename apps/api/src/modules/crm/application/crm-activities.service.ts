@@ -4,7 +4,7 @@
  */
 
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Result, AppError, Err } from '@common/result';
 import { CRM_ACTIVITIES_REPO, type ICrmActivitiesRepo } from '../domain/repositories/i-crm-activities.repo';
 
 @Injectable()
@@ -23,7 +23,7 @@ export class CrmActivitiesService {
     return safeCall(async () => {
       const rowResult = await this.repo.getById(aid);
 
-      if (!rowResult.ok) throw new Error(rowResult.error.message);
+      if (!rowResult.ok) return Err(rowResult.error.message);
       if (!rowResult.data) throw new NotFoundException(`Faoliyat #${aid} topilmadi`);
 
       return rowResult.data;
@@ -38,7 +38,7 @@ export class CrmActivitiesService {
     return safeCall(async () => {
       const updatedResult = await this.repo.update(aid, body);
 
-      if (!updatedResult.ok) throw new Error(updatedResult.error.message);
+      if (!updatedResult.ok) return Err(updatedResult.error.message);
       if (!updatedResult.data) throw new NotFoundException(`Faoliyat #${aid} topilmadi`);
 
       return updatedResult.data;
@@ -49,7 +49,7 @@ export class CrmActivitiesService {
     return safeCall(async () => {
       const completedResult = await this.repo.complete(aid, outcome);
 
-      if (!completedResult.ok) throw new Error(completedResult.error.message);
+      if (!completedResult.ok) return Err(completedResult.error.message);
       if (!completedResult.data) throw new NotFoundException(`Faoliyat #${aid} topilmadi`);
 
       return completedResult.data;

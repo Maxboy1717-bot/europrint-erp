@@ -1,0 +1,36 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash 'C:\\Users\\AzzA\\Downloads\\EuroPrint-Clean\\Uzbek-Language-Module\\.codex\\hooks\\PreToolUse.sh'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash 'C:\\Users\\AzzA\\Downloads\\EuroPrint-Clean\\Uzbek-Language-Module\\.codex\\hooks\\PostToolUse.sh'"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash 'C:\\Users\\AzzA\\Downloads\\EuroPrint-Clean\\Uzbek-Language-Module\\.codex\\hooks\\SessionStart.sh'"
+          }
+        ]
+      }
+    ]
+  }
+}

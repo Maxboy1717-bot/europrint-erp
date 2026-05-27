@@ -6,7 +6,7 @@
 import { Injectable, NotFoundException, Logger, Optional } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { RbacCacheService } from '@common/cache/rbac-cache.service';
-import { Result, safeCall } from '@common/result';
+import { Ok, Err, Result } from '@common/result';
 import { positions, positionPermissions } from '@europrint/schemas';
 import { PositionPermissionsRepository } from './position-permissions.repository';
 
@@ -51,77 +51,69 @@ export class PositionPermissionsService {
   }
 
   async getByPosition(positionId: number): Promise<Result<{ position: PositionRow; permissions: PermRow[]; permMap: Record<string, string> }>> {
-    return safeCall(async () => {
-      const positionResult = await this.repo.findPosition(positionId);
-      if (!positionResult.ok) throw new Error(String(positionResult.error));
-      if (!positionResult.data) throw new NotFoundException(`Lavozim #${positionId} topilmadi`);
-      const permsResult = await this.repo.findPermissionsByPosition(positionId);
-      if (!permsResult.ok) throw new Error(String(permsResult.error));
-      const perms = permsResult.data;
-      const permMap: Record<string, string> = {};
-      for (const p of perms) { permMap[String(p.moduleCode)] = String(p.accessLevel); }
-      return { position: positionResult.data, permissions: perms, permMap };
-    });
+    const positionResult = await this.repo.findPosition(positionId);
+    if (!positionResult.ok) return Err(String(positionResult.error));
+    if (!positionResult.data) throw new NotFoundException(`Lavozim #${positionId} topilmadi`);
+    const permsResult = await this.repo.findPermissionsByPosition(positionId);
+    if (!permsResult.ok) return Err(String(permsResult.error));
+    const perms = permsResult.data;
+    const permMap: Record<string, string> = {};
+    for (const p of perms) { permMap[String(p.moduleCode)] = String(p.accessLevel); }
+    return Ok({ position: positionResult.data, permissions: perms, permMap });
   }
 
   async getAll(): Promise<Result<Array<PositionRow & { permissions: Record<string, string> }>>> {
-    return safeCall(async () => {
-      const posResult = await this.repo.findAllPositions();
-      if (!posResult.ok) throw new Error(String(posResult.error));
-      const permResult = await this.repo.findAllPermissions();
-      if (!permResult.ok) throw new Error(String(permResult.error));
-      const allPositions = posResult.data;
-      const allPerms = permResult.data;
-      const safePositions = Array.isArray(allPositions) ? allPositions : [];
-      const safePerms = Array.isArray(allPerms) ? allPerms : [];
-      return (Array.isArray(safePositions) ? safePositions : []).map((pos) => {
-        // positionPermissions.positionId is integer; positions.id is uuid (string). Compare by string form.
-        const posPerms = (Array.isArray(safePerms) ? safePerms : []).filter((p) => String(p.positionId) === String(pos.id));
-        const permissions: Record<string, string> = {};
-        for (const p of posPerms) { permissions[String(p.moduleCode)] = String(p.accessLevel); }
-        return { ...pos, permissions };
-      });
-    });
+    const posResult = await this.repo.findAllPositions();
+    if (!posResult.ok) return Err(String(posResult.error));
+    const permResult = await this.repo.findAllPermissions();
+    if (!permResult.ok) return Err(String(permResult.error));
+    const allPositions = posResult.data;
+    const allPerms = permResult.data;
+    const safePositions = Array.isArray(allPositions) ? allPositions : [];
+    const safePerms = Array.isArray(allPerms) ? allPerms : [];
+    return Ok((Array.isArray(safePositions) ? safePositions : []).map((pos) => {
+      // positionPermissions.positionId is integer; positions.id is uuid (string). Compare by string form.
+      const posPerms = (Array.isArray(safePerms) ? safePerms : []).filter((p) => String(p.positionId) === String(pos.id));
+      const permissions: Record<string, string> = {};
+      for (const p of posPerms) { permissions[String(p.moduleCode)] = String(p.accessLevel); }
+      return { ...pos, permissions };
+    }));
   }
 
-  async setPermission(positionId: number, moduleCode: string, accessLevel: string) {
-    return safeCall(async () => {
-      this.logger.log(`Pozitsiya #${positionId} uchun ruxsat o'rnatilmoqda: ${moduleCode}=${accessLevel}`);
-      const existResult = await this.repo.findExistingPermissions(positionId);
-      if (!existResult.ok) throw new Error(String(existResult.error));
-      const existing = existResult.data;
-      const safeExisting = Array.isArray(existing) ? existing : [];
-      const found = (Array.isArray(safeExisting) ? safeExisting : []).find((p) => p.moduleCode === moduleCode);
-      let result;
-      if (found) {
-        const r = await this.repo.updatePermission(found.id, accessLevel);
-        if (!r.ok) throw new Error(String(r.error));
-        result = r.data;
-      } else {
-        const r = await this.repo.insertPermission(positionId, moduleCode, accessLevel);
-        if (!r.ok) throw new Error(String(r.error));
-        result = r.data;
-      }
-      // Cache invalidation + event emit (best-effort)
-      await this.invalidatePositionCache({
-        positionId,
-        moduleCode,
-        accessLevel,
-        changedAt: new Date(),
-      });
-      return result;
+  async setPermission(positionId: number, moduleCode: string, accessLevel: string): Promise<Result<unknown>> {
+    this.logger.log(`Pozitsiya #${positionId} uchun ruxsat o'rnatilmoqda: ${moduleCode}=${accessLevel}`);
+    const existResult = await this.repo.findExistingPermissions(positionId);
+    if (!existResult.ok) return Err(String(existResult.error));
+    const existing = existResult.data;
+    const safeExisting = Array.isArray(existing) ? existing : [];
+    const found = (Array.isArray(safeExisting) ? safeExisting : []).find((p) => p.moduleCode === moduleCode);
+    let result;
+    if (found) {
+      const r = await this.repo.updatePermission(found.id, accessLevel);
+      if (!r.ok) return Err(String(r.error));
+      result = r.data;
+    } else {
+      const r = await this.repo.insertPermission(positionId, moduleCode, accessLevel);
+      if (!r.ok) return Err(String(r.error));
+      result = r.data;
+    }
+    // Cache invalidation + event emit (best-effort)
+    await this.invalidatePositionCache({
+      positionId,
+      moduleCode,
+      accessLevel,
+      changedAt: new Date(),
     });
+    return Ok(result);
   }
 
   async hasAccess(positionId: number, moduleCode: string, requiredLevel: string): Promise<Result<boolean>> {
-    return safeCall(async () => {
-      const levels = ['NONE', 'READ', 'READ_PLUS', 'WRITE', 'FULL'];
-      const permsResult = await this.repo.findPermissionsByPosition(positionId);
-      if (!permsResult.ok) throw new Error(String(permsResult.error));
-      const perms = permsResult.data;
-      const found = (Array.isArray(perms) ? perms : []).find((p) => p.moduleCode === moduleCode);
-      if (!found) return false;
-      return levels.indexOf(String(found.accessLevel).toUpperCase()) >= levels.indexOf(requiredLevel.toUpperCase());
-    });
+    const levels = ['NONE', 'READ', 'READ_PLUS', 'WRITE', 'FULL'];
+    const permsResult = await this.repo.findPermissionsByPosition(positionId);
+    if (!permsResult.ok) return Err(String(permsResult.error));
+    const perms = permsResult.data;
+    const found = (Array.isArray(perms) ? perms : []).find((p) => p.moduleCode === moduleCode);
+    if (!found) return Ok(false);
+    return Ok(levels.indexOf(String(found.accessLevel).toUpperCase()) >= levels.indexOf(requiredLevel.toUpperCase()));
   }
 }

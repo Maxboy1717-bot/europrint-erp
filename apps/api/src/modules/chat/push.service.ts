@@ -6,7 +6,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import webpush from 'web-push';
-import { Result, safeCall } from '@common/result';
+import { Result, Err, safeCall } from '@common/result';
 import { PushNotificationRepository } from './repositories/push-notification.repository';
 
 export interface PushPayload {
@@ -69,10 +69,10 @@ export class PushService {
   }
 
   async sendToUser(userId: string, payload: PushPayload): Promise<Result<{ delivered: number }>> {
+    const subsR = await this.pushRepo.findActiveByUser(userId);
+    if (!subsR.ok) return Err(subsR.error);
+    const subs = subsR.data;
     return safeCall(async () => {
-      const subsR = await this.pushRepo.findActiveByUser(userId);
-      if (!subsR.ok) throw new Error(subsR.error.message);
-      const subs = subsR.data;
       let delivered = 0;
       for (const sub of subs) {
         const ok = await this.dispatch(sub as Record<string, unknown>, payload);

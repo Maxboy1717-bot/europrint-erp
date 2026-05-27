@@ -12,7 +12,7 @@
 // architectural rationale.
 
 import { Injectable } from '@nestjs/common';
-import { Result, Err, AppErr, safeCall } from '@common/result';
+import { Result, Ok, Err, AppErr } from '@common/result';
 import { sql } from 'drizzle-orm';
 import { db } from '@shared/db';
 import type { IAishaTool, ToolResult } from '../../domain/tool.interface';
@@ -45,7 +45,7 @@ export class GetMachineStatusTool implements IAishaTool {
     const id = String(input['machineId'] ?? '');
     if (!id) return Err(AppErr('VALIDATION', 'machineId majburiy'));
 
-    return safeCall<ToolResult<MachineStatus>>(async () => {
+    try {
       const start = Date.now();
       const rows = rowsOf<{
         id: string; name: string; current_state: string;
@@ -56,14 +56,14 @@ export class GetMachineStatusTool implements IAishaTool {
         WHERE id = ${id} OR LOWER(name) = LOWER(${id})
         LIMIT 1
       `));
-      if (!rows[0]) throw new Error(`Mashina topilmadi: ${id}`);
+      if (!rows[0]) return Err(AppErr('NOT_FOUND', `Mashina topilmadi: ${id}`));
       const m = rows[0];
       const dt = rowsOf<{ m: number }>(await db.execute(sql`
         SELECT EXTRACT(EPOCH FROM (ended_at - started_at))/60 AS m
         FROM downtime_events WHERE machine_id = ${m.id}
         ORDER BY started_at DESC LIMIT 1
       `))[0]?.m ?? null;
-      return provResult<MachineStatus>({
+      return Ok(provResult<MachineStatus>({
         data: {
           machineId: m.id, name: m.name, state: m.current_state,
           oee: m.current_oee, operator: m.current_operator,
@@ -74,7 +74,10 @@ export class GetMachineStatusTool implements IAishaTool {
           provSource({ type: 'database', identifier: 'mes.downtime_events', startMs: start, rowCount: dt === null ? 0 : 1 }),
         ],
         citations: [{ label: m.name, url: `/iot/machines/${m.id}` }],
-      });
-    });
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return Err(AppErr('EXTERNAL_SERVICE', msg));
+    }
   }
 }

@@ -21,7 +21,7 @@ import {
   kanbanChecklists, kanbanChecklistItems,
   kanbanCardComments, kanbanCardWatchers, kanbanNotifications,
 } from '@shared/db';
-import { safeCall, Result } from '@common/result';
+import { safeCall, Err, Ok, Result } from '@common/result';
 import { castTo } from '@common/db-rows';
 
 @Injectable()
@@ -36,11 +36,13 @@ export class DrizzleKanbanCardsRepository {
   }
 
   async createChecklist(cardId: string, title: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
+    try {
       const [row] = await db.insert(kanbanChecklists).values({ cardId, title }).returning();
-      if (!row) throw new Error('Cheklistni yaratishda xato');
-      return row;
-    });
+      if (!row) return Err('Cheklistni yaratishda xato');
+      return Ok(row as Record<string, unknown>);
+    } catch (e) {
+      return Err(String(e));
+    }
   }
 
   async updateChecklist(id: string, title: string): Promise<Result<Record<string, unknown>>> {
@@ -64,11 +66,13 @@ export class DrizzleKanbanCardsRepository {
   }
 
   async createChecklistItem(checklistId: string, title: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
+    try {
       const [row] = await db.insert(kanbanChecklistItems).values({ checklistId, title }).returning();
-      if (!row) throw new Error('Checklist elementi yaratishda xato');
-      return row;
-    });
+      if (!row) return Err('Checklist elementi yaratishda xato');
+      return Ok(row as Record<string, unknown>);
+    } catch (e) {
+      return Err(String(e));
+    }
   }
 
   async updateChecklistItem(
@@ -125,9 +129,9 @@ export class DrizzleKanbanCardsRepository {
   }
 
   async addComment(cardId: string, userId: number, content: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
+    try {
       const [row] = await db.insert(kanbanCardComments).values({ cardId, userId, content }).returning();
-      if (!row) throw new Error("Izoh qo'shishda xato");
+      if (!row) return Err("Izoh qo'shishda xato");
       // Return with user info so the frontend can display immediately without re-fetch
       const userRows = await runQuery<Record<string, unknown>>(sql`
         SELECT id,
@@ -135,13 +139,15 @@ export class DrizzleKanbanCardsRepository {
           profile_image_url AS "profileImageUrl"
         FROM users WHERE id = ${userId}
       `);
-      return {
+      return Ok({
         ...row,
         message: content,
         messageType: 'user',
         user: userRows.rows[0] ?? null,
-      };
-    });
+      } as Record<string, unknown>);
+    } catch (e) {
+      return Err(String(e));
+    }
   }
 
   // ─── Watchers ─────────────────────────────────────────────────────────────
@@ -152,17 +158,19 @@ export class DrizzleKanbanCardsRepository {
   }
 
   async addWatcher(cardId: string, userId: number): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
+    try {
       const [row] = await db.insert(kanbanCardWatchers).values({ cardId, userId }).returning();
-      if (!row) throw new Error("Kuzatuvchi qo'shishda xato");
-      return row;
-    });
+      if (!row) return Err("Kuzatuvchi qo'shishda xato");
+      return Ok(row as Record<string, unknown>);
+    } catch (e) {
+      return Err(String(e));
+    }
   }
 
   // ─── Card creation (flat endpoint) ────────────────────────────────────────
 
   async createCardFlat(data: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
+    try {
       const boardId     = String(data.boardId   ?? data.board_id   ?? '');
       const columnId    = String(data.columnId  ?? data.column_id  ?? '');
       const title       = String(data.title     ?? 'Yangi vazifa');
@@ -175,22 +183,24 @@ export class DrizzleKanbanCardsRepository {
           (${boardId}, ${columnId}, ${title}, ${description}, ${priority}, 0)
         RETURNING *
       `);
-      if (!rows.rows[0]) throw new Error('Karta yaratishda xato');
-      return rows.rows[0];
-    });
+      if (!rows.rows[0]) return Err('Karta yaratishda xato');
+      return Ok(rows.rows[0]);
+    } catch (e) {
+      return Err(String(e));
+    }
   }
 
   // ─── Accept / Complete ────────────────────────────────────────────────────
 
   async acceptCard(cardId: string, userId: number): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
+    try {
       const rows = await runQuery<Record<string, unknown>>(sql`
         UPDATE kanban_cards
         SET accepted_at = NOW(), accepted_by_id = ${String(userId)}, updated_at = NOW()
         WHERE id = ${cardId} AND deleted_at IS NULL
         RETURNING id, title, accepted_at, accepted_by_id, column_id, owner_user_id
       `);
-      if (!rows.rows[0]) throw new Error('Karta topilmadi');
+      if (!rows.rows[0]) return Err('Karta topilmadi');
       // Egasiga bildirishnoma
       const card = rows.rows[0];
       if (card.owner_user_id && Number(card.owner_user_id) !== userId) {
@@ -202,12 +212,14 @@ export class DrizzleKanbanCardsRepository {
           message: `Karta ${userId}-foydalanuvchi tomonidan qabul qilindi`,
         });
       }
-      return castTo<Record<string, unknown>>(rows.rows[0]);
-    });
+      return Ok(castTo<Record<string, unknown>>(rows.rows[0]));
+    } catch (e) {
+      return Err(String(e));
+    }
   }
 
   async completeCard(cardId: string, userId: number, completionReport?: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
+    try {
       const rows = await runQuery<Record<string, unknown>>(sql`
         UPDATE kanban_cards
         SET completed_at = NOW(),
@@ -216,7 +228,7 @@ export class DrizzleKanbanCardsRepository {
         WHERE id = ${cardId} AND deleted_at IS NULL
         RETURNING id, title, completed_at, column_id, owner_user_id
       `);
-      if (!rows.rows[0]) throw new Error('Karta topilmadi');
+      if (!rows.rows[0]) return Err('Karta topilmadi');
       const card = rows.rows[0];
       if (card.owner_user_id && Number(card.owner_user_id) !== userId) {
         await db.insert(kanbanNotifications).values({
@@ -227,7 +239,9 @@ export class DrizzleKanbanCardsRepository {
           message: completionReport ?? 'Karta muvaffaqiyatli yakunlandi',
         });
       }
-      return castTo<Record<string, unknown>>(rows.rows[0]);
-    });
+      return Ok(castTo<Record<string, unknown>>(rows.rows[0]));
+    } catch (e) {
+      return Err(String(e));
+    }
   }
 }

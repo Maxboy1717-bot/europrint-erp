@@ -99,7 +99,7 @@ export class DrizzleAttendanceRepository implements IAttendanceRepository {
     embedding:  number[],
     confidence: number,
     imageUrl?:  string,
-  ): Promise<{ id: number }> {
+  ): Promise<Result<{ id: number }>> {
     const [existing] = await db
       .select({ face_embedding: hrEmployees.face_embedding })
       .from(hrEmployees)
@@ -137,7 +137,7 @@ export class DrizzleAttendanceRepository implements IAttendanceRepository {
       })
       .returning({ id: face_embeddings.id });
 
-    if (!inserted) throw new Error('Failed to insert face_embedding record');
-    return { id: inserted.id };
+    if (!inserted) return Err('Failed to insert face_embedding record');
+    return Ok({ id: inserted.id });
   }
 }

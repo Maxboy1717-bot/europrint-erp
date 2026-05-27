@@ -6,7 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
-import { Err, Result, safeCall } from '@common/result';
+import { Err, Ok, Result, safeCall } from '@common/result';
 import { WeeklyPlanRepository } from './weekly-plan.repository';
 
 import { MS_PER_HOUR } from '@common/constants/app.constants';
@@ -80,7 +80,7 @@ export class WeeklyPlanService {
       if (!Array.isArray(top5Tasks) || top5Tasks.length === 0) return Err('top5_tasks array talab qilinadi');
       const weekStart = getMondayOfWeek(String(body['week'] ?? ''));
       const existing = await this.repo.findExisting(employeeId, weekStart);
-      if (!existing.ok) throw new Error(existing.error.message);
+      if (!existing.ok) return Err(existing.error.message);
       if (existing.data.length > 0) {
         const existingId = existing.data[0]['id'];
         const plan = await this.repo.updatePlan(existingId, gsdTarget, top5Tasks as Record<string, unknown>[], body);
@@ -109,13 +109,13 @@ export class WeeklyPlanService {
       const planId = parseInt(id, 10);
       if (isNaN(planId)) return Err("Noto'g'ri ID");
       const planR = await this.repo.getOne(planId);
-      if (!planR.ok) throw new Error(planR.error.message);
+      if (!planR.ok) return Err(planR.error.message);
       const plan = planR.data as Record<string, unknown> | null;
       if (!plan) return Err('Reja topilmadi');
       const isManager = MANAGER_ROLES.includes(user.role);
       if (!isManager && Number(plan['employee_id']) !== user.id) return Err("Ruxsat yo'q");
       const updated = await this.repo.updatePlanById(planId, body);
-      if (!updated.ok) throw new Error(updated.error.message);
+      if (!updated.ok) return Err(updated.error.message);
       return { plan: updated.data };
     });
   }
@@ -125,7 +125,7 @@ export class WeeklyPlanService {
       const planId = parseInt(id, 10);
       if (isNaN(planId)) return Err("Noto'g'ri ID");
       const planR = await this.repo.getOne(planId);
-      if (!planR.ok) throw new Error(planR.error.message);
+      if (!planR.ok) return Err(planR.error.message);
       const plan = planR.data as Record<string, unknown> | null;
       if (!plan) return Err('Reja topilmadi');
       const isManager = MANAGER_ROLES.includes(user.role);
@@ -141,7 +141,7 @@ export class WeeklyPlanService {
       const planId = parseInt(id, 10);
       if (isNaN(planId)) return Err("Noto'g'ri ID");
       const planR = await this.repo.getOne(planId);
-      if (!planR.ok) throw new Error(planR.error.message);
+      if (!planR.ok) return Err(planR.error.message);
       const plan = planR.data as Record<string, unknown> | null;
       if (!plan) return Err('Reja topilmadi');
       if (plan['status'] === 'approved') return Err('Reja allaqachon tasdiqlangan');

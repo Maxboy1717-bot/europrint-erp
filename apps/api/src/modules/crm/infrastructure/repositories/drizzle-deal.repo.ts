@@ -14,7 +14,7 @@ import { Deal } from '../../domain/aggregates/deal.aggregate';
 import { IDealRepository } from '../../domain/repositories/i-deal.repo';
 import { DealStatus } from '../../domain/value-objects/deal-status.vo';
 import { Money } from '@shared/domain/value-objects/money.vo';
-import { Ok, Result } from '@common/result';
+import { Ok, Err, Result } from '@common/result';
 
 type DbRow = Record<string, unknown>;
 
@@ -31,7 +31,7 @@ export class DrizzleDealRepository implements IDealRepository {
       await db.insert(crmDeals).values(payload as typeof crmDeals.$inferInsert).onConflictDoNothing();
       return Ok(deal);
     } catch (e) {
-      throw new Error(`drizzle_deal.save: ${String(e)}`);
+      return Err(`drizzle_deal.save: ${String(e)}`);
     }
   }
 
@@ -41,7 +41,7 @@ export class DrizzleDealRepository implements IDealRepository {
       if (!rows[0]) return Ok(null);
       return Ok(this.toDomain(castTo<DbRow>(rows[0])));
     } catch (e) {
-      throw new Error(`drizzle_deal.findById: ${String(e)}`);
+      return Err(`drizzle_deal.findById: ${String(e)}`);
     }
   }
 
@@ -51,7 +51,7 @@ export class DrizzleDealRepository implements IDealRepository {
       if (!rows[0]) return Ok(null);
       return Ok(this.toDomain(castTo<DbRow>(rows[0])));
     } catch (e) {
-      throw new Error(`drizzle_deal.findByLeadId: ${String(e)}`);
+      return Err(`drizzle_deal.findByLeadId: ${String(e)}`);
     }
   }
 
@@ -62,7 +62,7 @@ export class DrizzleDealRepository implements IDealRepository {
         .limit(limit).offset(offset);
       return Ok(rows.map((r) => this.toDomain(castTo<DbRow>(r))));
     } catch (e) {
-      throw new Error(`drizzle_deal.findByCompanyId: ${String(e)}`);
+      return Err(`drizzle_deal.findByCompanyId: ${String(e)}`);
     }
   }
 
@@ -73,7 +73,7 @@ export class DrizzleDealRepository implements IDealRepository {
         .limit(limit).offset(offset);
       return Ok(rows.map((r) => this.toDomain(castTo<DbRow>(r))));
     } catch (e) {
-      throw new Error(`drizzle_deal.findByStatus: ${String(e)}`);
+      return Err(`drizzle_deal.findByStatus: ${String(e)}`);
     }
   }
 
@@ -85,7 +85,7 @@ export class DrizzleDealRepository implements IDealRepository {
       }).where(eq(crmDeals.id, deal.getId()));
       return Ok();
     } catch (e) {
-      throw new Error(`drizzle_deal.update: ${String(e)}`);
+      return Err(`drizzle_deal.update: ${String(e)}`);
     }
   }
 
@@ -94,7 +94,7 @@ export class DrizzleDealRepository implements IDealRepository {
       await db.delete(crmDeals).where(eq(crmDeals.id, id));
       return Ok();
     } catch (e) {
-      throw new Error(`drizzle_deal.delete: ${String(e)}`);
+      return Err(`drizzle_deal.delete: ${String(e)}`);
     }
   }
 
@@ -104,7 +104,7 @@ export class DrizzleDealRepository implements IDealRepository {
         .from(crmDeals).where(eq(crmDeals.status, status));
       return Ok(Number(rows[0]?.count ?? 0));
     } catch (e) {
-      throw new Error(`drizzle_deal.countByStatus: ${String(e)}`);
+      return Err(`drizzle_deal.countByStatus: ${String(e)}`);
     }
   }
 

@@ -4,7 +4,7 @@
  *   (Rule 16 file-size split). Pure orchestration over CcDocumentsRepository.
  */
 
-import { Logger, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Logger, BadRequestException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
 import { unwrapOrThrow } from '@common/http-result';
 import { db } from '@shared/db';
 import type { CcDocumentsRepository, DocumentRow } from '../../infrastructure/repositories/cc-documents.repo';
@@ -92,7 +92,8 @@ export async function executeApproveTransaction(
       return { ok: true, status: 'advanced', nextStepOrder: nextOrder, nextApproverIds: nextApprovers };
     });
   } catch (e) {
-    throw new Error(`ccWorkflow.approve: ${String(e)}`);
+    if (e instanceof BadRequestException || e instanceof ForbiddenException) throw e;
+    throw new InternalServerErrorException(`ccWorkflow.approve: ${String(e)}`);
   }
 }
 

@@ -153,7 +153,8 @@ export class CrmLeadsController {
     const statusId = String(
       parsed.stage_id ?? parsed.statusId ?? parsed.stageId ?? parsed.status ?? 'NEW',
     );
-    const res = await this.leadsService.update(safeInt(id, 0), { status: statusId.toLowerCase() });
+    // CRM-2: statusId (camelCase Drizzle accessor) ishlatiladi, 'status' emas
+    const res = await this.leadsService.update(safeInt(id, 0), { statusId: statusId.toUpperCase(), status: statusId.toLowerCase() });
     return unwrapOrThrow(res);
   }
 

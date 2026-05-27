@@ -5,7 +5,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Result, AppError, Ok, Err } from '@common/result';
 import { TashkentTimeService } from '@common/time';
 import { TerritoryLogRepository } from './territory-log.repository';
 import { FaceRecognitionService } from './face-recognition.service';
@@ -59,13 +59,14 @@ export class TerritoryLogService {
         if (!matchResult.ok) {
           return { faces: [], total_faces: 0, ai_unavailable: true };
         }
-        const face = await this._logFaceResult(
+        const faceRes = await this._logFaceResult(
           matchResult.data.employee_id,
           matchResult.data.confidence,
           dto,
           eventTs,
         );
-        return { faces: [face], total_faces: 1, ai_unavailable: false };
+        if (!faceRes.ok) return { faces: [], total_faces: 0, ai_unavailable: false };
+        return { faces: [faceRes.data], total_faces: 1, ai_unavailable: false };
       }
 
       if (dto.image_base64) {
@@ -87,7 +88,7 @@ export class TerritoryLogService {
           const empId = matchResult.ok ? matchResult.data.employee_id : null;
           const conf  = matchResult.ok ? matchResult.data.confidence : (face.confidence ?? 0);
           const faceResult = await this._logFaceResult(empId, conf, dto, eventTs);
-          results.push(faceResult);
+          if (faceResult.ok) results.push(faceResult.data);
         }
 
         return {
@@ -106,7 +107,7 @@ export class TerritoryLogService {
     confidence:    number,
     dto:           CameraEventDto,
     eventTs:       Date,
-  ): Promise<FaceEventResult> {
+  ): Promise<Result<FaceEventResult, AppError>> {
     const numericEmployeeId = employeeIdStr ? parseInt(employeeIdStr, 10) : null;
     const isLate = this._isLateArrival(dto.event_type, eventTs);
 
@@ -155,13 +156,13 @@ export class TerritoryLogService {
         room_code:       dto.room_code,
       });
 
-      return {
+      return Ok({
         log_id:      unknownLogResult.ok ? unknownLogResult.data.id : 'unresolved',
         employee_id: null,
         event_type:  dto.event_type,
         ts:          eventTs.toISOString(),
         is_late:     false,
-      };
+      });
     }
 
     const today = this.time.formatDate(eventTs);
@@ -176,7 +177,7 @@ export class TerritoryLogService {
       room_code:       dto.room_code,
     });
 
-    if (!logResult.ok) throw new Error(String(logResult.error));
+    if (!logResult.ok) return Err(String(logResult.error));
 
     if (dto.event_type === 'exit') {
       this.emitter.emit('attendance.territory_exit', {
@@ -198,13 +199,13 @@ export class TerritoryLogService {
       });
     }
 
-    return {
+    return Ok({
       log_id:      logResult.data.id,
       employee_id: employeeIdStr,
       event_type:  dto.event_type,
       ts:          eventTs.toISOString(),
       is_late:     isLate,
-    };
+    });
   }
 
   async getLiveStatus(): Promise<Result<object, AppError>> {
@@ -251,11 +252,9 @@ export class TerritoryLogService {
   }
 
   async getLogsForDate(date: string, employeeId?: number): Promise<Result<object, AppError>> {
-    return safeCall(async () => {
-      const res = await this.repo.getLogsEnriched(date, employeeId);
-      if (!res.ok) throw new Error(String(res.error));
-      return { date, logs: res.data ?? [] };
-    });
+    const res = await this.repo.getLogsEnriched(date, employeeId);
+    if (!res.ok) return Err(String(res.error));
+    return Ok({ date, logs: res.data ?? [] });
   }
 
   private _tashkentMinutes(ts: Date): number {

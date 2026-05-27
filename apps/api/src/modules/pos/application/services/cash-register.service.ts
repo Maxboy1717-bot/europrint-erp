@@ -134,11 +134,9 @@ export class CashRegisterService {
       paymentDetails: dto.paymentDetails,
       notes:          dto.notes,
     };
-    const result = await this.repo.insertTransaction(data, cashierId);
+    // POS-1: Sotuv insert + stock decrement bitta atomik DB transaction (partial failure prevention)
+    const result = await this.repo.insertTransactionAtomic(data, dto.items, cashierId);
     if (!result.ok) throw new BadRequestException(result.error.message);
-    for (const item of dto.items) {
-      await this.repo.decrementStock(item.productId, item.quantity);
-    }
     return this.mapTransaction(result.data);
   }
 

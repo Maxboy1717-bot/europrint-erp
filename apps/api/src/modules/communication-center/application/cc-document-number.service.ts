@@ -21,13 +21,9 @@ import { db } from '@shared/db';
 export class CcDocumentNumberService {
   /** Berilgan shablon uchun keyingi yagona hujjat raqamini yaratadi (atomic) */
   async generate(templateId: string, format: string): Promise<string> {
-    try {
-      const parts = this.buildDateParts();
-      const seq = await this.nextSequence(templateId, parts.year);
-      return this.applyFormat(format, parts, seq);
-    } catch (e) {
-      throw new Error(`cc_document_number.generate: ${String(e)}`);
-    }
+    const parts = this.buildDateParts();
+    const seq = await this.nextSequence(templateId, parts.year);
+    return this.applyFormat(format, parts, seq);
   }
 
   private buildDateParts(): { yyyy: string; yy: string; mm: string; dd: string; year: number } {

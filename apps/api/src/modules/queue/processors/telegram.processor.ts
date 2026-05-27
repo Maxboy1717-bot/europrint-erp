@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { QUEUE_NAMES, backoffDelay } from '../queue.constants';
 import { TELEGRAM_TIMEOUT_MS } from '@common/constants/app.constants';
+import { Result, Ok, Err } from '@common/types/result.type';
 
 export interface TelegramJobData {
   chatId: string | number;
@@ -36,7 +37,11 @@ export class TelegramProcessor extends WorkerHost {
     );
 
     try {
-      await this.sendTelegramMessage(job.data);
+      const result = await this.sendTelegramMessage(job.data);
+      if (!result.ok) {
+        this.logger.error(`[telegram] Job #${job.id} xato: ${result.error.message}`);
+        throw new Error(result.error.message);
+      }
       this.logger.log(`[telegram] Job #${job.id} muvaffaqiyatli yuborildi: chatId=${job.data.chatId}`);
     } catch (err) {
       this.logger.error(`[telegram] Job #${job.id} xato: ${String(err)}`);
@@ -44,11 +49,11 @@ export class TelegramProcessor extends WorkerHost {
     }
   }
 
-  private async sendTelegramMessage(data: TelegramJobData): Promise<void> {
+  private async sendTelegramMessage(data: TelegramJobData): Promise<Result<void>> {
     const token = this.cfg.get<string>('TELEGRAM_BOT_TOKEN');
 
     if (!token) {
-      throw new Error('[telegram] TELEGRAM_BOT_TOKEN muhit o\'zgaruvchisi sozlanmagan');
+      return Err('[telegram] TELEGRAM_BOT_TOKEN muhit o\'zgaruvchisi sozlanmagan');
     }
 
     const url = `${TELEGRAM_API}/bot${token}/sendMessage`;
@@ -64,12 +69,11 @@ export class TelegramProcessor extends WorkerHost {
 
     try {
       await axios.post(url, payload, { timeout: TELEGRAM_TIMEOUT_MS });
+      return Ok();
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
         const body = JSON.stringify(err.response.data ?? {});
-        throw new Error(
-          `[telegram] HTTP ${err.response.status} — Telegram API xatosi: ${body}`,
-        );
+        return Err(`[telegram] HTTP ${err.response.status} — Telegram API xatosi: ${body}`);
       }
       throw err;
     }

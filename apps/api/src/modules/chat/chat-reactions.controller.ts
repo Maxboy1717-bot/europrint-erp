@@ -26,7 +26,7 @@ import {
   ChatCreatePollSchema, ChatCreatePollDto,
   ChatVotePollSchema, ChatVotePollDto,
 } from './dto/chat.dto';
-import { unwrapOrInternal } from '@common/http-result';
+import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 
 @ApiTags('Chat Reactions')
 @ApiBearerAuth()
@@ -81,7 +81,7 @@ export class ChatReactionsController {
     @Body(new ZodValidationPipe(ChatEmojiSchema)) body: ChatEmojiDto,
   ) {
     await this.chatService.assertRoomMember(roomId, user.id);
-    const reaction = await this.chatService.toggleReaction(msgId, user.id, body.emoji);
+    const reaction = unwrapOrThrow(await this.chatService.toggleReaction(msgId, user.id, body.emoji));
     this.gateway.emitToRoom(roomId, 'reaction:updated', { messageId: msgId, ...reaction });
     return reaction;
   }

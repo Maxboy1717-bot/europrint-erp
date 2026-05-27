@@ -44,7 +44,7 @@ export class PosEmployeeBalanceService {
   // ─── getMyInventory ────────────────────────────────────────────────────────
 
   async getMyInventory(userId: number): Promise<Result<EmployeeInventoryItem[], AppError>> {
-    return safeCall(() => this.repo.getInventory(userId));
+    return this.repo.getInventory(userId);
   }
 
   // ─── requestReturn ─────────────────────────────────────────────────────────
@@ -202,7 +202,7 @@ export class PosEmployeeBalanceService {
 
   // ─── getHRChecklist ────────────────────────────────────────────────────────
 
-  async getHRChecklist(userId: number): Promise<EmployeeInventoryItem[]> {
+  async getHRChecklist(userId: number): Promise<Result<EmployeeInventoryItem[], AppError>> {
     return this.repo.getChecklist(userId);
   }
 }

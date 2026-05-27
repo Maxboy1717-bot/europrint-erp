@@ -28,6 +28,8 @@ export const users = pgTable('users', {
 
 export const crmLeads = pgTable('crm_leads', {
   id:                 integer('id').primaryKey(),
+  // CRM-1: title NOT NULL in canonical schema — exposed here so DDD-layer save() can set it
+  title:              text('title'),
   customer_id:        integer('customer_id'),
   manager_id:         integer('manager_id'),
   status:             varchar('status', { length: 50 }).default('new'),

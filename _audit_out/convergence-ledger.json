@@ -1,80 +1,5 @@
 [
  {
-  "table": "daily_financial_metrics",
-  "verdict": "CLEAN",
-  "cons": 1,
-  "nDefs": 2,
-  "idTypes": [
-   "number"
-  ],
-  "conflicts": [],
-  "missing": [],
-  "libFile": "lib/db/src/schema/fi-payroll-calc.ts",
-  "apiFiles": [
-   "apps/api/src/shared/db/schema-finance-extended.ts"
-  ]
- },
- {
-  "table": "downtime_reason_codes",
-  "verdict": "CLEAN",
-  "cons": 1,
-  "nDefs": 2,
-  "idTypes": [
-   "number"
-  ],
-  "conflicts": [],
-  "missing": [],
-  "libFile": "lib/db/src/schema/pp/pp-iot.ts",
-  "apiFiles": [
-   "apps/api/src/shared/db/schema-compat-3.ts"
-  ]
- },
- {
-  "table": "financial_kpis",
-  "verdict": "CLEAN",
-  "cons": 1,
-  "nDefs": 2,
-  "idTypes": [
-   "number"
-  ],
-  "conflicts": [],
-  "missing": [],
-  "libFile": "lib/db/src/schema/fi-budgets.ts",
-  "apiFiles": [
-   "apps/api/src/shared/db/schema-finance-extended.ts"
-  ]
- },
- {
-  "table": "hr_job_descriptions",
-  "verdict": "CLEAN",
-  "cons": 1,
-  "nDefs": 2,
-  "idTypes": [
-   "number"
-  ],
-  "conflicts": [],
-  "missing": [],
-  "libFile": "lib/db/src/schema/hr-recruiter.ts",
-  "apiFiles": [
-   "apps/api/src/shared/db/schema-compat-1b.ts"
-  ]
- },
- {
-  "table": "hr_job_offers",
-  "verdict": "CLEAN",
-  "cons": 1,
-  "nDefs": 2,
-  "idTypes": [
-   "number"
-  ],
-  "conflicts": [],
-  "missing": [],
-  "libFile": "lib/db/src/schema/hr-recruiter.ts",
-  "apiFiles": [
-   "apps/api/src/shared/db/schema-compat-1b.ts"
-  ]
- },
- {
   "table": "order_costings",
   "verdict": "CLEAN",
   "cons": 1,
@@ -90,66 +15,6 @@
   ]
  },
  {
-  "table": "website_settings",
-  "verdict": "CLEAN",
-  "cons": 1,
-  "nDefs": 2,
-  "idTypes": [
-   "number"
-  ],
-  "conflicts": [],
-  "missing": [],
-  "libFile": "lib/db/src/schema/ecommerce-schema.ts",
-  "apiFiles": [
-   "apps/api/src/shared/db/schema-compat-3.ts"
-  ]
- },
- {
-  "table": "hr_references_checks",
-  "verdict": "CLEAN",
-  "cons": 2,
-  "nDefs": 2,
-  "idTypes": [
-   "number"
-  ],
-  "conflicts": [],
-  "missing": [],
-  "libFile": "lib/db/src/schema/hr-recruiter.ts",
-  "apiFiles": [
-   "apps/api/src/shared/db/schema-compat-1b.ts"
-  ]
- },
- {
-  "table": "retail_pos_products",
-  "verdict": "CLEAN",
-  "cons": 2,
-  "nDefs": 2,
-  "idTypes": [
-   "string"
-  ],
-  "conflicts": [],
-  "missing": [],
-  "libFile": "lib/db/src/schema/pos-retail.ts",
-  "apiFiles": [
-   "apps/api/src/shared/db/schema-pos-retail.ts"
-  ]
- },
- {
-  "table": "system_settings",
-  "verdict": "CLEAN",
-  "cons": 2,
-  "nDefs": 2,
-  "idTypes": [
-   "number"
-  ],
-  "conflicts": [],
-  "missing": [],
-  "libFile": "lib/db/src/schema/core-schema.ts",
-  "apiFiles": [
-   "apps/api/src/shared/db/schema-admin-ext.ts"
-  ]
- },
- {
   "table": "approval_requests",
   "verdict": "CLEAN",
   "cons": 3,
@@ -162,36 +27,6 @@
   "libFile": "lib/db/src/schema/core/core-ai-reports.ts",
   "apiFiles": [
    "apps/api/src/shared/db/schema-compat-4.ts"
-  ]
- },
- {
-  "table": "retail_pos_transactions",
-  "verdict": "CLEAN",
-  "cons": 3,
-  "nDefs": 2,
-  "idTypes": [
-   "string"
-  ],
-  "conflicts": [],
-  "missing": [],
-  "libFile": "lib/db/src/schema/pos-retail.ts",
-  "apiFiles": [
-   "apps/api/src/shared/db/schema-pos-retail.ts"
-  ]
- },
- {
-  "table": "hr_tool_test_results",
-  "verdict": "CLEAN",
-  "cons": 5,
-  "nDefs": 2,
-  "idTypes": [
-   "number"
-  ],
-  "conflicts": [],
-  "missing": [],
-  "libFile": "lib/db/src/schema/hr-recruiter.ts",
-  "apiFiles": [
-   "apps/api/src/shared/db/schema-compat-1b.ts"
   ]
  },
  {
@@ -2059,35 +1894,6 @@
   ]
  },
  {
-  "table": "guidelines",
-  "verdict": "RECONCILE",
-  "cons": 3,
-  "nDefs": 2,
-  "idTypes": [
-   "number"
-  ],
-  "conflicts": [
-   {
-    "col": "createdBy",
-    "stub": "string",
-    "lib": "number",
-    "file": "apps/api/src/shared/db/schema-admin-ext.ts"
-   }
-  ],
-  "missing": [
-   "companyName",
-   "timezone",
-   "language",
-   "currency",
-   "logoUrl",
-   "config"
-  ],
-  "libFile": "lib/db/src/schema/lms-schema.ts",
-  "apiFiles": [
-   "apps/api/src/shared/db/schema-admin-ext.ts"
-  ]
- },
- {
   "table": "hr_conflict_reports",
   "verdict": "RECONCILE",
   "cons": 3,
@@ -3893,6 +3699,39 @@
   "apiFiles": [
    "apps/api/src/shared/db/schema-compat-4.ts",
    "apps/api/src/shared/db/schema-misc.ts"
+  ]
+ },
+ {
+  "table": "guidelines",
+  "verdict": "PK-CONFLICT",
+  "cons": 3,
+  "nDefs": 2,
+  "idTypes": [
+   "string",
+   "number"
+  ],
+  "conflicts": [
+   {
+    "col": "id",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-admin-ext.ts"
+   },
+   {
+    "col": "createdBy",
+    "stub": "string",
+    "lib": "number",
+    "file": "apps/api/src/shared/db/schema-admin-ext.ts"
+   }
+  ],
+  "missing": [
+   "name",
+   "filterType",
+   "config"
+  ],
+  "libFile": "lib/db/src/schema/lms-schema.ts",
+  "apiFiles": [
+   "apps/api/src/shared/db/schema-admin-ext.ts"
   ]
  },
  {

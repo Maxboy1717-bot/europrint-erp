@@ -24,14 +24,10 @@ export class CrmBitrixCompatService {
   }
 
   async getRobot(id: number) {
-    return safeCall(async () => {
-      const robotResult = await this.repo.getRobot(id);
-
-      if (!robotResult.ok) throw new Error(robotResult.error.message);
-      if (!robotResult.data) throw new NotFoundException(`Robot #${id} topilmadi`);
-
-      return robotResult.data;
-    });
+    const robotResult = await this.repo.getRobot(id);
+    if (!robotResult.ok) return robotResult;
+    if (!robotResult.data) throw new NotFoundException(`Robot #${id} topilmadi`);
+    return { ok: true as const, data: robotResult.data };
   }
 
   async createRobot(body: Record<string, unknown>) {

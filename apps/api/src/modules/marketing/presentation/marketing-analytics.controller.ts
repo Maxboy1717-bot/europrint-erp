@@ -213,11 +213,8 @@ export class MarketingAnalyticsController {
   @ApiOperation({ summary: 'Lead yo`qotish sabablari analitikasi' })
   @ApiResponse({ status: 200, description: 'OK' })
   async getLeadsLossAnalysis() {
-    try {
-      const rows = await this.leadsSvc.getLossAnalysis();
-      return rows;
-    } catch {
-      return { total: 0, breakdown: [] };
-    }
+    const r = await this.leadsSvc.getLossAnalysis();
+    if (!r.ok) return { total: 0, breakdown: [] };
+    return r.data;
   }
 }

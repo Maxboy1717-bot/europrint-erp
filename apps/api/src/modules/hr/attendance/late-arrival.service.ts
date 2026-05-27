@@ -2,7 +2,7 @@
  *  creates a LATE_ARRIVAL document for HR approval. Penalty deferred to document.rejected event. */
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Result, AppError, Err } from '@common/result';
 import { SYSTEM_USER_ID } from '@common/constants/app.constants';
 import { TashkentTimeService } from '@common/time';
 import { NotificationBotService } from '../telegram-bots/notification-bot.service';
@@ -163,13 +163,12 @@ export class LateArrivalService {
   }
 
   async receiveLateReason(employeeId: string, reason: string): Promise<Result<void, AppError>> {
+    if (!reason || reason.trim().length < 30) {
+      return Err(
+        `Sabab kamida 30 ta belgi bo'lishi kerak (hozir: ${reason?.trim().length ?? 0} ta belgi).`,
+      );
+    }
     return safeCall(async () => {
-      if (!reason || reason.trim().length < 30) {
-        throw new Error(
-          `Sabab kamida 30 ta belgi bo'lishi kerak (hozir: ${reason?.trim().length ?? 0} ta belgi).`,
-        );
-      }
-
       const today = this.time.formatDate(this.time.today());
       const key   = `${employeeId}:${today}`;
       const pend  = this._pending.get(key);

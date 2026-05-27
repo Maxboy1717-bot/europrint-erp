@@ -23,6 +23,7 @@
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { Ok, Err, Result } from '@common/result';
 
 export interface EmployeeInventoryItem {
   materialCardId: number;
@@ -68,21 +69,21 @@ function mapRows(rows: Record<string, unknown>[]): EmployeeInventoryItem[] {
 
 @Injectable()
 export class PosEmployeeBalanceRepository {
-  async getInventory(userId: number): Promise<EmployeeInventoryItem[]> {
+  async getInventory(userId: number): Promise<Result<EmployeeInventoryItem[]>> {
     try {
       const r = await db.execute(LEDGER_BALANCE_SQL(userId));
-      return mapRows(r.rows as Record<string, unknown>[]);
+      return Ok(mapRows(r.rows as Record<string, unknown>[]));
     } catch (e) {
-      throw new Error(`pos_employee_balance.getInventory: ${String(e)}`);
+      return Err(`pos_employee_balance.getInventory: ${String(e)}`);
     }
   }
 
   /** Same query as getInventory — no HAVING filter difference at this level */
-  async getChecklist(userId: number): Promise<EmployeeInventoryItem[]> {
+  async getChecklist(userId: number): Promise<Result<EmployeeInventoryItem[]>> {
     return this.getInventory(userId);
   }
 
-  async reserveStock(warehouseId: string, materialCardId: number, qty: number): Promise<void> {
+  async reserveStock(warehouseId: string, materialCardId: number, qty: number): Promise<Result<void>> {
     try {
       await db.execute(sql`
         UPDATE pos_stock_balances
@@ -90,12 +91,13 @@ export class PosEmployeeBalanceRepository {
          WHERE warehouse_id     = ${warehouseId}
            AND material_card_id = ${materialCardId}
       `);
+      return Ok();
     } catch (e) {
-      throw new Error(`pos_employee_balance.reserveStock: ${String(e)}`);
+      return Err(`pos_employee_balance.reserveStock: ${String(e)}`);
     }
   }
 
-  async releaseStock(warehouseId: string, materialCardId: number, qty: number): Promise<void> {
+  async releaseStock(warehouseId: string, materialCardId: number, qty: number): Promise<Result<void>> {
     try {
       await db.execute(sql`
         UPDATE pos_stock_balances
@@ -103,12 +105,13 @@ export class PosEmployeeBalanceRepository {
          WHERE warehouse_id     = ${warehouseId}
            AND material_card_id = ${materialCardId}
       `);
+      return Ok();
     } catch (e) {
-      throw new Error(`pos_employee_balance.releaseStock: ${String(e)}`);
+      return Err(`pos_employee_balance.releaseStock: ${String(e)}`);
     }
   }
 
-  async barcodeExists(barcode: string): Promise<boolean> {
+  async barcodeExists(barcode: string): Promise<Result<boolean>> {
     try {
       const r = await db.execute(sql`
         SELECT 1 FROM material_cards mc WHERE mc.barcode = ${barcode}
@@ -116,9 +119,9 @@ export class PosEmployeeBalanceRepository {
         SELECT 1 FROM pos_batches pb WHERE pb.batch_number = ${barcode}
         LIMIT 1
       `);
-      return (r.rows ?? []).length > 0;
+      return Ok((r.rows ?? []).length > 0);
     } catch (e) {
-      throw new Error(`pos_employee_balance.barcodeExists: ${String(e)}`);
+      return Err(`pos_employee_balance.barcodeExists: ${String(e)}`);
     }
   }
 }

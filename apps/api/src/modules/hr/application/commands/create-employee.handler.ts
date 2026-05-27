@@ -79,7 +79,7 @@ export class CreateEmployeeHandler
             .returning({ id: users.id });
           const u = userInsert[0];
           if (!u) {
-            throw new Error('CreateEmployee: user account INSERT returned no row');
+            return { kind: 'err' as const, message: 'CreateEmployee: user account INSERT returned no row' };
           }
           userId = u.id as string;
         }
@@ -106,7 +106,7 @@ export class CreateEmployeeHandler
           .returning();
         const emp = empInsert[0];
         if (!emp) {
-          throw new Error('CreateEmployee: employee INSERT returned no row');
+          return { kind: 'err' as const, message: 'CreateEmployee: employee INSERT returned no row' };
         }
 
         // 3) Inline audit log — records who created the employee and the

@@ -48,9 +48,9 @@ export class MmVendorsPrService {
   }
 
   async createRequisition(title: unknown, requested_by: number | null, needed_by: unknown, notes: unknown, items: Array<Record<string, unknown>>) {
+    const req = await this.repo.createRequisition(title, requested_by, needed_by, notes);
+    if (!req.ok) return req;
     return safeCall(async () => {
-      const req = await this.repo.createRequisition(title, requested_by, needed_by, notes);
-      if (!req.ok) throw new Error(req.error.message);
       for (const item of items) {
         await this.repo.createRequisitionItem(req.data.id, item.material_id, item.quantity, item.unit_price);
       }

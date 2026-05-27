@@ -15,13 +15,11 @@ export class LibraryService {
   constructor(private readonly repo: LibraryRepository) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
-    return safeCall(async () => {
-      const { page = 1, limit = 10 } = query;
-      const r = await this.repo.findAll(Number(page), Number(limit));
-      if (!r.ok) throw new Error(r.error.message);
-      const { data, total } = r.data as { data: unknown[]; total: number };
-      return { data, pagination: { total, page, limit } };
-    });
+    const { page = 1, limit = 10 } = query;
+    const r = await this.repo.findAll(Number(page), Number(limit));
+    if (!r.ok) return r;
+    const { data, total } = r.data as { data: unknown[]; total: number };
+    return safeCall(async () => ({ data, pagination: { total, page, limit } }));
   }
 
   async findOne(id: number) {

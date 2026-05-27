@@ -155,8 +155,7 @@ export class HrBaseRepository {
           .returning();
         const saved = inserted[0];
         if (!saved) {
-          // Throwing inside the callback rolls back the whole tx.
-          throw new Error('saveEmployee: INSERT returned no row');
+          return { kind: 'err', message: 'saveEmployee: INSERT returned no row' };
         }
 
         // 2) Inline audit envelope — recorded in the same tx so the audit

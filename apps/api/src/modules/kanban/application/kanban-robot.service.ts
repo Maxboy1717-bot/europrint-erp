@@ -115,7 +115,12 @@ export class KanbanRobotService {
     data: { cardId: string; boardId: string; newColumnId: string; ownerUserId?: string | null },
   ): Promise<void> {
     try {
-      const robots = await this.kanbanRepo.findActiveRobots(data.boardId, triggerType);
+      const robotsResult = await this.kanbanRepo.findActiveRobots(data.boardId, triggerType);
+      if (!robotsResult.ok) {
+        this.logger.error(`Robot trigger xato (${triggerType}): ${robotsResult.error.message}`);
+        return;
+      }
+      const robots = robotsResult.data;
 
       for (const robot of robots) {
         const actions: RobotAction[] = Array.isArray(robot.actions)
@@ -164,13 +169,16 @@ export class KanbanRobotService {
 
       case 'send_notification':
         if (data.ownerUserId) {
-          await this.kanbanRepo.insertNotification({
+          const notifResult1 = await this.kanbanRepo.insertNotification({
             userId:  Number(data.ownerUserId),
             cardId:  data.cardId,
             type:    'task_assigned',
             title:   action.message ?? 'Robot bildirishnomasi',
             message: `Karta avtomatik harakatga duchor bo'ldi`,
           });
+          if (!notifResult1.ok) {
+            this.logger.warn(`insertNotification xato: ${notifResult1.error.message}`);
+          }
         }
         break;
 
@@ -181,13 +189,16 @@ export class KanbanRobotService {
             SET owner_user_id = ${action.targetUserId}, updated_at = NOW()
             WHERE id = ${data.cardId} AND deleted_at IS NULL
           `);
-          await this.kanbanRepo.insertNotification({
+          const notifResult2 = await this.kanbanRepo.insertNotification({
             userId:  Number(action.targetUserId),
             cardId:  data.cardId,
             type:    'task_assigned',
             title:   'Vazifa sizga tayinlandi',
             message: 'Robot tomonidan avtomatik tayinlash',
           });
+          if (!notifResult2.ok) {
+            this.logger.warn(`insertNotification xato: ${notifResult2.error.message}`);
+          }
         }
         break;
 

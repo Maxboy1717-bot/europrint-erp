@@ -23,21 +23,23 @@ type DbRow = Record<string, unknown>;
 export class DrizzleLeadRepository implements ILeadRepository {
   async save(lead: Lead): Promise<{ ok: true; data: Lead }> {
     const now = _time.now();
+    const contactName = `${lead.getFirstName()} ${lead.getLastName()}`.trim();
+    // CRM-1: compat stub (@shared/db) uses snake_case accessor names.
+    // title exposed in stub (ADD-ONLY, 2026-05-27) so NOT NULL constraint is satisfied.
     const payload = {
+      title:              contactName || 'Yangi lid',
       customer_id:        lead.getCompanyId(),
       status:             lead.getStatus(),
-      // status_description carries the AI score so the value is round-tripped
-      // through the compat schema (which has no dedicated ai_score column).
       status_description: `ai_score:${lead.getAiScore()}`,
       contact_email:      lead.getEmail?.() ?? undefined,
       contact_phone:      lead.getPhone?.() ?? undefined,
-      contact_name:       `${lead.getFirstName()} ${lead.getLastName()}`.trim(),
+      contact_name:       contactName,
       source:             lead.getSource?.() ?? undefined,
       notes:              lead.getNotes?.() ?? undefined,
       manager_id:         lead.getAssignedTo?.() ?? lead.getCreatedBy?.() ?? undefined,
       created_at:         now,
       updated_at:         now,
-    } as typeof crmLeads.$inferInsert;
+    } as unknown as typeof crmLeads.$inferInsert;
     await db.insert(crmLeads).values(payload)
       .onConflictDoUpdate({
         target: crmLeads.id,
@@ -101,12 +103,12 @@ export class DrizzleLeadRepository implements ILeadRepository {
       notes:         lead.getNotes?.() ?? undefined,
       manager_id:    lead.getAssignedTo?.() ?? undefined,
       updated_at:    _time.now(),
-    }).where(eq(crmLeads.id, lead.getId()));
+    } as unknown as Partial<typeof crmLeads.$inferInsert>).where(eq(crmLeads.id, lead.getId()));
     return { ok: true as const, data: undefined };
   }
 
   async delete(id: number): Promise<{ ok: true; data: void }> {
-    await db.update(crmLeads).set({ deleted_at: _time.now() }).where(eq(crmLeads.id, id));
+    await db.update(crmLeads).set({ deleted_at: _time.now() } as unknown as Partial<typeof crmLeads.$inferInsert>).where(eq(crmLeads.id, id));
     return { ok: true as const, data: undefined };
   }
 
@@ -132,18 +134,26 @@ export class DrizzleLeadRepository implements ILeadRepository {
   }
 
   private toDomain(row: DbRow): Lead {
+    // CRM-1: DB columns use legacy names (contact_name, contact_email, contact_phone,
+    // manager_id). Modern columns (name, emails, assignedById) also exist but save()
+    // writes legacy names — read from those to round-trip correctly.
+    const contactName = String(row['contact_name'] ?? row['name'] ?? '');
+    const nameParts = contactName.split(' ');
+    const aiScoreRaw = String(row['status_description'] ?? '');
+    const aiScoreMatch = aiScoreRaw.match(/ai_score:(\d+)/);
+    const aiScore = aiScoreMatch ? Number(aiScoreMatch[1]) : Number(row['ai_score'] ?? 0);
     return new Lead({
       id:         Number(row['id']),
-      companyId:  Number(row['customer_id']),
-      firstName:  String(row['first_name'] ?? ''),
-      lastName:   String(row['last_name'] ?? ''),
-      email:      Email.fromRaw(String(row['email'] ?? '')),
-      phone:      PhoneNumber.fromRaw(String(row['phone'] ?? '')),
-      status:     this.parseLeadStatus(String(row['status'] ?? 'new')),
-      aiScore:    this.parseAiScore(Number(row['ai_score'] ?? 0)),
-      createdBy:  Number(row['created_by']),
-      assignedTo: row['assigned_to'] ? Number(row['assigned_to']) : undefined,
-      source:     String(row['source'] ?? ''),
+      companyId:  Number(row['customer_id'] ?? row['company_id'] ?? 0),
+      firstName:  nameParts[0] ?? '',
+      lastName:   nameParts.slice(1).join(' '),
+      email:      Email.fromRaw(String(row['contact_email'] ?? row['email'] ?? '')),
+      phone:      PhoneNumber.fromRaw(String(row['contact_phone'] ?? row['phone'] ?? '')),
+      status:     this.parseLeadStatus(String(row['status'] ?? row['statusId'] ?? 'new').toLowerCase()),
+      aiScore:    this.parseAiScore(aiScore),
+      createdBy:  Number(row['created_by'] ?? 0),
+      assignedTo: (row['manager_id'] ?? row['assigned_by_id'] ?? row['assignedById']) ? Number(row['manager_id'] ?? row['assigned_by_id'] ?? row['assignedById']) : undefined,
+      source:     String(row['source'] ?? row['sourceId'] ?? ''),
       notes:      row['notes'] ? String(row['notes']) : undefined,
       createdAt:  new Date(String(row['created_at'] ?? _time.now())),
       updatedAt:  new Date(String(row['updated_at'] ?? _time.now())),

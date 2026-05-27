@@ -5,7 +5,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Result, AppError, Err } from '@common/result';
 import { TashkentTimeService } from '@common/time';
 import { db, camera_events, hrEmployees } from '@shared/db';
 import { eq, gte, desc, or, and } from 'drizzle-orm';
@@ -39,10 +39,9 @@ export class RoomAnalysisCron {
   }
 
   async _run(): Promise<Result<{ processed: number; anomalies: number }, AppError>> {
+    const roomsResult = await this.repo.findAllRooms();
+    if (!roomsResult.ok) return Err(String(roomsResult.error));
     return safeCall(async () => {
-      const roomsResult = await this.repo.findAllRooms();
-      if (!roomsResult.ok) throw new Error(String(roomsResult.error));
-
       const rooms = roomsResult.data as Record<string, unknown>[];
       if (rooms.length === 0) {
         this.logger.debug('RoomAnalysisCron: no rooms registered yet');

@@ -6,7 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Result, AppError, Err } from '@common/result';
 import { AttendanceRepository } from './attendance.repository';
 import { securityAttendance } from '@europrint/schemas';
 
@@ -17,13 +17,11 @@ export class AttendanceService {
   constructor(private readonly repo: AttendanceRepository) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
-    return safeCall(async () => {
-      const { page = 1, limit = 10 } = query;
-      const r = await this.repo.findAll(Number(page), Number(limit));
-      if (!r.ok) throw new Error(r.error.message);
-      const { data, total } = r.data as { data: unknown[]; total: number };
-      return { data, pagination: { total, page, limit } };
-    });
+    const { page = 1, limit = 10 } = query;
+    const r = await this.repo.findAll(Number(page), Number(limit));
+    if (!r.ok) return Err(r.error.message);
+    const { data, total } = r.data as { data: unknown[]; total: number };
+    return { ok: true, data: { data, pagination: { total, page, limit } } };
   }
 
   async findOne(id: number) {

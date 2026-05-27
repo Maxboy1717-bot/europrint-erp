@@ -3,7 +3,7 @@
  */
 
 import { Injectable, Inject, Optional } from '@nestjs/common';
-import { Result, Err, AppErr, safeCall } from '@common/result';
+import { Result, Ok, Err, AppErr } from '@common/result';
 import type { IAishaTool, ToolResult } from '../../domain/tool.interface';
 import { provSource, provResult } from './_helpers';
 import type { CameraSnapshot } from '../../domain/value-objects/tool-call.vo';
@@ -56,10 +56,10 @@ export class DetectSafetyViolationsTool implements IAishaTool {
     const provider = this.provider;
     if (!provider) return Err(AppErr('EXTERNAL_SERVICE', 'CameraSnapshotProvider ulanmagan'));
 
-    return safeCall<ToolResult<SafetyViolationsResult>>(async () => {
+    try {
       const start = Date.now();
       const frame = await provider.captureFrame(id);
-      if (!frame.base64) throw new Error('Frame base64 yo\'q');
+      if (!frame.base64) return Err(AppErr('EXTERNAL_SERVICE', 'Frame base64 yo\'q'));
 
       const r = await this.claude.sendOneShot({
         messages: [{
@@ -71,14 +71,14 @@ export class DetectSafetyViolationsTool implements IAishaTool {
         }],
         maxTokens: 512,
       });
-      if (!r.ok) throw new Error(r.error.message);
+      if (!r.ok) return Err(AppErr('EXTERNAL_SERVICE', r.error.message));
 
       const violations = this.parseViolations(r.data);
       const snapshot: CameraSnapshot = {
         cameraId: id, cameraName: frame.name,
         snapshotUrl: frame.url, capturedAt: frame.capturedAt,
       };
-      return provResult<SafetyViolationsResult>({
+      return Ok(provResult<SafetyViolationsResult>({
         data: { violations, cameraName: frame.name, snapshotUrl: frame.url },
         sources: [
           provSource({ type: 'camera', identifier: `camera.${id}`, startMs: start }),
@@ -86,8 +86,11 @@ export class DetectSafetyViolationsTool implements IAishaTool {
         ],
         confidence: 0.78,
         cameraSnapshots: [snapshot],
-      });
-    });
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return Err(AppErr('EXTERNAL_SERVICE', msg));
+    }
   }
 
   private parseViolations(raw: string): SafetyViolation[] {

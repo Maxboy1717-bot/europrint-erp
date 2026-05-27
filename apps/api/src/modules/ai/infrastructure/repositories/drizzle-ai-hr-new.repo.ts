@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { eq, desc } from 'drizzle-orm';
 import { DrizzleService } from '@common/services/drizzle.service';
 import { safeCall, Ok, Result } from '@common/result';
@@ -71,7 +71,7 @@ export class DrizzleAiHrNewRepo {
           createdBy,
         })
         .returning();
-      if (!row) throw new Error('AI intervyu yaratishda xato: natija qaytmadi');
+      if (!row) throw new InternalServerErrorException('AI intervyu yaratishda xato: natija qaytmadi');
       return this.toRow(row);
     });
   }

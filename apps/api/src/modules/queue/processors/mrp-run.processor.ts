@@ -19,6 +19,7 @@ import { EoqCalculatorService } from '../../wms/domain/services/eoq-calculator.s
 import { SafetyStockService } from '../../wms/domain/services/safety-stock.service';
 import { runEoqRecalcAll } from './mrp-run-eoq.helper';
 import { runSafetyStockRefresh } from './mrp-run-safety-stock.helper';
+import { Result, Ok, Err } from '@common/types/result.type';
 
 export interface MrpRunJobData {
   planningHorizonDays?: number;
@@ -50,7 +51,10 @@ export class MrpRunProcessor extends WorkerHost {
       } else if (job.data.jobType === 'SAFETY_STOCK_REFRESH') {
         await runSafetyStockRefresh(this.ssSvc, this.logger);
       } else {
-        await this.runMrpBomExplosion(job.data);
+        const result = await this.runMrpBomExplosion(job.data);
+        if (!result.ok) {
+          throw new Error(result.error.message);
+        }
       }
       this.logger.log(`[mrp] Job #${job.id} muvaffaqiyatli yakunlandi`);
     } catch (err) {
@@ -59,10 +63,10 @@ export class MrpRunProcessor extends WorkerHost {
     }
   }
 
-  private async runMrpBomExplosion(data: MrpRunJobData): Promise<void> {
+  private async runMrpBomExplosion(data: MrpRunJobData): Promise<Result<void>> {
     const productIds = Array.isArray(data.productIds) ? data.productIds : [];
     if (productIds.length === 0) {
-      throw new Error('[mrp] productIds bo\'sh — kamida bitta mahsulot talab qilinadi');
+      return Err('[mrp] productIds bo\'sh — kamida bitta mahsulot talab qilinadi');
     }
 
     let totalNodes = 0;
@@ -87,7 +91,8 @@ export class MrpRunProcessor extends WorkerHost {
     );
 
     if (failedIds.length > 0) {
-      throw new Error(`[mrp] ${failedIds.length}/${productIds.length} mahsulot BOM explosion muvaffaqiyatsiz`);
+      return Err(`[mrp] ${failedIds.length}/${productIds.length} mahsulot BOM explosion muvaffaqiyatsiz`);
     }
+    return Ok();
   }
 }

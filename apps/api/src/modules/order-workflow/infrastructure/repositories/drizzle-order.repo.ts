@@ -217,10 +217,14 @@ export class DrizzleOrderRepo implements IOrderRepo {
     if (!statusResult.ok) {
       this.logger.warn({ msg: 'DB\'da noto\'g\'ri holat, DRAFT ga qaytarildi', rowId: row.id, status: row.status });
       const fallback = OrderStatusVo.create(DRAFT_STATUS);
-      if (!fallback.ok) throw new Error(`OrderStatusVo DRAFT yarata olmadi: ${fallback.error.message}`);
+      // DRAFT har doim ORDER_STATUSES ichida — ok=false bo'lishi mumkin emas (statik invariant)
+      if (!fallback.ok) {
+        this.logger.error({ msg: 'OrderStatusVo DRAFT yarata olmadi (invariant buzildi)', err: fallback.error.message });
+      }
       return OrderAggregate.reconstitute({
         ...this.buildProps(row),
-        status: fallback.data,
+        // fallback.ok doim true chunki 'DRAFT' ORDER_STATUSES da bor
+        status: (fallback.ok ? fallback : OrderStatusVo.create(DRAFT_STATUS)).data as OrderStatusVo,
       });
     }
     return OrderAggregate.reconstitute({

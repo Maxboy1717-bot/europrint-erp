@@ -74,64 +74,20 @@ export const hitlApprovals = pgTable('hitl_approvals', {
   updatedAt: ts('updated_at').defaultNow(),
 });
 
-export const customerOrders = pgTable('customer_orders', {
-  id: integer('id').primaryKey(),
-  customerId: text('customer_id'),
-  orderNumber: text('order_number').unique(),
-  status: text('status').notNull().default('pending'),
-  totalAmount: decimal('total_amount', { precision: 18, scale: 2 }),
-  total: decimal('total', { precision: 18, scale: 2 }),
-  currency: text('currency').default('UZS'),
-  notes: text('notes'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-  guestName: text('guest_name'),
-  guestPhone: text('guest_phone'),
-  paymentStatus: text('payment_status'),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { customerOrders } from '@workspace/db';
 
 // Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
 export { customerAccounts } from '@workspace/db';
 
-export const publicProducts = pgTable('public_products', {
-  id: integer('id').primaryKey(),
-  name: text('name').notNull(),
-  slug: text('slug').unique(),
-  description: text('description'),
-  price: decimal('price', { precision: 18, scale: 2 }),
-  categoryId: text('category_id'),
-  isActive: boolean('is_active').default(true),
-  imageUrl: text('image_url'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-  inStock: boolean('in_stock').default(true),
-  isFeatured: boolean('is_featured').default(false),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { publicProducts } from '@workspace/db';
 
-export const websitePages = pgTable('website_pages', {
-  id: integer('id').primaryKey(),
-  slug: text('slug').notNull().unique(),
-  title: text('title').notNull(),
-  content: text('content'),
-  isPublished: boolean('is_published').default(false),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { websitePages } from '@workspace/db';
 
-export const portfolioItems = pgTable('portfolio_items', {
-  id: integer('id').primaryKey(),
-  sortOrder: integer('sort_order').default(0),
-  title: text('title').notNull(),
-  description: text('description'),
-  imageUrl: text('image_url'),
-  categoryId: text('category_id'),
-  isPublished: boolean('is_published').default(true),
-  createdAt: ts('created_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { portfolioItems } from '@workspace/db';
 
 export { lmsModules as modules } from '@workspace/db';
 
@@ -169,27 +125,11 @@ export const courses = pgTable('courses', {
   deletedAt: ts('deleted_at'),
 });
 
-export const mmDeliveries = pgTable('mm_deliveries', {
-  id: integer('id').primaryKey(),
-  purchaseOrderId: text('purchase_order_id'),
-  vendorId: text('vendor_id'),
-  status: text('status').notNull().default('pending'),
-  deliveredAt: ts('delivered_at'),
-  notes: text('notes'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { mmDeliveries } from '@workspace/db';
 
-export const sdOrders = pgTable('sd_orders', {
-  id: integer('id').primaryKey(),
-  orderNumber: text('order_number').unique(),
-  customerId: text('customer_id'),
-  status: text('status').notNull().default('draft'),
-  totalAmount: decimal('total_amount', { precision: 18, scale: 2 }),
-  createdBy: text('created_by'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { sdOrders } from '@workspace/db';
 
 export const productionSessions = pgTable('production_sessions', {
   id: integer('id').primaryKey(),

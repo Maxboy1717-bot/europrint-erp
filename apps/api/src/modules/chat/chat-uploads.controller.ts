@@ -144,20 +144,17 @@ export class ChatUploadsController {
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(CompleteUploadSchema)) dto: CompleteUploadDto,
   ): Promise<{ ok: true }> {
-    let sentMessage: Record<string, unknown>;
-    try {
-      sentMessage = await this.chatService.sendMessage(dto.roomId, user.id, dto.fileUrl ?? '', {
-        fileUrl:  dto.fileUrl,
-        fileName: dto.fileName ?? 'fayl',
-        fileType: dto.fileType ?? 'application/octet-stream',
-        replyToId: undefined,
-      }) as Record<string, unknown>;
-    } catch (e: unknown) {
-      this.logger.error(`completeUpload xato: ${e instanceof Error ? e.message : String(e)}`);
-      throw new InternalServerErrorException(
-        e instanceof Error ? e.message : 'Xabar yuborilmadi',
-      );
+    const sendResult = await this.chatService.sendMessage(dto.roomId, user.id, dto.fileUrl ?? '', {
+      fileUrl:  dto.fileUrl,
+      fileName: dto.fileName ?? 'fayl',
+      fileType: dto.fileType ?? 'application/octet-stream',
+      replyToId: undefined,
+    });
+    if (!sendResult.ok) {
+      this.logger.error(`completeUpload xato: ${sendResult.error.message}`);
+      throw new InternalServerErrorException(sendResult.error.message);
     }
+    const sentMessage: Record<string, unknown> = sendResult.data;
     this.gateway.emitToRoom(dto.roomId, 'message:new', sentMessage);
     return { ok: true };
   }

@@ -173,31 +173,11 @@ export const marketingLeads = pgTable('marketing_leads', {
   deletedAt:   ts('deleted_at'),
 });
 
-export const productCategories = pgTable('product_categories', {
-  id: integer('id').primaryKey(),
-  name: text('name').notNull(),
-  slug: text('slug').unique(),
-  parentId: text('parent_id'),
-  description: text('description'),
-  imageUrl: text('image_url'),
-  isActive: boolean('is_active').default(true),
-  sortOrder: integer('sort_order').default(0),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { productCategories } from '@workspace/db';
 
-export const websiteBanners = pgTable('website_banners', {
-  id: integer('id').primaryKey(),
-  title: text('title').notNull(),
-  subtitle: text('subtitle'),
-  imageUrl: text('image_url'),
-  linkUrl: text('link_url'),
-  isActive: boolean('is_active').default(true),
-  sortOrder: integer('sort_order').default(0),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  position: text('position'),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { websiteBanners } from '@workspace/db';
 
 // Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
 export { websiteSettings } from '@workspace/db';

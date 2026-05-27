@@ -42,7 +42,9 @@ export class ThreeWayMatchService {
 
       const status = (qtyVar > QTY_TOLERANCE_PCT || amountVar > AMOUNT_TOLERANCE_PCT) ? 'VARIANCE' : 'MATCHED';
 
-      const existing = await this.repo.findByMovement(input.movementId);
+      const existingR = await this.repo.findByMovement(input.movementId);
+      if (!existingR.ok) return Err(existingR.error);
+      const existing = existingR.data;
       const data = {
         purchaseOrderNo:  input.purchaseOrderNo  ?? null,
         receiptNo:        input.receiptNo        ?? null,

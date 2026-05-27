@@ -6,6 +6,7 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
+import { Result, Ok, Err, AppErr } from '@common/result';
 import { AishaConfig } from '../../config/aisha.config';
 
 interface ElevenLike {
@@ -25,22 +26,27 @@ export class ElevenLabsService {
     this.sdk = sdk;
   }
 
-  private async getSdk(): Promise<ElevenLike> {
-    if (this.sdk) return this.sdk;
-    // Dynamic import — package is optional. Fall back to a stub that throws on
+  private async getSdk(): Promise<Result<ElevenLike>> {
+    if (this.sdk) return Ok(this.sdk);
+    // Dynamic import — package is optional. Fall back to a stub that returns Err on
     // actual use when not installed (build/CI environments without the dep).
     const mod = await import('elevenlabs' as string).catch(() => null) as unknown as {
       ElevenLabsClient?: new (opts: { apiKey: string }) => ElevenLike;
     } | null;
     if (!mod?.ElevenLabsClient) {
-      throw new Error('elevenlabs package not installed — ElevenLabs voice synthesis disabled');
+      return Err(AppErr('EXTERNAL_SERVICE', 'elevenlabs package not installed — ElevenLabs voice synthesis disabled'));
     }
     this.sdk = new mod.ElevenLabsClient({ apiKey: this.cfg.elevenLabsKey });
-    return this.sdk;
+    return Ok(this.sdk);
   }
 
   async *synthesizeStream(text: string, voiceId?: string): AsyncIterable<Uint8Array> {
-    const sdk = await this.getSdk();
+    const sdkResult = await this.getSdk();
+    if (!sdkResult.ok) {
+      this.logger.error('ElevenLabs SDK unavailable', sdkResult.error.message);
+      return;
+    }
+    const sdk = sdkResult.data;
     const id = voiceId ?? this.cfg.elevenLabsVoiceId;
     try {
       const it = await sdk.textToSpeech.convertAsStream(id, {

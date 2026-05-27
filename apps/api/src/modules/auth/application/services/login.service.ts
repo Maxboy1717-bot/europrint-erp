@@ -32,6 +32,7 @@ import { AuthResult, AuthErrorCode } from '../../domain/types';
 import { UserLoggedInEvent } from '../../domain/events/user-logged-in.event';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
 
 /**
  * i18n PATTERN (Backend Task Group 3 — Reference Implementation)
@@ -179,15 +180,18 @@ export class LoginService {
   }
 
   private buildAuthResult(user: NonNullable<Awaited<ReturnType<IAuthRepo['findByUsername']>>>): AuthResult {
+    // SEC-3: jti (JWT ID) qo'shildi — logout blacklist JwtAuthGuard da ishlashi uchun
     const payload = {
       sub: user.getId(),
       username: user.getUsername(),
       email: user.getEmail(),
       role: user.getRole(),
+      jti: randomUUID(),
     };
-    const accessToken  = this.jwtService.sign(payload, { expiresIn: '8h' });
+    // AUTH-1: JWT TTL = cookie maxAge (24h access, 7d refresh) — no more drift
+    const accessToken  = this.jwtService.sign(payload, { expiresIn: '24h' });
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '30d',
+      expiresIn: '7d',
       secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
     });
     return {

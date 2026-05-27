@@ -74,12 +74,14 @@ export class ChatGatewayHelperService {
     const roomId = Number(data.roomId);
 
     try {
-      const message = await this.chatService.sendMessage(
+      const sendResult = await this.chatService.sendMessage(
         roomId,
         userId,
         data.content,
         { fileUrl: data.fileUrl, fileName: data.fileName, fileType: data.fileType, replyToId: data.replyToId ? Number(data.replyToId) : undefined },
       );
+      if (!sendResult.ok) { client.emit('error', { message: sendResult.error.message }); return; }
+      const message = sendResult.data;
 
       this.server?.to(`room:${roomId}`).emit('new_message', message);
 
