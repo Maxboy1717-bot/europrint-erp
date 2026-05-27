@@ -21,6 +21,13 @@ export const guidelines = pgTable("guidelines", {
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
+  // ── Live-DB superset columns (ADD-ONLY convergence) ──
+  orgFunctionId: integer("org_function_id"),
+  title: text("title"),
+  content: text("content"),
+  category: varchar("category", { length: 100 }),
+  isActive: boolean("is_active").default(true),
+  createdBy: integer("created_by"),
 });
 
 
@@ -59,6 +66,26 @@ export const courses = pgTable("courses", {
   endDate: varchar("end_date", { length: 10 }), // Default end date in YYYY-MM-DD format (optional)
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
+  // ── Live-DB superset columns (ADD-ONLY convergence) ──
+  orgDepartmentId: integer("org_department_id"),
+  courseCode: varchar("course_code", { length: 50 }),
+  titleUz: text("title_uz"),
+  category: varchar("category", { length: 100 }),
+  difficultyLevel: varchar("difficulty_level", { length: 20 }),
+  durationHours: integer("duration_hours"),
+  passingScore: integer("passing_score"),
+  maxAttempts: integer("max_attempts"),
+  isMandatory: boolean("is_mandatory").default(false),
+  prerequisiteCourseId: integer("prerequisite_course_id"),
+  thumbnailUrl: text("thumbnail_url"),
+  authorId: integer("author_id"),
+  isActive: boolean("is_active").default(true),
+  publishedAt: timestamp("published_at"),
+  updatedAt: timestamp("updated_at"),
+  createdBy: integer("created_by"),
+  status: varchar("status", { length: 20 }),
+  instructorId: integer("instructor_id"),
+  coverUrl: text("cover_url"),
 }, (t) => [
   check("courses_level_chk", sql`${t.level} IN ('beginner','intermediate','advanced')`),
   check("courses_duration_chk", sql`${t.duration} IS NULL OR ${t.duration} > 0`),

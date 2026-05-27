@@ -221,6 +221,24 @@ export const mmDeliveries = pgTable("mm_deliveries", {
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  // --- live-DB superset columns (schema-convergence A5; ADD-ONLY) ---
+  deliveryNumber: varchar("delivery_number", { length: 50 }),
+  deliveryType: varchar("delivery_type", { length: 30 }), // outbound, inbound, transfer, etc.
+  shippingPoint: varchar("shipping_point", { length: 100 }),
+  loadingPoint: varchar("loading_point", { length: 100 }),
+  salesOrderId: varchar("sales_order_id"),
+  plannedGoodsMovementDate: timestamp("planned_goods_movement_date"),
+  actualGoodsMovementDate: timestamp("actual_goods_movement_date"),
+  deliveryStatus: varchar("delivery_status", { length: 30 }), // SD-style status (alongside `status`)
+  totalWeight: numericMoney("total_weight"),
+  totalVolume: numericMoney("total_volume"),
+  numberOfPackages: integer("number_of_packages"),
+  vehicleNumber: varchar("vehicle_number", { length: 30 }),
+  createdBy: integer("created_by"),
+  deletedAt: timestamp("deleted_at"),
+  deliveryAddress: text("delivery_address"),
+  dispatchedAt: timestamp("dispatched_at"),
+  deliveredAt: timestamp("delivered_at"),
 }, (t) => [
   check("mm_deliveries_status_chk", sql`${t.status} IN ('planned','in_transit','delivered','failed','cancelled')`),
 ]);

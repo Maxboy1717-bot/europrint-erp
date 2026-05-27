@@ -122,6 +122,10 @@ export const orderCostingLines = pgTable("order_costing_lines", {
   totalAmount: numericMoney("total_amount").notNull().default(0), // quantity * unitPrice
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // ADD-ONLY (live DB drift columns)
+  type: text("type"),
+  description: text("description"),
+  amount: numericMoney("amount"),
 }, (t) => [
   index("idx_order_costing_lines_order_costing_id").on(t.orderCostingId),
   index("idx_order_costing_lines_cost_type").on(t.costType),

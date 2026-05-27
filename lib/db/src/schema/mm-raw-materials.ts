@@ -180,6 +180,11 @@ export const vendors = pgTable("vendors", {
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
+  // --- live-DB superset columns (schema-convergence A5; ADD-ONLY) ---
+  tin: varchar("tin", { length: 50 }), // STIR / tax identification number (alias of tax_id in some flows)
+  rating: numericMoney("rating"), // vendor performance rating
+  code: varchar("code", { length: 50 }), // alternate vendor code
+  contactPerson: varchar("contact_person", { length: 200 }),
 }, (t) => [
   index("idx_vendors_is_active").on(t.isActive),
   index("idx_vendors_created_at").on(t.createdAt),
@@ -214,6 +219,23 @@ export const purchaseOrders = pgTable("purchase_orders", {
   createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
+  // --- live-DB superset columns (schema-convergence A5; ADD-ONLY) ---
+  vendorName: text("vendor_name"), // denormalized vendor display name
+  items: jsonb("items"), // embedded line-items payload (legacy JSON storage)
+  approvedBy: integer("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  goodsReceivedBy: integer("goods_received_by"),
+  goodsReceivedAt: timestamp("goods_received_at"),
+  invoiceMatched: boolean("invoice_matched").default(false),
+  threeWayMatched: boolean("three_way_matched").default(false),
+  notes: text("notes"),
+  updatedAt: timestamp("updated_at"),
+  supplierId: varchar("supplier_id"), // alternate supplier reference (string id)
+  expectedDeliveryDate: varchar("expected_delivery_date", { length: 10 }), // YYYY-MM-DD
+  actualDeliveryDate: varchar("actual_delivery_date", { length: 10 }), // YYYY-MM-DD
+  expectedDate: varchar("expected_date", { length: 10 }), // YYYY-MM-DD
+  referenceNumber: varchar("reference_number", { length: 100 }),
+  receivedBy: integer("received_by"),
 }, (t) => [
   index("idx_purchase_orders_vendor_id").on(t.vendorId),
   index("idx_purchase_orders_status").on(t.status),

@@ -60,6 +60,13 @@ export const entries = pgTable("entries", {
   description: text("description"),
   createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // ADD-ONLY (live DB drift columns)
+  debitAccount: text("debit_account"),
+  creditAccount: text("credit_account"),
+  referenceId: varchar("reference_id"),
+  referenceType: varchar("reference_type", { length: 30 }),
+  postedBy: integer("posted_by"),
+  postedAt: timestamp("posted_at"),
 }, (t) => [
   check("entries_amount_chk", sql`${t.amount} > 0`),
 ]);
@@ -145,6 +152,17 @@ export const glDocuments = pgTable("gl_documents", {
   postedAt: timestamp("posted_at"),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // ADD-ONLY (live DB drift columns — converged from stub/DB manifest)
+  costCenterId: varchar("cost_center_id"),
+  profitCenterId: varchar("profit_center_id"),
+  updatedAt: timestamp("updated_at"),
+  docNumber: text("doc_number"),
+  docType: varchar("doc_type", { length: 20 }),
+  reference: varchar("reference", { length: 100 }),
+  totalAmount: numericMoney("total_amount"),
+  amount: numericMoney("amount"),
+  metadata: jsonb("metadata"),
+  createdBy: integer("created_by"),
 }, (t) => [
   index("idx_gl_documents_status").on(t.status),
   index("idx_gl_documents_document_type").on(t.documentType),
@@ -208,6 +226,10 @@ export const accountingPeriods = pgTable("accounting_periods", {
   closedBy: varchar("closed_by").references(() => users.id, { onDelete: "set null" }),
   closedAt: timestamp("closed_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // ADD-ONLY (live DB drift columns)
+  year: integer("year"),
+  isClosed: boolean("is_closed"),
+  name: text("name"),
 }, (t) => [
   check("accounting_periods_status_chk", sql`${t.status} IN ('open','closed','soft_closed')`),
   check("accounting_periods_month_chk", sql`${t.month} >= 1 AND ${t.month} <= 12`),
@@ -251,6 +273,8 @@ export const payrollPeriods = pgTable("payroll_periods", {
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   closedAt: timestamp("closed_at"),
+  // ADD-ONLY (live DB drift column)
+  updatedAt: timestamp("updated_at"),
 }, (t) => [
   check("payroll_periods_status_chk", sql`${t.status} IN ('open','processing','closed')`),
 ]);
@@ -283,6 +307,10 @@ export const payrollRows = pgTable("payroll_rows", {
   totalSalary: numericMoney("total_salary").notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // ADD-ONLY (live DB drift columns)
+  bonus: numericMoney("bonus"),
+  netPay: numericMoney("net_pay"),
+  status: varchar("status", { length: 20 }),
 });
 
 

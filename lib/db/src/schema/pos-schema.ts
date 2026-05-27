@@ -29,6 +29,9 @@ export const posMovementTypes = pgTable("pos_movement_types", {
   requiresDocument: boolean("requires_document").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // ─── Legacy / live-DB drift columns (ADD-ONLY superset; do not remove) ──────
+  isIssue: boolean("is_issue").notNull().default(false),
+  isReceipt: boolean("is_receipt").notNull().default(false),
 }, (t) => [
   check("pos_movement_types_dir_chk", sql`${t.direction} IN ('in','out','transfer','adjustment')`),
 ]);

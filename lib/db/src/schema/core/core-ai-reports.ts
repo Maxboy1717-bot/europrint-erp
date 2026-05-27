@@ -46,6 +46,8 @@ export const documentSequences = pgTable("document_sequences", {
   year: integer("year").notNull(),
   month: integer("month").notNull(),
   lastNumber: integer("last_number").notNull().default(0),
+  // Live DB superset (ADD-ONLY)
+  documentType: varchar("document_type", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -103,6 +105,11 @@ export const approvalRequests = pgTable("approval_requests", {
   rejectedAt: timestamp("rejected_at"),
   rejectionReason: text("rejection_reason"),
   notes: text("notes"),
+  // Live DB superset (ADD-ONLY)
+  approvedBy: varchar("approved_by").references(() => users.id, { onDelete: "set null" }),
+  rejectedBy: varchar("rejected_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export type ApprovalRequest = typeof approvalRequests.$inferSelect;

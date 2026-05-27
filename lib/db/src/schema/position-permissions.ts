@@ -17,6 +17,8 @@ export const positionPermissions = pgTable("position_permissions", {
   validFrom: date("valid_from"),
   validUntil: date("valid_until"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  // Convergence additions (live-DB superset)
+  orgFunctionId: integer("org_function_id"),
 }, (table) => [
   uniqueIndex("uq_pos_perm_position_module").on(table.positionId, table.moduleCode),
 ]);

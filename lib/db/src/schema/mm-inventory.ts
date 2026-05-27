@@ -81,6 +81,19 @@ export const inventoryCounts = pgTable("inventory_counts", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   completedAt: timestamp("completed_at"),
   approvedAt: timestamp("approved_at"),
+  // --- live-DB superset columns (schema-convergence A5; ADD-ONLY) ---
+  countedBy: integer("counted_by").references(() => users.id, { onDelete: "set null" }),
+  updatedAt: timestamp("updated_at"),
+  materialId: integer("material_id"), // single-material count (alongside line-level detail)
+  countedQty: numericMoney("counted_qty"),
+  systemQty: numericMoney("system_qty"),
+  startedBy: integer("started_by"),
+  isWarehouseLocked: boolean("is_warehouse_locked").default(false),
+  systemSnapshotAt: timestamp("system_snapshot_at"),
+  totalVarianceValue: numericMoney("total_variance_value"),
+  glDocumentId: varchar("gl_document_id"),
+  pdfPath: text("pdf_path"),
+  conductedBy: integer("conducted_by"),
 }, (t) => [
   check("inventory_counts_status_chk", sql`${t.status} IN ('planned','in_progress','completed','approved')`),
   check("inventory_counts_count_type_chk", sql`${t.countType} IN ('full','cycle','spot')`),
@@ -168,6 +181,10 @@ export const aiReservationRequests = pgTable("ai_reservation_requests", {
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
+  // --- live-DB superset columns (schema-convergence A5; ADD-ONLY) ---
+  quantity: numericMoney("quantity"), // alias of required_quantity (legacy column)
+  neededBy: varchar("needed_by", { length: 10 }), // YYYY-MM-DD (alias of required_by_date)
+  optimization: jsonb("optimization"), // AI optimization result payload
 }, (t) => [
   index("idx_ai_reservation_requests_status").on(t.status),
   index("idx_ai_reservation_requests_priority").on(t.priority),

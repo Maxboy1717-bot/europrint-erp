@@ -154,6 +154,10 @@ export const marketingLeads = pgTable("marketing_leads", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
+  // --- live-DB superset (A12 convergence) ---
+  firstName: varchar("first_name", { length: 255 }),
+  lastName: varchar("last_name", { length: 255 }),
+  convertedAt: timestamp("converted_at"),
 }, (t) => [
   check("marketing_leads_status_chk", sql`${t.status} IN ('new','qualified','contacted','converted','lost')`),
   check("marketing_leads_score_chk", sql`${t.score} IS NULL OR ${t.score} >= 0`),

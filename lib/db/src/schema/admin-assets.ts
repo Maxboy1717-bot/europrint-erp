@@ -26,6 +26,15 @@ export const assetItems = pgTable("asset_items", {
   notes:         text("notes"),
   createdAt:     timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt:     timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  // ─── live-DB superset columns (ADD-ONLY) ───
+  nameRu:                  text("name_ru"),
+  purchasePrice:           text("purchase_price"),
+  depreciationMethod:      text("depreciation_method"),
+  usefulLife:              integer("useful_life"),
+  salvageValue:            text("salvage_value"),
+  accumulatedDepreciation: text("accumulated_depreciation"),
+  condition:               text("condition"),
+  lastInventoryDate:       timestamp("last_inventory_date", { withTimezone: true }),
 }, (t) => [
   check("asset_items_status_chk", sql`${t.status} IN ('active','inactive','maintenance','disposed')`),
   check("asset_items_category_chk", sql`${t.category} IN ('equipment','vehicle','it','furniture','building','other')`),
@@ -75,6 +84,12 @@ export const assetDisposals = pgTable("asset_disposals", {
   reason:       text("reason"),
   approvedBy:   text("approved_by"),
   createdAt:    timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  // ─── live-DB superset columns (ADD-ONLY) ───
+  disposalMethod:      text("disposal_method"),
+  disposalValue:       text("disposal_value"),
+  bookValueAtDisposal: text("book_value_at_disposal"),
+  gainLoss:            text("gain_loss"),
+  notes:               text("notes"),
 }, (t) => [
   check("asset_disposals_type_chk", sql`${t.disposalType} IN ('retired','sold','donated','scrapped','transferred')`),
 ]);
@@ -96,6 +111,15 @@ export const assetTransfers = pgTable("asset_transfers", {
   reason:       text("reason"),
   approvedBy:   text("approved_by"),
   createdAt:    timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  // ─── live-DB superset columns (ADD-ONLY) ───
+  fromDepartmentId: integer("from_department_id"),
+  toDepartmentId:   integer("to_department_id"),
+  fromLocation:     text("from_location"),
+  toLocation:       text("to_location"),
+  transferredBy:    text("transferred_by"),
+  receivedBy:       text("received_by"),
+  status:           text("status"),
+  notes:            text("notes"),
 });
 
 export const insertAssetTransferSchema = createInsertSchema(assetTransfers).omit({ id: true, createdAt: true } as never);

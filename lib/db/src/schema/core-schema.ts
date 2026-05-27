@@ -31,6 +31,8 @@ export const contactSettings = pgTable("contact_settings", {
   workingHours: text("working_hours").notNull().default("9:00 - 18:00 (Dushanba - Juma)"),
   workingHoursRu: text("working_hours_ru").notNull().default("9:00 - 18:00 (Понедельник - Пятница)"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  // ─── live-DB superset columns (ADD-ONLY) ───
+  telegram: varchar("telegram", { length: 100 }),
 });
 
 export const insertContactSettingsSchema = createInsertSchema(contactSettings).omit({ id: true, updatedAt: true } as never);
@@ -52,6 +54,12 @@ export const systemSettings = pgTable("system_settings", {
   minWage: integer("min_wage").default(1120000),
   qqsRate: real("qqs_rate").default(12.0),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  // ─── live-DB superset columns (ADD-ONLY) ───
+  timezone: varchar("timezone", { length: 50 }),
+  language: varchar("language", { length: 5 }),
+  currency: varchar("currency", { length: 10 }),
+  logoUrl: text("logo_url"),
+  config: jsonb("config"),
 });
 
 export const insertSystemSettingsSchema = createInsertSchema(systemSettings).omit({ id: true, updatedAt: true } as never);
@@ -96,6 +104,11 @@ export const calendarEvents = pgTable("calendar_events", {
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
+  // ─── live-DB superset columns (ADD-ONLY) ───
+  allDay: boolean("all_day").default(false),
+  eventType: varchar("event_type", { length: 50 }),
+  location: text("location"),
+  attendees: jsonb("attendees"),
 });
 
 

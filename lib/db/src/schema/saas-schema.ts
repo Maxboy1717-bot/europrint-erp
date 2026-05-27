@@ -35,6 +35,8 @@ export const tenants = pgTable("saas_tenants", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
+  // ─── live-DB superset columns (ADD-ONLY) ───
+  employeeLimit: integer("employee_limit"),
 }, (t) => [
   check("saas_tenants_plan_chk", sql`${t.plan} IN ('basic','starter','professional','enterprise')`),
   check("saas_tenants_status_chk", sql`${t.status} IN ('trial','active','suspended','cancelled')`),

@@ -173,6 +173,13 @@ export const hrCandidateFunnels = pgTable("hr_candidate_funnels", {
 
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  // Convergence additions (live-DB superset)
+  checklistData: jsonb("checklist_data"),
+  stage: varchar("stage", { length: 50 }),
+  notes: text("notes"),
+  movedAt: timestamp("moved_at"),
+  funnelId: integer("funnel_id"),
+  metadata: jsonb("metadata"),
 }, (t) => ({
   candidateIdx: index("hr_candidate_funnels_candidate_idx").on(t.candidateId),
   stageIdx: index("hr_candidate_funnels_stage_idx").on(t.funnelStage),
@@ -188,6 +195,10 @@ export const hrFunnelHistory = pgTable("hr_funnel_history", {
   changedById: integer("changed_by_id").references(() => users.id, { onDelete: "set null" }),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // Convergence additions (live-DB superset)
+  stage: varchar("stage", { length: 50 }),
+  changedBy: varchar("changed_by", { length: 100 }),
+  candidateId: integer("candidate_id"),
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -336,6 +347,12 @@ export const hrOnboardingPlans = pgTable("hr_onboarding_plans", {
   createdById: integer("created_by_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  // Convergence additions (live-DB superset)
+  title: varchar("title", { length: 200 }),
+  tasks: jsonb("tasks"),
+  durationDays: integer("duration_days"),
+  orgDepartmentId: integer("org_department_id"),
+  orgFunctionId: integer("org_function_id"),
 });
 
 // Xodim onboardingi (individual kuzatuv)
@@ -371,6 +388,8 @@ export const hrEmployeeOnboardings = pgTable("hr_employee_onboardings", {
 
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  // Convergence additions (live-DB superset)
+  progress: integer("progress").default(0),
 }, (t) => ({
   employeeIdx: index("hr_employee_onboardings_emp_idx").on(t.employeeId),
 }));
@@ -449,6 +468,10 @@ export const hrJobDescriptions = pgTable("hr_job_descriptions", {
   createdById: integer("created_by_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  // Convergence additions (live-DB superset)
+  content: text("content"),
+  isActive: boolean("is_active").default(true),
+  orgFunctionId: integer("org_function_id"),
 }, (t) => ({
   positionVersionIdx: index("hr_job_desc_position_version_idx").on(t.positionId, t.version),
 }));
@@ -491,6 +514,10 @@ export const hrMotivationPlans = pgTable("hr_motivation_plans", {
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  // Convergence additions (live-DB superset)
+  title: varchar("title", { length: 200 }),
+  targets: jsonb("targets"),
+  status: varchar("status", { length: 20 }),
 }, (t) => ({
   employeeIdx: index("hr_motivation_plans_emp_idx").on(t.employeeId),
 }));

@@ -29,6 +29,15 @@ export const attendance = pgTable("attendance", {
   approvedBy: integer("approved_by"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Convergence additions (live-DB superset)
+  checkIn: timestamp("check_in"),
+  checkOut: timestamp("check_out"),
+  userId: integer("user_id"),
+  date: date("date"),
+  isEarlyLeave: boolean("is_early_leave"),
+  minutesLate: integer("minutes_late"),
+  minutesEarly: integer("minutes_early"),
+  hoursWorked: decimal("hours_worked", { precision: 6, scale: 2 }),
 }, (table) => [
   check("attendance_status_chk", sql`${table.status} IN ('present','absent','late','half_day','on_leave','sick_leave','business_trip','remote','holiday')`),
   check("attendance_late_minutes_chk", sql`${table.lateMinutes} >= 0`),

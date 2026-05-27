@@ -64,6 +64,14 @@ export const workCenters = pgTable("work_centers", {
    * Masalan: "Offset bosma", "Digital bosma", "Sifat nazorati"
    */
   requiredSkillName: varchar("required_skill_name", { length: 100 }),
+  // ── ADD-ONLY: live DB superset columns ──
+  nameUz: text("name_uz"),
+  hoursPerDay: numericMoney("hours_per_day"),
+  department: varchar("department", { length: 100 }),
+  orgDepartmentId: integer("org_department_id"),
+  costPerHour: numericMoney("cost_per_hour"),
+  capacityPerHour: numericMoney("capacity_per_hour"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 }, (t) => [
@@ -282,6 +290,8 @@ export const bomHeaders = pgTable("bom_headers", {
   validFrom: varchar("valid_from", { length: 10 }),
   validTo: varchar("valid_to", { length: 10 }),
   description: text("description"),
+  // ── ADD-ONLY: live DB superset columns ──
+  isActive: boolean("is_active").notNull().default(true),
   createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -317,6 +327,9 @@ export const bomItems = pgTable("bom_items", {
   scrapPercentage: numericMoney("scrap_percentage").notNull().default(0),
   position: integer("position").notNull().default(0),
   notes: text("notes"),
+  // ── ADD-ONLY: live DB superset columns ──
+  materialId: integer("material_id"),
+  scrapPercent: numericMoney("scrap_percent"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
@@ -350,6 +363,11 @@ export const routings = pgTable("routings", {
   validFrom: varchar("valid_from", { length: 10 }),
   validTo: varchar("valid_to", { length: 10 }),
   description: text("description"),
+  // ── ADD-ONLY: live DB superset columns ──
+  name: text("name"),
+  isActive: boolean("is_active").notNull().default(true),
+  steps: jsonb("steps"),
+  workCenters: jsonb("work_centers"),
   createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -386,6 +404,13 @@ export const routingOperations = pgTable("routing_operations", {
   sequence: integer("sequence").notNull(),
   isParallel: boolean("is_parallel").notNull().default(false),
   notes: text("notes"),
+  // ── ADD-ONLY: live DB superset columns ──
+  name: text("name"),
+  productId: integer("product_id"),
+  setupTimeMin: numericMoney("setup_time_min"),
+  runTimePerUnitMin: numericMoney("run_time_per_unit_min"),
+  runTimeMin: numericMoney("run_time_min"),
+  isActive: boolean("is_active"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
 }, (t) => [
@@ -436,6 +461,14 @@ export const productionOrders = pgTable("production_orders", {
   shiftSupervisorId: varchar("shift_supervisor_id", { length: 50 }),
   qcInspectorId: varchar("qc_inspector_id", { length: 50 }),
   notes: text("notes"),
+  // ── ADD-ONLY: live DB superset columns ──
+  scheduledStart: timestamp("scheduled_start"),
+  scheduledEnd: timestamp("scheduled_end"),
+  actualStart: timestamp("actual_start"),
+  actualEnd: timestamp("actual_end"),
+  productName: text("product_name"),
+  quantity: numericMoney("quantity"),
+  unit: varchar("unit", { length: 20 }),
   createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -595,7 +628,8 @@ export type ShiftCalendar = typeof shiftCalendars.$inferSelect;
 export type InsertShiftCalendar = z.infer<typeof insertShiftCalendarSchema>;
 
 // Shift Assignments — canonical definition lives in ../shifts
-export { shiftAssignments, insertShiftAssignmentSchema, ShiftAssignment, InsertShiftAssignment } from "../shifts";
+export { shiftAssignments, insertShiftAssignmentSchema } from "../shifts";
+export type { ShiftAssignment, InsertShiftAssignment } from "../shifts";
 
 // MRP Runs
 export const mrpRuns = pgTable("mrp_runs", {

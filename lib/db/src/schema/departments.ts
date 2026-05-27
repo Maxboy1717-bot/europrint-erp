@@ -24,6 +24,18 @@ export const departments = pgTable("departments", {
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Convergence additions (live-DB superset)
+  name: varchar("name", { length: 150 }),
+  nameEn: varchar("name_en", { length: 150 }),
+  organizationNumber: varchar("organization_number", { length: 50 }),
+  descriptionRu: text("description_ru"),
+  vep: text("vep"),
+  vepRu: text("vep_ru"),
+  statisticsType: varchar("statistics_type", { length: 50 }),
+  departmentCode: varchar("department_code", { length: 50 }),
+  icon: varchar("icon", { length: 50 }),
+  color: varchar("color", { length: 30 }),
+  headId: integer("head_id"),
 }, (t) => [
   index("idx_departments_parent_id").on(t.parentId),
   index("idx_departments_is_active").on(t.isActive),

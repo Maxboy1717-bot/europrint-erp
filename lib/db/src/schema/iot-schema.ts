@@ -404,6 +404,10 @@ export const iotSensors = pgTable("iot_sensors", {
   lastReading: numericMoney("last_reading"),
   lastReadingAt: timestamp("last_reading_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- live-DB superset (A12 convergence) ---
+  deviceCode: varchar("device_code", { length: 50 }),
+  status: varchar("status", { length: 20 }),
+  thresholds: jsonb("thresholds"),
 });
 
 

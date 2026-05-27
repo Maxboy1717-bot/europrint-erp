@@ -35,6 +35,11 @@ export const marketingContentPosts = pgTable('marketing_content_posts', {
   status:       varchar('status', { length: 20 }).notNull().default('draft'),
   authorId:     integer('author_id').references(() => users.id, { onDelete: 'set null' }),
   errorMessage: text('error_message'),
+  // ADD-ONLY superset: columns present in live DB (marketing_content_posts)
+  title:        text('title'),
+  postType:     text('post_type'),
+  tags:         text('tags'),
+  category:     text('category'),
   createdAt:    timestamp('created_at').notNull().defaultNow(),
   updatedAt:    timestamp('updated_at').notNull().defaultNow(),
 });
@@ -46,5 +51,8 @@ export const marketingSocialAccounts = pgTable('marketing_social_accounts', {
   accessTokenEnc: text('access_token_enc'),
   isActive:       boolean('is_active').notNull().default(true),
   expiresAt:      timestamp('expires_at'),
+  // ADD-ONLY superset: columns present in live DB (marketing_social_accounts)
+  accountId:      text('account_id'),
+  accessToken:    text('access_token'),
   createdAt:      timestamp('created_at').notNull().defaultNow(),
 });

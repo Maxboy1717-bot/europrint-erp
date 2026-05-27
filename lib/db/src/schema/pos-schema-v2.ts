@@ -12,7 +12,7 @@ import { numericMoney } from './numeric-money';
 import { sql, relations } from 'drizzle-orm';
 import {
   serial, pgTable, text, varchar, integer, boolean,
-  timestamp, jsonb, unique, index, pgEnum, inet, bigserial, check,
+  timestamp, date, jsonb, unique, index, pgEnum, inet, bigserial, check,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
@@ -119,6 +119,20 @@ export const posMovements = pgTable('pos_movements', {
   deletedAt:             timestamp('deleted_at'),
   createdAt:             timestamp('created_at').notNull().defaultNow(),
   updatedAt:             timestamp('updated_at').notNull().defaultNow(),
+  // ─── Legacy / live-DB drift columns (ADD-ONLY superset; do not remove) ──────
+  movementTypeId:        integer('movement_type_id'),
+  bulim:                 text('bulim'),
+  supplierName:          text('supplier_name'),
+  documentNumber:        varchar('document_number', { length: 100 }),
+  documentDate:          date('document_date'),
+  productId:             varchar('product_id', { length: 50 }),
+  type:                  varchar('type', { length: 50 }),
+  quantity:              numericMoney('quantity'),
+  referenceId:           integer('reference_id'),
+  warehouseId:           varchar('warehouse_id', { length: 50 }),
+  direction:             varchar('direction', { length: 20 }),
+  documentRef:           varchar('document_ref', { length: 100 }),
+  completedBy:           integer('completed_by'),
 }, (t) => [
   index('idx_pos_movements_type').on(t.movementType),
   index('idx_pos_movements_status').on(t.status),

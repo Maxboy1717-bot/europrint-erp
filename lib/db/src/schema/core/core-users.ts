@@ -8,7 +8,7 @@
 
 import { sql } from "drizzle-orm";
 import {
-  pgTable, text, varchar, integer, boolean, timestamp, serial,
+  pgTable, text, varchar, integer, boolean, timestamp, serial, jsonb,
   index
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -16,9 +16,12 @@ import { z } from "zod";
 import { users } from "../users";
 
 // ─── RE-EXPORTS from canonical top-level files ────────────────────────────────
-export { users, insertUserSchema, InsertUser, User } from "../users";
-export { departments, insertDepartmentSchema, InsertDepartment, Department } from "../departments";
-export { positions, insertPositionSchema, InsertPosition, Position } from "../positions";
+export { users, insertUserSchema } from "../users";
+export type { InsertUser, User } from "../users";
+export { departments, insertDepartmentSchema } from "../departments";
+export type { InsertDepartment, Department } from "../departments";
+export { positions, insertPositionSchema } from "../positions";
+export type { InsertPosition, Position } from "../positions";
 
 // ─── ADMINS ──────────────────────────────────────────────────────────────────
 // DB: varchar UUID PK — PRESERVED
@@ -40,6 +43,23 @@ export const notifications = pgTable("notifications", {
   messageRu: text("message_ru"),
   read:      boolean("read").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // ─── live-DB superset columns (ADD-ONLY) ───
+  body:              text("body"),
+  isRead:            boolean("is_read").default(false),
+  referenceId:       varchar("reference_id"),
+  referenceType:     varchar("reference_type", { length: 50 }),
+  entityType:        varchar("entity_type", { length: 50 }),
+  entityId:          varchar("entity_id"),
+  updatedAt:         timestamp("updated_at"),
+  documentId:        varchar("document_id"),
+  priority:          varchar("priority", { length: 20 }),
+  titleUz:           text("title_uz"),
+  messageUz:         text("message_uz"),
+  readAt:            timestamp("read_at"),
+  sentViaTelegram:   boolean("sent_via_telegram").default(false),
+  telegramMessageId: varchar("telegram_message_id", { length: 100 }),
+  notificationType:  varchar("notification_type", { length: 50 }),
+  metadata:          jsonb("metadata"),
 }, (t) => [
   index("idx_notifications_user_id").on(t.userId),
   index("idx_notifications_read").on(t.read),

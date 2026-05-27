@@ -144,6 +144,9 @@ export const crmPipelines = pgTable("crm_pipelines", {
   sort: integer("sort").default(500),
   isDefault: boolean("is_default").default(false),
   createdDate: timestamp("created_date").notNull().defaultNow(),
+
+  // Legacy / live-DB superset column (ADD-ONLY convergence 2026-05-27)
+  isActive: boolean("is_active").default(true),
 });
 
 
@@ -169,6 +172,9 @@ export const crmStages = pgTable("crm_stages", {
   sort: integer("sort").default(500),
   color: varchar("color", { length: 20 }),
   semantics: varchar("semantics", { length: 20 }), // process, success, fail
+
+  // Legacy / live-DB superset column (ADD-ONLY convergence 2026-05-27)
+  probability: integer("probability").default(0),
 }, (t) => [
   check("crm_stages_semantics_chk", sql`${t.semantics} IS NULL OR ${t.semantics} IN ('process','success','fail')`),
   index("idx_crm_stages_category_id").on(t.categoryId),
@@ -251,6 +257,21 @@ export const crmDeals = pgTable("crm_deals", {
   nextActivityAt: timestamp("next_activity_at"),
   deletedAt: timestamp("deleted_at"),
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+
+  // Legacy / live-DB superset columns (ADD-ONLY convergence 2026-05-27)
+  leadId: integer("lead_id"),
+  amount: numeric("amount", { precision: 18, scale: 2 }),
+  value: numeric("value", { precision: 18, scale: 2 }),
+  currency: varchar("currency", { length: 3 }),
+  status: text("status"),
+  wonAt: timestamp("won_at"),
+  closedAt: timestamp("closed_at"),
+  lostReason: text("lost_reason"),
+  createdBy: integer("created_by"),
+  customerId: integer("customer_id"),
+  managerId: integer("manager_id"),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
 }, (t) => [
   check("crm_deals_probability_chk", sql`${t.probability} IS NULL OR (${t.probability} >= 0 AND ${t.probability} <= 100)`),
   check("crm_deals_stage_semantic_chk", sql`${t.stageSemanticId} IS NULL OR ${t.stageSemanticId} IN ('process','success','fail')`),

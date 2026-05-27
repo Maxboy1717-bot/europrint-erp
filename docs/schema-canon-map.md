@@ -1,1236 +1,362 @@
-# Phase 2 — Duplicate pgTable canon recommendations
-
-Total duplicates: 295, live: 240
-
-## `employees` 🔴 LIVE (114 live fayl, DB 69 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/employees.ts` (`employees`, 53/53)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-hr-lms.ts` (`employees`, 13/13)
-
-## `users` 🔴 LIVE (70 live fayl, DB 52 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-users.ts` (`users`, 44/44)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/users.ts` (`users`, 17/17)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-core.ts` (`users`, 13/13)
-
-## `sales_orders` 🔴 LIVE (38 live fayl, DB 49 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-orders.ts` (`salesOrders`, 32/32)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-core.ts` (`sales_orders`, 19/19)
-
-## `departments` 🔴 LIVE (35 live fayl, DB 24 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-users.ts` (`departments`, 20/20)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/departments.ts` (`departments`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-hr-lms.ts` (`departments`, 9/9)
-
-## `positions` 🔴 LIVE (35 live fayl, DB 28 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-users.ts` (`positions`, 24/24)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/positions.ts` (`positions`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-rbac.ts` (`rbacPositions`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-hr-lms.ts` (`positions`, 10/10)
-
-## `warehouses` 🔴 LIVE (33 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/wms-schema.ts` (`warehouses`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-wms.ts` (`warehouses`, 9/9)
-
-## `production_orders` 🔴 LIVE (25 live fayl, DB 36 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-production.ts` (`productionOrders`, 29/29)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-manufacturing.ts` (`production_orders`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-3.ts` (`production_orders_int`, 14/14)
-
-## `pos_movements` 🔴 LIVE (23 live fayl, DB 55 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema-v2.ts` (`posMovements`, 32/32)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema.ts` (`posMovements`, 18/18)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-2.ts` (`pos_movements_legacy`, 14/14)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-pos-ext.ts` (`pos_movements`, 14/14)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`pos_movements`, 7/7)
-
-## `crm_deals` 🔴 LIVE (18 live fayl, DB 46 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/crm-pipelines.ts` (`crmDeals`, 19/19)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`crm_deals`, 8/8)
-
-## `warehouse_stock` 🔴 LIVE (17 live fayl, DB 15 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/wms-schema.ts` (`warehouseStock`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`warehouse_stock`, 5/5)
-
-## `pos_movement_lines` 🔴 LIVE (16 live fayl, DB 29 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema-v2.ts` (`posMovementLines`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema.ts` (`posMovementLines`, 14/14)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-pos-ext.ts` (`pos_movement_lines`, 11/11)
-
-## `work_centers` 🔴 LIVE (15 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-pp.ts` (`ppWorkCenters`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-manufacturing.ts` (`work_centers`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-production.ts` (`workCenters`, 10/10)
-
-## `crm_leads` 🔴 LIVE (11 live fayl, DB 34 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/crm-contacts.ts` (`crmLeads`, 18/18)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`crm_leads`, 10/10)
-
-## `courses` 🔴 LIVE (11 live fayl, DB 31 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms.ts` (`courses`, 18/18)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms-schema.ts` (`courses`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`courses_table`, 3/3)
-
-## `sd_customers` 🔴 LIVE (11 live fayl, DB 36 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-europrint-schema.ts` (`sdCustomers`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`sd_customers`, 8/8)
-
-## `mm_materials` 🔴 LIVE (11 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-3.ts` (`mm_materials_int`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-2.ts` (`mm_materials_ext`, 4/4)
-
-## `attendance` 🔴 LIVE (10 live fayl, DB 25 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/attendance.ts` (`attendance`, 17/17)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts` (`hr_attendance`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-personal-core.ts` (`attendance`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-hr-lms.ts` (`attendance`, 8/8)
-
-## `kanban_cards` 🔴 LIVE (10 live fayl, DB 29 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-core.ts` (`kanbanCards`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`kanbanCards`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-kanban.ts` (`kanbanCards`, 12/12)
-
-## `pos_movement_types` 🔴 LIVE (10 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema.ts` (`posMovementTypes`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-pos-ext.ts` (`pos_movement_types`, 7/7)
-
-## `discipline_records` 🔴 LIVE (9 live fayl, DB 43 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/discipline.ts` (`disciplineRecords`, 27/27)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`discipline_records`, 25/25)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-personal-core.ts` (`disciplineRecords`, 6/6)
-
-## `vacancies` 🔴 LIVE (9 live fayl, DB 41 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/recruitment.ts` (`vacancies`, 21/21)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-questionnaire.ts` (`vacancies`, 12/12)
-
-## `hr_candidate_funnels` 🔴 LIVE (9 live fayl, DB 23 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-recruiter.ts` (`hrCandidateFunnels`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`hr_candidate_funnels`, 7/7)
-
-## `mm_purchase_orders` 🔴 LIVE (9 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-1.ts` (`mm_purchase_orders`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-3.ts` (`mm_purchase_orders_ext`, 9/9)
-
-## `notifications` 🔴 LIVE (8 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`notificationsApp`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-users.ts` (`notifications`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc.ts` (`notifications`, 9/9)
-
-## `candidates` 🔴 LIVE (8 live fayl, DB 30 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/recruitment.ts` (`candidates`, 20/20)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-questionnaire.ts` (`candidates`, 9/9)
-
-## `hr_daily_reports` 🔴 LIVE (8 live fayl, DB 20 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`hrDailyReports`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`hr_daily_reports`, 11/11)
-
-## `cameras` 🔴 LIVE (8 live fayl, DB 21 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc-iot.ts` (`cameras`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/iot-schema.ts` (`cameras`, 13/13)
-
-## `camera_events` 🔴 LIVE (8 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/iot-schema.ts` (`cameraEvents`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc-iot.ts` (`camera_events`, 11/11)
-
-## `routings` 🔴 LIVE (8 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-production.ts` (`routings`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-3.ts` (`routings_int`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-manufacturing.ts` (`routings`, 7/7)
-
-## `audit_logs` 🔴 LIVE (7 live fayl, DB 19 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-ai-reports.ts` (`auditLogs`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-rbac.ts` (`auditLogs`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-core.ts` (`audit_logs`, 9/9)
-
-## `employee_org_departments` 🔴 LIVE (7 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core-schema.ts` (`employeeOrgDepartments`, 5/5)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-1.ts` (`employee_org_departments`, 5/5)
-
-## `pos_barcode_print_queue` 🔴 LIVE (7 live fayl, DB 25 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema-v2.ts` (`posBarcodePrintQueue`, 14/14)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`pos_barcode_print_queue`, 9/9)
-
-## `sd_leads` 🔴 LIVE (7 live fayl, DB 22 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-europrint-schema.ts` (`sdLeads`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`sd_leads`, 13/13)
-
-## `sales_invoices` 🔴 LIVE (7 live fayl, DB 21 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-misc.ts` (`sales_invoices`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-orders.ts` (`salesInvoices`, 12/12)
-
-## `crm_activities` 🔴 LIVE (6 live fayl, DB 37 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`crm_activities`, 18/18)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/crm-deal-products.ts` (`crmActivities`, 9/9)
-
-## `salary_history` 🔴 LIVE (6 live fayl, DB 39 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/payroll.ts` (`salaryHistory`, 31/31)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts` (`salary_history`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-employees-docs.ts` (`salaryHistory`, 8/8)
-
-## `certificates` 🔴 LIVE (6 live fayl, DB 15 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms.ts` (`certificates`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-questionnaire.ts` (`certificates`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`certificates_table`, 3/3)
-
-## `offboarding_cases` 🔴 LIVE (6 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`offboardingCases`, 17/17)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-1.ts` (`offboarding_cases`, 10/10)
-
-## `camera_zones` 🔴 LIVE (6 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/iot-schema.ts` (`cameraZones`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc-iot.ts` (`camera_zones`, 6/6)
-
-## `purchase_invoices` 🔴 LIVE (6 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-1.ts` (`purchase_invoices`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-raw-materials.ts` (`purchaseInvoices`, 10/10)
-
-## `employee_liability_cases` 🔴 LIVE (6 live fayl, DB 32 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema-v2.ts` (`employeeLiabilityCases`, 23/23)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`employee_liability_cases`, 7/7)
-
-## `downtime_events` 🔴 LIVE (6 live fayl, DB 15 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-iot.ts` (`downtimeEvents`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-manufacturing.ts` (`downtime_events`, 11/11)
-
-## `warehouse_transactions` 🔴 LIVE (6 live fayl, DB 24 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/wms-schema.ts` (`warehouseTransactions`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-3.ts` (`warehouse_transactions`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`warehouseTransactions`, 7/7)
-
-## `employee_360_assessments` 🔴 LIVE (5 live fayl, DB 23 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/assessment.ts` (`employee360Assessments`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts` (`employee_360_assessments`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-safety.ts` (`employee360Assessments`, 8/8)
-
-## `crm_contacts` 🔴 LIVE (5 live fayl, DB 27 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/crm-contacts.ts` (`crmContacts`, 17/17)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`crm_contacts`, 7/7)
-
-## `customer_payments` 🔴 LIVE (5 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-compat-5.ts` (`customer_payments`, 18/18)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-ap-core.ts` (`customerPayments`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`customerPayments`, 7/7)
-
-## `employee_skills` 🔴 LIVE (5 live fayl, DB 24 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-performance-ext.ts` (`employeeSkills`, 20/20)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-3.ts` (`employee_skills`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/skills.ts` (`employeeSkills`, 12/12)
-
-## `employee_blocks` 🔴 LIVE (5 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`employee_blocks`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`employeeBlocks`, 9/9)
-
-## `hr_documents` 🔴 LIVE (5 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`hr_documents`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`hrDocuments`, 11/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-2.ts` (`hr_documents_legacy`, 10/10)
-
-## `shift_schedules` 🔴 LIVE (5 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`shiftSchedules`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-safety.ts` (`shift_schedules`, 8/9)
-
-## `iot_sensors` 🔴 LIVE (5 live fayl, DB 13 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/iot-schema.ts` (`iotSensors`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`iot_sensors`, 6/6)
-
-## `kanban_boards` 🔴 LIVE (5 live fayl, DB 8 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-kanban.ts` (`kanbanBoards`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-core.ts` (`kanbanBoards`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`kanbanBoards`, 6/6)
-
-## `kanban_columns` 🔴 LIVE (5 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-core.ts` (`kanbanColumns`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`kanbanColumns`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-kanban.ts` (`kanbanColumns`, 8/8)
-
-## `inventory_counts` 🔴 LIVE (5 live fayl, DB 24 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-inventory.ts` (`inventoryCounts`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-pos-ext.ts` (`inventory_counts`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`inventoryCounts`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-3.ts` (`inventory_counts`, 6/6)
-
-## `purchase_orders` 🔴 LIVE (5 live fayl, DB 21 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-wms.ts` (`purchase_orders`, 18/18)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-raw-materials.ts` (`purchaseOrders`, 8/8)
-
-## `inventory_barcode_assignments` 🔴 LIVE (5 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema.ts` (`inventoryBarcodeAssignments`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`inventory_barcode_assignments`, 3/4)
-
-## `equipment` 🔴 LIVE (5 live fayl, DB 27 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-production.ts` (`equipment`, 24/24)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-1.ts` (`equipment`, 8/8)
-
-## `qc_reclamations` 🔴 LIVE (5 live fayl, DB 29 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/qc-schema.ts` (`qcReclamations`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc-qc.ts` (`qc_reclamations`, 13/13)
-
-## `materials` 🔴 LIVE (5 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-pos-ext.ts` (`materials`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-2.ts` (`materials_legacy`, 7/7)
-
-## `mm_vendors` 🔴 LIVE (5 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc-qc.ts` (`mm_vendors`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-3.ts` (`mm_vendors_ext2`, 5/9)
-
-## `budgets` 🔴 LIVE (4 live fayl, DB 19 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-budgets.ts` (`budgets`, 14/14)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-ap-core.ts` (`budgets`, 8/8)
-
-## `accounts` 🔴 LIVE (4 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`accounts`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-gl.ts` (`accounts`, 8/8)
-
-## `gl_documents` 🔴 LIVE (4 live fayl, DB 19 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`gl_documents`, 17/17)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-gl.ts` (`glDocuments`, 11/11)
-
-## `payroll_periods` 🔴 LIVE (4 live fayl, DB 19 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-gl.ts` (`payrollPeriods`, 18/18)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts` (`payroll_periods_hr`, 10/10)
-
-## `income_expense_transactions` 🔴 LIVE (4 live fayl, DB 21 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-kassa.ts` (`incomeExpenseTransactions`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`income_expense_transactions`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`incomeExpenseTransactions`, 6/6)
-
-## `absence_tracking` 🔴 LIVE (4 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`absenceTracking`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`absence_tracking`, 11/11)
-
-## `gamification_points` 🔴 LIVE (4 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-1.ts` (`gamification_points`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`gamificationPoints`, 7/7)
-
-## `gamification_totals` 🔴 LIVE (4 live fayl, DB 8 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-1.ts` (`gamification_totals`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`gamificationTotals`, 6/6)
-
-## `enps_surveys` 🔴 LIVE (4 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`enps_surveys`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`enpsSurveys`, 10/10)
-
-## `iot_sensor_readings` 🔴 LIVE (4 live fayl, DB 7 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`iot_sensor_readings`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/iot-schema.ts` (`iotSensorReadings`, 5/5)
-
-## `lms_certificates` 🔴 LIVE (4 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms-extended.ts` (`lmsCertificates`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`lms_certificates`, 5/5)
-
-## `pos_inventory_count_lines` 🔴 LIVE (4 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema-v2.ts` (`posInventoryCountLines`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`pos_inventory_count_lines`, 1/3)
-
-## `position_permissions` 🔴 LIVE (4 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/position-permissions.ts` (`positionPermissions`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-rbac.ts` (`positionPermissions`, 5/5)
-
-## `sd_payments` 🔴 LIVE (4 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-europrint-schema.ts` (`sdPayments`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`sd_payments`, 6/6)
-
-## `boms` 🔴 LIVE (4 live fayl, DB 7 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-3.ts` (`boms_int`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-manufacturing.ts` (`boms`, 7/7)
-
-## `adaptation_programs` 🔴 LIVE (3 live fayl, DB 24 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/adaptation.ts` (`adaptationPrograms`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-compensation.ts` (`adaptationPrograms`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-safety.ts` (`adaptation_programs`, 6/6)
-
-## `adaptation_records` 🔴 LIVE (3 live fayl, DB 28 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/adaptation.ts` (`adaptationRecords`, 19/19)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-performance-core.ts` (`adaptationRecords`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-safety.ts` (`adaptation_records`, 7/7)
-
-## `adaptation_milestones` 🔴 LIVE (3 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/adaptation.ts` (`adaptationMilestones`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-safety.ts` (`adaptation_milestones`, 8/8)
-
-## `approval_requests` 🔴 LIVE (3 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-budgets.ts` (`approval_requests`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-ai-reports.ts` (`approvalRequests`, 14/14)
-
-## `crm_lead_stages` 🔴 LIVE (3 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/crm-deal-products.ts` (`crmLeadStages`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`crm_lead_stages`, 5/5)
-
-## `employee_files` 🔴 LIVE (3 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/employees.ts` (`employeeFiles`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`employee_files`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-compensation.ts` (`employeeFiles`, 4/4)
-
-## `budget_lines` 🔴 LIVE (3 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-budgets.ts` (`budgetLines`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`budget_lines`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-budgets.ts` (`budget_lines`, 6/6)
-
-## `cost_centers` 🔴 LIVE (3 live fayl, DB 13 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-gl.ts` (`costCenters`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-1.ts` (`cost_centers`, 9/9)
-
-## `profit_centers` 🔴 LIVE (3 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-1.ts` (`profit_centers`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-gl.ts` (`profitCenters`, 8/8)
-
-## `leave_requests` 🔴 LIVE (3 live fayl, DB 33 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/leave.ts` (`leaveRequests`, 23/23)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-hr-lms.ts` (`leave_requests`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-employees-docs.ts` (`leaveRequests`, 11/11)
-
-## `safety_incidents` 🔴 LIVE (3 live fayl, DB 28 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/safety.ts` (`safetyIncidents`, 25/25)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-safety.ts` (`safety_incidents`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-safety.ts` (`safetyIncidents`, 10/10)
-
-## `hr_conflict_reports` 🔴 LIVE (3 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts` (`hr_conflict_reports`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-safety.ts` (`hrConflictReports`, 7/7)
-
-## `violation_catalog` 🔴 LIVE (3 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`violationCatalog`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`violation_catalog`, 11/11)
-
-## `badge_catalog` 🔴 LIVE (3 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`badgeCatalog`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`badge_catalog`, 11/11)
-
-## `pip_plans` 🔴 LIVE (3 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`pip_plans`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`pipPlans`, 14/14)
-
-## `document_approval_steps` 🔴 LIVE (3 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`documentApprovalSteps`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`document_approval_steps`, 6/8)
-
-## `hr_interview_sessions` 🔴 LIVE (3 live fayl, DB 28 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-1.ts` (`hr_interview_sessions`, 28/28)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`hrInterviewSessions`, 23/23)
-
-## `iot_alerts` 🔴 LIVE (3 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/iot-schema.ts` (`iotAlerts`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`iot_alerts`, 7/7)
-
-## `lessons` 🔴 LIVE (3 live fayl, DB 21 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms.ts` (`lessons`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms-schema.ts` (`lessons`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`lessons`, 4/4)
-
-## `stock_reservations` 🔴 LIVE (3 live fayl, DB 31 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-batch-mgmt.ts` (`stockReservations`, 21/21)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema-v2.ts` (`posStockReservations`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-3.ts` (`stock_reservations`, 8/8)
-
-## `three_way_match_results` 🔴 LIVE (3 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-mro.ts` (`threeWayMatchResults`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`three_way_match_results`, 7/7)
-
-## `mro_items` 🔴 LIVE (3 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-mro.ts` (`mroItems`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-2-mro.ts` (`mro_items`, 11/11)
-
-## `goods_receipts` 🔴 LIVE (3 live fayl, DB 21 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-purchase.ts` (`goodsReceipts`, 18/18)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-3.ts` (`goods_receipts`, 9/9)
-
-## `employee_inventory_ledger` 🔴 LIVE (3 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema-v2.ts` (`employeeInventoryLedger`, 17/17)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`employee_inventory_ledger`, 3/6)
-
-## `design_orders` 🔴 LIVE (3 live fayl, DB 29 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-design.ts` (`designOrders`, 24/24)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc.ts` (`design_orders`, 22/22)
-
-## `sd_customer_contacts` 🔴 LIVE (3 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-customer-relations.ts` (`sdCustomerContacts`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`sd_customer_contacts`, 6/6)
-
-## `sd_customer_documents` 🔴 LIVE (3 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-customer-relations.ts` (`sdCustomerDocuments`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`sd_customer_documents`, 5/5)
-
-## `sd_customer_competitors` 🔴 LIVE (3 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-customer-relations.ts` (`sdCustomerCompetitors`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`sd_customer_competitors`, 5/5)
-
-## `sd_contracts` 🔴 LIVE (3 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-europrint-schema.ts` (`sdContracts`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-misc.ts` (`sd_contracts`, 10/10)
-
-## `mm_goods_receipts` 🔴 LIVE (3 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-3.ts` (`mm_goods_receipts_int`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-1.ts` (`mm_goods_receipts`, 5/8)
-
-## `employee_assets` 🔴 LIVE (3 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-2.ts` (`employee_assets`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc.ts` (`employee_assets`, 9/9)
-
-## `asset_items` 🔴 LIVE (2 live fayl, DB 21 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-1.ts` (`asset_items`, 15/17)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/admin-assets.ts` (`assetItems`, 14/15)
-
-## `ai_report_categories` 🔴 LIVE (2 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-ai-reports.ts` (`aiReportCategories`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-1.ts` (`ai_report_categories`, 7/7)
-
-## `ai_report_subscriptions` 🔴 LIVE (2 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-ai-reports.ts` (`aiReportSubscriptions`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-1.ts` (`ai_report_subscriptions`, 6/6)
-
-## `hr_health_checkups` 🔴 LIVE (2 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core-schema.ts` (`hrHealthCheckups`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-payroll.ts` (`hr_health_checkups`, 9/9)
-
-## `crm_proposals` 🔴 LIVE (2 live fayl, DB 26 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/crm-proposals.ts` (`crmProposals`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`crm_proposals`, 8/8)
-
-## `crm_invoices` 🔴 LIVE (2 live fayl, DB 30 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/crm-proposals.ts` (`crmInvoices`, 17/17)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`crm_invoices`, 7/7)
-
-## `entries` 🔴 LIVE (2 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-gl.ts` (`entries`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`entries`, 7/7)
-
-## `gl_lines` 🔴 LIVE (2 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-gl.ts` (`glLines`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`gl_lines`, 10/10)
-
-## `accounting_periods` 🔴 LIVE (2 live fayl, DB 13 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-1.ts` (`accounting_periods`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`accountingPeriods`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-gl.ts` (`accountingPeriods`, 5/5)
-
-## `cash_transactions` 🔴 LIVE (2 live fayl, DB 19 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-kassa.ts` (`cashTransactions`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`cashTransactions`, 7/7)
-
-## `questionnaire_templates` 🔴 LIVE (2 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-architecture-additions.ts` (`questionnaireTemplates`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/recruitment.ts` (`questionnaireTemplates`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-questionnaire.ts` (`questionnaireTemplates`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`questionnaire_templates`, 5/5)
-
-## `questionnaire_questions` 🔴 LIVE (2 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/recruitment.ts` (`questionnaireQuestions`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-architecture-additions.ts` (`questionnaireQuestions`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-questionnaire.ts` (`questionnaireQuestions`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-1.ts` (`questionnaire_questions`, 8/8)
-
-## `adaptation_feedback` 🔴 LIVE (2 live fayl, DB 21 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-1.ts` (`adaptation_feedback`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-performance-core.ts` (`adaptationFeedback`, 4/4)
-
-## `employee_ratings` 🔴 LIVE (2 live fayl, DB 39 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-performance-ext.ts` (`employeeRatings`, 25/25)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kpi.ts` (`employeeRatings`, 14/14)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`employee_ratings`, 6/6)
-
-## `hr_tz2_attendance_photos` 🔴 LIVE (2 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-tz2-schema.ts` (`hrTz2AttendancePhotos`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-hr-tz2.ts` (`hr_tz2_attendance_photos`, 9/9)
-
-## `career_paths` 🔴 LIVE (2 live fayl, DB 13 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`careerPaths`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`career_paths`, 9/10)
-
-## `skill_catalog` 🔴 LIVE (2 live fayl, DB 8 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`skillCatalog`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-misc.ts` (`skill_catalog`, 7/7)
-
-## `hr_interview_questions` 🔴 LIVE (2 live fayl, DB 13 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`hrInterviewQuestions`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`hr_interview_questions`, 2/2)
-
-## `ideal_rasm_targets` 🔴 LIVE (2 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/ideal-rasm-schema.ts` (`idealRasmTargets`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`ideal_rasm_targets`, 9/9)
-
-## `camera_alerts` 🔴 LIVE (2 live fayl, DB 20 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/iot-schema.ts` (`cameraAlerts`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc-iot.ts` (`camera_alerts`, 13/13)
-
-## `lms_exams` 🔴 LIVE (2 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms-extended.ts` (`lmsExams`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-1.ts` (`lms_exams`, 5/5)
-
-## `lms_exam_attempts` 🔴 LIVE (2 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms-extended.ts` (`lmsExamAttempts`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-1.ts` (`lms_exam_attempts`, 6/6)
-
-## `tests` 🔴 LIVE (2 live fayl, DB 21 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms.ts` (`tests`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms-schema.ts` (`tests`, 11/11)
-
-## `inventory_count_lines` 🔴 LIVE (2 live fayl, DB 24 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-inventory.ts` (`inventoryCountLines`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-pos-ext.ts` (`inventory_count_lines`, 11/11)
-
-## `mro_cleaning_schedules` 🔴 LIVE (2 live fayl, DB 15 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-2-mro.ts` (`mro_cleaning_schedules`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-logistics.ts` (`mroCleaningSchedules`, 8/8)
-
-## `mro_utility_readings` 🔴 LIVE (2 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-2-mro.ts` (`mro_utility_readings`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-logistics.ts` (`mroUtilityReadings`, 8/8)
-
-## `mro_facilities` 🔴 LIVE (2 live fayl, DB 15 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-logistics.ts` (`mroFacilities`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-2-mro.ts` (`mro_facilities`, 8/8)
-
-## `vendor_invoices` 🔴 LIVE (2 live fayl, DB 26 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-mro.ts` (`vendorInvoices`, 22/22)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`vendor_invoices`, 10/10)
-
-## `mro_requests` 🔴 LIVE (2 live fayl, DB 21 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-mro.ts` (`mroRequests`, 17/17)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-2-mro.ts` (`mro_requests`, 13/13)
-
-## `mro_budgets` 🔴 LIVE (2 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-mro.ts` (`mroBudgets`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`mro_budgets`, 8/8)
-
-## `raw_materials` 🔴 LIVE (2 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-raw-materials.ts` (`rawMaterials`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`raw_materials`, 10/10)
-
-## `vendors` 🔴 LIVE (2 live fayl, DB 15 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/mm-raw-materials.ts` (`vendors`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-wms.ts` (`vendors`, 10/10)
-
-## `ow_orders` 🔴 LIVE (2 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-order-workflow.ts` (`owOrders`, 17/17)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/order-workflow-schema.ts` (`owOrders`, 15/15)
-
-## `ow_material_requirements` 🔴 LIVE (2 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/order-workflow-schema.ts` (`owMaterialRequirements`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-order-workflow.ts` (`owMaterialRequirements`, 8/8)
-
-## `ow_payment_plan_entries` 🔴 LIVE (2 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/order-workflow-schema.ts` (`owPaymentPlanEntries`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-order-workflow.ts` (`owPaymentPlanEntries`, 10/10)
-
-## `employee_issuance_log` 🔴 LIVE (2 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema-v2.ts` (`employeeIssuanceLog`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`employee_issuance_log`, 4/4)
-
-## `department_warehouse_map` 🔴 LIVE (2 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema-v2.ts` (`departmentWarehouseMap`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-3.ts` (`department_warehouse_map`, 4/4)
-
-## `position_feature_flags` 🔴 LIVE (2 live fayl, DB 6 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/position-permissions.ts` (`positionFeatureFlags`, 5/5)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-rbac.ts` (`positionFeatureFlags`, 5/5)
-
-## `papka_orders` 🔴 LIVE (2 live fayl, DB 41 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-papka.ts` (`papkaOrders`, 35/35)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-1.ts` (`papka_orders`, 9/9)
-
-## `routing_operations` 🔴 LIVE (2 live fayl, DB 15 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-production.ts` (`routingOperations`, 14/14)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-3.ts` (`routing_operations_int`, 6/6)
-
-## `shift_assignments` 🔴 LIVE (2 live fayl, DB 13 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/shifts.ts` (`shiftAssignments`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-production.ts` (`shiftAssignments`, 7/7)
-
-## `qc_standards` 🔴 LIVE (2 live fayl, DB 15 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/qc-schema.ts` (`qcStandards`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc-qc.ts` (`qc_standards`, 8/8)
-
-## `qc_final_inspections` 🔴 LIVE (2 live fayl, DB 19 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`qc_final_inspections`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/qc-schema.ts` (`qcFinalInspections`, 5/5)
-
-## `qc_supplier_quality` 🔴 LIVE (2 live fayl, DB 20 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/qc-schema.ts` (`qcSupplierQuality`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc-qc.ts` (`qc_supplier_quality`, 10/10)
-
-## `sd_customer_interactions` 🔴 LIVE (2 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-customer-relations.ts` (`sdCustomerInteractions`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`sd_customer_interactions`, 6/6)
-
-## `sd_customer_complaints` 🔴 LIVE (2 live fayl, DB 8 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-customer-relations.ts` (`sdCustomerComplaints`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`sd_customer_complaints`, 4/8)
-
-## `deliveries` 🔴 LIVE (2 live fayl, DB 26 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc.ts` (`deliveries`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-delivery.ts` (`deliveries`, 12/12)
-
-## `sd_price_formulas` 🔴 LIVE (2 live fayl, DB 26 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-europrint-schema.ts` (`sdPriceFormulas`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`sd_price_formulas`, 5/5)
-
-## `sd_quotations` 🔴 LIVE (2 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-europrint-schema.ts` (`sdQuotations`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`sd_quotations`, 7/7)
-
-## `order_status_logs` 🔴 LIVE (2 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/sd-order-items.ts` (`orderStatusLogs`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`order_status_logs`, 7/7)
-
-## `security_incidents` 🔴 LIVE (2 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/security-ops-schema.ts` (`securityIncidents`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc.ts` (`security_incidents`, 11/11)
-
-## `internal_requests` 🔴 LIVE (2 live fayl, DB 22 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/wms-schema.ts` (`internalRequests`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-3.ts` (`internal_requests`, 6/6)
-
-## `warehouse_rental_records` 🔴 LIVE (2 live fayl, DB 29 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/wms-schema.ts` (`warehouseRentalRecords`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`warehouse_rental_records`, 8/8)
-
-## `asset_disposals` 🔴 LIVE (1 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-enhanced.ts` (`assetDisposals`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/admin-assets.ts` (`assetDisposals`, 6/8)
-
-## `asset_transfers` 🔴 LIVE (1 live fayl, DB 13 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-enhanced.ts` (`assetTransfers`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/admin-assets.ts` (`assetTransfers`, 5/8)
-
-## `ai_usage_logs` 🔴 LIVE (1 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/ai-providers-schema.ts` (`aiUsageLogs`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-reports.ts` (`ai_usage_logs`, 15/15)
-
-## `employee_360_responses` 🔴 LIVE (1 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/assessment.ts` (`employee360Responses`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`employee_360_responses`, 3/5)
-
-## `succession_plans` 🔴 LIVE (1 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/assessment.ts` (`successionPlans`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-safety.ts` (`successionPlans`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`succession_plans`, 7/7)
-
-## `attendance_records` 🔴 LIVE (1 live fayl, DB 19 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/attendance.ts` (`attendanceRecords`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`attendance_records`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-safety.ts` (`attendanceRecords`, 7/7)
-
-## `ai_report_definitions` 🔴 LIVE (1 live fayl, DB 13 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-ai-reports.ts` (`aiReportDefinitions`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-1.ts` (`ai_report_definitions`, 8/8)
-
-## `ai_report_runs` 🔴 LIVE (1 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-ai-reports.ts` (`aiReportRuns`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`ai_report_runs`, 7/7)
-
-## `currencies` 🔴 LIVE (1 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-ai-reports.ts` (`currencies`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-3.ts` (`currencies`, 7/7)
-
-## `goals` 🔴 LIVE (1 live fayl, DB 19 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-ai.ts` (`goals`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-1.ts` (`goals`, 9/9)
-
-## `knowledge_base` 🔴 LIVE (1 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-ai.ts` (`knowledgeBase`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc-qc.ts` (`knowledge_base`, 11/11)
-
-## `kpi_definitions` 🔴 LIVE (1 live fayl, DB 24 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-rules.ts` (`kpiDefinitions`, 21/21)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-1.ts` (`kpi_definitions`, 8/8)
-
-## `kpi_values` 🔴 LIVE (1 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-rules.ts` (`kpiValues`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-1.ts` (`kpi_values`, 7/7)
-
-## `system_alerts` 🔴 LIVE (1 live fayl, DB 24 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-rules.ts` (`systemAlerts`, 23/23)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-admin-ext.ts` (`system_alerts`, 9/9)
-
-## `exception_logs` 🔴 LIVE (1 live fayl, DB 24 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/core/core-rules.ts` (`exceptionLogs`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`exception_logs`, 5/5)
-
-## `crm_comments` 🔴 LIVE (1 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/crm-activities.ts` (`crmComments`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`crm_comments`, 7/7)
-
-## `crm_custom_fields` 🔴 LIVE (1 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`crm_custom_fields`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/crm-docs.ts` (`crmCustomFields`, 9/9)
-
-## `crm_robots` 🔴 LIVE (1 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/crm-docs.ts` (`crmRobots`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`crm_robots`, 7/7)
-
-## `employee_bank_accounts` 🔴 LIVE (1 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/employees.ts` (`employeeBankAccounts`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-employees-docs.ts` (`employeeBankAccounts`, 8/8)
-
-## `employee_emergency_contacts` 🔴 LIVE (1 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/employees.ts` (`employeeEmergencyContacts`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-employees-docs.ts` (`employeeEmergencyContacts`, 7/7)
-
-## `invoice_payments` 🔴 LIVE (1 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-ap-core.ts` (`invoicePayments`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`invoicePayments`, 7/7)
-
-## `cash_flow_transactions` 🔴 LIVE (1 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`cashFlowTransactions`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-ap-core.ts` (`cashFlowTransactions`, 6/6)
-
-## `order_costings` 🔴 LIVE (1 live fayl, DB 20 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-budgets.ts` (`orderCostings`, 20/20)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`orderCostings`, 19/19)
-
-## `order_costing_lines` 🔴 LIVE (1 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-budgets.ts` (`orderCostingLines`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`orderCostingLines`, 5/5)
-
-## `ar_aging_buckets` 🔴 LIVE (1 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`ar_aging_buckets`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-budgets.ts` (`arAgingBuckets`, 7/7)
-
-## `ap_aging_buckets` 🔴 LIVE (1 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-2.ts` (`ap_aging_buckets`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-budgets.ts` (`apAgingBuckets`, 8/8)
-
-## `financial_kpis` 🔴 LIVE (1 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`financialKPIs`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-budgets.ts` (`financialKPIs`, 2/2)
-
-## `expense_requests` 🔴 LIVE (1 live fayl, DB 24 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-expenses.ts` (`expenseRequests`, 21/21)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-1.ts` (`expense_requests`, 10/10)
-
-## `expense_reports` 🔴 LIVE (1 live fayl, DB 20 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-expenses.ts` (`expenseReports`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`expense_reports`, 10/10)
-
-## `advance_payments` 🔴 LIVE (1 live fayl, DB 22 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-expenses.ts` (`advancePayments`, 18/18)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-1.ts` (`advance_payments`, 9/9)
-
-## `rpt_kassa_transactions` 🔴 LIVE (1 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-financial-reports.ts` (`kassaTransactions`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-reports.ts` (`kassaTransactions`, 9/9)
-
-## `rpt_ombor_qoldiq` 🔴 LIVE (1 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-financial-reports.ts` (`omborQoldiq`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-reports.ts` (`omborQoldiq`, 10/10)
-
-## `rpt_debitorlar` 🔴 LIVE (1 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-reports.ts` (`debitorlar`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-financial-reports.ts` (`debitorlar`, 8/8)
-
-## `rpt_kreditorlar` 🔴 LIVE (1 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-financial-reports.ts` (`kreditorlar`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-reports.ts` (`kreditorlar`, 11/11)
-
-## `rpt_balans` 🔴 LIVE (1 live fayl, DB 13 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-financial-reports.ts` (`balans`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-reports.ts` (`balans`, 12/12)
-
-## `rpt_ishlab_chiqarish` 🔴 LIVE (1 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-financial-reports.ts` (`ishlabChiqarish`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-reports.ts` (`ishlabChiqarish`, 11/11)
-
-## `cfo_config` 🔴 LIVE (1 live fayl, DB 5 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-gl.ts` (`cfoConfig`, 5/5)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`cfoConfigTable`, 5/5)
-
-## `finance_categories` 🔴 LIVE (1 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-kassa.ts` (`financeCategories`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`financeCategories`, 5/5)
-
-## `daily_financial_metrics` 🔴 LIVE (1 live fayl, DB 31 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-payroll-calc.ts` (`dailyFinancialMetrics`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-finance-extended.ts` (`dailyFinancialMetrics`, 6/6)
-
-## `employee_daily_kpi` 🔴 LIVE (1 live fayl, DB 28 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-performance-ext.ts` (`employeeDailyKpi`, 20/20)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kpi.ts` (`employeeDailyKpi`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`employee_daily_kpi`, 5/5)
-
-## `ai_interview_sessions` 🔴 LIVE (1 live fayl, DB 27 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/recruitment.ts` (`aiInterviewSessions`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-performance-ext.ts` (`aiInterviewSessions`, 14/14)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-3.ts` (`ai_interview_sessions`, 8/8)
-
-## `position_skill_requirements` 🔴 LIVE (1 live fayl, DB 15 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-performance-ext.ts` (`positionSkillRequirements`, 14/14)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-3.ts` (`position_skill_requirements`, 4/4)
-
-## `interviews` 🔴 LIVE (1 live fayl, DB 25 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/recruitment.ts` (`interviews`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-questionnaire.ts` (`interviews`, 8/8)
-
-## `shift_swap_requests` 🔴 LIVE (1 live fayl, DB 21 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-safety.ts` (`shiftSwapRequests`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/shifts.ts` (`shiftSwapRequests`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`shift_swap_requests`, 6/6)
-
-## `ppe_compliance` 🔴 LIVE (1 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/safety.ts` (`ppeCompliance`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-safety.ts` (`ppe_compliance`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-safety.ts` (`ppeCompliance`, 6/6)
-
-## `hazard_zones` 🔴 LIVE (1 live fayl, DB 19 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/safety.ts` (`hazardZones`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-safety.ts` (`hazard_zones`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-safety.ts` (`hazardZones`, 10/10)
-
-## `face_embeddings` 🔴 LIVE (1 live fayl, DB 8 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-3.ts` (`face_embeddings`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-transfers.ts` (`faceEmbeddings`, 4/4)
-
-## `hr_tz2_territory_logs` 🔴 LIVE (1 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-tz2-schema.ts` (`hrTz2TerritoryLogs`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-hr-tz2.ts` (`hr_tz2_territory_logs`, 9/9)
-
-## `employee_badges` 🔴 LIVE (1 live fayl, DB 7 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-1.ts` (`employee_badges`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`employeeBadges`, 6/6)
-
-## `hr_daily_report_audit` 🔴 LIVE (1 live fayl, DB 7 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`hrDailyReportAudit`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`hr_daily_report_audit`, 7/7)
-
-## `career_path_steps` 🔴 LIVE (1 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`careerPathSteps`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`career_path_steps`, 8/8)
-
-## `employee_skill_scores` 🔴 LIVE (1 live fayl, DB 7 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`employeeSkillScores`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-3.ts` (`employee_skill_scores`, 6/6)
-
-## `enps_responses` 🔴 LIVE (1 live fayl, DB 8 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`enpsResponses`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-misc.ts` (`enps_responses`, 7/7)
-
-## `pip_progress_updates` 🔴 LIVE (1 live fayl, DB 6 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`pipProgressUpdates`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-1.ts` (`pip_progress_updates`, 6/6)
-
-## `visitor_log` 🔴 LIVE (1 live fayl, DB 15 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`visitorLog`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-misc.ts` (`visitor_log`, 14/14)
-
-## `workflow_route_configs` 🔴 LIVE (1 live fayl, DB 6 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`documentWorkflowRoutes`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-safety.ts` (`workflow_route_configs`, 5/5)
-
-## `offboarding_checklist_items` 🔴 LIVE (1 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-v2-schema.ts` (`offboardingChecklistItems`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-1.ts` (`offboarding_checklist_items`, 6/6)
-
-## `camera_ai_configs` 🔴 LIVE (1 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/iot-schema.ts` (`cameraAiConfigs`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc-iot.ts` (`camera_ai_configs`, 9/9)
-
-## `lms_modules` 🔴 LIVE (1 live fayl, DB 8 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms-extended.ts` (`lmsModules`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-1.ts` (`lms_modules`, 5/5)
-
-## `hr_capital_courses` 🔴 LIVE (1 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms-schema.ts` (`hrCapitalCourses`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`hr_capital_courses`, 7/7)
-
-## `ow_molds` 🔴 LIVE (1 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/order-workflow-schema.ts` (`owMolds`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-order-workflow.ts` (`owMolds`, 5/5)
-
-## `ow_cliches` 🔴 LIVE (1 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/order-workflow-schema.ts` (`owCliches`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-order-workflow.ts` (`owCliches`, 6/6)
-
-## `ow_order_status_history` 🔴 LIVE (1 live fayl, DB 8 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/order-workflow-schema.ts` (`owOrderStatusHistory`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-order-workflow.ts` (`owOrderStatusHistory`, 8/8)
-
-## `retail_pos_products` 🔴 LIVE (1 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-retail.ts` (`retailPosProducts`, 14/14)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-pos-retail.ts` (`retail_pos_products`, 14/14)
-
-## `retail_pos_transactions` 🔴 LIVE (1 live fayl, DB 19 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-retail.ts` (`retailPosTransactions`, 19/19)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-pos-retail.ts` (`retail_pos_transactions`, 19/19)
-
-## `pos_damage_qc_links` 🔴 LIVE (1 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema-v2.ts` (`posDamageQcLinks`, 16/16)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-a-1.ts` (`pos_damage_qc_links`, 4/8)
-
-## `waste_records` 🔴 LIVE (1 live fayl, DB 20 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`waste_records`, 20/20)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-enhanced.ts` (`wasteRecords`, 19/19)
-
-## `waste_targets` 🔴 LIVE (1 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`waste_targets`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-enhanced.ts` (`wasteTargets`, 9/9)
-
-## `machine_tasks` 🔴 LIVE (1 live fayl, DB 29 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-papka.ts` (`machineTasks`, 24/24)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-1.ts` (`machine_tasks`, 8/8)
-
-## `qc_root_causes` 🔴 LIVE (1 live fayl, DB 25 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/qc-schema.ts` (`qcRootCauses`, 14/14)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-1.ts` (`qc_root_causes`, 7/7)
-
-## `safety_training_records` 🔴 LIVE (1 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/safety.ts` (`safetyTrainingRecords`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-c-2-hr-safety.ts` (`safety_training_records`, 9/9)
-
-## `strategic_categories` 🔴 LIVE (1 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/strategic-ext-schema.ts` (`strategicCategories`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-2.ts` (`strategic_categories`, 5/5)
-
-## `strategic_tasks` 🔴 LIVE (1 live fayl, DB 31 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/strategic-ext-schema.ts` (`strategicTasks`, 30/30)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-2.ts` (`strategic_tasks`, 12/12)
-
-## `strategic_milestones` 🔴 LIVE (1 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/strategic-ext-schema.ts` (`strategicMilestones`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-2.ts` (`strategic_milestones`, 7/7)
-
-## `raci_tasks` 🔴 LIVE (1 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-2.ts` (`raci_tasks`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/strategic-ext-schema.ts` (`raciTasks`, 7/7)
-
-## `raci_assignments` 🔴 LIVE (1 live fayl, DB 7 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/strategic-ext-schema.ts` (`raciAssignments`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-2.ts` (`raci_assignments`, 4/4)
-
-## `okr_objectives` 🔴 LIVE (1 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/strategic-ext-schema.ts` (`okrObjectives`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-2.ts` (`okr_objectives`, 10/10)
-
-## `okr_key_results` 🔴 LIVE (1 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/strategic-ext-schema.ts` (`okrKeyResults`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-a-2.ts` (`okr_key_results`, 10/10)
-
-## `weekly_plans` 🔴 LIVE (1 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/weekly-plans-schema.ts` (`weeklyPlans`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-3.ts` (`weekly_plans`, 7/7)
-
-## `stock_moves` 🔴 LIVE (1 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/wms-schema.ts` (`stockMoves`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-1.ts` (`stock_moves`, 10/10)
-
-## `warehouse_rental_settings` 🔴 LIVE (1 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/wms-schema.ts` (`warehouseRentalSettings`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-c-2.ts` (`warehouse_rental_settings`, 5/5)
-
-## `employee_strengths_weaknesses` ⚪ dormant (0 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-transfers.ts` (`employeeStrengthsWeaknesses`, 3/3)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/assessment.ts` (`employeeStrengthsWeaknesses`, 2/13)
-
-## `employee_transfer_history` ⚪ dormant (0 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-transfers.ts` (`employeeTransferHistory`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/assessment.ts` (`employeeTransferHistory`, 9/15)
-
-## `exit_interviews` ⚪ dormant (0 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-architecture-additions.ts` (`exitInterviews`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/assessment.ts` (`exitInterviews`, 3/17)
-
-## `daily_attendance_summary` ⚪ dormant (0 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-transfers.ts` (`dailyAttendanceSummary`, 4/4)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/attendance.ts` (`dailyAttendanceSummary`, 2/11)
-
-## `abc_analysis` ⚪ dormant (0 live fayl, DB 18 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-compensation.ts` (`abcAnalysis`, 5/5)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/attendance.ts` (`abcAnalysis`, 3/18)
-
-## `discipline_appeals` ⚪ dormant (0 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-architecture-additions.ts` (`disciplineAppeals`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/discipline.ts` (`disciplineAppeals`, 6/12)
-
-## `employment_contracts` ⚪ dormant (0 live fayl, DB 13 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-employees-docs.ts` (`employmentContracts`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/employees.ts` (`employmentContracts`, 7/20)
-
-## `employee_passports` ⚪ dormant (0 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-employees-docs.ts` (`employeePassports`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/employees.ts` (`employeePassports`, 4/11)
-
-## `pos_products` ⚪ dormant (0 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/fi-payroll-ext.ts` (`posProducts`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-ext-b-2.ts` (`pos_products`, 12/12)
-
-## `leave_balances` ⚪ dormant (0 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-architecture-additions.ts` (`leaveBalances`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/leave.ts` (`leaveBalances`, 6/10)
-
-## `salary_bands` ⚪ dormant (0 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-architecture-additions.ts` (`salaryBands`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/payroll.ts` (`salaryBands`, 9/10)
-
-## `job_templates` ⚪ dormant (0 live fayl, DB 25 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-questionnaire.ts` (`jobTemplates`, 23/23)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/recruitment.ts` (`jobTemplates`, 8/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-architecture-additions.ts` (`jobTemplates`, 5/14)
-
-## `ai_cv_screenings` ⚪ dormant (0 live fayl, DB 20 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-performance-ext.ts` (`aiCvScreenings`, 20/20)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-architecture-additions.ts` (`aiCvScreenings`, 6/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/recruitment.ts` (`aiCvScreenings`, 5/14)
-
-## `cash_advances` ⚪ dormant (0 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-employees-docs.ts` (`cashAdvances`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/payroll.ts` (`cashAdvances`, 5/14)
-
-## `bonus_payments` ⚪ dormant (0 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-employees-docs.ts` (`bonusPayments`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/payroll.ts` (`bonusPayments`, 5/15)
-
-## `employee_fines` ⚪ dormant (0 live fayl, DB 11 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-employees-docs.ts` (`employeeFines`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/payroll.ts` (`employeeFines`, 3/11)
-
-## `overtime_payments` ⚪ dormant (0 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-employees-docs.ts` (`overtimePayments`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/payroll.ts` (`overtimePayments`, 5/11)
-
-## `sick_leaves` ⚪ dormant (0 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-employees-docs.ts` (`sickLeaves`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/leave.ts` (`sickLeaves`, 3/13)
-
-## `business_trips` ⚪ dormant (0 live fayl, DB 16 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-employees-docs.ts` (`businessTrips`, 15/15)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/leave.ts` (`businessTrips`, 10/16)
-
-## `ai_interview_messages` ⚪ dormant (0 live fayl, DB 7 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-performance-ext.ts` (`aiInterviewMessages`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/recruitment.ts` (`aiInterviewMessages`, 4/8)
-
-## `performance_goals` ⚪ dormant (0 live fayl, DB 13 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-performance-ext.ts` (`performanceGoals`, 13/13)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kpi.ts` (`performanceGoals`, 9/18)
-
-## `position_required_courses` ⚪ dormant (0 live fayl, DB 7 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/lms.ts` (`positionRequiredCourses`, 4/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-personal-core.ts` (`positionRequiredCourses`, 4/4)
-
-## `operator_daily_stats` ⚪ dormant (0 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-safety.ts` (`operatorDailyStats`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kpi.ts` (`operatorDailyStats`, 3/13)
-
-## `safety_trainings` ⚪ dormant (0 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-safety.ts` (`safetyTrainings`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/safety.ts` (`safetyTrainings`, 3/9)
-
-## `employee_productivity` ⚪ dormant (0 live fayl, DB 21 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-transfers.ts` (`employeeProductivity`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kpi.ts` (`employeeProductivity`, 3/13)
-
-## `hr_tz2_room_reference_photos` ⚪ dormant (0 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-tz2-schema.ts` (`hrTz2RoomReferencePhotos`, 10/10)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-hr-tz2.ts` (`hr_tz2_room_reference_photos`, 10/10)
-
-## `hr_tz2_ai_room_analysis` ⚪ dormant (0 live fayl, DB 13 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-hr-tz2.ts` (`hr_tz2_ai_room_analysis`, 13/14)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/hr-tz2-schema.ts` (`hrTz2AiRoomAnalysis`, 13/13)
-
-## `kanban_comments` ⚪ dormant (0 live fayl, DB 5 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-core.ts` (`kanbanComments`, 5/5)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`kanbanComments`, 5/5)
-
-## `task_subtasks` ⚪ dormant (0 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskSubtasks`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskSubtasks`, 9/9)
-
-## `task_checklists` ⚪ dormant (0 live fayl, DB 5 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskChecklists`, 5/5)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskChecklists`, 5/5)
-
-## `task_tags` ⚪ dormant (0 live fayl, DB 5 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskTags`, 5/5)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskTags`, 5/5)
-
-## `task_card_tags` ⚪ dormant (0 live fayl, DB 3 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskCardTags`, 3/3)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskCardTags`, 3/3)
-
-## `task_reminders` ⚪ dormant (0 live fayl, DB 7 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskReminders`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskReminders`, 7/7)
-
-## `task_time_entries` ⚪ dormant (0 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskTimeEntries`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskTimeEntries`, 9/9)
-
-## `task_collaborators` ⚪ dormant (0 live fayl, DB 5 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskCollaborators`, 4/4)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskCollaborators`, 4/4)
-
-## `task_templates` ⚪ dormant (0 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskTemplates`, 12/12)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskTemplates`, 12/12)
-
-## `task_files` ⚪ dormant (0 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskFiles`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskFiles`, 9/9)
-
-## `task_status_history` ⚪ dormant (0 live fayl, DB 8 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskStatusHistory`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskStatusHistory`, 8/8)
-
-## `task_results` ⚪ dormant (0 live fayl, DB 6 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskResults`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskResults`, 6/6)
-
-## `task_result_files` ⚪ dormant (0 live fayl, DB 7 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskResultFiles`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskResultFiles`, 7/7)
-
-## `task_chat_messages` ⚪ dormant (0 live fayl, DB 6 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskChatMessages`, 5/5)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskChatMessages`, 5/5)
-
-## `task_chat_message_files` ⚪ dormant (0 live fayl, DB 7 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskChatMessageFiles`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskChatMessageFiles`, 7/7)
-
-## `task_time_tracks` ⚪ dormant (0 live fayl, DB 10 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskTimeTracks`, 9/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskTimeTracks`, 9/9)
-
-## `task_observers` ⚪ dormant (0 live fayl, DB 5 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskObservers`, 5/5)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskObservers`, 5/5)
-
-## `task_co_executors` ⚪ dormant (0 live fayl, DB 5 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskCoExecutors`, 5/5)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskCoExecutors`, 5/5)
-
-## `task_projects` ⚪ dormant (0 live fayl, DB 12 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskProjects`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskProjects`, 11/11)
-
-## `task_project_members` ⚪ dormant (0 live fayl, DB 5 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskProjectMembers`, 4/4)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskProjectMembers`, 4/4)
-
-## `automation_robots` ⚪ dormant (0 live fayl, DB 14 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`automationRobots`, 11/11)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`automationRobots`, 11/11)
-
-## `task_flows` ⚪ dormant (0 live fayl, DB 8 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskFlows`, 5/5)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskFlows`, 5/5)
-
-## `task_notifications` ⚪ dormant (0 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskNotifications`, 8/8)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskNotifications`, 8/8)
-
-## `task_view_preferences` ⚪ dormant (0 live fayl, DB 9 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban/kanban-extended.ts` (`taskViewPreferences`, 7/7)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/kanban-schema.ts` (`taskViewPreferences`, 7/7)
-
-## `pos_printer_config` ⚪ dormant (0 live fayl, DB 0 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema-v2.ts` (`posPrinterConfig`, 0/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-business-b-1.ts` (`pos_printer_config`, 0/9)
-
-## `pos_warehouse_access` ⚪ dormant (0 live fayl, DB 0 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pos-schema.ts` (`posWarehouseAccess`, 0/9)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-pos-ext.ts` (`pos_warehouse_access`, 0/9)
-
-## `sensor_devices` ⚪ dormant (0 live fayl, DB 17 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-iot.ts` (`sensorDevices`, 17/17)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc-iot.ts` (`sensor_devices`, 5/9)
-
-## `sensor_readings` ⚪ dormant (0 live fayl, DB 6 ustun)
-**CANON:** `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/lib/db/src/schema/pp/pp-iot.ts` (`sensorReadings`, 6/6)
-- redundant: `C:/Users/AzzA/Downloads/EuroPrint-Clean/Uzbek-Language-Module/apps/api/src/shared/db/schema-misc-iot.ts` (`sensor_readings`, 2/7)
+# Schema Canon Map — A0 (canon-mapper)
+
+> Generated by agent **A0** for the schema-convergence operation.
+> Goal: converge every barrel-re-exported duplicate table to a SINGLE canonical
+> definition in `lib/db/src/schema/`, make that def a superset of the live DB,
+> switch the barrel (`europrint-compat.ts`) to re-export the canonical def, then
+> delete the now-unused stub files.
+
+The barrel is `apps/api/src/shared/db/europrint-compat.ts`. It does
+`export * from './schema'` (line 6) and then **explicit named re-exports** from
+stub files (lines 9–77). By TS rules the explicit named re-exports OVERRIDE the
+`export *`, so repos importing from `@europrint/schemas` get the STUB def, not the
+richer `lib/db` def.
+
+**Important nuance discovered:** several barrel-named symbols are ALREADY canonical
+re-exports inside the stub files themselves (e.g. `schema-compat-2.ts` re-exports
+`budgets`, `accounts`, `departments`, `positions`, `payrollPeriods`, `salesInvoices`,
+`sdLeads`, `purchaseOrders` from their canonical `schema-*` defs). Those rows are
+marked **(already canon-re-export)** below — convergence for them is partially done.
+The remaining locally-defined `pgTable(...)` stubs are the real convergence targets.
+
+Legend for CANONICAL column:
+- A `lib/db` path = a richer canonical def exists there; switch barrel to it.
+- **NO lib/db canon** = the apps/api stub is the only Drizzle def; canon target is
+  to CREATE the def in `lib/db` (superset of live DB), then re-export.
+- **(already canon-re-export)** = barrel already gets a canonical def (via the stub
+  re-exporting it); canon file noted is where that def lives.
+
+---
+
+## Canon decisions
+
+| symbol | db_table | current stub file (file:line) | CANONICAL lib/db file | db_col_count |
+|--------|----------|-------------------------------|-----------------------|--------------|
+| users | users | schema-compat-1a.ts:9 | lib/db/src/schema/users.ts:13 | 52 |
+| crmLeads | crm_leads | schema-compat-1a.ts:29 | lib/db/src/schema/crm-contacts.ts:21 | 47 |
+| crmDeals | crm_deals | schema-compat-1a.ts:45 | lib/db/src/schema/crm-pipelines.ts:193 | 50 |
+| crmContacts | crm_contacts | schema-compat-1a.ts:63 | lib/db/src/schema/crm-contacts.ts:107 | 36 |
+| crmCompanies | crm_companies | schema-compat-1a.ts:77 | lib/db/src/schema/crm-contacts.ts:200 | 53 |
+| crmPipelines | crm_pipelines | schema-compat-1a.ts:92 | lib/db/src/schema/crm-pipelines.ts:140 | 7 |
+| crmStages | crm_stages | schema-compat-1a.ts:100 | lib/db/src/schema/crm-pipelines.ts:161 | 10 |
+| candidates | candidates | schema-compat-1a.ts:109 | lib/db/src/schema/recruitment.ts:43 | 31 |
+| vacancies | vacancies | schema-compat-1a.ts:127 | lib/db/src/schema/recruitment.ts:12 | 44 |
+| hrCandidateFunnels | hr_candidate_funnels | schema-compat-1a.ts:141 | lib/db/src/schema/hr-recruiter.ts:143 | 25 |
+| hrFunnelHistory | hr_funnel_history | schema-compat-1b.ts:10 | lib/db/src/schema/hr-recruiter.ts:183 | 10 |
+| hrReferencesChecks | hr_references_checks | schema-compat-1b.ts:21 | lib/db/src/schema/hr-recruiter.ts:542 | 14 |
+| hrToolTestResults | hr_tool_test_results | schema-compat-1b.ts:38 | lib/db/src/schema/hr-recruiter.ts:198 | 24 |
+| hrOnboardingPlans | hr_onboarding_plans | schema-compat-1b.ts:65 | lib/db/src/schema/hr-recruiter.ts:300 | 17 |
+| hrEmployeeOnboardings | hr_employee_onboardings | schema-compat-1b.ts:77 | lib/db/src/schema/hr-recruiter.ts:342 | 15 |
+| hrJobDescriptions | hr_job_descriptions | schema-compat-1b.ts:96 | lib/db/src/schema/hr-recruiter.ts:382 | 24 |
+| hrJobOffers | hr_job_offers | schema-compat-1b.ts:109 | lib/db/src/schema/hr-recruiter.ts:581 | 20 |
+| hrMotivationPlans | hr_motivation_plans | schema-compat-1b.ts:132 | lib/db/src/schema/hr-recruiter.ts:460 | 16 |
+| hrProductivityInterviews | hr_productivity_interviews | schema-compat-1b.ts:144 | lib/db/src/schema/hr-recruiter.ts:241 | 10 |
+| salaryHistory | salary_history | schema-compat-5.ts:42 | lib/db/src/schema/payroll.ts:11 | 43 |
+| payrollPeriods | payroll_periods | schema-compat-2.ts:16 (already canon-re-export ← schema-business-c-2-hr-payroll.ts `payroll_periods_hr`) | lib/db/src/schema/fi-gl.ts:233 | 20 |
+| payrollRows | payroll_rows | schema-compat-2.ts:18 | lib/db/src/schema/fi-gl.ts:273 | 15 |
+| attendance | attendance | schema-compat-2.ts:30 | lib/db/src/schema/attendance.ts:12 | 26 |
+| leaveRequests | leave_requests | schema-compat-2.ts:42 | lib/db/src/schema/leave.ts:12 | 34 |
+| departments | departments | schema-compat-2.ts:59 (already canon-re-export ← schema-hr-lms.ts) | lib/db/src/schema/departments.ts:10 | 25 |
+| positions | positions | schema-compat-2.ts:60 (already canon-re-export ← schema-hr-lms.ts) | lib/db/src/schema/positions.ts:12 | 28 |
+| positionPermissions | position_permissions | schema-compat-2.ts:62 | lib/db/src/schema/position-permissions.ts:11 | 9 |
+| budgets | budgets | schema-compat-2.ts:73 (already canon-re-export ← schema-finance-budgets.ts) | lib/db/src/schema/fi-ap-core.ts:185 | 28 |
+| glDocuments | gl_documents | schema-compat-2.ts:75 | lib/db/src/schema/fi-gl.ts:131 | 26 |
+| accounts | accounts | schema-compat-2.ts:92 (already canon-re-export ← schema-ext-b-1.ts) | lib/db/src/schema/fi-gl.ts:23 | 9 |
+| salesInvoices | sales_invoices | schema-compat-2.ts:95 (already canon-re-export ← schema-business-c-2-misc.ts) | lib/db/src/schema/sd-orders.ts:19 | 21 |
+| documentSequences | document_sequences | schema-compat-2.ts:97 | lib/db/src/schema/core/core-ai-reports.ts:43 | 8 |
+| salesOrders | sales_orders | schema-compat-2.ts:108 | lib/db/src/schema/sd-orders.ts:89 | 71 |
+| sdLeads | sd_leads | schema-compat-2.ts:128 (already canon-re-export ← schema-ext-b-2.ts) | lib/db/src/schema/sd-europrint-schema.ts:91 | 23 |
+| purchaseOrders | purchase_orders | schema-compat-2.ts:131 (already canon-re-export ← schema-wms.ts) | lib/db/src/schema/mm-raw-materials.ts:202 | 28 |
+| purchaseOrderItems | purchase_order_items | schema-compat-2.ts:133 | lib/db/src/schema/mm-purchase.ts:32 | 11 |
+| vendors | vendors | schema-compat-2.ts:145 | lib/db/src/schema/mm-raw-materials.ts:169 | 17 |
+| warehouses | warehouses | schema-compat-2.ts:157 | lib/db/src/schema/wms-schema.ts:18 | 17 |
+| warehouseZones | warehouse_zones | schema-compat-2.ts:167 | lib/db/src/schema/wms-schema.ts:51 | 11 |
+| warehouseStock | warehouse_stock | schema-compat-2.ts:176 | lib/db/src/schema/wms-schema.ts:276 | 16 |
+| materials | materials | schema-compat-2.ts:186 | **NO lib/db canon** (mm-materials.ts is empty; `schema.ts` uses schema-pos-ext.ts def) | 16 |
+| posMovements | pos_movements | schema-compat-2.ts:199 (already canon-re-export ← @workspace/db) | lib/db/src/schema/pos-schema-v2.ts:69 | 55 |
+| posMovementTypes | pos_movement_types | schema-compat-2.ts:201 (already canon-re-export ← @workspace/db) | lib/db/src/schema/pos-schema.ts:23 | 10 |
+| mroInventory | mro_inventory | schema-compat-3.ts:10 | **NO lib/db canon** | 10 |
+| productionOrders | production_orders | schema-compat-3.ts:23 | lib/db/src/schema/pp/pp-production.ts:413 | 36 |
+| routings | routings | schema-compat-3.ts:41 (already canon-re-export ← schema-manufacturing.ts) | lib/db/src/schema/pp/pp-production.ts:344 | 17 |
+| routingOperations | routing_operations | schema-compat-3.ts:43 | lib/db/src/schema/pp/pp-production.ts:376 | 20 |
+| bomHeaders | bom_headers | schema-compat-3.ts:54 | lib/db/src/schema/pp/pp-production.ts:274 | 16 |
+| bomItems | bom_items | schema-compat-3.ts:65 | lib/db/src/schema/pp/pp-production.ts:309 | 16 |
+| workCenters | work_centers | schema-compat-3.ts:76 (already canon-re-export ← schema-manufacturing.ts) | lib/db/src/schema/pp/pp-production.ts:46 | 19 |
+| downtimeEvents | downtime_events | schema-compat-3.ts:80 (already canon-re-export ← schema-manufacturing.ts) | lib/db/src/schema/pp/pp-iot.ts:101 | 17 |
+| downtimeReasonCodes | downtime_reason_codes | schema-compat-3.ts:82 | lib/db/src/schema/pp/pp-iot.ts:184 | 9 |
+| machineCrews | machine_crews | schema-compat-3.ts:91 | lib/db/src/schema/pp/pp-enhanced.ts:20 | 14 |
+| equipmentMaintenance | equipment_maintenance | schema-compat-3.ts:103 | lib/db/src/schema/pp/pp-enhanced.ts:496 | 17 |
+| qcReclamations | qc_reclamations | schema-compat-3.ts:117 | lib/db/src/schema/qc-schema.ts:205 | 32 |
+| qcBraks | qc_braks | schema-compat-3.ts:129 | lib/db/src/schema/qc-schema.ts:243 | 18 |
+| notifications | notifications | schema-compat-3.ts:139 | lib/db/src/schema/core/core-users.ts:33 | 25 |
+| marketingCampaigns | marketing_campaigns | schema-compat-3.ts:151 | lib/db/src/schema/marketing-schema.ts:16 | 16 |
+| marketingLeads | marketing_leads | schema-compat-3.ts:165 | lib/db/src/schema/marketing-schema.ts:139 | 20 |
+| productCategories | product_categories | schema-compat-3.ts:180 | lib/db/src/schema/pp/pp-enhanced.ts:275 | 14 |
+| websiteBanners | website_banners | schema-compat-3.ts:193 | lib/db/src/schema/ecommerce-schema.ts:157 | 16 |
+| websiteSettings | website_settings | schema-compat-3.ts:206 | lib/db/src/schema/ecommerce-schema.ts:185 | 7 |
+| securityAccess | security_access | schema-compat-3.ts:215 | **NO lib/db canon** | 9 |
+| securityAttendance | security_attendance | schema-compat-3.ts:225 | **NO lib/db canon** | 8 |
+| logisticsRoutes | logistics_routes | schema-compat-4.ts:10 | **NO lib/db canon** | 8 |
+| iotSensors | iot_sensors | schema-compat-4.ts:39 (⚠ known 3-way drift, see stub comment) | lib/db/src/schema/iot-schema.ts:393 (camelCase shape differs; see note) | 16 |
+| designLibraryItems | design_library_items | schema-compat-4.ts:52 | **NO lib/db canon** | 10 |
+| hitlApprovals | hitl_approvals | schema-compat-4.ts:65 | **NO lib/db canon** | 9 |
+| customerOrders | customer_orders | schema-compat-4.ts:77 | lib/db/src/schema/ecommerce-schema.ts:74 | 24 |
+| customerAccounts | customer_accounts | schema-compat-4.ts:94 | lib/db/src/schema/ecommerce-schema.ts:49 | 16 |
+| publicProducts | public_products | schema-compat-4.ts:110 | lib/db/src/schema/ecommerce-schema.ts:16 | 23 |
+| websitePages | website_pages | schema-compat-4.ts:126 | lib/db/src/schema/ecommerce-schema.ts:134 | 11 |
+| portfolioItems | portfolio_items | schema-compat-4.ts:137 | lib/db/src/schema/ecommerce-schema.ts:110 | 14 |
+| modules | lms_modules | schema-compat-4.ts:149 (already canon-re-export ← @workspace/db `lmsModules`) | lib/db/src/schema/lms-extended.ts:32 | 11 |
+| tests | lms_tests | schema-compat-4.ts:151 | **NO lib/db canon** | 23 |
+| assignments | lms_assignments | schema-compat-4.ts:160 | **NO lib/db canon** | 13 |
+| courses | courses | schema-compat-4.ts:172 | lib/db/src/schema/lms-schema.ts:45 | 35 |
+| mmDeliveries | mm_deliveries | schema-compat-4.ts:185 | lib/db/src/schema/mm-logistics.ts:204 | 36 |
+| sdOrders | sd_orders | schema-compat-4.ts:196 | lib/db/src/schema/sd-europrint-schema.ts:265 | 47 |
+| productionSessions | production_sessions | schema-compat-4.ts:207 | lib/db/src/schema/pp/pp-iot.ts:51 | 34 |
+| aiUsageLogs | ai_usage_logs | schema-compat-4.ts:218 | lib/db/src/schema/ai-providers-schema.ts:13 | 19 |
+| approvalRequests | approval_requests | schema-compat-4.ts:239 | lib/db/src/schema/core/core-ai-reports.ts:91 | 18 |
+| designOrders | design_orders | schema-compat-4.ts:258 | lib/db/src/schema/pp/pp-design.ts:22 | 32 |
+| stockTransferLines | stock_transfer_lines | schema-compat-4.ts:273 | lib/db/src/schema/wms-schema.ts:163 | 17 |
+| insertCustomerOrderSchema | (zod) | schema-compat-zod.ts:8 | n/a (zod, not a table) | — |
+| insertWebsitePageSchema | (zod) | schema-compat-zod.ts:14 | n/a (zod) | — |
+| insertWebsiteBannerSchema | (zod) | schema-compat-zod.ts:21 | n/a (zod) | — |
+| insertPortfolioItemSchema | (zod) | schema-compat-zod.ts:27 | n/a (zod) | — |
+| insertWebsiteSettingSchema | (zod) | schema-compat-zod.ts:34 | n/a (zod) | — |
+| insertProductCategorySchema | (zod) | schema-compat-zod.ts:39 | n/a (zod) | — |
+| insertPublicProductSchema | (zod) | schema-compat-zod.ts:49 | n/a (zod) | — |
+| aiExamAttempts | lms_exam_attempts | schema-ai.ts:8 | **NO lib/db canon** (lib/db `aiExamAttempts` maps to a DIFFERENT table `ai_exam_attempts`, lms-schema.ts:209) | 15 |
+| aiInsights | ai_insights | schema-ai.ts:22 | lib/db/src/schema/core/core-ai.ts:77 | 16 |
+| aiPlanningPlans | ai_planning_plans | schema-ai.ts:35 | **NO lib/db canon** | 15 |
+| aiPlanningConfig | ai_planning_config | schema-ai.ts:53 | lib/db/src/schema/pp/pp-enhanced.ts:475 | 11 |
+| aiReservationRequests | ai_reservation_requests | schema-ai.ts:63 | lib/db/src/schema/mm-inventory.ts:153 | 20 |
+| aiReservationBatches | ai_reservation_batches | schema-ai.ts:76 | **NO lib/db canon** | 6 |
+| aiHrInterviews | ai_hr_interviews | schema-ai.ts:85 | **NO lib/db canon** | 9 |
+| kanbanFlows | kanban_flows | schema-kanban.ts:47 | **NO lib/db canon** (lib/db kanban has only boards/columns/cards/comments + a separate `task_*` schema) | 8 |
+| kanbanRobots | kanban_robots | schema-kanban.ts:58 | **NO lib/db canon** | 7 |
+| kanbanChecklists | kanban_checklists | schema-kanban.ts:69 | **NO lib/db canon** | 5 |
+| kanbanChecklistItems | kanban_checklist_items | schema-kanban.ts:77 | **NO lib/db canon** | 8 |
+| kanbanCardComments | kanban_card_comments | schema-kanban.ts:88 | **NO lib/db canon** | 5 |
+| kanbanCardWatchers | kanban_card_watchers | schema-kanban.ts:96 | **NO lib/db canon** | 4 |
+| kanbanNotifications | kanban_notifications | schema-kanban.ts:104 | **NO lib/db canon** | 9 |
+| kanbanTemplates | kanban_templates | schema-kanban.ts:117 | **NO lib/db canon** | 11 |
+| kanbanTimeTracks | kanban_time_tracks | schema-kanban.ts:132 | **NO lib/db canon** | 10 |
+| kanbanTags | kanban_tags | schema-kanban.ts:146 | **NO lib/db canon** | 5 |
+| kanbanCardTags | kanban_card_tags | schema-kanban.ts:154 | **NO lib/db canon** | 4 |
+| kanbanResults | kanban_results | schema-kanban.ts:162 | **NO lib/db canon** | 6 |
+| kanbanResultFiles | kanban_result_files | schema-kanban.ts:171 | **NO lib/db canon** | 7 |
+| kanbanObservers | kanban_observers | schema-kanban.ts:182 | **NO lib/db canon** | 4 |
+| kanbanCoExecutors | kanban_co_executors | schema-kanban.ts:189 | **NO lib/db canon** | 4 |
+| kanbanFiles | kanban_files | schema-kanban.ts:197 | **NO lib/db canon** | 9 |
+| marketingContentPosts | marketing_content_posts | schema-marketing-ext.ts:8 | lib/db/src/schema/kanban-extended.ts:28 | 15 |
+| marketingSocialAccounts | marketing_social_accounts | schema-marketing-ext.ts:23 | lib/db/src/schema/kanban-extended.ts:42 | 9 |
+| marketingSocialPosts | marketing_social_posts | schema-marketing-ext.ts:33 | **NO lib/db canon** | 8 |
+| marketingEmailTemplates | marketing_email_templates | schema-marketing-ext.ts:44 | **NO lib/db canon** | 8 |
+| guidelines | guidelines | schema-admin-ext.ts:31 | lib/db/src/schema/lms-schema.ts:15 | 14 |
+| contactSettings | contact_settings | schema-admin-ext.ts:42 | lib/db/src/schema/core-schema.ts:24 | 10 |
+| systemSettings | system_settings | schema-admin-ext.ts:53 | lib/db/src/schema/core-schema.ts:41 | 18 |
+| adminFilters | admin_filters | schema-admin-ext.ts:64 | **NO lib/db canon** | 7 |
+| calendarEvents | calendar_events | schema-admin-ext.ts:74 | lib/db/src/schema/core-schema.ts:76 | 26 |
+| assetItems | asset_items | schema-admin-ext.ts:90 (already canon-re-export ← @workspace/db) | lib/db/src/schema/admin-assets.ts:13 | 22 |
+| assetMaintenance | asset_maintenance | schema-admin-ext.ts:92 | lib/db/src/schema/admin-assets.ts:45 | 9 |
+| assetDisposals | asset_disposals | schema-admin-ext.ts:104 | lib/db/src/schema/admin-assets.ts:69 | 13 |
+| assetTransfers | asset_transfers | schema-admin-ext.ts:115 | lib/db/src/schema/admin-assets.ts:90 | 16 |
+| saasTenants | saas_tenants | schema-admin-ext.ts:126 | lib/db/src/schema/saas-schema.ts:12 (`tenants`) | 24 |
+| entries | entries | schema-finance-extended.ts:29 | lib/db/src/schema/fi-gl.ts:51 | 17 |
+| cashFlowTransactions | cash_flow_transactions | schema-finance-extended.ts:39 | lib/db/src/schema/fi-ap-core.ts:149 | 11 |
+| accountingPeriods | accounting_periods | schema-finance-extended.ts:49 | lib/db/src/schema/fi-gl.ts:200 | 13 |
+| financeCategories | finance_categories | schema-finance-extended.ts:59 | lib/db/src/schema/fi-kassa.ts:145 | 14 |
+| incomeExpenseTransactions | income_expense_transactions | schema-finance-extended.ts:67 | lib/db/src/schema/fi-kassa.ts:179 | 21 |
+| orderCostings | order_costings | schema-finance-extended.ts:76 | lib/db/src/schema/fi-budgets.ts:68 | 20 |
+| orderCostingLines | order_costing_lines | schema-finance-extended.ts:90 | lib/db/src/schema/fi-budgets.ts:115 | 12 |
+| financialKPIs | financial_kpis | schema-finance-extended.ts:98 | lib/db/src/schema/fi-budgets.ts:213 | 16 |
+| dailyFinancialMetrics | daily_financial_metrics | schema-finance-extended.ts:108 | lib/db/src/schema/fi-payroll-calc.ts:173 | 31 |
+| inventoryCounts | inventory_counts | schema-finance-extended.ts:117 | lib/db/src/schema/mm-inventory.ts:65 | 30 |
+| cashTransactions | cash_transactions | schema-finance-extended.ts:128 | lib/db/src/schema/fi-kassa.ts:95 | 19 |
+| warehouseTransactions | warehouse_transactions | schema-finance-extended.ts:138 | lib/db/src/schema/wms-schema.ts:232 | 24 |
+| customerPayments | customer_payments | schema-finance-extended.ts:150 (re-export ← schema-compat-5.ts:9) | lib/db/src/schema/fi-ap-core.ts:72 | 18 |
+| invoicePayments | invoice_payments | schema-finance-extended.ts:152 | lib/db/src/schema/fi-ap-core.ts:28 | 16 |
+| kassaTransactions | rpt_kassa_transactions | schema-finance-reports.ts:17 | lib/db/src/schema/fi-financial-reports.ts:17 | 10 |
+| omborQoldiq | rpt_ombor_qoldiq | schema-finance-reports.ts:29 | lib/db/src/schema/fi-financial-reports.ts:35 | 11 |
+| debitorlar | rpt_debitorlar | schema-finance-reports.ts:42 | lib/db/src/schema/fi-financial-reports.ts:54 | 12 |
+| kreditorlar | rpt_kreditorlar | schema-finance-reports.ts:56 | lib/db/src/schema/fi-financial-reports.ts:74 | 12 |
+| balans | rpt_balans | schema-finance-reports.ts:70 | lib/db/src/schema/fi-financial-reports.ts:94 | 13 |
+| ishlabChiqarish | rpt_ishlab_chiqarish | schema-finance-reports.ts:85 | lib/db/src/schema/fi-financial-reports.ts:113 | 12 |
+
+**Symbol count:** 134 barrel-named exports (127 tables + 7 zod schemas).
+Of the 127 tables: 84 have a richer `lib/db` canonical def to switch to; 32 have
+**NO lib/db canon** (canon target = create in lib/db); 11 are already canon-re-exports
+inside the stub (convergence partly done — see note rows).
+
+> **iotSensors note:** `schema-compat-4.ts` carries an explicit @deprecated comment
+> warning of a 3-way drift between this camelCase stub, `lib/db/.../iot-schema.ts:393`,
+> and the raw-SQL contract in `iot/application/commands/*.handler.ts` (which uses
+> `sensor_code/unit/min_threshold/max_threshold/last_reading`). The live DB (16 cols)
+> matches the raw-SQL contract. Do NOT blindly switch the barrel to iot-schema.ts —
+> the IoT-domain agent must reconcile column names first.
+
+---
+
+## Stub files — drainability
+
+A stub file is **DRAINABLE** (safe to delete after convergence) only if nothing
+except the aggregators imports it. Aggregators = `europrint-compat.ts`, `index.ts`,
+`schema.ts`, `schema-compat.ts`, `schema-business.ts`, `schema-misc-app.ts`,
+`schema-finance.ts`, `schema-business-c-2.ts`, `schema-business-a-2.ts` (barrels only).
+
+| stub file | drainable? | other importers (file:line) |
+|-----------|-----------|------------------------------|
+| schema-compat-1.ts | DRAINABLE | only barrels (europrint-compat:14, index:17, schema-compat:6); it re-exports 1a+1b |
+| schema-compat-1a.ts | DRAINABLE | only via schema-compat-1.ts:6 |
+| schema-compat-1b.ts | DRAINABLE | only via schema-compat-1.ts:7 |
+| schema-compat-2.ts | **HAS-OTHER-IMPORTERS** | seed-pos-movement-types.ts:16 (`posMovementTypes`) |
+| schema-compat-3.ts | **HAS-OTHER-IMPORTERS** | qc-new.repository.ts:13 (`qcBraks`); schema-misc.ts:149 (`notifications`, agg-ish); schema-finance-budgets.ts:45 (`approvalRequests`) |
+| schema-compat-4.ts | **HAS-OTHER-IMPORTERS** | schema-finance-budgets.ts:45 (`approvalRequests`); schema-finance-reports.ts:101 (`aiUsageLogs`) |
+| schema-compat-5.ts | **HAS-OTHER-IMPORTERS** | wms-crud.repository.ts:13 + drizzle-wms.repo.ts:15 (`wms_stock`); finance-actions.repository.ts:16 + financial-reports-query.helpers.ts:16 (`customer_payments`); schema-finance-extended.ts:150 (re-export) |
+| schema-compat-zod.ts | DRAINABLE | only barrels (europrint-compat:43) |
+| schema-ai.ts | DRAINABLE | only barrels (europrint-compat:48, index:54); no module-level direct import. Coordinate `aiExamAttempts` name-clash with lms-schema.ts before deletion. |
+| schema-kanban.ts | **HAS-OTHER-IMPORTERS** | kanban-templates.seed.ts:13 (`kanbanTemplates`); kanban-tables.ts:10 (`kanbanBoards/Columns/Cards`); schema-ext-a-1.ts:9 (`kanbanCards/kanbanColumns`) |
+| schema-marketing-ext.ts | DRAINABLE | only barrels (europrint-compat:61) |
+| schema-admin-ext.ts | DRAINABLE | only barrels (europrint-compat:67, index:81); no module import |
+| schema-finance.ts | **HAS-OTHER-IMPORTERS** | approval-workflow.repo.ts:8 (`approval_requests`); schema.ts:19/53 (agg). Itself a barrel over the 4 splits |
+| schema-finance-invoicing.ts | DRAINABLE | only via schema-finance.ts:8 |
+| schema-finance-budgets.ts | **HAS-OTHER-IMPORTERS** | drizzle-finance-budget.repo.ts:11 (`budgets, budget_lines`); schema-compat-2.ts:7, schema-ext-b-2.ts:10 (canon source) |
+| schema-finance-extended.ts | DRAINABLE | only via schema-finance.ts:10 (re-exports compat-5 customerPayments) |
+| schema-finance-reports.ts | DRAINABLE | only via schema-finance.ts:11 |
+| schema-business-c-2.ts | **HAS-OTHER-IMPORTERS** | finance-actions.repository.ts:13 (`salary_history`), :18 (`sales_invoices`); barrel over 3 hr/misc splits |
+| schema-business-b-1.ts | **HAS-OTHER-IMPORTERS** | finance-actions.repository.ts:14 (`payroll_advances`); schema-ext-b-1.ts:9, schema-ext-a-2.ts:9 (canon source) |
+| schema-business-b-2.ts | **HAS-OTHER-IMPORTERS** | finance-actions.repository.ts:17 (`vendor_invoices`); schema-ext-b-1.ts:10, schema-ext-a-2.ts:10 |
+| schema-business-c-2-hr-payroll.ts | **HAS-OTHER-IMPORTERS** | schema-compat-2.ts:12 (`payroll_periods_hr`) (canon source) |
+| schema-business-c-2-misc.ts | **HAS-OTHER-IMPORTERS** | schema-compat-2.ts:10 (`sales_invoices`) (canon source) |
+| schema-business-c-2-hr-safety.ts | **HAS-OTHER-IMPORTERS** | schema-ext-a-2.ts:14 (`hr_brand_settings`) |
+| schema-business-a-1.ts | **HAS-OTHER-IMPORTERS** | schema-ext-c-3.ts:10, schema-ext-a-2.ts:12 |
+| schema-business-a-2.ts | **HAS-OTHER-IMPORTERS** | schema-ext-c-3.ts:9 (barrel over schema-business-a-2-mro.ts) |
+| schema-business-c-1.ts | **HAS-OTHER-IMPORTERS** | schema-ext-c-2.ts:9, schema-ext-a-2.ts:13 |
+| schema-business-c-3.ts | **HAS-OTHER-IMPORTERS** | schema-ext-c-1.ts:9 |
+| schema-misc-app-a.ts | **HAS-OTHER-IMPORTERS** | finance-actions.repository.ts:15 (`hrEmployees`); schema-ext-c-1.ts:54 (`employeeOrgDepartments`); index.ts:73 (barrel) |
+| schema-misc-app-b.ts | DRAINABLE | only via schema-misc-app.ts:7 |
+
+> **Drainability summary:** 11 stub files are DRAINABLE today (compat-1, 1a, 1b,
+> compat-zod, ai, marketing-ext, admin-ext, finance-invoicing, finance-extended,
+> finance-reports, misc-app-b). The rest have direct repository/seed/cross-schema
+> importers that must be repointed to `@europrint/schemas` or to the canonical
+> `lib/db` def BEFORE the stub can be deleted. The high-value blockers are the direct
+> module imports: `seed-pos-movement-types.ts` (compat-2), `qc-new.repository.ts`
+> (compat-3), the two WMS repos + two finance helpers on compat-5, the kanban seed +
+> kanban-tables.ts (kanban), and especially `finance-actions.repository.ts` — which
+> alone pins compat-5, business-c-2, business-b-1, business-b-2, and misc-app-a.
+
+---
+
+## Dormant tables to DROP
+
+These tables are defined in Drizzle (`lib/db`) but have **ZERO** real query
+references in `apps/api/src/modules` (verified with word-boundary Grep; the only
+hits are a re-export shim and a code comment, not usage):
+
+| symbol | db_table | Drizzle def | ref count in modules | notes |
+|--------|----------|-------------|----------------------|-------|
+| payrollCalculations | payroll_calculations | lib/db/src/schema/fi-payroll-calc.ts:100 | **0** | no camelCase or snake_case ref anywhere in apps/api/src |
+| posTransactions | pos_transactions | lib/db/src/schema/fi-payroll-ext.ts:228 | **0** | the 16 `pos_transactions` hits are all `retail_pos_transactions` (schema-pos-retail.ts) — a different table |
+| posProducts | pos_products | lib/db/src/schema/fi-payroll-ext.ts:259 | **0** | the 20 `pos_products` hits are all `retail_pos_products`; only non-lib/db `posProducts` refs are a re-export shim (schema-ext-b-2.ts:38) + a comment (legacy-iot.service.ts:92) |
+
+Verification commands run:
+- `Grep \bpos_products\b apps/api/src/modules` → 0 (excluding `retail_` prefix)
+- `Grep \bpos_transactions\b apps/api/src/modules` → 0 (excluding `retail_` prefix)
+- `Grep payroll_calculations|payrollCalculations apps/api/src/modules` → 0
+- `Grep \bpayrollCalculations\b|\bposTransactions\b|\bposProducts\b apps/api/src` → only schema-ext-b-2.ts:38 (shim) + legacy-iot.service.ts:92 (comment)
+
+**Recommendation:** these three `lib/db` defs (all colocated in fi-payroll-* files)
+can be dropped from Drizzle once confirmed the live DB tables are also unused, or
+kept as DB-only. They are NOT re-exported by the barrel and pose no convergence work
+— only a cleanup opportunity.
+
+---
+
+## Domain assignment
+
+Canon files grouped by domain prefix so 12 downstream agents own disjoint sets.
+(Each agent makes its canon files supersets of the live DB and repoints the barrel.)
+
+### hr-* (HR / recruitment / payroll-people) — Agent A1
+- lib/db/src/schema/users.ts (users)
+- lib/db/src/schema/hr-recruiter.ts (hrCandidateFunnels, hrFunnelHistory, hrReferencesChecks, hrToolTestResults, hrOnboardingPlans, hrEmployeeOnboardings, hrJobDescriptions, hrJobOffers, hrMotivationPlans, hrProductivityInterviews)
+- lib/db/src/schema/recruitment.ts (candidates, vacancies)
+- lib/db/src/schema/payroll.ts (salaryHistory)
+- lib/db/src/schema/attendance.ts (attendance)
+- lib/db/src/schema/leave.ts (leaveRequests)
+- lib/db/src/schema/departments.ts (departments)
+- lib/db/src/schema/positions.ts (positions)
+- lib/db/src/schema/position-permissions.ts (positionPermissions)
+
+### fi-* (Finance / GL / AP-AR / payroll-rows / reports) — Agent A2
+- lib/db/src/schema/fi-gl.ts (accounts, glDocuments, payrollPeriods, payrollRows, entries, accountingPeriods)
+- lib/db/src/schema/fi-ap-core.ts (budgets, invoicePayments, cashFlowTransactions, customerPayments)
+- lib/db/src/schema/fi-kassa.ts (cashTransactions, financeCategories, incomeExpenseTransactions)
+- lib/db/src/schema/fi-budgets.ts (orderCostings, orderCostingLines, financialKPIs)
+- lib/db/src/schema/fi-payroll-calc.ts (dailyFinancialMetrics)
+- lib/db/src/schema/fi-financial-reports.ts (kassaTransactions, omborQoldiq, debitorlar, kreditorlar, balans, ishlabChiqarish)
+- **DROP-candidates (dormant):** fi-payroll-calc.ts:100 payrollCalculations, fi-payroll-ext.ts posTransactions/posProducts
+
+### pos-* (POS / movements) — Agent A3
+- lib/db/src/schema/pos-schema-v2.ts (posMovements)
+- lib/db/src/schema/pos-schema.ts (posMovementTypes)
+- **NO-canon:** materials (schema-compat-2 stub; mm-materials.ts empty) → create in lib/db (mm or pos)
+
+### crm-* — Agent A4
+- lib/db/src/schema/crm-contacts.ts (crmLeads, crmContacts, crmCompanies)
+- lib/db/src/schema/crm-pipelines.ts (crmDeals, crmPipelines, crmStages)
+
+### mm-* (Materials mgmt / procurement / logistics / inventory) — Agent A5
+- lib/db/src/schema/mm-raw-materials.ts (vendors, purchaseOrders)
+- lib/db/src/schema/mm-purchase.ts (purchaseOrderItems)
+- lib/db/src/schema/mm-logistics.ts (mmDeliveries)
+- lib/db/src/schema/mm-inventory.ts (inventoryCounts, aiReservationRequests)
+- **NO-canon:** mroInventory, logisticsRoutes → create in lib/db
+
+### sd-* (Sales & Distribution) — Agent A6
+- lib/db/src/schema/sd-orders.ts (salesInvoices, salesOrders)
+- lib/db/src/schema/sd-europrint-schema.ts (sdLeads, sdOrders)
+- lib/db/src/schema/core/core-ai-reports.ts (documentSequences, approvalRequests)
+
+### wms-* (Warehouse) — Agent A7
+- lib/db/src/schema/wms-schema.ts (warehouses, warehouseZones, warehouseStock, stockTransferLines, warehouseTransactions)
+
+### pp-* / mfg / qc (Production / quality) — Agent A8
+- lib/db/src/schema/pp/pp-production.ts (productionOrders, routings, routingOperations, bomHeaders, bomItems, workCenters)
+- lib/db/src/schema/pp/pp-iot.ts (downtimeEvents, downtimeReasonCodes, productionSessions)
+- lib/db/src/schema/pp/pp-enhanced.ts (machineCrews, equipmentMaintenance, productCategories, aiPlanningConfig)
+- lib/db/src/schema/pp/pp-design.ts (designOrders)
+- lib/db/src/schema/qc-schema.ts (qcReclamations, qcBraks)
+- **NO-canon:** designLibraryItems → create in lib/db
+
+### lms (Learning) — Agent A9
+- lib/db/src/schema/lms-extended.ts (modules = lmsModules)
+- lib/db/src/schema/lms-schema.ts (courses, guidelines)
+- **NO-canon:** tests (lms_tests), assignments (lms_assignments), aiExamAttempts (lms_exam_attempts) → create in lib/db
+
+### kanban — Agent A10
+- lib/db/src/schema/kanban/kanban-core.ts (kanbanBoards, kanbanColumns, kanbanCards, kanbanComments — canonical core)
+- lib/db/src/schema/kanban-extended.ts (marketingContentPosts, marketingSocialAccounts — currently mis-filed here)
+- **NO-canon (16 tables, biggest gap):** kanbanFlows, kanbanRobots, kanbanChecklists, kanbanChecklistItems, kanbanCardComments, kanbanCardWatchers, kanbanNotifications, kanbanTemplates, kanbanTimeTracks, kanbanTags, kanbanCardTags, kanbanResults, kanbanResultFiles, kanbanObservers, kanbanCoExecutors, kanbanFiles → create in lib/db/src/schema/kanban/
+
+### core (users-adjacent / admin / settings / notifications / saas) — Agent A11
+- lib/db/src/schema/core/core-users.ts (notifications)
+- lib/db/src/schema/core/core-ai.ts (aiInsights)
+- lib/db/src/schema/core-schema.ts (contactSettings, systemSettings, calendarEvents)
+- lib/db/src/schema/admin-assets.ts (assetItems, assetMaintenance, assetDisposals, assetTransfers)
+- lib/db/src/schema/saas-schema.ts (saasTenants = `tenants`)
+- lib/db/src/schema/ai-providers-schema.ts (aiUsageLogs)
+- **NO-canon:** adminFilters → create in lib/db
+
+### misc / web / marketing / iot / security / ai-misc — Agent A12
+- lib/db/src/schema/ecommerce-schema.ts (customerOrders, customerAccounts, publicProducts, websitePages, portfolioItems, websiteBanners, websiteSettings)
+- lib/db/src/schema/marketing-schema.ts (marketingCampaigns, marketingLeads)
+- lib/db/src/schema/iot-schema.ts (iotSensors — ⚠ drift; reconcile before switch)
+- **NO-canon:** securityAccess, securityAttendance, hitlApprovals, marketingSocialPosts, marketingEmailTemplates, aiPlanningPlans, aiReservationBatches, aiHrInterviews → create in lib/db
+- **zod schemas** (insertCustomerOrderSchema … insertPublicProductSchema) live in schema-compat-zod.ts — keep or move to a zod-validators module; not table convergence.
+
+---
+
+*Generated 2026-05-27 by agent A0. Evidence: europrint-compat.ts lines 9–77;
+stub files schema-compat-1a/1b/2/3/4/5/zod, schema-ai, schema-kanban,
+schema-marketing-ext, schema-admin-ext, schema-finance(+splits); canonical defs
+grepped in lib/db/src/schema; DB column counts from _audit_out/db-columns-by-table.json.*

@@ -35,6 +35,9 @@ export const publicProducts = pgTable("public_products", {
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- live-DB superset (A12 convergence) ---
+  price: numericMoney("price"),
+  imageUrl: text("image_url"),
 });
 
 
@@ -60,6 +63,10 @@ export const customerAccounts = pgTable("customer_accounts", {
   verificationCode: varchar("verification_code", { length: 10 }),
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- live-DB superset (A12 convergence) ---
+  name: text("name"),
+  status: varchar("status", { length: 30 }),
+  creditLimit: numericMoney("credit_limit"),
 });
 
 
@@ -94,6 +101,9 @@ export const customerOrders = pgTable("customer_orders", {
   crmDealId: integer("crm_deal_id").references(() => crmDeals.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
+  // --- live-DB superset (A12 convergence) ---
+  totalAmount: numericMoney("total_amount"),
+  currency: varchar("currency", { length: 10 }),
 }, (t) => [
   check("customer_orders_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('new','confirmed','in_production','ready','shipped','delivered','cancelled')`),
   check("customer_orders_payment_status_chk", sql`${t.paymentStatus} IS NULL OR ${t.paymentStatus} IN ('pending','paid','refunded')`),
@@ -120,6 +130,9 @@ export const portfolioItems = pgTable("portfolio_items", {
   isFeatured: boolean("is_featured").default(false),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- live-DB superset (A12 convergence) ---
+  imageUrl: text("image_url"),
+  isPublished: boolean("is_published").default(false),
 });
 
 

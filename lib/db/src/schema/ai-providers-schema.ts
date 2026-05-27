@@ -27,6 +27,10 @@ export const aiUsageLogs = pgTable("ai_usage_logs", {
   status: varchar("status", { length: 20 }).default("success"),
   errorMessage: text("error_message"),
   createdAt: timestamp("created_at").defaultNow(),
+  // ─── live-DB superset columns (ADD-ONLY) ───
+  module: varchar("module", { length: 50 }),
+  action: varchar("action", { length: 100 }),
+  cost: numeric("cost", { precision: 10, scale: 6 }).default("0"),
 });
 
 

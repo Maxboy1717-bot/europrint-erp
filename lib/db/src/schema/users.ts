@@ -3,7 +3,7 @@
  * @description Drizzle ORM schema. Table definitions, CHECK constraints, FK relations.
  */
 
-import { pgTable, serial, varchar, integer, boolean, timestamp, text, index, check } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, integer, boolean, timestamp, text, index, check, numeric, date } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -28,6 +28,42 @@ export const users = pgTable("users", {
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Convergence additions (live-DB superset)
+  fullName: text("full_name"),
+  employeeId: integer("employee_id"),
+  role: varchar("role", { length: 50 }).default("employee"),
+  status: varchar("status", { length: 20 }).default("active"),
+  profileImageUrl: text("profile_image_url"),
+  managerId: integer("manager_id"),
+  hierarchyLevel: integer("hierarchy_level"),
+  ckpCode: varchar("ckp_code", { length: 100 }),
+  rfidCard: varchar("rfid_card", { length: 100 }),
+  age: integer("age"),
+  gender: varchar("gender", { length: 20 }),
+  childrenCount: integer("children_count"),
+  maritalStatus: varchar("marital_status", { length: 30 }),
+  childrenEducation: text("children_education"),
+  householdSize: integer("household_size"),
+  householdMembers: text("household_members"),
+  housingType: varchar("housing_type", { length: 50 }),
+  latitude: numeric("latitude"),
+  longitude: numeric("longitude"),
+  shift: varchar("shift", { length: 50 }),
+  district: varchar("district", { length: 100 }),
+  salaryType: varchar("salary_type", { length: 50 }),
+  workshopZone: varchar("workshop_zone", { length: 50 }),
+  lang: varchar("lang", { length: 5 }),
+  birthDate: date("birth_date"),
+  hireDate: date("hire_date"),
+  address: text("address"),
+  attestationDate: date("attestation_date"),
+  deletedAt: timestamp("deleted_at"),
+  failedLoginAttempts: integer("failed_login_attempts").default(0),
+  lockedUntil: timestamp("locked_until"),
+  telegramId: varchar("telegram_id", { length: 50 }),
+  orgDepartmentId: integer("org_department_id"),
+  orgFunctionId: integer("org_function_id"),
+  department: varchar("department", { length: 100 }),
 }, (t) => [
   index("idx_users_position_id").on(t.positionId),
   index("idx_users_department_id").on(t.departmentId),

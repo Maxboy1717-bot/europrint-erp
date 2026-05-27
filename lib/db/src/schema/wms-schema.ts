@@ -27,6 +27,13 @@ export const warehouses = pgTable("warehouses", {
   deletedAt: timestamp("deleted_at"),
   deletedBy: integer("deleted_by").references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- A7 superset: live-DB columns ---
+  address: text("address"),
+  isFreeStorage: boolean("is_free_storage").default(false),
+  freeStorageDays: integer("free_storage_days"),
+  monthlyRate: numericMoney("monthly_rate"),
+  capacity: numericMoney("capacity"),
+  notes: text("notes"),
 }, (t) => [
   index("idx_warehouses_type").on(t.type),
   index("idx_warehouses_is_active").on(t.isActive),
@@ -59,6 +66,8 @@ export const warehouseZones = pgTable("warehouse_zones", {
   isActive: boolean("is_active").notNull().default(true),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- A7 superset: live-DB columns ---
+  type: varchar("type", { length: 30 }),
 }, (t) => [
   index("idx_warehouse_zones_warehouse_id").on(t.warehouseId),
   index("idx_warehouse_zones_zone_type").on(t.zoneType),
@@ -175,6 +184,10 @@ export const stockTransferLines = pgTable("stock_transfer_lines", {
   expiryDate: varchar("expiry_date", { length: 10 }), // Yaroqlilik muddati
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- A7 superset: live-DB columns ---
+  quantity: numericMoney("quantity"),
+  unit: varchar("unit", { length: 20 }),
+  status: varchar("status", { length: 20 }),
 }, (t) => [
   index("idx_stock_transfer_lines_transfer_id").on(t.transferId),
   check("stock_transfer_lines_type_chk", sql`${t.itemType} IN ('material','product')`),
@@ -255,6 +268,11 @@ export const warehouseTransactions = pgTable("warehouse_transactions", {
   notes: text("notes"),
   createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- A7 superset: live-DB columns ---
+  warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
+  itemId: varchar("item_id"),
+  type: varchar("type", { length: 20 }),
+  referenceId: varchar("reference_id"),
 }, (t) => [
   check("warehouse_transactions_type_chk", sql`${t.transactionType} IN ('kirim','chiqim','return','adjustment')`),
   check("warehouse_transactions_qty_chk", sql`${t.quantity} > 0`),
@@ -283,6 +301,14 @@ export const warehouseStock = pgTable("warehouse_stock", {
   unitOfMeasure: varchar("unit_of_measure", { length: 20 }),
   lastUpdatedAt: timestamp("last_updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- A7 superset: live-DB columns ---
+  reorderPoint: numericMoney("reorder_point"),
+  maxStock: numericMoney("max_stock"),
+  binLocationId: varchar("bin_location_id"),
+  lastMovementAt: timestamp("last_movement_at"),
+  itemId: varchar("item_id"),
+  updatedAt: timestamp("updated_at"),
+  unit: varchar("unit", { length: 20 }),
 });
 
 

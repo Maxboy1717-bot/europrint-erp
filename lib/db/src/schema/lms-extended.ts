@@ -33,10 +33,14 @@ export const lmsModules = pgTable('lms_modules', {
   id:          serial('id').primaryKey(),
   courseId:    integer('course_id').notNull().references(() => courses.id, { onDelete: 'cascade' }),
   title:       varchar('title', { length: 200 }).notNull(),
+  titleRu:     text('title_ru'),
   description: text('description'),
+  order:       integer('order'),
   orderIndex:  integer('order_index').notNull().default(0),
+  sortOrder:   integer('sort_order'),
   createdAt:   timestamp('created_at').notNull().defaultNow(),
   updatedAt:   timestamp('updated_at').notNull().defaultNow(),
+  deletedAt:   timestamp('deleted_at'),
 });
 
 export const lmsLessons = pgTable('lms_lessons', {

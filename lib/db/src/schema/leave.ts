@@ -35,6 +35,17 @@ export const leaveRequests = pgTable("leave_requests", {
   documentUrl: text("document_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Convergence additions (live-DB superset)
+  userId: integer("user_id"),
+  totalDays: integer("total_days"),
+  approvedBy: integer("approved_by"),
+  approvedDate: date("approved_date"),
+  notes: text("notes"),
+  deletedAt: timestamp("deleted_at"),
+  daysRequested: integer("days_requested"),
+  approvedAt: timestamp("approved_at"),
+  rejectedBy: integer("rejected_by"),
+  rejectionReason: text("rejection_reason"),
 }, (t) => [
   check("leave_requests_status_chk", sql`${t.status} IN ('draft','pending','approved','rejected','cancelled')`),
   check("leave_requests_manager_status_chk", sql`${t.managerStatus} IN ('pending','approved','rejected')`),

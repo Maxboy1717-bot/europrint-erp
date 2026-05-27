@@ -156,6 +156,8 @@ export const financeCategories = pgTable("finance_categories", {
   icon: varchar("icon", { length: 50 }), // Lucide icon nomi
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // ADD-ONLY (live DB drift column)
+  type: text("type"),
 }, (t) => [
   check("finance_cat_type_chk", sql`${t.categoryType} IN ('income','expense')`),
   index("idx_finance_categories_category_type").on(t.categoryType),

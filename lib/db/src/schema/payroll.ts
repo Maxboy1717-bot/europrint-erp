@@ -42,6 +42,18 @@ export const salaryHistory = pgTable("salary_history", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Convergence additions (live-DB superset)
+  userId: integer("user_id"),
+  effectiveDate: timestamp("effective_date"),
+  previousSalary: decimal("previous_salary", { precision: 12, scale: 2 }),
+  newSalary: decimal("new_salary", { precision: 12, scale: 2 }),
+  changeType: varchar("change_type", { length: 30 }),
+  changePercent: decimal("change_percent", { precision: 5, scale: 2 }),
+  reason: text("reason"),
+  approvedBy: integer("approved_by"),
+  amount: decimal("amount", { precision: 18, scale: 2 }),
+  currency: varchar("currency", { length: 10 }).default("UZS"),
+  createdBy: integer("created_by"),
 });
 
 export const bonusPayments = pgTable("bonus_payments", {

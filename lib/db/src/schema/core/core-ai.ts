@@ -7,8 +7,9 @@ import { sql } from "drizzle-orm";
 import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { AdaptationRecord, InsertAdaptationRecord } from "../hr-schema";
+import type { AdaptationRecord, InsertAdaptationRecord } from "../hr-schema";
 import { admins } from "./core-users";
+import { users } from "../users";
 
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
@@ -86,6 +87,12 @@ export const aiInsights = pgTable("ai_insights", {
   isRead: boolean("is_read").notNull().default(false),
   validUntil: timestamp("valid_until"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // ─── live-DB superset columns (ADD-ONLY) ───
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  module: varchar("module", { length: 50 }),
+  description: text("description"),
+  priority: varchar("priority", { length: 20 }),
+  readAt: timestamp("read_at"),
 }, (t) => [
   check("ai_insights_severity_chk", sql`${t.severity} IN ('info','warning','critical','success')`),
 ]);

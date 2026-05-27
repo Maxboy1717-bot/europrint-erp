@@ -216,6 +216,11 @@ export const dailyFinancialMetrics = pgTable("daily_financial_metrics", {
 
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
+
+  // ADD-ONLY (live DB drift columns)
+  totalRevenue: numericMoney("total_revenue").default(0),
+  totalExpenses: numericMoney("total_expenses").default(0),
+  grossProfit: numericMoney("gross_profit").default(0),
 }, (t) => [
   index("idx_daily_financial_metrics_metric_date").on(t.metricDate),
 ]);

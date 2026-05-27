@@ -24,6 +24,14 @@ export const machineCrews = pgTable("machine_crews", {
   polmasterId: integer("polmaster_id"),
   shogirdId: integer("shogird_id"),
   roklerId: integer("rokler_id"),
+  // ── ADD-ONLY: live DB superset columns ──
+  workCenterId: integer("work_center_id"),
+  employeeId: integer("employee_id"),
+  productionOrderId: integer("production_order_id"),
+  role: varchar("role", { length: 30 }),
+  startDate: varchar("start_date", { length: 10 }),
+  endDate: varchar("end_date", { length: 10 }),
+  isActive: boolean("is_active"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -283,6 +291,10 @@ export const productCategories = pgTable("product_categories", {
   parentId: varchar("parent_id").references((): AnyPgColumn => productCategories.id, { onDelete: "set null" }),
   sortOrder: integer("sort_order").default(0),
   isActive: boolean("is_active").default(true),
+  // ── ADD-ONLY: live DB superset columns ──
+  sort: integer("sort"),
+  active: boolean("active"),
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -477,6 +489,12 @@ export const aiPlanningConfig = pgTable("ai_planning_config", {
   configKey: varchar("config_key", { length: 50 }).notNull().unique(),
   configValue: text("config_value").notNull(),
   description: text("description"),
+  // ── ADD-ONLY: live DB superset columns ──
+  autoApprovalThreshold: numericMoney("auto_approval_threshold"),
+  maxShiftHours: numericMoney("max_shift_hours"),
+  batchGroupingEnabled: boolean("batch_grouping_enabled"),
+  energyOptimizationWeight: numericMoney("energy_optimization_weight"),
+  changeoverMinutes: integer("changeover_minutes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
 });
@@ -508,6 +526,9 @@ export const equipmentMaintenance = pgTable("equipment_maintenance", {
   status: varchar("status", { length: 20 }).notNull().default("scheduled"),
   cost: numericMoney("cost").default(0),
   notes: text("notes"),
+  // ── ADD-ONLY: live DB superset columns ──
+  workCenterId: integer("work_center_id"),
+  type: varchar("type", { length: 30 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   check("equip_maint_type_chk", sql`${t.maintenanceType} IN ('PREVENTIVE','CORRECTIVE','PREDICTIVE','EMERGENCY')`),
@@ -567,7 +588,8 @@ export const assetMaintenanceRecords = pgTable("asset_maintenance_records", {
 ]);
 
 // assetDisposals — canonical definition lives in ../admin-assets
-export { assetDisposals, insertAssetDisposalSchema, AssetDisposal, InsertAssetDisposal } from "../admin-assets";
+export { assetDisposals, insertAssetDisposalSchema } from "../admin-assets";
+export type { AssetDisposal, InsertAssetDisposal } from "../admin-assets";
 
 export const insertAssetMaintenanceSchema = createInsertSchema(assetMaintenanceRecords, {
   maintenanceType: z.enum(["preventive", "corrective", "predictive", "emergency"]).default("preventive"),
@@ -582,7 +604,8 @@ export type InsertAssetMaintenance = z.infer<typeof insertAssetMaintenanceSchema
 // ASSET TRANSFERS — canonical definition lives in ../admin-assets
 // ============================================================
 
-export { assetTransfers, insertAssetTransferSchema, AssetTransfer, InsertAssetTransfer } from "../admin-assets";
+export { assetTransfers, insertAssetTransferSchema } from "../admin-assets";
+export type { AssetTransfer, InsertAssetTransfer } from "../admin-assets";
 
 // ============================================================
 // ASSET INSURANCE (Asosiy vosita sug'urtasi)

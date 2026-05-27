@@ -5,7 +5,7 @@
 
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index, check } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index, check, bigint } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -26,6 +26,9 @@ export const salesInvoices = pgTable("sales_invoices", {
   customerName: text("customer_name").notNull(),
   customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: "set null" }),
   orderId: varchar("order_id").references(() => orders.id, { onDelete: "set null" }),
+  // Live DB superset (ADD-ONLY): link to a sales_orders row + invoice currency
+  salesOrderId: integer("sales_order_id"),
+  currency: varchar("currency", { length: 3 }).default("UZS"),
   netValue: numericMoney("net_value").notNull().default(0), // Sof summa (QQS dan oldin)
   taxAmount: numericMoney("tax_amount").notNull().default(0), // QQS summasi
   totalAmount: numericMoney("total_amount").notNull(),
@@ -186,6 +189,33 @@ export const salesOrders = pgTable("sales_orders", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
+
+  // ====================================================================
+  // Live DB superset (ADD-ONLY) — legacy/parallel columns present in the
+  // live `sales_orders` table that the SAP-style def above does not cover.
+  // ====================================================================
+  // Legacy simple-order shape (parallel to document_number/overall_status/total_value)
+  orderNumber: varchar("order_number", { length: 50 }),
+  status: varchar("status", { length: 30 }),
+  totalAmount: numericMoney("total_amount"),
+  paidAmount: numericMoney("paid_amount").default(0),
+  notes: text("notes"),
+  customerName: text("customer_name"),
+  // CRM / org linkage
+  dealId: varchar("deal_id"),
+  companyId: integer("company_id"),
+  assignedTo: varchar("assigned_to"),
+  // Advance-payment alternates (parallel to advance_required_percent/advance_paid_amount)
+  advanceRequiredAmount: numericMoney("advance_required"),
+  advancePaid: numericMoney("advance_paid").default(0),
+  advanceBypassBy: varchar("advance_bypass_by"),
+  advanceBypassReason: text("advance_bypass_reason"),
+  // Technologist checkpoint alternates (parallel to tech_*_approved flags)
+  bomChecked: boolean("bom_checked").default(false),
+  routingChecked: boolean("routing_checked").default(false),
+  techCardChecked: boolean("tech_card_checked").default(false),
+  // Optimistic concurrency
+  version: bigint("version", { mode: "number" }).default(0),
 }, (t) => [
   check("sales_orders_overall_status_chk", sql`${t.overallStatus} IN ('IN_PROCESS','COMPLETED','CANCELLED')`),
   check("sales_orders_delivery_status_chk", sql`${t.deliveryStatus} IN ('NOT_DELIVERED','PARTIALLY','FULLY')`),

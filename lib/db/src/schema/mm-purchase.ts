@@ -37,6 +37,11 @@ export const purchaseOrderItems = pgTable("purchase_order_items", {
   unit: varchar("unit", { length: 20 }).notNull(), // kg, m, pcs, etc.
   unitPrice: numericMoney("unit_price").notNull(),
   totalPrice: numericMoney("total_price").notNull(),
+  // --- live-DB superset columns (schema-convergence A5; ADD-ONLY) ---
+  purchaseOrderId: integer("purchase_order_id"), // alternate FK alias of po_id (legacy column)
+  materialId: integer("material_id"), // alternate FK alias of raw_material_id (legacy column)
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [
   check("purchase_order_items_quantity_chk", sql`${t.quantity} > 0`),
   check("purchase_order_items_unit_price_chk", sql`${t.unitPrice} >= 0`),

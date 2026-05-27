@@ -86,6 +86,9 @@ export const customerPayments = pgTable("customer_payments", {
   notes: text("notes"),
   createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // ADD-ONLY (live DB drift columns)
+  approvedBy: integer("approved_by"),
+  approvedAt: timestamp("approved_at"),
 }, (t) => [
   check("customer_payments_status_chk", sql`${t.status} IN ('received','applied','refunded')`),
   check("customer_payments_payment_method_chk", sql`${t.paymentMethod} IN ('bank_transfer','cash','check','credit_card')`),
@@ -195,6 +198,23 @@ export const budgets = pgTable("budgets", {
   approvedBy: varchar("approved_by").references(() => users.id, { onDelete: "set null" }),
   approvedAt: timestamp("approved_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // ADD-ONLY (live DB drift columns — converged from stub/DB manifest)
+  name: text("name"),
+  quarter: integer("quarter"),
+  department: text("department"),
+  totalPlanned: numericMoney("total_planned"),
+  totalActual: numericMoney("total_actual"),
+  notes: text("notes"),
+  updatedAt: timestamp("updated_at"),
+  periodYear: integer("period_year"),
+  periodMonth: integer("period_month"),
+  budgetAmount: numericMoney("budget_amount"),
+  spentAmount: numericMoney("spent_amount"),
+  remainingAmount: numericMoney("remaining_amount"),
+  currency: varchar("currency", { length: 10 }),
+  year: integer("year"),
+  month: integer("month"),
+  category: text("category"),
 }, (t) => [
   index("idx_budgets_fiscal_year").on(t.fiscalYear),
   index("idx_budgets_status").on(t.status),

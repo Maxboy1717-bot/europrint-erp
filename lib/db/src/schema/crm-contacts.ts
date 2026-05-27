@@ -67,6 +67,23 @@ export const crmLeads = pgTable("crm_leads", {
   nextActivityAt: timestamp("next_activity_at"),
   deletedAt: timestamp("deleted_at"),
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+
+  // Legacy / live-DB superset columns (ADD-ONLY convergence 2026-05-27)
+  customerId: integer("customer_id"),
+  managerId: integer("manager_id"),
+  status: varchar("status", { length: 50 }),
+  source: varchar("source", { length: 50 }),
+  contactName: varchar("contact_name", { length: 200 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
+  contactEmail: varchar("contact_email", { length: 200 }),
+  notes: text("notes"),
+  fullName: text("full_name"),
+  phone: text("phone"),
+  email: text("email"),
+  stageId: integer("stage_id"),
+  assignedTo: integer("assigned_to"),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
 }, (t) => [
   check("crm_leads_status_id_chk", sql`${t.statusId} IN ('NEW','IN_PROCESS','CONVERTED','JUNK')`),
   check("crm_leads_source_score_chk", sql`${t.sourceScore} IS NULL OR (${t.sourceScore} >= 1 AND ${t.sourceScore} <= 100)`),
@@ -148,6 +165,17 @@ export const crmContacts = pgTable("crm_contacts", {
   customerJourney: jsonb("customer_journey"), // Customer path tracking
   lastContactedAt: timestamp("last_contacted_at"),
   deletedAt: timestamp("deleted_at"),
+
+  // Legacy / live-DB superset columns (ADD-ONLY convergence 2026-05-27)
+  firstName: text("first_name"),
+  email: text("email"),
+  phone: text("phone"),
+  position: text("position"),
+  notes: text("notes"),
+  fullName: text("full_name"),
+  leadId: integer("lead_id"),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
 }, (t) => [
   index("idx_crm_contacts_company_id").on(t.companyId),
   index("idx_crm_contacts_assigned_by_id").on(t.assignedById),
@@ -282,6 +310,14 @@ export const crmCompanies = pgTable("crm_companies", {
   openDebt: numericMoney("open_debt").default(0),
 
   deletedAt: timestamp("deleted_at"),
+
+  // Legacy / live-DB superset columns (ADD-ONLY convergence 2026-05-27)
+  inn: text("inn"),
+  phone: text("phone"),
+  email: text("email"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
 }, (t) => [
   index("idx_crm_companies_status").on(t.status),
   index("idx_crm_companies_customer_type").on(t.customerType),
