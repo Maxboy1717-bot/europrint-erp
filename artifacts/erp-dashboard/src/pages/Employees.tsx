@@ -91,7 +91,7 @@ export default function Employees() {
     isError, error: employeesError,
     refetch: refetchEmployees,
   } = useQuery<{ items: EmployeeRow[]; total: number }>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
     enabled: isAuthenticated === true,
   });
 

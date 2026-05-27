@@ -1,3 +1,6 @@
+// @deprecated 2026-05-27
+// This component is a duplicate. Do NOT add new features here.
+// See: docs/modules/hr-employees.md for canonical location.
 /** @module EmployeeDailyKPIPanel @description Route-level page component. Owns state, data queries, mutations, and computed values; delegates rendering to sub-components. */
 
 import { useState, useMemo } from "react";

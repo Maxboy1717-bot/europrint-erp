@@ -1,4 +1,11 @@
 /**
+ * @deprecated 2026-05-27
+ * This file is a compatibility shim. Do NOT add new features here.
+ * Canonical replacement: `apps/api/src/modules/hr/presentation/hr-employees.controller.ts`
+ * Existing consumers continue to work. New code must import from the canonical file.
+ * See: docs/modules/hr-employees.md
+ */
+/**
  * @module employees-extra.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  * @deprecated Legacy compatibility shim. New consumers should target the canonical

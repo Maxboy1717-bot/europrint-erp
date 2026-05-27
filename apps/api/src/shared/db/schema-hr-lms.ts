@@ -1,4 +1,11 @@
 /**
+ * @deprecated 2026-05-27
+ * This file is a compatibility shim. Do NOT add new features here.
+ * Canonical replacement: `lib/db/src/schema/employees.ts (UUID FK mismatch)`
+ * Existing consumers continue to work. New code must import from the canonical file.
+ * See: docs/modules/hr-employees.md
+ */
+/**
  * @module schema-hr-lms
  * @description HR / LMS tables. Canonical sources re-exported from @workspace/db
  * where available; local definitions kept for tables not yet in lib/db or

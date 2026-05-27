@@ -1,3 +1,6 @@
+// @deprecated 2026-05-27
+// This component is a duplicate. Do NOT add new features here.
+// See: docs/modules/hr-employees.md for canonical location.
 /**
  * @module EditEmployeeDialog
  * @description React UI component.

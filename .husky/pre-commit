@@ -33,3 +33,8 @@ if [ -n "$STAGED" ]; then
     fi
   fi
 fi
+
+# 🔍 TypeScript typecheck gate (only for changed workspaces)
+# Catches FE↔BE type drift at commit time, not at runtime.
+# Bypass: git commit --no-verify
+node scripts/check-typecheck-gate.mjs || exit 1

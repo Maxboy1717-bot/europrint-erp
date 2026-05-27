@@ -136,7 +136,7 @@ export default function EmployeeProfile() {
   const [businessTripForm, setBusinessTripForm] = useState({ destination: "", purpose: "", startDate: "", endDate: "", dailyAllowance: "", transportCost: "", accommodationCost: "" });
   const [editForm, setEditForm] = useState({ fullName: "", employeeId: "", phone: "", telegramChatId: "", birthDate: "", hireDate: "", attestationDate: "", address: "", gender: "", status: "", shift: "", workshopZone: "", salaryType: "", positionId: "", departmentId: "", age: "", maritalStatus: "", childrenCount: "", childrenEducation: "", housingType: "", householdSize: "", householdMembers: "", latitude: "", longitude: "" });
 
-  const { data: employee, isLoading: loadingEmployee, isError, refetch} = useQuery<Employee>({ queryKey: ['/api/employees', id], enabled: !!id });
+  const { data: employee, isLoading: loadingEmployee, isError, refetch} = useQuery<Employee>({ queryKey: ['/api/hr/employees', id], enabled: !!id });
   const { data: passportData, isLoading: loadingPassport } = useQuery<PassportData | null>({ 
     queryKey: ['/api/employees', id, 'passport'], 
     enabled: !!id, 

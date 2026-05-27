@@ -45,6 +45,18 @@ interface CreatedEmployee {
   userId: string | null;
 }
 
+/**
+ * Discriminated-union outcome from the db.transaction callback.
+ *
+ * Using a typed union instead of throw lets us distinguish
+ * "expected business-rule failure" (no INSERT row) from
+ * "unexpected DB exception" (connection lost, constraint violated, etc.).
+ * The outer try/catch still handles the latter.
+ */
+type TxOutcome =
+  | { kind: 'ok';  row:     CreatedEmployee }
+  | { kind: 'err'; message: string };
+
 @CommandHandler(CreateEmployeeCommand)
 export class CreateEmployeeHandler
   implements ICommandHandler<CreateEmployeeCommand>
@@ -56,9 +68,9 @@ export class CreateEmployeeHandler
       `Creating employee ${cmd.firstName} ${cmd.lastName} (actor=${cmd.actorUserId})`,
     );
 
-    let txRow: CreatedEmployee;
+    let outcome: TxOutcome;
     try {
-      txRow = await db.transaction(async (tx): Promise<CreatedEmployee> => {
+      outcome = await db.transaction(async (tx): Promise<TxOutcome> => {
         // 1) Optional user account — must come first so the FK from
         //    employees.user_id can be set on the employee INSERT.
         let userId: string | null = null;
@@ -75,7 +87,9 @@ export class CreateEmployeeHandler
             .returning({ id: users.id });
           const u = userInsert[0];
           if (!u) {
-            throw new Error('CreateEmployee: user account INSERT returned no row');
+            // Expected business-rule failure: driver returned nothing.
+            // Return err so the tx auto-rolls-back without an exception stack.
+            return { kind: 'err' as const, message: 'CreateEmployee: user INSERT returned no row' };
           }
           userId = u.id as string;
         }
@@ -102,7 +116,7 @@ export class CreateEmployeeHandler
           .returning();
         const emp = empInsert[0];
         if (!emp) {
-          throw new Error('CreateEmployee: employee INSERT returned no row');
+          return { kind: 'err' as const, message: 'CreateEmployee: employee INSERT returned no row' };
         }
 
         // 3) Inline audit log — records who created the employee and the
@@ -127,19 +141,27 @@ export class CreateEmployeeHandler
         `);
 
         return {
-          id:           emp.id,
-          employeeCode: emp.employee_code as string,
-          firstName:    emp.first_name as string,
-          lastName:     emp.last_name as string,
-          userId,
+          kind: 'ok' as const,
+          row: {
+            id:           emp.id,
+            employeeCode: emp.employee_code as string,
+            firstName:    emp.first_name as string,
+            lastName:     emp.last_name as string,
+            userId,
+          },
         };
       });
     } catch (err) {
+      // Unexpected DB-level exception (connection lost, constraint violated, etc.)
       const message = (err as Error)?.message ?? 'Transaction failed';
       this.logger.error({ msg: 'CreateEmployee transaction rolled back', error: message });
       return Err(`Failed to create employee: ${message}`);
     }
 
-    return Ok(txRow);
+    if (outcome.kind === 'err') {
+      this.logger.warn({ msg: 'CreateEmployee logic failure', error: outcome.message });
+      return Err(outcome.message);
+    }
+    return Ok(outcome.row);
   }
 }

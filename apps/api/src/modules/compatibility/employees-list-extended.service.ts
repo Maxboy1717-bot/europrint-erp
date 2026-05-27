@@ -1,4 +1,11 @@
 /**
+ * @deprecated 2026-05-27
+ * This file is a compatibility shim. Do NOT add new features here.
+ * Canonical replacement: `apps/api/src/modules/hr/employees/employees.service.ts`
+ * Existing consumers continue to work. New code must import from the canonical file.
+ * See: docs/modules/hr-employees.md
+ */
+/**
  * EmployeesListExtendedService — frontend `Employees.tsx` uchun kengaytirilgan list.
  *
  * Maqsad: `Employees.tsx` /api/employees ga so'rov yuboradi va kutadi:

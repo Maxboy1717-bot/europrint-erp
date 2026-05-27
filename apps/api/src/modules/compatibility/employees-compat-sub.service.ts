@@ -1,4 +1,11 @@
 /**
+ * @deprecated 2026-05-27
+ * This file is a compatibility shim. Do NOT add new features here.
+ * Canonical replacement: `apps/api/src/modules/hr/application/hr-employees-ext.service.ts`
+ * Existing consumers continue to work. New code must import from the canonical file.
+ * See: docs/modules/hr-employees.md
+ */
+/**
  * @module employees-compat-sub.service
  * @description Sub-resource / relations service for employees. Returns Result<T> from @common/result; never throws raw Errors.
  * Methods: importEmployees, getAssets, assignAsset, returnAsset, getSwapRequests, getComplaints, createComplaint, getAssessmentSkips.

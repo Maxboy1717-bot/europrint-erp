@@ -1,4 +1,11 @@
 /**
+ * @deprecated 2026-05-27
+ * This file is a compatibility shim. Do NOT add new features here.
+ * Canonical replacement: `Finance module (separate domain)`
+ * Existing consumers continue to work. New code must import from the canonical file.
+ * See: docs/modules/hr-employees.md
+ */
+/**
  * @module employees-compat-financials.service
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
