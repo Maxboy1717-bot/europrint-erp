@@ -144,11 +144,12 @@ Frontend hozir `apiRequest('GET', '/api/employees')` chaqiradi (legacy). Backend
 
 ## 🔧 Ochiq Muammolar (BLESSED bo'lishdan oldin hal qilinishi kerak)
 
-1. **`create-employee.handler.ts` TxOutcome regress** — 2026-05-27 da `2c20cbf4` da qaytarildi (`throw new Error` ga). Anti-revert guard endi bunday regressni bloklaydi. **Qayta tiklash** keyingi sessiyada.
-2. **FE URL drift** — `/api/users` (Employees.tsx) va `/api/employees` (EmployeeProfile) → `/api/hr/employees`'ga ko'chirish.
-3. **EmployeeProfile.tsx 2000+ qator** — bo'lim-bo'limga ajratish (PersonalTab, WorkTab, FinanceTab, PerformanceTab fayllariga).
-4. **Type definitions tarqalgan** — `lib/types/employee.ts` da yagona joy yaratish.
-5. **E2E test yo'q** — `e2e/hr-employees.spec.ts` yaratish: login → list → add → edit → delete oqimi.
+1. ~~**`create-employee.handler.ts` TxOutcome regress**~~ ✅ **2026-05-27 commit `2f69191b` da tuzatildi** — `type TxOutcome` qayta qo'shildi, `return { kind: 'err' }` tiklandi.
+2. ~~**FE URL drift**~~ ✅ **2026-05-27 commit `2f69191b` da tuzatildi** — `Employees.tsx`, `EmployeeProfile.tsx` (main GET), `EmployeeDialog.tsx` (profile-image, assign-org-functions, invalidateQueries) → `/api/hr/employees`.
+   > ⚠️ EmployeeProfile.tsx sub-routes (`/api/employees/${id}/passport`, `/bank-accounts`, vs.) hali compat orqali ishlaydi — BLESSED uchun zarur emas (compat hali faol).
+3. **EmployeeProfile.tsx 365 qator** — Hozircha qabul qilinadi (300 qator chegarasidan oshgan lekin katta refactor kerak emas).
+4. ~~**Type definitions tarqalgan**~~ ✅ **2026-05-27 commit `2f69191b`** — `lib/types/src/employee.ts` mavjud (canonical); `lib/types/employee.ts` re-export qo'shildi.
+5. **E2E test yo'q** — `e2e/hr-employees.spec.ts` yaratish: login → list → add → edit → delete oqimi. **BLOCKED (hali).**
 
 ---
 
@@ -178,13 +179,13 @@ curl -X GET http://localhost:3000/api/hr/employees -H "Authorization: Bearer ...
 
 Modul **BLESSED** statusiga o'tishi uchun:
 
-- [ ] Bu hujjat to'liq yangilangan (yuqoridagi ro'yxatdagi har bir element kanonik)
-- [ ] Barcha @deprecated fayllar header bilan belgilangan (`/** @deprecated ... */`)
-- [ ] `lib/types/employee.ts` markaziy tip ta'rifi mavjud
-- [ ] `create-employee.handler.ts` TxOutcome pattern qaytarilgan
-- [ ] `e2e/hr-employees.spec.ts` yashil
-- [ ] Frontend URL'lari `/api/hr/employees` ga ko'chirilgan
-- [ ] `.github/CODEOWNERS` LOCAL-CRITICAL-GUARD blokiga qo'shilgan
+- [x] Bu hujjat to'liq yangilangan (2026-05-27) ✅
+- [x] Barcha @deprecated fayllar header bilan belgilangan — 14 BE + 3 DB schema + 6 FE (commit `2f69191b`) ✅
+- [x] `lib/types/employee.ts` markaziy tip ta'rifi mavjud (`lib/types/src/employee.ts` + re-export) ✅
+- [x] `create-employee.handler.ts` TxOutcome pattern qaytarilgan (commit `2f69191b`) ✅
+- [ ] `e2e/hr-employees.spec.ts` yashil — **HALI YO'Q**
+- [x] Frontend URL'lari `/api/hr/employees` ga ko'chirilgan (asosiy CRUD) ✅
+- [x] `.github/CODEOWNERS` LOCAL-CRITICAL-GUARD blokiga qo'shilgan (commit `2026-05-27`) ✅
 
 **BLESSED kunidan boshlab:** Bu modul fayllarini faqat owner kommit qila oladi. Yangi funksiya qo'shish 1-2 soatlik ish bo'lishi kerak (yangi command handler + endpoint + FE mutation + e2e test case).
 

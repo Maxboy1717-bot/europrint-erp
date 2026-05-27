@@ -17,7 +17,7 @@
 
 | Modul | Status | Hujjat | Mas'ul |
 |-------|--------|--------|--------|
-| HR Employees (Xodimlar) | 🔵 INVENTORY | [hr-employees.md](hr-employees.md) | @Maxboy1717-bot |
+| HR Employees (Xodimlar) | 🔵 INVENTORY (6/7 BLESSED) | [hr-employees.md](hr-employees.md) | @Maxboy1717-bot |
 | HR Leave & Attendance | ⚪ NOT_YET | — | — |
 | HR Payroll | ⚪ NOT_YET | — | — |
 | HR Recruitment | ⚪ NOT_YET | — | — |

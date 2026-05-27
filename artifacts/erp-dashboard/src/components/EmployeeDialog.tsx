@@ -208,14 +208,14 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
       const formData = new FormData();
       formData.append("image", selectedFile);
       try {
-        await apiRequest('POST', `/api/employees/${empId}/profile-image`);
+        await apiRequest('POST', `/api/hr/employees/${empId}/profile-image`);
       } catch {
         // Silently fail — asosiy xodim yaratilgan, rasm yuklash optional
       }
     }
     // Org functions — JSON, apiRequest throws on non-2xx
     try {
-      await apiRequest('POST', `/api/employees/${empId}/assign-org-functions`, { orgDepartmentIds: selectedOrgDepts });
+      await apiRequest('POST', `/api/hr/employees/${empId}/assign-org-functions`, { orgDepartmentIds: selectedOrgDepts });
     } catch (e) {
       const msg = (e as { message?: string })?.message;
       toast({
@@ -224,7 +224,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         variant: "destructive",
       });
     }
-    queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/hr/employees"] });
     queryClient.invalidateQueries({ queryKey: ["/api/org-departments"] });
     queryClient.invalidateQueries({ queryKey: ["/api/org-structure/hierarchy"] });
     onOpenChange(false);

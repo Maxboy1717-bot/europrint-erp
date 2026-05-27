@@ -42,7 +42,15 @@ tsconfig*.json                          @Maxboy1717-bot
 /apps/api/src/modules/finance/application/                        @Maxboy1717-bot
 /apps/api/src/modules/hr/application/commands/                    @Maxboy1717-bot
 /apps/api/src/modules/hr/infrastructure/repositories/             @Maxboy1717-bot
+/apps/api/src/modules/hr/presentation/hr-employees.controller.ts  @Maxboy1717-bot
+/apps/api/src/modules/hr/presentation/hr-employees-ext.controller.ts @Maxboy1717-bot
+/apps/api/src/modules/hr/employees/employees.service.ts           @Maxboy1717-bot
+/apps/api/src/modules/hr/employees/drizzle-employees.repo.ts      @Maxboy1717-bot
+/artifacts/erp-dashboard/src/pages/Employees.tsx                  @Maxboy1717-bot
+/artifacts/erp-dashboard/src/pages/EmployeeProfile.tsx            @Maxboy1717-bot
+/artifacts/erp-dashboard/src/components/EmployeeDialog.tsx        @Maxboy1717-bot
 /lib/db/src/schema/                                               @Maxboy1717-bot
+/lib/types/src/employee.ts                                        @Maxboy1717-bot
 /apps/api/src/shared/db/migrations-drift.ts                       @Maxboy1717-bot
 /migrations/                                                      @Maxboy1717-bot
 
