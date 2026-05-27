@@ -114,8 +114,10 @@ export class HrDashboardController {
   }
 
   @Get('alumni')
-  getAlumni() {
-    return { items: [], total: 0 };
+  async getAlumni() {
+    const r = await this.svc.getAlumni();
+    const items = r.ok ? r.data : [];
+    return { items, total: (items as unknown[]).length };
   }
 
   @Get('alumni/:id')
@@ -141,8 +143,12 @@ export class HrDashboardController {
   @Post('daily-reports')
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ZodValidationPipe(HrDailyReportSchema))
-  createDailyReport(@Body() _body: HrDailyReportDto) {
-    return { created: true };
+  async createDailyReport(@Body() body: HrDailyReportDto) {
+    return unwrapOrInternal(await this.svc.createDailyReport({
+      user_id:         body.user_id ?? 0,
+      report_date:     body.date ?? new Date().toISOString().split('T')[0],
+      tasks_completed: body.summary,
+    }));
   }
 
   // `GET hr/offboarding/cases` is implemented by `HrOffboardingController`
@@ -244,5 +250,61 @@ export class HrDashboardController {
   @Get('abc-analysis/:id/calculate')
   calculateAbcAnalysis(@Param('id') _id: string) {
     return { result: null };
+  }
+
+  // ── New endpoints (HR Dashboard missing) ──────────────────────────────────
+
+  /** Risk scores: employees ranked by discipline warnings + block status */
+  @Get('risk-scores')
+  async getRiskScores() {
+    return unwrapOrInternal(await this.svc.getRiskScores());
+  }
+
+  /** Safety KPI summary: incidents this month, PPE compliance %, expiring trainings */
+  @Get('safety/summary')
+  async getSafetySummary() {
+    return unwrapOrInternal(await this.svc.getSafetySummary());
+  }
+
+  /** Recent safety incidents list */
+  @Get('safety/incidents')
+  async getSafetyIncidents(@Query('limit') limit?: string) {
+    return unwrapOrInternal(await this.svc.getSafetyIncidents(limit ? Math.min(parseInt(limit, 10) || 20, 100) : 20));
+  }
+
+  /** Blocked employees from employee_blocks table */
+  @Get('discipline/blocked')
+  async getDisciplineBlocked() {
+    return unwrapOrInternal(await this.svc.getDisciplineBlocked());
+  }
+
+  /** Resignation reason breakdown from exit_interviews (last 12 months) */
+  @Get('resignation-stats')
+  async getResignationStats() {
+    return unwrapOrInternal(await this.svc.getResignationStats());
+  }
+
+  /** Contracts expiring within N days (default 30) */
+  @Get('contracts/expiring')
+  async getContractsExpiring(@Query('days') days?: string) {
+    return unwrapOrInternal(await this.svc.getContractsExpiring(Math.min(parseInt(days ?? '30', 10) || 30, 365)));
+  }
+
+  /** Attendance summary from daily_attendance_summary (last N days, default 30) */
+  @Get('attendance')
+  async getAttendanceSummary(@Query('days') days?: string) {
+    return unwrapOrInternal(await this.svc.getAttendanceSummary(Math.min(parseInt(days ?? '30', 10) || 30, 90)));
+  }
+
+  /** Gamification leaderboard (period: monthly | quarterly | total) */
+  @Get('gamification/leaderboard')
+  async getGamificationLeaderboard(@Query('period') period?: string) {
+    return unwrapOrInternal(await this.svc.getGamificationLeaderboard(period ?? 'monthly'));
+  }
+
+  /** Offboarding aggregate stats */
+  @Get('offboarding/cases/stats')
+  async getOffboardingStats() {
+    return unwrapOrInternal(await this.svc.getOffboardingStats());
   }
 }

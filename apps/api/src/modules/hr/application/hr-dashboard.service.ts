@@ -70,4 +70,15 @@ export class HrDashboardService {
   async createDailyReport(dto: { user_id: number; report_date: string; tasks_completed?: string }) {
     return this.repo.createDailyReport(dto);
   }
+
+  // ── New delegation methods ─────────────────────────────────────────────────
+  async getRiskScores() { return this.repo.getRiskScores(); }
+  async getSafetySummary() { return this.repo.getSafetySummary(); }
+  async getSafetyIncidents(limit?: number) { return this.repo.getSafetyIncidents(limit); }
+  async getDisciplineBlocked() { return this.repo.getDisciplineBlocked(); }
+  async getResignationStats() { return this.repo.getResignationStats(); }
+  async getContractsExpiring(days: number) { return this.repo.getContractsExpiring(days); }
+  async getAttendanceSummary(days?: number) { return this.repo.getAttendanceSummary(days); }
+  async getGamificationLeaderboard(period: string) { return this.repo.getGamificationLeaderboard(period); }
+  async getOffboardingStats() { return this.repo.getOffboardingStats(); }
 }

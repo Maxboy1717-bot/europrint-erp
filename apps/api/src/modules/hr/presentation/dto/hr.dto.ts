@@ -224,6 +224,7 @@ export type HrCreateComplaintDto = z.infer<typeof HrCreateComplaintSchema>;
 export const HrDailyReportSchema = z.object({
   date:    z.string().optional(),
   summary: z.string().max(MAX_NOTES_LENGTH).optional(),
+  user_id: z.number().int().positive().optional(),
 });
 export type HrDailyReportDto = z.infer<typeof HrDailyReportSchema>;
 

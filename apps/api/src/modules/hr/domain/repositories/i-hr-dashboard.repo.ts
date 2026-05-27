@@ -39,6 +39,16 @@ export interface IHrDashboardRepo {
     report_date: string;
     tasks_completed?: string;
   }): Promise<Result<Row>>;
+  // ── New endpoints (HR Dashboard missing) ──────────────────────────────────
+  getRiskScores(): Promise<Result<Row[]>>;
+  getSafetySummary(): Promise<Result<Row>>;
+  getSafetyIncidents(limit?: number): Promise<Result<Row[]>>;
+  getDisciplineBlocked(): Promise<Result<Row[]>>;
+  getResignationStats(): Promise<Result<Row[]>>;
+  getContractsExpiring(days: number): Promise<Result<Row[]>>;
+  getAttendanceSummary(days?: number): Promise<Result<Row[]>>;
+  getGamificationLeaderboard(period: string): Promise<Result<Row[]>>;
+  getOffboardingStats(): Promise<Result<Row>>;
 }
 
 export const HR_DASHBOARD_REPO = Symbol('HR_DASHBOARD_REPO');

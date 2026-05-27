@@ -312,6 +312,224 @@ export class HrDashboardRepository implements IHrDashboardRepo {
     }, 'DB_ERROR');
   }
 
+  // ── New endpoints ─────────────────────────────────────────────────────────
+
+  async getRiskScores(): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT e.id,
+               COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
+               primary_org.dept_name AS department,
+               COALESCE(d.warn_count, 0)::int                               AS warning_count,
+               COALESCE(b.is_blocked, false)                                AS is_blocked,
+               CASE
+                 WHEN COALESCE(b.is_blocked, false) OR COALESCE(d.warn_count,0) >= 3 THEN 'critical'
+                 WHEN COALESCE(d.warn_count,0) >= 2 THEN 'high'
+                 WHEN COALESCE(d.warn_count,0) = 1  THEN 'medium'
+                 ELSE 'low'
+               END AS risk_level,
+               (COALESCE(d.warn_count,0) * 25
+                + CASE WHEN COALESCE(b.is_blocked, false) THEN 50 ELSE 0 END)::int AS risk_score
+        FROM employees e
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC LIMIT 1
+        ) primary_org ON true
+        LEFT JOIN (
+          SELECT employee_id, COUNT(*)::int AS warn_count
+          FROM discipline_records
+          GROUP BY employee_id
+        ) d ON d.employee_id = e.id
+        LEFT JOIN (
+          SELECT DISTINCT employee_id, true AS is_blocked
+          FROM employee_blocks WHERE is_active = true
+        ) b ON b.employee_id = e.id
+        WHERE e.status = 'active'
+        ORDER BY risk_score DESC
+        LIMIT 50
+      `);
+      return rows.rows as Row[];
+    }, 'DB_ERROR');
+  }
+
+  async getSafetySummary(): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT
+          (SELECT COUNT(*)::int FROM safety_incidents
+           WHERE incident_date >= DATE_TRUNC('month', NOW()))          AS incidents_this_month,
+          (SELECT COUNT(*)::int FROM safety_incidents
+           WHERE investigation_status = 'open')                        AS open_incidents,
+          (SELECT ROUND(
+            COUNT(*) FILTER (WHERE is_compliant = true)::numeric
+            / NULLIF(COUNT(*),0) * 100, 1
+          ) FROM ppe_compliance)                                        AS ppe_compliance_pct,
+          (SELECT COUNT(*)::int FROM safety_training_records
+           WHERE is_passed = false
+             AND expiry_date IS NOT NULL
+             AND expiry_date::date BETWEEN NOW()::date
+                AND (NOW() + INTERVAL '30 days')::date)                AS expiring_trainings
+      `);
+      return (rows.rows[0] ?? {
+        incidents_this_month: 0, open_incidents: 0,
+        ppe_compliance_pct: 0, expiring_trainings: 0,
+      }) as Row;
+    }, 'DB_ERROR');
+  }
+
+  async getSafetyIncidents(limit = 20): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT si.id, si.incident_date, si.incident_type, si.severity,
+               si.investigation_status, si.status, si.description,
+               si.days_lost, si.cost_estimate,
+               COALESCE(ea.first_name || ' ' || ea.last_name, '—') AS affected_employee,
+               od.name_uz AS department_name
+        FROM safety_incidents si
+        LEFT JOIN employees ea ON ea.id = si.affected_employee_id
+        LEFT JOIN org_departments od ON od.id = si.department_id
+        ORDER BY si.created_at DESC
+        LIMIT ${limit}
+      `);
+      return rows.rows as Row[];
+    }, 'DB_ERROR');
+  }
+
+  async getDisciplineBlocked(): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT eb.id, eb.reason, eb.blocked_at, eb.employee_id,
+               COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_name,
+               primary_org.dept_name AS department
+        FROM employee_blocks eb
+        JOIN employees e ON e.id = eb.employee_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC LIMIT 1
+        ) primary_org ON true
+        WHERE eb.is_active = true
+        ORDER BY eb.blocked_at DESC
+        LIMIT 50
+      `);
+      return rows.rows as Row[];
+    }, 'DB_ERROR');
+  }
+
+  async getResignationStats(): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT
+          COALESCE(reason_for_leaving, 'not_specified')   AS reason,
+          COUNT(*)::int                                    AS count,
+          ROUND(
+            COUNT(*)::numeric
+            / NULLIF(SUM(COUNT(*)) OVER (), 0) * 100, 1
+          )                                               AS percentage
+        FROM exit_interviews
+        WHERE interview_date >= NOW() - INTERVAL '12 months'
+        GROUP BY reason_for_leaving
+        ORDER BY count DESC
+      `);
+      return rows.rows as Row[];
+    }, 'DB_ERROR');
+  }
+
+  async getContractsExpiring(days: number): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT ec.id, ec.contract_number, ec.contract_type,
+               ec.start_date, ec.end_date, ec.position_title,
+               ec.department_name, ec.status,
+               (ec.end_date::date - CURRENT_DATE)::int    AS days_until_expiry,
+               COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_name
+        FROM employment_contracts ec
+        JOIN employees e ON e.id = ec.employee_id
+        WHERE ec.status = 'active'
+          AND ec.end_date IS NOT NULL
+          AND ec.end_date::date BETWEEN CURRENT_DATE
+              AND (CURRENT_DATE + (${days} || ' days')::interval)::date
+        ORDER BY ec.end_date ASC
+        LIMIT 100
+      `);
+      return rows.rows as Row[];
+    }, 'DB_ERROR');
+  }
+
+  async getAttendanceSummary(days = 30): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT attendance_date,
+               total_employees, present_count, absent_count,
+               late_count, on_leave_count, sick_leave_count,
+               ROUND(
+                 present_count::numeric / NULLIF(total_employees, 0) * 100, 1
+               ) AS attendance_rate
+        FROM daily_attendance_summary
+        WHERE attendance_date >= (CURRENT_DATE - (${days} || ' days')::interval)::date
+        ORDER BY attendance_date DESC
+        LIMIT 60
+      `);
+      return rows.rows as Row[];
+    }, 'DB_ERROR');
+  }
+
+  async getGamificationLeaderboard(period = 'monthly'): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const orderCol = period === 'quarterly' ? sql`gt.quarterly_points`
+                     : period === 'total'     ? sql`gt.total_points`
+                     :                         sql`gt.monthly_points`;
+      const rows = await runQuery<Row>(sql`
+        SELECT gt.total_points, gt.monthly_points, gt.quarterly_points,
+               e.id   AS employee_id,
+               COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
+               primary_org.dept_name AS department,
+               ROW_NUMBER() OVER (ORDER BY ${orderCol} DESC)::int AS rank
+        FROM gamification_totals gt
+        JOIN employees e ON e.id = gt.employee_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC LIMIT 1
+        ) primary_org ON true
+        WHERE e.status = 'active'
+        ORDER BY ${orderCol} DESC
+        LIMIT 20
+      `);
+      return rows.rows as Row[];
+    }, 'DB_ERROR');
+  }
+
+  async getOffboardingStats(): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT
+          (SELECT COUNT(*)::int FROM offboarding_cases WHERE status = 'active')           AS active_cases,
+          (SELECT COUNT(*)::int FROM offboarding_cases WHERE status = 'completed')        AS completed_cases,
+          (SELECT COUNT(*)::int FROM offboarding_cases
+           WHERE created_at >= DATE_TRUNC('month', NOW()))                                AS new_this_month,
+          (SELECT COUNT(*)::int FROM exit_interviews
+           WHERE interview_date >= DATE_TRUNC('month', NOW())::date)                      AS interviews_this_month,
+          (SELECT COUNT(*)::int FROM offboarding_cases
+           WHERE settlement_done = false AND status = 'active')                           AS pending_settlement
+      `);
+      return (rows.rows[0] ?? {
+        active_cases: 0, completed_cases: 0,
+        new_this_month: 0, interviews_this_month: 0, pending_settlement: 0,
+      }) as Row;
+    }, 'DB_ERROR');
+  }
+
   async createDailyReport(dto: {
     user_id:         number;
     report_date:     string;
