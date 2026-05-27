@@ -67,4 +67,20 @@ export class MesShiftsStatsService {
   async recordMaterialConsumption(session_id: number, material_id: number, quantity: number, batch_number: string | null) {
     return safeCall(async () => this.repo.recordMaterialConsumption(session_id, material_id, quantity, batch_number));
   }
+
+  async getProductionOrders(status: string | undefined, lim: number, off: number) {
+    return safeCall(async () => this.repo.getProductionOrders(status, lim, off));
+  }
+
+  async getProductionOrderById(id: number) {
+    return safeCall(async () => this.repo.getProductionOrderById(id));
+  }
+
+  async getShifts(from: string | undefined, to: string | undefined, lim: number) {
+    return safeCall(async () => this.repo.getShifts(from, to, lim));
+  }
+
+  async getMaintenanceRequests(status: string | undefined, lim: number, off: number) {
+    return safeCall(async () => this.repo.getMaintenanceRequests(status, lim, off));
+  }
 }

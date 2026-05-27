@@ -20,6 +20,7 @@ import { DealWonNotificationListener } from './infrastructure/event-handlers/dea
 import { OrderCreatedNotificationListener } from './infrastructure/event-handlers/order-created-notification.listener';
 import { QcFailedNotificationListener } from './infrastructure/event-handlers/qc-failed-notification.listener';
 import { LmsCertExpiredNotificationListener } from './infrastructure/event-handlers/lms-cert-expired-notification.listener';
+import { OrphanEventsListener } from './infrastructure/event-handlers/orphan-events.listener';
 import { NotificationsController } from './presentation/notifications.controller';
 import { NOTIFICATION_REPO } from './domain/repositories/i-notification.repo';
 import { DrizzleNotificationRepository } from './infrastructure/repositories/drizzle-notification.repo';
@@ -40,6 +41,8 @@ const eventHandlers = [
   OrderCreatedNotificationListener,
   QcFailedNotificationListener,
   LmsCertExpiredNotificationListener,
+  // Orphan @OnEvent handlers — kanban, absence-block, access/IoT events.
+  OrphanEventsListener,
 ];
 const queryHandlers = [GetNotificationsHandler];
 

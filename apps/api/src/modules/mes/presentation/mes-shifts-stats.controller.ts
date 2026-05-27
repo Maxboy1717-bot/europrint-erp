@@ -11,7 +11,7 @@ import { safeInt } from '../../hr/common/db-rows';
 import {
 BadRequestException } from '@nestjs/common';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
-import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
+import { throwFromError, unwrapOrThrow, unwrapOrNotFoundDefined, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -160,21 +160,41 @@ export class MesShiftsStatsController {
   @ApiOperation({ summary: 'Get orders' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('orders')
-  async getOrders() { return []; }
+  async getOrders(
+    @Query('status') status?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return unwrapOrThrow(await this.svc.getProductionOrders(status, safeInt(limit, 50), safeInt(offset, 0)));
+  }
 
   @ApiOperation({ summary: 'Get order by id' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('orders/:id')
-  async getOrderById(@Param('id') _id: string) { return null; }
+  async getOrderById(@Param('id') id: string) {
+    return unwrapOrNotFoundDefined(await this.svc.getProductionOrderById(safeInt(id, 0)), `Order ${id} not found`);
+  }
 
   @ApiOperation({ summary: 'Get shifts' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('shifts')
-  async getShifts() { return []; }
+  async getShifts(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return unwrapOrThrow(await this.svc.getShifts(from, to, safeInt(limit, 50)));
+  }
 
   @ApiOperation({ summary: 'Get maintenance' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('maintenance')
-  async getMaintenance() { return []; }
+  async getMaintenance(
+    @Query('status') status?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return unwrapOrThrow(await this.svc.getMaintenanceRequests(status, safeInt(limit, 50), safeInt(offset, 0)));
+  }
 }

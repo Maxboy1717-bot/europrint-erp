@@ -135,4 +135,58 @@ export class MesShiftsStatsRepository {
     `);
     return rows.rows as Row[];
   }
+
+  async getProductionOrders(status: string | undefined, lim: number, off: number): Promise<Row[]> {
+    const rows = await runQuery<Row>(sql`
+      SELECT po.*, so.order_number AS sales_order_number,
+             COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS operator_name
+      FROM mes_papka_orders po
+      LEFT JOIN sales_orders so ON so.id = po.sales_order_id
+      LEFT JOIN employees e ON e.id = po.operator_id
+      WHERE (${status ?? null}::text IS NULL OR po.status = ${status ?? null})
+      ORDER BY po.created_at DESC LIMIT ${lim} OFFSET ${off}
+    `);
+    return rows.rows as Row[];
+  }
+
+  async getProductionOrderById(id: number): Promise<Row | null> {
+    const rows = await runQuery<Row>(sql`
+      SELECT po.*, so.order_number AS sales_order_number,
+             COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS operator_name
+      FROM mes_papka_orders po
+      LEFT JOIN sales_orders so ON so.id = po.sales_order_id
+      LEFT JOIN employees e ON e.id = po.operator_id
+      WHERE po.id = ${id} LIMIT 1
+    `);
+    return (rows.rows[0] ?? null) as Row | null;
+  }
+
+  async getShifts(from: string | undefined, to: string | undefined, lim: number): Promise<Row[]> {
+    const rows = await runQuery<Row>(sql`
+      SELECT sh.*,
+             COALESCE(e_out.first_name,'') || ' ' || COALESCE(e_out.last_name,'') AS outgoing_supervisor_name,
+             COALESCE(e_in.first_name,'') || ' ' || COALESCE(e_in.last_name,'') AS incoming_supervisor_name
+      FROM mes_shift_handovers sh
+      LEFT JOIN employees e_out ON e_out.id = sh.outgoing_supervisor
+      LEFT JOIN employees e_in  ON e_in.id  = sh.incoming_supervisor
+      WHERE (${from ?? null}::date IS NULL OR sh.handover_time::date >= ${from ?? null}::date)
+        AND (${to ?? null}::date IS NULL OR sh.handover_time::date <= ${to ?? null}::date)
+      ORDER BY sh.handover_time DESC LIMIT ${lim}
+    `);
+    return rows.rows as Row[];
+  }
+
+  async getMaintenanceRequests(status: string | undefined, lim: number, off: number): Promise<Row[]> {
+    const rows = await runQuery<Row>(sql`
+      SELECT mr.*,
+             COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS assigned_to_name,
+             wc.name AS work_center_name
+      FROM mes_maintenance_requests mr
+      LEFT JOIN employees e  ON e.id  = mr.assigned_to
+      LEFT JOIN work_centers wc ON wc.id = mr.work_center_id
+      WHERE (${status ?? null}::text IS NULL OR mr.status = ${status ?? null})
+      ORDER BY mr.created_at DESC LIMIT ${lim} OFFSET ${off}
+    `);
+    return rows.rows as Row[];
+  }
 }

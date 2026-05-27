@@ -10,19 +10,13 @@
  */
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { OrderCancelledEvent } from '../../../sd/domain/events/order-cancelled.event';
 import {
   IKanbanBoardsRepo,
   KANBAN_BOARDS_REPO,
 } from '../../domain/repositories/i-kanban-boards.repo';
 
-export class OrderCancelledEvent {
-  readonly aggregateName = 'SalesOrder';
-  readonly eventName     = 'OrderCancelled';
-  constructor(
-    public readonly orderId:     number,
-    public readonly orderNumber: string,
-  ) {}
-}
+export { OrderCancelledEvent };
 
 @Injectable()
 @EventsHandler(OrderCancelledEvent)
