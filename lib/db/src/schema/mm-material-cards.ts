@@ -122,7 +122,8 @@ export type InsertMaterialCard = z.infer<typeof insertMaterialCardSchema>;
 // Min Stock Alerts (Kam qoldiq ogohlantirishlari)
 export const minStockAlerts = pgTable("min_stock_alerts", {
   id: serial("id").primaryKey(),
-  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "cascade" }).notNull(),
+  // FK type fix: materialCards.id is serial (integer), was incorrectly declared varchar
+  materialCardId: integer("material_id").references(() => materialCards.id, { onDelete: "cascade" }).notNull(),
   alertDate: varchar("alert_date", { length: 10 }).notNull(),
   alertType: varchar("alert_type", { length: 20 }).default("min_stock"), // min_stock | expiring | zero_stock | price_change | reorder
   currentStock: numericMoney("current_stock").notNull(),
@@ -131,7 +132,8 @@ export const minStockAlerts = pgTable("min_stock_alerts", {
   severity: varchar("severity", { length: 20 }).notNull(), // warning, critical
   // Holat
   isAcknowledged: boolean("is_acknowledged").default(false),
-  acknowledgedBy: varchar("acknowledged_by").references(() => users.id, { onDelete: "set null" }),
+  // FK type fix: users.id is serial (integer), was incorrectly declared varchar
+  acknowledgedBy: integer("acknowledged_by").references(() => users.id, { onDelete: "set null" }),
   acknowledgedAt: timestamp("acknowledged_at"),
   isResolved: boolean("is_resolved").default(false),
   resolvedAt: timestamp("resolved_at"),
@@ -156,7 +158,8 @@ export type MinStockAlert = typeof minStockAlerts.$inferSelect;
 export const consumptionSuggestions = pgTable("consumption_suggestions", {
   id: serial("id").primaryKey(),
   papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id, { onDelete: "cascade" }).notNull(),
-  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "cascade" }).notNull(),
+  // FK type fix: materialCards.id is serial (integer)
+  materialCardId: integer("material_id").references(() => materialCards.id, { onDelete: "cascade" }).notNull(),
   formulaId: varchar("formula_id").references(() => formulaDefinitions.id, { onDelete: "set null" }),
   // Tavsiya
   suggestedQuantity: numericMoney("suggested_quantity").notNull(),
@@ -164,7 +167,8 @@ export const consumptionSuggestions = pgTable("consumption_suggestions", {
   calculationDetails: jsonb("calculation_details"), // Formula natijalari
   // Holat
   status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, approved, rejected, executed
-  approvedBy: varchar("approved_by").references(() => users.id, { onDelete: "set null" }),
+  // FK type fix: users.id is serial (integer)
+  approvedBy: integer("approved_by").references(() => users.id, { onDelete: "set null" }),
   approvedAt: timestamp("approved_at"),
   executedTransactionId: varchar("executed_transaction_id").references(() => warehouseTransactions.id, { onDelete: "set null" }),
   notes: text("notes"),
@@ -185,7 +189,8 @@ export type ConsumptionSuggestion = typeof consumptionSuggestions.$inferSelect;
 export const materialBatches = pgTable("material_batches", {
   id: serial("id").primaryKey(),
   batchNumber: varchar("batch_number", { length: 50 }).notNull(),
-  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
+  // FK type fix: materialCards.id is serial (integer)
+  materialCardId: integer("material_id").references(() => materialCards.id, { onDelete: "set null" }),
   warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   binId: varchar("bin_id").references(() => warehouseBins.id, { onDelete: "set null" }),
   quantity: numericMoney("quantity").notNull(),

@@ -5,3 +5,4 @@
 
 export * from "./fi-payroll-ext";
 export * from "./fi-expenses";
+export * from "./fi-payroll-calc";

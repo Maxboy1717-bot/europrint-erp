@@ -3189,4 +3189,114 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   "timestamp" TIMESTAMP NOT NULL
 )` },
 
+  // ── 2026-05-27: auth fixes ──────────────────────────────────────────────────
+
+  // Task 2: jti column on refresh_tokens — required by JwtAuthGuard blacklist
+  // query `SELECT is_revoked FROM refresh_tokens WHERE jti=$jti`.
+  // Without this column the guard silently passes every token (fail-open).
+  { name: 'refresh_tokens.jti ADD COLUMN', sql: `ALTER TABLE IF EXISTS refresh_tokens ADD COLUMN IF NOT EXISTS jti TEXT` },
+  { name: 'refresh_tokens.jti UNIQUE INDEX', sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_refresh_tokens_jti ON refresh_tokens (jti) WHERE jti IS NOT NULL` },
+
+  // Task 3: username column on users — required by drizzle-auth.repo.ts
+  // `WHERE username = $1`. Without this column every login returns 0 rows.
+  { name: 'users.username ADD COLUMN', sql: `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS username TEXT` },
+  { name: 'users.username UNIQUE INDEX', sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users (username) WHERE username IS NOT NULL` },
+  // Back-fill: copy email → username for existing rows that have no username.
+  { name: 'users.username BACKFILL email', sql: `UPDATE users SET username = email WHERE username IS NULL` },
+
+  // ── 2026-05-27: payroll_calculations + position_feature_flags schemas ──────
+
+  // Task 2: payroll_calculations — Drizzle schema now in fi-payroll-calc.ts;
+  // ensure table exists in the DB if it was dropped by drop-dormant-tables.sql.
+  { name: 'payroll_calculations CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS payroll_calculations (
+        id SERIAL PRIMARY KEY,
+        period_id VARCHAR,
+        employee_id INTEGER NOT NULL,
+        contract_id VARCHAR,
+        pay_type VARCHAR(20) NOT NULL DEFAULT 'fixed',
+        work_days INTEGER DEFAULT 0,
+        work_hours NUMERIC(15,2) DEFAULT 0,
+        overtime_hours NUMERIC(15,2) DEFAULT 0,
+        production_units NUMERIC(15,2) DEFAULT 0,
+        base_pay NUMERIC(15,2) NOT NULL DEFAULT 0,
+        hourly_pay NUMERIC(15,2) DEFAULT 0,
+        piecework_pay NUMERIC(15,2) DEFAULT 0,
+        overtime_pay NUMERIC(15,2) DEFAULT 0,
+        bonuses NUMERIC(15,2) DEFAULT 0,
+        allowances NUMERIC(15,2) DEFAULT 0,
+        gross_pay NUMERIC(15,2) NOT NULL,
+        tax_inps NUMERIC(15,2) NOT NULL DEFAULT 0,
+        tax_jshd NUMERIC(15,2) NOT NULL DEFAULT 0,
+        total_taxes NUMERIC(15,2) NOT NULL DEFAULT 0,
+        other_deductions NUMERIC(15,2) DEFAULT 0,
+        advances NUMERIC(15,2) DEFAULT 0,
+        loans NUMERIC(15,2) DEFAULT 0,
+        total_deductions NUMERIC(15,2) NOT NULL DEFAULT 0,
+        net_pay NUMERIC(15,2) NOT NULL,
+        min_wage_top_up NUMERIC(15,2) DEFAULT 0,
+        status VARCHAR(20) NOT NULL DEFAULT 'draft',
+        calculated_at TIMESTAMP,
+        approved_by INTEGER,
+        approved_at TIMESTAMP,
+        paid_at TIMESTAMP,
+        notes TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    ` },
+
+  // Task 3: position_feature_flags — Drizzle schema already in position-permissions.ts;
+  // ensure table exists in the DB (idempotent CREATE TABLE IF NOT EXISTS).
+  { name: 'position_feature_flags CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS position_feature_flags (
+        id SERIAL PRIMARY KEY,
+        position_id INTEGER NOT NULL,
+        feature_key VARCHAR(100) NOT NULL,
+        is_allowed BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    ` },
+  { name: 'position_feature_flags UNIQUE INDEX', sql: `
+      CREATE UNIQUE INDEX IF NOT EXISTS uq_pos_ff_position_feature
+        ON position_feature_flags (position_id, feature_key)
+    ` },
+
+  // ── 2026-05-27: FK type fixes ───────────────────────────────────────────────
+
+  // TASK 1: min_stock_alerts.material_id varchar→integer
+  // materialCards.id is serial (integer); FK comparison was silently failing.
+  { name: 'min_stock_alerts.material_id TYPE integer', sql: `ALTER TABLE IF EXISTS min_stock_alerts ALTER COLUMN material_id TYPE INTEGER USING material_id::INTEGER` },
+
+  // Also fix min_stock_alerts.acknowledged_by varchar→integer (references users.id)
+  { name: 'min_stock_alerts.acknowledged_by TYPE integer', sql: `ALTER TABLE IF EXISTS min_stock_alerts ALTER COLUMN acknowledged_by TYPE INTEGER USING acknowledged_by::INTEGER` },
+
+  // Fix consumption_suggestions.material_id varchar→integer
+  { name: 'consumption_suggestions.material_id TYPE integer', sql: `ALTER TABLE IF EXISTS consumption_suggestions ALTER COLUMN material_id TYPE INTEGER USING material_id::INTEGER` },
+
+  // Fix consumption_suggestions.approved_by varchar→integer (references users.id)
+  { name: 'consumption_suggestions.approved_by TYPE integer', sql: `ALTER TABLE IF EXISTS consumption_suggestions ALTER COLUMN approved_by TYPE INTEGER USING approved_by::INTEGER` },
+
+  // Fix material_batches.material_id varchar→integer
+  { name: 'material_batches.material_id TYPE integer', sql: `ALTER TABLE IF EXISTS material_batches ALTER COLUMN material_id TYPE INTEGER USING material_id::INTEGER` },
+
+  // TASK 2: goods_receipt_lines.material_id varchar→integer
+  { name: 'goods_receipt_lines.material_id TYPE integer', sql: `ALTER TABLE IF EXISTS goods_receipt_lines ALTER COLUMN material_id TYPE INTEGER USING material_id::INTEGER` },
+
+  // TASK 3: goods_receipts.supplier_id varchar→integer
+  { name: 'goods_receipts.supplier_id TYPE integer', sql: `ALTER TABLE IF EXISTS goods_receipts ALTER COLUMN supplier_id TYPE INTEGER USING supplier_id::INTEGER` },
+
+  // TASK 4: bom_items.component_id — drop wrong FK (products), add correct FK (material_cards)
+  { name: 'bom_items.component_id DROP old FK', sql: `ALTER TABLE IF EXISTS bom_items DROP CONSTRAINT IF EXISTS bom_items_component_id_fkey` },
+  { name: 'bom_items.component_id TYPE integer', sql: `ALTER TABLE IF EXISTS bom_items ALTER COLUMN component_id TYPE INTEGER USING component_id::INTEGER` },
+  // PostgreSQL does not support IF NOT EXISTS for ADD CONSTRAINT; use DO block for idempotency
+  { name: 'bom_items.component_id ADD FK material_cards', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'bom_items_component_id_fkey' AND table_name = 'bom_items') THEN ALTER TABLE bom_items ADD CONSTRAINT bom_items_component_id_fkey FOREIGN KEY (component_id) REFERENCES material_cards(id); END IF; END $$` },
+
+  // TASK 5: production_order_components.raw_material_id — fix FK from raw_materials to material_cards
+  { name: 'production_order_components.raw_material_id DROP old FK', sql: `ALTER TABLE IF EXISTS production_order_components DROP CONSTRAINT IF EXISTS production_order_components_raw_material_id_fkey` },
+  { name: 'production_order_components.raw_material_id TYPE integer', sql: `ALTER TABLE IF EXISTS production_order_components ALTER COLUMN raw_material_id TYPE INTEGER USING raw_material_id::INTEGER` },
+  { name: 'production_order_components.raw_material_id ADD FK material_cards', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'production_order_components_raw_material_id_fkey' AND table_name = 'production_order_components') THEN ALTER TABLE production_order_components ADD CONSTRAINT production_order_components_raw_material_id_fkey FOREIGN KEY (raw_material_id) REFERENCES material_cards(id); END IF; END $$` },
+
+  // TASK 6: production_facts_sm72.operator_id — add FK to users (idempotent DO block)
+  { name: 'production_facts_sm72.operator_id ADD FK users', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'production_facts_sm72_operator_id_fkey' AND table_name = 'production_facts_sm72') THEN ALTER TABLE production_facts_sm72 ADD CONSTRAINT production_facts_sm72_operator_id_fkey FOREIGN KEY (operator_id) REFERENCES users(id) ON DELETE SET NULL; END IF; END $$` },
+
 ];

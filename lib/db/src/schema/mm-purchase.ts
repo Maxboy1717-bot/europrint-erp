@@ -71,7 +71,8 @@ export const goodsReceipts = pgTable("goods_receipts", {
   id: serial("id").primaryKey(),
   receiptNumber: varchar("receipt_number", { length: 50 }).notNull().unique(),
   receiptDate: varchar("receipt_date", { length: 10 }).notNull(),
-  supplierId: varchar("supplier_id").references(() => vendors.id, { onDelete: "set null" }),
+  // FK type fix: vendors.id is serial (integer), was incorrectly declared varchar
+  supplierId: integer("supplier_id").references(() => vendors.id, { onDelete: "set null" }),
   supplierName: text("supplier_name"),
   warehouseId: varchar("warehouse_id").references(() => warehouses.id, { onDelete: "set null" }),
   purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id, { onDelete: "set null" }),
@@ -114,7 +115,8 @@ export type InsertGoodsReceipt = z.infer<typeof insertGoodsReceiptSchema>;
 export const goodsReceiptLines = pgTable("goods_receipt_lines", {
   id: serial("id").primaryKey(),
   receiptId: integer("receipt_id").notNull().references(() => goodsReceipts.id, { onDelete: "cascade" }),
-  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
+  // FK type fix: materialCards.id is serial (integer), was incorrectly declared varchar
+  materialCardId: integer("material_id").references(() => materialCards.id, { onDelete: "set null" }),
   orderedQuantity: numericMoney("ordered_quantity"),
   receivedQuantity: numericMoney("received_quantity").notNull(),
   acceptedQuantity: numericMoney("accepted_quantity"),

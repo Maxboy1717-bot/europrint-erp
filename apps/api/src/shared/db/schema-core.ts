@@ -30,6 +30,11 @@ export const users = pgTable(
   {
     id: uuid('id').primaryKey().$defaultFn(() => createId()),
     email: text('email').notNull().unique(),
+    // username — login handle used by drizzle-auth.repo.ts `WHERE username = $1`.
+    // Nullable so existing rows without a username are valid; a boot migration
+    // back-fills `username = email` for those rows.
+    // Added: 2026-05-27 — fixes drizzle-auth.repo query silently returning no rows.
+    username: text('username').unique(),
     password_hash: text('password_hash').notNull(),
     full_name: text('full_name').notNull(),
     role: userRoleEnum('role').notNull().default('employee'),
@@ -44,6 +49,7 @@ export const users = pgTable(
   },
   (table) => [
     uniqueIndex('users_email_idx').on(table.email),
+    uniqueIndex('users_username_idx').on(table.username),
     index('users_is_active_idx').on(table.is_active),
     index('users_role_idx').on(table.role),
   ],
@@ -57,6 +63,10 @@ export const refresh_tokens = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     token: text('token').notNull(),
+    // jti (JWT ID) — unique claim from the JWT payload. Enables O(1) blacklist
+    // lookups by jti instead of scanning the full token column.
+    // Added: 2026-05-27 — fixes silent fail-open in JwtAuthGuard.isTokenBlacklisted.
+    jti: text('jti').unique(),
     expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
     is_revoked: boolean('is_revoked').notNull().default(false),
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -64,6 +74,7 @@ export const refresh_tokens = pgTable(
   (table) => [
     index('refresh_tokens_user_id_idx').on(table.user_id),
     index('refresh_tokens_expires_at_idx').on(table.expires_at),
+    uniqueIndex('refresh_tokens_jti_idx').on(table.jti),
   ],
 );
 

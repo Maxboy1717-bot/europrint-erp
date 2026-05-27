@@ -10,7 +10,8 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { departments, users } from "../core-schema";
 import { crmCompanies } from "../crm-schema";
-import { rawMaterials } from "../mm-schema";
+// rawMaterials import removed: production_order_components.rawMaterialId FK
+// now references material_cards via DB migration (avoiding circular import cycle)
 import { salesOrders } from "../sd-schema";
 import { warehouses } from "../wms-schema";
 
@@ -19,7 +20,8 @@ export const productionFactsSM72 = pgTable("production_facts_sm72", {
   id: serial("id").primaryKey(),
   papkaNo: varchar("papka_no", { length: 50 }).notNull(),
   factDate: varchar("fact_date", { length: 10 }).notNull(),
-  operatorId: integer("operator_id").notNull(),
+  // FK fix: added references to users.id with SET NULL on delete
+  operatorId: integer("operator_id").references(() => users.id, { onDelete: "set null" }),
   workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: 'set null' }),
   plannedQty: integer("planned_qty").notNull(),
   actualQty: integer("actual_qty").notNull(),
@@ -321,7 +323,11 @@ export const bomItems = pgTable("bom_items", {
   bomId: varchar("bom_id").notNull().references(() => bomHeaders.id, { onDelete: "cascade" }),
   itemNumber: varchar("item_number", { length: 10 }).notNull(),
   componentType: varchar("component_type", { length: 20 }).notNull().default("material"),
-  componentId: varchar("component_id").notNull().references(() => products.id, { onDelete: "restrict" }),
+  // FK type fix: should reference material_cards.id (integer), not products.id.
+  // Cannot use .references() here without creating a circular import
+  // (pp-production → mm-material-cards → pp-schema → pp-production).
+  // DB-level FK is applied via migrations-drift.ts entry below.
+  componentId: integer("component_id").notNull(),
   quantity: numericMoney("quantity").notNull(),
   unit: varchar("unit", { length: 20 }).notNull().default("dona"),
   scrapPercentage: numericMoney("scrap_percentage").notNull().default(0),
@@ -533,7 +539,9 @@ export type InsertProductionOrderOperation = z.infer<typeof insertProductionOrde
 export const productionOrderComponents = pgTable("production_order_components", {
   id: serial("id").primaryKey(),
   productionOrderId: varchar("production_order_id").notNull().references(() => productionOrders.id, { onDelete: "cascade" }),
-  rawMaterialId: varchar("raw_material_id").notNull().references(() => rawMaterials.id, { onDelete: "restrict" }),
+  // FK type fix: was varchar referencing raw_materials; changed to integer to reference
+  // material_cards.id (serial/integer). DB-level FK applied via migrations-drift.ts.
+  rawMaterialId: integer("raw_material_id").notNull(),
   requiredQuantity: numericMoney("required_quantity").notNull(),
   issuedQuantity: numericMoney("issued_quantity").notNull().default(0),
   unit: varchar("unit", { length: 20 }).notNull(),
