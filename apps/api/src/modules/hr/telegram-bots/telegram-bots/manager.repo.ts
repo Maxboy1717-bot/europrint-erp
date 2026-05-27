@@ -154,7 +154,13 @@ export class TelegramBotsManagerRepo {
         LEFT JOIN attendance_logs al ON al.employee_id = e.id AND al.date >= CURRENT_DATE - INTERVAL '30 days'
         LEFT JOIN daily_reports dr ON dr.employee_id = e.id AND dr.date >= CURRENT_DATE - INTERVAL '30 days'
         LEFT JOIN pip_goals pg ON pg.employee_id = e.id
-        WHERE e.department_id = ${departmentId} AND e.status = 'active'
+        WHERE EXISTS (
+          SELECT 1 FROM users u2
+          JOIN employee_org_departments eod2 ON eod2.user_id = u2.id
+          WHERE u2.employee_id = e.id AND u2.deleted_at IS NULL
+            AND eod2.org_department_id = ${departmentId} AND eod2.is_primary = true
+        )
+        AND e.status = 'active'
       `);
       return (rows.rows[0] ?? null) as Row | null;
     }, 'DB_ERROR');

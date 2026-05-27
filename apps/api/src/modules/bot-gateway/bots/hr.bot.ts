@@ -30,9 +30,17 @@ export class HrBotService {
   private async getBirthdays(): Promise<BotReply> {
     const res = await execSqlResult<{ full_name: string; department: string }>(
       sql`
-        SELECT e.full_name, d.name AS department
+        SELECT e.full_name, COALESCE(primary_org.dept_name, '') AS department
         FROM employees e
-        LEFT JOIN departments d ON d.id = e.department_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         WHERE EXTRACT(month FROM e.birth_date) = EXTRACT(month FROM NOW())
           AND EXTRACT(day FROM e.birth_date) = EXTRACT(day FROM NOW())
       `,

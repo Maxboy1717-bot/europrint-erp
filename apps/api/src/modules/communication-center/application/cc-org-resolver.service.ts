@@ -65,12 +65,14 @@ export class CcOrgResolverService {
   }
 
   private async resolveDeptHead(senderUserId: number): Promise<number> {
-    // sender's department → org_departments.head_user_id
+    // sender's department → org_departments.head_user_id (via employee_org_departments)
     const r = await runQuery<{ head_user_id: number | null }>(sql`
       SELECT od.head_user_id
-      FROM employees e
-      LEFT JOIN org_departments od ON od.id = e.department_id
-      WHERE e.user_id = ${senderUserId}
+      FROM employee_org_departments eod
+      JOIN org_departments od ON od.id = eod.org_department_id
+      WHERE eod.user_id = ${senderUserId}
+        AND eod.is_primary = true
+      ORDER BY eod.assigned_at DESC
       LIMIT 1
     `);
     const id = r.rows[0]?.head_user_id ?? null;
