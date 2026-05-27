@@ -18,6 +18,7 @@ import {
 
 // CFO configuration table — moved here from finance/domain/services/cfo-config.service.ts
 // per P0-1 DDD audit (domain MUST NOT know about Drizzle).
+// NOTE: convergence deferred — @workspace/db does not export this symbol name.
 export const cfoConfigTable = pgTable('cfo_config', {
   id:          serial('id').primaryKey(),
   configKey:   varchar('config_key', { length: 100 }).notNull().unique(),
@@ -66,6 +67,8 @@ export const incomeExpenseTransactions = pgTable('income_expense_transactions', 
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
+// NOTE: convergence deferred (tier-1) — order-costing repo passes string where
+// lib/db orderCostings expects numeric; needs reconciliation first.
 export const orderCostings = pgTable('order_costings', {
   id: integer('id').primaryKey(),
   orderId: text('order_id'),
@@ -88,24 +91,11 @@ export const orderCostingLines = pgTable('order_costing_lines', {
   amount: decimal('amount', { precision: 18, scale: 2 }).notNull(),
 });
 
-export const financialKPIs = pgTable('financial_kpis', {
-  id:                integer('id').primaryKey(),
-  kpiDate:           text('kpi_date').notNull(),
-  kpiPeriod:         text('kpi_period'),
-  currentRatio:      decimal('current_ratio', { precision: 18, scale: 4 }),
-  quickRatio:        decimal('quick_ratio', { precision: 18, scale: 4 }),
-  debtToEquity:      decimal('debt_to_equity', { precision: 18, scale: 4 }),
-  grossProfitMargin: decimal('gross_profit_margin', { precision: 18, scale: 4 }),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { financialKPIs } from '@workspace/db';
 
-export const dailyFinancialMetrics = pgTable('daily_financial_metrics', {
-  id: integer('id').primaryKey(),
-  metricDate: text('metric_date').notNull(),
-  totalRevenue: decimal('total_revenue', { precision: 18, scale: 2 }).default('0'),
-  totalExpenses: decimal('total_expenses', { precision: 18, scale: 2 }).default('0'),
-  grossProfit: decimal('gross_profit', { precision: 18, scale: 2 }).default('0'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { dailyFinancialMetrics } from '@workspace/db';
 
 export const inventoryCounts = pgTable('inventory_counts', {
   id: integer('id').primaryKey(),

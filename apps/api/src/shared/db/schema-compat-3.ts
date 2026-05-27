@@ -81,14 +81,8 @@ export const workCenters = canonicalWorkCenters;
 // The 9-col stub here was redundant — schema-manufacturing is now the canonical definition.
 export const downtimeEvents = canonicalDowntimeEvents;
 
-export const downtimeReasonCodes = pgTable('downtime_reason_codes', {
-  id: integer('id').primaryKey(),
-  code: text('code').notNull().unique(),
-  name: text('name').notNull(),
-  category: text('category'),
-  isActive: boolean('is_active').default(true),
-  createdAt: ts('created_at').defaultNow(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { downtimeReasonCodes } from '@workspace/db';
 
 export const machineCrews = pgTable('machine_crews', {
   id: integer('id').primaryKey(),
@@ -205,14 +199,8 @@ export const websiteBanners = pgTable('website_banners', {
   position: text('position'),
 });
 
-export const websiteSettings = pgTable('website_settings', {
-  id: integer('id').primaryKey(),
-  key: text('key').notNull().unique(),
-  value: text('value'),
-  type: text('type').default('text'),
-  updatedAt: ts('updated_at').defaultNow(),
-  category: text('category'),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { websiteSettings } from '@workspace/db';
 
 export const securityAccess = pgTable('security_access', {
   id: integer('id').primaryKey(),

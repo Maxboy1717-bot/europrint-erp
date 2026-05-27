@@ -18,49 +18,11 @@ export const hrFunnelHistory = pgTable('hr_funnel_history', {
   createdAt: ts('created_at').defaultNow(),
 });
 
-export const hrReferencesChecks = pgTable('hr_references_checks', {
-  id: integer('id').primaryKey(),
-  funnelId: integer('funnel_id').notNull(),
-  candidateId: integer('candidate_id').notNull(),
-  previousCompany: text('previous_company').notNull(),
-  contactPerson: text('contact_person').notNull(),
-  contactPhone: text('contact_phone'),
-  contactPosition: text('contact_position'),
-  result: text('result'),
-  wouldRehire: boolean('would_rehire'),
-  notes: text('notes'),
-  rating: integer('rating'),
-  checkedById: integer('checked_by_id'),
-  checkedAt: ts('checked_at'),
-  createdAt: ts('created_at').defaultNow(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { hrReferencesChecks } from '@workspace/db';
 
-export const hrToolTestResults = pgTable('hr_tool_test_results', {
-  id: integer('id').primaryKey(),
-  candidateId: integer('candidate_id').notNull(),
-  vacancyId: integer('vacancy_id'),
-  funnelId: integer('funnel_id'),
-  pointA: integer('point_a'),
-  pointB: integer('point_b'),
-  pointC: integer('point_c'),
-  pointD: integer('point_d'),
-  pointE: integer('point_e'),
-  pointF: integer('point_f'),
-  pointG: integer('point_g'),
-  pointH: integer('point_h'),
-  pointI: integer('point_i'),
-  pointJ: integer('point_j'),
-  compulsivePoints: text('compulsive_points').array(),
-  totalScore: integer('total_score'),
-  categoryResult: text('category_result').default('UNKNOWN'),
-  positionMatchScore: integer('position_match_score'),
-  positionMatchNotes: text('position_match_notes'),
-  testedById: integer('tested_by_id'),
-  testDate: ts('test_date').notNull().defaultNow(),
-  isValid: boolean('is_valid').notNull().default(true),
-  invalidReason: text('invalid_reason'),
-  createdAt: ts('created_at').defaultNow(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { hrToolTestResults } from '@workspace/db';
 
 export const hrOnboardingPlans = pgTable('hr_onboarding_plans', {
   id: integer('id').primaryKey(),
@@ -93,41 +55,11 @@ export const hrEmployeeOnboardings = pgTable('hr_employee_onboardings', {
   isProbationPassed: boolean('is_probation_passed'),
 });
 
-export const hrJobDescriptions = pgTable('hr_job_descriptions', {
-  id: integer('id').primaryKey(),
-  positionId: integer('position_id'),
-  version: integer('version').notNull().default(1),
-  title: text('title').notNull(),
-  content: text('content'),
-  isActive: boolean('is_active').default(true),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  isCurrentVersion: boolean('is_current_version').default(false),
-  createdById: integer('created_by_id'),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { hrJobDescriptions } from '@workspace/db';
 
-export const hrJobOffers = pgTable('hr_job_offers', {
-  id: integer('id').primaryKey(),
-  vacancyId: integer('vacancy_id'),
-  candidateId: integer('candidate_id').notNull(),
-  funnelId: integer('funnel_id'),
-  position: text('position').notNull(),
-  department: text('department'),
-  startDate: ts('start_date'),
-  probationMonths: integer('probation_months').default(3),
-  salaryProbation: integer('salary_probation'),
-  salaryAfter: integer('salary_after'),
-  workSchedule: text('work_schedule'),
-  additionalBenefits: text('additional_benefits'),
-  status: text('status').notNull().default('DRAFT'),
-  offerExpiresAt: ts('offer_expires_at'),
-  sentAt: ts('sent_at'),
-  respondedAt: ts('responded_at'),
-  declineReason: text('decline_reason'),
-  createdById: integer('created_by_id'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { hrJobOffers } from '@workspace/db';
 
 export const hrMotivationPlans = pgTable('hr_motivation_plans', {
   id: integer('id').primaryKey(),

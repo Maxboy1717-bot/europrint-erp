@@ -42,16 +42,8 @@ export const guidelines = pgTable('guidelines', {
 // Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
 export { contactSettings } from '@workspace/db';
 
-export const systemSettings = pgTable('system_settings', {
-  id:          integer('id').primaryKey().default(1),
-  companyName: text('company_name'),
-  timezone:    text('timezone').notNull().default('Asia/Tashkent'),
-  language:    text('language').notNull().default('uz'),
-  currency:    text('currency').notNull().default('UZS'),
-  logoUrl:     text('logo_url'),
-  config:      jsonb('config').default({}),
-  updatedAt:   timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { systemSettings } from '@workspace/db';
 
 export const adminFilters = pgTable('admin_filters', {
   id:          uuid('id').primaryKey().defaultRandom(),
