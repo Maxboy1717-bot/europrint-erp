@@ -29,7 +29,7 @@ export function useEmployeeMutation({ isEdit, employeeId, onAfterSubmit }: UseEm
 
   const createMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      return await apiRequest<{ id?: string | number }>('POST', "/api/employees", data);
+      return await apiRequest<{ id?: string | number }>('POST', "/api/hr/employees", data);
     },
     onSuccess: async (data) => {
       const id = data?.id ? String(data.id) : "";

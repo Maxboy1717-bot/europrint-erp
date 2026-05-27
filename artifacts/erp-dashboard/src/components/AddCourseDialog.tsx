@@ -109,9 +109,9 @@ export function AddCourseDialog({ open, onOpenChange, course }: AddCourseDialogP
   });
 
   const { data: employeesResponse } = useQuery<{ data: Employee[] } | Employee[]>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
   });
-  
+
   const employees = Array.isArray(employeesResponse) ? employeesResponse : (employeesResponse?.data || []);
 
   const { data: mentors = [] } = useQuery<Mentor[]>({

@@ -71,7 +71,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
       return await apiRequest("PATCH", `/api/employees/${id}/status`, { status });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/employees"] });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({
         title: "Muvaffaqiyat",
@@ -94,9 +94,7 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
       return await apiRequest("DELETE", `/api/employees/${id}`);
     },
     onSuccess: () => {
-      // Frontend Employees.tsx ishlatadigan key
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
-      // Eski legacy key'lar (boshqa joylarda hali ishlatilishi mumkin)
+      // Canonical key (canonical: /api/hr/employees)
       queryClient.invalidateQueries({ queryKey: ["/api/hr/employees"] });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({

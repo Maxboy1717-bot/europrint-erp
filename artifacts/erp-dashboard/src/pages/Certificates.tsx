@@ -28,7 +28,7 @@ export default function Certificates() {
   });
 
   const { data: users } = useQuery<User[]>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
   });
 
   const { data: courses } = useQuery<Course[]>({

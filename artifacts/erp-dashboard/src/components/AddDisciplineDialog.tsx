@@ -43,7 +43,7 @@ export function AddDisciplineDialog({ open, onOpenChange, userId }: AddDisciplin
   }, [userId]);
 
   const { data: employeesData } = useQuery<{ data: { id: string; fullName: string; employeeId: string; role: string }[] }>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
   });
   const employees = employeesData?.data || [];
 

@@ -58,9 +58,9 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
   }
 
   const { data: usersResponse, isLoading: usersLoading } = useQuery<{ data: EmployeeItem[] } | EmployeeItem[]>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
   });
-  
+
   const users = Array.isArray(usersResponse) ? usersResponse : (usersResponse?.data || []);
 
   const { data: orgDepartments = [], isLoading: departmentsLoading } = useQuery<OrgDept[]>({

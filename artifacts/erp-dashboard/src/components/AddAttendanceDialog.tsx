@@ -46,7 +46,7 @@ export function AddAttendanceDialog({ open, onOpenChange, userId }: AddAttendanc
   }, [userId]);
 
   const { data: employeesResponse } = useQuery<{ data: { id: string; fullName: string; employeeId: string }[] }>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
   });
   const employees = employeesResponse?.data || [];
 

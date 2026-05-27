@@ -57,7 +57,7 @@ export default function CourseDetail() {
   });
 
   const { data: employeesResponse } = useQuery<{ data: Array<{ id: string; fullName: string; departmentId: string | null }> }>({
-    queryKey: ["/api/employees"],
+    queryKey: ["/api/hr/employees"],
   });
   const employees = employeesResponse?.data ?? [];
 

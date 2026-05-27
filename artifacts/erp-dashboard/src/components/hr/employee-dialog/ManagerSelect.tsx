@@ -74,7 +74,7 @@ export function ManagerSelect({
   const [search, setSearch] = useState("");
 
   const { data: employeesData, isLoading } = useQuery<{ data?: ManagerOption[] } | ManagerOption[]>({
-    queryKey: ["/api/employees", { managerPicker: true }],
+    queryKey: ["/api/hr/employees", { managerPicker: true }],
     // Slight cache window — the manager list rarely changes mid-edit
     staleTime: 60_000,
   });

@@ -37,7 +37,7 @@ vi.mock('@tanstack/react-query', async () => {
   return {
     ...actual,
     useQuery: ({ queryKey }: { queryKey: readonly unknown[] }) => {
-      if (queryKey[0] === '/api/employees') {
+      if (queryKey[0] === '/api/hr/employees') {
         return {
           data: { data: [{ id: 'u-1', fullName: 'Test User', employeeId: 'EP-001', positionId: 'p-1' }] },
           isLoading: false,

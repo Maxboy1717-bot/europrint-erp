@@ -67,12 +67,12 @@ export function EditPersonalInfoDialog({ open, onOpenChange, userId, employee }:
 
   const updateMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await apiRequest("PUT", `/api/employees/${userId}`, data);
+      const response = await apiRequest("PUT", `/api/hr/employees/${userId}`, data);
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/employees", userId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/employees"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/employees", userId] });
       toast({
         title: "Muvaffaqiyat",
         description: "Shaxsiy ma'lumotlar muvaffaqiyatli yangilandi",

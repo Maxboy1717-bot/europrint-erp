@@ -88,11 +88,11 @@ export function ImportEmployeesDialog({
       if (employees.length === 0) {
         throw new Error("CSV fayl bo'sh yoki noto'g'ri format");
       }
-      return apiRequest<ImportResult>("POST", "/api/employees/import", { employees });
+      return apiRequest<ImportResult>("POST", "/api/hr/employees/import", { employees });
     },
     onSuccess: (data) => {
       setImportResult(data);
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/employees"] });
       if ((data.errors ?? []).length === 0) {
         toast({
           title: "Muvaffaqiyatli",

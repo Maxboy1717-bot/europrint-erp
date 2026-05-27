@@ -173,9 +173,9 @@ export const hrApi = {
     apiRequest("POST", `/api/ai/hr/performance-review/${employeeId}`),
   // Employees (compat routes)
   createEmployeeCompat: (data: Record<string, unknown>) =>
-    apiRequest("POST", "/api/employees", data),
+    apiRequest("POST", "/api/hr/employees", data),
   importEmployeesCompat: (data: Record<string, unknown>) =>
-    apiRequest("POST", "/api/employees/import", data),
+    apiRequest("POST", "/api/hr/employees/import", data),
   updateEmployeeCompat: (id: number | string, data: Record<string, unknown>) =>
     apiRequest("PUT", `/api/employees/${id}`, data),
   deleteEmployeeCompat: (id: number | string) =>

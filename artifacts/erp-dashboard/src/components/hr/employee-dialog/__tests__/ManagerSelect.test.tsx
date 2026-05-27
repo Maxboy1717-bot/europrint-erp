@@ -32,7 +32,7 @@ function makeProviders(initialData: unknown = EMPLOYEES) {
     });
     // Seed the cache so the component doesn't trigger network and we
     // can assert on the rendered "selected manager" name synchronously.
-    qc.setQueryData(['/api/employees', { managerPicker: true }], initialData);
+    qc.setQueryData(['/api/hr/employees', { managerPicker: true }], initialData);
     return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
   };
 }
