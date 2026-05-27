@@ -87,8 +87,13 @@ export class HrBaseRepository {
           phone_number:    hrEmployees.phone_number,
           email_work:      hrEmployees.email_work,
           photo_url:       hrEmployees.photo_url,
+          department_id:   hrEmployees.department_id,
           department_name: hrDepartments.name,
           position_name:   hrPositions.title,
+          telegram_chat_id: hrEmployees.telegram_chat_id,
+          date_of_birth:   hrEmployees.date_of_birth,
+          birth_date:      hrEmployees.birth_date,
+          total_points:    hrEmployees.total_points,
         })
           .from(hrEmployees)
           .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))

@@ -31,10 +31,15 @@ import { useTranslation } from '@/lib/i18n';
 interface HealthCheckup {
   id: string;
   departmentName?: string;
+  department_name?: string;
   checkupDate?: string;
+  last_checkup_date?: string;
   nextCheckupDate?: string;
+  next_checkup_date?: string;
   totalEmployees?: number;
+  total_employees?: number;
   examinedCount?: number;
+  examined_count?: number;
   status?: string;
   checkupType?: string;
   notes?: string;
@@ -145,14 +150,16 @@ export default function HRHealthMonitoring() {
 
   const filtered = all
     .filter(c => statusFilter === "all" || c.status === statusFilter)
-    .filter(c =>
-      !search ||
-      (c.departmentName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (c.checkupType || "").toLowerCase().includes(search.toLowerCase())
-    );
+    .filter(c => {
+      const deptName = c.departmentName || c.department_name || "";
+      const cType = c.checkupType || "";
+      return !search ||
+        deptName.toLowerCase().includes(search.toLowerCase()) ||
+        cType.toLowerCase().includes(search.toLowerCase());
+    });
 
-  const totalExamined = (Array.isArray(all) ? all : []).reduce((s, c) => s + (c.examinedCount ?? 0), 0);
-  const totalEmployees = (Array.isArray(all) ? all : []).reduce((s, c) => s + (c.totalEmployees ?? 0), 0);
+  const totalExamined = (Array.isArray(all) ? all : []).reduce((s, c) => s + (c.examinedCount ?? c.examined_count ?? 0), 0);
+  const totalEmployees = (Array.isArray(all) ? all : []).reduce((s, c) => s + (c.totalEmployees ?? c.total_employees ?? 0), 0);
   const coveragePct = totalEmployees > 0 ? Math.round((totalExamined / totalEmployees) * 100) : 0;
   const overdueCount = (Array.isArray(all) ? all : []).filter(c => c.status === "overdue").length;
   const completedCount = (Array.isArray(all) ? all : []).filter(c => c.status === "completed").length;
@@ -280,9 +287,12 @@ export default function HRHealthMonitoring() {
                   </TableRow>
                 ) : (
                   (Array.isArray(filtered) ? filtered : []).map((c, i) => {
-                    const pct = (c.totalEmployees ?? 0) > 0
-                      ? Math.round(((c.examinedCount ?? 0) / (c.totalEmployees ?? 1)) * 100)
-                      : 0;
+                    const deptName = c.departmentName || c.department_name;
+                    const checkDate = c.checkupDate || c.last_checkup_date;
+                    const nextDate = c.nextCheckupDate || c.next_checkup_date;
+                    const empTotal = c.totalEmployees ?? c.total_employees ?? 0;
+                    const empExamined = c.examinedCount ?? c.examined_count ?? 0;
+                    const pct = empTotal > 0 ? Math.round((empExamined / empTotal) * 100) : 0;
                     const st = STATUS_MAP[c.status || "scheduled"] || STATUS_MAP.scheduled;
                     const TYPE_LABEL: Record<string, string> = {
                       annual: "Yillik", quarterly: "Choraklik",
@@ -290,31 +300,31 @@ export default function HRHealthMonitoring() {
                     };
                     return (
                       <TableRow key={c.id} data-testid={`row-health-${i}`} className="hover:bg-muted/40 transition-colors">
-                        <TableCell className="font-medium">{c.departmentName || "—"}</TableCell>
+                        <TableCell className="font-medium">{deptName || "—"}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {TYPE_LABEL[c.checkupType || ""] || c.checkupType || "—"}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {c.checkupDate
-                            ? <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{c.checkupDate.slice(0, 10)}</span>
+                          {checkDate
+                            ? <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{checkDate.slice(0, 10)}</span>
                             : "—"}
                         </TableCell>
                         <TableCell>
                           <span className="flex items-center gap-1 text-sm">
                             <Users className="h-3 w-3 text-muted-foreground" />
-                            {c.totalEmployees ?? "—"}
+                            {empTotal || "—"}
                           </span>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2 min-w-[100px]">
                             <Progress value={pct} className="h-1.5 flex-1" />
                             <span className="text-xs text-muted-foreground w-14 shrink-0">
-                              {c.examinedCount ?? 0} ({pct}%)
+                              {empExamined} ({pct}%)
                             </span>
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {c.nextCheckupDate ? c.nextCheckupDate.slice(0, 10) : "—"}
+                          {nextDate ? nextDate.slice(0, 10) : "—"}
                         </TableCell>
                         <TableCell>
                           <Badge variant={st.variant} className="text-xs">{st.label}</Badge>

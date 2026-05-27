@@ -55,7 +55,6 @@ export const menuGroupsHrLms: Record<string, MenuGroup> = {
       // ─── INTIZOM VA KONFLIKT ───────────────────────────────────────────────
       { title: "INTIZOM", url: "", icon: ShieldCheck, separator: true },
       { title: "Intizom", url: "discipline", icon: FileText },
-      { title: "Intizom V2", url: "discipline", icon: FileText },
       { title: "Konflikt Boshqaruvi", url: "hr/conflict", icon: MessageSquare },
       { title: "Offboarding", url: "hr/offboarding", icon: UserMinus },
       { title: "Alumni", url: "hr/alumni", icon: UserPlus },
@@ -74,7 +73,7 @@ export const menuGroupsHrLms: Record<string, MenuGroup> = {
       { title: "Sog'liq Nazorati", url: "hr/health-monitoring", icon: HeartPulse },
       { title: "Xavfsizlik", url: "hr/safety", icon: ShieldCheck },
       { title: "Reception", url: "hr/reception", icon: MapPin },
-      { title: "Bildirishnomalar", url: "settings/notifications", icon: Inbox },
+      { title: "Bildirishnomalar", url: "wms/notifications", icon: Inbox },
 
       // ─── BREND ────────────────────────────────────────────────────────────
       { title: "HR BREND", url: "", icon: Megaphone, separator: true },

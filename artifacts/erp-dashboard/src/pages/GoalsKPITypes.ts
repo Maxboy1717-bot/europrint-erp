@@ -35,7 +35,8 @@ export const STATUS_OPTIONS = [
 ];
 
 export function getProgressPercentage(current: number, target: number): number {
-  return Math.min((current / target) * 100, 100);
+  if (!target || target <= 0) return 0;
+  return Math.min(((current ?? 0) / target) * 100, 100);
 }
 
 export function getPriorityColor(priority: string): string {

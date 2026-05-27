@@ -115,7 +115,8 @@ export class HrCompatSafetyController {
 
   @Get('leave-requests')
   async getLeaveRequests(@Query('employeeId') employeeId?: string, @Query('status') status?: string) {
-    return unwrapOrInternal(await this.svc.getLeaveRequests(employeeId, status));
+    const r = await this.svc.getLeaveRequests(employeeId, status);
+    return r.ok && Array.isArray(r.data) ? r.data : [];
   }
 
   @Post('leave-requests')

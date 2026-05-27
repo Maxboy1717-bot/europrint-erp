@@ -54,6 +54,28 @@ const SEVERITY_LABEL: Record<string, string> = {
   medium:   "O'rta",
   high:     "Yuqori",
   critical: "Kritik",
+  minor:    "Engil",
+  major:    "Og'ir",
+};
+
+const VIOLATION_TYPE_LABEL: Record<string, string> = {
+  absence:        "Sababsiz kelmagan",
+  misconduct:     "Xulq-atvor buzilishi",
+  late_arrival:   "Kech kelish",
+  insubordination:"Buyruqqa itoatsizlik",
+  harassment:     "Ta'qib",
+  theft:          "O'g'irlik",
+  safety_violation:"Xavfsizlik qoidasi buzilishi",
+  performance:    "Yomon ko'rsatkich",
+  other:          "Boshqa",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  open:       "Ochiq",
+  closed:     "Yopilgan",
+  pending:    "Kutilmoqda",
+  resolved:   "Hal qilindi",
+  appealed:   "Shikoyat qilindi",
 };
 
 function SeverityBadge({ severity }: { severity: string }) {
@@ -211,7 +233,7 @@ export default function Discipline() {
                     <TableRow key={v.id}>
                       <TableCell className="font-medium">{v.full_name}</TableCell>
                       <TableCell>{v.department}</TableCell>
-                      <TableCell>{v.violation_type}</TableCell>
+                      <TableCell>{VIOLATION_TYPE_LABEL[v.violation_type] || v.violation_type}</TableCell>
                       <TableCell>
                         <SeverityBadge severity={v.severity} />
                       </TableCell>
@@ -224,7 +246,7 @@ export default function Discipline() {
                           : "—"}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{v.status}</Badge>
+                        <Badge variant="outline">{STATUS_LABEL[v.status] || v.status}</Badge>
                       </TableCell>
                     </TableRow>
                   ))

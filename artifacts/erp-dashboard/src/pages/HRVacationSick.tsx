@@ -26,11 +26,17 @@ interface LeaveRequest {
   id: number | string;
   userId?: number | string;
   employeeId?: number | string;
+  employee_id?: number | string;
+  employeeName?: string;
+  employee_name?: string;
   type?: string;
   leaveType?: string;
+  leave_type?: string;
   status?: string;
   startDate?: string;
+  start_date?: string;
   endDate?: string;
+  end_date?: string;
   reason?: string;
 }
 
@@ -137,12 +143,12 @@ export default function HRVacationSick() {
                   <TableRow><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">{t("tatilSorovlariYoq")}</TableCell></TableRow>
                 ) : (leaveRequests as LeaveRequest[]).slice(0, 30).map((v) => (
                   <TableRow key={v.id} data-testid={`row-vacation-${v.id}`} className="hover:bg-muted/40 transition-colors">
-                    <TableCell className="font-medium">{v.userId || v.employeeId || `#${v.id}`}</TableCell>
+                    <TableCell className="font-medium">{v.employeeName || v.employee_name || v.employeeId || v.employee_id || `#${v.id}`}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{LEAVE_TYPE_LABELS[v.type || v.leaveType || ""] || v.type || "—"}</Badge>
+                      <Badge variant="outline">{LEAVE_TYPE_LABELS[v.type || v.leaveType || v.leave_type || ""] || v.type || v.leave_type || "—"}</Badge>
                     </TableCell>
-                    <TableCell>{v.startDate ? new Date(v.startDate).toLocaleDateString("uz-UZ") : "—"}</TableCell>
-                    <TableCell>{v.endDate ? new Date(v.endDate).toLocaleDateString("uz-UZ") : "—"}</TableCell>
+                    <TableCell>{(v.startDate || v.start_date) ? new Date((v.startDate || v.start_date)!).toLocaleDateString("uz-UZ") : "—"}</TableCell>
+                    <TableCell>{(v.endDate || v.end_date) ? new Date((v.endDate || v.end_date)!).toLocaleDateString("uz-UZ") : "—"}</TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">{v.reason || "—"}</TableCell>
                     <TableCell>
                       <Badge variant={v.status === "approved" ? "default" : v.status === "rejected" ? "destructive" : "secondary"}>

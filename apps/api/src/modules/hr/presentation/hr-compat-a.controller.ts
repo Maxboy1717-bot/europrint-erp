@@ -21,7 +21,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 
-import { throwFromError, unwrapOrThrow, assertOk, unwrapOrInternal } from '@common/http-result';
+import { throwFromError, unwrapOrThrow, assertOk, unwrapOrInternal, unwrapOrDefault } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -70,7 +70,7 @@ export class HrCompatAController {
 
   @Get('360/review')
   async get360Reviews(@Query('employeeId') employeeId?: string) {
-    return unwrapOrInternal(await this.svc.get360Reviews(employeeId));
+    return unwrapOrDefault(await this.svc.get360Reviews(employeeId), []);
   }
 
   @Post('360/review')
@@ -89,12 +89,13 @@ export class HrCompatAController {
 
   @Get('360/dept-summary')
   async get360DeptSummary(@Query('departmentId') departmentId?: string) {
-    return unwrapOrInternal(await this.svc.get360DeptSummary(departmentId));
+    const r = await this.svc.get360DeptSummary(departmentId);
+    return r.ok && r.data ? r.data : {};
   }
 
   @Get('conflict-reports')
   async getConflictReports(@Query('status') status?: string) {
-    return unwrapOrInternal(await this.svc.getConflictReports(status));
+    return unwrapOrDefault(await this.svc.getConflictReports(status), []);
   }
 
   @Post('conflict-reports')
@@ -106,7 +107,7 @@ export class HrCompatAController {
 
   @Get('employee-skills')
   async getEmployeeSkills(@Query('employeeId') employeeId?: string) {
-    return unwrapOrInternal(await this.svc.getEmployeeSkills(employeeId));
+    return unwrapOrDefault(await this.svc.getEmployeeSkills(employeeId), []);
   }
 
   @Post('employee-skills')
@@ -118,12 +119,13 @@ export class HrCompatAController {
 
   @Get('employee-skills/:employeeId')
   async getEmployeeSkillsById(@Param('employeeId') employeeId: string) {
-    return unwrapOrInternal(await this.svc.getEmployeeSkillsById(safeInt(employeeId, 0)));
+    const r = await this.svc.getEmployeeSkillsById(safeInt(employeeId, 0));
+    return r.ok && r.data ? r.data : [];
   }
 
   @Get('health-checkups')
   async getHealthCheckups(@Query('departmentId') departmentId?: string) {
-    return unwrapOrInternal(await this.svc.getHealthCheckups(departmentId));
+    return unwrapOrDefault(await this.svc.getHealthCheckups(departmentId), []);
   }
 
   @Post('health-checkups')
@@ -135,22 +137,22 @@ export class HrCompatAController {
 
   @Get('hrc-tests/sessions')
   async getHrcTestSessions() {
-    return unwrapOrInternal(await this.svc.getHrcTestSessions());
+    return unwrapOrDefault(await this.svc.getHrcTestSessions(), []);
   }
 
   @Get('hrc-tests/tool-test/questions')
   async getHrcTestQuestions(@Query('category') category?: string) {
-    return unwrapOrInternal(await this.svc.getHrcTestQuestions(category));
+    return unwrapOrDefault(await this.svc.getHrcTestQuestions(category), []);
   }
 
   @Get('recruitment/vacancy/candidates')
   async getRecruitmentVacancyCandidates(@Query('vacancyId') vacancyId?: string) {
-    return unwrapOrInternal(await this.svc.getVacancyCandidates(vacancyId));
+    return unwrapOrDefault(await this.svc.getVacancyCandidates(vacancyId), []);
   }
 
   @Get('discipline')
   async getDiscipline(@Query('employeeId') employeeId?: string) {
-    return unwrapOrInternal(await this.svc.getDiscipline(employeeId));
+    return unwrapOrDefault(await this.svc.getDiscipline(employeeId), []);
   }
 
   @Post('discipline-records')

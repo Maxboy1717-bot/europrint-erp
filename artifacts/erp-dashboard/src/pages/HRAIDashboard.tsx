@@ -135,8 +135,8 @@ export default function HRAIDashboard() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between mb-6">
         <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">HR AI {t('dashboard')}</b></>}
-        title="HR AI {t('dashboard')}"
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("hrAiDashboard")}</b></>}
+        title={t("hrAiDashboard")}
       />
         <div className="flex items-center gap-2">
           <Brain className="h-8 w-8 text-primary opacity-20" />
