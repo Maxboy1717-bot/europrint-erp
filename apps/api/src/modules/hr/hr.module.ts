@@ -19,6 +19,8 @@ import { ShiftModule } from './shift/shift.module';
 import { AiInterviewV2Module } from './ai-interview-v2/ai-interview-v2.module';
 import { TelegramBotsModule } from './telegram-bots/telegram-bots.module';
 import { InspectionModule } from './inspection/inspection.module';
+import { EnpsModule } from './enps/enps.module';
+import { PipModule } from './pip/pip.module';
 import { hrControllers, hrProviders, hrExports } from './hr.providers';
 
 @Module({
@@ -36,6 +38,8 @@ import { hrControllers, hrProviders, hrExports } from './hr.providers';
     AiInterviewV2Module,
     TelegramBotsModule,
     InspectionModule,
+    EnpsModule,
+    PipModule,
   ],
   controllers: hrControllers,
   providers: hrProviders,

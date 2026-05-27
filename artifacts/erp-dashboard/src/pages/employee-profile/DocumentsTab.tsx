@@ -54,10 +54,10 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
   });
 
   const { data: hrDocs, isLoading: loadingDocs } = useQuery<HrDocument[]>({
-    queryKey: ["/api/hr-v2/documents/employee", employeeId],
+    queryKey: ["/api/hr-v2/workflow/employee", employeeId, "documents"],
     queryFn: async () => {
       try {
-        const json = await apiRequest('GET', `/api/hr-v2/documents/employee/${employeeId}`) as unknown;
+        const json = await apiRequest('GET', `/api/hr-v2/workflow/employee/${employeeId}/documents`) as unknown;
         const arr = Array.isArray(json) ? json : (Array.isArray((json as { data?: unknown[] })?.data) ? (json as { data: unknown[] }).data : []);
         return arr as HrDocument[];
       } catch {
