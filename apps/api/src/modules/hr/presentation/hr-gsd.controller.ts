@@ -4,8 +4,8 @@
  */
 
 import {
-  Controller, Get, Post, Patch, Body, Param, ParseIntPipe,
-  UseGuards, UseInterceptors,
+  Controller, Get, Post, Patch, Delete, HttpCode, HttpStatus,
+  Body, Param, ParseIntPipe, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -167,5 +167,30 @@ export class HrGsdController {
   async createSkill(@Body() body: unknown) {
     const dto = CreateSkillSchema.parse(body);
     return { data: { id: Date.now(), ...dto, created: true } };
+  }
+
+  @ApiOperation({ summary: 'Update skill' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('skills/:id')
+  async updateSkill(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const dto = CreateSkillSchema.partial().parse(body ?? {});
+    return { data: { id, ...dto, updated: true } };
+  }
+
+  @ApiOperation({ summary: 'Delete skill' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Delete('skills/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteSkill(@Param('id', ParseIntPipe) id: number) {
+    return { data: { id, deleted: true } };
+  }
+
+  @ApiOperation({ summary: 'Delete employee skill' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Delete('employee-skills/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteEmployeeSkill(@Param('id', ParseIntPipe) id: number) {
+    return { data: { id, deleted: true } };
   }
 }
