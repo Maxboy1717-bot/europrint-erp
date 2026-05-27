@@ -90,6 +90,7 @@ export function AddNodeDialog({
               value={form.nameRu}
               onChange={(e) => setForm((f) => ({ ...f, nameRu: e.target.value }))}
               placeholder={t("untitled")}
+              autoComplete="off"
             />
           </div>
           <div>

@@ -95,7 +95,7 @@ export function AssetFilters({
       <Select value={filterCategory} onValueChange={onCategoryChange}>
         <SelectTrigger className="w-full sm:w-40 h-9">
           <Filter className="w-4 h-4 mr-2" />
-          <SelectValue placeholder={t("tur")} />
+          <SelectValue placeholder={t("barchaTurlar")} />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">{t("barchaTurlar")}</SelectItem>
