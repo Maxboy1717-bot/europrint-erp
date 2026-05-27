@@ -3,6 +3,15 @@
 > Bu fayl Claude Code terminaliga loyihaning arxitekturasi, qoidalari va hozirgi holati
 > haqida to'liq ma'lumot beradi. Har bir vazifani boshlashdan oldin bu faylni o'qing.
 
+> 🏛️ **AGENT KONSTITUTSIYASI — Har sessiyada majburiy o'qish:**
+> [`docs/agent-constitution.md`](docs/agent-constitution.md) — Ish metodologiyasi,
+> modul holatlari, katta vazifalar jarayoni (dizayn o'zgartirish, refactor), commit qoidalari,
+> va governance. Bu faylni o'qimagan agent sessiya boshlamaydi.
+
+> 📦 **MODUL REESTRI:**
+> [`docs/modules/INDEX.md`](docs/modules/INDEX.md) — Qaysi modul BLESSED/INVENTORY/NOT_YET
+> ekanini tekshiring. BLESSED modul fayllarini o'zgartirishdan oldin INDEX ni ko'ring.
+
 > 🛡️ **Dedup / refactor / agent sessiyasidan oldin majburiy o'qish:**
 > [`docs/dedup-safety-rules.md`](docs/dedup-safety-rules.md) — 15 ta xavfsizlik qoidasi
 > (cyclic shim taqiq, tsconfig `dist/cjs/`, nest watch tree-kill bug, PWA SW NetworkOnly,
