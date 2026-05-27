@@ -51,6 +51,8 @@ export const routingOperations = pgTable('routing_operations', {
   createdAt: ts('created_at').defaultNow(),
 });
 
+// NOTE: convergence deferred (tier-1) — lib/db bomHeaders.productId is numeric but
+// pp-bom repo passes string; needs column-type reconciliation before re-export.
 export const bomHeaders = pgTable('bom_headers', {
   id: integer('id').primaryKey(),
   productId: text('product_id').notNull(),

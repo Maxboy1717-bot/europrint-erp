@@ -36,15 +36,8 @@ export const entries = pgTable('entries', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
-export const cashFlowTransactions = pgTable('cash_flow_transactions', {
-  id: integer('id').primaryKey(),
-  transactionDate: text('transaction_date'),
-  transactionType: text('transaction_type'),
-  amount: decimal('amount', { precision: 18, scale: 2 }),
-  category: text('category'),
-  description: text('description'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { cashFlowTransactions } from '@workspace/db';
 
 export const accountingPeriods = pgTable('accounting_periods', {
   id: integer('id').primaryKey(),
@@ -125,15 +118,8 @@ export const inventoryCounts = pgTable('inventory_counts', {
 });
 
 // AR/AP/Kassa stubs (for financial-reports queries)
-export const cashTransactions = pgTable('cash_transactions', {
-  id: integer('id').primaryKey(),
-  transactionDate: timestamp('transaction_date', { withTimezone: true }),
-  transactionType: text('transaction_type'),
-  amount: decimal('amount', { precision: 18, scale: 2 }).default('0'),
-  currency: text('currency').default('UZS'),
-  description: text('description'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { cashTransactions } from '@workspace/db';
 
 export const warehouseTransactions = pgTable('warehouse_transactions', {
   id: integer('id').primaryKey(),

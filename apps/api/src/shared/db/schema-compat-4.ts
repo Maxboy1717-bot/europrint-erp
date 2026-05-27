@@ -91,21 +91,8 @@ export const customerOrders = pgTable('customer_orders', {
   paymentStatus: text('payment_status'),
 });
 
-export const customerAccounts = pgTable('customer_accounts', {
-  id: integer('id').primaryKey(),
-  name: text('name').notNull(),
-  email: text('email').unique(),
-  phone: text('phone'),
-  status: text('status').notNull().default('active'),
-  creditLimit: decimal('credit_limit', { precision: 18, scale: 2 }).default('0'),
-  createdAt: ts('created_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-  fullName: text('full_name'),
-  companyName: text('company_name'),
-  isVerified: boolean('is_verified').default(false),
-  passwordHash: text('password_hash'),
-  verificationCode: text('verification_code'),
-});
+// Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md
+export { customerAccounts } from '@workspace/db';
 
 export const publicProducts = pgTable('public_products', {
   id: integer('id').primaryKey(),
@@ -215,6 +202,8 @@ export const productionSessions = pgTable('production_sessions', {
   createdAt: ts('created_at').defaultNow(),
 });
 
+// NOTE: convergence deferred (tier-1) — lib/db aiUsageLogs.userId is numeric but
+// ai-router passes string; needs column-type reconciliation before re-export.
 export const aiUsageLogs = pgTable('ai_usage_logs', {
   id: serial('id').primaryKey(),                                     // serial = auto-increment, id excluded from insert type
   userId: text('user_id'),
