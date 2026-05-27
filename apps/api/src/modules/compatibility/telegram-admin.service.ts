@@ -40,9 +40,17 @@ export class TelegramAdminService {
         SELECT e.id, e.employee_code AS "chatId", e.email AS username,
                e.first_name AS "firstName", e.status,
                CASE WHEN e.status = 'active' THEN true ELSE false END AS "isActive",
-               p.name AS role
+               COALESCE(primary_org.pos_name, '') AS role
         FROM employees e
-        LEFT JOIN positions p ON p.id = e.position_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT COALESCE(of2.position_name, '') AS pos_name
+          FROM employee_org_departments eod
+          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC
+          LIMIT 1
+        ) primary_org ON true
         WHERE e.status != 'terminated'
         ORDER BY e.first_name
         LIMIT 100
