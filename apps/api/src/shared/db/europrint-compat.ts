@@ -48,14 +48,6 @@ export {
 } from './schema-ai';
 
 export {
-  kanbanFlows, kanbanRobots, kanbanChecklists, kanbanChecklistItems,
-  kanbanCardComments, kanbanCardWatchers,
-  kanbanNotifications, kanbanTemplates, kanbanTimeTracks,
-  kanbanTags, kanbanCardTags, kanbanResults, kanbanResultFiles,
-  kanbanObservers, kanbanCoExecutors, kanbanFiles,
-} from './schema-kanban';
-
-export {
   marketingContentPosts, marketingSocialAccounts, marketingSocialPosts,
   marketingEmailTemplates,
 } from './schema-marketing-ext';
@@ -66,12 +58,3 @@ export {
   saasTenants,
 } from './schema-admin-ext';
 
-export {
-  entries, cashFlowTransactions, accountingPeriods, financeCategories,
-  incomeExpenseTransactions, orderCostings, orderCostingLines,
-  financialKPIs, dailyFinancialMetrics, inventoryCounts,
-  // AR/AP/Kassa stubs
-  cashTransactions, warehouseTransactions, customerPayments, invoicePayments,
-  // Financial reports snapshot tables
-  kassaTransactions, omborQoldiq, debitorlar, kreditorlar, balans, ishlabChiqarish,
-} from './schema-finance';
