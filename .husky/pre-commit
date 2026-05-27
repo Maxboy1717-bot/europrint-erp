@@ -5,6 +5,13 @@
 
 pnpm lint-staged || exit 1
 
+# 🛡️ CODEOWNERS local-critical-guard
+# Kritik fayllar (auth, finance, hr commands, DB schema, migrations)
+# faqat owner tomonidan o'zgartirilishi mumkin. Marker:
+#   `# 🛡️ LOCAL-CRITICAL-GUARD` (.github/CODEOWNERS faylida)
+# Bypass: `git commit --no-verify` + PR review.
+node scripts/check-codeowners.mjs || exit 1
+
 # i18n leakage quick-scan. Blocks the commit if any new hardcoded UI string
 # slips into a tracked source file. Fix by wrapping the string in
 # `tLabel('namespace.key', 'Original Text')` or by running the bulk

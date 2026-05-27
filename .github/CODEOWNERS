@@ -22,3 +22,27 @@
 package.json                            @Maxboy1717-bot
 pnpm-lock.yaml                          @Maxboy1717-bot
 tsconfig*.json                          @Maxboy1717-bot
+
+# ============================================================
+# 🛡️ LOCAL-CRITICAL-GUARD
+# ------------------------------------------------------------
+# Quyidagi qatorlar pre-commit hook'i orqali mahalliy mashinada
+# tekshiriladi (scripts/check-codeowners.mjs). Owner emailidan
+# boshqa author ushbu fayllarni o'zgartirsa — kommit bloklanadi.
+#
+# OWNER_EMAIL=muslimbeknosirov1995@gmail.com
+#
+# Bypass: `git commit --no-verify` + PR review majburiy.
+# Marker bo'sh qator bilan tugaydi — qatorlar orasida bo'sh qator
+# qoldirmang, aks holda guard buziladi.
+# ============================================================
+/apps/api/src/modules/auth/                                      @Maxboy1717-bot
+/apps/api/src/database/seeds/admin.seed.ts                        @Maxboy1717-bot
+/apps/api/src/modules/finance/domain/services/                    @Maxboy1717-bot
+/apps/api/src/modules/finance/application/                        @Maxboy1717-bot
+/apps/api/src/modules/hr/application/commands/                    @Maxboy1717-bot
+/apps/api/src/modules/hr/infrastructure/repositories/             @Maxboy1717-bot
+/lib/db/src/schema/                                               @Maxboy1717-bot
+/apps/api/src/shared/db/migrations-drift.ts                       @Maxboy1717-bot
+/migrations/                                                      @Maxboy1717-bot
+

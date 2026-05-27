@@ -23,3 +23,10 @@ if ! grep -qE "$commit_regex" "$1"; then
     echo "$error_msg" >&2
     exit 1
 fi
+
+# 🛡️ Anti-Revert Guard
+# `fix(tests)` kommit so'nggi 7 kun ichida shu fayllarda bo'lgan
+# feat()/refactor() ni qaytarmasligini ta'minlaydi.
+# Sabab: 2026-05-27 kommit 2c20cbf4 aynan shu xatoni qildi.
+# Bypass: `git commit --no-verify` + PR review.
+node scripts/check-revert-via-tests.mjs "$1" || exit 1
