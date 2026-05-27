@@ -7,9 +7,15 @@
  */
 
 import { GlPostingService } from '../../src/modules/finance/domain/services/gl-posting.service';
+import { Ok } from '../../src/common/result';
+import type { IGlPostingRepository } from '../../src/modules/finance/domain/repositories/i-gl-posting.repo';
+
+const mockGlRepo: IGlPostingRepository = {
+  insertEntry: jest.fn().mockResolvedValue(Ok(1)),
+};
 
 describe('GlPostingService', () => {
-  const svc = new GlPostingService();
+  const svc = new GlPostingService(mockGlRepo);
 
   describe('postSalesInvoice()', () => {
     it('balances AR debit against revenue + tax credit', async () => {

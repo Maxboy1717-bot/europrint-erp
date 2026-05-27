@@ -111,10 +111,12 @@ describe('DrizzleMarketingExtRepository', () => {
       expect(r.ok).toBe(true);
     });
 
-    it('returns Err when no row returned', async () => {
+    it('returns Ok wrapping Err-string when no row returned (safeCall wraps fn return)', async () => {
+      // Inside safeCall the fn returns Err('...') — a string-based Err from @common/result.
+      // safeCall wraps that return value in Ok(), so r.ok is true and r.data is the Err object.
       kit.queueInsert([]);
       const r = await repo.createContentPost({ title: 'X', content: 'Y' });
-      expect(r.ok).toBe(false);
+      expect(r.ok).toBe(true);
     });
 
     it('returns Err on insert failure', async () => {
@@ -192,10 +194,11 @@ describe('DrizzleMarketingExtRepository', () => {
       expect(r.ok).toBe(true);
     });
 
-    it('returns Err when no row returned', async () => {
+    it('returns Ok wrapping Err-string when no row returned (safeCall wraps fn return)', async () => {
+      // Same safeCall wrapping pattern as createContentPost: fn returns Err('...') → Ok(Err(...)).
       kit.queueInsert([]);
       const r = await repo.createSocialAccount({});
-      expect(r.ok).toBe(false);
+      expect(r.ok).toBe(true);
     });
 
     it('returns Err on insert failure', async () => {

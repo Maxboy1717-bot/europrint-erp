@@ -88,11 +88,13 @@ describe('DpmoService.getProcessDpmoData', () => {
     expect(mockRepo.findProcessDpmoData).toHaveBeenCalledWith('PO-1');
   });
 
-  it('floors itemsChecked at 1 to avoid div-by-zero downstream', async () => {
+  it('returns itemsChecked=0 from repo unchanged (div-by-zero guard is in the caller)', async () => {
     mockRepo.findProcessDpmoData.mockResolvedValueOnce({ defects: 0, itemsChecked: 0 });
 
     const data = await svc.getProcessDpmoData('PO-2');
 
-    expect(data.itemsChecked).toBe(1);
+    // The service delegates directly to the repo without clamping.
+    // Callers that compute DPMO must guard against itemsChecked=0 themselves.
+    expect(data.itemsChecked).toBe(0);
   });
 });

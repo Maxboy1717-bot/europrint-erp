@@ -13,6 +13,7 @@ import { MmGoodsService } from '../src/modules/mm/application/mm-goods.service';
 import { WmsExtendedService } from '../src/modules/wms/application/wms-extended.service';
 import { WmsCountsService } from '../src/modules/wms/application/wms-counts.service';
 import { WmsCrudService } from '../src/modules/wms/application/wms-crud.service';
+import { MovementsService } from '../src/modules/wms/movements/movements.service';
 import { JwtAuthGuard } from 'shared/guards/jwt-auth.guard';
 import { RolesGuard } from 'shared/guards/roles.guard';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
@@ -32,6 +33,7 @@ describe('MM Vendors and WMS Extended Controllers — Behavioral Integration Tes
   let mockWmsExtSvc: jest.Mocked<Partial<WmsExtendedService>>;
   let mockWmsCountsSvc: jest.Mocked<Partial<WmsCountsService>>;
   let mockWmsCrudSvc: jest.Mocked<Partial<WmsCrudService>>;
+  let mockMovementsSvc: jest.Mocked<Partial<MovementsService>>;
 
   beforeEach(async () => {
     mockVendorsSvc = {
@@ -63,6 +65,7 @@ describe('MM Vendors and WMS Extended Controllers — Behavioral Integration Tes
       createInternalRequest: jest.fn(),
     };
     mockWmsCrudSvc = {};
+    mockMovementsSvc = { findAll: jest.fn().mockResolvedValue({ data: [], total: 0 }) };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MmVendorsPrController, MmGoodsController, WmsExtendedController, WmsCountsController],
@@ -72,6 +75,7 @@ describe('MM Vendors and WMS Extended Controllers — Behavioral Integration Tes
         { provide: WmsExtendedService, useValue: mockWmsExtSvc },
         { provide: WmsCountsService, useValue: mockWmsCountsSvc },
         { provide: WmsCrudService, useValue: mockWmsCrudSvc },
+        { provide: MovementsService, useValue: mockMovementsSvc },
       ],
     })
       .overrideGuard(JwtAuthGuard).useValue(mockGuard)

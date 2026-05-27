@@ -40,7 +40,9 @@ describe('ToolRegistry', () => {
   it('rejects duplicate registration', () => {
     const reg = new ToolRegistry();
     reg.register(mkTool('x'));
-    expect(() => reg.register(mkTool('x'))).toThrow(/duplicate/);
+    const r = reg.register(mkTool('x'));
+    expect(r.ok).toBe(false);
+    expect(!r.ok && r.error.message).toMatch(/duplicate/i);
   });
 
   it('getDefinitions returns one entry per registered tool', () => {

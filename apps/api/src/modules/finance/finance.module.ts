@@ -24,6 +24,8 @@ import { FinancePlanningRepo } from './infrastructure/repositories/drizzle-finan
 import { FinanceCostingRepo } from './infrastructure/repositories/drizzle-finance-costing.repo';
 import { FinanceVarianceRepo } from './infrastructure/repositories/drizzle-finance-variance.repo';
 import { GlPostingService } from './domain/services/gl-posting.service';
+import { GL_POSTING_REPO } from './domain/repositories/i-gl-posting.repo';
+import { DrizzleGlPostingRepository } from './infrastructure/repositories/drizzle-gl-posting.repo';
 import { CheckAdvanceHandler } from './application/commands/check-advance.handler';
 import { RecordPaymentHandler } from './application/commands/record-payment.handler';
 import { StartRentalTimerHandler } from './application/commands/start-rental-timer.handler';
@@ -161,6 +163,7 @@ const eventListeners = [
     FinanceInvoiceRepo, FinanceReportRepo, FinanceBudgetRepo,
     FinanceOpsRepo, FinanceCfoRepo, FinancePlanningRepo, FinanceCostingRepo, FinanceVarianceRepo,
     { provide: FINANCE_REPO, useClass: FinanceRepository },
+    { provide: GL_POSTING_REPO, useClass: DrizzleGlPostingRepository },
     GlPostingService,
     ...commandHandlers, ...queryHandlers, ...eventListeners,
     FpCycleCronRepository,

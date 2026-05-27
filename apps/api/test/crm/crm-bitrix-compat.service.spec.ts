@@ -59,11 +59,10 @@ describe('CrmBitrixCompatService', () => {
     expect(repo.listProposals).toHaveBeenCalledWith(25, 50);
   });
 
-  it('returns NOT_FOUND when getRobot row missing', async () => {
+  it('throws NotFoundException when getRobot row missing', async () => {
     repo.getRobot.mockResolvedValue(Ok(null));
-    const r = await svc.getRobot(99);
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe('NOT_FOUND');
+    // The service throws NotFoundException when the robot row is not found.
+    await expect(svc.getRobot(99)).rejects.toThrow('Robot #99 topilmadi');
   });
 
   it('returns Err when getRobot repo errors', async () => {

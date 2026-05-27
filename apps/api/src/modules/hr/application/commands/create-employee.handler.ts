@@ -56,13 +56,9 @@ export class CreateEmployeeHandler
       `Creating employee ${cmd.firstName} ${cmd.lastName} (actor=${cmd.actorUserId})`,
     );
 
-    type TxOutcome =
-      | { kind: 'ok'; row: CreatedEmployee }
-      | { kind: 'err'; message: string };
-
-    let outcome: TxOutcome;
+    let txRow: CreatedEmployee;
     try {
-      outcome = await db.transaction(async (tx): Promise<TxOutcome> => {
+      txRow = await db.transaction(async (tx): Promise<CreatedEmployee> => {
         // 1) Optional user account — must come first so the FK from
         //    employees.user_id can be set on the employee INSERT.
         let userId: string | null = null;
@@ -79,7 +75,7 @@ export class CreateEmployeeHandler
             .returning({ id: users.id });
           const u = userInsert[0];
           if (!u) {
-            return { kind: 'err' as const, message: 'CreateEmployee: user account INSERT returned no row' };
+            throw new Error('CreateEmployee: user account INSERT returned no row');
           }
           userId = u.id as string;
         }
@@ -106,7 +102,7 @@ export class CreateEmployeeHandler
           .returning();
         const emp = empInsert[0];
         if (!emp) {
-          return { kind: 'err' as const, message: 'CreateEmployee: employee INSERT returned no row' };
+          throw new Error('CreateEmployee: employee INSERT returned no row');
         }
 
         // 3) Inline audit log — records who created the employee and the
@@ -131,14 +127,11 @@ export class CreateEmployeeHandler
         `);
 
         return {
-          kind: 'ok',
-          row: {
-            id:           emp.id,
-            employeeCode: emp.employee_code as string,
-            firstName:    emp.first_name as string,
-            lastName:     emp.last_name as string,
-            userId,
-          },
+          id:           emp.id,
+          employeeCode: emp.employee_code as string,
+          firstName:    emp.first_name as string,
+          lastName:     emp.last_name as string,
+          userId,
         };
       });
     } catch (err) {
@@ -147,9 +140,6 @@ export class CreateEmployeeHandler
       return Err(`Failed to create employee: ${message}`);
     }
 
-    if (outcome.kind === 'err') {
-      return Err(outcome.message);
-    }
-    return Ok(outcome.row);
+    return Ok(txRow);
   }
 }

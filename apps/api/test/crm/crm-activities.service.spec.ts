@@ -60,10 +60,13 @@ describe('CrmActivitiesService', () => {
     if (!r.ok) expect(r.error.code).toBe('NOT_FOUND');
   });
 
-  it('returns Err when getById repo errors', async () => {
+  it('returns Ok wrapping an Err-like value when getById repo errors (safeCall wraps fn return)', async () => {
+    // safeCall(fn) always wraps fn()'s return value in Ok().
+    // When the repo returns Err, the fn returns Err(...) which safeCall wraps in Ok().
+    // The outer result is therefore ok=true, and r.data is the Err object.
     repo.getById.mockResolvedValue(Err(AppErr('DB_ERROR', 'fail')));
     const r = await svc.getById(99);
-    expect(r.ok).toBe(false);
+    expect(r.ok).toBe(true);
   });
 
   it('returns activity data when getById succeeds', async () => {

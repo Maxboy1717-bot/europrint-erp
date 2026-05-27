@@ -180,15 +180,18 @@ describe('PosRequisitionWorkflowService', () => {
         { provide: PosRequestExtRepository,  useValue: requestExtRepo   },
         { provide: EventEmitter2,            useValue: emitter          },
         { provide: PosEmployeeBalanceRepository, useValue: {
-          // Each reserveStock/releaseStock call mirrors what db.execute would do so
-          // existing assertions on mockDbExecute continue to hold.
+          // Each reserveStock/releaseStock call invokes mockDbExecute (so assertions
+          // on mockDbExecute call-count continue to hold) and MUST return { ok: true }
+          // so the helpers' `if (!r.ok) return Err(...)` guard passes.
           reserveStock: jest.fn().mockImplementation(async () => {
             await mockDbExecute({ sql: 'UPDATE pos_employee_balances SET reserved_qty', params: [] });
+            return { ok: true };
           }),
           releaseStock: jest.fn().mockImplementation(async () => {
             await mockDbExecute({ sql: 'UPDATE pos_employee_balances SET reserved_qty', params: [] });
+            return { ok: true };
           }),
-          barcodeExists: jest.fn().mockResolvedValue(false),
+          barcodeExists: jest.fn().mockResolvedValue({ ok: true, data: false }),
         } },
       ],
     }).compile();

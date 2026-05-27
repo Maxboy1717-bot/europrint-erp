@@ -143,19 +143,15 @@ export class HrBaseRepository {
         date_of_birth:   (employee.dateOfBirth ?? employee.date_of_birth ?? null) as string,
       };
 
-      type TxOutcome =
-        | { kind: 'ok'; saved: typeof hrEmployees.$inferSelect }
-        | { kind: 'err'; message: string };
-
-      const outcome: TxOutcome = await db.transaction(async (tx): Promise<TxOutcome> => {
+      const saved = await db.transaction(async (tx): Promise<typeof hrEmployees.$inferSelect> => {
         // 1) Employee row — the primary write.
         const inserted = await tx
           .insert(hrEmployees)
           .values(empPayload as typeof hrEmployees.$inferInsert)
           .returning();
-        const saved = inserted[0];
-        if (!saved) {
-          return { kind: 'err', message: 'saveEmployee: INSERT returned no row' };
+        const row = inserted[0];
+        if (!row) {
+          throw new Error('saveEmployee: INSERT returned no row');
         }
 
         // 2) Inline audit envelope — recorded in the same tx so the audit
@@ -168,20 +164,17 @@ export class HrBaseRepository {
           VALUES (
             gen_random_uuid()::text,
             'employees',
-            ${String((saved as { id: number }).id)},
+            ${String((row as { id: number }).id)},
             'CREATE',
             ${JSON.stringify(empPayload)}::jsonb,
             NOW()
           )
         `);
 
-        return { kind: 'ok', saved };
+        return row;
       });
 
-      if (outcome.kind === 'err') {
-        return Err(outcome.message);
-      }
-      return { ok: true, data: castTo<HrRow>(outcome.saved) };
+      return { ok: true, data: castTo<HrRow>(saved) };
     } catch (error: unknown) {
       // Any throw inside the tx callback bubbles up here with the rollback
       // already complete — no half-state in the DB.

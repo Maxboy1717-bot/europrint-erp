@@ -61,12 +61,15 @@ describe('GetInspectionStatsHandler', () => {
     expect(r.data.fail_rate).toBeGreaterThan(0);
   });
 
-  it('produces pass_rate=1 fail_rate=0 when every inspection is resolved', async () => {
+  it('produces pass_rate=100 fail_rate=0 when every inspection is resolved', async () => {
     setRow({ total_inspections: 5, total_resolved: 5, total_open: 0 });
 
     const r = await handler.execute(new GetInspectionStatsQuery());
 
-    expect(r.data.pass_rate).toBeCloseTo(1, 5);
+    // pass_rate is expressed as a percentage with two decimal places:
+    // Math.round((resolved / total) * PERCENT_BASIS) / 100
+    // where PERCENT_BASIS = 10_000, so 5/5 → 100.00
+    expect(r.data.pass_rate).toBeCloseTo(100, 2);
     expect(r.data.fail_rate).toBe(0);
   });
 

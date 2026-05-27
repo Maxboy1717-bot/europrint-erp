@@ -86,6 +86,20 @@ function makeI18n() {
   } as unknown as import('nestjs-i18n').I18nService;
 }
 
+// Mock ConfigService — provides JWT_REFRESH_SECRET used by buildAuthResult.
+function makeConfig() {
+  return {
+    getOrThrow: jest.fn().mockImplementation((key: string) => {
+      if (key === 'JWT_REFRESH_SECRET') return 'test-refresh-secret';
+      throw new Error(`ConfigService: unknown key "${key}"`);
+    }),
+    get: jest.fn().mockImplementation((key: string) => {
+      if (key === 'JWT_REFRESH_SECRET') return 'test-refresh-secret';
+      return undefined;
+    }),
+  } as unknown as import('@nestjs/config').ConfigService;
+}
+
 describe('LoginService', () => {
   const cmdBase = {
     username: 'alice',
@@ -100,7 +114,7 @@ describe('LoginService', () => {
 
   it('returns UNAUTHORIZED / USER_NOT_FOUND when user does not exist', async () => {
     const repo = makeRepo(null);
-    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeConfig(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -116,7 +130,7 @@ describe('LoginService', () => {
   it('returns UNAUTHORIZED / ACCOUNT_LOCKED for locked accounts', async () => {
     const user = makeFakeUser({ locked: true });
     const repo = makeRepo(user);
-    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeConfig(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -127,7 +141,7 @@ describe('LoginService', () => {
   it('returns UNAUTHORIZED / ACCOUNT_INACTIVE for inactive accounts', async () => {
     const user = makeFakeUser({ active: false });
     const repo = makeRepo(user);
-    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeConfig(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -138,7 +152,7 @@ describe('LoginService', () => {
   it('returns UNAUTHORIZED / INVALID_CREDENTIALS on bad password', async () => {
     const user = makeFakeUser({ passwordOk: false });
     const repo = makeRepo(user);
-    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeConfig(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -152,7 +166,7 @@ describe('LoginService', () => {
     const user = makeFakeUser();
     const repo = makeRepo(user);
     const jwt = makeJwt();
-    const handler = new LoginService(repo as never, makePasswordHasher(), jwt, makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), jwt, makeConfig(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 
@@ -163,19 +177,19 @@ describe('LoginService', () => {
       expect(r.data.user.username).toBe('alice');
       expect(r.data.user.role).toBe('employee');
     }
-    // Access token signed with 8h expiry
+    // Access token signed with 24h expiry (updated from 8h)
     expect(jwt.sign).toHaveBeenCalledTimes(2);
     const firstCall = (jwt.sign as jest.Mock).mock.calls[0];
-    expect(firstCall[1]).toEqual({ expiresIn: '8h' });
-    // Refresh token signed with separate JWT_REFRESH_SECRET
+    expect(firstCall[1]).toEqual({ expiresIn: '24h' });
+    // Refresh token signed with separate JWT_REFRESH_SECRET (updated to 7d)
     const secondCall = (jwt.sign as jest.Mock).mock.calls[1];
-    expect(secondCall[1]).toEqual({ expiresIn: '30d', secret: 'test-refresh-secret' });
+    expect(secondCall[1]).toEqual({ expiresIn: '7d', secret: 'test-refresh-secret' });
   });
 
   it('resets failed-attempt counter and updates last-login on success', async () => {
     const user = makeFakeUser({ failedAttempts: 3 });
     const repo = makeRepo(user);
-    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeConfig(), makeI18n());
 
     await handler.execute(cmdBase);
 
@@ -189,7 +203,7 @@ describe('LoginService', () => {
     (runQuery as jest.Mock).mockRejectedValueOnce(new Error('db gone'));
     const user = makeFakeUser({ passwordOk: false });
     const repo = makeRepo(user);
-    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher(), makeJwt(), makeConfig(), makeI18n());
 
     const r = await handler.execute(cmdBase);
 

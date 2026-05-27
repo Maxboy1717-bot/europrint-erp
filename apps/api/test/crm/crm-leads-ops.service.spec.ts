@@ -51,11 +51,10 @@ describe('CrmLeadsOpsService', () => {
     svc = module.get(CrmLeadsOpsService);
   });
 
-  it('returns NOT_FOUND when updateStage stage missing', async () => {
+  it('throws NotFoundException when updateStage stage missing', async () => {
     repo.findStage.mockResolvedValue(Ok(null));
-    const r = await svc.updateStage(1, 99);
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe('NOT_FOUND');
+    // The service throws NotFoundException when the stage row is not found.
+    await expect(svc.updateStage(1, 99)).rejects.toThrow('Stage #99 topilmadi');
   });
 
   it('inserts activity note when updateStage called with notes', async () => {

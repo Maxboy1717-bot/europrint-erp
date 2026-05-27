@@ -32,6 +32,10 @@ jest.mock('../../../../src/shared/db/invariants/migrations-crm', () => ({
   CRM_MIGRATIONS: [{ name: 'crm_a', sql: 'CREATE TABLE crm_x ...' }],
 }));
 
+jest.mock('../../../../src/shared/db/invariants/migrations-drift', () => ({
+  DRIFT_MIGRATIONS: [],
+}));
+
 import { ensureDbInvariants, ensureSchemaAdditions } from '../../../../src/shared/db/invariants';
 
 describe('ensureDbInvariants', () => {

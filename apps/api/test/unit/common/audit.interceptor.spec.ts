@@ -6,6 +6,16 @@
  * an audit row (with result=error) and that GET requests skip the write.
  */
 
+// Must be before any module imports that transitively load @workspace/db.
+// schema-rbac.ts re-exports positionFeatureFlags from @workspace/db, which
+// requires DATABASE_URL at load time. Mocking it here prevents that side-effect.
+jest.mock('@workspace/db', () => ({
+  positionFeatureFlags: {},
+  posMaterialRequests: {},
+  posMaterialRequestLines: {},
+  db: {},
+}));
+
 const insertValues = jest.fn().mockResolvedValue(undefined);
 const insertMock = jest.fn(() => ({ values: insertValues }));
 

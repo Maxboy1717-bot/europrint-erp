@@ -52,6 +52,28 @@ function makeProduct(id: string, name: string, unitPrice: number, stock: number)
 }
 
 function makeRepoMock(state: PersistenceState): jest.Mocked<CashRegisterRepository> {
+  const makeTx = (data: CreateTransactionInput, cashierId?: string): RetailTransaction => ({
+    id:                 `tx-${state.retail_pos_transactions.length + 1}`,
+    transaction_number: `TXN-TEST-${state.retail_pos_transactions.length + 1}`,
+    receipt_number:     `REC-TEST-${state.retail_pos_transactions.length + 1}`,
+    cashier_id:         cashierId ?? data.cashierId ?? null,
+    customer_name:      data.customerName ?? null,
+    customer_id:        data.customerId ?? null,
+    items:              data.items,
+    subtotal:           String(data.subtotal),
+    discount_amount:    String(data.discountAmount ?? 0),
+    tax_rate:           String(data.taxRate ?? 12),
+    tax_amount:         String(data.taxAmount ?? 0),
+    total_amount:       String(data.totalAmount),
+    payment_method:     data.paymentMethod,
+    payment_details:    data.paymentDetails ?? {},
+    status:             'completed',
+    notes:              data.notes ?? null,
+    refunded_at:        null,
+    refunded_by:        null,
+    created_at:         new Date('2026-05-17T12:00:00Z'),
+  } as RetailTransaction);
+
   const mock: Partial<jest.Mocked<CashRegisterRepository>> = {
     findProductById: jest.fn(async (id: string) => Ok(state.products.get(id) ?? null)),
     findProductByBarcode: jest.fn(),
@@ -67,28 +89,24 @@ function makeRepoMock(state: PersistenceState): jest.Mocked<CashRegisterReposito
       return Ok(undefined as unknown as void);
     }),
     insertTransaction: jest.fn(async (data: CreateTransactionInput, cashierId?: string) => {
-      const tx: RetailTransaction = {
-        id:                 `tx-${state.retail_pos_transactions.length + 1}`,
-        transaction_number: `TXN-TEST-${state.retail_pos_transactions.length + 1}`,
-        receipt_number:     `REC-TEST-${state.retail_pos_transactions.length + 1}`,
-        cashier_id:         cashierId ?? data.cashierId ?? null,
-        customer_name:      data.customerName ?? null,
-        customer_id:        data.customerId ?? null,
-        items:              data.items,
-        subtotal:           String(data.subtotal),
-        discount_amount:    String(data.discountAmount ?? 0),
-        tax_rate:           String(data.taxRate ?? 12),
-        tax_amount:         String(data.taxAmount ?? 0),
-        total_amount:       String(data.totalAmount),
-        payment_method:     data.paymentMethod,
-        payment_details:    data.paymentDetails ?? {},
-        status:             'completed',
-        notes:              data.notes ?? null,
-        refunded_at:        null,
-        refunded_by:        null,
-        created_at:         new Date('2026-05-17T12:00:00Z'),
-      } as RetailTransaction;
+      const tx = makeTx(data, cashierId);
       state.retail_pos_transactions.push(tx);
+      return Ok(tx);
+    }),
+    // POS-1: CashRegisterService.createTransaction now uses insertTransactionAtomic
+    // for atomic insert + stock decrement. The mock replicates the same persistence
+    // behaviour as insertTransaction so existing assertions continue to hold.
+    insertTransactionAtomic: jest.fn(async (
+      data: CreateTransactionInput,
+      items: { productId: string; quantity: number }[],
+      cashierId?: string,
+    ) => {
+      const tx = makeTx(data, cashierId);
+      state.retail_pos_transactions.push(tx);
+      // Mirror the decrementStock side-effect so state.decrementCalls assertions pass.
+      for (const item of items) {
+        state.decrementCalls.push({ productId: item.productId, quantity: item.quantity });
+      }
       return Ok(tx);
     }),
   };
@@ -147,9 +165,10 @@ describe('A.2 (P0): POST /pos/sales persists to retail_pos_transactions', () => 
 
     const result = await controller.createSale(body, { id: 7, role: 'cashier' } as never);
 
-    // Assert persistence side-effect — the row exists in retail_pos_transactions
+    // Assert persistence side-effect — the row exists in retail_pos_transactions.
+    // CashRegisterService uses insertTransactionAtomic (POS-1: atomic insert + stock).
     expect(state.retail_pos_transactions).toHaveLength(1);
-    expect(repo.insertTransaction).toHaveBeenCalledTimes(1);
+    expect(repo.insertTransactionAtomic).toHaveBeenCalledTimes(1);
 
     const persisted = state.retail_pos_transactions[0];
     expect(persisted.customer_name).toBe('Test Customer');

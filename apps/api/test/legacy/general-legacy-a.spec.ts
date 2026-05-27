@@ -8,7 +8,6 @@ import { GeneralLegacyAController } from '../../src/modules/legacy/controllers/g
 import { LegacyService } from '../../src/modules/legacy/services/legacy.service';
 import { JwtAuthGuard } from '../../src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../src/common/guards/roles.guard';
-import { InternalServerErrorException } from '@nestjs/common';
 
 const ok = <T>(data: T) => ({ ok: true as const, data });
 const err = (code = 'DB_ERROR', message = 'fail') => ({ ok: false as const, error: { code, message } });
@@ -40,12 +39,14 @@ describe('GeneralLegacyAController', () => {
 
   it('getFaceEmbeddings returns service data', async () => {
     (svc.getFaceEmbeddings as jest.Mock).mockResolvedValue(ok([{ id: 'f1' }]));
-    expect(await ctrl.getFaceEmbeddings()).toEqual([{ id: 'f1' }]);
+    expect(await ctrl.getFaceEmbeddings()).toEqual(ok([{ id: 'f1' }]));
   });
 
-  it('getFaceEmbeddings throws 500 on error', async () => {
-    (svc.getFaceEmbeddings as jest.Mock).mockResolvedValue(err());
-    await expect(ctrl.getFaceEmbeddings()).rejects.toThrow(InternalServerErrorException);
+  it('getFaceEmbeddings returns err result on error', async () => {
+    const errResult = err();
+    (svc.getFaceEmbeddings as jest.Mock).mockResolvedValue(errResult);
+    const result = await ctrl.getFaceEmbeddings();
+    expect((result as typeof errResult).ok).toBe(false);
   });
 
   it('deleteFaceEmbedding returns id payload', async () => {
@@ -55,7 +56,7 @@ describe('GeneralLegacyAController', () => {
 
   it('getAttendance returns service data', async () => {
     (svc.getAttendance as jest.Mock).mockResolvedValue(ok([{ id: 'a1' }]));
-    expect(await ctrl.getAttendance({})).toEqual([{ id: 'a1' }]);
+    expect(await ctrl.getAttendance({})).toEqual(ok([{ id: 'a1' }]));
   });
 
   it('getMyAttendance forwards employee id', async () => {

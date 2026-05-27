@@ -37,35 +37,40 @@ describe('DrizzleRecruitmentAssessmentRepository', () => {
     it('returns the first inserted row when array', async () => {
       kit.queueInsert([{ id: 1, score: 85 }]);
       const r = await repo.insertToolTest({ candidateId: 1 } as never);
-      expect(r).toEqual({ id: 1, score: 85 });
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.data).toEqual({ id: 1, score: 85 });
     });
 
-    it('returns undefined when array is empty', async () => {
+    it('returns Ok with undefined when array is empty', async () => {
       kit.queueInsert([]);
       const r = await repo.insertToolTest({ candidateId: 1 } as never);
-      expect(r).toBeUndefined();
+      expect(r.ok).toBe(true);
     });
 
-    it('throws when insert rejects', async () => {
+    it('returns Err when insert rejects', async () => {
       kit.queueInsert(new Error('locked'));
-      await expect(repo.insertToolTest({ candidateId: 1 } as never)).rejects.toThrow(/locked/);
+      const r = await repo.insertToolTest({ candidateId: 1 } as never);
+      expect(r.ok).toBe(false);
     });
   });
 
   describe('updateFunnelProductivityCategory', () => {
     it('completes without error on success', async () => {
       kit.queueUpdate([{ id: 1 }]);
-      await expect(repo.updateFunnelProductivityCategory(1, 'A')).resolves.toBeUndefined();
+      const r = await repo.updateFunnelProductivityCategory(1, 'A');
+      expect(r.ok).toBe(true);
     });
 
     it('completes silently when no row matched', async () => {
       kit.queueUpdate([]);
-      await expect(repo.updateFunnelProductivityCategory(1, 'B')).resolves.toBeUndefined();
+      const r = await repo.updateFunnelProductivityCategory(1, 'B');
+      expect(r.ok).toBe(true);
     });
 
-    it('throws when update rejects', async () => {
+    it('returns Err when update rejects', async () => {
       kit.queueUpdate(new Error('locked'));
-      await expect(repo.updateFunnelProductivityCategory(1, 'A')).rejects.toThrow(/locked/);
+      const r = await repo.updateFunnelProductivityCategory(1, 'A');
+      expect(r.ok).toBe(false);
     });
   });
 
@@ -73,34 +78,41 @@ describe('DrizzleRecruitmentAssessmentRepository', () => {
     it('returns the tool test when found', async () => {
       kit.queueSelect([{ id: 5 }]);
       const r = await repo.findToolTestById(5);
-      expect(r).toEqual({ id: 5 });
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.data).toEqual({ id: 5 });
     });
 
-    it('throws NotFoundException when missing', async () => {
+    it('returns Err when missing', async () => {
       kit.queueSelect([]);
-      await expect(repo.findToolTestById(99)).rejects.toThrow(/topilmadi/);
+      const r = await repo.findToolTestById(99);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.message).toMatch(/topilmadi/);
     });
 
-    it('throws when select rejects', async () => {
+    it('returns Err when select rejects', async () => {
       kit.queueSelect(new Error('x'));
-      await expect(repo.findToolTestById(1)).rejects.toThrow();
+      const r = await repo.findToolTestById(1);
+      expect(r.ok).toBe(false);
     });
   });
 
   describe('updateToolTestMatchScore', () => {
     it('completes without error on success', async () => {
       kit.queueUpdate([{ id: 1 }]);
-      await expect(repo.updateToolTestMatchScore(1, 75, 'note')).resolves.toBeUndefined();
+      const r = await repo.updateToolTestMatchScore(1, 75, 'note');
+      expect(r.ok).toBe(true);
     });
 
     it('completes silently when no row', async () => {
       kit.queueUpdate([]);
-      await expect(repo.updateToolTestMatchScore(99, 50, 'x')).resolves.toBeUndefined();
+      const r = await repo.updateToolTestMatchScore(99, 50, 'x');
+      expect(r.ok).toBe(true);
     });
 
-    it('throws when update fails', async () => {
+    it('returns Err when update fails', async () => {
       kit.queueUpdate(new Error('boom'));
-      await expect(repo.updateToolTestMatchScore(1, 75, 'note')).rejects.toThrow();
+      const r = await repo.updateToolTestMatchScore(1, 75, 'note');
+      expect(r.ok).toBe(false);
     });
   });
 
@@ -108,18 +120,21 @@ describe('DrizzleRecruitmentAssessmentRepository', () => {
     it('returns rows when present', async () => {
       kit.queueSelect([{ id: 1 }, { id: 2 }]);
       const r = await repo.findToolTestsByCandidate(7);
-      expect(r).toHaveLength(2);
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.data).toHaveLength(2);
     });
 
-    it('returns empty when none', async () => {
+    it('returns empty array when none', async () => {
       kit.queueSelect([]);
       const r = await repo.findToolTestsByCandidate(99);
-      expect(r).toEqual([]);
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.data).toEqual([]);
     });
 
-    it('throws when query fails', async () => {
+    it('returns Err when query fails', async () => {
       kit.queueSelect(new Error('x'));
-      await expect(repo.findToolTestsByCandidate(1)).rejects.toThrow();
+      const r = await repo.findToolTestsByCandidate(1);
+      expect(r.ok).toBe(false);
     });
   });
 
@@ -127,17 +142,21 @@ describe('DrizzleRecruitmentAssessmentRepository', () => {
     it('returns candidate when found', async () => {
       kit.queueSelect([{ id: 7 }]);
       const r = await repo.findCandidateById(7);
-      expect(r).toEqual({ id: 7 });
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.data).toEqual({ id: 7 });
     });
 
-    it('throws NotFoundException when missing', async () => {
+    it('returns Err when missing', async () => {
       kit.queueSelect([]);
-      await expect(repo.findCandidateById(99)).rejects.toThrow(/topilmadi/);
+      const r = await repo.findCandidateById(99);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.message).toMatch(/topilmadi/);
     });
 
-    it('throws when db rejects', async () => {
+    it('returns Err when db rejects', async () => {
       kit.queueSelect(new Error('x'));
-      await expect(repo.findCandidateById(1)).rejects.toThrow();
+      const r = await repo.findCandidateById(1);
+      expect(r.ok).toBe(false);
     });
   });
 
@@ -145,18 +164,20 @@ describe('DrizzleRecruitmentAssessmentRepository', () => {
     it('returns the inserted job offer', async () => {
       kit.queueInsert([{ id: 1, status: 'DRAFT' }]);
       const r = await repo.insertJobOffer({ candidateId: 7 } as never, 1);
-      expect(r).toEqual({ id: 1, status: 'DRAFT' });
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.data).toEqual({ id: 1, status: 'DRAFT' });
     });
 
-    it('returns undefined when no row returned', async () => {
+    it('returns Ok with undefined when no row returned', async () => {
       kit.queueInsert([]);
       const r = await repo.insertJobOffer({ candidateId: 7 } as never, 1);
-      expect(r).toBeUndefined();
+      expect(r.ok).toBe(true);
     });
 
-    it('throws when insert rejects', async () => {
+    it('returns Err when insert rejects', async () => {
       kit.queueInsert(new Error('dup'));
-      await expect(repo.insertJobOffer({ candidateId: 7 } as never, 1)).rejects.toThrow();
+      const r = await repo.insertJobOffer({ candidateId: 7 } as never, 1);
+      expect(r.ok).toBe(false);
     });
   });
 
@@ -164,34 +185,41 @@ describe('DrizzleRecruitmentAssessmentRepository', () => {
     it('returns offer when present', async () => {
       kit.queueSelect([{ id: 1 }]);
       const r = await repo.findJobOfferById(1);
-      expect(r).toEqual({ id: 1 });
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.data).toEqual({ id: 1 });
     });
 
-    it('throws NotFoundException when missing', async () => {
+    it('returns Err when missing', async () => {
       kit.queueSelect([]);
-      await expect(repo.findJobOfferById(99)).rejects.toThrow(/topilmadi/);
+      const r = await repo.findJobOfferById(99);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.message).toMatch(/topilmadi/);
     });
 
-    it('throws when query rejects', async () => {
+    it('returns Err when query rejects', async () => {
       kit.queueSelect(new Error('x'));
-      await expect(repo.findJobOfferById(1)).rejects.toThrow();
+      const r = await repo.findJobOfferById(1);
+      expect(r.ok).toBe(false);
     });
   });
 
   describe('markFunnelAsHired', () => {
     it('completes without error on success', async () => {
       kit.queueUpdate([{ id: 1 }]);
-      await expect(repo.markFunnelAsHired(1)).resolves.toBeUndefined();
+      const r = await repo.markFunnelAsHired(1);
+      expect(r.ok).toBe(true);
     });
 
     it('completes silently when no row matched', async () => {
       kit.queueUpdate([]);
-      await expect(repo.markFunnelAsHired(99)).resolves.toBeUndefined();
+      const r = await repo.markFunnelAsHired(99);
+      expect(r.ok).toBe(true);
     });
 
-    it('throws when update rejects', async () => {
+    it('returns Err when update rejects', async () => {
       kit.queueUpdate(new Error('locked'));
-      await expect(repo.markFunnelAsHired(1)).rejects.toThrow();
+      const r = await repo.markFunnelAsHired(1);
+      expect(r.ok).toBe(false);
     });
   });
 });

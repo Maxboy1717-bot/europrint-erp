@@ -77,6 +77,20 @@ function makePasswordHasher() {
   };
 }
 
+// Mock ConfigService — provides JWT_REFRESH_SECRET used by buildAuthResult.
+function makeConfig() {
+  return {
+    getOrThrow: jest.fn().mockImplementation((key: string) => {
+      if (key === 'JWT_REFRESH_SECRET') return 'test-refresh-secret';
+      throw new Error(`ConfigService: unknown key "${key}"`);
+    }),
+    get: jest.fn().mockImplementation((key: string) => {
+      if (key === 'JWT_REFRESH_SECRET') return 'test-refresh-secret';
+      return undefined;
+    }),
+  } as unknown as import('@nestjs/config').ConfigService;
+}
+
 // Map AuthErrorCode → the i18n key that LoginService now resolves to.
 // Keeps the existing parametric test table small and readable.
 const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
@@ -107,7 +121,7 @@ const ROLES = ['admin', 'super_admin', 'hr', 'cfo', 'sales_manager', 'operator',
 describe('LoginService — every role can log in successfully', () => {
   it.each(ROLES)('role=%s', async (role) => {
     const user = makeUser({ role });
-    const handler = new LoginService(makeRepo(user) as never, makePasswordHasher() as never, makeJwt(), makeI18n());
+    const handler = new LoginService(makeRepo(user) as never, makePasswordHasher() as never, makeJwt(), makeConfig(), makeI18n());
     const r = await handler.execute({ username: 'u', password: 'p', ipAddress: '127.0.0.1', userAgent: 'jest' });
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.data.user.role).toBe(role);
@@ -123,7 +137,7 @@ describe('LoginService — failure scenarios', () => {
   ];
 
   it.each(cases)('%s', async (_, user, expectedMsg) => {
-    const handler = new LoginService(makeRepo(user) as never, makePasswordHasher() as never, makeJwt(), makeI18n());
+    const handler = new LoginService(makeRepo(user) as never, makePasswordHasher() as never, makeJwt(), makeConfig(), makeI18n());
     const r = await handler.execute({ username: 'u', password: 'p', ipAddress: '127.0.0.1', userAgent: 'j' });
     expect(r.ok).toBe(false);
     // After i18n migration, the message is an i18n key (mock returns the key
@@ -144,37 +158,37 @@ describe('LoginService — token issuance details', () => {
     ['with hyphen', 'first-last'],
   ])('issues tokens for username "%s"', async (_, username) => {
     const user = makeUser({ username });
-    const handler = new LoginService(makeRepo(user) as never, makePasswordHasher() as never, makeJwt(), makeI18n());
+    const handler = new LoginService(makeRepo(user) as never, makePasswordHasher() as never, makeJwt(), makeConfig(), makeI18n());
     const r = await handler.execute({ username, password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(r.ok).toBe(true);
   });
 
-  it('access token expires in 8h', async () => {
+  it('access token expires in 24h', async () => {
     const jwt = makeJwt();
-    const handler = new LoginService(makeRepo(makeUser()) as never, makePasswordHasher() as never, jwt, makeI18n());
+    const handler = new LoginService(makeRepo(makeUser()) as never, makePasswordHasher() as never, jwt, makeConfig(), makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
-    expect((jwt.sign as jest.Mock).mock.calls[0][1]).toEqual({ expiresIn: '8h' });
+    expect((jwt.sign as jest.Mock).mock.calls[0][1]).toEqual({ expiresIn: '24h' });
   });
 
-  it('refresh token expires in 30d with separate secret', async () => {
+  it('refresh token expires in 7d with separate secret', async () => {
     const jwt = makeJwt();
-    const handler = new LoginService(makeRepo(makeUser()) as never, makePasswordHasher() as never, jwt, makeI18n());
+    const handler = new LoginService(makeRepo(makeUser()) as never, makePasswordHasher() as never, jwt, makeConfig(), makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     const refreshCall = (jwt.sign as jest.Mock).mock.calls[1][1];
-    expect(refreshCall.expiresIn).toBe('30d');
+    expect(refreshCall.expiresIn).toBe('7d');
     expect(refreshCall.secret).toBe('test-refresh-secret');
   });
 
   it('failed-attempt counter is incremented in repo on bad password', async () => {
     const repo = makeRepo(makeUser({ passwordOk: false }));
-    const handler = new LoginService(repo as never, makePasswordHasher() as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher() as never, makeJwt(), makeConfig(), makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(repo.incrementFailedAttempts).toHaveBeenCalledWith(1);
   });
 
   it('counter resets and last-login updates on success', async () => {
     const repo = makeRepo(makeUser({ failedAttempts: 4 }));
-    const handler = new LoginService(repo as never, makePasswordHasher() as never, makeJwt(), makeI18n());
+    const handler = new LoginService(repo as never, makePasswordHasher() as never, makeJwt(), makeConfig(), makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(repo.resetFailedAttempts).toHaveBeenCalled();
     expect(repo.updateLastLogin).toHaveBeenCalled();
@@ -183,7 +197,7 @@ describe('LoginService — token issuance details', () => {
   it('audit log failure does not break login flow', async () => {
     const { runQuery } = await import('@shared/db');
     (runQuery as jest.Mock).mockRejectedValueOnce(new Error('db'));
-    const handler = new LoginService(makeRepo(makeUser()) as never, makePasswordHasher() as never, makeJwt(), makeI18n());
+    const handler = new LoginService(makeRepo(makeUser()) as never, makePasswordHasher() as never, makeJwt(), makeConfig(), makeI18n());
     const r = await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
     expect(r.ok).toBe(true);
   });

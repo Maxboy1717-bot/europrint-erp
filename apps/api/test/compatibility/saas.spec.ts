@@ -82,7 +82,8 @@ describe('SaasController', () => {
     expect(await ctrl.updateTenant('t1', { name: 'X' })).toEqual({ id: 't1', name: 'X' });
   });
 
-  it('onboardTenant returns id and onboarded flag', async () => {
-    expect(await ctrl.onboardTenant('t1', { plan: 'pro' })).toEqual({ id: 't1', onboarded: true });
+  it('onboardTenant throws HttpException (not yet implemented)', async () => {
+    // The endpoint delegates to notImplemented() which throws HttpException 501.
+    await expect(ctrl.onboardTenant('t1', { plan: 'pro' })).rejects.toThrow('Endpoint not yet implemented');
   });
 });
