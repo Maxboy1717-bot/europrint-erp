@@ -254,23 +254,8 @@ export class HrDashboardController {
 
   // ── New endpoints (HR Dashboard missing) ──────────────────────────────────
 
-  /** Risk scores: employees ranked by discipline warnings + block status */
-  @Get('risk-scores')
-  async getRiskScores() {
-    return unwrapOrInternal(await this.svc.getRiskScores());
-  }
-
-  /** Safety KPI summary: incidents this month, PPE compliance %, expiring trainings */
-  @Get('safety/summary')
-  async getSafetySummary() {
-    return unwrapOrInternal(await this.svc.getSafetySummary());
-  }
-
-  /** Recent safety incidents list */
-  @Get('safety/incidents')
-  async getSafetyIncidents(@Query('limit') limit?: string) {
-    return unwrapOrInternal(await this.svc.getSafetyIncidents(limit ? Math.min(parseInt(limit, 10) || 20, 100) : 20));
-  }
+  // NOTE: risk-scores, safety/summary, safety/incidents are served by
+  // HrDashboardExtraController — duplicate declarations removed (boot collision).
 
   /** Blocked employees from employee_blocks table */
   @Get('discipline/blocked')
@@ -278,17 +263,11 @@ export class HrDashboardController {
     return unwrapOrInternal(await this.svc.getDisciplineBlocked());
   }
 
-  /** Resignation reason breakdown from exit_interviews (last 12 months) */
-  @Get('resignation-stats')
-  async getResignationStats() {
-    return unwrapOrInternal(await this.svc.getResignationStats());
-  }
+  // NOTE: `GET /api/hr/resignation-stats` is served by HrDashboardExtraController
+  // (which also exposes the `resignation-stats/:lang` variant). The duplicate
+  // declaration here collided at boot ("Method 'GET' already declared") — removed.
 
-  /** Contracts expiring within N days (default 30) */
-  @Get('contracts/expiring')
-  async getContractsExpiring(@Query('days') days?: string) {
-    return unwrapOrInternal(await this.svc.getContractsExpiring(Math.min(parseInt(days ?? '30', 10) || 30, 365)));
-  }
+  // NOTE: contracts/expiring served by HrDashboardExtraController (dup removed).
 
   /** Attendance summary from daily_attendance_summary (last N days, default 30) */
   @Get('attendance')
@@ -302,9 +281,5 @@ export class HrDashboardController {
     return unwrapOrInternal(await this.svc.getGamificationLeaderboard(period ?? 'monthly'));
   }
 
-  /** Offboarding aggregate stats */
-  @Get('offboarding/cases/stats')
-  async getOffboardingStats() {
-    return unwrapOrInternal(await this.svc.getOffboardingStats());
-  }
+  // NOTE: offboarding/cases/stats served by HrDashboardExtraController (dup removed).
 }
