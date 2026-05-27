@@ -12,7 +12,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { MentorshipsCompatService } from './mentorships-compat.service';
 import { CompatBodyDto } from './dto/compat-body.dto';
-import { unwrapOrInternal } from '@common/http-result';
+import { unwrapOrDefault, unwrapOrInternal } from '@common/http-result';
 import {
   MentorAclTranslator,
   type LegacyMentorRow,
@@ -37,7 +37,7 @@ export class MentorshipsCompatController {
     @Query('mentorId') mentorId?: string,
     @Query('status') status?: string,
   ) {
-    return unwrapOrInternal(await this.svc.getMentorships(mentorId, status));
+    return unwrapOrDefault(await this.svc.getMentorships(mentorId, status), []);
   }
 
   /**

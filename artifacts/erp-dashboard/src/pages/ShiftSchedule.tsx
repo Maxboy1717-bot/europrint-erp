@@ -67,7 +67,7 @@ export default function ShiftSchedule() {
   );
 
   const scheduleKey = useMemo(
-    () => ["/api/hr/shifts/schedule", weekStart, selectedDeptId],
+    () => ["/api/hr-v2/shifts/schedule", weekStart, selectedDeptId],
     [weekStart, selectedDeptId]
   );
 
@@ -76,14 +76,14 @@ export default function ShiftSchedule() {
     queryFn: () => {
       const params = new URLSearchParams({ week_start: weekStart });
       if (selectedDeptId !== "all") params.set("department_id", selectedDeptId);
-      return apiRequest("GET", `/api/hr/shifts/schedule?${params}`);
+      return apiRequest("GET", `/api/hr-v2/shifts/schedule?${params}`);
     },
   });
   const schedules = (Array.isArray(schedulesRaw) ? schedulesRaw : []) as ShiftScheduleEntry[];
 
   const { data: swapRequests = [], isLoading: swapLoading, refetch: refetchSwaps } = useQuery<ShiftSwapRequest[]>({
-    queryKey: ["/api/hr/shifts/swap-requests"],
-    queryFn: () => apiRequest("GET", "/api/hr/shifts/swap-requests"),
+    queryKey: ["/api/hr-v2/shifts/swap-requests"],
+    queryFn: () => apiRequest("GET", "/api/hr-v2/shifts/swap-requests"),
   });
 
   const { data: todayShifts = [] } = useQuery<ShiftScheduleEntry[]>({
@@ -93,9 +93,9 @@ export default function ShiftSchedule() {
 
   const assignMutation = useMutation({
     mutationFn: (data: { user_id: string; shift_date: string; shift_type: ShiftType }) =>
-      apiRequest("POST", "/api/hr/shifts/schedule", data),
+      apiRequest("POST", "/api/hr-v2/shifts", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hr/shifts/schedule"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr-v2/shifts/schedule"] });
       queryClient.invalidateQueries({ queryKey: ["/api/hr/shifts/today"] });
       toast({ title: "Smena tayinlandi" });
       setAssignDialog(null);
@@ -104,9 +104,9 @@ export default function ShiftSchedule() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("DELETE", `/api/hr/shifts/${id}`),
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/hr-v2/shifts/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hr/shifts/schedule"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr-v2/shifts/schedule"] });
       queryClient.invalidateQueries({ queryKey: ["/api/hr/shifts/today"] });
       toast({ title: "Smena o'chirildi" });
     },
@@ -115,9 +115,9 @@ export default function ShiftSchedule() {
 
   const swapMutation = useMutation({
     mutationFn: (data: { from_employee_id?: string; to_employee_id?: string; shift_date: string; reason: string }) =>
-      apiRequest("POST", "/api/hr/shifts/swap-request", data),
+      apiRequest("POST", "/api/hr-v2/shifts/swap-request", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hr/shifts/swap-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr-v2/shifts/swap-requests"] });
       toast({ title: "Almashish so'rovi yuborildi" });
       setSwapDialog(null);
       setSwapToUserId("");
@@ -128,9 +128,9 @@ export default function ShiftSchedule() {
 
   const approveMutation = useMutation({
     mutationFn: ({ id, action }: { id: number; action: "approve" | "reject" }) =>
-      apiRequest("PATCH", `/api/hr/shifts/swap-request/${id}/approve`, { action }),
+      apiRequest("PATCH", `/api/hr-v2/shifts/${id}/approve-swap`, { action }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hr/shifts/swap-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr-v2/shifts/swap-requests"] });
       toast({ title: "So'rov yangilandi" });
     },
     onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),

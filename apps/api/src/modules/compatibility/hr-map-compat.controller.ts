@@ -35,9 +35,12 @@ export class HrMapCompatController {
   @Get('employees')
   async getMapEmployees(
     @Query('departmentId') departmentId?: string,
+    @Query('orgDepartmentId') orgDepartmentId?: string,
     @Query('status') status?: string,
   ) {
-    return unwrapOrInternal(await this.svc.getMapEmployees(departmentId, status));
+    // Accept both 'departmentId' and 'orgDepartmentId' query params (FE uses orgDepartmentId)
+    const deptId = departmentId ?? orgDepartmentId;
+    return unwrapOrDefault(await this.svc.getMapEmployees(deptId, status), []);
   }
 
   /**
@@ -87,9 +90,10 @@ export class HrMapCompatController {
 
   @Get('stats')
   async getMapStats() {
-    const r = await this.svc.getMapStats();
-    return unwrapOrDefault(r, { totalEmployees: 0, activeEmployees: 0, totalDepartments: 0, byDepartment: [] });
-    return r.data;
+    return unwrapOrDefault(
+      await this.svc.getMapStats(),
+      { totalEmployees: 0, activeEmployees: 0, totalDepartments: 0, byDepartment: [] },
+    );
   }
 
   @Get('zones')
