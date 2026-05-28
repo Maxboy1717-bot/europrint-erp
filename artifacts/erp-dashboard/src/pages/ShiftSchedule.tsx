@@ -23,7 +23,7 @@ import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 
 export default function ShiftSchedule() {
   const { t } = useTranslation("common");
-  const { t: tCommon } = useTranslation("common");
+  const { t: tHr } = useTranslation("hr");
   const { user: authUser } = useAuth();
   const { toast } = useToast();
 
@@ -46,9 +46,13 @@ export default function ShiftSchedule() {
 
   const isHR = ["admin", "super_admin", "hr_manager", "manager", "director"].includes(authUser?.role ?? "");
 
-  const { data: rawEmployees = [], isLoading: empLoading, isError, error: empError, refetch: refetchEmps } = useQuery<Employee[]>({
-    queryKey: ["/api/users"],
+  const { data: rawData, isLoading: empLoading, isError, error: empError, refetch: refetchEmps } = useQuery({
+    queryKey: ["/api/hr/employees"],
+    queryFn: () => apiRequest("GET", "/api/hr/employees"),
   });
+  const rawEmployees: Employee[] = Array.isArray(rawData)
+    ? (rawData as Employee[])
+    : ((rawData as Record<string, Employee[]>)?.items ?? []);
 
   const { data: departments = [] } = useQuery<Department[]>({
     queryKey: ["/api/departments"],
@@ -186,8 +190,8 @@ export default function ShiftSchedule() {
         <div className="flex items-center gap-3">
           <Calendar className="h-8 w-8 text-primary" />
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{tCommon("shiftScheduleTitle")}</b></>}
-        title={tCommon("shiftScheduleTitle")}
+        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{tHr("shiftScheduleTitle")}</b></>}
+        title={tHr("shiftScheduleTitle")}
       />
         </div>
         <Button variant="outline" size="sm" onClick={() => { refetchSchedules(); refetchSwaps(); }} data-testid="button-refresh">
@@ -199,28 +203,28 @@ export default function ShiftSchedule() {
         <div className="bg-card rounded-lg p-4 flex items-center gap-3">
           <Users className="h-7 w-7 text-[var(--ep-blue)] shrink-0" />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tCommon("totalEmployeesLabel")}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tHr("totalEmployeesLabel")}</p>
             <p className="text-3xl font-bold text-foreground" data-testid="text-today-total">{todayShifts.length}</p>
           </div>
         </div>
         <div className="bg-card rounded-lg p-4 flex items-center gap-3">
           <Sun className="h-7 w-7 text-[var(--ep-yellow)] shrink-0" />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tCommon("morningShiftLabel")}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tHr("morningShiftLabel")}</p>
             <p className="text-3xl font-bold text-foreground" data-testid="text-morning-count">{morningCount}</p>
           </div>
         </div>
         <div className="bg-card rounded-lg p-4 flex items-center gap-3">
           <Sunrise className="h-7 w-7 text-[var(--ep-primary)] shrink-0" />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tCommon("eveningShiftLabel")}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tHr("eveningShiftLabel")}</p>
             <p className="text-3xl font-bold text-foreground" data-testid="text-evening-count">{eveningCount}</p>
           </div>
         </div>
         <div className="bg-card rounded-lg p-4 flex items-center gap-3">
           <Moon className="h-7 w-7 text-[var(--ep-blue)] shrink-0" />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tCommon("nightShiftLabel")}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tHr("nightShiftLabel")}</p>
             <p className="text-3xl font-bold text-foreground" data-testid="text-night-count">{nightCount}</p>
           </div>
         </div>
