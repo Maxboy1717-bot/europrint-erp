@@ -47,14 +47,25 @@ export default function HROnboarding() {
   });
 
   const { data: roadmapsRaw } = useQuery({ queryKey: ["/api/hr/recruitment/roadmaps"] });
-  const roadmaps: OnboardingRoadmap[] = Array.isArray((roadmapsRaw as { data?: OnboardingRoadmap[] })?.data)
-    ? ((roadmapsRaw as { data: OnboardingRoadmap[] }).data)
-    : [];
+  // P1.17.1: BE returns { items, total }; also handle { data } for backward compat
+  const roadmaps: OnboardingRoadmap[] = (() => {
+    const d = roadmapsRaw as Record<string, unknown> | null;
+    if (!d) return [];
+    if (Array.isArray(d)) return d as OnboardingRoadmap[];
+    if (Array.isArray(d['items'])) return d['items'] as OnboardingRoadmap[];
+    if (Array.isArray(d['data']))  return d['data']  as OnboardingRoadmap[];
+    return [];
+  })();
 
   const { data: employeesRaw } = useQuery({ queryKey: ["/api/hr/employees"] });
-  const employees: Employee[] = Array.isArray(employeesRaw)
-    ? employeesRaw
-    : ((employeesRaw as { data?: Employee[] })?.data || []);
+  const employees: Employee[] = (() => {
+    const d = employeesRaw as Record<string, unknown> | null;
+    if (!d) return [];
+    if (Array.isArray(d)) return d as Employee[];
+    if (Array.isArray(d['items'])) return d['items'] as Employee[];
+    if (Array.isArray(d['data']))  return d['data']  as Employee[];
+    return [];
+  })();
 
   const ninetyDaysAgo = new Date();
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
