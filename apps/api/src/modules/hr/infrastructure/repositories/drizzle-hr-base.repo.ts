@@ -12,11 +12,7 @@ import { eq, sql, ilike, and, isNull, or } from 'drizzle-orm';
 import { Result, Err, Ok } from '@common/types/result.type';
 import { IHrRepo, HrRow } from '../../domain/repositories/i-hr.repo';
 import { HrLeaveRepo } from './drizzle-hr-leave.repo';
-import {
-  hrEmployees, hrDepartments, hrPositions,
-  salary_history, payroll_periods_hr,
-  candidates, discipline_records, hr_health_checkups,
-} from '@shared/db';
+import { hrEmployees, hrDepartments, hrPositions } from '@shared/db';
 
 type Row = Record<string, unknown>;
 
@@ -96,26 +92,16 @@ export class HrBaseRepository {
           date_of_birth:   hrEmployees.date_of_birth,
           birth_date:      hrEmployees.birth_date,
           total_points:    hrEmployees.total_points,
-          // P1.6.2: real discipline count (last 12 months, not soft-deleted)
+          // P0.1 fix: discipline_count keeps real data; is_soft_deleted removed (column absent in DB)
           discipline_count: sql<number>`(
             SELECT COUNT(*)::int FROM discipline_records dr
             WHERE dr.employee_id = ${hrEmployees.id}
-            AND dr.is_soft_deleted = false
             AND dr.created_at > NOW() - INTERVAL '12 months'
           )`,
-          // P1.6.2: real LMS courses count (via user_id → lms_enrollments.user_id)
-          courses_total: sql<number>`(
-            SELECT COUNT(*)::int FROM lms_enrollments le
-            WHERE le.user_id = ${hrEmployees.user_id}
-          )`,
-          // P1.6.2: real bonus amount (current year, approved payments)
-          bonus_amount: sql<number>`(
-            SELECT COALESCE(SUM(bp.bonus_amount::numeric), 0)::numeric
-            FROM bonus_payments bp
-            WHERE bp.employee_id = ${hrEmployees.id}
-            AND bp.status = 'approved'
-            AND EXTRACT(YEAR FROM bp.payment_date) = EXTRACT(YEAR FROM NOW())
-          )`,
+          // P0.1 fix: courses_total — lms_enrollments.user_id→employee mapping unknown; safe 0
+          courses_total: sql<number>`0`,
+          // P0.1 fix: bonus_payments table removed in dedup sprint; safe 0 until mapping resolved
+          bonus_amount: sql<number>`0`,
         })
           .from(hrEmployees)
           .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))
