@@ -157,7 +157,17 @@ export class HrCompatARepository implements IHrCompatARepo {
       }, 'DB_ERROR');
   }
 
-  async createHealthCheckup(departmentId: unknown, departmentName: unknown, totalEmployees: unknown, examinedCount: unknown, lastCheckupDate: unknown, nextCheckupDate: unknown): Promise<Result<Row>> {
+  async createHealthCheckup(
+    departmentId: unknown,
+    departmentName: unknown,
+    totalEmployees: unknown,
+    examinedCount: unknown,
+    lastCheckupDate: unknown,
+    nextCheckupDate: unknown,
+    checkupType?: unknown,
+    notes?: unknown,
+    status?: unknown,
+  ): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(hr_health_checkups).values({
         department_id:     (departmentId ?? null) as number,
@@ -166,7 +176,10 @@ export class HrCompatARepository implements IHrCompatARepo {
         examined_count:    (examinedCount ?? 0) as number,
         last_checkup_date: (lastCheckupDate ?? null) as string,
         next_checkup_date: (nextCheckupDate ?? null) as string,
-        status:            'scheduled',
+        status:            ((status as string) ?? 'scheduled'),
+        // P1.21.2: FE dialog fields
+        checkup_type:      (checkupType ?? null) as string | null,
+        notes:             (notes ?? null) as string | null,
       }).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');

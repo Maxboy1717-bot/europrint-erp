@@ -132,7 +132,7 @@ export class HrCompatAController {
   }
 
   @Post('health-checkups')
-  // P1.21.1/P1.21.2: accept camelCase from FE; department_id optional (null when not provided)
+  // P1.21.1/P1.21.2: accept camelCase from FE; all FE fields mapped; department_id optional
   async createHealthCheckup(@Body() body: unknown) {
     const HealthCheckupFlexSchema = z.object({
       department_id:      z.number().int().positive().optional(),
@@ -147,6 +147,11 @@ export class HrCompatAController {
       checkupDate:        z.string().optional(),
       next_checkup_date:  z.string().optional(),
       nextCheckupDate:    z.string().optional(),
+      // FE fields from HRHealthMonitoring dialog
+      checkupType:        z.string().optional(),
+      checkType:          z.string().optional(),
+      notes:              z.string().optional(),
+      status:             z.string().optional(),
     }).passthrough();
     const dto = HealthCheckupFlexSchema.parse(body ?? {});
     const deptId       = dto.department_id ?? (dto.departmentId ? Number(dto.departmentId) : null);
@@ -155,7 +160,13 @@ export class HrCompatAController {
     const examined     = dto.examined_count  ?? (dto.examinedCount  != null ? Number(dto.examinedCount)  : 0);
     const lastDate     = dto.last_checkup_date ?? dto.checkupDate ?? null;
     const nextDate     = dto.next_checkup_date ?? dto.nextCheckupDate ?? null;
-    return unwrapOrThrow(await this.svc.createHealthCheckup(deptId, deptName, totalEmp, examined, lastDate, nextDate));
+    // P1.21.2: pass FE dialog fields through
+    const checkupType  = dto.checkupType ?? dto.checkType ?? null;
+    const notes        = dto.notes ?? null;
+    const status       = dto.status ?? null;
+    return unwrapOrThrow(await this.svc.createHealthCheckup(
+      deptId, deptName, totalEmp, examined, lastDate, nextDate, checkupType, notes, status,
+    ));
   }
 
   @Get('hrc-tests/sessions')

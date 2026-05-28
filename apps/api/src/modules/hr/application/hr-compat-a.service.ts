@@ -55,8 +55,16 @@ export class HrCompatAService {
     });
   }
 
-  async createHealthCheckup(departmentId: unknown, departmentName: unknown, totalEmployees: unknown, examinedCount: unknown, lastCheckupDate: unknown, nextCheckupDate: unknown) {
-    return this.repo.createHealthCheckup(departmentId, departmentName, totalEmployees, examinedCount, lastCheckupDate, nextCheckupDate);
+  async createHealthCheckup(
+    departmentId: unknown, departmentName: unknown,
+    totalEmployees: unknown, examinedCount: unknown,
+    lastCheckupDate: unknown, nextCheckupDate: unknown,
+    checkupType?: unknown, notes?: unknown, status?: unknown,
+  ) {
+    return this.repo.createHealthCheckup(
+      departmentId, departmentName, totalEmployees, examinedCount,
+      lastCheckupDate, nextCheckupDate, checkupType, notes, status,
+    );
   }
 
   async getHrcTestSessions() {

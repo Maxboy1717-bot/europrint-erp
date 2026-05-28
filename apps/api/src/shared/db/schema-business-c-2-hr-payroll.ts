@@ -79,6 +79,9 @@ export const hr_health_checkups = pgTable('hr_health_checkups', {
   last_checkup_date: date('last_checkup_date'),
   next_checkup_date: date('next_checkup_date'),
   status:            text('status').default('pending'),
+  // P1.21.2: FE dialog sends checkupType and notes — added to schema
+  checkup_type:      text('checkup_type'),
+  notes:             text('notes'),
   updated_at:        timestamp('updated_at').defaultNow(),
 });
 

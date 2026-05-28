@@ -51,6 +51,9 @@ export interface IHrCompatARepo {
     examinedCount: unknown,
     lastCheckupDate: unknown,
     nextCheckupDate: unknown,
+    checkupType?: unknown,
+    notes?: unknown,
+    status?: unknown,
   ): Promise<Result<Row>>;
   getHrcTestSessions(): Promise<Result<Row[]>>;
   getHrcTestQuestions(category?: string): Promise<Result<Row[]>>;
