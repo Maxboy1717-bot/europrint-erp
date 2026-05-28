@@ -92,7 +92,24 @@ export class IntegrationExtendedHrController {
       periodYear ? parseInt(periodYear, 10) : undefined,
       periodMonth ? parseInt(periodMonth, 10) : undefined,
     );
-    return r.ok ? r.data : [];
+    // P1.13.1: wrap in { ratings, total } + map snake_case DB cols → camelCase FE fields
+    const rows = (r.ok && Array.isArray(r.data) ? r.data : []) as Record<string, unknown>[];
+    const ratings = rows.map((row) => ({
+      id:               row['id'],
+      productivityScore: Number(row['performance_rating'] ?? row['productivity_score']  ?? 0),
+      disciplineScore:   Number(row['behavior_rating']    ?? row['discipline_score']    ?? 0),
+      qualityScore:      Number(row['quality_score']      ?? row['performance_rating']  ?? 0),
+      skillsScore:       Number(row['skills_rating']      ?? row['skills_score']        ?? 0),
+      compositeScore:    Number(row['overall_rating']     ?? row['composite_score']     ?? 0),
+      trend:             String(row['trend'] ?? 'stable'),
+      ratingYear:        row['rating_year']  ?? row['period_year'],
+      ratingMonth:       row['rating_month'] ?? row['period_month'],
+      status:            row['status'],
+      employee: row['employee_name']
+        ? { fullName: String(row['employee_name']) }
+        : null,
+    }));
+    return { ratings, total: ratings.length };
   }
 
   @ApiOperation({ summary: 'Get employee rating goals' })
@@ -101,7 +118,17 @@ export class IntegrationExtendedHrController {
   @Roles(...HR_ROLES)
   async getEmployeeRatingGoals() {
     const r = await this.repo.findEmployeeRatingGoals();
-    return r.ok ? r.data : [];
+    // P1.13.1: map snake_case goal fields → camelCase FE fields
+    const rows = (r.ok && Array.isArray(r.data) ? r.data : []) as Record<string, unknown>[];
+    return rows.map((g) => ({
+      id:           g['id'],
+      title:        g['title']          ?? g['goal_title'],
+      currentValue: Number(g['current_value'] ?? g['current_progress'] ?? 0),
+      targetValue:  Number(g['target_value']  ?? g['target']           ?? 0),
+      unit:         String(g['unit']    ?? ''),
+      status:       String(g['status']  ?? 'active'),
+      employee:     g['employee_name'] ? { fullName: String(g['employee_name']) } : null,
+    }));
   }
 
   @ApiOperation({ summary: 'Get employee rating stats' })
@@ -110,7 +137,15 @@ export class IntegrationExtendedHrController {
   @Roles(...HR_ROLES)
   async getEmployeeRatingStats() {
     const r = await this.repo.getEmployeeRatingStats();
-    return r.ok ? r.data : {};
+    // P1.13.1: map to FE's { avgScores: { avgComposite, avgProductivity, totalRated } }
+    const raw = (r.ok && r.data ? r.data as Record<string, unknown> : {});
+    return {
+      avgScores: {
+        avgComposite:    Number(raw['average_score']    ?? raw['avg_composite']    ?? 0),
+        avgProductivity: Number(raw['average_score']    ?? raw['avg_productivity'] ?? 0),
+        totalRated:      Number(raw['total_ratings']    ?? raw['total_rated']      ?? 0),
+      },
+    };
   }
 
   @ApiOperation({ summary: 'Get vendor performance' })
