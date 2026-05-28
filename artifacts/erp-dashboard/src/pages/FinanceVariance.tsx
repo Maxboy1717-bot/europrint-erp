@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, CheckCircle, TrendingUp, Search } from "lucide-react";
+import { AlertTriangle, CheckCircle, TrendingUp, Search, Download } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
@@ -100,6 +100,19 @@ export default function FinanceVariance() {
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("variance.title")}</b></>}
         title={t("variance.title")}
         subtitle={t("variance.subtitle")}
+        actions={
+          data ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => window.open(`/api/finance/variance/export?orderId=${searchId}`, "_blank")}
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          ) : undefined
+        }
       />
 
       <Card>
