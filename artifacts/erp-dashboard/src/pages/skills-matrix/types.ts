@@ -50,6 +50,22 @@ export const employeeSkillFormSchema = z.object({
 
 export type EmployeeSkillFormValues = z.infer<typeof employeeSkillFormSchema>;
 
+// P1.14.2: FE uses 1-5 numeric levels; BE stores string enum values
+export const LEVEL_MAP: Record<number, string> = {
+  1: 'beginner',
+  2: 'basic',
+  3: 'intermediate',
+  4: 'advanced',
+  5: 'expert',
+};
+
+/** Convert numeric level (1-5) → DB string enum */
+export const levelToString = (n: number): string => LEVEL_MAP[n] ?? 'beginner';
+
+/** Convert DB string enum → numeric level (1-5) */
+export const levelToNumber = (s: string): number =>
+  Number(Object.entries(LEVEL_MAP).find(([, v]) => v === s)?.[0] ?? 1);
+
 export function getLevelBadge(level: number) {
   const levels = [
     { label: tLabel('common..boshlangich', "Boshlang'ich"), variant: "secondary" as const },
