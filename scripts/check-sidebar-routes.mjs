@@ -2,22 +2,35 @@
 /**
  * check-sidebar-routes.mjs — Guard 3: Sidebar URL ↔ AppRouter Route Mapping
  *
- * Reads all sidebar menuGroups URLs from constants-groups-a/b.ts and verifies
- * that each non-separator, non-empty URL has a corresponding <Route path=...>
- * in the FE route files (*Routes.tsx, AppRouter.tsx).
+ * Verifies that every clickable sidebar URL resolves to a registered route,
+ * so the guard models what the app ACTUALLY renders rather than a stale
+ * hand-maintained file list.
  *
- * INFORMATIONAL ONLY — does NOT block commits.
- * Some sidebar items intentionally point to stub/coming-soon pages that have
- * no real route yet. This guard surfaces gaps for developer awareness.
+ * HOW IT MIRRORS THE RUNNING APP (no more silent false positives):
+ *  - Sidebar source: the canonical inline `menuGroups` in
+ *    `components/sidebar/constants.ts`. That is the ONLY menuGroups consumed by
+ *    the real sidebar components (ModuleTabs.tsx / MobileSidebar.tsx via
+ *    getTranslatedMenuGroups). The per-domain `constants-*.ts` and
+ *    `constants-groups-a/b.ts` exports are an abandoned refactor — unused — so
+ *    reading them produced phantom gaps. We read constants.ts only.
+ *  - Route source: every `*.tsx` under `src/routes/` is globbed (no stale
+ *    hardcoded list). This auto-includes CRMRoutes / DirectorRoutes / StubRoutes
+ *    and auto-drops files that no longer exist.
+ *  - Matching: reproduces AppRouter's own `isKnownPath` — a path is known when
+ *    it equals "/", matches a module-route tuple pattern (`:param`→`[^/]+`,
+ *    `:rest*`→`.*`), or exactly equals a REDIRECT_PATHS / redirect-alias entry.
+ *
+ * INFORMATIONAL ONLY — does NOT block commits. A remaining "unrouted" line is a
+ * genuine sidebar link with no route (a real gap), not a scanner artifact.
  *
  * Usage:
  *   node scripts/check-sidebar-routes.mjs            # summary output
  *   node scripts/check-sidebar-routes.mjs --verbose  # show all mismatches
  *   node scripts/check-sidebar-routes.mjs --all      # show all URLs checked
  *
- * Session 9 — EuroPrint ERP governance.
+ * Session 9 — EuroPrint ERP governance. Rewritten Session 17 (false-positive fix).
  */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -25,103 +38,110 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const verbose = process.argv.includes('--verbose');
 const showAll = process.argv.includes('--all');
 
-// ---------------------------------------------------------------------------
-// 1. Extract sidebar URLs from constants-groups-a/b.ts
-// ---------------------------------------------------------------------------
-const CONSTANTS_FILES = [
-  'artifacts/erp-dashboard/src/components/sidebar/constants-groups-a.ts',
-  'artifacts/erp-dashboard/src/components/sidebar/constants-groups-b.ts',
-];
+const FE = 'artifacts/erp-dashboard/src';
+const SIDEBAR_CONSTANTS = `${FE}/components/sidebar/constants.ts`;
+const ROUTES_DIR = `${FE}/routes`;
+// Shell files register a few top-level routes outside the *Routes.tsx tuples
+// (e.g. App.tsx handles "/pos-monitor" via location.startsWith). Scan their
+// bare "/path" string literals too so those are not reported as gaps.
+const SHELL_FILES = [`${FE}/App.tsx`, `${ROUTES_DIR}/AppRouter.tsx`];
 
-// Match:  url: "some/path"  or  url: 'some/path'
-// Also ignore separators (url: "" or url: '', separator: true)
+/** Strip query string and hash, then normalise to a single leading slash. */
+function normalizePath(raw) {
+  let p = raw.trim();
+  if (!p) return '';
+  p = p.split('?')[0].split('#')[0];
+  if (!p) return '';
+  return p.startsWith('/') ? p : '/' + p;
+}
+
+// ---------------------------------------------------------------------------
+// 1. Sidebar URLs — canonical inline menuGroups in constants.ts
+// ---------------------------------------------------------------------------
+// Match `url: "some/path"` / `url: 'some/path'`. Separators use `url: ""` and
+// are skipped (empty after normalise). Only menuGroups items carry a `url:`
+// key, so scanning the whole file is safe (colour/permission maps use bg:/text:).
 const URL_VALUE_RE = /\burl:\s*["'`]([^"'`]+)["'`]/g;
 
 const sidebarUrls = new Set();
-
-for (const relPath of CONSTANTS_FILES) {
-  const abs = join(root, relPath);
-  if (!existsSync(abs)) {
-    console.warn(`[check-sidebar-routes] WARN: constants file not found: ${relPath}`);
-    continue;
-  }
-  const src = readFileSync(abs, 'utf8');
+const sidebarAbs = join(root, SIDEBAR_CONSTANTS);
+if (!existsSync(sidebarAbs)) {
+  console.error(`[check-sidebar-routes] ERROR: canonical sidebar source not found: ${SIDEBAR_CONSTANTS}`);
+  process.exit(0);
+}
+{
+  const src = readFileSync(sidebarAbs, 'utf8');
   let m;
-  URL_VALUE_RE.lastIndex = 0;
   while ((m = URL_VALUE_RE.exec(src)) !== null) {
-    const url = m[1].trim();
-    if (url) sidebarUrls.add(url);
+    const url = normalizePath(m[1]);
+    if (url && !/^https?:\/\//i.test(m[1])) sidebarUrls.add(url);
   }
-  URL_VALUE_RE.lastIndex = 0;
 }
 
 // ---------------------------------------------------------------------------
-// 2. Extract declared routes from all *Routes.tsx + AppRouter.tsx
+// 2. Registered routes — every *.tsx under src/routes/ (no stale list)
 // ---------------------------------------------------------------------------
-const ROUTE_FILES = [
-  'artifacts/erp-dashboard/src/routes/AppRouter.tsx',
-  'artifacts/erp-dashboard/src/routes/HRRoutes.tsx',
-  'artifacts/erp-dashboard/src/routes/FinanceRoutes.tsx',
-  'artifacts/erp-dashboard/src/routes/SalesRoutes.tsx',
-  'artifacts/erp-dashboard/src/routes/WarehouseRoutes.tsx',
-  'artifacts/erp-dashboard/src/routes/ProductionRoutes.tsx',
-  'artifacts/erp-dashboard/src/routes/AdminRoutes.tsx',
-  'artifacts/erp-dashboard/src/routes/AnalyticsRoutes.tsx',
-  'artifacts/erp-dashboard/src/routes/DesignRoutes.tsx',
-  'artifacts/erp-dashboard/src/routes/CameraRoutes.tsx',
-  'artifacts/erp-dashboard/src/routes/TechRoutes.tsx',
-  'artifacts/erp-dashboard/src/routes/PosRoutes.tsx',
-  'artifacts/erp-dashboard/src/routes/LmsRoutes.tsx',
-];
-
-// Pattern 1: ['/path', Component]  — tuple route arrays
+// Pattern 1: ['/path', Component]  — tuple route arrays (the *Routes.tsx files)
 const TUPLE_ROUTE_RE = /\[\s*['"`](\/[^'"`]+)['"`]\s*,/g;
-// Pattern 2: path="/path"  — JSX Route props
+// Pattern 2: path="/path"  — JSX Route props (AppRouter home/redirect aliases)
 const JSX_ROUTE_RE = /\bpath=["'`](\/[^"'`]+)["'`]/g;
+// Pattern 3: bare '/path' string literals — REDIRECT_PATHS array entries in
+// AppRouter (and redirect `to=` targets, which are themselves real routes).
+const STRING_PATH_RE = /["'`](\/[A-Za-z0-9][^"'`\s]*)["'`]/g;
 
-const routePaths = new Set();
+const routePatterns = new Set(['/']); // home is always known
 
-for (const relPath of ROUTE_FILES) {
+const routesDirAbs = join(root, ROUTES_DIR);
+const routeFiles = existsSync(routesDirAbs)
+  ? readdirSync(routesDirAbs).filter((f) => f.endsWith('.tsx')).map((f) => join(ROUTES_DIR, f))
+  : [];
+// Dedupe so AppRouter.tsx (in both lists) is scanned once.
+const scanFiles = [...new Set([...routeFiles, ...SHELL_FILES])];
+
+for (const relPath of scanFiles) {
   const abs = join(root, relPath);
   if (!existsSync(abs)) continue;
   const src = readFileSync(abs, 'utf8');
+  // Shell files (App.tsx, AppRouter.tsx) carry REDIRECT_PATHS / startsWith
+  // route literals; data route files only carry tuples + JSX path props.
+  const isShell = SHELL_FILES.some((s) => relPath.endsWith(s.split('/').pop()));
 
   let m;
   TUPLE_ROUTE_RE.lastIndex = 0;
-  while ((m = TUPLE_ROUTE_RE.exec(src)) !== null) {
-    routePaths.add(m[1]);
-  }
+  while ((m = TUPLE_ROUTE_RE.exec(src)) !== null) routePatterns.add(normalizePath(m[1]));
   JSX_ROUTE_RE.lastIndex = 0;
-  while ((m = JSX_ROUTE_RE.exec(src)) !== null) {
-    routePaths.add(m[1]);
+  while ((m = JSX_ROUTE_RE.exec(src)) !== null) routePatterns.add(normalizePath(m[1]));
+  if (isShell) {
+    STRING_PATH_RE.lastIndex = 0;
+    while ((m = STRING_PATH_RE.exec(src)) !== null) routePatterns.add(normalizePath(m[1]));
   }
 }
 
 // ---------------------------------------------------------------------------
-// 3. Compare
+// 3. Match — reproduce AppRouter.pathMatches (`:param`→[^/]+, `:rest*`→.*)
 // ---------------------------------------------------------------------------
+function pathMatches(pattern, loc) {
+  if (pattern === loc) return true;
+  if (!pattern.includes(':')) return false; // no dynamic segment → exact only
+  try {
+    const regStr = '^' + pattern.replace(/:[^/]+\*/g, '.*').replace(/:[^/]+/g, '[^/]+') + '$';
+    return new RegExp(regStr).test(loc);
+  } catch {
+    return false;
+  }
+}
+
+const patternList = [...routePatterns];
+function isKnownPath(loc) {
+  return patternList.some((p) => pathMatches(p, loc));
+}
+
 const matched = [];
 const unmatched = [];
-
 for (const url of sidebarUrls) {
-  // Sidebar URLs are relative (no leading /); routes have leading /
-  const routePath = '/' + url;
-  // Exact match or prefix match for dynamic segments e.g. /employees/:id
-  const found =
-    routePaths.has(routePath) ||
-    // Accept if any route starts with the same path (e.g. /org-structure/hierarchy/node/:id)
-    [...routePaths].some((r) => {
-      // Strip dynamic segments for comparison: /foo/:id → /foo
-      const base = r.replace(/\/:[^/]+/g, '');
-      return base === routePath || r === routePath;
-    });
-
-  if (found) {
-    matched.push(url);
-  } else {
-    unmatched.push(url);
-  }
+  (isKnownPath(url) ? matched : unmatched).push(url);
 }
+unmatched.sort();
 
 // ---------------------------------------------------------------------------
 // 4. Output
@@ -129,8 +149,7 @@ for (const url of sidebarUrls) {
 if (showAll) {
   console.log('\nAll sidebar URLs checked:');
   for (const u of [...sidebarUrls].sort()) {
-    const icon = matched.includes(u) ? '✅' : '⚠️ ';
-    console.log(`  ${icon} ${u}`);
+    console.log(`  ${matched.includes(u) ? '✅' : '⚠️ '} ${u}`);
   }
   console.log();
 }
@@ -138,19 +157,16 @@ if (showAll) {
 if (unmatched.length > 0 && (verbose || showAll)) {
   console.warn('⚠️  Sidebar ↔ Route mapping gaps (informational):');
   for (const u of unmatched) {
-    console.warn(`  WARN: sidebar URL "${u}" has no matching route in route files`);
-    console.warn(`        (may be a stub/coming-soon page — that is OK)`);
+    console.warn(`  WARN: sidebar URL "${u}" has no matching route (real gap or intentional stub)`);
   }
   console.warn();
 }
 
 const total = sidebarUrls.size;
-const matchedCount = matched.length;
-const unmatchedCount = unmatched.length;
-
 console.log(
-  `✅ Sidebar routes: ${matchedCount}/${total} URLs matched` +
-  (unmatchedCount > 0 ? ` — ${unmatchedCount} unrouted (run --verbose for detail)` : ''),
+  `✅ Sidebar routes: ${matched.length}/${total} URLs matched` +
+  (unmatched.length > 0 ? ` — ${unmatched.length} unrouted (run --verbose for detail)` : '') +
+  ` [${patternList.length} route patterns from ${scanFiles.length} files]`,
 );
 
 // Guard 3 is informational — always exit 0
