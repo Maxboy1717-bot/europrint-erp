@@ -16,14 +16,19 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { db } from '@shared/db';
+import { Result, Ok, Err } from '@common/result';
 
 @Injectable()
 export class CcDocumentNumberService {
   /** Berilgan shablon uchun keyingi yagona hujjat raqamini yaratadi (atomic) */
-  async generate(templateId: string, format: string): Promise<string> {
-    const parts = this.buildDateParts();
-    const seq = await this.nextSequence(templateId, parts.year);
-    return this.applyFormat(format, parts, seq);
+  async generate(templateId: string, format: string): Promise<Result<string>> {
+    try {
+      const parts = this.buildDateParts();
+      const seq = await this.nextSequence(templateId, parts.year);
+      return Ok(this.applyFormat(format, parts, seq));
+    } catch (e) {
+      return Err(`Document number generation failed: ${String(e)}`);
+    }
   }
 
   private buildDateParts(): { yyyy: string; yy: string; mm: string; dd: string; year: number } {

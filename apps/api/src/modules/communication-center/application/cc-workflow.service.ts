@@ -13,6 +13,7 @@ import { CcOrgResolverService } from './cc-org-resolver.service';
 import { CcPinService } from './cc-pin.service';
 import { CcDocumentNumberService } from './cc-document-number.service';
 import { unwrapOrThrow } from '@common/http-result';
+import { isOk } from '@common/result';
 import { db } from '@shared/db';
 import {
   executeApproveTransaction, findMyPendingApproval, requireDocInProgress,
@@ -49,7 +50,9 @@ export class CcWorkflowService {
     if (!tmpl) throw new NotFoundException(await this.i18n.t('errors.templateNotFound'));
     if (!tmpl.isActive) throw new BadRequestException(await this.i18n.t('errors.templateInactive'));
 
-    const documentNumber = await this.numbers.generate(tmpl.id, tmpl.numberFormat);
+    const docNumR = await this.numbers.generate(tmpl.id, tmpl.numberFormat);
+    if (!isOk(docNumR)) throw new BadRequestException(docNumR.error.message);
+    const documentNumber = docNumR.data;
 
     const created = unwrapOrThrow(await this.docs.createDraft({
       templateId:      tmpl.id,

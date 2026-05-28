@@ -66,7 +66,12 @@ export class CcEventListener implements IEventHandler<CcSpawnRequestedEvent> {
       }
 
       // 2) Draft yaratamiz (AI'siz, to'g'ridan-to'g'ri body bilan)
-      const documentNumber = await this.numbers.generate(tmpl.id, tmpl.number_format);
+      const docNumR = await this.numbers.generate(tmpl.id, tmpl.number_format);
+      if (!isOk(docNumR)) {
+        this.logger.error(`cc.spawn: hujjat raqami xatosi — ${docNumR.error.message}`);
+        return;
+      }
+      const documentNumber = docNumR.data;
       const draftR = await this.docs.createDraft({
         templateId:      tmpl.id,
         templateVersion: tmpl.version,

@@ -234,7 +234,7 @@ export default function Discipline() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredViolations.map((v) => (
+                  (Array.isArray(filteredViolations) ? filteredViolations : []).map((v) => (
                     <TableRow key={v.id}>
                       <TableCell className="font-medium">{v.full_name}</TableCell>
                       <TableCell>{v.department}</TableCell>
@@ -283,7 +283,7 @@ export default function Discipline() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredBlocked.map((b) => (
+                  (Array.isArray(filteredBlocked) ? filteredBlocked : []).map((b) => (
                     <TableRow key={b.employee_id}>
                       <TableCell className="font-medium">{b.full_name}</TableCell>
                       <TableCell>{b.department}</TableCell>

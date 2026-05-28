@@ -227,7 +227,9 @@ export class CcAiInterviewService {
     subject: string,
     body: string,
   ): Promise<string> {
-    const documentNumber = await this.numbers.generate(tmpl.id, tmpl.numberFormat);
+    const docNumR = await this.numbers.generate(tmpl.id, tmpl.numberFormat);
+    if (!isOk(docNumR)) throw new InternalServerErrorException(`Hujjat raqami xatosi: ${docNumR.error.message}`);
+    const documentNumber = docNumR.data;
     const draftRes = await this.docs.createDraft({
       templateId:      tmpl.id,
       templateVersion: tmpl.version,
