@@ -4,16 +4,12 @@
  */
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -21,26 +17,14 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  TrendingUp, Plus, Search, CheckCircle2, Clock, XCircle, Star, LayoutGrid, List,
+  TrendingUp, Plus, Search, Star, LayoutGrid, List,
 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { EPStatusPill } from "@/components/ep";
+import { type CareerPlan } from "./HRCareerPathTypes";
+import { NewPlanDialog } from "./HRCareerPathDialogs";
 
-interface CareerPlan {
-  id: string;
-  employee_name?: string;
-  target_position_title?: string;
-  current_position_title?: string;
-  status?: string;
-  target_date?: string;
-  progress_percent?: number;
-  mentor_name?: string;
-  notes?: string;
-}
-
-const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const CAREER_STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   active:    { label: "Faol",           variant: "secondary"   },
   completed: { label: "Bajarilgan",     variant: "default"     },
   on_hold:   { label: "To'xtatilgan",   variant: "outline"     },
@@ -49,7 +33,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 
 function PlanCard({ plan }: { plan: CareerPlan }) {
   const { t } = useTranslation("common");
-  const st = STATUS_MAP[plan.status || "active"] || STATUS_MAP.active;
+  const st = CAREER_STATUS_MAP[plan.status || "active"] || CAREER_STATUS_MAP.active;
   const pct = plan.progress_percent ?? 0;
   const daysLeft = plan.target_date
     ? Math.ceil((new Date(plan.target_date).getTime() - Date.now()) / 86400000)
@@ -100,83 +84,6 @@ function PlanCard({ plan }: { plan: CareerPlan }) {
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function NewPlanDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useTranslation("common");
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [form, setForm] = useState({
-    employeeName: "", currentPosition: "", targetPosition: "", targetDate: "", mentorName: "", notes: "",
-  });
-
-  const create = useMutation({
-    mutationFn: () =>
-      apiRequest("POST", "/api/succession/career-plans", {
-        employee_name: form.employeeName,
-        current_position_title: form.currentPosition,
-        target_position_title: form.targetPosition,
-        target_date: form.targetDate || null,
-        mentor_name: form.mentorName || null,
-        notes: form.notes || null,
-        status: "active",
-        progress_percent: 0,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/succession/career-plans"] });
-      toast({ title: "Yangi kasbiy reja yaratildi" });
-      setForm({ employeeName: "", currentPosition: "", targetPosition: "", targetDate: "", mentorName: "", notes: "" });
-      onClose();
-    },
-    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
-  });
-
-  const f = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md p-6">
-        <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("yangiKasbiyRivojlanishRejasi")}</DialogTitle></DialogHeader>
-        <div className="space-y-3 py-1">
-          <div>
-            <Label>{t("xodimIsmi1")}</Label>
-            <Input value={form.employeeName} onChange={e => f("employeeName", e.target.value)} placeholder={t("toliqIsmi")} className="mt-1" />
-          </div>
-          <div>
-            <Label>{t("joriyLavozim")}</Label>
-            <Input value={form.currentPosition} onChange={e => f("currentPosition", e.target.value)} placeholder={t("hozirgiLavozim")} className="mt-1" />
-          </div>
-          <div>
-            <Label>{t("maqsadLavozim")}</Label>
-            <Input value={form.targetPosition} onChange={e => f("targetPosition", e.target.value)} placeholder={t("erishmochiBolganLavozim")} className="mt-1" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <Label>{t("muddat")}</Label>
-              <Input type="date" value={form.targetDate} onChange={e => f("targetDate", e.target.value)} className="mt-1" />
-            </div>
-            <div>
-              <Label>{t("mentor")}</Label>
-              <Input value={form.mentorName} onChange={e => f("mentorName", e.target.value)} placeholder={t("mentorIsmi")} className="mt-1" />
-            </div>
-          </div>
-          <div>
-            <Label>{t("Izoh")}</Label>
-            <Input value={form.notes} onChange={e => f("notes", e.target.value)} placeholder={t("qoshimchaMalumot1")} className="mt-1" />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
-          <Button
-            onClick={() => create.mutate()}
-            disabled={!form.employeeName || !form.targetPosition || create.isPending}
-          >
-            {create.isPending ? "Saqlanmoqda..." : "Saqlash"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -324,7 +231,7 @@ export default function HRCareerPath() {
                 </TableHeader>
                 <TableBody>
                   {(Array.isArray(filtered) ? filtered : []).map(plan => {
-                    const st = STATUS_MAP[plan.status || "active"] || STATUS_MAP.active;
+                    const st = CAREER_STATUS_MAP[plan.status || "active"] || CAREER_STATUS_MAP.active;
                     const pct = plan.progress_percent ?? 0;
                     return (
                       <TableRow key={plan.id} data-testid={`row-career-plan-${plan.id}`} className="hover:bg-muted/40 transition-colors">
