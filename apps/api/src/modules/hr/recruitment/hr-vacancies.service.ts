@@ -73,6 +73,15 @@ export class HrVacanciesService {
     return this.repo.findRoadmapByPipeline(pipelineId);
   }
 
+  // P1.17.2: persist roadmap JSON to DB
+  createRoadmap(pipelineId: number, roadmapData: unknown, userId: string): Promise<Result<Row>> {
+    const json = typeof roadmapData === 'string' ? roadmapData : JSON.stringify(roadmapData ?? {});
+    return this.repo.createRoadmapEntry(pipelineId, json, userId);
+  }
+  findLatestRoadmapData(pipelineId: number): Promise<Result<Row | null>> {
+    return this.repo.findLatestRoadmapData(pipelineId);
+  }
+
   findProbationJournal(pipelineId: number): Promise<Result<Row[]>> {
     return this.repo.findProbationJournal(pipelineId);
   }

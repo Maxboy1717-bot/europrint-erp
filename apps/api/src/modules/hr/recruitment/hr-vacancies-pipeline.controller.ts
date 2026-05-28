@@ -36,9 +36,11 @@ const ChecklistSchema = z.object({
   items: z.array(z.union([z.string(), z.record(z.unknown())])).optional(),
 }).passthrough();
 
+// P1.17.2: also accept roadmap_data JSON from FE OnboardingRoadmapDialog
 const RoadmapSchema = z.object({
-  stages: z.array(z.record(z.unknown())).optional(),
-  notes: z.string().max(2000).optional(),
+  stages:       z.array(z.record(z.unknown())).optional(),
+  notes:        z.string().max(2000).optional(),
+  roadmap_data: z.record(z.unknown()).optional(),
 }).passthrough();
 
 const AddCandidateSchema = z.object({
@@ -119,9 +121,21 @@ export class HrVacanciesPipelineController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('pipeline/:id/roadmap')
   async getPipelineRoadmap(@Param('id', ParseIntPipe) id: number) {
-    const r = await this.svc.findRoadmapByPipeline(id);
-    const stages = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { data: { pipeline_id: id, stages, total: stages.length } };
+    // P1.17.2: include saved roadmap_data alongside stage history
+    const [stagesR, savedR] = await Promise.all([
+      this.svc.findRoadmapByPipeline(id),
+      this.svc.findLatestRoadmapData(id),
+    ]);
+    const stages = stagesR.ok && Array.isArray(stagesR.data) ? stagesR.data : [];
+    const saved = savedR.ok ? savedR.data : null;
+    return {
+      data: {
+        pipeline_id:  id,
+        stages,
+        total:        stages.length,
+        roadmap_data: (saved as Record<string, unknown> | null)?.roadmap_data ?? null,
+      },
+    };
   }
 
   @ApiOperation({ summary: 'Get roadmaps' })
@@ -222,9 +236,16 @@ export class HrVacanciesPipelineController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('pipeline/:id/roadmap')
   @HttpCode(HttpStatus.CREATED)
-  async createPipelineRoadmap(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+  // P1.17.2: persist roadmap_data to DB instead of returning stub
+  async createPipelineRoadmap(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const dto = RoadmapSchema.parse(body);
-    return { data: { pipeline_id: id, ...dto, created: true } };
+    const roadmapData = dto.roadmap_data ?? dto;
+    const r = await this.svc.createRoadmap(id, roadmapData, String(user?.id ?? 'system'));
+    return { data: { pipeline_id: id, saved: r.ok, roadmap_data: roadmapData } };
   }
 
   // Yollash Kanban: yangi nomzodni pipeline ga qo'shish

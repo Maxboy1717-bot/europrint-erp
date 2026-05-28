@@ -129,6 +129,14 @@ export class DrizzleHrVacanciesRepository {
     return this.funnel.findRoadmapByPipeline(pipelineId);
   }
 
+  // P1.17.2: persist + retrieve roadmap JSON
+  createRoadmapEntry(pipelineId: number, roadmapJson: string, userId: string): Promise<Result<Row>> {
+    return this.funnel.createRoadmapEntry(pipelineId, roadmapJson, userId);
+  }
+  findLatestRoadmapData(pipelineId: number): Promise<Result<Row | null>> {
+    return this.funnel.findLatestRoadmapData(pipelineId);
+  }
+
   findProbationJournal(pipelineId: number): Promise<Result<Row[]>> {
     return this.funnel.findProbationJournal(pipelineId);
   }

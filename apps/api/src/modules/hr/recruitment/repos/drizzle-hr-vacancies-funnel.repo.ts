@@ -222,6 +222,39 @@ export class DrizzleHrVacanciesFunnelRepository {
     }
   }
 
+  // P1.17.2: persist roadmap JSON into hr_funnel_history (stage='ROADMAP_GENERATED')
+  async createRoadmapEntry(pipelineId: number, roadmapJson: string, userId: string): Promise<Result<Row>> {
+    return this.recordFunnelHistory(String(pipelineId), 'ROADMAP_GENERATED', userId, roadmapJson);
+  }
+
+  // P1.17.2: retrieve the latest saved roadmap for a pipeline entry
+  async findLatestRoadmapData(pipelineId: number): Promise<Result<Row | null>> {
+    try {
+      const rows = await db
+        .select({
+          id:         hrFunnelHistory.id,
+          funnel_id:  hrFunnelHistory.funnelId,
+          notes:      hrFunnelHistory.notes,
+          created_at: hrFunnelHistory.createdAt,
+        })
+        .from(hrFunnelHistory)
+        .where(eq(hrFunnelHistory.funnelId, String(pipelineId)))
+        .orderBy(desc(hrFunnelHistory.createdAt))
+        .limit(10);
+      if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
+      const roadmapRow = rows.find(r => {
+        try { const parsed = JSON.parse(String(r.notes ?? '')); return parsed && typeof parsed === 'object'; } catch { return false; }
+      });
+      if (!roadmapRow) return Ok(null);
+      try {
+        const roadmap_data = JSON.parse(String(roadmapRow.notes));
+        return Ok({ id: roadmapRow.id, funnel_id: roadmapRow.funnel_id, roadmap_data, created_at: roadmapRow.created_at } as Row);
+      } catch { return Ok(null); }
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
   async updateFunnelNotes(funnelId: number, notes: string): Promise<Result<Row>> {
     try {
       const r = await rawSql(sql`
