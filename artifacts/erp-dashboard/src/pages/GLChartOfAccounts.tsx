@@ -121,7 +121,6 @@ export default function GLChartOfAccounts() {
       apiRequest("POST", "/api/gl/accounts", body),
     onSuccess: () => {
       toast({ title: "Hisob qo'shildi" });
-      queryClient.invalidateQueries({ queryKey: ["/api/finance/gl/chart-of-accounts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/finance/gl-accounts"] });
       setCreateOpen(false);
       setForm({ code: "", name: "", type: "asset", parentCode: "" });

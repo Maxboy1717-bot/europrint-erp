@@ -56,6 +56,6 @@ export class GlStandaloneController {
   @Post('accounts')
   async createAccount(@Body() body: unknown) {
     const dto = CreateAccountSchema.parse(body);
-    return { id: Date.now(), ...dto, created: true };
+    return unwrapOrInternal(await this.glSvc.createAccount(dto as Record<string, unknown>));
   }
 }

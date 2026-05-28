@@ -12,6 +12,7 @@ import { Injectable, NotFoundException, BadRequestException, InternalServerError
 import { I18nService } from 'nestjs-i18n';
 import { IFinanceGlRepository, FINANCE_GL_REPO } from './i-finance-gl.repo';
 import { safeCall, Result, AppError } from '@common/result';
+import { throwFromError } from '@common/http-result';
 
 @Injectable()
 export class GlService {
@@ -107,7 +108,26 @@ export class GlService {
     const result  = await this.financeGlRepo.seedAccounts(payload);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return { inserted: (result.data as Record<string, unknown>[]).length };
-  
+
+    });}
+
+  /**
+   * Creates a single chart-of-accounts entry. Validation (required fields,
+   * allowed accountType) and duplicate-code detection live in the repo and
+   * surface as VALIDATION (→400) / CONFLICT (→409); `throwFromError` re-raises
+   * the matching exception so `safeCall` re-tags the code for the controller.
+   * @param dto - { accountNumber, accountName, accountType, parentId?, active? }
+   * @returns Result.ok(inserted account row)
+   */
+  async createAccount(dto: Record<string, unknown>){
+    return safeCall(async () => {
+    const result = await this.financeGlRepo.createAccount(dto);
+    if (!result.ok) {
+      this.logger.warn(`createAccount: ${result.error.message}`);
+      throwFromError(result.error);
+    }
+    return result.data;
+
     });}
 
   async getTrialBalance(date?: string) {
