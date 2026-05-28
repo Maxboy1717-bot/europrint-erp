@@ -322,7 +322,7 @@
   "shiftScheduleTitle": "Смена Жадвали",
   "shiftScheduleDesc": "Ходимлар смена жадвалини бошқаринг",
   "totalEmployeesLabel": "Жами Ходимлар",
-  "morningShiftLabel": "Эрталаби Смена",
+  "morningShiftLabel": "Эрталабки Смена",
   "eveningShiftLabel": "Кечки Смена",
   "nightShiftLabel": "Тунги Смена",
   "assignShift": "Смена белгилаш",
@@ -685,10 +685,5 @@
   "muddatSoat": "Муддат (соат)",
   "k1EslatmaSoatQolgunicha": "1-еслатма (неча соат қолганда)",
   "k2EslatmaSoatQolgunicha": "2-еслатма (неча соат қолганда)",
-  "haliMarshrutlashQoidasiYoqYuqoridagi": "Ҳали маршрутлаш қоидаси йўқ. Юқоридаги шакл орқали қўшинг.",
-  "shiftScheduleTitle": "Смена Жадвали",
-  "totalEmployeesLabel": "Жами Ходимлар",
-  "morningShiftLabel": "Эрталабки Смена",
-  "eveningShiftLabel": "Кечки Смена",
-  "nightShiftLabel": "Тунги Смена"
+  "haliMarshrutlashQoidasiYoqYuqoridagi": "Ҳали маршрутлаш қоидаси йўқ. Юқоридаги шакл орқали қўшинг."
 }

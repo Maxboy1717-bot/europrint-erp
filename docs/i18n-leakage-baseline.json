@@ -63,77 +63,77 @@
   "leaks": [
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
-      "line": 181,
+      "line": 203,
       "text": "Qoidabuzarliklar",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
-      "line": 191,
+      "line": 213,
       "text": "Xodim",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
-      "line": 192,
+      "line": 214,
       "text": "Bo'lim",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
-      "line": 193,
+      "line": 215,
       "text": "Qoidabuzarlik turi",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
-      "line": 195,
+      "line": 217,
       "text": "Sana",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
-      "line": 243,
+      "line": 265,
       "text": "Xodim",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
-      "line": 244,
+      "line": 266,
       "text": "Bo'lim",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
-      "line": 245,
+      "line": 267,
       "text": "Bloklangan sana",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
-      "line": 149,
+      "line": 171,
       "text": "Jami qoidabuzarliklar",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
-      "line": 161,
+      "line": 183,
       "text": "Bloklangan xodimlar",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\Discipline.tsx",
-      "line": 172,
+      "line": 194,
       "text": "Xodim bo'yicha qidirish...",
       "kind": "PROP",
       "locale": "uz"
@@ -238,42 +238,42 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
-      "line": 170,
+      "line": 176,
       "text": "eNPS So'rov",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
-      "line": 195,
+      "line": 201,
       "text": "So'rovlar",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
-      "line": 196,
+      "line": 202,
       "text": "Natijalar",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
-      "line": 214,
+      "line": 220,
       "text": "Tavsif",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
-      "line": 217,
+      "line": 223,
       "text": "Holat",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HREnps.tsx",
-      "line": 218,
+      "line": 224,
       "text": "Javoblar",
       "kind": "JSX_TEXT",
       "locale": "uz"
@@ -350,35 +350,35 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HRPip.tsx",
-      "line": 136,
+      "line": 162,
       "text": "PIP Rejalar",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HRPip.tsx",
-      "line": 150,
+      "line": 176,
       "text": "Jami",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HRPip.tsx",
-      "line": 161,
+      "line": 187,
       "text": "Faol",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HRPip.tsx",
-      "line": 183,
+      "line": 209,
       "text": "Muvaffaqiyatsiz",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\HRPip.tsx",
-      "line": 217,
+      "line": 243,
       "text": "Xodim",
       "kind": "JSX_TEXT",
       "locale": "uz"

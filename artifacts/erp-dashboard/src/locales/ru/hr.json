@@ -601,10 +601,5 @@
   "muddatSoat": "Срок (часов)",
   "k1EslatmaSoatQolgunicha": "Напоминание 1 (за сколько часов)",
   "k2EslatmaSoatQolgunicha": "Напоминание 2 (за сколько часов)",
-  "haliMarshrutlashQoidasiYoqYuqoridagi": "Пока нет правил маршрутизации. Добавьте через форму выше.",
-  "shiftScheduleTitle": "График Смен",
-  "totalEmployeesLabel": "Всего Сотрудников",
-  "morningShiftLabel": "Утренняя Смена",
-  "eveningShiftLabel": "Вечерняя Смена",
-  "nightShiftLabel": "Ночная Смена"
+  "haliMarshrutlashQoidasiYoqYuqoridagi": "Пока нет правил маршрутизации. Добавьте через форму выше."
 }

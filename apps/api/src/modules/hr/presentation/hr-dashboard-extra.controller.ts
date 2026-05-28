@@ -55,13 +55,8 @@ export class HrDashboardExtraController {
     return r.ok && r.data ? r.data : { incidentsThisMonth: 0, ppeCompliancePercent: 0, expiringTrainings: 0, openIncidents: 0 };
   }
 
-  @ApiOperation({ summary: 'Get safety incidents' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('safety/incidents')
-  async getSafetyIncidents() {
-    const r = await this.svc.getSafetyIncidentsRaw();
-    return r.ok && Array.isArray(r.data) ? r.data : [];
-  }
+  // NOTE: GET /api/hr/safety/incidents served by HrCompatSafetyController (with status filter).
+  // Duplicate declaration here removed (Fastify boot collision).
 
   @ApiOperation({ summary: 'Get offboarding stats' })
   @ApiResponse({ status: 200, description: 'OK' })

@@ -87,12 +87,9 @@ export class HrCompatSafetyController {
     return unwrapOrInternal(await this.svc.getSafetyIncidents(status));
   }
 
-  // P1.23.1: DELETE single incident
-  @Delete('safety/incidents/:id')
-  async deleteSafetyIncident(@Param('id', ParseIntPipe) id: number) {
-    await this.svc.deleteSafetyIncident(id);
-    return { data: { deleted: true } };
-  }
+  // NOTE: DELETE /api/hr/safety/incidents/:id is served by HrSafetyController
+  // (@Controller('hr/safety') + @Delete('incidents/:id'), soft-close pattern).
+  // Duplicate declaration here removed (Fastify boot collision).
 
   // P1.23.1: PDF export — GET /api/hr/safety/export/pdf
   @Get('safety/export/pdf')
