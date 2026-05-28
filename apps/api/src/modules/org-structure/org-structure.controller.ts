@@ -23,13 +23,15 @@ import { assertOk, unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
+// P2.6: .strict() instead of .passthrough() for mass-assignment protection
 const OrgNodeSchema = z.object({
-  name: z.string().max(500).optional(),
-  type: z.string().max(50).optional(),
-  parentId: z.union([z.string(), z.number()]).nullable().optional(),
-  positionId: z.union([z.string(), z.number()]).optional(),
+  name:        z.string().max(500).optional(),
+  nameRu:      z.string().max(500).optional(),
+  type:        z.string().max(50).optional(),
+  parentId:    z.union([z.string(), z.number()]).nullable().optional(),
+  positionId:  z.union([z.string(), z.number()]).optional(),
   description: z.string().max(2000).optional(),
-}).passthrough();
+}).strict();
 
 const MoveNodeSchema = z.object({
   newParentId: z.union([z.string(), z.number()]).nullable().optional(),
