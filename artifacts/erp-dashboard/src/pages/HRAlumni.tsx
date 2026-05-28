@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/table";
 import { UserPlus, Search, Users, RefreshCw, CalendarX } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { EPComingSoon, EPErrorState } from "@/components/ep";
+import { isNotImplementedError } from "@/hooks/useNotImplemented";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -99,7 +101,7 @@ export default function HRAlumni() {
   const { t } = useTranslation("common");
   const [search, setSearch] = useState("");
 
-  const { data: rawResponse, isLoading } =
+  const { data: rawResponse, isLoading, isError, error, refetch } =
     useQuery<AlumniResponse>({ queryKey: ["/api/hr/alumni"] });
 
   // Handle both wrapped { items, total } and bare array responses safely
@@ -136,6 +138,12 @@ export default function HRAlumni() {
         <span className="text-sm text-muted-foreground">(Sobiq xodimlar)</span>
       </div>
 
+      {isError && isNotImplementedError(error)
+        ? <EPComingSoon />
+        : isError
+          ? <EPErrorState onRetry={refetch} />
+          : (
+      <>
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard
@@ -219,6 +227,8 @@ export default function HRAlumni() {
           </TableBody>
         </Table>
       </div>
+      </>
+          )}
     </div>
   );
 }

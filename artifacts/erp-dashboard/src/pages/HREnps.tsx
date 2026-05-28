@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart3 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { EPComingSoon, EPErrorState } from "@/components/ep";
+import { isNotImplementedError } from "@/hooks/useNotImplemented";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -154,6 +156,8 @@ export default function HREnps() {
     data: surveysRaw,
     isLoading: loadingSurveys,
     isError: errSurveys,
+    error,
+    refetch,
   } = useQuery<EnpsSurvey[]>({ queryKey: ["/api/hr/enps/surveys"] });
 
   const {
@@ -196,6 +200,11 @@ export default function HREnps() {
       </Card>
 
       {/* Tabs */}
+      {isNotImplementedError(error) && errSurveys
+        ? <EPComingSoon />
+        : errSurveys
+          ? <EPErrorState onRetry={refetch} />
+          : (
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="surveys">So'rovlar</TabsTrigger>
@@ -300,6 +309,7 @@ export default function HREnps() {
           )}
         </TabsContent>
       </Tabs>
+          )}
     </div>
   );
 }

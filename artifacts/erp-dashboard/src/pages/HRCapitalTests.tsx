@@ -15,7 +15,8 @@ import { type HrcSession, type HrcQuestion, type StatRow } from "./HRCapitalTest
 import { getTestTypeLabel } from "./HRCapitalTestsHelpers";
 import { SessionsTab, ToolTestAdminTab, ResultsTab, MethodologyTab } from "./HRCapitalTestsTabs";
 import { CreateSessionDialog, QuestionDialog, ResultDetailDialog } from "./HRCapitalTestsDialogs";
-import { EPPageHeader } from "@/components/ep";
+import { EPComingSoon, EPErrorState, EPPageHeader } from "@/components/ep";
+import { isNotImplementedError } from "@/hooks/useNotImplemented";
 import { useTranslation } from '@/lib/i18n';
 
 export default function HRCapitalTests() {
@@ -38,7 +39,7 @@ export default function HRCapitalTests() {
   });
   const stats = statsData?.data ?? [];
 
-  const { data: sessionsData, isLoading: sessionsLoading } = useQuery<{ data: HrcSession[] }>({
+  const { data: sessionsData, isLoading: sessionsLoading, isError, error, refetch } = useQuery<{ data: HrcSession[] }>({
     queryKey: ["/api/hr/hrc-tests/sessions"],
   });
   const sessions = sessionsData?.data ?? [];
@@ -103,6 +104,12 @@ export default function HRCapitalTests() {
         </Button>
       </div>
 
+      {isError && isNotImplementedError(error)
+        ? <EPComingSoon />
+        : isError
+          ? <EPErrorState onRetry={refetch} />
+          : (
+      <>
       {/* Stats overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {([
@@ -170,6 +177,8 @@ export default function HRCapitalTests() {
           <MethodologyTab />
         </TabsContent>
       </Tabs>
+      </>
+          )}
 
       {/* Dialogs */}
       <CreateSessionDialog open={showCreateSessionDialog} onOpenChange={setShowCreateSessionDialog} />

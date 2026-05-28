@@ -23,7 +23,8 @@ import { type OffboardingCase, type Stats } from "./HROffboardingTypes";
 import { OffboardingCard, CreateCaseDialog } from "./HROffboardingDialogs";
 import { ChecklistPanel } from "./HROffboardingSteps";
 import { apiRequest } from '@/lib/queryClient';
-import { EPStatusPill } from "@/components/ep";
+import { EPComingSoon, EPErrorState, EPStatusPill } from "@/components/ep";
+import { isNotImplementedError } from "@/hooks/useNotImplemented";
 import { useTranslation } from '@/lib/i18n';
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
@@ -49,7 +50,7 @@ export default function HROffboarding() {
   });
 
   // ── Cases list query ────────────────────────────────────────────────────────
-  const { data: rawCases, isLoading } = useQuery<OffboardingCase[]>({
+  const { data: rawCases, isLoading, isError, error, refetch } = useQuery<OffboardingCase[]>({
     queryKey: ["/api/hr/offboarding/cases", statusFilter, search],
     queryFn: async () => {
       try {
@@ -137,6 +138,11 @@ export default function HROffboarding() {
         </Button>
       </div>
 
+      {isError && isNotImplementedError(error)
+        ? <EPComingSoon />
+        : isError
+          ? <EPErrorState onRetry={refetch} />
+          : (
       <div className="flex-1 overflow-auto p-6 space-y-5">
         {/* Stats cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4">
@@ -221,6 +227,7 @@ export default function HROffboarding() {
           </div>
         )}
       </div>
+          )}
 
       {/* Create case dialog */}
       <CreateCaseDialog open={createOpen} onClose={() => setCreateOpen(false)} />
