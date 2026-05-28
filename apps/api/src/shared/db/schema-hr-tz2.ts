@@ -155,3 +155,54 @@ export const hr_tz2_daily_attendance = pgTable(
     index('hrtz2_daily_emp_date_idx').on(t.employee_id, t.date),
   ],
 );
+
+// ─────────────────────────────────────────────────────────────────────────────
+// P1.26.1 — hr_referrals: employee referral tracking
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const hr_referrals = pgTable(
+  'hr_referrals',
+  {
+    id:                  serial('id').primaryKey(),
+    referrer_id:         integer('referrer_id').notNull(),
+    candidate_full_name: varchar('candidate_full_name', { length: 200 }).notNull(),
+    candidate_email:     varchar('candidate_email', { length: 200 }),
+    candidate_phone:     varchar('candidate_phone', { length: 50 }),
+    position_title:      varchar('position_title', { length: 200 }),  // text not FK
+    status:              varchar('status', { length: 20 }).default('pending'),
+    bonus_type:          varchar('bonus_type', { length: 50 }),
+    bonus_amount:        numeric('bonus_amount', { precision: 12, scale: 2 }),
+    bonus_paid:          boolean('bonus_paid').default(false),
+    hr_notes:            text('hr_notes'),
+    created_at:          timestamp('created_at').notNull().defaultNow(),
+    updated_at:          timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('hr_referrals_referrer_idx').on(t.referrer_id),
+    index('hr_referrals_status_idx').on(t.status),
+  ],
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// P1.15.1 — hr_mentorship_pairings: mentor-mentee assignment table
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const hr_mentorship_pairings = pgTable(
+  'hr_mentorship_pairings',
+  {
+    id:           serial('id').primaryKey(),
+    mentor_id:    integer('mentor_id').notNull(),
+    mentee_id:    integer('mentee_id').notNull(),
+    course_id:    integer('course_id'),
+    status:       varchar('status', { length: 20 }).default('active'),
+    started_at:   timestamp('started_at'),
+    completed_at: timestamp('completed_at'),
+    notes:        text('notes'),
+    created_at:   timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('hr_mentorship_mentor_idx').on(t.mentor_id),
+    index('hr_mentorship_mentee_idx').on(t.mentee_id),
+    index('hr_mentorship_status_idx').on(t.status),
+  ],
+);

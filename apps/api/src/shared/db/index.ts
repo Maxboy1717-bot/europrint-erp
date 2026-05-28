@@ -208,12 +208,15 @@ export {
 } from './schema-chat';
 
 // schema-hr-tz2: HR Territory/Camera Attendance + Inspection tables (HR-03/04)
+// + hr_referrals (P1.26.1) + hr_mentorship_pairings (P1.15.1)
 export {
   hr_tz2_territory_logs,
   hr_tz2_attendance_photos,
   hr_tz2_daily_attendance,
   hr_tz2_room_reference_photos,
   hr_tz2_ai_room_analysis,
+  hr_referrals,
+  hr_mentorship_pairings,
 } from './schema-hr-tz2';
 
 // schema-outbox: Domain events outbox table (PA0-6)

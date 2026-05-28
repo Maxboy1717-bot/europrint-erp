@@ -5,7 +5,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { employees, employee_skills, adaptation_milestones, salary_history } from '@shared/db';
+import { employees, employee_skills, adaptation_milestones, salary_history, hr_referrals } from '@shared/db';
 import { eq, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 
@@ -57,23 +57,57 @@ export class HrGsdRepository {
     }
   }
 
+  // P1.26.1: query hr_referrals table — column names match FE ReferralPage.tsx interface
   async findReferrals(): Promise<Result<Row[]>> {
     try {
       const rows = await db
         .select({
-          id: employees.id,
-          full_name: sql<string>`COALESCE("employees"."full_name", '')`,
-          position_id: sql<string>`"employees"."position"`,
-          department_id: sql<string>`"employees"."department"`,
-          status: employees.status,
-          hire_date: employees.hire_date,
+          id:                  hr_referrals.id,
+          referrer_id:         hr_referrals.referrer_id,
+          candidate_full_name: hr_referrals.candidate_full_name,
+          candidate_email:     hr_referrals.candidate_email,
+          candidate_phone:     hr_referrals.candidate_phone,
+          position_title:      hr_referrals.position_title,
+          status:              hr_referrals.status,
+          bonus_type:          hr_referrals.bonus_type,
+          bonus_amount:        hr_referrals.bonus_amount,
+          bonus_paid:          hr_referrals.bonus_paid,
+          hr_notes:            hr_referrals.hr_notes,
+          created_at:          hr_referrals.created_at,
         })
-        .from(employees)
-        .where(eq(employees.status, 'active'))
-        .orderBy(desc(employees.hire_date))
-        .limit(50);
+        .from(hr_referrals)
+        .orderBy(desc(hr_referrals.created_at))
+        .limit(100);
       if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
       return Ok(rows as Row[]);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  // P1.26.1: real insert into hr_referrals — column names match updated schema
+  async createReferral(dto: {
+    referrerId?: number | string | null;
+    candidateName?: string;
+    candidateEmail?: string;
+    candidatePhone?: string;
+    positionTitle?: string;
+    hrNotes?: string;
+  }): Promise<Result<Row>> {
+    try {
+      const rows = await db
+        .insert(hr_referrals)
+        .values({
+          referrer_id:         dto.referrerId ? Number(dto.referrerId) : 0,
+          candidate_full_name: dto.candidateName ?? 'Unknown',
+          candidate_email:     dto.candidateEmail ?? null,
+          candidate_phone:     dto.candidatePhone ?? null,
+          position_title:      dto.positionTitle ?? null,
+          hr_notes:            dto.hrNotes ?? null,
+        })
+        .returning();
+      if (!Array.isArray(rows) || !rows[0]) return Err('INSERT_FAILED');
+      return Ok(rows[0] as Row);
     } catch (e) {
       return Err(String(e));
     }
@@ -144,6 +178,32 @@ export class HrGsdRepository {
         .returning();
       if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
       return Ok((rows[0] ?? {}) as Row);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  // P1.26.1: update hr_referrals row — column names match updated schema
+  async updateReferral(id: number, dto: {
+    status?: string;
+    bonusAmount?: number;
+    bonusPaid?: boolean;
+    hrNotes?: string;
+  }): Promise<Result<Row>> {
+    try {
+      const rows = await db
+        .update(hr_referrals)
+        .set({
+          ...(dto.status      != null ? { status:       dto.status }              : {}),
+          ...(dto.bonusAmount != null ? { bonus_amount: String(dto.bonusAmount) } : {}),
+          ...(dto.bonusPaid   != null ? { bonus_paid:   dto.bonusPaid }           : {}),
+          ...(dto.hrNotes     != null ? { hr_notes:     dto.hrNotes }             : {}),
+          updated_at: new Date(),
+        })
+        .where(eq(hr_referrals.id, id))
+        .returning();
+      if (!Array.isArray(rows) || !rows[0]) return Err('NOT_FOUND');
+      return Ok(rows[0] as Row);
     } catch (e) {
       return Err(String(e));
     }

@@ -25,6 +25,28 @@ export class HrGsdService {
     return this.repo.findReferrals();
   }
 
+  // P1.26.1: real insert
+  createReferral(dto: {
+    referrerId?: number | string | null;
+    candidateName?: string;
+    candidateEmail?: string;
+    candidatePhone?: string;
+    positionTitle?: string;
+    hrNotes?: string;
+  }): Promise<Result<Row, AppError>> {
+    return this.repo.createReferral(dto);
+  }
+
+  // P1.26.1: update status/bonus
+  updateReferral(id: number, dto: {
+    status?: string;
+    bonusAmount?: number;
+    bonusPaid?: boolean;
+    hrNotes?: string;
+  }): Promise<Result<Row, AppError>> {
+    return this.repo.updateReferral(id, dto);
+  }
+
   getBoomerangs(): Promise<Result<Row[], AppError>> {
     return this.repo.findBoomerangs();
   }

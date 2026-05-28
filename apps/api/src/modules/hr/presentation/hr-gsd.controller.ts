@@ -24,11 +24,12 @@ const UpdateGsdEmployeeSchema = z.object({
 }).passthrough();
 
 const CreateReferralSchema = z.object({
-  referrerId: z.union([z.string(), z.number()]).optional(),
+  referrerId:    z.union([z.string(), z.number()]).optional(),
   candidateName: z.string().max(200).optional(),
-  email: z.string().email().optional(),
-  phone: z.string().max(50).optional(),
-  positionId: z.union([z.string(), z.number()]).optional(),
+  email:         z.string().email().optional(),
+  phone:         z.string().max(50).optional(),
+  positionTitle: z.string().max(200).optional(),
+  hrNotes:       z.string().max(2000).optional(),
 }).passthrough();
 
 const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'admin'] as const;
@@ -68,8 +69,9 @@ export class HrGsdController {
   @Get('referrals')
   async getReferrals() {
     const r = await this.svc.getReferrals();
-    const items = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { items, total: items.length };
+    const referrals = r.ok && Array.isArray(r.data) ? r.data : [];
+    // ReferralPage.tsx expects { referrals, stats } envelope
+    return { referrals, stats: { total: referrals.length } };
   }
 
   @ApiOperation({ summary: 'Get boomerang referrals' })
@@ -131,9 +133,37 @@ export class HrGsdController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('referrals')
+  // P1.26.1: real insert into hr_referrals (was a stub)
   async createReferral(@Body() body: unknown) {
     const dto = CreateReferralSchema.parse(body);
-    return { data: { id: Date.now(), ...dto, created: true } };
+    const r = await this.svc.createReferral({
+      referrerId:    dto.referrerId,
+      candidateName: dto.candidateName,
+      candidateEmail: dto.email,
+      candidatePhone: dto.phone,
+      positionTitle: dto.positionTitle,
+      hrNotes:       dto.hrNotes,
+    });
+    const data = r.ok ? r.data : { error: (r as { ok: false; error: unknown }).error };
+    return { data };
+  }
+
+  // P1.26.1: update referral status/bonus (HR_MANAGER only)
+  @ApiOperation({ summary: 'Update referral' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  @Patch('referrals/:id')
+  async updateReferral(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const UpdateReferralSchema = z.object({
+      status:      z.enum(['submitted', 'reviewing', 'hired', 'rejected', 'pending']).optional(),
+      bonusAmount: z.number().min(0).optional(),
+      bonusPaid:   z.boolean().optional(),
+      hrNotes:     z.string().max(2000).optional(),
+    }).passthrough();
+    const dto = UpdateReferralSchema.parse(body ?? {});
+    const r = await this.svc.updateReferral(id, dto);
+    const data = r.ok ? r.data : { error: (r as { ok: false; error: unknown }).error };
+    return { data };
   }
 
   // NOTE: DELETE /api/hr/employee-skills/:id is served by HrCompatAController —
