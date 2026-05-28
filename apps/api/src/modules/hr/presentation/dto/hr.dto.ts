@@ -203,6 +203,7 @@ export type HrHealthLeaveDto = z.infer<typeof HrHealthLeaveSchema>;
 export const HrCreateEmployeeSchema = z.object({
   firstName:        z.string().min(1, 'Ism majburiy').max(MAX_NAME_LENGTH),
   lastName:         z.string().min(1, 'Familiya majburiy').max(MAX_NAME_LENGTH),
+  middleName:       z.string().max(MAX_NAME_LENGTH).optional(),
   departmentId:     z.string().optional(),
   positionId:       z.string().optional(),
   employeeCode:     z.string().optional(),
@@ -215,6 +216,7 @@ export type HrCreateEmployeeDto = z.infer<typeof HrCreateEmployeeSchema>;
 export const HrUpdateEmployeeSchema = z.object({
   firstName:        z.string().min(1).max(MAX_NAME_LENGTH).optional(),
   lastName:         z.string().min(1).max(MAX_NAME_LENGTH).optional(),
+  middleName:       z.string().max(MAX_NAME_LENGTH).optional(),
   departmentId:     z.string().optional(),
   positionId:       z.string().optional(),
   hireDate:         z.string().optional(),
