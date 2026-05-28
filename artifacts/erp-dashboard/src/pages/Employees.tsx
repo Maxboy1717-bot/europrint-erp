@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
+import { apiRequest, HttpError } from "@/lib/api-request";
 import {
   EPPageHeader, EPKpiCard, EPStatusPill,
   EPEmptyState, EPErrorState, EPSkeletonKpiRow, EPSkeletonTable,
@@ -101,13 +102,7 @@ export default function Employees() {
       if (deptParam)    params.set("departmentId",  deptParam);
       params.set("page",  String(page));
       params.set("limit", String(pageSize));
-      return fetch(`/api/hr/employees?${params.toString()}`, {
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      }).then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      });
+      return apiRequest("GET", `/api/hr/employees?${params.toString()}`);
     },
     enabled: isAuthenticated === true,
   });
@@ -253,7 +248,14 @@ export default function Employees() {
 
       {/* ── Error branch ────────────────────────────────────────────────── */}
       {employeesError ? (
-        <EPErrorState onRetry={refetchEmployees} />
+        employeesError instanceof HttpError && (employeesError as HttpError).status === 503
+          ? <EPErrorState
+              title={tCommon("serverUnavailableTitle")}
+              description={tCommon("serverUnavailableDesc")}
+              onRetry={refetchEmployees}
+              retryLabel={tCommon("retryNow")}
+            />
+          : <EPErrorState onRetry={refetchEmployees} />
       ) : (
         <>
           {/* ── Filters ─────────────────────────────────────────────────── */}

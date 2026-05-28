@@ -8501,5 +8501,8 @@
   "onlineStatus": "Onlayn · sinxronlangan",
   "comingSoon": "Tez orada",
   "comingSoonDescription": "Bu bo'lim hali ishlab chiqilmoqda. Yaqin orada ishga tushiriladi.",
-  "wsDisconnected": "Real-time ulanish yo'q — ma'lumotlar yangilanmayapti"
+  "wsDisconnected": "Real-time ulanish yo'q — ma'lumotlar yangilanmayapti",
+  "serverUnavailableTitle": "Server vaqtincha ishlamayapti",
+  "serverUnavailableDesc": "HR xizmati hozir mavjud emas. Bir oz kuting va qayta urinib ko'ring.",
+  "retryNow": "Qayta urinish"
 }

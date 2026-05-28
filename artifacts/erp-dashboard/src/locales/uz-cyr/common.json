@@ -9923,5 +9923,8 @@
   "onlineStatus": "Онлайн · синхронланган",
   "comingSoon": "Тез орада",
   "comingSoonDescription": "Бу бўлим ҳали ишлаб чиқилмоқда. Яқин орада ишга туширилади.",
-  "wsDisconnected": "Real-time ulanish yo'q — ma'lumotlar yangilanmayapti"
+  "wsDisconnected": "Real-time ulanish yo'q — ma'lumotlar yangilanmayapti",
+  "serverUnavailableTitle": "Сервер вақтинча ишламаяпти",
+  "serverUnavailableDesc": "HR хизмати ҳозир мавжуд эмас. Бир оз кутинг ва қайта уриниб кўринг.",
+  "retryNow": "Қайта уриниш"
 }
