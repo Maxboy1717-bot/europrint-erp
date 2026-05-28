@@ -8498,5 +8498,7 @@
   "importQilish": "Import qilish",
   "commandPaletteSearch": "Sahifa qidirish...",
   "commandPaletteEmpty": "Topilmadi.",
-  "onlineStatus": "Onlayn · sinxronlangan"
+  "onlineStatus": "Onlayn · sinxronlangan",
+  "comingSoon": "Tez orada",
+  "comingSoonDescription": "Bu bo'lim hali ishlab chiqilmoqda. Yaqin orada ishga tushiriladi."
 }

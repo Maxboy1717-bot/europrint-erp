@@ -1,18 +1,19 @@
 /**
  * @module EPComingSoon
  * @description Canonical EuroPrint "coming soon" state for 501 NOT_IMPLEMENTED
- *   endpoints. Shows a Clock icon with a friendly Uzbek label.
+ *   endpoints. Shows a Clock icon with a locale-aware label.
  *
  *   Usage: Replace the main content of a page/section when the backend returns
- *   HTTP 501. Use `useNotImplemented(error)` hook to detect the condition.
+ *   HTTP 501. Use `isNotImplementedError(error)` to detect the condition.
  *
- *     if (useNotImplemented(error)) return <EPComingSoon />;
+ *     if (isNotImplementedError(error)) return <EPComingSoon />;
  */
 
 import * as React from "react";
 import { Clock } from "lucide-react";
 import { EPCard } from "./EPCard";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 interface EPComingSoonProps {
   title?: React.ReactNode;
@@ -22,11 +23,14 @@ interface EPComingSoonProps {
 }
 
 export function EPComingSoon({
-  title = "Tez orada",
-  description = "Bu bo'lim hali ishlab chiqilmoqda. Yaqin orada ishga tushiriladi.",
+  title,
+  description,
   variant = "card",
   className,
 }: EPComingSoonProps) {
+  const { t } = useTranslation("common");
+  const effectiveTitle = title ?? t("comingSoon");
+  const effectiveDescription = description ?? t("comingSoonDescription");
   const body = (
     <div className="flex flex-col items-center text-center gap-3">
       <div
@@ -40,10 +44,10 @@ export function EPComingSoon({
         />
       </div>
       <div className="space-y-1">
-        <h3 className="text-[14px] font-semibold">{title}</h3>
-        {description && (
+        <h3 className="text-[14px] font-semibold">{effectiveTitle}</h3>
+        {effectiveDescription && (
           <p className="text-[13px] text-muted-foreground max-w-[420px]">
-            {description}
+            {effectiveDescription}
           </p>
         )}
       </div>

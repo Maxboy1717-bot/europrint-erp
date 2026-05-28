@@ -8498,5 +8498,7 @@
   "importQilish": "Импортировать",
   "commandPaletteSearch": "Поиск страницы...",
   "commandPaletteEmpty": "Не найдено.",
-  "onlineStatus": "Онлайн · синхронизировано"
+  "onlineStatus": "Онлайн · синхронизировано",
+  "comingSoon": "Скоро будет доступно",
+  "comingSoonDescription": "Этот раздел находится в разработке. Скоро будет запущен."
 }

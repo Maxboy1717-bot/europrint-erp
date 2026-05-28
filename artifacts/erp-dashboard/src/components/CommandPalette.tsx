@@ -63,7 +63,7 @@ export function CommandPalette() {
           <CommandGroup key={g.groupTitle} heading={g.groupTitle}>
             {g.items.map((item) => (
               <CommandItem
-                key={item.url}
+                key={`${g.groupTitle}::${item.url}`}
                 value={`${g.groupTitle} ${item.label}`}
                 onSelect={() => {
                   navigate(item.url);

@@ -71,27 +71,22 @@ function useWarehouses(enabled: boolean): WarehouseRow[] {
   return warehouses;
 }
 
-/** Role label map for sidebar avatar block */
-const ROLE_LABEL: Record<string, string> = {
-  admin: "Admin",
-  super_admin: "Super Admin",
-  hr_manager: "HR Manager",
-  manager: "Menejer",
-  director: "Direktor",
-  accountant: "Buxgalter",
-  employee: "Xodim",
-  warehouse_manager: "Ombor Menejer",
-};
+/** Convert backend snake_case role to auth-namespace i18n key (e.g. "hr_manager" → "role.hrManager") */
+function roleToI18nKey(role: string): string {
+  const camel = role.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
+  return `role.${camel}`;
+}
 
 /** User avatar + name + role shown at the top of the sidebar */
 function AvatarBlock() {
   const { user } = useAuth();
+  const { t: tAuth } = useTranslation("auth");
   const initials = [user?.firstName, user?.lastName]
-    .filter(Boolean)
-    .map((s) => (s as string)[0].toUpperCase())
+    .filter((s): s is string => typeof s === "string" && s.length > 0)
+    .map((s) => s[0].toUpperCase())
     .join("")
     .slice(0, 2) || "?";
-  const roleLabel = ROLE_LABEL[user?.role ?? ""] ?? user?.role ?? "";
+  const roleLabel = user?.role ? (tAuth(roleToI18nKey(user.role)) || user.role) : "";
   return (
     <div className="px-3 py-3 border-b border-sidebar-border flex items-center gap-2.5 shrink-0">
       <span className="h-7 w-7 rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-[11px] font-bold flex items-center justify-center shrink-0 select-none">
@@ -158,7 +153,7 @@ export function ModuleSidebar({ activeModule, onModuleChange }: ModuleSidebarPro
   const allItems = [...filteredItems, ...warehouseItems];
 
   return (
-    <aside className="fixed left-0 top-12 h-[calc(100vh-3rem)] w-64 z-40 flex-col hidden lg:flex shadow-lg border-r border-sidebar-border bg-sidebar">
+    <aside className="fixed left-0 top-14 h-[calc(100vh-3.5rem)] w-64 z-40 flex-col hidden lg:flex shadow-lg border-r border-sidebar-border bg-sidebar">
       <AvatarBlock />
       <SidebarHeader
         icon={group.icon}

@@ -84,7 +84,7 @@ function UserAvatarButton({ onLogout }: { onLogout: () => void }) {
         {initials}
       </span>
       <span className="hidden sm:block text-[12px] font-medium text-foreground max-w-[100px] truncate">
-        {user?.firstName ?? t("logout")}
+        {user?.firstName ?? ""}
       </span>
     </button>
   );

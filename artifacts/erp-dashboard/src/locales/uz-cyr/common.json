@@ -9920,5 +9920,7 @@
   "importQilish": "Импорт қилиш",
   "commandPaletteSearch": "Саҳифа қидириш...",
   "commandPaletteEmpty": "Топилмади.",
-  "onlineStatus": "Онлайн · синхронланган"
+  "onlineStatus": "Онлайн · синхронланган",
+  "comingSoon": "Тез орада",
+  "comingSoonDescription": "Бу бўлим ҳали ишлаб чиқилмоқда. Яқин орада ишга туширилади."
 }
