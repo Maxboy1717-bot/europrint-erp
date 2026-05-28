@@ -169,3 +169,21 @@ export const ABC_SCORE_WEIGHT = {
  * until rollout phase P3 unifies the two systems.
  */
 export const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001';
+
+// ---------------------------------------------------------------------------
+// HR — Employee rating score thresholds (0–100 scale) P3.2
+// ---------------------------------------------------------------------------
+
+/** Employee performance score → rating label (0–100 scale) */
+export const EMPLOYEE_RATING_EXCELLENT = 90;
+export const EMPLOYEE_RATING_GOOD      = 75;
+export const EMPLOYEE_RATING_AVERAGE   = 50;
+
+/** KPI weighting factors for achievement-based scoring (must sum to 1.0) */
+export const KPI_WEIGHT_ACHIEVEMENT = 0.4;
+export const KPI_WEIGHT_QUALITY     = 0.3;
+export const KPI_WEIGHT_OEE         = 0.2;
+export const KPI_WEIGHT_ATTENDANCE  = 0.1;
+
+/** Income tax rate alias (same as PAYROLL_JSHD_RATE_DEFAULT — 12%) */
+export const INCOME_TAX_RATE = PAYROLL_JSHD_RATE_DEFAULT;

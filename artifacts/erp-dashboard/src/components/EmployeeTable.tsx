@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { formatDate } from "@/lib/format";
 import {
   Table,
@@ -62,6 +62,7 @@ interface EmployeeTableProps {
 export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTableProps) {
   const { t } = useTranslation("common");
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [confirmDeleteEmployee, setConfirmDeleteEmployee] = useState<{ id: string; name: string } | null>(null);
   const [confirmResignEmployee, setConfirmResignEmployee] = useState<{ id: string; name: string } | null>(null);
 
@@ -289,10 +290,11 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
                         {t("edit")}
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.location.href = "/org-structure/hierarchy";
+                        // P3.3: use Wouter router instead of full-page reload
+                        setLocation("/org-structure/hierarchy");
                       }}
                       data-testid={`action-org-structure-${employee.id}`}
                     >
