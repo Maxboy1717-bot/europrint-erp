@@ -7,16 +7,23 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ShoppingCart, ArrowRight, Clock, MapPin } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { ShoppingCart, ArrowRight, Clock, MapPin, Plus } from "lucide-react";
 import {
   fmt, PAYMENT_STATUS_COLORS,
 } from "@/lib/sd-helpers";
 import { EPPageHeader } from "@/components/ep";
+import { Pagination } from "@/components/Pagination";
+import { SearchBar } from "@/components/SearchBar";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from "@/lib/i18n/tLabel";
 
 interface OrderTimelineItem {
   id: string;
@@ -54,11 +61,19 @@ interface SalesOrderListItem {
   moduleStatus: string;
   totalValue: number;
   requestedDeliveryDate: string | null;
+  status?: string;
+  createdAt?: string;
 }
 
 interface OrdersListResponse {
   data: SalesOrderListItem[];
   total: number;
+}
+
+interface CustomerItem {
+  id: number;
+  name?: string;
+  title?: string;
 }
 
 const NEXT_STATUS: Record<string, string> = {
@@ -101,18 +116,37 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold",
 };
 
+const CURRENCIES = ["UZS", "USD", "EUR"] as const;
+
+const EMPTY_ORDER_FORM = {
+  companyId: "",
+  totalAmount: "",
+  currency: "UZS" as string,
+  designFlag: false,
+  sampleFlag: false,
+};
+
 export default function SDSalesOrders() {
   const { t } = useTranslation("common");
+  const { isAuthenticated } = useAuth();
   const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [selected, setSelected] = useState<SalesOrderListItem | null>(null);
+  const [createDialog, setCreateDialog] = useState(false);
+  const [orderForm, setOrderForm] = useState({ ...EMPTY_ORDER_FORM });
   const { toast } = useToast();
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery<OrdersListResponse>({
-    queryKey: ["/api/sd/orders", statusFilter],
+    queryKey: ["/api/sd/orders", statusFilter, search, page, pageSize],
     queryFn: () => {
-      const params = new URLSearchParams({ limit: "50" });
+      const params = new URLSearchParams();
+      params.set("limit", String(pageSize));
+      params.set("offset", String((page - 1) * pageSize));
       if (statusFilter !== "all") params.append("status", statusFilter);
+      if (search) params.set("search", search);
       return apiRequest("GET", `/api/sd/orders?${params}`);
     },
   });
@@ -122,6 +156,20 @@ export default function SDSalesOrders() {
     queryFn: () => apiRequest("GET", `/api/sd/orders/${selected?.id}`),
     enabled: !!selected?.id,
   });
+
+  const { data: customersData } = useQuery<unknown>({
+    queryKey: ["/api/sd/customers", "dropdown"],
+    queryFn: () => apiRequest("GET", "/api/sd/customers?limit=200"),
+    enabled: isAuthenticated === true,
+  });
+  const _cd = customersData as Record<string, unknown> | CustomerItem[] | null | undefined;
+  const customers: CustomerItem[] = Array.isArray(_cd)
+    ? (_cd as CustomerItem[])
+    : Array.isArray((_cd as Record<string, unknown>)?.["items"])
+    ? ((_cd as Record<string, unknown>)["items"] as CustomerItem[])
+    : Array.isArray((_cd as Record<string, unknown>)?.["data"])
+    ? ((_cd as Record<string, unknown>)["data"] as CustomerItem[])
+    : [];
 
   const statusMut = useMutation({
     mutationFn: ({ id, status, note }: { id: string; status: string; note?: string }) =>
@@ -138,13 +186,39 @@ export default function SDSalesOrders() {
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       apiRequest("PATCH", `/api/sd/orders/${id}/cancel`, { reason }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/sd/orders"] }); toast({ title: "Bekor qilindi" }); },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
-  const orders = data?.data || [];
+  const createMut = useMutation({
+    mutationFn: (body: typeof EMPTY_ORDER_FORM) =>
+      apiRequest("POST", "/api/sd/orders", {
+        company_id: Number(body.companyId),
+        total_amount: Number(body.totalAmount),
+        currency: body.currency,
+        design_flag: body.designFlag,
+        sample_flag: body.sampleFlag,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/sd/orders"] });
+      setCreateDialog(false);
+      setOrderForm({ ...EMPTY_ORDER_FORM });
+      toast({ title: "Buyurtma yaratildi" });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  const orders = Array.isArray(data?.data) ? data.data : [];
+  const totalItems = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+  function handleSearchChange(val: string) {
+    setSearch(val);
+    setPage(1);
+  }
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-      <div className="flex items-center justify-between mb-6 gap-4">
+      <div className="flex items-center justify-between mb-2 gap-4 flex-wrap">
         <div>
           <EPPageHeader
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("savdoBuyurtmalari")}</b></>}
@@ -152,18 +226,30 @@ export default function SDSalesOrders() {
         subtitle="13 bosqichli buyurtma zanjiri boshqaruvi"
       />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-48 bg-card border-border h-9" data-testid="select-order-status-filter">
-            <SelectValue placeholder={t("barchaHolat")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("Barchasi")}</SelectItem>
-            {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 flex-wrap">
+          <SearchBar
+            value={search}
+            onChange={handleSearchChange}
+            placeholder={tLabel("sd.orders.buyurtmaQidirish", "Buyurtma qidirish...")}
+          />
+          <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setPage(1); }}>
+            <SelectTrigger className="w-48 bg-card border-border h-9" data-testid="select-order-status-filter">
+              <SelectValue placeholder={t("barchaHolat")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("Barchasi")}</SelectItem>
+              {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button onClick={() => setCreateDialog(true)} className="gap-1.5" data-testid="btn-new-order">
+            <Plus className="h-4 w-4" />
+            {tLabel("sd.orders.yangiBuyurtma", "Yangi buyurtma")}
+          </Button>
+        </div>
       </div>
 
-      <div className="flex gap-6 h-[calc(100vh-200px)]">
+      <div className="flex gap-6 h-[calc(100vh-260px)]">
+        {/* Order list */}
         <div className="w-80 flex flex-col gap-2 shrink-0 overflow-y-auto">
           {isLoading && <div className="text-sm text-muted-foreground p-2">{t("Yuklanmoqda...")}</div>}
           {(Array.isArray(orders) ? orders : []).map((o) => (
@@ -172,12 +258,14 @@ export default function SDSalesOrders() {
                 onClick={() => setSelected(o)}>
                 <div className="flex items-center justify-between gap-1 mb-1">
                   <span className="font-mono text-xs font-bold text-foreground">{o.documentNumber}</span>
-                  <span className={STATUS_COLORS[o.moduleStatus] || ""}>
-                    {STATUS_LABELS[o.moduleStatus] || o.moduleStatus}
+                  <span className={STATUS_COLORS[o.moduleStatus] || STATUS_COLORS[o.status || ""] || ""}>
+                    {STATUS_LABELS[o.moduleStatus] || STATUS_LABELS[o.status || ""] || o.moduleStatus}
                   </span>
                 </div>
                 <div className="text-sm font-bold text-foreground">{fmt(o.totalValue)} so'm</div>
-                <div className="text-xs text-muted-foreground font-medium">{o.requestedDeliveryDate || "Sana belgilanmagan"}</div>
+                <div className="text-xs text-muted-foreground font-medium">
+                  {o.requestedDeliveryDate || (o.createdAt ? new Date(o.createdAt).toLocaleDateString("uz-UZ") : "Sana belgilanmagan")}
+                </div>
               </div>
           ))}
           {!isLoading && orders.length === 0 && (
@@ -185,6 +273,7 @@ export default function SDSalesOrders() {
           )}
         </div>
 
+        {/* Detail panel */}
         <div className="flex-1 overflow-y-auto">
           {!selected ? (
             <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
@@ -248,16 +337,16 @@ export default function SDSalesOrders() {
                 <div className="bg-card rounded-xl p-6">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">{t("holatTarixi")}</h3>
                   <div className="space-y-4">
-                    {detail?.timeline?.map((t) => (
-                      <div key={t.id} className="flex items-start gap-3 text-sm">
+                    {detail?.timeline?.map((tl) => (
+                      <div key={tl.id} className="flex items-start gap-3 text-sm">
                         <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
                           <div className="flex-1">
-                            <span className={STATUS_COLORS[t.status] || "bg-muted/40 rounded-full px-2.5 py-0.5 text-xs font-semibold"}>
-                              {STATUS_LABELS[t.status] || t.status}
+                            <span className={STATUS_COLORS[tl.status] || "bg-muted/40 rounded-full px-2.5 py-0.5 text-xs font-semibold"}>
+                              {STATUS_LABELS[tl.status] || tl.status}
                             </span>
-                            {t.note && <div className="text-xs text-muted-foreground mt-1">{t.note}</div>}
+                            {tl.note && <div className="text-xs text-muted-foreground mt-1">{tl.note}</div>}
                           </div>
-                        <div className="text-xs text-muted-foreground shrink-0">{t.createdAt?.slice(0, 16).replace("T", " ")}</div>
+                        <div className="text-xs text-muted-foreground shrink-0">{tl.createdAt?.slice(0, 16).replace("T", " ")}</div>
                       </div>
                     ))}
                   </div>
@@ -289,6 +378,104 @@ export default function SDSalesOrders() {
           )}
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalItems > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={setPage}
+          onPageSizeChange={(sz) => { setPageSize(sz); setPage(1); }}
+        />
+      )}
+
+      {/* Create order dialog */}
+      <Dialog open={createDialog} onOpenChange={setCreateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">{tLabel("sd.orders.yangiBuyurtma", "Yangi buyurtma")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>{tLabel("sd.orders.mijozKompaniya", "Mijoz (kompaniya)")}</Label>
+              <Select value={orderForm.companyId} onValueChange={v => setOrderForm(f => ({ ...f, companyId: v }))}>
+                <SelectTrigger className="h-9" data-testid="select-order-company">
+                  <SelectValue placeholder={tLabel("sd.orders.mijozniTanlang", "Mijozni tanlang")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Array.isArray(customers) ? customers : []).map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name || c.title || `Mijoz #${c.id}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{tLabel("sd.orders.umumiySumma", "Umumiy summa")}</Label>
+              <Input
+                type="number"
+                value={orderForm.totalAmount}
+                onChange={e => setOrderForm(f => ({ ...f, totalAmount: e.target.value }))}
+                placeholder="0"
+                data-testid="input-order-amount"
+              />
+            </div>
+            <div>
+              <Label>{tLabel("sd.orders.valyuta", "Valyuta")}</Label>
+              <Select value={orderForm.currency} onValueChange={v => setOrderForm(f => ({ ...f, currency: v }))}>
+                <SelectTrigger className="h-9" data-testid="select-order-currency">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map(c => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="design-flag"
+                  checked={orderForm.designFlag}
+                  onCheckedChange={v => setOrderForm(f => ({ ...f, designFlag: !!v }))}
+                  data-testid="check-design-flag"
+                />
+                <Label htmlFor="design-flag" className="font-normal cursor-pointer">
+                  {tLabel("sd.orders.dizaynKerak", "Dizayn kerak")}
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="sample-flag"
+                  checked={orderForm.sampleFlag}
+                  onCheckedChange={v => setOrderForm(f => ({ ...f, sampleFlag: !!v }))}
+                  data-testid="check-sample-flag"
+                />
+                <Label htmlFor="sample-flag" className="font-normal cursor-pointer">
+                  {tLabel("sd.orders.namunaKerak", "Namuna kerak")}
+                </Label>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" className="flex-1" onClick={() => setCreateDialog(false)}>
+                {t("cancel")}
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={() => createMut.mutate(orderForm)}
+                disabled={!orderForm.companyId || createMut.isPending}
+                data-testid="btn-save-order"
+              >
+                {createMut.isPending ? "Saqlanmoqda..." : tLabel("sd.orders.saqlash", "Saqlash")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -10,11 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { PageState } from "@/components/ui/page-state";
 import { useToast } from "@/hooks/use-toast";
-import { FileCheck, Search, CheckCircle, Clock, Eye } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { FileCheck, Search, CheckCircle, Clock, Eye, Plus } from "lucide-react";
 import { EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from "@/lib/i18n/tLabel";
 
 interface ContractItem {
   id: string;
@@ -26,6 +30,12 @@ interface ContractItem {
   status: string;
   signedAt: string | null;
   createdAt: string;
+}
+
+interface CustomerItem {
+  id: number;
+  name?: string;
+  title?: string;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -48,12 +58,24 @@ const TEMPLATE_LABELS: Record<string, string> = {
   oneTime: "Bir martalik",
 };
 
+const EMPTY_FORM = {
+  customerId: "",
+  startDate: "",
+  endDate: "",
+  totalAmount: "",
+  paymentTerms: "",
+  notes: "",
+};
+
 export default function SDContracts() {
   const { t } = useTranslation("common");
+  const { isAuthenticated } = useAuth();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState<ContractItem | null>(null);
   const [signDialog, setSignDialog] = useState<ContractItem | null>(null);
+  const [createDialog, setCreateDialog] = useState(false);
+  const [form, setForm] = useState({ ...EMPTY_FORM });
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -67,6 +89,20 @@ export default function SDContracts() {
     },
   });
 
+  const { data: customersData } = useQuery<unknown>({
+    queryKey: ["/api/sd/customers", "dropdown"],
+    queryFn: () => apiRequest("GET", "/api/sd/customers?limit=200"),
+    enabled: isAuthenticated === true,
+  });
+  const _cd = customersData as Record<string, unknown> | CustomerItem[] | null | undefined;
+  const customers: CustomerItem[] = Array.isArray(_cd)
+    ? (_cd as CustomerItem[])
+    : Array.isArray((_cd as Record<string, unknown>)?.["items"])
+    ? ((_cd as Record<string, unknown>)["items"] as CustomerItem[])
+    : Array.isArray((_cd as Record<string, unknown>)?.["data"])
+    ? ((_cd as Record<string, unknown>)["data"] as CustomerItem[])
+    : [];
+
   const signMut = useMutation({
     mutationFn: (id: string) =>
       apiRequest("PATCH", `/api/sd/contracts/${id}/sign`, {}),
@@ -74,6 +110,25 @@ export default function SDContracts() {
       qc.invalidateQueries({ queryKey: ["/api/sd/contracts"] });
       setSignDialog(null);
       toast({ title: "Shartnoma imzolandi" });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: typeof EMPTY_FORM) =>
+      apiRequest("POST", "/api/sd/contracts", {
+        customer_id: Number(data.customerId),
+        start_date: data.startDate,
+        end_date: data.endDate,
+        total_amount: Number(data.totalAmount),
+        payment_terms: data.paymentTerms,
+        notes: data.notes,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/sd/contracts"] });
+      setCreateDialog(false);
+      setForm({ ...EMPTY_FORM });
+      toast({ title: "Shartnoma yaratildi" });
     },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
@@ -95,6 +150,12 @@ export default function SDContracts() {
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("shartnomalarBoshqaruvi")}</b></>}
         title={t("shartnomalarBoshqaruvi")}
         subtitle={t("shartnomalarArxiviVaHolatBoshqaruvi")}
+        actions={
+          <Button onClick={() => setCreateDialog(true)} className="gap-1.5">
+            <Plus className="h-4 w-4" />
+            {tLabel("sd.contracts.yangiShartnoma", "Yangi shartnoma")}
+          </Button>
+        }
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -221,6 +282,7 @@ export default function SDContracts() {
         </div>
       </PageState>
 
+      {/* View dialog */}
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent>
           <DialogHeader>
@@ -273,6 +335,7 @@ export default function SDContracts() {
         </DialogContent>
       </Dialog>
 
+      {/* Sign confirm dialog */}
       <Dialog open={!!signDialog} onOpenChange={() => setSignDialog(null)}>
         <DialogContent>
           <DialogHeader>
@@ -292,6 +355,93 @@ export default function SDContracts() {
             >
               {signMut.isPending ? "Saqlanmoqda..." : "Tasdiqlash"}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create contract dialog */}
+      <Dialog open={createDialog} onOpenChange={setCreateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">{tLabel("sd.contracts.yangiShartnoma", "Yangi shartnoma")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>{tLabel("sd.contracts.mijoz", "Mijoz")}</Label>
+              <Select value={form.customerId} onValueChange={v => setForm(f => ({ ...f, customerId: v }))}>
+                <SelectTrigger className="h-9" data-testid="select-contract-customer">
+                  <SelectValue placeholder={tLabel("sd.contracts.mijozniTanlang", "Mijozni tanlang")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Array.isArray(customers) ? customers : []).map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name || c.title || `Mijoz #${c.id}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>{tLabel("sd.contracts.boshlanishSanasi", "Boshlanish sanasi")}</Label>
+                <Input
+                  type="date"
+                  value={form.startDate}
+                  onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
+                  data-testid="input-contract-start-date"
+                />
+              </div>
+              <div>
+                <Label>{tLabel("sd.contracts.tugashSanasi", "Tugash sanasi")}</Label>
+                <Input
+                  type="date"
+                  value={form.endDate}
+                  onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))}
+                  data-testid="input-contract-end-date"
+                />
+              </div>
+            </div>
+            <div>
+              <Label>{tLabel("sd.contracts.umumiySumma", "Umumiy summa")}</Label>
+              <Input
+                type="number"
+                value={form.totalAmount}
+                onChange={e => setForm(f => ({ ...f, totalAmount: e.target.value }))}
+                placeholder="0"
+                data-testid="input-contract-amount"
+              />
+            </div>
+            <div>
+              <Label>{tLabel("sd.contracts.tolovShartlari", "To'lov shartlari")}</Label>
+              <Input
+                value={form.paymentTerms}
+                onChange={e => setForm(f => ({ ...f, paymentTerms: e.target.value }))}
+                placeholder={tLabel("sd.contracts.masalan30Kun", "Masalan: 30 kun")}
+                data-testid="input-contract-payment-terms"
+              />
+            </div>
+            <div>
+              <Label>{tLabel("sd.contracts.izoh", "Izoh")}</Label>
+              <Textarea
+                value={form.notes}
+                onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                rows={2}
+                data-testid="textarea-contract-notes"
+              />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" className="flex-1" onClick={() => setCreateDialog(false)}>
+                {t("cancel")}
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={() => createMutation.mutate(form)}
+                disabled={!form.customerId || createMutation.isPending}
+                data-testid="btn-create-contract"
+              >
+                {createMutation.isPending ? "Saqlanmoqda..." : tLabel("sd.contracts.saqlash", "Saqlash")}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

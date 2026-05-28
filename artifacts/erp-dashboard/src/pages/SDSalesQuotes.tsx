@@ -7,7 +7,15 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { FileText } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { FileText, Send, CheckCircle, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { fmt, QUOT_STATUS_LABELS, QUOT_STATUS_COLORS } from "@/lib/sd-helpers";
 import {
   defaultCalcForm,
   defaultQuotationForm,
@@ -18,29 +26,80 @@ import {
   type SdQuotationItem,
 } from "./SDSalesQuotesTypes";
 import { NewQuotationDialog } from "./SDSalesQuotesDialogs";
-import { QuotationList } from "./SDSalesQuotesSections";
-import { EPPageHeader } from "@/components/ep";
+import { EPPageHeader, EPSkeletonTable, EPEmptyState, EPErrorState } from "@/components/ep";
+import { Pagination } from "@/components/Pagination";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from "@/lib/i18n/tLabel";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface EditForm {
+  validUntil: string;
+  paymentTerms: string;
+  notes: string;
+}
+
+const EMPTY_EDIT: EditForm = { validUntil: "", paymentTerms: "", notes: "" };
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function SDSalesQuotes() {
   const { t } = useTranslation("common");
+  const { isAuthenticated } = useAuth();
   const [isNew, setIsNew] = useState(false);
   const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
   const [calcForm, setCalcForm] = useState<CalcForm>({ ...defaultCalcForm });
   const [form, setForm] = useState<QuotationForm>({ ...defaultQuotationForm });
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  // Edit dialog
+  const [editDialog, setEditDialog] = useState<{ open: boolean; quotation?: SdQuotationItem }>({ open: false });
+  const [editForm, setEditForm] = useState<EditForm>({ ...EMPTY_EDIT });
+
+  // Delete confirm
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const { data: quotations = [], isLoading, isError, refetch } = useQuery<SdQuotationItem[]>({
-    queryKey: ["/api/sd/quotations"],
+  const { data: quotationsRaw, isLoading, isError, refetch } = useQuery<unknown>({
+    queryKey: ["/api/sd/quotations", page, pageSize],
+    queryFn: () => {
+      const p = new URLSearchParams();
+      p.set("limit", String(pageSize));
+      p.set("offset", String((page - 1) * pageSize));
+      return apiRequest("GET", `/api/sd/quotations?${p}`);
+    },
+    enabled: isAuthenticated === true,
   });
+
+  // Support both paginated `{ data, total }` and plain array
+  type QuotationPage = { data?: SdQuotationItem[]; items?: SdQuotationItem[]; total?: number };
+  const _qr = quotationsRaw as QuotationPage | SdQuotationItem[] | null | undefined;
+  const quotations: SdQuotationItem[] = Array.isArray(_qr)
+    ? (_qr as SdQuotationItem[])
+    : Array.isArray((_qr as QuotationPage)?.data)
+    ? (_qr as QuotationPage).data!
+    : Array.isArray((_qr as QuotationPage)?.items)
+    ? (_qr as QuotationPage).items!
+    : [];
+  const totalItems: number = (_qr as QuotationPage)?.total ?? quotations.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
   const { data: customersData } = useQuery<{ data: SdCustomerItem[] }>({
     queryKey: ["/api/sd/customers"],
     queryFn: () => apiRequest("GET", "/api/sd/customers?limit=200"),
   });
+  const customers = Array.isArray(customersData?.data)
+    ? customersData.data
+    : Array.isArray(customersData)
+    ? (customersData as unknown as SdCustomerItem[])
+    : [];
 
-  const customers = customersData?.data || [];
+  // ── Mutations ──────────────────────────────────────────────────────────────
 
   const calcMut = useMutation({
     mutationFn: (body: Record<string, unknown>) => apiRequest<PriceResult>("POST", "/api/sd/calculate-price", body),
@@ -80,6 +139,33 @@ export default function SDSalesQuotes() {
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
+  const editMut = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: EditForm }) =>
+      apiRequest("PATCH", `/api/sd/quotations/${id}`, {
+        valid_until: data.validUntil,
+        payment_terms: data.paymentTerms,
+        notes: data.notes,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/sd/quotations"] });
+      setEditDialog({ open: false });
+      toast({ title: "Taklifnoma yangilandi" });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/sd/quotations/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/sd/quotations"] });
+      setDeleteId(null);
+      toast({ title: "Taklifnoma o'chirildi" });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
+
   function handleCalc() {
     calcMut.mutate({
       ...calcForm,
@@ -114,6 +200,17 @@ export default function SDSalesQuotes() {
     });
   }
 
+  function openEdit(q: SdQuotationItem) {
+    setEditForm({
+      validUntil: q.validUntil ?? "",
+      paymentTerms: "",
+      notes: q.notes ?? "",
+    });
+    setEditDialog({ open: true, quotation: q });
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center gap-3 pb-6 mb-6">
@@ -143,16 +240,206 @@ export default function SDSalesQuotes() {
         />
       </div>
 
-      <QuotationList
-        quotations={quotations as SdQuotationItem[]}
-        isLoading={isLoading}
-        isError={isError}
-        onRetry={refetch}
-        onSend={(id) => sendMut.mutate(id)}
-        onApprove={(id) => approveMut.mutate(id)}
-        isSendPending={sendMut.isPending}
-        isApprovePending={approveMut.isPending}
-      />
+      {/* Table view */}
+      {isLoading ? (
+        <EPSkeletonTable rows={6} cols={6} />
+      ) : isError ? (
+        <EPErrorState onRetry={refetch} />
+      ) : quotations.length === 0 ? (
+        <EPEmptyState
+          icon={FileText}
+          title="Hozircha taklifnomalar yo'q"
+          description="Yuqoridagi tugma orqali birinchi taklifnomani yarating."
+        />
+      ) : (
+        <div className="bg-card rounded-xl overflow-hidden">
+          <table className="w-full text-left">
+            <thead>
+              <tr>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">
+                  {tLabel("sd.quotes.raqam", "Raqam")}
+                </th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">
+                  {tLabel("sd.quotes.mijoz", "Mijoz")}
+                </th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">
+                  {t("status28") || "Status"}
+                </th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">
+                  {tLabel("sd.quotes.summa", "Summa")}
+                </th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">
+                  {tLabel("sd.quotes.muddat", "Muddat")}
+                </th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">
+                  {t("Amallar") || "Amallar"}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {(Array.isArray(quotations) ? quotations : []).map((q: SdQuotationItem) => (
+                <tr key={q.id} className="hover:bg-muted/40 transition-colors border-b last:border-0" data-testid={`row-quotation-${q.id}`}>
+                  <td className="py-3 px-4 font-mono text-sm font-semibold">
+                    {q.quotationNumber || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    {q.customerName || "—"}
+                  </td>
+                  <td className="py-3 px-4">
+                    <Badge className={`text-xs ${QUOT_STATUS_COLORS[q.status ?? ""] || ""}`}>
+                      {QUOT_STATUS_LABELS[q.status ?? ""] || q.status}
+                    </Badge>
+                  </td>
+                  <td className="py-3 px-4 text-sm font-semibold text-right">
+                    {fmt(q.totalPrice ?? 0)} so'm
+                  </td>
+                  <td className="py-3 px-4 text-sm text-muted-foreground">
+                    {q.validUntil || "—"}
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex gap-1 justify-end">
+                      {q.status === "draft" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => sendMut.mutate(q.id)}
+                          disabled={sendMut.isPending}
+                          data-testid={`btn-send-${q.id}`}
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                      {(q.status === "sent" || q.status === "draft") && (
+                        <Button
+                          size="sm"
+                          onClick={() => approveMut.mutate(q.id)}
+                          disabled={approveMut.isPending}
+                          data-testid={`btn-approve-${q.id}`}
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openEdit(q)}
+                        data-testid={`btn-edit-${q.id}`}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-[var(--ep-red)] hover:text-[var(--ep-red)] hover:bg-red-50"
+                        onClick={() => setDeleteId(q.id)}
+                        data-testid={`btn-delete-${q.id}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalItems > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={setPage}
+          onPageSizeChange={(sz) => { setPageSize(sz); setPage(1); }}
+        />
+      )}
+
+      {/* Edit dialog */}
+      <Dialog
+        open={editDialog.open}
+        onOpenChange={(open) => setEditDialog(d => ({ ...d, open }))}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">
+              {tLabel("sd.quotes.taklifnomaTahrirlash", "Taklifnomani tahrirlash")} — {editDialog.quotation?.quotationNumber}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>{tLabel("sd.quotes.amalMuddati", "Amal qilish muddati")}</Label>
+              <Input
+                type="date"
+                value={editForm.validUntil}
+                onChange={e => setEditForm(f => ({ ...f, validUntil: e.target.value }))}
+                data-testid="input-edit-valid-until"
+              />
+            </div>
+            <div>
+              <Label>{tLabel("sd.quotes.tolovShartlari", "To'lov shartlari")}</Label>
+              <Input
+                value={editForm.paymentTerms}
+                onChange={e => setEditForm(f => ({ ...f, paymentTerms: e.target.value }))}
+                placeholder={tLabel("sd.quotes.masalan30Kun", "Masalan: 30 kun")}
+                data-testid="input-edit-payment-terms"
+              />
+            </div>
+            <div>
+              <Label>{tLabel("sd.quotes.izoh", "Izoh")}</Label>
+              <Textarea
+                value={editForm.notes}
+                onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))}
+                rows={3}
+                data-testid="textarea-edit-notes"
+              />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" className="flex-1" onClick={() => setEditDialog({ open: false })}>
+                {t("cancel")}
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={() => editDialog.quotation && editMut.mutate({ id: editDialog.quotation.id, data: editForm })}
+                disabled={editMut.isPending}
+                data-testid="btn-save-edit"
+              >
+                {editMut.isPending ? "Saqlanmoqda..." : tLabel("sd.quotes.saqlash", "Saqlash")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirm dialog */}
+      <Dialog open={deleteId !== null} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">
+              {tLabel("sd.quotes.ochirishTasdiqlash", "O'chirishni tasdiqlaysizmi?")}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {tLabel("sd.quotes.ochirishOgohlantirish", "Bu taklifnoma butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.")}
+          </p>
+          <div className="flex gap-2 mt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setDeleteId(null)}>
+              {t("cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={() => deleteId && deleteMut.mutate(deleteId)}
+              disabled={deleteMut.isPending}
+              data-testid="btn-confirm-delete"
+            >
+              {deleteMut.isPending ? "O'chirilmoqda..." : tLabel("sd.quotes.ochirish", "O'chirish")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

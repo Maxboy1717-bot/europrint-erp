@@ -5,109 +5,176 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { cn } from "@/lib/utils";
-import { ChevronRight } from "lucide-react";
-import { CrmDashboardAnalysis, Deal, Invoice, Lead } from "./SDDashboardTypes";
+import { ChevronRight, ShoppingCart, Factory, Warehouse, Truck, AlertCircle, TrendingUp } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from '@/lib/i18n';
-import {
-  KpiSection,
-  AiSummaryCard,
-  AttentionSection,
-  AiAnalysisSection,
-} from "./SDDashboardSections";
+import { fmtMoney } from "./SDDashboardTypes";
+import { EPPageHeader, EPKpiCard, EPSkeletonKpiRow, EPErrorState } from "@/components/ep";
+
+// ─── Response Shapes ──────────────────────────────────────────────────────────
+
+interface OverviewResponse {
+  newOrdersThisWeek?: { count: number; totalAmount: number };
+  inProduction?: { count: number; totalAmount: number };
+  arrivedInWarehouse?: { count: number; totalAmount: number };
+  inDelivery?: { count: number };
+  debtors?: { totalAmount: number; count: number };
+  monthlyRevenue?: { amount: number; collected: number };
+}
+
+interface FunnelItem {
+  status: string;
+  count: number;
+  totalValue: number;
+}
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function SDDashboard() {
   const { t } = useTranslation('common');
-  const { data: aiAnalysis, isLoading: aiLoad } = useQuery<CrmDashboardAnalysis>({
-    queryKey: ["/api/crm/ai/dashboard-analysis"],
+  const { isAuthenticated } = useAuth();
+
+  const {
+    data: overview,
+    isLoading: overviewLoad,
+    isError: overviewError,
+    refetch: refetchOverview,
+  } = useQuery<OverviewResponse>({
+    queryKey: ["/api/sd/dashboard/overview"],
+    queryFn: () => apiRequest("GET", "/api/sd/dashboard/overview"),
+    enabled: isAuthenticated === true,
   });
 
-  const { data: leadsRaw, isLoading: leadsLoad } = useQuery<{ data?: Lead[] } | Lead[]>({
-    queryKey: ["/api/crm/leads"],
+  const {
+    data: funnelRaw,
+    isLoading: funnelLoad,
+  } = useQuery<FunnelItem[]>({
+    queryKey: ["/api/sd/reports/funnel"],
+    queryFn: () => apiRequest("GET", "/api/sd/reports/funnel"),
+    enabled: isAuthenticated === true,
   });
 
-  const { data: dealsRaw, isLoading: dealsLoad } = useQuery<{ data?: Deal[] } | Deal[]>({
-    queryKey: ["/api/crm/deals"],
-  });
-
-  const { data: invRaw, isLoading: invLoad } = useQuery<{ data?: Invoice[] } | Invoice[]>({
-    queryKey: ["/api/crm/invoices"],
-  });
-
-  const loading = aiLoad || leadsLoad || dealsLoad || invLoad;
-
-  const leads: Lead[] = Array.isArray(leadsRaw) ? leadsRaw : (leadsRaw as { data?: Lead[] })?.data || [];
-  const deals: Deal[] = Array.isArray(dealsRaw) ? dealsRaw : (dealsRaw as { data?: Deal[] })?.data || [];
-  const invoices: Invoice[] = Array.isArray(invRaw) ? invRaw : (invRaw as { data?: Invoice[] })?.data || [];
-
-  const stats = aiAnalysis?.stats ?? { leads: leads.length, deals: deals.length, contacts: 0, companies: 0 };
-  const convRate = stats.leads > 0 ? Math.round((stats.deals / stats.leads) * 100) : 0;
-  const pipelineValue = (Array.isArray(deals) ? deals : []).reduce((s, d) => s + (d.opportunity || 0), 0);
-
-  const health = aiAnalysis?.analysis?.overallHealth || "o'rtacha";
-  const healthColor = health === "yaxshi" ? "text-[var(--ep-green)] bg-green-50" :
-    health === "yomon" ? "text-[var(--ep-red)] bg-red-50" : "text-[var(--ep-yellow)] bg-amber-50";
-
-  const leadsByStatus: Record<string, number> = {};
-  (Array.isArray(leads) ? leads : []).forEach(l => {
-    const k = String(l.statusId ?? "yangi");
-    leadsByStatus[k] = (leadsByStatus[k] || 0) + 1;
-  });
+  const funnel: FunnelItem[] = Array.isArray(funnelRaw) ? funnelRaw : [];
+  const loading = overviewLoad || funnelLoad;
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("crmSavdoDashbordi")}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{t("savdoMenejeriningKunlikKorinishi")}</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {!aiLoad && aiAnalysis?.analysis && (
-            <Badge className={cn("text-xs font-semibold px-3", healthColor)}>
-              Holat: {health}
-            </Badge>
-          )}
+      <EPPageHeader
+        breadcrumb={<>{t("dashboardSd")}<b className="text-foreground">{t("crmSavdoDashbordi")}</b></>}
+        title={t("crmSavdoDashbordi")}
+        subtitle={t("savdoMenejeriningKunlikKorinishi")}
+        actions={
           <Button variant="outline" size="sm" asChild>
-            <Link href="/crm-workspace">
-              CRM <ChevronRight className="w-3.5 h-3.5 ml-1" />
+            <Link href="/sd/sales-management">
+              {t("buyurtmalar")} <ChevronRight className="w-3.5 h-3.5 ml-1" />
             </Link>
           </Button>
+        }
+      />
+
+      {/* KPI Row */}
+      {loading ? (
+        <EPSkeletonKpiRow count={6} />
+      ) : overviewError ? (
+        <EPErrorState onRetry={refetchOverview} />
+      ) : (
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <EPKpiCard
+            label={t("yangiOrderlarHafta") || "Yangi buyurtmalar (hafta)"}
+            value={overview?.newOrdersThisWeek?.count ?? 0}
+            icon={ShoppingCart}
+            iconBg="sd"
+            enterDelayMs={0}
+          />
+          <EPKpiCard
+            label={t("ishlabyiqarishda") || "Ishlab chiqarishda"}
+            value={overview?.inProduction?.count ?? 0}
+            icon={Factory}
+            iconBg="var(--ep-yellow)"
+            enterDelayMs={60}
+          />
+          <EPKpiCard
+            label={t("omborGeldi") || "Omborga keldi"}
+            value={overview?.arrivedInWarehouse?.count ?? 0}
+            icon={Warehouse}
+            iconBg="var(--ep-green)"
+            enterDelayMs={120}
+          />
+          <EPKpiCard
+            label={t("yetkazishda") || "Yetkazishda"}
+            value={overview?.inDelivery?.count ?? 0}
+            icon={Truck}
+            iconBg="var(--ep-blue)"
+            enterDelayMs={180}
+          />
+          <EPKpiCard
+            label={t("debitorlar") || "Debitorlar"}
+            value={overview?.debtors?.count ?? 0}
+            staticValue={overview?.debtors?.totalAmount
+              ? fmtMoney(overview.debtors.totalAmount)
+              : undefined}
+            icon={AlertCircle}
+            iconBg="var(--ep-red)"
+            enterDelayMs={240}
+          />
+          <EPKpiCard
+            label={t("oylikDaromad") || "Oylik daromad"}
+            staticValue={overview?.monthlyRevenue?.amount
+              ? fmtMoney(overview.monthlyRevenue.amount)
+              : "0"}
+            icon={TrendingUp}
+            iconBg="var(--ep-purple)"
+            enterDelayMs={300}
+          />
         </div>
-      </div>
+      )}
 
-      <KpiSection
-        stats={stats}
-        pipelineValue={pipelineValue}
-        convRate={convRate}
-        loading={loading}
-      />
+      {/* Funnel table */}
+      {funnel.length > 0 && (
+        <div className="bg-card rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t("savdoFunneli") || "Savdo funnel"}
+            </p>
+          </div>
+          <table className="w-full text-left">
+            <thead>
+              <tr>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{t("status28") || "Status"}</th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t("soni") || "Soni"}</th>
+                <th className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t("qiymati") || "Qiymati"}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {funnel.map((row, i) => (
+                <tr key={`funnel-${i}`} className="hover:bg-muted/40 transition-colors border-b last:border-0">
+                  <td className="py-3 px-6 text-sm font-medium capitalize">{row.status}</td>
+                  <td className="py-3 px-6 text-sm text-right font-semibold">{row.count}</td>
+                  <td className="py-3 px-6 text-sm text-right font-semibold text-[var(--ep-green)]">
+                    {fmtMoney(row.totalValue)} so'm
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      <AiSummaryCard aiLoad={aiLoad} aiAnalysis={aiAnalysis} />
-
-      <AttentionSection
-        leads={leads}
-        deals={deals}
-        invoices={invoices}
-        leadsByStatus={leadsByStatus}
-        leadsLoad={leadsLoad}
-        dealsLoad={dealsLoad}
-        invLoad={invLoad}
-      />
-
-      <AiAnalysisSection aiLoad={aiLoad} aiAnalysis={aiAnalysis} />
-
-      {/* Tezkor harakatlar */}
+      {/* Quick actions */}
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" asChild><Link href="/crm-workspace">{t("crmWorkspace")}</Link></Button>
-        <Button variant="outline" size="sm" asChild><Link href="/sd/sales-management">{t("buyurtmalar")}</Link></Button>
-        <Button variant="outline" size="sm" asChild><Link href="/sd/dashboard/quota">{t("kvota")}</Link></Button>
-        <Button variant="outline" size="sm" asChild><Link href="/sd/dashboard/overview">{t('overview')}</Link></Button>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/sd/sales-management">{t("buyurtmalar")}</Link>
+        </Button>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/sd/dashboard/quota">{t("kvota")}</Link>
+        </Button>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/sd/dashboard/overview">{t('overview') || "Overview"}</Link>
+        </Button>
       </div>
     </div>
   );
