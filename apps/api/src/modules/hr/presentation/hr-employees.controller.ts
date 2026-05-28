@@ -12,7 +12,7 @@ import {
   Query, UseGuards, UseInterceptors, InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { assertOk, throwFromError, unwrapOrThrow } from '@common/http-result';
+import { assertOk, throwFromError, unwrapOrThrow, unwrapOrDefault } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -60,7 +60,7 @@ export class HrEmployeesController {
         limit:        parseInt(query.limit ?? '20', 10),
       }),
     );
-    return unwrapOrThrow(res);
+    return unwrapOrDefault(res, { items: [], total: 0 });
   }
 
   @ApiOperation({ summary: 'Get employee' })

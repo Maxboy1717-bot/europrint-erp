@@ -104,7 +104,10 @@ export default function Employees() {
       return fetch(`/api/hr/employees?${params.toString()}`, {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-      }).then((r) => r.json());
+      }).then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      });
     },
     enabled: isAuthenticated === true,
   });
