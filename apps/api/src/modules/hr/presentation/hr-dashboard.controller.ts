@@ -100,8 +100,9 @@ export class HrDashboardController {
   }
 
   @Get('dashboard-stats')
-  async getDashboardStats() {
-    return unwrapOrDefault(await this.svc.getAlerts(), []);
+  getDashboardStats() {
+    // TODO: implement real HR summary stats (totalEmployees, active, onLeave, alerts)
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('adaptation')
