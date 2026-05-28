@@ -7,8 +7,10 @@ import { assertFound } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
 import {
-BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpException, HttpStatus, Logger, NotFoundException, Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes,
+BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpException, HttpStatus, Logger, NotFoundException, Param, ParseIntPipe, Patch, Post, Put, Query, Res, StreamableFile, UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
+import { Readable } from 'stream';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { I18nService } from 'nestjs-i18n';
@@ -78,7 +80,6 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { SdCustomersService } from '../application/sd-customers.service';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   SdUpdateCustomerSchema, SdUpdateCustomerDto,
   SdAddContactSchema, SdAddContactDto,
@@ -115,6 +116,22 @@ export class SdCustomersController {
     // Return as { data: [...] } for frontend compatibility (also handles plain array)
     const arr = Array.isArray(rows) ? rows : [];
     return { data: arr, total: arr.length };
+  }
+
+  @ApiOperation({ summary: 'Export customers as CSV' })
+  @ApiResponse({ status: 200, description: 'CSV file' })
+  @Get('export')
+  @Roles('super_admin', 'director', 'sales_manager')
+  async exportCustomers(
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Res({ passthrough: true }) res?: FastifyReply,
+  ): Promise<StreamableFile> {
+    const result = await this.svc.exportCsv(search, status);
+    if (!result.ok) throw new HttpException('Export failed', HttpStatus.INTERNAL_SERVER_ERROR);
+    void res!.header('Content-Type', 'text/csv; charset=utf-8')
+              .header('Content-Disposition', 'attachment; filename="customers.csv"');
+    return new StreamableFile(Readable.from(Buffer.from(result.data as string, 'utf-8')));
   }
 
   @ApiOperation({ summary: 'Get by id' })
@@ -386,20 +403,25 @@ export class SdCustomersController {
     return unwrapOrThrow(await this.svc.getComplaints(safeInt(id, 0)));
   }
 
-  // P3-26: createComplaint is not yet wired - the real SdCustomersService only
-  // exposes getComplaints/resolveComplaint. Validate the payload then return
-  // 501 instead of echoing a fake created record.
   @ApiOperation({ summary: 'Create complaint' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Post(':id/complaints')
   @UseGuards(RolesGuard)
   @Roles(...SD_WRITE_ROLES)
-  async createComplaint(@Param('id') _id: string, @Body() body: unknown) {
-    CreateComplaintSchema.parse(body);
-    return notImplemented('POST /sd/customers/:id/complaints');
+  async createComplaint(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: unknown,
+  ) {
+    const parsed = z.object({
+      subject: z.string().min(1),
+      description: z.string().optional(),
+      severity: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
+    }).parse(body);
+    const result = await this.svc.createComplaint(id, parsed);
+    if (!result.ok) throw new BadRequestException(result.error.message);
+    return result.data;
   }
 
   @ApiOperation({ summary: 'Resolve complaint' })

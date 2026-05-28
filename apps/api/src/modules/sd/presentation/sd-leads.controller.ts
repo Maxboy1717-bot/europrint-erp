@@ -65,6 +65,26 @@ export class SdLeadsController {
     return unwrapOrThrow(await this.svc.exportLeads(from, to, status));
   }
 
+  @ApiOperation({ summary: 'Bulk import leads from CSV rows' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('import')
+  @Roles(...SD_ADMIN_ROLES)
+  async importLeads(@Body() body: { rows: Array<Record<string, string>> }) {
+    let imported = 0; let skipped = 0; const errors: string[] = [];
+    for (const row of (Array.isArray(body.rows) ? body.rows : [])) {
+      if (!row.title) { skipped++; continue; }
+      const r = await this.svc.create({
+        title: row.title,
+        source: row.source ?? null,
+        expected_amount: row.amount ? Number(row.amount) : null,
+        notes: row.notes ?? null,
+      });
+      if (r.ok) imported++; else { skipped++; errors.push(`${row.title}: ${r.error?.message ?? 'error'}`); }
+    }
+    return { imported, skipped, errors };
+  }
+
   @ApiOperation({ summary: 'Get by id' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })

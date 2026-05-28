@@ -161,3 +161,57 @@ export async function updateInternalNotes(cid: number, body: Record<string, unkn
   `);
   return rows.rows as Row[];
 }
+
+export async function exportCsv(search?: string, status?: string): Promise<string> {
+  const pat = search ? `%${search}%` : null;
+  const dbStatus = status === 'regular' ? 'active'
+    : status === 'vip' ? 'vip'
+    : status === 'potential' ? 'at_risk'
+    : status === 'new' ? 'new'
+    : (status && status !== 'all') ? status : null;
+
+  const rows = await runQuery<Row>(sql`
+    SELECT c.id, c.name, c.stir, c.phone, c.email, c.actual_address,
+           c.status, c.industry, c.credit_limit,
+           COUNT(DISTINCT o.id)::int AS total_orders,
+           COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS open_debt
+    FROM sd_customers c
+    LEFT JOIN sales_orders o ON o.customer_id = c.id
+    WHERE c.status != 'deleted'
+      AND (${pat}::text IS NULL OR c.name ILIKE ${pat} OR c.stir ILIKE ${pat})
+      AND (${dbStatus}::text IS NULL OR c.status = ${dbStatus})
+    GROUP BY c.id, c.name, c.stir, c.phone, c.email, c.actual_address,
+             c.status, c.industry, c.credit_limit
+    ORDER BY c.name
+    LIMIT 5000
+  `);
+
+  const header = ['Nomi', 'INN', 'Telefon', 'Email', 'Manzil', 'Segment', 'Holat', 'Qarz', 'Buyurtmalar'].join(',');
+  const csvRows = (rows.rows as Row[]).map(c => [
+    `"${String(c.name ?? '').replace(/"/g, '""')}"`,
+    c.stir ?? '',
+    c.phone ?? '',
+    c.email ?? '',
+    `"${String(c.actual_address ?? '').replace(/"/g, '""')}"`,
+    c.industry ?? '',
+    c.status ?? '',
+    c.open_debt ?? 0,
+    c.total_orders ?? 0,
+  ].join(','));
+  return [header, ...csvRows].join('\n');
+}
+
+export async function createComplaint(
+  customerId: number,
+  data: { subject: string; description?: string; severity: string },
+): Promise<Row> {
+  const rows = await runQuery<Row>(sql`
+    INSERT INTO sd_customer_complaints
+      (customer_id, subject, description, severity, status, created_at)
+    VALUES
+      (${customerId}, ${data.subject}, ${data.description ?? null},
+       ${data.severity}, 'open', NOW())
+    RETURNING *
+  `);
+  return (rows.rows[0] ?? {}) as Row;
+}

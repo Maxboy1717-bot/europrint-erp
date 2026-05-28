@@ -113,7 +113,15 @@ export class SdCustomersService {
     return safeCall(async () => this.repo.getComplaints(cid));
   }
 
+  async createComplaint(customerId: number, data: { subject: string; description?: string; severity: string }) {
+    return safeCall(async () => this.repo.createComplaint(customerId, data));
+  }
+
   async resolveComplaint(customerId: number, complaintId: number, resolution: string, resolvedBy: number | null) {
     return safeCall(async () => this.repo.resolveComplaint(customerId, complaintId, resolution, resolvedBy));
+  }
+
+  async exportCsv(search?: string, status?: string): Promise<Result<string, AppError>> {
+    return safeCall(async () => this.repo.exportCsv(search, status));
   }
 }

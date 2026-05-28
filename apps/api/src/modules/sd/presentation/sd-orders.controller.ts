@@ -3,7 +3,9 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Body, Controller, Get, Inject, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes, Logger , InternalServerErrorException } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, ParseIntPipe, Patch, Post, Put, Query, Res, StreamableFile, UseGuards, UseInterceptors, UsePipes, Logger , InternalServerErrorException } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
+import { Readable } from 'stream';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -43,6 +45,34 @@ export class SdOrdersController {
 
  constructor(private readonly commandBus: CommandBus,
   private readonly queryBus: QueryBus) {}
+
+ @ApiOperation({ summary: 'Export orders as CSV' })
+ @ApiResponse({ status: 200, description: 'CSV file' })
+ @Get('export')
+ @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE_MANAGER)
+ async exportOrders(
+  @Query('status') status?: string,
+  @Res({ passthrough: true }) res?: FastifyReply,
+ ): Promise<StreamableFile> {
+  const query = new ListOrdersQuery(undefined, status, 5000, 0);
+  const res2 = await this.queryBus.execute(query);
+  const data = unwrapOrThrow(res2) as { data: Record<string, unknown>[] };
+  const rows = Array.isArray(data?.data) ? data.data : [];
+
+  const header = ['Raqam', 'Holat', 'Summasi', 'Yetkazish sanasi', 'Yaratilgan'].join(',');
+  const csvRows = rows.map(o => [
+    `"${String(o.orderNumber ?? o.order_number ?? '').replace(/"/g, '""')}"`,
+    o.status ?? '',
+    o.totalAmount ?? o.total_amount ?? 0,
+    o.requestedDeliveryDate ?? o.delivery_date ?? '',
+    o.createdAt ?? o.created_at ?? '',
+  ].join(','));
+  const csv = [header, ...csvRows].join('\n');
+
+  void res!.header('Content-Type', 'text/csv; charset=utf-8')
+           .header('Content-Disposition', 'attachment; filename="orders.csv"');
+  return new StreamableFile(Readable.from(Buffer.from(csv, 'utf-8')));
+ }
 
  @ApiOperation({ summary: 'List orders' })
  @ApiResponse({ status: 200, description: 'OK' })

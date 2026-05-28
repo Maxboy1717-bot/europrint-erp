@@ -173,6 +173,8 @@ export class DrizzleSdCustomersRepository {
   addCompetitor        = subOps.addCompetitor;
   deleteCompetitor     = subOps.deleteCompetitor;
   getComplaints        = subOps.getComplaints;
+  createComplaint      = subOps.createComplaint;
   resolveComplaint     = subOps.resolveComplaint;
   updateInternalNotes  = subOps.updateInternalNotes;
+  exportCsv            = subOps.exportCsv;
 }
