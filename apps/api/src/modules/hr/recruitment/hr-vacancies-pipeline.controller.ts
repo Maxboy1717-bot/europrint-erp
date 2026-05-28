@@ -8,8 +8,9 @@
 
 import {
   Controller, Get, Post, Patch, Body, Param, ParseIntPipe,
-  UseGuards, UseInterceptors, Logger, UsePipes, HttpCode, HttpStatus,
+  UseGuards, UseInterceptors, Logger, UsePipes, HttpCode, HttpStatus, HttpException,
 } from '@nestjs/common';
+import { unwrapOrInternal } from '@common/http-result';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -78,8 +79,8 @@ export class HrVacanciesPipelineController {
   @Get('pipeline/:id/stage')
   async getPipelineStage(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.findPipelineById(id);
-    const row = r.ok ? (r.data ?? {}) : {};
-    return { data: row };
+    // Rule C: GET /:id → unwrapOrInternal (throws 500 on DB error, not silent {})
+    return { data: unwrapOrInternal(r) };
   }
 
   @ApiOperation({ summary: 'Update pipeline stage post' })
@@ -208,10 +209,11 @@ export class HrVacanciesPipelineController {
 
   @ApiOperation({ summary: 'Get pipeline checklist' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('pipeline/:id/checklist')
-  async getPipelineChecklist(@Param('id', ParseIntPipe) id: number) {
-    return { data: { pipeline_id: id, items: [] } };
+  getPipelineChecklist(@Param('id', ParseIntPipe) _id: number) {
+    // Qoida 10: stub bo'sh array qaytarmasligi kerak
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @ApiOperation({ summary: 'Patch pipeline checklist' })

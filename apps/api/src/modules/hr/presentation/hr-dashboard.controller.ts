@@ -106,7 +106,7 @@ export class HrDashboardController {
 
   @Get('adaptation')
   async getAdaptation() {
-    return unwrapOrInternal(await this.svc.getAdaptationAtRisk());
+    return unwrapOrDefault(await this.svc.getAdaptationAtRisk(), []);
   }
 
   @Get('adaptation/:id')
