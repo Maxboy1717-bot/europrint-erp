@@ -27,9 +27,19 @@ export function useEmployeeMutation({ isEdit, employeeId, onAfterSubmit }: UseEm
     }
   };
 
+  /** Split "Ali Vali Valiyev" → firstName="Ali", lastName="Vali Valiyev" */
+  const splitFullName = (data: Record<string, unknown>): Record<string, unknown> => {
+    if (typeof data.fullName !== 'string') return data;
+    const parts = data.fullName.trim().split(/\s+/);
+    const firstName = parts[0] ?? '';
+    const lastName  = parts.length > 1 ? parts.slice(1).join(' ') : (parts[0] ?? '');
+    const { fullName: _dropped, ...rest } = data;
+    return { ...rest, firstName, lastName };
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      return await apiRequest<{ id?: string | number }>('POST', "/api/hr/employees", data);
+      return await apiRequest<{ id?: string | number }>('POST', "/api/hr/employees", splitFullName(data));
     },
     onSuccess: async (data) => {
       const id = data?.id ? String(data.id) : "";
@@ -43,7 +53,7 @@ export function useEmployeeMutation({ isEdit, employeeId, onAfterSubmit }: UseEm
 
   const updateMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      return await apiRequest('PATCH', `/api/hr/employees/${employeeId}`, data);
+      return await apiRequest('PATCH', `/api/hr/employees/${employeeId}`, splitFullName(data));
     },
     onSuccess: async () => {
       if (employeeId) await onAfterSubmit(employeeId).catch(() => null);
