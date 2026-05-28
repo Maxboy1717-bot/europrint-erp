@@ -33,15 +33,27 @@ export class HrOffboardingController {
 
   @Get('cases')
   @UsePipes(new ZodValidationPipe(HrOffboardingListQuerySchema))
+  // P1.18: return { items } — FE checks Array.isArray(d) || d?.items (not d?.data)
   async listCases(@Query() q: HrOffboardingListQueryDto) {
     const r = await this.svc.listCases({ status: q.status, employeeId: q.employee_id });
-    return { data: unwrapOrInternal(r) };
+    const items = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { items, total: items.length };
   }
 
   @Get('stats')
   async getStats() {
     const r = await this.svc.getStats();
-    return { data: unwrapOrInternal(r) };
+    // P1.18: return stats object directly — FE accesses stats.active/completed/total
+    const data = r.ok && r.data ? r.data : { active: 0, completed: 0, cancelled: 0, total: 0 };
+    return data;
+  }
+
+  // P1.18: FE queries /cases/stats, not /stats — add alias
+  @Get('cases/stats')
+  async getCasesStats() {
+    const r = await this.svc.getStats();
+    const data = r.ok && r.data ? r.data : { active: 0, completed: 0, cancelled: 0, total: 0 };
+    return data;
   }
 
   @Get('cases/:id')

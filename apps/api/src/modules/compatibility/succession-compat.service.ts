@@ -42,20 +42,29 @@ export class SuccessionCompatService {
 
   async createCareerPlan(body: Record<string, unknown>){
     return safeCall(async () => {
-    const { position_id, current_holder_id, candidate_id, readiness_level, development_plan, target_date, priority } = body;
-    if (!position_id || !candidate_id) throw new BadRequestException('position_id va candidate_id majburiy');
+    // P1.22: FE sends { employee_name, target_position_title, notes, progress_percent } rather
+    // than { position_id, candidate_id }. Accept both formats — store name info in development_plan.
+    const {
+      position_id, current_holder_id, candidate_id,
+      readiness_level, development_plan, target_date, priority,
+      employee_name, target_position_title, current_position_title, notes, progress_percent,
+    } = body;
+    const planNote = development_plan
+      ?? (employee_name || target_position_title || notes
+          ? JSON.stringify({ employee_name, target_position_title, current_position_title, notes, progress_percent })
+          : null);
     const r = await rawSql(sql`
       INSERT INTO succession_plans
         (position_id, current_holder_id, candidate_id, readiness_level, development_plan, target_date, priority, status)
       VALUES (${position_id ?? null}, ${current_holder_id ?? null}, ${candidate_id ?? null},
-              ${readiness_level ?? 'low'}, ${development_plan ?? null}, ${target_date ?? null},
+              ${readiness_level ?? 'low'}, ${planNote ?? null}, ${target_date ?? null},
               ${priority ?? 1}, 'active')
-      RETURNING id, position_id, candidate_id, readiness_level, status, created_at
+      RETURNING id, position_id, candidate_id, readiness_level, development_plan, status, created_at
     `);
     const _found = dbRows(r)[0];
     if (!_found) throw new NotFoundException('Record not found');
     return _found;
-  
+
     });}
 
   async getKeyPositions(){
