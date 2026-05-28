@@ -4,18 +4,25 @@
  */
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { BookOpen, Search, ChevronRight, ChevronDown } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { BookOpen, Search, ChevronRight, ChevronDown, Plus } from "lucide-react";
 import { safeArray } from "@/lib/queryClient";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { apiRequest } from "@/lib/api-request";
+import { useToast } from "@/hooks/use-toast";
 
 interface GLAccount {
   id?: string | number;
@@ -27,6 +34,13 @@ interface GLAccount {
   balance?: number;
   isActive?: boolean;
   level?: number;
+}
+
+interface CreateAccountForm {
+  code: string;
+  name: string;
+  type: "asset" | "liability" | "equity" | "revenue" | "expense";
+  parentCode: string;
 }
 
 const STATIC_GL_ACCOUNTS: GLAccount[] = [
@@ -80,18 +94,57 @@ const TYPE_COLORS: Record<string, string> = {
 
 export default function GLChartOfAccounts() {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [search, setSearch] = useState("");
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set(["asset", "liability", "equity", "revenue", "expense"])
   );
+
+  // Create dialog state
+  const [createOpen, setCreateOpen] = useState(false);
+  const [form, setForm] = useState<CreateAccountForm>({
+    code: "",
+    name: "",
+    type: "asset",
+    parentCode: "",
+  });
 
   const { data: apiAccounts } = useQuery<GLAccount[]>({
     queryKey: ["/api/finance/gl-accounts"],
     select: (data) => safeArray<GLAccount>(data, "accounts"),
   });
 
+  const createMutation = useMutation({
+    mutationFn: (body: { code: string; name: string; type: string; parentCode?: string }) =>
+      apiRequest("POST", "/api/finance/gl/accounts", body),
+    onSuccess: () => {
+      toast({ title: "Hisob qo'shildi" });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/gl/chart-of-accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/gl-accounts"] });
+      setCreateOpen(false);
+      setForm({ code: "", name: "", type: "asset", parentCode: "" });
+    },
+    onError: () => {
+      toast({ title: "Xatolik yuz berdi", variant: "destructive" });
+    },
+  });
+
+  const handleCreateSubmit = () => {
+    const body: { code: string; name: string; type: string; parentCode?: string } = {
+      code: form.code,
+      name: form.name,
+      type: form.type,
+    };
+    if (form.parentCode.trim()) {
+      body.parentCode = form.parentCode.trim();
+    }
+    createMutation.mutate(body);
+  };
+
   const accounts =
-    apiAccounts && (apiAccounts as GLAccount[]).length > 0
+    apiAccounts && (Array.isArray(apiAccounts) ? apiAccounts : []).length > 0
       ? (apiAccounts as GLAccount[])
       : STATIC_GL_ACCOUNTS;
 
@@ -124,7 +177,7 @@ export default function GLChartOfAccounts() {
         <div className="flex items-center gap-3">
           <BookOpen className="h-5 w-5 text-primary" />
           <h1 className="font-semibold text-base">{t("glHisoblarJadvali")}</h1>
-          <EPStatusPill tone="neutral">{accounts.length} hisob</EPStatusPill>
+          <EPStatusPill tone="neutral">{(Array.isArray(accounts) ? accounts : []).length} hisob</EPStatusPill>
         </div>
         <div className="flex gap-2">
           <div className="relative w-56">
@@ -147,6 +200,14 @@ export default function GLChartOfAccounts() {
             }
           >
             {t("barchasiniYoy")}
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setCreateOpen(true)}
+            data-testid="button-add-account"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Hisob qo'shish
           </Button>
         </div>
       </div>
@@ -225,6 +286,77 @@ export default function GLChartOfAccounts() {
           </Card>
         ))}
       </div>
+
+      {/* Create Account Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle>Hisob qo'shish</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="acc-code">{t("code")}</Label>
+              <Input
+                id="acc-code"
+                placeholder="1000"
+                value={form.code}
+                onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
+                data-testid="input-create-code"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="acc-name">{t("nomiUz")}</Label>
+              <Input
+                id="acc-name"
+                placeholder="Hisob nomi..."
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                data-testid="input-create-name"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="acc-type">{t("tur")}</Label>
+              <Select
+                value={form.type}
+                onValueChange={(v) => setForm((f) => ({ ...f, type: v as CreateAccountForm["type"] }))}
+              >
+                <SelectTrigger id="acc-type" data-testid="select-create-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="asset">Aktiv</SelectItem>
+                  <SelectItem value="liability">Passiv</SelectItem>
+                  <SelectItem value="equity">Kapital</SelectItem>
+                  <SelectItem value="revenue">Daromad</SelectItem>
+                  <SelectItem value="expense">Xarajat</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="acc-parent">Ota hisob kodi (ixtiyoriy)</Label>
+              <Input
+                id="acc-parent"
+                placeholder="1000"
+                value={form.parentCode}
+                onChange={(e) => setForm((f) => ({ ...f, parentCode: e.target.value }))}
+                data-testid="input-create-parent"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)} disabled={createMutation.isPending}>
+              {t("tozalash")}
+            </Button>
+            <Button
+              onClick={handleCreateSubmit}
+              disabled={createMutation.isPending || !form.code || !form.name}
+              data-testid="button-submit-create-account"
+            >
+              {createMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

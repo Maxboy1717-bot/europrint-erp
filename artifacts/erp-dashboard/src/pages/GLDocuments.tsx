@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDate, formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,10 +12,15 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Download, ArrowUpDown, Calendar, Filter, RefreshCw, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { FileText, Download, ArrowUpDown, Calendar, Filter, RefreshCw, AlertCircle, Plus } from "lucide-react";
 import { EPErrorState, EPPageHeader, EPStatusPill, EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { apiRequest } from "@/lib/api-request";
+import { useToast } from "@/hooks/use-toast";
+
 interface GLDocument {
   id: string;
   documentNumber: string;
@@ -28,6 +33,11 @@ interface GLDocument {
   createdAt: string;
 }
 
+interface CreateDocumentForm {
+  date: string;
+  description: string;
+  totalAmount: number;
+}
 
 function getStatusBadge(status: string) {
   const { t } = useTranslation("common");
@@ -45,11 +55,22 @@ function getStatusBadge(status: string) {
 
 export default function GLDocuments() {
   const { t } = useTranslation('common');
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [sortField, setSortField] = useState<string>("documentDate");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+  // Create dialog state
+  const [createOpen, setCreateOpen] = useState(false);
+  const [form, setForm] = useState<CreateDocumentForm>({
+    date: new Date().toISOString().slice(0, 10),
+    description: "",
+    totalAmount: 0,
+  });
 
   const queryParams = new URLSearchParams();
   if (statusFilter && statusFilter !== "all") {
@@ -66,6 +87,31 @@ export default function GLDocuments() {
     queryKey: ["/api/accounting/gl-documents", { status: statusFilter, startDate, endDate }],
   });
 
+  const createMutation = useMutation({
+    mutationFn: (body: { date: string; description: string; lines: { accountCode: string; debit: number; credit: number }[] }) =>
+      apiRequest("POST", "/api/finance/gl/documents", body),
+    onSuccess: () => {
+      toast({ title: "Hujjat yaratildi" });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/gl/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/accounting/gl-documents"] });
+      setCreateOpen(false);
+      setForm({ date: new Date().toISOString().slice(0, 10), description: "", totalAmount: 0 });
+    },
+    onError: () => {
+      toast({ title: "Xatolik yuz berdi", variant: "destructive" });
+    },
+  });
+
+  const handleCreateSubmit = () => {
+    createMutation.mutate({
+      date: form.date,
+      description: form.description,
+      lines: [
+        { accountCode: "1000", debit: form.totalAmount, credit: 0 },
+      ],
+    });
+  };
+
   const handleSort = (field: string) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -75,7 +121,7 @@ export default function GLDocuments() {
     }
   };
 
-  const sortedDocuments = [...documents].sort((a, b) => {
+  const sortedDocuments = [...(Array.isArray(documents) ? documents : [])].sort((a, b) => {
     let aValue: string | number = "";
     let bValue: string | number = "";
 
@@ -146,18 +192,25 @@ export default function GLDocuments() {
           <p className="text-muted-foreground mt-1">{t("boshJurnalYozuvlariVaHujjatlar")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            onClick={() => setCreateOpen(true)}
+            data-testid="button-create-document"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Hujjat yaratish
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => refetch()}
             data-testid="button-refresh"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             {t("refresh")}
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => {
-              const rows = documents?.map(d => [d.documentNumber, d.documentDate, d.documentType, d.description, d.status, d.totalDebit, d.totalCredit].join(",")) || [];
+              const rows = (Array.isArray(documents) ? documents : []).map(d => [d.documentNumber, d.documentDate, d.documentType, d.description, d.status, d.totalDebit, d.totalCredit].join(","));
               const csv = ["Document Number,Date,Type,Description,Status,Debit,Credit", ...rows].join("\n");
               const blob = new Blob([csv], { type: "text/csv" });
               const url = URL.createObjectURL(blob);
@@ -218,8 +271,8 @@ export default function GLDocuments() {
                 data-testid="input-end-date"
               />
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={clearFilters}
               data-testid="button-clear-filters"
             >
@@ -231,7 +284,7 @@ export default function GLDocuments() {
         <div className="grid gap-4 md:grid-cols-3">
           <div className="bg-card rounded-lg p-5" data-testid="card-total-documents">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("jamiHujjatlar")}</p>
-            <p className="text-4xl font-bold tracking-tight text-foreground mt-1" data-testid="text-total-documents">{documents.length}</p>
+            <p className="text-4xl font-bold tracking-tight text-foreground mt-1" data-testid="text-total-documents">{(Array.isArray(documents) ? documents : []).length}</p>
           </div>
 
           <div className="bg-card rounded-lg p-5" data-testid="card-total-debit">
@@ -265,7 +318,7 @@ export default function GLDocuments() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead 
+                    <TableHead
                       className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 cursor-pointer hover:bg-muted/40 transition-colors"
                       onClick={() => handleSort("documentNumber")}
                       data-testid="th-id"
@@ -275,7 +328,7 @@ export default function GLDocuments() {
                         <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </TableHead>
-                    <TableHead 
+                    <TableHead
                       className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 cursor-pointer hover:bg-muted/40 transition-colors"
                       onClick={() => handleSort("documentDate")}
                       data-testid="th-date"
@@ -286,7 +339,7 @@ export default function GLDocuments() {
                       </div>
                     </TableHead>
                     <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6" data-testid="th-description">{t("progress.description")}</TableHead>
-                    <TableHead 
+                    <TableHead
                       className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right cursor-pointer hover:bg-muted/40 transition-colors"
                       onClick={() => handleSort("totalDebit")}
                       data-testid="th-debit"
@@ -296,7 +349,7 @@ export default function GLDocuments() {
                         <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </TableHead>
-                    <TableHead 
+                    <TableHead
                       className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right cursor-pointer hover:bg-muted/40 transition-colors"
                       onClick={() => handleSort("totalCredit")}
                       data-testid="th-credit"
@@ -332,6 +385,61 @@ export default function GLDocuments() {
           )}
         </div>
       </div>
+
+      {/* Create Document Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle>Hujjat yaratish</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="doc-date">{t("date")}</Label>
+              <Input
+                id="doc-date"
+                type="date"
+                value={form.date}
+                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+                data-testid="input-create-date"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="doc-description">{t("progress.description")}</Label>
+              <Input
+                id="doc-description"
+                placeholder="Hujjat tavsifi..."
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                data-testid="input-create-description"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="doc-amount">Jami summa</Label>
+              <Input
+                id="doc-amount"
+                type="number"
+                min={0}
+                placeholder="0"
+                value={form.totalAmount === 0 ? "" : form.totalAmount}
+                onChange={(e) => setForm((f) => ({ ...f, totalAmount: Number(e.target.value) || 0 }))}
+                data-testid="input-create-amount"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)} disabled={createMutation.isPending}>
+              {t("tozalash")}
+            </Button>
+            <Button
+              onClick={handleCreateSubmit}
+              disabled={createMutation.isPending || !form.date || !form.description}
+              data-testid="button-submit-create-document"
+            >
+              {createMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

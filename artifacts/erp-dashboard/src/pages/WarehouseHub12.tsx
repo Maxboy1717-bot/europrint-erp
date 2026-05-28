@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/api-request";
 import { useToast } from "@/hooks/use-toast";
+import { tLabel } from "@/lib/i18n/tLabel";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -67,7 +68,7 @@ export default function WarehouseHub12() {
     mutationFn: (data: typeof transferForm) =>
       apiRequest("POST", "/api/wms/transfers", data),
     onSuccess: () => {
-      toast({ title: "Ko'chirish yaratildi" });
+      toast({ title: tLabel("common.kochirishYaratildi", "Ko'chirish yaratildi") });
       queryClient.invalidateQueries({ queryKey: ["/api/wms/transfers"] });
       setTransferOpen(false);
       setTransferForm({ fromLocationId: "default", toLocationId: "", materialId: "", quantity: 1 });
@@ -273,7 +274,7 @@ export default function WarehouseHub12() {
           onSyncToPos={syncToPos}
         />
         <Button size="sm" onClick={() => setTransferOpen(true)} data-testid="button-create-transfer">
-          Ko&apos;chirish
+          {tLabel("common.kochirish", "Ko'chirish")}
         </Button>
       </div>
 
@@ -281,11 +282,11 @@ export default function WarehouseHub12() {
       <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Ko&apos;chirish yaratish</DialogTitle>
+            <DialogTitle>{tLabel("common.kochirishYaratish", "Ko'chirish yaratish")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
-              <Label htmlFor="tf-from">Qayerdan (fromLocationId)</Label>
+              <Label htmlFor="tf-from">{tLabel("common.qayerdan", "Qayerdan (fromLocationId)")}</Label>
               <Input
                 id="tf-from"
                 value={transferForm.fromLocationId}
@@ -293,7 +294,7 @@ export default function WarehouseHub12() {
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="tf-to">Qayerga (toLocationId)</Label>
+              <Label htmlFor="tf-to">{tLabel("common.qayerga", "Qayerga (toLocationId)")}</Label>
               <Input
                 id="tf-to"
                 value={transferForm.toLocationId}
@@ -301,7 +302,7 @@ export default function WarehouseHub12() {
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="tf-material">Material ID</Label>
+              <Label htmlFor="tf-material">{tLabel("common.materialId", "Material ID")}</Label>
               <Input
                 id="tf-material"
                 value={transferForm.materialId}
@@ -309,7 +310,7 @@ export default function WarehouseHub12() {
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="tf-qty">Miqdor</Label>
+              <Label htmlFor="tf-qty">{tLabel("common.miqdor", "Miqdor")}</Label>
               <Input
                 id="tf-qty"
                 type="number"
@@ -320,12 +321,12 @@ export default function WarehouseHub12() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTransferOpen(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setTransferOpen(false)}>{tLabel("common.bekor", "Bekor")}</Button>
             <Button
               onClick={() => transferMutation.mutate(transferForm)}
               disabled={transferMutation.isPending}
             >
-              {transferMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+              {transferMutation.isPending ? tLabel("common.saqlanmoqda", "Saqlanmoqda...") : tLabel("common.saqlash", "Saqlash")}
             </Button>
           </DialogFooter>
         </DialogContent>
