@@ -59,8 +59,8 @@ export default function RecruitingKanban() {
         socket.emit("messages:list", { roomId });
       }
       setLocation("/chat");
-    } catch {
-      // Silently ignore
+    } catch (err) {
+      console.warn('[RecruitingKanban] context room init failed:', err);
     } finally {
       setOpeningContextRoom(null);
     }

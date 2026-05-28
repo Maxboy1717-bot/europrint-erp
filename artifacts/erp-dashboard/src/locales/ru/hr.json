@@ -607,5 +607,19 @@
   "swapRequestSent": "Запрос на обмен отправлен",
   "swapRequestUpdated": "Запрос обновлён",
   "errorOccurred": "Произошла ошибка",
-  "swapRequests": "Запросы на обмен"
+  "swapRequests": "Запросы на обмен",
+  "violation.absence": "Отсутствие без причины",
+  "violation.misconduct": "Нарушение поведения",
+  "violation.late": "Опоздание",
+  "violation.insubordination": "Неподчинение",
+  "violation.harassment": "Преследование",
+  "violation.theft": "Кража",
+  "violation.safety": "Нарушение правил безопасности",
+  "violation.performance": "Низкая производительность",
+  "violation.other": "Другое",
+  "disciplineStatus.open": "Открыто",
+  "disciplineStatus.closed": "Закрыто",
+  "disciplineStatus.pending": "В ожидании",
+  "disciplineStatus.resolved": "Решено",
+  "disciplineStatus.appealed": "Обжаловано"
 }

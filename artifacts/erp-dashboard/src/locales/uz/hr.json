@@ -607,5 +607,19 @@
   "swapRequestSent": "Almashish so'rovi yuborildi",
   "swapRequestUpdated": "So'rov yangilandi",
   "errorOccurred": "Xatolik yuz berdi",
-  "swapRequests": "Almashish So'rovlari"
+  "swapRequests": "Almashish So'rovlari",
+  "violation.absence": "Sababsiz kelmagan",
+  "violation.misconduct": "Xulq-atvor buzilishi",
+  "violation.late": "Kech kelish",
+  "violation.insubordination": "Buyruqqa itoatsizlik",
+  "violation.harassment": "Ta'qib",
+  "violation.theft": "O'g'irlik",
+  "violation.safety": "Xavfsizlik qoidasi buzilishi",
+  "violation.performance": "Yomon ko'rsatkich",
+  "violation.other": "Boshqa",
+  "disciplineStatus.open": "Ochiq",
+  "disciplineStatus.closed": "Yopilgan",
+  "disciplineStatus.pending": "Kutilmoqda",
+  "disciplineStatus.resolved": "Hal qilindi",
+  "disciplineStatus.appealed": "Shikoyat qilindi"
 }

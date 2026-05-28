@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { ShieldCheck, Search, AlertTriangle, XCircle, ShieldOff } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { EPErrorState } from "@/components/ep";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -58,25 +59,6 @@ const SEVERITY_LABEL: Record<string, string> = {
   major:    "Og'ir",
 };
 
-const VIOLATION_TYPE_LABEL: Record<string, string> = {
-  absence:        "Sababsiz kelmagan",
-  misconduct:     "Xulq-atvor buzilishi",
-  late_arrival:   "Kech kelish",
-  insubordination:"Buyruqqa itoatsizlik",
-  harassment:     "Ta'qib",
-  theft:          "O'g'irlik",
-  safety_violation:"Xavfsizlik qoidasi buzilishi",
-  performance:    "Yomon ko'rsatkich",
-  other:          "Boshqa",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  open:       "Ochiq",
-  closed:     "Yopilgan",
-  pending:    "Kutilmoqda",
-  resolved:   "Hal qilindi",
-  appealed:   "Shikoyat qilindi",
-};
 
 function SeverityBadge({ severity }: { severity: string }) {
   const variant = SEVERITY_VARIANT[severity] ?? "neutral";
@@ -127,10 +109,30 @@ function StatCard({
 
 export default function Discipline() {
   const { t } = useTranslation("common");
+  const { t: tHr } = useTranslation("hr");
   const [tab, setTab]       = useState<"violations" | "blocked">("violations");
   const [search, setSearch] = useState("");
 
-  const { data: rawViolations, isLoading: loadingViolations } =
+  const VIOLATION_TYPE_LABEL: Record<string, string> = {
+    absence:         tHr("violation.absence"),
+    misconduct:      tHr("violation.misconduct"),
+    late:            tHr("violation.late"),
+    insubordination: tHr("violation.insubordination"),
+    harassment:      tHr("violation.harassment"),
+    theft:           tHr("violation.theft"),
+    safety:          tHr("violation.safety"),
+    performance:     tHr("violation.performance"),
+    other:           tHr("violation.other"),
+  };
+  const STATUS_LABEL: Record<string, string> = {
+    open:     tHr("disciplineStatus.open"),
+    closed:   tHr("disciplineStatus.closed"),
+    pending:  tHr("disciplineStatus.pending"),
+    resolved: tHr("disciplineStatus.resolved"),
+    appealed: tHr("disciplineStatus.appealed"),
+  };
+
+  const { data: rawViolations, isLoading: loadingViolations, isError, refetch } =
     useQuery<DisciplineRecord[]>({ queryKey: ["/api/hr/discipline"] });
 
   const { data: rawBlocked, isLoading: loadingBlocked } =
@@ -185,6 +187,9 @@ export default function Discipline() {
           color="bg-[rgba(181,137,28,.14)] text-[var(--ep-yellow)]"
         />
       </div>
+
+      {/* Error state */}
+      {isError && <EPErrorState onRetry={refetch} />}
 
       {/* Search */}
       <div className="relative max-w-xs">

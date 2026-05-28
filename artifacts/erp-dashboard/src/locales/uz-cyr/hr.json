@@ -691,5 +691,19 @@
   "swapRequestSent": "Алмашиш сўрови юборилди",
   "swapRequestUpdated": "Сўров янгиланди",
   "errorOccurred": "Хатолик юз берди",
-  "swapRequests": "Алмашиш Сўровлари"
+  "swapRequests": "Алмашиш Сўровлари",
+  "violation.absence": "Сабабсиз келмаган",
+  "violation.misconduct": "Хулқ-атвор бузилиши",
+  "violation.late": "Кеч келиш",
+  "violation.insubordination": "Буйруққа итоатсизлик",
+  "violation.harassment": "Таъқиб",
+  "violation.theft": "Ўғирлик",
+  "violation.safety": "Хавфсизлик қоидаси бузилиши",
+  "violation.performance": "Ёмон кўрсаткич",
+  "violation.other": "Бошқа",
+  "disciplineStatus.open": "Очиқ",
+  "disciplineStatus.closed": "Ёпилган",
+  "disciplineStatus.pending": "Кутилмоқда",
+  "disciplineStatus.resolved": "Ҳал қилинди",
+  "disciplineStatus.appealed": "Шикоят қилинди"
 }
