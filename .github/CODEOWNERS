@@ -41,6 +41,7 @@ tsconfig*.json                          @Maxboy1717-bot
 /apps/api/src/modules/finance/domain/services/                    @Maxboy1717-bot
 /apps/api/src/modules/finance/application/                        @Maxboy1717-bot
 /apps/api/src/modules/hr/application/commands/                    @Maxboy1717-bot
+/apps/api/src/modules/hr/application/queries/get-employees.handler.ts @Maxboy1717-bot
 /apps/api/src/modules/hr/infrastructure/repositories/             @Maxboy1717-bot
 /apps/api/src/modules/hr/presentation/hr-employees.controller.ts  @Maxboy1717-bot
 /apps/api/src/modules/hr/presentation/hr-employees-ext.controller.ts @Maxboy1717-bot

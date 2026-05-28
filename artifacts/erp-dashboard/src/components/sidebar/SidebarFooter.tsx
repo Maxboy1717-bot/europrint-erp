@@ -6,6 +6,7 @@
 import { Plus, MessageSquare, Star } from "lucide-react";
 import { useLocation } from "wouter";
 import { useTranslation } from '@/lib/i18n';
+import { APP_VERSION, LAST_UPDATED } from '@/config/module-status';
 
 export function SidebarFooter() {
   const { t } = useTranslation("common");
@@ -38,6 +39,9 @@ export function SidebarFooter() {
           <Star className="h-3.5 w-3.5 shrink-0" />
           <span>{t("fikr")}</span>
         </button>
+      </div>
+      <div className="pt-1 text-center text-[10px] text-sidebar-foreground/30 select-none">
+        v{APP_VERSION} · {LAST_UPDATED}
       </div>
     </div>
   );
