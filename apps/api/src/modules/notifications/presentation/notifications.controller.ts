@@ -8,7 +8,9 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Inject,
   Logger,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -28,6 +30,7 @@ import { GetNotificationsQuery} from '../application/queries/get-notifications.q
 import { CreateNotificationDto} from './dto/notification.dto';
 import { NotificationPreferencesService } from '../application/notification-preferences.service';
 import { parseNotificationPreferences } from './dto/notification-preferences.dto';
+import { NOTIFICATION_REPO, INotificationRepo } from '../domain/repositories/i-notification.repo';
 
 @ApiThrottle()
 @ApiTags('Notifications')
@@ -42,7 +45,9 @@ export class NotificationsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    private readonly prefsSvc: NotificationPreferencesService) {}
+    private readonly prefsSvc: NotificationPreferencesService,
+    @Inject(NOTIFICATION_REPO) private readonly notifRepo: INotificationRepo,
+  ) {}
 
   @ApiOperation({ summary: 'List notifications' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -80,8 +85,10 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Get unread count' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('/my/unread-count')
-  async getUnreadCount(@CurrentUser() _user: AuthenticatedUser) {
-    return { statusCode: HttpStatus.OK, data: { unreadCount: 0 } };
+  async getUnreadCount(@CurrentUser() user: AuthenticatedUser) {
+    const result = await this.notifRepo.findUnreadCount(String(user.id));
+    const unreadCount = result.ok ? (result.data ?? 0) : 0;
+    return { statusCode: HttpStatus.OK, data: { unreadCount } };
   }
 
   @ApiOperation({ summary: 'Mark all read my' })
@@ -120,6 +127,8 @@ export class NotificationsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('/:id/read')
   async markAsRead(@Param('id') notificationId: string) {
+    const result = await this.notifRepo.markAsRead(notificationId);
+    if (!result.ok) throw new NotFoundException(`Bildirishnoma #${notificationId} topilmadi`);
     return { statusCode: HttpStatus.OK, data: { id: notificationId, isRead: true } };
   }
 
@@ -129,7 +138,9 @@ export class NotificationsController {
   @Patch('/read-all')
   async markAllAsRead(@CurrentUser() user: AuthenticatedUser) {
     this.logger.log({ userId: user.id }, 'Mark all notifications as read');
-    return { statusCode: HttpStatus.OK, data: { updated: 0 } };
+    const result = await this.notifRepo.markAllAsRead(String(user.id));
+    const updated = result.ok ? (result.data ?? 0) : 0;
+    return { statusCode: HttpStatus.OK, data: { updated } };
   }
 
   @ApiOperation({ summary: 'Patch mark all read my' })
