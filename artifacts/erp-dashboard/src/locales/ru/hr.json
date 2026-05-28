@@ -625,5 +625,17 @@
   "careerStatus.active": "Активный",
   "careerStatus.completed": "Завершено",
   "careerStatus.on_hold": "Приостановлено",
-  "careerStatus.cancelled": "Отменено"
+  "careerStatus.cancelled": "Отменено",
+  "pip.statusDraft": "Черновик",
+  "pip.statusActive": "Активный",
+  "pip.statusCompleted": "Выполнен",
+  "pip.statusFailed": "Провален",
+  "pip.statusCancelled": "Отменён",
+  "pip.createTitle": "Новый ПИП",
+  "pip.createBtn": "Создать ПИП",
+  "pip.goals": "Цели",
+  "pip.successCriteria": "Критерии успеха",
+  "pip.startDate": "Дата начала",
+  "pip.endDate": "Дата окончания",
+  "pip.createSuccess": "ПИП успешно создан"
 }

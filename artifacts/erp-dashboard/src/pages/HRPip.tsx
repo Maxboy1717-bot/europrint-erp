@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,8 +12,20 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { TrendingUp, Users, CheckCircle2, XCircle, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { TrendingUp, Users, CheckCircle2, XCircle, Activity, Plus } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { apiRequest } from "@/lib/api-request";
+import { useToast } from "@/hooks/use-toast";
 
 interface PipPlan {
   id: string | number;
@@ -43,17 +55,10 @@ interface Employee {
   name?: string;
   firstName?: string;
   lastName?: string;
+  fullName?: string;
 }
 
 type StatusFilter = "all" | "draft" | "active" | "completed" | "failed" | "cancelled";
-
-const STATUS_CONFIG: Record<string, { label: string; variant: "info" | "success" | "danger" | "secondary" }> = {
-  draft:     { label: "Qoralama",         variant: "secondary" },
-  active:    { label: "Faol",             variant: "info" },
-  completed: { label: "Bajarilgan",       variant: "success" },
-  failed:    { label: "Muvaffaqiyatsiz",  variant: "danger" },
-  cancelled: { label: "Bekor qilingan",   variant: "secondary" },
-};
 
 /** Normalize a pip plan record regardless of camelCase or snake_case */
 function normalizePip(p: PipPlan) {
@@ -75,35 +80,12 @@ function getEmployeeName(employeeId: string | number, employees: Employee[]): st
   );
   if (!emp) return `#${employeeId}`;
   const composed = `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim();
-  return emp.full_name ?? (composed || `#${employeeId}`);
+  return emp.full_name ?? emp.fullName ?? emp.name ?? (composed || `#${employeeId}`);
 }
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return "—";
   return dateStr.slice(0, 10);
-}
-
-function StatCard({
-  icon, value, label, color,
-}: {
-  icon: React.ReactNode;
-  value: number;
-  label: string;
-  color: string;
-}) {
-  return (
-    <Card>
-      <CardContent className="pt-4 pb-3 flex items-center gap-3">
-        <div className={`rounded-full p-2.5 ${color}-100`}>{icon}</div>
-        <div>
-          <div className={`text-2xl font-bold text-[var(--ep-${color === "bg-blue" ? "blue" : color === "bg-green" ? "green" : "red"})]`}>
-            {value}
-          </div>
-          <div className="text-xs text-muted-foreground">{label}</div>
-        </div>
-      </CardContent>
-    </Card>
-  );
 }
 
 function TableSkeleton() {
@@ -122,28 +104,56 @@ function TableSkeleton() {
   );
 }
 
-const TABS: { value: StatusFilter; label: string }[] = [
-  { value: "all",       label: "Barchasi" },
-  { value: "draft",     label: "Qoralama" },
-  { value: "active",    label: "Faol" },
-  { value: "completed", label: "Bajarilgan" },
-  { value: "failed",    label: "Muvaffaqiyatsiz" },
-];
-
 export default function HRPip() {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation("hr");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const STATUS_LABELS: Record<string, string> = {
+    draft:     t("pip.statusDraft"),
+    active:    t("pip.statusActive"),
+    completed: t("pip.statusCompleted"),
+    failed:    t("pip.statusFailed"),
+    cancelled: t("pip.statusCancelled"),
+  };
+
+  const STATUS_CONFIG: Record<string, { variant: "info" | "success" | "danger" | "secondary" }> = {
+    draft:     { variant: "secondary" },
+    active:    { variant: "info" },
+    completed: { variant: "success" },
+    failed:    { variant: "danger" },
+    cancelled: { variant: "secondary" },
+  };
+
+  const TABS: { value: StatusFilter; label: string }[] = [
+    { value: "all",       label: "Barchasi" },
+    { value: "draft",     label: t("pip.statusDraft") },
+    { value: "active",    label: t("pip.statusActive") },
+    { value: "completed", label: t("pip.statusCompleted") },
+    { value: "failed",    label: t("pip.statusFailed") },
+  ];
+
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [createDialog, setCreateDialog] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    employee_id: "",
+    goals: "",
+    success_criteria: "",
+    start_date: new Date().toISOString().slice(0, 10),
+    end_date: "",
+  });
 
   const { data: rawPlans, isLoading: plansLoading, isError: plansError } = useQuery<PipPlan[]>({
     queryKey: ["/api/hr/pip"],
   });
 
-  const { data: rawEmployees } = useQuery<Employee[]>({
-    queryKey: ["/api/hr/employees"],
+  const { data: employeesData } = useQuery<{ items: Array<{ id: string; fullName: string }> }>({
+    queryKey: ["/api/hr/employees", { limit: 200 }],
+    queryFn: () => apiRequest("GET", "/api/hr/employees?limit=200"),
   });
+  const employees = Array.isArray(employeesData?.items) ? employeesData.items : [];
 
   const plans = Array.isArray(rawPlans) ? rawPlans : [];
-  const employees = Array.isArray(rawEmployees) ? rawEmployees : [];
 
   const filtered = plans.filter(
     (p) => statusFilter === "all" || p.status === statusFilter
@@ -154,6 +164,30 @@ export default function HRPip() {
   const completedCount = plans.filter((p) => p.status === "completed").length;
   const failedCount    = plans.filter((p) => p.status === "failed").length;
 
+  const createPipMutation = useMutation({
+    mutationFn: (data: typeof createForm) =>
+      apiRequest("POST", "/api/hr/pip", {
+        employee_id: Number(data.employee_id),
+        goals: data.goals,
+        success_criteria: data.success_criteria,
+        start_date: data.start_date,
+        end_date: data.end_date,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/pip"] });
+      setCreateDialog(false);
+      setCreateForm({
+        employee_id: "",
+        goals: "",
+        success_criteria: "",
+        start_date: new Date().toISOString().slice(0, 10),
+        end_date: "",
+      });
+      toast({ title: t("pip.createSuccess") });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       {/* Header */}
@@ -161,6 +195,12 @@ export default function HRPip() {
         <TrendingUp className="h-5 w-5 text-[var(--ep-blue)]" />
         <h1 className="font-semibold text-base">PIP Rejalar</h1>
         <span className="text-xs text-muted-foreground ml-1">Performance Improvement Plans</span>
+        <div className="ml-auto">
+          <Button onClick={() => setCreateDialog(true)} className="gap-1.5" size="sm">
+            <Plus className="h-4 w-4" />
+            {t("pip.createBtn")}
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto space-y-5">
@@ -184,7 +224,7 @@ export default function HRPip() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-blue)]">{activeCount}</div>
-                <div className="text-xs text-muted-foreground">Faol</div>
+                <div className="text-xs text-muted-foreground">{t("pip.statusActive")}</div>
               </div>
             </CardContent>
           </Card>
@@ -195,7 +235,7 @@ export default function HRPip() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-green)]">{completedCount}</div>
-                <div className="text-xs text-muted-foreground">Bajarilgan</div>
+                <div className="text-xs text-muted-foreground">{t("pip.statusCompleted")}</div>
               </div>
             </CardContent>
           </Card>
@@ -206,7 +246,7 @@ export default function HRPip() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-red)]">{failedCount}</div>
-                <div className="text-xs text-muted-foreground">Muvaffaqiyatsiz</div>
+                <div className="text-xs text-muted-foreground">{t("pip.statusFailed")}</div>
               </div>
             </CardContent>
           </Card>
@@ -241,10 +281,10 @@ export default function HRPip() {
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
                       <TableHead>Xodim</TableHead>
-                      <TableHead>Maqsad</TableHead>
-                      <TableHead>Boshlanish</TableHead>
-                      <TableHead>Tugash</TableHead>
-                      <TableHead className="min-w-[180px]">Muvaffaqiyat mezoni</TableHead>
+                      <TableHead>{t("pip.goals")}</TableHead>
+                      <TableHead>{t("pip.startDate")}</TableHead>
+                      <TableHead>{t("pip.endDate")}</TableHead>
+                      <TableHead className="min-w-[180px]">{t("pip.successCriteria")}</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -266,7 +306,8 @@ export default function HRPip() {
                       (Array.isArray(filtered) ? filtered : []).map((rawPlan) => {
                         const plan = normalizePip(rawPlan);
                         const cfg = STATUS_CONFIG[plan.status] ?? STATUS_CONFIG.active;
-                        const empName = getEmployeeName(plan.employeeId ?? 0, employees);
+                        const label = STATUS_LABELS[plan.status] ?? plan.status;
+                        const empName = getEmployeeName(plan.employeeId ?? 0, employees as Employee[]);
                         return (
                           <TableRow key={plan.id} className="hover:bg-muted/40 transition-colors">
                             <TableCell className="font-medium text-sm">{empName}</TableCell>
@@ -283,8 +324,8 @@ export default function HRPip() {
                               {plan.successCriteria ?? "—"}
                             </TableCell>
                             <TableCell>
-                              <Badge variant={cfg.variant as "info" | "success" | "danger" | "secondary"} className="text-xs">
-                                {cfg.label}
+                              <Badge variant={cfg.variant} className="text-xs">
+                                {label}
                               </Badge>
                             </TableCell>
                           </TableRow>
@@ -298,6 +339,87 @@ export default function HRPip() {
           </Card>
         )}
       </div>
+
+      {/* Create PIP Dialog */}
+      <Dialog open={createDialog} onOpenChange={setCreateDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("pip.createTitle")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Xodim</Label>
+              <Select
+                value={createForm.employee_id}
+                onValueChange={(v) => setCreateForm((f) => ({ ...f, employee_id: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Xodimni tanlang..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map((e) => (
+                    <SelectItem key={e.id} value={String(e.id)}>
+                      {e.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("pip.goals")}</Label>
+              <Textarea
+                value={createForm.goals}
+                onChange={(e) => setCreateForm((f) => ({ ...f, goals: e.target.value }))}
+                rows={3}
+                placeholder="Maqsadlarni kiriting..."
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("pip.successCriteria")}</Label>
+              <Textarea
+                value={createForm.success_criteria}
+                onChange={(e) => setCreateForm((f) => ({ ...f, success_criteria: e.target.value }))}
+                rows={3}
+                placeholder="Muvaffaqiyat mezonini kiriting..."
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>{t("pip.startDate")}</Label>
+                <Input
+                  type="date"
+                  value={createForm.start_date}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, start_date: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t("pip.endDate")}</Label>
+                <Input
+                  type="date"
+                  value={createForm.end_date}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, end_date: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialog(false)}>
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={() => createPipMutation.mutate(createForm)}
+              disabled={
+                createPipMutation.isPending ||
+                !createForm.employee_id ||
+                !createForm.goals ||
+                !createForm.end_date
+              }
+            >
+              {createPipMutation.isPending ? "..." : t("pip.createBtn")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

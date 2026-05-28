@@ -709,5 +709,17 @@
   "careerStatus.active": "Фаол",
   "careerStatus.completed": "Бажарилган",
   "careerStatus.on_hold": "Тўхтатилган",
-  "careerStatus.cancelled": "Бекор"
+  "careerStatus.cancelled": "Бекор",
+  "pip.statusDraft": "Қоралама",
+  "pip.statusActive": "Фаол",
+  "pip.statusCompleted": "Бажарилган",
+  "pip.statusFailed": "Муваффақиятсиз",
+  "pip.statusCancelled": "Бекор қилинган",
+  "pip.createTitle": "Янги ПИП",
+  "pip.createBtn": "ПИП яратиш",
+  "pip.goals": "Мақсадлар",
+  "pip.successCriteria": "Муваффақият мезони",
+  "pip.startDate": "Бошланиш санаси",
+  "pip.endDate": "Тугаш санаси",
+  "pip.createSuccess": "ПИП муваффақиятли яратилди"
 }

@@ -625,5 +625,17 @@
   "careerStatus.active": "Faol",
   "careerStatus.completed": "Bajarilgan",
   "careerStatus.on_hold": "To'xtatilgan",
-  "careerStatus.cancelled": "Bekor"
+  "careerStatus.cancelled": "Bekor",
+  "pip.statusDraft": "Qoralama",
+  "pip.statusActive": "Faol",
+  "pip.statusCompleted": "Bajarilgan",
+  "pip.statusFailed": "Muvaffaqiyatsiz",
+  "pip.statusCancelled": "Bekor qilingan",
+  "pip.createTitle": "Yangi PIP",
+  "pip.createBtn": "PIP yaratish",
+  "pip.goals": "Maqsadlar",
+  "pip.successCriteria": "Muvaffaqiyat mezoni",
+  "pip.startDate": "Boshlanish sanasi",
+  "pip.endDate": "Tugash sanasi",
+  "pip.createSuccess": "PIP muvaffaqiyatli yaratildi"
 }
