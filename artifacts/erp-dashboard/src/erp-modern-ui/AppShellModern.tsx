@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useChatStore } from "@/store/chatStore";
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from "@/hooks/useAuth";
+import { CommandPalette } from "@/components/CommandPalette";
 
 const TOP_H = "h-14";
 const TOP_OFFSET = "pt-14";
@@ -162,6 +163,8 @@ export function AppShellModern({
           onMobileMenuOpenChange(false);
         }}
       />
+
+      <CommandPalette />
 
       <main
         className={cn(
