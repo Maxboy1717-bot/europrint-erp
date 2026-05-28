@@ -31,12 +31,6 @@ const CreateReferralSchema = z.object({
   positionId: z.union([z.string(), z.number()]).optional(),
 }).passthrough();
 
-const CreateSkillSchema = z.object({
-  name: z.string().max(200),
-  category: z.string().max(100).optional(),
-  levels: z.array(z.string()).optional(),
-}).passthrough();
-
 const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'admin'] as const;
 
 @ApiThrottle()
@@ -87,27 +81,9 @@ export class HrGsdController {
     return { items, total: items.length };
   }
 
-  @ApiOperation({ summary: 'Get skills' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('skills')
-  async getSkills() {
-    const r = await this.svc.getSkills();
-    const items = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { items, total: items.length };
-  }
-
-  /**
-   * SkillsMatrix page calls GET /api/hr/skills/:id for a single skill record.
-   * Returns a null payload until the service has a findById helper; the page
-   * handles missing data by rendering "skill topilmadi".
-   */
-  @ApiOperation({ summary: 'Get skill by id' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Get('skills/:id')
-  async getSkillById(@Param('id', ParseIntPipe) id: number) {
-    return { id, name: null, category: null, levels: [] };
-  }
+  // NOTE: GET /hr/skills, GET /hr/skills/:id, POST /hr/skills, PATCH /hr/skills/:id,
+  // DELETE /hr/skills/:id — moved to HrCompatAController (real DB implementation).
+  // Stub declarations removed to avoid Fastify duplicate-route collision.
 
   @ApiOperation({ summary: 'Get milestone complete' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -158,32 +134,6 @@ export class HrGsdController {
   async createReferral(@Body() body: unknown) {
     const dto = CreateReferralSchema.parse(body);
     return { data: { id: Date.now(), ...dto, created: true } };
-  }
-
-  @ApiOperation({ summary: 'Create skill' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('skills')
-  async createSkill(@Body() body: unknown) {
-    const dto = CreateSkillSchema.parse(body);
-    return { data: { id: Date.now(), ...dto, created: true } };
-  }
-
-  @ApiOperation({ summary: 'Update skill' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Patch('skills/:id')
-  async updateSkill(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
-    const dto = CreateSkillSchema.partial().parse(body ?? {});
-    return { data: { id, ...dto, updated: true } };
-  }
-
-  @ApiOperation({ summary: 'Delete skill' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Delete('skills/:id')
-  @HttpCode(HttpStatus.OK)
-  async deleteSkill(@Param('id', ParseIntPipe) id: number) {
-    return { data: { id, deleted: true } };
   }
 
   // NOTE: DELETE /api/hr/employee-skills/:id is served by HrCompatAController —
