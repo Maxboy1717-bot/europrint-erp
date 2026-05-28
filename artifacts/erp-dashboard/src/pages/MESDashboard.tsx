@@ -3,8 +3,8 @@
  * @description React page component. Route-level UI.
  */
 
-import { useQuery } from "@tanstack/react-query";
-import { safeArray } from "@/lib/queryClient";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { safeArray, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,8 +16,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface MesStats {
@@ -83,11 +85,42 @@ function KpiCard({ title, value, sub, icon: Icon, color, loading }: {
 
 export default function MESDashboard() {
   const { t } = useTranslation('common');
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: stats, isLoading: sLoad } = useQuery<MesStats>({ queryKey: ["/api/mes/stats"] });
   const { data: oeeRaw, isLoading: oLoad } = useQuery<unknown>({ queryKey: ["/api/mes/oee"] });
   const { data: tasksRaw, isLoading: tLoad } = useQuery<unknown>({ queryKey: ["/api/mes/tasks"] });
   const { data: ordersRaw, isLoading: pLoad } = useQuery<unknown>({ queryKey: ["/api/mes/papka-orders"] });
   const { data: sessionsRaw, isLoading: seLoad } = useQuery<unknown>({ queryKey: ["/api/mes/sessions"] });
+
+  const startMutation = useMutation({
+    mutationFn: (id: number) => apiRequest("PATCH", `/api/mes/work-orders/${id}/start`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mes/tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mes/stats"] });
+      toast({ title: tLabel('common.MESDashboard.muvaffaqiyatli', "Muvaffaqiyatli"), description: tLabel('common.MESDashboard.vazifaBoshlandi', "Vazifa boshlandi") });
+    },
+    onError: () => toast({
+      title: tLabel('common.MESDashboard.serverXatosi', "Server xatosi"),
+      description: tLabel('common.MESDashboard.ushbuFunksiyaHaliSozlanmoqda', "Ushbu funksiya hali sozlanmoqda"),
+      variant: "destructive",
+    }),
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: (id: number) => apiRequest("PATCH", `/api/mes/work-orders/${id}/complete`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mes/tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mes/stats"] });
+      toast({ title: tLabel('common.MESDashboard.muvaffaqiyatli', "Muvaffaqiyatli"), description: tLabel('common.MESDashboard.vazifaYakunlandi', "Vazifa yakunlandi") });
+    },
+    onError: () => toast({
+      title: tLabel('common.MESDashboard.serverXatosi', "Server xatosi"),
+      description: tLabel('common.MESDashboard.ushbuFunksiyaHaliSozlanmoqda', "Ushbu funksiya hali sozlanmoqda"),
+      variant: "destructive",
+    }),
+  });
 
   const loading = sLoad || oLoad || tLoad || pLoad || seLoad;
 
@@ -194,14 +227,37 @@ export default function MESDashboard() {
                tasks.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">{t("vazifaYoq")}</p> : (
                 <div className="space-y-2">
                   {tasks?.slice(0, 5).map(t => (
-                    <div key={t.id} className="flex items-center justify-between text-sm py-0.5">
-                      <div className="flex flex-col min-w-0">
+                    <div key={t.id} className="flex items-center justify-between text-sm py-0.5 gap-2">
+                      <div className="flex flex-col min-w-0 flex-1">
                         <span className="font-medium truncate max-w-[130px]">{t.machineName || `Vazifa #${t.id}`}</span>
                         {t.operatorName && <span className="text-xs text-muted-foreground">{t.operatorName}</span>}
                       </div>
-                      <Badge className={cn("text-xs ml-2 shrink-0", statusBadge[t.status || "pending"]?.cls || "bg-muted text-muted-foreground")}>
+                      <Badge className={cn("text-xs shrink-0", statusBadge[t.status || "pending"]?.cls || "bg-muted text-muted-foreground")}>
                         {statusBadge[t.status || "pending"]?.label || t.status}
                       </Badge>
+                      {t.status === "pending" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 text-xs px-2 shrink-0"
+                          onClick={() => startMutation.mutate(t.id)}
+                          disabled={startMutation.isPending}
+                          data-testid={`button-start-${t.id}`}
+                        >
+                          {tLabel('common.MESDashboard.boshlash', "Boshlash")}
+                        </Button>
+                      )}
+                      {t.status === "in_progress" && (
+                        <Button
+                          size="sm"
+                          className="h-6 text-xs px-2 shrink-0"
+                          onClick={() => completeMutation.mutate(t.id)}
+                          disabled={completeMutation.isPending}
+                          data-testid={`button-complete-${t.id}`}
+                        >
+                          {tLabel('common.MESDashboard.yakunlash', "Yakunlash")}
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>

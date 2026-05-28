@@ -4,11 +4,11 @@
  */
 
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from "@/lib/i18n";
-import { Calculator, FileText, Plus, Sparkles } from "lucide-react";
+import { Calculator, FileText, Plus, Sparkles, Play } from "lucide-react";
 import type { PayrollContract, PayrollCalculation, PayrollTaxRule, PayrollUser } from "./payroll/types";
 import { AIPayrollDialog } from "./payroll/AIPayrollDialog";
 import { CalculatePayrollDialog } from "./payroll/CalculatePayrollDialog";
@@ -18,12 +18,41 @@ import { CalculationsTab } from "./payroll/CalculationsTab";
 import { TaxRulesSidebar } from "./payroll/TaxRulesSidebar";
 import { EPErrorState } from "@/components/ep";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 export default function PayrollAutomation() {
   const { t } = useTranslation('hr');
   const { t: tFinance } = useTranslation('finance');
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("contracts");
   const [isCalculateDialogOpen, setIsCalculateDialogOpen] = useState(false);
+  const [isRunPayrollOpen, setIsRunPayrollOpen] = useState(false);
+  const [payrollPeriod, setPayrollPeriod] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
+
+  const runPayrollMutation = useMutation({
+    mutationFn: (period: string) => apiRequest("POST", "/api/hr/payroll/run", { period }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/finance-extended/payroll-calculations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance-extended/payroll-contracts"] });
+      setIsRunPayrollOpen(false);
+      toast({ title: tLabel('payroll.runPayroll.success', "Maosh hisoblandi"), description: tLabel('payroll.runPayroll.successDesc', `${payrollPeriod} davri uchun hisoblash boshlandi`) });
+    },
+    onError: () => toast({
+      title: tLabel('payroll.runPayroll.error', "Server xatosi"),
+      description: tLabel('payroll.runPayroll.errorDesc', "Ushbu funksiya hali sozlanmoqda"),
+      variant: "destructive",
+    }),
+  });
 
   const { data: sysSettings } = useQuery<{ inpsRate?: number; jshdRate?: number; jshirdRate?: number; minWage?: number; qqsRate?: number }>({
     queryKey: ["/api/system-settings"],
@@ -89,6 +118,15 @@ export default function PayrollAutomation() {
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
+              <Button
+                variant="secondary"
+                className="bg-green-600 hover:bg-green-700 text-white border-0 gap-2"
+                onClick={() => setIsRunPayrollOpen(true)}
+                data-testid="button-run-payroll"
+              >
+                <Play className="h-4 w-4" />
+                {tLabel('payroll.runPayroll.button', "Maosh hisoblash")}
+              </Button>
               <AIPayrollDialog
                 contracts={contracts}
                 employeeMap={employeeMap}
@@ -157,6 +195,43 @@ export default function PayrollAutomation() {
           <TaxRulesSidebar taxRules={taxRules} taxRulesLoading={taxRulesLoading} minWage={TAX_CONSTANTS.MIN_WAGE} />
         </div>
       </div>
+
+      {/* Maosh hisoblash davri dialog */}
+      <Dialog open={isRunPayrollOpen} onOpenChange={setIsRunPayrollOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{tLabel('payroll.runPayroll.title', "Maosh hisoblash")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="payroll-period">{tLabel('payroll.runPayroll.period', "Hisoblash davri (YYYY-MM)")}</Label>
+              <Input
+                id="payroll-period"
+                type="month"
+                value={payrollPeriod}
+                onChange={(e) => setPayrollPeriod(e.target.value)}
+                data-testid="input-payroll-period"
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {tLabel('payroll.runPayroll.hint', "Belgilangan davr uchun barcha faol shartnomalar bo'yicha maosh hisoblanadi.")}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRunPayrollOpen(false)}>
+              {tLabel('payroll.runPayroll.cancel', "Bekor")}
+            </Button>
+            <Button
+              onClick={() => runPayrollMutation.mutate(payrollPeriod)}
+              disabled={!payrollPeriod || runPayrollMutation.isPending}
+              data-testid="button-confirm-run-payroll"
+            >
+              <Play className="h-4 w-4 mr-2" />
+              {tLabel('payroll.runPayroll.confirm', "Hisoblashni boshlash")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

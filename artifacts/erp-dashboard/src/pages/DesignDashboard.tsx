@@ -3,16 +3,20 @@
  * @description React page component. Route-level UI.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RefreshCw } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Package, CheckCircle, Palette, FileText, Zap, Clock } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 import { tLabel } from '@/lib/i18n/tLabel';
 interface DesignStats {
@@ -54,8 +58,28 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function DesignDashboard() {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [pendingStatus, setPendingStatus] = useState<Record<string, string>>({});
+
   const { data: stats, isLoading, isError, error, refetch } = useQuery<DesignStats>({
     queryKey: ["/api/design/statistics"],
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      apiRequest("PATCH", `/api/design/${id}/status`, { status }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/design/statistics"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/design"] });
+      setPendingStatus(prev => { const n = { ...prev }; delete n[variables.id]; return n; });
+      toast({ title: tLabel('common.DesignDashboard.statusYangilandi', "Status yangilandi") });
+    },
+    onError: () => toast({
+      title: tLabel('common.DesignDashboard.serverXatosi', "Server xatosi"),
+      description: tLabel('common.DesignDashboard.ushbuFunksiyaHaliSozlanmoqda', "Ushbu funksiya hali sozlanmoqda"),
+      variant: "destructive",
+    }),
   });
 
   const approvalRate = stats?.totalDesigns
@@ -204,27 +228,39 @@ export default function DesignDashboard() {
             stats.recentOrders?.map((order) => (
               <div
                 key={order.id}
-                className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-muted/40 transition-colors"
+                className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-muted/40 transition-colors gap-3"
                 data-testid={`row-order-${order.id}`}
               >
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground">{order.orderNumber}</p>
                   <p className="text-xs text-muted-foreground">{order.clientName} — {order.productName}</p>
                 </div>
-                <div className="text-right">
-                  <span
-                    className={cn(
-                      "rounded-full px-2.5 py-0.5 text-xs font-semibold",
-                      order.status === "yakunlangan" ? "bg-green-100 text-green-800" :
-                      order.status === "tasdiqlangan" ? "bg-primary/10 text-primary" :
-                      order.status === "tasdiq-kutilmoqda" ? "bg-amber-100 text-amber-800" :
-                      order.status === "jarayonda" ? "bg-primary/10 text-primary" :
-                      "bg-muted/60 text-muted-foreground"
-                    )}
+                <div className="flex items-center gap-2 shrink-0">
+                  <Select
+                    value={pendingStatus[order.id] ?? order.status}
+                    onValueChange={(val) => setPendingStatus(prev => ({ ...prev, [order.id]: val }))}
                   >
-                    {STATUS_LABELS[order.status] || order.status}
-                  </span>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{order.productType}</p>
+                    <SelectTrigger className="h-7 text-xs w-36" data-testid={`select-status-${order.id}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(STATUS_LABELS).map(([val, label]) => (
+                        <SelectItem key={val} value={val} className="text-xs">{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {pendingStatus[order.id] && pendingStatus[order.id] !== order.status && (
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs px-2"
+                      onClick={() => updateStatusMutation.mutate({ id: order.id, status: pendingStatus[order.id] })}
+                      disabled={updateStatusMutation.isPending}
+                      data-testid={`button-update-status-${order.id}`}
+                    >
+                      {tLabel('common.DesignDashboard.saqlash', "Saqlash")}
+                    </Button>
+                  )}
+                  <p className="text-[10px] text-muted-foreground">{order.productType}</p>
                 </div>
               </div>
             ))

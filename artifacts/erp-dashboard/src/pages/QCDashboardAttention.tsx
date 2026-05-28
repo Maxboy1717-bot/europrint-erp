@@ -8,6 +8,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertTriangle, TrendingDown, CheckCircle, Truck,
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
 
 import type { QcStats, QcBrak, QcReclamation, QcSupplierQuality } from "./QCDashboardTypes";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 // ─── AttentionSection ─────────────────────────────────────────────────────────
 
@@ -26,10 +28,13 @@ interface AttentionSectionProps {
   rLoad: boolean;
   bLoad: boolean;
   suLoad: boolean;
+  onApprove?: (id: string) => void;
+  onReject?: (id: string) => void;
+  approveLoading?: boolean;
 }
 
 export function AttentionSection({
-  recs, brakList, suppliers, rLoad, bLoad, suLoad,
+  recs, brakList, suppliers, rLoad, bLoad, suLoad, onApprove, onReject, approveLoading,
 }: AttentionSectionProps) {
   const { t } = useTranslation("common");
   return (
@@ -60,12 +65,12 @@ export function AttentionSection({
             ) : (
               <div className="space-y-2">
                 {recs.slice(0, 5).map(r => (
-                  <div key={r.id} className="flex items-center justify-between text-sm py-1">
-                    <span className="truncate max-w-[160px] text-muted-foreground">
+                  <div key={r.id} className="flex items-center justify-between text-sm py-1 gap-2">
+                    <span className="truncate max-w-[120px] text-muted-foreground flex-1">
                       {r.clientName || `#${r.id}`}
                     </span>
                     <Badge className={cn(
-                      "text-xs shrink-0 ml-2",
+                      "text-xs shrink-0",
                       r.status === "new"           ? "bg-red-50 text-[var(--ep-red)]" :
                       r.status === "investigating" ? "bg-amber-50 text-[var(--ep-yellow)]" :
                                                     "bg-green-50 text-[var(--ep-green)]"
@@ -76,6 +81,29 @@ export function AttentionSection({
                         ? "Ko'rilmoqda"
                         : r.status}
                     </Badge>
+                    {r.status === "new" && onApprove && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-xs px-2 shrink-0 text-[var(--ep-green)]"
+                        onClick={() => onApprove(r.id)}
+                        disabled={approveLoading}
+                        data-testid={`button-approve-rec-${r.id}`}
+                      >
+                        {tLabel('common.QCDashboard.tasdiqlash', "Tasdiqlash")}
+                      </Button>
+                    )}
+                    {r.status === "new" && onReject && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-xs px-2 shrink-0 text-[var(--ep-red)]"
+                        onClick={() => onReject(r.id)}
+                        data-testid={`button-reject-rec-${r.id}`}
+                      >
+                        {tLabel('common.QCDashboard.rad', "Rad")}
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>

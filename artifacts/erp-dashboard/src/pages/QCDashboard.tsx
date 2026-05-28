@@ -6,21 +6,36 @@
  * for the split-out pieces.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 import type { QcStats, QcFlowData, QcBrak, QcReclamation, QcSupplierQuality } from "./QCDashboardTypes";
 import { KpiSection, QcFlowSection, AttentionSection, SummarySection } from "./QCDashboardSections";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function QCDashboard() {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const [rejectDialog, setRejectDialog] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
+  const [rejectReason, setRejectReason] = useState("");
+
   const { data: stats,    isLoading: sLoad  } = useQuery<QcStats>            ({ queryKey: ["/api/qc/dashboard/stats"] });
   const { data: flow,     isLoading: fLoad  } = useQuery<QcFlowData>         ({ queryKey: ["/api/qc/dashboard/flow"] });
   const { data: braks,    isLoading: bLoad  } = useQuery<QcBrak[]>           ({ queryKey: ["/api/qc/braks"] });
@@ -30,6 +45,37 @@ export default function QCDashboard() {
   const recs:      QcReclamation[]    = Array.isArray(recRaw)   ? recRaw   : [];
   const suppliers: QcSupplierQuality[] = Array.isArray(supplier) ? supplier : [];
   const brakList:  QcBrak[]           = Array.isArray(braks)    ? braks    : [];
+
+  const approveMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("PATCH", `/api/qc/inspections/${id}/approve`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/qc/reclamations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/qc/dashboard/stats"] });
+      toast({ title: tLabel('common.QCDashboard.tasdiqlandi', "Tasdiqlandi") });
+    },
+    onError: () => toast({
+      title: tLabel('common.QCDashboard.serverXatosi', "Server xatosi"),
+      description: tLabel('common.QCDashboard.ushbuFunksiyaHaliSozlanmoqda', "Ushbu funksiya hali sozlanmoqda"),
+      variant: "destructive",
+    }),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      apiRequest("PATCH", `/api/qc/inspections/${id}/reject`, { reason }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/qc/reclamations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/qc/dashboard/stats"] });
+      setRejectDialog({ open: false, id: null });
+      setRejectReason("");
+      toast({ title: tLabel('common.QCDashboard.radEtildi', "Rad etildi") });
+    },
+    onError: () => toast({
+      title: tLabel('common.QCDashboard.serverXatosi', "Server xatosi"),
+      description: tLabel('common.QCDashboard.ushbuFunksiyaHaliSozlanmoqda', "Ushbu funksiya hali sozlanmoqda"),
+      variant: "destructive",
+    }),
+  });
 
   const passRate  = stats?.tests?.passRate || 0;
   const passColor = passRate >= 95 ? "text-[var(--ep-green)]" : passRate >= 85 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]";
@@ -76,10 +122,44 @@ export default function QCDashboard() {
         rLoad={rLoad}
         bLoad={bLoad}
         suLoad={suLoad}
+        onApprove={(id: string) => approveMutation.mutate(id)}
+        onReject={(id: string) => setRejectDialog({ open: true, id })}
+        approveLoading={approveMutation.isPending}
       />
 
       {/* ── SECTION 4: Sifat xulosa ─────────────────────── */}
       <SummarySection stats={stats} loading={sLoad} />
+
+      {/* Reject sababi dialog */}
+      <Dialog open={rejectDialog.open} onOpenChange={(open) => { if (!open) { setRejectDialog({ open: false, id: null }); setRejectReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{tLabel('common.QCDashboard.radEtishSababi', "Rad etish sababi")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="qc-reject-reason">{tLabel('common.QCDashboard.sabab', "Sabab")}</Label>
+            <Textarea
+              id="qc-reject-reason"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder={tLabel('common.QCDashboard.sabab', "Sabab")}
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setRejectDialog({ open: false, id: null }); setRejectReason(""); }}>
+              {tLabel('common.QCDashboard.bekor', "Bekor")}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!rejectReason.trim() || rejectMutation.isPending}
+              onClick={() => { if (rejectDialog.id) rejectMutation.mutate({ id: rejectDialog.id, reason: rejectReason }); }}
+            >
+              {tLabel('common.QCDashboard.radEtish', "Rad etish")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Tezkor harakatlar */}
       <div className="flex flex-wrap gap-2">
