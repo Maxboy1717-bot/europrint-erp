@@ -174,8 +174,15 @@ export class HrCompatAController {
   }
 
   @Get('discipline')
+  // P1.19.1: DB returns employee_name; FE expects full_name + department
   async getDiscipline(@Query('employeeId') employeeId?: string) {
-    return unwrapOrDefault(await this.svc.getDiscipline(employeeId), []);
+    const r = await this.svc.getDiscipline(employeeId);
+    const rows = (r.ok && Array.isArray(r.data) ? r.data : []) as Record<string, unknown>[];
+    return rows.map((row) => ({
+      ...row,
+      full_name:  row['full_name']  ?? row['employee_name'] ?? '',
+      department: row['department'] ?? row['department_name'] ?? '',
+    }));
   }
 
   @Post('discipline-records')

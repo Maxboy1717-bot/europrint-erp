@@ -199,18 +199,24 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
     try {
       const eid = employeeId ? parseInt(employeeId, 10) : 0;
       const rows = await db.select({
-        id:             discipline_records.id,
-        employee_id:    discipline_records.employeeId,
-        violation_type: discipline_records.violationType,
-        severity:       discipline_records.severity,
-        status:         discipline_records.status,
-        violation_date: discipline_records.violationDate,
-        fine_amount:    discipline_records.fineAmount,
-        created_at:     discipline_records.createdAt,
-        employee_name:  sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
+        id:              discipline_records.id,
+        employee_id:     discipline_records.employeeId,
+        violation_type:  discipline_records.violationType,
+        discipline_type: discipline_records.violationType,  // alias for FE
+        severity:        discipline_records.severity,
+        status:          discipline_records.status,
+        violation_date:  discipline_records.violationDate,
+        fine_amount:     discipline_records.fineAmount,
+        created_at:      discipline_records.createdAt,
+        // P1.19.1: FE expects full_name and department — join departments
+        full_name:       sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
+        employee_name:   sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
+        department:      hrDepartments.name,
+        department_name: hrDepartments.name,
       })
         .from(discipline_records)
         .innerJoin(hrEmployees, eq(hrEmployees.id, discipline_records.employeeId))
+        .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))
         .where(sql`
           ${discipline_records.isSoftDeleted} = false AND
           (${eid > 0 ? eid : null}::int IS NULL OR ${discipline_records.employeeId} = ${eid > 0 ? eid : null})
