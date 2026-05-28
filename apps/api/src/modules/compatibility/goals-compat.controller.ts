@@ -5,7 +5,7 @@
  *   goals module endpoints (see docs/B5-compat-endpoints.md). Existing routes
  *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, HttpCode, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Param, Query, Body, HttpCode, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -77,6 +77,12 @@ export class GoalsCompatController {
 
   @Put(':id')
   async updateGoal(@Param('id') id: string, @Body() body: CompatBodyDto) {
+    return unwrapOrInternal(await this.svc.updateGoal(id, body));
+  }
+
+  // P1.8.1: FE uses PATCH not PUT — add PATCH alias that delegates to same handler
+  @Patch(':id')
+  async patchGoal(@Param('id') id: string, @Body() body: CompatBodyDto) {
     return unwrapOrInternal(await this.svc.updateGoal(id, body));
   }
 

@@ -40,17 +40,27 @@ export class HrCompatSafetyController {
   constructor(private readonly svc: HrCompatSafetyService) {}
 
   @Get('brand-settings')
+  // P1.27.1: FE expects { brand_data: {...} } — wrap the stored brand_data in envelope
   async getBrandSettings() {
     const _rRow = await this.svc.getBrandSettings();
     assertOk(_rRow);
     const row = _rRow.data as Record<string, unknown>;
-    return row ? (row['brand_data'] ?? {}) : { primaryColor: '#1A56DB', companyName: 'EuroPrint' };
+    const defaultBrand = { primaryColor: '#1A56DB', companyName: 'EuroPrint' };
+    let brandData: unknown = row ? (row['brand_data'] ?? defaultBrand) : defaultBrand;
+    // brand_data may be stored as JSON string — parse it
+    if (typeof brandData === 'string') {
+      try { brandData = JSON.parse(brandData); } catch { brandData = defaultBrand; }
+    }
+    return { brand_data: brandData };
   }
 
   @Patch('brand-settings')
-  @UsePipes(new ZodValidationPipe(HrBrandSettingsSchema))
-  async updateBrandSettings(@Body() body: HrBrandSettingsDto) {
-    await this.svc.updateBrandSettings(body);
+  // P1.27.1/3: Accept { brand_data: {...} } from FE; avoid double-encoding by extracting inner object
+  async updateBrandSettings(@Body() body: unknown) {
+    const b = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>;
+    // FE sends { brand_data: {...} }; service expects the brand_data object directly
+    const brandData = b['brand_data'] ?? b;
+    await this.svc.updateBrandSettings(brandData as Record<string, unknown>);
     return { data: { updated: true } };
   }
 
