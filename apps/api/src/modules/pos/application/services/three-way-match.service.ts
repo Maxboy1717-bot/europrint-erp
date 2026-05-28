@@ -59,13 +59,15 @@ export class ThreeWayMatchService {
       };
 
       if (existing) {
-        await this.repo.update(existing.id, data);
+        const updateR = await this.repo.update(existing.id, data);
+        if (!updateR.ok) return Err(updateR.error);
         this.logger.log(`[3WayMatch] UPDATE movement ${input.movementId}: ${status}`);
         return Ok({ id: existing.id, status });
       } else {
-        const id = await this.repo.insert({ movementId: input.movementId, ...data });
-        this.logger.log(`[3WayMatch] INSERT movement ${input.movementId}: ${status} (id=${id})`);
-        return Ok({ id, status });
+        const insertR = await this.repo.insert({ movementId: input.movementId, ...data });
+        if (!insertR.ok) return Err(insertR.error);
+        this.logger.log(`[3WayMatch] INSERT movement ${input.movementId}: ${status} (id=${insertR.data})`);
+        return Ok({ id: insertR.data, status });
       }
     } catch (e) {
       this.logger.error(`[3WayMatch] xato: ${String(e)}`);

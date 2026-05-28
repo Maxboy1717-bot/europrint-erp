@@ -72,12 +72,16 @@ export class AutoGlPostingService {
     try {
       this.logger.log(`[AutoGL] Movement ${movementId} uchun GL posting hisoblanmoqda...`);
 
-      const mov = await this.repo.findMovement(movementId);
+      const movR = await this.repo.findMovement(movementId);
+      if (!movR.ok) return Err(movR.error);
+      const mov = movR.data;
       if (!mov) return Err({ message: 'Harakat topilmadi', code: 'NOT_FOUND' });
 
       let totalAmount = Number(mov.total_amount);
       if (totalAmount === 0) {
-        totalAmount = await this.repo.sumLines(movementId);
+        const sumR = await this.repo.sumLines(movementId);
+        if (!sumR.ok) return Err(sumR.error);
+        totalAmount = sumR.data;
       }
       if (totalAmount === 0) {
         this.logger.log(`[AutoGL] Movement ${movementId} miqdori 0 — GL posting o'tkazilmadi`);
@@ -87,7 +91,9 @@ export class AutoGlPostingService {
       const entries = this.calculateEntries(mov.movement_type, totalAmount, movementId);
       if (entries.length === 0) return Ok({ posted: 0, entries: [] });
 
-      const existing = await this.repo.countExistingPostings(movementId);
+      const existingR = await this.repo.countExistingPostings(movementId);
+      if (!existingR.ok) return Err(existingR.error);
+      const existing = existingR.data;
       if (existing > 0) {
         this.logger.log(`[AutoGL] Movement ${movementId} uchun ${existing} ta GL yozuvi allaqachon bor`);
         return Ok({ posted: 0, entries: [] });

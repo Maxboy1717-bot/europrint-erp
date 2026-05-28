@@ -36,38 +36,44 @@ interface GlPostingInsert {
 
 @Injectable()
 export class AutoGlPostingRepository {
-  async findMovement(movementId: number): Promise<{
+  async findMovement(movementId: number): Promise<Result<{
     id: number; movement_number: string; movement_type: string; status: string;
     total_amount: string | number; currency: string; exchange_rate: string | number;
-  } | null> {
-    const rows = await typedExecute<{
-      id: number; movement_number: string; movement_type: string; status: string;
-      total_amount: string | number; currency: string; exchange_rate: string | number;
-    }>(sql`
-      SELECT pm.id, pm.movement_number, pm.movement_type, pm.status,
-             COALESCE(pm.total_amount, 0)::numeric AS total_amount,
-             pm.currency, COALESCE(pm.exchange_rate, 1)::numeric AS exchange_rate
-      FROM pos_movements pm
-      WHERE pm.id = ${movementId}
-      LIMIT 1
-    `);
-    return rows[0] ?? null;
+  } | null>> {
+    return safeCall(async () => {
+      const rows = await typedExecute<{
+        id: number; movement_number: string; movement_type: string; status: string;
+        total_amount: string | number; currency: string; exchange_rate: string | number;
+      }>(sql`
+        SELECT pm.id, pm.movement_number, pm.movement_type, pm.status,
+               COALESCE(pm.total_amount, 0)::numeric AS total_amount,
+               pm.currency, COALESCE(pm.exchange_rate, 1)::numeric AS exchange_rate
+        FROM pos_movements pm
+        WHERE pm.id = ${movementId}
+        LIMIT 1
+      `);
+      return rows[0] ?? null;
+    }, 'DB_ERROR');
   }
 
-  async sumLines(movementId: number): Promise<number> {
-    const rows = await typedExecute<{ total: string | number }>(sql`
-      SELECT COALESCE(SUM(quantity * COALESCE(unit_price, 0)), 0)::numeric AS total
-      FROM pos_movement_lines
-      WHERE movement_id = ${movementId}
-    `);
-    return Number(rows[0]?.total ?? 0);
+  async sumLines(movementId: number): Promise<Result<number>> {
+    return safeCall(async () => {
+      const rows = await typedExecute<{ total: string | number }>(sql`
+        SELECT COALESCE(SUM(quantity * COALESCE(unit_price, 0)), 0)::numeric AS total
+        FROM pos_movement_lines
+        WHERE movement_id = ${movementId}
+      `);
+      return Number(rows[0]?.total ?? 0);
+    }, 'DB_ERROR');
   }
 
-  async countExistingPostings(movementId: number): Promise<number> {
-    const rows = await typedExecute<{ cnt: number }>(sql`
-      SELECT COUNT(*)::int AS cnt FROM pos_gl_postings WHERE movement_id = ${movementId}
-    `);
-    return rows[0]?.cnt ?? 0;
+  async countExistingPostings(movementId: number): Promise<Result<number>> {
+    return safeCall(async () => {
+      const rows = await typedExecute<{ cnt: number }>(sql`
+        SELECT COUNT(*)::int AS cnt FROM pos_gl_postings WHERE movement_id = ${movementId}
+      `);
+      return rows[0]?.cnt ?? 0;
+    }, 'DB_ERROR');
   }
 
   async insertPosting(entry: GlPostingInsert): Promise<Result<void>> {

@@ -46,22 +46,24 @@ export class ThreeWayMatchRepository {
     invoiceAmount?:   number | null;
     status:           string;
     matchedBy?:       number | null;
-  }): Promise<void> {
-    await db.execute(sql`
-      UPDATE three_way_match_log
-         SET purchase_order_no = ${data.purchaseOrderNo ?? null},
-             receipt_no        = ${data.receiptNo       ?? null},
-             invoice_no        = ${data.invoiceNo       ?? null},
-             po_quantity       = ${data.poQuantity      ?? null},
-             received_quantity = ${data.receivedQuantity ?? null},
-             invoiced_quantity = ${data.invoicedQuantity ?? null},
-             po_amount         = ${data.poAmount        ?? null},
-             invoice_amount    = ${data.invoiceAmount   ?? null},
-             match_status      = ${data.status},
-             matched_at        = NOW(),
-             matched_by        = ${data.matchedBy ?? null}
-       WHERE id = ${id}
-    `);
+  }): Promise<Result<void>> {
+    return safeCall(async () => {
+      await db.execute(sql`
+        UPDATE three_way_match_log
+           SET purchase_order_no = ${data.purchaseOrderNo ?? null},
+               receipt_no        = ${data.receiptNo       ?? null},
+               invoice_no        = ${data.invoiceNo       ?? null},
+               po_quantity       = ${data.poQuantity      ?? null},
+               received_quantity = ${data.receivedQuantity ?? null},
+               invoiced_quantity = ${data.invoicedQuantity ?? null},
+               po_amount         = ${data.poAmount        ?? null},
+               invoice_amount    = ${data.invoiceAmount   ?? null},
+               match_status      = ${data.status},
+               matched_at        = NOW(),
+               matched_by        = ${data.matchedBy ?? null}
+         WHERE id = ${id}
+      `);
+    }, 'DB_ERROR');
   }
 
   async insert(data: {
@@ -76,23 +78,25 @@ export class ThreeWayMatchRepository {
     invoiceAmount?:   number | null;
     status:           string;
     matchedBy?:       number | null;
-  }): Promise<number> {
-    const rows = await typedExecute<{ id: number }>(sql`
-      INSERT INTO three_way_match_log
-        (movement_id, purchase_order_no, receipt_no, invoice_no,
-         po_quantity, received_quantity, invoiced_quantity,
-         po_amount, invoice_amount, match_status,
-         matched_at, matched_by, created_at)
-      VALUES
-        (${data.movementId},   ${data.purchaseOrderNo ?? null},
-         ${data.receiptNo ?? null},    ${data.invoiceNo   ?? null},
-         ${data.poQuantity ?? null},   ${data.receivedQuantity ?? null},
-         ${data.invoicedQuantity ?? null},
-         ${data.poAmount ?? null},     ${data.invoiceAmount ?? null},
-         ${data.status}, NOW(), ${data.matchedBy ?? null}, NOW())
-      RETURNING id
-    `);
-    return rows[0]?.id ?? 0;
+  }): Promise<Result<number>> {
+    return safeCall(async () => {
+      const rows = await typedExecute<{ id: number }>(sql`
+        INSERT INTO three_way_match_log
+          (movement_id, purchase_order_no, receipt_no, invoice_no,
+           po_quantity, received_quantity, invoiced_quantity,
+           po_amount, invoice_amount, match_status,
+           matched_at, matched_by, created_at)
+        VALUES
+          (${data.movementId},   ${data.purchaseOrderNo ?? null},
+           ${data.receiptNo ?? null},    ${data.invoiceNo   ?? null},
+           ${data.poQuantity ?? null},   ${data.receivedQuantity ?? null},
+           ${data.invoicedQuantity ?? null},
+           ${data.poAmount ?? null},     ${data.invoiceAmount ?? null},
+           ${data.status}, NOW(), ${data.matchedBy ?? null}, NOW())
+        RETURNING id
+      `);
+      return rows[0]?.id ?? 0;
+    }, 'DB_ERROR');
   }
 
   async listVariances(): Promise<unknown[]> {
