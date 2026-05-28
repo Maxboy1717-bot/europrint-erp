@@ -23,6 +23,8 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { unwrapOrThrow } from '@common/http-result';
+import { MarketingExtService } from '../application/marketing-ext.service';
 
 const StubBodySchema = z.record(z.unknown());
 
@@ -35,25 +37,61 @@ const StubBodySchema = z.record(z.unknown());
 export class MarketingAnalyticsStubsController {
   private readonly logger = new Logger(MarketingAnalyticsStubsController.name);
 
+  constructor(private readonly svc: MarketingExtService) {}
+
   // -- Content ---------------------------------------------------------------
   @Post('content/ai-generate') @Roles('super_admin', 'marketing_manager', 'director')
   async aiGenerateContent(@Body() _body: unknown) { return notImplemented('POST /marketing/content/ai-generate'); }
 
   // -- NPS & Churn -----------------------------------------------------------
-  @Get('nps/stats')    @Roles('super_admin', 'marketing_manager', 'director') async getNpsStats()    { return notImplemented('GET /marketing/nps/stats'); }
-  @Get('nps/monthly')  @Roles('super_admin', 'marketing_manager', 'director') async getNpsMonthly()  { return notImplemented('GET /marketing/nps/monthly'); }
-  @Get('nps')          @Roles('super_admin', 'marketing_manager', 'director') async getNps()         { return notImplemented('GET /marketing/nps'); }
+  @Get('nps/stats')
+  @Roles('super_admin', 'marketing_manager', 'director')
+  async getNpsStats() {
+    return unwrapOrThrow(await this.svc.getNpsStats());
+  }
 
-  @Get('churn-risk/ai-signal') @Roles('super_admin', 'marketing_manager', 'director') async getChurnRiskAiSignal() { return notImplemented('GET /marketing/churn-risk/ai-signal'); }
-  @Get('churn-risk')           @Roles('super_admin', 'marketing_manager', 'director') async getChurnRisk()         { return notImplemented('GET /marketing/churn-risk'); }
+  @Get('nps/monthly')
+  @Roles('super_admin', 'marketing_manager', 'director')
+  async getNpsMonthly() {
+    const r = await this.svc.getNpsStats();
+    if (!r.ok) return { monthlyTrend: [] };
+    return { monthlyTrend: r.data.monthlyTrend };
+  }
+
+  @Get('nps')
+  @Roles('super_admin', 'marketing_manager', 'director')
+  async getNps() {
+    return unwrapOrThrow(await this.svc.getNps());
+  }
+
+  @Get('churn-risk/ai-signal')
+  @Roles('super_admin', 'marketing_manager', 'director')
+  async getChurnRiskAiSignal() {
+    // AI-signal: same churn-risk data — frontend can style it differently
+    return unwrapOrThrow(await this.svc.getChurnRisk());
+  }
+
+  @Get('churn-risk')
+  @Roles('super_admin', 'marketing_manager', 'director')
+  async getChurnRisk() {
+    return unwrapOrThrow(await this.svc.getChurnRisk());
+  }
   @Post('churn-risk/ai-signal') @Roles('super_admin', 'marketing_manager', 'director') @HttpCode(HttpStatus.OK)
   async postChurnRiskAiSignal(@Body() _body: unknown) { return notImplemented('POST /marketing/churn-risk/ai-signal'); }
 
   // -- AI / Leads ------------------------------------------------------------
-  @Get('ai/hot-leads') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager') async getAiHotLeads() { return notImplemented('GET /marketing/ai/hot-leads'); }
+  @Get('ai/hot-leads')
+  @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  async getAiHotLeads() {
+    return unwrapOrThrow(await this.svc.getHotLeads());
+  }
   @Get('ai-assistant') @Roles('super_admin', 'marketing_manager', 'director') async getAiAssistant() { return notImplemented('GET /marketing/ai-assistant'); }
 
-  @Get('leads/sources/summary')          @Roles('super_admin', 'marketing_manager', 'director') async getLeadsSourcesSummary() { return notImplemented('GET /marketing/leads/sources/summary'); }
+  @Get('leads/sources/summary')
+  @Roles('super_admin', 'marketing_manager', 'director')
+  async getLeadsSourcesSummary() {
+    return unwrapOrThrow(await this.svc.getLeadsSourcesSummary());
+  }
   @Get('leads/automation/overdue-leads') @Roles('super_admin', 'marketing_manager', 'director') async getAutomationOverdueLeads() { return notImplemented('GET /marketing/leads/automation/overdue-leads'); }
 
   @Get('leads/:id/contacts') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
@@ -70,8 +108,11 @@ export class MarketingAnalyticsStubsController {
   async deleteLead(@Param('id') _id: string) { return notImplemented('DELETE /marketing/leads/:id'); }
 
   // -- Inbox (social conversations + messages) -------------------------------
-  @Get('inbox/stats')         @Roles('super_admin', 'marketing_manager', 'director')
-  async getInboxStats() { return notImplemented('GET /marketing/inbox/stats'); }
+  @Get('inbox/stats')
+  @Roles('super_admin', 'marketing_manager', 'director')
+  async getInboxStats() {
+    return unwrapOrThrow(await this.svc.getInboxStats());
+  }
 
   @Get('inbox/conversations') @Roles('super_admin', 'marketing_manager', 'director')
   async getInboxConversations() { return notImplemented('GET /marketing/inbox/conversations'); }

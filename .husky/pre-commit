@@ -60,3 +60,12 @@ node scripts/check-sidebar-routes.mjs || true
 # Blocks if any NEW pgTable duplicate is introduced beyond the baseline.
 # Existing ~11 known duplicates remain allowed; this stops further growth.
 node scripts/reviewer-schema-dup.mjs || exit 1
+
+# Qoida 17: notImplemented() taqiqlangan
+node scripts/check-no-new-stubs.mjs || exit 1
+
+# Qoida 18: FE-BE URL solishtirish (warning only)
+node scripts/check-fe-api-urls.mjs
+
+# Qoida 19: Yangi sahifa CRUD tekshiruvi (warning only)
+node scripts/check-page-has-crud.mjs

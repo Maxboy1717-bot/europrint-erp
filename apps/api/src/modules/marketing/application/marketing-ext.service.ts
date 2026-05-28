@@ -112,4 +112,42 @@ export class MarketingExtService {
   getMarketingFunnel(): Promise<Result<Record<string, unknown>>> {
     return this.repo.getMarketingFunnel();
   }
+
+  // ── GURUH 1 ──────────────────────────────────────────────────────────────────
+
+  getNps(): Promise<Result<{ items: Record<string, unknown>[]; avgScore: number; total: number }>> {
+    return this.repo.getNps();
+  }
+
+  getNpsStats(): Promise<Result<{
+    npsScore: number;
+    promoters: number;
+    passives: number;
+    detractors: number;
+    monthlyTrend: { month: string; score: number }[];
+  }>> {
+    return this.repo.getNpsStats();
+  }
+
+  getHotLeads(): Promise<Result<Record<string, unknown>[]>> {
+    return this.repo.getHotLeads();
+  }
+
+  getLeadsSourcesSummary(): Promise<Result<{ source: string; count: number; totalValue: number; conversionRate: number }[]>> {
+    return this.repo.getLeadsSourcesSummary();
+  }
+
+  getInboxStats(): Promise<Result<{ total: number; unread: number; pending: number; resolved: number; openRate: number }>> {
+    return this.repo.getInboxStats();
+  }
+
+  getChurnRisk(): Promise<Result<{
+    customerId: number;
+    customerName: string;
+    riskLevel: 'high' | 'medium' | 'low';
+    daysSinceLastOrder: number;
+    openDebt: number;
+  }[]>> {
+    return this.repo.getChurnRisk();
+  }
 }

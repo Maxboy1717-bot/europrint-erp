@@ -65,7 +65,7 @@ export default function MMDashboard() {
   });
 
   const { data: transactionsData } = useQuery<Transaction[]>({
-    queryKey: ["/api/warehouse/transactions"],
+    queryKey: ["/api/wms/transactions"],
   });
 
   const { data: vendorsData } = useQuery<Vendor[]>({

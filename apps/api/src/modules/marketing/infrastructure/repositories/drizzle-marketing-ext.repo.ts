@@ -6,7 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { and, eq, desc, isNull, sql } from 'drizzle-orm';
+import { and, eq, desc, isNull, sql, notInArray } from 'drizzle-orm';
 import { db } from '@shared/db';
 import { safeCall, Result, Err } from '@common/result';
 import {
@@ -14,6 +14,10 @@ import {
   marketingSocialPosts, marketingEmailTemplates,
   marketingCampaigns, marketingLeads,
 } from '@europrint/schemas';
+import {
+  npsResponses, socialConversations, sdCustomers,
+  marketingLeads as marketingLeadsCanonical,
+} from '@workspace/db';
 
 @Injectable()
 export class DrizzleMarketingExtRepository {
@@ -230,6 +234,176 @@ export class DrizzleMarketingExtRepository {
           { name: 'Converted', count: Number(converted[0]?.count ?? 0) },
         ],
       };
+    });
+  }
+
+  // ── GURUH 1 ─────────────────────────────────────────────────────────────────
+
+  async getNps(): Promise<Result<{ items: Record<string, unknown>[]; avgScore: number; total: number }>> {
+    return safeCall(async () => {
+      const items = await db.select().from(npsResponses)
+        .orderBy(desc(npsResponses.createdAt))
+        .limit(50);
+      const rows = Array.isArray(items) ? items : [];
+      const avg = rows.length > 0
+        ? rows.reduce((s, r) => s + Number(r.score ?? 0), 0) / rows.length
+        : 0;
+      return { items: rows as Record<string, unknown>[], avgScore: Math.round(avg * 10) / 10, total: rows.length };
+    });
+  }
+
+  async getNpsStats(): Promise<Result<{
+    npsScore: number;
+    promoters: number;
+    passives: number;
+    detractors: number;
+    monthlyTrend: { month: string; score: number }[];
+  }>> {
+    return safeCall(async () => {
+      const all = await db.select({ score: npsResponses.score, createdAt: npsResponses.createdAt })
+        .from(npsResponses);
+      const rows = Array.isArray(all) ? all : [];
+      const total = rows.length;
+      const promoters  = rows.filter(r => Number(r.score) >= 9).length;
+      const passives   = rows.filter(r => Number(r.score) >= 7 && Number(r.score) < 9).length;
+      const detractors = rows.filter(r => Number(r.score) < 7).length;
+      const npsScore   = total > 0
+        ? Math.round(((promoters - detractors) / total) * 100)
+        : 0;
+
+      // Monthly trend — last 6 months
+      const now = new Date();
+      const monthlyTrend: { month: string; score: number }[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const monthRows = rows.filter(r => {
+          if (!r.createdAt) return false;
+          const rd = new Date(r.createdAt);
+          return rd.getFullYear() === d.getFullYear() && rd.getMonth() === d.getMonth();
+        });
+        const mTotal = monthRows.length;
+        const mPro   = monthRows.filter(r => Number(r.score) >= 9).length;
+        const mDet   = monthRows.filter(r => Number(r.score) < 7).length;
+        monthlyTrend.push({
+          month: label,
+          score: mTotal > 0 ? Math.round(((mPro - mDet) / mTotal) * 100) : 0,
+        });
+      }
+      return { npsScore, promoters, passives, detractors, monthlyTrend };
+    });
+  }
+
+  async getHotLeads(): Promise<Result<Record<string, unknown>[]>> {
+    return safeCall(async () => {
+      // score field used as AI proxy (highest score = hottest lead)
+      const rows = await db.select().from(marketingLeadsCanonical)
+        .where(and(
+          notInArray(marketingLeadsCanonical.status, ['converted', 'lost']),
+          isNull(marketingLeadsCanonical.deletedAt),
+        ))
+        .orderBy(desc(marketingLeadsCanonical.score))
+        .limit(10);
+      return (Array.isArray(rows) ? rows : []) as Record<string, unknown>[];
+    });
+  }
+
+  async getLeadsSourcesSummary(): Promise<Result<{ source: string; count: number; totalValue: number; conversionRate: number }[]>> {
+    return safeCall(async () => {
+      const grouped = await db.select({
+        source:     marketingLeadsCanonical.source,
+        totalCount: sql<number>`count(*)::int`,
+        wonCount:   sql<number>`count(*) filter (where ${marketingLeadsCanonical.status} = 'converted')::int`,
+      })
+        .from(marketingLeadsCanonical)
+        .where(isNull(marketingLeadsCanonical.deletedAt))
+        .groupBy(marketingLeadsCanonical.source);
+
+      return (Array.isArray(grouped) ? grouped : []).map(r => ({
+        source:         r.source ?? 'unknown',
+        count:          Number(r.totalCount ?? 0),
+        totalValue:     0,
+        conversionRate: Number(r.totalCount) > 0
+          ? Math.round((Number(r.wonCount) / Number(r.totalCount)) * 100 * 10) / 10
+          : 0,
+      }));
+    });
+  }
+
+  async getInboxStats(): Promise<Result<{ total: number; unread: number; pending: number; resolved: number; openRate: number }>> {
+    return safeCall(async () => {
+      const rows = await db.select({
+        status:    socialConversations.status,
+        cnt:       sql<number>`count(*)::int`,
+        unreadSum: sql<number>`sum(${socialConversations.unreadCount})::int`,
+      })
+        .from(socialConversations)
+        .groupBy(socialConversations.status);
+
+      const byStatus = Object.fromEntries(
+        (Array.isArray(rows) ? rows : []).map(r => [r.status, r]),
+      ) as Record<string, { cnt: number; unreadSum: number }>;
+
+      const open    = Number(byStatus['open']?.cnt ?? 0);
+      const pending = Number(byStatus['pending']?.cnt ?? 0);
+      const closed  = Number(byStatus['closed']?.cnt ?? 0);
+      const total   = open + pending + closed;
+      const unread  = (Array.isArray(rows) ? rows : []).reduce((s, r) => s + Number(r.unreadSum ?? 0), 0);
+
+      return {
+        total,
+        unread,
+        pending,
+        resolved: closed,
+        openRate: total > 0 ? Math.round((open / total) * 100 * 10) / 10 : 0,
+      };
+    });
+  }
+
+  async getChurnRisk(): Promise<Result<{
+    customerId: number;
+    customerName: string;
+    riskLevel: 'high' | 'medium' | 'low';
+    daysSinceLastOrder: number;
+    openDebt: number;
+  }[]>> {
+    return safeCall(async () => {
+      const today = new Date();
+
+      // Pull customers with lastOrderDate set; compare as date string YYYY-MM-DD
+      const rows = await db.select({
+        id:            sdCustomers.id,
+        name:          sdCustomers.name,
+        lastOrderDate: sdCustomers.lastOrderDate,
+        openDebt:      sdCustomers.openDebt,
+      })
+        .from(sdCustomers)
+        .where(eq(sdCustomers.status, 'active'))
+        .limit(100);
+
+      const result = (Array.isArray(rows) ? rows : [])
+        .map(c => {
+          let daysSince = 999;
+          if (c.lastOrderDate) {
+            const d = new Date(c.lastOrderDate);
+            daysSince = Math.floor((today.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+          }
+          const debt = Number(c.openDebt ?? 0);
+          let riskLevel: 'high' | 'medium' | 'low' = 'low';
+          if (debt > 0 && daysSince >= 90) riskLevel = 'high';
+          else if (daysSince >= 60) riskLevel = 'medium';
+          else if (daysSince >= 30) riskLevel = 'low';
+          else return null; // not at risk
+          return { customerId: c.id, customerName: c.name, riskLevel, daysSinceLastOrder: daysSince, openDebt: debt };
+        })
+        .filter((x): x is NonNullable<typeof x> => x !== null)
+        .sort((a, b) => {
+          const rank = { high: 0, medium: 1, low: 2 };
+          return rank[a.riskLevel] - rank[b.riskLevel];
+        })
+        .slice(0, 20);
+
+      return result;
     });
   }
 }

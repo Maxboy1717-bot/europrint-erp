@@ -6,9 +6,9 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { and, desc, sql } from 'drizzle-orm';
-import { Result, Err, Ok } from '@common/types/result.type';
-import { PaginatedResult } from '@common/types/result.type';
+import { and, count, desc, eq, gte, sql } from 'drizzle-orm';
+import { Result, Err, Ok, safeCall, PaginatedResult } from '@common/types/result.type';
+import { DesignStatistics } from '../../domain/repositories/i-design.repo';
 import { IDesignRepo } from '../../domain/repositories/i-design.repo';
 import { DesignOrder } from '../../domain/aggregates/design-order.aggregate';
 import { DesignStatus } from '../../domain/enums/design-status.enum';
@@ -148,6 +148,37 @@ export class DrizzleDesignRepository implements IDesignRepo {
         this.logger.error('Error updating design order');
         return Err((error as Error).message);
       });
+  }
+
+  async getStatistics(): Promise<Result<DesignStatistics>> {
+    return safeCall(async () => {
+      const totalRows = await db.select({ count: count() }).from(design_orders).execute();
+      const byStatusRows = await db
+        .select({ status: design_orders.status, count: count() })
+        .from(design_orders)
+        .groupBy(design_orders.status)
+        .execute();
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const completedRows = await db
+        .select({ count: count() })
+        .from(design_orders)
+        .where(and(eq(design_orders.status, 'completed'), gte(design_orders.updated_at, startOfMonth)))
+        .execute();
+
+      const byStatus: Record<string, number> = {};
+      for (const row of byStatusRows) {
+        if (row.status) byStatus[row.status] = Number(row.count);
+      }
+
+      return {
+        total: Number(totalRows[0]?.count ?? 0),
+        byStatus,
+        completedThisMonth: Number(completedRows[0]?.count ?? 0),
+        avgDaysToComplete: null,
+      };
+    });
   }
 
   private toDomain(row: Record<string, unknown>): DesignOrder {

@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  Inject,
   Logger,
   Param,
   Patch,
@@ -32,6 +33,7 @@ import { GetDesignOrderQuery} from '../application/queries/get-design-order.quer
 import { RequestDesignDto, UpdateDesignStatusDto} from './dto/design.dto';
 import { z } from 'zod';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { IDesignRepo, DESIGN_REPO } from '../domain/repositories/i-design.repo';
 
 const CreateOrderSchema = z.object({
   salesOrderId: z.union([z.string(), z.number()]).optional(),
@@ -49,6 +51,8 @@ enum Role {
  SUPER_ADMIN = 'super_admin',
  SALES_MANAGER = 'sales_manager',
  DESIGNER = 'designer',
+ MANAGER = 'manager',
+ ADMIN = 'admin',
 }
 
 
@@ -63,7 +67,8 @@ export class DesignController {
 
  constructor(
  private readonly commandBus: CommandBus,
- private readonly queryBus: QueryBus) {}
+ private readonly queryBus: QueryBus,
+ @Inject(DESIGN_REPO) private readonly designRepo: IDesignRepo) {}
 
  @ApiOperation({ summary: 'Get all' })
  @ApiResponse({ status: 200, description: 'OK' })
@@ -154,10 +159,14 @@ export class DesignController {
  getNotifications() { return notImplemented('GET /design/notifications'); }
 
  @ApiOperation({ summary: 'Get statistics' })
- @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-7' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('statistics')
- @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER)
- getStatistics() { return notImplemented('GET /design/statistics'); }
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER, Role.SALES_MANAGER, Role.MANAGER, Role.ADMIN)
+ async getStatistics() {
+   const result = await this.designRepo.getStatistics();
+   if (!result.ok) throw new InternalServerErrorException(result.error.message);
+   return result.data;
+ }
 
  @ApiOperation({ summary: 'Get tooling' })
  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-7' })

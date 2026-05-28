@@ -721,4 +721,29 @@ pnpm --filter erp-dashboard run dev
 
 ---
 
-*Yangilangan: 2026-05-12 | Audit topilmalar asosida tuzilgan*
+### Qoida 17: No-Stub Policy — notImplemented() TAQIQLANGAN
+❌ `return notImplemented('...')` → yangi kodda QOʻSHISH TAQIQLANGAN
+✅ Haqiqiy Drizzle/SQL query yozing
+✅ Agar DB schema tayyorlanmagan bo'lsa — EPComingSoon (FE) yoki `{ items: [], total: 0 }` (BE)
+Pre-commit: `scripts/check-no-new-stubs.mjs` → commit block
+
+### Qoida 18: FE-BE URL Shartnomasi
+❌ `apiRequest("GET", "/api/X")` — BE da `/api/X` yo'q
+✅ Endpoint mavjudligini tekshirib, keyin FE yozing
+Pre-commit: `scripts/check-fe-api-urls.mjs` → WARNING (commit block emas)
+
+### Qoida 19: Yangi Sahifa Minimumi — Faqat GET TAQIQLANGAN
+❌ `pages/NewPage.tsx` — faqat `useQuery()`, `useMutation()` yo'q
+✅ Kamida bitta CREATE / UPDATE / DELETE mutation bo'lishi kerak
+✅ ISTISNO: `EPComingSoon` sahifasi (placeholder) — mutation kerak emas
+Pre-commit: `scripts/check-page-has-crud.mjs` → WARNING
+
+### Qoida 20: Route-Page Sinxronizatsiyasi
+❌ Sidebar'ga URL qo'shish, lekin sahifa fayl yaratmaslik
+✅ Fayl MAVJUD bo'lgandan KEYIN sidebar'ga qo'shing
+✅ Agar sahifa hali tayyor emas — `EPComingSoon` wrapper yarating
+Tekshirish: `scripts/check-sidebar-routes.mjs`
+
+---
+
+*Yangilangan: 2026-05-28 | Qoidalar 17-20 qo'shildi (pre-commit guards)*

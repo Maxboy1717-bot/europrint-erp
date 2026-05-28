@@ -6,6 +6,13 @@
 import { Result } from '@common/types/result.type';
 import { DesignOrder } from '../aggregates/design-order.aggregate';
 
+export interface DesignStatistics {
+  total: number;
+  byStatus: Record<string, number>;
+  completedThisMonth: number;
+  avgDaysToComplete: number | null;
+}
+
 export interface IDesignRepo {
   findById(id: string): Promise<Result<DesignOrder | null>>;
   findAll(filters: {
@@ -17,6 +24,7 @@ export interface IDesignRepo {
   findBySalesOrderId(salesOrderId: string): Promise<Result<DesignOrder | null>>;
   save(order: DesignOrder): Promise<Result<DesignOrder>>;
   update(id: string, data: Partial<DesignOrder>): Promise<Result<DesignOrder>>;
+  getStatistics(): Promise<Result<DesignStatistics>>;
 }
 
 export const DESIGN_REPO = Symbol('DESIGN_REPO');
