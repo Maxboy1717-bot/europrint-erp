@@ -1,13 +1,13 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Controller, Get, Param, Post, Body, HttpCode, HttpException, Query, UseGuards, UseInterceptors, HttpStatus, UsePipes } from '@nestjs/common';
+import { Controller, Get, Param, Post, Patch, Body, HttpCode, HttpException, Query, UseGuards, UseInterceptors, HttpStatus, UsePipes, ParseIntPipe } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { HrDashboardService } from '../application/hr-dashboard.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
-import { HrDailyReportSchema, HrDailyReportDto, HrBirthdaySettingsSchema, HrBirthdaySettingsDto } from './dto/hr.dto';
+import { HrDailyReportSchema, HrDailyReportDto, HrBirthdaySettingsSchema, HrBirthdaySettingsDto, CreatePipSchema, CreatePipDto, UpdatePipSchema, UpdatePipDto } from './dto/hr.dto';
 import { unwrapOrInternal, unwrapOrDefault } from '@common/http-result';
 
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
@@ -66,6 +66,22 @@ export class HrDashboardController {
   @Get('pip')
   async getPip() {
     return unwrapOrDefault(await this.svc.getPip(), []);
+  }
+
+  @Post('pip')
+  @HttpCode(HttpStatus.CREATED)
+  @UsePipes(new ZodValidationPipe(CreatePipSchema))
+  async createPip(@Body() body: CreatePipDto): Promise<{ data: unknown }> {
+    return { data: unwrapOrInternal(await this.svc.createPip(body)) };
+  }
+
+  @Patch('pip/:id')
+  async updatePip(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: unknown,
+  ): Promise<{ data: unknown }> {
+    const dto = UpdatePipSchema.parse(body ?? {}) as UpdatePipDto;
+    return { data: unwrapOrInternal(await this.svc.updatePip(id, dto)) };
   }
 
   @Get('enps/surveys')

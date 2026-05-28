@@ -6,6 +6,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { HR_DASHBOARD_REPO, type IHrDashboardRepo } from '../domain/repositories/i-hr-dashboard.repo';
+import type { CreatePipDto, UpdatePipDto } from '../presentation/dto/hr.dto';
 
 @Injectable()
 export class HrDashboardService {
@@ -41,6 +42,14 @@ export class HrDashboardService {
 
   async getPip() {
     return this.repo.getPip();
+  }
+
+  async createPip(data: CreatePipDto) {
+    return this.repo.createPip(data);
+  }
+
+  async updatePip(id: number, data: UpdatePipDto) {
+    return this.repo.updatePip(id, data);
   }
 
   async getEnpsSurveys() {

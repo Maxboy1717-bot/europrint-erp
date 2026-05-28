@@ -14,6 +14,7 @@ import {
   discipline_records, pip_plans, enps_surveys, shiftSchedules,
   hr_daily_reports,
 } from '@shared/db';
+import type { CreatePipDto, UpdatePipDto } from '../../presentation/dto/hr.dto';
 import type { IHrDashboardRepo, DailyReportsStatsRow } from '../../domain/repositories/i-hr-dashboard.repo';
 
 type Row = Record<string, unknown>;
@@ -209,6 +210,30 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         .limit(50);
       return castTo<unknown[]>(rows);
       }, 'DB_ERROR');
+  }
+
+  async createPip(data: CreatePipDto): Promise<Result<{ id: number }>> {
+    return safeCall(async () => {
+      const rows = await runQuery<{ id: number }>(sql`
+        INSERT INTO pip_plans (employee_id, goals, success_criteria, start_date, end_date, status, created_at)
+        VALUES (${data.employee_id}, ${data.goals}, ${data.success_criteria},
+                ${data.start_date}::date, ${data.end_date}::date, 'draft', NOW())
+        RETURNING id
+      `);
+      const id = (rows.rows as Array<{ id: number }>)[0]?.id;
+      return { id: Number(id) };
+    }, 'DB_ERROR');
+  }
+
+  async updatePip(id: number, data: UpdatePipDto): Promise<Result<void>> {
+    return safeCall(async () => {
+      await runQuery(sql`
+        UPDATE pip_plans SET
+          status = COALESCE(${data.status ?? null}::text, status),
+          outcome = COALESCE(${data.outcome ?? null}, outcome)
+        WHERE id = ${id}
+      `);
+    }, 'DB_ERROR');
   }
 
   async getEnpsSurveys(): Promise<Result<unknown[]>> {

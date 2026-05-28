@@ -9,6 +9,7 @@
  */
 
 import type { Result } from '@common/result';
+import type { CreatePipDto, UpdatePipDto } from '../../presentation/dto/hr.dto';
 
 type Row = Record<string, unknown>;
 
@@ -28,6 +29,8 @@ export interface IHrDashboardRepo {
   getAlerts(): Promise<Result<Row[]>>;
   getDisciplineRecords(): Promise<Result<unknown[]>>;
   getPip(): Promise<Result<unknown[]>>;
+  createPip(data: CreatePipDto): Promise<Result<{ id: number }>>;
+  updatePip(id: number, data: UpdatePipDto): Promise<Result<void>>;
   getEnpsSurveys(): Promise<Result<unknown[]>>;
   getAiInterviewSessions(): Promise<Result<unknown[]>>;
   getDailyReportsStats(): Promise<Result<DailyReportsStatsRow>>;

@@ -254,3 +254,18 @@ export const HrBirthdaySettingsSchema = z.object({
   message:         z.string().max(MAX_NOTES_LENGTH).optional(),
 });
 export type HrBirthdaySettingsDto = z.infer<typeof HrBirthdaySettingsSchema>;
+
+export const CreatePipSchema = z.object({
+  employee_id:      z.number().int().positive(),
+  goals:            z.string().min(1).max(1000),
+  success_criteria: z.string().min(1).max(1000),
+  start_date:       z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD format'),
+  end_date:         z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD format'),
+});
+export type CreatePipDto = z.infer<typeof CreatePipSchema>;
+
+export const UpdatePipSchema = z.object({
+  status:  z.enum(['draft', 'active', 'completed', 'failed', 'cancelled']).optional(),
+  outcome: z.string().max(2000).optional(),
+});
+export type UpdatePipDto = z.infer<typeof UpdatePipSchema>;
