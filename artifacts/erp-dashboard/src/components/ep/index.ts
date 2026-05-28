@@ -25,3 +25,4 @@ export {
 } from "./EPSkeleton";
 export { useCountUp } from "./useCountUp";
 export { EPLoader, EPSpinnerBlock } from "./EPLoader";
+export { EPComingSoon } from "./EPComingSoon";
