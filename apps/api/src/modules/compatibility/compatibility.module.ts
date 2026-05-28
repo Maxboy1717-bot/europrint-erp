@@ -20,6 +20,7 @@ import {
   DepartmentsCompatController, OrgDepartmentsCompatController,
   PositionsCompatController,
 } from './resources.controller';
+import { CoreDepartmentsCompatController } from './core-departments-compat.controller';
 import { WarehouseCatalogController }    from './warehouse-catalog.controller';
 import { WarehouseBarcodeOpsController } from './warehouse-barcode-ops.controller';
 import { WarehouseLabelController }      from './warehouse-label.controller';
@@ -109,6 +110,7 @@ import { AuthModule }                 from '../auth/auth.module';
     MaterialCardsCompatController,
     DepartmentsCompatController,
     OrgDepartmentsCompatController,
+    CoreDepartmentsCompatController,
     PositionsCompatController,
     WarehouseCatalogController,
     WarehouseBarcodeOpsController,
