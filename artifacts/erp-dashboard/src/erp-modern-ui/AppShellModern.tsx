@@ -6,7 +6,7 @@
 import type { ReactNode } from "react";
 import { Menu, MessageSquare } from "lucide-react";
 import { Link } from "wouter";
-import { ModuleTabs, ModuleSidebar, MobileSidebar } from "@/components/ModuleSidebar";
+import { ModuleSidebar, MobileSidebar } from "@/components/ModuleSidebar";
 import { DesignNotifications } from "@/components/DesignNotifications";
 import { GlobalInboxBadge } from "@/components/cc/GlobalInboxBadge";
 import { EuroprintLogo } from "@/components/EuroprintLogo";
@@ -15,6 +15,7 @@ import { ThemeToggleModern } from "./ThemeToggleModern";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/store/chatStore";
 import { useTranslation } from '@/lib/i18n';
+import { useAuth } from "@/hooks/useAuth";
 
 const TOP_H = "h-14";
 const TOP_OFFSET = "pt-14";
@@ -50,9 +51,47 @@ function ChatHeaderButton() {
   );
 }
 
+/** "● Onlayn · sinxronlangan" status chip shown next to logo on desktop */
+function OnlineStatusChip() {
+  return (
+    <span className="hidden xl:flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium select-none">
+      <span className="h-1.5 w-1.5 rounded-full bg-green-500 shrink-0" />
+      Onlayn · sinxronlangan
+    </span>
+  );
+}
+
+/** User avatar + name button replacing the plain logout button */
+function UserAvatarButton({ onLogout }: { onLogout: () => void }) {
+  const { t } = useTranslation("common");
+  const { user } = useAuth();
+  const initials = [user?.firstName, user?.lastName]
+    .filter(Boolean)
+    .map((s) => (s as string)[0].toUpperCase())
+    .join("")
+    .slice(0, 2) || "?";
+  return (
+    <button
+      type="button"
+      onClick={onLogout}
+      className="ml-1 flex items-center gap-2 h-8 pl-1 pr-3 rounded-md hover:bg-muted transition-colors"
+      data-testid="button-user-menu"
+      title={t("logout")}
+    >
+      <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shrink-0">
+        {initials}
+      </span>
+      <span className="hidden sm:block text-[12px] font-medium text-foreground max-w-[100px] truncate">
+        {user?.firstName ?? t("logout")}
+      </span>
+    </button>
+  );
+}
+
 /**
  * Zamonaviy ERP shell: shaffof header, semantic bg-background, sidebar mos offset.
  * Navigatsiya va modul mantiq o'zgarishsiz — faqat UI qatlami.
+ * ModuleTabs header dan o'chirildi — sidebar navigatsiyasi yetarli.
  */
 export function AppShellModern({
   activeModule,
@@ -94,8 +133,9 @@ export function AppShellModern({
             <EuroprintLogo height={28} />
           </div>
 
-          <div className="hidden lg:flex items-stretch min-w-0 overflow-x-auto hidden-scrollbar">
-            <ModuleTabs activeModule={activeModule} onModuleChange={onModuleChange} />
+          {/* Online status chip — replaces module tabs (sidebar handles module nav) */}
+          <div className="hidden lg:flex flex-1 items-center gap-3 px-2 min-w-0">
+            <OnlineStatusChip />
           </div>
         </div>
 
@@ -107,18 +147,7 @@ export function AppShellModern({
             <LanguageSwitcher />
           </span>
           <ThemeToggleModern />
-          <button
-            type="button"
-            className={cn(
-              "ml-1 h-8 px-3 rounded-md text-[12px] font-medium",
-              "bg-primary text-primary-foreground hover:bg-primary/90 transition-colors",
-            )}
-            data-testid="button-user-menu"
-            onClick={onLogout}
-            title={t("logout")}
-          >
-            {t("logout")}
-          </button>
+          <UserAvatarButton onLogout={onLogout} />
         </div>
       </header>
 
