@@ -13,7 +13,7 @@ interface NavGroupProps {
 }
 
 export function NavGroup({ items, currentPath }: NavGroupProps) {
-  const search = useSearch(); // reaktiv: URL o'zgarganda yangilanadi
+  const search = useSearch(); // reaktiv: URL o'zganganda yangilanadi
 
   return (
     <nav className="py-2 px-2">
@@ -36,6 +36,7 @@ export function NavGroup({ items, currentPath }: NavGroupProps) {
         const queryMatch = !itemQuery || search === `?${itemQuery}` || search === `${itemQuery}`;
         const isActive = pathMatch && queryMatch;
         const itemName = item.url.replace(/[/?=]/g, "-");
+        const hasBadge = typeof item.badge === "number" && item.badge > 0;
 
         return (
           <Link
@@ -45,7 +46,7 @@ export function NavGroup({ items, currentPath }: NavGroupProps) {
             className={cn(
               "relative flex items-center gap-2.5 px-3 h-9 rounded-md text-[12.5px] font-medium transition-colors duration-100 mb-0.5",
               isActive
-                ? "bg-primary/10 text-primary font-semibold"
+                ? "bg-sidebar-accent text-primary font-semibold shadow-[inset_3px_0_0_hsl(var(--primary))]"
                 : "text-sidebar-foreground/65 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
             )}
           >
@@ -53,7 +54,12 @@ export function NavGroup({ items, currentPath }: NavGroupProps) {
               "h-4 w-4 shrink-0 transition-colors",
               isActive ? "text-primary" : "text-sidebar-foreground/40"
             )} />
-            <span>{item.title}</span>
+            <span className="flex-1 truncate">{item.title}</span>
+            {hasBadge && (
+              <span className="ml-auto text-[10px] font-bold bg-primary text-primary-foreground rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shrink-0">
+                {(item.badge as number) > 99 ? "99+" : item.badge}
+              </span>
+            )}
           </Link>
         );
       })}

@@ -10,6 +10,8 @@ export interface MenuItem {
   url: string;
   icon: typeof LayoutDashboard;
   separator?: boolean;
+  /** Optional notification count badge. Values ≤ 0 are not displayed. */
+  badge?: number;
 }
 
 export interface MenuGroup {

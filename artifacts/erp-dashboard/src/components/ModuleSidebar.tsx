@@ -20,6 +20,7 @@ import { SidebarHeader } from "./sidebar/SidebarHeader";
 import { NavGroup } from "./sidebar/NavGroup";
 import { SidebarFooter } from "./sidebar/SidebarFooter";
 import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from "@/hooks/useAuth";
 
 export { MobileSidebar } from "./sidebar/MobileSidebar";
 export { ModuleTabs } from "./sidebar/ModuleTabs";
@@ -68,6 +69,44 @@ function useWarehouses(enabled: boolean): WarehouseRow[] {
   }, [enabled]);
 
   return warehouses;
+}
+
+/** Role label map for sidebar avatar block */
+const ROLE_LABEL: Record<string, string> = {
+  admin: "Admin",
+  super_admin: "Super Admin",
+  hr_manager: "HR Manager",
+  manager: "Menejer",
+  director: "Direktor",
+  accountant: "Buxgalter",
+  employee: "Xodim",
+  warehouse_manager: "Ombor Menejer",
+};
+
+/** User avatar + name + role shown at the top of the sidebar */
+function AvatarBlock() {
+  const { user } = useAuth();
+  const initials = [user?.firstName, user?.lastName]
+    .filter(Boolean)
+    .map((s) => (s as string)[0].toUpperCase())
+    .join("")
+    .slice(0, 2) || "?";
+  const roleLabel = ROLE_LABEL[user?.role ?? ""] ?? user?.role ?? "";
+  return (
+    <div className="px-3 py-3 border-b border-sidebar-border flex items-center gap-2.5 shrink-0">
+      <span className="h-7 w-7 rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-[11px] font-bold flex items-center justify-center shrink-0 select-none">
+        {initials}
+      </span>
+      <div className="min-w-0">
+        <p className="text-[13px] font-semibold text-sidebar-foreground truncate leading-tight">
+          {user?.firstName} {user?.lastName}
+        </p>
+        <p className="text-[11px] text-muted-foreground truncate leading-tight">
+          {roleLabel}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export function ModuleSidebar({ activeModule, onModuleChange }: ModuleSidebarProps) {
@@ -120,6 +159,7 @@ export function ModuleSidebar({ activeModule, onModuleChange }: ModuleSidebarPro
 
   return (
     <aside className="fixed left-0 top-12 h-[calc(100vh-3rem)] w-64 z-40 flex-col hidden lg:flex shadow-lg border-r border-sidebar-border bg-sidebar">
+      <AvatarBlock />
       <SidebarHeader
         icon={group.icon}
         title={group.title}
