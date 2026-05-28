@@ -8,7 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { Result, AppError, safeCall } from '@common/result';
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb, PageSizes, PDFPage, PDFFont } from 'pdf-lib';
 import { posMovements, db, eq } from '@workspace/db';
 import { PosPdfInventoryService } from './pos-pdf-inventory.service';
 import { PosPdfRepository } from '../../infrastructure/repositories/pos-pdf.repository';
@@ -58,12 +58,12 @@ export class PosPdfService {
         .select()
         .from(posMovements)
         .where(eq(posMovements.id, movementId));
-  
+
       if (!movement) throw new NotFoundException(`Harakat topilmadi: ${movementId}`);
-  
+
       const linesRows = await this.pdfRepo.getMovementLines(movementId);
       const createdByName = await this.pdfRepo.getCreatorFullName(movement.createdBy as number);
-  
+
       const data: PdfMovementData = {
         movementNumber:  movement.movementNumber,
         typeCode:        movement.movementType?.toString() ?? '',
@@ -85,7 +85,7 @@ export class PosPdfService {
           expiryDate:    r['expiry_date'] ? new Date(r['expiry_date'] as string) : null,
         })),
       };
-  
+
       return this._buildPdf(data);
     });
   }
@@ -104,7 +104,35 @@ export class PosPdfService {
     const colWidth = (width - margin * 2) / 5;
     let y = height - PDF_TOP_OFFSET;
 
-    // ─── Sarlavha ────────────────────────────────────────────────────────
+    y = this._drawHeader(page, data, fontBold, width, y);
+    y = this._drawMeta(page, data, fontRegular, margin, y);
+    y = this._drawTable(page, pdfDoc, data, fontRegular, fontBold, margin, colWidth, y);
+
+    // ─── Footer ───────────────────────────────────────────────────────────
+    const pages = pdfDoc.getPages();
+    const lastPage = pages[pages.length - 1] ?? pdfDoc.addPage(PageSizes.A4);
+    lastPage.drawText(`EuroPrint ERP | POS | ${_time.now().toLocaleDateString('uz-UZ')}`, {
+      x: margin,
+      y: 20,
+      size: PDF_FOOTER_FONT_SIZE,
+      font: fontRegular,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    return Buffer.from(pdfBytes);
+  }
+
+  // ─── Private draw helpers ─────────────────────────────────────────────────
+
+  private _drawHeader(
+    page: PDFPage,
+    data: PdfMovementData,
+    fontBold: PDFFont,
+    width: number,
+    startY: number,
+  ): number {
+    let y = startY;
     const title = `HARAKAT AKTI / АКТ ДВИЖЕНИЯ`;
     const titleWidth = fontBold.widthOfTextAtSize(title, PDF_TITLE_FONT_SIZE);
     page.drawText(title, {
@@ -124,8 +152,17 @@ export class PosPdfService {
       color: rgb(0.2, 0.2, 0.2),
     });
     y -= PDF_LINE_HEIGHT_LG;
+    return y;
+  }
 
-    // ─── Meta ma'lumotlar ─────────────────────────────────────────────────
+  private _drawMeta(
+    page: PDFPage,
+    data: PdfMovementData,
+    fontRegular: PDFFont,
+    margin: number,
+    startY: number,
+  ): number {
+    let y = startY;
     const meta = [
       [`Sana / Дата:`,          this._formatDate(data.createdAt)],
       [`Holat / Статус:`,       this._translateStatus(data.status)],
@@ -145,6 +182,21 @@ export class PosPdfService {
       y -= PDF_LINE_HEIGHT_XS;
     }
     y -= PDF_LINE_HEIGHT_XS / 2;
+    return y;
+  }
+
+  private _drawTable(
+    page: PDFPage,
+    pdfDoc: PDFDocument,
+    data: PdfMovementData,
+    fontRegular: PDFFont,
+    fontBold: PDFFont,
+    margin: number,
+    colWidth: number,
+    startY: number,
+  ): number {
+    let y = startY;
+    const { width } = page.getSize();
 
     // ─── Jadval sarlavhasi ────────────────────────────────────────────────
     const headers = ['Nomi', 'Miqdor', "O'lch.", 'Narx', 'Jami'];
@@ -172,11 +224,12 @@ export class PosPdfService {
     // ─── Jadval qatorlari ─────────────────────────────────────────────────
     let totalSum = 0;
     let totalQty = 0;
+    let activePage = page;
 
     for (const line of data.lines) {
       if (y < PDF_MIN_Y_BEFORE_NEW_PAGE) {
-        const newPage = pdfDoc.addPage(PageSizes.A4);
-        y = newPage.getSize().height - PDF_TOP_OFFSET;
+        activePage = pdfDoc.addPage(PageSizes.A4);
+        y = activePage.getSize().height - PDF_TOP_OFFSET;
       }
 
       const cells = [
@@ -188,7 +241,7 @@ export class PosPdfService {
       ];
 
       for (let i = 0; i < cells.length; i++) {
-        page.drawText(cells[i], {
+        activePage.drawText(cells[i], {
           x: margin + i * colWidth + PDF_CELL_OFFSET_X,
           y: y - PDF_CELL_TEXT_Y_OFFSET_BD,
           size: PDF_SMALL_FONT_SIZE,
@@ -198,7 +251,7 @@ export class PosPdfService {
       }
 
       // Chegara
-      page.drawLine({
+      activePage.drawLine({
         start: { x: margin, y: y - PDF_SEPARATOR_Y_OFFSET },
         end:   { x: width - margin, y: y - PDF_SEPARATOR_Y_OFFSET },
         thickness: PDF_SEPARATOR_THICKNESS,
@@ -212,20 +265,17 @@ export class PosPdfService {
 
     // ─── Jami ─────────────────────────────────────────────────────────────
     y -= PDF_ROW_SKIP;
-    page.drawText(`Jami miqdor: ${totalQty.toFixed(2)}   Jami summa: ${this._formatMoney(totalSum)} UZS`, {
-      x: margin,
-      y,
-      size: PDF_BODY_FONT_SIZE,
-      font: fontBold,
-      color: rgb(0, 0, 0),
-    });
+    activePage.drawText(
+      `Jami miqdor: ${totalQty.toFixed(2)}   Jami summa: ${this._formatMoney(totalSum)} UZS`,
+      { x: margin, y, size: PDF_BODY_FONT_SIZE, font: fontBold, color: rgb(0, 0, 0) },
+    );
 
     // ─── Imzolar ──────────────────────────────────────────────────────────
     y -= PDF_SIGNATURE_Y_GAP;
     const sigLabels = ['Berdi / Отпустил:', 'Qabul qildi / Принял:', 'Tekshirdi / Проверил:'];
     for (const label of sigLabels) {
-      page.drawText(label, { x: margin, y, size: PDF_SMALL_FONT_SIZE, font: fontRegular, color: rgb(0, 0, 0) });
-      page.drawLine({
+      activePage.drawText(label, { x: margin, y, size: PDF_SMALL_FONT_SIZE, font: fontRegular, color: rgb(0, 0, 0) });
+      activePage.drawLine({
         start: { x: margin + PDF_SIGNATURE_LINE_X_START, y },
         end:   { x: margin + PDF_SIGNATURE_LINE_X_END, y },
         thickness: PDF_SIGNATURE_LINE_THICKNESS,
@@ -234,19 +284,7 @@ export class PosPdfService {
       y -= PDF_LINE_HEIGHT_LG;
     }
 
-    // ─── Footer ───────────────────────────────────────────────────────────
-    const pages = pdfDoc.getPages();
-    const lastPage = pages[pages.length - 1] ?? pdfDoc.addPage(PageSizes.A4);
-    lastPage.drawText(`EuroPrint ERP | POS | ${_time.now().toLocaleDateString('uz-UZ')}`, {
-      x: margin,
-      y: 20,
-      size: PDF_FOOTER_FONT_SIZE,
-      font: fontRegular,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-
-    const pdfBytes = await pdfDoc.save();
-    return Buffer.from(pdfBytes);
+    return y;
   }
 
   // ─── Yordamchi metodlar ───────────────────────────────────────────────────

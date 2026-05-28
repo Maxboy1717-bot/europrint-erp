@@ -29,6 +29,13 @@ export class CreateOrderCommand {
     public readonly customerId?: number) {}
 }
 
+type OutboxRow = {
+  aggregate_type: string;
+  aggregate_id: string;
+  event_name: string;
+  payload: Record<string, unknown>;
+};
+
 @CommandHandler(CreateOrderCommand)
 export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
   private readonly logger = new Logger(CreateOrderHandler.name);
@@ -62,17 +69,8 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
       customerId = r.data;
     }
 
-    // DB sequence orqali noyob raqam — bir millisekundda ikki buyurtma muammosini hal qiladi
-    let orderNumber: string;
-    try {
-      const seqRow = await this.orderRepo.count?.();
-      const seqNum = seqRow?.ok ? (seqRow.data ?? 0) + 1 : Date.now();
-      const year   = new Date().getFullYear();
-      const padded = String(seqNum).padStart(6, '0');
-      orderNumber  = `SO-${year}-${padded}`;
-    } catch {
-      orderNumber = `SO-${Date.now()}`;
-    }
+    const orderNumber = await this._generateOrderNumber();
+
     const order = SalesOrder.create({
       orderNumber,
       status: statusResult.data,
@@ -100,48 +98,7 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
         }
         const savedOrder = saveResult.data as SalesOrder;
 
-        const aggregateEvents = savedOrder.getDomainEvents();
-        const outboxRows = aggregateEvents.map((e) => {
-          const raw = e as unknown as { eventName?: string; data?: Record<string, unknown> };
-          return {
-            aggregate_type: 'SalesOrder',
-            aggregate_id: String(savedOrder.getId()),
-            event_name: raw.eventName ?? 'UnknownEvent',
-            payload: (raw.data ?? {}) as Record<string, unknown>,
-          };
-        });
-
-        // Synthesise OrderCreated outbox entry so listeners that wait on
-        // ERP_EVENTS.ORDER_CREATED can pick it up after publisher tick.
-        outboxRows.push({
-          aggregate_type: 'SalesOrder',
-          aggregate_id: String(savedOrder.getId()),
-          event_name: ERP_EVENTS.ORDER_CREATED,
-          payload: {
-            orderId: savedOrder.getId(),
-            companyId: command.companyId,
-            orderNumber,
-            totalAmount: command.totalAmount,
-          },
-        });
-
-        if (command.designFlag) {
-          outboxRows.push({
-            aggregate_type: 'SalesOrder',
-            aggregate_id: String(savedOrder.getId()),
-            event_name: ERP_EVENTS.SO_DESIGN_REQUESTED,
-            payload: { orderId: savedOrder.getId(), at: _time.now().toISOString() },
-          });
-        }
-        if (command.sampleFlag) {
-          outboxRows.push({
-            aggregate_type: 'SalesOrder',
-            aggregate_id: String(savedOrder.getId()),
-            event_name: ERP_EVENTS.SO_SAMPLE_REQUESTED,
-            payload: { orderId: savedOrder.getId(), at: _time.now().toISOString() },
-          });
-        }
-
+        const outboxRows = this._buildOutboxEntries(savedOrder, orderNumber, command);
         const outboxInsert = await this.outboxRepo.insertBatch(outboxRows, tx);
         if (!outboxInsert.ok) {
           // Roll back the order insert — the events must never go missing.
@@ -199,5 +156,70 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
     });
 
     return Ok(savedOrder);
+  }
+
+  // ── Private helpers ────────────────────────────────────────────────────
+
+  private async _generateOrderNumber(): Promise<string> {
+    try {
+      const seqRow = await this.orderRepo.count?.();
+      const seqNum = seqRow?.ok ? (seqRow.data ?? 0) + 1 : Date.now();
+      const year   = new Date().getFullYear();
+      const padded = String(seqNum).padStart(6, '0');
+      return `SO-${year}-${padded}`;
+    } catch {
+      return `SO-${Date.now()}`;
+    }
+  }
+
+  private _buildOutboxEntries(
+    savedOrder: SalesOrder,
+    orderNumber: string,
+    command: CreateOrderCommand,
+  ): OutboxRow[] {
+    const aggregateEvents = savedOrder.getDomainEvents();
+    const outboxRows: OutboxRow[] = aggregateEvents.map((e) => {
+      const raw = e as unknown as { eventName?: string; data?: Record<string, unknown> };
+      return {
+        aggregate_type: 'SalesOrder',
+        aggregate_id: String(savedOrder.getId()),
+        event_name: raw.eventName ?? 'UnknownEvent',
+        payload: (raw.data ?? {}) as Record<string, unknown>,
+      };
+    });
+
+    // Synthesise OrderCreated outbox entry so listeners that wait on
+    // ERP_EVENTS.ORDER_CREATED can pick it up after publisher tick.
+    outboxRows.push({
+      aggregate_type: 'SalesOrder',
+      aggregate_id: String(savedOrder.getId()),
+      event_name: ERP_EVENTS.ORDER_CREATED,
+      payload: {
+        orderId: savedOrder.getId(),
+        companyId: command.companyId,
+        orderNumber,
+        totalAmount: command.totalAmount,
+      },
+    });
+
+    if (command.designFlag) {
+      outboxRows.push({
+        aggregate_type: 'SalesOrder',
+        aggregate_id: String(savedOrder.getId()),
+        event_name: ERP_EVENTS.SO_DESIGN_REQUESTED,
+        payload: { orderId: savedOrder.getId(), at: _time.now().toISOString() },
+      });
+    }
+
+    if (command.sampleFlag) {
+      outboxRows.push({
+        aggregate_type: 'SalesOrder',
+        aggregate_id: String(savedOrder.getId()),
+        event_name: ERP_EVENTS.SO_SAMPLE_REQUESTED,
+        payload: { orderId: savedOrder.getId(), at: _time.now().toISOString() },
+      });
+    }
+
+    return outboxRows;
   }
 }

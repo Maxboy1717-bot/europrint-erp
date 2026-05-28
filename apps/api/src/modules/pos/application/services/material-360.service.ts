@@ -99,80 +99,15 @@ export class Material360Service {
       this.logger.log(`[Material360] Material ${materialId} profili yuklanmoqda...`);
 
       // ── 1. Asosiy ma'lumot ─────────────────────────────────────────────
-      const matRows = await typedExecute<Material360Profile['material']>(sql`
-        SELECT
-          id, kod                AS code,
-          xom_ashyo              AS name,
-          xom_ashyo_ru           AS "nameRu",
-          category, material_type AS "materialType",
-          unit_of_measure        AS unit,
-          COALESCE(unit_price, 0)  AS "unitPrice",
-          COALESCE(currency, 'UZS') AS currency,
-          COALESCE(current_stock, 0) AS "currentStock",
-          COALESCE(min_stock, 0)   AS "minStock",
-          max_stock              AS "maxStock",
-          description,
-          supplier_name          AS "supplierName",
-          is_active              AS "isActive",
-          created_at             AS "createdAt"
-        FROM material_cards
-        WHERE id = ${materialId}
-        LIMIT 1
-      `);
+      const matRows = await this._fetchMaterial(materialId);
       if (matRows.length === 0) {
         return Err({ message: 'Material topilmadi', code: 'NOT_FOUND' });
       }
       const material = matRows[0];
 
-      // ── 2. Har omborda stok ───────────────────────────────────────────
-      const stockByWarehouse = (await typedExecute<Material360Profile['stockByWarehouse'][number]>(sql`
-        SELECT
-          w.id                              AS "warehouseId",
-          w.code                            AS "warehouseCode",
-          w.name                            AS "warehouseName",
-          UPPER(COALESCE(w.type,'MAIN'))    AS "warehouseType",
-          COALESCE(ws.available_quantity,0)::numeric  AS available,
-          COALESCE(ws.reserved_quantity,0)::numeric   AS reserved,
-          (COALESCE(ws.available_quantity,0) + COALESCE(ws.reserved_quantity,0))::numeric AS total,
-          ws.last_updated_at                AS "lastUpdated"
-        FROM warehouses w
-        LEFT JOIN warehouse_stock ws
-          ON ws.warehouse_id = w.id AND ws.material_card_id = ${materialId}
-        WHERE w.is_active = true
-        ORDER BY w.code
-      `))
-        .map(r => ({ ...r,
-          available: Number(r.available ?? 0),
-          reserved:  Number(r.reserved  ?? 0),
-          total:     Number(r.total     ?? 0),
-        }));
-
-      // ── 3. Oxirgi 50 ta harakat ───────────────────────────────────────
-      const recentMovements = (await typedExecute<Material360Profile['recentMovements'][number]>(sql`
-        SELECT
-          pm.id                            AS "movementId",
-          pm.movement_number               AS "movementNumber",
-          pm.movement_type                 AS "movementType",
-          pm.status,
-          pml.quantity::numeric            AS quantity,
-          pml.unit,
-          COALESCE(pml.unit_price, 0)::numeric  AS "unitPrice",
-          pm.from_warehouse_id             AS "fromWarehouseId",
-          pm.to_warehouse_id               AS "toWarehouseId",
-          pm.created_at                    AS "createdAt",
-          (COALESCE(u.first_name,'') || ' ' || COALESCE(u.last_name,'')) AS "createdByName"
-        FROM pos_movement_lines pml
-        JOIN pos_movements pm ON pm.id = pml.movement_id
-        LEFT JOIN users u ON u.id = pm.created_by
-        WHERE pml.material_card_id = ${materialId}
-          AND pm.deleted_at IS NULL
-        ORDER BY pm.created_at DESC
-        LIMIT 50
-      `))
-        .map(r => ({ ...r,
-          quantity:  Number(r.quantity  ?? 0),
-          unitPrice: Number(r.unitPrice ?? 0),
-        }));
+      // ── 2 & 3. Stok va harakatlar ─────────────────────────────────────
+      const stockByWarehouse = await this._fetchStockByWarehouse(materialId);
+      const recentMovements  = await this._fetchRecentMovements(materialId);
 
       // ── 4. Narx tarixi ────────────────────────────────────────────────
       let priceHistory: Material360Profile['priceHistory'] = [];
@@ -268,5 +203,88 @@ export class Material360Service {
       this.logger.error(`[Material360] Xato: ${String(e)}`);
       return Err({ message: String(e), code: 'DB_ERROR' });
     }
+  }
+
+  // ── Private helpers ────────────────────────────────────────────────────
+
+  private async _fetchMaterial(
+    materialId: number,
+  ): Promise<Material360Profile['material'][]> {
+    return typedExecute<Material360Profile['material']>(sql`
+      SELECT
+        id, kod                AS code,
+        xom_ashyo              AS name,
+        xom_ashyo_ru           AS "nameRu",
+        category, material_type AS "materialType",
+        unit_of_measure        AS unit,
+        COALESCE(unit_price, 0)  AS "unitPrice",
+        COALESCE(currency, 'UZS') AS currency,
+        COALESCE(current_stock, 0) AS "currentStock",
+        COALESCE(min_stock, 0)   AS "minStock",
+        max_stock              AS "maxStock",
+        description,
+        supplier_name          AS "supplierName",
+        is_active              AS "isActive",
+        created_at             AS "createdAt"
+      FROM material_cards
+      WHERE id = ${materialId}
+      LIMIT 1
+    `);
+  }
+
+  private async _fetchStockByWarehouse(
+    materialId: number,
+  ): Promise<Material360Profile['stockByWarehouse']> {
+    return (await typedExecute<Material360Profile['stockByWarehouse'][number]>(sql`
+      SELECT
+        w.id                              AS "warehouseId",
+        w.code                            AS "warehouseCode",
+        w.name                            AS "warehouseName",
+        UPPER(COALESCE(w.type,'MAIN'))    AS "warehouseType",
+        COALESCE(ws.available_quantity,0)::numeric  AS available,
+        COALESCE(ws.reserved_quantity,0)::numeric   AS reserved,
+        (COALESCE(ws.available_quantity,0) + COALESCE(ws.reserved_quantity,0))::numeric AS total,
+        ws.last_updated_at                AS "lastUpdated"
+      FROM warehouses w
+      LEFT JOIN warehouse_stock ws
+        ON ws.warehouse_id = w.id AND ws.material_card_id = ${materialId}
+      WHERE w.is_active = true
+      ORDER BY w.code
+    `))
+      .map(r => ({ ...r,
+        available: Number(r.available ?? 0),
+        reserved:  Number(r.reserved  ?? 0),
+        total:     Number(r.total     ?? 0),
+      }));
+  }
+
+  private async _fetchRecentMovements(
+    materialId: number,
+  ): Promise<Material360Profile['recentMovements']> {
+    return (await typedExecute<Material360Profile['recentMovements'][number]>(sql`
+      SELECT
+        pm.id                            AS "movementId",
+        pm.movement_number               AS "movementNumber",
+        pm.movement_type                 AS "movementType",
+        pm.status,
+        pml.quantity::numeric            AS quantity,
+        pml.unit,
+        COALESCE(pml.unit_price, 0)::numeric  AS "unitPrice",
+        pm.from_warehouse_id             AS "fromWarehouseId",
+        pm.to_warehouse_id               AS "toWarehouseId",
+        pm.created_at                    AS "createdAt",
+        (COALESCE(u.first_name,'') || ' ' || COALESCE(u.last_name,'')) AS "createdByName"
+      FROM pos_movement_lines pml
+      JOIN pos_movements pm ON pm.id = pml.movement_id
+      LEFT JOIN users u ON u.id = pm.created_by
+      WHERE pml.material_card_id = ${materialId}
+        AND pm.deleted_at IS NULL
+      ORDER BY pm.created_at DESC
+      LIMIT 50
+    `))
+      .map(r => ({ ...r,
+        quantity:  Number(r.quantity  ?? 0),
+        unitPrice: Number(r.unitPrice ?? 0),
+      }));
   }
 }

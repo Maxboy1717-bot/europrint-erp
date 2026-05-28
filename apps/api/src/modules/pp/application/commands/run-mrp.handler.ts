@@ -66,6 +66,14 @@ export interface MrpRunResult {
   runAt: Date;
 }
 
+export interface NrEntry {
+  materialId: string;
+  period: number;
+  gr: number;
+  sr: number;
+  nr: number;
+}
+
 function makeMrpErr(msg: string): AppError {
   return { code: 'VALIDATION', message: msg };
 }
@@ -111,12 +119,46 @@ export class RunMrpHandler {
 
     if (!mpsRows.length) return Err(makeMrpErr('MPS satrlari bo\'sh'));
     if (horizonPeriods <= 0) return Err(makeMrpErr('horizonPeriods musbat bo\'lishi kerak'));
-    // Safety Stock konvensiyasi: NR = max(0, GR - OH - SR - SS)
-    // Bu "buffer stock as floor" — OH + SR >= SS bo'lsa, qo'shimcha buyurtma bo'lmaydi.
-    // Ba'zi standartlarda SS = qo'shimcha talab sifatida qo'shiladi (GR+SS-OH-SR).
-    // Domain egasi bilan kelishuv asosida bu formula tanlanadi.
 
     const policyMap = new Map((Array.isArray(policies) ? policies : []).map((p) => [p.materialId, p]));
+
+    const grossResult = await this._buildGrossRequirements(mpsRows, bomEdges, horizonPeriods);
+    if (!grossResult.ok) return Err(grossResult.error);
+    const grossByMaterial = grossResult.data;
+
+    const plannedOrders: PlannedOrder[] = [];
+    const netRequirements: MrpRunResult['netRequirements'] = [];
+
+    for (const [matId, grossByPeriod] of grossByMaterial) {
+      // Safety Stock konvensiyasi: NR = max(0, GR - OH - SR - SS)
+      // Bu "buffer stock as floor" — OH + SR >= SS bo'lsa, qo'shimcha buyurtma bo'lmaydi.
+      const policy = policyMap.get(matId) ?? {
+        materialId: matId,
+        lotSizingMethod: 'L4L' as LotSizingMethod,
+        leadTimeDays: 0,
+        safetyStock: 0,
+      };
+
+      const oh0 = safeNum(onHandByMaterial[matId]);
+      const srByPeriod = scheduledReceiptsByMaterial[matId] ?? [];
+
+      const { plannedOrders: matOrders, netRequirements: matNr } = this._calcNetAndLot(
+        matId, grossByPeriod, policy, oh0, srByPeriod, horizonPeriods,
+      );
+      plannedOrders.push(...matOrders);
+      netRequirements.push(...matNr);
+    }
+
+    return Ok({ plannedOrders, netRequirements, runAt: new Date() });
+  }
+
+  // ── Private helpers ────────────────────────────────────────────────────
+
+  private async _buildGrossRequirements(
+    mpsRows: MpsRow[],
+    bomEdges: BomEdge[],
+    horizonPeriods: number,
+  ): Promise<Result<Map<string, number[]>, AppError>> {
     const grossByMaterial = new Map<string, number[]>();
 
     for (const mps of mpsRows) {
@@ -137,132 +179,114 @@ export class RunMrpHandler {
       }
     }
 
+    return Ok(grossByMaterial);
+  }
+
+  private _calcNetAndLot(
+    matId: string,
+    grossByPeriod: number[],
+    policy: MaterialPolicy,
+    oh0: number,
+    srByPeriod: number[],
+    horizonPeriods: number,
+  ): { plannedOrders: PlannedOrder[]; netRequirements: NrEntry[] } {
     const plannedOrders: PlannedOrder[] = [];
-    const netRequirements: MrpRunResult['netRequirements'] = [];
+    const netRequirements: NrEntry[] = [];
+    const ss = safeNum(policy.safetyStock);
+    const ltOffset = leadTimePeriodOffset(policy.leadTimeDays);
 
-    for (const [matId, grossByPeriod] of grossByMaterial) {
-      const policy = policyMap.get(matId) ?? {
-        materialId: matId,
-        lotSizingMethod: 'L4L' as LotSizingMethod,
-        leadTimeDays: 0,
-        safetyStock: 0,
-      };
+    if (policy.lotSizingMethod === 'WAGNER_WHITIN') {
+      const nrByPeriod: number[] = [];
+      let tempOh = oh0;
 
-      const oh0 = safeNum(onHandByMaterial[matId]);
-      const ss = safeNum(policy.safetyStock);
-      const srByPeriod = scheduledReceiptsByMaterial[matId] ?? [];
-      const ltOffset = leadTimePeriodOffset(policy.leadTimeDays);
+      for (let t = 0; t < horizonPeriods; t++) {
+        const gr = safeNum(grossByPeriod[t]);
+        const sr = safeNum(srByPeriod[t]);
+        const nr = Math.max(0, gr - tempOh - sr - ss);
+        nrByPeriod.push(nr);
+        netRequirements.push({ materialId: matId, period: t, gr, sr, nr });
+        tempOh = Math.max(0, tempOh + sr - gr);
+      }
 
-      if (policy.lotSizingMethod === 'WAGNER_WHITIN') {
-        // Wagner-Whitin: barcha davrlar uchun NR ni avval hisoblaymiz
-        const nrByPeriod: number[] = [];
-        let tempOh = oh0;
-
-        for (let t = 0; t < horizonPeriods; t++) {
-          const gr = safeNum(grossByPeriod[t]);
-          const sr = safeNum(srByPeriod[t]);
-          const nr = Math.max(0, gr - tempOh - sr - ss);
-          nrByPeriod.push(nr);
-          netRequirements.push({ materialId: matId, period: t, gr, sr, nr });
-          tempOh = Math.max(0, tempOh + sr - gr);
+      const wwLotSizes = wagnerWhitin(nrByPeriod);
+      for (let t = 0; t < horizonPeriods; t++) {
+        const lotQty = safeNum(wwLotSizes[t]);
+        if (lotQty > 0) {
+          const releaseByPeriod = Math.max(0, t - ltOffset);
+          plannedOrders.push({ materialId: matId, qty: lotQty, periodIndex: t, releaseByPeriod });
         }
+      }
+    } else if (policy.lotSizingMethod === 'POQ') {
+      // POQ — Period Order Quantity: n davr talabini bitta buyurtmada qoplash
+      const poqN = Math.max(1, safeNum(policy.poqPeriods, 1));
+      let oh = oh0;
+      let t = 0;
 
-        const wwLotSizes = wagnerWhitin(nrByPeriod);
+      while (t < horizonPeriods) {
+        const gr = safeNum(grossByPeriod[t]);
+        const sr = safeNum(srByPeriod[t]);
+        oh += sr;
+        const nr = Math.max(0, gr - oh - ss);
+        netRequirements.push({ materialId: matId, period: t, gr, sr, nr });
 
-        for (let t = 0; t < horizonPeriods; t++) {
-          const lotQty = safeNum(wwLotSizes[t]);
+        if (nr > 0) {
+          let totalBucketGR = 0;
+          let totalFutureSR = 0;
+
+          for (let k = t; k < Math.min(t + poqN, horizonPeriods); k++) {
+            totalBucketGR += safeNum(grossByPeriod[k]);
+            if (k > t) totalFutureSR += safeNum(srByPeriod[k]);
+          }
+
+          const lotQty = Math.max(0, totalBucketGR - oh - totalFutureSR);
+          const releaseByPeriod = Math.max(0, t - ltOffset);
+
           if (lotQty > 0) {
-            const releaseByPeriod = Math.max(0, t - ltOffset);
             plannedOrders.push({ materialId: matId, qty: lotQty, periodIndex: t, releaseByPeriod });
           }
-        }
-      } else if (policy.lotSizingMethod === 'POQ') {
-        // POQ — Period Order Quantity: n davr talabini bitta buyurtmada qoplash
-        //
-        // Talab ijobiy bo'lganda, [t, t+poqN) bucket ni qoplaymiz.
-        // Lot miqdori = max(0, totalBucketGR - oh_at_t_start - futureSRs)
-        //   bu yerda oh_at_t_start = joriy mavjud zaxira (SR[t] qo'shilgan)
-        //   futureSRs = Σ_{k=t+1}^{t+poqN-1} SR[k]
-        //
-        // Misol: OH=2, demand=[5,5], POQ=2 → lot=max(0,10-2)=8 (10 emas)
-        const poqN = Math.max(1, safeNum(policy.poqPeriods, 1));
-        let oh = oh0;
-        let t = 0;
 
-        while (t < horizonPeriods) {
-          const gr = safeNum(grossByPeriod[t]);
-          const sr = safeNum(srByPeriod[t]);
-          oh += sr; // SR[t] joriy zaxiraga qo'shiladi
-          const nr = Math.max(0, gr - oh - ss);
-          netRequirements.push({ materialId: matId, period: t, gr, sr, nr });
+          oh = Math.max(0, oh + lotQty - gr);
 
-          if (nr > 0) {
-            // Bucket jami GR va kelajakdagi SR
-            let totalBucketGR = 0;
-            let totalFutureSR = 0; // SR[t] allaqachon oh ga qo'shilgan
-
-            for (let k = t; k < Math.min(t + poqN, horizonPeriods); k++) {
-              totalBucketGR += safeNum(grossByPeriod[k]);
-              if (k > t) totalFutureSR += safeNum(srByPeriod[k]);
-            }
-
-            // LOT = max(0, totalBucketGR - oh (SR[t] qo'shilgan) - futureSRs)
-            const lotQty = Math.max(0, totalBucketGR - oh - totalFutureSR);
-            const releaseByPeriod = Math.max(0, t - ltOffset);
-
-            if (lotQty > 0) {
-              plannedOrders.push({ materialId: matId, qty: lotQty, periodIndex: t, releaseByPeriod });
-            }
-
-            oh = Math.max(0, oh + lotQty - gr);
-
-            // Qoplangan keyingi davrlarga NR=0 deb belgilaymiz
-            for (let k = t + 1; k < Math.min(t + poqN, horizonPeriods); k++) {
-              const futureGr2 = safeNum(grossByPeriod[k]);
-              const futureSr2 = safeNum(srByPeriod[k]);
-              oh += futureSr2;
-              netRequirements.push({ materialId: matId, period: k, gr: futureGr2, sr: futureSr2, nr: 0 });
-              oh = Math.max(0, oh - futureGr2);
-            }
-            t += poqN;
-          } else {
-            oh = Math.max(0, oh - gr);
-            t++;
+          for (let k = t + 1; k < Math.min(t + poqN, horizonPeriods); k++) {
+            const futureGr2 = safeNum(grossByPeriod[k]);
+            const futureSr2 = safeNum(srByPeriod[k]);
+            oh += futureSr2;
+            netRequirements.push({ materialId: matId, period: k, gr: futureGr2, sr: futureSr2, nr: 0 });
+            oh = Math.max(0, oh - futureGr2);
           }
+          t += poqN;
+        } else {
+          oh = Math.max(0, oh - gr);
+          t++;
         }
-      } else {
-        // L4L / EOQ: period by period
-        let oh = oh0;
+      }
+    } else {
+      // L4L / EOQ: period by period
+      let oh = oh0;
 
-        for (let t = 0; t < horizonPeriods; t++) {
-          const gr = safeNum(grossByPeriod[t]);
-          const sr = safeNum(srByPeriod[t]);
+      for (let t = 0; t < horizonPeriods; t++) {
+        const gr = safeNum(grossByPeriod[t]);
+        const sr = safeNum(srByPeriod[t]);
+        oh += sr;
+        const nr = Math.max(0, gr - oh - ss);
+        netRequirements.push({ materialId: matId, period: t, gr, sr, nr });
 
-          // SR_t: mavjud zaxiraga qo'shiladi (rejalashtirilgan kelishi)
-          oh += sr;
-
-          // NR_t = max(0, GR_t - OH_t - SS)
-          const nr = Math.max(0, gr - oh - ss);
-
-          netRequirements.push({ materialId: matId, period: t, gr, sr, nr });
-
-          if (nr > 0) {
-            let qty: number;
-            if (policy.lotSizingMethod === 'EOQ') {
-              qty = Math.max(nr, safeNum(policy.eoq, nr));
-            } else {
-              qty = nr; // L4L
-            }
-            const releaseByPeriod = Math.max(0, t - ltOffset);
-            plannedOrders.push({ materialId: matId, qty, periodIndex: t, releaseByPeriod });
-            oh = Math.max(0, oh + qty - gr);
+        if (nr > 0) {
+          let qty: number;
+          if (policy.lotSizingMethod === 'EOQ') {
+            qty = Math.max(nr, safeNum(policy.eoq, nr));
           } else {
-            oh = Math.max(0, oh - gr);
+            qty = nr; // L4L
           }
+          const releaseByPeriod = Math.max(0, t - ltOffset);
+          plannedOrders.push({ materialId: matId, qty, periodIndex: t, releaseByPeriod });
+          oh = Math.max(0, oh + qty - gr);
+        } else {
+          oh = Math.max(0, oh - gr);
         }
       }
     }
 
-    return Ok({ plannedOrders, netRequirements, runAt: new Date() });
+    return { plannedOrders, netRequirements };
   }
 }
