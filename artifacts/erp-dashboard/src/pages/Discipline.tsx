@@ -5,17 +5,29 @@
  */
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { ShieldCheck, Search, AlertTriangle, XCircle, ShieldOff } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { ShieldCheck, Search, AlertTriangle, XCircle, ShieldOff, Plus } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { tLabel } from "@/lib/i18n/tLabel";
 import { EPErrorState } from "@/components/ep";
+import { apiRequest } from "@/lib/api-request";
+import { useToast } from "@/hooks/use-toast";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -39,6 +51,11 @@ interface BlockedEmployee {
   department: string;
   blocked_since: string;
   reason: string;
+}
+
+interface EmployeeListItem {
+  id: string | number;
+  fullName: string;
 }
 
 // ── Severity badge ─────────────────────────────────────────────────────────────
@@ -105,13 +122,30 @@ function StatCard({
   );
 }
 
+// ── Default form state ─────────────────────────────────────────────────────────
+
+const defaultCreateForm = () => ({
+  employee_id: "",
+  violation_type: "",
+  discipline_type: "",
+  severity: "low" as "low" | "medium" | "high" | "critical",
+  violation_date: new Date().toISOString().slice(0, 10),
+  description: "",
+  fine_amount: "",
+});
+
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function Discipline() {
   const { t } = useTranslation("common");
   const { t: tHr } = useTranslation("hr");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [tab, setTab]       = useState<"violations" | "blocked">("violations");
   const [search, setSearch] = useState("");
+  const [createDialog, setCreateDialog] = useState(false);
+  const [createForm, setCreateForm] = useState(defaultCreateForm());
 
   const VIOLATION_TYPE_LABEL: Record<string, string> = {
     absence:         tHr("violation.absence"),
@@ -138,6 +172,12 @@ export default function Discipline() {
   const { data: rawBlocked, isLoading: loadingBlocked } =
     useQuery<BlockedEmployee[]>({ queryKey: ["/api/hr/discipline/blocked"] });
 
+  const { data: employeesData } = useQuery<{ items: Array<EmployeeListItem> }>({
+    queryKey: ["/api/hr/employees", { limit: 200 }],
+    queryFn: () => apiRequest("GET", "/api/hr/employees?limit=200"),
+  });
+  const employees = Array.isArray(employeesData?.items) ? employeesData.items : [];
+
   const violations: DisciplineRecord[] =
     Array.isArray(rawViolations) ? rawViolations : [];
 
@@ -158,12 +198,39 @@ export default function Discipline() {
 
   const criticalCount = violations.filter((v) => v.severity === "critical").length;
 
+  const createMutation = useMutation({
+    mutationFn: (data: ReturnType<typeof defaultCreateForm>) =>
+      apiRequest("POST", "/api/hr/discipline-records", {
+        employee_id: Number(data.employee_id),
+        violation_type: data.violation_type,
+        discipline_type: data.discipline_type,
+        severity: data.severity,
+        violation_date: data.violation_date,
+        description: data.description,
+        fine_amount: data.fine_amount ? Number(data.fine_amount) : undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/discipline"] });
+      setCreateDialog(false);
+      setCreateForm(defaultCreateForm());
+      toast({ title: "Intizom yozuvi qo'shildi" });
+    },
+    onError: () =>
+      toast({ title: "Xatolik", description: "Yozuv qo'shishda xatolik", variant: "destructive" }),
+  });
+
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       {/* Header */}
-      <div className="border-b border-border/50 pb-3 flex items-center gap-3">
-        <ShieldCheck className="h-5 w-5 text-[var(--ep-blue)]" />
-        <h1 className="font-semibold text-base">Intizom</h1>
+      <div className="border-b border-border/50 pb-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <ShieldCheck className="h-5 w-5 text-[var(--ep-blue)]" />
+          <h1 className="font-semibold text-base">Intizom</h1>
+        </div>
+        <Button onClick={() => setCreateDialog(true)} className="gap-1.5">
+          <Plus className="h-4 w-4" />
+          {tLabel('hr.jarimaYozish', "Jarima yozish")}
+        </Button>
       </div>
 
       {/* Stats */}
@@ -299,6 +366,112 @@ export default function Discipline() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* ── Create discipline record dialog ── */}
+      <Dialog open={createDialog} onOpenChange={setCreateDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{tLabel('hr.intizomYozuviQoshish', "Intizom yozuvi qo'shish")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>{tLabel('hr.xodim', "Xodim")}</Label>
+              <Select
+                value={createForm.employee_id}
+                onValueChange={(v) => setCreateForm((f) => ({ ...f, employee_id: v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Xodimni tanlang" /></SelectTrigger>
+                <SelectContent>
+                  {employees.map((e) => (
+                    <SelectItem key={e.id} value={String(e.id)}>{e.fullName}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>{tLabel('hr.qoidabuzarlikTuri', "Qoidabuzarlik turi")}</Label>
+                <Input
+                  value={createForm.violation_type}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, violation_type: e.target.value }))}
+                  placeholder="Kechikish, tartibsizlik..."
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{tLabel('hr.intizomTuri', "Intizom turi")}</Label>
+                <Input
+                  value={createForm.discipline_type}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, discipline_type: e.target.value }))}
+                  placeholder="Ogohlantiirsh, jarima..."
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>{tLabel('hr.jiddiylikDarajasi', "Jiddiylik darajasi")}</Label>
+                <Select
+                  value={createForm.severity}
+                  onValueChange={(v: typeof createForm.severity) =>
+                    setCreateForm((f) => ({ ...f, severity: v }))
+                  }
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">{tLabel('hr.severityLow', "Past")}</SelectItem>
+                    <SelectItem value="medium">{tLabel('hr.severityMedium', "O'rta")}</SelectItem>
+                    <SelectItem value="high">{tLabel('hr.severityHigh', "Yuqori")}</SelectItem>
+                    <SelectItem value="critical">{tLabel('hr.severityCritical', "Kritik")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>{tLabel('hr.sana', "Sana")}</Label>
+                <Input
+                  type="date"
+                  value={createForm.violation_date}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, violation_date: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{tLabel('hr.tavsif', "Tavsif")}</Label>
+              <Textarea
+                value={createForm.description}
+                onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Qoidabuzarlik tavsifi..."
+                rows={3}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{tLabel('hr.jarimaMiqdoriIxtiyoriy', "Jarima miqdori (ixtiyoriy)")}</Label>
+              <Input
+                type="number"
+                value={createForm.fine_amount}
+                onChange={(e) => setCreateForm((f) => ({ ...f, fine_amount: e.target.value }))}
+                placeholder="0"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialog(false)}>
+              {tLabel('hr.bekorQilish', "Bekor qilish")}
+            </Button>
+            <Button
+              onClick={() => createMutation.mutate(createForm)}
+              disabled={
+                createMutation.isPending ||
+                !createForm.employee_id ||
+                !createForm.violation_type ||
+                !createForm.description
+              }
+            >
+              {createMutation.isPending
+                ? tLabel('hr.saqlanmoqda', "Saqlanmoqda...")
+                : tLabel('hr.saqlash', "Saqlash")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
