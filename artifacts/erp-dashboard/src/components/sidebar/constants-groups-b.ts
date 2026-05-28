@@ -118,7 +118,7 @@ export const menuGroupsB = {
       // ─── ISH JARAYONI ──────────────────────────────────────────────────────
       { title: "ISH JARAYONI", url: "", icon: Calendar, separator: true },
       { title: "Smena Jadvali", url: "shift-schedule", icon: Calendar },
-      { title: "Maqsadlar (OKR)", url: "goals", icon: Target },
+      { title: "Maqsadlar (OKR)", url: "okr", icon: Target },
       { title: "Kunlik Hisobot", url: "hr/daily-reports", icon: ClipboardList },
       { title: "Aktivlar", url: "assets", icon: Building2 },
       { title: "Bildirishnomalar", url: "notifications", icon: Inbox },
