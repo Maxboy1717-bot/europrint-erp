@@ -79,12 +79,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         reply.status(HttpStatus.OK).send({})
         return
       }
-      // Boshqa GET endpointlar uchun 503 qaytaramiz (haqiqiy xato),
-      // body'da xato matnsiz — frontend retry yoki error UI ko'rsata oladi
+      // Boshqa GET endpointlar uchun 503 qaytaramiz (haqiqiy xato).
+      // Development muhitida `debug` maydoni real xato matni — production da yashirin.
       reply.status(HttpStatus.SERVICE_UNAVAILABLE).send({
         success: false,
         error: 'Server temporarily unavailable',
         code: 'SERVICE_UNAVAILABLE',
+        debug: process.env['NODE_ENV'] !== 'production' ? message : undefined,
         timestamp: new Date().toISOString(),
       })
       return
