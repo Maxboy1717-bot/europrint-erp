@@ -5,7 +5,8 @@
 
 import {
   Controller, Get, Post, Patch, Delete, HttpCode, HttpStatus,
-  Body, Param, ParseIntPipe, UseGuards, UseInterceptors,
+  Body, Param, ParseIntPipe, Query,
+  UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -162,6 +163,59 @@ export class HrGsdController {
     }).passthrough();
     const dto = UpdateReferralSchema.parse(body ?? {});
     const r = await this.svc.updateReferral(id, dto);
+    const data = r.ok ? r.data : { error: (r as { ok: false; error: unknown }).error };
+    return { data };
+  }
+
+  // ── P1.15.1: hr_mentorship_pairings CRUD ─────────────────────────────────────
+
+  @ApiOperation({ summary: 'List mentorship pairings' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('mentorship-pairings')
+  async getMentorshipPairings(
+    @Query('mentorId') mentorId?: string,
+    @Query('status')   status?: string,
+  ) {
+    const id = mentorId ? Number(mentorId) : undefined;
+    const r = await this.svc.getMentorshipPairings(id, status);
+    const items = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Create mentorship pairing' })
+  @ApiResponse({ status: 201, description: 'Created' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @HttpCode(HttpStatus.CREATED)
+  @Post('mentorship-pairings')
+  async createMentorshipPairing(@Body() body: unknown) {
+    const CreatePairingSchema = z.object({
+      mentorId: z.number().int().positive(),
+      menteeId: z.number().int().positive(),
+      courseId: z.number().int().positive().optional(),
+      notes:    z.string().max(2000).optional(),
+    });
+    const dto = CreatePairingSchema.parse(body);
+    const r = await this.svc.createMentorshipPairing(dto);
+    const data = r.ok ? r.data : { error: (r as { ok: false; error: unknown }).error };
+    return { data };
+  }
+
+  @ApiOperation({ summary: 'Update mentorship pairing' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('mentorship-pairings/:id')
+  async updateMentorshipPairing(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const UpdatePairingSchema = z.object({
+      status:    z.enum(['pending', 'active', 'completed', 'cancelled']).optional(),
+      notes:     z.string().max(2000).optional(),
+      completed: z.boolean().optional(),
+    }).passthrough();
+    const dto = UpdatePairingSchema.parse(body ?? {});
+    const r = await this.svc.updateMentorshipPairing(id, {
+      status:      dto.status,
+      notes:       dto.notes,
+      completedAt: dto.completed ? new Date() : undefined,
+    });
     const data = r.ok ? r.data : { error: (r as { ok: false; error: unknown }).error };
     return { data };
   }

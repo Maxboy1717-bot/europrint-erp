@@ -5,7 +5,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { employees, employee_skills, adaptation_milestones, salary_history, hr_referrals } from '@shared/db';
+import { employees, employee_skills, adaptation_milestones, salary_history, hr_referrals, hr_mentorship_pairings } from '@shared/db';
 import { eq, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 
@@ -201,6 +201,87 @@ export class HrGsdRepository {
           updated_at: new Date(),
         })
         .where(eq(hr_referrals.id, id))
+        .returning();
+      if (!Array.isArray(rows) || !rows[0]) return Err('NOT_FOUND');
+      return Ok(rows[0] as Row);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  // P1.15.1: hr_mentorship_pairings CRUD
+  async findMentorshipPairings(mentorId?: number, status?: string): Promise<Result<Row[]>> {
+    try {
+      const rows = await db
+        .select({
+          id:           hr_mentorship_pairings.id,
+          mentor_id:    hr_mentorship_pairings.mentor_id,
+          mentee_id:    hr_mentorship_pairings.mentee_id,
+          course_id:    hr_mentorship_pairings.course_id,
+          status:       hr_mentorship_pairings.status,
+          started_at:   hr_mentorship_pairings.started_at,
+          completed_at: hr_mentorship_pairings.completed_at,
+          notes:        hr_mentorship_pairings.notes,
+          created_at:   hr_mentorship_pairings.created_at,
+        })
+        .from(hr_mentorship_pairings)
+        .where(
+          mentorId != null && status
+            ? sql`${hr_mentorship_pairings.mentor_id} = ${mentorId} AND ${hr_mentorship_pairings.status} = ${status}`
+            : mentorId != null
+              ? sql`${hr_mentorship_pairings.mentor_id} = ${mentorId}`
+              : status
+                ? sql`${hr_mentorship_pairings.status} = ${status}`
+                : sql`1=1`,
+        )
+        .orderBy(desc(hr_mentorship_pairings.created_at))
+        .limit(100);
+      if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
+      return Ok(rows as Row[]);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  async createMentorshipPairing(dto: {
+    mentorId: number;
+    menteeId: number;
+    courseId?: number | null;
+    notes?: string;
+  }): Promise<Result<Row>> {
+    try {
+      const rows = await db
+        .insert(hr_mentorship_pairings)
+        .values({
+          mentor_id:  dto.mentorId,
+          mentee_id:  dto.menteeId,
+          course_id:  dto.courseId ?? null,
+          status:     'active',
+          started_at: new Date(),
+          notes:      dto.notes ?? null,
+        })
+        .returning();
+      if (!Array.isArray(rows) || !rows[0]) return Err('INSERT_FAILED');
+      return Ok(rows[0] as Row);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  async updateMentorshipPairing(id: number, dto: {
+    status?: string;
+    notes?: string;
+    completedAt?: Date;
+  }): Promise<Result<Row>> {
+    try {
+      const rows = await db
+        .update(hr_mentorship_pairings)
+        .set({
+          ...(dto.status      != null ? { status:       dto.status }      : {}),
+          ...(dto.notes       != null ? { notes:        dto.notes }       : {}),
+          ...(dto.completedAt != null ? { completed_at: dto.completedAt } : {}),
+        })
+        .where(eq(hr_mentorship_pairings.id, id))
         .returning();
       if (!Array.isArray(rows) || !rows[0]) return Err('NOT_FOUND');
       return Ok(rows[0] as Row);

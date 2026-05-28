@@ -63,6 +63,19 @@ export class HrGsdService {
     return this.repo.completeMilestone(id);
   }
 
+  // P1.15.1: mentorship pairings
+  getMentorshipPairings(mentorId?: number, status?: string): Promise<Result<Row[], AppError>> {
+    return this.repo.findMentorshipPairings(mentorId, status);
+  }
+
+  createMentorshipPairing(dto: Parameters<typeof this.repo.createMentorshipPairing>[0]): Promise<Result<Row, AppError>> {
+    return this.repo.createMentorshipPairing(dto);
+  }
+
+  updateMentorshipPairing(id: number, dto: Parameters<typeof this.repo.updateMentorshipPairing>[1]): Promise<Result<Row, AppError>> {
+    return this.repo.updateMentorshipPairing(id, dto);
+  }
+
   async getEmployeesList(limit = 100, offset = 0): Promise<Row[]> {
     const r: Result<Row[], AppError> = await this.repo.findEmployeesList(limit, offset);
     return r.ok && Array.isArray(r.data) ? r.data : [];
