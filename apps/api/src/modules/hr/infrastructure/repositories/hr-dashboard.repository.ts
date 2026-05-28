@@ -180,9 +180,19 @@ export class HrDashboardRepository implements IHrDashboardRepo {
   async getDisciplineRecords(): Promise<Result<unknown[]>> {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
-        SELECT dr.*, e.first_name || ' ' || e.last_name AS employee_name
+        SELECT dr.*,
+               COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_name,
+               primary_org.dept_name AS department
         FROM discipline_records dr
         LEFT JOIN employees e ON e.id = dr.employee_id
+        LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT od.name_uz AS dept_name
+          FROM employee_org_departments eod
+          JOIN org_departments od ON od.id = eod.org_department_id
+          WHERE eod.user_id = u.id AND eod.is_primary = true
+          ORDER BY eod.assigned_at DESC LIMIT 1
+        ) primary_org ON true
         ORDER BY dr.created_at DESC
         LIMIT 50
       `);
