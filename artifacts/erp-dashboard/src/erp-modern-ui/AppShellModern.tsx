@@ -6,7 +6,7 @@
 import type { ReactNode } from "react";
 import { Menu, MessageSquare } from "lucide-react";
 import { Link } from "wouter";
-import { ModuleSidebar, MobileSidebar } from "@/components/ModuleSidebar";
+import { ModuleSidebar, MobileSidebar, ModuleTabs } from "@/components/ModuleSidebar";
 import { DesignNotifications } from "@/components/DesignNotifications";
 import { GlobalInboxBadge } from "@/components/cc/GlobalInboxBadge";
 import { EuroprintLogo } from "@/components/EuroprintLogo";
@@ -135,9 +135,9 @@ export function AppShellModern({
             <EuroprintLogo height={28} />
           </div>
 
-          {/* Online status chip — replaces module tabs (sidebar handles module nav) */}
-          <div className="hidden lg:flex flex-1 items-center gap-3 px-2 min-w-0">
-            <OnlineStatusChip />
+          {/* Module tabs — switch between HR, Sales, WMS, Finance, etc. */}
+          <div className="hidden lg:flex flex-1 items-center min-w-0 h-full overflow-hidden">
+            <ModuleTabs activeModule={activeModule} onModuleChange={onModuleChange} />
           </div>
         </div>
 
