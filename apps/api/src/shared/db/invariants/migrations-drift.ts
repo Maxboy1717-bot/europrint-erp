@@ -3304,4 +3304,7 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'employees.lng ADD COLUMN', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS lng DECIMAL(9,6)` },
   { name: 'employees.geo_consent ADD COLUMN', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS geo_consent BOOLEAN DEFAULT FALSE` },
 
+  // P1.6.5: employees.base_salary text → NUMERIC(15,2) type fix
+  { name: 'employees.base_salary TYPE numeric', sql: `ALTER TABLE IF EXISTS employees ALTER COLUMN base_salary TYPE NUMERIC(15,2) USING NULLIF(base_salary, '')::NUMERIC` },
+
 ];

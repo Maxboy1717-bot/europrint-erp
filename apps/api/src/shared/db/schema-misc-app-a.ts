@@ -4,7 +4,7 @@
  */
 
 import {
-  pgTable, integer, text, boolean, timestamp, varchar, date, serial, customType,
+  pgTable, integer, text, boolean, timestamp, varchar, date, serial, customType, decimal,
 } from 'drizzle-orm/pg-core';
 import { departments as canonicalDepartments, positions as canonicalPositions } from './schema-hr-lms';
 
@@ -51,7 +51,7 @@ export const hrEmployees = pgTable('employees', {
   blocked_reason:    text('blocked_reason'),
   telegram_chat_id:  varchar('telegram_chat_id'),
   hire_date:         date('hire_date'),
-  base_salary:       text('base_salary'),
+  base_salary:       decimal('base_salary', { precision: 15, scale: 2 }),
   phone_number:      varchar('phone_number'),
   email_work:        varchar('email_work'),
   gender:            varchar('gender'),
