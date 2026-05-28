@@ -48,7 +48,8 @@ export class GetEmployeesHandler implements IQueryHandler<GetEmployeesQuery> {
       bonusAmount:      null,
       status:           (row['status'] as string) || 'active',
       failedTests:      null,
-      disciplineCount:  null,
+      // P1.6.2: real discipline count from subquery
+      disciplineCount:  (row['discipline_count'] as number | null) ?? 0,
       profileImageUrl:  (row['photo_url'] as string | null) ?? null,
     }));
 

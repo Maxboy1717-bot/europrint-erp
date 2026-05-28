@@ -48,13 +48,16 @@ export class HrEmployeesController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR')
-  async getEmployees(@Query() query: { status?: string; department?: string; search?: string; page?: string; limit?: string }) {
+  async getEmployees(@Query() query: { status?: string; department?: string; departmentId?: string; search?: string; page?: string; limit?: string }) {
     const res = await this.queryBus.execute(
       new GetEmployeesQuery({
-        department: query.department,
-        status:     query.status,
-        page:       parseInt(query.page ?? '1', 10),
-        limit:      parseInt(query.limit ?? '20', 10),
+        // P1.6.4: pass all filter params to enable BE-side filtering
+        department:   query.department ?? query.departmentId,
+        departmentId: query.departmentId,
+        status:       query.status,
+        search:       query.search,
+        page:         parseInt(query.page  ?? '1',  10),
+        limit:        parseInt(query.limit ?? '20', 10),
       }),
     );
     return unwrapOrThrow(res);

@@ -9,7 +9,7 @@ export type HrRow = Record<string, unknown>;
 
 export interface IHrRepo {
   findEmployeeById(id: string): Promise<Result<HrRow | null>>;
-  findAllEmployees(filters: { department?: string; status?: string; search?: string; page?: number; limit?: number }): Promise<Result<{ items: HrRow[]; total: number }>>;
+  findAllEmployees(filters: { department?: string; departmentId?: string; status?: string; search?: string; page?: number; limit?: number }): Promise<Result<{ items: HrRow[]; total: number }>>;
   saveEmployee(employee: HrRow): Promise<Result<HrRow>>;
   updateEmployee(id: string, data: HrRow): Promise<Result<HrRow>>;
 

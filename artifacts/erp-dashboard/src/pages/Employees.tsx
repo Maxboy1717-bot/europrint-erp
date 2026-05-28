@@ -85,13 +85,27 @@ export default function Employees() {
     if (!authLoading && !isAuthenticated) navigate("/login");
   }, [authLoading, isAuthenticated, navigate]);
 
+  // P1.6.4: send search + departmentId params to BE for server-side filtering
+  const searchParam  = search.trim();
+  const deptParam    = departmentFilter !== "all" ? departmentFilter : undefined;
   const {
     data: employeesResponse,
     isLoading: employeesLoading,
     isError, error: employeesError,
     refetch: refetchEmployees,
   } = useQuery<{ items: EmployeeRow[]; total: number }>({
-    queryKey: ["/api/hr/employees"],
+    queryKey: ["/api/hr/employees", { search: searchParam, departmentId: deptParam, page, limit: pageSize }],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (searchParam)  params.set("search",       searchParam);
+      if (deptParam)    params.set("departmentId",  deptParam);
+      params.set("page",  String(page));
+      params.set("limit", String(pageSize));
+      return fetch(`/api/hr/employees?${params.toString()}`, {
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      }).then((r) => r.json());
+    },
     enabled: isAuthenticated === true,
   });
 
@@ -117,28 +131,10 @@ export default function Employees() {
     return { total: allUsers.length, active, newThisMonth, inactive };
   }, [allUsers]);
 
-  // ─── Client-side filtering & pagination ────────────────────────────────
-  const filteredUsers = useMemo(() => {
-    const list = Array.isArray(allUsers) ? allUsers : [];
-    return list.filter((user) => {
-      if (search) {
-        const s = search.toLowerCase();
-        if (
-          !user.fullName?.toLowerCase().includes(s) &&
-          !user.employeeId?.toLowerCase().includes(s) &&
-          !user.phone?.toLowerCase().includes(s)
-        ) return false;
-      }
-      if (departmentFilter !== "all" && user.orgDepartmentId !== departmentFilter) {
-        return false;
-      }
-      return true;
-    });
-  }, [allUsers, search, departmentFilter]);
-
-  const total = filteredUsers.length;
+  // P1.6.4: BE handles filtering — no client-side filter needed
+  const total = employeesResponse?.total ?? allUsers.length;
   const totalPages = Math.ceil(total / pageSize) || 1;
-  const employees = filteredUsers.slice((page - 1) * pageSize, page * pageSize);
+  const employees = allUsers;
 
   const transformedEmployees: Employee[] = (Array.isArray(employees) ? employees : []).map(
     (emp) => {

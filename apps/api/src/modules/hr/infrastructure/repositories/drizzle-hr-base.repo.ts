@@ -58,13 +58,15 @@ export class HrBaseRepository {
     }
   }
 
-  async findAllEmployees(filters: { department?: string; status?: string; search?: string; page?: number; limit?: number }): Promise<Result<{ items: HrRow[]; total: number }>> {
+  async findAllEmployees(filters: { department?: string; departmentId?: string; status?: string; search?: string; page?: number; limit?: number }): Promise<Result<{ items: HrRow[]; total: number }>> {
     try {
       const page = filters.page ?? 1;
       const limit = filters.limit ?? 20;
       const offset = (page - 1) * limit;
       const pat = filters.search ? `%${filters.search}%` : null;
-      const dPat = filters.department ? `%${filters.department}%` : null;
+      // P1.6.4: accept departmentId (camelCase from FE) as alias for department
+      const deptFilter = filters.department ?? filters.departmentId;
+      const dPat = deptFilter ? `%${deptFilter}%` : null;
 
       const where = sql`
         ${hrEmployees.deleted_at} IS NULL AND
@@ -94,6 +96,13 @@ export class HrBaseRepository {
           date_of_birth:   hrEmployees.date_of_birth,
           birth_date:      hrEmployees.birth_date,
           total_points:    hrEmployees.total_points,
+          // P1.6.2: real discipline count (last 12 months, not soft-deleted)
+          discipline_count: sql<number>`(
+            SELECT COUNT(*)::int FROM discipline_records dr
+            WHERE dr.employee_id = ${hrEmployees.id}
+            AND dr.is_soft_deleted = false
+            AND dr.created_at > NOW() - INTERVAL '12 months'
+          )`,
         })
           .from(hrEmployees)
           .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))
