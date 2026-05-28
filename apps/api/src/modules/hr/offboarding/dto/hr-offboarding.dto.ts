@@ -5,12 +5,24 @@
 
 import { z } from 'zod';
 
+// P1.18.1: accept both camelCase (FE) and snake_case for backward compat
+const _dismissalEnum = z.enum(['voluntary', 'termination', 'retirement', 'end_of_contract', 'mutual', 'resignation']);
 export const HrOffboardingCreateSchema = z.object({
-  employee_id:      z.number().int().positive(),
-  dismissal_type:   z.enum(['voluntary', 'termination', 'retirement', 'end_of_contract', 'mutual']).optional(),
+  employee_id:      z.number().int().positive().optional(),
+  employeeId:       z.number().int().positive().optional(),
+  dismissal_type:   _dismissalEnum.optional(),
+  dismissalType:    _dismissalEnum.optional(),
   last_working_day: z.string().optional(),
+  lastWorkingDay:   z.string().optional(),
+}).passthrough().transform((d) => ({
+  employee_id:      d.employee_id ?? d.employeeId,
+  dismissal_type:   d.dismissal_type ?? d.dismissalType,
+  last_working_day: d.last_working_day ?? d.lastWorkingDay,
+})).refine(d => d.employee_id != null && d.employee_id > 0, {
+  message: 'employee_id / employeeId talab qilinadi',
+  path: ['employee_id'],
 });
-export type HrOffboardingCreateDto = z.infer<typeof HrOffboardingCreateSchema>;
+export type HrOffboardingCreateDto = { employee_id: number; dismissal_type?: string; last_working_day?: string };
 
 export const HrOffboardingUpdateChecklistSchema = z.object({
   completed: z.boolean(),
