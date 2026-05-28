@@ -84,9 +84,11 @@ export class ReceptionRepository {
   async getStats(): Promise<Result<Row>> {
     return safeCall(async () => {
       const r = await db.select({
-        active_visitors: sql<number>`COUNT(*) FILTER (WHERE ${visitor_log.check_out_at} IS NULL)`,
-        today_visitors:  sql<number>`COUNT(*) FILTER (WHERE DATE(${visitor_log.check_in_at}) = CURRENT_DATE)`,
-        month_visitors:  sql<number>`COUNT(*) FILTER (WHERE ${visitor_log.check_in_at} >= DATE_TRUNC('month', CURRENT_DATE))`,
+        // P1.25.1: compute all 4 counters FE expects
+        currently_inside: sql<number>`COUNT(*) FILTER (WHERE ${visitor_log.check_out_at} IS NULL)`,
+        today_visitors:   sql<number>`COUNT(*) FILTER (WHERE DATE(${visitor_log.check_in_at}) = CURRENT_DATE)`,
+        this_week:        sql<number>`COUNT(*) FILTER (WHERE ${visitor_log.check_in_at} >= DATE_TRUNC('week', CURRENT_DATE))`,
+        total_all_time:   sql<number>`COUNT(*)`,
       }).from(visitor_log);
       return (r[0] ?? {}) as Row;
       }, 'DB_ERROR');
@@ -96,7 +98,7 @@ export class ReceptionRepository {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
         UPDATE visitor_log
-        SET check_out_at = NOW(), status = 'auto_checked_out'
+        SET check_out_at = NOW(), status = 'left'
         WHERE check_out_at IS NULL AND check_in_at < NOW() - INTERVAL '12 hours'
         RETURNING id, visitor_name, host_employee_id
       `);
