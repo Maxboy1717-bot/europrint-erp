@@ -48,13 +48,6 @@ export class HrOffboardingController {
     return data;
   }
 
-  // P1.18: FE queries /cases/stats, not /stats — add alias
-  @Get('cases/stats')
-  async getCasesStats() {
-    const r = await this.svc.getStats();
-    const data = r.ok && r.data ? r.data : { active: 0, completed: 0, cancelled: 0, total: 0 };
-    return data;
-  }
 
   @Get('cases/:id')
   async getCase(@Param('id', ParseIntPipe) id: number) {

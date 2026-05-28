@@ -68,7 +68,15 @@ export class HrDashboardExtraController {
   @Get('offboarding/cases/stats')
   async getOffboardingStats() {
     const r = await this.svc.getOffboardingStats();
-    return r.ok && r.data ? r.data : { total: 0, completed: 0, inProgress: 0 };
+    // P1.18: FE expects { active, completed, cancelled, total } — normalise field names
+    const d = (r.ok && r.data ? r.data : {}) as Record<string, unknown>;
+    return {
+      total:      Number(d['total']       ?? 0),
+      completed:  Number(d['completed']   ?? 0),
+      inProgress: Number(d['inProgress']  ?? 0),
+      active:     Number(d['active']      ?? d['inProgress'] ?? 0),
+      cancelled:  Number(d['cancelled']   ?? 0),
+    };
   }
 
   @ApiOperation({ summary: 'Get safety overview' })
