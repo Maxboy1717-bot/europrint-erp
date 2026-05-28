@@ -3299,4 +3299,9 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   // TASK 6: production_facts_sm72.operator_id — add FK to users (idempotent DO block)
   { name: 'production_facts_sm72.operator_id ADD FK users', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'production_facts_sm72_operator_id_fkey' AND table_name = 'production_facts_sm72') THEN ALTER TABLE production_facts_sm72 ADD CONSTRAINT production_facts_sm72_operator_id_fkey FOREIGN KEY (operator_id) REFERENCES users(id) ON DELETE SET NULL; END IF; END $$` },
 
+  // P1.3.1/P1.3.3: HRMap — geo coordinates + PII consent flag on employees
+  { name: 'employees.lat ADD COLUMN', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS lat DECIMAL(9,6)` },
+  { name: 'employees.lng ADD COLUMN', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS lng DECIMAL(9,6)` },
+  { name: 'employees.geo_consent ADD COLUMN', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS geo_consent BOOLEAN DEFAULT FALSE` },
+
 ];

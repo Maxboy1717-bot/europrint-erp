@@ -24,6 +24,7 @@ export class HrMapCompatService {
     const r = await rawSql(sql`
       SELECT e.id, e.first_name || ' ' || e.last_name AS full_name, e.status,
              e.employee_code,
+             e.lat, e.lng,
              primary_org.dept_name AS org_department_name,
              primary_org.pos_name  AS org_position_name,
              primary_org.dept_id   AS org_department_id
@@ -41,7 +42,9 @@ export class HrMapCompatService {
         ORDER BY eod.assigned_at DESC
         LIMIT 1
       ) primary_org ON true
-      WHERE e.status != 'terminated' ${deptFilter} ${statusFilter}
+      WHERE e.status != 'terminated'
+        AND e.geo_consent = true
+        ${deptFilter} ${statusFilter}
       ORDER BY primary_org.dept_name, e.first_name LIMIT ${MAX_LARGE_QUERY_LIMIT}
     `);
     return dbRows(r);
@@ -233,6 +236,7 @@ export class HrMapCompatService {
     const statusFilter = status ? sql`AND e.status = ${status}` : sql``;
     const r = await rawSql(sql`
       SELECT e.id, e.first_name || ' ' || e.last_name AS full_name, e.status,
+             e.lat, e.lng,
              primary_org.dept_name AS org_department_name,
              primary_org.pos_name  AS org_position_name
       FROM employees e
@@ -249,7 +253,9 @@ export class HrMapCompatService {
         ORDER BY eod.assigned_at DESC
         LIMIT 1
       ) primary_org ON true
-      WHERE e.status != 'terminated' ${deptFilter} ${statusFilter}
+      WHERE e.status != 'terminated'
+        AND e.geo_consent = true
+        ${deptFilter} ${statusFilter}
       ORDER BY primary_org.dept_name, e.first_name LIMIT ${MAX_LARGE_QUERY_LIMIT}
     `);
     return dbRows(r);
