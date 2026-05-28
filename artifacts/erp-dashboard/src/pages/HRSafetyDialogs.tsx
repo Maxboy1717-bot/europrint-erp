@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Controller, type UseFormReturn } from "react-hook-form";
-import type { UseMutationResult } from "@tanstack/react-query";
+import { useQuery, type UseMutationResult } from "@tanstack/react-query";
 import type { IncidentData, PpeData, TrainingData, ZoneData } from "./HRSafetyTypes";
 import { useTranslation } from '@/lib/i18n';
 
@@ -147,6 +147,16 @@ interface TrainingDialogProps {
 }
 export function TrainingDialog({ open, onOpenChange, form, mutation }: TrainingDialogProps) {
   const { t } = useTranslation("common");
+  // P1.23.3: load LMS courses for autocomplete
+  const { data: coursesRaw } = useQuery<unknown>({ queryKey: ["/api/courses"], enabled: open });
+  const courses = (() => {
+    const d = coursesRaw as Record<string, unknown> | null;
+    if (!d) return [];
+    if (Array.isArray(d)) return d as { id: number; title: string }[];
+    if (Array.isArray(d['items'])) return d['items'] as { id: number; title: string }[];
+    if (Array.isArray(d['data']))  return d['data']  as { id: number; title: string }[];
+    return [];
+  })();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -155,7 +165,18 @@ export function TrainingDialog({ open, onOpenChange, form, mutation }: TrainingD
           <div><Label>{t("xodimId")}</Label><Input {...form.register("userId")} type="number" /></div>
           <div>
             <Label>{t("treningNomi")}</Label>
-            <Input {...form.register("trainingName")} />
+            {courses.length > 0 ? (
+              <Controller control={form.control} name="trainingId" render={({ field }) => (
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue placeholder={t("treningNominiTanlang")} /></SelectTrigger>
+                  <SelectContent>
+                    {courses.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )} />
+            ) : (
+              <Input {...form.register("trainingName")} placeholder={t("treningNomi")} />
+            )}
             {form.formState.errors.trainingName && (
               <p className="text-xs text-destructive">{form.formState.errors.trainingName.message}</p>
             )}

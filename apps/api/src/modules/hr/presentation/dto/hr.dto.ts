@@ -149,10 +149,11 @@ export const HrSafetyIncidentSchema = z.object({
 }).passthrough();
 export type HrSafetyIncidentDto = z.infer<typeof HrSafetyIncidentSchema>;
 
-// P1.23.3: accept trainingName as fallback when training_id not provided
+// P1.23.3: accept trainingId (FE course-select value) + trainingName free-text fallback
 export const HrSafetyTrainingSchema = z.object({
   training_id:    z.union([z.number().int().positive(), z.string()]).optional(),
-  trainingName:   z.string().optional(),         // FE sends this instead of training_id
+  trainingId:     z.union([z.string(), z.number()]).optional(),  // FE course-select (numeric string)
+  trainingName:   z.string().optional(),         // FE free-text fallback
   employee_id:    z.union([z.number().int().positive(), z.string()]).optional(),
   userId:         z.union([z.string(), z.number()]).optional(),  // FE alias
   completed_date: z.string().optional(),

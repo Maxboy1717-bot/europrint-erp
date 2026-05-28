@@ -21,14 +21,16 @@ export const PpeSchema = z.object({
   expiryDate: z.string().optional(),
 });
 
+// P1.23.3: trainingId (numeric FK) preferred; trainingName kept as fallback
 export const TrainingSchema = z.object({
   userId:        z.string().optional(),
-  trainingName:  z.string().min(1, "Trening nomi majburiy"),
+  trainingId:    z.string().optional(),           // selected course ID (numeric string)
+  trainingName:  z.string().optional(),            // free-text fallback when no ID selected
   trainingType:  z.string().optional(),
   scheduledDate: z.string().optional(),
   expiryDate:    z.string().optional(),
   status:        z.enum(["pending", "completed", "expired"]),
-});
+}).refine(d => d.trainingId || d.trainingName, { message: "treningIdYokiNomiKerak", path: ["trainingName"] });
 
 export const ZoneSchema = z.object({
   zoneName:     z.string().min(1, "Zona nomi majburiy"),

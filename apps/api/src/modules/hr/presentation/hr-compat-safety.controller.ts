@@ -101,8 +101,9 @@ export class HrCompatSafetyController {
   @Post('safety/trainings')
   @UsePipes(new ZodValidationPipe(HrSafetyTrainingSchema))
   async createSafetyTraining(@Body() body: HrSafetyTrainingDto) {
-    // P1.23.3: accept trainingName fallback + camelCase aliases from FE
-    const training_id    = body.training_id   ?? body.trainingName;
+    // P1.23.3: trainingId (numeric, from course select) > training_id > trainingName fallback
+    const rawTrainingId  = body.training_id ?? body.trainingId;
+    const training_id    = rawTrainingId != null ? Number(rawTrainingId) || null : null;
     const employee_id    = body.employee_id   ?? body.userId;
     const completed_date = body.completed_date ?? body.scheduledDate;
     const expiry_date    = body.expiry_date   ?? body.expiryDate;
