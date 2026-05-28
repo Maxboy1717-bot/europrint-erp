@@ -50,7 +50,7 @@ bash scripts/run-all-reviewers.sh             # barcha tekshiruvlar
 2. **Validatsiya:** Faqat **Zod** — `class-validator` EMAS
 3. **DB:** Faqat **Drizzle ORM** — `raw SQL` faqat lateral join kabi murakkab holatlarda
 4. **Xato boshqaruvi:** Faqat **Result pattern** — `throw new Error()` EMAS
-5. **Fayl hajmi:** 300 qatordan oshmasin — oshsa bo'laklarga ajratiladi
+5. **Fayl hajmi:** 900 qatordan oshmasin — oshsa bo'laklarga ajratiladi; har bir funksiya 150 qatordan oshmasin
 6. **Konstantlar:** `apps/api/src/common/constants/business.constants.ts` faylidan ishlatilsin
 
 ---
@@ -459,9 +459,13 @@ const score = achievement * KPI_WEIGHT_ACHIEVEMENT
 
 ---
 
-## Qoida 13 — Fayl Hajmi 300 Qator ✂️
+## Qoida 13 — Fayl Hajmi 900 Qator, Funksiya 150 Qator ✂️
 
-**Qoida:** Har bir fayl 300 qatordan oshmasligi kerak. Oshsa bo'laklarga ajratiladi:
+**Qoida (2026-05-28 yangilandi — 3 barobarga oshirildi):**
+- Har bir fayl **900 qatordan** oshmasligi kerak (avval 300 edi). Oshsa bo'laklarga ajratiladi.
+- Har bir funksiya/metod **150 qatordan** oshmasligi kerak (avval 50 edi). Oshsa kichikroq funksiyalarga bo'linadi.
+
+Bo'lish konvensiyasi:
 - `*Types.ts` — interfeys va konstantalar (JSX yo'q)
 - `*Helpers.tsx` — kichik UI komponentlar
 - `*Sections.tsx` — bo'lim komponentlar
@@ -469,23 +473,21 @@ const score = achievement * KPI_WEIGHT_ACHIEVEMENT
 - `*Tabs.tsx` — tab komponentlar
 
 ```
-// Misol: HRCapitalTests.tsx (941 qator) → 5 fayl
+// Misol: HRCapitalTests.tsx (2700+ qator) → 5 fayl
 HRCapitalTestsTypes.ts     ← interfeys, konstantalar
 HRCapitalTestsHelpers.tsx  ← kichik helper komponentlar
 HRCapitalTestsTabs.tsx     ← tab komponentlar
 HRCapitalTestsDialogs.tsx  ← dialog komponentlar
-HRCapitalTests.tsx         ← faqat state + orchestration (193 qator)
+HRCapitalTests.tsx         ← faqat state + orchestration (≤ 900 qator)
 ```
 
-**Hozirgi holat — bo'linishi kerak bo'lgan fayllar (backend):**
+**Hozirgi holat — yangi 900-qator chegarasidan oshgan fayllar (backend):**
 
 | Fayl | Qator | Amal |
 |------|-------|------|
-| `drizzle-kanban-ext.repo.ts` | 964 | 3 repoga bo'linsin |
-| `telegram-bots.repository.ts` | 722 | 2 repoga bo'linsin |
-| `drizzle-sd-customers.repo.ts` | 721 | 2 repoga bo'linsin |
-| `wms-catalog.controller.ts` | 463 | logika servisga ko'chirilsin |
-| `employees-compat.service.ts` | 461 | bo'linsin |
+| `drizzle-kanban-ext.repo.ts` | 964 | 900+ — bo'linsin |
+
+> Eslatma: 300–899 qatorli fayllar endi qoidaga muvofiq (oldin bo'lish kerak edi). Kelajakda 900+ va funksiyalar 150+ qator bo'lgan joylarni bo'lish kifoya.
 
 ---
 
