@@ -99,5 +99,21 @@
   "addItem": "Добавить позицию",
   "removeItem": "Удалить позицию",
   "tracking": "Отслеживание",
-  "trackingNumber": "Номер отслеживания"
+  "trackingNumber": "Номер отслеживания",
+  "leads": "Лиды",
+  "lead": "Лид",
+  "addLead": "Новый лид",
+  "editLead": "Редактировать лид",
+  "leadSource": "Источник",
+  "leadStatus": "Статус",
+  "convertToOrder": "Конвертировать в заказ",
+  "convertConfirm": "Вы хотите конвертировать этот лид в заказ?",
+  "driverName": "Водитель",
+  "driverPhone": "Телефон водителя",
+  "weightKg": "Вес (кг)",
+  "volumeM3": "Объём (м³)",
+  "scheduledDate": "Запланированная дата",
+  "updateDeliveryStatus": "Обновить статус",
+  "exportCsv": "Скачать CSV",
+  "estimatedValue": "Ожидаемая сумма"
 }

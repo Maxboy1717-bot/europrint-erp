@@ -24,6 +24,8 @@ export const menuGroupsA = {
       { title: "SD Dashboard", url: "sd/dashboard", icon: BarChart3 },
       { title: "Mijozlar", url: "sd/customers", icon: Building2 },
       { title: "Lidlar", url: "crm-workspace", icon: Users },
+      { title: "Leedlar",         url: "sd/leads",      icon: Target },
+      { title: "Yetkazib berish", url: "sd/deliveries", icon: Truck  },
       { title: "SOTISH", url: "", icon: ShoppingCart, separator: true },
       { title: "Sotish Paneli", url: "sales", icon: ShoppingCart },
       { title: "AI CRM", url: "ai/crm", icon: BrainCircuit },

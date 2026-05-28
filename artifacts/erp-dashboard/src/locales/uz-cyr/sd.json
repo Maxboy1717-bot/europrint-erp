@@ -99,5 +99,21 @@
   "addItem": "Банд қўшиш",
   "removeItem": "Бандни ўчириш",
   "tracking": "Кузатув",
-  "trackingNumber": "Кузатув рақами"
+  "trackingNumber": "Кузатув рақами",
+  "leads": "Лидлар",
+  "lead": "Лид",
+  "addLead": "Янги лид",
+  "editLead": "Лидни таҳрирлаш",
+  "leadSource": "Манба",
+  "leadStatus": "Ҳолат",
+  "convertToOrder": "Буюртмага айлантириш",
+  "convertConfirm": "Бу лидни буюртмага айлантирмоқчимисиз?",
+  "driverName": "Ҳайдовчи",
+  "driverPhone": "Ҳайдовчи телефони",
+  "weightKg": "Оғирлик (кг)",
+  "volumeM3": "Ҳажм (м³)",
+  "scheduledDate": "Режалаштирилган сана",
+  "updateDeliveryStatus": "Ҳолатни янгилаш",
+  "exportCsv": "CSV юклаб олиш",
+  "estimatedValue": "Мўлжалланган сумма"
 }

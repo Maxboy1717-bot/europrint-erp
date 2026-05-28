@@ -99,5 +99,21 @@
   "addItem": "Band qo'shish",
   "removeItem": "Bandni o'chirish",
   "tracking": "Kuzatuv",
-  "trackingNumber": "Kuzatuv raqami"
+  "trackingNumber": "Kuzatuv raqami",
+  "leads": "Leedlar",
+  "lead": "Lead",
+  "addLead": "Yangi lead",
+  "editLead": "Leadni tahrirlash",
+  "leadSource": "Manba",
+  "leadStatus": "Holat",
+  "convertToOrder": "Buyurtmaga aylantirish",
+  "convertConfirm": "Bu leadni buyurtmaga aylantirmoqchimisiz?",
+  "driverName": "Haydovchi",
+  "driverPhone": "Haydovchi telefoni",
+  "weightKg": "Og'irlik (kg)",
+  "volumeM3": "Hajm (m³)",
+  "scheduledDate": "Rejalashtirilgan sana",
+  "updateDeliveryStatus": "Holatni yangilash",
+  "exportCsv": "CSV yuklab olish",
+  "estimatedValue": "Mo'ljallangan summa"
 }
