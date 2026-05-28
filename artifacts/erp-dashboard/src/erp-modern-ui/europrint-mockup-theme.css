@@ -14,18 +14,18 @@
 
 :root {
   /* === Brand colors (raw HEX) === */
-  --ep-primary:       #FF902F;
-  --ep-primary-dark:  #F07F1B;
-  --ep-primary-rgb:   255, 144, 47;
-  --ep-primary-soft:  rgba(255, 144, 47, 0.10);
+  --ep-primary:       #F97316;
+  --ep-primary-dark:  #EA6D0C;
+  --ep-primary-rgb:   249, 115, 22;
+  --ep-primary-soft:  rgba(249, 115, 22, 0.10);
 
   --ep-dark:    #15171A;
   --ep-muted:   #6B6E72;
   --ep-subtle:  #9A9CA0;
 
-  --ep-bg:      #FAFAF9;
+  --ep-bg:      #FAF7F2;
   --ep-surface: #FFFFFF;
-  --ep-border:  #EBEAE6;
+  --ep-border:  #E7E2D8;
   --ep-text:    #15171A;
 
   /* Status */
@@ -38,15 +38,15 @@
   --ep-pink:    #C45C7A;
 
   /* === Tailwind/shadcn tokens — EP Linear Soft === */
-  /* Primary #FF902F → HSL(28°, 100%, 59%) */
-  --primary:            28 100% 59%;
-  --primary-dim:        28 100% 50%;
+  /* Primary #F97316 → HSL(25°, 95%, 53%) */
+  --primary:            25 95% 53%;
+  --primary-dim:        25 95% 44%;
   --primary-foreground: 0 0% 100%;
 
-  /* Background #FAFAF9 → warm off-white */
-  --background:   60 6% 98%;     /* #FAFAF9 */
+  /* Background #FAF7F2 → warm cream */
+  --background:   37 35% 97%;    /* #FAF7F2 */
   --foreground:   213 11% 9%;    /* #15171A */
-  --border:       45 9% 91%;     /* #EBEAE6 */
+  --border:       38 17% 88%;    /* #E7E2D8 */
 
   /* Card: pure white */
   --card:            0 0% 100%;
@@ -55,12 +55,12 @@
   /* Sidebar: white (light sidebar — Linear Soft style) */
   --sidebar:                    0 0% 100%;
   --sidebar-foreground:         213 11% 9%;
-  --sidebar-border:             45 9% 91%;
-  --sidebar-primary:            28 100% 59%;
+  --sidebar-border:             38 17% 88%;
+  --sidebar-primary:            25 95% 53%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent:             28 100% 97%;
-  --sidebar-accent-foreground:  28 100% 40%;
-  --sidebar-ring:               28 100% 59%;
+  --sidebar-accent:             25 95% 97%;
+  --sidebar-accent-foreground:  25 95% 35%;
+  --sidebar-ring:               25 95% 53%;
 
   /* Surface tints */
   --surface-container-lowest:  0 0% 100%;
@@ -82,8 +82,8 @@
   --secondary-foreground: 213 11% 9%;
 
   /* Accent: brand soft for hover states */
-  --accent:            28 100% 97%;
-  --accent-foreground: 28 100% 35%;
+  --accent:            25 95% 97%;
+  --accent-foreground: 25 95% 30%;
 
   /* Status */
   --success:     151 50% 36%;   /* #2E8A5A */
@@ -95,15 +95,15 @@
   --destructive-foreground: 0 0% 100%;
 
   /* Input / ring */
-  --input: 45 9% 91%;
-  --ring:  28 100% 59%;
+  --input: 38 17% 88%;
+  --ring:  25 95% 53%;
 
   /* Popover */
   --popover:            0 0% 100%;
   --popover-foreground: 213 11% 9%;
 
   /* Chart palette — EP c1–c5 */
-  --chart-1: 28 100% 59%;   /* brand orange */
+  --chart-1: 25 95% 53%;    /* brand orange */
   --chart-2: 151 50% 36%;   /* green */
   --chart-3: 213 53% 44%;   /* blue */
   --chart-4: 270 45% 50%;   /* purple */
@@ -162,11 +162,11 @@
   --sidebar:                    213 9% 11%;  /* #17191C */
   --sidebar-foreground:         0 0% 93%;
   --sidebar-border:             216 9% 17%;
-  --sidebar-primary:            28 100% 60%;
+  --sidebar-primary:            25 95% 55%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent:             216 10% 16%;
   --sidebar-accent-foreground:  0 0% 93%;
-  --sidebar-ring:               28 100% 60%;
+  --sidebar-ring:               25 95% 55%;
 
   --surface-container-lowest:  213 9% 8%;
   --surface-container-low:     213 9% 10%;
@@ -188,12 +188,12 @@
   --accent-foreground: 0 0% 93%;
 
   --input: 216 9% 17%;
-  --ring:  28 100% 60%;
+  --ring:  25 95% 55%;
 
   --popover:            213 9% 10%;
   --popover-foreground: 0 0% 93%;
 
-  --chart-1: 28 100% 62%;
+  --chart-1: 25 95% 57%;
   --chart-2: 151 48% 44%;
   --chart-3: 213 55% 56%;
   --chart-4: 270 42% 62%;
