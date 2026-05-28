@@ -1,6 +1,6 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Controller, Get, Param, Post, Body, HttpCode, Query, UseGuards, UseInterceptors, HttpStatus, UsePipes } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, HttpCode, HttpException, Query, UseGuards, UseInterceptors, HttpStatus, UsePipes } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -111,7 +111,7 @@ export class HrDashboardController {
 
   @Get('adaptation/:id')
   getAdaptationById(@Param('id') _id: string) {
-    return { adaptation: null };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('alumni')
@@ -123,22 +123,22 @@ export class HrDashboardController {
 
   @Get('alumni/:id')
   getAlumniById(@Param('id') _id: string) {
-    return { alumni: null };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('daily-reports')
   getDailyReports(@Query('date') _date?: string) {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('daily-reports/department')
   getDailyReportsByDept(@Query('departmentId') _departmentId?: string) {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('daily-reports/my')
   getDailyReportsMy() {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Post('daily-reports')
@@ -159,7 +159,7 @@ export class HrDashboardController {
 
   @Get('offboarding/questions')
   getOffboardingQuestions() {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   // `GET hr/onboarding-checklists` is implemented by
@@ -168,89 +168,89 @@ export class HrDashboardController {
 
   @Get('fp-cycle')
   getFpCycle() {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('hrc-tests/employee')
   getHrcTestsEmployee() {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('hrc-tests/public')
   getHrcTestsPublic() {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('hrc-tests/stats')
   getHrcTestsStats() {
-    return { stats: null };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('360/reviewable')
   get360Reviewable() {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('birthdays/settings')
   getBirthdaySettings() {
-    return { settings: null };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Post('birthdays/settings')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ZodValidationPipe(HrBirthdaySettingsSchema))
   saveBirthdaySettings(@Body() _body: HrBirthdaySettingsDto) {
-    return { saved: true };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('birthdays/settings/:id')
   getBirthdaySettingsById(@Param('id') _id: string) {
-    return { settings: null };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('ai-interview/session')
   getAiInterviewSession() {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('ai-interview/session/:id/review')
   getAiInterviewSessionReview(@Param('id') _id: string) {
-    return { review: null };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('documents/employee')
   getEmployeeDocuments() {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('documents/my')
   getMyDocuments() {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('documents/pending')
   getPendingDocuments() {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('employee-corp')
   getEmployeeCorp() {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('employees/operator-stats')
   getEmployeeOperatorStats() {
-    return { stats: null };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('enps/surveys/results')
   getEnpsSurveyResults() {
-    return { items: [], total: 0 };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   @Get('abc-analysis/:id/calculate')
   calculateAbcAnalysis(@Param('id') _id: string) {
-    return { result: null };
+    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 
   // ── New endpoints (HR Dashboard missing) ──────────────────────────────────
