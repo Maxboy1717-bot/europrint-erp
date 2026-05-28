@@ -42,8 +42,16 @@ export default function HRDashboard() {
   // Data queries
   // -------------------------------------------------------------------------
 
+  // P1.1.1: use HR employees endpoint (not auth /api/users)
   const { data: employees = [], isLoading: isLoadingEmployees, isError, error, refetch } =
-    useQuery<UserWithAnalysis[]>({ queryKey: ["/api/users"] });
+    useQuery<UserWithAnalysis[]>({
+      queryKey: ["/api/hr/employees"],
+      select: (data: unknown) => {
+        if (Array.isArray(data)) return data as UserWithAnalysis[];
+        const d = data as Record<string, unknown>;
+        return Array.isArray(d?.items) ? (d.items as UserWithAnalysis[]) : [];
+      },
+    });
 
   const { data: abcAnalysis = [], isLoading: isLoadingABC } =
     useQuery<AbcAnalysis[]>({ queryKey: ["/api/hr/abc-analysis"] });
