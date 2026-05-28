@@ -6,7 +6,8 @@
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
   Controller, Get, Post, Param, Body, Query,
-  UseGuards, UseInterceptors, Logger, HttpCode, HttpStatus } from '@nestjs/common';
+  UseGuards, UseInterceptors, Logger, HttpCode, HttpStatus,
+  BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -66,5 +67,22 @@ export class AiHrNewController {
   @ApiOperation({ summary: 'AI vazifa tafsiloti' })
   async getTaskById(@Param('id') id: string) {
     return unwrapOrBadRequest(await this.service.getTaskById(id));
+  }
+
+  // P1.7.1: POST /api/ai-hr/tasks/:taskType — submit an HR AI task by FE task key
+  @Post('tasks/:taskType')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(AuditInterceptor)
+  @ApiOperation({ summary: 'HR AI vazifasini yuborish (FE task key orqali)' })
+  async submitTask(
+    @Param('taskType') taskType: string,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    if (!taskType || typeof taskType !== 'string') {
+      throw new BadRequestException('taskType parametri talab qilinadi');
+    }
+    const payload = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
+    return unwrapOrBadRequest(await this.service.submitTask(taskType, payload, String(user.id)));
   }
 }

@@ -17,14 +17,31 @@ import {
   AiBudgetItem,
 } from '../../presentation/dto/ai-hr-new.dto';
 
-import { MAX_EXPORT_LIMIT, AI_DAILY_LIMIT_HIGH, AI_SHORT_MAX_TOKENS } from '@common/constants/app.constants';
+import {
+  MAX_EXPORT_LIMIT, AI_DAILY_LIMIT_HIGH, AI_SHORT_MAX_TOKENS,
+  AI_BUDGET_OPENAI_MONTHLY, AI_BUDGET_GEMINI_MONTHLY, AI_BUDGET_CLAUDE_MONTHLY,
+} from '@common/constants/app.constants';
+import { AiRequest, AiTaskType } from '../../domain/types/ai.types';
 type CreateDto = z.infer<typeof CreateAiInterviewDtoSchema>;
 
+// P1.7.3: named constants for budget defaults (values live in app.constants.ts)
 const PROVIDER_BUDGETS: AiProviderConfig[] = [
-  { providerName: 'openai', isActive: true,  monthlyBudget: 100, monthlySpent: 0, dailyRequestsUsed: 0, dailyRequestLimit: MAX_EXPORT_LIMIT },
-  { providerName: 'gemini', isActive: true,  monthlyBudget: 50,  monthlySpent: 0, dailyRequestsUsed: 0, dailyRequestLimit: AI_DAILY_LIMIT_HIGH },
-  { providerName: 'claude', isActive: false, monthlyBudget: 80,  monthlySpent: 0, dailyRequestsUsed: 0, dailyRequestLimit: AI_SHORT_MAX_TOKENS  },
+  { providerName: 'openai', isActive: true,  monthlyBudget: AI_BUDGET_OPENAI_MONTHLY, monthlySpent: 0, dailyRequestsUsed: 0, dailyRequestLimit: MAX_EXPORT_LIMIT },
+  { providerName: 'gemini', isActive: true,  monthlyBudget: AI_BUDGET_GEMINI_MONTHLY, monthlySpent: 0, dailyRequestsUsed: 0, dailyRequestLimit: AI_DAILY_LIMIT_HIGH },
+  { providerName: 'claude', isActive: false, monthlyBudget: AI_BUDGET_CLAUDE_MONTHLY, monthlySpent: 0, dailyRequestsUsed: 0, dailyRequestLimit: AI_SHORT_MAX_TOKENS },
 ];
+
+// P1.7.1: mapping from FE task key → AI task type
+const FE_TASK_TYPE_MAP: Partial<Record<string, AiTaskType>> = {
+  'resume-parse':         'hr.summarize_cv',
+  'quiz-generate':        'hr.generate_interview_questions',
+  'job-description':      'hr.onboarding_plan',
+  'performance-analysis': 'hr.performance_review',
+  'salary-validation':    'hr.salary_benchmark',
+  'email-generate':       'cc.generate_document',
+  'onboarding-plan':      'hr.onboarding_plan',
+  'score-candidate':      'hr.evaluate_candidate',
+};
 
 @Injectable()
 export class AiHrNewService {
@@ -97,13 +114,36 @@ export class AiHrNewService {
     return Ok(items);
   }
 
+  // P1.7.2: real DB query instead of hardcoded stub
   async getTaskById(taskId: string): Promise<Result<Record<string, unknown>>> {
-    return Ok({
-      id:         taskId,
-      taskType:   'hr.evaluate_candidate',
-      status:     'completed',
-      result:     null,
-      createdAt:  _time.now().toISOString(),
-    });
+    return this.repo.findInterviewById(taskId);
+  }
+
+  // P1.7.1: submit an ad-hoc HR AI task (FE task-type key → AI router)
+  async submitTask(
+    feTaskKey: string,
+    payload: Record<string, unknown>,
+    userId: string,
+  ): Promise<Result<{ result: string | null; message: string }>> {
+    const taskType: AiTaskType = FE_TASK_TYPE_MAP[feTaskKey] ?? 'hr.evaluate_candidate';
+    const prompt = [
+      `Task: ${feTaskKey}`,
+      `Payload: ${JSON.stringify(payload)}`,
+    ].join('\n');
+
+    const req: AiRequest = {
+      taskType,
+      prompt,
+      systemPrompt: 'You are an expert HR AI assistant. Provide concise, structured output.',
+      maxTokens:    800,
+      userId,
+      metadata:     { feTaskKey },
+    };
+
+    const aiResult = await this.aiRouter.call(req);
+    if (!isOk(aiResult)) {
+      return Ok({ result: null, message: `Task ${feTaskKey} queued (AI unavailable)` });
+    }
+    return Ok({ result: aiResult.data.text, message: 'OK' });
   }
 }

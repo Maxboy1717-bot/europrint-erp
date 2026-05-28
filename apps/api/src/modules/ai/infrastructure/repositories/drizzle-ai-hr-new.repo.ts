@@ -98,4 +98,27 @@ export class DrizzleAiHrNewRepo {
     if (!result.ok) return Ok([]);
     return result;
   }
+
+  // P1.7.2: real DB lookup instead of hardcoded stub
+  async findInterviewById(id: string): Promise<Result<Record<string, unknown>>> {
+    const result = await safeCall(async () => {
+      const rows = await this.drizzle.db
+        .select()
+        .from(aiHrInterviews)
+        .where(eq(aiHrInterviews.id, id));
+      if (!rows[0]) throw new Error(`Task ID ${id} topilmadi`);
+      const r = rows[0];
+      return {
+        id:           r.id,
+        taskType:     r.interviewType,
+        status:       r.status,
+        positionTitle: r.positionTitle,
+        candidateId:  r.candidateId,
+        notes:        r.notes ?? null,
+        scheduledAt:  r.scheduledAt ?? null,
+        createdAt:    r.createdAt?.toISOString() ?? _time.now().toISOString(),
+      };
+    });
+    return result;
+  }
 }

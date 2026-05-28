@@ -101,6 +101,11 @@ export const AI_MAX_TOKENS_STANDARD = 400;  // standart qisqa AI javob tokenlari
 export const AI_MAX_TOKENS_MEDIUM = 1_200;  // o'rtacha AI javob tokenlari
 export const AI_DAILY_LIMIT_HIGH = 2_000;   // kunlik so'rovlar chegarasi (yuqori)
 
+// ─── AI — provayder byudjetlari (USD, oylik) ─────────────────────────────────
+export const AI_BUDGET_OPENAI_MONTHLY  = 100;   // OpenAI oylik byudjet (USD)
+export const AI_BUDGET_GEMINI_MONTHLY  = 50;    // Gemini oylik byudjet (USD)
+export const AI_BUDGET_CLAUDE_MONTHLY  = 80;    // Claude oylik byudjet (USD)
+
 // ─── Foiz hisoblash ──────────────────────────────────────────────────────────
 export const PERCENT_BASIS = 10_000;        // 10000/100 → foiz ikki kasr bilan
 export const ROUND_2DP_FACTOR = 100;        // Math.round(x * 100) / 100 → 2 kasr
