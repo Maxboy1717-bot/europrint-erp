@@ -12,6 +12,7 @@ import { PillTabs } from "@/components/ui/pill-tabs";
 import { EPPageHeader, EPErrorState } from "@/components/ep";
 import type { AbcAnalysis, DisciplineRecord, Attendance } from "@shared/schema";
 import { useTranslation } from "@/lib/i18n";
+import { useAuth } from "@/hooks/useAuth";
 import type { UserWithAnalysis, AlertsResponse, RiskScoresResponse, EmployeeWithGrade } from "./hr-dashboard/types";
 import { HR_TABS } from "./hr-dashboard/types";
 import { RiskTab } from "./hr-dashboard/RiskTab";
@@ -36,6 +37,7 @@ import {
 export default function HRDashboard() {
   const { t } = useTranslation('common');
   const { t: tHr, language } = useTranslation("hr");
+  const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
 
   // -------------------------------------------------------------------------
@@ -46,6 +48,7 @@ export default function HRDashboard() {
   const { data: employees = [], isLoading: isLoadingEmployees, isError, error, refetch } =
     useQuery<UserWithAnalysis[]>({
       queryKey: ["/api/hr/employees"],
+      enabled: isAuthenticated === true,
       select: (data: unknown) => {
         if (Array.isArray(data)) return data as UserWithAnalysis[];
         const d = data as Record<string, unknown>;
