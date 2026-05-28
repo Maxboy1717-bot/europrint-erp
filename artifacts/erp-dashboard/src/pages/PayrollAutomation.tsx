@@ -40,16 +40,16 @@ export default function PayrollAutomation() {
   });
 
   const runPayrollMutation = useMutation({
-    mutationFn: (period: string) => apiRequest("POST", "/api/hr/payroll/run", { period }),
+    mutationFn: (period: string) => apiRequest("POST", "/api/finance-extended/payroll/run", { period }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/finance-extended/payroll-calculations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/finance-extended/payroll-contracts"] });
       setIsRunPayrollOpen(false);
       toast({ title: tLabel('payroll.runPayroll.success', "Maosh hisoblandi"), description: tLabel('payroll.runPayroll.successDesc', `${payrollPeriod} davri uchun hisoblash boshlandi`) });
     },
-    onError: () => toast({
+    onError: (error: Error) => toast({
       title: tLabel('payroll.runPayroll.error', "Server xatosi"),
-      description: tLabel('payroll.runPayroll.errorDesc', "Ushbu funksiya hali sozlanmoqda"),
+      description: error?.message || tLabel('payroll.runPayroll.errorDesc', "Maosh hisoblashda xatolik yuz berdi"),
       variant: "destructive",
     }),
   });

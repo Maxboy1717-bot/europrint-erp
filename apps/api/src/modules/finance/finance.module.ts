@@ -78,6 +78,7 @@ import { PayrollService } from './payroll/payroll.service';
 import { FINANCE_EXTENDED_REPO } from './finance-extended/i-finance-extended.repo';
 import { DrizzleFinanceExtendedRepository } from './finance-extended/drizzle-finance-extended.repo';
 import { FinanceExtendedService } from './finance-extended/finance-extended.service';
+import { FinanceExtendedPayrollService } from './finance-extended/finance-extended-payroll.service';
 import {
   FinanceExtendedController,
   FinanceExtendedIncomeController,
@@ -191,6 +192,7 @@ const eventListeners = [
     // New providers
     { provide: FINANCE_EXTENDED_REPO, useClass: DrizzleFinanceExtendedRepository },
     FinanceExtendedService,
+    FinanceExtendedPayrollService,
     { provide: CASHFLOW_REPO, useClass: DrizzleCashflowRepository },
     CashflowService,
     { provide: FINANCE_REPORTS_REPO, useClass: DrizzleFinanceReportsRepository },

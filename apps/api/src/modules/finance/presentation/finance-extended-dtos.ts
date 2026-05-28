@@ -24,8 +24,24 @@ export const CreateAssetSchema = z.object({
 }).passthrough();
 
 export const PayrollCalculateSchema = z.object({
-  period: z.string().min(1),
-  employeeIds: z.array(z.union([z.string(), z.number()])).optional(),
+  employeeId: z.union([z.string(), z.number()]),
+  workDays: z.coerce.number().min(0).max(31).optional(),
+  workHours: z.coerce.number().min(0).optional(),
+  productionUnits: z.coerce.number().min(0).optional(),
+  bonuses: z.coerce.number().min(0).optional(),
+  allowances: z.coerce.number().min(0).optional(),
+  advances: z.coerce.number().min(0).optional(),
+  loans: z.coerce.number().min(0).optional(),
+  otherDeductions: z.coerce.number().min(0).optional(),
+}).passthrough();
+
+export const PayrollAiCalculateSchema = z.object({
+  employeeId: z.union([z.string(), z.number()]),
+  periodMonth: z.string().optional(),
+}).passthrough();
+
+export const PayrollRunSchema = z.object({
+  period: z.string().min(1).max(20),
 }).passthrough();
 
 export const ApprovePayrollSchema = z.object({
