@@ -13,10 +13,12 @@ import {
   EventsTable, LiveEventsFeed,
 } from './AttendanceMonitorPageSections';
 import { MonthlyLateChart } from './AttendanceMonitorPageChart';
+import { useTranslation } from '@/lib/i18n';
 
 const SOCKET_URL = typeof window !== 'undefined' ? window.location.origin : '';
 
 export default function AttendanceMonitorPage() {
+  const { t } = useTranslation('common');
   const today = new Date().toISOString().slice(0, 10);
 
   const [date, setDate]               = useState(today);
@@ -123,6 +125,13 @@ export default function AttendanceMonitorPage() {
         alertCount={alertCount}
         filteredCount={filtered.length}
       />
+
+      {!wsConnected && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+          {t("wsDisconnected")}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <EventsTable

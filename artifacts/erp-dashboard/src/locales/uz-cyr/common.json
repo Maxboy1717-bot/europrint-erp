@@ -9922,5 +9922,6 @@
   "commandPaletteEmpty": "Топилмади.",
   "onlineStatus": "Онлайн · синхронланган",
   "comingSoon": "Тез орада",
-  "comingSoonDescription": "Бу бўлим ҳали ишлаб чиқилмоқда. Яқин орада ишга туширилади."
+  "comingSoonDescription": "Бу бўлим ҳали ишлаб чиқилмоқда. Яқин орада ишга туширилади.",
+  "wsDisconnected": "Real-time ulanish yo'q — ma'lumotlar yangilanmayapti"
 }
