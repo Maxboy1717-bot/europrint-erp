@@ -52,6 +52,10 @@ export {
   marketingEmailTemplates,
 } from './schema-marketing-ext';
 
+// Marketing GURUH 2: 3 tables from lib/db dist, 1 new local (calendar)
+export { blogPosts, marketingBudgetLines, marketingLeadContacts, sdCustomerCompetitors } from '@workspace/db';
+export { marketingCalendarEvents } from './schema-marketing-group2';
+
 export {
   guidelines, contactSettings, systemSettings, adminFilters,
   calendarEvents, assetItems, assetMaintenance, assetDisposals, assetTransfers,

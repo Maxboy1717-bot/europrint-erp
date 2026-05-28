@@ -14,8 +14,11 @@ import { GetCampaignHandler } from './application/queries/get-campaign.handler';
 import { MarketingController } from './presentation/marketing.controller';
 import { MarketingContentController } from './presentation/marketing-content.controller';
 import { MarketingAnalyticsController, MarketingAnalyticsStubsController } from './presentation/marketing-analytics.controller';
+import { MarketingGroup2Controller } from './presentation/marketing-group2.controller';
 import { MarketingExtService } from './application/marketing-ext.service';
+import { MarketingGroup2Service } from './application/marketing-group2.service';
 import { DrizzleMarketingExtRepository } from './infrastructure/repositories/drizzle-marketing-ext.repo';
+import { DrizzleMarketingGroup2Repository } from './infrastructure/repositories/drizzle-marketing-group2.repo';
 import { LeadsService } from './leads/leads.service';
 import { LeadsRepository } from './leads/leads.repository';
 import { CampaignsService } from './campaigns/campaigns.service';
@@ -34,8 +37,26 @@ const repositories = [
 
 @Module({
   imports: [CqrsModule, AuthModule],
-  controllers: [MarketingController, MarketingContentController, MarketingAnalyticsController, MarketingAnalyticsStubsController],
-  providers: [...commandHandlers, ...queryHandlers, ...repositories, DrizzleMarketingExtRepository, MarketingExtService, LeadsRepository, LeadsService, CampaignsRepository, CampaignsService],
+  controllers: [
+    MarketingController,
+    MarketingContentController,
+    MarketingAnalyticsController,
+    MarketingAnalyticsStubsController,
+    MarketingGroup2Controller,
+  ],
+  providers: [
+    ...commandHandlers,
+    ...queryHandlers,
+    ...repositories,
+    DrizzleMarketingExtRepository,
+    MarketingExtService,
+    DrizzleMarketingGroup2Repository,
+    MarketingGroup2Service,
+    LeadsRepository,
+    LeadsService,
+    CampaignsRepository,
+    CampaignsService,
+  ],
   exports: [CAMPAIGN_REPO],
 })
 export class MarketingModule {}

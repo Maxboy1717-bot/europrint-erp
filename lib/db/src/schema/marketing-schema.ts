@@ -650,3 +650,7 @@ export const insertMarketingLeadContactSchema = createInsertSchema(marketingLead
 export type MarketingLeadContact = typeof marketingLeadContacts.$inferSelect;
 export type InsertMarketingLeadContact = z.infer<typeof insertMarketingLeadContactSchema>;
 
+
+// marketing_calendar_events: defined in apps/api/src/shared/db/schema-marketing-group2.ts
+// (will be moved here once lib/db dist is rebuilt)
+
