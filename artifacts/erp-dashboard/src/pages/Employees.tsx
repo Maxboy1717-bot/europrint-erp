@@ -186,7 +186,7 @@ export default function Employees() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <EPPageHeader
-        breadcrumb={<>{tCommon("dashboard")} · HR · <b className="text-foreground">{t("employees")}</b></>}
+        breadcrumb={<>{tCommon("dashboard")} · HR · <b className="text-primary font-semibold">{t("employees")}</b></>}
         title={t("employees")}
         subtitle={t("employeesSubtitle")}
         actions={
