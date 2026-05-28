@@ -41,3 +41,22 @@ node scripts/check-typecheck-gate.mjs || exit 1
 
 # 🔀 Duplicate route scan — blocks if two controllers declare the same path+method
 node scripts/_dup-routes-scan.mjs || exit 1
+
+# 🛡️ Guard 1 — Critical UI invariants
+# Ensures ModuleTabs, EP components, AppShellModern cannot be silently removed.
+# Session 9: ModuleTabs disappearance was the trigger for these guards.
+node scripts/check-critical-ui.mjs || exit 1
+
+# 🛡️ Guard 2 — FE anti-patterns (HR endpoint, silent catch, raw fetch)
+# BLOCK: HR pages must not call /api/users (use /api/hr/employees)
+# WARN (non-blocking): silent catch blocks, raw fetch() without apiRequest()
+node scripts/check-fe-antipatterns.mjs || exit 1
+
+# 🛡️ Guard 3 — Sidebar URL ↔ AppRouter mapping (informational, non-blocking)
+# Shows which sidebar URLs have no matching route (stubs are allowed).
+node scripts/check-sidebar-routes.mjs || true
+
+# 🛡️ Guard 4 — DB schema duplicate ratchet
+# Blocks if any NEW pgTable duplicate is introduced beyond the baseline.
+# Existing ~11 known duplicates remain allowed; this stops further growth.
+node scripts/reviewer-schema-dup.mjs || exit 1
