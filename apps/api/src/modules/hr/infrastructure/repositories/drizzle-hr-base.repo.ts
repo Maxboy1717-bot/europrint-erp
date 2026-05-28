@@ -103,6 +103,19 @@ export class HrBaseRepository {
             AND dr.is_soft_deleted = false
             AND dr.created_at > NOW() - INTERVAL '12 months'
           )`,
+          // P1.6.2: real LMS courses count (via user_id → lms_enrollments.user_id)
+          courses_total: sql<number>`(
+            SELECT COUNT(*)::int FROM lms_enrollments le
+            WHERE le.user_id = ${hrEmployees.user_id}
+          )`,
+          // P1.6.2: real bonus amount (current year, approved payments)
+          bonus_amount: sql<number>`(
+            SELECT COALESCE(SUM(bp.bonus_amount::numeric), 0)::numeric
+            FROM bonus_payments bp
+            WHERE bp.employee_id = ${hrEmployees.id}
+            AND bp.status = 'approved'
+            AND EXTRACT(YEAR FROM bp.payment_date) = EXTRACT(YEAR FROM NOW())
+          )`,
         })
           .from(hrEmployees)
           .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))

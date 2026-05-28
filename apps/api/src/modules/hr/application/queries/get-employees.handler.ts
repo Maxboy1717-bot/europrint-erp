@@ -43,9 +43,10 @@ export class GetEmployeesHandler implements IQueryHandler<GetEmployeesQuery> {
       orgDepartmentName:(row['department_name'] as string | null) ?? null,
       orgPositionName:  (row['position_name'] as string | null) ?? null,
       phone:            (row['phone_number'] as string | null) ?? null,
-      coursesTotal:     null,
+      // P1.6.2: real values from DB subqueries (null safe — falls back to 0 in FE)
+      coursesTotal:     (row['courses_total'] as number | null) ?? null,
       rating:           (row['total_points'] as number | null) ?? null,
-      bonusAmount:      null,
+      bonusAmount:      (row['bonus_amount'] as number | null) ?? null,
       status:           (row['status'] as string) || 'active',
       failedTests:      null,
       // P1.6.2: real discipline count from subquery
