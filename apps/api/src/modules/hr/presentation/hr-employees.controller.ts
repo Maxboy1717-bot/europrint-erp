@@ -179,23 +179,9 @@ export class HrEmployeesController {
     const newSalary      = currentSalary + body.proposedIncrease;
     const today          = _time.now().toISOString().split('T')[0];
 
-    // 2. INSERT into salary_history: record the salary-review entry
-    const histResult = await this.hrRepo.savePayroll({
-      employeeId:  parseInt(employeeId, 10),
-      employee_id: parseInt(employeeId, 10),
-      periodStart: today,
-      periodEnd:   today,
-      baseSalary:  newSalary,
-      gross:       newSalary,
-      // Carry review metadata in other_bonuses field (0) and notes via reason
-      otherBonuses: 0,
-      netSalary:    newSalary,
-    });
-    assertOk(histResult);
-
-    // 3. UPDATE employees.base_salary with the new salary
-    const updateResult = await this.hrRepo.updateEmployee(employeeId, { baseSalary: newSalary });
-    assertOk(updateResult);
+    // P1.6.3: wrap UPDATE employees + INSERT salary_history in a single transaction
+    const txResult = await this.hrRepo.reviewSalaryTransactional(parseInt(employeeId, 10), newSalary, today);
+    assertOk(txResult);
 
     return {
       message:          "Maosh muvaffaqiyatli yangilandi",

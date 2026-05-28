@@ -74,6 +74,34 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
     }
   }
 
+  // P1.6.3: wrap salary review in a single DB transaction
+  async reviewSalaryTransactional(employeeId: number, newSalary: number, today: string): Promise<Result<HrRow>> {
+    try {
+      let historyRow: HrRow = {};
+      await db.transaction(async (tx) => {
+        // 1. UPDATE employees.base_salary
+        await tx.update(hrEmployees)
+          .set({ base_salary: String(newSalary) })
+          .where(eq(hrEmployees.id, employeeId));
+        // 2. INSERT salary_history row
+        const rows = await tx.insert(salary_history).values({
+          employee_id:         employeeId,
+          salary_period_start: today,
+          salary_period_end:   today,
+          base_salary:         String(newSalary),
+          salary_earned:       String(newSalary),
+          total_bonuses:       '0',
+          other_bonuses:       '0',
+        }).returning();
+        historyRow = castTo<HrRow>(rows[0] ?? {});
+      });
+      return Ok(historyRow);
+    } catch (error: unknown) {
+      this.logger.error(`reviewSalaryTransactional: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
   async updatePayroll(id: string, data: HrRow): Promise<Result<HrRow>> {
     try {
       const rows = await db.update(salary_history).set({

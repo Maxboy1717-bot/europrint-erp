@@ -20,6 +20,8 @@ export interface IHrRepo {
   findPayroll(filters: { employeeId?: string; period?: string; status?: string }): Promise<Result<HrRow[]>>;
   savePayroll(payroll: HrRow): Promise<Result<HrRow>>;
   updatePayroll(id: string, data: HrRow): Promise<Result<HrRow>>;
+  // P1.6.3: transactional salary review (UPDATE employees + INSERT salary_history in one tx)
+  reviewSalaryTransactional(employeeId: number, newSalary: number, today: string): Promise<Result<HrRow>>;
 
   getPayrollSummary(period: string): Promise<Result<{ totalGross: number; totalNet: number; totalINPS: number; totalJSHD: number; employeeCount: number }>>;
 
