@@ -31,11 +31,14 @@ export const TrainingSchema = z.object({
 });
 
 export const ZoneSchema = z.object({
-  zoneName:    z.string().min(1, "Zona nomi majburiy"),
-  location:    z.string().min(1, "Joylashuv majburiy"),
-  hazardType:  z.string().min(1, "Xavf turi majburiy"),
-  description: z.string().optional(),
-  riskLevel:   z.enum(["low", "medium", "high", "critical"]),
+  zoneName:     z.string().min(1, "Zona nomi majburiy"),
+  zoneCode:     z.string().optional(),
+  location:     z.string().min(1, "Joylashuv majburiy"),
+  hazardType:   z.string().min(1, "Xavf turi majburiy"),
+  description:  z.string().optional(),
+  riskLevel:    z.enum(["low", "medium", "high", "critical"]),
+  maxOccupancy: z.coerce.number().int().positive().optional(),
+  requiredPpe:  z.string().optional(),
 });
 
 export type IncidentData  = z.infer<typeof IncidentSchema>;
@@ -82,9 +85,12 @@ export interface SafetyTraining {
 export interface HazardZone {
   id: number;
   zoneName?: string;
+  zoneCode?: string;
   location?: string;
   hazardType?: string;
   riskLevel?: string;
+  maxOccupancy?: number;
+  requiredPpe?: string;
   isActive?: boolean;
 }
 

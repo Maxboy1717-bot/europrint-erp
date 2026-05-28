@@ -135,34 +135,51 @@ export const HrBrandSettingsSchema = z.object({
 });
 export type HrBrandSettingsDto = z.infer<typeof HrBrandSettingsSchema>;
 
+// P1.23.2: accept both snake_case (canonical) and camelCase (FE) aliases; relax required fields
 export const HrSafetyIncidentSchema = z.object({
-  incident_type:        z.string().min(1).max(100),
-  severity:             z.enum(['low', 'medium', 'high', 'critical']),
+  incident_type:        z.string().min(1).max(100).optional(),
+  incidentType:         z.string().optional(),  // camelCase alias
+  severity:             z.enum(['minor', 'moderate', 'low', 'medium', 'high', 'critical', 'severe']).optional().default('medium'),
   description:          z.string().min(1).max(MAX_NOTES_LENGTH),
-  location_description: z.string().min(1).max(MAX_NOTES_LENGTH),
-  department_id:        z.number().int().positive(),
-  incident_date:        z.string().min(1),
-});
+  location_description: z.string().max(MAX_NOTES_LENGTH).optional(),
+  location:             z.string().optional(),  // camelCase alias
+  department_id:        z.number().int().positive().optional(),
+  incident_date:        z.string().optional(),
+  incidentDate:         z.string().optional(),  // camelCase alias
+}).passthrough();
 export type HrSafetyIncidentDto = z.infer<typeof HrSafetyIncidentSchema>;
 
+// P1.23.3: accept trainingName as fallback when training_id not provided
 export const HrSafetyTrainingSchema = z.object({
-  training_id:    z.number().int().positive(),
-  employee_id:    z.number().int().positive(),
-  completed_date: z.string().min(1),
-  expiry_date:    z.string().min(1),
-  score:          z.number().min(0).max(100),
-  is_passed:      z.boolean(),
-});
+  training_id:    z.union([z.number().int().positive(), z.string()]).optional(),
+  trainingName:   z.string().optional(),         // FE sends this instead of training_id
+  employee_id:    z.union([z.number().int().positive(), z.string()]).optional(),
+  userId:         z.union([z.string(), z.number()]).optional(),  // FE alias
+  completed_date: z.string().optional(),
+  scheduledDate:  z.string().optional(),         // FE alias for completed_date
+  expiry_date:    z.string().optional(),
+  expiryDate:     z.string().optional(),         // camelCase alias
+  score:          z.number().min(0).max(100).optional().default(0),
+  is_passed:      z.boolean().optional().default(false),
+}).passthrough();
 export type HrSafetyTrainingDto = z.infer<typeof HrSafetyTrainingSchema>;
 
+// P1.23.4: accept FE field aliases; make strict fields optional
 export const HrHazardZoneSchema = z.object({
   zone_name:     z.string().min(1).max(MAX_NAME_LENGTH),
-  zone_code:     z.string().min(1).max(50),
-  department_id: z.number().int().positive(),
-  hazard_level:  z.enum(['low', 'medium', 'high', 'extreme']),
-  required_ppe:  z.string().min(1).max(MAX_NOTES_LENGTH),
+  zoneName:      z.string().optional(),           // camelCase alias
+  zone_code:     z.string().max(50).optional(),
+  zoneCode:      z.string().optional(),           // camelCase alias
+  department_id: z.number().int().positive().optional(),
+  hazard_level:  z.enum(['low', 'medium', 'high', 'extreme']).optional().default('low'),
+  riskLevel:     z.enum(['low', 'medium', 'high', 'critical']).optional(),  // FE alias
+  required_ppe:  z.string().max(MAX_NOTES_LENGTH).optional(),
+  requiredPpe:   z.string().optional(),           // camelCase alias
   max_occupancy: z.number().int().positive().optional(),
-});
+  maxOccupancy:  z.number().int().positive().optional(),  // camelCase alias
+  location:      z.string().optional(),           // FE uses this
+  hazardType:    z.string().optional(),           // FE uses this
+}).passthrough();
 export type HrHazardZoneDto = z.infer<typeof HrHazardZoneSchema>;
 
 export const HrPpeComplianceSchema = z.object({

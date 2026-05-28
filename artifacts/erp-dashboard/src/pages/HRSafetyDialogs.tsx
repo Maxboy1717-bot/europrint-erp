@@ -50,6 +50,23 @@ export function IncidentDialog({ open, onOpenChange, form, mutation }: IncidentD
               </Select>
             )} />
           </div>
+          {/* P1.23.2: severity field was missing — required by BE */}
+          <div>
+            <Label>{t("xavfDarajasi")}</Label>
+            <Controller control={form.control} name="severity" render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="minor">{t("yengil")}</SelectItem>
+                  <SelectItem value="major">{t("oʻrtacha")}</SelectItem>
+                  <SelectItem value="critical">{t("kritik")}</SelectItem>
+                </SelectContent>
+              </Select>
+            )} />
+            {form.formState.errors.severity && (
+              <p className="text-xs text-destructive">{form.formState.errors.severity.message}</p>
+            )}
+          </div>
           <div>
             <Label>{t("progress.description")}</Label>
             <Input {...form.register("description")} />
@@ -171,12 +188,19 @@ export function ZoneDialog({ open, onOpenChange, form, mutation }: ZoneDialogPro
       <DialogContent>
         <DialogHeader><DialogTitle className="text-[18px] font-semibold">{t("xavfliZonaQoshish")}</DialogTitle></DialogHeader>
         <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-3 py-2">
-          <div>
-            <Label>{t("zonaNomi")}</Label>
-            <Input {...form.register("zoneName")} />
-            {form.formState.errors.zoneName && (
-              <p className="text-xs text-destructive">{form.formState.errors.zoneName.message}</p>
-            )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label>{t("zonaNomi")}</Label>
+              <Input {...form.register("zoneName")} />
+              {form.formState.errors.zoneName && (
+                <p className="text-xs text-destructive">{form.formState.errors.zoneName.message}</p>
+              )}
+            </div>
+            {/* P1.23.4: zoneCode field was missing */}
+            <div>
+              <Label>{t("zonaKodi")}</Label>
+              <Input {...form.register("zoneCode")} placeholder="Z-001" />
+            </div>
           </div>
           <div>
             <Label>{t("location")}</Label>
@@ -191,6 +215,17 @@ export function ZoneDialog({ open, onOpenChange, form, mutation }: ZoneDialogPro
             {form.formState.errors.hazardType && (
               <p className="text-xs text-destructive">{form.formState.errors.hazardType.message}</p>
             )}
+          </div>
+          {/* P1.23.4: maxOccupancy + requiredPpe fields were missing */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label>{t("maksimalSig'im")}</Label>
+              <Input {...form.register("maxOccupancy")} type="number" min={1} placeholder="50" />
+            </div>
+            <div>
+              <Label>{t("talab qilinadigan himoya")}</Label>
+              <Input {...form.register("requiredPpe")} placeholder="Helmet, Vest, Gloves" />
+            </div>
           </div>
           <div>
             <Label>{t("xavfDarajasi")}</Label>

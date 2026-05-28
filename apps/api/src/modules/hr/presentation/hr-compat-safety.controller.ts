@@ -83,7 +83,12 @@ export class HrCompatSafetyController {
   @Post('safety/incidents')
   @UsePipes(new ZodValidationPipe(HrSafetyIncidentSchema))
   async createSafetyIncident(@Body() body: HrSafetyIncidentDto) {
-    const { incident_type, severity, description, location_description, department_id, incident_date } = body;
+    // P1.23.2: accept camelCase aliases from FE
+    const incident_type       = body.incident_type      ?? body.incidentType;
+    const { severity, description } = body;
+    const location_description = body.location_description ?? body.location;
+    const { department_id }   = body;
+    const incident_date       = body.incident_date      ?? body.incidentDate;
     const data = await this.svc.createSafetyIncident(incident_type, severity, description, location_description, department_id, incident_date);
     return { data };
   }
@@ -96,7 +101,12 @@ export class HrCompatSafetyController {
   @Post('safety/trainings')
   @UsePipes(new ZodValidationPipe(HrSafetyTrainingSchema))
   async createSafetyTraining(@Body() body: HrSafetyTrainingDto) {
-    const { training_id, employee_id, completed_date, expiry_date, score, is_passed } = body;
+    // P1.23.3: accept trainingName fallback + camelCase aliases from FE
+    const training_id    = body.training_id   ?? body.trainingName;
+    const employee_id    = body.employee_id   ?? body.userId;
+    const completed_date = body.completed_date ?? body.scheduledDate;
+    const expiry_date    = body.expiry_date   ?? body.expiryDate;
+    const { score, is_passed } = body;
     const data = await this.svc.createSafetyTraining(training_id, employee_id, completed_date, expiry_date, score, is_passed);
     return { data };
   }
@@ -109,7 +119,13 @@ export class HrCompatSafetyController {
   @Post('safety/hazard-zones')
   @UsePipes(new ZodValidationPipe(HrHazardZoneSchema))
   async createHazardZone(@Body() body: HrHazardZoneDto) {
-    const { zone_name, zone_code, department_id, hazard_level, required_ppe, max_occupancy } = body;
+    // P1.23.4: accept camelCase aliases from FE
+    const zone_name    = body.zone_name    ?? body.zoneName;
+    const zone_code    = body.zone_code    ?? body.zoneCode;
+    const { department_id } = body;
+    const hazard_level = body.hazard_level ?? body.riskLevel;
+    const required_ppe = body.required_ppe ?? body.requiredPpe;
+    const max_occupancy = body.max_occupancy ?? body.maxOccupancy;
     const data = await this.svc.createHazardZone(zone_name, zone_code, department_id, hazard_level, required_ppe, max_occupancy);
     return { data };
   }
