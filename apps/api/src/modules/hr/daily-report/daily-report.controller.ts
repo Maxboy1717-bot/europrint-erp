@@ -10,6 +10,8 @@ import { createZodDto } from '@anatine/zod-nestjs';
 import { DailyReportService } from './daily-report.service';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { unwrapOrInternal } from '@common/http-result';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@common/types/user.types';
 
 const REPORT_TYPES = ['all', 'operator', 'office'] as const;
 type ReportType = (typeof REPORT_TYPES)[number];
@@ -60,13 +62,33 @@ export class DailyReportController {
   }
 
   @Patch(':id/override')
-  async override(@Param('id', ParseIntPipe) id: number, @Body() body: OverrideReportDto) {
-    return unwrapOrInternal(await this.svc.hrOverride(id, body.hr_user_id || 1, body.override_notes ?? ''));
+  // P1.24.2: use JWT user id instead of hardcoded fallback of 1
+  async override(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: OverrideReportDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const hrUserId = body.hr_user_id ?? user?.id ?? 0;
+    return unwrapOrInternal(await this.svc.hrOverride(id, hrUserId, body.override_notes ?? ''));
   }
 
   @Get('stats')
+  // P1.24.2: wrap in { stats: {...} } and normalize field names FE expects
   async stats(@Query('date') date: string) {
-    return unwrapOrInternal(await this.svc.getStats(date));
+    const r = await this.svc.getStats(date);
+    const raw = (r.ok && r.data ? r.data as Record<string, unknown> : {});
+    const submitted   = Number(raw['submitted_count']        ?? 0);
+    const autoAbsent  = Number(raw['absent_count']           ?? 0);
+    const totalActive = Number(raw['total_active_employees'] ?? 0);
+    const pending     = Math.max(0, totalActive - submitted - autoAbsent);
+    return {
+      stats: {
+        submitted_count:         submitted,
+        auto_absent_count:       autoAbsent,
+        pending_count:           pending,
+        departments_with_reports: 0,  // aggregated elsewhere
+      },
+    };
   }
 
   @Get('by-date')

@@ -40,13 +40,15 @@ export default function DailyReportPage() {
   const now = new Date();
   const hour = now.getHours();
   const deadlinePassed = hour >= 20;
-  const empId = user?.employeeId || 1;
+  // P1.24.1: no fallback to 1 — disable query if employee identity is missing
+  const empId = user?.employeeId ?? null;
 
   // ── Queries ─────────────────────────────────────────────────────────────────
 
   const { data: myReports, isLoading } = useQuery<DailyReport[]>({
     queryKey: ["/api/hr-v2/daily-reports/employee", empId],
-    queryFn: () => apiRequest("GET", `/api/hr-v2/daily-reports/employee?employeeId=${empId}&limit=14`),
+    queryFn: () => apiRequest("GET", `/api/hr-v2/daily-reports/employee?employeeId=${empId!}&limit=14`),
+    enabled: empId !== null && empId > 0,
   });
 
   const { data: stats } = useQuery<DailyReportStats>({
@@ -171,10 +173,10 @@ export default function DailyReportPage() {
             deadlinePassed={deadlinePassed}
             hour={hour}
             isPending={submit.isPending}
-            empId={empId}
+            empId={empId ?? 0}
             today={today}
             onChange={handleFormChange}
-            onSubmit={() => submit.mutate({ ...form, employee_id: empId, report_date: today })}
+            onSubmit={() => { if (empId) submit.mutate({ ...form, employee_id: empId, report_date: today }); }}
           />
         </TabsContent>
 
