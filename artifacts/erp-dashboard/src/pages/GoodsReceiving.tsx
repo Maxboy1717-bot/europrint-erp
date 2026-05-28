@@ -4,8 +4,10 @@
  */
 
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/i18n";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/api-request";
 import { Button } from "@/components/ui/button";
 import { Plus, AlertCircle } from "lucide-react";
 import {
@@ -68,6 +70,22 @@ export default function GoodsReceiving() {
     updateQcMutation,
     completeReceiptMutation,
   } = useGoodsReceivingMutations(refetchDetail);
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const wmsGoodsReceiptMutation = useMutation({
+    mutationFn: (data: { supplierId: string; items: { materialId: string; quantity: number; unitPrice: number }[] }) =>
+      apiRequest("POST", "/api/wms/goods-receipt", data),
+    onSuccess: () => {
+      toast({ title: "Tovar qabul qilindi" });
+      queryClient.invalidateQueries({ queryKey: ["/api/warehouse/goods-receipts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wms/goods-receipt"] });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Xatolik", description: error.message, variant: "destructive" });
+    },
+  });
 
   const resetLineForm = () => {
     setLineFormData({

@@ -13,8 +13,12 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-;
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { apiRequest } from "@/lib/api-request";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,6 +53,27 @@ export default function WarehouseHub12() {
   const [, navigate] = useLocation();
   const [activeLayer, setActiveLayer] = useState<LayerKey>("stock");
   const [search, setSearch] = useState("");
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferForm, setTransferForm] = useState({
+    fromLocationId: "default",
+    toLocationId: "",
+    materialId: "",
+    quantity: 1,
+  });
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const transferMutation = useMutation({
+    mutationFn: (data: typeof transferForm) =>
+      apiRequest("POST", "/api/wms/transfers", data),
+    onSuccess: () => {
+      toast({ title: "Ko'chirish yaratildi" });
+      queryClient.invalidateQueries({ queryKey: ["/api/wms/transfers"] });
+      setTransferOpen(false);
+      setTransferForm({ fromLocationId: "default", toLocationId: "", materialId: "", quantity: 1 });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
 
   const {
     warehouses,
@@ -238,14 +263,73 @@ export default function WarehouseHub12() {
 
   return (
     <div className="space-y-6">
-      <WarehouseHub12Header
-        activeWarehouse={activeWarehouse}
-        cfg={cfg}
-        kpis={kpis}
-        isSyncing={isSyncing}
-        onNavigate={navigate}
-        onSyncToPos={syncToPos}
-      />
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <WarehouseHub12Header
+          activeWarehouse={activeWarehouse}
+          cfg={cfg}
+          kpis={kpis}
+          isSyncing={isSyncing}
+          onNavigate={navigate}
+          onSyncToPos={syncToPos}
+        />
+        <Button size="sm" onClick={() => setTransferOpen(true)} data-testid="button-create-transfer">
+          Ko&apos;chirish
+        </Button>
+      </div>
+
+      {/* Ko'chirish dialogi */}
+      <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ko&apos;chirish yaratish</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <Label htmlFor="tf-from">Qayerdan (fromLocationId)</Label>
+              <Input
+                id="tf-from"
+                value={transferForm.fromLocationId}
+                onChange={e => setTransferForm(f => ({ ...f, fromLocationId: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="tf-to">Qayerga (toLocationId)</Label>
+              <Input
+                id="tf-to"
+                value={transferForm.toLocationId}
+                onChange={e => setTransferForm(f => ({ ...f, toLocationId: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="tf-material">Material ID</Label>
+              <Input
+                id="tf-material"
+                value={transferForm.materialId}
+                onChange={e => setTransferForm(f => ({ ...f, materialId: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="tf-qty">Miqdor</Label>
+              <Input
+                id="tf-qty"
+                type="number"
+                min={1}
+                value={transferForm.quantity}
+                onChange={e => setTransferForm(f => ({ ...f, quantity: Number(e.target.value) }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTransferOpen(false)}>Bekor</Button>
+            <Button
+              onClick={() => transferMutation.mutate(transferForm)}
+              disabled={transferMutation.isPending}
+            >
+              {transferMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* 12 qatlamli tabs — ustuvor tablar bold */}
       <Tabs value={activeLayer} onValueChange={handleLayerChange}>

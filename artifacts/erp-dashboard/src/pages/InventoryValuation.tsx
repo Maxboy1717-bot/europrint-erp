@@ -4,20 +4,33 @@
  */
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  ClipboardList, 
-  Plus, 
+import {
+  ClipboardList,
+  Plus,
   RefreshCw,
   Package,
-  Building2
+  Building2,
+  Download,
+  Calculator
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { apiRequest } from "@/lib/api-request";
 
 import { 
   InventoryCount, 
@@ -53,6 +66,7 @@ export default function InventoryValuation() {
   const [isLinesDialogOpen, setIsLinesDialogOpen] = useState(false);
   const [selectedCount, setSelectedCount] = useState<InventoryCount | null>(null);
   const [isCreateAssetDialogOpen, setIsCreateAssetDialogOpen] = useState(false);
+  const [isRecalcConfirmOpen, setIsRecalcConfirmOpen] = useState(false);
 
   const [newCountForm, setNewCountForm] = useState<InventoryValuationCountForm>({
     countDate: new Date().toISOString().split("T")[0],
@@ -104,6 +118,20 @@ export default function InventoryValuation() {
     setIsCreateAssetDialogOpen,
   });
 
+  const queryClient = useQueryClient();
+
+  const recalculateMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/wms/inventory/recalculate-valuation"),
+    onSuccess: () => {
+      toast({ title: "Baholash yangilandi" });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance-extended/inventory-counts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance-extended/asset-inventory"] });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Xatolik", description: error.message, variant: "destructive" });
+    },
+  });
+
   const filteredCounts = (Array.isArray(inventoryCounts) ? inventoryCounts : []).filter(count => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -150,9 +178,28 @@ export default function InventoryValuation() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="secondary" 
-                size="sm" 
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => window.open("/api/wms/inventory/valuation/export?format=csv", "_blank")}
+                data-testid="button-export-csv"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Export CSV
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsRecalcConfirmOpen(true)}
+                disabled={recalculateMutation.isPending}
+                data-testid="button-recalculate"
+              >
+                <Calculator className="h-4 w-4 mr-1" />
+                {t("qaytaHisoblash") || "Qayta hisoblash"}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => activeTab === "material" ? refetchCounts() : refetchAssets()}
                 data-testid="button-refresh"
               >
@@ -290,13 +337,35 @@ export default function InventoryValuation() {
         }}
       />
 
-      <CountLinesDialog 
+      <CountLinesDialog
         isOpen={isLinesDialogOpen}
         onOpenChange={setIsLinesDialogOpen}
         selectedCount={selectedCount}
         countLines={countLines}
         isLoading={linesLoading}
       />
+
+      <AlertDialog open={isRecalcConfirmOpen} onOpenChange={setIsRecalcConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Qayta hisoblash</AlertDialogTitle>
+            <AlertDialogDescription>
+              Inventar bahosini qayta hisoblashni xohlaysizmi?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setIsRecalcConfirmOpen(false);
+                recalculateMutation.mutate();
+              }}
+            >
+              Tasdiqlash
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

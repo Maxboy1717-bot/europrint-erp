@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Wallet, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Banknote, Receipt, RefreshCw, FileText, Calculator, PlusCircle, BarChart3 } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Banknote, Receipt, RefreshCw, FileText, Calculator, PlusCircle, BarChart3, FileDown } from "lucide-react";
 import type { DailyMetrics, AiFinanceInsight } from "./daily-kpi/types";
 import { formatShortCurrency, getWeeklyDateRange } from "./daily-kpi/types";
 import { WeeklyTrendChart } from "./daily-kpi/WeeklyTrendChart";
@@ -56,6 +56,7 @@ export default function DailyKPIDashboard() {
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className="bg-white/10 border-white/30 text-white">{new Date().toLocaleDateString("uz-UZ", { weekday: "long", day: "numeric", month: "long" })}</Badge>
               <Button size="sm" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20" onClick={() => refetchToday()} data-testid="button-refresh-metrics"><RefreshCw className="h-4 w-4 mr-1" />{t("refresh")}</Button>
+              <Button size="sm" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20" onClick={() => window.open("/api/reports/daily-kpi/export?format=csv", "_blank")} data-testid="button-export-csv"><FileDown className="h-4 w-4 mr-1" />CSV</Button>
             </div>
           </div>
         </div>
