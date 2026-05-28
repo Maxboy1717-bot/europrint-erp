@@ -40,8 +40,10 @@ export class WeeklyPlanController {
     @CurrentUser() user: { id: number; role: string },
     @Query('week') week?: string,
     @Query('employeeId') employeeId?: string,
+    // P1.28.1: FE sends snake_case employee_id — accept both
+    @Query('employee_id') employee_id?: string,
   ) {
-    return unwrapOrThrow(await this.svc.getAll(user, week, employeeId));
+    return unwrapOrThrow(await this.svc.getAll(user, week, employeeId ?? employee_id));
   }
 
   /**

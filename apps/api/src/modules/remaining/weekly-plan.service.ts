@@ -57,7 +57,23 @@ export class WeeklyPlanService {
         const plansR = await this.repo.getAllForEmployee(user.id, weekStart);
         plans = (plansR.ok ? plansR.data : []) as Record<string, unknown>[];
       }
-      return { plans, weekStart };
+      // P1.28.1: translate snake_case DB rows to camelCase so FE types work
+      const normalised = plans.map((p) => ({
+        id:              p['id'],
+        employeeId:      p['employee_id'] ?? p['employeeId'],
+        weekStart:       p['week_start']  ?? p['weekStart'],
+        weekEnd:         p['week_end']    ?? p['weekEnd'],
+        gsdTarget:       p['gsd_target']  ?? p['gsdTarget'],
+        top5Tasks:       Array.isArray(p['top5_tasks'])  ? p['top5_tasks']  :
+                         Array.isArray(p['top5Tasks'])   ? p['top5Tasks']   : [],
+        successFactors:  p['success_factors'] ?? p['successFactors'],
+        resourcesNeeded: p['resources_needed'] ?? p['resourcesNeeded'],
+        status:          p['status'],
+        approvedBy:      p['approved_by']  ?? p['approvedBy'],
+        approvedAt:      p['approved_at']  ?? p['approvedAt'],
+        createdAt:       p['created_at']   ?? p['createdAt'],
+      }));
+      return { plans: normalised, weekStart };
     });
   }
 
@@ -74,8 +90,9 @@ export class WeeklyPlanService {
         employeeId = user.id;
       }
       if (!employeeId || isNaN(employeeId)) return Err('employee_id talab qilinadi');
-      const gsdTarget = body['gsd_target'];
-      const top5Tasks = body['top5_tasks'];
+      // P1.28.1: accept both snake_case (FE sends) and camelCase
+      const gsdTarget  = body['gsd_target']  ?? body['gsdTarget'];
+      const top5Tasks  = body['top5_tasks']  ?? body['top5Tasks'];
       if (!gsdTarget) return Err('gsd_target talab qilinadi');
       if (!Array.isArray(top5Tasks) || top5Tasks.length === 0) return Err('top5_tasks array talab qilinadi');
       const weekStart = getMondayOfWeek(String(body['week'] ?? ''));
