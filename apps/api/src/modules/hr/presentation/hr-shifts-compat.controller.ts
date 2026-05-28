@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { assertOk, throwFromError, unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -60,11 +60,13 @@ export class HrShiftsCompatController {
     const userLookup = (!body.employee_id && body.user_id)
       ? await this.shiftService.findEmployeeByUserId(body.user_id)
       : null;
+    // P1.9.2: never fall back to 0 — throw if no valid employee found
     const empId = body.employee_id
       ? Number(body.employee_id)
-      : userLookup?.ok ? (userLookup.data as number) : 0;
+      : userLookup?.ok && userLookup.data ? (userLookup.data as number) : null;
+    if (!empId) throw new BadRequestException('employee_id yoki user_id kerak — xodim topilmadi');
     const _rAssignShift = await this.shiftService.assignShift({
-      employeeId: Number(empId ?? 0),
+      employeeId: empId,
       shiftDate:  body.shift_date,
       shiftType:  body.shift_type ?? 'MORNING',
       startTime:  body.start_time ?? times.start,
