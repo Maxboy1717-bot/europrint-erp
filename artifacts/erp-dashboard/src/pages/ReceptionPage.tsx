@@ -13,16 +13,20 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 export default function ReceptionPage() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
+  const { user } = useAuth();
   const qc = useQueryClient();
+  // P1.25.3: registered_by from JWT user, not hardcoded
+  const registeredById = String(user?.id ?? "");
   const [form, setForm] = useState({
     visitor_name: "", visitor_phone: "", visitor_company: "",
-    visit_purpose: "", host_employee_id: "", registered_by: "1"
+    visit_purpose: "", host_employee_id: "",
   });
   interface BadgeVisit { visitor_name: string; visitor_company: string; check_in_at: string; }
   interface BadgeResult { badge_code: string; badge_expires_at: string; visit?: BadgeVisit; }
@@ -63,7 +67,7 @@ export default function ReceptionPage() {
     onSuccess: (data) => {
       toast({ title: "✅ Tashrif ro'yxatga olindi", description: `Badge kodi: ${data.badge_code}` });
       setLastBadge(data);
-      setForm({ visitor_name: "", visitor_phone: "", visitor_company: "", visit_purpose: "", host_employee_id: "", registered_by: "1" });
+      setForm({ visitor_name: "", visitor_phone: "", visitor_company: "", visit_purpose: "", host_employee_id: "" });
       qc.invalidateQueries({ queryKey: ["/api/hr-v2/reception/active"] });
       qc.invalidateQueries({ queryKey: ["/api/hr-v2/reception/stats"] });
     },
@@ -137,7 +141,7 @@ export default function ReceptionPage() {
                       placeholder={placeholder} className="bg-input border-border mt-1" />
                   </div>
                 ))}
-                <Button onClick={() => checkIn.mutate({ ...form, host_employee_id: parseInt(form.host_employee_id), registered_by: parseInt(form.registered_by) })}
+                <Button onClick={() => checkIn.mutate({ ...form, host_employee_id: parseInt(form.host_employee_id), registered_by: registeredById ? parseInt(registeredById) : undefined })}
                   disabled={!form.visitor_name || !form.host_employee_id || checkIn.isPending}
                   className="w-full bg-primary hover:bg-primary/90 text-white">
                   {checkIn.isPending ? "Saqlanmoqda..." : "✅ Ro'yxatga olish"}
