@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { UserCheck, Hash, AlertTriangle, AlertCircle, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { UserCheck, Hash, AlertTriangle, AlertCircle, CheckCircle, Pencil } from "lucide-react";
 import { Employee, AbcAnalysis, OrgStructureAssignment, EmploymentContract, Certificate, SalaryHistoryRecord } from "@/pages/employee-profile/profile-types";
 import { RoleGate, PII_VIEWER_ROLES } from "@/components/RoleGate";
 import { tLabel } from "@/lib/i18n/tLabel";
@@ -34,7 +35,8 @@ export function ProfileHeader({
   salaryHistory,
   expiredCerts,
   expiringSoonCerts,
-  getInitials
+  getInitials,
+  onEdit,
 }: ProfileHeaderProps) {
   return (
     <Card className="border border-outline-variant shadow-none overflow-hidden">
@@ -155,6 +157,17 @@ export function ProfileHeader({
               </div>
 
               <div className="flex items-center gap-3">
+                {onEdit && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onEdit}
+                    className="gap-1.5 shrink-0"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    {tLabel("employee.edit", "Tahrirlash")}
+                  </Button>
+                )}
                 <div className="text-right" data-testid="profile-header-salary">
                   <RoleGate
                     roles={PII_VIEWER_ROLES}
