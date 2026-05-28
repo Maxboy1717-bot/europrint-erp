@@ -92,7 +92,6 @@ export default function GLDocuments() {
       apiRequest("POST", "/api/fi/gl-documents", body),
     onSuccess: () => {
       toast({ title: "Hujjat yaratildi" });
-      queryClient.invalidateQueries({ queryKey: ["/api/finance/gl/documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/accounting/gl-documents"] });
       setCreateOpen(false);
       setForm({ date: new Date().toISOString().slice(0, 10), description: "", totalAmount: 0 });
