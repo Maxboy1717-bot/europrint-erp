@@ -79,7 +79,12 @@ export default function Applications() {
   });
 
   const { data: users = [] } = useQuery<UserStub[]>({
-    queryKey: ["/api/users"],
+    queryKey: ["/api/hr/employees"],
+    queryFn: () => apiRequest("GET", "/api/hr/employees"),
+    select: (data: unknown) => {
+      const d = data as Record<string, unknown>;
+      return Array.isArray(d?.items) ? (d.items as UserStub[]) : (Array.isArray(data) ? (data as UserStub[]) : []);
+    },
     enabled: !!userId,
   });
 

@@ -27,14 +27,28 @@ export function useEmployeeMutation({ isEdit, employeeId, onAfterSubmit }: UseEm
     }
   };
 
-  /** Split "Ali Vali Valiyev" → firstName="Ali", lastName="Vali Valiyev" */
+  /** Split "Ali Vali Valiyev" → firstName="Ali", middleName="Vali", lastName="Valiyev" */
   const splitFullName = (data: Record<string, unknown>): Record<string, unknown> => {
     if (typeof data.fullName !== 'string') return data;
     const parts = data.fullName.trim().split(/\s+/);
-    const firstName = parts[0] ?? '';
-    const lastName  = parts.length > 1 ? parts.slice(1).join(' ') : (parts[0] ?? '');
+    let firstName: string;
+    let middleName: string | undefined;
+    let lastName: string;
+
+    if (parts.length >= 3) {
+      firstName  = parts[0] ?? '';
+      middleName = parts.slice(1, parts.length - 1).join(' ');
+      lastName   = parts[parts.length - 1] ?? '';
+    } else if (parts.length === 2) {
+      firstName = parts[0] ?? '';
+      lastName  = parts[1] ?? '';
+    } else {
+      firstName = parts[0] ?? '';
+      lastName  = parts[0] ?? '';
+    }
+
     const { fullName: _dropped, ...rest } = data;
-    return { ...rest, firstName, lastName };
+    return { ...rest, firstName, lastName, ...(middleName ? { middleName } : {}) };
   };
 
   const createMutation = useMutation({

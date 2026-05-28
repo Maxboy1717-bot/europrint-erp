@@ -17,6 +17,7 @@ import { translations } from "./EmployeeTrackingReportTypes";
 import { StatCards, ChartSection, formatDuration } from "./EmployeeTrackingReportSections";
 import { AttendanceTable } from "./EmployeeTrackingReportTable";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
+import { apiRequest } from "@/lib/queryClient";
 export default function EmployeeTrackingReport() {
 
   const [language, setLanguage] = useState<Language>("uz");
@@ -35,7 +36,12 @@ export default function EmployeeTrackingReport() {
   });
 
   const { data: employees = [] } = useQuery<Employee[]>({
-    queryKey: ["/api/users"],
+    queryKey: ["/api/hr/employees"],
+    queryFn: () => apiRequest("GET", "/api/hr/employees"),
+    select: (data: unknown) => {
+      const d = data as Record<string, unknown>;
+      return Array.isArray(d?.items) ? (d.items as Employee[]) : (Array.isArray(data) ? (data as Employee[]) : []);
+    },
   });
 
   const { data: zoneHistory = [] } = useQuery<ZoneHistory[]>({

@@ -17,6 +17,7 @@ import { ContractsTab } from "./payroll/ContractsTab";
 import { CalculationsTab } from "./payroll/CalculationsTab";
 import { TaxRulesSidebar } from "./payroll/TaxRulesSidebar";
 import { EPErrorState } from "@/components/ep";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function PayrollAutomation() {
   const { t } = useTranslation('hr');
@@ -47,7 +48,12 @@ export default function PayrollAutomation() {
   });
 
   const { data: employees = [] } = useQuery<PayrollUser[]>({
-    queryKey: ["/api/users"],
+    queryKey: ["/api/hr/employees"],
+    queryFn: () => apiRequest("GET", "/api/hr/employees"),
+    select: (data: unknown) => {
+      const d = data as Record<string, unknown>;
+      return Array.isArray(d?.items) ? (d.items as PayrollUser[]) : (Array.isArray(data) ? (data as PayrollUser[]) : []);
+    },
   });
 
   const employeeMap = useMemo(() => {

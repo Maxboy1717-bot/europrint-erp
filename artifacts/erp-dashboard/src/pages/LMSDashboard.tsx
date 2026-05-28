@@ -36,7 +36,14 @@ export default function LMSDashboard() {
 
   const { data: courses = [], isLoading: isLoadingCourses, isError, error, refetch } = useQuery<Course[]>({ queryKey: ["/api/courses"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Course[] })?.data ?? []) });
   const { data: certificates = [], isLoading: isLoadingCertificates } = useQuery<Certificate[]>({ queryKey: ["/api/certificates"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Certificate[] })?.data ?? []) });
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({ queryKey: ["/api/users"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: User[] })?.data ?? []) });
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
+    queryKey: ["/api/hr/employees"],
+    queryFn: () => apiRequest("GET", "/api/hr/employees"),
+    select: (data: unknown) => {
+      const d = data as Record<string, unknown>;
+      return Array.isArray(d?.items) ? (d.items as User[]) : (Array.isArray(data) ? (data as User[]) : []);
+    },
+  });
   const { data: completionTrend = [] } = useQuery<{ month: string; completed: number; enrolled: number }[]>({ queryKey: ["/api/courses/completion-trend", language] });
   const { data: recentActivity = [] } = useQuery<ActivityRecord[]>({ queryKey: ["/api/lms/recent-activity", language] });
   const { data: lmsLeaderboard = [], isLoading: isLoadingLeaderboard } = useQuery<LMSLeaderboardEntry[]>({ queryKey: ["/api/analytics/leaderboard/employees"], select: (data: unknown) => Array.isArray(data) ? data : [] });

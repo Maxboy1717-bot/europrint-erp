@@ -37,7 +37,12 @@ export default function ERPDailyReports() {
   });
 
   const { data: users = [] } = useQuery<Array<{ id: string; fullName: string }>>({
-    queryKey: ["/api/users"],
+    queryKey: ["/api/hr/employees"],
+    queryFn: () => apiRequest("GET", "/api/hr/employees"),
+    select: (data: unknown) => {
+      const d = data as Record<string, unknown>;
+      return Array.isArray(d?.items) ? (d.items as Array<{ id: string; fullName: string }>) : (Array.isArray(data) ? (data as Array<{ id: string; fullName: string }>) : []);
+    },
   });
 
   const { data: workCenters = [] } = useQuery<Array<{ id: string; name: string }>>({
