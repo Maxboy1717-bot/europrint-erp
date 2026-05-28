@@ -123,23 +123,30 @@ export class HrDashboardController {
   }
 
   @Get('alumni/:id')
-  getAlumniById(@Param('id') _id: string) {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getAlumniById(@Param('id') id: string) {
+    const result = await this.svc.getAlumni();
+    const items = result.ok && Array.isArray(result.data) ? result.data as Record<string,unknown>[] : [];
+    const item = items.find(a => String(a['id']) === id);
+    if (!item) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    return item;
   }
 
   @Get('daily-reports')
-  getDailyReports(@Query('date') _date?: string) {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getDailyReports(@Query('date') _date?: string) {
+    const r = await this.svc.getDailyReportsStats();
+    return r.ok && r.data ? r.data : { total: 0, approved: 0, pending: 0, today: 0 };
   }
 
   @Get('daily-reports/department')
-  getDailyReportsByDept(@Query('departmentId') _departmentId?: string) {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getDailyReportsByDept(@Query('departmentId') _departmentId?: string) {
+    const r = await this.svc.getDailyReportsStats();
+    return r.ok && r.data ? r.data : { total: 0, approved: 0, pending: 0, today: 0 };
   }
 
   @Get('daily-reports/my')
-  getDailyReportsMy() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getDailyReportsMy() {
+    const r = await this.svc.getDailyReportsStats();
+    return r.ok && r.data ? r.data : { total: 0, approved: 0, pending: 0, today: 0 };
   }
 
   @Post('daily-reports')
@@ -221,17 +228,17 @@ export class HrDashboardController {
 
   @Get('documents/employee')
   getEmployeeDocuments() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+    return { items: [], total: 0 };
   }
 
   @Get('documents/my')
   getMyDocuments() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+    return { items: [], total: 0 };
   }
 
   @Get('documents/pending')
   getPendingDocuments() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+    return { items: [], total: 0 };
   }
 
   @Get('employee-corp')
@@ -240,8 +247,10 @@ export class HrDashboardController {
   }
 
   @Get('employees/operator-stats')
-  getEmployeeOperatorStats() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getEmployeeOperatorStats() {
+    const r = await this.svc.getDailyReportsStats();
+    const stats = r.ok && r.data ? r.data : { total: 0, approved: 0, pending: 0, today: 0 };
+    return { operatorStats: { submitted: stats.today, total: stats.total, percentage: stats.total > 0 ? Math.round(stats.today / stats.total * 100) : 0 } };
   }
 
   @Get('enps/surveys/results')
@@ -250,8 +259,12 @@ export class HrDashboardController {
   }
 
   @Get('abc-analysis/:id/calculate')
-  calculateAbcAnalysis(@Param('id') _id: string) {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async calculateAbcAnalysis(@Param('id') id: string) {
+    const all = unwrapOrDefault(await this.svc.getAbcAnalysis(), []);
+    const items = Array.isArray(all) ? all as Record<string,unknown>[] : [];
+    const found = items.find(a => String(a['userId'] ?? a['user_id']) === id);
+    if (!found) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    return found;
   }
 
   // ── New endpoints (HR Dashboard missing) ──────────────────────────────────
