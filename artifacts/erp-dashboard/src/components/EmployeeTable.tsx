@@ -73,7 +73,6 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/employees"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({
         title: "Muvaffaqiyat",
         description: "Xodim holati yangilandi",
@@ -97,7 +96,6 @@ export function EmployeeTable({ employees, onEmployeeClick, onEdit }: EmployeeTa
     onSuccess: () => {
       // Canonical key (canonical: /api/hr/employees)
       queryClient.invalidateQueries({ queryKey: ["/api/hr/employees"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({
         title: "Muvaffaqiyat",
         description: "Xodim o'chirildi",

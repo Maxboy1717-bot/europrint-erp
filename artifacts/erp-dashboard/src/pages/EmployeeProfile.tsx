@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowLeft, Shield, ShieldCheck, ShieldAlert, KeyRound } from "lucide-react";
+import { ArrowLeft, Shield, ShieldCheck, ShieldAlert } from "lucide-react";
 
 import { GsdGraph } from "@/components/GsdGraph";
 
@@ -42,7 +42,6 @@ import { CashAdvanceDialog } from "@/components/employee/dialogs/CashAdvanceDial
 import { LeaveRequestDialog } from "@/components/employee/dialogs/LeaveRequestDialog";
 import { SickLeaveDialog } from "@/components/employee/dialogs/SickLeaveDialog";
 import { BusinessTripDialog } from "@/components/employee/dialogs/BusinessTripDialog";
-import { PasswordDialog } from "@/components/employee/dialogs/PasswordDialog";
 import { EditEmployeeDialog } from "@/components/employee/dialogs/EditEmployeeDialog";
 import { ProfileHeader } from "@/components/employee/ProfileHeader";
 import { TabNavigation } from "@/components/employee/TabNavigation";
@@ -106,8 +105,6 @@ export default function EmployeeProfile() {
   useEffect(() => { const tab = parseTabFromSearch(searchStr); if (tab !== activeTab) setActiveTab(tab); }, [searchStr]);
   const handleTabChange = (tab: string) => { const nt = tab as TabValue; setActiveTab(nt); const p = new URLSearchParams(window.location.search); p.set("tab", nt); window.history.pushState(null, "", `${window.location.pathname}?${p.toString()}`); };
 
-  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({ password: "", confirmPassword: "" });
   const [passportDialogOpen, setPassportDialogOpen] = useState(false);
   const [bankDialogOpen, setBankDialogOpen] = useState(false);
   const [emergencyDialogOpen, setEmergencyDialogOpen] = useState(false);
@@ -294,11 +291,9 @@ export default function EmployeeProfile() {
   const saveLeaveRequestMutation = useMutation({ mutationFn: async (d: typeof leaveRequestForm) => { const s = new Date(d.startDate); const e = new Date(d.endDate); return apiRequest("POST", `/api/employees/${id}/leave-requests`, { ...d, userId: id, totalDays: Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1, status: "pending" }); }, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/employees', id, 'leave-requests'] }); setLeaveRequestDialogOpen(false); setLeaveRequestForm({ leaveType: "annual", startDate: "", endDate: "", reason: "" }); toast({ title: tCommon('savedSuccessfully') }); } });
   const saveSickLeaveMutation = useMutation({ mutationFn: async (d: typeof sickLeaveForm) => { const s = new Date(d.startDate); const e = new Date(d.endDate); return apiRequest("POST", `/api/hr/employees/${id}/sick-leaves`, { ...d, userId: id, totalDays: Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1, paymentPercent: parseInt(d.paymentPercent) || 100 }); }, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/hr/employees', id, 'sick-leaves'] }); setSickLeaveDialogOpen(false); setSickLeaveForm({ startDate: "", endDate: "", diagnosis: "", hospitalName: "", doctorName: "", documentNumber: "", isPaid: true, paymentPercent: "100" }); toast({ title: tCommon('savedSuccessfully') }); } });
   const saveBusinessTripMutation = useMutation({ mutationFn: async (d: typeof businessTripForm) => { const s = new Date(d.startDate); const e = new Date(d.endDate); const dt = Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1; const da = parseFloat(d.dailyAllowance) || 0; const tc = parseFloat(d.transportCost) || 0; const ac = parseFloat(d.accommodationCost) || 0; return apiRequest("POST", `/api/employees/${id}/business-trips`, { ...d, userId: id, totalDays: dt, totalCost: da * dt + tc + ac, status: "planned" }); }, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/employees', id, 'business-trips'] }); setBusinessTripDialogOpen(false); setBusinessTripForm({ destination: "", purpose: "", startDate: "", endDate: "", dailyAllowance: "", transportCost: "", accommodationCost: "" }); toast({ title: tCommon('savedSuccessfully') }); } });
-  const setPasswordMutation = useMutation({ mutationFn: async (p: { password: string }) => apiRequest("POST", `/api/hr/employees/${id}/set-password`, { password: p.password }), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/hr/employees', id] }); setPasswordDialogOpen(false); setPasswordForm({ password: "", confirmPassword: "" }); toast({ title: "Parol muvaffaqiyatli o'rnatildi" }); } });
   const updateRoleMutation = useMutation({ mutationFn: async (r: string) => apiRequest("PATCH", `/api/hr/employees/${id}`, { role: r }), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/hr/employees', id] }); toast({ title: "Rol muvaffaqiyatli yangilandi" }); } });
   const updateEmployeeMutation = useMutation({ mutationFn: async (d: typeof editForm) => apiRequest("PATCH", `/api/hr/employees/${id}`, d), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/hr/employees', id] }); queryClient.invalidateQueries({ queryKey: ['/api/hr/employees'] }); setEditDialogOpen(false); toast({ title: "Xodim ma'lumotlari muvaffaqiyatli yangilandi" }); } });
 
-  const handleSetPassword = (): void => { if (passwordForm.password !== passwordForm.confirmPassword) { toast({ title: "Parollar mos kelmaydi", variant: "destructive" }); return; } if (passwordForm.password.length < 6) { toast({ title: "Parol kamida 6 ta belgidan iborat bo'lishi kerak", variant: "destructive" }); return; } setPasswordMutation.mutate({ password: passwordForm.password }); };
   const calculateWorkExperience = () => { if (!employee?.hireDate) return tCommon('unknown'); const h = new Date(employee.hireDate); const n = new Date(); const y = Math.floor((n.getTime() - h.getTime()) / (365.25 * 24 * 60 * 60 * 1000)); const m = Math.floor(((n.getTime() - h.getTime()) % (365.25 * 24 * 60 * 60 * 1000)) / (30.44 * 24 * 60 * 60 * 1000)); return y > 0 ? `${y} ${t('years')} ${m} ${t('months')}` : `${m} ${t('months')}`; };
 
   const today = new Date(); const in30 = new Date(today); in30.setDate(today.getDate() + 30);
@@ -320,7 +315,7 @@ export default function EmployeeProfile() {
       /></div>
       <ProfileHeader employee={employee} abcData={abcData} orgStructureData={orgStructureData} contracts={contracts} certificatesData={certificatesData} payrollSummary={payrollSummary} salaryHistory={salaryHistory} expiredCerts={expiredCerts} expiringSoonCerts={expiringSoonCerts} getInitials={getInitials} onEdit={() => setEditDialogOpen(true)} attendanceStats={attStats} attendanceData={attendanceData} />
       {isAdminOrHrManager && (
-        <Card className="border border-border shadow-none"><CardContent className="p-4 flex flex-wrap items-center gap-6"><div className="flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground"><Shield className="h-3.5 w-3.5" /> {t("kirishHuquqlari")}</div><Select value={employee.role || "employee"} onValueChange={(val) => updateRoleMutation.mutate(val)} disabled={updateRoleMutation.isPending}><SelectTrigger className="h-9 text-xs w-44"><SelectValue /></SelectTrigger><SelectContent>{(Array.isArray(ROLE_OPTIONS) ? ROLE_OPTIONS : []).map(r => <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>)}</SelectContent></Select><div className="flex items-center gap-2">{employee.hasPassword ? <Badge className="bg-green-100 text-green-800 text-xs"><ShieldCheck className="h-3 w-3 mr-1" /> {t("ornatilgan")}</Badge> : <Badge className="bg-red-50 text-[var(--ep-red)] text-xs"><ShieldAlert className="h-3 w-3 mr-1" /> {t("ornatilmagan")}</Badge>}<Button size="sm" variant="outline" onClick={() => setPasswordDialogOpen(true)}><KeyRound className="h-3 w-3 mr-1" />{t("Parol")}</Button></div></CardContent></Card>
+        <Card className="border border-border shadow-none"><CardContent className="p-4 flex flex-wrap items-center gap-6"><div className="flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground"><Shield className="h-3.5 w-3.5" /> {t("kirishHuquqlari")}</div><Select value={employee.role || "employee"} onValueChange={(val) => updateRoleMutation.mutate(val)} disabled={updateRoleMutation.isPending}><SelectTrigger className="h-9 text-xs w-44"><SelectValue /></SelectTrigger><SelectContent>{(Array.isArray(ROLE_OPTIONS) ? ROLE_OPTIONS : []).map(r => <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>)}</SelectContent></Select><div className="flex items-center gap-2">{employee.hasPassword ? <Badge className="bg-green-100 text-green-800 text-xs"><ShieldCheck className="h-3 w-3 mr-1" /> {t("ornatilgan")}</Badge> : <Badge className="bg-red-50 text-[var(--ep-red)] text-xs"><ShieldAlert className="h-3 w-3 mr-1" /> {t("ornatilmagan")}</Badge>}</div></CardContent></Card>
       )}
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabNavigation isAdminOrHrManager={isAdminOrHrManager} isMachineOperator={isMachineOperator} status={employee.status} />
@@ -358,7 +353,6 @@ export default function EmployeeProfile() {
       <LeaveRequestDialog open={leaveRequestDialogOpen} onOpenChange={setLeaveRequestDialogOpen} form={leaveRequestForm} onChange={setLeaveRequestForm} onSave={() => saveLeaveRequestMutation.mutate(leaveRequestForm)} isPending={saveLeaveRequestMutation.isPending} />
       <SickLeaveDialog open={sickLeaveDialogOpen} onOpenChange={setSickLeaveDialogOpen} form={sickLeaveForm} onChange={setSickLeaveForm} onSave={() => saveSickLeaveMutation.mutate(sickLeaveForm)} isPending={saveSickLeaveMutation.isPending} />
       <BusinessTripDialog open={businessTripDialogOpen} onOpenChange={setBusinessTripDialogOpen} form={businessTripForm} onChange={setBusinessTripForm} onSave={() => saveBusinessTripMutation.mutate(businessTripForm)} isPending={saveBusinessTripMutation.isPending} />
-      <PasswordDialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen} form={passwordForm} onChange={setPasswordForm} onSave={handleSetPassword} isPending={setPasswordMutation.isPending} />
       <EditEmployeeDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} form={editForm} onChange={setEditForm} onSave={() => updateEmployeeMutation.mutate(editForm)} isPending={updateEmployeeMutation.isPending} allDepartments={allDepartments || []} allPositions={allPositions || []} />
     </div>
   );
