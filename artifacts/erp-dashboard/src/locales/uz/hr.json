@@ -621,5 +621,9 @@
   "disciplineStatus.closed": "Yopilgan",
   "disciplineStatus.pending": "Kutilmoqda",
   "disciplineStatus.resolved": "Hal qilindi",
-  "disciplineStatus.appealed": "Shikoyat qilindi"
+  "disciplineStatus.appealed": "Shikoyat qilindi",
+  "careerStatus.active": "Faol",
+  "careerStatus.completed": "Bajarilgan",
+  "careerStatus.on_hold": "To'xtatilgan",
+  "careerStatus.cancelled": "Bekor"
 }

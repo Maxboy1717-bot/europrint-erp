@@ -705,5 +705,9 @@
   "disciplineStatus.closed": "Ёпилган",
   "disciplineStatus.pending": "Кутилмоқда",
   "disciplineStatus.resolved": "Ҳал қилинди",
-  "disciplineStatus.appealed": "Шикоят қилинди"
+  "disciplineStatus.appealed": "Шикоят қилинди",
+  "careerStatus.active": "Фаол",
+  "careerStatus.completed": "Бажарилган",
+  "careerStatus.on_hold": "Тўхтатилган",
+  "careerStatus.cancelled": "Бекор"
 }

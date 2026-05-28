@@ -60,6 +60,7 @@ export default function RecruitingKanban() {
       }
       setLocation("/chat");
     } catch (err) {
+      // Non-critical: chat room may not exist yet; log for debugging only
       console.warn('[RecruitingKanban] context room init failed:', err);
     } finally {
       setOpeningContextRoom(null);

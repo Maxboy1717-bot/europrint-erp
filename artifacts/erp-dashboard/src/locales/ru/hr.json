@@ -621,5 +621,9 @@
   "disciplineStatus.closed": "Закрыто",
   "disciplineStatus.pending": "В ожидании",
   "disciplineStatus.resolved": "Решено",
-  "disciplineStatus.appealed": "Обжаловано"
+  "disciplineStatus.appealed": "Обжаловано",
+  "careerStatus.active": "Активный",
+  "careerStatus.completed": "Завершено",
+  "careerStatus.on_hold": "Приостановлено",
+  "careerStatus.cancelled": "Отменено"
 }

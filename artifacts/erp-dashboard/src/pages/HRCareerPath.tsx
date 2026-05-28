@@ -20,19 +20,19 @@ import {
   TrendingUp, Plus, Search, Star, LayoutGrid, List,
 } from "lucide-react";
 import { useTranslation } from '@/lib/i18n';
-import { EPStatusPill } from "@/components/ep";
+import { EPStatusPill, EPErrorState } from "@/components/ep";
 import { type CareerPlan } from "./HRCareerPathTypes";
 import { NewPlanDialog } from "./HRCareerPathDialogs";
 
-const CAREER_STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  active:    { label: "Faol",           variant: "secondary"   },
-  completed: { label: "Bajarilgan",     variant: "default"     },
-  on_hold:   { label: "To'xtatilgan",   variant: "outline"     },
-  cancelled: { label: "Bekor",          variant: "destructive" },
-};
-
 function PlanCard({ plan }: { plan: CareerPlan }) {
   const { t } = useTranslation("common");
+  const { t: tHr } = useTranslation("hr");
+  const CAREER_STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+    active:    { label: tHr("careerStatus.active"),    variant: "secondary"   },
+    completed: { label: tHr("careerStatus.completed"), variant: "default"     },
+    on_hold:   { label: tHr("careerStatus.on_hold"),   variant: "outline"     },
+    cancelled: { label: tHr("careerStatus.cancelled"), variant: "destructive" },
+  };
   const st = CAREER_STATUS_MAP[plan.status || "active"] || CAREER_STATUS_MAP.active;
   const pct = plan.progress_percent ?? 0;
   const daysLeft = plan.target_date
@@ -89,16 +89,24 @@ function PlanCard({ plan }: { plan: CareerPlan }) {
 
 export default function HRCareerPath() {
   const { t } = useTranslation("common");
+  const { t: tHr } = useTranslation("hr");
   const [view, setView] = useState<"cards" | "table">("cards");
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [newOpen, setNewOpen] = useState(false);
 
-  const { data: rawPlans = [], isLoading } = useQuery<CareerPlan[]>({
+  const CAREER_STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+    active:    { label: tHr("careerStatus.active"),    variant: "secondary"   },
+    completed: { label: tHr("careerStatus.completed"), variant: "default"     },
+    on_hold:   { label: tHr("careerStatus.on_hold"),   variant: "outline"     },
+    cancelled: { label: tHr("careerStatus.cancelled"), variant: "destructive" },
+  };
+
+  const { data: rawPlans = [], isLoading, isError, refetch } = useQuery<CareerPlan[]>({
     queryKey: ["/api/succession/career-plans"],
   });
 
-  const all = rawPlans as CareerPlan[];
+  const all = Array.isArray(rawPlans) ? rawPlans : [];
 
   const filtered = all
     .filter(p => statusFilter === "all" || p.status === statusFilter)
@@ -132,6 +140,8 @@ export default function HRCareerPath() {
           <Plus className="h-3.5 w-3.5 mr-1" />{t("yangiReja")}
         </Button>
       </div>
+
+      {isError && <EPErrorState onRetry={refetch} />}
 
       <div className="flex-1 overflow-auto p-6 space-y-5">
         {/* Stats row */}
