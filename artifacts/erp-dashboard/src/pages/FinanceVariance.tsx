@@ -44,6 +44,20 @@ interface VarianceResult {
   };
 }
 
+function toCsv(rows: string[][]): string {
+  return "﻿" + rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+}
+
+function downloadCsv(filename: string, csv: string) {
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function VarianceBar({ label, value, favorable }: { label: string; value: number; favorable: boolean }) {
   const color = value === 0 ? "#6b7280" : favorable ? "#10b981" : "#ef4444";
   return (
@@ -94,6 +108,30 @@ export default function FinanceVariance() {
       ]
     : [];
 
+  const handleExportCsv = () => {
+    if (!data) return;
+    const rows: string[][] = [
+      [
+        "Buyurtma", "Mahsulot", "MPV", "MQV", "LRV", "LEV", "OV",
+        "Jami farq", "Standart tannarx", "Haqiqiy tannarx", "Farq %",
+      ],
+      [
+        data.orderNumber || `#${data.orderId}`,
+        data.productName ?? "",
+        String(data.mpv),
+        String(data.mqv),
+        String(data.lrv),
+        String(data.lev),
+        String(data.ov),
+        String(data.totalVariance),
+        String(data.standardTotalCost),
+        String(data.actualTotalCost),
+        String(data.variancePct),
+      ],
+    ];
+    downloadCsv(`variance-${data.orderNumber || data.orderId}.csv`, toCsv(rows));
+  };
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <EPPageHeader
@@ -106,7 +144,7 @@ export default function FinanceVariance() {
               variant="outline"
               size="sm"
               className="gap-1.5"
-              onClick={() => window.open(`/api/finance/variance/export?orderId=${searchId}`, "_blank")}
+              onClick={handleExportCsv}
             >
               <Download className="h-4 w-4" />
               Export CSV

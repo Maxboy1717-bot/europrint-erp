@@ -4,8 +4,7 @@
  */
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,21 +17,9 @@ import {
   Package,
   Building2,
   Download,
-  Calculator
 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { apiRequest } from "@/lib/api-request";
 
-import { 
+import {
   InventoryCount, 
   InventoryCountLine, 
   AssetInventoryItem, 
@@ -54,6 +41,20 @@ import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 
+function toCsv(rows: string[][]): string {
+  return "﻿" + rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+}
+
+function downloadCsv(filename: string, csv: string) {
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function InventoryValuation() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -66,7 +67,6 @@ export default function InventoryValuation() {
   const [isLinesDialogOpen, setIsLinesDialogOpen] = useState(false);
   const [selectedCount, setSelectedCount] = useState<InventoryCount | null>(null);
   const [isCreateAssetDialogOpen, setIsCreateAssetDialogOpen] = useState(false);
-  const [isRecalcConfirmOpen, setIsRecalcConfirmOpen] = useState(false);
 
   const [newCountForm, setNewCountForm] = useState<InventoryValuationCountForm>({
     countDate: new Date().toISOString().split("T")[0],
@@ -118,19 +118,31 @@ export default function InventoryValuation() {
     setIsCreateAssetDialogOpen,
   });
 
-  const queryClient = useQueryClient();
-
-  const recalculateMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/wms/inventory/recalculate-valuation"),
-    onSuccess: () => {
-      toast({ title: "Baholash yangilandi" });
-      queryClient.invalidateQueries({ queryKey: ["/api/finance-extended/inventory-counts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/finance-extended/asset-inventory"] });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Xatolik", description: error.message, variant: "destructive" });
-    },
-  });
+  const handleExportCsv = () => {
+    const rows = Array.isArray(inventoryCounts) ? inventoryCounts : [];
+    if (rows.length === 0) {
+      toast({ title: "Eksport uchun ma'lumot yo'q", variant: "destructive" });
+      return;
+    }
+    const header = [
+      "Hisob raqami", "Sana", "Ombor", "Turi", "Holat",
+      "Jami pozitsiya", "Sanaldi", "Farqli", "Kitob qiymati", "Sanalgan qiymat", "Farq qiymati",
+    ];
+    const body = rows.map(c => [
+      c.countNumber,
+      c.countDate,
+      c.warehouseId ?? "",
+      c.countType,
+      c.status,
+      String(c.totalItems ?? 0),
+      String(c.countedItems ?? 0),
+      String(c.varianceItems ?? 0),
+      String(c.totalBookValue ?? 0),
+      String(c.totalCountedValue ?? 0),
+      String(c.totalVariance ?? 0),
+    ]);
+    downloadCsv(`inventarizatsiya-${new Date().toISOString().split("T")[0]}.csv`, toCsv([header, ...body]));
+  };
 
   const filteredCounts = (Array.isArray(inventoryCounts) ? inventoryCounts : []).filter(count => {
     if (searchQuery) {
@@ -181,21 +193,11 @@ export default function InventoryValuation() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => window.open("/api/wms/inventory/valuation/export?format=csv", "_blank")}
+                onClick={handleExportCsv}
                 data-testid="button-export-csv"
               >
                 <Download className="h-4 w-4 mr-1" />
                 Export CSV
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setIsRecalcConfirmOpen(true)}
-                disabled={recalculateMutation.isPending}
-                data-testid="button-recalculate"
-              >
-                <Calculator className="h-4 w-4 mr-1" />
-                {t("qaytaHisoblash") || "Qayta hisoblash"}
               </Button>
               <Button
                 variant="secondary"
@@ -344,28 +346,6 @@ export default function InventoryValuation() {
         countLines={countLines}
         isLoading={linesLoading}
       />
-
-      <AlertDialog open={isRecalcConfirmOpen} onOpenChange={setIsRecalcConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Qayta hisoblash</AlertDialogTitle>
-            <AlertDialogDescription>
-              Inventar bahosini qayta hisoblashni xohlaysizmi?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setIsRecalcConfirmOpen(false);
-                recalculateMutation.mutate();
-              }}
-            >
-              Tasdiqlash
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

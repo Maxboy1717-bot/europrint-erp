@@ -66,10 +66,15 @@ export default function WarehouseHub12() {
 
   const transferMutation = useMutation({
     mutationFn: (data: typeof transferForm) =>
-      apiRequest("POST", "/api/wms/transfers", data),
+      apiRequest("POST", "/api/warehouse/transfers", {
+        from_warehouse_id: Number(data.fromLocationId) || undefined,
+        to_warehouse_id: Number(data.toLocationId) || undefined,
+        material_id: Number(data.materialId) || undefined,
+        quantity: Number(data.quantity),
+      }),
     onSuccess: () => {
       toast({ title: tLabel("common.kochirishYaratildi", "Ko'chirish yaratildi") });
-      queryClient.invalidateQueries({ queryKey: ["/api/wms/transfers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/warehouse/transfers"] });
       setTransferOpen(false);
       setTransferForm({ fromLocationId: "default", toLocationId: "", materialId: "", quantity: 1 });
     },

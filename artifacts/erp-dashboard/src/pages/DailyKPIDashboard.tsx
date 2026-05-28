@@ -17,6 +17,20 @@ import { AIInsightsSection } from "./daily-kpi/AIInsightsSection";
 import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+function toCsv(rows: string[][]): string {
+  return "﻿" + rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+}
+
+function downloadCsv(filename: string, csv: string) {
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function DailyKPIDashboard() {
   const { t } = useTranslation("common");
   const { dateFrom, dateTo } = getWeeklyDateRange();
@@ -34,6 +48,25 @@ export default function DailyKPIDashboard() {
   })).reverse() || [];
 
   const netCashPositive = (todayMetrics?.dailyNetCash || 0) >= 0;
+
+  const handleExportCsv = () => {
+    const m = todayMetrics;
+    if (!m) return;
+    const rows: string[][] = [
+      ["Ko'rsatkich", "Qiymat"],
+      ["Sana", m.metricDate ?? new Date().toISOString().split("T")[0]],
+      ["Pul qoldig'i", String(m.cashBalance ?? 0)],
+      ["Kunlik daromad", String(m.dailyIncome ?? 0)],
+      ["Kunlik xarajat", String(m.dailyExpense ?? 0)],
+      ["Pul oqimi", String(m.dailyNetCash ?? 0)],
+      ["Debitorlik qarzi", String(m.totalReceivables ?? 0)],
+      ["Kreditorlik qarzi", String(m.totalPayables ?? 0)],
+      ["Bugungi buyurtmalar", String(m.newOrdersCount ?? 0)],
+      ["Buyurtmalar qiymati", String(m.newOrdersValue ?? 0)],
+      ["Inventar qiymati", String(m.inventoryValue ?? 0)],
+    ];
+    downloadCsv(`kunlik-kpi-${m.metricDate ?? new Date().toISOString().split("T")[0]}.csv`, toCsv(rows));
+  };
 
   if (isError) return <EPErrorState onRetry={refetchToday}  error={error} />;
 
@@ -56,7 +89,7 @@ export default function DailyKPIDashboard() {
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className="bg-white/10 border-white/30 text-white">{new Date().toLocaleDateString("uz-UZ", { weekday: "long", day: "numeric", month: "long" })}</Badge>
               <Button size="sm" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20" onClick={() => refetchToday()} data-testid="button-refresh-metrics"><RefreshCw className="h-4 w-4 mr-1" />{t("refresh")}</Button>
-              <Button size="sm" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20" onClick={() => window.open("/api/reports/daily-kpi/export?format=csv", "_blank")} data-testid="button-export-csv"><FileDown className="h-4 w-4 mr-1" />CSV</Button>
+              <Button size="sm" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20" onClick={handleExportCsv} disabled={!todayMetrics} data-testid="button-export-csv"><FileDown className="h-4 w-4 mr-1" />CSV</Button>
             </div>
           </div>
         </div>
