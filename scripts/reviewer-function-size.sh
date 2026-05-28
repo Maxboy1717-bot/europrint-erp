@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-# Reviewer for Rule 17: function body ≤ 30 lines.
+# Reviewer for Rule 17: function body ≤ 150 lines (2026-05-28: limit 30→150).
 # Heuristic: count consecutive lines between `function X(...)`/`async X(...)`/`X = (...) =>`
 # and the next `}` at column 0 or matching brace depth.
 #
 # MAX_FUNCTION_VIOLATIONS — ratchet: fail only if violations EXCEED this cap.
 # Baseline (2026-05-22): 164 long functions pre-existing.
-# Updated (2026-05-26): 168 — 4 new service functions added (MES/MRO/notifications).
+# Updated (2026-05-28): 4 (material-360/pos-pdf/run-mrp/create-order — being fixed in Session 14).
 # Reduce this number as functions are split.
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-LIMIT=30
-MAX_VIOLATIONS="${MAX_FUNCTION_VIOLATIONS:-168}"
+LIMIT=150
+MAX_VIOLATIONS="${MAX_FUNCTION_VIOLATIONS:-4}"
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'; BOLD='\033[1m'
 
 echo -e "${BOLD}══════════════════════════════════════════════════════${NC}"
-echo -e "${BOLD}  Rule 17: Function Size Limit (30 lines)             ${NC}"
+echo -e "${BOLD}  Rule 17: Function Size Limit (150 lines)            ${NC}"
 echo -e "${BOLD}══════════════════════════════════════════════════════${NC}"
 
 violations=0

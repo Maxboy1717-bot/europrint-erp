@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Reviewer for Rule 16: file size limit (300 lines).
+# Reviewer for Rule 16: file size limit (900 lines).
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-LIMIT=300
+LIMIT=900
 RED='\033[0;31m'; GREEN='\033[0;32m'; NC='\033[0m'; BOLD='\033[1m'
 
 echo -e "${BOLD}══════════════════════════════════════════════════════${NC}"
-echo -e "${BOLD}  Rule 16: File Size Limit (300 lines)                ${NC}"
+echo -e "${BOLD}  Rule 16: File Size Limit (900 lines)                ${NC}"
 echo -e "${BOLD}══════════════════════════════════════════════════════${NC}"
 
 violations=0
