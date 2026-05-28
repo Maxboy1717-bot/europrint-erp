@@ -88,8 +88,8 @@ export default function GLDocuments() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (body: { date: string; description: string; lines: { accountCode: string; debit: number; credit: number }[] }) =>
-      apiRequest("POST", "/api/finance/gl/documents", body),
+    mutationFn: (body: { documentDate: string; description: string; lines: { accountCode: string; debit: number; credit: number }[] }) =>
+      apiRequest("POST", "/api/fi/gl-documents", body),
     onSuccess: () => {
       toast({ title: "Hujjat yaratildi" });
       queryClient.invalidateQueries({ queryKey: ["/api/finance/gl/documents"] });
@@ -104,7 +104,7 @@ export default function GLDocuments() {
 
   const handleCreateSubmit = () => {
     createMutation.mutate({
-      date: form.date,
+      documentDate: form.date,
       description: form.description,
       lines: [
         { accountCode: "1000", debit: form.totalAmount, credit: 0 },

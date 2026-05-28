@@ -117,8 +117,8 @@ export default function GLChartOfAccounts() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (body: { code: string; name: string; type: string; parentCode?: string }) =>
-      apiRequest("POST", "/api/finance/gl/accounts", body),
+    mutationFn: (body: { accountNumber: string; accountName: string; accountType?: string }) =>
+      apiRequest("POST", "/api/gl/accounts", body),
     onSuccess: () => {
       toast({ title: "Hisob qo'shildi" });
       queryClient.invalidateQueries({ queryKey: ["/api/finance/gl/chart-of-accounts"] });
@@ -132,14 +132,11 @@ export default function GLChartOfAccounts() {
   });
 
   const handleCreateSubmit = () => {
-    const body: { code: string; name: string; type: string; parentCode?: string } = {
-      code: form.code,
-      name: form.name,
-      type: form.type,
+    const body: { accountNumber: string; accountName: string; accountType?: string } = {
+      accountNumber: form.code,
+      accountName: form.name,
+      accountType: form.type,
     };
-    if (form.parentCode.trim()) {
-      body.parentCode = form.parentCode.trim();
-    }
     createMutation.mutate(body);
   };
 

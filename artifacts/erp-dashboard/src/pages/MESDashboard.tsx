@@ -95,10 +95,11 @@ export default function MESDashboard() {
   const { data: sessionsRaw, isLoading: seLoad } = useQuery<unknown>({ queryKey: ["/api/mes/sessions"] });
 
   const startMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("PATCH", `/api/mes/work-orders/${id}/start`),
+    mutationFn: (id: number) => apiRequest("POST", `/api/mes/sessions/${id}/start`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mes/tasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/mes/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mes/sessions"] });
       toast({ title: tLabel('common.MESDashboard.muvaffaqiyatli', "Muvaffaqiyatli"), description: tLabel('common.MESDashboard.vazifaBoshlandi', "Vazifa boshlandi") });
     },
     onError: () => toast({
@@ -109,10 +110,11 @@ export default function MESDashboard() {
   });
 
   const completeMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("PATCH", `/api/mes/work-orders/${id}/complete`),
+    mutationFn: (id: number) => apiRequest("POST", `/api/mes/sessions/${id}/complete`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mes/tasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/mes/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mes/sessions"] });
       toast({ title: tLabel('common.MESDashboard.muvaffaqiyatli', "Muvaffaqiyatli"), description: tLabel('common.MESDashboard.vazifaYakunlandi', "Vazifa yakunlandi") });
     },
     onError: () => toast({

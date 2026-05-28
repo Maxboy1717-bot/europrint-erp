@@ -47,7 +47,7 @@ export default function QCDashboard() {
   const brakList:  QcBrak[]           = Array.isArray(braks)    ? braks    : [];
 
   const approveMutation = useMutation({
-    mutationFn: (id: string) => apiRequest("PATCH", `/api/qc/inspections/${id}/approve`),
+    mutationFn: (id: string) => apiRequest("PATCH", `/api/qc/inspections/${id}`, { status: "approved" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/qc/reclamations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/qc/dashboard/stats"] });
@@ -62,7 +62,7 @@ export default function QCDashboard() {
 
   const rejectMutation = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      apiRequest("PATCH", `/api/qc/inspections/${id}/reject`, { reason }),
+      apiRequest("PATCH", `/api/qc/inspections/${id}`, { status: "rejected", reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/qc/reclamations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/qc/dashboard/stats"] });
