@@ -11,13 +11,36 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GoalsCompatService } from './goals-compat.service';
-import { CompatBodyDto } from './dto/compat-body.dto';
 import { unwrapOrInternal } from '@common/http-result';
+import { z } from 'zod';
 import {
   GoalAclTranslator,
   type LegacyGoalRow,
   type GoalDto,
 } from './acl/goal-acl';
+
+// P1.8.2: proper Zod DTOs for goal mutations (replaces passthrough CompatBodyDto)
+const CreateGoalSchema = z.object({
+  title:       z.string().min(1).max(200),
+  description: z.string().optional(),
+  targetValue: z.number().positive().optional(),
+  // P1.8.3: dates required so goals always have a valid time window
+  startDate:   z.string().min(1, 'Boshlanish sanasi kerak'),
+  endDate:     z.string().min(1, 'Tugash sanasi kerak'),
+  category:    z.string().optional(),
+  status:      z.string().optional(),
+  assigneeId:  z.number().int().positive().optional(),
+}).passthrough();
+
+const UpdateGoalSchema = z.object({
+  title:       z.string().min(1).max(200).optional(),
+  description: z.string().optional(),
+  targetValue: z.number().positive().optional(),
+  startDate:   z.string().min(1).optional(),
+  endDate:     z.string().min(1).optional(),
+  category:    z.string().optional(),
+  status:      z.string().optional(),
+}).passthrough();
 
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
@@ -66,8 +89,10 @@ export class GoalsCompatController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createGoal(@Body() body: CompatBodyDto) {
-    return unwrapOrInternal(await this.svc.createGoal(body));
+  // P1.8.2: validate goal fields; P1.8.3: startDate/endDate required
+  async createGoal(@Body() body: unknown) {
+    const dto = CreateGoalSchema.parse(body);
+    return unwrapOrInternal(await this.svc.createGoal(dto));
   }
 
   @Get(':id')
@@ -76,14 +101,17 @@ export class GoalsCompatController {
   }
 
   @Put(':id')
-  async updateGoal(@Param('id') id: string, @Body() body: CompatBodyDto) {
-    return unwrapOrInternal(await this.svc.updateGoal(id, body));
+  // P1.8.2: validate update fields
+  async updateGoal(@Param('id') id: string, @Body() body: unknown) {
+    const dto = UpdateGoalSchema.parse(body);
+    return unwrapOrInternal(await this.svc.updateGoal(id, dto));
   }
 
   // P1.8.1: FE uses PATCH not PUT — add PATCH alias that delegates to same handler
   @Patch(':id')
-  async patchGoal(@Param('id') id: string, @Body() body: CompatBodyDto) {
-    return unwrapOrInternal(await this.svc.updateGoal(id, body));
+  async patchGoal(@Param('id') id: string, @Body() body: unknown) {
+    const dto = UpdateGoalSchema.parse(body);
+    return unwrapOrInternal(await this.svc.updateGoal(id, dto));
   }
 
   @Delete(':id')
