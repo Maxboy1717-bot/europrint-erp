@@ -601,5 +601,10 @@
   "muddatSoat": "Muddat (soat)",
   "k1EslatmaSoatQolgunicha": "1-eslatma (necha soat qolganda)",
   "k2EslatmaSoatQolgunicha": "2-eslatma (necha soat qolganda)",
-  "haliMarshrutlashQoidasiYoqYuqoridagi": "Hali marshrutlash qoidasi yo'q. Yuqoridagi shakl orqali qo'shing."
+  "haliMarshrutlashQoidasiYoqYuqoridagi": "Hali marshrutlash qoidasi yo'q. Yuqoridagi shakl orqali qo'shing.",
+  "shiftScheduleTitle": "Smena Jadvali",
+  "totalEmployeesLabel": "Jami Xodimlar",
+  "morningShiftLabel": "Ertalabki Smena",
+  "eveningShiftLabel": "Kechki Smena",
+  "nightShiftLabel": "Tungi Smena"
 }

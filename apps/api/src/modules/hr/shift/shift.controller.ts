@@ -6,7 +6,8 @@
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
   Controller, UseGuards, Get, Post, Patch, Delete, HttpCode, HttpStatus,
-  Body, Param, ParseIntPipe, Query, Logger, UseInterceptors, BadRequestException,
+  Body, Param, ParseIntPipe, Query, Req, Logger, UseInterceptors,
+  BadRequestException, UnauthorizedException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -63,6 +64,8 @@ export class ShiftController {
   @ApiOperation({ summary: 'Shift tayinlash' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
+  // P1.9.3: employees cannot assign shifts — managers/admins only
+  @Roles('admin', 'manager', 'supervisor', 'hr_manager')
   @Post()
   async assign(@Body() body: AssignShiftDto) {
     // Accept employee_id (numeric) or user_id (string from FE /api/users list)
@@ -95,12 +98,20 @@ export class ShiftController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('swap-request')
-  async requestSwap(@Body() body: RequestSwapDto) {
-    // Accept string or number IDs; resolve shift_id from employee+date if not provided
-    const fromEmpId = typeof body.from_employee_id === 'string'
-      ? (parseInt(body.from_employee_id, 10) || 0) : (body.from_employee_id ?? 0);
-    const toEmpId = typeof body.to_employee_id === 'string'
-      ? (parseInt(body.to_employee_id, 10) || 0) : (body.to_employee_id ?? 0);
+  // P1.9.2: use JWT employee ID as fallback — never 0
+  async requestSwap(@Body() body: RequestSwapDto, @Req() req: { user?: { employeeId?: number } }) {
+    const jwtEmpId = req.user?.employeeId;
+    if (!jwtEmpId) throw new UnauthorizedException('Employee ID topilmadi');
+
+    const fromEmpIdRaw = typeof body.from_employee_id === 'string'
+      ? parseInt(body.from_employee_id, 10) : body.from_employee_id;
+    const toEmpIdRaw = typeof body.to_employee_id === 'string'
+      ? parseInt(body.to_employee_id, 10) : body.to_employee_id;
+
+    // Fall back to JWT employee ID — never allow 0
+    const fromEmpId = (fromEmpIdRaw && fromEmpIdRaw > 0) ? fromEmpIdRaw : jwtEmpId;
+    const toEmpId = (toEmpIdRaw && toEmpIdRaw > 0) ? toEmpIdRaw : 0;
+    if (!toEmpId) throw new BadRequestException('to_employee_id kerak');
     let fromShiftId = body.from_shift_id ?? 0;
     if (!fromShiftId && fromEmpId && body.shift_date) {
       const r = await this.svc.findShiftByEmployeeAndDate(fromEmpId, body.shift_date);
