@@ -601,5 +601,11 @@
   "muddatSoat": "Срок (часов)",
   "k1EslatmaSoatQolgunicha": "Напоминание 1 (за сколько часов)",
   "k2EslatmaSoatQolgunicha": "Напоминание 2 (за сколько часов)",
-  "haliMarshrutlashQoidasiYoqYuqoridagi": "Пока нет правил маршрутизации. Добавьте через форму выше."
+  "haliMarshrutlashQoidasiYoqYuqoridagi": "Пока нет правил маршрутизации. Добавьте через форму выше.",
+  "shiftAssigned": "Смена назначена",
+  "shiftDeleted": "Смена удалена",
+  "swapRequestSent": "Запрос на обмен отправлен",
+  "swapRequestUpdated": "Запрос обновлён",
+  "errorOccurred": "Произошла ошибка",
+  "swapRequests": "Запросы на обмен"
 }

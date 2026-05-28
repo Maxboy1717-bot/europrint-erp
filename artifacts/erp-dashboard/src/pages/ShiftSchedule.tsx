@@ -101,10 +101,10 @@ export default function ShiftSchedule() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr-v2/shifts/schedule"] });
       queryClient.invalidateQueries({ queryKey: ["/api/hr/shifts/today"] });
-      toast({ title: "Smena tayinlandi" });
+      toast({ title: tHr("shiftAssigned") });
       setAssignDialog(null);
     },
-    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+    onError: () => toast({ title: tHr("errorOccurred"), variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
@@ -112,9 +112,9 @@ export default function ShiftSchedule() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr-v2/shifts/schedule"] });
       queryClient.invalidateQueries({ queryKey: ["/api/hr/shifts/today"] });
-      toast({ title: "Smena o'chirildi" });
+      toast({ title: tHr("shiftDeleted") });
     },
-    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+    onError: () => toast({ title: tHr("errorOccurred"), variant: "destructive" }),
   });
 
   const swapMutation = useMutation({
@@ -122,12 +122,12 @@ export default function ShiftSchedule() {
       apiRequest("POST", "/api/hr-v2/shifts/swap-request", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr-v2/shifts/swap-requests"] });
-      toast({ title: "Almashish so'rovi yuborildi" });
+      toast({ title: tHr("swapRequestSent") });
       setSwapDialog(null);
       setSwapToUserId("");
       setSwapReason("");
     },
-    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+    onError: () => toast({ title: tHr("errorOccurred"), variant: "destructive" }),
   });
 
   const approveMutation = useMutation({
@@ -135,9 +135,9 @@ export default function ShiftSchedule() {
       apiRequest("PATCH", `/api/hr-v2/shifts/${id}/approve-swap`, { action }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr-v2/shifts/swap-requests"] });
-      toast({ title: "So'rov yangilandi" });
+      toast({ title: tHr("swapRequestUpdated") });
     },
-    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+    onError: () => toast({ title: tHr("errorOccurred"), variant: "destructive" }),
   });
 
   const filteredEmployees = useMemo(() => {
@@ -235,7 +235,7 @@ export default function ShiftSchedule() {
           <Calendar className="h-4 w-4 mr-2" />{t("haftalikJadval")}
         </Button>
         <Button variant={activeTab === "swaps" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("swaps")} data-testid="tab-swaps">
-          <ArrowRightLeft className="h-4 w-4 mr-2" />Almashish So'rovlari
+          <ArrowRightLeft className="h-4 w-4 mr-2" />{tHr("swapRequests")}
           {pendingSwaps > 0 && <Badge className="ml-2 bg-[var(--ep-red)] text-white text-xs">{pendingSwaps}</Badge>}
         </Button>
       </div>

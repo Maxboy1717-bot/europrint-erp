@@ -601,5 +601,11 @@
   "muddatSoat": "Muddat (soat)",
   "k1EslatmaSoatQolgunicha": "1-eslatma (necha soat qolganda)",
   "k2EslatmaSoatQolgunicha": "2-eslatma (necha soat qolganda)",
-  "haliMarshrutlashQoidasiYoqYuqoridagi": "Hali marshrutlash qoidasi yo'q. Yuqoridagi shakl orqali qo'shing."
+  "haliMarshrutlashQoidasiYoqYuqoridagi": "Hali marshrutlash qoidasi yo'q. Yuqoridagi shakl orqali qo'shing.",
+  "shiftAssigned": "Smena tayinlandi",
+  "shiftDeleted": "Smena o'chirildi",
+  "swapRequestSent": "Almashish so'rovi yuborildi",
+  "swapRequestUpdated": "So'rov yangilandi",
+  "errorOccurred": "Xatolik yuz berdi",
+  "swapRequests": "Almashish So'rovlari"
 }

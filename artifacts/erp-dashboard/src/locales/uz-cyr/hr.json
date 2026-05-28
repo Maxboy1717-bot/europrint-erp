@@ -685,5 +685,11 @@
   "muddatSoat": "Муддат (соат)",
   "k1EslatmaSoatQolgunicha": "1-еслатма (неча соат қолганда)",
   "k2EslatmaSoatQolgunicha": "2-еслатма (неча соат қолганда)",
-  "haliMarshrutlashQoidasiYoqYuqoridagi": "Ҳали маршрутлаш қоидаси йўқ. Юқоридаги шакл орқали қўшинг."
+  "haliMarshrutlashQoidasiYoqYuqoridagi": "Ҳали маршрутлаш қоидаси йўқ. Юқоридаги шакл орқали қўшинг.",
+  "shiftAssigned": "Смена тайинланди",
+  "shiftDeleted": "Смена ўчирилди",
+  "swapRequestSent": "Алмашиш сўрови юборилди",
+  "swapRequestUpdated": "Сўров янгиланди",
+  "errorOccurred": "Хатолик юз берди",
+  "swapRequests": "Алмашиш Сўровлари"
 }
