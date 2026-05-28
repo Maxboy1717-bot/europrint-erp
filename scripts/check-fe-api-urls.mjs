@@ -3,9 +3,13 @@
  * check-fe-api-urls.mjs
  * FE da ishlatiladigan API URL'larni BE endpoint'lari bilan solishtiradi.
  * WARNING only — commit block qilmaydi.
+ *
+ * Cross-platform: fayllarni native Node `fs` bilan rekursiv aylanadi.
+ * (Avval `execSync('find ...')` ishlatilardi — Windows cmd.exe da `find`
+ * boshqa buyruq bo'lgani uchun jimgina fail bo'lardi → checker hech narsa
+ * solishtirmasdan o'tib ketardi.)
  */
-import { execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -19,19 +23,38 @@ const BE_DIR = path.join(ROOT, 'apps/api/src');
 const FE_URL_RE = /apiRequest\s*\(\s*["'][A-Z]+["']\s*,\s*["'`](\/?api\/[^"'`\s?#]+)/g;
 const BE_ROUTE_RE = /@(?:Get|Post|Patch|Put|Delete)\s*\(\s*['"`]([^'"`]+)['"`]/g;
 
+const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', 'coverage', '.git', '.next']);
+
+function* walk(dir) {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      if (SKIP_DIRS.has(entry.name)) continue;
+      yield* walk(path.join(dir, entry.name));
+    } else if (entry.isFile() && /\.(ts|tsx)$/.test(entry.name)) {
+      yield path.join(dir, entry.name);
+    }
+  }
+}
+
 function extractFromDir(dir, re) {
   const results = new Set();
-  try {
-    const files = execSync(`find "${dir}" -name "*.ts" -o -name "*.tsx" 2>/dev/null`, { encoding: 'utf8' })
-      .split('\n').filter(Boolean);
-    for (const f of files) {
-      try {
-        const content = readFileSync(f, 'utf8');
-        let m;
-        while ((m = re.exec(content)) !== null) results.add(m[1]);
-      } catch {}
+  for (const f of walk(dir)) {
+    let content;
+    try {
+      content = readFileSync(f, 'utf8');
+    } catch {
+      continue;
     }
-  } catch {}
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(content)) !== null) results.add(m[1]);
+  }
   return results;
 }
 
@@ -52,7 +75,9 @@ for (const url of feUrls) {
   if (!found) mismatches.push(url);
 }
 
-if (mismatches.length > 0) {
+if (feUrls.size === 0 || beRoutes.size === 0) {
+  console.warn(`\n⚠️  check-fe-api-urls: skanlash bo'sh natija qaytardi (FE=${feUrls.size}, BE=${beRoutes.size}). Yo'llarni tekshiring.\n`);
+} else if (mismatches.length > 0) {
   console.warn(`\n⚠️  ${mismatches.length} ta FE URL backend'da topilmadi:`);
   for (const u of mismatches.slice(0, 10)) console.warn(`   ${u}`);
   if (mismatches.length > 10) console.warn(`   ... va ${mismatches.length - 10} ta boshqa`);
