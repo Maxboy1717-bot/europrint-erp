@@ -3,7 +3,8 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, Param, ParseIntPipe, Patch, Post, Put, Query, Res, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -78,6 +79,31 @@ export class HrCompatSafetyController {
   async deleteDocument(@Param('id', ParseIntPipe) id: number) {
     await this.svc.archiveDocument(id);
     return { data: { deleted: true } };
+  }
+
+  // P1.23.1: GET incidents list (was missing — FE calls GET /api/hr/safety/incidents)
+  @Get('safety/incidents')
+  async getSafetyIncidents(@Query('status') status?: string) {
+    return unwrapOrInternal(await this.svc.getSafetyIncidents(status));
+  }
+
+  // P1.23.1: DELETE single incident
+  @Delete('safety/incidents/:id')
+  async deleteSafetyIncident(@Param('id', ParseIntPipe) id: number) {
+    await this.svc.deleteSafetyIncident(id);
+    return { data: { deleted: true } };
+  }
+
+  // P1.23.1: PDF export — GET /api/hr/safety/export/pdf
+  @Get('safety/export/pdf')
+  @Header('Content-Type', 'application/pdf')
+  @Header('Content-Disposition', 'attachment; filename="safety-incidents.pdf"')
+  async exportSafetyPdf(@Res() res: FastifyReply) {
+    const result = await this.svc.generateSafetyIncidentReport();
+    if (!result.ok) {
+      return res.status(500).send({ message: 'PDF yaratishda xatolik' });
+    }
+    return res.type('application/pdf').send(result.data);
   }
 
   @Post('safety/incidents')

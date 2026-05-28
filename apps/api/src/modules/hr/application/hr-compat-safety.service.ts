@@ -5,8 +5,9 @@
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { safeInt } from '../common/db-rows';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Result, AppError, Ok } from '@common/result';
 import { HR_COMPAT_SAFETY_REPO, type IHrCompatSafetyRepo } from '../domain/repositories/i-hr-compat-safety.repo';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 @Injectable()
 export class HrCompatSafetyService {
@@ -34,8 +35,50 @@ export class HrCompatSafetyService {
     return this.repo.archiveDocument(id);
   }
 
+  // P1.23.1: list + delete safety incidents
+  async getSafetyIncidents(statusFilter?: string) {
+    return this.repo.getSafetyIncidents(statusFilter);
+  }
+
+  async deleteSafetyIncident(id: number): Promise<void> {
+    return this.repo.deleteSafetyIncident(id);
+  }
+
   async createSafetyIncident(incidentType: unknown, severity: unknown, description: unknown, locationDesc: unknown, departmentId: unknown, incidentDate: unknown) {
     return this.repo.createSafetyIncident(incidentType, severity, description, locationDesc, departmentId, incidentDate);
+  }
+
+  // P1.23.1: PDF export — generates a simple safety incidents report
+  async generateSafetyIncidentReport(): Promise<Result<Buffer, AppError>> {
+    return safeCall(async () => {
+      const incidentsResult = await this.repo.getSafetyIncidents();
+      const incidents = incidentsResult.ok ? (incidentsResult.data as Record<string, unknown>[]) : [];
+
+      const pdf = await PDFDocument.create();
+      const page = pdf.addPage([595, 842]);
+      const font = await pdf.embedFont(StandardFonts.Helvetica);
+      const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+      let y = 800;
+      const draw = (text: string, opts?: { bold?: boolean; size?: number; color?: ReturnType<typeof rgb> }) => {
+        page.drawText(text.substring(0, 85), { x: 50, y, size: opts?.size ?? 10, font: opts?.bold ? bold : font, color: opts?.color ?? rgb(0, 0, 0) });
+        y -= (opts?.size ?? 10) + 5;
+      };
+
+      draw('EuroPrint — Xavfsizlik Hodisalari Hisoboti', { bold: true, size: 16 });
+      draw(`Sana: ${new Date().toLocaleDateString('uz-UZ')}  Jami: ${incidents.length} ta hodisa`, { size: 10, color: rgb(0.4, 0.4, 0.4) });
+      y -= 10;
+
+      for (const inc of incidents.slice(0, 40)) {
+        if (y < 80) break;
+        draw(`#${inc['id']} | ${inc['incident_type'] ?? '-'} | ${inc['severity'] ?? '-'} | ${inc['incident_date'] ?? '-'}`, { bold: true, size: 9 });
+        if (inc['description']) draw(`  ${String(inc['description']).substring(0, 80)}`, { size: 9, color: rgb(0.3, 0.3, 0.3) });
+        y -= 4;
+      }
+
+      const bytes = await pdf.save();
+      return Buffer.from(bytes);
+    });
   }
 
   async getSafetyTrainings(employeeId?: string) {

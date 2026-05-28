@@ -82,6 +82,33 @@ export class HrCompatSafetyRepository implements IHrCompatSafetyRepo {
       .where(sql`${hr_documents.id} = ${id} AND is_immutable = false`);
   }
 
+  // P1.23.1: list safety incidents (FE calls GET /api/hr/safety/incidents)
+  async getSafetyIncidents(statusFilter?: string): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await db.select({
+        id:                   safety_incidents.id,
+        incident_type:        safety_incidents.incident_type,
+        severity:             safety_incidents.severity,
+        description:          safety_incidents.description,
+        location_description: safety_incidents.location_description,
+        department_id:        safety_incidents.department_id,
+        incident_date:        safety_incidents.incident_date,
+        investigation_status: safety_incidents.investigation_status,
+        status:               safety_incidents.status,
+        created_at:           safety_incidents.created_at,
+      }).from(safety_incidents)
+        .where(statusFilter ? sql`${safety_incidents.status} = ${statusFilter}` : sql`1=1`)
+        .orderBy(sql`${safety_incidents.created_at} DESC`)
+        .limit(200);
+      return castTo<Row[]>(rows);
+    }, 'DB_ERROR');
+  }
+
+  // P1.23.1: delete safety incident (FE calls DELETE /api/hr/safety/incidents/:id)
+  async deleteSafetyIncident(id: number): Promise<void> {
+    await db.delete(safety_incidents).where(sql`${safety_incidents.id} = ${id}`);
+  }
+
   async createSafetyIncident(incidentType: unknown, severity: unknown, description: unknown, locationDesc: unknown, departmentId: unknown, incidentDate: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(safety_incidents).values({

@@ -17,6 +17,9 @@ export interface IHrCompatSafetyRepo {
   getDocuments(docType?: string, status?: string): Promise<Result<Row[]>>;
   getDocumentWorkflowRoutes(): Promise<Result<Row[]>>;
   archiveDocument(id: number): Promise<void>;
+  // P1.23.1: list + delete safety incidents (was missing — FE calls GET/DELETE)
+  getSafetyIncidents(statusFilter?: string): Promise<Result<Row[]>>;
+  deleteSafetyIncident(id: number): Promise<void>;
   createSafetyIncident(
     incidentType: unknown,
     severity: unknown,
