@@ -8495,5 +8495,8 @@
   "KanbanColumn.tsx.bosh": "Bo'sh",
   "CandidateCard.tsx.radEtish": "Rad etish",
   "CandidateCard.tsx.bekorQilish": "Bekor qilish",
-  "importQilish": "Import qilish"
+  "importQilish": "Import qilish",
+  "commandPaletteSearch": "Sahifa qidirish...",
+  "commandPaletteEmpty": "Topilmadi.",
+  "onlineStatus": "Onlayn · sinxronlangan"
 }

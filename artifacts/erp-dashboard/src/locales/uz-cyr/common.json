@@ -9917,5 +9917,8 @@
   "KanbanColumn.tsx.bosh": "Бўш",
   "CandidateCard.tsx.radEtish": "Рад етиш",
   "CandidateCard.tsx.bekorQilish": "Бекор қилиш",
-  "importQilish": "Импорт қилиш"
+  "importQilish": "Импорт қилиш",
+  "commandPaletteSearch": "Саҳифа қидириш...",
+  "commandPaletteEmpty": "Топилмади.",
+  "onlineStatus": "Онлайн · синхронланган"
 }

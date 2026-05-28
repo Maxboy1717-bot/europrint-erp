@@ -24,6 +24,7 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [, navigate] = useLocation();
   const { t } = useTranslation("navigation");
+  const { t: tCommon } = useTranslation("common");
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -55,9 +56,9 @@ export function CommandPalette() {
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Sahifa qidirish..." />
+      <CommandInput placeholder={tCommon("commandPaletteSearch")} />
       <CommandList>
-        <CommandEmpty>Topilmadi.</CommandEmpty>
+        <CommandEmpty>{tCommon("commandPaletteEmpty")}</CommandEmpty>
         {navGroups.map((g) => (
           <CommandGroup key={g.groupTitle} heading={g.groupTitle}>
             {g.items.map((item) => (

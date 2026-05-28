@@ -54,10 +54,11 @@ function ChatHeaderButton() {
 
 /** "● Onlayn · sinxronlangan" status chip shown next to logo on desktop */
 function OnlineStatusChip() {
+  const { t } = useTranslation("common");
   return (
     <span className="hidden xl:flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium select-none">
       <span className="h-1.5 w-1.5 rounded-full bg-green-500 shrink-0" />
-      Onlayn · sinxronlangan
+      {t("onlineStatus")}
     </span>
   );
 }

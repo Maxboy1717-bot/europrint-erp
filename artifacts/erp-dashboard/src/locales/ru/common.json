@@ -8495,5 +8495,8 @@
   "KanbanColumn.tsx.bosh": "Пусто",
   "CandidateCard.tsx.radEtish": "Отклонить",
   "CandidateCard.tsx.bekorQilish": "Отменить",
-  "importQilish": "Импортировать"
+  "importQilish": "Импортировать",
+  "commandPaletteSearch": "Поиск страницы...",
+  "commandPaletteEmpty": "Не найдено.",
+  "onlineStatus": "Онлайн · синхронизировано"
 }
