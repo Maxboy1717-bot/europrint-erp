@@ -9,6 +9,7 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { HrCompatSafetyService } from '../application/hr-compat-safety.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { z } from 'zod';
@@ -21,11 +22,14 @@ import {
   HrHealthLeaveSchema, HrHealthLeaveDto,
 } from './dto/hr.dto';
 
+interface AuthenticatedUser { id: number; sub?: number; }
+
 const GenerateMilestonesSchema = z.object({
   employeeId: z.union([z.string(), z.number()]).optional(),
 }).passthrough();
 
-const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
+// P1.12.2: EMPLOYEE added so leave-requests endpoints are accessible to regular employees
+const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER', 'EMPLOYEE'] as const;
 
 @ApiThrottle()
 @Controller('hr')
@@ -120,10 +124,26 @@ export class HrCompatSafetyController {
   }
 
   @Post('leave-requests')
-  @UsePipes(new ZodValidationPipe(HrHealthLeaveSchema))
-  async createLeaveRequest(@Body() body: HrHealthLeaveDto) {
-    const { employee_id, start_date, end_date, reason } = body;
-    const data = await this.svc.createLeaveRequest(employee_id, start_date, end_date, reason);
+  // P1.12.1: Accept both camelCase (FE) and snake_case inputs. employeeId falls back to JWT user.
+  async createLeaveRequest(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const LeaveFlexSchema = z.object({
+      employee_id: z.number().int().positive().optional(),
+      employeeId:  z.union([z.string(), z.number()]).optional(),
+      type:        z.string().optional(),
+      leaveType:   z.string().optional(),
+      leave_type:  z.string().optional(),
+      start_date:  z.string().min(1).optional(),
+      startDate:   z.string().min(1).optional(),
+      end_date:    z.string().min(1).optional(),
+      endDate:     z.string().min(1).optional(),
+      reason:      z.string().min(1).max(2000).optional(),
+    }).passthrough();
+    const dto = LeaveFlexSchema.parse(body ?? {});
+    const employeeId = dto.employee_id ?? (dto.employeeId ? Number(dto.employeeId) : null) ?? (user?.id ?? null);
+    const startDate  = dto.start_date ?? dto.startDate;
+    const endDate    = dto.end_date   ?? dto.endDate;
+    const reason     = dto.reason     ?? '';
+    const data = await this.svc.createLeaveRequest(employeeId, startDate, endDate, reason);
     return { data };
   }
 
