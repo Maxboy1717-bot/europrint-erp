@@ -114,4 +114,26 @@ export class HrCompatAService {
   async getVacancies(status?: string, isActive?: boolean) {
     return this.repo.getVacancies(status, isActive);
   }
+
+  // ─── Skills Catalog ──────────────────────────────────────────────────────────
+
+  async getSkillsCatalog() {
+    return this.repo.getSkillsCatalog();
+  }
+
+  async createSkillCatalog(data: { code: string; name: string; nameRu?: string; category?: string; description?: string }) {
+    return this.repo.createSkillCatalog(data);
+  }
+
+  async updateSkillCatalog(id: number, data: { name?: string; nameRu?: string; category?: string; description?: string }) {
+    return this.repo.updateSkillCatalog(id, data);
+  }
+
+  async deleteSkillCatalog(id: number) {
+    return this.repo.deleteSkillCatalog(id);
+  }
+
+  async deleteEmployeeSkill(id: number) {
+    return this.repo.deleteEmployeeSkill(id);
+  }
 }

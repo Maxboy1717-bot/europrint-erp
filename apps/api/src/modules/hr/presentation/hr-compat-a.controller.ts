@@ -10,9 +10,12 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
+  NotFoundException,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -214,8 +217,51 @@ export class HrCompatAController {
   }
 
   @Delete('employee-skills/:id')
-  async deleteEmployeeSkill(@Param('id') _id: string) {
-    return notImplemented('DELETE /hr/employee-skills/:id');
+  @HttpCode(HttpStatus.OK)
+  async deleteEmployeeSkill(@Param('id', ParseIntPipe) id: number) {
+    const r = await this.svc.deleteEmployeeSkill(id);
+    if (!r.ok) throw new NotFoundException(`Ko'nikma #${id} topilmadi`);
+    return r.data;
+  }
+
+  // ─── Skills Catalog: GET/POST/PATCH/DELETE /hr/skills ────────────────────────
+
+  @Get('skills')
+  async getSkillsCatalog() {
+    return unwrapOrDefault(await this.svc.getSkillsCatalog(), { items: [], total: 0 });
+  }
+
+  @Post('skills')
+  async createSkill(@Body() body: unknown) {
+    const CreateSkillSchema = z.object({
+      code:        z.string().min(1).max(50),
+      name:        z.string().min(1).max(200),
+      nameRu:      z.string().optional(),
+      category:    z.string().optional(),
+      description: z.string().optional(),
+    });
+    const dto = CreateSkillSchema.parse(body);
+    return unwrapOrInternal(await this.svc.createSkillCatalog(dto));
+  }
+
+  @Patch('skills/:id')
+  async updateSkill(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const UpdateSkillSchema = z.object({
+      name:        z.string().min(1).max(200).optional(),
+      nameRu:      z.string().optional(),
+      category:    z.string().optional(),
+      description: z.string().optional(),
+    });
+    const dto = UpdateSkillSchema.parse(body);
+    return unwrapOrInternal(await this.svc.updateSkillCatalog(id, dto));
+  }
+
+  @Delete('skills/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteSkill(@Param('id', ParseIntPipe) id: number) {
+    const r = await this.svc.deleteSkillCatalog(id);
+    if (!r.ok) throw new NotFoundException(`Ko'nikma #${id} topilmadi`);
+    return r.data;
   }
 
   @Post('hrc-tests/sessions')

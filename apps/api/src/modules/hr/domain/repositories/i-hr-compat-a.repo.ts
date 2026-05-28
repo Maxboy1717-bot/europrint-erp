@@ -37,7 +37,13 @@ export interface IHrCompatARepo {
     proficiencyScore: unknown,
     certifiedDate: unknown,
   ): Promise<Result<Row>>;
+  deleteEmployeeSkill(id: number): Promise<Result<{ deleted: number }>>;
   getEmployeeSkillsById(employeeId: number): Promise<Result<Row[]>>;
+  // Skills catalog (hr/skills)
+  getSkillsCatalog(): Promise<Result<{ items: Row[]; total: number }>>;
+  createSkillCatalog(data: { code: string; name: string; nameRu?: string; category?: string; description?: string }): Promise<Result<Row>>;
+  updateSkillCatalog(id: number, data: { name?: string; nameRu?: string; category?: string; description?: string }): Promise<Result<Row>>;
+  deleteSkillCatalog(id: number): Promise<Result<{ deleted: number }>>;
   createHealthCheckup(
     departmentId: unknown,
     departmentName: unknown,

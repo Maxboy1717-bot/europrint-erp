@@ -12,7 +12,7 @@ import {
   employee_360_assessments, hr_conflict_reports, employee_skills,
   hr_interview_sessions, hrc_iq_questions, hr_health_checkups,
   discipline_records, hrEmployees, hrDepartments, hrPositions,
-  vacancies,
+  vacancies, skill_catalog,
 } from '@shared/db';
 import { safeInt } from '../../common/db-rows';
 import { safeCall, Result } from '@common/result';
@@ -287,6 +287,79 @@ export class HrCompatARepository implements IHrCompatARepo {
         )
         .orderBy(sql`${vacancies.createdAt} DESC`);
       return castTo<Row[]>(rows);
+    }, 'DB_ERROR');
+  }
+
+  // ─── Skills Catalog (GET/POST/PATCH/DELETE /hr/skills) ───────────────────────
+
+  async getSkillsCatalog(): Promise<Result<{ items: Row[]; total: number }>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({
+          id:          skill_catalog.id,
+          code:        skill_catalog.code,
+          name:        skill_catalog.name,
+          nameRu:      skill_catalog.name_ru,
+          category:    skill_catalog.category,
+          is_active:   skill_catalog.is_active,
+          created_at:  skill_catalog.created_at,
+        })
+        .from(skill_catalog)
+        .where(eq(skill_catalog.is_active, true))
+        .orderBy(asc(skill_catalog.name));
+      return { items: castTo<Row[]>(rows), total: rows.length };
+    }, 'DB_ERROR');
+  }
+
+  async createSkillCatalog(data: { code: string; name: string; nameRu?: string; category?: string; description?: string }): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const rows = await db
+        .insert(skill_catalog)
+        .values({
+          code:     data.code,
+          name:     data.name,
+          name_ru:  data.nameRu ?? null,
+          category: data.category ?? null,
+        })
+        .returning();
+      return castTo<Row>(rows[0] ?? {});
+    }, 'DB_ERROR');
+  }
+
+  async updateSkillCatalog(id: number, data: { name?: string; nameRu?: string; category?: string; description?: string }): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const updateData: Record<string, unknown> = {};
+      if (data.name     !== undefined) updateData['name']     = data.name;
+      if (data.nameRu   !== undefined) updateData['name_ru']  = data.nameRu;
+      if (data.category !== undefined) updateData['category'] = data.category;
+      const rows = await db
+        .update(skill_catalog)
+        .set(updateData)
+        .where(eq(skill_catalog.id, id))
+        .returning();
+      return castTo<Row>(rows[0] ?? {});
+    }, 'DB_ERROR');
+  }
+
+  async deleteSkillCatalog(id: number): Promise<Result<{ deleted: number }>> {
+    return safeCall(async () => {
+      // Soft-delete: set is_active=false
+      await db
+        .update(skill_catalog)
+        .set({ is_active: false })
+        .where(eq(skill_catalog.id, id));
+      return { deleted: id };
+    }, 'DB_ERROR');
+  }
+
+  // ─── Delete Employee Skill Assignment ────────────────────────────────────────
+
+  async deleteEmployeeSkill(id: number): Promise<Result<{ deleted: number }>> {
+    return safeCall(async () => {
+      await db
+        .delete(employee_skills)
+        .where(eq(employee_skills.id, id));
+      return { deleted: id };
     }, 'DB_ERROR');
   }
 }
