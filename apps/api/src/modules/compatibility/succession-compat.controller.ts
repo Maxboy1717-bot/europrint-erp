@@ -80,23 +80,21 @@ export class SuccessionCompatController {
   }
 
   @Get('key-positions')
+  // P1.16.1: return bare array — FE uses Array.isArray() guard, wrapped {items,total} causes empty list
   async getKeyPositions() {
     const r = await this.svc.getKeyPositions();
-    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { items: rows, total: rows.length };
+    return r.ok && Array.isArray(r.data) ? r.data : [];
   }
 
   @Get('risks')
   async getSuccessionRisks() {
     const r = await this.svc.getSuccessionRisks();
-    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { items: rows, total: rows.length };
+    return r.ok && Array.isArray(r.data) ? r.data : [];
   }
 
   @Get('readiness-stats')
   async getReadinessStats() {
     const r = await this.svc.getReadinessStats();
     return unwrapOrDefault(r, { ready: 0, nearReady: 0, notReady: 0 });
-    return r.data;
   }
 }

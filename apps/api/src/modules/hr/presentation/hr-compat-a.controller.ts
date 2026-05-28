@@ -132,10 +132,30 @@ export class HrCompatAController {
   }
 
   @Post('health-checkups')
-  @UsePipes(new ZodValidationPipe(HrHealthCheckupSchema))
-  async createHealthCheckup(@Body() body: HrHealthCheckupDto) {
-    const { department_id, department_name, total_employees, examined_count, last_checkup_date, next_checkup_date } = body;
-    return unwrapOrThrow(await this.svc.createHealthCheckup(department_id, department_name, total_employees, examined_count, last_checkup_date, next_checkup_date));
+  // P1.21.1/P1.21.2: accept camelCase from FE; department_id optional (null when not provided)
+  async createHealthCheckup(@Body() body: unknown) {
+    const HealthCheckupFlexSchema = z.object({
+      department_id:      z.number().int().positive().optional(),
+      departmentId:       z.union([z.string(), z.number()]).optional(),
+      department_name:    z.string().min(1).max(200).optional(),
+      departmentName:     z.string().min(1).max(200).optional(),
+      total_employees:    z.number().int().min(0).optional(),
+      totalEmployees:     z.union([z.string(), z.number()]).optional(),
+      examined_count:     z.number().int().min(0).optional(),
+      examinedCount:      z.union([z.string(), z.number()]).optional(),
+      last_checkup_date:  z.string().optional(),
+      checkupDate:        z.string().optional(),
+      next_checkup_date:  z.string().optional(),
+      nextCheckupDate:    z.string().optional(),
+    }).passthrough();
+    const dto = HealthCheckupFlexSchema.parse(body ?? {});
+    const deptId       = dto.department_id ?? (dto.departmentId ? Number(dto.departmentId) : null);
+    const deptName     = dto.department_name ?? dto.departmentName ?? null;
+    const totalEmp     = dto.total_employees ?? (dto.totalEmployees != null ? Number(dto.totalEmployees) : 0);
+    const examined     = dto.examined_count  ?? (dto.examinedCount  != null ? Number(dto.examinedCount)  : 0);
+    const lastDate     = dto.last_checkup_date ?? dto.checkupDate ?? null;
+    const nextDate     = dto.next_checkup_date ?? dto.nextCheckupDate ?? null;
+    return unwrapOrThrow(await this.svc.createHealthCheckup(deptId, deptName, totalEmp, examined, lastDate, nextDate));
   }
 
   @Get('hrc-tests/sessions')
