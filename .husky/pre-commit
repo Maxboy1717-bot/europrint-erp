@@ -38,3 +38,6 @@ fi
 # Catches FE↔BE type drift at commit time, not at runtime.
 # Bypass: git commit --no-verify
 node scripts/check-typecheck-gate.mjs || exit 1
+
+# 🔀 Duplicate route scan — blocks if two controllers declare the same path+method
+node scripts/_dup-routes-scan.mjs || exit 1

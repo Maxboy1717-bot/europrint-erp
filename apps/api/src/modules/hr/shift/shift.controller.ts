@@ -37,6 +37,11 @@ const RequestSwapSchema = z.object({
 });
 class RequestSwapDto extends createZodDto(RequestSwapSchema) {}
 
+const RespondSwapSchema = z.object({
+  action: z.enum(['approve', 'reject']),
+  reason: z.string().optional(),
+});
+
 const ScheduleQuerySchema = z.object({
   employee_id:   z.string().optional(),
   department_id: z.string().optional(),
@@ -66,7 +71,13 @@ export class ShiftController {
       employeeId = body.employee_id;
     } else if (body.user_id) {
       const r = await this.svc.findEmployeeByUserId(body.user_id);
-      employeeId = r.ok && r.data ? r.data : (parseInt(body.user_id, 10) || 0);
+      if (r.ok && r.data) {
+        employeeId = r.data;
+      } else {
+        const parsed = parseInt(body.user_id, 10);
+        if (!parsed || isNaN(parsed)) throw new BadRequestException('user_id bo\'yicha xodim topilmadi');
+        employeeId = parsed;
+      }
     } else {
       throw new BadRequestException('employee_id yoki user_id kerak');
     }
@@ -103,12 +114,19 @@ export class ShiftController {
     }));
   }
 
-  @ApiOperation({ summary: 'Swap tasdiqlash' })
+  @ApiOperation({ summary: 'Swap tasdiqlash yoki rad etish' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/approve-swap')
-  async approveSwap(@Param('id', ParseIntPipe) id: number) {
+  async approveSwap(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    // Support both legacy (no body → approve) and new (body.action: approve|reject)
+    const dto = RespondSwapSchema.safeParse(body);
+    const action = dto.success ? dto.data.action : 'approve';
+    const reason = dto.success ? dto.data.reason : undefined;
+    if (action === 'reject') {
+      return unwrapOrInternal(await this.svc.rejectSwap(id, reason));
+    }
     return unwrapOrInternal(await this.svc.approveSwap(id));
   }
 

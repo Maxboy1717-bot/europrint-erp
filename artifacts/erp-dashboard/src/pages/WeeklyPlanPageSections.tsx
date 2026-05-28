@@ -21,13 +21,25 @@ import { getWeekLabel, offsetWeek } from "./WeeklyPlanPageTypes";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
+// Static labels — hooks qoidasini buzmaslik uchun (hooks faqat komponent ichida)
+const STATUS_LABELS: Record<string, string> = {
+  approved:  "Tasdiqlangan",
+  submitted: "Yuborilgan",
+  draft:     "Qoralama",
+};
+
+/** @deprecated Komponent sifatida chaqirish uchun StatusBadge ishlatilsin */
 export function statusBadge(status: WeeklyPlan["status"]) {
-  const { t } = useTranslation("common");
   if (status === "approved")
-    return <Badge className="bg-emerald-100 text-[var(--ep-green)] border-0">{t("approved")}</Badge>;
+    return <Badge className="bg-emerald-100 text-[var(--ep-green)] border-0">{STATUS_LABELS.approved}</Badge>;
   if (status === "submitted")
-    return <EPStatusPill tone="info">{t("yuborilgan")}</EPStatusPill>;
-  return <EPStatusPill tone="neutral">{t("draft")}</EPStatusPill>;
+    return <EPStatusPill tone="info">{STATUS_LABELS.submitted}</EPStatusPill>;
+  return <EPStatusPill tone="neutral">{STATUS_LABELS.draft}</EPStatusPill>;
+}
+
+/** Hooks-qoidasiga mos React komponent */
+export function StatusBadge({ status }: { status: WeeklyPlan["status"] }) {
+  return statusBadge(status);
 }
 
 interface WeekNavigatorProps {

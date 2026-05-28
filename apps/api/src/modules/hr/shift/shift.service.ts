@@ -104,6 +104,24 @@ export class ShiftService {
     });
   }
 
+  async rejectSwap(shiftId: number, reason?: string) {
+    return safeCall(async () => {
+      const fromShift = await this.repo.findSwapPendingShift(shiftId);
+      if (!fromShift || !fromShift.ok || !fromShift.data) {
+        throw new BadRequestException("Swap so'rov topilmadi yoki allaqachon tasdiqlangan");
+      }
+      // Set status to 'rejected' and store reason in notes
+      await this.repo.updateShiftStatus(shiftId, 'rejected', reason ? JSON.stringify({ reason }) : null);
+      this.eventEmitter.emit(HrV2Events.SHIFT_SWAP_APPROVED, {
+        shiftId,
+        fromEmployeeId: fromShift.data.employee_id,
+        rejected: true,
+        reason,
+      });
+      return { success: true, shiftId, rejected: true, reason: reason ?? null };
+    });
+  }
+
   async getSchedule(params: { employeeId?: number; departmentId?: number; weekStart?: string }) {
     // MUHIM: repo `Result<Row[]>` qaytaradi — qayta `safeCall` bilan o'rash double-wrap qiladi
     // (frontend `{ok, data: {ok, data: [...]}}` oladi, `for(...of)` ishlamaydi).

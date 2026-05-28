@@ -7,7 +7,8 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { assertFound } from '@common/assertions';
 import {
-  Body, Controller, Get, Inject, NotFoundException, Param, Patch, Post, Put,
+  Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, NotFoundException,
+  Param, ParseIntPipe, Patch, Post, Put,
   Query, UseGuards, UseInterceptors, InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -131,6 +132,28 @@ export class HrEmployeesController {
     const result = await this.hrRepo.updateEmployee(id, { status: body.status, employmentStatus: body.status });
     assertOk(result);
     return { message: `Xodim holati ${body.status} ga o'zgartirildi`, data: result.data };
+  }
+
+  @ApiOperation({ summary: 'Soft-delete employee (sets status=terminated, deleted_at=now)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles('HR_MANAGER', 'SUPER_ADMIN')
+  async deleteEmployee(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const existing = await this.hrRepo.findEmployeeById(String(id));
+    assertOk(existing);
+    if (!existing.data) throw new NotFoundException(`Xodim #${id} topilmadi`);
+    const result = await this.hrRepo.updateEmployee(String(id), {
+      status:           'terminated',
+      employment_status: 'terminated',
+      deleted_at:       _time.now().toISOString(),
+    });
+    assertOk(result);
+    return { success: true, message: "Xodim o'chirildi", deletedBy: user?.id ?? null };
   }
 
   @ApiOperation({ summary: 'Review salary' })
