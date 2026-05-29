@@ -47,8 +47,6 @@ interface EditEmployeeDialogProps {
   onChange: (form: EditEmployeeForm) => void;
   onSave: () => void;
   isPending: boolean;
-  allDepartments: { id: string; name: string }[];
-  allPositions: { id: string; name: string }[];
 }
 
 export function EditEmployeeDialog({
@@ -58,8 +56,6 @@ export function EditEmployeeDialog({
   onChange,
   onSave,
   isPending,
-  allDepartments,
-  allPositions
 }: EditEmployeeDialogProps) {
   const { t } = useTranslation("common");
   const updateField = (field: keyof EditEmployeeForm, value: string) => {
@@ -111,28 +107,7 @@ export function EditEmployeeDialog({
           <div>
             <h3 className="text-sm font-semibold text-muted-foreground mb-2 border-b pb-1">{t("ishMalumotlari")}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label>{t("bolim1")}</Label>
-                <Select value={form.departmentId} onValueChange={(v) => updateField("departmentId", v)}>
-                  <SelectTrigger className="mt-1 h-9"><SelectValue placeholder={t("bolimTanlang")} /></SelectTrigger>
-                  <SelectContent>
-                    {(Array.isArray(allDepartments) ? allDepartments : []).map(d => (
-                      <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>{t("lavozim1")}</Label>
-                <Select value={form.positionId} onValueChange={(v) => updateField("positionId", v)}>
-                  <SelectTrigger className="mt-1 h-9"><SelectValue placeholder={t("lavozimTanlang")} /></SelectTrigger>
-                  <SelectContent>
-                    {(Array.isArray(allPositions) ? allPositions : []).map(p => (
-                      <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Bo'lim/Lavozim (legacy departments/positions) removed — owned by org-schema */}
               <div>
                 <Label>{t("smena")}</Label>
                 <Select value={form.shift} onValueChange={(v) => updateField("shift", v)}>

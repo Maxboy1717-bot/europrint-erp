@@ -264,8 +264,7 @@ export default function EmployeeProfile() {
     }, 
     enabled: !!id 
   });
-  const { data: allPositions } = useQuery<{ id: string; name: string }[]>({ queryKey: ['/api/positions'] });
-  const { data: allDepartments } = useQuery<{ id: string; name: string }[]>({ queryKey: ['/api/departments'] });
+  // Legacy /api/positions + /api/departments removed — dept/function is owned by org-schema.
   const { data: corpInfoForMachine } = useQuery<{ is_machine_operator?: boolean }>({ 
     queryKey: ['/api/hr/employee-corp', id], 
     queryFn: async () => { 
@@ -353,7 +352,7 @@ export default function EmployeeProfile() {
       <LeaveRequestDialog open={leaveRequestDialogOpen} onOpenChange={setLeaveRequestDialogOpen} form={leaveRequestForm} onChange={setLeaveRequestForm} onSave={() => saveLeaveRequestMutation.mutate(leaveRequestForm)} isPending={saveLeaveRequestMutation.isPending} />
       <SickLeaveDialog open={sickLeaveDialogOpen} onOpenChange={setSickLeaveDialogOpen} form={sickLeaveForm} onChange={setSickLeaveForm} onSave={() => saveSickLeaveMutation.mutate(sickLeaveForm)} isPending={saveSickLeaveMutation.isPending} />
       <BusinessTripDialog open={businessTripDialogOpen} onOpenChange={setBusinessTripDialogOpen} form={businessTripForm} onChange={setBusinessTripForm} onSave={() => saveBusinessTripMutation.mutate(businessTripForm)} isPending={saveBusinessTripMutation.isPending} />
-      <EditEmployeeDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} form={editForm} onChange={setEditForm} onSave={() => updateEmployeeMutation.mutate(editForm)} isPending={updateEmployeeMutation.isPending} allDepartments={allDepartments || []} allPositions={allPositions || []} />
+      <EditEmployeeDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} form={editForm} onChange={setEditForm} onSave={() => updateEmployeeMutation.mutate(editForm)} isPending={updateEmployeeMutation.isPending} />
     </div>
   );
 }
