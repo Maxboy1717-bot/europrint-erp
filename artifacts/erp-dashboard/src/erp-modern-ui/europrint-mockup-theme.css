@@ -14,16 +14,16 @@
 
 :root {
   /* === Brand colors (raw HEX) === */
-  --ep-primary:       #F97316;
-  --ep-primary-dark:  #EA6D0C;
-  --ep-primary-rgb:   249, 115, 22;
-  --ep-primary-soft:  rgba(249, 115, 22, 0.10);
+  --ep-primary:       #FF902F;
+  --ep-primary-dark:  #F07F1B;
+  --ep-primary-rgb:   255, 144, 47;
+  --ep-primary-soft:  rgba(255, 144, 47, 0.10);
 
   --ep-dark:    #15171A;
   --ep-muted:   #6B6E72;
   --ep-subtle:  #9A9CA0;
 
-  --ep-bg:      #FAF7F2;
+  --ep-bg:      #F5E6E1;   /* SHIPNOW warm-blush page bg */
   --ep-surface: #FFFFFF;
   --ep-border:  #E7E2D8;
   --ep-text:    #15171A;
@@ -38,13 +38,13 @@
   --ep-pink:    #C45C7A;
 
   /* === Tailwind/shadcn tokens — EP Linear Soft === */
-  /* Primary #F97316 → HSL(25°, 95%, 53%) */
-  --primary:            25 95% 53%;
-  --primary-dim:        25 95% 44%;
+  /* Primary #FF902F (SHIPNOW brand orange) → HSL(28°, 100%, 59%) */
+  --primary:            28 100% 59%;
+  --primary-dim:        28 88% 52%;
   --primary-foreground: 0 0% 100%;
 
   /* Background #FAF7F2 → warm cream */
-  --background:   37 35% 97%;    /* #FAF7F2 */
+  --background:   15 50% 92%;    /* #F5E6E1 — SHIPNOW warm blush */
   --foreground:   213 11% 9%;    /* #15171A */
   --border:       38 17% 88%;    /* #E7E2D8 */
 
@@ -56,7 +56,7 @@
   --sidebar:                    0 0% 100%;
   --sidebar-foreground:         213 11% 9%;
   --sidebar-border:             38 17% 88%;
-  --sidebar-primary:            25 95% 53%;
+  --sidebar-primary:            28 100% 59%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent:             25 95% 97%;
   --sidebar-accent-foreground:  25 95% 35%;
