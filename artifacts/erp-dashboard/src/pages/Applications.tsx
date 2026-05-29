@@ -13,6 +13,7 @@ import {
   type ApplicationQuestion,
   type ApplicationResponse,
   type Department,
+  type Position,
   type UserStub,
   type UpdateResponsePayload,
 } from "./ApplicationsTypes";
@@ -42,6 +43,7 @@ export default function Applications() {
   const [description, setDescription] = useState("");
   const [descriptionRu, setDescriptionRu] = useState("");
   const [departmentId, setDepartmentId] = useState("");
+  const [positionId, setPositionId] = useState("");
   const [dueDays, setDueDays] = useState<number | "">("");
   const [questions, setQuestions] = useState<ApplicationQuestion[]>([]);
 
@@ -71,6 +73,10 @@ export default function Applications() {
     enabled: !!userId,
   });
 
+  const { data: positions = [] } = useQuery<Position[]>({
+    queryKey: ["/api/org-functions"],
+    enabled: !!userId,
+  });
 
   const { data: users = [] } = useQuery<UserStub[]>({
     queryKey: ["/api/hr/employees"],
@@ -146,7 +152,7 @@ export default function Applications() {
 
   const resetForm = () => {
     setTitle(""); setTitleRu(""); setDescription(""); setDescriptionRu("");
-    setDepartmentId(""); setDueDays(""); setQuestions([]);
+    setDepartmentId(""); setPositionId(""); setDueDays(""); setQuestions([]);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -161,6 +167,7 @@ export default function Applications() {
     createApplicationMutation.mutate({
       title, titleRu, description, descriptionRu,
       departmentId: departmentId || undefined,
+      positionId: positionId || undefined,
       dueDays: dueDays !== "" ? Number(dueDays) : undefined,
       questions, isActive: true,
     });
@@ -201,6 +208,7 @@ export default function Applications() {
             description={description} onDescriptionChange={setDescription}
             descriptionRu={descriptionRu} onDescriptionRuChange={setDescriptionRu}
             departmentId={departmentId} onDepartmentChange={setDepartmentId}
+            positionId={positionId} onPositionChange={setPositionId}
             dueDays={dueDays} onDueDaysChange={setDueDays}
             questions={questions}
             onAddQuestion={addQuestion}
@@ -209,6 +217,7 @@ export default function Applications() {
             onSubmit={handleSubmit}
             isSubmitting={createApplicationMutation.isPending}
             departments={departments}
+            positions={positions}
           />
 
           <Card>

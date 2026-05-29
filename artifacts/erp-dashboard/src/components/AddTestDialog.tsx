@@ -31,6 +31,7 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
     courseId: "none",
     moduleId: "",
     departmentId: "none",
+    positionId: "none",
     passPercentage: "80",
     timeLimit: "",
     maxAttempts: "3",
@@ -43,6 +44,11 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
   }
 
   interface Department {
+    id: string;
+    name: string;
+  }
+
+  interface Position {
     id: string;
     name: string;
   }
@@ -62,6 +68,10 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
     queryKey: ["/api/org-departments"],
   });
 
+  const { data: positions = [] } = useQuery<Position[]>({
+    queryKey: ["/api/org-functions"],
+  });
+
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       return await apiRequest("POST", "/api/tests", {
@@ -72,6 +82,7 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
         courseId: data.courseId === "none" ? null : data.courseId,
         moduleId: data.moduleId || null,
         departmentId: data.departmentId === "none" ? null : data.departmentId,
+        positionId: data.positionId === "none" ? null : data.positionId,
       });
     },
     onSuccess: () => {
@@ -87,6 +98,7 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
         courseId: "none",
         moduleId: "",
         departmentId: "none",
+        positionId: "none",
         passPercentage: "80",
         timeLimit: "",
         maxAttempts: "3",
@@ -177,6 +189,22 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
               </Select>
             </div>
 
+            <div className="space-y-1">
+          <Label htmlFor="testPosition">{t("positionOptional")}</Label>
+              <Select value={formData.positionId} onValueChange={(value) => setFormData({ ...formData, positionId: value })}>
+                <SelectTrigger data-testid="select-test-position" className="h-9">
+                  <SelectValue placeholder={t("lavozimniTanlang")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t("Barchasi")}</SelectItem>
+                  {(Array.isArray(positions) ? positions : []).map(pos => (
+                    <SelectItem key={pos.id} value={pos.id}>
+                      {pos.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

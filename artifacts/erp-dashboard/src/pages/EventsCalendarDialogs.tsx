@@ -31,8 +31,9 @@ import {
   CalendarEvent,
   Department,
   EventFormValues,
+  Position,
 } from "./EventsCalendarTypes";
-import { DepartmentSelector } from "./EventsCalendarSelectors";
+import { DepartmentSelector, PositionSelector } from "./EventsCalendarSelectors";
 
 import { useTranslation } from '@/lib/i18n';
 // ---------------------------------------------------------------------------
@@ -47,8 +48,11 @@ export interface EventDialogProps {
   onSubmit: (data: EventFormValues) => void;
   isPending: boolean;
   departments: Department[];
+  positions: Position[];
   selectedDepartments: string[];
   onDepartmentsChange: (ids: string[]) => void;
+  selectedPositions: string[];
+  onPositionsChange: (ids: string[]) => void;
   onCancel: () => void;
 }
 
@@ -63,8 +67,11 @@ export function EventDialog({open,
   onSubmit,
   isPending,
   departments,
+  positions,
   selectedDepartments,
   onDepartmentsChange,
+  selectedPositions,
+  onPositionsChange,
   onCancel,
 }: EventDialogProps) {
   const { t } = useTranslation('common');
@@ -256,6 +263,11 @@ export function EventDialog({open,
                 departments={departments}
                 selected={selectedDepartments}
                 onChange={onDepartmentsChange}
+              />
+              <PositionSelector
+                positions={positions}
+                selected={selectedPositions}
+                onChange={onPositionsChange}
               />
             </div>
 
