@@ -1,13 +1,14 @@
 /**
  * @module SDDashboard
  * @description CRM / Savdo dashboard — EuroPrint "EP Linear Soft" (SHIPNOW) layout.
- *   Greeting header + 4 KPI cards (striped icon tiles, real month-over-month deltas)
- *   + monthly order bar chart + order-status donut + sales funnel + top customers.
+ *   Greeting header + 4 KPI cards (striped icon tiles — real values, no synthetic
+ *   deltas) + monthly order bar chart + order-status donut + sales funnel + top
+ *   customers.
  *
- *   Every number is REAL backend data — no mock values:
+ *   Every number is REAL backend data — no mock values, no fabricated percentages:
  *     GET /api/sd/dashboard/overview                     → stats + top_customers
  *     GET /api/sd/reports/funnel                         → leads/deals funnel
- *     GET /api/sales/analytics/monthly-trend?months=8    → bar chart + MoM deltas
+ *     GET /api/sales/analytics/monthly-trend?months=8    → monthly order bar chart
  *
  *   Visuals come from the canonical kit.css atoms (.kpi / .card / .bar.stripe /
  *   .donut / .seg / .tbl / .pill). Colours are tokens only (var(--ep-*)) — no raw
@@ -17,7 +18,7 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { ArrowUpRight, ArrowDownRight, Plus, Package, TrendingUp, Truck, Trophy, type LucideIcon } from "lucide-react";
+import { Plus, Package, TrendingUp, Truck, Wallet, type LucideIcon } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/lib/i18n";
@@ -42,33 +43,19 @@ interface FunnelData {
 }
 interface TrendRow { month?: string; order_count?: number; revenue?: string | number; }
 
-type Delta = { value: string; trend: "up" | "down" } | null;
-
 const UZ_MONTHS = ["Yan", "Fev", "Mar", "Apr", "May", "Iyn", "Iyl", "Avg", "Sen", "Okt", "Noy", "Dek"];
 
-const pctDelta = (cur?: number, prev?: number): Delta => {
-  if (cur == null || prev == null || !Number.isFinite(cur) || !Number.isFinite(prev) || prev === 0) return null;
-  const d = ((cur - prev) / prev) * 100;
-  return { value: `${Math.abs(d).toFixed(1)}%`, trend: d >= 0 ? "up" : "down" };
-};
-
 // ─── Local chart atoms (kit.css reference classes; token colours only) ────────
+// Note: KPI cards show real values only — no synthetic deltas/percentages.
 
-function KpiTile({ label, value, delta, icon: Icon, iconBg }: {
-  label: string; value: React.ReactNode; delta?: Delta; icon: LucideIcon; iconBg: string;
+function KpiTile({ label, value, icon: Icon, iconBg }: {
+  label: string; value: React.ReactNode; icon: LucideIcon; iconBg: string;
 }) {
-  const { t } = useTranslation("common");
   return (
     <div className="kpi">
       <div>
         <div className="kpi-lbl">{label}</div>
         <div className="kpi-val">{value}</div>
-        {delta && (
-          <span className={`kpi-delta ${delta.trend === "up" ? "up" : "dn"}`}>
-            {delta.trend === "up" ? <ArrowUpRight /> : <ArrowDownRight />}
-            {delta.value} {tLabel("sd.vsLastMonth", "o'tgan oydan")}
-          </span>
-        )}
       </div>
       <div className="kpi-icn" style={{ background: iconBg }}>
         <Icon strokeWidth={2} aria-hidden />
@@ -170,12 +157,6 @@ export default function SDDashboard() {
   const greet = hour < 12 ? tLabel("sd.morning", "Xayrli tong") : hour < 18 ? tLabel("sd.day", "Xayrli kun") : tLabel("sd.evening", "Xayrli kech");
   const firstName = user?.firstName || tLabel("sd.colleague", "hamkasb");
 
-  // Real MoM deltas from the monthly trend (current vs previous month)
-  const cur = trendRows[trendRows.length - 1];
-  const prev = trendRows[trendRows.length - 2];
-  const ordersDelta = pctDelta(Number(cur?.order_count), Number(prev?.order_count));
-  const revenueDelta = pctDelta(Number(cur?.revenue), Number(prev?.revenue));
-
   // Bar chart — monthly order counts; highlight the peak month
   const barData = trendRows.map((row) => {
     const m = row.month ? new Date(row.month).getMonth() : NaN;
@@ -232,14 +213,12 @@ export default function SDDashboard() {
           <KpiTile
             label={tLabel("sd.jamiBuyurtmalar", "Jami buyurtmalar (90 kun)")}
             value={totalOrders.toLocaleString("en-US")}
-            delta={ordersDelta}
             icon={Package}
             iconBg="var(--ep-primary)"
           />
           <KpiTile
             label={tLabel("sd.oylikDaromad", "Oylik daromad")}
             value={fmtMoney(Number(stats.monthly_revenue ?? 0))}
-            delta={revenueDelta}
             icon={TrendingUp}
             iconBg="var(--accent-coral)"
           />
@@ -250,9 +229,9 @@ export default function SDDashboard() {
             iconBg="var(--ep-green)"
           />
           <KpiTile
-            label={tLabel("sd.yutilganDaromad", "Yutilgan daromad")}
-            value={fmtMoney(Number(funnel?.won_revenue ?? 0))}
-            icon={Trophy}
+            label={tLabel("sd.avansKutilmoqda", "Avans kutilmoqda")}
+            value={Number(stats.pending_advance ?? 0).toLocaleString("en-US")}
+            icon={Wallet}
             iconBg="var(--ep-purple)"
           />
         </div>
