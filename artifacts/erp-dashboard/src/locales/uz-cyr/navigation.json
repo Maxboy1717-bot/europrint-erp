@@ -685,5 +685,10 @@
   "topOtherSozlamalar": "Созламалар",
   "HR": "HR",
   "warehousesHeader": "Омборлар",
-  "warehouseFallback": "Омбор"
+  "warehouseFallback": "Омбор",
+  "user": "Foydalanuvchi",
+  "appVersion": "ERP System v2.0",
+  "lightMode": "Kunduzgi rejim",
+  "darkMode": "Tungi rejim",
+  "logoutFromSystem": "Tizimdan chiqish"
 }

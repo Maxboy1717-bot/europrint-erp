@@ -571,5 +571,6 @@
   "deliveryStatus": "Йетказиб бериш ҳолати",
   "cashFlowManagement": "Пул Оқими Бошқаруви",
   "currentBalance": "Жорий Баланс",
-  "bankAccount": "Банк Ҳисоби"
+  "bankAccount": "Банк Ҳисоби",
+  "key": "fallback"
 }

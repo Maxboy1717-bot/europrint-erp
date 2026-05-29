@@ -49,5 +49,8 @@
   "sodViolation": "Вазифалар бўлиниши қоидаси бузилди",
   "tooManyRequests": "Жуда кўп сўров. Кейинроқ уриниб кўринг.",
   "invalidFileType": "Рухсат этилмаган файл тури",
-  "aiUnavailable": "AI хизмати ҳозирда мавжуд эмас"
+  "aiUnavailable": "AI хизмати ҳозирда мавжуд эмас",
+  "save": "Save",
+  "__unknown_hooks_key__": "Unknown Hooks Key",
+  "cancel": "Cancel"
 }

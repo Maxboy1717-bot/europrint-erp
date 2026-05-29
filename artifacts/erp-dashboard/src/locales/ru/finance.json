@@ -571,5 +571,6 @@
   "deliveryStatus": "Статус доставки",
   "cashFlowManagement": "Управление денежным потоком",
   "currentBalance": "Текущий баланс",
-  "bankAccount": "Банковский счёт"
+  "bankAccount": "Банковский счёт",
+  "key": "fallback"
 }

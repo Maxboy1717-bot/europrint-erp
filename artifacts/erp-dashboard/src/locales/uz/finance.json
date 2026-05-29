@@ -571,5 +571,6 @@
   "deliveryStatus": "Yetkazib berish holati",
   "cashFlowManagement": "Pul Oqimi Boshqaruvi",
   "currentBalance": "Joriy Balans",
-  "bankAccount": "Bank Hisobi"
+  "bankAccount": "Bank Hisobi",
+  "key": "fallback"
 }

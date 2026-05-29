@@ -49,5 +49,8 @@
   "sodViolation": "Vazifalar bo'linishi qoidasi buzildi",
   "tooManyRequests": "Juda ko'p so'rov. Keyinroq urinib ko'ring.",
   "invalidFileType": "Ruxsat etilmagan fayl turi",
-  "aiUnavailable": "AI xizmati hozirda mavjud emas"
+  "aiUnavailable": "AI xizmati hozirda mavjud emas",
+  "save": "Save",
+  "__unknown_hooks_key__": "Unknown Hooks Key",
+  "cancel": "Cancel"
 }

@@ -49,5 +49,8 @@
   "sodViolation": "Нарушение правила разделения обязанностей",
   "tooManyRequests": "Слишком много запросов. Попробуйте позже.",
   "invalidFileType": "Недопустимый тип файла",
-  "aiUnavailable": "Сервис AI недоступен"
+  "aiUnavailable": "Сервис AI недоступен",
+  "save": "Save",
+  "__unknown_hooks_key__": "Unknown Hooks Key",
+  "cancel": "Cancel"
 }
