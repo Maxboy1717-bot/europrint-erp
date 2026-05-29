@@ -270,8 +270,15 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
               {/* Phase 2 / Task 2.5 — manager autocomplete + currency-formatted base salary with grade picker */}
               <section><h3 className="text-lg font-medium mb-4">Rahbar va asosiy maosh</h3><ManagerSalarySection form={form} excludeEmployeeId={employee?.id} /></section>
               <section><h3 className="text-lg font-medium mb-4">{t("shartnomaVaIshHaqi")}</h3><ContractSection form={form} /></section>
-              <section><h3 className="text-lg font-medium mb-4">{t("shaxsiyMalumotlar")}</h3><PersonalInfoSection form={form} /></section>
-              <section><h3 className="text-lg font-medium mb-4">{t("uyJoyVaJoylashuv")}</h3><HouseholdSection form={form} /></section>
+              {/* Personal + household/GPS are profile-level detail — shown only when
+                  EDITING, so "Yangi xodim qo'shish" stays lean (core fields only).
+                  These get filled after the employee exists (edit profile). */}
+              {isEdit && (
+                <>
+                  <section><h3 className="text-lg font-medium mb-4">{t("shaxsiyMalumotlar")}</h3><PersonalInfoSection form={form} /></section>
+                  <section><h3 className="text-lg font-medium mb-4">{t("uyJoyVaJoylashuv")}</h3><HouseholdSection form={form} /></section>
+                </>
+              )}
             </div>
 
             <DialogFooter>
