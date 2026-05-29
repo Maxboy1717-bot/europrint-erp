@@ -21,7 +21,7 @@ interface KpiItem {
   label: string;
   value: string | number;
   icon: React.ElementType;
-  accent: string;
+  iconBg: string;
   testId: string;
 }
 
@@ -50,28 +50,35 @@ export function KpiGrid({
 }: KpiGridProps) {
   const { t } = useTranslation("hr");
   const kpiItems: KpiItem[] = [
-    { label: t("kpi.employees"),        value: employeeCount,               icon: Users,         accent: "text-primary",             testId: "text-total-employees" },
-    { label: t("kpi.warnings"),         value: warningsCount,               icon: AlertTriangle, accent: "text-[var(--ep-yellow)]",  testId: "text-warnings" },
-    { label: t("kpi.lateArrivals"),     value: lateArrivals,                icon: Clock,         accent: "text-[var(--ep-primary)]", testId: "text-late" },
-    { label: t("kpi.criticalAlerts"),   value: criticalAlerts,              icon: ShieldAlert,   accent: "text-[var(--ep-red)]",     testId: "text-critical-alerts" },
-    { label: t("kpi.atRisk"),           value: atRiskCount,                 icon: Flame,         accent: "text-[var(--ep-red)]",     testId: "text-at-risk" },
-    { label: t("kpi.rewards"),          value: rewardsSum.toLocaleString(), icon: Award,         accent: "text-[var(--ep-green)]",   testId: "text-rewards" },
+    { label: t("kpi.employees"),        value: employeeCount,               icon: Users,         iconBg: "var(--ep-primary)",   testId: "text-total-employees" },
+    { label: t("kpi.warnings"),         value: warningsCount,               icon: AlertTriangle, iconBg: "var(--ep-yellow)",    testId: "text-warnings" },
+    { label: t("kpi.lateArrivals"),     value: lateArrivals,                icon: Clock,         iconBg: "var(--ep-blue)",      testId: "text-late" },
+    { label: t("kpi.criticalAlerts"),   value: criticalAlerts,              icon: ShieldAlert,   iconBg: "var(--ep-red)",       testId: "text-critical-alerts" },
+    { label: t("kpi.atRisk"),           value: atRiskCount,                 icon: Flame,         iconBg: "var(--accent-coral)", testId: "text-at-risk" },
+    { label: t("kpi.rewards"),          value: rewardsSum.toLocaleString(), icon: Award,         iconBg: "var(--ep-green)",     testId: "text-rewards" },
   ];
 
+  // SHIPNOW KPI cards (kit.css .kpi atoms — striped icon tile + big value), matching SD dashboard.
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {isLoading
         ? [0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={`k-${i}`} className="bg-card rounded-lg p-4 space-y-2">
-              <Skeleton className="h-3 w-20 rounded-lg" />
-              <Skeleton className="h-7 w-16 rounded-lg" />
+            <div key={`k-${i}`} className="kpi">
+              <div className="w-full space-y-2">
+                <Skeleton className="h-3 w-24 rounded-lg" />
+                <Skeleton className="h-7 w-16 rounded-lg" />
+              </div>
             </div>
           ))
         : kpiItems.map((item, i) => (
-            <div key={`k-${i}`} className="bg-card rounded-lg p-4" data-testid={item.testId}>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{item.label}</p>
-              <p className="text-2xl font-bold tracking-tight text-foreground mt-1">{item.value}</p>
-              <item.icon className={`w-3.5 h-3.5 ${item.accent} mt-1`} />
+            <div key={`k-${i}`} className="kpi" data-testid={item.testId}>
+              <div>
+                <div className="kpi-lbl">{item.label}</div>
+                <div className="kpi-val">{item.value}</div>
+              </div>
+              <div className="kpi-icn" style={{ background: item.iconBg }}>
+                <item.icon strokeWidth={2} aria-hidden />
+              </div>
             </div>
           ))}
     </div>

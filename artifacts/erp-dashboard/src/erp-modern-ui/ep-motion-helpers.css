@@ -294,18 +294,28 @@
   transform: rotate(-6deg) scale(1.08);
 }
 
-/* 42px round icon tile used on KPI cards */
+/* Icon tile on KPI cards — SHIPNOW look: rounded-square + diagonal white stripes */
 .ep-icon-tile {
   width: 42px;
   height: 42px;
-  border-radius: var(--r-pill);
+  border-radius: 13px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   transition: transform var(--d) var(--ease-out-back);
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
 }
+.ep-icon-tile::after {            /* SHIPNOW diagonal white-stripe overlay (in-CSS rgba is allowlisted) */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,.18) 0 5px, transparent 5px 10px);
+  pointer-events: none;
+}
+.ep-icon-tile > * { position: relative; z-index: 1; }
 
 /* Status pill — colored dot + soft tint background + colored text */
 .ep-pill {
