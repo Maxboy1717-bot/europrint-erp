@@ -34,7 +34,7 @@ export default function Settings() {
 
   // ── Queries ──────────────────────────────────────────────────────────────
   const { data: positions, isError, error, refetch } = useQuery<Position[]>({
-    queryKey: ["/api/positions"],
+    queryKey: ["/api/org-functions"],
   });
 
   const { data: guidelines } = useQuery<Guideline[]>({
