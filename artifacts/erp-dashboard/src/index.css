@@ -7,6 +7,9 @@
 @import "./erp-modern-ui/europrint-mockup-theme.css";
 /* EP motion, helpers, module tokens (animations, .ep-*, --mod-*, --sh-*) */
 @import "./erp-modern-ui/ep-motion-helpers.css";
+/* SHIPNOW UI-kit reference atoms (.kpi/.card/.bar/.donut/.seg/.tbl/.pill/.btn) —
+   component classes are global; base resets are scoped to .ep-shipnow wrapper */
+@import "./erp-modern-ui/kit.css";
 
 @custom-variant dark (&:is(.dark *));
 
