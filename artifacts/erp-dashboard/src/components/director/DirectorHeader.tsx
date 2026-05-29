@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, RefreshCw, BarChart3 } from "lucide-react";
 import type { AlertItem } from "@/components/director/types";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 interface DirectorHeaderProps {
   criticalAlerts: AlertItem[];
@@ -19,7 +20,7 @@ export function DirectorHeader({ criticalAlerts, onRefresh }: DirectorHeaderProp
     <div className="flex items-start justify-between gap-4 flex-wrap">
       <div>
         <h1 className="ep-h1 text-foreground">
-          {t("direktor")}<span className="text-primary">{t("paneli")}</span>
+          {tLabel("director.titlePrefix", "Direktor")} <span className="text-primary">{tLabel("director.titleSuffix", "paneli")}</span>
         </h1>
         <p className="text-sm text-muted-foreground mt-1">{t("realVaqtKorsatkichlarBarcha6")}</p>
       </div>
