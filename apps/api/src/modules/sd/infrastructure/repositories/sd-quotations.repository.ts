@@ -77,7 +77,7 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
   }
 
   async getFunnelReport(): Promise<Result<Row>> {
-    const rows = await exec(sql`SELECT COUNT(DISTINCT l.id)::int AS total_leads, COUNT(DISTINCT CASE WHEN l.status_description ILIKE '%active%' OR l.status_description ILIKE '%new%' THEN l.id END)::int AS active_leads, COUNT(DISTINCT d.id)::int AS total_deals, COUNT(DISTINCT CASE WHEN d.stage_semantic_id = 'won' THEN d.id END)::int AS won_deals, COALESCE(SUM(CASE WHEN d.stage_semantic_id = 'won' THEN d.opportunity END), 0)::numeric(15,2) AS won_revenue FROM crm_leads l LEFT JOIN crm_deals d ON d.lead_id = l.id`);
+    const rows = await exec(sql`SELECT COUNT(DISTINCT l.id)::int AS total_leads, COUNT(DISTINCT CASE WHEN l.status_description ILIKE '%active%' OR l.status_description ILIKE '%new%' THEN l.id END)::int AS active_leads, COUNT(DISTINCT d.id)::int AS total_deals, COUNT(DISTINCT CASE WHEN d.stage_semantic_id = 'won' THEN d.id END)::int AS won_deals, COALESCE(SUM(CASE WHEN d.stage_semantic_id = 'won' THEN d.opportunity END), 0)::numeric(15,2) AS won_revenue FROM crm_leads l LEFT JOIN crm_deals d ON d.lead_id::text = l.id::text`);
     if (!rows.ok) return rows as Result<Row>;
     return Ok((rows.data[0] ?? {}) as Row);
   }

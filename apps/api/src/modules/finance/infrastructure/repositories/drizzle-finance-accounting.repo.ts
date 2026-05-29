@@ -134,8 +134,9 @@ export class DrizzleFinanceAccountingRepo {
       runQuery<Row>(sql`
         SELECT rm.id, rm.code, rm.name, rm.category, rm.unit, rm.current_stock, rm.unit_price,
                (rm.current_stock * rm.unit_price) AS total_value,
-               COALESCE(rm.warehouse_name, '') AS warehouse_name
+               COALESCE(w.name, '') AS warehouse_name
         FROM raw_materials rm
+        LEFT JOIN warehouses w ON w.id = rm.warehouse_id
         WHERE rm.is_active = true ORDER BY (rm.current_stock * rm.unit_price) DESC
       `),
       runQuery<Row>(sql`SELECT COUNT(*) AS total_items, COALESCE(SUM(current_stock),0) AS total_stock, COALESCE(SUM(current_stock * unit_price),0) AS total_value FROM raw_materials WHERE is_active = true`),

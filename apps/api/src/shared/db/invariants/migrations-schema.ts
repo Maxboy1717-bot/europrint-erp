@@ -275,4 +275,25 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
       ON CONFLICT (config_key) DO NOTHING;
     `,
   },
+  {
+    name: 'marketing_calendar_events table',
+    sql: `
+      CREATE TABLE IF NOT EXISTS marketing_calendar_events (
+        id           SERIAL PRIMARY KEY,
+        title        TEXT NOT NULL,
+        event_type   VARCHAR(50) NOT NULL DEFAULT 'campaign'
+          CHECK (event_type IN ('campaign','meeting','deadline','exhibition')),
+        start_date   DATE NOT NULL,
+        end_date     DATE,
+        description  TEXT,
+        status       VARCHAR(50) NOT NULL DEFAULT 'planned'
+          CHECK (status IN ('planned','ongoing','completed','cancelled')),
+        created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `,
+  },
+  {
+    name: 'marketing_calendar_events.start_date index',
+    sql: `CREATE INDEX IF NOT EXISTS idx_marketing_calendar_events_start_date ON marketing_calendar_events (start_date)`,
+  },
 ];

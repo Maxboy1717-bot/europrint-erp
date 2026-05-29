@@ -21,11 +21,11 @@ export class SdLeadsRepository implements ISdLeadsRepo {
       const rows = await runQuery<Row>(sql`
         SELECT l.*, e.full_name AS assigned_to_name, c.name AS customer_name
         FROM sd_leads l
-        LEFT JOIN employees e ON e.id = l.assigned_to
+        LEFT JOIN employees e ON e.id::text = l.assigned_to::text
         LEFT JOIN sd_customers c ON c.id = l.customer_id
         WHERE (${status ?? null}::text IS NULL OR l.status = ${status ?? null})
-          AND (${uid}::int IS NULL OR l.assigned_to = ${uid})
-          AND (${pat}::text IS NULL OR l.title ILIKE ${pat} OR c.name ILIKE ${pat})
+          AND (${uid}::int IS NULL OR l.assigned_to::text = ${uid}::text)
+          AND (${pat}::text IS NULL OR l.full_name ILIKE ${pat} OR l.contact_name ILIKE ${pat} OR c.name ILIKE ${pat})
         ORDER BY l.created_at DESC LIMIT ${lim} OFFSET ${off}
       `);
       return Ok(rows.rows as Row[]);  } catch (_e) {
@@ -55,7 +55,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
       const rows = await runQuery<Row>(sql`
         SELECT l.*, e.full_name AS assigned_to_name, c.name AS customer_name
         FROM sd_leads l
-        LEFT JOIN employees e ON e.id = l.assigned_to
+        LEFT JOIN employees e ON e.id::text = l.assigned_to::text
         LEFT JOIN sd_customers c ON c.id = l.customer_id
         WHERE (${from ?? null}::text IS NULL OR l.created_at::date >= ${from ?? null}::date)
           AND (${to ?? null}::text IS NULL OR l.created_at::date <= ${to ?? null}::date)
@@ -73,7 +73,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
       const rows = await runQuery<Row>(sql`
         SELECT l.*, e.full_name AS assigned_to_name, c.name AS customer_name
         FROM sd_leads l
-        LEFT JOIN employees e ON e.id = l.assigned_to
+        LEFT JOIN employees e ON e.id::text = l.assigned_to::text
         LEFT JOIN sd_customers c ON c.id = l.customer_id
         WHERE l.id = ${lid} AND l.deleted_at IS NULL
       `);

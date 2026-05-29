@@ -54,7 +54,7 @@ export class MmDashboardRepository implements IMmDashboardRepo {
 
   async getFleetVehicles(): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT fv.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS driver_name FROM mm_vehicles fv LEFT JOIN employees e ON e.id = fv.assigned_driver_id ORDER BY fv.plate_number`);  } catch (_e) {
+      return exec(sql`SELECT fv.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_driver_name FROM mm_vehicles fv LEFT JOIN employees e ON e.id = fv.driver_id ORDER BY fv.plate_number`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -62,7 +62,7 @@ export class MmDashboardRepository implements IMmDashboardRepo {
 
   async createFleetVehicle(body: Row): Promise<Result<Row>>  {
   try {
-      const r = await exec(sql`INSERT INTO mm_vehicles (plate_number, vehicle_type, brand, model, year, assigned_driver_id, status, notes) VALUES (${body.plateNumber ?? body.plate_number}, ${body.vehicleType ?? body.vehicle_type ?? 'truck'}, ${body.brand ?? body.make ?? null}, ${body.model ?? null}, ${body.year ?? null}, ${body.driverId ?? body.driver_id ?? body.assigned_driver_id ?? null}, 'active', ${body.notes ?? null}) RETURNING *`);
+      const r = await exec(sql`INSERT INTO mm_vehicles (plate_number, type, model, year, driver_id, status, notes) VALUES (${body.plateNumber ?? body.plate_number}, ${body.vehicleType ?? body.vehicle_type ?? body.type ?? 'truck'}, ${body.model ?? null}, ${body.year ?? null}, ${body.driverId ?? body.driver_id ?? body.assigned_driver_id ?? null}, 'active', ${body.notes ?? null}) RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
