@@ -149,14 +149,14 @@ export default function EmployeeProfile() {
   });
   const { data: bankAccounts, isLoading: loadingBanks } = useQuery<BankAccount[]>({ queryKey: ['/api/employees', id, 'bank-accounts'], enabled: !!id });
   const { data: emergencyContacts, isLoading: loadingEmergency } = useQuery<EmergencyContact[]>({ queryKey: ['/api/employees', id, 'emergency-contacts'], enabled: !!id });
-  const { data: attendanceData, isLoading: loadingAttendance } = useQuery<AttendanceRecord[]>({ queryKey: ['/api/attendance/user', id], enabled: !!id });
-  const { data: disciplineData, isLoading: loadingDiscipline } = useQuery<DisciplineRecord[]>({ queryKey: ['/api/discipline/user', id], enabled: !!id });
+  const { data: attendanceData, isLoading: loadingAttendance } = useQuery<AttendanceRecord[]>({ queryKey: ['/api/attendance/user', { employee_id: id }], enabled: !!id });
+  const { data: disciplineData, isLoading: loadingDiscipline } = useQuery<DisciplineRecord[]>({ queryKey: ['/api/discipline/user', { employee_id: id }], enabled: !!id });
   const { data: complaintsData, isLoading: loadingComplaints } = useQuery<{ complaints: CustomerComplaint[] }>({ queryKey: ['/api/integration/employee-complaints', id], enabled: !!id });
   const { data: skipsData, isLoading: loadingSkips } = useQuery<{ skips: AssessmentSkipRecord[] }>({ queryKey: ['/api/integration/employee-assessment-skips', id], enabled: !!id });
-  const { data: certificatesData, isLoading: loadingCertificates } = useQuery<Certificate[]>({ queryKey: ['/api/certificates/user', id], enabled: !!id });
-  const { data: abcData, isLoading: loadingAbc } = useQuery<AbcAnalysis>({ queryKey: ['/api/abc-analysis/user', id], enabled: !!id });
+  const { data: certificatesData, isLoading: loadingCertificates } = useQuery<Certificate[]>({ queryKey: ['/api/certificates/user', { employee_id: id }], enabled: !!id });
+  const { data: abcData, isLoading: loadingAbc } = useQuery<AbcAnalysis>({ queryKey: ['/api/abc-analysis/user', { employee_id: id }], enabled: !!id });
   const { data: courseProgress, isLoading: loadingProgress } = useQuery<CourseProgressRecord[]>({ queryKey: ['/api/progress/user', id], enabled: !!id });
-  const { data: safetyViolations, isLoading: loadingSafety } = useQuery<SafetyViolation[]>({ queryKey: ['/api/safety-violations/user', id], enabled: !!id });
+  const { data: safetyViolations, isLoading: loadingSafety } = useQuery<SafetyViolation[]>({ queryKey: ['/api/safety-violations/user', { employee_id: id }], enabled: !!id });
   const { data: metrics } = useQuery<PerformanceMetric[]>({ queryKey: [`/api/erp/employee/${id}/metrics`], enabled: !!id });
   const { data: transfers } = useQuery<TransferRecord[]>({ queryKey: [`/api/erp/employee/${id}/transfer-history`], enabled: !!id });
   const mkArrFn = <T,>(path: string) => async (): Promise<T[]> => {
@@ -188,7 +188,7 @@ export default function EmployeeProfile() {
     },
     enabled: !!id 
   });
-  const { data: zoneLogs, isLoading: loadingZoneLogs } = useQuery<ZoneTrackingLog[]>({ queryKey: ['/api/attendance/zone-logs', id], enabled: !!id });
+  const { data: zoneLogs, isLoading: loadingZoneLogs } = useQuery<ZoneTrackingLog[]>({ queryKey: ['/api/attendance/zone-logs', { employee_id: id }], enabled: !!id });
   const { data: skillGapData, isLoading: loadingSkillGap } = useQuery<SkillGapData | null>({
     queryKey: ['/api/integration/skill-gap', id],
     queryFn: async () => {
