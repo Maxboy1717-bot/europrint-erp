@@ -34,8 +34,8 @@ export class SdDashboardRepository implements ISdDashboardRepo {
   async getPendingAdvanceOrders(mid: number | null, lim: number): Promise<Result<Row[]>>  {
   try {
       return mid
-        ? exec(sql`SELECT o.id, o.document_number AS order_number, o.customer_name, o.total_amount, o.advance_paid_amount AS advance_amount, o.created_at, 'advance_required' AS action_type FROM sales_orders o JOIN sd_leads l ON l.customer_id = o.customer_id AND l.manager_id = ${mid} WHERE o.advance_paid_amount < (o.total_amount * COALESCE(o.advance_percent, 30) / 100) AND o.status NOT IN ('cancelled', 'delivered') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`)
-        : exec(sql`SELECT o.id, o.document_number AS order_number, o.customer_name, o.total_amount, o.advance_paid_amount AS advance_amount, o.created_at, 'advance_required' AS action_type FROM sales_orders o WHERE o.advance_paid_amount < (o.total_amount * COALESCE(o.advance_percent, 30) / 100) AND o.status NOT IN ('cancelled', 'delivered') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`);  } catch (_e) {
+        ? exec(sql`SELECT o.id, o.document_number AS order_number, o.customer_name, o.total_amount, o.advance_paid_amount AS advance_amount, o.created_at, 'advance_required' AS action_type FROM sales_orders o JOIN sd_leads l ON l.customer_id = o.customer_id AND l.manager_id = ${mid} WHERE COALESCE(o.advance_paid_amount, 0) < (o.total_amount * COALESCE(o.advance_percent, 30) / 100) AND o.status NOT IN ('cancelled', 'delivered') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`)
+        : exec(sql`SELECT o.id, o.document_number AS order_number, o.customer_name, o.total_amount, o.advance_paid_amount AS advance_amount, o.created_at, 'advance_required' AS action_type FROM sales_orders o WHERE COALESCE(o.advance_paid_amount, 0) < (o.total_amount * COALESCE(o.advance_percent, 30) / 100) AND o.status NOT IN ('cancelled', 'delivered') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`);  } catch (_e) {
     return Err(String(_e));
   }
 

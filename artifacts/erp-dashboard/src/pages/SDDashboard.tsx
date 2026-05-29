@@ -1,24 +1,27 @@
 /**
  * @module SDDashboard
  * @description CRM / Savdo dashboard — EuroPrint "EP Linear Soft" (SHIPNOW) layout.
- *   Greeting header + 4 KPI cards (striped icon tiles — real values, no synthetic
- *   deltas) + monthly order bar chart + order-status donut + sales funnel + top
- *   customers.
+ *   An operational sales dashboard: greeting + KPI cards + monthly order bar chart
+ *   + order-status donut + recent orders + manager action-items + quota + funnel +
+ *   top customers. The 4 "Savdo/CRM" panels (orders, quota, manager) are surfaced
+ *   here INLINE — not as separate pages.
  *
  *   Every number is REAL backend data — no mock values, no fabricated percentages:
- *     GET /api/sd/dashboard/overview                     → stats + top_customers
+ *     GET /api/sd/dashboard/overview                     → KPI stats + top_customers
  *     GET /api/sd/reports/funnel                         → leads/deals funnel
  *     GET /api/sales/analytics/monthly-trend?months=8    → monthly order bar chart
+ *     GET /api/sd/orders?limit=8                         → recent orders list
+ *     GET /api/sd/dashboard/manager-actions              → advance/tech action items
+ *     GET /api/sd/dashboard/quota                        → quota achieved per manager
  *
- *   Visuals come from the canonical kit.css atoms (.kpi / .card / .bar.stripe /
- *   .donut / .seg / .tbl / .pill). Colours are tokens only (var(--ep-*)) — no raw
- *   hex — so the design-token guard (Qoida 21) stays green.
+ *   Visuals use the canonical kit.css atoms (.kpi / .card / .bar.stripe / .donut /
+ *   .tbl / .pill). Colours are tokens only (var(--ep-*)) — design-token guard green.
  */
 
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Plus, Package, TrendingUp, Truck, Wallet, type LucideIcon } from "lucide-react";
+import { Plus, Package, TrendingUp, Truck, Wallet, Banknote, Wrench, type LucideIcon } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/lib/i18n";
@@ -42,8 +45,50 @@ interface FunnelData {
   won_deals?: number; won_revenue?: string | number;
 }
 interface TrendRow { month?: string; order_count?: number; revenue?: string | number; }
+interface Money { amount?: string | number; currency?: string; }
+interface OrderRow {
+  _orderNumber?: string; orderNumber?: string; order_number?: string;
+  _totalAmount?: Money | string | number; totalAmount?: Money | string | number; total_amount?: Money | string | number;
+  _advanceStatus?: string; advanceStatus?: string;
+  _createdAt?: string; createdAt?: string; created_at?: string;
+}
+
+// /api/sd/orders returns the order aggregate where money is a value-object
+// { amount, currency } — unwrap to a number for display.
+const moneyVal = (m: Money | string | number | undefined | null): number => {
+  if (m == null) return 0;
+  if (typeof m === "number") return m;
+  if (typeof m === "string") return Number(m) || 0;
+  return Number(m.amount ?? 0) || 0;
+};
+interface OrdersResp { data?: OrderRow[]; }
+interface ActionRow {
+  id?: number | string; order_number?: string; customer_name?: string;
+  total_amount?: string | number; advance_amount?: string | number; tech_checkpoint_status?: string;
+}
+interface ManagerActionsResp { pending_advance?: ActionRow[]; tech_checkpoints?: ActionRow[]; total?: number; }
+interface QuotaRow { manager_id?: number | string; manager_name?: string; achieved?: string | number; order_count?: number; }
 
 const UZ_MONTHS = ["Yan", "Fev", "Mar", "Apr", "May", "Iyn", "Iyl", "Avg", "Sen", "Okt", "Noy", "Dek"];
+
+const fmtDate = (s?: string): string => {
+  if (!s) return "—";
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("ru-RU");
+};
+
+// Advance-status → pill class + Uzbek label (real backend status values)
+function AdvancePill({ status }: { status: string }) {
+  const map: Record<string, { cls: string; label: string }> = {
+    paid: { cls: "success", label: tLabel("sd.advPaid", "To'langan") },
+    pending: { cls: "warning", label: tLabel("sd.advPending", "Kutilmoqda") },
+    partial: { cls: "info", label: tLabel("sd.advPartial", "Qisman") },
+    not_required: { cls: "neutral", label: tLabel("sd.advNotReq", "Talab yo'q") },
+    bypassed: { cls: "neutral", label: tLabel("sd.advBypass", "O'tkazilgan") },
+  };
+  const e = map[status] ?? { cls: "neutral", label: status || "—" };
+  return <span className={`pill ${e.cls}`}>{e.label}</span>;
+}
 
 // ─── Local chart atoms (kit.css reference classes; token colours only) ────────
 // Note: KPI cards show real values only — no synthetic deltas/percentages.
@@ -123,6 +168,24 @@ function Donut({ segments, centerLabel, centerValue, size = 168, thickness = 26 
   );
 }
 
+// One manager action-item row (advance-pending or tech-checkpoint order)
+function ActionItem({ icon: Icon, iconBg, orderNo, customer, amount }: {
+  icon: LucideIcon; iconBg: string; orderNo: string; customer: string; amount: number;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 22px", borderTop: "1px solid var(--line-warm)" }}>
+      <div className="text-white" style={{ width: 36, height: 36, borderRadius: 10, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <Icon className="h-4 w-4" aria-hidden />
+      </div>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }}>{customer}</div>
+        <div style={{ fontSize: 11.5, color: "var(--fg2)", marginTop: 2, fontFamily: "var(--font-mono)" }}>{orderNo}</div>
+      </div>
+      <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: "nowrap" }}>{fmtMoney(amount)}</div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function SDDashboard() {
@@ -148,9 +211,32 @@ export default function SDDashboard() {
     enabled: isAuthenticated === true,
   });
 
+  const { data: ordersResp } = useQuery<OrdersResp>({
+    queryKey: ["/api/sd/orders", 8],
+    queryFn: () => apiRequest("GET", "/api/sd/orders?limit=8"),
+    enabled: isAuthenticated === true,
+  });
+
+  const { data: managerActions } = useQuery<ManagerActionsResp>({
+    queryKey: ["/api/sd/dashboard/manager-actions", 10],
+    queryFn: () => apiRequest("GET", "/api/sd/dashboard/manager-actions?limit=10"),
+    enabled: isAuthenticated === true,
+  });
+
+  const { data: quotaData } = useQuery<QuotaRow[]>({
+    queryKey: ["/api/sd/dashboard/quota"],
+    queryFn: () => apiRequest("GET", "/api/sd/dashboard/quota"),
+    enabled: isAuthenticated === true,
+  });
+
   const stats: SdStats = overview?.stats ?? {};
   const topCustomers: TopCustomer[] = Array.isArray(overview?.top_customers) ? overview!.top_customers! : [];
   const trendRows: TrendRow[] = Array.isArray(trend) ? trend : [];
+  const orderRows: OrderRow[] = Array.isArray(ordersResp?.data) ? ordersResp!.data! : [];
+  const pendingAdvance: ActionRow[] = Array.isArray(managerActions?.pending_advance) ? managerActions!.pending_advance! : [];
+  const techCheckpoints: ActionRow[] = Array.isArray(managerActions?.tech_checkpoints) ? managerActions!.tech_checkpoints! : [];
+  const quotaRows: QuotaRow[] = Array.isArray(quotaData) ? quotaData : [];
+  const actionTotal = pendingAdvance.length + techCheckpoints.length;
 
   // Greeting (time-of-day) + first name
   const hour = new Date().getHours();
@@ -188,6 +274,9 @@ export default function SDDashboard() {
     { l: tLabel("sd.yutilganDaromad", "Yutilgan daromad"), v: fmtMoney(Number(funnel?.won_revenue ?? 0)) },
   ];
 
+  const orderNo = (o: OrderRow) => String(o._orderNumber ?? o.orderNumber ?? o.order_number ?? "—");
+  const orderAmt = (o: OrderRow) => moneyVal(o._totalAmount ?? o.totalAmount ?? o.total_amount);
+
   return (
     <div className="ep-shipnow flex flex-col min-h-full p-5 lg:p-7 gap-4">
       {/* Greeting header */}
@@ -210,30 +299,10 @@ export default function SDDashboard() {
         <EPErrorState onRetry={refetchOverview} />
       ) : (
         <div className="kpi-grid">
-          <KpiTile
-            label={tLabel("sd.jamiBuyurtmalar", "Jami buyurtmalar (90 kun)")}
-            value={totalOrders.toLocaleString("en-US")}
-            icon={Package}
-            iconBg="var(--ep-primary)"
-          />
-          <KpiTile
-            label={tLabel("sd.oylikDaromad", "Oylik daromad")}
-            value={fmtMoney(Number(stats.monthly_revenue ?? 0))}
-            icon={TrendingUp}
-            iconBg="var(--accent-coral)"
-          />
-          <KpiTile
-            label={tLabel("sd.yetkazilgan", "Yetkazilgan")}
-            value={deliv.toLocaleString("en-US")}
-            icon={Truck}
-            iconBg="var(--ep-green)"
-          />
-          <KpiTile
-            label={tLabel("sd.avansKutilmoqda", "Avans kutilmoqda")}
-            value={Number(stats.pending_advance ?? 0).toLocaleString("en-US")}
-            icon={Wallet}
-            iconBg="var(--ep-purple)"
-          />
+          <KpiTile label={tLabel("sd.jamiBuyurtmalar", "Jami buyurtmalar (90 kun)")} value={totalOrders.toLocaleString("en-US")} icon={Package} iconBg="var(--ep-primary)" />
+          <KpiTile label={tLabel("sd.oylikDaromad", "Oylik daromad")} value={fmtMoney(Number(stats.monthly_revenue ?? 0))} icon={TrendingUp} iconBg="var(--accent-coral)" />
+          <KpiTile label={tLabel("sd.yetkazilgan", "Yetkazilgan")} value={deliv.toLocaleString("en-US")} icon={Truck} iconBg="var(--ep-green)" />
+          <KpiTile label={tLabel("sd.avansKutilmoqda", "Avans kutilmoqda")} value={Number(stats.pending_advance ?? 0).toLocaleString("en-US")} icon={Wallet} iconBg="var(--ep-purple)" />
         </div>
       )}
 
@@ -243,9 +312,7 @@ export default function SDDashboard() {
           <div className="card-head">
             <div>
               <div className="card-ttl">{tLabel("sd.orderStats", "Buyurtma statistikasi")}</div>
-              <div style={{ fontSize: 12, color: "var(--fg2)", marginTop: 3 }}>
-                {tLabel("sd.monthlyOrders", "Oylik buyurtmalar · 8 oy")}
-              </div>
+              <div style={{ fontSize: 12, color: "var(--fg2)", marginTop: 3 }}>{tLabel("sd.monthlyOrders", "Oylik buyurtmalar · 8 oy")}</div>
             </div>
           </div>
           <div className="card-body" style={{ paddingBottom: 28 }}>
@@ -275,6 +342,105 @@ export default function SDDashboard() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Recent orders (2) + Quota by manager (1) */}
+      <div className="grid-2-1">
+        <div className="card">
+          <div className="card-head">
+            <div className="card-ttl">{tLabel("sd.recentOrders", "So'nggi buyurtmalar")}</div>
+            <Link href="/sd/sales-orders" className="card-act">{tLabel("sd.hammasi", "Hammasi")}</Link>
+          </div>
+          {orderRows.length === 0 ? (
+            <div style={{ padding: "28px 22px", textAlign: "center", color: "var(--fg2)", fontSize: 13 }}>{tLabel("sd.noOrders", "Buyurtma yo'q")}</div>
+          ) : (
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>{tLabel("sd.buyurtma", "Buyurtma")}</th>
+                  <th>{tLabel("sd.avansHolati", "Avans holati")}</th>
+                  <th style={{ textAlign: "right" }}>{tLabel("sd.summa", "Summa")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orderRows.map((o, i) => (
+                  <tr key={`o-${orderNo(o)}-${i}`}>
+                    <td style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, fontWeight: 600 }}>{orderNo(o)}</td>
+                    <td><AdvancePill status={String(o._advanceStatus ?? o.advanceStatus ?? "")} /></td>
+                    <td style={{ textAlign: "right", fontWeight: 600 }}>{fmtMoney(orderAmt(o))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div className="card">
+          <div className="card-head">
+            <div className="card-ttl">{tLabel("sd.kvotaBajarilishi", "Kvota bajarilishi")}</div>
+          </div>
+          {quotaRows.length === 0 ? (
+            <div style={{ padding: "28px 22px", textAlign: "center", color: "var(--fg2)", fontSize: 13 }}>{tLabel("sd.noQuota", "Ma'lumot yo'q")}</div>
+          ) : (
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>{tLabel("sd.menejer", "Menejer")}</th>
+                  <th style={{ textAlign: "right" }}>{tLabel("sd.erishilgan", "Erishilgan")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {quotaRows.slice(0, 6).map((q, i) => (
+                  <tr key={`q-${q.manager_id ?? i}`}>
+                    <td>
+                      <b>{q.manager_name ?? "—"}</b>
+                      <div style={{ fontSize: 11, color: "var(--fg2)", marginTop: 2 }}>{Number(q.order_count ?? 0)} {tLabel("sd.taBuyurtma", "ta buyurtma")}</div>
+                    </td>
+                    <td style={{ textAlign: "right", fontWeight: 700, color: "var(--ep-green)" }}>{fmtMoney(Number(q.achieved ?? 0))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* Manager panel — action items (advance pending + tech checkpoints) */}
+      <div className="card">
+        <div className="card-head">
+          <div className="card-ttl">{tLabel("sd.menejerPaneli", "Menejer paneli — diqqat talab")}</div>
+          {actionTotal > 0 && (
+            <span style={{ fontSize: 12, color: "var(--accent-coral)", fontWeight: 600 }}>{actionTotal} {tLabel("sd.taShort", "ta")}</span>
+          )}
+        </div>
+        {actionTotal === 0 ? (
+          <div style={{ padding: "28px 22px", textAlign: "center", color: "var(--ep-green)", fontSize: 13, fontWeight: 600 }}>
+            {tLabel("sd.allClear", "Hammasi joyida — diqqat talab buyurtma yo'q")}
+          </div>
+        ) : (
+          <div style={{ paddingBottom: 8 }}>
+            {pendingAdvance.map((a, i) => (
+              <ActionItem
+                key={`adv-${a.id ?? i}`}
+                icon={Banknote}
+                iconBg="var(--accent-coral)"
+                orderNo={`${a.order_number ?? "—"} · ${tLabel("sd.avans", "Avans")}`}
+                customer={a.customer_name ?? "—"}
+                amount={Number(a.advance_amount ?? a.total_amount ?? 0)}
+              />
+            ))}
+            {techCheckpoints.map((a, i) => (
+              <ActionItem
+                key={`tech-${a.id ?? i}`}
+                icon={Wrench}
+                iconBg="var(--ep-yellow)"
+                orderNo={`${a.order_number ?? "—"} · ${tLabel("sd.texnik", "Texnik nazorat")}`}
+                customer={a.customer_name ?? "—"}
+                amount={Number(a.total_amount ?? 0)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Sales funnel */}
@@ -320,13 +486,6 @@ export default function SDDashboard() {
           </table>
         </div>
       )}
-
-      {/* Quick actions */}
-      <div className="flex flex-wrap gap-2">
-        <Link href="/sd/sales-orders" className="btn btn-secondary btn-sm">{t("buyurtmalar")}</Link>
-        <Link href="/sd/quota-dashboard" className="btn btn-secondary btn-sm">{t("kvota")}</Link>
-        <Link href="/sd/manager-panel" className="btn btn-secondary btn-sm">{tLabel("sd.managerPanel", "Menejer paneli")}</Link>
-      </div>
     </div>
   );
 }
