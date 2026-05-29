@@ -86,7 +86,11 @@ export function EPPageHeader({
   return (
     <header
       className={cn(
-        "ep-fade-up flex flex-col gap-3 pb-2 sm:pb-4",
+        // min-h-fit: in a constrained flex-column page (h-full), a flex item's
+        // automatic min-size is min-content — which compressed this header below
+        // its real content height, dropping the subtitle out of the header box so
+        // the next sibling (KPI row) overlapped it. fit-content pins the full height.
+        "ep-fade-up flex flex-col gap-3 pb-2 sm:pb-4 min-h-fit",
         className,
       )}
     >
