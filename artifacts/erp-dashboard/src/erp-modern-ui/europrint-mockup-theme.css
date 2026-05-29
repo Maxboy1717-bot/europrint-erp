@@ -490,15 +490,15 @@ nav[data-erp-sidebar] {
 }
 
 /* TopBar — mockup uslubi */
-[data-erp-shell="modern"] header {
+[data-erp-shell="modern"] > header {
   height: 60px;
   background: hsl(var(--card));
   border-bottom: 1px solid hsl(var(--border));
 }
 
 /* Search input mockup */
-[data-erp-shell="modern"] header input[type="search"],
-[data-erp-shell="modern"] header input[type="text"] {
+[data-erp-shell="modern"] > header input[type="search"],
+[data-erp-shell="modern"] > header input[type="text"] {
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
   border-radius: 8px;
@@ -506,16 +506,16 @@ nav[data-erp-sidebar] {
 }
 
 /* Top icon buttons (notification, chat, theme — mockup style) */
-[data-erp-shell="modern"] header button {
+[data-erp-shell="modern"] > header button {
   border-radius: 50%;
 }
-[data-erp-shell="modern"] header button.rounded-xl {
+[data-erp-shell="modern"] > header button.rounded-xl {
   border-radius: 50% !important;
   width: 36px;
   height: 36px;
   background: hsl(var(--muted));
 }
-[data-erp-shell="modern"] header button.rounded-xl:hover {
+[data-erp-shell="modern"] > header button.rounded-xl:hover {
   background: rgba(var(--ep-primary-rgb), 0.1);
   color: var(--ep-primary);
 }
