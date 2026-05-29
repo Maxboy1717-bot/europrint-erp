@@ -41,6 +41,10 @@ export class HrBaseRepository {
         photo_url:       hrEmployees.photo_url,
         department_name: hrDepartments.name,
         position_name:   hrPositions.title,
+        // Org-schema (canonical Lavozim/Bo'lim) — from employees.org_function_id.
+        // Legacy department_name/position_name above are being phased out.
+        orgPositionName:   sql<string | null>`(SELECT ofn.position_name FROM employees e2 JOIN org_functions ofn ON ofn.id = e2.org_function_id WHERE e2.id = ${hrEmployees.id})`,
+        orgDepartmentName: sql<string | null>`(SELECT od.name FROM employees e3 JOIN org_functions ofn ON ofn.id = e3.org_function_id JOIN org_departments od ON od.id = ofn.department_id WHERE e3.id = ${hrEmployees.id})`,
       })
         .from(hrEmployees)
         .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))

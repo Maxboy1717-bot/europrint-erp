@@ -23,7 +23,7 @@ import { GsdGraph } from "@/components/GsdGraph";
 import type {
   Employee, PassportData, BankAccount, EmergencyContact, AttendanceRecord,
   DisciplineRecord, Certificate, AbcAnalysis, CourseProgressRecord,
-  SafetyViolation, PerformanceMetric, TransferRecord, OrgStructureAssignment,
+  SafetyViolation, PerformanceMetric, TransferRecord,
   EmploymentContract, SalaryHistoryRecord, BonusRecord, FineRecord,
   OvertimeRecord, CashAdvanceRecord, LeaveRequest, SickLeaveRecord, BusinessTrip,
   ShiftSwapRecord, SkillGapData, MentorshipData, MesSummary, WmsSummary,
@@ -159,7 +159,6 @@ export default function EmployeeProfile() {
   const { data: safetyViolations, isLoading: loadingSafety } = useQuery<SafetyViolation[]>({ queryKey: ['/api/safety-violations/user', id], enabled: !!id });
   const { data: metrics } = useQuery<PerformanceMetric[]>({ queryKey: [`/api/erp/employee/${id}/metrics`], enabled: !!id });
   const { data: transfers } = useQuery<TransferRecord[]>({ queryKey: [`/api/erp/employee/${id}/transfer-history`], enabled: !!id });
-  const { data: orgStructureData } = useQuery<{ primary: OrgStructureAssignment; all: OrgStructureAssignment[] }>({ queryKey: [`/api/hr/employees/${id}/org-structure`], enabled: !!id });
   const mkArrFn = <T,>(path: string) => async (): Promise<T[]> => {
     try {
       const json = await apiRequest<unknown>('GET', path);
@@ -312,7 +311,7 @@ export default function EmployeeProfile() {
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xodimProfili")}</b></>}
         title={t("xodimProfili")}
       /></div>
-      <ProfileHeader employee={employee} abcData={abcData} orgStructureData={orgStructureData} contracts={contracts} certificatesData={certificatesData} payrollSummary={payrollSummary} salaryHistory={salaryHistory} expiredCerts={expiredCerts} expiringSoonCerts={expiringSoonCerts} getInitials={getInitials} onEdit={() => setEditDialogOpen(true)} attendanceStats={attStats} attendanceData={attendanceData} />
+      <ProfileHeader employee={employee} abcData={abcData} contracts={contracts} certificatesData={certificatesData} payrollSummary={payrollSummary} salaryHistory={salaryHistory} expiredCerts={expiredCerts} expiringSoonCerts={expiringSoonCerts} getInitials={getInitials} onEdit={() => setEditDialogOpen(true)} attendanceStats={attStats} attendanceData={attendanceData} />
       {isAdminOrHrManager && (
         <Card className="border border-border shadow-none"><CardContent className="p-4 flex flex-wrap items-center gap-6"><div className="flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground"><Shield className="h-3.5 w-3.5" /> {t("kirishHuquqlari")}</div><Select value={employee.role || "employee"} onValueChange={(val) => updateRoleMutation.mutate(val)} disabled={updateRoleMutation.isPending}><SelectTrigger className="h-9 text-xs w-44"><SelectValue /></SelectTrigger><SelectContent>{(Array.isArray(ROLE_OPTIONS) ? ROLE_OPTIONS : []).map(r => <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>)}</SelectContent></Select><div className="flex items-center gap-2">{employee.hasPassword ? <Badge className="bg-green-100 text-green-800 text-xs"><ShieldCheck className="h-3 w-3 mr-1" /> {t("ornatilgan")}</Badge> : <Badge className="bg-red-50 text-[var(--ep-red)] text-xs"><ShieldAlert className="h-3 w-3 mr-1" /> {t("ornatilmagan")}</Badge>}</div></CardContent></Card>
       )}

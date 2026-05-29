@@ -2,14 +2,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UserCheck, Hash, AlertTriangle, AlertCircle, CheckCircle, Pencil } from "lucide-react";
-import { Employee, AbcAnalysis, OrgStructureAssignment, EmploymentContract, Certificate, SalaryHistoryRecord } from "@/pages/employee-profile/profile-types";
+import { Employee, AbcAnalysis, EmploymentContract, Certificate, SalaryHistoryRecord } from "@/pages/employee-profile/profile-types";
 import { RoleGate, PII_VIEWER_ROLES } from "@/components/RoleGate";
 import { tLabel } from "@/lib/i18n/tLabel";
 
 interface ProfileHeaderProps {
   employee: Employee;
   abcData?: AbcAnalysis;
-  orgStructureData?: { primary: OrgStructureAssignment; all: OrgStructureAssignment[] };
   contracts?: EmploymentContract[];
   certificatesData?: Certificate[];
   payrollSummary?: { totalSalary?: number; periodName?: string; [key: string]: unknown };
@@ -28,7 +27,6 @@ interface ProfileHeaderProps {
 export function ProfileHeader({
   employee,
   abcData,
-  orgStructureData,
   contracts,
   certificatesData,
   payrollSummary,
@@ -125,10 +123,10 @@ export function ProfileHeader({
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   <span className="font-semibold text-foreground">
-                    {orgStructureData?.primary?.positionName || "—"}
+                    {employee.orgPositionName || "—"}
                   </span>
-                  {orgStructureData?.primary?.departmentName && (
-                    <> · <span>{orgStructureData.primary.departmentName}</span></>
+                  {employee.orgDepartmentName && (
+                    <> · <span>{employee.orgDepartmentName}</span></>
                   )}
                   {employee.shift && <> · <span className="text-muted-foreground">{employee.shift}</span></>}
                 </p>
