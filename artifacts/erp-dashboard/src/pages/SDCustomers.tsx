@@ -12,6 +12,7 @@
  */
 
 import { useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -108,6 +109,7 @@ export default function SDCustomers() {
   const [pageSize, setPageSize] = useState(50);
   const { toast } = useToast();
   const qc = useQueryClient();
+  const [, setLocation] = useLocation();
 
   // Edit dialog
   const [editDialog, setEditDialog] = useState<{ open: boolean; customer?: CustomerRow }>({ open: false });
@@ -322,7 +324,12 @@ export default function SDCustomers() {
                       const seg = c.customerCategory || c.segment || "C";
                       const debt = Number(c.openDebt || 0);
                       return (
-                        <TableRow key={c.id} className="hover:bg-muted/40 transition-colors border-none" data-testid={`row-customer-${c.id}`}>
+                        <TableRow
+                          key={c.id}
+                          className="hover:bg-muted/40 transition-colors border-none cursor-pointer"
+                          data-testid={`row-customer-${c.id}`}
+                          onClick={() => setLocation(`/sd/customers/${c.id}`)}
+                        >
                           <TableCell className="py-3 px-4">
                             <div className="font-medium text-sm text-foreground">{c.name}</div>
                             {c.phone && <div className="text-xs text-muted-foreground">{c.phone}</div>}
@@ -347,7 +354,7 @@ export default function SDCustomers() {
                                 variant="ghost"
                                 size="sm"
                                 className="h-7 px-2 text-xs"
-                                onClick={() => { setView360Dialog({ open: true, customerId: c.id }); setTab360("orders"); }}
+                                onClick={(e) => { e.stopPropagation(); setLocation(`/sd/customers/${c.id}`); }}
                                 data-testid={`btn-360-${c.id}`}
                               >
                                 360°
@@ -356,7 +363,7 @@ export default function SDCustomers() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7"
-                                onClick={() => openEdit(c)}
+                                onClick={(e) => { e.stopPropagation(); openEdit(c); }}
                                 data-testid={`btn-edit-${c.id}`}
                               >
                                 <Pencil className="h-3.5 w-3.5" />
@@ -365,7 +372,7 @@ export default function SDCustomers() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 text-[var(--ep-red)] hover:text-[var(--ep-red)]"
-                                onClick={() => setDeleteDialog({ open: true, id: c.id, name: c.name })}
+                                onClick={(e) => { e.stopPropagation(); setDeleteDialog({ open: true, id: c.id, name: c.name }); }}
                                 data-testid={`btn-delete-${c.id}`}
                               >
                                 <Trash2 className="h-3.5 w-3.5" />

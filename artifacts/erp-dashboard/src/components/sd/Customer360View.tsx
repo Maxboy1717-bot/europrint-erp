@@ -27,16 +27,16 @@ import { fmtMoney } from "./helpers";
 import { useTranslation } from '@/lib/i18n';
 
 const TABS = [
-  { value: "basic", label: "Asosiy", icon: Building2 },
-  { value: "orders", label: "Buyurtmalar", icon: ShoppingCart },
-  { value: "finance", label: "Moliya", icon: Wallet },
-  { value: "communications", label: "Muloqot", icon: MessageSquare },
-  { value: "complaints", label: "Shikoyatlar", icon: ShieldAlert },
-  { value: "segmentation", label: "ABC", icon: BarChart3 },
-  { value: "growth", label: "Rivojlanish", icon: TrendingUp },
-  { value: "competitors", label: "Raqobat", icon: Swords },
-  { value: "contracts", label: "Shartnomalar", icon: FileText },
-  { value: "ltv", label: "LTV", icon: Target },
+  { value: "basic",          labelKey: "360.tab.basic",          labelDefault: "Asosiy",       icon: Building2 },
+  { value: "orders",         labelKey: "360.tab.orders",         labelDefault: "Buyurtmalar",  icon: ShoppingCart },
+  { value: "finance",        labelKey: "360.tab.finance",        labelDefault: "Moliya",       icon: Wallet },
+  { value: "communications", labelKey: "360.tab.communications", labelDefault: "Muloqot",      icon: MessageSquare },
+  { value: "complaints",     labelKey: "360.tab.complaints",     labelDefault: "Shikoyatlar",  icon: ShieldAlert },
+  { value: "segmentation",   labelKey: "360.tab.segmentation",   labelDefault: "ABC",          icon: BarChart3 },
+  { value: "growth",         labelKey: "360.tab.growth",         labelDefault: "Rivojlanish",  icon: TrendingUp },
+  { value: "competitors",    labelKey: "360.tab.competitors",    labelDefault: "Raqobat",      icon: Swords },
+  { value: "contracts",      labelKey: "360.tab.contracts",      labelDefault: "Shartnomalar", icon: FileText },
+  { value: "ltv",            labelKey: "360.tab.ltv",            labelDefault: "LTV",          icon: Target },
 ];
 
 const SEG_COLORS: Record<string, { bg: string; text: string; ring: string }> = {
@@ -97,6 +97,7 @@ interface Customer360Data {
 
 export function Customer360View({ customerId, onBack }: { customerId: number; onBack: () => void }) {
   const { t } = useTranslation("common");
+  const { t: tSd } = useTranslation("sd");
   const { data, isLoading } = useQuery<Customer360Data>({
     queryKey: ["/api/sd/customers", customerId, "360"],
     queryFn: () => apiRequest<Customer360Data>("GET", `/api/sd/customers/${customerId}/360`),
@@ -231,12 +232,12 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
       <Tabs defaultValue="basic" className="w-full">
         <div className="overflow-x-auto -mx-1 px-1 pb-1">
           <TabsList className="inline-flex w-max gap-0.5 h-auto p-1 bg-muted/60 rounded-xl">
-            {TABS.map(t => (
-              <TabsTrigger key={t.value} value={t.value}
+            {TABS.map(tab => (
+              <TabsTrigger key={tab.value} value={tab.value}
                 className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                data-testid={`tab-${t.value}`}>
-                <t.icon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t.label}</span>
+                data-testid={`tab-${tab.value}`}>
+                <tab.icon className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{tSd(tab.labelKey, tab.labelDefault)}</span>
               </TabsTrigger>
             ))}
           </TabsList>
