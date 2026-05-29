@@ -109,9 +109,7 @@ function KpiTile({ label, value, icon: Icon, iconBg }: {
   );
 }
 
-function BarChart({ data, calloutIndex = -1 }: {
-  data: { label: string; value: number }[]; calloutIndex?: number;
-}) {
+function BarChart({ data }: { data: { label: string; value: number }[] }) {
   const rows = Array.isArray(data) ? data : [];
   const max = Math.max(1, ...rows.map((d) => d.value));
   if (rows.length === 0) {
@@ -119,18 +117,22 @@ function BarChart({ data, calloutIndex = -1 }: {
   }
   return (
     <div className="chart-row">
-      {rows.map((d, i) => (
-        <div key={`${d.label}-${i}`} className="bar-grp">
-          {i === calloutIndex && <div className="bar-callout">{d.label} · {d.value}</div>}
-          <div className="stack">
-            <div
-              className={`bar stripe${i === calloutIndex ? " dark" : ""}`}
-              style={{ height: `${Math.max(4, (d.value / max) * 140)}px` }}
-            />
+      {rows.map((d, i) => {
+        const isMax = d.value === max && d.value > 0;
+        return (
+          <div key={`${d.label}-${i}`} className="bar-grp">
+            {/* value label above every bar — so each month's count is readable */}
+            <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6, color: isMax ? "var(--ep-primary)" : "var(--fg1)" }}>{d.value}</div>
+            <div className="stack">
+              <div
+                className={`bar stripe${isMax ? " dark" : ""}`}
+                style={{ height: `${Math.max(4, (d.value / max) * 130)}px` }}
+              />
+            </div>
+            <div className="lbl">{d.label}</div>
           </div>
-          <div className="lbl">{d.label}</div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -243,14 +245,11 @@ export default function SDDashboard() {
   const greet = hour < 12 ? tLabel("sd.morning", "Xayrli tong") : hour < 18 ? tLabel("sd.day", "Xayrli kun") : tLabel("sd.evening", "Xayrli kech");
   const firstName = user?.firstName || tLabel("sd.colleague", "hamkasb");
 
-  // Bar chart — monthly order counts; highlight the peak month
+  // Bar chart — monthly order counts (peak month(s) highlighted, value shown on each bar)
   const barData = trendRows.map((row) => {
     const m = row.month ? new Date(row.month).getMonth() : NaN;
     return { label: Number.isFinite(m) ? UZ_MONTHS[m] : "", value: Number(row.order_count ?? 0) };
   });
-  const calloutIndex = barData.length
-    ? barData.reduce((best, d, i, arr) => (d.value > arr[best].value ? i : best), 0)
-    : -1;
 
   // Donut — order-status breakdown (real status counts)
   const pend = Number(stats.pending_orders ?? 0);
@@ -316,7 +315,7 @@ export default function SDDashboard() {
             </div>
           </div>
           <div className="card-body" style={{ paddingBottom: 28 }}>
-            <BarChart data={barData} calloutIndex={calloutIndex} />
+            <BarChart data={barData} />
           </div>
         </div>
 
