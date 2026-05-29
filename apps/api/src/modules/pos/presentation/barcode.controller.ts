@@ -10,7 +10,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
  */
 
 import {Controller, Get, Post, Body, Query, Param,
-  UseGuards, ParseIntPipe, Logger, UseInterceptors , UsePipes,} from '@nestjs/common';
+  UseGuards, ParseIntPipe, Logger, UseInterceptors , UsePipes, BadRequestException,} from '@nestjs/common';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -29,6 +29,7 @@ import {
   PrintLabelDto,
   ReviewAiSuggestionDto,
   GenerateEan13Dto,
+  LookupBarcodeQuerySchema,
 } from '../dto/barcode.dto';
 import { unwrapOrInternal } from '@common/http-result';
 
@@ -49,6 +50,19 @@ export class BarcodeController {
   @ApiOperation({ summary: 'EAN-13 barcode skanerlash (Redis cache → DB → AI)' })
   async scan(@Body() dto: ScanBarcodeDto, @CurrentUser() user: AuthenticatedUser) {
     return unwrapOrInternal(await this.barcodeService.scanBarcode(dto, user.id));
+  }
+
+  // ─── Lookup (navigatsiya) ─────────────────────────────────────────────────
+
+  @Get('lookup')
+  @RequirePermission('pos.barcode.scan')
+  @ApiOperation({ summary: 'Barcode bo\'yicha material kartochka topish (navigatsiya)' })
+  async lookup(@Query('barcode') barcodeRaw?: string) {
+    const parsed = LookupBarcodeQuerySchema.safeParse({ barcode: barcodeRaw });
+    if (!parsed.success) {
+      throw new BadRequestException('barcode query parametri majburiy (1–200 belgi)');
+    }
+    return unwrapOrInternal(await this.barcodeService.lookupByBarcode(parsed.data.barcode));
   }
 
   // ─── Tayinlash ────────────────────────────────────────────────────────────

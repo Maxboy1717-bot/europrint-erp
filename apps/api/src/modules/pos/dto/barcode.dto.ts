@@ -33,6 +33,13 @@ export const ScanBarcodeSchema = z.object({
 });
 export class ScanBarcodeDto extends createZodDto(ScanBarcodeSchema) {}
 
+// ─── Lookup Barcode (query) ─────────────────────────────────────────────────
+
+export const LookupBarcodeQuerySchema = z.object({
+  barcode: z.string().trim().min(1).max(MAX_NAME_LENGTH),
+});
+export type LookupBarcodeQuery = z.infer<typeof LookupBarcodeQuerySchema>;
+
 export class ScanBarcodeResultDto {
   found: boolean;
   materialCard?: {

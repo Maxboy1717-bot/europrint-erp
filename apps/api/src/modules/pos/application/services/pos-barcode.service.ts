@@ -20,8 +20,8 @@ import {
   OnModuleInit, OnModuleDestroy,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { safeCall, Ok, Result, AppError } from '@common/result';
-import { PosBarcodeRepository } from '../../infrastructure/repositories/pos-barcode.repository';
+import { safeCall, Ok, Err, AppErr, Result, AppError } from '@common/result';
+import { PosBarcodeRepository, type BarcodeLookupRow } from '../../infrastructure/repositories/pos-barcode.repository';
 import { materialCards, barcodeMap, posBarcodePrintQueue, materialCardSuggestions, db, eq, sql } from '@workspace/db';
 
 import { PosAuditService } from './pos-audit.service';
@@ -204,6 +204,20 @@ export class PosBarcodeService implements OnModuleInit, OnModuleDestroy {
           }
         : undefined,
     };
+  }
+
+  // ─── Barcode Lookup (navigatsiya) ─────────────────────────────────────────
+
+  /**
+   * Barcode bo'yicha material kartochka topish (PosMaterials sahifasi skaner
+   * orqali `/pos-monitor/materials/:id` ga o'tish uchun ishlatadi).
+   * Topilmasa NOT_FOUND → controller 404 qaytaradi (soxta `{}` EMAS).
+   */
+  async lookupByBarcode(barcode: string): Promise<Result<BarcodeLookupRow>> {
+    const res = await this.barcodeRepo.lookupByBarcode(barcode);
+    if (!res.ok) return Err(res.error);
+    if (!res.data) return Err(AppErr('NOT_FOUND', `Barcode "${barcode}" topilmadi`));
+    return Ok(res.data);
   }
 
   // ─── Barcode Biriktirish ──────────────────────────────────────────────────

@@ -17,6 +17,15 @@ interface MaterialCardRow {
   min_interval_days: number; max_qty_per_issue: number;
 }
 
+export interface BarcodeLookupRow {
+  materialCardId: number;
+  id: number;
+  name: string;
+  sku: string | null;
+  unit: string | null;
+  barcode: string;
+}
+
 type Row = Record<string, unknown>;
 const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await db.execute(q)).rows as Row[]);
 
@@ -29,6 +38,38 @@ export class PosBarcodeRepository {
     return Err(String(_e));
   }
 
+  }
+
+  /**
+   * Barcode → material kartochka (navigatsiya uchun). Skanerlangan qiymat
+   * uchta sxema-haqiqiy manbada qidiriladi:
+   *   1. material_cards.barcode       (to'g'ridan)
+   *   2. pos_barcode_map.barcode      (tayinlangan → material_id)
+   *   3. material_barcodes.gtin/sscc  (GS1 kod → material_id)
+   * inventory_barcode_assignments (passport_id orqali) — bu yerda EMAS (P2).
+   */
+  async lookupByBarcode(barcode: string): Promise<Result<BarcodeLookupRow | null>> {
+    const res = await exec(sql`
+      SELECT
+        mc.id              AS "materialCardId",
+        mc.id              AS "id",
+        mc.xom_ashyo       AS "name",
+        mc.kod             AS "sku",
+        mc.unit_of_measure AS "unit",
+        ${barcode}::text   AS "barcode"
+      FROM material_cards mc
+      WHERE mc.barcode = ${barcode}
+         OR mc.id IN (
+              SELECT material_id FROM pos_barcode_map   WHERE barcode = ${barcode}
+              UNION
+              SELECT material_id FROM material_barcodes WHERE gtin = ${barcode} OR sscc = ${barcode}
+            )
+      ORDER BY (mc.barcode = ${barcode}) DESC
+      LIMIT 1
+    `);
+    if (!res.ok) return Err(res.error);
+    const list = Array.isArray(res.data) ? res.data : [];
+    return Ok(castTo<BarcodeLookupRow | null>(list[0] ?? null));
   }
 
   async checkBarcodeExists(barcode: string): Promise<Result<boolean>>  {
