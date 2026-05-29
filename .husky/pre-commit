@@ -58,6 +58,12 @@ node scripts/check-fe-antipatterns.mjs || exit 1
 # Diff-aware (only newly-added lines); Tailwind arbitrary [#hex] is WARN-only.
 node scripts/check-design-tokens.mjs || exit 1
 
+# 🛡️ Guard 2c — Legacy dept/pos endpoint regress lock
+# Blocks NEW FE usage of legacy /api/departments or /api/positions. All consumers
+# migrated to the org-schema: /api/org-departments (org_departments) and
+# /api/org-functions (org_functions = Lavozim). Diff-aware (newly-added lines).
+node scripts/check-no-legacy-dept-pos.mjs || exit 1
+
 # 🛡️ Guard 3 — Sidebar URL ↔ AppRouter mapping (informational, non-blocking)
 # Shows which sidebar URLs have no matching route (stubs are allowed).
 node scripts/check-sidebar-routes.mjs || true
