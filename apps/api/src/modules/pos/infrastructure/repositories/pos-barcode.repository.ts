@@ -12,8 +12,11 @@ import { Injectable } from '@nestjs/common';
 import { execPosBarcodeClearPrimary } from '@common/database/queries-remaining';
 
 interface MaterialCardRow {
-  id: number; xom_ashyo: string; xom_ashyo_ru: string; barcode: string;
-  unit_of_measure: string; is_consumable: boolean; is_indivisible: boolean;
+  id: number; kod: string; xom_ashyo: string; xom_ashyo_ru: string; barcode: string;
+  unit_of_measure: string; material_type: string;
+  unit_price: number; last_purchase_price: number;
+  current_stock: number; available_stock: number;
+  is_consumable: boolean; is_indivisible: boolean;
   min_interval_days: number; max_qty_per_issue: number;
 }
 
@@ -31,13 +34,40 @@ const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () 
 
 @Injectable()
 export class PosBarcodeRepository {
-  async findByBarcode(barcode: string): Promise<Result<MaterialCardRow | null>>  {
-  try {  
-      const r = await castTo<MaterialCardRow[]>(exec(sql`SELECT mc.id, mc.xom_ashyo, mc.xom_ashyo_ru, mc.barcode, mc.unit_of_measure, mc.is_consumable, mc.is_indivisible, COALESCE(mc.min_interval_days, 0) AS min_interval_days, COALESCE(mc.max_qty_per_issue, 0) AS max_qty_per_issue FROM material_cards mc WHERE mc.barcode = ${barcode} OR mc.id IN (SELECT material_card_id FROM inventory_barcode_assignments WHERE barcode = ${barcode} AND is_active = TRUE UNION SELECT material_card_id FROM pos_barcode_map WHERE barcode = ${barcode} AND is_primary = TRUE) LIMIT 1`));
-      return Ok(r[0] ?? null);  } catch (_e) {
-    return Err(String(_e));
-  }
-
+  async findByBarcode(barcode: string): Promise<Result<MaterialCardRow | null>> {
+    // is_consumable / is_indivisible / min_interval_days / max_qty_per_issue:
+    // material_cards (na boshqa jadval) bu issue-policy ustunlariga ega EMAS
+    // (jonli DB da tasdiqlangan) → neytral default (cheklovsiz). Skaner natijasi
+    // shaklini saqlash uchun proyeksiyada qaytariladi.
+    const res = await exec(sql`
+      SELECT
+        mc.id,
+        mc.kod,
+        mc.xom_ashyo,
+        mc.xom_ashyo_ru,
+        mc.barcode,
+        mc.unit_of_measure,
+        mc.material_type,
+        mc.unit_price,
+        mc.last_purchase_price,
+        mc.current_stock,
+        mc.available_stock,
+        FALSE AS is_consumable,
+        FALSE AS is_indivisible,
+        0     AS min_interval_days,
+        0     AS max_qty_per_issue
+      FROM material_cards mc
+      WHERE mc.barcode = ${barcode}
+         OR mc.id IN (
+              SELECT material_id FROM pos_barcode_map   WHERE barcode = ${barcode} AND is_primary = TRUE
+              UNION
+              SELECT material_id FROM material_barcodes WHERE gtin = ${barcode} OR sscc = ${barcode}
+            )
+      LIMIT 1
+    `);
+    if (!res.ok) return Err(res.error);
+    const rows = Array.isArray(res.data) ? res.data : [];
+    return Ok(castTo<MaterialCardRow | null>(rows[0] ?? null));
   }
 
   /**

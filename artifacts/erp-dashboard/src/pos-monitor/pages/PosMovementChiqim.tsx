@@ -69,7 +69,16 @@ export default function PosMovementChiqim() {
 
     setScanning(true);
     try {
-      const result = await barcodeApi.scan({ barcode: barcode.trim(), warehouseId: fromWarehouseId }) as BarcodeResult | null;
+      const scan = await barcodeApi.scan({ barcode: barcode.trim(), warehouseId: fromWarehouseId });
+      const mc = scan && scan.found ? scan.materialCard : undefined;
+      const result: BarcodeResult | null = mc
+        ? {
+            id: mc.id, materialCardId: mc.id, name: mc.xomAshyo, nameUz: mc.xomAshyo,
+            code: mc.kod, sku: mc.kod, unit: mc.unitOfMeasure,
+            currentQty: mc.currentStock, availableQty: mc.availableStock,
+            materialType: mc.materialType, unitPrice: mc.unitPrice, lastPrice: mc.lastPurchasePrice,
+          }
+        : null;
 
       if (!result || (!result.id && !result.materialCardId)) {
         playBeep(false); setScanFlash("error"); setTimeout(() => setScanFlash(null), 600);

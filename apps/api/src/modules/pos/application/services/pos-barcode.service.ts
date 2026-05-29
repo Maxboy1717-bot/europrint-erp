@@ -142,7 +142,11 @@ export class PosBarcodeService implements OnModuleInit, OnModuleDestroy {
     }
 
     // 2. DB qidirish
-    const cardRow = await this.barcodeRepo.findByBarcode(dto.barcode);
+    const cardRes = await this.barcodeRepo.findByBarcode(dto.barcode);
+    if (!cardRes.ok) {
+      this.logger.warn(`Barcode DB qidiruv xatosi: ${dto.barcode} — ${String(cardRes.error)}`);
+    }
+    const cardRow = cardRes.ok ? cardRes.data : null;
 
     if (cardRow) {
       const card: Record<string, unknown> = castTo<Record<string, unknown>>(cardRow);
@@ -150,15 +154,21 @@ export class PosBarcodeService implements OnModuleInit, OnModuleDestroy {
       await this.cacheSet(
         BARCODE_CACHE_KEY(dto.barcode),
         JSON.stringify({
-          id:              card['id'],
-          xomAshyo:        card['xom_ashyo'],
-          xomAshyoRu:      card['xom_ashyo_ru'],
-          barcode:         card['barcode'],
-          unitOfMeasure:   card['unit_of_measure'],
-          isConsumable:    card['is_consumable'],
-          isIndivisible:   card['is_indivisible'],
-          minIntervalDays: card['min_interval_days'],
-          maxQtyPerIssue:  card['max_qty_per_issue'],
+          id:                card['id'],
+          kod:               card['kod'],
+          xomAshyo:          card['xom_ashyo'],
+          xomAshyoRu:        card['xom_ashyo_ru'],
+          barcode:           card['barcode'],
+          unitOfMeasure:     card['unit_of_measure'],
+          materialType:      card['material_type'],
+          unitPrice:         Number(card['unit_price'] ?? 0),
+          lastPurchasePrice: Number(card['last_purchase_price'] ?? 0),
+          currentStock:      Number(card['current_stock'] ?? 0),
+          availableStock:    Number(card['available_stock'] ?? 0),
+          isConsumable:      card['is_consumable'],
+          isIndivisible:     card['is_indivisible'],
+          minIntervalDays:   card['min_interval_days'],
+          maxQtyPerIssue:    card['max_qty_per_issue'],
         }),
         BARCODE_CACHE_TTL,
       );
@@ -172,15 +182,21 @@ export class PosBarcodeService implements OnModuleInit, OnModuleDestroy {
       return {
         found: true,
         materialCard: {
-          id:              card['id'] as number,
-          xomAshyo:        card['xom_ashyo'] as string,
-          xomAshyoRu:      card['xom_ashyo_ru'] as string,
-          barcode:         card['barcode'] as string,
-          unitOfMeasure:   card['unit_of_measure'] as string,
-          isConsumable:    card['is_consumable'] as boolean,
-          isIndivisible:   card['is_indivisible'] as boolean,
-          minIntervalDays: Number(card['min_interval_days']),
-          maxQtyPerIssue:  Number(card['max_qty_per_issue']),
+          id:                card['id'] as number,
+          kod:               (card['kod'] as string) ?? '',
+          xomAshyo:          card['xom_ashyo'] as string,
+          xomAshyoRu:        card['xom_ashyo_ru'] as string,
+          barcode:           card['barcode'] as string,
+          unitOfMeasure:     card['unit_of_measure'] as string,
+          materialType:      (card['material_type'] as string) ?? '',
+          unitPrice:         Number(card['unit_price'] ?? 0),
+          lastPurchasePrice: Number(card['last_purchase_price'] ?? 0),
+          currentStock:      Number(card['current_stock'] ?? 0),
+          availableStock:    Number(card['available_stock'] ?? 0),
+          isConsumable:      card['is_consumable'] as boolean,
+          isIndivisible:     card['is_indivisible'] as boolean,
+          minIntervalDays:   Number(card['min_interval_days']),
+          maxQtyPerIssue:    Number(card['max_qty_per_issue']),
           ...stockInfo,
         },
       };

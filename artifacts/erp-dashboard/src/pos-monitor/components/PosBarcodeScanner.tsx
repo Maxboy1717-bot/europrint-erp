@@ -61,9 +61,10 @@ export default function PosBarcodeScanner({ onResult, onClose }: Props) {
     if (!barcode.trim()) return;
     setScanning(true);
     try {
-      const r = await barcodeApi.scan({ barcode }) as ScanResult | null;
-      const result: ScanResult = r
-        ? { barcode, material: r.material, found: !!r.material }
+      const r = await barcodeApi.scan({ barcode });
+      const mc = r && r.found ? r.materialCard : undefined;
+      const result: ScanResult = mc
+        ? { barcode, found: true, material: { id: mc.id, name: mc.xomAshyo, sku: mc.kod, unit: mc.unitOfMeasure } }
         : { barcode, found: false };
 
       if (result.found) { playPing(); }

@@ -44,10 +44,14 @@ export class ScanBarcodeResultDto {
   found: boolean;
   materialCard?: {
     id: number;
+    kod: string;
     xomAshyo: string;
     xomAshyoRu: string;
     barcode: string;
     unitOfMeasure: string;
+    materialType: string;
+    unitPrice: number;
+    lastPurchasePrice: number;
     isConsumable: boolean;
     isIndivisible: boolean;
     minIntervalDays: number;

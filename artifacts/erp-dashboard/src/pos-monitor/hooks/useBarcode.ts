@@ -44,8 +44,21 @@ export function useBarcode(onFound?: (m: ScannedMaterial) => void): UseBarcodeRe
     setScanning(true);
     setError("");
     try {
-      const result = await barcodeApi.scan({ barcode: trimmed });
-      const material = result as ScannedMaterial;
+      const r = await barcodeApi.scan({ barcode: trimmed });
+      const mc = r && r.found ? r.materialCard : undefined;
+      if (!mc) {
+        setError("Barcode topilmadi");
+        setLastScanned(null);
+        return;
+      }
+      const material: ScannedMaterial = {
+        id:         mc.id,
+        code:       mc.kod,
+        nameUz:     mc.xomAshyo,
+        barcode:    mc.barcode,
+        unit:       mc.unitOfMeasure,
+        currentQty: mc.currentStock,
+      };
       setLastScanned(material);
       onFound?.(material);
       setManualInput("");

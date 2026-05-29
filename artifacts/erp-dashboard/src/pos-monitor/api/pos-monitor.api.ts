@@ -153,9 +153,42 @@ export const movementsApi = {
 
 // ─── Barcode ───────────────────────────────────────────────────────────────
 
+/** Canonical scan material card — mirrors BE ScanBarcodeResultDto.materialCard. */
+export interface ScanMaterialCard {
+  id: number;
+  kod: string;
+  xomAshyo: string;
+  xomAshyoRu: string;
+  barcode: string;
+  unitOfMeasure: string;
+  materialType: string;
+  unitPrice: number;
+  lastPurchasePrice: number;
+  isConsumable: boolean;
+  isIndivisible: boolean;
+  minIntervalDays: number;
+  maxQtyPerIssue: number;
+  currentStock?: number;
+  availableStock?: number;
+}
+
+/** Canonical /barcode/scan envelope — mirrors BE ScanBarcodeResultDto. */
+export interface ScanBarcodeResult {
+  found: boolean;
+  materialCard?: ScanMaterialCard;
+  aiSuggestionId?: number;
+  aiSuggestion?: {
+    suggestedName: string;
+    suggestedNameRu: string;
+    suggestedUnit: string;
+    confidence: number;
+    reasoning: string;
+  };
+}
+
 export const barcodeApi = {
   scan:       (b: { barcode: string; warehouseId?: string }) =>
-    posReq("POST", "/barcode/scan", b),
+    posReq<ScanBarcodeResult>("POST", "/barcode/scan", b),
   printLabel: (b: Record<string, unknown>) =>
     posReq("POST", "/barcode/print", b),
   lookup:     (barcode: string) =>
