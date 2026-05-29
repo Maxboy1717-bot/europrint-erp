@@ -568,5 +568,8 @@
   "inps12": "INPS (12%):",
   "birlik": "/бирлик",
   "paymentTerms": "Тўлов шартлари",
-  "deliveryStatus": "Йетказиб бериш ҳолати"
+  "deliveryStatus": "Йетказиб бериш ҳолати",
+  "cashFlowManagement": "Пул Оқими Бошқаруви",
+  "currentBalance": "Жорий Баланс",
+  "bankAccount": "Банк Ҳисоби"
 }

@@ -57,6 +57,57 @@ import uzReports       from '../../locales/uz/reports.json';
 import uzRequests      from '../../locales/uz/requests.json';
 import uzVariance      from '../../locales/uz/variance.json';
 
+// ─── UZ-CYR (Kirill) tarjimalari ──────────────────────────────────────────────
+import cyrCommon        from '../../locales/uz-cyr/common.json';
+import cyrAuth          from '../../locales/uz-cyr/auth.json';
+import cyrDashboard     from '../../locales/uz-cyr/dashboard.json';
+import cyrHR            from '../../locales/uz-cyr/hr.json';
+import cyrFinance       from '../../locales/uz-cyr/finance.json';
+import cyrProduction    from '../../locales/uz-cyr/production.json';
+import cyrWarehouse     from '../../locales/uz-cyr/warehouse.json';
+import cyrWms           from '../../locales/uz-cyr/wms.json';
+import cyrCRM           from '../../locales/uz-cyr/crm.json';
+import cyrLMS           from '../../locales/uz-cyr/lms.json';
+import cyrSettings      from '../../locales/uz-cyr/settings.json';
+import cyrErrors        from '../../locales/uz-cyr/errors.json';
+import cyrValidation    from '../../locales/uz-cyr/validation.json';
+import cyrMarketing     from '../../locales/uz-cyr/marketing.json';
+import cyrNavigation    from '../../locales/uz-cyr/navigation.json';
+import cyrPublic        from '../../locales/uz-cyr/public.json';
+import cyrSd            from '../../locales/uz-cyr/sd.json';
+import cyrMes           from '../../locales/uz-cyr/mes.json';
+import cyrKanban        from '../../locales/uz-cyr/kanban.json';
+import cyrDirector      from '../../locales/uz-cyr/director.json';
+import cyrSecurity      from '../../locales/uz-cyr/security.json';
+import cyrNotifications from '../../locales/uz-cyr/notifications.json';
+import cyrIot           from '../../locales/uz-cyr/iot.json';
+import cyrAdmin         from '../../locales/uz-cyr/admin.json';
+import cyrMro           from '../../locales/uz-cyr/mro.json';
+import cyrDesign        from '../../locales/uz-cyr/design.json';
+import cyrLogistics     from '../../locales/uz-cyr/logistics.json';
+import cyrPos           from '../../locales/uz-cyr/pos.json';
+import cyrAi            from '../../locales/uz-cyr/ai.json';
+import cyrAisha         from '../../locales/uz-cyr/aisha.json';
+import cyrCoordination  from '../../locales/uz-cyr/coordination.json';
+import cyrPrint         from '../../locales/uz-cyr/print.json';
+import cyrBarcode       from '../../locales/uz-cyr/barcode.json';
+import cyrCalc          from '../../locales/uz-cyr/calc.json';
+import cyrContact       from '../../locales/uz-cyr/contact.json';
+import cyrFooter        from '../../locales/uz-cyr/footer.json';
+import cyrGlPosting     from '../../locales/uz-cyr/glPosting.json';
+import cyrInventory     from '../../locales/uz-cyr/inventory.json';
+import cyrLedger        from '../../locales/uz-cyr/ledger.json';
+import cyrLowstock      from '../../locales/uz-cyr/lowstock.json';
+import cyrMovements     from '../../locales/uz-cyr/movements.json';
+import cyrMyInventory   from '../../locales/uz-cyr/myInventory.json';
+import cyrNav           from '../../locales/uz-cyr/nav.json';
+import cyrOffline       from '../../locales/uz-cyr/offline.json';
+import cyrQcreview      from '../../locales/uz-cyr/qcreview.json';
+import cyrQuarantine    from '../../locales/uz-cyr/quarantine.json';
+import cyrReports       from '../../locales/uz-cyr/reports.json';
+import cyrRequests      from '../../locales/uz-cyr/requests.json';
+import cyrVariance      from '../../locales/uz-cyr/variance.json';
+
 // ─── RU tarjimalari ───────────────────────────────────────────────────────────
 import ruCommon        from '../../locales/ru/common.json';
 import ruAuth          from '../../locales/ru/auth.json';
@@ -161,6 +212,58 @@ export const ALL_TRANSLATIONS: AllTranslations = {
     reports:       uzReports       as unknown as TranslationModule,
     requests:      uzRequests      as unknown as TranslationModule,
     variance:      uzVariance      as unknown as TranslationModule,
+  },
+  'uz-cyr': {
+    common:        cyrCommon        as unknown as TranslationModule,
+    auth:          cyrAuth          as unknown as TranslationModule,
+    dashboard:     cyrDashboard     as unknown as TranslationModule,
+    hr:            cyrHR            as unknown as TranslationModule,
+    finance:       cyrFinance       as unknown as TranslationModule,
+    production:    cyrProduction    as unknown as TranslationModule,
+    warehouse:     cyrWarehouse     as unknown as TranslationModule,
+    wms:           cyrWms           as unknown as TranslationModule,
+    crm:           cyrCRM           as unknown as TranslationModule,
+    lms:           cyrLMS           as unknown as TranslationModule,
+    settings:      cyrSettings      as unknown as TranslationModule,
+    errors:        cyrErrors        as unknown as TranslationModule,
+    validation:    cyrValidation    as unknown as TranslationModule,
+    marketing:     cyrMarketing     as unknown as TranslationModule,
+    navigation:    cyrNavigation    as unknown as TranslationModule,
+    public:        cyrPublic        as unknown as TranslationModule,
+    sd:            cyrSd            as unknown as TranslationModule,
+    mes:           cyrMes           as unknown as TranslationModule,
+    kanban:        cyrKanban        as unknown as TranslationModule,
+    director:      cyrDirector      as unknown as TranslationModule,
+    security:      cyrSecurity      as unknown as TranslationModule,
+    notifications: cyrNotifications as unknown as TranslationModule,
+    iot:           cyrIot           as unknown as TranslationModule,
+    admin:         cyrAdmin         as unknown as TranslationModule,
+    mro:           cyrMro           as unknown as TranslationModule,
+    design:        cyrDesign        as unknown as TranslationModule,
+    logistics:     cyrLogistics     as unknown as TranslationModule,
+    pos:           cyrPos           as unknown as TranslationModule,
+    ai:            cyrAi            as unknown as TranslationModule,
+    aisha:         cyrAisha         as unknown as TranslationModule,
+    coordination:  cyrCoordination  as unknown as TranslationModule,
+    print:         cyrPrint         as unknown as TranslationModule,
+    barcode:       cyrBarcode       as unknown as TranslationModule,
+    calc:          cyrCalc          as unknown as TranslationModule,
+    contact:       cyrContact       as unknown as TranslationModule,
+    footer:        cyrFooter        as unknown as TranslationModule,
+    glPosting:     cyrGlPosting     as unknown as TranslationModule,
+    inventory:     cyrInventory     as unknown as TranslationModule,
+    ledger:        cyrLedger        as unknown as TranslationModule,
+    lowstock:      cyrLowstock      as unknown as TranslationModule,
+    movements:     cyrMovements     as unknown as TranslationModule,
+    myInventory:   cyrMyInventory   as unknown as TranslationModule,
+    nav:           cyrNav           as unknown as TranslationModule,
+    offline:       cyrOffline       as unknown as TranslationModule,
+    qcreview:      cyrQcreview      as unknown as TranslationModule,
+    qc:            cyrQcreview      as unknown as TranslationModule,
+    quarantine:    cyrQuarantine    as unknown as TranslationModule,
+    reports:       cyrReports       as unknown as TranslationModule,
+    requests:      cyrRequests      as unknown as TranslationModule,
+    variance:      cyrVariance      as unknown as TranslationModule,
   },
   ru: {
     common:        ruCommon        as unknown as TranslationModule,

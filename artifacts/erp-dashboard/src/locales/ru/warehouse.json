@@ -446,5 +446,13 @@
   "miqdorniSozlash": "Настройка количества",
   "sabab": "Причина",
   "sabab2": "Причина",
-  "k10Yoki5": "10 или -5"
+  "k10Yoki5": "10 или -5",
+  "WMSExtended.kochirish": "Перемещение",
+  "WMSExtended.ichkiSorovlar": "Внутренние запросы",
+  "translations.fefoOptimizatsiyasiBilanAiAsosiy": "AI-резервирование материалов с FEFO-оптимизацией",
+  "translations.aiZaxiraSorovi": "AI запрос резерва",
+  "translations.zaxiraSorovlariTarixi": "История запросов резерва",
+  "translations.ai": "AI Резерв",
+  "translations.aiFefo": "AI-резервирование с FEFO-оптимизацией",
+  "translations.untitled": "Неизвестно"
 }

@@ -568,5 +568,8 @@
   "inps12": "INPS (12%):",
   "birlik": "/единица",
   "paymentTerms": "Условия оплаты",
-  "deliveryStatus": "Статус доставки"
+  "deliveryStatus": "Статус доставки",
+  "cashFlowManagement": "Управление денежным потоком",
+  "currentBalance": "Текущий баланс",
+  "bankAccount": "Банковский счёт"
 }

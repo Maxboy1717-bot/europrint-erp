@@ -466,5 +466,8 @@
   "CandidateChecklist.material46MahsuldorlikShakliToldirildi": "Материал №46 — Форма продуктивности заполнена",
   "CandidateChecklist.tavsiyalarTekshirildiReferenceCheck": "Рекомендации проверены (Reference check)",
   "CandidateChecklist.taklifYuborildiOgzakiTaklifBerildi": "Оффер отправлен / устный оффер сделан",
-  "CandidateChecklist.30KunBaholashSuhbatiOtkazildi": "Проведено оценочное интервью 30-го дня"
+  "CandidateChecklist.30KunBaholashSuhbatiOtkazildi": "Проведено оценочное интервью 30-го дня",
+  "AIProductionPlanning.avtoTasdiqlangan": "Авто-подтверждено",
+  "AIProductionPlanning.tasdiqlangan": "Подтверждено",
+  "AIProductionPlanning.bajarilmoqda": "Выполняется"
 }

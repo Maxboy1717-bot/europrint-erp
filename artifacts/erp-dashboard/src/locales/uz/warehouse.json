@@ -446,5 +446,13 @@
   "mm.price": "Tsena",
   "mm.total": "Itogo",
   "mm.confirmDeleteTitle": "Udalit zakaz na zakupku",
-  "mm.confirmDeleteDesc": "Podtverjdaete udalenie etogo zakaza? Eto deystvie nelzya otmenit."
+  "mm.confirmDeleteDesc": "Podtverjdaete udalenie etogo zakaza? Eto deystvie nelzya otmenit.",
+  "WMSExtended.kochirish": "Ko'chirish",
+  "WMSExtended.ichkiSorovlar": "Ichki So'rovlar",
+  "translations.fefoOptimizatsiyasiBilanAiAsosiy": "FEFO optimizatsiyasi bilan AI-asosiy material rezervatsiyasi",
+  "translations.aiZaxiraSorovi": "AI Zaxira So'rovi",
+  "translations.zaxiraSorovlariTarixi": "Zaxira So'rovlari Tarixi",
+  "translations.ai": "AI Rezerv",
+  "translations.aiFefo": "FEFO optimizatsiyasi bilan AI rezervatsiyasi",
+  "translations.untitled": "Noma'lum"
 }

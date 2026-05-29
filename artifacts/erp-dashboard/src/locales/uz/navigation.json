@@ -683,5 +683,7 @@
   "topOtherModule": "Boshqalar",
   "topOtherArizalar": "Arizalar",
   "topOtherSozlamalar": "Sozlamalar",
-  "HR": "HR"
+  "HR": "HR",
+  "warehousesHeader": "Omborlar",
+  "warehouseFallback": "Ombor"
 }

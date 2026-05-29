@@ -562,5 +562,13 @@
   },
   "PosWarehouseDetail": {
     "nomalum": "Номаълум"
-  }
+  },
+  "WMSExtended.kochirish": "Кўчириш",
+  "WMSExtended.ichkiSorovlar": "Ички Сўровлар",
+  "translations.fefoOptimizatsiyasiBilanAiAsosiy": "FEFO оптимизацияси билан AI-асосий материал резервацияси",
+  "translations.aiZaxiraSorovi": "AI Захира Сўрови",
+  "translations.zaxiraSorovlariTarixi": "Захира Сўровлари Тарихи",
+  "translations.ai": "AI Резерв",
+  "translations.aiFefo": "FEFO оптимизацияси билан AI резервацияси",
+  "translations.untitled": "Номаълум"
 }

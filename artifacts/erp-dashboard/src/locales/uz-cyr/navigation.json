@@ -683,5 +683,7 @@
   "topOtherModule": "Бошқалар",
   "topOtherArizalar": "Аризалар",
   "topOtherSozlamalar": "Созламалар",
-  "HR": "HR"
+  "HR": "HR",
+  "warehousesHeader": "Омборлар",
+  "warehouseFallback": "Омбор"
 }

@@ -466,5 +466,8 @@
   "CandidateChecklist.material46MahsuldorlikShakliToldirildi": "Material №46 — Mahsuldorlik shakli to'ldirildi",
   "CandidateChecklist.tavsiyalarTekshirildiReferenceCheck": "Tavsiyalar tekshirildi (Reference check)",
   "CandidateChecklist.taklifYuborildiOgzakiTaklifBerildi": "Taklif yuborildi / og'zaki taklif berildi",
-  "CandidateChecklist.30KunBaholashSuhbatiOtkazildi": "30-kun baholash suhbati o'tkazildi"
+  "CandidateChecklist.30KunBaholashSuhbatiOtkazildi": "30-kun baholash suhbati o'tkazildi",
+  "AIProductionPlanning.avtoTasdiqlangan": "Avto-tasdiqlangan",
+  "AIProductionPlanning.tasdiqlangan": "Tasdiqlangan",
+  "AIProductionPlanning.bajarilmoqda": "Bajarilmoqda"
 }

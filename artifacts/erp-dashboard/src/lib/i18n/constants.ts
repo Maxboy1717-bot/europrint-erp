@@ -3,7 +3,7 @@
  * @description Frontend utility / library module.
  */
 
-export const SUPPORTED_LANGUAGES = ['uz', 'ru'] as const;
+export const SUPPORTED_LANGUAGES = ['uz', 'uz-cyr', 'ru'] as const;
 
 export const DEFAULT_LANGUAGE = 'uz' as const;
 
@@ -17,8 +17,9 @@ export const LANGUAGE_LABELS: Record<
   (typeof SUPPORTED_LANGUAGES)[number],
   { label: string; shortCode: string; flag: string }
 > = {
-  uz: { label: "O'zbekcha", shortCode: 'UZ', flag: '🇺🇿' },
-  ru: { label: 'Русский',   shortCode: 'RU', flag: '🇷🇺' },
+  uz:       { label: "O'zbekcha",  shortCode: 'UZ',  flag: '🇺🇿' },
+  'uz-cyr': { label: 'Ўзбекча',    shortCode: 'УЗ',  flag: '🇺🇿' },
+  ru:       { label: 'Русский',    shortCode: 'RU',  flag: '🇷🇺' },
 };
 
 /**
