@@ -27,6 +27,7 @@ import { Ok, Err, Result } from '@common/result';
 
 export interface EmployeeInventoryItem {
   materialCardId: number;
+  materialCode?:  string;
   materialName?:  string;
   unitOfMeasure?: string;
   given:          number;
@@ -38,6 +39,7 @@ export interface EmployeeInventoryItem {
 const LEDGER_BALANCE_SQL = (userId: number) => sql`
   SELECT
     eil.material_id AS material_card_id,
+    mc.kod               AS material_code,
     mc.xom_ashyo         AS material_name,
     mc.unit_of_measure,
     SUM(CASE WHEN eil.entry_type = 'DEBIT'  THEN eil.quantity::numeric ELSE 0 END)  AS given,
@@ -49,7 +51,7 @@ const LEDGER_BALANCE_SQL = (userId: number) => sql`
   FROM employee_inventory_ledger eil
   LEFT JOIN material_cards mc ON mc.id = eil.material_id
   WHERE eil.user_id = ${userId}
-  GROUP BY eil.material_id, mc.xom_ashyo, mc.unit_of_measure
+  GROUP BY eil.material_id, mc.kod, mc.xom_ashyo, mc.unit_of_measure
   HAVING SUM(CASE WHEN eil.entry_type = 'DEBIT'  THEN  eil.quantity::numeric
                   ELSE -eil.quantity::numeric END) > 0
   ORDER BY mc.xom_ashyo
@@ -58,6 +60,7 @@ const LEDGER_BALANCE_SQL = (userId: number) => sql`
 function mapRows(rows: Record<string, unknown>[]): EmployeeInventoryItem[] {
   return rows.map(r => ({
     materialCardId: Number(r['material_card_id']),
+    materialCode:   r['material_code']  as string | undefined,
     materialName:   r['material_name']  as string | undefined,
     unitOfMeasure:  r['unit_of_measure'] as string | undefined,
     given:          Number(r['given']       ?? 0),

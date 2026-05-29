@@ -11,9 +11,9 @@ interface InventoryItem {
   materialCardId: number;
   materialCode: string;
   materialName: string;
-  unit: string;
-  givenQty: number;
-  returnedQty: number;
+  unitOfMeasure: string;
+  given: number;
+  returned: number;
   balance: number;
   totalValue: number;
 }
@@ -88,7 +88,7 @@ function ReturnModal({ item, onClose, onDone, t }: ReturnModalProps) {
           {/* Qty */}
           <div>
             <label style={{ fontSize: 11, color: "var(--pos-text-muted)", display: "block", marginBottom: 4 }}>
-              {t("myInventory.givenQty")} (max: {item.balance} {item.unit})
+              {t("myInventory.givenQty")} (max: {item.balance} {item.unitOfMeasure})
             </label>
             <input
               type="number"
@@ -192,9 +192,9 @@ export default function PosMyInventory() {
   useEffect(() => { void loadData(); }, [loadData]);
 
   // ── Derived stats ──────────────────────────────────────────────────────────
-  const totalGiven     = items.reduce((s, i) => s + i.givenQty, 0);
+  const totalGiven     = items.reduce((s, i) => s + i.given, 0);
   const totalBalance   = items.reduce((s, i) => s + i.balance, 0);
-  const totalReturned  = items.reduce((s, i) => s + i.returnedQty, 0);
+  const totalReturned  = items.reduce((s, i) => s + i.returned, 0);
   const totalValue     = items.reduce((s, i) => s + i.totalValue, 0);
   const pendingItems   = items.filter(i => i.balance > 0);
 
@@ -321,9 +321,9 @@ export default function PosMyInventory() {
                         </span>
                       </td>
                       <td style={{ fontWeight: hasBalance ? 600 : 400 }}>{item.materialName}</td>
-                      <td style={{ color: "var(--pos-text-muted)" }}>{item.unit}</td>
-                      <td>{fmtNum(item.givenQty)}</td>
-                      <td style={{ color: "var(--pos-success)" }}>{fmtNum(item.returnedQty)}</td>
+                      <td style={{ color: "var(--pos-text-muted)" }}>{item.unitOfMeasure}</td>
+                      <td>{fmtNum(item.given)}</td>
+                      <td style={{ color: "var(--pos-success)" }}>{fmtNum(item.returned)}</td>
                       <td>
                         <span
                           className={`pos-badge ${hasBalance ? "pos-badge-yellow" : "pos-badge-green"}`}
@@ -422,7 +422,7 @@ export default function PosMyInventory() {
                       <td>
                         <span className="pos-badge pos-badge-yellow">{fmtNum(item.balance)}</span>
                       </td>
-                      <td style={{ color: "var(--pos-text-muted)" }}>{item.unit}</td>
+                      <td style={{ color: "var(--pos-text-muted)" }}>{item.unitOfMeasure}</td>
                       <td>
                         <button
                           className="pos-btn pos-btn-ghost"
