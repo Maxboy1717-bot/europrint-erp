@@ -6,7 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { and, eq, desc, isNull, sql, notInArray } from 'drizzle-orm';
+import { and, eq, desc, isNull, sql, notInArray, lt } from 'drizzle-orm';
 import { db } from '@shared/db';
 import { safeCall, Result, Err } from '@common/result';
 import {
@@ -304,6 +304,27 @@ export class DrizzleMarketingExtRepository {
         ))
         .orderBy(desc(marketingLeadsCanonical.score))
         .limit(10);
+      return (Array.isArray(rows) ? rows : []) as Record<string, unknown>[];
+    });
+  }
+
+  // Leads that have not progressed for 7+ days and are not yet closed.
+  // Schema has no `next_follow_up_at` column, so staleness is derived from
+  // updatedAt (or createdAt if updatedAt is null).
+  async getOverdueLeads(): Promise<Result<Record<string, unknown>[]>> {
+    return safeCall(async () => {
+      const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const rows = await db.select().from(marketingLeadsCanonical)
+        .where(and(
+          notInArray(marketingLeadsCanonical.status, ['converted', 'lost']),
+          isNull(marketingLeadsCanonical.deletedAt),
+          lt(
+            sql`coalesce(${marketingLeadsCanonical.updatedAt}, ${marketingLeadsCanonical.createdAt})`,
+            cutoff,
+          ),
+        ))
+        .orderBy(desc(marketingLeadsCanonical.score))
+        .limit(50);
       return (Array.isArray(rows) ? rows : []) as Record<string, unknown>[];
     });
   }

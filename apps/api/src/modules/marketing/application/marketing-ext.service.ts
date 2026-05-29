@@ -133,6 +133,10 @@ export class MarketingExtService {
     return this.repo.getHotLeads();
   }
 
+  getOverdueLeads(): Promise<Result<Record<string, unknown>[]>> {
+    return this.repo.getOverdueLeads();
+  }
+
   getLeadsSourcesSummary(): Promise<Result<{ source: string; count: number; totalValue: number; conversionRate: number }[]>> {
     return this.repo.getLeadsSourcesSummary();
   }

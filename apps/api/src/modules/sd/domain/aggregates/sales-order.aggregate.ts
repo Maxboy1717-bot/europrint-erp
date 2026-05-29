@@ -363,4 +363,44 @@ export class SalesOrder extends AggregateRoot implements IOrderHeader {
   get updatedAt(): Date { return this._updatedAt; }
   get createdBy(): number { return this._createdBy; }
   get kind(): OrderKind { return 'sales'; }
+
+  // Stable JSON shape consumed by the FE SD pages.
+  // Without this, JSON.stringify leaks every private `_field` and the FE sees
+  // `_id` / `_orderNumber` instead of `id` / `orderNumber`, breaking list keys.
+  // Defensive on VO access: legacy DB rows occasionally hydrate without a
+  // valid SoStatus / Money — never throw from a serializer.
+  toJSON(): Record<string, unknown> {
+    const total = typeof this._totalAmount?.getAmount === 'function' ? this._totalAmount.getAmount() : 0;
+    const currency = typeof this._totalAmount?.getCurrency === 'function' ? this._totalAmount.getCurrency() : 'UZS';
+    const status = typeof this._status?.getValue === 'function' ? this._status.getValue() : 'draft';
+    return {
+      id: this._id,
+      orderNumber: this._orderNumber,
+      documentNumber: this._orderNumber,
+      status,
+      moduleStatus: status,
+      overallStatus: status,
+      companyId: this._companyId,
+      customerId: this._customerId?.value ?? null,
+      totalAmount: total,
+      totalValue: total,
+      currency,
+      advanceRequired: this._advanceRequired,
+      advancePaid: this._advancePaid,
+      advancePaidAmount: this._advancePaid,
+      advanceStatus: this._advanceStatus,
+      balanceDueAmount: Math.max(0, total - this._advancePaid),
+      advanceBypassBy: this._advanceBypassBy ?? null,
+      advanceBypassReason: this._advanceBypassReason ?? null,
+      designFlag: this._designFlag,
+      sampleFlag: this._sampleFlag,
+      techBomApproved: this._techBomApproved,
+      techRoutingApproved: this._techRoutingApproved,
+      techCardApproved: this._techCardApproved,
+      createdBy: this._createdBy,
+      createdAt: this._createdAt,
+      updatedAt: this._updatedAt,
+      version: this._version,
+    };
+  }
 }

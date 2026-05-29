@@ -102,8 +102,11 @@ export class MarketingAnalyticsStubsController {
     return unwrapOrThrow(await this.svc.getLeadsSourcesSummary());
   }
 
-  @Get('leads/automation/overdue-leads') @Roles('super_admin', 'marketing_manager', 'director')
-  async getAutomationOverdueLeads() { return stub('GET /marketing/leads/automation/overdue-leads'); }
+  @Get('leads/automation/overdue-leads')
+  @Roles('super_admin', 'marketing_manager', 'director')
+  async getAutomationOverdueLeads() {
+    return unwrapOrThrow(await this.svc.getOverdueLeads());
+  }
 
   // leads/:id/contacts (GET/POST) and leads/:id (DELETE) → marketing-group2.controller.ts
 
