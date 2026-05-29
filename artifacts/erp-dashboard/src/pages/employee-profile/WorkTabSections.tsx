@@ -6,7 +6,6 @@
  * attestation metadata).  None of these components own dialog state.
  */
 
-import { Link } from "wouter";
 import { useTranslation } from '@/lib/i18n';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +14,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { Briefcase, Target, Settings, Activity, Gauge, Wrench } from "lucide-react";
 import type {
   Employee,
-  OrgStructureAssignment,
   TranslationFn,
 } from "./WorkTabTypes";
 
@@ -144,9 +142,6 @@ interface CurrentWorkplaceCardProps {
   employee: Employee;
   t: TranslationFn & ((key: string) => string);
   tCommon: TranslationFn;
-  orgStructureData:
-    | { primary: OrgStructureAssignment; all: OrgStructureAssignment[] }
-    | undefined;
   calculateWorkExperience: () => string;
 }
 
@@ -154,7 +149,6 @@ export function CurrentWorkplaceCard({
   employee,
   t,
   tCommon,
-  orgStructureData,
   calculateWorkExperience,
 }: CurrentWorkplaceCardProps) {
   return (
@@ -167,39 +161,6 @@ export function CurrentWorkplaceCard({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">{t("position")}</p>
-            {orgStructureData?.primary ? (
-              <Link href="/org-structure/hierarchy">
-                <p className="font-medium text-primary underline cursor-pointer hover:text-primary/80">
-                  {orgStructureData.primary.positionName ||
-                    orgStructureData.primary.functionName}
-                </p>
-              </Link>
-            ) : (
-              <Link href="/org-structure/hierarchy">
-                <p className="font-medium text-muted-foreground underline cursor-pointer hover:text-foreground">
-                  {tCommon("notSpecified")}
-                </p>
-              </Link>
-            )}
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("department")}</p>
-            {orgStructureData?.primary ? (
-              <Link href="/org-structure/hierarchy">
-                <p className="font-medium text-primary underline cursor-pointer hover:text-primary/80">
-                  {orgStructureData.primary.departmentName}
-                </p>
-              </Link>
-            ) : (
-              <Link href="/org-structure/hierarchy">
-                <p className="font-medium text-muted-foreground underline cursor-pointer hover:text-foreground">
-                  {tCommon("notSpecified")}
-                </p>
-              </Link>
-            )}
-          </div>
           <div>
             <p className="text-sm text-muted-foreground">{t("hireDate")}</p>
             <p className="font-medium">

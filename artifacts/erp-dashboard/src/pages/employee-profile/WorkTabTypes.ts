@@ -49,9 +49,6 @@ export interface WorkTabProps {
   employee: Employee;
   t: TranslationFn & ((key: string) => string);
   tCommon: TranslationFn;
-  orgStructureData:
-    | { primary: OrgStructureAssignment; all: OrgStructureAssignment[] }
-    | undefined;
   calculateWorkExperience: () => string;
 
   contractDialogOpen: boolean;

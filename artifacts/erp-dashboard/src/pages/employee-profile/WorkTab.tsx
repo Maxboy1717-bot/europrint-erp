@@ -19,7 +19,6 @@ export function WorkTab({
   employee,
   t,
   tCommon,
-  orgStructureData,
   calculateWorkExperience,
   contractDialogOpen,
   setContractDialogOpen,
@@ -48,7 +47,6 @@ export function WorkTab({
           employee={employee}
           t={t}
           tCommon={tCommon}
-          orgStructureData={orgStructureData}
           calculateWorkExperience={calculateWorkExperience}
         />
         <CkpAttestationCard employee={employee} t={t} tCommon={tCommon} />
