@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ModuleSectionHeader } from "@/components/ModuleSectionHeader";
 import type { DesignOrder, DesignTool, DesignTemplate } from "./DesignExtendedTypes";
-import { routeTabMap, tabMeta, brandColors, defaultCostData } from "./DesignExtendedTypes";
+import { routeTabMap, tabMeta, brandColors } from "./DesignExtendedTypes";
 import {
   AiReviewTab,
   MockupTab,
@@ -17,9 +17,9 @@ import {
   CompareTab,
   TemplatesTab,
   ToolsTab,
-  CostingTab,
   LibraryTab,
 } from "./DesignExtendedSections";
+import { EPComingSoon } from "@/components/ep";
 
 export default function DesignExtended() {
   const [location, setLocation] = useLocation();
@@ -42,8 +42,6 @@ export default function DesignExtended() {
   const pendingReview = (Array.isArray(designOrders) ? designOrders : []).filter(
     (o) => ["submitted", "in_review"].includes(o.status ?? ""),
   );
-
-  const totalCost = (Array.isArray(defaultCostData) ? defaultCostData : []).reduce((s, c) => s + c.total, 0);
 
   const meta = tabMeta[activeTab] || tabMeta.ai;
 
@@ -86,7 +84,7 @@ export default function DesignExtended() {
         </TabsContent>
 
         <TabsContent value="costing" className="space-y-4 mt-0">
-          <CostingTab costData={defaultCostData} totalCost={totalCost} />
+          <EPComingSoon variant="inline" />
         </TabsContent>
 
         <TabsContent value="library" className="mt-0">

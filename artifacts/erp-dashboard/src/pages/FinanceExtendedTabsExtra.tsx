@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, CheckCircle, AlertTriangle } from "lucide-react";
+import { Download, CheckCircle } from "lucide-react";
 import type { TaxCalendarItem } from "./FinanceExtendedTypes";
 import { useTranslation } from '@/lib/i18n';
+import { EPComingSoon } from "@/components/ep";
 
 interface TaxTabProps {
   taxItems: TaxCalendarItem[];
@@ -85,43 +86,7 @@ export function TaxCalendarTab() {
   return (
     <TabsContent value="taxcal" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{t("soliqMuddatlariKalendari")}</h2>
-      <div className="space-y-3">
-        {([
-          { month: "Aprel 2026", tasks: [
-            { date: "15 aprel", tax: "INPS va MHTM to'lovi", done: false },
-            { date: "20 aprel", tax: "QQS deklaratsiyasi topshirish", done: false },
-            { date: "25 aprel", tax: "Foyda solig'i to'lovi", done: false },
-            { date: "30 aprel", tax: "Yillik hisobot (I chorak)", done: false },
-          ]},
-          { month: "Mart 2026", tasks: [
-            { date: "15 mart", tax: "INPS va MHTM to'lovi", done: true },
-            { date: "20 mart", tax: "QQS deklaratsiyasi", done: true },
-            { date: "25 mart", tax: "Foyda solig'i to'lovi", done: true },
-          ]},
-        ]).map((month, mi) => (
-          <Card key={mi}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold">{month.month}</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 space-y-2">
-              {(Array.isArray(month.tasks) ? month.tasks : []).map((task, ti) => (
-                <div key={ti} className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0" data-testid={`row-taxcal-${mi}-${ti}`}>
-                  {task.done ? (
-                    <CheckCircle className="h-4 w-4 text-[var(--ep-green)] shrink-0" />
-                  ) : (
-                    <AlertTriangle className="h-4 w-4 text-[var(--ep-primary)] shrink-0" />
-                  )}
-                  <span className="text-sm font-medium w-20 shrink-0">{task.date}</span>
-                  <span className="text-sm text-muted-foreground">{task.tax}</span>
-                  <Badge variant={task.done ? "default" : "outline"} className="ml-auto">
-                    {task.done ? "Bajarildi" : "Kutilmoqda"}
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <EPComingSoon variant="inline" />
     </TabsContent>
   );
 }
@@ -146,33 +111,8 @@ export function RiskAITab() {
       </div>
       <Card>
         <CardHeader><CardTitle className="text-base">{t("aiRiskBashoratlari")}</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          {([
-            { risk: "Pul oqimi tanqisligi", prob: 35, impact: "Yuqori", action: "Debitor qayta ko'rib chiqish kerak" },
-            { risk: "Kreditor muddatlari o'tishi", prob: 28, impact: "O'rta", action: "Yetkazuvchilarga muddatlarni uzaytirish so'rash" },
-            { risk: "Valyuta kursi xavfi", prob: 20, impact: "Past", action: "USD/UZS kuzatuvini kuchaytirish" },
-          ]).map((r, i) => (
-            <div key={`k-${i}`} className="p-3 rounded-md bg-muted/50 space-y-2" data-testid={`row-risk-${i}`}>
-              <div className="flex items-center justify-between">
-                <div className="font-medium text-sm">{r.risk}</div>
-                <div className="flex gap-2 items-center">
-                  <Badge variant={r.impact === "Yuqori" ? "destructive" : r.impact === "O'rta" ? "secondary" : "outline"}>
-                    {r.impact}
-                  </Badge>
-                  <span className="text-sm font-bold">{r.prob}%</span>
-                </div>
-              </div>
-              <div className="h-1.5 bg-muted rounded">
-                <div
-                  className={`h-1.5 rounded ${r.prob >= 50 ? "bg-red-500" : r.prob >= 25 ? "bg-yellow-500" : "bg-green-500"}`}
-                  style={{ width: `${r.prob}%` }}
-                />
-              </div>
-              <div className="text-xs text-muted-foreground">
-                <span className="font-medium">{t("tavsiya1")}</span>{r.action}
-              </div>
-            </div>
-          ))}
+        <CardContent>
+          <EPComingSoon variant="inline" />
         </CardContent>
       </Card>
     </TabsContent>

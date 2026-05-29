@@ -17,8 +17,10 @@ export { LotSection, RequestsSection, KpiSection, RentalSection } from "./WMSExt
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
+// NOTE: plain helper (not a component) — must NOT call hooks; label comes from the
+// static STATUS_LABEL_MAP so no useTranslation is needed (calling it here inside the
+// transfers .map() was a Rules-of-Hooks violation that crashed /wms/transfer).
 export function statusBadge(status?: string) {
-  const { t } = useTranslation('common');
   const key = status || "pending";
   return (
     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${STATUS_CLASS_MAP[key] || "bg-muted/40 text-muted-foreground"}`}>

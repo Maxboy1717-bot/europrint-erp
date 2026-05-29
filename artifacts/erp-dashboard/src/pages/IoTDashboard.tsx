@@ -183,7 +183,7 @@ export default function IoTDashboard() {
         <div>
           <EPPageHeader
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">IoT {t('dashboard1')}</b></>}
-        title="IoT {t('dashboard1')}"
+        title={`IoT ${t('dashboard1')}`}
         subtitle={t('systemDesc')}
       />
         </div>

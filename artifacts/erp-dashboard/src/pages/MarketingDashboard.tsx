@@ -77,7 +77,7 @@ export default function MarketingDashboard() {
     <div className="space-y-6" data-testid="marketing-dashboard">
       <EPPageHeader
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">Marketing {t('dashboard8')}</b></>}
-        title="Marketing {t('dashboard8')}"
+        title={`Marketing ${t('dashboard8')}`}
       />
 
       <StatCardsSection

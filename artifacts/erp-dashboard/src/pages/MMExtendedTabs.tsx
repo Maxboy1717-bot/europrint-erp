@@ -16,6 +16,7 @@ import type { GoodsReceipt, PurchaseOrder } from "./MMExtendedTypes";
 import { fmtMoney } from "./MMExtendedTypes";
 
 import { useTranslation } from '@/lib/i18n';
+import { EPComingSoon } from "@/components/ep";
 // ─── CheckBotTab ──────────────────────────────────────────────────────────────
 
 export function CheckBotTab() {
@@ -38,28 +39,8 @@ export function CheckBotTab() {
       </div>
       <Card>
         <CardHeader><CardTitle className="text-base">{t("oxirgiCheklar")}</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <div className="ep-table-scroll"><Table>
-            <TableHeader><TableRow>
-              <TableHead>{t("sanaVaqt")}</TableHead><TableHead>{t("yetkazuvchi")}</TableHead>
-              <TableHead>{t("summa")}</TableHead><TableHead>{t("toifasi")}</TableHead><TableHead>{t("holati")}</TableHead>
-            </TableRow></TableHeader>
-            <TableBody>
-              {([
-                { dt: "2026-03-18 09:15", sup: "KartonPack",     sum: "1,450,000", cat: "Material",  st: "Tasdiqlangan" },
-                { dt: "2026-03-18 11:30", sup: "Petrol Station", sum: "285,000",   cat: "Yoqilg'i", st: "Tasdiqlangan" },
-                { dt: "2026-03-18 14:20", sup: "PoliChem",       sum: "780,000",   cat: "Material",  st: "Tekshiruv" },
-              ]).map((r, i) => (
-                <TableRow key={`k-${i}`} data-testid={`row-check-${i}`} className="hover:bg-muted/40 transition-colors">
-                  <TableCell className="text-sm text-muted-foreground">{r.dt}</TableCell>
-                  <TableCell className="font-medium">{r.sup}</TableCell>
-                  <TableCell>{r.sum} so'm</TableCell>
-                  <TableCell><Badge variant="outline">{r.cat}</Badge></TableCell>
-                  <TableCell><Badge variant={r.st === "Tasdiqlangan" ? "default" : "secondary"}>{r.st}</Badge></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table></div>
+        <CardContent>
+          <EPComingSoon variant="inline" />
         </CardContent>
       </Card>
       <Card>

@@ -107,7 +107,7 @@ export default function DesignDashboard() {
       <div className="flex items-center justify-between gap-4">
         <EPPageHeader
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">Dizayn {t('dashboard7')}</b></>}
-        title="Dizayn {t('dashboard7')}"
+        title={`Dizayn ${t('dashboard7')}`}
       />
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" />
