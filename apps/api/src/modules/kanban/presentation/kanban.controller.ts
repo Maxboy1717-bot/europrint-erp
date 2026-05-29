@@ -15,7 +15,7 @@ import {
   Post,
   Query,
   UseGuards,
-  UseInterceptors, BadRequestException, InternalServerErrorException} from '@nestjs/common';
+  UseInterceptors, BadRequestException, InternalServerErrorException, ParseUUIDPipe} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
@@ -79,7 +79,7 @@ export class KanbanController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.WAREHOUSE_MANAGER)
- async getById(@Param('id') id: string) {
+ async getById(@Param('id', new ParseUUIDPipe()) id: string) {
  const result = await this.queryBus.execute(new GetTaskQuery(id));
 
  assertOk(result);
@@ -115,7 +115,7 @@ export class KanbanController {
  @Patch(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.WAREHOUSE_MANAGER)
  async update(
- @Param('id') id: string,
+ @Param('id', new ParseUUIDPipe()) id: string,
  @Body() dto: UpdateTaskDto,
  @CurrentUser() user: AuthenticatedUser) {
  const cmd = new UpdateTaskCommand(
@@ -142,7 +142,7 @@ export class KanbanController {
  @Delete(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.WAREHOUSE_MANAGER)
  async delete(
- @Param('id') id: string,
+ @Param('id', new ParseUUIDPipe()) id: string,
  @CurrentUser() user: AuthenticatedUser) {
  const cmd = new DeleteTaskCommand(id, String(user.id));
 

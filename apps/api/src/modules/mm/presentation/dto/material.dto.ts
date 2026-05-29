@@ -29,12 +29,19 @@ export const UpdateMaterialDtoSchema = z.object({
 
 export type UpdateMaterialDto = z.infer<typeof UpdateMaterialDtoSchema>;
 
+// Query string values arrive as strings (`?limit=1`); coerce numerics and
+// normalise the two boolean filters explicitly so 'false' is not truthy.
+const boolFromQuery = z.preprocess(
+  (v) => (v === 'true' ? true : v === 'false' ? false : v),
+  z.boolean(),
+);
+
 export const GetMaterialsDtoSchema = z.object({
   category: z.enum(['raw_material', 'packaging', 'spare_part', 'consumable']).optional(),
-  isActive: z.boolean().optional(),
-  lowStock: z.boolean().optional(),
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
+  isActive: boolFromQuery.optional(),
+  lowStock: boolFromQuery.optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export type GetMaterialsDto = z.infer<typeof GetMaterialsDtoSchema>;
