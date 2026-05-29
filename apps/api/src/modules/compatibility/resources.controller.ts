@@ -102,42 +102,6 @@ export class MaterialCardsCompatController {
   }
 }
 
-@ApiTags('Departments (Compat)')
-@ApiBearerAuth()
-@Roles('admin', 'manager', 'hr_manager', 'director')
-@ApiThrottle()
-@UseInterceptors(AuditInterceptor)
-@Controller('departments')
-export class DepartmentsCompatController {
-  constructor(private readonly svc: ResourcesCompatService) {}
-
-  @Get()
-  async getAll(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return unwrapOrInternal(await this.svc.getDepartments(page, limit));
-  }
-
-  @Get(':id')
-  async getOne(@Param('id') id: string) {
-    return unwrapOrInternal(await this.svc.getDepartment(id));
-  }
-
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async create(@Body() body: CompatBodyDto) {
-    return unwrapOrInternal(await this.svc.createDepartment(body));
-  }
-
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() body: CompatBodyDto) {
-    return unwrapOrInternal(await this.svc.updateDepartment(id, body));
-  }
-
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return unwrapOrInternal(await this.svc.deleteDepartment(id));
-  }
-}
-
 @ApiTags('Org Departments (Compat)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
@@ -189,47 +153,3 @@ export class OrgFunctionsCompatController {
   }
 }
 
-@ApiTags('Positions (Compat)')
-@ApiBearerAuth()
-@Roles('admin', 'manager', 'hr_manager', 'director')
-@ApiThrottle()
-@UseInterceptors(AuditInterceptor)
-@Controller('positions')
-export class PositionsCompatController {
-  constructor(
-    private readonly svc: ResourcesCompatService,
-    private readonly i18n: I18nService,
-  ) {}
-
-  @Get()
-  async getAll(@Query('page') page?: string, @Query('limit') limit?: string, @Query('departmentId') departmentId?: string) {
-    return unwrapOrInternal(await this.svc.getPositions(page, limit, departmentId));
-  }
-
-  @Get(':id')
-  async getOne(@Param('id') id: string) {
-    return unwrapOrInternal(await this.svc.getPosition(id));
-  }
-
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async create(@Body() body: CompatBodyDto) {
-    return unwrapOrInternal(await this.svc.createPosition(body));
-  }
-
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() body: CompatBodyDto) {
-    return unwrapOrInternal(await this.svc.updatePosition(id, body));
-  }
-
-  @Patch(':id/kpi-template')
-  async assignKpiTemplate(@Param('id') id: string, @Body('templateKey') templateKey: string) {
-    if (!templateKey) throw new BadRequestException(await this.i18n.t('errors.templateKeyRequired'));
-    return unwrapOrInternal(await this.svc.assignKpiTemplate(id, templateKey));
-  }
-
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return unwrapOrInternal(await this.svc.deletePosition(id));
-  }
-}

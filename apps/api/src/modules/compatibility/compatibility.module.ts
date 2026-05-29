@@ -17,9 +17,8 @@ import { EuroprintControlDirectorController } from './europrint-control-director
 import { CrmExtendedCompatController, MarketingExtendedCompatController } from './crm-extended.controller';
 import {
   WarehousesCompatController, MaterialCardsCompatController,
-  DepartmentsCompatController, OrgDepartmentsCompatController,
+  OrgDepartmentsCompatController,
   OrgFunctionsCompatController,
-  PositionsCompatController,
 } from './resources.controller';
 import { CoreDepartmentsCompatController } from './core-departments-compat.controller';
 import { WarehouseCatalogController }    from './warehouse-catalog.controller';
@@ -109,11 +108,9 @@ import { AuthModule }                 from '../auth/auth.module';
     MarketingExtendedCompatController,
     WarehousesCompatController,
     MaterialCardsCompatController,
-    DepartmentsCompatController,
     OrgDepartmentsCompatController,
     OrgFunctionsCompatController,
     CoreDepartmentsCompatController,
-    PositionsCompatController,
     WarehouseCatalogController,
     WarehouseBarcodeOpsController,
     WarehouseLabelController,
