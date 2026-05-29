@@ -8,10 +8,10 @@
  *   - HAVING SUM(CASE WHEN entry_type='DEBIT' THEN qty ELSE -qty END) > 0
  *     filter on the same expression as the SELECT, with no Drizzle alias
  *     re-use in HAVING (would have to be duplicated as sql template anyway).
- *   - UNION of material_cards.barcode and pos_batches.batch_number lookups
+ *   - UNION of material_cards.barcode and warehouse_batches.batch_number lookups
  *     for barcodeExists() — Drizzle's union() requires identical column
  *     shapes from select() builders rather than the trivial SELECT 1 pattern.
- *   - GREATEST(0, COALESCE(reserved_qty, 0) - ${qty}) clamp in releaseStock()
+ *   - GREATEST(0, COALESCE(reserved_quantity, 0) - ${qty}) clamp in releaseStock()
  *     UPDATE — Drizzle has no greatest()/least() helpers.
  *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
  */
@@ -89,10 +89,10 @@ export class PosEmployeeBalanceRepository {
   async reserveStock(warehouseId: string, materialCardId: number, qty: number): Promise<Result<void>> {
     try {
       await db.execute(sql`
-        UPDATE pos_stock_balances
-           SET reserved_qty = COALESCE(reserved_qty, 0) + ${qty}
-         WHERE warehouse_id     = ${warehouseId}
-           AND material_card_id = ${materialCardId}
+        UPDATE warehouse_stock
+           SET reserved_quantity = COALESCE(reserved_quantity, 0) + ${qty}
+         WHERE warehouse_id = ${warehouseId}
+           AND material_id  = ${materialCardId}
       `);
       return Ok();
     } catch (e) {
@@ -103,10 +103,10 @@ export class PosEmployeeBalanceRepository {
   async releaseStock(warehouseId: string, materialCardId: number, qty: number): Promise<Result<void>> {
     try {
       await db.execute(sql`
-        UPDATE pos_stock_balances
-           SET reserved_qty = GREATEST(0, COALESCE(reserved_qty, 0) - ${qty})
-         WHERE warehouse_id     = ${warehouseId}
-           AND material_card_id = ${materialCardId}
+        UPDATE warehouse_stock
+           SET reserved_quantity = GREATEST(0, COALESCE(reserved_quantity, 0) - ${qty})
+         WHERE warehouse_id = ${warehouseId}
+           AND material_id  = ${materialCardId}
       `);
       return Ok();
     } catch (e) {
@@ -119,7 +119,7 @@ export class PosEmployeeBalanceRepository {
       const r = await db.execute(sql`
         SELECT 1 FROM material_cards mc WHERE mc.barcode = ${barcode}
         UNION
-        SELECT 1 FROM pos_batches pb WHERE pb.batch_number = ${barcode}
+        SELECT 1 FROM warehouse_batches wb WHERE wb.batch_number = ${barcode}
         LIMIT 1
       `);
       return Ok((r.rows ?? []).length > 0);

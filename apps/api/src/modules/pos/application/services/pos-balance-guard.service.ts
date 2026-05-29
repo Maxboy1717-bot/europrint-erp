@@ -51,12 +51,12 @@ export class PosBalanceGuardService {
     // (e.g. in unit tests where mocks aren't queued) — without it, `.catch` throws TypeError.
     const r = await Promise.resolve(runQuery<StockBalanceRow>(sql`
       SELECT
-        COALESCE(sb.available_qty, 0)::text AS available_qty,
-        COALESCE(m.material_type, 'consumable') AS material_type
-      FROM pos_stock_balances sb
-      JOIN pos_materials m ON m.id = sb.material_card_id
-      WHERE sb.warehouse_id    = ${warehouseId}
-        AND sb.material_card_id = ${materialCardId}
+        COALESCE(ws.available_quantity, 0)::text AS available_qty,
+        COALESCE(mc.material_type, 'consumable') AS material_type
+      FROM warehouse_stock ws
+      JOIN material_cards mc ON mc.id = ws.material_id
+      WHERE ws.warehouse_id = ${warehouseId}
+        AND ws.material_id  = ${materialCardId}
       LIMIT 1
     `)).catch((err: unknown) => {
       this.logger.error(`[BALANCE-GUARD] DB xato (matId=${materialCardId}): ${(err as Error).message}`);
@@ -114,7 +114,7 @@ export class PosBalanceGuardService {
       // Avval DB dan real material_type ni olamiz
       const typeRow = await Promise.resolve(runQuery<{ material_type: string | null }>(sql`
         SELECT COALESCE(material_type, 'consumable') AS material_type
-        FROM pos_materials
+        FROM material_cards
         WHERE id = ${line.materialCardId}
         LIMIT 1
       `)).catch(() => ({ rows: [{ material_type: 'consumable' as string | null }] }));

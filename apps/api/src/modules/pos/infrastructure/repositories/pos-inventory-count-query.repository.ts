@@ -43,7 +43,7 @@ export class PosInventoryCountQueryRepository {
 
   async checkBarcode(materialCardId: number, scannedBarcode: string): Promise<Result<boolean>>  {
   try {  
-      const r = await exec(sql`SELECT id FROM material_cards WHERE id = ${materialCardId} AND (barcode = ${scannedBarcode} OR id IN (SELECT material_card_id FROM inventory_barcode_assignments WHERE barcode = ${scannedBarcode})) LIMIT 1`);
+      const r = await exec(sql`SELECT id FROM material_cards WHERE id = ${materialCardId} AND (barcode = ${scannedBarcode} OR id IN (SELECT pmp.material_id FROM inventory_barcode_assignments iba JOIN pos_material_passports pmp ON pmp.id = iba.passport_id WHERE iba.barcode = ${scannedBarcode} AND iba.is_active = TRUE)) LIMIT 1`);
       return Ok((r.ok ? r.data : []).length > 0);  } catch (_e) {
     return Err(String(_e));
   }
