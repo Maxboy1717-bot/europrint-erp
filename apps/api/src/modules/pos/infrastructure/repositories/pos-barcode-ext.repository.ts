@@ -66,7 +66,7 @@ export class PosBarcodeExtRepository {
 
   async getStockInfo(materialCardId: number, warehouseId: string): Promise<Result<{ currentStock: number; availableStock: number }>> {
     return safeCall(async () => {
-      const r = await exec(sql`SELECT COALESCE(cs.quantity_on_hand, 0) AS current_stock, COALESCE(cs.quantity_on_hand, 0) - COALESCE((SELECT COALESCE(SUM(reserved_qty), 0) FROM stock_reservations WHERE material_card_id = ${materialCardId} AND warehouse_id = ${warehouseId} AND status = 'ACTIVE'), 0) AS available_stock FROM current_stock cs WHERE cs.material_card_id = ${materialCardId} AND cs.warehouse_id = ${warehouseId} LIMIT 1`);
+      const r = await exec(sql`SELECT COALESCE(cs.quantity_on_hand, 0) AS current_stock, COALESCE(cs.quantity_on_hand, 0) - COALESCE((SELECT COALESCE(SUM(reserved_qty), 0) FROM stock_reservations WHERE material_id = ${materialCardId} AND warehouse_id = ${warehouseId} AND status = 'ACTIVE'), 0) AS available_stock FROM current_stock cs WHERE cs.material_id = ${materialCardId} AND cs.warehouse_id = ${warehouseId} LIMIT 1`);
       const row = r[0] ?? {};
       return { currentStock: Number(row.current_stock ?? 0), availableStock: Number(row.available_stock ?? 0) };
       }, 'DB_ERROR');

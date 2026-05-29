@@ -80,7 +80,7 @@ export class PosWmsSyncService {
       // 2. Fetch movement lines
       const lines = await runQuery<MovementLineRow>(sql`
         SELECT
-          material_card_id,
+          material_id AS material_card_id,
           quantity,
           unit_of_measure
         FROM pos_movement_lines
@@ -114,7 +114,7 @@ export class PosWmsSyncService {
         try {
           await runQuery(sql`
             INSERT INTO warehouse_transactions
-              (material_card_id, transaction_date, transaction_type,
+              (material_id, transaction_date, transaction_type,
                quantity, unit_of_measure, bulim, document_number, created_at)
             VALUES
               (${matId}, ${txDate}, ${transType},
@@ -134,7 +134,7 @@ export class PosWmsSyncService {
               SELECT available_quantity::text AS qty
               FROM warehouse_stock
               WHERE warehouse_id = ${targetWarehouseId}
-                AND material_card_id = ${String(matId)}
+                AND material_id = ${String(matId)}
               LIMIT 1
             `);
             const newQty = parseFloat(newQtyRows[0]?.qty ?? '0');
@@ -189,7 +189,7 @@ export class PosWmsSyncService {
       if (!movement) return;
 
       const lines = await runQuery<MovementLineRow>(sql`
-        SELECT material_card_id, quantity, unit_of_measure
+        SELECT material_id AS material_card_id, quantity, unit_of_measure
         FROM pos_movement_lines
         WHERE movement_id = ${movId}
       `);
@@ -208,7 +208,7 @@ export class PosWmsSyncService {
         try {
           await runQuery(sql`
             INSERT INTO warehouse_transactions
-              (material_card_id, transaction_date, transaction_type,
+              (material_id, transaction_date, transaction_type,
                quantity, unit_of_measure, bulim, document_number, created_at)
             VALUES
               (${matId}, ${txDate}, 'kirim',

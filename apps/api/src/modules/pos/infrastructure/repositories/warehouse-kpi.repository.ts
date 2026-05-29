@@ -15,17 +15,17 @@ export class WarehouseKpiRepository {
       WITH wh_stock AS (
         SELECT
           w.id, w.code, w.name, w.type,
-          COUNT(DISTINCT ws.material_card_id)::int AS material_count,
+          COUNT(DISTINCT ws.material_id)::int AS material_count,
           COALESCE(SUM(ws.available_quantity), 0)::numeric AS total_qty,
           COALESCE(SUM(ws.available_quantity * COALESCE(mc.unit_price, 0)), 0)::numeric AS total_value,
           COUNT(DISTINCT CASE WHEN ws.available_quantity < COALESCE(mc.min_stock, 0)
                                AND ws.available_quantity > 0
-                             THEN ws.material_card_id END)::int AS low_count,
+                             THEN ws.material_id END)::int AS low_count,
           COUNT(DISTINCT CASE WHEN COALESCE(ws.available_quantity, 0) <= 0
                              THEN mc.id END)::int AS out_count
         FROM warehouses w
         LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id
-        LEFT JOIN material_cards mc ON mc.id = ws.material_card_id
+        LEFT JOIN material_cards mc ON mc.id = ws.material_id
         WHERE w.is_active = true
         GROUP BY w.id, w.code, w.name, w.type
       ),
@@ -73,7 +73,7 @@ export class WarehouseKpiRepository {
         COUNT(DISTINCT mc.id)::int        AS count,
         COALESCE(SUM(ws.available_quantity), 0)::numeric AS quantity
       FROM warehouse_stock ws
-      JOIN material_cards mc ON mc.id = ws.material_card_id
+      JOIN material_cards mc ON mc.id = ws.material_id
       WHERE ws.warehouse_id = ${warehouseId}
         AND ws.available_quantity > 0
       GROUP BY mc.unit_of_measure
@@ -89,7 +89,7 @@ export class WarehouseKpiRepository {
         (SELECT COUNT(*) FROM material_cards WHERE is_active = true)::int AS total_materials,
         (SELECT COALESCE(SUM(available_quantity * COALESCE(mc.unit_price, 0)), 0)::numeric
            FROM warehouse_stock ws
-           LEFT JOIN material_cards mc ON mc.id = ws.material_card_id) AS total_stock_value,
+           LEFT JOIN material_cards mc ON mc.id = ws.material_id) AS total_stock_value,
         (SELECT COUNT(*) FROM low_stock_alerts WHERE is_resolved = false)::int AS low_stock_alerts,
         (SELECT COUNT(*) FROM pos_movements WHERE status IN ('pending','draft') AND deleted_at IS NULL)::int AS pending_movements,
         (SELECT COUNT(*) FROM pos_movements WHERE status = 'qc_pending' AND deleted_at IS NULL)::int AS qc_pending,
@@ -106,7 +106,7 @@ export class WarehouseKpiRepository {
              COALESCE(SUM(ws.available_quantity * COALESCE(mc.unit_price, 0)), 0)::numeric AS value
       FROM warehouses w
       LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id
-      LEFT JOIN material_cards mc ON mc.id = ws.material_card_id
+      LEFT JOIN material_cards mc ON mc.id = ws.material_id
       WHERE w.is_active = true
       GROUP BY w.id, w.code, w.name
       ORDER BY value DESC

@@ -24,7 +24,7 @@ export class PosMovementQueryRepository {
       if (filter.warehouseId)    conditions.push(sql`(from_warehouse_id = ${filter.warehouseId} OR to_warehouse_id = ${filter.warehouseId})`);
       if (filter.supplierName)   conditions.push(sql`supplier_name ILIKE ${'%' + filter.supplierName + '%'}`);
       if (filter.movementNumber) conditions.push(eq(posMovements.movementNumber, filter.movementNumber));
-      if (filter.materialCardId) conditions.push(sql`id IN (SELECT movement_id FROM pos_movement_lines WHERE material_card_id = ${filter.materialCardId})`);
+      if (filter.materialCardId) conditions.push(sql`id IN (SELECT movement_id FROM pos_movement_lines WHERE material_id = ${filter.materialCardId})`);
       if (filter.dateFrom)       conditions.push(sql`created_at >= ${new Date(filter.dateFrom)}`);
       if (filter.dateTo)         conditions.push(sql`created_at <= ${new Date(filter.dateTo)}`);
   

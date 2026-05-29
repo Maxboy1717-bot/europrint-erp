@@ -52,13 +52,13 @@ export class AutoBarcodeRepository {
       const rows = await typedExecute<MovementLineForBarcode>(sql`
         SELECT
           pml.id           AS "movementLineId",
-          pml.material_card_id AS "materialCardId",
+          pml.material_id AS "materialCardId",
           mc.kod           AS "materialCode",
           pml.batch_number AS "batchNumber",
           pml.quantity,
           pml.unit
         FROM pos_movement_lines pml
-        LEFT JOIN material_cards mc ON mc.id = pml.material_card_id
+        LEFT JOIN material_cards mc ON mc.id = pml.material_id
         WHERE pml.movement_id = ${movementId}
       `);
       return Ok(rows);
@@ -80,7 +80,7 @@ export class AutoBarcodeRepository {
     try {
       await db.execute(sql`
         INSERT INTO pos_barcode_print_queue
-          (movement_id, movement_line_id, material_card_id, warehouse_id,
+          (movement_id, movement_line_id, material_id, warehouse_id,
            batch_number, quantity, unit, barcode, barcode_type, status, created_at)
         VALUES
           (${dto.movementId}, ${dto.movementLineId}, ${dto.materialCardId}, ${dto.warehouseId},
@@ -97,7 +97,7 @@ export class AutoBarcodeRepository {
     try {
       const rows = await typedExecute<unknown>(sql`
         SELECT id, barcode, barcode_type, batch_number, quantity, unit,
-               material_card_id, status, printed_at, created_at
+               material_id AS material_card_id, status, printed_at, created_at
           FROM pos_barcode_print_queue
          WHERE movement_id = ${movementId}
          ORDER BY id

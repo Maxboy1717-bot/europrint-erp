@@ -65,7 +65,7 @@ export class PosWarehouseIntegrationMovementService {
     }
     const stockRows = await rawSql(sql`
       SELECT available_quantity, material_type FROM pos_warehouse_stock_view
-      WHERE warehouse_id = ${dto.fromWarehouseId} AND material_card_id = ${dto.materialCardId}
+      WHERE warehouse_id = ${dto.fromWarehouseId} AND material_id = ${dto.materialCardId}
       LIMIT 1
     `);
     const stock = dbRows(stockRows)[0];
@@ -127,14 +127,14 @@ export class PosWarehouseIntegrationMovementService {
       SET quantity = quantity - ${dto.quantity},
           available_quantity = available_quantity - ${dto.quantity},
           last_updated_at = NOW()
-      WHERE warehouse_id = ${dto.fromWarehouseId} AND material_card_id = ${dto.materialCardId}
+      WHERE warehouse_id = ${dto.fromWarehouseId} AND material_id = ${dto.materialCardId}
     `);
   }
 
   private async increaseToWarehouseStock(tx: Tx, dto: PosMovementDto): Promise<void> {
     await tx.execute(sql`
       INSERT INTO warehouse_stock (
-        warehouse_id, material_card_id, quantity, reserved_quantity,
+        warehouse_id, material_id, quantity, reserved_quantity,
         available_quantity, unit_of_measure, last_updated_at, created_at
       )
       SELECT
@@ -142,7 +142,7 @@ export class PosWarehouseIntegrationMovementService {
         ${dto.quantity}, mc.unit_of_measure, NOW(), NOW()
       FROM material_cards mc
       WHERE mc.id = ${dto.materialCardId}
-      ON CONFLICT (warehouse_id, material_card_id) DO UPDATE
+      ON CONFLICT (warehouse_id, material_id) DO UPDATE
       SET quantity = warehouse_stock.quantity + EXCLUDED.quantity,
           available_quantity = warehouse_stock.available_quantity + EXCLUDED.quantity,
           last_updated_at = NOW()
@@ -155,7 +155,7 @@ export class PosWarehouseIntegrationMovementService {
       SET current_stock = (
         SELECT COALESCE(SUM(quantity), 0)
         FROM warehouse_stock
-        WHERE material_card_id = ${materialCardId}
+        WHERE material_id = ${materialCardId}
       ),
       updated_at = NOW()
       WHERE id = ${materialCardId}

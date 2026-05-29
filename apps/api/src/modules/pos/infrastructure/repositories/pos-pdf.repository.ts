@@ -23,7 +23,7 @@ const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () 
 export class PosPdfRepository {
   async getMovementLines(movementId: number): Promise<Result<PdfMovementLine[]>>  {
   try {  
-      return Ok(castTo<PdfMovementLine[]>(exec(sql`SELECT ml.quantity, ml.unit_price, ml.total_price, ml.currency, ml.batch_id, ml.expiry_date, mc.xom_ashyo, mc.unit_of_measure FROM pos_movement_lines ml JOIN material_cards mc ON mc.id = ml.material_card_id WHERE ml.movement_id = ${movementId}`)));  } catch (_e) {
+      return Ok(castTo<PdfMovementLine[]>(exec(sql`SELECT ml.quantity, ml.unit_price, ml.total_price, ml.currency, ml.batch_id, ml.expiry_date, mc.xom_ashyo, mc.unit_of_measure FROM pos_movement_lines ml JOIN material_cards mc ON mc.id = ml.material_id WHERE ml.movement_id = ${movementId}`)));  } catch (_e) {
     return Err(String(_e));
   }
 

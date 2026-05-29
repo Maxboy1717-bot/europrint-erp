@@ -54,7 +54,7 @@ export class QuarantineWorkflowRepository {
     material_card_id: number; quantity: string | number; unit: string;
   }>> {
     return typedExecute<{ material_card_id: number; quantity: string | number; unit: string }>(sql`
-      SELECT pml.material_card_id, pml.quantity::numeric AS quantity, pml.unit
+      SELECT pml.material_id AS material_card_id, pml.quantity::numeric AS quantity, pml.unit
       FROM pos_movement_lines pml
       WHERE pml.movement_id = ${movementId}
     `);
@@ -63,9 +63,9 @@ export class QuarantineWorkflowRepository {
   async upsertWarehouseStock(warehouseId: number, materialCardId: number, qty: number, unit: string | null): Promise<void> {
     await db.execute(sql`
       INSERT INTO warehouse_stock
-        (warehouse_id, material_card_id, quantity, reserved_quantity, available_quantity, unit_of_measure, last_updated_at, created_at)
+        (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, unit_of_measure, last_updated_at, created_at)
       VALUES (${warehouseId}, ${materialCardId}, ${qty}, 0, ${qty}, ${unit}, NOW(), NOW())
-      ON CONFLICT (warehouse_id, material_card_id)
+      ON CONFLICT (warehouse_id, material_id)
       DO UPDATE SET
         quantity           = warehouse_stock.quantity           + ${qty},
         available_quantity = warehouse_stock.available_quantity + ${qty},
@@ -80,7 +80,7 @@ export class QuarantineWorkflowRepository {
              available_quantity = GREATEST(available_quantity - ${qty}, 0),
              last_updated_at    = NOW()
        WHERE warehouse_id     = ${warehouseId}
-         AND material_card_id = ${materialCardId}
+         AND material_id = ${materialCardId}
     `);
   }
 

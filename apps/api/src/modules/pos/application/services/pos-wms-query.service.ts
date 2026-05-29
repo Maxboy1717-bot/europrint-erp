@@ -58,7 +58,7 @@ export class PosWmsQueryService {
           UPPER(COALESCE(w.type, 'MAIN'))               AS type,
           w.is_active                                   AS is_active,
           NULL::text                                    AS department_code,
-          COUNT(DISTINCT cs.material_card_id)::text     AS total_materials,
+          COUNT(DISTINCT cs.material_id)::text     AS total_materials,
           COALESCE(SUM(cs.quantity_on_hand), 0)::text   AS total_qty
         FROM warehouses w
         LEFT JOIN current_stock cs ON cs.warehouse_id::text = w.id::text
@@ -103,7 +103,7 @@ export class PosWmsQueryService {
           COALESCE(
             (SELECT SUM(ws2.available_quantity)
              FROM warehouse_stock ws2
-             WHERE ws2.material_card_id = mc.id
+             WHERE ws2.material_id = mc.id
                AND (${warehouseId ?? null}::text IS NULL
                     OR ws2.warehouse_id::text = ${warehouseId ?? null})),
             mc.current_stock,
@@ -111,7 +111,7 @@ export class PosWmsQueryService {
           )::text                                             AS available_qty,
           (SELECT ws3.warehouse_id::text
            FROM warehouse_stock ws3
-           WHERE ws3.material_card_id = mc.id
+           WHERE ws3.material_id = mc.id
            ORDER BY ws3.available_quantity DESC
            LIMIT 1)                                           AS warehouse_id,
           mc.unit_price::text                                 AS last_purchase_price
@@ -143,7 +143,7 @@ export class PosWmsQueryService {
     return safeCall(async () => {
       const rows = await runQuery<StockRow>(sql`
         SELECT
-          ws.material_card_id,
+          ws.material_id AS material_card_id,
           mc.kod                                              AS material_code,
           COALESCE(mc.xom_ashyo, mc.kod)                      AS material_name,
           mc.unit_of_measure                                  AS unit,
@@ -152,7 +152,7 @@ export class PosWmsQueryService {
           (ws.available_quantity + ws.reserved_quantity)      AS total_qty,
           ws.last_updated_at                                  AS last_updated
         FROM warehouse_stock ws
-        JOIN material_cards mc ON mc.id = ws.material_card_id
+        JOIN material_cards mc ON mc.id = ws.material_id
         WHERE ws.warehouse_id::text = ${warehouseId}
           AND mc.is_active = true
         ORDER BY mc.xom_ashyo
@@ -228,7 +228,7 @@ export class PosWmsQueryService {
           COALESCE(mc.min_stock, 0)                           AS min_stock,
           (SELECT ws.warehouse_id::text
            FROM warehouse_stock ws
-           WHERE ws.material_card_id = mc.id
+           WHERE ws.material_id = mc.id
            ORDER BY ws.available_quantity DESC
            LIMIT 1)                                           AS warehouse_id
         FROM material_cards mc

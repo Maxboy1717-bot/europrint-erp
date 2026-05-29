@@ -23,7 +23,7 @@ export class PosStockReservationRepository {
 
   async getAvailableStock(materialCardId: number, warehouseId: string): Promise<Result<{ on_hand: number; already_reserved: number }>> {
     return safeCall(async () => {
-      const r = await exec(sql`SELECT COALESCE(cs.quantity_on_hand, 0) AS on_hand, COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations WHERE material_card_id = ${materialCardId} AND warehouse_id = ${warehouseId} AND status = 'ACTIVE'), 0) AS already_reserved FROM current_stock cs WHERE cs.material_card_id = ${materialCardId} AND cs.warehouse_id = ${warehouseId} LIMIT 1`);
+      const r = await exec(sql`SELECT COALESCE(cs.quantity_on_hand, 0) AS on_hand, COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations WHERE material_id = ${materialCardId} AND warehouse_id = ${warehouseId} AND status = 'ACTIVE'), 0) AS already_reserved FROM current_stock cs WHERE cs.material_id = ${materialCardId} AND cs.warehouse_id = ${warehouseId} LIMIT 1`);
       const row = r[0] ?? {};
       return { on_hand: Number(row.on_hand ?? 0), already_reserved: Number(row.already_reserved ?? 0) };
       }, 'DB_ERROR');

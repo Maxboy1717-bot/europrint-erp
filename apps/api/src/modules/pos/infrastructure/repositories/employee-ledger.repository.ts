@@ -20,7 +20,7 @@ type LedgerRow = typeof employeeInventoryLedger.$inferSelect;
 const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await db.execute(q)).rows as Row[]);
 
 const BALANCE_COLS = sql`
-  eil.user_id, eil.material_card_id, eil.warehouse_id,
+  eil.user_id, eil.material_id AS material_card_id, eil.warehouse_id,
   mc.xom_ashyo AS material_name, mc.is_consumable,
   SUM(CASE WHEN eil.entry_type = 'DEBIT'  THEN eil.quantity::numeric ELSE 0 END)
     - SUM(CASE WHEN eil.entry_type = 'CREDIT' THEN eil.quantity::numeric ELSE 0 END) AS net_qty,
@@ -48,9 +48,9 @@ export class EmployeeLedgerRepository {
 
   async getEmployeeBalance(userId: number, materialCardId?: number, warehouseId?: string): Promise<Result<EmployeeBalance[]>>  {
   try {  
-      const matFilter = materialCardId ? sql`AND eil.material_card_id = ${materialCardId}` : sql``;
+      const matFilter = materialCardId ? sql`AND eil.material_id = ${materialCardId}` : sql``;
       const whFilter  = warehouseId    ? sql`AND eil.warehouse_id = ${warehouseId}`        : sql``;
-      const r = await exec(sql`SELECT ${BALANCE_COLS} FROM employee_inventory_ledger eil LEFT JOIN material_cards mc ON mc.id = eil.material_card_id WHERE eil.user_id = ${userId} ${matFilter} ${whFilter} GROUP BY eil.user_id, eil.material_card_id, eil.warehouse_id, mc.xom_ashyo, mc.is_consumable HAVING SUM(CASE WHEN eil.entry_type = 'DEBIT' THEN eil.quantity::numeric ELSE 0 END) - SUM(CASE WHEN eil.entry_type = 'CREDIT' THEN eil.quantity::numeric ELSE 0 END) > 0`);
+      const r = await exec(sql`SELECT ${BALANCE_COLS} FROM employee_inventory_ledger eil LEFT JOIN material_cards mc ON mc.id = eil.material_id WHERE eil.user_id = ${userId} ${matFilter} ${whFilter} GROUP BY eil.user_id, eil.material_id, eil.warehouse_id, mc.xom_ashyo, mc.is_consumable HAVING SUM(CASE WHEN eil.entry_type = 'DEBIT' THEN eil.quantity::numeric ELSE 0 END) - SUM(CASE WHEN eil.entry_type = 'CREDIT' THEN eil.quantity::numeric ELSE 0 END) > 0`);
       return r.ok ? Ok((Array.isArray(r?.data) ? r?.data : []).map(mapBalance)) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -59,7 +59,7 @@ export class EmployeeLedgerRepository {
 
   async getDepartmentBalance(departmentCode: string): Promise<Result<EmployeeBalance[]>>  {
   try {  
-      const r = await exec(sql`SELECT ${BALANCE_COLS} FROM employee_inventory_ledger eil LEFT JOIN material_cards mc ON mc.id = eil.material_card_id JOIN users u ON u.id = eil.user_id WHERE u.department_code = ${departmentCode} GROUP BY eil.user_id, eil.material_card_id, eil.warehouse_id, mc.xom_ashyo, mc.is_consumable HAVING SUM(CASE WHEN eil.entry_type = 'DEBIT' THEN eil.quantity::numeric ELSE 0 END) - SUM(CASE WHEN eil.entry_type = 'CREDIT' THEN eil.quantity::numeric ELSE 0 END) > 0`);
+      const r = await exec(sql`SELECT ${BALANCE_COLS} FROM employee_inventory_ledger eil LEFT JOIN material_cards mc ON mc.id = eil.material_id JOIN users u ON u.id = eil.user_id WHERE u.department_code = ${departmentCode} GROUP BY eil.user_id, eil.material_id, eil.warehouse_id, mc.xom_ashyo, mc.is_consumable HAVING SUM(CASE WHEN eil.entry_type = 'DEBIT' THEN eil.quantity::numeric ELSE 0 END) - SUM(CASE WHEN eil.entry_type = 'CREDIT' THEN eil.quantity::numeric ELSE 0 END) > 0`);
       return r.ok ? Ok((Array.isArray(r?.data) ? r?.data : []).map(mapBalance)) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -68,7 +68,7 @@ export class EmployeeLedgerRepository {
 
   async getStatement(userId: number, dateFrom: Date, dateTo: Date): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT eil.*, mc.xom_ashyo AS material_name, mc.unit_of_measure FROM employee_inventory_ledger eil LEFT JOIN material_cards mc ON mc.id = eil.material_card_id WHERE eil.user_id = ${userId} AND eil.created_at >= ${dateFrom} AND eil.created_at <= ${dateTo} ORDER BY eil.created_at DESC`);  } catch (_e) {
+      return exec(sql`SELECT eil.*, mc.xom_ashyo AS material_name, mc.unit_of_measure FROM employee_inventory_ledger eil LEFT JOIN material_cards mc ON mc.id = eil.material_id WHERE eil.user_id = ${userId} AND eil.created_at >= ${dateFrom} AND eil.created_at <= ${dateTo} ORDER BY eil.created_at DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 

@@ -26,10 +26,10 @@ export class PosReportsRepository {
   async getStockReport(warehouseId?: string, category?: string): Promise<Result<Row[]>>  {
   try {  
       return warehouseId && category
-        ? exec(sql`SELECT cs.warehouse_id, w.name AS warehouse_name, mc.id AS material_card_id, mc.xom_ashyo AS material_name, mc.unit_of_measure, mc.material_type, cs.quantity_on_hand, COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations sr WHERE sr.material_card_id = cs.material_card_id AND sr.warehouse_id = cs.warehouse_id AND sr.status = 'ACTIVE'), 0) AS reserved_qty, cs.quantity_on_hand - COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations sr WHERE sr.material_card_id = cs.material_card_id AND sr.warehouse_id = cs.warehouse_id AND sr.status = 'ACTIVE'), 0) AS available_qty, cs.last_movement_at FROM current_stock cs JOIN warehouses w ON w.id = cs.warehouse_id JOIN material_cards mc ON mc.id = cs.material_card_id WHERE cs.warehouse_id = ${warehouseId} AND mc.material_type = ${category} ORDER BY w.name, mc.xom_ashyo`)
+        ? exec(sql`SELECT cs.warehouse_id, w.name AS warehouse_name, mc.id AS material_card_id, mc.xom_ashyo AS material_name, mc.unit_of_measure, mc.material_type, cs.quantity_on_hand, COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations sr WHERE sr.material_id = cs.material_id AND sr.warehouse_id = cs.warehouse_id AND sr.status = 'ACTIVE'), 0) AS reserved_qty, cs.quantity_on_hand - COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations sr WHERE sr.material_id = cs.material_id AND sr.warehouse_id = cs.warehouse_id AND sr.status = 'ACTIVE'), 0) AS available_qty, cs.last_movement_at FROM current_stock cs JOIN warehouses w ON w.id = cs.warehouse_id JOIN material_cards mc ON mc.id = cs.material_id WHERE cs.warehouse_id = ${warehouseId} AND mc.material_type = ${category} ORDER BY w.name, mc.xom_ashyo`)
         : warehouseId
-        ? exec(sql`SELECT cs.warehouse_id, w.name AS warehouse_name, mc.id AS material_card_id, mc.xom_ashyo AS material_name, mc.unit_of_measure, mc.material_type, cs.quantity_on_hand, COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations sr WHERE sr.material_card_id = cs.material_card_id AND sr.warehouse_id = cs.warehouse_id AND sr.status = 'ACTIVE'), 0) AS reserved_qty, cs.quantity_on_hand - COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations sr WHERE sr.material_card_id = cs.material_card_id AND sr.warehouse_id = cs.warehouse_id AND sr.status = 'ACTIVE'), 0) AS available_qty, cs.last_movement_at FROM current_stock cs JOIN warehouses w ON w.id = cs.warehouse_id JOIN material_cards mc ON mc.id = cs.material_card_id WHERE cs.warehouse_id = ${warehouseId} ORDER BY w.name, mc.xom_ashyo`)
-        : exec(sql`SELECT cs.warehouse_id, w.name AS warehouse_name, mc.id AS material_card_id, mc.xom_ashyo AS material_name, mc.unit_of_measure, mc.material_type, cs.quantity_on_hand, COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations sr WHERE sr.material_card_id = cs.material_card_id AND sr.warehouse_id = cs.warehouse_id AND sr.status = 'ACTIVE'), 0) AS reserved_qty, cs.quantity_on_hand - COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations sr WHERE sr.material_card_id = cs.material_card_id AND sr.warehouse_id = cs.warehouse_id AND sr.status = 'ACTIVE'), 0) AS available_qty, cs.last_movement_at FROM current_stock cs JOIN warehouses w ON w.id = cs.warehouse_id JOIN material_cards mc ON mc.id = cs.material_card_id ORDER BY w.name, mc.xom_ashyo`);  } catch (_e) {
+        ? exec(sql`SELECT cs.warehouse_id, w.name AS warehouse_name, mc.id AS material_card_id, mc.xom_ashyo AS material_name, mc.unit_of_measure, mc.material_type, cs.quantity_on_hand, COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations sr WHERE sr.material_id = cs.material_id AND sr.warehouse_id = cs.warehouse_id AND sr.status = 'ACTIVE'), 0) AS reserved_qty, cs.quantity_on_hand - COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations sr WHERE sr.material_id = cs.material_id AND sr.warehouse_id = cs.warehouse_id AND sr.status = 'ACTIVE'), 0) AS available_qty, cs.last_movement_at FROM current_stock cs JOIN warehouses w ON w.id = cs.warehouse_id JOIN material_cards mc ON mc.id = cs.material_id WHERE cs.warehouse_id = ${warehouseId} ORDER BY w.name, mc.xom_ashyo`)
+        : exec(sql`SELECT cs.warehouse_id, w.name AS warehouse_name, mc.id AS material_card_id, mc.xom_ashyo AS material_name, mc.unit_of_measure, mc.material_type, cs.quantity_on_hand, COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations sr WHERE sr.material_id = cs.material_id AND sr.warehouse_id = cs.warehouse_id AND sr.status = 'ACTIVE'), 0) AS reserved_qty, cs.quantity_on_hand - COALESCE((SELECT SUM(reserved_qty) FROM stock_reservations sr WHERE sr.material_id = cs.material_id AND sr.warehouse_id = cs.warehouse_id AND sr.status = 'ACTIVE'), 0) AS available_qty, cs.last_movement_at FROM current_stock cs JOIN warehouses w ON w.id = cs.warehouse_id JOIN material_cards mc ON mc.id = cs.material_id ORDER BY w.name, mc.xom_ashyo`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -45,7 +45,7 @@ export class PosReportsRepository {
 
   async getTopMaterials(): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT mc.id, mc.xom_ashyo AS material_name, mc.unit_of_measure, SUM(pml.quantity::numeric) AS total_issued_qty, COUNT(DISTINCT pm.id) AS movement_count FROM pos_movement_lines pml JOIN pos_movements pm ON pm.id = pml.movement_id JOIN pos_movement_types pmt ON pmt.id = pm.movement_type_id JOIN material_cards mc ON mc.id = pml.material_card_id WHERE pm.created_at >= NOW() - INTERVAL '30 days' AND pmt.code = 'INTERNAL_ISSUE' AND pm.status = 'completed' GROUP BY mc.id, mc.xom_ashyo, mc.unit_of_measure ORDER BY total_issued_qty DESC LIMIT 20`);  } catch (_e) {
+      return exec(sql`SELECT mc.id, mc.xom_ashyo AS material_name, mc.unit_of_measure, SUM(pml.quantity::numeric) AS total_issued_qty, COUNT(DISTINCT pm.id) AS movement_count FROM pos_movement_lines pml JOIN pos_movements pm ON pm.id = pml.movement_id JOIN pos_movement_types pmt ON pmt.id = pm.movement_type_id JOIN material_cards mc ON mc.id = pml.material_id WHERE pm.created_at >= NOW() - INTERVAL '30 days' AND pmt.code = 'INTERNAL_ISSUE' AND pm.status = 'completed' GROUP BY mc.id, mc.xom_ashyo, mc.unit_of_measure ORDER BY total_issued_qty DESC LIMIT 20`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -61,7 +61,7 @@ export class PosReportsRepository {
 
   async getLiabilityReport(): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT elc.*, CONCAT(u.first_name, ' ', u.last_name) AS employee_name, u.department_code, mc.xom_ashyo AS material_name, mc.unit_of_measure FROM employee_liability_cases elc JOIN users u ON u.id = elc.user_id JOIN material_cards mc ON mc.id = elc.material_card_id WHERE elc.status IN ('OPEN', 'UNDER_REVIEW') ORDER BY elc.assessed_value::numeric DESC`);  } catch (_e) {
+      return exec(sql`SELECT elc.*, CONCAT(u.first_name, ' ', u.last_name) AS employee_name, u.department_code, mc.xom_ashyo AS material_name, mc.unit_of_measure FROM employee_liability_cases elc JOIN users u ON u.id = elc.user_id JOIN material_cards mc ON mc.id = elc.material_id WHERE elc.status IN ('OPEN', 'UNDER_REVIEW') ORDER BY elc.assessed_value::numeric DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -85,7 +85,7 @@ export class PosReportsRepository {
             SUM(COALESCE(cs.quantity_on_hand, 0) * COALESCE(mc.last_purchase_price, 0))
               OVER () AS grand_total
           FROM current_stock cs
-          JOIN material_cards mc ON mc.id = cs.material_card_id
+          JOIN material_cards mc ON mc.id = cs.material_id
           ${whereClause}
           AND mc.is_active = true
         ),
@@ -137,7 +137,7 @@ export class PosReportsRepository {
           cs.last_movement_at,
           EXTRACT(DAY FROM NOW() - cs.last_movement_at)::int AS days_inactive
         FROM current_stock cs
-        JOIN material_cards mc ON mc.id = cs.material_card_id
+        JOIN material_cards mc ON mc.id = cs.material_id
         WHERE mc.is_active = true
           AND COALESCE(cs.quantity_on_hand, 0) > 0
           AND (cs.last_movement_at IS NULL OR cs.last_movement_at < NOW() - (${inactiveDays} || ' days')::interval)

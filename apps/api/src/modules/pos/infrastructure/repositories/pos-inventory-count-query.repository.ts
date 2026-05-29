@@ -21,8 +21,8 @@ export class PosInventoryCountQueryRepository {
   async snapshotStock(countId: number, warehouseId: string, categoryFilter?: string): Promise<Result<void>>  {
   try {  
       const stocks = categoryFilter
-        ? await exec(sql`SELECT cs.material_card_id, cs.quantity_on_hand, mc.xom_ashyo FROM current_stock cs JOIN material_cards mc ON mc.id = cs.material_card_id WHERE cs.warehouse_id = ${warehouseId} AND mc.material_type = ${categoryFilter}`)
-        : await exec(sql`SELECT cs.material_card_id, cs.quantity_on_hand, mc.xom_ashyo FROM current_stock cs JOIN material_cards mc ON mc.id = cs.material_card_id WHERE cs.warehouse_id = ${warehouseId}`);
+        ? await exec(sql`SELECT cs.material_id AS material_card_id, cs.quantity_on_hand, mc.xom_ashyo FROM current_stock cs JOIN material_cards mc ON mc.id = cs.material_id WHERE cs.warehouse_id = ${warehouseId} AND mc.material_type = ${categoryFilter}`)
+        : await exec(sql`SELECT cs.material_id AS material_card_id, cs.quantity_on_hand, mc.xom_ashyo FROM current_stock cs JOIN material_cards mc ON mc.id = cs.material_id WHERE cs.warehouse_id = ${warehouseId}`);
       if ((stocks.ok ? stocks.data : []).length === 0) { this.logger.warn(`Omborda material topilmadi: ${warehouseId}`); return Ok(); }
       const lines = (stocks.ok ? stocks.data : []).map((row: Row) => ({ countId, materialCardId: Number(row['material_card_id'] ?? 0), systemQty: Number(row['quantity_on_hand'] ?? 0), actualQty: null as null }));
       await db.insert(posInventoryCountLines).values(lines as typeof posInventoryCountLines.$inferInsert[]);
@@ -69,7 +69,7 @@ export class PosInventoryCountQueryRepository {
 
   async getVarianceLines(countId: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT cicl.*, mc.xom_ashyo AS material_name, mc.unit_of_measure, COALESCE(cicl.actual_qty::numeric - cicl.system_qty::numeric, 0) AS variance_calc, COALESCE((cicl.actual_qty::numeric - cicl.system_qty::numeric) * COALESCE((SELECT unit_price::numeric FROM pos_movement_lines pml JOIN pos_movements pm ON pm.id = pml.movement_id WHERE pml.material_card_id = cicl.material_card_id ORDER BY pm.created_at DESC LIMIT 1), 0), 0) AS variance_value FROM pos_inventory_count_lines cicl JOIN material_cards mc ON mc.id = cicl.material_card_id WHERE cicl.count_id = ${countId} ORDER BY ABS(cicl.actual_qty::numeric - cicl.system_qty::numeric) DESC NULLS LAST`);  } catch (_e) {
+      return exec(sql`SELECT cicl.*, mc.xom_ashyo AS material_name, mc.unit_of_measure, COALESCE(cicl.actual_qty::numeric - cicl.system_qty::numeric, 0) AS variance_calc, COALESCE((cicl.actual_qty::numeric - cicl.system_qty::numeric) * COALESCE((SELECT unit_price::numeric FROM pos_movement_lines pml JOIN pos_movements pm ON pm.id = pml.movement_id WHERE pml.material_id = cicl.material_id ORDER BY pm.created_at DESC LIMIT 1), 0), 0) AS variance_value FROM pos_inventory_count_lines cicl JOIN material_cards mc ON mc.id = cicl.material_id WHERE cicl.count_id = ${countId} ORDER BY ABS(cicl.actual_qty::numeric - cicl.system_qty::numeric) DESC NULLS LAST`);  } catch (_e) {
     return Err(String(_e));
   }
 

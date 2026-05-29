@@ -6,7 +6,7 @@
 
 /**
  * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
- *   INSERT ... ON CONFLICT (warehouse_id, material_card_id) DO UPDATE with
+ *   INSERT ... ON CONFLICT (warehouse_id, material_id) DO UPDATE with
  *   per-column arithmetic (quantity = warehouse_stock.quantity + ${delta},
  *   GREATEST(0, quantity - delta)) for stock upsert. Drizzle's onConflictDoUpdate
  *   does not support referencing the target table's own columns in SET
@@ -91,10 +91,10 @@ export async function upsertWarehouseStock(
     // Stock IN — add to quantities
     await runQuery<StockUpdateRow>(sql`
       INSERT INTO warehouse_stock
-        (warehouse_id, material_card_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at)
+        (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at)
       VALUES
         (${warehouseId}, ${matIdStr}, ${absDelta}, 0, ${absDelta}, NOW(), NOW())
-      ON CONFLICT (warehouse_id, material_card_id)
+      ON CONFLICT (warehouse_id, material_id)
       DO UPDATE SET
         quantity           = warehouse_stock.quantity + ${absDelta},
         available_quantity = warehouse_stock.available_quantity + ${absDelta},
@@ -104,10 +104,10 @@ export async function upsertWarehouseStock(
     // Stock OUT — subtract, floor at 0
     await runQuery<StockUpdateRow>(sql`
       INSERT INTO warehouse_stock
-        (warehouse_id, material_card_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at)
+        (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at)
       VALUES
         (${warehouseId}, ${matIdStr}, 0, 0, 0, NOW(), NOW())
-      ON CONFLICT (warehouse_id, material_card_id)
+      ON CONFLICT (warehouse_id, material_id)
       DO UPDATE SET
         quantity           = GREATEST(0, warehouse_stock.quantity - ${absDelta}),
         available_quantity = GREATEST(0, warehouse_stock.available_quantity - ${absDelta}),

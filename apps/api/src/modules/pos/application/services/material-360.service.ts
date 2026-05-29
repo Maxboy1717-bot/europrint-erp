@@ -118,7 +118,7 @@ export class Material360Service {
                  purchase_date AS "purchaseDate",
                  created_at    AS "createdAt"
           FROM material_price_history
-          WHERE material_card_id = ${materialId}
+          WHERE material_id = ${materialId}
           ORDER BY purchase_date DESC NULLS LAST, created_at DESC
           LIMIT 30
         `))
@@ -137,7 +137,7 @@ export class Material360Service {
           FROM pos_movements pm
           JOIN pos_movement_lines pml ON pml.movement_id = pm.id
           LEFT JOIN pos_inventory_passport pip ON pip.movement_id = pm.id
-          WHERE pml.material_card_id = ${materialId}
+          WHERE pml.material_id = ${materialId}
             AND pm.movement_type = 'EXTERNAL_IN'
             AND pip.supplier_name IS NOT NULL
           GROUP BY pip.supplier_name
@@ -156,7 +156,7 @@ export class Material360Service {
                batch_number AS "batchNumber",
                quantity::numeric, status, created_at AS "createdAt"
         FROM pos_barcode_print_queue
-        WHERE material_card_id = ${materialId}
+        WHERE material_id = ${materialId}
         ORDER BY created_at DESC
         LIMIT 50
       `))
@@ -173,7 +173,7 @@ export class Material360Service {
           COUNT(DISTINCT pm.from_warehouse_id) + COUNT(DISTINCT pm.to_warehouse_id) AS "distinctWarehouses"
         FROM pos_movements pm
         JOIN pos_movement_lines pml ON pml.movement_id = pm.id
-        WHERE pml.material_card_id = ${materialId}
+        WHERE pml.material_id = ${materialId}
           AND pm.deleted_at IS NULL
       `))[0];
       const totals = {
@@ -247,7 +247,7 @@ export class Material360Service {
         ws.last_updated_at                AS "lastUpdated"
       FROM warehouses w
       LEFT JOIN warehouse_stock ws
-        ON ws.warehouse_id = w.id AND ws.material_card_id = ${materialId}
+        ON ws.warehouse_id = w.id AND ws.material_id = ${materialId}
       WHERE w.is_active = true
       ORDER BY w.code
     `))
@@ -277,7 +277,7 @@ export class Material360Service {
       FROM pos_movement_lines pml
       JOIN pos_movements pm ON pm.id = pml.movement_id
       LEFT JOIN users u ON u.id = pm.created_by
-      WHERE pml.material_card_id = ${materialId}
+      WHERE pml.material_id = ${materialId}
         AND pm.deleted_at IS NULL
       ORDER BY pm.created_at DESC
       LIMIT 50

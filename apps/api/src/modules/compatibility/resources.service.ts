@@ -23,7 +23,7 @@ export class ResourcesCompatService {
     const lim = Math.min(si(limit, 100), MAX_LARGE_QUERY_LIMIT);
     const off = (Math.max(1, si(page, 1)) - 1) * lim;
     const result = await rawSql(sql`
-      SELECT w.*, COUNT(cs.material_card_id) AS items_count
+      SELECT w.*, COUNT(cs.material_id) AS items_count
       FROM warehouses w
       LEFT JOIN current_stock cs ON cs.warehouse_id::text = w.id::text
       WHERE w.is_active = true

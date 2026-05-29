@@ -41,7 +41,7 @@ export class BarcodeWarehouseQueriesService {
                pm.lot_number AS "lotNumber", mc.xom_ashyo AS "materialName", mc.id AS "materialCardId"
         FROM pos_movements pm
         LEFT JOIN pos_movement_lines pml ON pml.movement_id = pm.id
-        LEFT JOIN material_cards mc ON mc.id = pml.material_card_id
+        LEFT JOIN material_cards mc ON mc.id = pml.material_id
         WHERE ${statusFilter}
         ORDER BY pm.created_at DESC LIMIT 100
       `);
@@ -68,7 +68,7 @@ export class BarcodeWarehouseQueriesService {
                mc.xom_ashyo AS "materialName"
         FROM pos_movements pm
         LEFT JOIN pos_movement_lines pml ON pml.movement_id = pm.id
-        LEFT JOIN material_cards mc ON mc.id = pml.material_card_id
+        LEFT JOIN material_cards mc ON mc.id = pml.material_id
         JOIN pos_movement_types pmt ON pmt.id = pm.movement_type_id
         WHERE pmt.code = 'INTERNAL_ISSUE' AND pm.status IN ('pending', 'in_progress')
         ORDER BY pm.created_at DESC LIMIT 50
@@ -117,7 +117,7 @@ export class BarcodeWarehouseQueriesService {
                elc.assessed_value::float AS "qtyDebt", elc.created_at, null AS "barcodeCode"
         FROM employee_liability_cases elc
         LEFT JOIN users u ON u.id = elc.user_id
-        LEFT JOIN material_cards mc ON mc.id = elc.material_card_id
+        LEFT JOIN material_cards mc ON mc.id = elc.material_id
         WHERE elc.status IN ('OPEN', 'UNDER_REVIEW')
         ORDER BY elc.created_at DESC LIMIT 50
       `);

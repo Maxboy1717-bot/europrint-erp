@@ -37,7 +37,7 @@ export interface EmployeeInventoryItem {
 
 const LEDGER_BALANCE_SQL = (userId: number) => sql`
   SELECT
-    eil.material_card_id,
+    eil.material_id AS material_card_id,
     mc.xom_ashyo         AS material_name,
     mc.unit_of_measure,
     SUM(CASE WHEN eil.entry_type = 'DEBIT'  THEN eil.quantity::numeric ELSE 0 END)  AS given,
@@ -47,9 +47,9 @@ const LEDGER_BALANCE_SQL = (userId: number) => sql`
     SUM(CASE WHEN eil.entry_type = 'DEBIT'  THEN  eil.quantity::numeric * eil.unit_price::numeric
              ELSE -eil.quantity::numeric * eil.unit_price::numeric END)              AS total_value
   FROM employee_inventory_ledger eil
-  LEFT JOIN material_cards mc ON mc.id = eil.material_card_id
+  LEFT JOIN material_cards mc ON mc.id = eil.material_id
   WHERE eil.user_id = ${userId}
-  GROUP BY eil.material_card_id, mc.xom_ashyo, mc.unit_of_measure
+  GROUP BY eil.material_id, mc.xom_ashyo, mc.unit_of_measure
   HAVING SUM(CASE WHEN eil.entry_type = 'DEBIT'  THEN  eil.quantity::numeric
                   ELSE -eil.quantity::numeric END) > 0
   ORDER BY mc.xom_ashyo

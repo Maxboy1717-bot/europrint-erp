@@ -40,7 +40,7 @@ export class PosWarehouseIntegrationQueriesService {
           warehouse_code AS "warehouseCode",
           warehouse_name AS "warehouseName",
           warehouse_type AS "warehouseType",
-          material_card_id AS "materialId",
+          material_id AS "materialId",
           material_code AS "materialCode",
           material_name AS "materialName",
           material_name_ru AS "materialNameRu",
@@ -81,7 +81,7 @@ export class PosWarehouseIntegrationQueriesService {
       const rows = await rawSql(sql`
         SELECT v.*, b.barcode_value AS barcode
         FROM pos_warehouse_stock_view v
-        LEFT JOIN material_barcodes b ON b.material_card_id = v.material_card_id
+        LEFT JOIN material_barcodes b ON b.material_id = v.material_id
         WHERE b.barcode_value = ${barcode} OR v.material_code = ${barcode}
         LIMIT 1
       `);
@@ -157,7 +157,7 @@ export class PosWarehouseIntegrationQueriesService {
         'pos_monitor'                                 AS source
       FROM pos_movements pm
       LEFT JOIN LATERAL (
-        SELECT material_card_id, quantity, unit
+        SELECT material_id AS material_card_id, quantity, unit
         FROM pos_movement_lines
         WHERE movement_id = pm.id
         ORDER BY id ASC

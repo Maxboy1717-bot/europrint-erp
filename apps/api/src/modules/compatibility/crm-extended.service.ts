@@ -92,7 +92,7 @@ export class CrmExtendedCompatService {
                mc.unit_of_measure AS unit, mc.sku_code AS sku,
                COALESCE(cs.quantity_on_hand, 0) AS "currentStock"
         FROM material_cards mc
-        LEFT JOIN current_stock cs ON cs.material_card_id = mc.id
+        LEFT JOIN current_stock cs ON cs.material_id = mc.id
         ORDER BY mc.xom_ashyo LIMIT ${lim} OFFSET ${off}
       `),
       rawSql(sql`SELECT COUNT(*) AS cnt FROM material_cards`)
