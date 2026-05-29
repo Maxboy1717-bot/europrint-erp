@@ -43,6 +43,29 @@ interface CreateAccountForm {
   parentCode: string;
 }
 
+/**
+ * Map a raw `/api/finance/gl-accounts` row to the FE GLAccount shape.
+ * WHY: the API returns Drizzle field names (accountCode/accountName/accountType),
+ * not the camelCase the table renders (code/name/type). Without this remap the
+ * filter `a.code.includes(...)` dereferences undefined and crashes the page the
+ * moment the DB has ≥1 account. Reads both shapes so the static fallback (which
+ * already uses code/name/type) and the API both flow through unchanged.
+ */
+function toGLAccount(r: Record<string, unknown>): GLAccount {
+  const parent = r.parentAccountId ?? r.parentCode;
+  const hasParent = parent != null && String(parent).trim() !== "";
+  return {
+    id: r.id as GLAccount["id"],
+    code: String(r.accountCode ?? r.code ?? ""),
+    name: String(r.accountName ?? r.name ?? ""),
+    nameRu: (r.accountNameRu ?? r.nameRu) as string | undefined,
+    type: (r.accountType ?? r.type) as GLAccount["type"],
+    parentCode: hasParent ? String(parent) : undefined,
+    isActive: r.isActive as boolean | undefined,
+    level: hasParent ? 2 : 1,
+  };
+}
+
 const STATIC_GL_ACCOUNTS: GLAccount[] = [
   { code: "1000", name: "Naqd pul", nameRu: "Наличные деньги", type: "asset", level: 1 },
   { code: "1010", name: "Kassa", nameRu: "Касса", type: "asset", parentCode: "1000", level: 2 },
@@ -113,7 +136,8 @@ export default function GLChartOfAccounts() {
 
   const { data: apiAccounts } = useQuery<GLAccount[]>({
     queryKey: ["/api/finance/gl-accounts"],
-    select: (data) => safeArray<GLAccount>(data, "accounts"),
+    select: (data) =>
+      safeArray<Record<string, unknown>>(data, "accounts").map(toGLAccount),
   });
 
   const createMutation = useMutation({
