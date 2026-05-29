@@ -3,8 +3,7 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { I18nService } from 'nestjs-i18n';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { MAX_LARGE_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db,
   rawSql} from '@shared/db';
@@ -16,7 +15,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class ResourcesCompatService {
-  constructor(private readonly i18n: I18nService) {}
+  constructor() {}
 
   async getWarehouses(page = '1', limit = '100'): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
@@ -81,27 +80,12 @@ export class ResourcesCompatService {
   
     });}
 
-  async getDepartments(page = '1', limit = '100'){
-    return safeCall(async () => {
-    const lim = Math.min(si(limit, 100), MAX_LARGE_QUERY_LIMIT);
-    const off = (Math.max(1, si(page, 1)) - 1) * lim;
-    const result = await rawSql(sql`
-      SELECT d.*, COUNT(e.id) AS employee_count
-      FROM departments d
-      LEFT JOIN employees e ON e.department_id = d.id AND e.status = 'active'
-      GROUP BY d.id ORDER BY d.name LIMIT ${lim} OFFSET ${off}
-    `);
-    return dbRows(result);
-
-    });}
-
   /**
    * `/api/org-departments` — frontend `OrgStructureSection` (EmployeeDialog) ishlatadi.
    *
    * `org_departments` jadvalidan camelCase format'da qaytaradi:
    *   { id, name, nameRu, tskp, hierarchyLevel, nodeType, headUserId, headUserName }
    *
-   * Eslatma: `getDepartments` (yuqorida) eski `departments` jadval uchun.
    * Bu metod yangi `org_departments` (org-structure-sync migration) bilan ishlaydi.
    */
   async getOrgDepartments(page = '1', limit = '200'): Promise<Result<Record<string, unknown>[]>> {
@@ -175,131 +159,6 @@ export class ResourcesCompatService {
       LIMIT ${lim} OFFSET ${off}
     `);
   }
-
-  async getDepartment(id: string){
-    return safeCall(async () => {
-    const result = await rawSql(sql`SELECT * FROM departments WHERE id = ${si(id)}`)
-      ;
-    return dbRows(result)[0] ?? null;
-  
-    });}
-
-  async createDepartment(body: Record<string, unknown>){
-    return safeCall(async () => {
-    if (!body['name']) throw new BadRequestException('name majburiy');
-    const result = await rawSql(sql`
-      INSERT INTO departments (name, name_uz, parent_id, manager_id)
-      VALUES (${body['name'] ?? ''}, ${body['name_uz'] ?? null},
-              ${body['parent_id'] ?? null}, ${body['manager_id'] ?? null})
-      RETURNING *
-    `);
-    const created = dbRows(result)[0];
-    return created;
-  
-    });}
-
-  async updateDepartment(id: string, body: Record<string, unknown>){
-    return safeCall(async () => {
-    const result = await rawSql(sql`
-      UPDATE departments
-      SET name = COALESCE(${body['name'] ?? null}, name),
-          name_uz = COALESCE(${body['name_uz'] ?? null}, name_uz),
-          manager_id = COALESCE(${body['manager_id'] ?? null}, manager_id),
-          updated_at = NOW()
-      WHERE id = ${si(id)} RETURNING *
-    `);
-    const _found = dbRows(result)[0];
-    if (!_found) throw new NotFoundException('Record not found');
-    return _found;
-  
-    });}
-
-  async deleteDepartment(id: string){
-    return safeCall(async () => {
-    await rawSql(sql`DELETE FROM departments WHERE id = ${si(id)}`)
-    return { ok: true, deleted: true };
-  
-    });}
-
-  async getPositions(page = '1', limit = '100', departmentId?: string){
-    return safeCall(async () => {
-    const lim = Math.min(si(limit, 100), MAX_LARGE_QUERY_LIMIT);
-    const off = (Math.max(1, si(page, 1)) - 1) * lim;
-    const deptFilter = departmentId ? sql`AND p.department_id = ${si(departmentId)}` : sql``;
-    const result = await rawSql(sql`
-      SELECT p.*, d.name AS department_name
-      FROM positions p
-      LEFT JOIN departments d ON d.id = p.department_id
-      WHERE p.is_active = true ${deptFilter}
-      ORDER BY p.name LIMIT ${lim} OFFSET ${off}
-    `);
-    return dbRows(result);
-  
-    });}
-
-  async getPosition(id: string){
-    return safeCall(async () => {
-    const result = await rawSql(sql`SELECT * FROM positions WHERE id = ${si(id)}`)
-      ;
-    return dbRows(result)[0] ?? null;
-  
-    });}
-
-  async createPosition(body: Record<string, unknown>){
-    return safeCall(async () => {
-    if (!body['name']) throw new BadRequestException('name majburiy');
-    const result = await rawSql(sql`
-      INSERT INTO positions (name, name_uz, department_id, is_active)
-      VALUES (${body['name'] ?? ''}, ${body['name_uz'] ?? null},
-              ${body['department_id'] ?? null}, true)
-      RETURNING *
-    `);
-    const created = dbRows(result)[0];
-    return created;
-  
-    });}
-
-  async updatePosition(id: string, body: Record<string, unknown>){
-    return safeCall(async () => {
-    const result = await rawSql(sql`
-      UPDATE positions
-      SET name = COALESCE(${body['name'] ?? null}, name),
-          name_uz = COALESCE(${body['name_uz'] ?? null}, name_uz),
-          is_active = COALESCE(${body['is_active'] ?? null}, is_active),
-          updated_at = NOW()
-      WHERE id = ${si(id)} RETURNING *
-    `);
-    const _found = dbRows(result)[0];
-    if (!_found) throw new NotFoundException('Record not found');
-    return _found;
-  
-    });}
-
-  async assignKpiTemplate(id: string, templateKey: string){
-    return safeCall(async () => {
-      const marker = `[KPI:${templateKey}]`;
-      const result = await rawSql(sql`
-        UPDATE positions
-        SET description = CASE
-          WHEN description IS NULL THEN ${marker}
-          WHEN description LIKE '[KPI:%]%' THEN REGEXP_REPLACE(description, '^\\[KPI:[^\\]]*\\]', ${marker})
-          ELSE (${marker} || ' ' || description)
-        END,
-        updated_at = NOW()
-        WHERE id = ${si(id)} RETURNING id, name_uz, description
-      `);
-      const found = dbRows(result)[0];
-      if (!found) throw new NotFoundException(await this.i18n.t('errors.positionNotFound'));
-      return found;
-    });
-  }
-
-  async deletePosition(id: string){
-    return safeCall(async () => {
-    await rawSql(sql`UPDATE positions SET is_active = false WHERE id = ${si(id)}`)
-    return { ok: true, deleted: true };
-
-    });}
 
   async createWarehouse(body: Record<string, unknown>){
     return safeCall(async () => {
