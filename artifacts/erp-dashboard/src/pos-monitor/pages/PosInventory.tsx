@@ -49,7 +49,7 @@ function NewPlanModal({ onClose, onCreated, t }: { onClose: () => void; onCreate
 }
 
 interface Plan { id: number; planNumber?: string; status: string; scheduledFor?: string; warehouseId?: string; createdAt: string; }
-interface VarianceLine { materialCardId: number; systemQty: number; actualQty: number; varianceQty: number; }
+interface VarianceLine { materialCardId: number; materialName?: string; systemQty: number; actualQty: number; variance: number; }
 
 const STATUS_BADGE: Record<string, string> = {
   DRAFT:"pos-badge-gray", SCHEDULED:"pos-badge-blue", IN_PROGRESS:"pos-badge-yellow",
@@ -81,8 +81,10 @@ export default function PosInventory() {
 
   async function loadVariances(planId: number) {
     try {
-      const data = await inventoryApi.getVariance(planId);
-      setVariances((Array.isArray(data) ? data : []) as VarianceLine[]);
+      // BE getVarianceReport returns an OBJECT { ..., lines: VarianceLine[] }, not an array.
+      const res = await inventoryApi.getVariance(planId) as { lines?: VarianceLine[] };
+      setVariances(Array.isArray(res?.lines) ? res.lines : []);
+      setTab("variances");
     } catch { /* noop */ }
   }
 
@@ -187,7 +189,7 @@ export default function PosInventory() {
               </thead>
               <tbody>
                 {(Array.isArray(variances) ? variances : []).map((v) => {
-                  const diff = v.varianceQty ?? (v.actualQty - v.systemQty);
+                  const diff = v.variance ?? (v.actualQty - v.systemQty);
                   const isShort = diff < 0;
                   return (
                     <tr key={`var-${v.materialCardId}-${v.systemQty}`}>

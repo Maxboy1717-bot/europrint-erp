@@ -183,8 +183,9 @@ export class PosInventoryCountService {
     const varianceLines = await this.inventoryRepo.getVarianceLines(invCount.id as number);
 
     for (const line of (varianceLines.ok ? varianceLines.data : [])) {
-      const variance = Number(line.variance);
-      if (variance === 0) continue;
+      // getVarianceLines aliases the computed diff as `variance_calc`; physical id col is `material_id`.
+      const variance = Number(line.variance_calc);
+      if (variance === 0 || Number.isNaN(variance)) continue;
 
       const isPlus = variance > 0;
       const adjTypeCode = isPlus ? 'INVENTORY_ADJ_PLUS' : 'INVENTORY_ADJ_MINUS';
@@ -198,7 +199,7 @@ export class PosInventoryCountService {
           fromWarehouseId: isPlus ? undefined : String(invCount.warehouseId),
           toWarehouseId: isPlus ? String(invCount.warehouseId) : undefined,
           lines: [{
-            materialCardId: Number(line.material_card_id),
+            materialCardId: Number(line.material_id),
             quantity: Math.abs(variance),
           }],
           notes: `Inventarizatsiya tuzatmasi: ${invCount.countNumber}`,

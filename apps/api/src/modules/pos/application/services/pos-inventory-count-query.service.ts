@@ -90,7 +90,7 @@ export class PosInventoryCountQueryService {
       varianceLines:     varianceLines.length,
       totalVarianceValue,
       lines: (Array.isArray(allLines) ? allLines : []).map(l => ({
-        materialCardId: Number(l['material_card_id']),
+        materialCardId: Number(l['material_id']),
         materialName: String(l['material_name'] ?? ''),
         systemQty:       Number(l['system_qty'] ?? 0),
         actualQty:       Number(l['actual_qty'] ?? 0),
