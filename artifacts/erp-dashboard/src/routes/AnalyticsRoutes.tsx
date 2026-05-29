@@ -20,9 +20,11 @@ const KnowledgeBase = lazy(() => import("@/pages/KnowledgeBase"));
 const KanbanBoard = lazy(() => import("@/pages/KanbanBoard"));
 const RecruitingKanban = lazy(() => import("@/pages/RecruitingKanban"));
 const Analytics = lazy(() => import("@/pages/Analytics"));
+const NotificationCenter = lazy(() => import("@/pages/NotificationCenter"));
 
 export const ANALYTICS_ROUTES: [string, React.ComponentType][] = [
   ['/analytics',                      Analytics],
+  ['/notifications',                  NotificationCenter],
   ['/ai/forecast',                    ForecastAnalytics],
   ['/lms-dashboard',                  LMSDashboard],
   ['/courses',                        Courses],

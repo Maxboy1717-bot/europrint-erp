@@ -68,7 +68,7 @@ const REDIRECT_PATHS = [
   '/feedback', '/logout',
   '/order-workflow', '/sales',
   // Dead sidebar links → canonical redirects
-  '/assets', '/notifications', '/hr/documents', '/cfo', '/org-chart',
+  '/assets', '/hr/documents', '/cfo', '/org-chart',
 ];
 
 function pathMatches(pattern: string, loc: string): boolean {
@@ -171,7 +171,6 @@ export function AppRouter() {
 
       {/* ── Dead sidebar links → canonical redirects ── */}
       <Route path="/assets"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/assets" /></RoleRoute></Route>
-      <Route path="/notifications"><RoleRoute roles={ALL_AUTHENTICATED}><Redirect to="/settings/notifications" /></RoleRoute></Route>
       <Route path="/hr/documents"><RoleRoute roles={HR_ROLES}><Redirect to="/employee-files" /></RoleRoute></Route>
       <Route path="/cfo"><RoleRoute roles={FINANCE_ROLES}><Redirect to="/cfo/dashboard" /></RoleRoute></Route>
       <Route path="/org-chart"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>

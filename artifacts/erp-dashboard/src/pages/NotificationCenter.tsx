@@ -1,7 +1,7 @@
 /**
  * NotificationCenter.tsx
  * ERP — Markaziy xabarnomalar sahifasi.
- * URL: /wms/notifications
+ * URL: /notifications (canonical), /wms/notifications (legacy alias)
  */
 import { useEffect, useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
