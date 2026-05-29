@@ -28,6 +28,7 @@ import { useTranslation } from "@/lib/i18n";
 import { tLabel } from "@/lib/i18n/tLabel";
 import { fmtMoney } from "./SDDashboardTypes";
 import { EPSkeletonKpiRow, EPErrorState } from "@/components/ep";
+import { useCountUp } from "@/components/ep/useCountUp";
 
 // ─── Response shapes ────────────────────────────────────────────────────────
 interface SdStats {
@@ -71,6 +72,17 @@ interface QuotaRow { manager_id?: number | string; manager_name?: string; achiev
 
 const UZ_MONTHS = ["Yan", "Fev", "Mar", "Apr", "May", "Iyn", "Iyl", "Avg", "Sen", "Okt", "Noy", "Dek"];
 
+// Initials avatar (endpoints return names, not photo URLs — so we render a
+// deterministic coloured initials badge; real photos would need a BE change).
+const AV_COLORS = ["var(--ep-primary)", "var(--ep-blue)", "var(--ep-purple)", "var(--ep-green)", "var(--accent-coral)", "var(--ep-cyan)"];
+const avInitials = (name?: string): string =>
+  (name ?? "").split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase() || "?";
+const avColor = (name?: string): string =>
+  AV_COLORS[[...(name ?? "?")].reduce((a, c) => a + c.charCodeAt(0), 0) % AV_COLORS.length];
+function Avatar({ name }: { name?: string }) {
+  return <span className="av sm" style={{ background: avColor(name) }}>{avInitials(name)}</span>;
+}
+
 const fmtDate = (s?: string): string => {
   if (!s) return "—";
   const d = new Date(s);
@@ -93,14 +105,16 @@ function AdvancePill({ status }: { status: string }) {
 // ─── Local chart atoms (kit.css reference classes; token colours only) ────────
 // Note: KPI cards show real values only — no synthetic deltas/percentages.
 
-function KpiTile({ label, value, icon: Icon, iconBg }: {
-  label: string; value: React.ReactNode; icon: LucideIcon; iconBg: string;
+function KpiTile({ label, value, format, icon: Icon, iconBg, delayMs = 0 }: {
+  label: string; value: number; format?: (n: number) => string; icon: LucideIcon; iconBg: string; delayMs?: number;
 }) {
+  const animated = useCountUp(value);
+  const display = format ? format(animated) : Math.round(animated).toLocaleString("en-US");
   return (
-    <div className="kpi">
+    <div className="kpi ep-fade-up" style={{ animationDelay: `${delayMs}ms` }}>
       <div>
         <div className="kpi-lbl">{label}</div>
-        <div className="kpi-val">{value}</div>
+        <div className="kpi-val">{display}</div>
       </div>
       <div className="kpi-icn" style={{ background: iconBg }}>
         <Icon strokeWidth={2} aria-hidden />
@@ -109,7 +123,7 @@ function KpiTile({ label, value, icon: Icon, iconBg }: {
   );
 }
 
-function BarChart({ data }: { data: { label: string; value: number }[] }) {
+function BarChart({ data }: { data: { label: string; value: number; tip?: string }[] }) {
   const rows = Array.isArray(data) ? data : [];
   const max = Math.max(1, ...rows.map((d) => d.value));
   if (rows.length === 0) {
@@ -120,14 +134,21 @@ function BarChart({ data }: { data: { label: string; value: number }[] }) {
       {rows.map((d, i) => {
         const isMax = d.value === max && d.value > 0;
         return (
-          <div key={`${d.label}-${i}`} className="bar-grp">
+          <div key={`${d.label}-${i}`} className="bar-grp group">
             {/* value label above every bar — so each month's count is readable */}
             <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6, color: isMax ? "var(--ep-primary)" : "var(--fg1)" }}>{d.value}</div>
-            <div className="stack">
+            <div className="stack" style={{ position: "relative" }}>
               <div
                 className={`bar stripe${isMax ? " dark" : ""}`}
                 style={{ height: `${Math.max(4, (d.value / max) * 130)}px` }}
               />
+              {/* hover tooltip — month · count · revenue */}
+              <div
+                className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none text-white shadow-lg"
+                style={{ position: "absolute", bottom: "calc(100% + 8px)", left: "50%", transform: "translateX(-50%)", background: "var(--fg1)", fontSize: 11, fontWeight: 600, padding: "6px 10px", borderRadius: 8, whiteSpace: "nowrap", zIndex: 5 }}
+              >
+                {d.tip ?? `${d.label}: ${d.value}`}
+              </div>
             </div>
             <div className="lbl">{d.label}</div>
           </div>
@@ -245,10 +266,12 @@ export default function SDDashboard() {
   const greet = hour < 12 ? tLabel("sd.morning", "Xayrli tong") : hour < 18 ? tLabel("sd.day", "Xayrli kun") : tLabel("sd.evening", "Xayrli kech");
   const firstName = user?.firstName || tLabel("sd.colleague", "hamkasb");
 
-  // Bar chart — monthly order counts (peak month(s) highlighted, value shown on each bar)
+  // Bar chart — monthly order counts (peak month(s) highlighted, value on each bar, hover tooltip)
   const barData = trendRows.map((row) => {
     const m = row.month ? new Date(row.month).getMonth() : NaN;
-    return { label: Number.isFinite(m) ? UZ_MONTHS[m] : "", value: Number(row.order_count ?? 0) };
+    const label = Number.isFinite(m) ? UZ_MONTHS[m] : "";
+    const value = Number(row.order_count ?? 0);
+    return { label, value, tip: `${label}: ${value} ${tLabel("sd.taBuyurtma", "ta buyurtma")} · ${fmtMoney(Number(row.revenue ?? 0))}` };
   });
 
   // Donut — order-status breakdown (real status counts)
@@ -298,16 +321,16 @@ export default function SDDashboard() {
         <EPErrorState onRetry={refetchOverview} />
       ) : (
         <div className="kpi-grid">
-          <KpiTile label={tLabel("sd.jamiBuyurtmalar", "Jami buyurtmalar (90 kun)")} value={totalOrders.toLocaleString("en-US")} icon={Package} iconBg="var(--ep-primary)" />
-          <KpiTile label={tLabel("sd.oylikDaromad", "Oylik daromad")} value={fmtMoney(Number(stats.monthly_revenue ?? 0))} icon={TrendingUp} iconBg="var(--accent-coral)" />
-          <KpiTile label={tLabel("sd.yetkazilgan", "Yetkazilgan")} value={deliv.toLocaleString("en-US")} icon={Truck} iconBg="var(--ep-green)" />
-          <KpiTile label={tLabel("sd.avansKutilmoqda", "Avans kutilmoqda")} value={Number(stats.pending_advance ?? 0).toLocaleString("en-US")} icon={Wallet} iconBg="var(--ep-purple)" />
+          <KpiTile label={tLabel("sd.jamiBuyurtmalar", "Jami buyurtmalar (90 kun)")} value={totalOrders} icon={Package} iconBg="var(--ep-primary)" delayMs={0} />
+          <KpiTile label={tLabel("sd.oylikDaromad", "Oylik daromad")} value={Number(stats.monthly_revenue ?? 0)} format={fmtMoney} icon={TrendingUp} iconBg="var(--accent-coral)" delayMs={80} />
+          <KpiTile label={tLabel("sd.yetkazilgan", "Yetkazilgan")} value={deliv} icon={Truck} iconBg="var(--ep-green)" delayMs={160} />
+          <KpiTile label={tLabel("sd.avansKutilmoqda", "Avans kutilmoqda")} value={Number(stats.pending_advance ?? 0)} icon={Wallet} iconBg="var(--ep-purple)" delayMs={240} />
         </div>
       )}
 
       {/* Charts row: monthly orders (2) + status donut (1) */}
       <div className="grid-2-1">
-        <div className="card hover-lift">
+        <div className="card hover-lift ep-fade-up">
           <div className="card-head">
             <div>
               <div className="card-ttl">{tLabel("sd.orderStats", "Buyurtma statistikasi")}</div>
@@ -319,7 +342,7 @@ export default function SDDashboard() {
           </div>
         </div>
 
-        <div className="card hover-lift">
+        <div className="card hover-lift ep-fade-up">
           <div className="card-head">
             <div className="card-ttl">{tLabel("sd.orderStatus", "Buyurtma holati")}</div>
           </div>
@@ -392,8 +415,13 @@ export default function SDDashboard() {
                 {quotaRows.slice(0, 6).map((q, i) => (
                   <tr key={`q-${q.manager_id ?? i}`}>
                     <td>
-                      <b>{q.manager_name ?? "—"}</b>
-                      <div style={{ fontSize: 11, color: "var(--fg2)", marginTop: 2 }}>{Number(q.order_count ?? 0)} {tLabel("sd.taBuyurtma", "ta buyurtma")}</div>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <Avatar name={q.manager_name} />
+                        <div>
+                          <b>{q.manager_name ?? "—"}</b>
+                          <div style={{ fontSize: 11, color: "var(--fg2)", marginTop: 2 }}>{Number(q.order_count ?? 0)} {tLabel("sd.taBuyurtma", "ta buyurtma")}</div>
+                        </div>
+                      </div>
                     </td>
                     <td style={{ textAlign: "right", fontWeight: 700, color: "var(--ep-green)" }}>{fmtMoney(Number(q.achieved ?? 0))}</td>
                   </tr>
@@ -474,7 +502,12 @@ export default function SDDashboard() {
             <tbody>
               {topCustomers.map((c, i) => (
                 <tr key={`tc-${c.customer_id ?? i}`}>
-                  <td><b>{c.customer_name ?? "—"}</b></td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <Avatar name={c.customer_name} />
+                      <b>{c.customer_name ?? "—"}</b>
+                    </div>
+                  </td>
                   <td style={{ textAlign: "right", fontWeight: 600 }}>{Number(c.order_count ?? 0)}</td>
                   <td style={{ textAlign: "right", fontWeight: 600, color: "var(--ep-green)" }}>
                     {fmtMoney(Number(c.total_revenue ?? 0))} {tLabel("sd.soum", "so'm")}

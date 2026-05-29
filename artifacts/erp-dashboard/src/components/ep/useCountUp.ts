@@ -34,21 +34,46 @@ export function useCountUp(target: number, options: UseCountUpOptions = {}): num
     }
 
     const safeTarget = Number.isFinite(target) ? target : 0;
-    const startTime = performance.now();
+    let cancelled = false;
 
-    const tick = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / durationMs, 1);
-      setValue(safeTarget * cubicOut(progress));
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        setValue(safeTarget);
-      }
+    const animate = () => {
+      const startTime = performance.now();
+      const tick = (now: number) => {
+        if (cancelled) return;
+        const progress = Math.min((now - startTime) / durationMs, 1);
+        setValue(safeTarget * cubicOut(progress));
+        if (progress < 1) {
+          rafRef.current = requestAnimationFrame(tick);
+        } else {
+          setValue(safeTarget);
+        }
+      };
+      rafRef.current = requestAnimationFrame(tick);
     };
 
-    rafRef.current = requestAnimationFrame(tick);
+    // In a hidden/background tab requestAnimationFrame is paused — the number
+    // would be stuck at 0. Show the final value now, and animate once the tab
+    // becomes visible so the count-up still plays when the user looks at it.
+    if (typeof document !== "undefined" && document.hidden) {
+      setValue(safeTarget);
+      const onVisible = () => {
+        if (!document.hidden) {
+          document.removeEventListener("visibilitychange", onVisible);
+          setValue(0);
+          animate();
+        }
+      };
+      document.addEventListener("visibilitychange", onVisible);
+      return () => {
+        cancelled = true;
+        document.removeEventListener("visibilitychange", onVisible);
+        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      };
+    }
+
+    animate();
     return () => {
+      cancelled = true;
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
     // resetKey lets callers re-trigger the animation explicitly
