@@ -58,8 +58,8 @@ export default function DailyReportPage() {
   });
 
   const { data: departments } = useQuery({
-    queryKey: ["/api/departments"],
-    queryFn: () => apiRequest("GET", "/api/departments"),
+    queryKey: ["/api/org-departments"],
+    queryFn: () => apiRequest("GET", "/api/org-departments"),
   });
 
   const { data: deptReports } = useQuery<DeptReports>({

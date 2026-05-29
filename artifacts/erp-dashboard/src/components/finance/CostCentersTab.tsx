@@ -56,7 +56,7 @@ export function CostCentersTab() {
   });
 
   const { data: departments = [] } = useQuery<Department[]>({
-    queryKey: ["/api/departments"],
+    queryKey: ["/api/org-departments"],
   });
 
   const { data: users = [] } = useQuery<User[]>({

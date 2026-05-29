@@ -93,7 +93,7 @@ export default function Courses() {
   const pagination = coursesResponse?.pagination;
 
   const { data: departments = [] } = useQuery<Array<{ id: string; name: string }>>({
-    queryKey: ["/api/departments"],
+    queryKey: ["/api/org-departments"],
     enabled: !!isAuthenticated,
   });
 

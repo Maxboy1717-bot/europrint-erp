@@ -28,7 +28,7 @@ export default function GoalsKPI() {
   });
 
   const { data: departments = [] } = useQuery<Array<{ id: string; name: string }>>({
-    queryKey: ["/api/departments"],
+    queryKey: ["/api/org-departments"],
   });
 
   const { data: positions = [] } = useQuery<Array<{ id: string; name: string }>>({

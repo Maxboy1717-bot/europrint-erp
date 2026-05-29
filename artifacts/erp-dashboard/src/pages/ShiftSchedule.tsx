@@ -55,7 +55,7 @@ export default function ShiftSchedule() {
     : ((rawData as Record<string, Employee[]>)?.items ?? []);
 
   const { data: departments = [] } = useQuery<Department[]>({
-    queryKey: ["/api/departments"],
+    queryKey: ["/api/org-departments"],
   });
 
   const employees: Employee[] = useMemo(() =>

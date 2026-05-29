@@ -90,10 +90,10 @@ export default function HRAssetManagement() {
   });
 
   const { data: departments } = useQuery<Department[]>({
-    queryKey: ["/api/departments"],
+    queryKey: ["/api/org-departments"],
     queryFn: async () => {
       let data: unknown;
-      try { data = await apiRequest('GET', "/api/departments"); }
+      try { data = await apiRequest('GET', "/api/org-departments"); }
       catch { return []; }
       return Array.isArray(data) ? (data as Department[]) : [];
     },

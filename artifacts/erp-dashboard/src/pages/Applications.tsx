@@ -69,7 +69,7 @@ export default function Applications() {
   });
 
   const { data: departments = [] } = useQuery<Department[]>({
-    queryKey: ["/api/departments"],
+    queryKey: ["/api/org-departments"],
     enabled: !!userId,
   });
 

@@ -125,10 +125,10 @@ export function ProfileHeader({
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   <span className="font-semibold text-foreground">
-                    {orgStructureData?.primary?.positionName || employee.positionName || "Lavozim tayinlanmagan"}
+                    {orgStructureData?.primary?.positionName || "—"}
                   </span>
-                  {(orgStructureData?.primary?.departmentName || employee.departmentName) && (
-                    <> · <span>{orgStructureData?.primary?.departmentName || employee.departmentName}</span></>
+                  {orgStructureData?.primary?.departmentName && (
+                    <> · <span>{orgStructureData.primary.departmentName}</span></>
                   )}
                   {employee.shift && <> · <span className="text-muted-foreground">{employee.shift}</span></>}
                 </p>

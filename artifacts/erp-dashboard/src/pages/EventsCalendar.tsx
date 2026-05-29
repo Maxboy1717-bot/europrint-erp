@@ -30,7 +30,7 @@ import { useTranslation } from '@/lib/i18n';
 
 const EVENTS_KEY    = ["/api/calendar-events"] as const;
 const UPCOMING_KEY  = ["/api/calendar-events/upcoming"] as const;
-const DEPTS_KEY     = ["/api/departments"] as const;
+const DEPTS_KEY     = ["/api/org-departments"] as const;
 const POSITIONS_KEY = ["/api/positions"] as const;
 
 // ---------------------------------------------------------------------------

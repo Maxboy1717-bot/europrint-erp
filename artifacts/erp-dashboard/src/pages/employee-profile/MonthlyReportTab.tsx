@@ -87,8 +87,6 @@ export function MonthlyReportTab({ employeeId }: MonthlyReportTabProps) {
     section("XODIM MA'LUMOTLARI");
     row("Xodim:", r.employee.fullName || "-");
     row("Tabel raqami:", r.employee.employeeId || "-");
-    row("Bo'lim:", r.employee.departmentName || "-");
-    row("Lavozim:", r.employee.positionName || "-");
 
     section("DAVOMAT");
     row("Jami ish kunlari:", String(r.attendance.totalDays));

@@ -65,7 +65,7 @@ export function AddTestDialog({ open, onOpenChange }: AddTestDialogProps) {
   const courses = coursesResponse?.data || [];
 
   const { data: departments = [] } = useQuery<Department[]>({
-    queryKey: ["/api/departments"],
+    queryKey: ["/api/org-departments"],
   });
 
   const { data: positions = [] } = useQuery<Position[]>({
