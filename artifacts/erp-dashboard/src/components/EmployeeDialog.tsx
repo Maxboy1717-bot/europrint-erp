@@ -20,16 +20,15 @@ import {
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 
-import { 
-  employeeSchema, 
-  EmployeeFormData, 
-  EmployeeDialogProps, 
-  Department, 
-  Position, 
-  OrgDepartment 
+import {
+  employeeSchema,
+  EmployeeFormData,
+  EmployeeDialogProps,
+  OrgDepartment
 } from "./hr/employee-dialog/types";
 import { BasicInfoSection } from "./hr/employee-dialog/BasicInfoSection";
-import { PositionSection } from "./hr/employee-dialog/PositionSection";
+// PositionSection (legacy Bo'lim/Lavozim → /api/departments + /api/positions) removed —
+// employee dept/function is owned by the org-schema (OrgStructureSection / org_departments).
 import { ContractSection } from "./hr/employee-dialog/ContractSection";
 import { PersonalInfoSection } from "./hr/employee-dialog/PersonalInfoSection";
 import { HouseholdSection } from "./hr/employee-dialog/HouseholdSection";
@@ -50,16 +49,6 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
   const [orgSearchQuery, setOrgSearchQuery] = useState("");
 
   // Modal ochilganda chaqiruvlar — yopiq bo'lsa hech narsa chaqirilmaydi (auth tekshirilmagan ham)
-  const { data: departments = [] } = useQuery<Department[]>({
-    queryKey: ["/api/departments"],
-    enabled: open === true,
-  });
-
-  const { data: allPositions = [] } = useQuery<Position[]>({
-    queryKey: ["/api/positions"],
-    enabled: open === true,
-  });
-
   const { data: orgDepartments = [] } = useQuery<OrgDepartment[]>({
     queryKey: ["/api/org-departments"],
     enabled: open === true,
@@ -266,7 +255,6 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
 
             <div className="space-y-8">
               <section><h3 className="text-lg font-medium mb-4">{t("asosiyMalumotlar")}</h3><BasicInfoSection form={form} /></section>
-              <section><h3 className="text-lg font-medium mb-4">{t("bolimVaLavozim")}</h3><PositionSection form={form} departments={departments} positions={allPositions} /></section>
               {/* Phase 2 / Task 2.5 — manager autocomplete + currency-formatted base salary with grade picker */}
               <section><h3 className="text-lg font-medium mb-4">Rahbar va asosiy maosh</h3><ManagerSalarySection form={form} excludeEmployeeId={employee?.id} /></section>
               <section><h3 className="text-lg font-medium mb-4">{t("shartnomaVaIshHaqi")}</h3><ContractSection form={form} /></section>
