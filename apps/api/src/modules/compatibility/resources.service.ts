@@ -142,6 +142,40 @@ export class ResourcesCompatService {
     `);
   }
 
+  /**
+   * `/api/org-functions` — org-sxemadagi "Lavozim" (position) ro'yxati.
+   * `org_functions` jadvalidan { id, name(=position_name), departmentId, ... } qaytaradi.
+   * Legacy `/api/positions` o'rnini bosadi — org-sxema yagona manba.
+   */
+  async getOrgFunctions(page = '1', limit = '500', departmentId?: string): Promise<Result<Record<string, unknown>[]>> {
+    return safeCall(async () => {
+      const lim = Math.min(si(limit, 500), MAX_LARGE_QUERY_LIMIT);
+      const off = (Math.max(1, si(page, 1)) - 1) * lim;
+      const result = await this.queryOrgFunctions(lim, off, departmentId ? si(departmentId) : undefined);
+      return dbRows(result);
+    });
+  }
+
+  private queryOrgFunctions(lim: number, off: number, departmentId?: number) {
+    const deptFilter = departmentId ? sql`AND ofn.department_id = ${departmentId}` : sql``;
+    return rawSql(sql`
+      SELECT
+        ofn.id::text                                                       AS id,
+        COALESCE(NULLIF(ofn.position_name, ''), ofn.sub_department_name, '') AS name,
+        ofn.position_name_ru                                               AS "nameRu",
+        ofn.sub_department_name                                            AS "subDepartmentName",
+        ofn.department_id                                                  AS "departmentId",
+        od.name                                                            AS "departmentName",
+        ofn.tskp                                                           AS tskp
+      FROM org_functions ofn
+      LEFT JOIN org_departments od ON od.id = ofn.department_id
+      WHERE COALESCE(NULLIF(ofn.position_name, ''), ofn.sub_department_name) IS NOT NULL
+      ${deptFilter}
+      ORDER BY ofn.department_id NULLS FIRST, ofn.position_name
+      LIMIT ${lim} OFFSET ${off}
+    `);
+  }
+
   async getDepartment(id: string){
     return safeCall(async () => {
     const result = await rawSql(sql`SELECT * FROM departments WHERE id = ${si(id)}`)

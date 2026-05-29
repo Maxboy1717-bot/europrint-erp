@@ -18,6 +18,7 @@ import { CrmExtendedCompatController, MarketingExtendedCompatController } from '
 import {
   WarehousesCompatController, MaterialCardsCompatController,
   DepartmentsCompatController, OrgDepartmentsCompatController,
+  OrgFunctionsCompatController,
   PositionsCompatController,
 } from './resources.controller';
 import { CoreDepartmentsCompatController } from './core-departments-compat.controller';
@@ -110,6 +111,7 @@ import { AuthModule }                 from '../auth/auth.module';
     MaterialCardsCompatController,
     DepartmentsCompatController,
     OrgDepartmentsCompatController,
+    OrgFunctionsCompatController,
     CoreDepartmentsCompatController,
     PositionsCompatController,
     WarehouseCatalogController,

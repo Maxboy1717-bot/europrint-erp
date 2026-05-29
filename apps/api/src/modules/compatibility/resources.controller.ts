@@ -164,6 +164,31 @@ export class OrgDepartmentsCompatController {
   }
 }
 
+@ApiTags('Org Functions (Compat)')
+@ApiBearerAuth()
+@Roles('admin', 'manager', 'hr_manager', 'director')
+@ApiThrottle()
+@UseInterceptors(AuditInterceptor)
+@Controller('org-functions')
+export class OrgFunctionsCompatController {
+  constructor(private readonly svc: ResourcesCompatService) {}
+
+  /**
+   * GET /api/org-functions
+   * Org-sxemadagi "Lavozim" (position) ro'yxati — `org_functions` jadvalidan
+   * { id, name(=position_name), departmentId, ... } qaytaradi. Legacy
+   * `/api/positions` o'rnini bosadi (dropdown'lar uchun org-sxema manba).
+   */
+  @Get()
+  async getAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('departmentId') departmentId?: string,
+  ) {
+    return unwrapOrInternal(await this.svc.getOrgFunctions(page, limit, departmentId));
+  }
+}
+
 @ApiTags('Positions (Compat)')
 @ApiBearerAuth()
 @Roles('admin', 'manager', 'hr_manager', 'director')
