@@ -744,6 +744,15 @@ Pre-commit: `scripts/check-page-has-crud.mjs` → WARNING
 ✅ Agar sahifa hali tayyor emas — `EPComingSoon` wrapper yarating
 Tekshirish: `scripts/check-sidebar-routes.mjs`
 
+### Qoida 21: Dizayn-tizim — token + shablon majburiy (regress-himoya) 🎨
+❌ Inline `style={{ color:'#fff' }}` / `style={{ background:'rgba(...)' }}` — xom rang TAQIQLANGAN
+❌ Tailwind arbitrary hex `text-[#94a3b8]` — WARN (token bilan almashtiring)
+✅ `var(--ep-*)` / `var(--mod-*)` token yoki semantic Tailwind class ishlating
+✅ Yangi sahifa = mavjud shablon (ListPage / DetailPage / FormPage / DashboardPage / BoardPage) + PROPS — **yangi dizayn EMAS**
+✅ Yagona manba — tokenlar: `artifacts/erp-dashboard/src/erp-modern-ui/*.css` · komponentlar: `src/components/ep/` + `src/components/ui/`
+Pre-commit: `scripts/check-design-tokens.mjs` (diff-aware) — inline xom rang BLOK, Tailwind `[#hex]` WARN
+Bypass (sabab bilan): `git commit --no-verify`
+
 ---
 
-*Yangilangan: 2026-05-28 | Qoidalar 17-20 qo'shildi (pre-commit guards)*
+*Yangilangan: 2026-05-29 | Qoida 21 qo'shildi (dizayn-tizim regress-himoya). Qoidalar 17-20 (2026-05-28).*

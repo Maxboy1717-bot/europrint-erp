@@ -52,6 +52,12 @@ node scripts/check-critical-ui.mjs || exit 1
 # WARN (non-blocking): silent catch blocks, raw fetch() without apiRequest()
 node scripts/check-fe-antipatterns.mjs || exit 1
 
+# 🛡️ Guard 2b — Design-system regress lock (FAZA 3)
+# Blocks NEW inline hardcoded colors (hex/rgb inside style={{}}) so the EuroPrint
+# token system (src/erp-modern-ui/*.css + EP* components) can't be silently bypassed.
+# Diff-aware (only newly-added lines); Tailwind arbitrary [#hex] is WARN-only.
+node scripts/check-design-tokens.mjs || exit 1
+
 # 🛡️ Guard 3 — Sidebar URL ↔ AppRouter mapping (informational, non-blocking)
 # Shows which sidebar URLs have no matching route (stubs are allowed).
 node scripts/check-sidebar-routes.mjs || true
