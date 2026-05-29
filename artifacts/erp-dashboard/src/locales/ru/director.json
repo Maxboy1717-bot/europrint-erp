@@ -120,5 +120,7 @@
   "oeeOrtacha": "Среднее OEE",
   "ogohlantirishlar": "Уведомления",
   "oylikBuyurtmalar": "Ежемесячные заказы",
-  "refresh": "Обновить"
+  "refresh": "Обновить",
+  "titlePrefix": "Direktor",
+  "titleSuffix": "paneli"
 }

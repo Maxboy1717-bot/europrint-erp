@@ -661,5 +661,7 @@
   "tavsif": "Tavsif",
   "jarimaMiqdoriIxtiyoriy": "Jarima miqdori (ixtiyoriy)",
   "bekorQilish": "Bekor qilish",
-  "saqlash": "Saqlash"
+  "saqlash": "Saqlash",
+  "manager.select_label": "Rahbar tanlash",
+  "manager.search_placeholder": "Ism yoki familiya bo'yicha qidiring"
 }

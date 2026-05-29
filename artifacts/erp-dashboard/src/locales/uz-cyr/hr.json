@@ -745,5 +745,7 @@
   "tavsif": "Тавсиф",
   "jarimaMiqdoriIxtiyoriy": "Жарима миқдори (ихтиёрий)",
   "bekorQilish": "Бекор қилиш",
-  "saqlash": "Сақлаш"
+  "saqlash": "Сақлаш",
+  "manager.select_label": "Rahbar tanlash",
+  "manager.search_placeholder": "Ism yoki familiya bo'yicha qidiring"
 }
