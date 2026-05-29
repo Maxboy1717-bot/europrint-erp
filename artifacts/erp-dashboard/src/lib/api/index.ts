@@ -6,7 +6,6 @@
 export * from "./routes";
 export * from "./admin";
 export * from "./auth";
-export * from "./crm";
 export * from "./director";
 export * from "./finance";
 export * from "./hr";
