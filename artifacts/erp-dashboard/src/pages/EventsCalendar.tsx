@@ -16,7 +16,6 @@ import {
   CalendarEvent,
   Department,
   EventFormValues,
-  Position,
   eventFormSchema,
 } from "./EventsCalendarTypes";
 import { EventDialog } from "./EventsCalendarDialogs";
@@ -31,7 +30,6 @@ import { useTranslation } from '@/lib/i18n';
 const EVENTS_KEY    = ["/api/calendar-events"] as const;
 const UPCOMING_KEY  = ["/api/calendar-events/upcoming"] as const;
 const DEPTS_KEY     = ["/api/org-departments"] as const;
-const POSITIONS_KEY = ["/api/positions"] as const;
 
 // ---------------------------------------------------------------------------
 // Default form values
@@ -65,7 +63,6 @@ export default function EventsCalendar() {
   const [isDialogOpen,         setIsDialogOpen]         = useState(false);
   const [editingEvent,         setEditingEvent]          = useState<CalendarEvent | null>(null);
   const [selectedDepartments,  setSelectedDepartments]   = useState<string[]>([]);
-  const [selectedPositions,    setSelectedPositions]     = useState<string[]>([]);
 
   // -------------------------------------------------------------------------
   // Queries
@@ -77,12 +74,10 @@ export default function EventsCalendar() {
 
   const { data: upcomingRaw } = useQuery({ queryKey: UPCOMING_KEY });
   const { data: departmentsRaw } = useQuery({ queryKey: DEPTS_KEY });
-  const { data: positionsRaw }   = useQuery({ queryKey: POSITIONS_KEY });
 
   const events         = Array.isArray(eventsRaw)      ? (eventsRaw      as CalendarEvent[]) : [];
   const upcomingEvents = Array.isArray(upcomingRaw)    ? (upcomingRaw    as CalendarEvent[]) : [];
   const departments    = Array.isArray(departmentsRaw) ? (departmentsRaw as Department[])    : [];
-  const positions      = Array.isArray(positionsRaw)   ? (positionsRaw   as Position[])      : [];
 
   // -------------------------------------------------------------------------
   // Form
@@ -106,7 +101,6 @@ export default function EventsCalendar() {
     setIsDialogOpen(false);
     setEditingEvent(null);
     setSelectedDepartments([]);
-    setSelectedPositions([]);
     form.reset(DEFAULT_VALUES);
   };
 
@@ -156,7 +150,7 @@ export default function EventsCalendar() {
     const payload: EventFormValues = {
       ...data,
       targetDepartments: selectedDepartments,
-      targetPositions:   selectedPositions,
+      targetPositions:   [],
     };
     if (editingEvent) {
       updateEventMutation.mutate({ id: editingEvent.id, data: payload });
@@ -168,7 +162,6 @@ export default function EventsCalendar() {
   const handleEdit = (event: CalendarEvent) => {
     setEditingEvent(event);
     setSelectedDepartments(event.targetDepartments ?? []);
-    setSelectedPositions(event.targetPositions ?? []);
     form.reset({
       title:           event.title,
       titleRu:         event.titleRu,
@@ -214,11 +207,8 @@ export default function EventsCalendar() {
           onSubmit={handleSubmit}
           isPending={isPending}
           departments={departments}
-          positions={positions}
           selectedDepartments={selectedDepartments}
           onDepartmentsChange={setSelectedDepartments}
-          selectedPositions={selectedPositions}
-          onPositionsChange={setSelectedPositions}
           onCancel={resetDialog}
         />
       </div>

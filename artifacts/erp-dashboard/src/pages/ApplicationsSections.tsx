@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ApplicationQuestion, Department, Position } from "./ApplicationsTypes";
+import type { ApplicationQuestion, Department } from "./ApplicationsTypes";
 import { useTranslation } from '@/lib/i18n';
 
 // ─── Question builder row ─────────────────────────────────────────────────────
@@ -112,8 +112,6 @@ interface CreateFormCardProps {
   onDescriptionRuChange: (v: string) => void;
   departmentId: string;
   onDepartmentChange: (v: string) => void;
-  positionId: string;
-  onPositionChange: (v: string) => void;
   dueDays: number | "";
   onDueDaysChange: (v: number | "") => void;
   questions: ApplicationQuestion[];
@@ -123,7 +121,6 @@ interface CreateFormCardProps {
   onSubmit: (e: React.FormEvent) => void;
   isSubmitting: boolean;
   departments: Department[];
-  positions: Position[];
 }
 
 export function CreateFormCard({
@@ -137,8 +134,6 @@ export function CreateFormCard({
   onDescriptionRuChange,
   departmentId,
   onDepartmentChange,
-  positionId,
-  onPositionChange,
   dueDays,
   onDueDaysChange,
   questions,
@@ -148,7 +143,6 @@ export function CreateFormCard({
   onSubmit,
   isSubmitting,
   departments,
-  positions,
 }: CreateFormCardProps) {
   const { t } = useTranslation("common");
   return (
@@ -222,25 +216,6 @@ export function CreateFormCard({
                   {(Array.isArray(departments) ? departments : []).map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-          <Label htmlFor="position">{t("positionOptional")}</Label>
-              <Select
-                value={positionId || "all"}
-                onValueChange={(val) => onPositionChange(val === "all" ? "" : val)}
-              >
-                <SelectTrigger data-testid="select-position" className="h-9">
-                  <SelectValue placeholder={t("lavozimniTanlang")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("barchaLavozimlar")}</SelectItem>
-                  {(Array.isArray(positions) ? positions : []).map((pos) => (
-                    <SelectItem key={pos.id} value={pos.id}>
-                      {pos.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

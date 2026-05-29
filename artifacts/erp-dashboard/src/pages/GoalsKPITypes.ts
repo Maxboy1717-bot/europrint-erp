@@ -16,7 +16,6 @@ export const CATEGORIES = [
 export const TARGET_TYPES = [
   { value: "global", label: "Umumiy" },
   { value: "department", label: tLabel('common.GoalsKPI.bolim', "Bo'lim") },
-  { value: "position", label: tLabel('common.GoalsKPI.lavozim', "Lavozim") },
   { value: "user", label: tLabel('common.GoalsKPI.xodim', "Xodim") },
 ];
 

@@ -18,7 +18,6 @@ interface GoalDialogProps {
   form: UseFormReturn<InsertGoal>;
   onSubmit: (data: InsertGoal) => void;
   departments: Array<{ id: string; name: string }>;
-  positions: Array<{ id: string; name: string }>;
   employees: Array<{ id: string; fullName: string }>;
   onResetForNew: () => void;
 }
@@ -29,7 +28,6 @@ export function GoalDialog({isOpen,
   form,
   onSubmit,
   departments,
-  positions,
   employees,
   onResetForNew,
 }: GoalDialogProps) {
@@ -129,7 +127,6 @@ export function GoalDialog({isOpen,
                   <FormItem>
                     <FormLabel>
                       {form.watch("targetType") === "department" && "Bo'lim"}
-                      {form.watch("targetType") === "position" && "Lavozim"}
                       {form.watch("targetType") === "user" && "Xodim"}
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || ""}>
@@ -142,10 +139,6 @@ export function GoalDialog({isOpen,
                         {form.watch("targetType") === "department" &&
                           (Array.isArray(departments) ? departments : []).map(d => (
                             <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                          ))}
-                        {form.watch("targetType") === "position" &&
-                          (Array.isArray(positions) ? positions : []).map(p => (
-                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                           ))}
                         {form.watch("targetType") === "user" &&
                           (Array.isArray(employees) ? employees : []).map(e => (

@@ -31,10 +31,6 @@ export default function GoalsKPI() {
     queryKey: ["/api/org-departments"],
   });
 
-  const { data: positions = [] } = useQuery<Array<{ id: string; name: string }>>({
-    queryKey: ["/api/positions"],
-  });
-
   const { data: employeesResponse } = useQuery<{ data: Array<{ id: string; fullName: string }> }>({
     queryKey: ["/api/hr/employees"],
   });
@@ -159,7 +155,6 @@ export default function GoalsKPI() {
           form={form}
           onSubmit={onSubmit}
           departments={departments}
-          positions={positions}
           employees={employees}
           onResetForNew={handleResetForNew}
         />
