@@ -20,11 +20,9 @@ export function NavGroup({ items, currentPath }: NavGroupProps) {
       {(Array.isArray(items) ? items : []).map((item, index) => {
         if (item.separator) {
           return (
-            <div key={`separator-${index}`} className="px-2 pt-5 pb-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] flex items-center gap-1.5 text-sidebar-foreground/35">
-                <span className="flex-1 h-px bg-sidebar-border" />
+            <div key={`separator-${index}`} className="px-2 pt-4 pb-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/40">
                 {item.title}
-                <span className="flex-1 h-px bg-sidebar-border" />
               </p>
             </div>
           );
@@ -44,19 +42,19 @@ export function NavGroup({ items, currentPath }: NavGroupProps) {
             href={`/${item.url}`}
             data-testid={`nav-menu-item-${itemName}`}
             className={cn(
-              "relative flex items-center gap-2.5 px-3 h-9 rounded-md text-[12.5px] font-medium transition-colors duration-100 mb-0.5",
+              "group relative flex items-center gap-3 px-3 h-10 rounded-[10px] text-[13px] font-medium transition-colors duration-150 mb-0.5",
               isActive
                 ? "bg-sidebar-accent text-primary font-semibold shadow-[inset_3px_0_0_hsl(var(--primary))]"
-                : "text-sidebar-foreground/65 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/55 hover:text-primary"
             )}
           >
             <item.icon className={cn(
-              "h-4 w-4 shrink-0 transition-colors",
-              isActive ? "text-primary" : "text-sidebar-foreground/40"
+              "h-[18px] w-[18px] shrink-0 transition-all duration-200",
+              isActive ? "text-primary" : "text-sidebar-foreground/45 group-hover:text-primary group-hover:scale-110"
             )} />
             <span className="flex-1 truncate">{item.title}</span>
             {hasBadge && (
-              <span className="ml-auto text-[10px] font-bold bg-primary text-primary-foreground rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shrink-0">
+              <span className="ml-auto text-[10.5px] font-bold bg-primary text-primary-foreground rounded-full min-w-[22px] h-[18px] flex items-center justify-center px-2 shrink-0">
                 {(item.badge as number) > 99 ? "99+" : item.badge}
               </span>
             )}

@@ -114,10 +114,8 @@ export function MobileSidebar({ open, onClose, activeModule, onModuleChange }: M
                 if (item.separator) {
                   return (
                     <div key={`sep-${index}`} className="px-2 pt-4 pb-1.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-1.5">
-                        <span className="flex-1 h-px bg-border" />
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                         {item.title}
-                        <span className="flex-1 h-px bg-border" />
                       </p>
                     </div>
                   );
@@ -133,17 +131,14 @@ export function MobileSidebar({ open, onClose, activeModule, onModuleChange }: M
                     key={item.url + index}
                     onClick={() => navigate(`/${item.url}`)}
                     className={cn(
-                      "relative w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all duration-150 mb-0.5 text-left",
+                      "group relative w-full flex items-center gap-3 px-3 h-10 rounded-[10px] text-[13px] font-medium transition-colors duration-150 mb-0.5 text-left",
                       isActive
-                        ? "bg-primary/10 text-primary font-semibold"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        ? "bg-sidebar-accent text-primary font-semibold shadow-[inset_3px_0_0_hsl(var(--primary))]"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/55 hover:text-primary"
                     )}
                   >
-                    {isActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-full" />
-                    )}
-                    <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
-                    <span>{item.title}</span>
+                    <item.icon className={cn("h-[18px] w-[18px] shrink-0 transition-all duration-200", isActive ? "text-primary" : "text-sidebar-foreground/45 group-hover:text-primary group-hover:scale-110")} />
+                    <span className="truncate">{item.title}</span>
                   </button>
                 );
               })}
@@ -154,7 +149,7 @@ export function MobileSidebar({ open, onClose, activeModule, onModuleChange }: M
         {/* Footer actions */}
         <div className="p-3 space-y-1 bg-card border-t border-border">
           <button
-            className="w-full from-primary to-amber-500 text-primary-foreground text-[12px] font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+            className="w-full bg-primary text-primary-foreground text-[12px] font-semibold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-opacity hover:opacity-90 shadow-sm"
             onClick={() => navigate("/kanban")}
           >
             <Plus className="h-4 w-4" />

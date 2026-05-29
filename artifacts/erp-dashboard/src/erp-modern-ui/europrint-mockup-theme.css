@@ -58,8 +58,8 @@
   --sidebar-border:             38 17% 88%;
   --sidebar-primary:            28 100% 59%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent:             25 95% 97%;
-  --sidebar-accent-foreground:  25 95% 35%;
+  --sidebar-accent:             5 85% 92%;    /* #FCDCD9 — SHIPNOW coral-soft active pill */
+  --sidebar-accent-foreground:  20 90% 48%;   /* warm orange text on the coral pill */
   --sidebar-ring:               25 95% 53%;
 
   /* Surface tints */

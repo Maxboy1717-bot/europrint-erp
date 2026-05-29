@@ -7,7 +7,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
   Warehouse, Package, CheckSquare, Layers, AlertTriangle,
-  Shield, Wrench, Home, Settings2, Store,
+  Shield, Wrench, Home, Settings2, Store, ChevronsUpDown,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { useRoleMenus } from "@/hooks/use-role-menus";
@@ -88,18 +88,19 @@ function AvatarBlock() {
     .slice(0, 2) || "?";
   const roleLabel = user?.role ? (tAuth(roleToI18nKey(user.role)) || user.role) : "";
   return (
-    <div className="px-3 py-3 border-b border-sidebar-border flex items-center gap-2.5 shrink-0">
-      <span className="h-7 w-7 rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-[11px] font-bold flex items-center justify-center shrink-0 select-none">
+    <div className="mx-3 mt-3 mb-1 rounded-xl bg-sidebar-accent/40 hover:bg-sidebar-accent/60 transition-colors px-3.5 py-3 flex items-center gap-3 shrink-0 select-none">
+      <span className="h-[38px] w-[38px] rounded-full bg-gradient-to-br from-primary to-orange-600 text-white text-[14px] font-bold flex items-center justify-center shrink-0">
         {initials}
       </span>
-      <div className="min-w-0">
-        <p className="text-[13px] font-semibold text-sidebar-foreground truncate leading-tight">
+      <div className="min-w-0 flex-1">
+        <p className="text-[13.5px] font-semibold text-sidebar-foreground truncate leading-tight">
           {user?.firstName} {user?.lastName}
         </p>
-        <p className="text-[11px] text-muted-foreground truncate leading-tight">
+        <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
           {roleLabel}
         </p>
       </div>
+      <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
     </div>
   );
 }
@@ -154,12 +155,12 @@ export function ModuleSidebar({ activeModule, onModuleChange }: ModuleSidebarPro
 
   return (
     <aside className="fixed left-0 top-14 h-[calc(100vh-3.5rem)] w-64 z-40 flex-col hidden lg:flex shadow-lg border-r border-sidebar-border bg-sidebar">
-      <AvatarBlock />
       <SidebarHeader
         icon={group.icon}
         title={group.title}
         accentBg={accentBg}
       />
+      <AvatarBlock />
 
       <ScrollArea className="flex-1">
         <NavGroup
