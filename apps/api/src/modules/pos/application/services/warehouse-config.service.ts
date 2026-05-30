@@ -242,13 +242,29 @@ export class WarehouseConfigService {
         ORDER BY mm.created_at DESC, mm.id DESC
         LIMIT 20
       `));
+      // Kam qoldiq (reorder_point yoki min_stock'dan past mavjud qoldiq)
+      const lowStock = dbRows(await rawSql(sql`
+        SELECT w.id AS "warehouseId", w.code AS "warehouseCode", mc.id AS "materialId",
+               COALESCE(mc.xom_ashyo, mc.kod, '—') AS "name", COALESCE(mc.unit_of_measure, 'dona') AS unit,
+               ROUND(ws.available_quantity, 2) AS available,
+               COALESCE(NULLIF(mc.reorder_point, 0), mc.min_stock, 0) AS threshold
+        FROM warehouse_stock ws
+        JOIN material_cards mc ON mc.id = ws.material_id
+        JOIN warehouses w ON w.id = ws.warehouse_id
+        WHERE w.is_active = true
+          AND COALESCE(NULLIF(mc.reorder_point, 0), mc.min_stock, 0) > 0
+          AND ws.available_quantity < COALESCE(NULLIF(mc.reorder_point, 0), mc.min_stock, 0)
+        ORDER BY (COALESCE(NULLIF(mc.reorder_point, 0), mc.min_stock, 0) - ws.available_quantity) DESC
+        LIMIT 20
+      `));
       const totals = {
         warehouses: warehouses.length,
         stockedWarehouses: warehouses.filter((w) => Number(w['lineCount'] ?? 0) > 0).length,
         stockLines: warehouses.reduce((s, w) => s + Number(w['lineCount'] ?? 0), 0),
         totalValue: warehouses.reduce((s, w) => s + Number(w['totalValue'] ?? 0), 0),
+        lowStockCount: lowStock.length,
       };
-      return { totals, warehouses, recentMovements };
+      return { totals, warehouses, recentMovements, lowStock };
     });
   }
 }
