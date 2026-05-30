@@ -69,4 +69,12 @@ export class WarehouseConfigController {
     const dto = IssueStockSchema.parse(body);
     return unwrapOrThrow(await this.svc.issueStock(id, dto, user.id));
   }
+
+  /** Material harakat tarixi (kirim/chiqim jurnali, eng yangisi birinchi). */
+  @Get('materials/:materialId/movements')
+  @RequirePermission('pos.reports.read')
+  @ApiOperation({ summary: 'Material harakat tarixi (material_movements)' })
+  async materialMovements(@Param('materialId', ParseIntPipe) materialId: number) {
+    return unwrapOrThrow(await this.svc.getMaterialMovements(materialId));
+  }
 }

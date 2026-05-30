@@ -132,4 +132,24 @@ export class WarehouseConfigService {
       };
     });
   }
+
+  /**
+   * Material harakat tarixi (material_movements) — kirim/chiqim ('RECEIVE'/'ISSUE'/...) jurnali,
+   * eng yangisi birinchi. Material 360 / ombor qoldig'i sahifasidagi "Tarix" uchun.
+   */
+  async getMaterialMovements(materialId: number): Promise<Result<Record<string, unknown>[], AppError>> {
+    return safeCall(async () => {
+      const rows = await rawSql(sql`
+        SELECT mm.id, mm.movement_type AS "movementType", COALESCE(mm.quantity, 0) AS quantity,
+               mm.unit, mm.reason, mm.notes, mm.created_at AS "createdAt",
+               COALESCE(NULLIF(TRIM(u.full_name), ''), u.username, 'User #' || mm.performed_by) AS "performedByName"
+        FROM material_movements mm
+        LEFT JOIN users u ON u.id = mm.performed_by
+        WHERE mm.material_id = ${materialId}
+        ORDER BY mm.created_at DESC, mm.id DESC
+        LIMIT 50
+      `);
+      return dbRows(rows);
+    });
+  }
 }
