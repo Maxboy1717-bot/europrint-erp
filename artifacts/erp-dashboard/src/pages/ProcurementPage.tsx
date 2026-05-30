@@ -27,6 +27,8 @@ export default function ProcurementPage() {
   const [cQty, setCQty] = useState("1");
   const [cPrice, setCPrice] = useState("");
   const [created, setCreated] = useState<Record<string, unknown> | null>(null);
+  const [wlApprover, setWlApprover] = useState("");
+  const [worklist, setWorklist] = useState<Record<string, unknown>[] | null>(null);
 
   const loadChain = async () => {
     const id = parseInt(empId, 10);
@@ -69,6 +71,33 @@ export default function ProcurementPage() {
       });
       setCreated(res);
       toast({ title: tLabel("common.procurement.created", "So'rov yaratildi") });
+    } catch (e) {
+      toast({ title: tLabel("common.procurement.error", "Xato"), description: String((e as Error).message), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadWorklist = async () => {
+    const appr = parseInt(wlApprover, 10);
+    if (!appr) { toast({ title: tLabel("common.procurement.enterApprover", "Rahbar user ID kiriting"), variant: "destructive" }); return; }
+    setLoading(true);
+    try {
+      setWorklist(await procurementApi.list({ pendingApproverUserId: appr, status: "pending_approval" }));
+    } catch (e) {
+      toast({ title: tLabel("common.procurement.error", "Xato"), description: String((e as Error).message), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const approve = async (id: number) => {
+    const appr = parseInt(wlApprover, 10);
+    setLoading(true);
+    try {
+      await procurementApi.decide(id, { approverUserId: appr, action: "approve" });
+      toast({ title: tLabel("common.procurement.approved", "Tasdiqlandi") });
+      await loadWorklist();
     } catch (e) {
       toast({ title: tLabel("common.procurement.error", "Xato"), description: String((e as Error).message), variant: "destructive" });
     } finally {
@@ -126,6 +155,42 @@ export default function ProcurementPage() {
               </p>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <GitBranch className="h-4 w-4" /> {tLabel("common.procurement.worklist", "Tasdiqlash kerak (rahbar)")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-end gap-2">
+            <div className="flex-1">
+              <Label htmlFor="wlApprover">{tLabel("common.procurement.approverUser", "Rahbar (user ID)")}</Label>
+              <Input id="wlApprover" value={wlApprover} onChange={(e) => setWlApprover(e.target.value)} placeholder="masalan 35" />
+            </div>
+            <Button onClick={loadWorklist} disabled={loading}>
+              <Search className="mr-1 h-4 w-4" /> {tLabel("common.procurement.view", "Ko'rish")}
+            </Button>
+          </div>
+          {worklist && (worklist.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{tLabel("common.procurement.noWorklist", "Tasdiq kutayotgan so'rov yo'q.")}</p>
+          ) : (
+            <ul className="space-y-2">
+              {worklist.map((r) => (
+                <li key={String(r["id"])} className="flex items-center justify-between rounded-md border p-2 text-sm">
+                  <span>
+                    <span className="font-medium">{String(r["request_number"])}</span>
+                    <span className="text-muted-foreground"> · {String(r["title"])} · {String(r["total_amount"])} {String(r["currency"])}</span>
+                  </span>
+                  <Button size="sm" onClick={() => approve(Number(r["id"]))} disabled={loading}>
+                    {tLabel("common.procurement.approve", "Tasdiqlash")}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ))}
         </CardContent>
       </Card>
 

@@ -42,6 +42,15 @@ export const procurementApi = {
   /** Yangi xarid so'rovi + tasdiq zanjirini biriktirish. */
   createRequest: (body: CreateProcurementRequest) =>
     apiRequest<Record<string, unknown>>("POST", `${BASE}/requests`, body),
+  /** So'rovlar ro'yxati (filtr: status/requester/navbatdagi tasdiqlovchi). */
+  list: (params: { status?: string; requesterEmployeeId?: number; pendingApproverUserId?: number } = {}) => {
+    const q = new URLSearchParams();
+    if (params.status) q.set("status", params.status);
+    if (params.requesterEmployeeId) q.set("requesterEmployeeId", String(params.requesterEmployeeId));
+    if (params.pendingApproverUserId) q.set("pendingApproverUserId", String(params.pendingApproverUserId));
+    const qs = q.toString();
+    return apiRequest<Record<string, unknown>[]>("GET", `${BASE}/requests${qs ? `?${qs}` : ""}`);
+  },
   /** So'rov tafsilotlari (qatorlar + tasdiq bosqichlari). */
   getRequest: (id: number) =>
     apiRequest<Record<string, unknown>>("GET", `${BASE}/requests/${id}`),
