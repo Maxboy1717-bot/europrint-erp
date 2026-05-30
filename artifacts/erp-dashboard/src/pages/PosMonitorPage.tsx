@@ -29,6 +29,7 @@ import {
   type PosIssueInput,
 } from "@/lib/api/pos-operations.api";
 import { useHardwareScanner } from "@/pos-monitor/hooks/useHardwareScanner";
+import PosBarcodeScanner from "@/pos-monitor/components/PosBarcodeScanner";
 import {
   Warehouse,
   Barcode,
@@ -38,6 +39,7 @@ import {
   Search,
   CheckCircle,
   Clock,
+  Camera,
 } from "lucide-react";
 
 // ─── Yordamchi funksiyalar ────────────────────────────────────────────────────
@@ -514,6 +516,7 @@ export default function PosMonitorPage() {
   // Barcode qidirish
   const [barcodeValue, setBarcodeValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [cameraOpen, setCameraOpen] = useState(false);
   const barcodeRef = useRef<HTMLInputElement>(null);
 
   // P2P reload trigger
@@ -726,22 +729,27 @@ export default function PosMonitorPage() {
                   : tLabel("pos.operations.scannerWedge", "Klaviatura skaner")}
               </span>
             </Label>
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <input
-                id="barcode-input"
-                ref={barcodeRef}
-                className="w-full h-9 rounded-md border border-input bg-background pl-8 pr-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                placeholder={tLabel("pos.operations.barcodePlaceholder", "Barcode yoki material nomi...")}
-                value={barcodeValue}
-                onChange={(e) => setBarcodeValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleBarcodeScan(barcodeValue);
-                    setBarcodeValue("");
-                  }
-                }}
-              />
+            <div className="flex items-center gap-1">
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <input
+                  id="barcode-input"
+                  ref={barcodeRef}
+                  className="w-full h-9 rounded-md border border-input bg-background pl-8 pr-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  placeholder={tLabel("pos.operations.barcodePlaceholder", "Barcode yoki material nomi...")}
+                  value={barcodeValue}
+                  onChange={(e) => setBarcodeValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleBarcodeScan(barcodeValue);
+                      setBarcodeValue("");
+                    }
+                  }}
+                />
+              </div>
+              <Button type="button" size="sm" variant="outline" className="h-9 shrink-0" onClick={() => setCameraOpen(true)} title={tLabel("pos.operations.cameraScan", "Kamera skaner")}>
+                <Camera className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
@@ -844,6 +852,21 @@ export default function PosMonitorPage() {
         onClose={closeP2PDialog}
         onSuccess={handleOpSuccess}
       />
+
+      {/* ── Kamera skaner Dialog (BarcodeDetector/ZXing) ── */}
+      <Dialog open={cameraOpen} onOpenChange={(o) => { if (!o) setCameraOpen(false); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{tLabel("pos.operations.cameraScanTitle", "Kamera bilan skanerlash")}</DialogTitle>
+          </DialogHeader>
+          {cameraOpen && (
+            <PosBarcodeScanner
+              onDetected={(code) => { handleBarcodeScan(code); setCameraOpen(false); }}
+              onClose={() => setCameraOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
