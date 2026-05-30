@@ -3,7 +3,7 @@
  * @description Ombor tip KONFIGURATSIYASI (warehouse_types) + omborlar o'qish — config-driven UI uchun.
  *   Yangi toza per-tur ombor sahifalari shu config'dan generatsiya qilinadi (eski rasvo WMS'ni almashtirish).
  */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../../../hr/common/db-rows';
@@ -39,6 +39,35 @@ export class WarehouseConfigService {
         ORDER BY name
       `);
       return dbRows(rows);
+    });
+  }
+
+  /**
+   * Bitta ombor qoldig'i — warehouse_stock + material_cards (kod/nom/birlik). P2P qabul (§7.7)
+   * tovarni shu jadvalga prixod qiladi; bu yerda ombordagi joriy qoldiq ko'rsatiladi.
+   */
+  async getWarehouseStock(warehouseId: number): Promise<Result<Record<string, unknown>, AppError>> {
+    return safeCall(async () => {
+      const wh = dbRows(await rawSql(sql`
+        SELECT id, code, name, name_ru AS "nameRu", type, location FROM warehouses WHERE id = ${warehouseId}
+      `))[0];
+      if (!wh) throw new NotFoundException(`Ombor topilmadi: ${warehouseId}`);
+      const stock = dbRows(await rawSql(sql`
+        SELECT ws.id, ws.material_id AS "materialId", mc.kod,
+               COALESCE(mc.xom_ashyo, '—') AS "name",
+               COALESCE(ws.quantity, 0) AS quantity,
+               COALESCE(ws.reserved_quantity, 0) AS reserved,
+               COALESCE(ws.available_quantity, 0) AS available,
+               COALESCE(mc.unit_of_measure, 'dona') AS unit,
+               ws.last_updated_at AS "lastUpdatedAt"
+        FROM warehouse_stock ws
+        LEFT JOIN material_cards mc ON mc.id = ws.material_id
+        WHERE ws.warehouse_id = ${warehouseId}
+        ORDER BY mc.xom_ashyo NULLS LAST, ws.id
+        LIMIT 500
+      `));
+      const totalQuantity = stock.reduce((s, r) => s + Number(r['quantity'] ?? 0), 0);
+      return { warehouse: wh, stock, lineCount: stock.length, totalQuantity };
     });
   }
 }

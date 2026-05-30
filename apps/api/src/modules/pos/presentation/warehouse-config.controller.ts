@@ -2,7 +2,7 @@
  * POS — Ombor konfiguratsiyasi (config-driven UI uchun).
  * Yangi toza per-tur ombor sahifalari shu endpointlardan generatsiya qilinadi.
  */
-import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -36,5 +36,13 @@ export class WarehouseConfigController {
   @ApiQuery({ name: 'type', required: false })
   async warehouses(@Query('type') type?: string) {
     return unwrapOrThrow(await this.svc.listWarehouses(type));
+  }
+
+  /** Bitta ombor qoldig'i — material kartochka bo'yicha joriy stok (warehouse_stock). */
+  @Get('warehouses/:id/stock')
+  @RequirePermission('pos.reports.read')
+  @ApiOperation({ summary: "Ombor qoldig'i (material kartochka bo'yicha)" })
+  async warehouseStock(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrThrow(await this.svc.getWarehouseStock(id));
   }
 }
