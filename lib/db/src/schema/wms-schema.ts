@@ -38,14 +38,15 @@ export const warehouses = pgTable("warehouses", {
   index("idx_warehouses_type").on(t.type),
   index("idx_warehouses_is_active").on(t.isActive),
   index("idx_warehouses_manager_id").on(t.managerId),
-  check("warehouses_type_chk", sql`${t.type} IN ('main','raw_material','finished_goods','transit','semi_finished','defective','quarantine','tools_equipment','household_mro','mro','production')`),
+  // Live-DB superset (ADD-ONLY) + paper_rolls (rulon qog'oz) + waste_paper (makulatura) — 2026-05-30 vision.
+  check("warehouses_type_chk", sql`${t.type} IN ('main','raw_material','finished_goods','transit','semi_finished','defective','quarantine','tools_equipment','household_mro','mro','production','department_warehouse','MAIN','QUARANTINE','PRODUCTION_OFFSET','PRODUCTION_FLEXO','tools','household','wip','scrap','paper_rolls','waste_paper')`),
 ]);
 
 
 export const insertWarehouseSchema = createInsertSchema(warehouses, {
   code: z.string().min(1, "Kod talab qilinadi"),
   name: z.string().min(2, "Nom kamida 2 ta belgidan iborat bo'lishi kerak"),
-  type: z.enum(["main", "raw_material", "finished_goods", "transit", "semi_finished", "defective", "quarantine", "tools_equipment", "household_mro", "mro", "production"]),
+  type: z.enum(["main", "raw_material", "finished_goods", "transit", "semi_finished", "defective", "quarantine", "tools_equipment", "household_mro", "mro", "production", "department_warehouse", "MAIN", "QUARANTINE", "PRODUCTION_OFFSET", "PRODUCTION_FLEXO", "tools", "household", "wip", "scrap", "paper_rolls", "waste_paper"]),
 }).omit({ id: true, createdAt: true } as never);
 
 
