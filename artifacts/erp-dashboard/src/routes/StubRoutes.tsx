@@ -14,7 +14,6 @@ const AIExamsPage              = lazy(() => import("@/pages/AIExams"));
 const HRAIDashboardPage        = lazy(() => import("@/pages/HRAIDashboard"));
 const AIProductionPlanningPage = lazy(() => import("@/pages/AIProductionPlanning"));
 const AiCrmPageComponent       = lazy(() => import("@/pages/AiCrmPage"));
-const WmsAnalyticsPage         = lazy(() => import("@/pages/WmsAnalytics"));
 const IoTExtendedPage          = lazy(() => import("@/pages/IoTExtended"));
 const IntegrationMgmtPage      = lazy(() => import("@/pages/IntegrationManagement"));
 const LessonPlayerPage         = lazy(() => import("@/pages/LessonPlayer"));
@@ -70,7 +69,7 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/ai/hr',                     HRAIDashboardPage],        // HR AI dashboard
   ['/ai/marketing',              AiCrmPageComponent],       // AI CRM / marketing
   ['/ai-planning',               AIProductionPlanningPage], // AI production planning
-  ['/ai/wms',                    WmsAnalyticsPage],         // WMS analytics
+  ['/ai/wms',                    Stub],                     // WmsAnalytics o'chirildi (stub)
   ['/assignments',               MESWorkerAssignmentsPage], // MES worker assignments
   ['/insights',                  AnalyticsPage],            // BI analytics / insights
   ['/integration/requests',      IntegrationMgmtPage],      // Integration management
