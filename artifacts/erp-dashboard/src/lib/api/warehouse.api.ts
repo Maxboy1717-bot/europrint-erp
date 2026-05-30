@@ -99,10 +99,21 @@ export interface DashboardMovement {
   performedByName: string | null;
 }
 
+export interface LowStockItem {
+  warehouseId: number;
+  warehouseCode: string;
+  materialId: number;
+  name: string;
+  unit: string;
+  available: number;
+  threshold: number;
+}
+
 export interface WarehouseDashboard {
-  totals: { warehouses: number; stockedWarehouses: number; stockLines: number; totalValue: number };
+  totals: { warehouses: number; stockedWarehouses: number; stockLines: number; totalValue: number; lowStockCount: number };
   warehouses: DashboardWarehouse[];
   recentMovements: DashboardMovement[];
+  lowStock: LowStockItem[];
 }
 
 const BASE = "/api/pos/warehouse-config";

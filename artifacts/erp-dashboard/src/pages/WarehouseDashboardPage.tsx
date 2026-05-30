@@ -9,7 +9,7 @@ import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Warehouse, Wallet, Boxes, Layers } from "lucide-react";
+import { Warehouse, Wallet, Boxes, Layers, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { tLabel } from "@/lib/i18n/tLabel";
 import { warehouseApi, type WarehouseDashboard } from "@/lib/api/warehouse.api";
@@ -93,6 +93,42 @@ export default function WarehouseDashboardPage() {
           </>
         )}
       </div>
+
+      {data && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className={data.totals.lowStockCount > 0 ? "h-4 w-4 text-destructive" : "h-4 w-4 text-muted-foreground"} />
+              {tLabel("common.whDash.lowStock", "Kam qoldiq")}
+            </CardTitle>
+            <Badge variant={data.totals.lowStockCount > 0 ? "destructive" : "secondary"}>{data.totals.lowStockCount}</Badge>
+          </CardHeader>
+          <CardContent>
+            {data.lowStock.length === 0 ? (
+              <p className="py-2 text-sm text-muted-foreground">{tLabel("common.whDash.lowStockOk", "Barcha materiallar yetarli")}</p>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {data.lowStock.map((it) => (
+                  <Link
+                    key={`${it.warehouseId}-${it.materialId}`}
+                    href={`/wms/warehouse-stock/${it.warehouseId}`}
+                    className="flex items-center justify-between gap-2 rounded-md border border-destructive/40 p-2 text-sm hover:bg-muted/50"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate font-medium">{it.name}</div>
+                      <div className="text-xs text-muted-foreground">{it.warehouseCode}</div>
+                    </div>
+                    <div className="whitespace-nowrap text-right">
+                      <div className="font-medium text-destructive">{fmtQty(it.available)} {it.unit}</div>
+                      <div className="text-xs text-muted-foreground">/ {fmtQty(it.threshold)}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
