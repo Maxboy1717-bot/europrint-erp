@@ -11,6 +11,7 @@ import { useTranslation } from '@/lib/i18n';
 
 const PosLogin         = lazy(() => import("./pages/PosLogin"));
 const PosDashboard     = lazy(() => import("./pages/PosDashboard"));
+const PosMonitorMain   = lazy(() => import("@/pages/PosMonitorPage"));
 const PosWarehouses    = lazy(() => import("./pages/PosWarehouses"));
 const PosWarehouseDetail = lazy(() => import("./pages/PosWarehouseDetail"));
 const PosMaterials     = lazy(() => import("./pages/PosMaterials"));
@@ -137,8 +138,17 @@ export default function PosMonitorApp() {
           </Suspense>
         </Route>
 
-        {/* Dashboard */}
+        {/* Dashboard — PosMonitorPage: tabs+kirim/chiqim+barcode+P2P qabul */}
         <Route path="/pos-monitor">
+          <AuthGuard>
+            <WithLayout>
+              <Suspense fallback={<PosLoader />}><PosMonitorMain /></Suspense>
+            </WithLayout>
+          </AuthGuard>
+        </Route>
+
+        {/* Legacy dashboard (eski boshqaruv ko'rinishi) */}
+        <Route path="/pos-monitor/dashboard-legacy">
           <AuthGuard>
             <WithLayout>
               <Suspense fallback={<PosLoader />}><PosDashboard /></Suspense>
