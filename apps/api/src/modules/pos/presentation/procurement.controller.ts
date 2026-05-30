@@ -81,13 +81,13 @@ export class ProcurementController {
     return unwrapOrThrow(await this.requestService.decideApproval(id, body.approverUserId, body.action, body.comments));
   }
 
-  /** Tovar qabul — chek + so'rov 'received' + podotchet reconcile (avans yopiladi). */
+  /** Tovar qabul — chek + so'rov 'received' + podotchet reconcile + ombor prixod (§7.7). */
   @Post('requests/:id/receive')
   @RequirePermission('pos.reports.read')
-  @ApiOperation({ summary: "Xarid tovarini qabul qilish (chek + podotchet reconcile)" })
+  @ApiOperation({ summary: 'Xarid tovarini qabul qilish (chek + podotchet reconcile + ombor prixod)' })
   async receive(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { chekNumber?: string; chekAmount?: number; warehouseId?: string; notes?: string },
+    @Body() body: { chekNumber?: string; chekAmount?: number; warehouseId?: string | number; notes?: string },
   ) {
     return unwrapOrThrow(await this.requestService.receiveProcurement(id, body));
   }

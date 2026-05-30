@@ -209,14 +209,104 @@ export class ProcurementRequestService {
   }
 
   /**
-   * Increment 1.6: tovar yetib kelganda — chek qabul + so'rov 'received' + podotchet RECONCILE
-   * (advance_payments settlement_status='settled'). Chek ma'lumoti rules JSONB ga yoziladi.
-   * Eslatma: haqiqiy ombor EXTERNAL_IN harakati (FIFO/passport/barcode) FAZA 2 da pos-movement
-   * (createMovement) orqali ulanadi — bu yerda procurement + podotchet zanjiri yopiladi.
+   * Increment 2.1 (§7.7): qabul qilingan tovar HAQIQIY tur-omborga PRIXOD bo'ladi.
+   * Har qator uchun material kartochka topiladi/yaratiladi (material_cards) va warehouse_stock
+   * (warehouse_id, material_id) qoldig'i oshiriladi (UPDATE→INSERT upsert) + material current_stock
+   * yangilanadi. Maqsadli ombor: input.warehouseId (aniq integer) YOKI request.target_warehouse_type
+   * bo'yicha o'sha turdagi 1-ombor. Ombor topilmasa — prixod o'tkazilmaydi (procurement baribir yopiladi).
+   */
+  private async enterWarehouseStock(
+    requestId: number,
+    warehouseIdInput: string | number | undefined,
+  ): Promise<Record<string, unknown> | null> {
+    // 1. Maqsadli ombor (integer id) — aniq berilgan yoki tur bo'yicha
+    let warehouseId: number | null = null;
+    const parsed = Number(warehouseIdInput);
+    if (warehouseIdInput != null && warehouseIdInput !== '' && Number.isFinite(parsed) && parsed > 0) {
+      warehouseId = parsed;
+    } else {
+      const typeRow = dbRows(await rawSql(sql`SELECT target_warehouse_type FROM procurement_requests WHERE id = ${requestId}`))[0];
+      const whType = typeRow?.['target_warehouse_type'] ? String(typeRow['target_warehouse_type']) : null;
+      if (whType) {
+        const wh = dbRows(await rawSql(sql`SELECT id FROM warehouses WHERE type = ${whType} ORDER BY id LIMIT 1`))[0];
+        if (wh) warehouseId = Number(wh['id']);
+      }
+    }
+    if (warehouseId == null) {
+      this.logger.warn(`[P2P] So'rov ${requestId}: maqsadli ombor aniqlanmadi — prixod o'tkazilmadi`);
+      return null;
+    }
+    const whInfo = dbRows(await rawSql(sql`SELECT id, code, name FROM warehouses WHERE id = ${warehouseId}`))[0];
+    if (!whInfo) {
+      this.logger.warn(`[P2P] So'rov ${requestId}: ombor #${warehouseId} topilmadi — prixod o'tkazilmadi`);
+      return null;
+    }
+
+    // 2. Qatorlar bo'yicha prixod
+    const items = dbRows(await rawSql(sql`
+      SELECT id, material_id, description, quantity, unit FROM procurement_request_items WHERE request_id = ${requestId} ORDER BY id
+    `));
+    const lines: Record<string, unknown>[] = [];
+    for (const it of items) {
+      const qty = Number(it['quantity'] ?? 0);
+      if (qty <= 0) continue;
+      const unit = String(it['unit'] ?? 'dona');
+      const description = String(it['description'] ?? '').trim() || `Item ${it['id']}`;
+
+      // 2a. Material kartochka — qatordagi material_id, aks holda nom bo'yicha topish, aks holda yaratish
+      let materialId = it['material_id'] != null ? Number(it['material_id']) : null;
+      if (materialId == null) {
+        const found = dbRows(await rawSql(sql`SELECT id FROM material_cards WHERE xom_ashyo = ${description} LIMIT 1`))[0];
+        if (found) {
+          materialId = Number(found['id']);
+        } else {
+          const kod = `AUTO-P${requestId}-I${Number(it['id'])}`;
+          const created = dbRows(await rawSql(sql`
+            INSERT INTO material_cards (kod, xom_ashyo, unit_of_measure, current_stock, is_active, created_at)
+            VALUES (${kod}, ${description}, ${unit}, 0, true, NOW())
+            RETURNING id
+          `))[0];
+          materialId = created?.['id'] != null ? Number(created['id']) : null;
+        }
+        if (materialId != null) {
+          await rawSql(sql`UPDATE procurement_request_items SET material_id = ${materialId} WHERE id = ${Number(it['id'])}`);
+        }
+      }
+      if (materialId == null) continue;
+
+      // 2b. warehouse_stock upsert — mavjud qoldiqni oshir, bo'lmasa yangi qator
+      const updated = dbRows(await rawSql(sql`
+        UPDATE warehouse_stock
+        SET quantity = quantity + ${qty}, available_quantity = available_quantity + ${qty}, last_updated_at = NOW()
+        WHERE warehouse_id = ${warehouseId} AND material_id = ${materialId}
+        RETURNING id
+      `))[0];
+      if (!updated) {
+        await rawSql(sql`
+          INSERT INTO warehouse_stock (warehouse_id, material_id, quantity, reserved_quantity, available_quantity)
+          VALUES (${warehouseId}, ${materialId}, ${qty}, 0, ${qty})
+        `);
+      }
+
+      // 2c. Material umumiy qoldig'i
+      await rawSql(sql`UPDATE material_cards SET current_stock = COALESCE(current_stock, 0) + ${qty} WHERE id = ${materialId}`);
+
+      lines.push({ materialId, description, quantity: qty, unit });
+    }
+
+    this.logger.log(`[P2P] So'rov ${requestId} → ombor ${String(whInfo['code'])} (#${warehouseId}) ga ${lines.length} qator prixod`);
+    return { warehouseId, warehouseCode: whInfo['code'], warehouseName: whInfo['name'], lineCount: lines.length, lines };
+  }
+
+  /**
+   * Increment 1.6 + 2.1: tovar yetib kelganda — chek qabul + so'rov 'received' + podotchet RECONCILE
+   * (advance_payments settlement_status='settled') + HAQIQIY ombor PRIXOD (§7.7: warehouse_stock +
+   * material_cards). Chek ma'lumoti rules JSONB ga yoziladi.
+   * Eslatma: pos-movement EXTERNAL_IN audit-ledger (FIFO/passport/barcode) FAZA 2 da qo'shimcha ulanadi.
    */
   async receiveProcurement(
     requestId: number,
-    input: { chekNumber?: string; chekAmount?: number; warehouseId?: string; notes?: string },
+    input: { chekNumber?: string; chekAmount?: number; warehouseId?: string | number; notes?: string },
     receivedBy?: number,
   ): Promise<Result<Record<string, unknown>, AppError>> {
     return safeCall(async () => {
@@ -251,13 +341,17 @@ export class ProcurementRequestService {
         RETURNING id, settled_amount, settlement_status
       `))[0] ?? null;
 
-      this.logger.log(`[P2P] So'rov ${req['request_number']} qabul qilindi (chek ${chekAmount}); podotchet ${settled ? 'yopildi #' + settled['id'] : "yo'q"}`);
+      // 3. HAQIQIY ombor PRIXOD (§7.7): tovar tegishli tur-omborga kiradi (warehouse_stock + material_cards)
+      const warehouseEntry = await this.enterWarehouseStock(requestId, input.warehouseId);
+
+      this.logger.log(`[P2P] So'rov ${req['request_number']} qabul qilindi (chek ${chekAmount}); podotchet ${settled ? 'yopildi #' + settled['id'] : "yo'q"}; prixod ${warehouseEntry ? warehouseEntry['lineCount'] + ' qator' : "yo'q"}`);
       return {
         requestId,
         requestNumber: req['request_number'],
         status: 'received',
         chekAmount,
         podotchetSettled: settled,
+        warehouseEntry,
       };
     });
   }
