@@ -10,15 +10,12 @@
 
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { payrollContracts, payrollCalculations, payrollTaxRules, users } from '@workspace/db';
+import { payrollContracts, payrollCalculations, users } from '@workspace/db';
 import { and, eq, desc } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/result';
 
-// Statutory default rates — mirror the FE TAX_CONSTANTS fallbacks in
-// PayrollAutomation.tsx (INPS 8%, JSHD 12%, min wage 1.12M so'm).
-const INPS_RATE = 0.08;
-const JSHD_RATE = 0.12;
-const MIN_WAGE = 1_120_000;
+// ERP is gross-only: tax (INPS/JSHD) and the statutory min-wage guarantee are
+// computed in 1C, NOT here. This service handles gross + NON-TAX deductions only.
 const DEFAULT_WORK_DAYS = 22;
 const DEFAULT_MONTHLY_HOURS = 176;
 const LIST_LIMIT = 200;
@@ -58,15 +55,11 @@ interface ComputeParts {
   hourlyPay: number;
   pieceworkPay: number;
   grossPay: number;
-  taxInps: number;
-  taxJshd: number;
-  totalTaxes: number;
   advances: number;
   loans: number;
   otherDeductions: number;
   totalDeductions: number;
   netPay: number;
-  minWageTopUp: number;
 }
 
 interface AiRecommendation {
@@ -91,20 +84,13 @@ export class FinanceExtendedPayrollService {
       case 'piecework': pieceworkPay = i.productionUnits * (contract.pieceworkRate ?? 0); break;
     }
     const grossPay = basePay + hourlyPay + pieceworkPay + i.bonuses + i.allowances;
-    const taxInps = grossPay * INPS_RATE;
-    const taxJshd = grossPay * JSHD_RATE;
-    const totalTaxes = taxInps + taxJshd;
-    const totalDeductions = totalTaxes + i.advances + i.loans + i.otherDeductions;
-    let netPay = grossPay - totalDeductions;
-    let minWageTopUp = 0;
-    if (contract.minWageGuarantee && netPay < MIN_WAGE) {
-      minWageTopUp = MIN_WAGE - netPay;
-      netPay = MIN_WAGE;
-    }
+    // ERP gross-only: deductions are NON-TAX (advances/loans/other). Tax + min-wage in 1C.
+    const totalDeductions = i.advances + i.loans + i.otherDeductions;
+    const netPay = grossPay - totalDeductions;
     return {
-      basePay, hourlyPay, pieceworkPay, grossPay, taxInps, taxJshd, totalTaxes,
+      basePay, hourlyPay, pieceworkPay, grossPay,
       advances: i.advances, loans: i.loans, otherDeductions: i.otherDeductions,
-      totalDeductions, netPay, minWageTopUp,
+      totalDeductions, netPay,
     };
   }
 
@@ -143,17 +129,6 @@ export class FinanceExtendedPayrollService {
     }
   }
 
-  async listTaxRules(): Promise<Result<unknown[]>> {
-    try {
-      const rows = await db.select().from(payrollTaxRules)
-        .where(eq(payrollTaxRules.isActive, true))
-        .orderBy(desc(payrollTaxRules.id)).limit(LIST_LIMIT);
-      return Ok((Array.isArray(rows) ? rows : []).map((r) => ({ ...r, id: String(r.id) })));
-    } catch (e: unknown) {
-      return Err(AppErr('DB_ERROR', `PAYROLL_TAX_RULES_LIST_FAILED: ${String(e)}`));
-    }
-  }
-
   private async insertCalc(
     contract: ContractRow,
     employeeId: number,
@@ -181,15 +156,13 @@ export class FinanceExtendedPayrollService {
       bonuses,
       allowances,
       grossPay: p.grossPay,
-      taxInps: p.taxInps,
-      taxJshd: p.taxJshd,
-      totalTaxes: p.totalTaxes,
+      // tax columns (tax_inps/tax_jshd/total_taxes) + min_wage_top_up left at DB default 0:
+      // ERP is gross-only, tax & min-wage live in 1C (schema columns kept, not written).
       otherDeductions: p.otherDeductions,
       advances: p.advances,
       loans: p.loans,
       totalDeductions: p.totalDeductions,
       netPay: p.netPay,
-      minWageTopUp: p.minWageTopUp,
       status: 'calculated',
       calculatedAt: new Date(),
       notes: notes ?? null,
@@ -281,14 +254,6 @@ export class FinanceExtendedPayrollService {
     p: ComputeParts,
   ) {
     const recommendations: AiRecommendation[] = [];
-    if (p.minWageTopUp > 0) {
-      recommendations.push({
-        type: 'warning', priority: 'high',
-        title: "Minimal ish haqi kafolati qo'llanildi",
-        description: `Sof maosh minimal ish haqidan past edi; ${Math.round(p.minWageTopUp)} so'm qo'shildi.`,
-        confidence: 90,
-      });
-    }
     if (contract.payType === 'piecework') {
       recommendations.push({
         type: 'optimization', priority: 'medium',
@@ -313,12 +278,8 @@ export class FinanceExtendedPayrollService {
       pieceworkPay: p.pieceworkPay,
       overtimePay: 0,
       grossPay: p.grossPay,
-      taxInps: p.taxInps,
-      taxJshd: p.taxJshd,
-      totalTaxes: p.totalTaxes,
       totalDeductions: p.totalDeductions,
       netPay: p.netPay,
-      minWageTopUp: p.minWageTopUp,
       confidence,
       dataQuality,
       recommendations,
@@ -334,10 +295,8 @@ export class FinanceExtendedPayrollService {
         overtimeHours: 0,
         overallConfidence: confidence,
         dataQualityScore: dataQuality,
-        anomaliesDetected: p.minWageTopUp > 0,
-        anomalyDetails: p.minWageTopUp > 0
-          ? [{ type: 'min_wage_topup', description: 'Net pay below statutory minimum wage', severity: 'medium' }]
-          : [],
+        anomaliesDetected: false,
+        anomalyDetails: [],
       },
     };
   }

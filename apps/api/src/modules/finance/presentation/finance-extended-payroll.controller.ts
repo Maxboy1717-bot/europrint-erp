@@ -86,12 +86,6 @@ export class FinanceExtendedPayrollController {
     return unwrapOrInternal(await this.svc.listContracts());
   }
 
-  @ApiOperation({ summary: 'Get payroll tax rules' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('payroll-tax-rules')
-  async getPayrollTaxRules() {
-    return unwrapOrInternal(await this.svc.listTaxRules());
-  }
 
   @ApiOperation({ summary: 'Get tax calendar' })
   @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-1' })
