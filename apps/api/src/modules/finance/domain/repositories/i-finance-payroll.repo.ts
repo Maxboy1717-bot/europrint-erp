@@ -14,12 +14,10 @@ type Row = Record<string, unknown>;
 export interface IFinancePayrollRepo {
   byDepartment(periodId?: string): Promise<Result<Row[]>>;
   byBrigade(periodId?: string): Promise<Result<Row[]>>;
+  // ERP gross-only: returns gross/net/headcount. Tax (INPS/JSHD) totals are 1C's domain.
   taxSummary(periodId?: string): Promise<
     Result<{
       grossSalary: number;
-      inpsTotal: number;
-      jshdTotal: number;
-      totalDeductions: number;
       netSalary: number;
       employeeCount: number;
     }>

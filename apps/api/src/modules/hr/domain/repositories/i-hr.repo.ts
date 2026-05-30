@@ -23,7 +23,7 @@ export interface IHrRepo {
   // P1.6.3: transactional salary review (UPDATE employees + INSERT salary_history in one tx)
   reviewSalaryTransactional(employeeId: number, newSalary: number, today: string): Promise<Result<HrRow>>;
 
-  getPayrollSummary(period: string): Promise<Result<{ totalGross: number; totalNet: number; totalINPS: number; totalJSHD: number; employeeCount: number }>>;
+  getPayrollSummary(period: string): Promise<Result<{ totalGross: number; totalNet: number; employeeCount: number }>>;
 
   // Leave Management
   findLeaveById(id: string): Promise<Result<HrRow | null>>;

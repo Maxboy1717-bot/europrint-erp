@@ -55,15 +55,12 @@ export class PayrollService {
     const period = await this.findOne(id);
     const rows = (period.rows as Record<string, unknown>[]) ?? [];
 
-    const DEFAULT_INCOME_TAX_RATE = 12;
-    const DEFAULT_PENSION_RATE = 8;
-
     const calculated = (Array.isArray(rows) ? rows : []).map((row) => {
+      // ERP gross-only: income-tax/pension are computed in 1C, not here. This
+      // period carries no non-tax deductions, so net = gross.
       const gross = Number(row.grossSalary ?? row.baseSalary ?? 0);
-      const incomeTax = parseFloat(((gross * DEFAULT_INCOME_TAX_RATE) / 100).toFixed(2));
-      const pension = parseFloat(((gross * DEFAULT_PENSION_RATE) / 100).toFixed(2));
-      const net = parseFloat((gross - incomeTax - pension).toFixed(2));
-      return { ...row, incomeTax, pensionDeduction: pension, netSalary: net, calculated: true };
+      const net = gross;
+      return { ...row, netSalary: net, calculated: true };
     });
 
     const statusResult = await this.financePayrollRepo.updateStatus(id, 'calculated');

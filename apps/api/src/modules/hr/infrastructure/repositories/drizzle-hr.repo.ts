@@ -18,7 +18,6 @@ import {
   hrEmployees, hrDepartments, hrPositions,
   salary_history, payroll_periods_hr,
   candidates, discipline_records, hr_health_checkups,
-  settings,
 } from '@shared/db';
 
 type Row = Record<string, unknown>;
@@ -119,14 +118,8 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
     }
   }
 
-  async getPayrollSummary(period: string): Promise<Result<{ totalGross: number; totalNet: number; totalINPS: number; totalJSHD: number; employeeCount: number }>> {
+  async getPayrollSummary(period: string): Promise<Result<{ totalGross: number; totalNet: number; employeeCount: number }>> {
     try {
-      const inpsRate = await db.select({ value: settings.value }).from(settings).where(eq(settings.key, 'inps_rate')).limit(1)
-        .then(r => parseFloat(r[0]?.value ?? '0.08'))
-        .catch(() => 0.08);
-      const jshdRate = await db.select({ value: settings.value }).from(settings).where(eq(settings.key, 'jshd_rate')).limit(1)
-        .then(r => parseFloat(r[0]?.value ?? '0.12'))
-        .catch(() => 0.12);
       const rows = await db.select({
         totalGross:     sql<string>`COALESCE(SUM(${salary_history.base_salary}::numeric), 0)`,
         totalNet:       sql<string>`COALESCE(SUM(${salary_history.salary_earned}::numeric), 0)`,
@@ -135,8 +128,8 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
         .from(salary_history)
         .where(sql`TO_CHAR(${salary_history.salary_period_start}::date, 'YYYY-MM') = ${period}`);
       const row = rows[0] ?? {};
-      const gross = Number(row.totalGross ?? 0);
-      return { ok: true, data: { totalGross: gross, totalNet: Number(row.totalNet ?? 0), totalINPS: gross * inpsRate, totalJSHD: gross * jshdRate, employeeCount: Number(row.employeeCount ?? 0) } };
+      // ERP gross-only: tax (INPS/JSHD) totals are computed in 1C, not here.
+      return { ok: true, data: { totalGross: Number(row.totalGross ?? 0), totalNet: Number(row.totalNet ?? 0), employeeCount: Number(row.employeeCount ?? 0) } };
     } catch (error: unknown) {
       this.logger.error(`getPayrollSummary: ${(error as Error).message}`);
       return Err((error as Error).message);

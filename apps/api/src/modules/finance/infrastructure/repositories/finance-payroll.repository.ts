@@ -10,7 +10,6 @@ import { sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
 import type { IFinancePayrollRepo } from '../../domain/repositories/i-finance-payroll.repo';
 
-const TAX_CONSTANTS = { INPS_RATE: 0.12, JSHD_RATE: 0.12 };
 type Row = Record<string, unknown>;
 
 @Injectable()
@@ -52,7 +51,7 @@ export class FinancePayrollRepository implements IFinancePayrollRepo {
       }, 'DB_ERROR');
   }
 
-  async taxSummary(periodId?: string): Promise<Result<{ grossSalary: number; inpsTotal: number; jshdTotal: number; totalDeductions: number; netSalary: number; employeeCount: number }>> {
+  async taxSummary(periodId?: string): Promise<Result<{ grossSalary: number; netSalary: number; employeeCount: number }>> {
     return safeCall(async () => {
       const rows = await runQuery<{ employee_count: string; total_gross_salary: string; total_net_salary: string }>(sql`
         SELECT COUNT(*) AS employee_count,
@@ -62,11 +61,8 @@ export class FinancePayrollRepository implements IFinancePayrollRepo {
         WHERE (${periodId ?? null}::text IS NULL OR period_id = ${periodId ?? null})
       `);
       const row = rows.rows[0] ?? {};
-      const grossSalary = Number(row.total_gross_salary) || 0;
-      const inpsTotal = Math.round(grossSalary * TAX_CONSTANTS.INPS_RATE);
-      const taxableIncome = grossSalary - inpsTotal;
-      const jshdTotal = Math.round(taxableIncome * TAX_CONSTANTS.JSHD_RATE);
-      return { grossSalary, inpsTotal, jshdTotal, totalDeductions: inpsTotal + jshdTotal, netSalary: Number(row.total_net_salary) || 0, employeeCount: Number(row.employee_count) || 0 };
+      // ERP gross-only: tax (INPS/JSHD) totals are computed in 1C, not here.
+      return { grossSalary: Number(row.total_gross_salary) || 0, netSalary: Number(row.total_net_salary) || 0, employeeCount: Number(row.employee_count) || 0 };
       }, 'DB_ERROR');
   }
 }
