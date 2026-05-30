@@ -77,6 +77,34 @@ export interface MaterialMovement {
   performedByName: string | null;
 }
 
+export interface DashboardWarehouse {
+  id: number;
+  code: string;
+  name: string;
+  type: string;
+  lineCount: number;
+  totalQuantity: number;
+  totalValue: number;
+}
+
+export interface DashboardMovement {
+  id: number;
+  materialId: number;
+  materialName: string;
+  movementType: string;
+  quantity: number;
+  unit: string | null;
+  reason: string | null;
+  createdAt: string | null;
+  performedByName: string | null;
+}
+
+export interface WarehouseDashboard {
+  totals: { warehouses: number; stockedWarehouses: number; stockLines: number; totalValue: number };
+  warehouses: DashboardWarehouse[];
+  recentMovements: DashboardMovement[];
+}
+
 const BASE = "/api/pos/warehouse-config";
 
 export const warehouseApi = {
@@ -93,4 +121,6 @@ export const warehouseApi = {
   /** Material harakat tarixi (kirim/chiqim jurnali). */
   movements: (materialId: number | string) =>
     apiRequest<MaterialMovement[]>("GET", `${BASE}/materials/${materialId}/movements`),
+  /** Moliya/Ombor umumiy dashboard (qoldiq + qiymat + so'nggi harakatlar). */
+  dashboard: () => apiRequest<WarehouseDashboard>("GET", `${BASE}/dashboard`),
 };

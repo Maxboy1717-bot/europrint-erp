@@ -306,6 +306,7 @@ import { LayoutDashboard, X,
       // 9 ombor-turi (RM-MAIN..MRO-STORE) endi Ombor Dashboard ICHIDA Tabs filter
       // (warehouse/hub/:code route saqlangan). Alohida sidebar yozuv EMAS — 2026-05-21 kanon.
       { title: "OMBORLAR", url: "", icon: Package, separator: true },
+      { title: "Moliya nazorati", url: "wms/overview", icon: DollarSign },
       { title: "Omborlar", url: "wms/warehouses", icon: Boxes },
       { title: "Ombor Dashboard", url: "warehouse/hub", icon: BarChart3 },
       { title: "QABUL", url: "", icon: PackageCheck, separator: true },
