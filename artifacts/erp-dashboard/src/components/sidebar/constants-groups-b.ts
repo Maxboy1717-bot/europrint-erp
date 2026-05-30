@@ -67,16 +67,10 @@ export const menuGroupsB = {
       { title: "Kassa", url: "accounting/cash-register", icon: DollarSign },
       { title: "Kirim/Chiqim", url: "accounting/income-expense", icon: TrendingUp },
       { title: "POS TIZIMI", url: "", icon: ShoppingCart, separator: true },
-      { title: "POS Kassa", url: "pos/dashboard", icon: ShoppingCart },
-      { title: "Inventar Boshqaruvi", url: "pos/inventory", icon: Package },
       { title: "POS Monitor", url: "pos-monitor", icon: MonitorDot },
-      { title: "POS Zaxirasi", url: "pos/stock", icon: Layers },
-      { title: "POS Harakatlar", url: "pos/movements", icon: TrendingUp },
-      { title: "POS So'rovlar", url: "pos/requests", icon: MessageSquare },
-      { title: "POS Barkod", url: "pos/barcode", icon: Barcode },
-      { title: "POS Inventarizatsiya", url: "pos/inventory-counts", icon: ClipboardCheck },
-      { title: "POS Ombor", url: "pos/warehouse", icon: Package },
-      { title: "POS Sinxronizatsiya", url: "pos/sync", icon: RotateCcw },
+      // 2026-05-21 kanon: 9 ta eski /pos/* sahifa (Kassa, Inventar, Zaxira, Harakatlar,
+      // So'rovlar, Barkod, Inventarizatsiya, Ombor, Sinxronizatsiya) olib tashlandi —
+      // hammasi POS Monitor (/pos-monitor) ilovasini dublikat qilardi. Kassa → Finance.
       // "Ish Haqi" HR moduliga (tz11) ko'chirildi — "Maosh" deb yagona joyda
       { title: "TANNARX", url: "", icon: Calculator, separator: true },
       { title: "Buyurtma Tannarxi", url: "finance/order-costing", icon: Calculator },
