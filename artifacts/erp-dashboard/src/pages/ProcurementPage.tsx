@@ -29,6 +29,8 @@ export default function ProcurementPage() {
   const [created, setCreated] = useState<Record<string, unknown> | null>(null);
   const [wlApprover, setWlApprover] = useState("");
   const [worklist, setWorklist] = useState<Record<string, unknown>[] | null>(null);
+  const [chekAmt, setChekAmt] = useState("");
+  const [received, setReceived] = useState<Record<string, unknown> | null>(null);
 
   const loadChain = async () => {
     const id = parseInt(empId, 10);
@@ -98,6 +100,20 @@ export default function ProcurementPage() {
       await procurementApi.decide(id, { approverUserId: appr, action: "approve" });
       toast({ title: tLabel("common.procurement.approved", "Tasdiqlandi") });
       await loadWorklist();
+    } catch (e) {
+      toast({ title: tLabel("common.procurement.error", "Xato"), description: String((e as Error).message), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const doReceive = async (id: number) => {
+    setLoading(true);
+    try {
+      const res = await procurementApi.receive(id, { chekAmount: Number(chekAmt) || undefined });
+      setReceived(res);
+      toast({ title: tLabel("common.procurement.received", "Qabul qilindi, podotchet yopildi") });
+      setRequest(await procurementApi.getRequest(id));
     } catch (e) {
       toast({ title: tLabel("common.procurement.error", "Xato"), description: String((e as Error).message), variant: "destructive" });
     } finally {
@@ -253,6 +269,18 @@ export default function ProcurementPage() {
                 </div>
                 <p className="text-muted-foreground">{String(request["title"] ?? "")}</p>
                 <p>{tLabel("common.procurement.amount", "Summa")}: {String(request["total_amount"] ?? 0)} {String(request["currency"] ?? "UZS")}</p>
+                {String(request["status"]) === "approved" && (
+                  <div className="flex items-end gap-2 pt-2">
+                    <div className="flex-1">
+                      <Label htmlFor="chekAmt">{tLabel("common.procurement.chekAmount", "Chek summasi")}</Label>
+                      <Input id="chekAmt" value={chekAmt} onChange={(e) => setChekAmt(e.target.value)} placeholder={String(request["total_amount"] ?? "")} />
+                    </div>
+                    <Button size="sm" onClick={() => doReceive(Number(request["id"]))} disabled={loading}>
+                      {tLabel("common.procurement.receive", "Qabul qilish")}
+                    </Button>
+                  </div>
+                )}
+                {received && <p className="pt-1 text-muted-foreground">{tLabel("common.procurement.podotchetClosed", "Podotchet yopildi")} ✓</p>}
               </div>
             )}
           </CardContent>
