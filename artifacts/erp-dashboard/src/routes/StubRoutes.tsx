@@ -17,12 +17,10 @@ const AiCrmPageComponent       = lazy(() => import("@/pages/AiCrmPage"));
 const WmsAnalyticsPage         = lazy(() => import("@/pages/WmsAnalytics"));
 const IoTExtendedPage          = lazy(() => import("@/pages/IoTExtended"));
 const IntegrationMgmtPage      = lazy(() => import("@/pages/IntegrationManagement"));
-const POSDashboardPage         = lazy(() => import("@/pages/POSDashboard"));
 const LessonPlayerPage         = lazy(() => import("@/pages/LessonPlayer"));
 const MESWorkerAssignmentsPage = lazy(() => import("@/pages/MESWorkerAssignments"));
 const Customer360Page          = lazy(() => import("@/pages/Customer360Page"));
 const AnalyticsPage            = lazy(() => import("@/pages/Analytics"));
-const POSInventoryPage         = lazy(() => import("@/pages/POSInventoryPage"));
 
 // ── Real pages (prior sessions) ───────────────────────────────────────────────
 const HRVacationPage      = lazy(() => import("@/pages/HRVacationSick"));
@@ -30,7 +28,6 @@ const GLDocumentsPage     = lazy(() => import("@/pages/GLDocuments"));
 const AttendancePage      = lazy(() => import("@/pages/AttendanceMonitorPage"));
 const OkrPage             = lazy(() => import("@/pages/OkrPage"));
 const MaterialCardsPage   = lazy(() => import("@/pages/MaterialCardsPage"));
-const PosMovementsPage    = lazy(() => import("@/pages/PosMovementsPage"));
 const EquipmentPage       = lazy(() => import("@/pages/EquipmentPage"));
 const OrgDepartmentsPage  = lazy(() => import("@/pages/OrgDepartmentsPage"));
 const WeeklyPlansPage     = lazy(() => import("@/pages/WeeklyPlansPage"));
@@ -38,7 +35,6 @@ const CandidatesPage      = lazy(() => import("@/pages/CandidatesPage"));
 const EmployeeFilesPage   = lazy(() => import("@/pages/EmployeeFilesPage"));
 const HRZnoPage           = lazy(() => import("@/pages/HRZnoPage"));
 const HRZvsPage           = lazy(() => import("@/pages/HRZvsPage"));
-const PosBarcPage         = lazy(() => import("@/pages/PosBarcPage"));
 const AchievementsPage    = lazy(() => import("@/pages/AchievementsPage"));
 const AiAutomationPage          = lazy(() => import("@/pages/AiAutomationPage"));
 const EuroprintControlPage      = lazy(() => import("@/pages/EuroprintControlPage"));
@@ -57,8 +53,6 @@ const UsersPage                 = lazy(() => import("@/pages/UsersPage"));
 const QualityDefectsCameraPage  = lazy(() => import("@/pages/QualityDefectsCameraPage"));
 const IotSensorsPage            = lazy(() => import("@/pages/IotSensorsPage"));
 const OrderStatusPage           = lazy(() => import("@/pages/OrderStatusPage"));
-const PosInventoryCountsPage    = lazy(() => import("@/pages/PosInventoryCountsPage"));
-const PosRequestsPage           = lazy(() => import("@/pages/PosRequestsPage"));
 const ShiftReportsPage          = lazy(() => import("@/pages/ShiftReportsPage"));
 const RaciCrisisPage            = lazy(() => import("@/pages/RaciCrisisPage"));
 const CalendarEventsPage        = lazy(() => import("@/pages/CalendarEventsPage"));
@@ -80,9 +74,7 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/assignments',               MESWorkerAssignmentsPage], // MES worker assignments
   ['/insights',                  AnalyticsPage],            // BI analytics / insights
   ['/integration/requests',      IntegrationMgmtPage],      // Integration management
-  ['/inventory/advanced',        POSInventoryPage],         // Advanced POS inventory
   ['/iot-enhanced',              IoTExtendedPage],          // Extended IoT dashboard
-  ['/pos/mini-app',              POSDashboardPage],         // POS dashboard
   ['/video-progress',            LessonPlayerPage],         // Video lesson player
 
   // ── Still Stub (no real backend/page built yet) ───────────────────────────
@@ -123,10 +115,6 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/okr',                       OkrPage],
   ['/order-status',              OrderStatusPage],
   ['/org-departments',           OrgDepartmentsPage],
-  ['/pos/barcode',               PosBarcPage],
-  ['/pos/inventory-counts',      PosInventoryCountsPage],
-  ['/pos/movements',             PosMovementsPage],
-  ['/pos/requests',              PosRequestsPage],
   ['/production-facts',          ProductionFactsPage],
   ['/production/shift-reports',  ShiftReportsPage],
   ['/quality-defects-camera',    QualityDefectsCameraPage],
