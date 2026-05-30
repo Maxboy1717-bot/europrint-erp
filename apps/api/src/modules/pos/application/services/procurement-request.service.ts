@@ -218,6 +218,7 @@ export class ProcurementRequestService {
   private async enterWarehouseStock(
     requestId: number,
     warehouseIdInput: string | number | undefined,
+    receivedBy?: number,
   ): Promise<Record<string, unknown> | null> {
     // 1. Maqsadli ombor (integer id) — aniq berilgan yoki tur bo'yicha
     let warehouseId: number | null = null;
@@ -291,6 +292,14 @@ export class ProcurementRequestService {
       // 2c. Material umumiy qoldig'i
       await rawSql(sql`UPDATE material_cards SET current_stock = COALESCE(current_stock, 0) + ${qty} WHERE id = ${materialId}`);
 
+      // 2d. Harakat jurnali (material_movements — 'RECEIVE'), chiqim bilan simmetrik
+      if (receivedBy != null) {
+        await rawSql(sql`
+          INSERT INTO material_movements (material_id, material_name, movement_type, quantity, unit, performed_by, reason)
+          VALUES (${materialId}, ${description}, 'RECEIVE', ${qty}, ${unit}, ${receivedBy}, ${`Xarid qabul: PR#${requestId}`})
+        `);
+      }
+
       lines.push({ materialId, description, quantity: qty, unit });
     }
 
@@ -341,8 +350,8 @@ export class ProcurementRequestService {
         RETURNING id, settled_amount, settlement_status
       `))[0] ?? null;
 
-      // 3. HAQIQIY ombor PRIXOD (§7.7): tovar tegishli tur-omborga kiradi (warehouse_stock + material_cards)
-      const warehouseEntry = await this.enterWarehouseStock(requestId, input.warehouseId);
+      // 3. HAQIQIY ombor PRIXOD (§7.7): tovar tegishli tur-omborga kiradi (warehouse_stock + material_cards + jurnal)
+      const warehouseEntry = await this.enterWarehouseStock(requestId, input.warehouseId, receivedBy);
 
       this.logger.log(`[P2P] So'rov ${req['request_number']} qabul qilindi (chek ${chekAmount}); podotchet ${settled ? 'yopildi #' + settled['id'] : "yo'q"}; prixod ${warehouseEntry ? warehouseEntry['lineCount'] + ' qator' : "yo'q"}`);
       return {

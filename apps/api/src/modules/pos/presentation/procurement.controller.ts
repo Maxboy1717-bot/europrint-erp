@@ -9,6 +9,8 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { PermissionGuard } from '@common/guards/permission.guard';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@common/types/user.types';
 import { unwrapOrThrow } from '@common/http-result';
 
 import { ProcurementApprovalChainService } from '../application/services/procurement-approval-chain.service';
@@ -88,7 +90,8 @@ export class ProcurementController {
   async receive(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { chekNumber?: string; chekAmount?: number; warehouseId?: string | number; notes?: string },
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    return unwrapOrThrow(await this.requestService.receiveProcurement(id, body));
+    return unwrapOrThrow(await this.requestService.receiveProcurement(id, body, user.id));
   }
 }
