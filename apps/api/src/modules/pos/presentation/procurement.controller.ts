@@ -3,7 +3,7 @@
  * Xarid-to'lov zanjiri endpointlari.
  * Increment 1.2: org-sxema bo'yicha xarid tasdiq zanjirini ko'rsatish (eng yaqin rahbar → direktor).
  */
-import { Controller, Get, Post, Body, Param, ParseIntPipe, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, ParseIntPipe, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -44,6 +44,22 @@ export class ProcurementController {
   @ApiOperation({ summary: "Xarid so'rovi yaratish (P2P) + org-sxema tasdiq zanjiri" })
   async createRequest(@Body() body: CreateProcurementRequestInput) {
     return unwrapOrThrow(await this.requestService.createRequest(body));
+  }
+
+  /** So'rovlar ro'yxati — ?status= / ?requesterEmployeeId= / ?pendingApproverUserId= (rahbar worklist). */
+  @Get('requests')
+  @RequirePermission('pos.reports.read')
+  @ApiOperation({ summary: "Xarid so'rovlari ro'yxati (filtr: status/requester/navbatdagi tasdiqlovchi)" })
+  async listRequests(
+    @Query('status') status?: string,
+    @Query('requesterEmployeeId') requesterEmployeeId?: string,
+    @Query('pendingApproverUserId') pendingApproverUserId?: string,
+  ) {
+    return unwrapOrThrow(await this.requestService.listRequests({
+      status,
+      requesterEmployeeId: requesterEmployeeId ? parseInt(requesterEmployeeId, 10) : undefined,
+      pendingApproverUserId: pendingApproverUserId ? parseInt(pendingApproverUserId, 10) : undefined,
+    }));
   }
 
   /** Xarid so'rovi tafsilotlari (qatorlar + tasdiq bosqichlari). */

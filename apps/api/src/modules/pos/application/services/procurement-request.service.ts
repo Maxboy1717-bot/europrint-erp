@@ -272,4 +272,35 @@ export class ProcurementRequestService {
       return { ...req, items, approvals };
     });
   }
+
+  /**
+   * So'rovlar ro'yxati — status / requester / pendingApprover (navbatdagi tasdiqlovchi) filtri.
+   * pendingApprover: shu user ENG PAST pending bosqich tasdiqlovchisi bo'lgan so'rovlar (uning worklist'i).
+   */
+  async listRequests(filter: {
+    status?: string;
+    requesterEmployeeId?: number;
+    pendingApproverUserId?: number;
+  }): Promise<Result<Record<string, unknown>[], AppError>> {
+    return safeCall(async () => {
+      const status = filter.status ?? null;
+      const reqEmp = filter.requesterEmployeeId ?? null;
+      const appr = filter.pendingApproverUserId ?? null;
+      const rows = await rawSql(sql`
+        SELECT pr.id, pr.request_number, pr.title, pr.status, pr.total_amount, pr.currency,
+               pr.requester_employee_id, pr.created_at
+        FROM procurement_requests pr
+        WHERE (${status}::text IS NULL OR pr.status = ${status})
+          AND (${reqEmp}::int IS NULL OR pr.requester_employee_id = ${reqEmp})
+          AND (${appr}::int IS NULL OR EXISTS (
+            SELECT 1 FROM procurement_approvals pa
+            WHERE pa.request_id = pr.id AND pa.status = 'pending' AND pa.approver_user_id = ${appr}
+              AND pa.level = (SELECT MIN(level) FROM procurement_approvals WHERE request_id = pr.id AND status = 'pending')
+          ))
+        ORDER BY pr.created_at DESC
+        LIMIT 100
+      `);
+      return dbRows(rows);
+    });
+  }
 }
