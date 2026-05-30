@@ -23,8 +23,7 @@ import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 // ─── Badge helpers ─────────────────────────────────────────────────────────────
 
-function severityBadge(s: string) {
-  const { t } = useTranslation("common");
+function severityBadge(s: string, t: ReturnType<typeof useTranslation>["t"]) {
   if (s === "HIGH")   return <Badge variant="error">{t("high")}</Badge>;
   if (s === "MEDIUM") return <Badge variant="warning">{t("medium")}</Badge>;
   return                     <Badge variant="success">{t("low")}</Badge>;
@@ -93,7 +92,7 @@ export function AnomalyTab() {
                           </p>
                         )}
                       </div>
-                      {severityBadge(a.severity)}
+                      {severityBadge(a.severity, t)}
                     </div>
                   ))}
                 </div>

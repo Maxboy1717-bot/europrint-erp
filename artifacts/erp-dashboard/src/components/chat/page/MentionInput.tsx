@@ -181,6 +181,12 @@ export function MentionInput({
     textareaRef.current?.focus();
   }, [roomId]);
 
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onUploadFile) onUploadFile(file);
+    e.target.value = "";
+  }, [onUploadFile]);
+
   if (isChannelReadOnly) {
     return (
       <div className="flex-shrink-0 bg-[var(--tg-chat-bg)] px-4 py-3">
@@ -192,12 +198,6 @@ export function MentionInput({
       </div>
     );
   }
-
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && onUploadFile) onUploadFile(file);
-    e.target.value = "";
-  }, [onUploadFile]);
 
   const hasText = text.trim().length > 0;
 

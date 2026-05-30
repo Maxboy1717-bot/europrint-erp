@@ -18,8 +18,7 @@ import { riskColor } from "./AIFinancePageTypes";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
-function riskBadge(s: string) {
-  const { t } = useTranslation("common");
+function riskBadge(s: string, t: ReturnType<typeof useTranslation>["t"]) {
   if (s === "HIGH")   return <Badge variant="error">{t("yuqoriXavf")}</Badge>;
   if (s === "MEDIUM") return <Badge variant="warning">{t("ortaXavf")}</Badge>;
   return                     <Badge variant="success">{t("pastXavf")}</Badge>;
@@ -102,7 +101,7 @@ export function FraudTab() {
                 <ShieldAlert className={`h-5 w-5 ${result.riskLevel === "HIGH" ? "text-[var(--ep-red)]" : result.riskLevel === "MEDIUM" ? "text-[var(--ep-yellow)]" : "text-[var(--ep-green)]"}`} />
                 {t("fraudBaholashNatijasi")}
               </CardTitle>
-              {riskBadge(result.riskLevel)}
+              {riskBadge(result.riskLevel, t)}
             </div>
           </CardHeader>
           <CardContent className="space-y-3">

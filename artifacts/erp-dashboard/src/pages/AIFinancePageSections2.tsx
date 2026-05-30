@@ -20,8 +20,7 @@ import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 // ─── Badge helpers ─────────────────────────────────────────────────────────────
 
-function trendBadge(trend: string) {
-  const { t } = useTranslation("common");
+function trendBadge(trend: string, t: ReturnType<typeof useTranslation>["t"]) {
   if (trend === "IMPROVING")  return <Badge variant="success">{t("yaxshilanmoqda")}</Badge>;
   if (trend === "WORSENING")  return <Badge variant="error">{t("yomonlashmoqda")}</Badge>;
   return                            <Badge variant="info">{t("barqaror")}</Badge>;
@@ -130,7 +129,7 @@ export function BudgetVarianceTab() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">{t("tahlilNatijasi")}</CardTitle>
               <div className="flex items-center gap-2">
-                {trendBadge(result.trend)}
+                {trendBadge(result.trend, t)}
                 {result.isAcceptable
                   ? <Badge variant="success">{t("qabulQilinadi")}</Badge>
                   : <Badge variant="error">{t("muhimOgish")}</Badge>}

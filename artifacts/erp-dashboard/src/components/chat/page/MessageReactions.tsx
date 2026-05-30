@@ -29,11 +29,11 @@ export function MessageReactions({ messageId, reactions = [], onReact, compact }
   const { user } = useAuth();
   const userId = String(user?.id);
 
-  if (reactions.length === 0 && compact) return null;
-
   const handleReact = useCallback((emoji: string) => {
     onReact(messageId, emoji);
   }, [messageId, onReact]);
+
+  if (reactions.length === 0 && compact) return null;
 
   return (
     <div className="flex flex-wrap gap-1 mt-1">
