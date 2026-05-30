@@ -64,7 +64,7 @@ async function bootstrap(): Promise<void> {
   // The COOKIE_SECRET env var is OPTIONAL: cookies are httpOnly + sameSite=strict
   // already, so signing them is defense-in-depth, not required for MVP.
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const fastifyCookie = require('@fastify/cookie');
     await app.register(fastifyCookie.default ?? fastifyCookie, {
       secret: process.env.COOKIE_SECRET, // optional — undefined disables signing
@@ -75,7 +75,7 @@ async function bootstrap(): Promise<void> {
       `@fastify/cookie ro'yxatdan o'tmadi — Bearer token rejimi ishlatiladi: ${String(e)}`,
     );
   }
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   await app.register(require('@fastify/multipart'), { limits: { fileSize: MAX_FILE_SIZE, files: 1 } });
 
   // Parse raw binary uploads as Buffer. Registered AFTER multipart so

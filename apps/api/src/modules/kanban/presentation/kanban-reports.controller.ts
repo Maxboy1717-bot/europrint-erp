@@ -13,11 +13,11 @@ import * as path from 'path';
 import ExcelJS from 'exceljs';
 
 // pdfmake - loaded once at module init to avoid per-request require() overhead
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 const PdfPrinter = require('pdfmake') as new (fonts: Record<string, unknown>) => {
   createPdfKitDocument(def: unknown): NodeJS.EventEmitter & { end(): void };
 };
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 const _pdfVfs = require('pdfmake/build/vfs_fonts') as Record<string, string>;
 const PDF_FONTS = {
   Roboto: {

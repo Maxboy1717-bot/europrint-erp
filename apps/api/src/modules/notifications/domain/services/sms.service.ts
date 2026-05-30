@@ -5,5 +5,5 @@
  *
  * TODO: delete this file. No consumers import from this path.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+ 
 export {};

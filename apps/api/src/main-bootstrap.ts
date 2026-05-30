@@ -30,7 +30,7 @@ const BLOCKED_HTTP_METHODS = ['CONNECT', 'TRACE', 'PROPFIND'] as const;
 const CSRF_PROTECTED_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 export async function configureSecurityHeaders(app: NestFastifyApplication): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   await app.register(require('@fastify/helmet'), {
     contentSecurityPolicy: {
       directives: {

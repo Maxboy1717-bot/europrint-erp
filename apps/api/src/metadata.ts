@@ -1,4 +1,4 @@
-/* eslint-disable */
+ 
 export default async () => {
     const t = {
         ["./modules/pos/dto/barcode.dto"]: await import("./modules/pos/dto/barcode.dto"),

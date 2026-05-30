@@ -103,7 +103,7 @@ export class DrizzleDowntimeRepository {
 
   async save(event: DowntimeEvent): Promise<Result<DowntimeEvent>> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       await db.insert(downtimeEvents).values({
         sessionId: event.sessionId,
         workCenterId: event.workCenterId,
@@ -115,7 +115,7 @@ export class DrizzleDowntimeRepository {
         reportedBy: event.reportedBy,
         notes: event.notes,
         createdAt: event.createdAt,
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      } as any);  
 
       return Ok(event);
     } catch (error: unknown) {

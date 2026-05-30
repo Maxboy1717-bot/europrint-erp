@@ -43,6 +43,11 @@ export default [
       "**/.cache/**",
       "**/build/**",
       "**/*.d.ts",
+      // Generated code is not ours to lint — it's regenerated from source, so
+      // hand-fixing lint there is pointless (e.g. the `/* eslint-disable */`
+      // banner in apps/api/src/generated/i18n.generated.ts produced by
+      // nestjs-i18n). Required for the `--max-warnings 0` gate to be green.
+      "**/generated/**",
     ],
   },
   js.configs.recommended,
