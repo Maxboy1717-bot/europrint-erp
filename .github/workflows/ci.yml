@@ -141,7 +141,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: pnpm --filter @europrint/api exec eslint src/ --ext .ts --max-warnings 100
+        run: pnpm --filter @europrint/api exec eslint src/ --ext .ts --max-warnings 0
 
   security-audit:
     name: Xavfsizlik Audit

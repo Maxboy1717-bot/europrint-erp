@@ -51,7 +51,7 @@ jobs:
       - name: Apply schema to test DB
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/europrint_test
-        run: pnpm --filter @workspace/db run push || true
+        run: pnpm --filter @workspace/db run push
       - name: Run backend tests with coverage
         env:
           NODE_ENV: test
@@ -113,7 +113,7 @@ jobs:
         # If the doc was stale, `git diff --exit-code` flags it — author must
         # commit the regenerated doc so it never lags behind the rules.
         run: |
-          node scripts/update-architecture-rules-doc.mjs || true
+          node scripts/update-architecture-rules-doc.mjs
           git diff --exit-code ARCHITECTURE_RULES.md
       - name: Run architecture spec
         env:
