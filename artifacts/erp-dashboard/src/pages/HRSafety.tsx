@@ -126,6 +126,21 @@ export default function HRSafety() {
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
+  // Raw fetch (not apiRequest): the response is a binary PDF blob.
+  // apiRequest() unwraps JSON envelopes and can't return a Blob. Auth is the
+  // httpOnly cookie sent via credentials: 'include'.
+  const handleExportPdf = () => {
+    // eslint-disable-next-line no-restricted-globals
+    fetch("/api/hr/safety/export/pdf", { credentials: "include" })
+      .then(r => { if (!r.ok) throw new Error("PDF yaratishda xatolik"); return r.blob(); })
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = "safety-report.pdf"; a.click();
+        URL.revokeObjectURL(url);
+      }).catch(() => toast({ title: "PDF yaratishda xatolik", variant: "destructive" }));
+  };
+
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="border-b border-border/50 px-6 py-3 flex items-center justify-between">
@@ -135,14 +150,7 @@ export default function HRSafety() {
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" data-testid="button-export-safety-pdf"
-            onClick={() => fetch("/api/hr/safety/export/pdf", { credentials: "include" })
-              .then(r => { if (!r.ok) throw new Error("PDF yaratishda xatolik"); return r.blob(); })
-              .then(blob => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url; a.download = "safety-report.pdf"; a.click();
-                URL.revokeObjectURL(url);
-              }).catch(() => toast({ title: "PDF yaratishda xatolik", variant: "destructive" }))}>
+            onClick={handleExportPdf}>
             <FileText className="h-3.5 w-3.5 mr-1.5" />{t("pdfHisobot")}
           </Button>
           {subTab === "incidents" && <Button size="sm" onClick={() => setShowIncident(true)} data-testid="button-add-incident"><Plus className="h-3.5 w-3.5 mr-1.5" />{t("hodisaQoshish")}</Button>}

@@ -81,6 +81,7 @@ export async function downloadReport(
 ): Promise<void> {
   void apiRequest; // unused; raw fetch is needed for binary blob
   const endpoint = format === "pdf" ? "generate-pdf" : "generate-excel";
+  // eslint-disable-next-line no-restricted-globals -- binary blob (PDF/Excel); apiRequest() unwraps JSON and can't return Blob
   const response = await fetch(`/api/camera-reports/${endpoint}?period=${period}`, { credentials: "include" });
   if (!response.ok) return;
   const blob = await response.blob();

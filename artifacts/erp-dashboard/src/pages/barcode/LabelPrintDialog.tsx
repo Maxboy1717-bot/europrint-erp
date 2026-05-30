@@ -64,6 +64,7 @@ export function LabelPrintDialog({
       if (!batch) throw new Error("Batch tanlanmagan");
 
       if (format === "PDF") {
+        // eslint-disable-next-line no-restricted-globals -- raw fetch: PDF blob download; apiRequest() unwraps JSON and can't return Blob
         const res = await fetch(`/api/warehouse/label/print`, {
           method: "POST",
           credentials: "include",

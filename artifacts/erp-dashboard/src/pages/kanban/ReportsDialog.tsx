@@ -43,6 +43,7 @@ export function ReportsDialog({
   const handleExport = async (format: "excel" | "pdf") => {
     setExporting(format);
     try {
+      // eslint-disable-next-line no-restricted-globals -- raw fetch: Excel/PDF blob download; apiRequest() unwraps JSON and can't return Blob
       const res = await fetch(`/api/kanban/reports/export?format=${format}`, { credentials: "include" });
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();

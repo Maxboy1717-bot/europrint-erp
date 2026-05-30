@@ -109,6 +109,7 @@ export default function OrgStructureHierarchy() {
       const endpoint = format === "pdf" ? "/api/org-structure/export/pdf" : "/api/org-structure/export/excel";
       // NOTE: Binary blob download (PDF/Excel) — keep raw fetch; apiRequest unwraps JSON envelopes.
       // Auth via httpOnly cookie sent with credentials: 'include'.
+      // eslint-disable-next-line no-restricted-globals
       const res = await fetch(endpoint, { credentials: "include" });
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
