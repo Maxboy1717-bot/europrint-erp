@@ -64,6 +64,13 @@ node scripts/check-design-tokens.mjs || exit 1
 # /api/org-functions (org_functions = Lavozim). Diff-aware (newly-added lines).
 node scripts/check-no-legacy-dept-pos.mjs || exit 1
 
+# 🛡️ Guard 2d — Ombor + POS Monitor sidebar regress lock (Qoida 22)
+# Blocks NEW sidebar entries re-introducing the removed /pos/* cluster or the 9
+# warehouse-type subviews (warehouse/hub/RM-MAIN..). POS Monitor (pos-monitor) is
+# the single canonical POS; warehouse types are a Tabs filter inside Ombor
+# Dashboard (warehouse/hub). Diff-aware (newly-added lines).
+node scripts/check-sidebar-regress.mjs || exit 1
+
 # 🛡️ Guard 3 — Sidebar URL ↔ AppRouter mapping (informational, non-blocking)
 # Shows which sidebar URLs have no matching route (stubs are allowed).
 node scripts/check-sidebar-routes.mjs || true

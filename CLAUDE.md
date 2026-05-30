@@ -753,6 +753,15 @@ Tekshirish: `scripts/check-sidebar-routes.mjs`
 Pre-commit: `scripts/check-design-tokens.mjs` (diff-aware) — inline xom rang BLOK, Tailwind `[#hex]` WARN
 Bypass (sabab bilan): `git commit --no-verify`
 
+### Qoida 22: Ombor + POS Monitor sidebar kanonik (regress-himoya) 🧭
+❌ Eski `/pos/*` sidebar klasteri (pos/dashboard, pos/stock, pos/movements, pos/requests, pos/barcode, pos/inventory-counts, pos/warehouse, pos/sync, pos/inventory, pos/mini-app) — POS Monitor'ni takrorlaydi
+❌ 9 ombor-turi alohida sidebar yozuvi (warehouse/hub/RM-MAIN .. MRO-STORE) — Ombor Dashboard ichidagi filterni takrorlaydi
+✅ POS = yagona `{ url: "pos-monitor" }` (zavod ombori tablet ilovasi; kassa → Finance)
+✅ Ombor turlari = `warehouse/hub` (Ombor Dashboard) ichidagi Tabs filter; `/warehouse/hub/:code` route deep-link uchun saqlanadi
+Pre-commit: `scripts/check-sidebar-regress.mjs` (diff-aware) — yangi `/pos/*` yoki `warehouse/hub/<CODE>` sidebar yozuvi BLOK
+Bypass (sabab bilan): `git commit --no-verify`
+Manba: memory `session_2026-05-21_full_cleanup.md` + `project_pos_monitor_purpose.md`
+
 ---
 
-*Yangilangan: 2026-05-29 | Qoida 21 qo'shildi (dizayn-tizim regress-himoya). Qoidalar 17-20 (2026-05-28).*
+*Yangilangan: 2026-05-30 | Qoida 22 qo'shildi (Ombor+POS sidebar regress-himoya). Qoida 21 (2026-05-29). Qoidalar 17-20 (2026-05-28).*
