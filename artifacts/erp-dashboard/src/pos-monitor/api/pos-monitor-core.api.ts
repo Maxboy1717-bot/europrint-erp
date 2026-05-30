@@ -3,32 +3,22 @@
  * @description POS-specific fetch core: token retrieval and posReq helper.
  * Extracted from pos-monitor.api.ts (Rule 16).
  *
- * Uses its own JWT from pos_session (not the ERP access_token).
- * All requests send Authorization: Bearer {pos_token} header.
+ * §1.2: ERP SSO — ERP httpOnly access_token cookie (credentials:include) bilan autentifikatsiya.
+ * Alohida pos_session token YO'Q.
  */
 
 const _base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 export const BASE = `${_base}/api/pos`;
 
-// ─── POS-specific token ───────────────────────────────────────────────────────
-
+// ─── Legacy shim: pos_session olib tashlandi (ERP SSO). Eski chaqiruvchilar uchun bo'sh string. ───
 export function getPosSessionToken(): string {
-  try {
-    const raw = localStorage.getItem("pos_session");
-    if (!raw) return "";
-    const parsed = JSON.parse(raw) as { token?: string };
-    return parsed.token ?? "";
-  } catch {
-    return "";
-  }
+  return "";
 }
 
-// ─── POS-specific fetch ───────────────────────────────────────────────────────
+// ─── POS fetch (ERP cookie auth) ──────────────────────────────────────────────
 
 export async function posReq<T = unknown>(method: string, path: string, body?: unknown): Promise<T> {
-  const token = getPosSessionToken();
   const headers: Record<string, string> = {};
-  if (token) { headers["Authorization"] = `Bearer ${token}`; }
   if (body !== undefined && !(body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }

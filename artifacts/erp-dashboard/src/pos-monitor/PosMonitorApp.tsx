@@ -8,8 +8,8 @@ import { Switch, Route, Redirect } from "wouter";
 import "./styles/pos-theme.css";
 import { initTelegramWebApp, isTelegramWebApp } from "./lib/telegram";
 import { useTranslation } from '@/lib/i18n';
+import { useAuth } from "@/hooks/useAuth";
 
-const PosLogin         = lazy(() => import("./pages/PosLogin"));
 const PosDashboard     = lazy(() => import("./pages/PosDashboard"));
 const PosMonitorMain   = lazy(() => import("@/pages/PosMonitorPage"));
 const PosWarehouses    = lazy(() => import("./pages/PosWarehouses"));
@@ -54,45 +54,23 @@ function PosLoader() {
   );
 }
 
-function isAuthenticated(): boolean {
-  try {
-    const sess = localStorage.getItem("pos_session");
-    if (!sess) return false;
-    const parsed = JSON.parse(sess) as { token?: string };
-    if (!parsed.token) return false;
-    const parts = parsed.token.split(".");
-    if (parts.length !== 3) return false;
-    const payload = JSON.parse(atob(parts[1])) as { exp?: number };
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      localStorage.removeItem("pos_session");
-      return false;
-    }
-    return true;
-  } catch { return false; }
-}
-
+// §1.2: POS Monitor ERP SSO ishlatadi — alohida login YO'Q.
+// Foydalanuvchi ERP'ga kirgan bo'lsa (httpOnly access_token cookie) POS ham ochiq.
 const POS_ADMIN_ROLES = new Set(["pos_manager", "admin", "super_admin", "finance_head"]);
 
-function getPosRole(): string {
-  try {
-    const sess = localStorage.getItem("pos_session");
-    if (!sess) return "";
-    const parsed = JSON.parse(sess) as { role?: string };
-    return (parsed.role ?? "").toLowerCase();
-  } catch { return ""; }
-}
-
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  if (!isAuthenticated()) {
-    return <Redirect to="/pos-monitor/login" />;
-  }
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <PosLoader />;
+  if (!isAuthenticated) return <Redirect to="/login" />;
   return <>{children}</>;
 }
 
 function AdminGuard({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation("common");
-  if (!isAuthenticated()) return <Redirect to="/pos-monitor/login" />;
-  const role = getPosRole();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  if (isLoading) return <PosLoader />;
+  if (!isAuthenticated) return <Redirect to="/login" />;
+  const role = String((user as { role?: string } | null)?.role ?? "").toLowerCase();
   if (!POS_ADMIN_ROLES.has(role)) {
     return (
       <div style={{
@@ -131,11 +109,9 @@ export default function PosMonitorApp() {
   return (
     <Suspense fallback={<PosLoader />}>
       <Switch>
-        {/* Login — public */}
+        {/* §1.2: alohida login YO'Q — ERP SSO. Eski login URL → asosiy sahifaga. */}
         <Route path="/pos-monitor/login">
-          <Suspense fallback={<PosLoader />}>
-            <PosLogin />
-          </Suspense>
+          <Redirect to="/pos-monitor" />
         </Route>
 
         {/* Dashboard — PosMonitorPage: tabs+kirim/chiqim+barcode+P2P qabul */}

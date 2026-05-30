@@ -1,29 +1,16 @@
 /**
  * POS Monitor API Layer
- * Uses its own JWT from pos_session (not the ERP access_token).
- * All requests send Authorization: Bearer {pos_token} header.
+ * §1.2: ERP SSO — ERP httpOnly access_token cookie (credentials:include) bilan auth.
+ * Alohida pos_session token YO'Q.
  */
 
 const _base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 const BASE = `${_base}/api/pos`;
 
-// ─── POS-specific fetch (uses pos_session token, not ERP access_token) ───────
-
-function getPosSessionToken(): string {
-  try {
-    const raw = localStorage.getItem("pos_session");
-    if (!raw) return "";
-    const parsed = JSON.parse(raw) as { token?: string };
-    return parsed.token ?? "";
-  } catch {
-    return "";
-  }
-}
+// ─── POS fetch (ERP cookie auth) ──────────────────────────────────────────────
 
 async function posReq<T = unknown>(method: string, path: string, body?: unknown): Promise<T> {
-  const token = getPosSessionToken();
   const headers: Record<string, string> = {};
-  if (token) { headers["Authorization"] = `Bearer ${token}`; }
   if (body !== undefined && !(body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
