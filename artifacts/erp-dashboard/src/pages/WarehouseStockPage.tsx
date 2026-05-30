@@ -1,19 +1,18 @@
 /**
  * @module WarehouseStockPage
- * @description Bitta ombor qoldig'i (/wms/warehouse-stock/:id) — material kartochka bo'yicha joriy stok
- *   + CHIQIM (iste'mol/sarf) amali. P2P qabul (§7.7) tovarni warehouse_stock ga prixod qiladi; bu sahifa
- *   qoldiqni ko'rsatadi va chiqim qiladi. Config-driven toza UI (EP/ui + semantic token + tLabel).
+ * @description Bitta ombor qoldig'i (/wms/warehouse-stock/:id) — faqat KO'RISH.
+ *   ERP = moliya rahbari uchun nazorat sahifasi (view-only).
+ *   Kirim/chiqim = POS Monitor (/pos-monitor) orqali ombor xodimi tomonidan.
+ *   Config-driven toza UI (EP/ui + semantic token + tLabel).
  */
 import { useCallback, useEffect, useState } from "react";
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Warehouse, ArrowLeft, Package, Minus, Plus, History } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Warehouse, ArrowLeft, Package, History } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { tLabel } from "@/lib/i18n/tLabel";
 import { warehouseApi, type WarehouseStock, type WarehouseStockLine, type MaterialMovement } from "@/lib/api/warehouse.api";
@@ -38,12 +37,6 @@ export default function WarehouseStockPage() {
   const [data, setData] = useState<WarehouseStock | null>(null);
   const [loaded, setLoaded] = useState(false);
 
-  const [opFor, setOpFor] = useState<WarehouseStockLine | null>(null);
-  const [opMode, setOpMode] = useState<"issue" | "receive">("issue");
-  const [qty, setQty] = useState("");
-  const [reason, setReason] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
   const [historyFor, setHistoryFor] = useState<WarehouseStockLine | null>(null);
   const [history, setHistory] = useState<MaterialMovement[] | null>(null);
 
@@ -62,43 +55,6 @@ export default function WarehouseStockPage() {
   useEffect(() => {
     load();
   }, [load]);
-
-  const openOp = (line: WarehouseStockLine, mode: "issue" | "receive") => {
-    setOpFor(line);
-    setOpMode(mode);
-    setQty("");
-    setReason("");
-  };
-
-  const submitOp = async () => {
-    if (!opFor) return;
-    const q = Number(qty);
-    if (!Number.isFinite(q) || q <= 0) {
-      toast({ title: tLabel("common.warehouseStock.qtyInvalid", "Miqdor musbat bo'lishi kerak"), variant: "destructive" });
-      return;
-    }
-    if (opMode === "issue" && q > opFor.available) {
-      toast({ title: tLabel("common.warehouseStock.qtyTooBig", "Mavjud qoldiqdan ko'p"), variant: "destructive" });
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const body = { materialId: opFor.materialId, quantity: q, unit: opFor.unit, reason: reason || undefined };
-      if (opMode === "issue") {
-        await warehouseApi.issue(id, body);
-        toast({ title: tLabel("common.warehouseStock.issued", "Chiqim bajarildi") });
-      } else {
-        await warehouseApi.receive(id, body);
-        toast({ title: tLabel("common.warehouseStock.received", "Kirim bajarildi") });
-      }
-      setOpFor(null);
-      load();
-    } catch (e) {
-      toast({ title: tLabel("common.warehouseStock.error", "Xato"), description: String((e as Error).message), variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const openHistory = async (line: WarehouseStockLine) => {
     setHistoryFor(line);
@@ -185,20 +141,10 @@ export default function WarehouseStockPage() {
                       <td className="py-2 pr-3 text-right">{fmtQty(r.available)}</td>
                       <td className="py-2 pr-3 text-muted-foreground">{r.unit}</td>
                       <td className="py-2 pr-0 text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button size="sm" variant="ghost" onClick={() => openHistory(r)}>
-                            <History className="mr-1 h-3 w-3" />
-                            {tLabel("common.warehouseStock.history", "Tarix")}
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => openOp(r, "receive")}>
-                            <Plus className="mr-1 h-3 w-3" />
-                            {tLabel("common.warehouseStock.receive", "Kirim")}
-                          </Button>
-                          <Button size="sm" variant="outline" disabled={r.available <= 0} onClick={() => openOp(r, "issue")}>
-                            <Minus className="mr-1 h-3 w-3" />
-                            {tLabel("common.warehouseStock.issue", "Chiqim")}
-                          </Button>
-                        </div>
+                        <Button size="sm" variant="ghost" onClick={() => openHistory(r)}>
+                          <History className="mr-1 h-3 w-3" />
+                          {tLabel("common.warehouseStock.history", "Tarix")}
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -208,59 +154,6 @@ export default function WarehouseStockPage() {
           )}
         </CardContent>
       </Card>
-
-      <Dialog open={opFor !== null} onOpenChange={(o) => { if (!o) setOpFor(null); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {opMode === "issue"
-                ? tLabel("common.warehouseStock.issueTitle", "Material chiqim")
-                : tLabel("common.warehouseStock.receiveTitle", "Material kirim")}
-            </DialogTitle>
-          </DialogHeader>
-          {opFor && (
-            <div className="space-y-3">
-              <div className="text-sm">
-                <span className="font-medium">{opFor.name}</span>
-                <span className="ml-2 text-muted-foreground">
-                  {tLabel("common.warehouseStock.available", "Mavjud")}: {fmtQty(opFor.available)} {opFor.unit}
-                </span>
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="op-qty">{tLabel("common.warehouseStock.qtyLabel", "Miqdor")}</Label>
-                <Input
-                  id="op-qty"
-                  type="number"
-                  min={0}
-                  max={opMode === "issue" ? opFor.available : undefined}
-                  value={qty}
-                  onChange={(e) => setQty(e.target.value)}
-                  placeholder={tLabel("common.warehouseStock.qtyPlaceholder", "Miqdorni kiriting")}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="op-reason">{tLabel("common.warehouseStock.reasonLabel", "Sabab (ixtiyoriy)")}</Label>
-                <Input
-                  id="op-reason"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  placeholder={tLabel("common.warehouseStock.reasonPlaceholder", "Sababni kiriting")}
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpFor(null)} disabled={submitting}>
-              {tLabel("common.warehouseStock.cancel", "Bekor qilish")}
-            </Button>
-            <Button onClick={submitOp} disabled={submitting}>
-              {opMode === "issue"
-                ? tLabel("common.warehouseStock.confirmIssue", "Chiqim qilish")
-                : tLabel("common.warehouseStock.confirmReceive", "Kirim qilish")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={historyFor !== null} onOpenChange={(o) => { if (!o) { setHistoryFor(null); setHistory(null); } }}>
         <DialogContent>
