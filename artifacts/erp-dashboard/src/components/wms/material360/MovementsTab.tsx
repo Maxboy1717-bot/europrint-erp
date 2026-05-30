@@ -18,6 +18,7 @@ import { useTranslation } from '@/lib/i18n';
 export function MovementsTab({ movements, basic }: { movements: MovementsInfo; basic: BasicInfo }) {
   const { t } = useTranslation("common");
   const [filter, setFilter] = useState("all");
+  if (!movements) return <div className="text-muted-foreground text-sm py-8 text-center">{t("harakatMalumotlariYoq")}</div>;
   const rawRecent = movements?.recent;
   const rawMonthly = movements?.monthlyTrend;
   const recent = (Array.isArray(rawRecent) ? rawRecent : []).filter(t => filter === "all" || t.transactionType === filter);

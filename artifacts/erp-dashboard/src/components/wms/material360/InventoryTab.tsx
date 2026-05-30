@@ -10,6 +10,7 @@ import { useTranslation } from '@/lib/i18n';
 
 export function InventoryTab({ inventory, basic }: { inventory: InventoryInfo; basic: BasicInfo }) {
   const { t } = useTranslation("common");
+  if (!inventory) return <div className="text-muted-foreground text-sm py-8 text-center">{t("inventarizatsiyaMalumotlariYoq")}</div>;
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

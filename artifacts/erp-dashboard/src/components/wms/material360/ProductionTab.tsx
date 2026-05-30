@@ -11,6 +11,7 @@ import { useTranslation } from '@/lib/i18n';
 
 export function ProductionTab({ productionUsage, basic }: { productionUsage: ProductionUsageInfo; basic: BasicInfo }) {
   const { t } = useTranslation("common");
+  if (!productionUsage) return <div className="text-muted-foreground text-sm py-8 text-center">{t("ishlabChiqarishMalumotlariYoq")}</div>;
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">

@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 import { fmtNum, fmtQty, fmtMoney, StockStatusBadge, AbcBadge } from "@/components/wms/helpers";
 import { MaterialDialog, type MaterialRecord } from "@/components/wms/MaterialDialog";
-import { BasicTab, StockTab, MovementsTab, FinanceTab, SuppliersTab, ProductionTab, QualityTab, ForecastTab, StorageTab, InventoryTab } from "@/components/wms/MaterialTabs";
 import type { MaterialBasic } from "@/components/wms/wms-types";
 
 import { useTranslation } from '@/lib/i18n';

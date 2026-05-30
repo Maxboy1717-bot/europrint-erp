@@ -9,6 +9,7 @@ import { useTranslation } from '@/lib/i18n';
 
 export function SuppliersTab({ suppliers, basic }: { suppliers: SuppliersInfo; basic: BasicInfo }) {
   const { t } = useTranslation("common");
+  if (!suppliers) return <div className="text-muted-foreground text-sm py-8 text-center">{t("yetkazibBeruvchiMalumotlariYoq")}</div>;
   return (
     <div className="space-y-4">
       {suppliers.primarySupplier ? (

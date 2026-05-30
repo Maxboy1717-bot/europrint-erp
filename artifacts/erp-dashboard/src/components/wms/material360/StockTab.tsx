@@ -13,6 +13,7 @@ import { useTranslation } from '@/lib/i18n';
 
 export function StockTab({ stock, basic }: { stock: StockInfo; basic: BasicInfo }) {
   const { t } = useTranslation("common");
+  if (!stock) return <div className="text-muted-foreground text-sm py-8 text-center">{t("omborMalumotlariYoq")}</div>;
   const maxStock = fmtNum(stock.maxStock || basic.maxStock || 0);
   const curr = fmtNum(stock.totalQty || 0);
   const progressPct = maxStock > 0 ? Math.min(100, (curr / maxStock) * 100) : 0;
