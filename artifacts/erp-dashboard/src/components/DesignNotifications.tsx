@@ -47,7 +47,8 @@ export function DesignNotifications() {
     try {
       await apiRequest('PATCH', `/api/design/notifications/${notificationId}/read`);
       queryClient.invalidateQueries({ queryKey: ["/api/design/notifications"] });
-    } catch (error) {
+    } catch {
+      /* best-effort: marking a notification read is non-critical */
     }
   };
 

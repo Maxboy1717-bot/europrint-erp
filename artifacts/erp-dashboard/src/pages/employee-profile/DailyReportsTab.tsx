@@ -47,6 +47,7 @@ function OperatorReportCard({ report }: { report: DailyReport }) {
       }
     }
   } catch {
+    /* malformed tasks_completed JSON → leave productionData empty */
   }
 
   const oee = (productionData.oee as number) ?? (productionData.today_oee as number) ?? null;

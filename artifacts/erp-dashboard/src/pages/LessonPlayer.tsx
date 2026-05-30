@@ -164,7 +164,7 @@ export default function LessonPlayer() {
 
   const handleToggleModule = (modId: number, open: boolean) => {
     const next = new Set(openModules);
-    open ? next.add(modId) : next.delete(modId);
+    if (open) next.add(modId); else next.delete(modId);
     setOpenModules(next);
   };
 

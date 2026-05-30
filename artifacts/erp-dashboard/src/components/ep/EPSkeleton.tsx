@@ -16,7 +16,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { EPCard } from "./EPCard";
 
-interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {}
+type SkeletonProps = React.HTMLAttributes<HTMLDivElement>;
 
 export function EPSkeletonBar({ className, style, ...props }: SkeletonProps) {
   return (

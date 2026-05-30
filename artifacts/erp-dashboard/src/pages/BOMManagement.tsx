@@ -83,7 +83,7 @@ export default function BOMManagement() {
     onError: () => { toast({ variant: "destructive", title: tCommon("error"), description: tCommon("operationFailed") }); },
   });
 
-  const toggleBOMExpansion = (bomId: string) => { const next = new Set(expandedBOMs); next.has(bomId) ? next.delete(bomId) : next.add(bomId); setExpandedBOMs(next); };
+  const toggleBOMExpansion = (bomId: string) => { const next = new Set(expandedBOMs); if (next.has(bomId)) next.delete(bomId); else next.add(bomId); setExpandedBOMs(next); };
   const handleCreateBOM = (data: BOMFormValues) => createBOMMutation.mutate(data);
   const handleCreateItem = (data: ItemFormValues) => {
     if (!selectedBOM) { toast({ variant: "destructive", title: tCommon("error"), description: tCommon("required") }); return; }

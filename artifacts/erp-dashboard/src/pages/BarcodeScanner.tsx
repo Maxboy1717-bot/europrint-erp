@@ -75,7 +75,7 @@ export default function BarcodeScanner() {
       inputRef.current?.focus();
       toast({
         title: data.success !== false ? "Muvaffaqiyatli" : "Topilmadi",
-        description: String(data.message) ?? data.material?.name,
+        description: data.message ? String(data.message) : data.material?.name,
         variant: data.success !== false ? "default" : "destructive",
       });
     },

@@ -31,7 +31,7 @@ interface ExceptionStats {
   lastMonth: number;
 }
 
-interface ExceptionLog {
+interface ExceptionLogEntry {
   id: string;
   exceptionType: string;
   severity: string;
@@ -45,7 +45,7 @@ interface ExceptionLog {
 }
 
 interface LogsResponse {
-  data: ExceptionLog[];
+  data: ExceptionLogEntry[];
   total: number;
   page: number;
   limit: number;

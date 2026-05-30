@@ -77,7 +77,7 @@ export default function SkillsMatrix() {
     onError: () => { toast({ title: t("skills.empDeleteError"), variant: "destructive" }); },
   });
 
-  const onSkillSubmit = (data: SkillFormValues) => { editingSkill ? updateSkillMutation.mutate({ id: editingSkill.id, data }) : createSkillMutation.mutate(data); };
+  const onSkillSubmit = (data: SkillFormValues) => { if (editingSkill) updateSkillMutation.mutate({ id: editingSkill.id, data }); else createSkillMutation.mutate(data); };
   const onEmployeeSkillSubmit = (data: EmployeeSkillFormValues) => { createEmployeeSkillMutation.mutate(data); };
 
   const handleEditSkill = (skill: Skill) => {

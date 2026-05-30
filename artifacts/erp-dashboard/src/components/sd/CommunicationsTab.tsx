@@ -131,8 +131,8 @@ export function CommunicationsTab({
 
   return (
     <div className="space-y-4">
-      {/* NPS Widget */}
-      {(nps || true) && (
+      {/* NPS Widget — always rendered (hosts the "add NPS" action) */}
+      {(
         <div className={`rounded-xl border overflow-hidden ${npsConf ? npsConf.bg : "bg-muted/20 border-border"}`}>
           <div className="px-4 py-3 border-b border-inherit">
             <div className="flex items-center justify-between">

@@ -1,6 +1,6 @@
 
 import { tLabel } from '@/lib/i18n/tLabel';
-﻿/**
+/**
  * @module WarehouseDailyViewTypes
  * @description Types and constants for WarehouseDailyView page.
  */

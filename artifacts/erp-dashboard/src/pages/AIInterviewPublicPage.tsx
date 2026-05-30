@@ -223,10 +223,10 @@ export default function AIInterviewPublicPage() {
       start: () => void; stop: () => void;
     };
     const win = window as Window & { SpeechRecognition?: SpeechRecognitionCtor; webkitSpeechRecognition?: SpeechRecognitionCtor };
-    const SpeechRecognitionCtor = win.SpeechRecognition ?? win.webkitSpeechRecognition;
-    if (!SpeechRecognitionCtor) { setIsMicActive(false); return; }
+    const SpeechRecognitionImpl = win.SpeechRecognition ?? win.webkitSpeechRecognition;
+    if (!SpeechRecognitionImpl) { setIsMicActive(false); return; }
 
-    const recognition = new SpeechRecognitionCtor();
+    const recognition = new SpeechRecognitionImpl();
     recognition.continuous = true;
     recognition.interimResults = false;
     recognition.lang = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
