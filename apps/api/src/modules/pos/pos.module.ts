@@ -7,6 +7,7 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ProcurementApprovalChainService } from './application/services/procurement-approval-chain.service';
 import { ProcurementController } from './presentation/procurement.controller';
+import { ProcurementRequestService } from './application/services/procurement-request.service';
 import {
   PosGateway,
   // Controllers
@@ -92,6 +93,7 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     PosMovementStatusService,
     PosMovementQueryService,
     ProcurementApprovalChainService,
+    ProcurementRequestService,
     PosBarcodeRepository,
     PosBarcodeService,
     PosBarcodeExtRepository,

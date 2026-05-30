@@ -84,6 +84,73 @@ export const warehouseTypes = pgTable("warehouse_types", {
 export type WarehouseTypeConfig = typeof warehouseTypes.$inferSelect;
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+// P2P XARID-TO'LOV (procurement) — 2026-05-30 vision. Ichki ta'minotchi so'rovi →
+// org-sxema tasdiq → avans → chek → ombor kirim → podotchet. Toza, P2P-maxsus.
+// (Tasdiq zanjiri ProcurementApprovalChainService bilan hisoblanadi.)
+// ─────────────────────────────────────────────────────────────────────────────
+export const procurementRequests = pgTable("procurement_requests", {
+  id:                  serial("id").primaryKey(),
+  requestNumber:       varchar("request_number", { length: 50 }).notNull().unique(),       // PR-2026-00001
+  requesterEmployeeId: integer("requester_employee_id").notNull(),                          // ichki ta'minotchi (xodim)
+  requesterUserId:     integer("requester_user_id"),
+  orgDepartmentId:     integer("org_department_id"),                                        // tasdiq zanjiri uchun
+  title:               text("title").notNull(),
+  description:         text("description"),
+  vendorId:            integer("vendor_id"),                                                // tashqi yetkazuvchi (qo'lda)
+  totalAmount:         numericMoney("total_amount").notNull().default(0),
+  currency:            varchar("currency", { length: 3 }).notNull().default("UZS"),
+  paymentMode:         varchar("payment_mode", { length: 20 }).notNull().default("advance"), // advance/reimburse
+  targetWarehouseType: varchar("target_warehouse_type", { length: 40 }),                    // qaysi tur omborga
+  status:              varchar("status", { length: 24 }).notNull().default("draft"),
+  currentApprovalLevel: integer("current_approval_level").notNull().default(0),
+  neededByDate:        varchar("needed_by_date", { length: 10 }),
+  rules:               jsonb("rules").notNull().default(sql`'{}'::jsonb`),
+  createdBy:           integer("created_by"),
+  createdAt:           timestamp("created_at").notNull().defaultNow(),
+  updatedAt:           timestamp("updated_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_procurement_requests_status").on(t.status),
+  index("idx_procurement_requests_requester").on(t.requesterEmployeeId),
+  check("procurement_requests_status_chk", sql`${t.status} IN ('draft','pending_approval','approved','rejected','purchasing','received','closed','cancelled')`),
+  check("procurement_requests_payment_chk", sql`${t.paymentMode} IN ('advance','reimburse')`),
+]);
+
+export const procurementRequestItems = pgTable("procurement_request_items", {
+  id:             serial("id").primaryKey(),
+  requestId:      integer("request_id").notNull().references(() => procurementRequests.id, { onDelete: "cascade" }),
+  materialId:     integer("material_id"),                                  // mavjud material (optional)
+  description:    text("description").notNull(),                           // "nima olinadi"
+  quantity:       numericMoney("quantity").notNull().default(1),
+  unit:           varchar("unit", { length: 20 }).notNull().default("dona"),
+  estimatedPrice: numericMoney("estimated_price").notNull().default(0),
+  lineTotal:      numericMoney("line_total").notNull().default(0),
+  createdAt:      timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_procurement_request_items_request").on(t.requestId),
+]);
+
+export const procurementApprovals = pgTable("procurement_approvals", {
+  id:              serial("id").primaryKey(),
+  requestId:       integer("request_id").notNull().references(() => procurementRequests.id, { onDelete: "cascade" }),
+  level:           integer("level").notNull(),                            // 0 = eng yaqin rahbar → yuqori
+  orgDepartmentId: integer("org_department_id"),
+  approverUserId:  integer("approver_user_id").notNull(),
+  status:          varchar("status", { length: 16 }).notNull().default("pending"),
+  decidedAt:       timestamp("decided_at"),
+  comments:        text("comments"),
+  createdAt:       timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_procurement_approvals_request").on(t.requestId),
+  index("idx_procurement_approvals_approver").on(t.approverUserId),
+  check("procurement_approvals_status_chk", sql`${t.status} IN ('pending','approved','rejected')`),
+]);
+
+export type ProcurementRequest = typeof procurementRequests.$inferSelect;
+export type ProcurementRequestItem = typeof procurementRequestItems.$inferSelect;
+export type ProcurementApproval = typeof procurementApprovals.$inferSelect;
+
+
 // Warehouse Zones (ombor zonalari)
 export const warehouseZones = pgTable("warehouse_zones", {
   id: serial("id").primaryKey(),
