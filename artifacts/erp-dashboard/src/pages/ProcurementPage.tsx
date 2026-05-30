@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Search, GitBranch, FileText } from "lucide-react";
+import { ShoppingCart, Search, GitBranch, FileText, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { tLabel } from "@/lib/i18n/tLabel";
 import { procurementApi, type ApprovalStep } from "@/lib/api/procurement.api";
@@ -21,6 +21,12 @@ export default function ProcurementPage() {
   const [reqId, setReqId] = useState("");
   const [request, setRequest] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
+  const [cTitle, setCTitle] = useState("");
+  const [cEmp, setCEmp] = useState("");
+  const [cDesc, setCDesc] = useState("");
+  const [cQty, setCQty] = useState("1");
+  const [cPrice, setCPrice] = useState("");
+  const [created, setCreated] = useState<Record<string, unknown> | null>(null);
 
   const loadChain = async () => {
     const id = parseInt(empId, 10);
@@ -48,12 +54,80 @@ export default function ProcurementPage() {
     }
   };
 
+  const createReq = async () => {
+    const emp = parseInt(cEmp, 10);
+    if (!cTitle.trim() || !emp || !cDesc.trim()) {
+      toast({ title: tLabel("common.procurement.fillRequired", "Sarlavha, xodim ID va material kiriting"), variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await procurementApi.createRequest({
+        title: cTitle,
+        requesterEmployeeId: emp,
+        items: [{ description: cDesc, quantity: Number(cQty) || 1, estimatedPrice: Number(cPrice) || 0 }],
+      });
+      setCreated(res);
+      toast({ title: tLabel("common.procurement.created", "So'rov yaratildi") });
+    } catch (e) {
+      toast({ title: tLabel("common.procurement.error", "Xato"), description: String((e as Error).message), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center gap-2">
         <ShoppingCart className="h-6 w-6 text-primary" />
         <h1 className="text-xl font-semibold">{tLabel("common.procurement.title", "Xarid-to'lov (P2P)")}</h1>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Plus className="h-4 w-4" /> {tLabel("common.procurement.newRequest", "Yangi xarid so'rovi")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <Label htmlFor="cTitle">{tLabel("common.procurement.cTitle", "Sarlavha")}</Label>
+              <Input id="cTitle" value={cTitle} onChange={(e) => setCTitle(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="cEmp">{tLabel("common.procurement.requesterEmp", "Ta'minotchi (xodim ID)")}</Label>
+              <Input id="cEmp" value={cEmp} onChange={(e) => setCEmp(e.target.value)} placeholder="masalan 5" />
+            </div>
+            <div className="md:col-span-2">
+              <Label htmlFor="cDesc">{tLabel("common.procurement.material", "Material (nima olinadi)")}</Label>
+              <Input id="cDesc" value={cDesc} onChange={(e) => setCDesc(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="cQty">{tLabel("common.procurement.qty", "Miqdor")}</Label>
+              <Input id="cQty" value={cQty} onChange={(e) => setCQty(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="cPrice">{tLabel("common.procurement.price", "Taxminiy narx")}</Label>
+              <Input id="cPrice" value={cPrice} onChange={(e) => setCPrice(e.target.value)} />
+            </div>
+          </div>
+          <Button onClick={createReq} disabled={loading}>
+            <Plus className="mr-1 h-4 w-4" /> {tLabel("common.procurement.create", "So'rov yaratish")}
+          </Button>
+          {created && (
+            <div className="space-y-1 rounded-md border p-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">{String(created["requestNumber"] ?? "—")}</span>
+                <Badge>{String(created["status"] ?? "—")}</Badge>
+              </div>
+              <p className="text-muted-foreground">
+                {tLabel("common.procurement.approvers", "Tasdiqlovchilar")}: {String(created["approvalSteps"] ?? 0)}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
