@@ -138,6 +138,16 @@ export default function WarehouseStockPage() {
         )}
       </div>
 
+      {data?.typeConfig && (
+        <div className="flex flex-wrap items-center gap-1">
+          <Badge variant="secondary">{data.typeConfig.nameUz}</Badge>
+          <Badge variant="outline">{tLabel("common.warehouseStock.unitBasis", "Birlik")}: {data.typeConfig.unitBasis}</Badge>
+          {data.typeConfig.needsQc && <Badge variant="outline">QC</Badge>}
+          {data.typeConfig.needsQuarantine && <Badge variant="outline">{tLabel("common.warehouseStock.quarantine", "Karantin")}</Badge>}
+          <Badge variant="outline">{data.typeConfig.inboundFlow} → {data.typeConfig.outboundFlow}</Badge>
+        </div>
+      )}
+
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">{tLabel("common.warehouseStock.title", "Ombor qoldig'i")}</CardTitle>

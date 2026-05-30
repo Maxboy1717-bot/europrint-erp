@@ -61,6 +61,12 @@ export class WarehouseConfigService {
         SELECT id, code, name, name_ru AS "nameRu", type, location FROM warehouses WHERE id = ${warehouseId}
       `))[0];
       if (!wh) throw new NotFoundException(`Ombor topilmadi: ${warehouseId}`);
+      const typeConfig = dbRows(await rawSql(sql`
+        SELECT code, name_uz AS "nameUz", category, needs_quarantine AS "needsQuarantine", needs_qc AS "needsQc",
+               unit_basis AS "unitBasis", label_template AS "labelTemplate",
+               inbound_flow AS "inboundFlow", outbound_flow AS "outboundFlow"
+        FROM warehouse_types WHERE code = ${String(wh['type'])}
+      `))[0] ?? null;
       const stock = dbRows(await rawSql(sql`
         SELECT ws.id, ws.material_id AS "materialId", mc.kod,
                COALESCE(mc.xom_ashyo, '—') AS "name",
@@ -76,7 +82,7 @@ export class WarehouseConfigService {
         LIMIT 500
       `));
       const totalQuantity = stock.reduce((s, r) => s + Number(r['quantity'] ?? 0), 0);
-      return { warehouse: wh, stock, lineCount: stock.length, totalQuantity };
+      return { warehouse: wh, typeConfig, stock, lineCount: stock.length, totalQuantity };
     });
   }
 

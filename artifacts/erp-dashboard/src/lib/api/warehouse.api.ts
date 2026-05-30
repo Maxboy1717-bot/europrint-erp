@@ -42,8 +42,21 @@ export interface WarehouseStockLine {
   lastUpdatedAt: string | null;
 }
 
+export interface WarehouseTypeConfig {
+  code: string;
+  nameUz: string;
+  category: string;
+  needsQuarantine: boolean;
+  needsQc: boolean;
+  unitBasis: string;
+  labelTemplate: string;
+  inboundFlow: string;
+  outboundFlow: string;
+}
+
 export interface WarehouseStock {
   warehouse: { id: number; code: string; name: string; nameRu?: string; type: string; location?: string };
+  typeConfig: WarehouseTypeConfig | null;
   stock: WarehouseStockLine[];
   lineCount: number;
   totalQuantity: number;
