@@ -3,19 +3,14 @@
  * @description Source module. See exports for details.
  */
 
-import { TashkentTimeService } from '@common/time';
-const _time = new TashkentTimeService();
 import { Logger } from '@nestjs/common';
 import { DomainEvent } from '@shared/domain/domain-event';
-import { SalaryCalculatedEvent } from '../events/salary-calculated.event';
 import { EmployeeId } from '@shared/domain/value-objects/employee-id.vo';
 import { Email } from '@shared/domain/value-objects/email.vo';
 import { PhoneNumber } from '@shared/domain/value-objects/phone-number.vo';
 import { Result, Ok, Err, AppErr } from '@common/types/result.type';
 import { Money } from '@shared/domain/value-objects/money.vo';
 import {
-  PAYROLL_INPS_RATE_DEFAULT,
-  PAYROLL_JSHD_RATE_DEFAULT,
   PAYROLL_MONTHLY_HOURS,
   PAYROLL_OVERTIME_MULTIPLIER,
 } from '@common/constants/business.constants';
@@ -145,58 +140,6 @@ export class Employee {
     return Money.of(gross, currency);
   }
 
-  /** Legacy primitive INPS. Prefer `calculateInpsVO`. */
-  calculateInps(gross: number, inpsRate: number = PAYROLL_INPS_RATE_DEFAULT): number {
-    return Math.round(gross * inpsRate * 100) / 100;
-  }
-
-  calculateInpsVO(
-    gross: number,
-    inpsRate: number = PAYROLL_INPS_RATE_DEFAULT,
-    currency: string = 'UZS',
-  ): Result<Money> {
-    const e = this.requireFiniteNonNegative({ gross, inpsRate });
-    if (e) return e;
-    return Money.of(Math.round(gross * inpsRate * 100) / 100, currency);
-  }
-
-  /** Legacy primitive JSHD. Prefer `calculateJshdVO`. */
-  calculateJshd(gross: number, jshdRate: number = PAYROLL_JSHD_RATE_DEFAULT): number {
-    return Math.round(gross * jshdRate * 100) / 100;
-  }
-
-  calculateJshdVO(
-    gross: number,
-    jshdRate: number = PAYROLL_JSHD_RATE_DEFAULT,
-    currency: string = 'UZS',
-  ): Result<Money> {
-    const e = this.requireFiniteNonNegative({ gross, jshdRate });
-    if (e) return e;
-    return Money.of(Math.round(gross * jshdRate * 100) / 100, currency);
-  }
-
-  /** Legacy primitive net. Prefer `calculateNetSalaryVO`. */
-  calculateNetSalary(gross: number, inps: number, jshd: number, other: number): number {
-    const net = gross - inps - jshd - other;
-    this.logger.debug(
-      `Net calculation - Gross: ${gross}, INPS: ${inps}, JSHD: ${jshd}, Other: ${other}, Net: ${net}`
-    );
-    return Math.max(0, net);
-  }
-
-  calculateNetSalaryVO(
-    gross: number,
-    inps: number,
-    jshd: number,
-    other: number,
-    currency: string = 'UZS',
-  ): Result<Money> {
-    const e = this.requireFiniteNonNegative({ gross, inps, jshd, other });
-    if (e) return e;
-    const net = Math.max(0, gross - inps - jshd - other);
-    return Money.of(net, currency);
-  }
-
   /**
    * Shared validation gate for tax / salary inputs — returns `Err` if any
    * field is non-finite or negative; otherwise `null`. We rely on the caller
@@ -212,25 +155,6 @@ export class Employee {
       }
     }
     return null;
-  }
-
-  emitSalaryCalculation(
-    gross: number,
-    inps: number,
-    jshd: number,
-    netSalary: number
-  ): void {
-    const event = new SalaryCalculatedEvent({
-      employeeId: this.props.id.value,
-      departmentId: this.props.departmentId,
-      gross,
-      inps,
-      jshd,
-      netSalary,
-      calculatedAt: _time.now(),
-    });
-    this.events.push(event);
-    this.logger.debug(`Salary calculated event emitted for employee ${this.props.id.value}`);
   }
 
   getDomainEvents(): DomainEvent[] {

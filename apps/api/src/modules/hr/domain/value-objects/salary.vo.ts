@@ -1,16 +1,14 @@
 /**
  * @module salary.vo
  * @description Salary value object. Immutable monthly payroll snapshot with a
- * non-negative `net` invariant. Composes `gross`, `inps`, `jshd`, and `net`
- * (per HR audit 2026-05-16 §2.3 #3) where:
+ * non-negative `net` invariant. Composes `gross` and `net` where:
  *
- *   net = max(0, gross - inps - jshd - other)
+ *   net = max(0, gross - other)   // "other" = NON-TAX deductions (advances/debts)
  *
- * The clamp at zero is intentional — Uzbekistan payroll rules can produce a
- * computed "net" below zero (e.g. when garnishments + taxes exceed gross),
- * and the recorded net in those cases is 0 with the remainder logged as a
- * payable. The aggregate is responsible for emitting that overflow as an
- * event; the VO only owns the invariant `net >= 0`.
+ * The ERP is GROSS-ONLY: it does NOT compute tax (JSHD/INPS/pension) — that is
+ * done entirely in 1C. `net` here is gross minus non-tax deductions only.
+ * The clamp at zero is intentional — when non-tax deductions exceed gross the
+ * recorded net is 0 with the remainder tracked as a payable.
  *
  * Construction goes through `Salary.create(...)` (Result<Salary>); the
  * private constructor accepts already-validated values.
@@ -20,8 +18,7 @@ import { Result, Ok, Err, AppErr } from '@common/types/result.type';
 
 export interface SalaryReadonlyProps {
   readonly gross: number;
-  readonly inps: number;
-  readonly jshd: number;
+  /** = max(0, gross − other); "other" = NON-TAX deductions (advances/debts). No tax. */
   readonly net: number;
   readonly currency: string;
 }
@@ -37,12 +34,10 @@ export class Salary {
    */
   static create(
     gross: number,
-    inps: number,
-    jshd: number,
     other: number = 0,
     currency: string = 'UZS',
   ): Result<Salary> {
-    const fields: Record<string, number> = { gross, inps, jshd, other };
+    const fields: Record<string, number> = { gross, other };
     for (const [name, v] of Object.entries(fields)) {
       if (typeof v !== 'number' || !Number.isFinite(v)) {
         return Err(AppErr('VALIDATION', `${name} must be a finite number (got ${v})`));
@@ -55,26 +50,18 @@ export class Salary {
     if (cur.length !== 3) {
       return Err(AppErr('VALIDATION', `Invalid currency code: ${currency}`));
     }
-    const net = Math.max(0, gross - inps - jshd - other);
-    return Ok(new Salary({ gross, inps, jshd, net, currency: cur }));
+    // NON-TAX only: gross minus non-tax deductions (advances/debts). Tax lives in 1C.
+    const net = Math.max(0, gross - other);
+    return Ok(new Salary({ gross, net, currency: cur }));
   }
 
   get gross(): number { return this.p.gross; }
-  get inps(): number { return this.p.inps; }
-  get jshd(): number { return this.p.jshd; }
   get net(): number { return this.p.net; }
   get currency(): string { return this.p.currency; }
-
-  /** INPS + JSHD — convenience for GL postings and dashboards. */
-  totalTax(): number {
-    return this.p.inps + this.p.jshd;
-  }
 
   equals(other: Salary): boolean {
     return (
       this.p.gross === other.p.gross &&
-      this.p.inps === other.p.inps &&
-      this.p.jshd === other.p.jshd &&
       this.p.net === other.p.net &&
       this.p.currency === other.p.currency
     );

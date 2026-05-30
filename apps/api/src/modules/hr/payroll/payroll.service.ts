@@ -162,8 +162,6 @@ export class PayrollService {
         employeeId,
         periodId,
         gross:        row.baseSalary + row.bonus,
-        inps:         0,
-        jshd:         0,
         other:        row.deductions,
         status,
         createdAt:    now,

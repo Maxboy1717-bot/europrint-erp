@@ -1,9 +1,10 @@
 /**
  * @module test/hr/payroll-record.aggregate.spec
- * @description Unit tests for Salary value object + PayrollRecord aggregate
- * (HR audit 2026-05-16 §2.3 #3, task H.10). Covers the non-negative `net`
- * invariant, the increase/decrease/completeRun state machine, and the
- * domain-event drain semantics that mirror LeaveRequest.
+ * @description Unit tests for Salary value object + PayrollRecord aggregate.
+ * The ERP is GROSS-ONLY: no tax (JSHD/INPS) — that lives in 1C. The Salary VO
+ * carries `gross` and `net = max(0, gross − other)` where `other` = NON-TAX
+ * deductions (advances/debts). Covers the non-negative `net` invariant, the
+ * increase/decrease/completeRun state machine, and the domain-event drain.
  */
 
 import { Salary } from '../../src/modules/hr/domain/value-objects/salary.vo';
@@ -44,8 +45,6 @@ function baseRawProps(over: Partial<PayrollRecordRawProps> = {}): PayrollRecordR
     employeeId: 11,
     periodId: 202_605,
     gross: 5_000_000,
-    inps: 300_000,
-    jshd: 50_000,
     other: 0,
     currency: 'UZS',
     status: 'draft',
@@ -57,48 +56,41 @@ function baseRawProps(over: Partial<PayrollRecordRawProps> = {}): PayrollRecordR
 
 // ─── Salary VO ──────────────────────────────────────────────────────────────
 describe('Salary.create', () => {
-  it('computes net = gross - inps - jshd - other', () => {
-    const s = unwrap(Salary.create(5_000_000, 300_000, 50_000, 100_000));
+  it('computes net = gross - other (non-tax deductions only)', () => {
+    const s = unwrap(Salary.create(5_000_000, 100_000));
     expect(s.gross).toBe(5_000_000);
-    expect(s.inps).toBe(300_000);
-    expect(s.jshd).toBe(50_000);
-    expect(s.net).toBe(5_000_000 - 300_000 - 50_000 - 100_000);
+    expect(s.net).toBe(5_000_000 - 100_000);
   });
 
-  it('clamps net to zero when deductions exceed gross', () => {
-    const s = unwrap(Salary.create(100, 200, 50, 0));
+  it('clamps net to zero when non-tax deductions exceed gross', () => {
+    const s = unwrap(Salary.create(100, 250));
     expect(s.net).toBe(0);
   });
 
   it('rejects a negative gross', () => {
-    const r = Salary.create(-1, 0, 0, 0);
+    const r = Salary.create(-1, 0);
     expect(r.ok).toBe(false);
   });
 
   it('rejects a non-finite input', () => {
-    const r = Salary.create(Number.NaN, 0, 0, 0);
+    const r = Salary.create(Number.NaN, 0);
     expect(r.ok).toBe(false);
   });
 
   it('normalizes the currency code to upper case', () => {
-    const s = unwrap(Salary.create(1, 0, 0, 0, 'usd'));
+    const s = unwrap(Salary.create(1, 0, 'usd'));
     expect(s.currency).toBe('USD');
   });
 
   it('rejects a currency code that is not 3 characters', () => {
-    const r = Salary.create(1, 0, 0, 0, 'USDZ');
+    const r = Salary.create(1, 0, 'USDZ');
     expect(r.ok).toBe(false);
-  });
-
-  it('totalTax returns inps + jshd', () => {
-    const s = unwrap(Salary.create(5_000_000, 300_000, 50_000));
-    expect(s.totalTax()).toBe(350_000);
   });
 });
 
 // ─── PayrollRecord — factories ──────────────────────────────────────────────
 describe('PayrollRecord.createFromEmployee', () => {
-  it('derives salary from the Employee aggregate payroll arithmetic', () => {
+  it('derives gross salary from the Employee aggregate arithmetic', () => {
     const emp = makeEmployee({ baseSalary: 1_760_000 });
     const rec = unwrap(PayrollRecord.createFromEmployee(emp, {
       id: 7,
@@ -121,15 +113,15 @@ describe('PayrollRecord.createFromEmployee', () => {
 });
 
 describe('PayrollRecord.fromProps', () => {
-  it('hydrates with the same Salary as create()', () => {
-    const rec = unwrap(PayrollRecord.fromProps(baseRawProps()));
+  it('hydrates with net = gross - other', () => {
+    const rec = unwrap(PayrollRecord.fromProps(baseRawProps({ other: 200_000 })));
     expect(rec.id).toBe(1);
     expect(rec.salary.gross).toBe(5_000_000);
-    expect(rec.salary.net).toBe(5_000_000 - 300_000 - 50_000);
+    expect(rec.salary.net).toBe(5_000_000 - 200_000);
   });
 
   it('propagates Salary validation failures', () => {
-    const r = PayrollRecord.fromProps(baseRawProps({ inps: -1 }));
+    const r = PayrollRecord.fromProps(baseRawProps({ gross: -1 }));
     expect(r.ok).toBe(false);
   });
 });
@@ -138,7 +130,7 @@ describe('PayrollRecord.fromProps', () => {
 describe('PayrollRecord.increaseSalary', () => {
   it('emits SalaryIncreasedEvent with the correct delta on success', () => {
     const rec = unwrap(PayrollRecord.fromProps(baseRawProps({ status: 'draft' })));
-    const r = rec.increaseSalary(6_000_000, 360_000, 60_000, 'manager-9');
+    const r = rec.increaseSalary(6_000_000, 'manager-9');
     expect(r.ok).toBe(true);
     expect(rec.salary.gross).toBe(6_000_000);
     const events = rec.getDomainEvents();
@@ -153,14 +145,14 @@ describe('PayrollRecord.increaseSalary', () => {
 
   it('rejects when newGross is less than or equal to current gross', () => {
     const rec = unwrap(PayrollRecord.fromProps(baseRawProps()));
-    expect(rec.increaseSalary(5_000_000, 0, 0, 'u-1').ok).toBe(false);
-    expect(rec.increaseSalary(4_000_000, 0, 0, 'u-1').ok).toBe(false);
+    expect(rec.increaseSalary(5_000_000, 'u-1').ok).toBe(false);
+    expect(rec.increaseSalary(4_000_000, 'u-1').ok).toBe(false);
     expect(rec.getDomainEvents()).toHaveLength(0);
   });
 
   it('rejects when the record is already posted', () => {
     const rec = unwrap(PayrollRecord.fromProps(baseRawProps({ status: 'posted' })));
-    const r = rec.increaseSalary(6_000_000, 360_000, 60_000, 'u-1');
+    const r = rec.increaseSalary(6_000_000, 'u-1');
     expect(r.ok).toBe(false);
   });
 });
@@ -168,7 +160,7 @@ describe('PayrollRecord.increaseSalary', () => {
 describe('PayrollRecord.decreaseSalary', () => {
   it('emits SalaryDecreasedEvent with a negative delta', () => {
     const rec = unwrap(PayrollRecord.fromProps(baseRawProps()));
-    const r = rec.decreaseSalary(4_000_000, 240_000, 40_000, 'manager-9');
+    const r = rec.decreaseSalary(4_000_000, 'manager-9');
     expect(r.ok).toBe(true);
     const events = rec.getDomainEvents();
     expect(events[0]).toBeInstanceOf(SalaryDecreasedEvent);
@@ -177,8 +169,8 @@ describe('PayrollRecord.decreaseSalary', () => {
 
   it('rejects when newGross is greater than or equal to current gross', () => {
     const rec = unwrap(PayrollRecord.fromProps(baseRawProps()));
-    expect(rec.decreaseSalary(5_000_000, 0, 0, 'u-1').ok).toBe(false);
-    expect(rec.decreaseSalary(6_000_000, 0, 0, 'u-1').ok).toBe(false);
+    expect(rec.decreaseSalary(5_000_000, 'u-1').ok).toBe(false);
+    expect(rec.decreaseSalary(6_000_000, 'u-1').ok).toBe(false);
   });
 });
 

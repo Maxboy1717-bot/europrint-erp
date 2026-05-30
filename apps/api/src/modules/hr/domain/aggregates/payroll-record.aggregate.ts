@@ -7,9 +7,8 @@
  *
  * Pattern: follows LeaveRequest/Attendance (private `props` bag, getters,
  * `getDomainEvents()` + `clearDomainEvents()` drain). The factory
- * `createFromEmployee` reuses the existing Employee aggregate's payroll
- * arithmetic (`calculateGrossSalary`/INPS/JSHD) so there's a single source
- * of truth for the math.
+ * `createFromEmployee` reuses the Employee aggregate's `calculateGrossSalary`
+ * (GROSS only — tax JSHD/INPS is computed in 1C, not the ERP).
  */
 
 import { Logger } from '@nestjs/common';
@@ -42,8 +41,6 @@ export interface PayrollRecordRawProps {
   employeeId: number;
   periodId: number;
   gross: number;
-  inps: number;
-  jshd: number;
   other?: number;
   currency?: string;
   status: PayrollRecordStatus;
@@ -79,10 +76,8 @@ export class PayrollRecord {
     const currency = args.currency ?? 'UZS';
 
     const gross = employee.calculateGrossSalary(overtimeHours, bonus);
-    const inps = employee.calculateInps(gross);
-    const jshd = employee.calculateJshd(gross);
 
-    const salaryR = Salary.create(gross, inps, jshd, other, currency);
+    const salaryR = Salary.create(gross, other, currency);
     if (!salaryR.ok) return Err(salaryR.error);
 
     const now = args.createdAt ?? _time.now();
@@ -103,8 +98,6 @@ export class PayrollRecord {
   static fromProps(props: PayrollRecordRawProps): Result<PayrollRecord> {
     const salaryR = Salary.create(
       props.gross,
-      props.inps,
-      props.jshd,
       props.other ?? 0,
       props.currency ?? 'UZS',
     );
@@ -140,8 +133,6 @@ export class PayrollRecord {
    */
   increaseSalary(
     newGross: number,
-    newInps: number,
-    newJshd: number,
     changedBy: string,
     newOther: number = 0,
   ): Result<void> {
@@ -155,7 +146,7 @@ export class PayrollRecord {
         `Yangi gross (${newGross}) eski grossdan (${oldGross}) katta bo'lishi kerak — kamaytirish uchun decreaseSalary ishlatiladi`,
       ));
     }
-    const salaryR = Salary.create(newGross, newInps, newJshd, newOther, this.props.salary.currency);
+    const salaryR = Salary.create(newGross, newOther, this.props.salary.currency);
     if (!salaryR.ok) return Err(salaryR.error);
 
     const now = _time.now();
@@ -180,8 +171,6 @@ export class PayrollRecord {
    */
   decreaseSalary(
     newGross: number,
-    newInps: number,
-    newJshd: number,
     changedBy: string,
     newOther: number = 0,
   ): Result<void> {
@@ -195,7 +184,7 @@ export class PayrollRecord {
         `Yangi gross (${newGross}) eski grossdan (${oldGross}) kichik bo'lishi kerak — oshirish uchun increaseSalary ishlatiladi`,
       ));
     }
-    const salaryR = Salary.create(newGross, newInps, newJshd, newOther, this.props.salary.currency);
+    const salaryR = Salary.create(newGross, newOther, this.props.salary.currency);
     if (!salaryR.ok) return Err(salaryR.error);
 
     const now = _time.now();
