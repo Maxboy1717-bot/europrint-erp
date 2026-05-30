@@ -13,10 +13,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Warehouse, ArrowLeft, Package, Minus } from "lucide-react";
+import { Warehouse, ArrowLeft, Package, Minus, History } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { tLabel } from "@/lib/i18n/tLabel";
-import { warehouseApi, type WarehouseStock, type WarehouseStockLine } from "@/lib/api/warehouse.api";
+import { warehouseApi, type WarehouseStock, type WarehouseStockLine, type MaterialMovement } from "@/lib/api/warehouse.api";
+
+const MOVEMENT_LABEL: Record<string, string> = {
+  RECEIVE: "Kirim",
+  ISSUE: "Chiqim",
+  INTERNAL_ISSUE: "Ichki chiqim",
+  TRANSFER: "Ko'chirish",
+  ADJUST: "Tuzatish",
+};
 
 function fmtQty(n: number): string {
   const v = Number(n) || 0;
@@ -34,6 +42,9 @@ export default function WarehouseStockPage() {
   const [qty, setQty] = useState("");
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const [historyFor, setHistoryFor] = useState<WarehouseStockLine | null>(null);
+  const [history, setHistory] = useState<MaterialMovement[] | null>(null);
 
   const load = useCallback(() => {
     if (!id) return;
@@ -78,6 +89,18 @@ export default function WarehouseStockPage() {
       toast({ title: tLabel("common.warehouseStock.error", "Xato"), description: String((e as Error).message), variant: "destructive" });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const openHistory = async (line: WarehouseStockLine) => {
+    setHistoryFor(line);
+    setHistory(null);
+    try {
+      const m = await warehouseApi.movements(line.materialId);
+      setHistory(Array.isArray(m) ? m : []);
+    } catch (e) {
+      setHistory([]);
+      toast({ title: tLabel("common.warehouseStock.error", "Xato"), description: String((e as Error).message), variant: "destructive" });
     }
   };
 
@@ -144,10 +167,16 @@ export default function WarehouseStockPage() {
                       <td className="py-2 pr-3 text-right">{fmtQty(r.available)}</td>
                       <td className="py-2 pr-3 text-muted-foreground">{r.unit}</td>
                       <td className="py-2 pr-0 text-right">
-                        <Button size="sm" variant="outline" disabled={r.available <= 0} onClick={() => openIssue(r)}>
-                          <Minus className="mr-1 h-3 w-3" />
-                          {tLabel("common.warehouseStock.issue", "Chiqim")}
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => openHistory(r)}>
+                            <History className="mr-1 h-3 w-3" />
+                            {tLabel("common.warehouseStock.history", "Tarix")}
+                          </Button>
+                          <Button size="sm" variant="outline" disabled={r.available <= 0} onClick={() => openIssue(r)}>
+                            <Minus className="mr-1 h-3 w-3" />
+                            {tLabel("common.warehouseStock.issue", "Chiqim")}
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -202,6 +231,44 @@ export default function WarehouseStockPage() {
               {tLabel("common.warehouseStock.confirmIssue", "Chiqim qilish")}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={historyFor !== null} onOpenChange={(o) => { if (!o) { setHistoryFor(null); setHistory(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {tLabel("common.warehouseStock.historyTitle", "Harakat tarixi")}{historyFor ? ` — ${historyFor.name}` : ""}
+            </DialogTitle>
+          </DialogHeader>
+          {history === null ? (
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+            </div>
+          ) : history.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              {tLabel("common.warehouseStock.historyEmpty", "Harakat yo'q")}
+            </p>
+          ) : (
+            <div className="max-h-80 space-y-2 overflow-y-auto">
+              {history.map((m) => (
+                <div key={m.id} className="flex items-start justify-between gap-2 border-b pb-2 text-sm last:border-0">
+                  <div>
+                    <Badge variant={m.movementType === "RECEIVE" ? "secondary" : "outline"}>
+                      {MOVEMENT_LABEL[m.movementType] ?? m.movementType}
+                    </Badge>
+                    <div className="mt-1 text-muted-foreground">{m.reason || "—"}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {m.performedByName ?? "—"}{m.createdAt ? ` · ${new Date(m.createdAt).toLocaleString()}` : ""}
+                    </div>
+                  </div>
+                  <div className="whitespace-nowrap font-medium">
+                    {fmtQty(m.quantity)} {m.unit ?? ""}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

@@ -66,6 +66,17 @@ export interface IssueStockResult {
   movementId: number | null;
 }
 
+export interface MaterialMovement {
+  id: number;
+  movementType: string;
+  quantity: number;
+  unit: string | null;
+  reason: string | null;
+  notes: string | null;
+  createdAt: string | null;
+  performedByName: string | null;
+}
+
 const BASE = "/api/pos/warehouse-config";
 
 export const warehouseApi = {
@@ -79,4 +90,7 @@ export const warehouseApi = {
   /** Ombordan material chiqim (iste'mol/sarf) — qoldiqni kamaytiradi. */
   issue: (id: number | string, body: IssueStockInput) =>
     apiRequest<IssueStockResult>("POST", `${BASE}/warehouses/${id}/issue`, body),
+  /** Material harakat tarixi (kirim/chiqim jurnali). */
+  movements: (materialId: number | string) =>
+    apiRequest<MaterialMovement[]>("GET", `${BASE}/materials/${materialId}/movements`),
 };
