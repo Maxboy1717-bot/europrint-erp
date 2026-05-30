@@ -88,7 +88,7 @@ describe('CalculatePayrollHandler', () => {
     expect(r.ok).toBe(false);
   });
 
-  it('computes INPS/JSHD/net salary and emits hr.payroll.calculated on success', async () => {
+  it('computes gross + net (gross-only, no tax) and emits hr.payroll.calculated on success', async () => {
     mockFindUser.mockResolvedValue(7);
     mockHasAssign.mockResolvedValue(true);
     const repo = makeRepo();
@@ -99,11 +99,10 @@ describe('CalculatePayrollHandler', () => {
 
     expect(r.ok).toBe(true);
     if (r.ok) {
-      // gross = base + bonus = 5_000_000; INPS = 8% = 400_000; net = 4_600_000
+      // ERP is gross-only (tax in 1C): gross = base + bonus = 5_000_000;
+      // net = gross − otherDeductions = 5_000_000 (no tax subtracted)
       expect(r.data.grossSalary).toBe(5_000_000);
-      expect(r.data.inpsEmployee).toBe(400_000);
-      expect(r.data.jshdEmployer).toBe(600_000);
-      expect(r.data.netSalary).toBe(4_600_000);
+      expect(r.data.netSalary).toBe(5_000_000);
     }
     expect(repo.savePayroll).toHaveBeenCalledTimes(1);
     expect(bus.emit).toHaveBeenCalledWith('hr.payroll.calculated', expect.any(Object));

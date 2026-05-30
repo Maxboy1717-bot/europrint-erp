@@ -29,8 +29,6 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { HrCalculatePayrollSchema, HrCalculatePayrollDto } from './dto/hr.dto';
 interface AuthenticatedUser { id: number; sub?: number; }
 
-const INPS_EMPLOYEE_RATE = 0.08;
-const JSHD_EMPLOYER_RATE = 0.12;
 
 @ApiThrottle()
 @ApiTags('Hr Payroll')
@@ -97,9 +95,8 @@ export class HrPayrollController {
     const dailyRate    = body.baseSalary / 22;
     const overtimePay  = (body.overtimeHours ?? 0) * (dailyRate / 8) * overtimeRate;
     const grossSalary  = body.baseSalary + overtimePay + (body.bonus ?? 0);
-    const inpsEmployee = grossSalary * INPS_EMPLOYEE_RATE;
-    const jshdEmployer = grossSalary * JSHD_EMPLOYER_RATE;
-    const netSalary    = grossSalary - inpsEmployee - (body.otherDeductions ?? 0);
+    // ERP is gross-only: net = gross − NON-TAX deductions. Tax (INPS/JSHD) is computed in 1C.
+    const netSalary    = grossSalary - (body.otherDeductions ?? 0);
 
     const result = await this.hrRepo.savePayroll({
       employeeId:    body.employeeId,
@@ -111,7 +108,7 @@ export class HrPayrollController {
       otherDeductions: body.otherDeductions ?? 0,
     });
     assertOk(result);
-    return { ...result.data, grossSalary, netSalary, inpsEmployee, jshdEmployer, period };
+    return { ...result.data, grossSalary, netSalary, period };
   }
 
   @ApiOperation({ summary: 'Approve payroll' })

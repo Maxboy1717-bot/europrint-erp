@@ -16,10 +16,6 @@ import {
   hasAnyOrgAssignment,
 } from '../../../compatibility/employees-org-assignment.helper';
 
-// O'zbekiston mehnat qonuni (2024)
-const INPS_RATE   = 0.08;   // 8%  — xodimdan ushlab qolinadi
-const JSHD_RATE   = 0.12;   // 12% — ish beruvchi to'laydi
-
 export class CalculatePayrollCommand {
   constructor(public readonly employeeId: number,
     public readonly period: string,          // YYYY-MM
@@ -67,14 +63,13 @@ export class CalculatePayrollHandler implements ICommandHandler<CalculatePayroll
         });
       }
 
-      // INPS/JSHD hisob-kitobi
+      // Gross hisob-kitobi (ERP gross-only: soliq JSHD/INPS 1C da hisoblanadi)
       const dailyRate = command.baseSalary / 22;
       const overtimePay = command.overtimeHours * (dailyRate / 8) * 1.5;
       const grossSalary = command.baseSalary + overtimePay + command.bonus;
 
-      const inpsEmployee = grossSalary * INPS_RATE;
-      const jshdEmployer = grossSalary * JSHD_RATE;
-      const netSalary = grossSalary - inpsEmployee - command.otherDeductions;
+      // net = gross − NON-TAX deductions (advances/debts). No tax.
+      const netSalary = grossSalary - command.otherDeductions;
 
       const periodStart = new Date(`${command.period}-01`);
       const periodEnd = new Date(periodStart.getFullYear(), periodStart.getMonth() + 1, 0);
@@ -94,7 +89,7 @@ export class CalculatePayrollHandler implements ICommandHandler<CalculatePayroll
       }
 
       this.logger.log(
-        `Payroll calculated - Employee: ${command.employeeId}, Gross: ${grossSalary}, Net: ${netSalary}, INPS: ${inpsEmployee}`,
+        `Payroll calculated - Employee: ${command.employeeId}, Gross: ${grossSalary}, Net: ${netSalary}`,
       );
 
       this.eventEmitter.emit('hr.payroll.calculated', {
@@ -102,8 +97,6 @@ export class CalculatePayrollHandler implements ICommandHandler<CalculatePayroll
         period: command.period,
         grossSalary,
         netSalary,
-        inpsEmployee,
-        jshdEmployer,
         calculatedBy: command.calculatedBy,
         calculatedAt: _time.now(),
       });
@@ -114,8 +107,6 @@ export class CalculatePayrollHandler implements ICommandHandler<CalculatePayroll
           ...result.data,
           grossSalary,
           netSalary,
-          inpsEmployee,
-          jshdEmployer,
           period: command.period,
         },
       };
