@@ -28,6 +28,7 @@ import {
   type PosWarehouseStock,
   type PosIssueInput,
 } from "@/lib/api/pos-operations.api";
+import { useHardwareScanner } from "@/pos-monitor/hooks/useHardwareScanner";
 import {
   Warehouse,
   Barcode,
@@ -600,6 +601,14 @@ export default function PosMonitorPage() {
     [stockData, toast],
   );
 
+  // ── USB/BT hardware skaner (keyboard wedge + WebHID + Serial) — global ──────
+  // Operator klaviatura-emulyatsiya skaner bilan istalgan joyda skanerlaydi;
+  // input fokusda bo'lsa pastdagi onKeyDown ishlaydi (ignoreWhileTyping).
+  const { status: scannerStatus } = useHardwareScanner({
+    onScan: (e) => handleBarcodeScan(e.barcode),
+    ignoreWhileTyping: true,
+  });
+
   // ── Dialog yordamchilari ────────────────────────────────────────────────────
   const openIssue = (line: PosStockLine) =>
     setIssueDialog({ open: true, mode: "issue", line });
@@ -707,6 +716,15 @@ export default function PosMonitorPage() {
             <Label htmlFor="barcode-input" className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
               <Barcode className="h-3 w-3" />
               {tLabel("pos.operations.barcodeSearch", "Barcode / Qidirish")}
+              <span
+                className={`ml-1 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] ${scannerStatus === "connected" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
+                title={tLabel("pos.operations.scannerStatus", "Skaner holati")}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${scannerStatus === "connected" ? "bg-primary" : "bg-muted-foreground"}`} />
+                {scannerStatus === "connected"
+                  ? tLabel("pos.operations.scannerReady", "Skaner ulangan")
+                  : tLabel("pos.operations.scannerWedge", "Klaviatura skaner")}
+              </span>
             </Label>
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -717,7 +735,6 @@ export default function PosMonitorPage() {
                 placeholder={tLabel("pos.operations.barcodePlaceholder", "Barcode yoki material nomi...")}
                 value={barcodeValue}
                 onChange={(e) => setBarcodeValue(e.target.value)}
-                autoFocus
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleBarcodeScan(barcodeValue);
