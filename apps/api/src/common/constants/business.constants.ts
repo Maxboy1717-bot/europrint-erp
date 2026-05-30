@@ -120,11 +120,8 @@ export const PAYROLL_MONTHLY_HOURS = 176;
 /** Overtime rate multiplier — 1.5x base hourly rate (statutory minimum). */
 export const PAYROLL_OVERTIME_MULTIPLIER = 1.5;
 
-/** INPS (pension fund) default contribution rate, employee share (1%). */
-export const PAYROLL_INPS_RATE_DEFAULT = 0.01;
-
-/** JSHD (income tax) default flat rate (12%). */
-export const PAYROLL_JSHD_RATE_DEFAULT = 0.12;
+// NOTE: payroll-tax rate constants (INPS/JSHD/income-tax) were removed — the ERP
+// is gross-only and does NOT compute tax (JSHD/INPS/pension live in 1C).
 
 // ---------------------------------------------------------------------------
 // Sales / CRM
@@ -184,6 +181,3 @@ export const KPI_WEIGHT_ACHIEVEMENT = 0.4;
 export const KPI_WEIGHT_QUALITY     = 0.3;
 export const KPI_WEIGHT_OEE         = 0.2;
 export const KPI_WEIGHT_ATTENDANCE  = 0.1;
-
-/** Income tax rate alias (same as PAYROLL_JSHD_RATE_DEFAULT — 12%) */
-export const INCOME_TAX_RATE = PAYROLL_JSHD_RATE_DEFAULT;
