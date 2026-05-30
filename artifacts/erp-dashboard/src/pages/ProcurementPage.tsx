@@ -13,6 +13,7 @@ import { ShoppingCart, Search, GitBranch, FileText, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { tLabel } from "@/lib/i18n/tLabel";
 import { procurementApi, type ApprovalStep } from "@/lib/api/procurement.api";
+import { warehouseApi, type WarehouseRow } from "@/lib/api/warehouse.api";
 
 export default function ProcurementPage() {
   const { toast } = useToast();
@@ -31,6 +32,8 @@ export default function ProcurementPage() {
   const [worklist, setWorklist] = useState<Record<string, unknown>[] | null>(null);
   const [chekAmt, setChekAmt] = useState("");
   const [received, setReceived] = useState<Record<string, unknown> | null>(null);
+  const [whOptions, setWhOptions] = useState<WarehouseRow[]>([]);
+  const [selectedWh, setSelectedWh] = useState("");
 
   const loadChain = async () => {
     const id = parseInt(empId, 10);
@@ -50,7 +53,12 @@ export default function ProcurementPage() {
     if (!id) { toast({ title: tLabel("common.procurement.enterReqId", "So'rov ID kiriting"), variant: "destructive" }); return; }
     setLoading(true);
     try {
-      setRequest(await procurementApi.getRequest(id));
+      const req = await procurementApi.getRequest(id);
+      setRequest(req);
+      setReceived(null);
+      setSelectedWh("");
+      const whType = req?.["target_warehouse_type"] ? String(req["target_warehouse_type"]) : undefined;
+      setWhOptions(await warehouseApi.warehouses(whType));
     } catch (e) {
       toast({ title: tLabel("common.procurement.error", "Xato"), description: String((e as Error).message), variant: "destructive" });
     } finally {
@@ -124,7 +132,10 @@ export default function ProcurementPage() {
   const doReceive = async (id: number) => {
     setLoading(true);
     try {
-      const res = await procurementApi.receive(id, { chekAmount: Number(chekAmt) || undefined });
+      const res = await procurementApi.receive(id, {
+        chekAmount: Number(chekAmt) || undefined,
+        warehouseId: selectedWh || undefined,
+      });
       setReceived(res);
       toast({ title: tLabel("common.procurement.received", "Qabul qilindi, podotchet yopildi") });
       setRequest(await procurementApi.getRequest(id));
@@ -289,17 +300,43 @@ export default function ProcurementPage() {
                 <p className="text-muted-foreground">{String(request["title"] ?? "")}</p>
                 <p>{tLabel("common.procurement.amount", "Summa")}: {String(request["total_amount"] ?? 0)} {String(request["currency"] ?? "UZS")}</p>
                 {String(request["status"]) === "approved" && (
-                  <div className="flex items-end gap-2 pt-2">
-                    <div className="flex-1">
-                      <Label htmlFor="chekAmt">{tLabel("common.procurement.chekAmount", "Chek summasi")}</Label>
-                      <Input id="chekAmt" value={chekAmt} onChange={(e) => setChekAmt(e.target.value)} placeholder={String(request["total_amount"] ?? "")} />
+                  <div className="space-y-2 pt-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="recvWh">{tLabel("common.procurement.targetWarehouse", "Maqsadli ombor")}</Label>
+                      <select
+                        id="recvWh"
+                        value={selectedWh}
+                        onChange={(e) => setSelectedWh(e.target.value)}
+                        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      >
+                        <option value="">{tLabel("common.procurement.autoWarehouse", "Avto (tur bo'yicha)")}</option>
+                        {whOptions.map((w) => (
+                          <option key={w.id} value={w.id}>{w.name} ({w.code})</option>
+                        ))}
+                      </select>
                     </div>
-                    <Button size="sm" onClick={() => doReceive(Number(request["id"]))} disabled={loading}>
-                      {tLabel("common.procurement.receive", "Qabul qilish")}
-                    </Button>
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <Label htmlFor="chekAmt">{tLabel("common.procurement.chekAmount", "Chek summasi")}</Label>
+                        <Input id="chekAmt" value={chekAmt} onChange={(e) => setChekAmt(e.target.value)} placeholder={String(request["total_amount"] ?? "")} />
+                      </div>
+                      <Button size="sm" onClick={() => doReceive(Number(request["id"]))} disabled={loading}>
+                        {tLabel("common.procurement.receive", "Qabul qilish")}
+                      </Button>
+                    </div>
                   </div>
                 )}
-                {received && <p className="pt-1 text-muted-foreground">{tLabel("common.procurement.podotchetClosed", "Podotchet yopildi")} ✓</p>}
+                {received && (
+                  <div className="space-y-0.5 pt-1 text-muted-foreground">
+                    <p>{tLabel("common.procurement.podotchetClosed", "Podotchet yopildi")} ✓</p>
+                    {received["warehouseEntry"] != null && (
+                      <p>
+                        {tLabel("common.procurement.stockedIn", "Omborga kirdi")}:{" "}
+                        {String((received["warehouseEntry"] as Record<string, unknown>)["warehouseCode"] ?? "")} — {String((received["warehouseEntry"] as Record<string, unknown>)["lineCount"] ?? 0)} {tLabel("common.procurement.lines", "qator")}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
