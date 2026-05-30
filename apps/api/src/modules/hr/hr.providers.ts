@@ -17,7 +17,6 @@ import { HrRepository } from './infrastructure/repositories/drizzle-hr.repo';
 import { HrLeaveRepo } from './infrastructure/repositories/drizzle-hr-leave.repo';
 import { LeaveRepository } from './infrastructure/repositories/drizzle-leave.repo';
 import { KpiService } from './domain/services/kpi.service';
-import { TaxCalculatorService } from './domain/services/tax-calculator.service';
 import { AttritionService } from './analytics/attrition.service';
 import { UtilizationService } from './analytics/utilization.service';
 import { OvertimeCalculatorService } from './domain/services/overtime-calculator.service';
@@ -152,7 +151,7 @@ export const hrQueryHandlers = [
 export const hrEventListeners = [MesTo360Listener];
 
 export const hrDomainServices = [
-  KpiService, TaxCalculatorService, AttritionService, UtilizationService, OvertimeCalculatorService,
+  KpiService, AttritionService, UtilizationService, OvertimeCalculatorService,
 ];
 
 export const hrLegacyRepositories = [LeaveRepository, HrLeaveRepo];
@@ -281,6 +280,6 @@ export const hrProviders = [
 
 export const hrExports = [
   HR_REPO, Record360FeedbackHandler, LeaveRepository,
-  TaxCalculatorService, AttritionService, UtilizationService, OvertimeCalculatorService,
+  AttritionService, UtilizationService, OvertimeCalculatorService,
   Feedback360Service, ApplicationsService,
 ];
