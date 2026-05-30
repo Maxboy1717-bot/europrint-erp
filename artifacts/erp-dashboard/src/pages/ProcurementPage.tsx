@@ -107,6 +107,20 @@ export default function ProcurementPage() {
     }
   };
 
+  const reject = async (id: number) => {
+    const appr = parseInt(wlApprover, 10);
+    setLoading(true);
+    try {
+      await procurementApi.decide(id, { approverUserId: appr, action: "reject" });
+      toast({ title: tLabel("common.procurement.rejected", "Rad etildi") });
+      await loadWorklist();
+    } catch (e) {
+      toast({ title: tLabel("common.procurement.error", "Xato"), description: String((e as Error).message), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const doReceive = async (id: number) => {
     setLoading(true);
     try {
@@ -200,9 +214,14 @@ export default function ProcurementPage() {
                     <span className="font-medium">{String(r["request_number"])}</span>
                     <span className="text-muted-foreground"> · {String(r["title"])} · {String(r["total_amount"])} {String(r["currency"])}</span>
                   </span>
-                  <Button size="sm" onClick={() => approve(Number(r["id"]))} disabled={loading}>
-                    {tLabel("common.procurement.approve", "Tasdiqlash")}
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button size="sm" onClick={() => approve(Number(r["id"]))} disabled={loading}>
+                      {tLabel("common.procurement.approve", "Tasdiqlash")}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => reject(Number(r["id"]))} disabled={loading}>
+                      {tLabel("common.procurement.reject", "Rad etish")}
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
