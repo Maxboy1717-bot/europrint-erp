@@ -45,8 +45,7 @@ function getMonthName(month: number): string {
   return months[month - 1] || "";
 }
 
-function getStatusBadge(status: string) {
-  const { t } = useTranslation("common");
+function getStatusBadge(status: string, t: ReturnType<typeof useTranslation>["t"]) {
   switch (status) {
     case "open":
       return <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/40">{"Open1"}</Badge>;
@@ -212,7 +211,7 @@ export default function PeriodClosing() {
                       <TableRow key={period.id} data-testid={`row-period-${period.id}`} className="hover:bg-muted/40 transition-colors">
                         <TableCell className="font-medium">{period.fiscalYear}</TableCell>
                         <TableCell>{getMonthName(period.month)}</TableCell>
-                        <TableCell>{getStatusBadge(period.status)}</TableCell>
+                        <TableCell>{getStatusBadge(period.status, tCommon)}</TableCell>
                         <TableCell>{formatDate(period.closedAt)}</TableCell>
                         <TableCell className="text-right">
                           {period.status === "open" ? (

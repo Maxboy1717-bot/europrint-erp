@@ -27,8 +27,7 @@ import { useTranslation } from '@/lib/i18n';
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
-function statusBadge(status: string) {
-  const { t } = useTranslation("common");
+function statusBadge(status: string, t: ReturnType<typeof useTranslation>["t"]) {
   if (status === "active")
     return (
       <EPStatusPill tone="info">
@@ -173,7 +172,7 @@ export function RecordsTable({
                       <span className="text-muted-foreground">{t("bepul")}</span>
                     )}
                   </TableCell>
-                  <TableCell>{statusBadge(r.status)}</TableCell>
+                  <TableCell>{statusBadge(r.status, t)}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
                       {r.status === "active" && (

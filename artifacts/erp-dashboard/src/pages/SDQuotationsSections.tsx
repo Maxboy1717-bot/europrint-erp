@@ -32,8 +32,7 @@ import {
 // Status badge
 // ---------------------------------------------------------------------------
 
-export function getStatusBadge(status: string) {
-  const { t } = useTranslation("common");
+export function getStatusBadge(status: string, t: ReturnType<typeof useTranslation>["t"]) {
   switch (status) {
     case "draft":
       return (
@@ -223,7 +222,7 @@ export function QuotationTable({
                   {formatCurrency(quotation.totalValue, quotation.currency)}
                 </TableCell>
                 <TableCell className="py-3 px-6" data-testid={`badge-status-${quotation.id}`}>
-                  {getStatusBadge(quotation.status)}
+                  {getStatusBadge(quotation.status, t)}
                 </TableCell>
                 <TableCell className="py-3 px-6 text-right">
                   <div className="flex items-center justify-end gap-1">

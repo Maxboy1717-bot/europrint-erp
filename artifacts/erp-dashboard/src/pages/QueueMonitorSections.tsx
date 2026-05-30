@@ -19,7 +19,6 @@ import { useTranslation } from '@/lib/i18n';
 // ─── Helper ───────────────────────────────────────────────────────────────
 
 export function statusBadge(value: number, type: "failed" | "active" | "waiting" | "completed" | "delayed") {
-  const { t } = useTranslation("common");
   if (type === "failed" && value > 0) return <EPStatusPill tone="danger">{value}</EPStatusPill>;
   if (type === "active" && value > 0) return <EPStatusPill tone="info">{value}</EPStatusPill>;
   if (type === "waiting" && value > 0) return <EPStatusPill tone="warning">{value}</EPStatusPill>;

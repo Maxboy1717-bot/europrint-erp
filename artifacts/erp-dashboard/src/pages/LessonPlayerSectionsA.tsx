@@ -24,14 +24,13 @@ import {
 } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Course, Lesson, ProgressData } from "./LessonPlayerTypes";
-
 import { useTranslation } from '@/lib/i18n';
+
 // ---------------------------------------------------------------------------
 // Icon helper
 // ---------------------------------------------------------------------------
 
 export function getLessonIcon(type: string) {
-  const { t } = useTranslation('common');
   if (type === "video") return <Video className="h-4 w-4" />;
   if (type === "pdf") return <FileText className="h-4 w-4" />;
   return <BookOpen className="h-4 w-4" />;

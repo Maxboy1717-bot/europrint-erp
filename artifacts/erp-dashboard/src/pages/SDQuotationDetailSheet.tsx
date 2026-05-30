@@ -17,8 +17,7 @@ import { useTranslation } from '@/lib/i18n';
 // Status badge helper (local to this component)
 // ---------------------------------------------------------------------------
 
-function getStatusBadge(status: string) {
-  const { t } = useTranslation("common");
+function getStatusBadge(status: string, t: ReturnType<typeof useTranslation>["t"]) {
   switch (status) {
     case "draft":
       return (
@@ -106,7 +105,7 @@ export function QuotationDetailSheet({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{t("status28")}</p>
-                <div>{getStatusBadge(quotation.status)}</div>
+                <div>{getStatusBadge(quotation.status, t)}</div>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{t("taklifSanasi")}</p>

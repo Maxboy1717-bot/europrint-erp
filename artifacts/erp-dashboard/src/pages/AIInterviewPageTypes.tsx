@@ -86,8 +86,7 @@ export type InterviewFormData = z.infer<typeof interviewSchema>;
 
 // ── Helper Functions ──────────────────────────────────────────────────────────
 
-export function getStatusBadge(status: string): JSX.Element {
-  const { t } = useTranslation("common");
+export function getStatusBadge(status: string, t: ReturnType<typeof useTranslation>["t"]): JSX.Element {
   switch (status) {
     case "scheduled":
       return <Badge variant="outline" className="bg-blue-50 text-[var(--ep-blue)] dark:bg-blue-950 dark:text-blue-300">{t("rejalashtirilgan")}</Badge>;
@@ -100,8 +99,7 @@ export function getStatusBadge(status: string): JSX.Element {
   }
 }
 
-export function getProviderBadge(provider?: string): JSX.Element | null {
-  const { t } = useTranslation("common");
+export function getProviderBadge(provider: string | undefined, t: ReturnType<typeof useTranslation>["t"]): JSX.Element | null {
   if (!provider) return null;
   switch (provider) {
     case "gemini":

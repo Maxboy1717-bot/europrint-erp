@@ -35,8 +35,7 @@ const categoryLabels: Record<string, string> = {
   visual: "Vizual sifat",
 };
 
-function getRiskBadge(riskLevel: string | undefined) {
-  const { t } = useTranslation("common");
+function getRiskBadge(riskLevel: string | undefined, t: ReturnType<typeof useTranslation>["t"]) {
   switch (riskLevel) {
     case "low": return <Badge variant="success">{t("low")}</Badge>;
     case "medium": return <Badge variant="warning">{t("medium")}</Badge>;
@@ -92,7 +91,7 @@ export function QCAIAnalysisTab() {
                         {categoryLabels[test.testCategory] || test.testCategory}
                       </div>
                     </div>
-                    {getRiskBadge((test.aiAnalysis as Record<string, unknown>)?.riskLevel as string)}
+                    {getRiskBadge((test.aiAnalysis as Record<string, unknown>)?.riskLevel as string, t)}
                   </div>
 
                   <div className="flex gap-4 text-sm">

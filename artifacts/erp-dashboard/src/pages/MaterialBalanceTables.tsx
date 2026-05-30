@@ -36,8 +36,7 @@ import type {
 // statusBadge helper
 // ---------------------------------------------------------------------------
 
-export function statusBadge(status: string) {
-  const { t } = useTranslation('common');
+export function statusBadge(status: string, t: ReturnType<typeof useTranslation>["t"]) {
   const labelMap: Record<string, string> = {
     pending: "Kutmoqda",
     approved: "Tasdiqlangan",
@@ -107,7 +106,7 @@ export function RequestsSection({ requests, requestsLoading, onApprove, onIssue,
               <TableBody>
                 {rows.map((r) => (
                   <TableRow key={r.id} data-testid={`row-request-${r.id}`} className="hover:bg-muted/40 transition-colors">
-                    <TableCell>{statusBadge(r.status)}</TableCell>
+                    <TableCell>{statusBadge(r.status, t)}</TableCell>
                     <TableCell className="font-medium">
                       {r.materialName}
                     </TableCell>

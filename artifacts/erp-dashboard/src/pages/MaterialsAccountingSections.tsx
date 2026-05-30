@@ -27,8 +27,7 @@ import { useTranslation } from '@/lib/i18n';
 // Helpers
 // ---------------------------------------------------------------------------
 
-export function getMoveTypeBadge(moveType: string) {
-  const { t } = useTranslation('common');
+export function getMoveTypeBadge(moveType: string, t: ReturnType<typeof useTranslation>["t"]) {
   switch (moveType?.toLowerCase()) {
     case "in":
     case "receipt":
@@ -264,7 +263,7 @@ export function MovementsCard({ movements, movementsLoading, startDate, endDate,
                     <TableCell className="font-medium">{move.moveNumber}</TableCell>
                     <TableCell>{move.materialCode || "-"}</TableCell>
                     <TableCell>{move.materialName || "-"}</TableCell>
-                    <TableCell>{getMoveTypeBadge(move.moveType)}</TableCell>
+                    <TableCell>{getMoveTypeBadge(move.moveType, t)}</TableCell>
                     <TableCell className="text-right">{formatNumber(move.quantity)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(move.unitCost)}</TableCell>
                     <TableCell className="text-right font-medium">{formatCurrency(move.totalCost)}</TableCell>

@@ -27,7 +27,7 @@ export function InterviewDetailView({interview, onClose }: InterviewDetailViewPr
         <CardHeader>
           <div className="flex items-start justify-between gap-2 flex-wrap">
             <CardTitle className="text-[14px] font-semibold">Intervyu: {interview.sessionId?.slice(0, 12)}...</CardTitle>
-            {getStatusBadge(interview.status)}
+            {getStatusBadge(interview.status, t)}
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -36,7 +36,7 @@ export function InterviewDetailView({interview, onClose }: InterviewDetailViewPr
             {interview.candidateName && <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("nomzodIsmi")}</p><p className="font-medium">{interview.candidateName}</p></div>}
             {interview.jobTitle && <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("lavozim1")}</p><p className="font-medium">{interview.jobTitle}</p></div>}
             <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("language")}</p><p className="font-medium">{interview.language === "uz" ? "O'zbek" : "Rus"}</p></div>
-            {interview.provider && <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("provider")}</p><div>{getProviderBadge(interview.provider)}</div></div>}
+            {interview.provider && <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("provider")}</p><div>{getProviderBadge(interview.provider, t)}</div></div>}
             {interview.scheduledAt && <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("rejalashtirilgan")}</p><p className="font-medium">{formatDateTime(interview.scheduledAt)}</p></div>}
             {interview.startedAt && <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("boshlangan")}</p><p className="font-medium">{formatDateTime(interview.startedAt)}</p></div>}
             {interview.completedAt && <div className="space-y-2"><p className="text-sm text-muted-foreground">{t("completed")}</p><p className="font-medium">{formatDateTime(interview.completedAt)}</p></div>}

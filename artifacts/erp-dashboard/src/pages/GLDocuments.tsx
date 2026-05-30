@@ -39,8 +39,7 @@ interface CreateDocumentForm {
   totalAmount: number;
 }
 
-function getStatusBadge(status: string) {
-  const { t } = useTranslation("common");
+function getStatusBadge(status: string, t: ReturnType<typeof useTranslation>["t"]) {
   switch (status) {
     case "draft":
       return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{t("draft")}</Badge>;
@@ -369,7 +368,7 @@ export default function GLDocuments() {
                       <TableCell className="max-w-[300px] truncate py-3 px-6">{doc.description || "-"}</TableCell>
                       <TableCell className="text-right text-primary font-semibold py-3 px-6">{formatCurrency(doc.totalDebit)}</TableCell>
                       <TableCell className="text-right text-[var(--ep-red)] font-semibold py-3 px-6">{formatCurrency(doc.totalCredit)}</TableCell>
-                      <TableCell className="py-3 px-6">{getStatusBadge(doc.status)}</TableCell>
+                      <TableCell className="py-3 px-6">{getStatusBadge(doc.status, t)}</TableCell>
                     </TableRow>
                   ))}
                   <TableRow className="bg-muted/40 font-bold hover:bg-muted/40 transition-colors">

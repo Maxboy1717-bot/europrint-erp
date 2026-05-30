@@ -263,7 +263,7 @@ export default function AIInterviewPage() {
                       <CardTitle className="text-sm font-mono truncate max-w-[180px]" data-testid={`text-session-${interview.id}`}>
                         {interview.sessionId?.slice(0, 12)}...
                       </CardTitle>
-                      {getStatusBadge(interview.status)}
+                      {getStatusBadge(interview.status, t)}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -279,7 +279,7 @@ export default function AIInterviewPage() {
                       </p>
                     )}
                     <div className="flex items-center gap-2 flex-wrap">
-                      {getProviderBadge(interview.provider)}
+                      {getProviderBadge(interview.provider, t)}
                       {interview.language && (
                         <Badge variant="outline" data-testid={`badge-lang-${interview.id}`}>
                           {interview.language === "uz" ? "UZ" : "RU"}
