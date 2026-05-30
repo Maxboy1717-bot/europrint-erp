@@ -36,31 +36,14 @@ export interface PayrollCalculation {
   bonuses: number;
   allowances: number;
   grossPay: number;
-  taxInps: number;
-  taxJshd: number;
-  totalTaxes: number;
   advances: number;
   loans: number;
   otherDeductions: number;
   totalDeductions: number;
   netPay: number;
-  minWageTopUp: number;
   status: string;
   calculatedAt: string;
   approvedAt: string | null;
-}
-
-export interface PayrollTaxRule {
-  id: string;
-  taxCode: string;
-  taxName: string;
-  taxNameRu: string | null;
-  taxType: string;
-  rate: number;
-  employeeShare: number;
-  employerShare: number;
-  effectiveFrom: string;
-  isActive: boolean;
 }
 
 export interface PayrollUser {
@@ -85,12 +68,8 @@ export interface AIPayrollResult {
   pieceworkPay: number;
   overtimePay: number;
   grossPay: number;
-  taxInps: number;
-  taxJshd: number;
-  totalTaxes: number;
   totalDeductions: number;
   netPay: number;
-  minWageTopUp: number;
   confidence: number;
   dataQuality: string;
   recommendations: AIRecommendation[];

@@ -167,20 +167,6 @@ export function AIPayrollDialog({ contracts, employeeMap, trigger }: AIPayrollDi
                         <span>{tFinance('grossSalary')}:</span>
                         <span className="text-[var(--ep-green)]">{formatCurrency(aiResult.grossPay)}</span>
                       </div>
-                      <div className="flex justify-between text-muted-foreground">
-                        <span>{t("inps12")}</span>
-                        <span>-{formatCurrency(aiResult.taxInps)}</span>
-                      </div>
-                      <div className="flex justify-between text-muted-foreground">
-                        <span>{t("jshd12")}</span>
-                        <span>-{formatCurrency(aiResult.taxJshd)}</span>
-                      </div>
-                      {aiResult.minWageTopUp > 0 && (
-                        <div className="flex justify-between text-[var(--ep-blue)]">
-                          <span>{tFinance('minWageTopUp')}:</span>
-                          <span>+{formatCurrency(aiResult.minWageTopUp)}</span>
-                        </div>
-                      )}
                       <Separator />
                       <div className="flex justify-between text-lg font-bold">
                         <span>{tFinance('netSalary')}:</span>

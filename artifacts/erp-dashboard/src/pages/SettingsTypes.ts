@@ -31,8 +31,6 @@ export interface SystemSettings {
   randomizeQuestions?: boolean;
   gptModel?: string;
   promptTemplate?: string;
-  inpsRate?: number;
-  minWage?: number;
   qqsRate?: number;
 }
 
@@ -49,8 +47,6 @@ export interface SettingsForm {
   randomizeQuestions: boolean;
   gptModel: string;
   promptTemplate: string;
-  inpsRate: number;
-  minWage: number;
   qqsRate: number;
 }
 
@@ -70,8 +66,6 @@ export const DEFAULT_SETTINGS_FORM: SettingsForm = {
   randomizeQuestions: true,
   gptModel: "gpt-4o",
   promptTemplate: DEFAULT_PROMPT_TEMPLATE,
-  inpsRate: 0.12,
-  minWage: 1120000,
   qqsRate: 12.0,
 };
 

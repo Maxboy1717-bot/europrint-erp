@@ -32,7 +32,7 @@ interface CalculationsTabProps {
 function computeDrift(calc: PayrollCalculation): { pct: number; label: string; color: string } {
   const gross = calc.grossPay || 0;
   if (gross <= 0) return { pct: 0, label: '0%', color: 'green' };
-  const expectedNet = gross - calc.totalTaxes;
+  const expectedNet = gross - calc.totalDeductions;
   const actualNet = calc.netPay;
   const driftPct = Math.round(((actualNet - expectedNet) / gross) * 100);
   if (driftPct === 0) return { pct: 0, label: '0%', color: 'green' };
@@ -107,7 +107,7 @@ export function CalculationsTab({ calculations, employeeMap, loading, onNewCalcu
                   <TableHead>{t('employee')}</TableHead>
                   <TableHead>{tFinance('paymentType')}</TableHead>
                   <TableHead className="text-right">{tFinance('grossSalary')}</TableHead>
-                  <TableHead className="text-right">{tFinance('totalTaxes')}</TableHead>
+                  <TableHead className="text-right">{tFinance('totalDeductions')}</TableHead>
                   <TableHead className="text-right">{tFinance('netSalary')}</TableHead>
                   <TableHead className="text-center">{t("drift")}</TableHead>
                   <TableHead>{tCommon('status')}</TableHead>
@@ -124,7 +124,7 @@ export function CalculationsTab({ calculations, employeeMap, loading, onNewCalcu
                       <Badge variant="outline" className="text-xs">{tFinance(payTypeKeys[calc.payType])}</Badge>
                     </TableCell>
                     <TableCell className="text-right font-medium">{formatCurrency(calc.grossPay)}</TableCell>
-                    <TableCell className="text-right text-[var(--ep-red)]">-{formatCurrency(calc.totalTaxes)}</TableCell>
+                    <TableCell className="text-right text-[var(--ep-red)]">-{formatCurrency(calc.totalDeductions)}</TableCell>
                     <TableCell className="text-right font-bold text-[var(--ep-green)]">{formatCurrency(calc.netPay)}</TableCell>
                     <TableCell className="text-center">
                       <DriftBadge calc={calc} />

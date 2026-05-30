@@ -74,8 +74,6 @@ export default function Settings() {
       randomizeQuestions: systemSettings.randomizeQuestions ?? true,
       gptModel: systemSettings.gptModel ?? "gpt-4o",
       promptTemplate: systemSettings.promptTemplate ?? DEFAULT_SETTINGS_FORM.promptTemplate,
-      inpsRate: systemSettings.inpsRate ?? 0.12,
-      minWage: systemSettings.minWage ?? 1120000,
       qqsRate: systemSettings.qqsRate ?? 12.0,
     });
   }, [systemSettings]);

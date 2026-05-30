@@ -9,13 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from "@/lib/i18n";
 import { Calculator, FileText, Plus, Sparkles, Play } from "lucide-react";
-import type { PayrollContract, PayrollCalculation, PayrollTaxRule, PayrollUser } from "./payroll/types";
+import type { PayrollContract, PayrollCalculation, PayrollUser } from "./payroll/types";
 import { AIPayrollDialog } from "./payroll/AIPayrollDialog";
 import { CalculatePayrollDialog } from "./payroll/CalculatePayrollDialog";
 import { PayrollStatsCards } from "./payroll/PayrollStatsCards";
 import { ContractsTab } from "./payroll/ContractsTab";
 import { CalculationsTab } from "./payroll/CalculationsTab";
-import { TaxRulesSidebar } from "./payroll/TaxRulesSidebar";
 import { EPErrorState } from "@/components/ep";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -54,26 +53,12 @@ export default function PayrollAutomation() {
     }),
   });
 
-  const { data: sysSettings } = useQuery<{ inpsRate?: number; jshdRate?: number; jshirdRate?: number; minWage?: number; qqsRate?: number }>({
-    queryKey: ["/api/system-settings"],
-  });
-
-  const TAX_CONSTANTS = useMemo(() => ({
-    INPS_RATE: sysSettings?.inpsRate ?? 0.08,
-    JSHD_RATE: sysSettings?.jshdRate ?? sysSettings?.jshirdRate ?? 0.12,
-    MIN_WAGE: sysSettings?.minWage ?? 1120000,
-  }), [sysSettings]);
-
   const { data: contracts = [], isLoading: contractsLoading, isError, error, refetch } = useQuery<PayrollContract[]>({
     queryKey: ["/api/finance-extended/payroll-contracts"],
   });
 
   const { data: calculations = [], isLoading: calculationsLoading } = useQuery<PayrollCalculation[]>({
     queryKey: ["/api/finance-extended/payroll-calculations"],
-  });
-
-  const { data: taxRules = [], isLoading: taxRulesLoading } = useQuery<PayrollTaxRule[]>({
-    queryKey: ["/api/finance-extended/payroll-tax-rules"],
   });
 
   const { data: employees = [] } = useQuery<PayrollUser[]>({
@@ -141,7 +126,6 @@ export default function PayrollAutomation() {
                 contracts={contracts}
                 employeeMap={employeeMap}
                 contractsByEmployee={contractsByEmployee}
-                taxConstants={TAX_CONSTANTS}
                 open={isCalculateDialogOpen}
                 onOpenChange={setIsCalculateDialogOpen}
                 trigger={
@@ -166,34 +150,29 @@ export default function PayrollAutomation() {
           calculationsLoading={calculationsLoading}
         />
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="contracts" data-testid="tab-contracts">
-                  <FileText className="h-4 w-4 mr-2" />
-                  {tFinance('contracts')}
-                </TabsTrigger>
-                <TabsTrigger value="calculations" data-testid="tab-calculations">
-                  <Calculator className="h-4 w-4 mr-2" />
-                  {tFinance('calculations')}
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="contracts" className="space-y-4">
-                <ContractsTab contracts={contracts} employeeMap={employeeMap} loading={contractsLoading} />
-              </TabsContent>
-              <TabsContent value="calculations" className="space-y-4">
-                <CalculationsTab
-                  calculations={calculations}
-                  employeeMap={employeeMap}
-                  loading={calculationsLoading}
-                  onNewCalculation={() => setIsCalculateDialogOpen(true)}
-                />
-              </TabsContent>
-            </Tabs>
-          </div>
-          <TaxRulesSidebar taxRules={taxRules} taxRulesLoading={taxRulesLoading} minWage={TAX_CONSTANTS.MIN_WAGE} />
-        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="contracts" data-testid="tab-contracts">
+              <FileText className="h-4 w-4 mr-2" />
+              {tFinance('contracts')}
+            </TabsTrigger>
+            <TabsTrigger value="calculations" data-testid="tab-calculations">
+              <Calculator className="h-4 w-4 mr-2" />
+              {tFinance('calculations')}
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="contracts" className="space-y-4">
+            <ContractsTab contracts={contracts} employeeMap={employeeMap} loading={contractsLoading} />
+          </TabsContent>
+          <TabsContent value="calculations" className="space-y-4">
+            <CalculationsTab
+              calculations={calculations}
+              employeeMap={employeeMap}
+              loading={calculationsLoading}
+              onNewCalculation={() => setIsCalculateDialogOpen(true)}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Maosh hisoblash davri dialog */}

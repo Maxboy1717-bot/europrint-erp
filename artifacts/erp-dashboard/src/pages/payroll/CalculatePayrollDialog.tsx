@@ -27,7 +27,6 @@ interface CalculatePayrollDialogProps {
   contracts: PayrollContract[];
   employeeMap: Record<string, PayrollUser>;
   contractsByEmployee: Record<string, PayrollContract>;
-  taxConstants: { INPS_RATE: number; JSHD_RATE: number; MIN_WAGE: number };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   trigger: React.ReactNode;
@@ -37,7 +36,6 @@ export function CalculatePayrollDialog({
   contracts,
   employeeMap,
   contractsByEmployee,
-  taxConstants,
   open,
   onOpenChange,
   trigger,
@@ -83,17 +81,11 @@ export function CalculatePayrollDialog({
       case "piecework": pieceworkPay = (values.productionUnits || 0) * (contract.pieceworkRate || 0); break;
     }
     const grossPay = basePay + hourlyPay + pieceworkPay + (values.bonuses || 0) + (values.allowances || 0);
-    const taxInps = grossPay * taxConstants.INPS_RATE;
-    const taxJshd = grossPay * taxConstants.JSHD_RATE;
-    const totalTaxes = taxInps + taxJshd;
-    const totalDeductions = totalTaxes + (values.advances || 0) + (values.loans || 0) + (values.otherDeductions || 0);
-    let netPay = grossPay - totalDeductions;
-    let minWageTopUp = 0;
-    if (contract.minWageGuarantee && netPay < taxConstants.MIN_WAGE) {
-      minWageTopUp = taxConstants.MIN_WAGE - netPay;
-      netPay = taxConstants.MIN_WAGE;
-    }
-    return { basePay, hourlyPay, pieceworkPay, grossPay, taxInps, taxJshd, totalTaxes, totalDeductions, netPay, minWageTopUp };
+    // ERP gross-only: tax (INPS/JSHD) + min-wage guarantee are computed in 1C.
+    // Deductions here are NON-TAX only (advances/loans/other).
+    const totalDeductions = (values.advances || 0) + (values.loans || 0) + (values.otherDeductions || 0);
+    const netPay = grossPay - totalDeductions;
+    return { basePay, hourlyPay, pieceworkPay, grossPay, totalDeductions, netPay };
   };
 
   const watchedValues = form.watch();
@@ -227,23 +219,10 @@ export function CalculatePayrollDialog({
                       <span className="font-medium">{formatCurrency(previewCalculation.grossPay)}</span>
                     </div>
                     <Separator />
-                    <div className="flex justify-between text-[var(--ep-primary)]"><span>INPS ({(taxConstants.INPS_RATE * 100).toFixed(0)}%):</span><span>- {formatCurrency(previewCalculation.taxInps)}</span></div>
-                    <div className="flex justify-between text-[var(--ep-red)]"><span>JSHD ({(taxConstants.JSHD_RATE * 100).toFixed(0)}%):</span><span>- {formatCurrency(previewCalculation.taxJshd)}</span></div>
-                    <div className="flex justify-between font-medium">
-                      <span>{tFinance('totalTaxes')}:</span>
-                      <span className="text-[var(--ep-red)]">- {formatCurrency(previewCalculation.totalTaxes)}</span>
-                    </div>
-                    <Separator />
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{tFinance('totalDeductions')}:</span>
                       <span>- {formatCurrency(previewCalculation.totalDeductions)}</span>
                     </div>
-                    {previewCalculation.minWageTopUp > 0 && (
-                      <div className="flex justify-between text-[var(--ep-green)]">
-                        <span>{tFinance('minWageTopUp')}:</span>
-                        <span>+ {formatCurrency(previewCalculation.minWageTopUp)}</span>
-                      </div>
-                    )}
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>{tFinance('netSalary')}:</span>

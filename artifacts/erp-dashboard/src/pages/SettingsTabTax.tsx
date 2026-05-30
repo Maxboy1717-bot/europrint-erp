@@ -33,37 +33,6 @@ export function SettingsTabTax({ loading, form, onChange, onSave, isSaving }: Pr
         ) : (
           <>
             <div className="space-y-1">
-          <Label htmlFor="inps-rate">INPS stavkasi (ulush, masalan 0.12 = 12%)</Label>
-              <Input
-                id="inps-rate"
-                type="number"
-                step="0.01"
-                min="0"
-                max="1"
-                value={form.inpsRate}
-                onChange={(e) => onChange({ inpsRate: parseFloat(e.target.value) || 0.12 })}
-                data-testid="input-inps-rate"
-              />
-              <p className="text-xs text-muted-foreground">
-                Joriy qiymat: {(form.inpsRate * 100).toFixed(1)}%
-              </p>
-            </div>
-            <div className="space-y-1">
-          <Label htmlFor="min-wage">{t("minimalIshHaqiSoM")}</Label>
-              <Input
-                id="min-wage"
-                type="number"
-                min="0"
-                step="10000"
-                value={form.minWage}
-                onChange={(e) => onChange({ minWage: parseInt(e.target.value) || 1120000 })}
-                data-testid="input-min-wage"
-              />
-              <p className="text-xs text-muted-foreground">
-                Hozir: {form.minWage.toLocaleString('uz-UZ')} so'm
-              </p>
-            </div>
-            <div className="space-y-1">
           <Label htmlFor="qqs-rate">{t("qqsStavkasi")}</Label>
               <Input
                 id="qqs-rate"
