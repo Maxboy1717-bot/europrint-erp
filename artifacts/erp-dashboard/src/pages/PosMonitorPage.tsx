@@ -30,6 +30,7 @@ import {
 } from "@/lib/api/pos-operations.api";
 import { useHardwareScanner } from "@/pos-monitor/hooks/useHardwareScanner";
 import PosBarcodeScanner from "@/pos-monitor/components/PosBarcodeScanner";
+import { Link } from "wouter";
 import {
   Warehouse,
   Barcode,
@@ -650,6 +651,25 @@ export default function PosMonitorPage() {
       </div>
 
       <div className="p-4 space-y-4 max-w-5xl mx-auto">
+
+        {/* ── To'liq operatsiyalar (EXTERNAL_IN 5-bosqich: barcode + karantin + QC + GL + PDF) ── */}
+        <div className="flex flex-wrap gap-2">
+          <Link href="/pos-monitor/movements/new/kirim" className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+            <Plus className="h-4 w-4" /> {tLabel("pos.operations.fullKirim", "To'liq Kirim (QC+barcode)")}
+          </Link>
+          <Link href="/pos-monitor/movements/new/chiqim" className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted">
+            <Minus className="h-4 w-4" /> {tLabel("pos.operations.fullChiqim", "To'liq Chiqim")}
+          </Link>
+          <Link href="/pos-monitor/quarantine" className="inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted">
+            {tLabel("pos.operations.quarantineQc", "Karantin / QC")}
+          </Link>
+          <Link href="/pos-monitor/movements" className="inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted">
+            {tLabel("pos.operations.allMovements", "Harakatlar")}
+          </Link>
+          <Link href="/pos-monitor/reports" className="inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted">
+            {tLabel("pos.operations.reports", "Hisobotlar")}
+          </Link>
+        </div>
 
         {/* ── Ombor turlari tablar ── */}
         <Card>
