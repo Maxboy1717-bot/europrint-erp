@@ -118,6 +118,9 @@ export const warehouseApi = {
   /** Ombordan material chiqim (iste'mol/sarf) — qoldiqni kamaytiradi. */
   issue: (id: number | string, body: IssueStockInput) =>
     apiRequest<IssueStockResult>("POST", `${BASE}/warehouses/${id}/issue`, body),
+  /** Omborga qo'lda kirim/tuzatish — qoldiqni oshiradi. */
+  receive: (id: number | string, body: IssueStockInput) =>
+    apiRequest<IssueStockResult>("POST", `${BASE}/warehouses/${id}/receive`, body),
   /** Material harakat tarixi (kirim/chiqim jurnali). */
   movements: (materialId: number | string) =>
     apiRequest<MaterialMovement[]>("GET", `${BASE}/materials/${materialId}/movements`),
