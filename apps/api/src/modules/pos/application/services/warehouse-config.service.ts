@@ -3,14 +3,23 @@
  * @description Ombor tip KONFIGURATSIYASI (warehouse_types) + omborlar o'qish — config-driven UI uchun.
  *   Yangi toza per-tur ombor sahifalari shu config'dan generatsiya qilinadi (eski rasvo WMS'ni almashtirish).
  */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../../../hr/common/db-rows';
 import { safeCall, Result, AppError } from '@common/result';
 
+export interface IssueStockInput {
+  materialId: number;
+  quantity: number;
+  unit?: string;
+  reason?: string;
+  notes?: string;
+}
+
 @Injectable()
 export class WarehouseConfigService {
+  private readonly logger = new Logger(WarehouseConfigService.name);
   /** Faol ombor turlari (sort_order bo'yicha) + har turdagi omborlar soni. */
   async listTypes(): Promise<Result<Record<string, unknown>[], AppError>> {
     return safeCall(async () => {
@@ -68,6 +77,59 @@ export class WarehouseConfigService {
       `));
       const totalQuantity = stock.reduce((s, r) => s + Number(r['quantity'] ?? 0), 0);
       return { warehouse: wh, stock, lineCount: stock.length, totalQuantity };
+    });
+  }
+
+  /**
+   * Ombordan material CHIQIM (iste'mol/sarf) — warehouse_stock atomik kamaytiriladi (faqat mavjud
+   * qoldiq yetsa), material_cards.current_stock yangilanadi va material_movements ('ISSUE') jurnaliga
+   * yoziladi. Qoldiq yetmasa BadRequest. performedBy = amalni bajargan foydalanuvchi.
+   */
+  async issueStock(
+    warehouseId: number,
+    input: IssueStockInput,
+    performedBy: number,
+  ): Promise<Result<Record<string, unknown>, AppError>> {
+    return safeCall(async () => {
+      const qty = Number(input.quantity);
+      if (!input.materialId) throw new BadRequestException('materialId majburiy');
+      if (!Number.isFinite(qty) || qty <= 0) throw new BadRequestException("quantity musbat bo'lishi kerak");
+
+      const mat = dbRows(await rawSql(sql`
+        SELECT id, kod, xom_ashyo, unit_of_measure FROM material_cards WHERE id = ${input.materialId}
+      `))[0];
+      if (!mat) throw new NotFoundException(`Material topilmadi: ${input.materialId}`);
+      const unit = input.unit ?? String(mat['unit_of_measure'] ?? 'dona');
+      const materialName = String(mat['xom_ashyo'] ?? mat['kod'] ?? `#${input.materialId}`);
+
+      // Atomik chiqim — faqat mavjud qoldiq yetganda kamayadi
+      const updated = dbRows(await rawSql(sql`
+        UPDATE warehouse_stock
+        SET quantity = quantity - ${qty}, available_quantity = available_quantity - ${qty}, last_updated_at = NOW()
+        WHERE warehouse_id = ${warehouseId} AND material_id = ${input.materialId} AND available_quantity >= ${qty}
+        RETURNING quantity, available_quantity
+      `))[0];
+      if (!updated) throw new BadRequestException("Yetarli mavjud qoldiq yo'q yoki material bu omborda mavjud emas");
+
+      await rawSql(sql`
+        UPDATE material_cards SET current_stock = GREATEST(0, COALESCE(current_stock, 0) - ${qty}) WHERE id = ${input.materialId}
+      `);
+
+      const mv = dbRows(await rawSql(sql`
+        INSERT INTO material_movements (material_id, material_name, movement_type, quantity, unit, performed_by, reason, notes)
+        VALUES (${input.materialId}, ${materialName}, 'ISSUE', ${qty}, ${unit}, ${performedBy}, ${input.reason ?? null}, ${input.notes ?? null})
+        RETURNING id
+      `))[0];
+
+      this.logger.log(`[WMS] Ombor #${warehouseId} chiqim: material ${input.materialId} ×${qty} ${unit} (movement #${mv?.['id'] ?? '?'})`);
+      return {
+        warehouseId,
+        materialId: input.materialId,
+        issued: qty,
+        newQuantity: Number(updated['quantity']),
+        newAvailable: Number(updated['available_quantity']),
+        movementId: mv?.['id'] ?? null,
+      };
     });
   }
 }

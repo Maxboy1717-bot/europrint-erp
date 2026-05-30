@@ -2,15 +2,26 @@
  * POS — Ombor konfiguratsiyasi (config-driven UI uchun).
  * Yangi toza per-tur ombor sahifalari shu endpointlardan generatsiya qilinadi.
  */
-import { Controller, Get, Param, ParseIntPipe, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { z } from 'zod';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { PermissionGuard } from '@common/guards/permission.guard';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@common/types/user.types';
 import { unwrapOrThrow } from '@common/http-result';
 
 import { WarehouseConfigService } from '../application/services/warehouse-config.service';
+
+const IssueStockSchema = z.object({
+  materialId: z.coerce.number().int().positive(),
+  quantity: z.coerce.number().positive(),
+  unit: z.string().max(50).optional(),
+  reason: z.string().max(500).optional(),
+  notes: z.string().max(2000).optional(),
+});
 
 @ApiTags('POS — Ombor konfiguratsiyasi')
 @ApiBearerAuth()
@@ -44,5 +55,18 @@ export class WarehouseConfigController {
   @ApiOperation({ summary: "Ombor qoldig'i (material kartochka bo'yicha)" })
   async warehouseStock(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.svc.getWarehouseStock(id));
+  }
+
+  /** Ombordan material chiqim (iste'mol/sarf) — qoldiq kamayadi + material_movements jurnali. */
+  @Post('warehouses/:id/issue')
+  @RequirePermission('pos.reports.read')
+  @ApiOperation({ summary: 'Ombordan material chiqim (iste\'mol/sarf)' })
+  async issueStock(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const dto = IssueStockSchema.parse(body);
+    return unwrapOrThrow(await this.svc.issueStock(id, dto, user.id));
   }
 }
