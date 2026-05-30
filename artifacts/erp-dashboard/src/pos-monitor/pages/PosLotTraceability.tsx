@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { warehouseFeaturesApi } from "../api/pos-monitor.api";
+import { warehouseFeaturesApi, movementsApi } from "../api/pos-monitor.api";
 
 import { useTranslation } from '@/lib/i18n';
 interface BarcodeRow {
@@ -55,13 +55,11 @@ export default function PosLotTraceability() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      // NOTE: POS uses its own pos_session token, not access_token — keep raw fetch
-      const movements = await fetch("/api/pos/movements?limit=100", {
-        headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem("pos_session") ?? "{}")?.token ?? ""}` }
-      }).then(r => r.json()).catch(() => []);
+      // §1.2: ERP SSO — posReq (movementsApi) httpOnly cookie bilan auth.
+      const movements = await movementsApi.getAll({ limit: 100 }).catch(() => []);
 
       const allBarcodes: BarcodeRow[] = [];
-      for (const m of (Array.isArray(movements) ? movements : []).slice(0, 50)) {
+      for (const m of (Array.isArray(movements) ? movements : []).slice(0, 50) as Array<{ id: number }>) {
         try {
           const bcs = await warehouseFeaturesApi.listBarcodes(m.id) as BarcodeRow[];
           if (Array.isArray(bcs)) allBarcodes.push(...bcs);

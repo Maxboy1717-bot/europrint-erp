@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
+import { useAuth } from "@/hooks/useAuth";
 import { glApi } from "../api/pos-monitor.api";
 import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -35,15 +36,6 @@ function deriveOverallStatus(entries: GlEntry[]): "none" | "reviewing" | "approv
   return "reviewing";
 }
 
-function getPosRole(): string {
-  try {
-    const sess = localStorage.getItem("pos_session");
-    if (!sess) return "";
-    const p = JSON.parse(sess) as { role?: string };
-    return (p.role ?? "").toLowerCase();
-  } catch { return ""; }
-}
-
 // ─── Compact badge ────────────────────────────────────────────────────────────
 function CompactBadge({ status, t }: { status: ReturnType<typeof deriveOverallStatus>; t: (k: string) => string }) {
   const map = {
@@ -65,17 +57,19 @@ function FullCard({
   entries,
   movementId,
   onApproved,
+  role,
   t,
 }: {
   entries: GlEntry[];
   movementId: number;
   onApproved: () => void;
+  role: string;
   t: (k: string) => string;
 }) {
 
   const [busy, setBusy]   = useState(false);
   const [err, setErr]     = useState("");
-  const isFinance = getPosRole().includes("finance") || getPosRole().includes("admin");
+  const isFinance = role.includes("finance") || role.includes("admin");
 
   async function approve() {
     setBusy(true);
@@ -216,6 +210,8 @@ function FullCard({
 // ─── Exported component ───────────────────────────────────────────────────────
 export default function GLPostingStatus({ movementId, compact = false }: GLPostingStatusProps) {
   const { t }                   = usePosI18n();
+  const { user }                = useAuth();
+  const role                    = (user?.role ?? "").toLowerCase();
   const [entries, setEntries]   = useState<GlEntry[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
@@ -276,6 +272,7 @@ export default function GLPostingStatus({ movementId, compact = false }: GLPosti
       entries={entries}
       movementId={movementId}
       onApproved={() => void load()}
+      role={role}
       t={t}
     />
   );

@@ -7,9 +7,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRoute, useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
+import { useAuth } from "@/hooks/useAuth";
 import { requestsApi } from "../api/pos-monitor.api";
 import type { Requisition } from "./RequisitionDetail.types";
-import { getPosUserId, getPosRole } from "./RequisitionDetail.types";
 import { RejectModal, StatusTimeline } from "./RequisitionDetail.modals";
 import {
   HeaderBar,
@@ -22,6 +22,7 @@ export default function RequisitionDetail() {
   const [, navigate] = useLocation();
   const [match, params] = useRoute("/pos-monitor/requests/:id");
   const { t } = usePosI18n();
+  const { user } = useAuth();
   const id = match ? parseInt(params?.id ?? "0", 10) : 0;
 
   const [req, setReq] = useState<Requisition | null>(null);
@@ -31,8 +32,8 @@ export default function RequisitionDetail() {
   const [showReject, setShowReject] = useState(false);
   const [toast, setToast] = useState("");
 
-  const myUserId = getPosUserId();
-  const myRole = getPosRole();
+  const myUserId = user?.id ?? 0;
+  const myRole = (user?.role ?? "").toLowerCase();
   const isManager =
     myRole.includes("manager") || myRole.includes("department_head") || myRole.includes("admin");
   const isWarehouse =

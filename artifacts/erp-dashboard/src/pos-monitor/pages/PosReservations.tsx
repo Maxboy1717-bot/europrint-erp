@@ -4,6 +4,7 @@
  * URL: /pos-monitor/reservations
  */
 import { useCallback, useEffect, useState } from "react";
+import { stockApi } from "../api/pos-monitor.api";
 
 import { useTranslation } from '@/lib/i18n';
 interface Reservation {
@@ -38,13 +39,10 @@ export default function PosReservations() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const token = JSON.parse(localStorage.getItem("pos_session") ?? "{}")?.token ?? "";
       // Backend endpoint kerak: /api/pos/reservations
       // Hozircha — stock_reservations dan o'qiymiz
-      // NOTE: POS uses its own pos_session token, not access_token — keep raw fetch
-      const r = await fetch("/api/pos/stock", {
-        headers: { Authorization: `Bearer ${token}` },
-      }).then(r => r.json()).catch(() => []);
+      // §1.2: ERP SSO — stockApi (posReq) httpOnly cookie bilan auth.
+      const r = await stockApi.getAll().catch(() => []);
       // Stock dan reserved_qty ni filterlab olamiz
       const reserved = (Array.isArray(r) ? r : []).filter((s: { reservedQty?: number }) =>
         (s.reservedQty ?? 0) > 0

@@ -11,10 +11,11 @@ const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 
 export function getPosSocket(): Socket {
   if (!socket) {
-    const token = getPosToken();
+    // §1.2: ERP SSO — alohida pos_session token YO'Q. Socket ERP httpOnly
+    // access_token cookie (withCredentials) orqali same-origin autentifikatsiya.
     socket = io(`${window.location.origin}/pos`, {
       path: `${BASE_URL}/socket.io`,
-      auth: { token },
+      withCredentials: true,
       transports: ["websocket"],
       reconnectionDelay: 2000,
       reconnectionAttempts: 10,
@@ -31,15 +32,6 @@ export function disconnectPosSocket(): void {
   if (socket) {
     socket.disconnect();
     socket = null;
-  }
-}
-
-function getPosToken(): string {
-  try {
-    const s = localStorage.getItem("pos_session");
-    return s ? (JSON.parse(s) as { token?: string }).token ?? "" : "";
-  } catch {
-    return "";
   }
 }
 

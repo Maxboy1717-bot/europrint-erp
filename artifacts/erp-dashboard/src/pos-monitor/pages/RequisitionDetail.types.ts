@@ -65,25 +65,3 @@ export const TIMELINE_LABELS: Record<string, string> = {
   APPROVED: "Tasdiqlandi",
   FULFILLED: "Bajarildi",
 };
-
-export function getPosUserId(): number {
-  try {
-    const sess = localStorage.getItem("pos_session");
-    if (!sess) return 0;
-    const p = JSON.parse(sess) as { userId?: number };
-    return p.userId ?? 0;
-  } catch {
-    return 0;
-  }
-}
-
-export function getPosRole(): string {
-  try {
-    const sess = localStorage.getItem("pos_session");
-    if (!sess) return "";
-    const p = JSON.parse(sess) as { role?: string };
-    return (p.role ?? "").toLowerCase();
-  } catch {
-    return "";
-  }
-}

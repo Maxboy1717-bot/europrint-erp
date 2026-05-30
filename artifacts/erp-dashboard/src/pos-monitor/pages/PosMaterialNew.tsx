@@ -75,7 +75,7 @@ export default function PosMaterialNew() {
     setSaving(true);
     setError("");
     try {
-      const token = JSON.parse(localStorage.getItem("pos_session") ?? "{}")?.token ?? "";
+      // §1.2: ERP SSO — apiRequest httpOnly cookie yuboradi; alohida token kerak emas.
       const res = await apiRequest('POST', "/api/material-cards", {
         kod:             form.kod,
         xom_ashyo:       form.xom_ashyo,
@@ -89,7 +89,6 @@ export default function PosMaterialNew() {
         currency:        form.currency,
         description:     form.description || undefined,
         supplier_name:   form.supplier_name || undefined,
-        token,
       });
       const data = res as { id?: number; message?: string };
       alert(`✅ Material yaratildi! ID: ${data.id}`);

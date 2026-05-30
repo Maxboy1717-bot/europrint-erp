@@ -6,6 +6,7 @@
 import { useState, useEffect, ReactNode } from "react";
 import { useLocation, Link } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
+import { useAuth } from "@/hooks/useAuth";
 import { getPosSocket } from "../socket/pos-socket";
 import { warehousesApi } from "../api/pos-monitor.api";
 import PosOfflineBanner from "../components/PosOfflineBanner";
@@ -59,8 +60,9 @@ const NAV_ITEMS: NavItem[] = [
 interface PosLayoutProps { children: ReactNode; }
 
 export default function PosLayout({ children }: PosLayoutProps) {
-  const [location, navigate] = useLocation();
+  const [location] = useLocation();
   const { t, lang, toggleLang } = usePosI18n();
+  const { user, logout } = useAuth();
   const [mini, setMini] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
@@ -103,9 +105,12 @@ export default function PosLayout({ children }: PosLayoutProps) {
   const formatClock = (d: Date) => d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
   function handleLogout() {
-    try { localStorage.removeItem("pos_session"); } catch { /* noop */ }
-    navigate("/pos-monitor/login");
+    // ERP SSO: server httpOnly cookie'larni tozalaydi va /login ga yo'naltiradi.
+    void logout();
   }
+
+  const userLabel = user?.fullName || user?.username || "";
+  const userRole  = user?.role ?? "";
 
   const isActive = (path: string) => {
     if (path === "/pos-monitor") return location === "/pos-monitor" || location === "/pos-monitor/";
@@ -253,6 +258,14 @@ export default function PosLayout({ children }: PosLayoutProps) {
               </span>
             )}
           </button>
+
+          {/* Current user (ERP SSO) */}
+          {userLabel && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.2, marginRight: 4 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--pos-text)" }}>{userLabel}</span>
+              {userRole && <span style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>{userRole}</span>}
+            </div>
+          )}
 
           {/* Logout */}
           <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12, padding: "4px 10px" }} onClick={handleLogout}>
