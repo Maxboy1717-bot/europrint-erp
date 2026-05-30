@@ -301,32 +301,22 @@ import { LayoutDashboard, X,
   tz08: {
     title: "Ombor",
     icon: Package,
-    defaultUrl: "warehouse/hub",
+    defaultUrl: "wms/overview",
     items: [
-      // 9 ombor-turi (RM-MAIN..MRO-STORE) endi Ombor Dashboard ICHIDA Tabs filter
-      // (warehouse/hub/:code route saqlangan). Alohida sidebar yozuv EMAS — 2026-05-21 kanon.
-      { title: "OMBORLAR", url: "", icon: Package, separator: true },
+      // Arxitektura: ERP = ko'rish/nazorat; amaliyot (kirim/chiqim/qabul) = POS Monitor.
+      // Toza kanonik oqim (2026-05-30) — rasvo WMSExtended/Hub/Integratsiya stublari olib tashlandi.
+      { title: "NAZORAT (ERP)", url: "", icon: Package, separator: true },
       { title: "Moliya nazorati", url: "wms/overview", icon: DollarSign },
       { title: "Omborlar", url: "wms/warehouses", icon: Boxes },
-      { title: "Ombor Dashboard", url: "warehouse/hub", icon: BarChart3 },
-      { title: "QABUL", url: "", icon: PackageCheck, separator: true },
-      { title: "Xarid-to'lov (P2P)", url: "wms/procurement", icon: ShoppingCart },
+      { title: "Xarid so'rovi (P2P)", url: "wms/procurement", icon: ShoppingCart },
+      { title: "AMALIYOT", url: "", icon: MonitorDot, separator: true },
+      { title: "POS Monitor (kirim/chiqim)", url: "pos-monitor", icon: MonitorDot },
+      { title: "INVENTAR / HISOBOT", url: "", icon: ClipboardList, separator: true },
+      { title: "Inventarizatsiya", url: "wms/inventory", icon: ClipboardCheck },
       { title: "Qabul Akti (GRN)", url: "wms/grn", icon: PackageCheck },
       { title: "Reservation Panel", url: "wms/reservation", icon: Lock },
-      { title: "INVENTAR", url: "", icon: ClipboardList, separator: true },
-      { title: "Inventarizatsiya", url: "wms/inventory", icon: ClipboardCheck },
-      { title: "Lot Traceability", url: "wms/lot-traceability", icon: Barcode },
-      { title: "Barkod Tizimi", url: "barcode-warehouse", icon: Barcode },
       { title: "Material 360°", url: "inventory/materials", icon: Package },
-      { title: "HARAKAT", url: "", icon: FileText, separator: true },
-      { title: "Ko'chirish Hujjatlari", url: "wms/transfer", icon: FileText },
-      { title: "ICHKI SO'ROV", url: "", icon: MessageSquare, separator: true },
-      { title: "Ichki So'rov", url: "wms/internal-requests", icon: MessageSquare },
-      { title: "IJARA VA CHIQINDI", url: "", icon: DollarSign, separator: true },
       { title: "Tayyor Mahsulot Ijara", url: "wms/rental", icon: DollarSign },
-      { title: "Chiqindilar", url: "warehouse/hub/SCRAP", icon: Recycle },
-      { title: "INTEGRATSIYA", url: "", icon: GitBranch, separator: true },
-      { title: "PP/MM/FI Integratsiya", url: "warehouse/integrations", icon: GitBranch },
     ]
   },
   tz09: {
