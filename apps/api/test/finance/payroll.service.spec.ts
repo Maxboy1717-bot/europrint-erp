@@ -126,7 +126,7 @@ describe('finance PayrollService', () => {
   });
 
   describe('calculatePeriod()', () => {
-    it('computes tax + pension for each row at 12% + 8%', async () => {
+    it('computes net = gross for each row (gross-only; tax computed in 1C)', async () => {
       const repo = makeRepo();
       const svc = await buildSvc(repo);
 
@@ -138,15 +138,13 @@ describe('finance PayrollService', () => {
           totalGross: number;
           totalNet: number;
           employeeCount: number;
-          rows: Array<{ incomeTax: number; pensionDeduction: number; netSalary: number }>;
+          rows: Array<{ netSalary: number }>;
         };
-        // gross 1000+2000 = 3000; tax = 360; pension = 240; net = 2400
+        // ERP gross-only: net = gross (no tax subtracted). gross 1000 + 2000 = 3000.
         expect(d.totalGross).toBe(3000);
-        expect(d.totalNet).toBeCloseTo(2400, 2);
+        expect(d.totalNet).toBe(3000);
         expect(d.employeeCount).toBe(2);
-        expect(d.rows[0].incomeTax).toBe(120);
-        expect(d.rows[0].pensionDeduction).toBe(80);
-        expect(d.rows[0].netSalary).toBe(800);
+        expect(d.rows[0].netSalary).toBe(1000);
       }
     });
 
