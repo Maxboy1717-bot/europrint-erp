@@ -70,6 +70,19 @@ export class WarehouseConfigController {
     return unwrapOrThrow(await this.svc.issueStock(id, dto, user.id));
   }
 
+  /** Ombor kirim (qo'lda / tuzatish) — qoldiq oshadi + material_movements jurnali. */
+  @Post('warehouses/:id/receive')
+  @RequirePermission('pos.reports.read')
+  @ApiOperation({ summary: "Ombor kirim (qo'lda / inventarizatsiya tuzatishi)" })
+  async receiveStock(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const dto = IssueStockSchema.parse(body);
+    return unwrapOrThrow(await this.svc.receiveStock(id, dto, user.id));
+  }
+
   /** Material harakat tarixi (kirim/chiqim jurnali, eng yangisi birinchi). */
   @Get('materials/:materialId/movements')
   @RequirePermission('pos.reports.read')

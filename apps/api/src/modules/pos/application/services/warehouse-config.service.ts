@@ -134,6 +134,67 @@ export class WarehouseConfigService {
   }
 
   /**
+   * Ombor KIRIM (qo'lda / tuzatish) — warehouse_stock qoldig'i oshiriladi (UPDATE→INSERT upsert),
+   * material_cards.current_stock yangilanadi va material_movements ('RECEIVE') jurnaliga yoziladi.
+   * Inventarizatsiya tuzatishi yoki P2P'siz qo'lda kirim uchun (korreksiya). performedBy = bajaruvchi.
+   */
+  async receiveStock(
+    warehouseId: number,
+    input: IssueStockInput,
+    performedBy: number,
+  ): Promise<Result<Record<string, unknown>, AppError>> {
+    return safeCall(async () => {
+      const qty = Number(input.quantity);
+      if (!input.materialId) throw new BadRequestException('materialId majburiy');
+      if (!Number.isFinite(qty) || qty <= 0) throw new BadRequestException("quantity musbat bo'lishi kerak");
+
+      const wh = dbRows(await rawSql(sql`SELECT id, code FROM warehouses WHERE id = ${warehouseId}`))[0];
+      if (!wh) throw new NotFoundException(`Ombor topilmadi: ${warehouseId}`);
+      const mat = dbRows(await rawSql(sql`
+        SELECT id, kod, xom_ashyo, unit_of_measure FROM material_cards WHERE id = ${input.materialId}
+      `))[0];
+      if (!mat) throw new NotFoundException(`Material topilmadi: ${input.materialId}`);
+      const unit = input.unit ?? String(mat['unit_of_measure'] ?? 'dona');
+      const materialName = String(mat['xom_ashyo'] ?? mat['kod'] ?? `#${input.materialId}`);
+
+      // warehouse_stock upsert (oshirish)
+      const updated = dbRows(await rawSql(sql`
+        UPDATE warehouse_stock
+        SET quantity = quantity + ${qty}, available_quantity = available_quantity + ${qty}, last_updated_at = NOW()
+        WHERE warehouse_id = ${warehouseId} AND material_id = ${input.materialId}
+        RETURNING quantity, available_quantity
+      `))[0];
+      let newQuantity: number;
+      let newAvailable: number;
+      if (updated) {
+        newQuantity = Number(updated['quantity']);
+        newAvailable = Number(updated['available_quantity']);
+      } else {
+        const ins = dbRows(await rawSql(sql`
+          INSERT INTO warehouse_stock (warehouse_id, material_id, quantity, reserved_quantity, available_quantity)
+          VALUES (${warehouseId}, ${input.materialId}, ${qty}, 0, ${qty})
+          RETURNING quantity, available_quantity
+        `))[0];
+        newQuantity = Number(ins?.['quantity'] ?? qty);
+        newAvailable = Number(ins?.['available_quantity'] ?? qty);
+      }
+
+      await rawSql(sql`
+        UPDATE material_cards SET current_stock = COALESCE(current_stock, 0) + ${qty} WHERE id = ${input.materialId}
+      `);
+
+      const mv = dbRows(await rawSql(sql`
+        INSERT INTO material_movements (material_id, material_name, movement_type, quantity, unit, performed_by, reason)
+        VALUES (${input.materialId}, ${materialName}, 'RECEIVE', ${qty}, ${unit}, ${performedBy}, ${input.reason ?? "Qo'lda kirim"})
+        RETURNING id
+      `))[0];
+
+      this.logger.log(`[WMS] Ombor #${warehouseId} kirim: material ${input.materialId} +${qty} ${unit} (movement #${mv?.['id'] ?? '?'})`);
+      return { warehouseId, materialId: input.materialId, received: qty, newQuantity, newAvailable, movementId: mv?.['id'] ?? null };
+    });
+  }
+
+  /**
    * Material harakat tarixi (material_movements) — kirim/chiqim ('RECEIVE'/'ISSUE'/...) jurnali,
    * eng yangisi birinchi. Material 360 / ombor qoldig'i sahifasidagi "Tarix" uchun.
    */
