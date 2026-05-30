@@ -6,6 +6,7 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ProcurementApprovalChainService } from './application/services/procurement-approval-chain.service';
+import { ProcurementController } from './presentation/procurement.controller';
 import {
   PosGateway,
   // Controllers
@@ -56,6 +57,7 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
 @Module({
   imports: [CqrsModule],
   controllers: [
+    ProcurementController,
     PosStubController,
     CashRegisterController,
     PosPrinterConfigV2Controller,
