@@ -78,14 +78,16 @@ export class AutoBarcodeRepository {
     barcode:        string;
   }): Promise<Result<void, AppError>> {
     try {
+      // MUHIM: barcode_print_queue.barcode_data NOT NULL — barcode_data/barcode_value ham yoziladi,
+      // aks holda kirimda barkod generatsiya jonli NOT NULL xatosi bilan yiqiladi (jonli tasdiqlandi).
       await db.execute(sql`
         INSERT INTO pos_barcode_print_queue
           (movement_id, movement_line_id, material_id, warehouse_id,
-           batch_number, quantity, unit, barcode, barcode_type, status, created_at)
+           batch_number, quantity, unit, barcode, barcode_data, barcode_value, barcode_type, status, created_at)
         VALUES
           (${dto.movementId}, ${dto.movementLineId}, ${dto.materialCardId}, ${dto.warehouseId},
            ${dto.batchNumber}, ${dto.quantity}, ${dto.unit ?? null},
-           ${dto.barcode}, 'CODE128', 'QUEUED', NOW())
+           ${dto.barcode}, ${dto.barcode}, ${dto.barcode}, 'CODE128', 'QUEUED', NOW())
       `);
       return Ok(undefined);
     } catch (e) {
