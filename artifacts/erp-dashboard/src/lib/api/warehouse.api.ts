@@ -49,6 +49,23 @@ export interface WarehouseStock {
   totalQuantity: number;
 }
 
+export interface IssueStockInput {
+  materialId: number;
+  quantity: number;
+  unit?: string;
+  reason?: string;
+  notes?: string;
+}
+
+export interface IssueStockResult {
+  warehouseId: number;
+  materialId: number;
+  issued: number;
+  newQuantity: number;
+  newAvailable: number;
+  movementId: number | null;
+}
+
 const BASE = "/api/pos/warehouse-config";
 
 export const warehouseApi = {
@@ -59,4 +76,7 @@ export const warehouseApi = {
     apiRequest<WarehouseRow[]>("GET", `${BASE}/warehouses${type ? `?type=${encodeURIComponent(type)}` : ""}`),
   /** Bitta ombor qoldig'i (material kartochka bo'yicha joriy stok). */
   stock: (id: number | string) => apiRequest<WarehouseStock>("GET", `${BASE}/warehouses/${id}/stock`),
+  /** Ombordan material chiqim (iste'mol/sarf) — qoldiqni kamaytiradi. */
+  issue: (id: number | string, body: IssueStockInput) =>
+    apiRequest<IssueStockResult>("POST", `${BASE}/warehouses/${id}/issue`, body),
 };
