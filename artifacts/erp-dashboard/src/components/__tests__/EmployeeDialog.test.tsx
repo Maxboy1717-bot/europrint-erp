@@ -73,10 +73,6 @@ vi.mock('../hr/employee-dialog/BasicInfoSection', () => ({
   ),
 }));
 
-vi.mock('../hr/employee-dialog/PositionSection', () => ({
-  PositionSection: () => <SectionStub label="position-section" />,
-}));
-
 vi.mock('../hr/employee-dialog/ContractSection', () => ({
   ContractSection: () => <SectionStub label="contract-section" />,
 }));
