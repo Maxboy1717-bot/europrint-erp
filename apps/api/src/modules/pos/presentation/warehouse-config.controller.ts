@@ -77,4 +77,12 @@ export class WarehouseConfigController {
   async materialMovements(@Param('materialId', ParseIntPipe) materialId: number) {
     return unwrapOrThrow(await this.svc.getMaterialMovements(materialId));
   }
+
+  /** Moliya/Ombor dashboard — har ombor qoldiq+qiymat, yig'indilar, so'nggi harakatlar. */
+  @Get('dashboard')
+  @RequirePermission('pos.reports.read')
+  @ApiOperation({ summary: 'Moliya/Ombor umumiy dashboard (qoldiq + qiymat)' })
+  async dashboard() {
+    return unwrapOrThrow(await this.svc.getDashboard());
+  }
 }

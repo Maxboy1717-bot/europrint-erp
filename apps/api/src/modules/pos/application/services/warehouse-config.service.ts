@@ -152,4 +152,42 @@ export class WarehouseConfigService {
       return dbRows(rows);
     });
   }
+
+  /**
+   * Moliya/Ombor umumiy dashboard (rahbar nazorati): har ombor qoldiq + QIYMAT (qty × unit_price),
+   * umumiy yig'indilar va so'nggi harakatlar. "Markaziy ombor yo'q — moliya rahbari ko'rib turadi".
+   */
+  async getDashboard(): Promise<Result<Record<string, unknown>, AppError>> {
+    return safeCall(async () => {
+      const warehouses = dbRows(await rawSql(sql`
+        SELECT w.id, w.code, w.name, w.type,
+               COUNT(ws.id)::int AS "lineCount",
+               COALESCE(SUM(ws.quantity), 0) AS "totalQuantity",
+               COALESCE(SUM(ws.quantity * COALESCE(mc.unit_price, mc.last_purchase_price, 0)), 0) AS "totalValue"
+        FROM warehouses w
+        LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id
+        LEFT JOIN material_cards mc ON mc.id = ws.material_id
+        WHERE w.is_active = true
+        GROUP BY w.id, w.code, w.name, w.type
+        ORDER BY "totalValue" DESC
+      `));
+      const recentMovements = dbRows(await rawSql(sql`
+        SELECT mm.id, mm.material_id AS "materialId", mm.material_name AS "materialName",
+               mm.movement_type AS "movementType", COALESCE(mm.quantity, 0) AS quantity, mm.unit,
+               mm.reason, mm.created_at AS "createdAt",
+               COALESCE(NULLIF(TRIM(u.full_name), ''), u.username, 'User #' || mm.performed_by) AS "performedByName"
+        FROM material_movements mm
+        LEFT JOIN users u ON u.id = mm.performed_by
+        ORDER BY mm.created_at DESC, mm.id DESC
+        LIMIT 20
+      `));
+      const totals = {
+        warehouses: warehouses.length,
+        stockedWarehouses: warehouses.filter((w) => Number(w['lineCount'] ?? 0) > 0).length,
+        stockLines: warehouses.reduce((s, w) => s + Number(w['lineCount'] ?? 0), 0),
+        totalValue: warehouses.reduce((s, w) => s + Number(w['totalValue'] ?? 0), 0),
+      };
+      return { totals, warehouses, recentMovements };
+    });
+  }
 }
