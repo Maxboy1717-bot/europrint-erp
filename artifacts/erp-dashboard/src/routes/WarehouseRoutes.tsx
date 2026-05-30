@@ -41,10 +41,12 @@ const WarehouseAuditLog = lazy(() => import("@/pages/WarehouseAuditLog"));
 const ProcurementPage = lazy(() => import("@/pages/ProcurementPage"));
 const WarehousesPage = lazy(() => import("@/pages/WarehousesPage"));
 const WarehouseTypePage = lazy(() => import("@/pages/WarehouseTypePage"));
+const WarehouseStockPage = lazy(() => import("@/pages/WarehouseStockPage"));
 
 export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   ['/wms/procurement',            ProcurementPage],
   ['/wms/warehouses',             WarehousesPage],
+  ['/wms/warehouse-stock/:id',    WarehouseStockPage],
   ['/wms/warehouses/:type',       WarehouseTypePage],
   ['/warehouse/hub',              WarehouseHub],
   ['/warehouse/hub/:code',        WarehouseHub],

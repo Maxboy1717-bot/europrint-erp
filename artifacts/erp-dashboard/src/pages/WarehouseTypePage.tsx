@@ -4,7 +4,7 @@
  *   WarehousesPage kartochkasiga bosilganda ochiladi. EP/ui + token + tLabel.
  */
 import { useEffect, useState } from "react";
-import { useParams } from "wouter";
+import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,17 +40,19 @@ export default function WarehouseTypePage() {
         {rows === null
           ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)
           : rows.map((w) => (
-              <Card key={w.id}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center justify-between text-base">
-                    <span>{w.name}</span>
-                    <Badge variant="secondary">{w.code}</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  {w.location || tLabel("common.warehouses.noLocation", "Joylashuv ko'rsatilmagan")}
-                </CardContent>
-              </Card>
+              <Link key={w.id} href={`/wms/warehouse-stock/${w.id}`} className="block transition hover:shadow-md">
+                <Card className="h-full cursor-pointer">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center justify-between text-base">
+                      <span>{w.name}</span>
+                      <Badge variant="secondary">{w.code}</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm text-muted-foreground">
+                    {w.location || tLabel("common.warehouses.noLocation", "Joylashuv ko'rsatilmagan")}
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
       </div>
 
