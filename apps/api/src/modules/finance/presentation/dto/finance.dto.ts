@@ -30,11 +30,10 @@ export const FinancePostSalesInvoiceSchema = z.object({
 });
 export type FinancePostSalesInvoiceDto = z.infer<typeof FinancePostSalesInvoiceSchema>;
 
+// ERP gross-only: payroll GL posts gross only; tax (INPS/JSHD) legs are 1C's domain.
 export const FinancePostPayrollSchema = z.object({
   payrollId: z.number().int().positive(),
   gross:     z.number(),
-  inps:      z.number(),
-  jshd:      z.number(),
   postedBy:  z.number().int().positive(),
 });
 export type FinancePostPayrollDto = z.infer<typeof FinancePostPayrollSchema>;

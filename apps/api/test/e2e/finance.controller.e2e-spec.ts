@@ -81,7 +81,7 @@ describe('FinanceGlController (e2e)', () => {
     glSvc.postPayroll.mockResolvedValue({ ok: true, data: 777 });
     const res = await app.inject({
       method: 'POST', url: '/finance/gl/post-payroll',
-      payload: { payrollId: 1, gross: 10000, inps: 800, jshd: 1200, postedBy: 1 },
+      payload: { payrollId: 1, gross: 10000, postedBy: 1 },
     });
     expect(res.statusCode).toBe(201);
   });
@@ -90,7 +90,7 @@ describe('FinanceGlController (e2e)', () => {
     glSvc.postPayroll.mockResolvedValue({ ok: false, error: { code: 'INTERNAL', message: 'GL error' } });
     const res = await app.inject({
       method: 'POST', url: '/finance/gl/post-payroll',
-      payload: { payrollId: 1, gross: 10000, inps: 800, jshd: 1200, postedBy: 1 },
+      payload: { payrollId: 1, gross: 10000, postedBy: 1 },
     });
     expect(res.statusCode).toBe(500);
   });

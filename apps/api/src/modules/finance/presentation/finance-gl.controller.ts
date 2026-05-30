@@ -77,7 +77,7 @@ export class FinanceGlController {
   async postPayroll(@Body() body: FinancePostPayrollDto) {
 
       this.logger.log(`Posting payroll ${body.payrollId} to GL`);
-      const result = await this.glPostingService.postPayroll(body.payrollId, body.gross, body.inps, body.jshd);
+      const result = await this.glPostingService.postPayroll(body.payrollId, body.gross);
       assertOk(result);
       return { entryId: (result).data };
     

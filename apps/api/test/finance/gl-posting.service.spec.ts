@@ -95,41 +95,21 @@ describe('GlPostingService', () => {
   });
 
   describe('postPayroll()', () => {
-    it('balances all four lines: gross 1000 + emp_pension 100 = salary_payable 870 + deductions 230', async () => {
-      // debit:  salaryExpense (gross 1000) + employer 100 = 1100
-      // credit: salary_payable (1000 - 100 - 30 = 870) + deductions (100 + 30 = 130)... wait
-      // gross 1000, INPS 100, JSHD 30 → debit = gross + INPS = 1100
-      //                           credit = (gross - INPS - JSHD) + (INPS + JSHD) = 870 + 130 = 1000
-      // Total debit (1100) != Total credit (1000) for this combination
-      // The service formula needs INPS as employer contrib to balance — confirmed in source:
-      //   debit:  gross + inps
-      //   credit: (gross − inps − jshd) + (inps + jshd) = gross
-      // For balance we need inps = 0, OR the algorithm expects different inputs.
-      // Verify balanced shape: gross 1000, INPS 0, JSHD 0
-      const r = await svc.postPayroll(50, 1_000, 0, 0);
+    // ERP is gross-only: payroll GL = Dr Salary Expense (gross) / Cr Salary Payable (gross).
+    // Tax (INPS/JSHD) legs are posted in 1C, not here, so the entry always balances.
+    it('posts a balanced gross-only entry (Dr Salary Expense = Cr Salary Payable)', async () => {
+      const r = await svc.postPayroll(50, 1_000);
       expect(r.ok).toBe(true);
     });
 
-    it('returns error when debit/credit do not balance (non-zero INPS)', async () => {
-      // gross=1000, INPS=100, JSHD=30
-      // debit:  1000 (salary) + 100 (employer contrib) = 1100
-      // credit: (1000-100-30)=870 + (100+30)=130 → 1000
-      // mismatch ≠ 0
-      const r = await svc.postPayroll(51, 1_000, 100, 30);
-      expect(r.ok).toBe(false);
+    it('balances for any gross amount', async () => {
+      const r = await svc.postPayroll(53, 5_000);
+      expect(r.ok).toBe(true);
     });
 
     it('zero gross still balances (degenerate but valid)', async () => {
-      const r = await svc.postPayroll(52, 0, 0, 0);
+      const r = await svc.postPayroll(52, 0);
       expect(r.ok).toBe(true);
-    });
-
-    it('error message describes mismatch', async () => {
-      const r = await svc.postPayroll(53, 5_000, 200, 50);
-      expect(r.ok).toBe(false);
-      if (!r.ok) {
-        expect(String(r.error.message)).toMatch(/Double-entry/i);
-      }
     });
   });
 });

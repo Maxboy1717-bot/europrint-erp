@@ -69,13 +69,13 @@ export class GlPostingService {
     return this.createJournalEntry(lines, `MC-${goodsIssueId}`);
   }
 
-  async postPayroll(payrollId: number, gross: number, inps: number, jshd: number): Promise<Result<number>> {
-    this.logger.debug(`Posting Payroll - ID: ${payrollId}, Gross: ${gross}, INPS: ${inps}, JSHD: ${jshd}`);
+  async postPayroll(payrollId: number, gross: number): Promise<Result<number>> {
+    this.logger.debug(`Posting Payroll - ID: ${payrollId}, Gross: ${gross}`);
+    // ERP gross-only: payroll-tax (INPS/JSHD) GL legs are posted in 1C, not here.
+    // Balanced gross entry: Dr Salary Expense / Cr Salary Payable.
     const lines: JournalLine[] = [
       { accountCode: GL.SALARY_EXPENSE, accountName: 'Salary Expense', debit: gross, credit: 0 },
-      { accountCode: GL.EMPLOYER_CONTRIBUTION, accountName: 'Employer Contribution', debit: inps, credit: 0 },
-      { accountCode: GL.SALARY_PAYABLE, accountName: 'Salary Payable', debit: 0, credit: gross - inps - jshd },
-      { accountCode: GL.EMPLOYEE_DEDUCTIONS, accountName: 'Employee Deductions', debit: 0, credit: inps + jshd },
+      { accountCode: GL.SALARY_PAYABLE, accountName: 'Salary Payable', debit: 0, credit: gross },
     ];
     const result = await this.createJournalEntry(lines, `PR-${payrollId}`);
     if (result.ok) this.logger.log(`Payroll posted - Entry ID: ${result.data}`);
