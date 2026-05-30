@@ -55,6 +55,35 @@ export type Warehouse = typeof warehouses.$inferSelect;
 export type InsertWarehouse = z.infer<typeof insertWarehouseSchema>;
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Ombor tip KONFIGURATSIYASI (config-driven) — 2026-05-30 vision.
+// Yangi ombor turi qo'shish = bitta qator INSERT (kod o'zgartmasdan). `rules` JSONB
+// cheksiz kengaytirish uchun (akt turlari, qoidalar — keyin "yana qo'shamiz").
+// ─────────────────────────────────────────────────────────────────────────────
+export const warehouseTypes = pgTable("warehouse_types", {
+  code:            varchar("code", { length: 40 }).primaryKey(),     // 'raw_material','paper_rolls',...
+  nameUz:          text("name_uz").notNull(),
+  nameRu:          text("name_ru"),
+  category:        varchar("category", { length: 30 }).notNull(),    // material/finished/production/waste/tools/department
+  icon:            varchar("icon", { length: 40 }),                  // lucide icon nomi (FE)
+  inboundFlow:     varchar("inbound_flow", { length: 30 }).notNull().default("standard"),   // procurement_qc/mes_qc/transfer/waste_collect
+  outboundFlow:    varchar("outbound_flow", { length: 30 }).notNull().default("standard"),  // production_issue/sales_order/consume/sell
+  needsQuarantine: boolean("needs_quarantine").notNull().default(false),
+  needsQc:         boolean("needs_qc").notNull().default(false),
+  unitBasis:       varchar("unit_basis", { length: 20 }).notNull().default("unit"),         // unit/weight/length
+  labelTemplate:   varchar("label_template", { length: 30 }).notNull().default("standard"), // standard/roll/finished
+  rules:           jsonb("rules").notNull().default(sql`'{}'::jsonb`),                       // kengaytiriladigan qoidalar
+  sortOrder:       integer("sort_order").notNull().default(0),
+  isActive:        boolean("is_active").notNull().default(true),
+  createdAt:       timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_warehouse_types_category").on(t.category),
+  index("idx_warehouse_types_active").on(t.isActive),
+]);
+
+export type WarehouseTypeConfig = typeof warehouseTypes.$inferSelect;
+
+
 // Warehouse Zones (ombor zonalari)
 export const warehouseZones = pgTable("warehouse_zones", {
   id: serial("id").primaryKey(),
