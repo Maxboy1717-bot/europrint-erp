@@ -18,7 +18,7 @@ import {
   EmployeeController, ReportsController, MiniAppController, MiniAppHistoryController,
   PrinterConfigController, StockController, GlController, SyncController,
   PosNotificationsController, PosAuthController, InventoryPassportController,
-  PosWmsController, WarehouseFeaturesController,
+  PosWmsController, WarehouseFeaturesController, PosOperationsController,
   // Repos & services
   PosInventoryPassportRepository, PosInventoryPassportService, PosFifoService,
   PosLowStockJob, PosQuarantineCheckJob, PosFifoRecalculateJob, PosInactiveMaterialsJob,
@@ -82,6 +82,7 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     InventoryPassportController,
     PosWmsController,
     WarehouseFeaturesController,
+    PosOperationsController,
   ],
   providers: [
     { provide: POS_SVC_REPO, useClass: DrizzlePosSvcRepository },

@@ -144,6 +144,7 @@ export { EmailService }                 from './application/services/email.servi
 export { TelegramBotService }           from './application/services/telegram-bot.service';
 export { QueueService }                 from './application/services/queue.service';
 export { WarehouseFeaturesController }  from './presentation/warehouse-features.controller';
+export { PosOperationsController }      from './presentation/pos-operations.controller';
 
 // Sprint B: new repositories for warehouse feature services
 export { WarehouseEmployeesRepository }  from './infrastructure/repositories/warehouse-employees.repository';
