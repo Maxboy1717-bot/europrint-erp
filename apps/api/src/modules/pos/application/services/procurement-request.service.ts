@@ -174,13 +174,38 @@ export class ProcurementRequestService {
 
       if (remaining === 0) {
         await rawSql(sql`UPDATE procurement_requests SET status = 'approved', updated_at = NOW() WHERE id = ${requestId}`);
-        return { requestId, decision: 'approved', level, finalized: true, requestStatus: 'approved' };
+        const advance = await this.createAdvanceIfNeeded(requestId, approverUserId);
+        return { requestId, decision: 'approved', level, finalized: true, requestStatus: 'approved', advance };
       }
       await rawSql(sql`
         UPDATE procurement_requests SET current_approval_level = ${level + 1}, updated_at = NOW() WHERE id = ${requestId}
       `);
       return { requestId, decision: 'approved', level, finalized: false, requestStatus: 'pending_approval', remainingSteps: remaining };
     });
+  }
+
+  /**
+   * Increment 1.5: so'rov to'liq tasdiqlanganda avans/podotchet yaratadi (paymentMode='advance').
+   * Mavjud `advance_payments` jadvaliga (duplikat yo'q): employee_id = ichki ta'minotchi, settlement_status
+   * = 'unsettled' (ochiq podotchet) — ombor kirimdan keyin (1.6) reconcile qilinadi. Reimburse → keyin.
+   */
+  private async createAdvanceIfNeeded(requestId: number, createdBy: number): Promise<Record<string, unknown> | null> {
+    const r = dbRows(await rawSql(sql`
+      SELECT request_number, requester_employee_id, vendor_id, total_amount, currency, payment_mode, title
+      FROM procurement_requests WHERE id = ${requestId}
+    `))[0];
+    if (!r || r['payment_mode'] !== 'advance') return null;
+    const ins = dbRows(await rawSql(sql`
+      INSERT INTO advance_payments
+        (request_number, vendor_id, employee_id, payment_type, amount, currency, purpose, status, settlement_status, request_date, created_by, created_at, updated_at)
+      VALUES (${String(r['request_number'])}, ${r['vendor_id'] ?? null}, ${Number(r['requester_employee_id'])},
+        'procurement_advance', ${Number(r['total_amount'])}, ${String(r['currency'] ?? 'UZS')},
+        ${String(r['title'] ?? '')}, 'pending', 'unsettled', CURRENT_DATE, ${createdBy}, NOW(), NOW())
+      RETURNING id, amount, currency, status, settlement_status
+    `));
+    const adv = ins[0] ?? null;
+    if (adv) this.logger.log(`[P2P] So'rov ${requestId} → avans/podotchet #${adv['id']} (${adv['amount']} ${adv['currency']}) ochildi`);
+    return adv;
   }
 
   /** So'rovni qatorlari + tasdiq bosqichlari bilan qaytaradi. */
