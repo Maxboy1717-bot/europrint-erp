@@ -5,6 +5,7 @@
  *   EP/ui komponentlar + semantic token + tLabel.
  */
 import { useEffect, useState } from "react";
+import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,7 +47,8 @@ export default function WarehousesPage() {
         {types === null
           ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)
           : types.map((t) => (
-              <Card key={t.code}>
+              <Link key={t.code} href={`/wms/warehouses/${t.code}`} className="block transition hover:shadow-md">
+              <Card className="h-full cursor-pointer">
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center justify-between text-base">
                     <span>{t.nameUz}</span>
@@ -63,6 +65,7 @@ export default function WarehousesPage() {
                   </div>
                 </CardContent>
               </Card>
+              </Link>
             ))}
       </div>
 
