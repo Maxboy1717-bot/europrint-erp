@@ -208,6 +208,60 @@ export class ProcurementRequestService {
     return adv;
   }
 
+  /**
+   * Increment 1.6: tovar yetib kelganda — chek qabul + so'rov 'received' + podotchet RECONCILE
+   * (advance_payments settlement_status='settled'). Chek ma'lumoti rules JSONB ga yoziladi.
+   * Eslatma: haqiqiy ombor EXTERNAL_IN harakati (FIFO/passport/barcode) FAZA 2 da pos-movement
+   * (createMovement) orqali ulanadi — bu yerda procurement + podotchet zanjiri yopiladi.
+   */
+  async receiveProcurement(
+    requestId: number,
+    input: { chekNumber?: string; chekAmount?: number; warehouseId?: string; notes?: string },
+    receivedBy?: number,
+  ): Promise<Result<Record<string, unknown>, AppError>> {
+    return safeCall(async () => {
+      const req = dbRows(await rawSql(sql`
+        SELECT id, request_number, status, total_amount, payment_mode FROM procurement_requests WHERE id = ${requestId}
+      `))[0];
+      if (!req) throw new NotFoundException(`So'rov topilmadi: ${requestId}`);
+      if (req['status'] !== 'approved') {
+        throw new BadRequestException(`So'rov 'approved' holatida emas (status=${req['status']})`);
+      }
+      const chekAmount = input.chekAmount != null ? Number(input.chekAmount) : Number(req['total_amount']);
+      const chekInfo = JSON.stringify({
+        chekNumber: input.chekNumber ?? null,
+        chekAmount,
+        receivedBy: receivedBy ?? null,
+        warehouseId: input.warehouseId ?? null,
+        notes: input.notes ?? null,
+      });
+
+      // 1. So'rov → received + chek ma'lumoti (rules JSONB)
+      await rawSql(sql`
+        UPDATE procurement_requests
+        SET status = 'received', updated_at = NOW(), rules = COALESCE(rules, '{}'::jsonb) || ${chekInfo}::jsonb
+        WHERE id = ${requestId}
+      `);
+
+      // 2. Podotchet RECONCILE — avans 'settled'
+      const settled = dbRows(await rawSql(sql`
+        UPDATE advance_payments
+        SET settlement_status = 'settled', settled_amount = ${chekAmount}, status = 'disbursed', disbursed_at = NOW(), updated_at = NOW()
+        WHERE request_number = ${String(req['request_number'])} AND settlement_status = 'unsettled'
+        RETURNING id, settled_amount, settlement_status
+      `))[0] ?? null;
+
+      this.logger.log(`[P2P] So'rov ${req['request_number']} qabul qilindi (chek ${chekAmount}); podotchet ${settled ? 'yopildi #' + settled['id'] : "yo'q"}`);
+      return {
+        requestId,
+        requestNumber: req['request_number'],
+        status: 'received',
+        chekAmount,
+        podotchetSettled: settled,
+      };
+    });
+  }
+
   /** So'rovni qatorlari + tasdiq bosqichlari bilan qaytaradi. */
   async getRequest(id: number): Promise<Result<Record<string, unknown> | null, AppError>> {
     return safeCall(async () => {
