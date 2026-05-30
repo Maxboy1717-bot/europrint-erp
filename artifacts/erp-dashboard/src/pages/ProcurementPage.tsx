@@ -3,7 +3,7 @@
  * @description P2P xarid-to'lov — org-sxema tasdiq zanjiri + xarid so'rovi ko'rish.
  *   Toza UI (EP/ui komponentlar + semantic token; raw rang yo'q). BE: /api/pos/procurement.
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { ShoppingCart, Search, GitBranch, FileText, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { tLabel } from "@/lib/i18n/tLabel";
 import { procurementApi, type ApprovalStep } from "@/lib/api/procurement.api";
-import { warehouseApi, type WarehouseRow } from "@/lib/api/warehouse.api";
+import { warehouseApi, type WarehouseRow, type WarehouseType } from "@/lib/api/warehouse.api";
 
 export default function ProcurementPage() {
   const { toast } = useToast();
@@ -27,6 +27,8 @@ export default function ProcurementPage() {
   const [cDesc, setCDesc] = useState("");
   const [cQty, setCQty] = useState("1");
   const [cPrice, setCPrice] = useState("");
+  const [cWhType, setCWhType] = useState("");
+  const [whTypes, setWhTypes] = useState<WarehouseType[]>([]);
   const [created, setCreated] = useState<Record<string, unknown> | null>(null);
   const [wlApprover, setWlApprover] = useState("");
   const [worklist, setWorklist] = useState<Record<string, unknown>[] | null>(null);
@@ -34,6 +36,10 @@ export default function ProcurementPage() {
   const [received, setReceived] = useState<Record<string, unknown> | null>(null);
   const [whOptions, setWhOptions] = useState<WarehouseRow[]>([]);
   const [selectedWh, setSelectedWh] = useState("");
+
+  useEffect(() => {
+    warehouseApi.types().then(setWhTypes).catch(() => setWhTypes([]));
+  }, []);
 
   const loadChain = async () => {
     const id = parseInt(empId, 10);
@@ -77,6 +83,7 @@ export default function ProcurementPage() {
       const res = await procurementApi.createRequest({
         title: cTitle,
         requesterEmployeeId: emp,
+        targetWarehouseType: cWhType || undefined,
         items: [{ description: cDesc, quantity: Number(cQty) || 1, estimatedPrice: Number(cPrice) || 0 }],
       });
       setCreated(res);
@@ -180,6 +187,20 @@ export default function ProcurementPage() {
             <div>
               <Label htmlFor="cPrice">{tLabel("common.procurement.price", "Taxminiy narx")}</Label>
               <Input id="cPrice" value={cPrice} onChange={(e) => setCPrice(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="cWhType">{tLabel("common.procurement.targetType", "Maqsadli ombor turi")}</Label>
+              <select
+                id="cWhType"
+                value={cWhType}
+                onChange={(e) => setCWhType(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">{tLabel("common.procurement.chooseType", "Tanlang (ixtiyoriy)")}</option>
+                {whTypes.map((t) => (
+                  <option key={t.code} value={t.code}>{t.nameUz}</option>
+                ))}
+              </select>
             </div>
           </div>
           <Button onClick={createReq} disabled={loading}>
