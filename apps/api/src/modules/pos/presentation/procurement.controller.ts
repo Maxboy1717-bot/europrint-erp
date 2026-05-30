@@ -53,4 +53,15 @@ export class ProcurementController {
   async getRequest(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.requestService.getRequest(id));
   }
+
+  /** Tasdiq qadami — navbatdagi rahbar approve/reject qiladi (org-sxema bo'yicha keyingisiga o'tadi). */
+  @Post('requests/:id/decide')
+  @RequirePermission('pos.reports.read')
+  @ApiOperation({ summary: "Xarid so'rovi tasdiq qadami (approve/reject)" })
+  async decide(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { approverUserId: number; action: 'approve' | 'reject'; comments?: string },
+  ) {
+    return unwrapOrThrow(await this.requestService.decideApproval(id, body.approverUserId, body.action, body.comments));
+  }
 }

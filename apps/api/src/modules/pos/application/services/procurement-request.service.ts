@@ -4,7 +4,7 @@
  *   org-sxema bo'yicha tasdiq zanjiri (ProcurementApprovalChainService) `procurement_approvals`
  *   ga pending bosqichlar sifatida biriktiriladi. Returns Result<T>; never throws raw Errors.
  */
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { TashkentTimeService } from '@common/time';
@@ -122,6 +122,64 @@ export class ProcurementRequestService {
         approvalSteps: chain.length,
         approvers: chain.map((c) => c.approverUserId),
       };
+    });
+  }
+
+  /**
+   * Tasdiq qadami (Increment 1.4): navbatdagi (eng past) pending bosqich rahbari approve/reject qiladi.
+   * approve → keyingi bosqich pending qoladi (current_approval_level oshadi); oxirgi bo'lsa so'rov 'approved'.
+   * reject → so'rov darhol 'rejected'. Faqat o'sha bosqichning belgilangan rahbari qaror qila oladi.
+   */
+  async decideApproval(
+    requestId: number,
+    approverUserId: number,
+    action: 'approve' | 'reject',
+    comments?: string,
+  ): Promise<Result<Record<string, unknown>, AppError>> {
+    return safeCall(async () => {
+      const req = dbRows(await rawSql(sql`
+        SELECT id, status, current_approval_level FROM procurement_requests WHERE id = ${requestId}
+      `))[0];
+      if (!req) throw new NotFoundException(`So'rov topilmadi: ${requestId}`);
+      if (req['status'] !== 'pending_approval') {
+        throw new BadRequestException(`So'rov tasdiq holatida emas (status=${req['status']})`);
+      }
+
+      // Navbatdagi pending bosqich (eng past level)
+      const step = dbRows(await rawSql(sql`
+        SELECT id, level, approver_user_id FROM procurement_approvals
+        WHERE request_id = ${requestId} AND status = 'pending'
+        ORDER BY level ASC LIMIT 1
+      `))[0];
+      if (!step) throw new BadRequestException("Pending tasdiq bosqichi yo'q");
+      if (Number(step['approver_user_id']) !== approverUserId) {
+        throw new ForbiddenException(`Bu bosqichni faqat user ${step['approver_user_id']} tasdiqlaydi`);
+      }
+
+      const level = Number(step['level']);
+      await rawSql(sql`
+        UPDATE procurement_approvals
+        SET status = ${action === 'approve' ? 'approved' : 'rejected'}, decided_at = NOW(), comments = ${comments ?? null}
+        WHERE id = ${Number(step['id'])}
+      `);
+
+      if (action === 'reject') {
+        await rawSql(sql`UPDATE procurement_requests SET status = 'rejected', updated_at = NOW() WHERE id = ${requestId}`);
+        return { requestId, decision: 'rejected', level, finalized: true, requestStatus: 'rejected' };
+      }
+
+      const remaining = Number(dbRows(await rawSql(sql`
+        SELECT COUNT(*)::int AS c FROM procurement_approvals WHERE request_id = ${requestId} AND status = 'pending'
+      `))[0]?.['c'] ?? 0);
+
+      if (remaining === 0) {
+        await rawSql(sql`UPDATE procurement_requests SET status = 'approved', updated_at = NOW() WHERE id = ${requestId}`);
+        return { requestId, decision: 'approved', level, finalized: true, requestStatus: 'approved' };
+      }
+      await rawSql(sql`
+        UPDATE procurement_requests SET current_approval_level = ${level + 1}, updated_at = NOW() WHERE id = ${requestId}
+      `);
+      return { requestId, decision: 'approved', level, finalized: false, requestStatus: 'pending_approval', remainingSteps: remaining };
     });
   }
 
