@@ -1,0 +1,41 @@
+/**
+ * Ombor konfiguratsiyasi FE client (BE: /api/pos/warehouse-config).
+ * Config-driven: yangi ombor turi qo'shilsa, UI o'zi ko'rsatadi.
+ */
+import { apiRequest } from "@/lib/api-request";
+
+export interface WarehouseType {
+  code: string;
+  nameUz: string;
+  nameRu?: string;
+  category: string;
+  icon?: string;
+  inboundFlow: string;
+  outboundFlow: string;
+  needsQuarantine: boolean;
+  needsQc: boolean;
+  unitBasis: string;
+  labelTemplate: string;
+  sortOrder: number;
+  warehouseCount: number;
+}
+
+export interface WarehouseRow {
+  id: string;
+  code: string;
+  name: string;
+  nameRu?: string;
+  type: string;
+  location?: string;
+  isActive?: boolean;
+}
+
+const BASE = "/api/pos/warehouse-config";
+
+export const warehouseApi = {
+  /** Ombor turlari (config) + har turdagi ombor soni. */
+  types: () => apiRequest<WarehouseType[]>("GET", `${BASE}/types`),
+  /** Omborlar ro'yxati (ixtiyoriy tur filtri). */
+  warehouses: (type?: string) =>
+    apiRequest<WarehouseRow[]>("GET", `${BASE}/warehouses${type ? `?type=${encodeURIComponent(type)}` : ""}`),
+};
