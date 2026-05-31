@@ -63,21 +63,26 @@ router, crm analytics — ya'ni butun AI/analitika qatlami `customers`'ni ko'rad
 
 ---
 
-## XULOSA — ikkalasi ham OSON
+## XULOSA
 
 | Tushuncha | Real jadval | Bo'sh/demo dublikatlar | Verdikt | Ko'chadigan data | Asosiy ish |
 |---|---|---|---|---|---|
-| **Material** | material_cards (150) | materials (0), raw_materials (0) | 🟢 OSON | yo'q | uxlab yotgan MM modulni hal qilish |
-| **Customer** | customers (42) | sd_customers (2 demo), crm_companies (0) | 🟢 OSON | yo'q (2 demo) | SDCustomers yozuvchisini yo'naltirish/nafaqa |
+| **Material** | material_cards (150) | materials (0), raw_materials (0) | 🟢 **OSON** | yo'q | uxlab yotgan MM modulni hal qilish (retire/keep) |
+| **Customer** | customers (42, tarix+buyurtma) | sd_customers (2 demo), crm_companies (0) | 🟡 **O'RTA** | arzimas (2 demo) | qaysi jadval kanonik — **mahsulot qarori** + 49 buyurtma bog'lanishi |
+
+**Nega Customer "O'RTA" (data kam bo'lsa ham):** jonli yozuvchi (SDCustomers UI) `sd_customers`'ga yozadi,
+buyurtmalar esa yozuvchisiz `customers`'ga bog'langan. Bu **arxitektura ziddiyati** — qaysi jadval "kelajak"
+ekani biznes qaroriga bog'liq, va 49 jonli buyurtma `customer_id` ga tegiladi.
 
 **Tavsiya — tartib:**
-1. **AVVAL Material** — eng oson (dublikatlarda 0 qator; faqat dormant MM modul qarori).
-2. **KEYIN Customer** — deyarli oson (2 demo qator), lekin SDCustomers "mijoz qo'shish" sahifasi
-   jonli yozuvchi — uni `customers`'ga repoint qilish (yoki retire) divergensiya qaytmasligi uchun.
+1. **AVVAL Material** — chinakam oson (dublikatlarda 0 qator; faqat dormant MM modul qarori, buyurtma bog'lanishi yo'q).
+2. **KEYIN Customer** — avval **qaror**: SD modul rasmiy mijoz moduli bo'ladimi (A: customers kanonik) yoki yo'q.
+   Keyin repoint + 49 buyurtma migration (ehtiyot + zaxira).
 
-> **MUHIM:** "Oson" = data jihatidan. Ikkala holatda ham real qiyinchilik **data ko'chirish emas**,
-> balki **takror-yozuvchini bartaraf etish** (SDCustomers sahifa, MM modul) — aks holda dublikat jadval
-> kelajakda yana to'ladi. Bu kod o'zgarishi (FE repoint / modul retire), migration emas.
+> **MUHIM (verify-don't-trust):** dastlab "ikkalasi ham OSON" deb yozilgandi — KOD tekshiruvi buni
+> tuzatdi: `customers` jadvalida **yozuvchi yo'q** (CRMWorkspace/POSCustomers da'vosi xato edi), jonli
+> mijoz UI esa `sd_customers`'ga yozadi. Material data ko'chirishsiz oson; Customer'da real qiyinchilik
+> **data emas, qaror + buyurtma repoint**.
 
 ---
 *Faza 0 = faqat read-only tekshiruv (psql `sb_erp`@5433). Migration kodi yozilmadi,
