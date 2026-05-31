@@ -73,6 +73,8 @@ export const workCenters = pgTable("work_centers", {
   orgDepartmentId: integer("org_department_id"),
   costPerHour: numericMoney("cost_per_hour"),
   capacityPerHour: numericMoney("capacity_per_hour"),
+  // Per-work-center efficiency/OEE factor (0–1) used by CRP available-hours calc; defaults to 0.85.
+  efficiencyRate: numericMoney("efficiency_rate"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),

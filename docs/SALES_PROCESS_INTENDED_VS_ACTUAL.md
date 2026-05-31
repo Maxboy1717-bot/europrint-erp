@@ -150,4 +150,6 @@ Qaysi buyurtma jadval tanlansa ham: **bitta** buyurtma yaratish yo'li bo'lsin va
 ---
 *1-qadam — hujjat. READ-ONLY, kod/jadval o'zgartirilmadi. Da'volar file:line bilan tekshirildi.
 Manba: egasi jarayoni + SALES_CRM_AUDIT_2026-05-31.md + qayta-tekshiruv (sap.controller:87/106,
-drizzle-quotation.repo:133, sd-contracts.controller, sd-order-created.handler, sd-orders.service:200-253).*
+drizzle-quotation.repo:133, sd-contracts.controller, create-order.handler:92-223,
+outbox-publisher.service:31/40, confirm-advance-payment.handler:61-67,
+advance-approved.listener:14/26, queries-pp:18, legacy-warehouse.helpers:65).*

@@ -603,6 +603,8 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'tests.shuffle_questions ADD COLUMN', sql: `ALTER TABLE IF EXISTS tests ADD COLUMN IF NOT EXISTS shuffle_questions BOOLEAN` },
   { name: 'tests.show_results ADD COLUMN', sql: `ALTER TABLE IF EXISTS tests ADD COLUMN IF NOT EXISTS show_results BOOLEAN` },
   { name: 'tests.is_active ADD COLUMN', sql: `ALTER TABLE IF EXISTS tests ADD COLUMN IF NOT EXISTS is_active BOOLEAN` },
+  // Per-work-center efficiency/OEE factor consumed by CRP (pp-crp.service COALESCE(efficiency_rate,0.85)).
+  { name: 'work_centers.efficiency_rate ADD COLUMN', sql: `ALTER TABLE IF EXISTS work_centers ADD COLUMN IF NOT EXISTS efficiency_rate NUMERIC DEFAULT 0.85` },
   { name: 'hr_capital_courses.provider ADD COLUMN', sql: `ALTER TABLE IF EXISTS hr_capital_courses ADD COLUMN IF NOT EXISTS provider TEXT` },
   { name: 'hr_capital_courses.cost ADD COLUMN', sql: `ALTER TABLE IF EXISTS hr_capital_courses ADD COLUMN IF NOT EXISTS cost NUMERIC` },
   { name: 'hr_capital_courses.duration ADD COLUMN', sql: `ALTER TABLE IF EXISTS hr_capital_courses ADD COLUMN IF NOT EXISTS duration INTEGER` },
