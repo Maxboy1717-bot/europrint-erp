@@ -40,7 +40,7 @@ Lid/Murojaat → Taklif → Buyurtma → Shartnoma+70% avans → Ishlab chiqaris
 | 2 | **TAKLIF (narx)** | menejer | taklif: mijoz, qatorlar, o'lcham/karton/bosma/miqdor, narx, chegirma | Taklifnomalar `/sd/sales-quotes`, SD Quotations `/sd/quotations` | `sd_quotations` | 🟡 | ⚠️ narx kalkulyator **soxta** (pastda) |
 | 3 | **BUYURTMA** | menejer | buyurtma: mijoz, taklifdan qatorlar, summa, 70% avans bayrog'i | Buyurtmalar `/sd/sales-orders`, Order Create `/order-create`, Order Workflow `/order-workflow` | **5 xil jadval!** (pastda) | 🟡/🔴 | ❌ eng tarqoq qadam |
 | 4 | **SHARTNOMA + 70% avans** | menejer + buxgalter | shartnoma: buyurtmaga bog'liq, 70% avans sharti | Shartnomalar `/sd/contracts` | `sd_contracts` | 🔴 | ❌ **yaratish ishlamaydi** (POST handler YO'Q) |
-| 5 | **ISHLAB CHIQARISH (papka/job) → MES** | ishlab chiqarish | production order: buyurtmaga bog'liq, mahsulot, miqdor, BOM | Papka `/papka-orders`; (avtomatik: event→`production_orders`) | `papka_orders` **VA** `production_orders` | 🟡 | ❌ bog'lanish **ishonchsiz** (pastda) |
+| 5 | **ISHLAB CHIQARISH (papka/job) → MES** | ishlab chiqarish | production order: buyurtmaga bog'liq, mahsulot, miqdor, BOM | Papka `/papka-orders` (qo'lda); PP `POST /pp/orders` (qo'lda) | `papka_orders` **VA** `production_orders` | 🔴 | ❌ avtomatik bog'lanish YO'Q — faqat qo'lda; avans→PP kod o'lik (§3.3) |
 | 6 | **YETKAZISH** | logistika | delivery: buyurtmaga bog'liq, pick→pack→issue | SD Deliveries `/sd/deliveries` | `deliveries` | 🟢 | ⚠️ buyurtma=sales_orders ga bog'liq |
 | 7 | **TO'LOV (avans+qoldiq, qarz)** | buxgalter | payment: buyurtmaga bog'liq, summa, avans/qoldiq; qarz yoshi | To'lovlar `/sd/sales-payments`, Debitors `/sd/debitors` | `sd_payments` (yozadi) | 🟡 | ❌ "To'landi" **noto'g'ri jadvalga** (pastda) |
 
@@ -83,15 +83,26 @@ Hammasi qayta tekshirildi (file:line):
 4. **Taklif "Approve" yolg'on** — toast "buyurtma+shartnoma yaratildi" deydi, aslida faqat status flag (audit; konversiya alohida endpointda).
 5. **SD Overview/Quota dashboard 0 ko'rsatadi** — SQL real, javob shakli FE kutganidan boshqa → barcha KPI 0 (audit).
 
-### 3.3 🟡 BUYURTMA → ISHLAB CHIQARISH bog'lanishi — bor, lekin ISHONCHSIZ
+### 3.3 🔴 BUYURTMA → ISHLAB CHIQARISH bog'lanishi — UZILGAN (avtomatik yo'q)
 
-Egasi: "har buyurtma papka/job → MES bo'lishi SHART." Haqiqat (qayta tekshirilgan):
-- **Mexanizm BOR:** SD buyurtma yaratilganda `OrderCreatedEvent` (`eventType:'sd.order.created'`) outbox'ga yoziladi (`sd-orders.service.ts:200-253`), va consumer bor — `SdOrderCreatedHandler` (`pp/.../sd-order-created.handler.ts`) `@OnEvent('sd.order.created')` → `db.insert(production_orders)`. Nom mos (✅).
-- **LEKIN 3 muammo:**
-  1. **Relay topilmadi:** producer **outbox jadvalga** yozadi, consumer **in-process EventEmitter** ni tinglaydi. Outbox→EventEmitter relay (dispatcher/poller) grep'da **topilmadi** → ehtimol event handler'ga **yetib bormaydi** (production_orders yaratilmaydi). ⚠️ runtime tekshiruv kerak (DB bo'sh).
-  2. **Handler yarim-stub:** `where(/* eq order */ undefined as never)` — dedup tekshiruvi no-op; faqat `order_id, order_number, status:'planned'` yoziladi (mahsulot/miqdor/BOM yo'q).
-  3. **Faqat 1 yo'l qamraydi:** event faqat SD service (`sd_sales_orders`) orqali yaratilган buyurtmaga chiqadi. Konversiya (`sales_orders`) va `/order-create` (`papka_orders` to'g'ridan) — **event chiqarmaydi** → ishlab chiqarish ishi yaralmaydi.
-- **Xulosa:** "har buyurtma → papka/job" **bugun ishonchli emas** — mexanizm yarim ulangan, relay ehtimol yo'q, va 3 buyurtma yo'lidan faqat bittasi event chiqaradi. Ayni paytda `/order-create` `papka_orders` ga to'g'ridan yozadi = **ikkinchi, alohida ishlab chiqarish yo'li**.
+> ⚠️ **HALOLLIK: bu bo'limni avval 2 marta XATO yozdim** ("mexanizm yo'q", keyin "ishlaydi:
+> avans→production_orders insert" — ikkalasi ham o'qimasdan, hatto mavjud bo'lmagan fayl nomlab).
+> Quyida HAR fayl o'qib, file:line dalil bilan tasdiqlangan haqiqat (Explore agent + men).
+
+Egasi: "har buyurtma papka/job → MES bo'lishi SHART." **Haqiqat: avtomatik bog'lanish YO'Q.**
+
+**Mavjud (to'g'ri ishlaydigan) qismlar:**
+- `create-order.handler.ts` buyurtma + outbox yozuvlarini (`ORDER_CREATED`, `SO_DESIGN_REQUESTED`, `SO_SAMPLE_REQUESTED`) **bitta tranzaksiyada** yozadi (`:92-111`, `:193-223`). ✅
+- Outbox relay **BOR**: `shared/outbox/outbox-publisher.service.ts:31` `@Interval(...,10_000)` har 10s poll → `:40` `emitter.emit(row.event_name, row.payload)`. ✅
+
+**🔴 Lekin zanjir 3 joyda uzilgan (tasdiqlangan):**
+1. **70% avans tasdiqlanganda HECH QANDAY event chiqmaydi.** `confirm-advance-payment.handler.ts:61-67` faqat `updateAdvancePaidAtomic()` qiladi — buyurtma qatorini yangilaydi, lekin event/outbox yozmaydi. Demak avans to'langach pastoqim (ishlab chiqarish) xabardor qilinmaydi.
+2. **`production_orders` ga avtomatik INSERT umuman yo'q.** Yagona yozuv — **qo'lda** `POST /pp/orders` (texnolog; `create-production-order.handler` → `queries-pp.ts:18 db.insert(production_orders_int)`). Hech bir order/advance/design eventi production_orders yaratmaydi.
+3. **`advance-approved.listener.ts` aslida boshqa narsa qiladi** (men "production_orders insert qiladi" deb xato yozgandim): u `@EventsHandler(AdvanceApprovedEvent)` (`:14`) → `ppRepo.unlockPlanning(orderId)` (`:26`) — ya'ni production_orders **statusini UPDATE** qiladi (INSERT EMAS). Bundan tashqari uni qo'zg'ovchi `AdvanceApprovedEvent` **o'lik kod**: uni faqat `finance/tech-three-checkpoint.listener.ts` chiqaradi, u esa hech qachon publish qilinmaydigan `TechThreeCheckpointEvent` ga bog'liq (faylning o'z izohi: "no-op at runtime").
+
+**Qo'shimcha (ikkilik):** `/order-create` sahifasi `papka_orders` ga **to'g'ridan** yozadi (`legacy-warehouse.helpers.ts:65`) — bu event-zanjirdagi `production_orders` dan butunlay alohida jadval. "Papka buyurtma" (papka_orders) va "ishlab chiqarish buyurtmasi" (production_orders) bog'lanmagan.
+
+- **Xulosa:** Egasining "har buyurtma → papka/job → MES" niyati **bugun avtomatlashtirilmagan**. Ishlab chiqarish ishi faqat **qo'lda** (PP/MES ekranidan) ochiladi; 70% avans tasdig'i uni avtomatik qo'zg'amaydi (event chiqmaydi), avans→PP ni ulashi kerak bo'lgan kod o'lik. Bu 2/3-qadamda ulanishi kerak bo'lgan asosiy bo'shliq.
 
 ### 3.4 🟡 ROL AJRATISH kuchsiz
 
