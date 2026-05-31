@@ -119,13 +119,13 @@ Audit: **pul amalda `sales_orders` da** (konversiya + dashboard + to'lov + Custo
 | Variant | Nima | Egasi jarayoniga mosligi | Xavf |
 |---|---|---|---|
 | **A (kam ish)** | `sales_orders` = yagona buyurtma jadval. Buyurtmalar sahifasi + barcha hisobot shunga qaratiladi; `sd_sales_orders` nafaqaga. | ✅ Pul allaqachon shu yerda; bitta zanjir | Past-o'rta |
-| B | `sd_sales_orders` = kanonik (DDD aggregate, status-graph, 70% avans bloki, outbox event shu yerda). Konversiya + dashboard + to'lov shunga ko'chiriladi. | ✅ Eng boy domen (70% avans + event→production shu jadvalda) | O'rta — ko'p joy ko'chadi |
+| B | `sd_sales_orders` = kanonik (DDD aggregate, status-graph, 70% avans bloki, outbox event shu yerda). Konversiya + dashboard + to'lov shunga ko'chiriladi. | ✅ Eng boy domen (70% avans bloki + outbox shu jadvalda) | O'rta — ko'p joy ko'chadi |
 | — | `sap_sales_orders`, `papka_orders`, `ow_orders` | — | har holda nafaqa yoki aniq rol: papka_orders=ishlab chiqarish yozuvi (sotish emas), ow_orders=alohida tajriba |
 
-**Nozik nuqta (egaga qaror):** Variant A kam ish, lekin **70% avans bloki va event→production mexanizmi `sd_sales_orders` (DDD aggregate) da**. Agar Variant A tanlansa, o'sha 70%-avans + production-event mantiqini `sales_orders` ga olib o'tish kerak. Variant B ko'proq ko'chirish, lekin boyroq domenni saqlaydi. **Bu — egasi qarori.**
+**Nozik nuqta (egaga qaror):** Variant A kam ish, lekin **70% avans bloki va outbox event mexanizmi `sd_sales_orders` (DDD aggregate) da**. Agar Variant A tanlansa, o'sha 70%-avans + outbox mantiqini `sales_orders` ga olib o'tish kerak. Variant B ko'proq ko'chirish, lekin boyroq domenni saqlaydi. **Bu — egasi qarori.**
 
 ### 4.3 Ishlab chiqarish bog'lanishi (har ikki variantda kerak)
-Qaysi buyurtma jadval tanlansa ham: **bitta** buyurtma yaratish yo'li bo'lsin va u **ishonchli** `production_orders`/papka yaratsin (relay'ni tuzatish + handler'ni to'ldirish + `/order-create` ni shu yo'lga ulash). Hozir 3 yo'ldan faqat 1 tasi event chiqaradi va relay ehtimol yo'q.
+Qaysi buyurtma jadval tanlansa ham: **bitta** buyurtma yaratish yo'li bo'lsin va undan **avtomatik** ishlab chiqarish ishi ochilsin. Hozir bu **umuman yo'q** (§3.3): 70% avans tasdig'i event chiqarmaydi, avans→PP kod o'lik (`TechThreeCheckpointEvent` hech qachon publish qilinmaydi), production_orders faqat qo'lda yaratiladi, va `/order-create` boshqa jadvalga (papka_orders) yozadi. 2/3-qadamda: (a) avans tasdig'idan event chiqarish, (b) o'sha eventni production/papka yaratuvchi listenerga ulash, (c) papka_orders↔production_orders ikkiligini hal qilish.
 
 ---
 
