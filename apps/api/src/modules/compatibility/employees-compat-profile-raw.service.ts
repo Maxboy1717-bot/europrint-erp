@@ -61,12 +61,12 @@ export class EmployeesCompatProfileRawService {
           WHERE er.employee_id = ${si(id)}
         `),
         rawSql(sql`
-          SELECT es.id, es.employee_id, es.skill_id, es.level, es.created_at,
-                 sc.name AS skill_name, sc.category
+          SELECT es.id, es.employee_id, es.skill_name,
+                 es.proficiency_level AS level, es.proficiency_score,
+                 es.skill_category AS category, es.created_at
           FROM employee_skills es
-          LEFT JOIN skill_catalog sc ON sc.id = es.skill_id
           WHERE es.employee_id = ${si(id)}
-          ORDER BY sc.category, sc.name LIMIT 50
+          ORDER BY es.skill_category, es.skill_name LIMIT 50
         `),
       ]);
       const ratingRow = dbRows(ratR)[0] ?? {};
@@ -158,10 +158,9 @@ export class EmployeesCompatProfileRawService {
   async createCapitalProfile(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
       const r = await rawSql(sql`
-        INSERT INTO employee_skills (employee_id, skill_id, level)
-        VALUES (${si(employeeId)}, ${body['skill_id'] ?? body['skillId'] ?? null}, ${body['level'] ?? 'beginner'})
-        ON CONFLICT (employee_id, skill_id) DO UPDATE SET level = EXCLUDED.level
-        RETURNING id, employee_id, skill_id, level, created_at
+        INSERT INTO employee_skills (employee_id, skill_name, skill_category, proficiency_level)
+        VALUES (${si(employeeId)}, ${body['skill_name'] ?? body['skillName'] ?? null}, ${body['skill_category'] ?? body['category'] ?? 'general'}, ${body['level'] ?? body['proficiencyLevel'] ?? 'beginner'})
+        RETURNING id, employee_id, skill_name, skill_category, proficiency_level, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
       if (!item) throw new InternalServerErrorException('Skill creation failed');
