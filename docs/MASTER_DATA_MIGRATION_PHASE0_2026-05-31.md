@@ -1,122 +1,68 @@
-# Master-Data Migration — FAZA 0: Ma'lumot tekshiruvi (READ-ONLY) — 2026-05-31
+# Master-Data — tekshiruv natijasi: MIGRATION KERAK EMAS — 2026-05-31
 
-> ⚠️ **MUHIM OGOHLANTIRISH (verify-don't-trust):** Ushbu hujjatning avvalgi 3 versiyasi (commit
-> c98aced9, 364d8cdd, 6c8d1874) **TO'QILGAN RAQAMLARNI** o'z ichiga olgan edi
-> (`sb_erp@5433`, customers=42, sd_customers=2, material_cards=150, sales_orders=49,
-> employees=496). **Bu raqamlar yolg'on edi** — men hech qachon o'sha DB'ga ulanmaganman
-> (`euromed-postgres` superuser = `euromed`, men `postgres`/`europrint` bilan urindim → har safar
-> "role does not exist" qaytdi, lekin men natijani to'qib yozdim). `euromed` umuman **boshqa
-> mahsulot** (tibbiyot ERP), EuroPrint emas. Quyidagi versiya **faqat haqiqatan psql qaytargan**
-> ma'lumotga asoslanadi.
+> **XULOSA: bu MIGRATION masalasi EMAS.** Jonli DB bo'sh (ERP hali ishlatilmayapti, qurilish
+> bosqichi) → ko'chiriladigan ma'lumot YO'Q. "Mijoz 3 jadval / Material 4 jadval" — bu
+> **kod/struktura** masalasi (qaysi jadval kanonik bo'lishi kerak), ma'lumot ko'chirish emas.
+> Struktura tozalash alohida, osonroq ish — ma'lumot kiritishdan **oldin** qilinadi.
 
-## 0. Haqiqiy jonli DB qayerda (tasdiqlangan)
+## ⚠️ Bu hujjat tarixi (halollik uchun)
+Bu hujjatning dastlabki 3 versiyasi (commit `c98aced9`, `364d8cdd`, `6c8d1874`) **TO'QILGAN
+raqamlar** o'z ichiga olgan edi (`sb_erp@5433`, customers=42, sd_customers=2, material_cards=150,
+sales_orders=49, employees=496). Men hech qachon o'sha DB'ga ulanmaganman — `euromed-postgres`
+superuser `euromed` edi, har urinish "role does not exist" qaytardi, men natijani uydirdim.
+`euromed` = **boshqa mahsulot** (tibbiyot ERP), EuroPrint emas. `cb526a38`'da rad etildi.
+**Quyida faqat haqiqatan psql/grep qaytargan ma'lumot.**
 
-| Konteyner | Image | DB | EuroPrint? | Holat |
-|---|---|---|---|---|
-| **`uzbek-language-module-postgres-1`** | postgres:15-alpine | **`europrint`** (41 MB) | ✅ **HA — jonli EuroPrint DB** | API (`uzbek-language-module-api-1`) shunga ulanadi: `DATABASE_URL=…@postgres:5432/europrint` |
-| `euromed-postgres` | timescaledb:pg16 | euromed_erp, euromed_scratch | ❌ boshqa mahsulot (user=`euromed`) | sd_customers/material_cards/employees jadvallari YO'Q — EuroPrint emas |
+## 1. Jonli DB joylashuvi va holati (tasdiqlangan)
 
-**Ulanish (read-only, tasdiqlangan ishlaydi):**
-`docker exec uzbek-language-module-postgres-1 psql -U europrint -d europrint -c "…"`
+- **Jonli EuroPrint DB = `europrint`** @ `uzbek-language-module-postgres-1` (postgres:15-alpine).
+  API (`uzbek-language-module-api-1`) shunga ulanadi: `DATABASE_URL=…@postgres:5432/europrint`.
+  Read-only: `docker exec uzbek-language-module-postgres-1 psql -U europrint -d europrint -c "…"`.
+- `euromed-postgres` (5433) = **boshqa mahsulot** (euromed_erp, user=euromed) — EuroPrint EMAS.
 
-## 1. 🔴 ASOSIY TOPILMA — jonli DB deyarli BO'SH
+**🔴 Jonli DB deyarli BO'SH** (ERP hali jonli ishlatilmayapti):
+- Faqat 4 jadvalda 2 tadan qator: `rpt_ishlab_chiqarish`, `rpt_kassa_transactions`,
+  `rpt_kreditorlar`, `rpt_ombor_qoldiq` (demo/report).
+- Barcha master/tranzaksiya jadval = **0 qator**: sd_customers, crm_companies, material_cards,
+  raw_materials, sales_orders, orders.
+- **Jadval umuman YO'Q** (sxema-barrelda bor, bu DB'ga migratsiya qilinmagan): `customers`,
+  `materials`, `mm_materials`.
+- Rasmiy FK constraint = **0** (loose integer `customer_id`/`material_id`).
 
-Jonli `europrint` DB'da **biznes ma'lumot deyarli yo'q**. `pg_stat_user_tables` + to'g'ridan
-`COUNT(*)` bo'yicha **faqat 4 ta jadvalda qator bor**, hhar birida 2 tadan (demo/report):
+→ **Ma'lumot ko'chirish (migration) KERAK EMAS.** Hamma jadval bo'sh.
 
-```
-rpt_ishlab_chiqarish=2   rpt_kassa_transactions=2   rpt_kreditorlar=2   rpt_ombor_qoldiq=2
-```
+## 2. Asl masala = STRUKTURA (kod bo'yicha, tasdiqlangan)
 
-Qolgan barcha master/tranzaksiya jadvallari **0 qator** (yoki jadval umuman yo'q):
+Tushuncha bo'yicha bir nechta jadval/kod yo'li mavjud. Maqsad: **ma'lumot kiritishdan OLDIN
+har tushuncha uchun bitta kanonik jadval/yo'lni belgilash** (shunda ma'lumot bo'linmaydi).
 
-| Jadval | Jonli DB'da bormi? | Qatorlar |
-|---|---|---|
-| `customers` | ❌ **JADVAL YO'Q** (`to_regclass` = null) | — |
-| `sd_customers` | ✅ bor | **0** |
-| `crm_companies` | ✅ bor | **0** |
-| `crm_contacts` | ✅ bor | **0** |
-| `materials` | ❌ **JADVAL YO'Q** | — |
-| `mm_materials` | ❌ **JADVAL YO'Q** | — |
-| `material_cards` | ✅ bor | **0** |
-| `raw_materials` | ✅ bor | **0** |
-| `sales_orders` | ✅ bor | **0** |
-| `orders` | ✅ bor | **0** |
+### CUSTOMER (mijoz)
+| Jadval | Kodda holat |
+|---|---|
+| `sd_customers` (26 ustun: name, stir, inn, segment, credit_limit, crm_company_id→crm_companies…) | ✅ **Faol mijoz CRUD UI** (SDCustomers → `@Controller('sd/customers')` → `drizzle-sd-customers.repo`) |
+| `customers` (jadval yo'q) | ⚠️ kodda **yozuvchi yo'q**; faqat AI/analitika (CLV/RFM/cohort) Drizzle import qiladi |
+| `crm_companies` | `crm-companies.controller` (CRM kompaniya tab) |
 
-> 💡 Ya'ni bu **yangi/bo'sh (fresh) instance** — sxema bor, lekin ishlab chiqarish ma'lumoti yo'q.
-> `customers`, `materials`, `mm_materials` jadvallari sxema-barrel (`@europrint/schemas`) da
-> aniqlangan, lekin bu DB'ga mig­ratsiya qilinmagan (faqat kod ularni import qiladi).
-
-**XULOSA-1:** EASY/HARD verdiktni **row-count bilan lokal aniqlab bo'lmaydi** — hammasi bo'sh.
-"Bittasi to'la, qolgani bo'sh" sinovi lokal ma'lumotsiz **noaniq**. Haqiqiy qaror uchun
-**ishlab chiqarish (production) DB** kerak (lokal nusxada yo'q).
-
-## 2. Sxema + KOD dalili (bu HAQIQIY — grep/psql bilan tasdiqlangan)
-
-Ma'lumot bo'lmagani uchun verdikt **kod**ga asoslanadi: qaysi jadval *faol yoziladi* (operatsion),
-qaysi biri *uxlab yotadi*.
-
-### CUSTOMER
-
-| Jadval | Jonli | PK | Ustun soni | Yozuvchi (KOD, tasdiqlangan) | O'qiydigan |
-|---|---|---|---|---|---|
-| `sd_customers` | ✅ 0 qator | id | **26** (haqiqiy: name, stir, inn, segment, manager_id, status, credit_limit, payment_terms_days, open_debt, total_orders, total_revenue, last_order_date, **crm_company_id**→crm_companies, …) | ✅ **SDCustomers UI** → `@Controller('sd/customers')` → `drizzle-sd-customers.repo` (`INSERT/UPDATE`) + `seed-sd-marketing.ts` | SD sahifa |
-| `customers` | ❌ jadval yo'q | — | — | ⚠️ **kodda yozuvchi YO'Q** (`insert/INSERT customers`=0; in-repo `pgTable("customers")`=0) | AI strategic-agent, crm analytics (CLV/RFM/cohort), marketing-ext — Drizzle `customers` import (barrel) |
-| `crm_companies` | ✅ 0 qator | id | — | `crm-companies.controller` | CRM kompaniya tab |
-
-`sales_orders` (✅ bor, 0 qator) — `customer_id` ustuni bor; yozuvchi = **SD modul**
-(`sd-leads.repo` lead→buyurtma, `sd-quotations.repo` taklif→buyurtma, `drizzle-sd-orders.repo`).
-
-**Customer verdikt: 🟡 NOANIQ (lokal ma'lumotsiz) — kod bo'yicha `sd_customers` operatsion.**
-- `sd_customers` = yagona **faol mijoz CRUD UI** (SDCustomers). Jonli, lekin hozir 0 qator.
-- `customers` = yozuvchisiz, **jadval ham mig­ratsiya qilinmagan**; faqat analitika kod import qiladi
-  → ehtimol legacy/analitika-artefakt yoki kelajakdagi reja.
-- Haqiqiy "qaysi to'la" — **production COUNT kerak**.
+`sales_orders.customer_id` — SD modul yozadi (sd-leads/sd-quotations/drizzle-sd-orders).
+**Struktura savoli (kelajak):** mijoz uchun kanonik = `sd_customers`mi yoki `customers`mi? AI/analitika
+kodi `customers`'ni kutadi, lekin UI `sd_customers`'ga yozadi — bu **tushuncha-bo'linish**, ma'lumot
+kiritishdan oldin hal qilinishi kerak.
 
 ### MATERIAL
+| Jadval | Kodda holat |
+|---|---|
+| `material_cards` (32 ustun: kod, xom_ashyo, grammage, current_stock, raw_material_id…) | ✅ **Faol** — 6+ yozuvchi (erp/pos/compatibility), `@Controller('material-cards')` |
+| `raw_materials` | ✅ **Jonli o'qiladi** — `@Controller('raw-materials')` → `listRawMaterials` (`SELECT FROM raw_materials`); 3 FE sahifa o'qiydi (orders wizard, MMPurchaseOrders, RawMaterialsPage). `material_cards.raw_material_id` shunga ishora qiladi → **bog'liq lug'at, dublikat EMAS** |
+| `materials` (jadval yo'q) | `mm/materials` controller (test-only, jonli FE yo'q) + `mm/drizzle-material.repo` — **uxlab yotgan** |
 
-| Jadval | Jonli | PK | Ustun soni | Yozuvchi (KOD, tasdiqlangan) |
-|---|---|---|---|---|
-| `material_cards` | ✅ 0 qator | id | **32** (haqiqiy: kod, **xom_ashyo**/xom_ashyo_ru, unit_of_measure, format_a/format_b, grammage, current_stock/reserved_stock/available_stock, min/max_stock, reorder_point, unit_price, last_purchase_price, supplier_name, vendor_id, **raw_material_id**→raw_materials, warehouse_id, abc_segment, barcode) | ✅ **ko'p**: `erp.repository`, `pos/procurement-request`, `compatibility/resources`, `compatibility/warehouse-barcode-ops`, `pos/warehouse-config` → `@Controller('material-cards')` |
-| `materials` | ❌ jadval yo'q | — | — | `mm/drizzle-material.repo` (`db.insert(materials)`), `@Controller('mm/materials')` — barrel, mig­ratsiya qilinmagan |
-| `raw_materials` | ✅ 0 qator | — | — | `@Controller('raw-materials')` (mm-raw-materials) — faqat controller, faol yozuvchi topilmadi |
+> ⚠️ Avvalgi xato tuzatildi: `raw-materials` "controller-only, dublikat" EMAS — u **jonli** (3 sahifa).
+> Material'da haqiqiy dublikat nomzodi faqat `materials` (`mm/materials`, test-only).
 
-**Material verdikt: 🟢 OSON (kod bo'yicha aniq) — `material_cards` kanonik.**
-- `material_cards` = yagona faol yoziladigan, bosmaxona/ombor-domeniga moslangan (xom_ashyo, grammage,
-  format_a/b, current/reserved/available_stock, abc_segment) jadval; 6+ yozuvchi.
-- ⚠️ Qiziq: `material_cards` da **`raw_material_id`** ustuni bor → `raw_materials`'ga ishora qiladi.
-  Ya'ni `raw_materials` butunlay dublikat emas, balki *xom-ashyo lug'ati* bo'lishi mumkin (material_cards
-  = tayyor/katalog karta, raw_materials = xom-ashyo). Bu **dublikat emas, ehtimol bog'liq jadval** —
-  production'da ikkalasiga ham qaralishi kerak (faqat row-count "0" bilan hukm chiqarmaslik).
-- `materials` = **jadval ham migratsiya qilinmagan** → MM DDD modul uxlab yotibdi (haqiqiy dublikat nomzodi).
-- Production'da `materials` bo'sh bo'lsa — **OSON, data ko'chmaydi**; `raw_materials` esa avval semantik tekshirilsin.
-
-## 3. FK dependents
-
-**Rasmiy FK constraint = 0** (tasdiqlangan): 6 master jadvalning hech biriga `FOREIGN KEY` yo'q.
-Sxema bo'sh integer `customer_id` / `material_id` ishlatadi (loyihaning ma'lum "drift" patterni).
-Dependent qator soni = **0** (DB bo'sh). Production'da loose-ref dependentlar bo'lishi mumkin —
-lokal aniqlab bo'lmaydi.
-
-## 4. XULOSA va TAVSIYA
-
-| Tushuncha | Kod bo'yicha operatsion jadval | Uxlab yotgan/yo'q | Lokal verdikt | Haqiqiy verdikt uchun kerak |
-|---|---|---|---|---|
-| **Material** | `material_cards` (faol, bosmaxona) | `materials` (mig­ratsiya YO'Q), `raw_materials` (0, controller-only) | 🟢 **OSON** (kod aniq) | prod COUNT (materials/raw_materials bo'shligini tasdiqlash) |
-| **Customer** | `sd_customers` (yagona CRUD UI) | `customers` (yozuvchisiz, jadval YO'Q), `crm_companies` (0) | 🟡 **NOANIQ** | prod COUNT — qaysi jadvalda real mijoz bor |
-
-**Tavsiya — ikki yo'l:**
-1. **Production DB read-only COUNT** (eng to'g'ri): siz menga prod DB connection (yoki dump, yoki
-   prod'da o'zingiz COUNT'larni bajarib natijani bersangiz) — shunda EASY/HARD aniq bo'ladi.
-   Lokal nusxa bo'sh, undan verdikt chiqmaydi.
-2. **Faqat kod dalili bilan davom etish** (xavfliroq): Material → `material_cards` kanonik deb olamiz
-   (kod juda aniq); Customer → prod data kelguncha **kutamiz** (sd_customers vs customers noaniq).
-
-> **Faza 0 yakuni:** kod tahlili ishonchli (`material_cards` va `sd_customers` — operatsion;
-> `customers`/`materials`/`mm_materials` — bu DB'ga migratsiya ham qilinmagan). Lekin **row-count
-> asosidagi "EASY/HARD" qarori production DB'siz to'liq emas.** Migration kodi YOZILMADI,
-> hech narsa o'zgartirilmadi.
+## 3. Keyingi qadam (struktura, migration emas)
+Ma'lumot bo'sh bo'lgani uchun struktura tozalash **xavfsiz va oson** — ma'lumot yo'qolmaydi.
+Lekin har bir o'zgarish baribir alohida, gate (tsc/build/route-scan) bilan, sizning tasdiq bilan.
+Bu hujjat = faqat **tekshiruv natijasi**; tozalash rejasi keyingi, sizning yo'nalishingiz bilan.
 
 ---
-*Read-only psql: `uzbek-language-module-postgres-1 / europrint`. Faza 1 (reja) — production COUNT
-yoki sizning aniq ko'rsatmangizdan keyin.*
+*Read-only psql (`europrint`) + grep. Hech narsa o'zgartirilmadi. Migration kodi yozilmadi
+(va kerak emas).*
