@@ -28,7 +28,6 @@ const IncomeExpense = lazy(() => import("@/pages/IncomeExpense"));
 const InventoryValuation = lazy(() => import("@/pages/InventoryValuation"));
 const AssetManagement = lazy(() => import("@/pages/AssetManagement"));
 const FinanceExtended = lazy(() => import("@/pages/FinanceExtended"));
-const GLChartOfAccounts = lazy(() => import("@/pages/GLChartOfAccounts"));
 const CfoConfigSettings = lazy(() => import("@/pages/CfoConfigSettings"));
 const AIFinancePage = lazy(() => import("@/pages/AIFinancePage"));
 
