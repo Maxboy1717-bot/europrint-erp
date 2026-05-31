@@ -60,7 +60,7 @@ qaysi biri *uxlab yotadi*.
 
 | Jadval | Jonli | PK | Ustun soni | Yozuvchi (KOD, tasdiqlangan) | O'qiydigan |
 |---|---|---|---|---|---|
-| `sd_customers` | ✅ 0 qator | id | 32 (customer_code, company_name, inn, credit_limit, lifetime_value, total_orders…) | ✅ **SDCustomers UI** → `@Controller('sd/customers')` → `drizzle-sd-customers.repo` (`INSERT/UPDATE`) + `seed-sd-marketing.ts` | SD sahifa |
+| `sd_customers` | ✅ 0 qator | id | **26** (haqiqiy: name, stir, inn, segment, manager_id, status, credit_limit, payment_terms_days, open_debt, total_orders, total_revenue, last_order_date, **crm_company_id**→crm_companies, …) | ✅ **SDCustomers UI** → `@Controller('sd/customers')` → `drizzle-sd-customers.repo` (`INSERT/UPDATE`) + `seed-sd-marketing.ts` | SD sahifa |
 | `customers` | ❌ jadval yo'q | — | — | ⚠️ **kodda yozuvchi YO'Q** (`insert/INSERT customers`=0; in-repo `pgTable("customers")`=0) | AI strategic-agent, crm analytics (CLV/RFM/cohort), marketing-ext — Drizzle `customers` import (barrel) |
 | `crm_companies` | ✅ 0 qator | id | — | `crm-companies.controller` | CRM kompaniya tab |
 
@@ -77,15 +77,19 @@ qaysi biri *uxlab yotadi*.
 
 | Jadval | Jonli | PK | Ustun soni | Yozuvchi (KOD, tasdiqlangan) |
 |---|---|---|---|---|
-| `material_cards` | ✅ 0 qator | id | 34 (sku_code, current_stock, standard_cost, barcode, **gsm/width_cm/length_m/sheet_count/color** = bosmaxona) | ✅ **ko'p**: `erp.repository`, `pos/procurement-request`, `compatibility/resources`, `compatibility/warehouse-barcode-ops`, `pos/warehouse-config` → `@Controller('material-cards')` |
+| `material_cards` | ✅ 0 qator | id | **32** (haqiqiy: kod, **xom_ashyo**/xom_ashyo_ru, unit_of_measure, format_a/format_b, grammage, current_stock/reserved_stock/available_stock, min/max_stock, reorder_point, unit_price, last_purchase_price, supplier_name, vendor_id, **raw_material_id**→raw_materials, warehouse_id, abc_segment, barcode) | ✅ **ko'p**: `erp.repository`, `pos/procurement-request`, `compatibility/resources`, `compatibility/warehouse-barcode-ops`, `pos/warehouse-config` → `@Controller('material-cards')` |
 | `materials` | ❌ jadval yo'q | — | — | `mm/drizzle-material.repo` (`db.insert(materials)`), `@Controller('mm/materials')` — barrel, mig­ratsiya qilinmagan |
 | `raw_materials` | ✅ 0 qator | — | — | `@Controller('raw-materials')` (mm-raw-materials) — faqat controller, faol yozuvchi topilmadi |
 
 **Material verdikt: 🟢 OSON (kod bo'yicha aniq) — `material_cards` kanonik.**
-- `material_cards` = yagona faol yoziladigan, bosmaxona-domeniga moslangan (gsm/width/length/color) jadval; 6+ yozuvchi.
-- `materials` = **jadval ham migratsiya qilinmagan** → MM DDD modul uxlab yotibdi.
-- `raw_materials` = bor, lekin faol yozuvchi yo'q (faqat controller).
-- Production'da ham `materials`/`raw_materials` bo'sh bo'lsa (ehtimol katta) — **OSON, data ko'chmaydi**.
+- `material_cards` = yagona faol yoziladigan, bosmaxona/ombor-domeniga moslangan (xom_ashyo, grammage,
+  format_a/b, current/reserved/available_stock, abc_segment) jadval; 6+ yozuvchi.
+- ⚠️ Qiziq: `material_cards` da **`raw_material_id`** ustuni bor → `raw_materials`'ga ishora qiladi.
+  Ya'ni `raw_materials` butunlay dublikat emas, balki *xom-ashyo lug'ati* bo'lishi mumkin (material_cards
+  = tayyor/katalog karta, raw_materials = xom-ashyo). Bu **dublikat emas, ehtimol bog'liq jadval** —
+  production'da ikkalasiga ham qaralishi kerak (faqat row-count "0" bilan hukm chiqarmaslik).
+- `materials` = **jadval ham migratsiya qilinmagan** → MM DDD modul uxlab yotibdi (haqiqiy dublikat nomzodi).
+- Production'da `materials` bo'sh bo'lsa — **OSON, data ko'chmaydi**; `raw_materials` esa avval semantik tekshirilsin.
 
 ## 3. FK dependents
 
