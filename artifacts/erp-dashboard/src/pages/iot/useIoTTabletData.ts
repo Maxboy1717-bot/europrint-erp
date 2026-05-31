@@ -28,6 +28,7 @@ function makeTabletFetch(tabletToken: string, t: (uz: string, ru: string) => str
   ): Promise<Response> {
     const token = tabletToken || safeStorage.getItem("iot_tablet_token") || "";
     if (!token) throw new Error(t("Sessiya muddati tugagan — iltimos qayta kiring", "Сессия истекла — войдите снова"));
+    // eslint-disable-next-line no-restricted-globals -- raw fetch: shared tablet-fetch helper; uses x-tablet-token auth, not ERP cookie
     return fetch(path, {
       method,
       headers: { "Content-Type": "application/json", "x-tablet-token": token },
@@ -96,6 +97,7 @@ export function useIoTTabletData({
       const token = tabletToken || safeStorage.getItem("iot_tablet_token") || "";
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (token) headers["x-tablet-token"] = token;
+      // eslint-disable-next-line no-restricted-globals -- raw fetch: IoT tablet uses x-tablet-token auth, not ERP session cookie
       const res = await fetch("/api/iot/tablet/defect-reasons", { headers });
       if (!res.ok) return [];
       return res.json();

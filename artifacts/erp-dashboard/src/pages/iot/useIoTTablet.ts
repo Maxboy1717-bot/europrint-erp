@@ -233,6 +233,7 @@ export function useIoTTablet() {
       if (!token) throw new Error("Tablet sessiyasi yo'q");
       if (!core.handoverSignature.trim())
         throw new Error(core.t("Raqamli imzo majburiy", "Цифровая подпись обязательна"));
+      // eslint-disable-next-line no-restricted-globals -- raw fetch: IoT tablet uses x-tablet-token auth, not ERP session cookie
       const res = await fetch("/api/iot/tablet/handover", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-tablet-token": token },

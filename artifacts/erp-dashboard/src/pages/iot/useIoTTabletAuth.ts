@@ -45,6 +45,7 @@ export function buildIoTTabletAuth({
       return;
     }
     try {
+      // eslint-disable-next-line no-restricted-globals -- raw fetch: tablet login endpoint issues the x-tablet-token; not ERP cookie auth
       const res = await fetch("/api/iot/tablet/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
