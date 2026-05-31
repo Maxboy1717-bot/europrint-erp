@@ -12,7 +12,7 @@ import { safeCall, Result } from '@common/result';
 import {
   lmsTestAttempts, lmsSessions, lmsTests, mentorships, lmsEvents,
   applications, applicationResponses, surveysTable, surveyResponses,
-  broadcastsTable, skillsTable, userSkills, hrEmployees, appUsers,
+  broadcastsTable, hrEmployees, appUsers,
   lmsEnrollments, hrDepartments, lmsCourses,
 } from '@shared/db';
 

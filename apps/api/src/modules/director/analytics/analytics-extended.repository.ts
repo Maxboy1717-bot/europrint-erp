@@ -14,7 +14,7 @@ import { safeCall, Result } from '@common/result';
 import {
   lmsTestAttempts, mentorships, lmsEvents,
   applications, applicationResponses, surveysTable, surveyResponses,
-  broadcastsTable, skillsTable, userSkills, hrEmployees, appUsers,
+  broadcastsTable, employee_skills, hrEmployees, appUsers,
   hrDepartments, lmsCourses,
 } from '@shared/db';
 
@@ -123,16 +123,17 @@ export class AnalyticsExtendedRepository extends AnalyticsExtendedBaseRepository
 
     return safeCall(async () => {
       const [[row], catRows] = await Promise.all([
+        // Converged 2026-05-31: employee_skills is the live source (user_skills frozen/empty).
         db.select({
-          total: sql<string>`COUNT(${skillsTable.id})`,
-          user_skills: sql<string>`COUNT(DISTINCT ${userSkills.id})`,
-          verified: sql<string>`COUNT(DISTINCT ${userSkills.id}) FILTER (WHERE ${userSkills.verified}=true)`,
-        }).from(skillsTable).leftJoin(userSkills, sql`${userSkills.skill_id} = ${skillsTable.id}`),
+          total: sql<string>`COUNT(DISTINCT ${employee_skills.skillName})`,
+          user_skills: sql<string>`COUNT(${employee_skills.id})`,
+          verified: sql<string>`COUNT(${employee_skills.id}) FILTER (WHERE confirmed_at IS NOT NULL)`,
+        }).from(employee_skills),
         db.select({
-          category: skillsTable.category,
+          category: sql<string>`skill_category`,
           cnt: sql<string>`COUNT(*)`,
-        }).from(skillsTable)
-          .groupBy(skillsTable.category)
+        }).from(employee_skills)
+          .groupBy(sql`skill_category`)
           .orderBy(sql`COUNT(*) DESC`),
       ]);
       const r = row as Row | undefined;
@@ -202,13 +203,13 @@ export class AnalyticsExtendedRepository extends AnalyticsExtendedBaseRepository
     return safeCall(async () => {
       const rows = await db.select({
         subject: hrDepartments.name,
-        A: sql<string>`COUNT(DISTINCT ${userSkills.id})`,
-        B: sql<string>`COUNT(DISTINCT ${userSkills.id}) FILTER (WHERE ${userSkills.verified}=true)`,
+        A: sql<string>`COUNT(DISTINCT ${employee_skills.id})`,
+        B: sql<string>`COUNT(DISTINCT ${employee_skills.id}) FILTER (WHERE confirmed_at IS NOT NULL)`,
       }).from(hrDepartments)
         .leftJoin(hrEmployees, sql`${hrEmployees.department_id} = ${hrDepartments.id}`)
-        .leftJoin(userSkills, sql`${userSkills.employee_id} = ${hrEmployees.id}`)
+        .leftJoin(employee_skills, sql`${employee_skills.employeeId} = ${hrEmployees.id}`)
         .groupBy(hrDepartments.name)
-        .orderBy(sql`COUNT(DISTINCT ${userSkills.id}) DESC`)
+        .orderBy(sql`COUNT(DISTINCT ${employee_skills.id}) DESC`)
         .limit(10);
       type MR = { subject: string; A: string; B: string };
       return ((rows ?? []) as MR[]).map(row => ({ subject: row.subject ?? '', A: parseInt(row.A, 10) || 0, B: parseInt(row.B, 10) || 0 }));

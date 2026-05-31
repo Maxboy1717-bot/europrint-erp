@@ -101,6 +101,13 @@ export const broadcastsTable = pgTable('broadcasts', {
   created_at: timestamp('created_at'),
 });
 
+/**
+ * @deprecated FROZEN 2026-05-31. `skills` catalog + `user_skills` are an empty,
+ * write-less alternate skill model. The live employee-skill source is `employee_skills`
+ * (HR / SkillsMatrix / HR-LMS). Their only reader (director skills-stats/skills-matrix)
+ * was repointed to employee_skills. Kept (not dropped) per convergence policy; do not
+ * add new consumers — use employee_skills.
+ */
 export const skillsTable = pgTable('skills', {
   id: integer('id').primaryKey(),
   category: varchar('category'),
@@ -108,6 +115,7 @@ export const skillsTable = pgTable('skills', {
   created_at: timestamp('created_at'),
 });
 
+/** @deprecated FROZEN 2026-05-31 — see skillsTable note above. Use employee_skills. */
 export const userSkills = pgTable('user_skills', {
   id: integer('id').primaryKey(),
   skill_id: integer('skill_id'),
