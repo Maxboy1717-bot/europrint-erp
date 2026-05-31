@@ -58,7 +58,6 @@ export const FINANCE_ROUTES: [string, React.ComponentType][] = [
   ['/fi/tax-calendar',                 FinanceExtended],
   ['/fi/audit-log',                    FinanceExtended],
   ['/fi/risk-ai',                      FinanceExtended],
-  ['/finance/gl-chart-of-accounts',    GLChartOfAccounts],
   ['/cfo/config',                      CfoConfigSettings],
   ['/finance/variance',                FinanceVariance],
   ['/finance/break-even',              FinanceBreakEven],
