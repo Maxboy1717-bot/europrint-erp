@@ -19,27 +19,38 @@ u **BO'SH** (barcha jadval 0 qator, `employees` jadvali umuman yo'q). Bu jonli D
 
 ## CUSTOMER — jonli holat (sb_erp)
 
-| Jadval | Qatorlar | PK | Yozuvchi (FE sahifa → endpoint) | sales_orders bog'lanishi |
+| Jadval | Qatorlar | PK | Yozuvchi (KOD bilan tasdiqlangan) | sales_orders bog'lanishi |
 |---|---|---|---|---|
-| **`customers`** | **42** | id | **CRMWorkspace** (`POST /api/crm/customers`), **POSCustomers** (`POST /api/pos/customers`, telegram_chat_id), legacy buyurtma quick-add (`INSERT INTO customers`) | ✅ **49/49** (barcha buyurtma) |
-| `sd_customers` | **2** (demo) | id | **SDCustomers** (`@Controller('sd-customers')`) + `seed-sd-marketing.ts` | ❌ **0/49** |
-| `crm_companies` | **0** | id | CRMWorkspace (kompaniya tab) | — |
-
-**Demo dalili:** sd_customers 2 qatori — "Demo Mijoz" (`+998901234567`) va "Tashkent Print
-Solutions" (`+998712345678`), ikkalasi ham INN'siz, 0 buyurtma → **test/seed ma'lumot**, real mijoz emas.
+| **`customers`** | **42** | id | ⚠️ **kodda YOZUVCHI YO'Q** (apps/api/src bo'ylab `insert/INSERT customers` = 0 topilma; in-repo Drizzle `pgTable("customers")` ta'rifi ham yo'q → tarixiy/seed data) | ✅ **49/49** (barcha buyurtma) |
+| `sd_customers` | **2** (demo) | id | **SDCustomers** sahifa → `@Controller('sd/customers')` → `drizzle-sd-customers.repo` (`INSERT/UPDATE sd_customers`) + `seed-sd-marketing.ts` | ❌ **0/49** |
+| `crm_companies` | **0** | id | `crm-companies.controller` (CRM kompaniya tab) | — |
 
 **O'qiydiganlar (`customers`):** AI strategic-agent, marketing-ext repo, ai-agents/logistics
-router, crm analytics — ya'ni butun AI/analitika qatlami `customers`'ni ko'radi.
+router, crm analytics (CLV/RFM/cohort) — Drizzle `customers` import orqali (raw `FROM customers` emas).
 
-### VERDIKT: 🟢 OSON (EASY)
-- **Yagona real jadval = `customers` (42)** — barcha 49 buyurtma, 3 yozuvchi (CRM+POS+legacy), butun AI/analitika o'qiydi.
-- `sd_customers` = faqat **2 demo qator**, 0 buyurtma, izolyatsiya (alohida SD sahifa yozadi). `crm_companies` = **0**.
-- **Yagona manba tavsiyasi: `customers`.**
-- **Ko'chiriladigan real data: 0** (sd_customers'dagi 2 qator demo — tashlanadi yoki e'tiborsiz).
-- **Migration xavfi: PAST.** ⚠️ ASOSIY ISH = data ko'chirish EMAS, balki **takror-divergensiyani
-  to'xtatish**: hozir 2 ta "mijoz qo'shish" UI bor — CRMWorkspace/POSCustomers → `customers` (to'g'ri),
-  SDCustomers → `sd_customers` (izolyatsiya orol). SDCustomers'ni `customers`'ga yo'naltirish yoki
-  nafaqaga chiqarish kerak (aks holda yangi mijozlar yana ikki joyga bo'linadi).
+**sales_orders (49) yozuvchisi (tasdiq):** **SD modul** — `sd-leads.repository` (lead→buyurtma),
+`sd-quotations.repository` (taklif→buyurtma), `drizzle-sd-orders.repo` (`db.insert(salesOrders)`).
+Buyurtmalar `customer_id` saqlaydi; jonli 49 qatorning hammasi **`customers`** (42) ga mos, **0** tasi `sd_customers`'ga.
+Bundan tashqari `customers` ga ko'p operatsion jadval bog'langan (sales_invoices, production_orders, QC va h.k.) — chuqur o'rnashgan.
+
+**Demo dalili:** sd_customers 2 qatori — "Demo Mijoz" (`+998901234567`) va "Tashkent Print
+Solutions" (`+998712345678`), ikkalasi ham INN'siz, 0 buyurtma → **test/seed ma'lumot**.
+
+### VERDIKT: 🟡 O'RTA (data oson, lekin ARXITEKTURA qarori kerak)
+**Ziddiyat (verify-don't-trust bilan ochildi):**
+- `customers` (42) = tarixiy/seed mijoz bazasi — **barcha 49 buyurtma + ko'p operatsion jadval shunga bog'langan**,
+  AI/analitika shuni o'qiydi, lekin uni **yangilaydigan kod yo'q** (yozuvchi topilmadi).
+- `sd_customers` (2 demo) = **jonli "mijoz qo'shish" UI (SDCustomers) shunga yozadi**, lekin 0 buyurtma/0 dependent.
+- SD modul buyurtma ham yaratadi (`sales_orders`), lekin jonli buyurtmalar `customers`'ga ishora qiladi
+  (seed paytidan) — ya'ni SD oqimi yangidan ishlatilsa, yangi mijoz `sd_customers`'ga, eski tarix `customers`'da qoladi → **bo'linish**.
+
+**Data jihatidan OSON** (42 + 2demo + 0 = arzimas hajm), lekin **qaysi jadval "kelajak" ekani — mahsulot qarori:**
+- **A variant (tavsiya) — `customers`'ni kanonik qil:** SD UI'ni `customers`'ga repoint; 2 demo sd_customers tashlanadi.
+  (Kam data ko'chish; `customers` allaqachon barcha buyurtma+invoice+production bilan bog'langan.)
+- **B variant — `sd_customers`'ni kanonik qil:** 42 mijoz + 49 buyurtma + invoice/production `customer_id` repoint.
+  (Ancha ko'proq data ko'chish — `customers` chuqur o'rnashgani uchun qimmat.)
+- **Migration xavfi: O'RTA** — hajm kichik, lekin `customers` "yuk ko'taruvchi" (ko'p dependent) → undan UZOQLASHMA;
+  faqat `sd_customers` orolini to'xtat. Zaxira + ehtiyot shart.
 
 ---
 
