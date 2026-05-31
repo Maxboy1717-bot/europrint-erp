@@ -121,7 +121,7 @@ export default function EmployeeStats() {
 
   const calculateAbcMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", `/api/hr/abc-analysis/${id}/calculate`);
+      const response = await apiRequest("GET", `/api/hr/abc-analysis/${id}/calculate`);
       return response;
     },
     onSuccess: () => {
