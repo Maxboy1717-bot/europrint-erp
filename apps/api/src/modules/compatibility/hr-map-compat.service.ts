@@ -3,7 +3,7 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db,
   rawSql} from '@shared/db';
@@ -94,55 +94,10 @@ export class HrMapCompatService {
 
     });}
 
-  async getCourses(status?: string, limit = '50'){
-    return safeCall(async () => {
-    const lim = Math.min(si(limit, 50), MAX_QUERY_LIMIT);
-    const activeFilter = status === 'inactive' ? sql`AND hc.is_active = false` : sql`AND hc.is_active = true`;
-    const r = await rawSql(sql`
-      SELECT hc.id, hc.title, hc.content, hc.difficulty, hc.duration_minutes,
-             hc.author, hc.session_number, hc.is_active, hc.created_at
-      FROM hr_capital_courses hc
-      WHERE true ${activeFilter}
-      ORDER BY hc.created_at DESC LIMIT ${lim}
-    `);
-    return dbRows(r);
-  
-    });}
-
-  async createCourse(body: Record<string, unknown>){
-    return safeCall(async () => {
-    const { title, content, difficulty, duration_minutes, author, session_number } = body;
-    if (!title) throw new BadRequestException('title majburiy');
-    const r = await rawSql(sql`
-      INSERT INTO hr_capital_courses (title, content, difficulty, duration_minutes, author, session_number, is_active)
-      VALUES (${title ?? ''}, ${content ?? null}, ${difficulty ?? 'intermediate'},
-              ${duration_minutes ?? null}, ${author ?? null}, ${session_number ?? null}, true)
-      RETURNING id, title, difficulty, is_active, created_at
-    `);
-    const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
-    return _found;
-  
-    });}
-
-  async getHrCapitalStats(){
-    return safeCall(async () => {
-    const r = await rawSql(sql`
-      SELECT COUNT(*) AS total_courses,
-             COUNT(*) FILTER (WHERE is_active = true) AS active_courses,
-             COUNT(DISTINCT author) AS total_authors,
-             ROUND(AVG(duration_minutes)::numeric, 0) AS avg_duration_minutes
-      FROM hr_capital_courses
-    `);
-    const statsRow = dbRows(r)[0] ?? {};
-    return {
-      totalCourses: statsRow['total_courses'] ?? 0,
-      activeCourses: statsRow['active_courses'] ?? 0,
-      totalAuthors: statsRow['total_authors'] ?? 0,
-      avgDurationMinutes: statsRow['avg_duration_minutes'] ?? 0,
-    };
-  
-    });}
+  // Removed 2026-05-31 (dup #4 convergence): getCourses / createCourse / getHrCapitalStats
+  // were dead code over the FROZEN hr_capital_courses table — no controller/FE caller
+  // (grep-verified). HR-Capital course/quiz cluster is an orphaned LMS duplicate; the
+  // HRCapitalCourses page was already removed (1c9ed02c). LMS (courses/tests) is canonical.
 
   async getSwapRequests(status?: string, limit = '50'){
     return safeCall(async () => {

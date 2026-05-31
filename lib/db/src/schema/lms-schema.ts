@@ -551,6 +551,16 @@ export type InsertMentorshipSession = z.infer<typeof insertMentorshipSessionSche
 // HR CAPITAL - PDF KURSLAR TIZIMI (LMS uchun)
 // ============================================================
 
+/**
+ * @deprecated FROZEN 2026-05-31 (duplicate-cleanup #4). The HR-Capital course/quiz
+ * cluster (hrCapitalCourses → Modules → QuizQuestions → QuizAttempts) is an orphaned
+ * duplicate of the canonical LMS system (courses/modules/questions/attempts): same
+ * purpose (PDF→AI course + quiz), ZERO cross-FK to LMS. The HRCapitalCourses page was
+ * removed (1c9ed02c) and the only writer (hr-map-compat dead methods) was deleted — no
+ * live reader/writer remains. Kept (not dropped) as scaffold; do NOT add new consumers —
+ * use the LMS tables. NOTE: hrc_iq_questions + hr_capital_profiles are a SEPARATE live
+ * psychometric system (HRCapitalTests) — unrelated, keep.
+ */
 export const hrCapitalCourses = pgTable("hr_capital_courses", {
   id: serial("id").primaryKey(),
   sessionNumber: integer("session_number"),
