@@ -72,8 +72,8 @@ export class PositionPermissionsService {
     const safePositions = Array.isArray(allPositions) ? allPositions : [];
     const safePerms = Array.isArray(allPerms) ? allPerms : [];
     return Ok((Array.isArray(safePositions) ? safePositions : []).map((pos) => {
-      // positionPermissions.positionId is integer; positions.id is uuid (string). Compare by string form.
-      const posPerms = (Array.isArray(safePerms) ? safePerms : []).filter((p) => String(p.positionId) === String(pos.id));
+      // positionPermissions.positionId and positions.id are both integer (converged 2026-05-31).
+      const posPerms = (Array.isArray(safePerms) ? safePerms : []).filter((p) => Number(p.positionId) === Number(pos.id));
       const permissions: Record<string, string> = {};
       for (const p of posPerms) { permissions[String(p.moduleCode)] = String(p.accessLevel); }
       return { ...pos, permissions };

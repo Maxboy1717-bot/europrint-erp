@@ -15,8 +15,8 @@ type PermRow = typeof positionPermissions.$inferSelect;
 export class PositionPermissionsRepository {
   async findPosition(positionId: number): Promise<Result<PositionRow | null>> {
     try {
-      // positions.id is uuid (string) in the canonical schema; cast input to string.
-      const rows = await db.select().from(positions).where(eq(positions.id, String(positionId)));
+      // positions.id is integer (converged 2026-05-31).
+      const rows = await db.select().from(positions).where(eq(positions.id, positionId));
       return Ok(rows[0] ?? null);
     } catch (_e) {
       return Err(String(_e));

@@ -23,7 +23,7 @@ export class PositionsRepository {
 
   async findOne(id: number): Promise<Result<Record<string, unknown> | null>> {
     try {
-      const rows = await db.select().from(positions).where(eq(positions.id, String(id)));
+      const rows = await db.select().from(positions).where(eq(positions.id, id));
       return Ok(rows[0] ?? null);
     } catch (_e) {
       return Err(String(_e));
@@ -41,7 +41,7 @@ export class PositionsRepository {
 
   async update(id: number, values: Partial<typeof positions.$inferInsert>): Promise<Result<Record<string, unknown> | null>> {
     try {
-      const result = await db.update(positions).set(values as typeof positions.$inferInsert).where(eq(positions.id, String(id))).returning();
+      const result = await db.update(positions).set(values as typeof positions.$inferInsert).where(eq(positions.id, id)).returning();
       return Ok(result[0] ?? null);
     } catch (_e) {
       return Err(String(_e));
@@ -59,7 +59,7 @@ export class PositionsRepository {
 
   async remove(id: number): Promise<Result<Record<string, unknown> | null>> {
     try {
-      const result = await db.delete(positions).where(eq(positions.id, String(id))).returning();
+      const result = await db.delete(positions).where(eq(positions.id, id)).returning();
       return Ok(result[0] ?? null);
     } catch (_e) {
       return Err(String(_e));

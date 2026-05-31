@@ -151,9 +151,8 @@ export async function execDailyReportMarkAbsent(today: string): Promise<void> {
 
   if (!activeEmps.length) return;
 
-  // Canonical positions uses string (UUID) id and `title` (not `name`).
-  // employees.position_id is integer; cast to strings via String() for comparison.
-  const positionIds = [...new Set((Array.isArray(activeEmps) ? activeEmps : []).map(e => e.position_id).filter(Boolean))].map(id => String(id)) as string[];
+  // Canonical positions.id is integer (converged 2026-05-31); `title` holds the label.
+  const positionIds = [...new Set((Array.isArray(activeEmps) ? activeEmps : []).map(e => e.position_id).filter(Boolean))] as number[];
   const operatorPosIds = positionIds.length
     ? (await db
         .select({ id: hrPositions.id })
@@ -167,7 +166,7 @@ export async function execDailyReportMarkAbsent(today: string): Promise<void> {
 
   const toInsert = (Array.isArray(activeEmps) ? activeEmps : []).filter(e => {
     if (existingIds.has(e.id)) return false;
-    if (e.position_id && operatorPosIds.includes(String(e.position_id))) return false;
+    if (e.position_id && operatorPosIds.includes(e.position_id)) return false;
     return true;
   });
 

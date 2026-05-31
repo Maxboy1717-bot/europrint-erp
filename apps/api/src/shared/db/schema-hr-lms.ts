@@ -176,18 +176,13 @@ export const departments = pgTable('departments', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
-export const positions = pgTable('positions', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  title: text('title').notNull(),
-  code: text('code').unique().notNull(),
-  departmentId: uuid('department_id').references(() => departments.id),
-  level: integer('level').notNull().default(1),
-  minSalary: decimal('min_salary', { precision: 18, scale: 2 }).notNull().default('0'),
-  maxSalary: decimal('max_salary', { precision: 18, scale: 2 }).notNull().default('0'),
-  isActive: boolean('is_active').default(true),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+// CONVERGENCE 2026-05-31: `positions` is ONE physical table (id integer, 96 live rows);
+// the int canonical def in @workspace/db matches reality. The former UUID pgTable here was
+// a phantom (id/department_id/salary typed as uuid/decimal) that corrupted HR title reads,
+// core positions CRUD, and RBAC (position-permissions). Re-export the canonical int def so
+// every barrel/consumer (hrPositions, @europrint/schemas positions) converges on one truth.
+// positions is the RBAC anchor (position_permissions + rbac_tier) — KEPT, never retired.
+export { positions } from '@workspace/db';
 
 export const user_panels = pgTable('user_panels', {
   id: text('id').primaryKey().$defaultFn(() => createId()),
