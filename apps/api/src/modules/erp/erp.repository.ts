@@ -9,6 +9,7 @@ import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
+import { safeInt } from '../hr/common/db-rows';
 type Row = Record<string, unknown>;
 const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
 
@@ -111,8 +112,8 @@ export class ErpRepository {
   async listRoutingOperations(routingId?: number): Promise<Result<Row[]>>  {
   try {  
       return routingId
-        ? exec(sql`SELECT ro.*, wc.name AS work_center_name FROM pp_routing_operations ro LEFT JOIN work_centers wc ON wc.id::text = ro.work_center_id::text WHERE ro.routing_id = ${routingId} ORDER BY ro.routing_id, ro.sequence_no LIMIT ${MAX_QUERY_LIMIT}`)
-        : exec(sql`SELECT ro.*, wc.name AS work_center_name FROM pp_routing_operations ro LEFT JOIN work_centers wc ON wc.id::text = ro.work_center_id::text ORDER BY ro.routing_id, ro.sequence_no LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
+        ? exec(sql`SELECT ro.*, ro.operation_description AS operation_name, wc.name AS work_center_name FROM routing_operations ro LEFT JOIN work_centers wc ON wc.id = ro.work_center_id WHERE ro.routing_id = ${routingId} ORDER BY ro.routing_id, ro.sequence LIMIT ${MAX_QUERY_LIMIT}`)
+        : exec(sql`SELECT ro.*, ro.operation_description AS operation_name, wc.name AS work_center_name FROM routing_operations ro LEFT JOIN work_centers wc ON wc.id = ro.work_center_id ORDER BY ro.routing_id, ro.sequence LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -120,7 +121,7 @@ export class ErpRepository {
 
   async updateRoutingOperation(id: number, body: Row): Promise<Result<Row | null>>  {
   try {
-      const r = await exec(sql`UPDATE pp_routing_operations SET planned_duration = COALESCE(${body.plannedDuration ?? null}, planned_duration), work_center_id = COALESCE(${body.workCenterId ?? null}, work_center_id), updated_at = NOW() WHERE id = ${id} RETURNING *`);
+      const r = await exec(sql`UPDATE routing_operations SET work_center_id = COALESCE(${body.workCenterId != null ? safeInt(body.workCenterId, 0) : null}, work_center_id), operation_description = COALESCE(${body.operationName ?? null}, operation_description), setup_time = COALESCE(${body.setupTime ?? null}, setup_time), machine_time = COALESCE(${body.machineTime ?? null}, machine_time), labor_time = COALESCE(${body.laborTime ?? null}, labor_time), sequence = COALESCE(${body.sequence != null ? safeInt(body.sequence, 0) : null}, sequence) WHERE id = ${id} RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -167,7 +168,7 @@ export class ErpRepository {
   async createRouting(body: Row): Promise<Result<Row | null>> {
   try {
     const routingNumber = body.routingNumber ?? body.code ?? `RT-${Date.now()}`;
-    const r = await exec(sql`INSERT INTO routings (routing_number, product_id, version) VALUES (${routingNumber}, ${body.productId ?? null}, ${body.version ?? 1}) RETURNING *`);
+    const r = await exec(sql`INSERT INTO routings (routing_number, product_id, version) VALUES (${routingNumber}, ${safeInt(body.productId, 0) || null}, ${body.version ?? '1.0'}) RETURNING *`);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   } catch (_e) { return Err(String(_e)); }
   }
@@ -181,14 +182,14 @@ export class ErpRepository {
 
   async createRoutingOperation(body: Row): Promise<Result<Row | null>> {
   try {
-    const r = await exec(sql`INSERT INTO pp_routing_operations (routing_id, sequence_no, work_center_id, planned_duration) VALUES (${body.routingId ?? null}, ${body.sequenceNo ?? body.operationNumber ?? 1}, ${body.workCenterId ?? null}, ${body.plannedDuration ?? 0}) RETURNING *`);
+    const r = await exec(sql`INSERT INTO routing_operations (routing_id, operation_number, operation_description, work_center_id, setup_time, machine_time, labor_time, sequence, notes) VALUES (${safeInt(body.routingId, 0)}, ${safeInt(body.operationNumber, 1)}, ${body.operationName ?? null}, ${safeInt(body.workCenterId, 0)}, ${body.setupTime ?? 0}, ${body.machineTime ?? 0}, ${body.laborTime ?? 0}, ${safeInt(body.sequence, 10)}, ${body.description ?? null}) RETURNING *`);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   } catch (_e) { return Err(String(_e)); }
   }
 
   async deleteRoutingOperation(id: number): Promise<Result<Row | null>> {
   try {
-    const r = await exec(sql`DELETE FROM pp_routing_operations WHERE id = ${id} RETURNING *`);
+    const r = await exec(sql`DELETE FROM routing_operations WHERE id = ${id} RETURNING *`);
     return r.ok ? Ok(r.data[0] ?? { id, deleted: true }) : Err(r.error);
   } catch (_e) { return Err(String(_e)); }
   }
