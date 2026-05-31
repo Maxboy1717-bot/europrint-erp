@@ -132,7 +132,7 @@ Qaysi buyurtma jadval tanlansa ham: **bitta** buyurtma yaratish yo'li bo'lsin va
 ## 5. KEYINGI QADAMLAR (siz hal qilasiz)
 - **2-qadam (jadval birlashtirish):** §4.1 va §4.2 dan variant tanlang → men batafsil birlashtirish rejasini yozaman (kod emas, reja).
 - **3-qadam (5 bug):** §3.2 dagi 5 "jim" bugni tuzatish (har biri alohida, gate bilan).
-- Ochiq savol (runtime): outbox→event relay haqiqatan bormi? (DB bo'lgani uchun lokal tekshirib bo'lmadi — boot/log bilan tasdiqlash kerak.)
+- **Ishlab chiqarish bog'lanishi (§3.3):** kod-zanjir tasdiqlandi (relay BOR, avans→production_orders REAL). Qolgan 3 bo'shliq (bypass uzilishi, bo'sh production_orders, papka_orders↔production_orders ikkiligi) — 2/3-qadamga qo'shilishi mumkin. Runtime tasdiq (DB bo'sh) faqat boot/log bilan, lekin kod yo'li to'liq tekshirilgan.
 
 ---
 *1-qadam — hujjat. READ-ONLY, kod/jadval o'zgartirilmadi. Da'volar file:line bilan tekshirildi.
