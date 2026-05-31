@@ -29,7 +29,7 @@ export class ExportRepository {
   async queryEmployeesCsv(): Promise<Result<string>> {
     
     return safeCall(async () => {
-      const r = await exec(sql`SELECT e.employee_code, TRIM(COALESCE(e.first_name, '') || ' ' || COALESCE(e.last_name, '')) AS full_name, COALESCE(e.email_work, e.email_personal, '') AS email, COALESCE(primary_org.dept_name, '') AS department, COALESCE(primary_org.pos_name, '') AS position, e.hire_date::text, e.status FROM employees e LEFT JOIN users u_org ON u_org.employee_id = e.id AND u_org.deleted_at IS NULL LEFT JOIN LATERAL (SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name FROM employee_org_departments eod JOIN org_departments od ON od.id = eod.org_department_id LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id WHERE eod.user_id = u_org.id AND eod.is_primary = true ORDER BY eod.assigned_at DESC LIMIT 1) primary_org ON true ORDER BY primary_org.dept_name NULLS LAST, full_name`);
+      const r = await exec(sql`SELECT e.employee_code, TRIM(COALESCE(e.first_name, '') || ' ' || COALESCE(e.last_name, '')) AS full_name, COALESCE(e.email_work, e.email_personal, '') AS email, COALESCE(primary_org.dept_name, '') AS department, COALESCE(primary_org.pos_name, '') AS position, e.hire_date::text, e.status FROM employees e LEFT JOIN users u_org ON u_org.employee_id = e.id AND u_org.deleted_at IS NULL LEFT JOIN LATERAL (SELECT od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name FROM employee_org_departments eod JOIN org_departments od ON od.id = eod.org_department_id LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id WHERE eod.user_id = u_org.id AND eod.is_primary = true ORDER BY eod.assigned_at DESC LIMIT 1) primary_org ON true ORDER BY primary_org.dept_name NULLS LAST, full_name`);
       return toCsv(['employee_code','full_name','email','department','position','hire_date','status'], r);
     }, 'DB_ERROR');
   }
@@ -37,7 +37,7 @@ export class ExportRepository {
   async queryAttendanceCsv(): Promise<Result<string>> {
     
     return safeCall(async () => {
-      const r = await exec(sql`SELECT TRIM(COALESCE(emp.first_name, '') || ' ' || COALESCE(emp.last_name, '')) AS full_name, COALESCE(a_org.dept_name, '') AS department, DATE(a.check_in)::text AS date, a.check_in::text, a.check_out::text, a.status, a.work_hours::text FROM attendance a LEFT JOIN employees emp ON emp.id = a.employee_id LEFT JOIN users u_org ON u_org.employee_id = emp.id AND u_org.deleted_at IS NULL LEFT JOIN LATERAL (SELECT od.name_uz AS dept_name FROM employee_org_departments eod JOIN org_departments od ON od.id = eod.org_department_id WHERE eod.user_id = u_org.id AND eod.is_primary = true ORDER BY eod.assigned_at DESC LIMIT 1) a_org ON true WHERE a.check_in >= NOW() - INTERVAL '30 days' ORDER BY date DESC, full_name`);
+      const r = await exec(sql`SELECT TRIM(COALESCE(emp.first_name, '') || ' ' || COALESCE(emp.last_name, '')) AS full_name, COALESCE(a_org.dept_name, '') AS department, DATE(a.check_in)::text AS date, a.check_in::text, a.check_out::text, a.status, a.work_hours::text FROM attendance a LEFT JOIN employees emp ON emp.id = a.employee_id LEFT JOIN users u_org ON u_org.employee_id = emp.id AND u_org.deleted_at IS NULL LEFT JOIN LATERAL (SELECT od.name AS dept_name FROM employee_org_departments eod JOIN org_departments od ON od.id = eod.org_department_id WHERE eod.user_id = u_org.id AND eod.is_primary = true ORDER BY eod.assigned_at DESC LIMIT 1) a_org ON true WHERE a.check_in >= NOW() - INTERVAL '30 days' ORDER BY date DESC, full_name`);
       return toCsv(['full_name','department','date','check_in','check_out','status','work_hours'], r);
     }, 'DB_ERROR');
   }
@@ -56,7 +56,7 @@ export class ExportRepository {
       const [empR, attR, depR] = await Promise.all([
         exec(sql`SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE is_active=true) AS active FROM employees`),
         exec(sql`SELECT COUNT(DISTINCT employee_id) AS present FROM attendance WHERE DATE(check_in) = CURRENT_DATE`),
-        exec(sql`SELECT od.name_uz AS name, COUNT(eod.user_id) AS cnt FROM org_departments od LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true GROUP BY od.id, od.name_uz ORDER BY cnt DESC LIMIT 8`),
+        exec(sql`SELECT od.name AS name, COUNT(eod.user_id) AS cnt FROM org_departments od LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true GROUP BY od.id, od.name ORDER BY cnt DESC LIMIT 8`),
       ]);
       const emp = empR[0] ?? {};
       const att = attR[0] ?? {};
@@ -67,7 +67,7 @@ export class ExportRepository {
   async queryHrExcel(): Promise<Result<string>> {
     
     return safeCall(async () => {
-      const r = await exec(sql`SELECT od.name_uz AS department, COUNT(DISTINCT eod.user_id) AS total_employees, COUNT(DISTINCT eod.user_id) FILTER (WHERE e.status = 'active') AS active, AVG(EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.hire_date)))::numeric AS avg_tenure_years FROM org_departments od LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true LEFT JOIN users u ON u.id = eod.user_id AND u.deleted_at IS NULL LEFT JOIN employees e ON e.id = u.employee_id GROUP BY od.id, od.name_uz ORDER BY total_employees DESC`);
+      const r = await exec(sql`SELECT od.name AS department, COUNT(DISTINCT eod.user_id) AS total_employees, COUNT(DISTINCT eod.user_id) FILTER (WHERE e.status = 'active') AS active, AVG(EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.hire_date)))::numeric AS avg_tenure_years FROM org_departments od LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true LEFT JOIN users u ON u.id = eod.user_id AND u.deleted_at IS NULL LEFT JOIN employees e ON e.id = u.employee_id GROUP BY od.id, od.name ORDER BY total_employees DESC`);
       return toCsv(['department','total_employees','active','avg_tenure_years'], r);
     }, 'DB_ERROR');
   }

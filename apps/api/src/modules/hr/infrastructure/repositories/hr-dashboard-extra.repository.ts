@@ -49,7 +49,7 @@ export class HrDashboardExtraRepository implements IHrDashboardExtraRepo {
         FROM employees e
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          SELECT od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id

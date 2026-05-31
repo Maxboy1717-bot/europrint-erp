@@ -33,7 +33,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         FROM employees e
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          SELECT od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
@@ -63,7 +63,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         FROM employees e
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          SELECT od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
@@ -92,7 +92,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         FROM employees e
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          SELECT od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
@@ -139,7 +139,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         FROM employees e
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          SELECT od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
@@ -163,7 +163,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         FROM employees e
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          SELECT od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
@@ -188,7 +188,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         LEFT JOIN employees e ON e.id = dr.employee_id
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name
+          SELECT od.name AS dept_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           WHERE eod.user_id = u.id AND eod.is_primary = true
@@ -280,7 +280,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         FROM employees e
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          SELECT od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
@@ -330,7 +330,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         FROM employees e
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          SELECT od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
@@ -368,7 +368,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         FROM employees e
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name
+          SELECT od.name AS dept_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           WHERE eod.user_id = u.id AND eod.is_primary = true
@@ -423,7 +423,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
                si.investigation_status, si.status, si.description,
                si.days_lost, si.cost_estimate,
                COALESCE(ea.first_name || ' ' || ea.last_name, '—') AS affected_employee,
-               od.name_uz AS department_name
+               od.name AS department_name
         FROM safety_incidents si
         LEFT JOIN employees ea ON ea.id = si.affected_employee_id
         LEFT JOIN org_departments od ON od.id = si.department_id
@@ -444,7 +444,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         JOIN employees e ON e.id = eb.employee_id
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name
+          SELECT od.name AS dept_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           WHERE eod.user_id = u.id AND eod.is_primary = true
@@ -531,7 +531,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         JOIN employees e ON e.id = gt.employee_id
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name
+          SELECT od.name AS dept_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           WHERE eod.user_id = u.id AND eod.is_primary = true

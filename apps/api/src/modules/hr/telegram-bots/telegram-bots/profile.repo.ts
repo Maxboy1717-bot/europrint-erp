@@ -53,7 +53,7 @@ export class TelegramBotsProfileRepo {
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
           SELECT eod.org_department_id AS dept_id,
-                 od.name_uz AS dept_name,
+                 od.name AS dept_name,
                  COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
@@ -84,7 +84,7 @@ export class TelegramBotsProfileRepo {
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
           SELECT eod.org_department_id AS dept_id,
-                 od.name_uz AS dept_name,
+                 od.name AS dept_name,
                  COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id

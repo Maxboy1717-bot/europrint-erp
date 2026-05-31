@@ -34,7 +34,7 @@ export class HrBotService {
         FROM employees e
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name_uz AS dept_name
+          SELECT od.name AS dept_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           WHERE eod.user_id = u.id AND eod.is_primary = true

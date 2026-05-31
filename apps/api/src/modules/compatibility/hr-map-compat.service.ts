@@ -33,7 +33,7 @@ export class HrMapCompatService {
       LEFT JOIN LATERAL (
         SELECT
           eod.org_department_id::text        AS dept_id,
-          od.name_uz                         AS dept_name,
+          od.name                         AS dept_name,
           COALESCE(of2.position_name, '')    AS pos_name
         FROM employee_org_departments eod
         JOIN org_departments od ON od.id = eod.org_department_id
@@ -61,12 +61,12 @@ export class HrMapCompatService {
         FROM employees e WHERE e.status != 'terminated'
       `),
       rawSql(sql`
-        SELECT od.id::text AS id, od.name_uz AS org_department_name, COUNT(DISTINCT e.id) AS employee_count
+        SELECT od.id::text AS id, od.name AS org_department_name, COUNT(DISTINCT e.id) AS employee_count
         FROM org_departments od
         LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true
         LEFT JOIN users u2 ON u2.id = eod.user_id AND u2.deleted_at IS NULL
         LEFT JOIN employees e ON e.id = u2.employee_id AND e.status = 'active'
-        GROUP BY od.id, od.name_uz ORDER BY employee_count DESC
+        GROUP BY od.id, od.name ORDER BY employee_count DESC
       `),
     ]);
     const statsRow = dbRows(r1)[0] ?? {};
@@ -82,13 +82,13 @@ export class HrMapCompatService {
   async getTransportGroups(){
     return safeCall(async () => {
     const r = await rawSql(sql`
-      SELECT od.id::text AS id, od.name_uz AS org_department_name, COUNT(DISTINCT e.id) AS employee_count,
+      SELECT od.id::text AS id, od.name AS org_department_name, COUNT(DISTINCT e.id) AS employee_count,
              STRING_AGG(e.first_name || ' ' || e.last_name, ', ' ORDER BY e.first_name) AS employees
       FROM org_departments od
       LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true
       LEFT JOIN users u ON u.id = eod.user_id AND u.deleted_at IS NULL
       LEFT JOIN employees e ON e.id = u.employee_id AND e.status = 'active'
-      GROUP BY od.id, od.name_uz ORDER BY od.name_uz LIMIT 50
+      GROUP BY od.id, od.name ORDER BY od.name LIMIT 50
     `);
     return dbRows(r);
 
@@ -114,7 +114,7 @@ export class HrMapCompatService {
       LEFT JOIN LATERAL (
         SELECT
           eod.org_department_id::text        AS dept_id,
-          od.name_uz                         AS dept_name,
+          od.name                         AS dept_name,
           COALESCE(of2.position_name, '')    AS pos_name
         FROM employee_org_departments eod
         JOIN org_departments od ON od.id = eod.org_department_id
@@ -133,12 +133,12 @@ export class HrMapCompatService {
   async getDepartments(){
     return safeCall(async () => {
     const r = await rawSql(sql`
-      SELECT od.id::text AS id, od.name_uz AS name, COUNT(DISTINCT e.id) AS employee_count
+      SELECT od.id::text AS id, od.name AS name, COUNT(DISTINCT e.id) AS employee_count
       FROM org_departments od
       LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true
       LEFT JOIN users u ON u.id = eod.user_id AND u.deleted_at IS NULL
       LEFT JOIN employees e ON e.id = u.employee_id AND e.status = 'active'
-      GROUP BY od.id, od.name_uz ORDER BY od.name_uz
+      GROUP BY od.id, od.name ORDER BY od.name
     `);
     return dbRows(r);
 
@@ -148,12 +148,12 @@ export class HrMapCompatService {
     return safeCall(async () => {
     const col = metric === 'salary' ? sql`COALESCE(AVG(e.salary), 0)` : sql`COUNT(DISTINCT e.id)`;
     const r = await rawSql(sql`
-      SELECT od.id::text AS id, od.name_uz AS org_department_name, ${col} AS value
+      SELECT od.id::text AS id, od.name AS org_department_name, ${col} AS value
       FROM org_departments od
       LEFT JOIN employee_org_departments eod ON eod.org_department_id = od.id AND eod.is_primary = true
       LEFT JOIN users u ON u.id = eod.user_id AND u.deleted_at IS NULL
       LEFT JOIN employees e ON e.id = u.employee_id AND e.status = 'active'
-      GROUP BY od.id, od.name_uz ORDER BY value DESC
+      GROUP BY od.id, od.name ORDER BY value DESC
     `);
     return dbRows(r);
 
@@ -199,7 +199,7 @@ export class HrMapCompatService {
       LEFT JOIN LATERAL (
         SELECT
           eod.org_department_id::text        AS dept_id,
-          od.name_uz                         AS dept_name,
+          od.name                         AS dept_name,
           COALESCE(of2.position_name, '')    AS pos_name
         FROM employee_org_departments eod
         JOIN org_departments od ON od.id = eod.org_department_id
