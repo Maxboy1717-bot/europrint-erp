@@ -605,6 +605,10 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'tests.is_active ADD COLUMN', sql: `ALTER TABLE IF EXISTS tests ADD COLUMN IF NOT EXISTS is_active BOOLEAN` },
   // Per-work-center efficiency/OEE factor consumed by CRP (pp-crp.service COALESCE(efficiency_rate,0.85)).
   { name: 'work_centers.efficiency_rate ADD COLUMN', sql: `ALTER TABLE IF EXISTS work_centers ADD COLUMN IF NOT EXISTS efficiency_rate NUMERIC DEFAULT 0.85` },
+  // positions.id had no sequence (96 rows seeded with explicit ids, max 663) -> inserts omitting id
+  // failed (core positions CREATE, org-structure sync). Attach a sequence idempotently; setval to the
+  // current MAX(id) so the next value (MAX+1) never collides with existing rows.
+  { name: 'positions.id attach sequence', sql: `DO $$ BEGIN IF pg_get_serial_sequence('positions','id') IS NULL THEN CREATE SEQUENCE IF NOT EXISTS positions_id_seq; PERFORM setval('positions_id_seq', COALESCE((SELECT MAX(id) FROM positions), 1)); ALTER TABLE positions ALTER COLUMN id SET DEFAULT nextval('positions_id_seq'); ALTER SEQUENCE positions_id_seq OWNED BY positions.id; END IF; END $$` },
   { name: 'hr_capital_courses.provider ADD COLUMN', sql: `ALTER TABLE IF EXISTS hr_capital_courses ADD COLUMN IF NOT EXISTS provider TEXT` },
   { name: 'hr_capital_courses.cost ADD COLUMN', sql: `ALTER TABLE IF EXISTS hr_capital_courses ADD COLUMN IF NOT EXISTS cost NUMERIC` },
   { name: 'hr_capital_courses.duration ADD COLUMN', sql: `ALTER TABLE IF EXISTS hr_capital_courses ADD COLUMN IF NOT EXISTS duration INTEGER` },
