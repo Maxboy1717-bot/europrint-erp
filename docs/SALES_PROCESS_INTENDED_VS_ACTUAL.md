@@ -104,11 +104,13 @@ Egasi: "har buyurtma papka/job → MES bo'lishi SHART." **Haqiqat: avtomatik bog
 
 - **Xulosa:** Egasining "har buyurtma → papka/job → MES" niyati **bugun avtomatlashtirilmagan**. Ishlab chiqarish ishi faqat **qo'lda** (PP/MES ekranidan) ochiladi; 70% avans tasdig'i uni avtomatik qo'zg'amaydi (event chiqmaydi), avans→PP ni ulashi kerak bo'lgan kod o'lik. Bu 2/3-qadamda ulanishi kerak bo'lgan asosiy bo'shliq.
 
-### 3.4 🟡 ROL AJRATISH kuchsiz
+### 3.4 🟡 ROL AJRATISH bor, lekin NOIZCHIL
 
-Egasi: menejer / ishlab chiqarish / buxgalter ajratilsin. Haqiqat:
-- Rollar BOR (controller'larda `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles(...)`), lekin **keng va aralash**. Masalan `sd-contracts.controller.ts:20` `SD_ROLES = ['sales_manager','SALES','director','super_admin','FINANCE_MANAGER','ACCOUNTANT']` — bitta to'plamda **ham sotish ham moliya** roli. Ya'ni qadamlar bo'yicha aniq ajratish (menejer faqat lid→buyurtma, buxgalter faqat to'lov) **yo'q**.
-- Bundan tashqari rol nomlari ham aralash: `sales_manager` vs `SALES`, `ACCOUNTANT` vs `FINANCE_MANAGER` (katta/kichik harf + dublikat) — RBAC/lavozim tizimi bilan moslashtirish kerak.
+Egasi: menejer / ishlab chiqarish / buxgalter ajratilsin. Haqiqat (grep bilan tekshirilgan):
+- **Ba'zi joyda ajratish YAXSHI:** `sd-orders.controller.ts` qadam bo'yicha alohida rol beradi — tech-checkpoint→`TECHNOLOGIST` (`:176`), avans to'lov/status→`FINANCE`/`FINANCE_MANAGER` (`:96,:191`), buyurtma yaratish/status→`SALES_MANAGER` (`:52,:111`). Ya'ni egasi xohlagan "menejer/ishlab chiqarish/buxgalter" ajratishi **bu kontrollerда mavjud**. ✅
+- **Lekin boshqa joyda KENG va aralash:** `sd-contracts.controller.ts:20` va `sd-payments.controller.ts:28` bitta `SD_ROLES` to'plamidan foydalanadi (`['sales_manager','SALES','director','super_admin','FINANCE_MANAGER','ACCOUNTANT']`) — ham sotish ham moliya bitta to'plamda → bu kontrollerlarda qadam-ajratish **yo'q**.
+- **Rol nomlari NOIZCHIL/dublikat:** `sales_manager` vs `SALES`, `accountant` vs `ACCOUNTANT` vs `FINANCE_MANAGER`, katta/kichik harf aralash. Bu RBAC/lavozim tizimi bilan moslashtirilishi kerak (bitta kanonik rol nomlari to'plami).
+- **Xulosa:** rol-ajratish g'oyasi tizimda BOR va ba'zan to'g'ri qo'llangan, lekin **noizchil** — bir nechta kontroller keng to'plam ishlatadi va rol nomlari standartlashtirilmagan.
 
 ---
 
