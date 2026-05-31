@@ -197,6 +197,7 @@ export function parseScanResult(m: Record<string, unknown>): MaterialResult {
 
 export function apiCall(path: string, options?: RequestInit) {
   const token = sessionStorage.getItem("tg_session_token");
+  // eslint-disable-next-line no-restricted-globals -- raw fetch: shared mini-app helper; x-tg-session auth + separate API_BASE, not ERP cookie
   return fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {

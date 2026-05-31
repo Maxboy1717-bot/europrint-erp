@@ -108,6 +108,7 @@ function TelegramMiniAppInner() {
     }
 
     try {
+      // eslint-disable-next-line no-restricted-globals -- raw fetch: Telegram mini-app auth (initData -> tg-session); separate API_BASE, not ERP cookie
       const data = await fetch(`${API_BASE}/auth`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
