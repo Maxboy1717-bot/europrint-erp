@@ -101,7 +101,8 @@ export function selectArray<T = unknown>(data: unknown, key?: string): T[] {
 
 // ─── QueryClient ──────────────────────────────────────────────────────────────
 
-import { QueryCache } from "@tanstack/react-query";
+import { QueryCache, MutationCache } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 
 /**
  * Global query error log — every failed query writes here so any error UI
@@ -127,6 +128,25 @@ export const queryClient = new QueryClient({
         url: url ?? String(query.queryKey[0] ?? ''),
         ts: Date.now(),
       });
+    },
+  }),
+  // Global mutation error handler. A useMutation WITHOUT its own onError would
+  // otherwise fail silently — the user sees no feedback while the write didn't
+  // land. This shows a default destructive toast for every such mutation.
+  //
+  // Coexists with per-mutation onError: TanStack calls the global handler AND
+  // the local one (it does not replace it), so the existing ~508 mutations that
+  // already toast keep working (TOAST_LIMIT=1 collapses any duplicate to one).
+  //
+  // Skipped statuses (same policy as the query handler above):
+  //   401/403 → AuthError, handled by api-request (refresh / login redirect).
+  //   501     → intentional NOT_IMPLEMENTED stub, not a real failure.
+  mutationCache: new MutationCache({
+    onError: (error) => {
+      const status = (error as { status?: number })?.status;
+      if (status === 401 || status === 403 || status === 501) return;
+      const message = (error as Error)?.message || "Amalni bajarishda xatolik";
+      toast({ title: "Xatolik", description: message, variant: "destructive" });
     },
   }),
   defaultOptions: {
