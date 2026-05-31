@@ -16,7 +16,6 @@ const EventsCalendar = lazy(() => import("@/pages/EventsCalendar"));
 const Applications = lazy(() => import("@/pages/Applications"));
 const ShiftSchedule = lazy(() => import("@/pages/ShiftSchedule"));
 const HRDashboard = lazy(() => import("@/pages/HRDashboard"));
-const HRCapitalCourses = lazy(() => import("@/pages/HRCapitalCourses"));
 const HRCapitalTests = lazy(() => import("@/pages/HRCapitalTests"));
 const OrgStructureHierarchy = lazy(() => import("@/pages/OrgStructureHierarchy"));
 const OrgNodeDetail = lazy(() => import("@/pages/OrgNodeDetail"));
@@ -62,7 +61,6 @@ export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/applications',                     Applications],
   ['/shift-schedule',                   ShiftSchedule],
   ['/hr-dashboard',                     HRDashboard],
-  ['/hr-capital/courses',               HRCapitalCourses],
   ['/hr-capital/tests',                 HRCapitalTests],
   ['/org-structure/hierarchy',          OrgStructureHierarchy],
   ['/org-structure/hierarchy/node/:id', OrgNodeDetail],
