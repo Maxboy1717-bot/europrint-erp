@@ -2793,6 +2793,61 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'domain_events.id SET DEFAULT gen_random_uuid() (drift: uuid PK lost default)', sql:
       `ALTER TABLE domain_events ALTER COLUMN id SET DEFAULT gen_random_uuid()` },
 
+  // ── DRIFT-NN sprint (2026-06-01): restore 104 DB-level defaults the live DB lost across 47
+  //    tables. Each is a column whose Drizzle def declares a DB-level default (.default(...),
+  //    .defaultNow(), .defaultRandom()) but whose live column is NOT NULL with no DEFAULT — so any
+  //    insert that omits the column (relying on the def's default, as Drizzle does) hits a
+  //    null-violation. Same class as sd_sales_orders.version + domain_events.id above. Source of
+  //    truth: docs/default-loss-audit-2026-06-01.md; values read from the Drizzle defs, not invented.
+  //    SET DEFAULT is idempotent (repeatable on every boot). One block per table.
+  { name: 'ai_insights restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE ai_insights ALTER COLUMN insight_type SET DEFAULT 'ai_generated'` },
+  { name: 'aisha_conversations restore 4 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE aisha_conversations ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE aisha_conversations ALTER COLUMN id SET DEFAULT gen_random_uuid(); ALTER TABLE aisha_conversations ALTER COLUMN started_at SET DEFAULT now(); ALTER TABLE aisha_conversations ALTER COLUMN status SET DEFAULT 'active'` },
+  { name: 'aisha_pending_approvals restore 3 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE aisha_pending_approvals ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE aisha_pending_approvals ALTER COLUMN id SET DEFAULT gen_random_uuid(); ALTER TABLE aisha_pending_approvals ALTER COLUMN status SET DEFAULT 'pending'` },
+  { name: 'aisha_tool_calls restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE aisha_tool_calls ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE aisha_tool_calls ALTER COLUMN id SET DEFAULT gen_random_uuid()` },
+  { name: 'aisha_voice_audit restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE aisha_voice_audit ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE aisha_voice_audit ALTER COLUMN id SET DEFAULT gen_random_uuid()` },
+  { name: 'approval_requests restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE approval_requests ALTER COLUMN amount SET DEFAULT 0` },
+  { name: 'camera_events restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE camera_events ALTER COLUMN description SET DEFAULT ''` },
+  { name: 'camera_quality_defects restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE camera_quality_defects ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE camera_quality_defects ALTER COLUMN detected_at SET DEFAULT now()` },
+  { name: 'chat_starred_messages restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE chat_starred_messages ALTER COLUMN id SET DEFAULT gen_random_uuid()` },
+  { name: 'control_chart_point restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE control_chart_point ALTER COLUMN id SET DEFAULT gen_random_uuid()::text; ALTER TABLE control_chart_point ALTER COLUMN timestamp SET DEFAULT now()` },
+  { name: 'crm_custom_fields restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE crm_custom_fields ALTER COLUMN field_type SET DEFAULT 'text'` },
+  { name: 'customer_payments restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE customer_payments ALTER COLUMN amount SET DEFAULT 0; ALTER TABLE customer_payments ALTER COLUMN payment_method SET DEFAULT 'bank_transfer'` },
+  { name: 'deals restore 4 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE deals ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE deals ALTER COLUMN currency SET DEFAULT 'UZS'; ALTER TABLE deals ALTER COLUMN status SET DEFAULT 'new'; ALTER TABLE deals ALTER COLUMN updated_at SET DEFAULT now()` },
+  { name: 'employee_360_responses restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE employee_360_responses ALTER COLUMN created_at SET DEFAULT now()` },
+  { name: 'employee_separation restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE employee_separation ALTER COLUMN id SET DEFAULT gen_random_uuid(); ALTER TABLE employee_separation ALTER COLUMN is_regretted SET DEFAULT false` },
+  { name: 'enrollments restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE enrollments ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE enrollments ALTER COLUMN updated_at SET DEFAULT now()` },
+  { name: 'gl_entries restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE gl_entries ALTER COLUMN created_at SET DEFAULT now()` },
+  { name: 'hr_tz2_daily_attendance restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE hr_tz2_daily_attendance ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE hr_tz2_daily_attendance ALTER COLUMN updated_at SET DEFAULT now()` },
+  { name: 'invoices restore 4 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE invoices ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE invoices ALTER COLUMN items SET DEFAULT '[]'; ALTER TABLE invoices ALTER COLUMN status SET DEFAULT 'draft'; ALTER TABLE invoices ALTER COLUMN updated_at SET DEFAULT now()` },
+  { name: 'knowledge_base restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE knowledge_base ALTER COLUMN category SET DEFAULT 'other'; ALTER TABLE knowledge_base ALTER COLUMN title_ru SET DEFAULT ''` },
+  { name: 'leads restore 3 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE leads ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE leads ALTER COLUMN status SET DEFAULT 'new'; ALTER TABLE leads ALTER COLUMN updated_at SET DEFAULT now()` },
+  { name: 'lms_courses restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE lms_courses ALTER COLUMN created_at SET DEFAULT now()` },
+  { name: 'lms_enrollments restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE lms_enrollments ALTER COLUMN created_at SET DEFAULT now()` },
+  { name: 'maintenance_orders restore 4 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE maintenance_orders ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE maintenance_orders ALTER COLUMN priority SET DEFAULT 'medium'; ALTER TABLE maintenance_orders ALTER COLUMN status SET DEFAULT 'open'; ALTER TABLE maintenance_orders ALTER COLUMN updated_at SET DEFAULT now()` },
+  { name: 'materials restore 5 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE materials ALTER COLUMN category SET DEFAULT 'raw_material'; ALTER TABLE materials ALTER COLUMN max_stock SET DEFAULT 0; ALTER TABLE materials ALTER COLUMN min_stock SET DEFAULT 0; ALTER TABLE materials ALTER COLUMN unit_cost SET DEFAULT 0; ALTER TABLE materials ALTER COLUMN unit_of_measure SET DEFAULT 'kg'` },
+  { name: 'mes_papka_orders restore 6 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE mes_papka_orders ALTER COLUMN completed_qty SET DEFAULT 0; ALTER TABLE mes_papka_orders ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE mes_papka_orders ALTER COLUMN priority SET DEFAULT 'MEDIUM'; ALTER TABLE mes_papka_orders ALTER COLUMN quantity SET DEFAULT 0; ALTER TABLE mes_papka_orders ALTER COLUMN status SET DEFAULT 'PENDING'; ALTER TABLE mes_papka_orders ALTER COLUMN updated_at SET DEFAULT now()` },
+  { name: 'mes_shift_evaluations restore 4 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE mes_shift_evaluations ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE mes_shift_evaluations ALTER COLUMN evaluated_at SET DEFAULT now(); ALTER TABLE mes_shift_evaluations ALTER COLUMN quality_score SET DEFAULT 0; ALTER TABLE mes_shift_evaluations ALTER COLUMN safety_score SET DEFAULT 0` },
+  { name: 'mes_shift_handovers restore 3 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE mes_shift_handovers ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE mes_shift_handovers ALTER COLUMN handover_time SET DEFAULT now(); ALTER TABLE mes_shift_handovers ALTER COLUMN pending_tasks_count SET DEFAULT 0` },
+  { name: 'mes_tasks restore 4 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE mes_tasks ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE mes_tasks ALTER COLUMN priority SET DEFAULT 'MEDIUM'; ALTER TABLE mes_tasks ALTER COLUMN status SET DEFAULT 'PENDING'; ALTER TABLE mes_tasks ALTER COLUMN updated_at SET DEFAULT now()` },
+  { name: 'mm_vendors restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE mm_vendors ALTER COLUMN created_at SET DEFAULT now()` },
+  { name: 'notifications restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE notifications ALTER COLUMN type SET DEFAULT 'info'` },
+  { name: 'overtime_policy restore 9 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE overtime_policy ALTER COLUMN extended_multiplier SET DEFAULT 2.0; ALTER TABLE overtime_policy ALTER COLUMN id SET DEFAULT gen_random_uuid(); ALTER TABLE overtime_policy ALTER COLUMN is_active SET DEFAULT true; ALTER TABLE overtime_policy ALTER COLUMN night_shift_bonus SET DEFAULT 0.5; ALTER TABLE overtime_policy ALTER COLUMN night_shift_end_hour SET DEFAULT 6; ALTER TABLE overtime_policy ALTER COLUMN night_shift_start_hour SET DEFAULT 22; ALTER TABLE overtime_policy ALTER COLUMN regular_multiplier SET DEFAULT 1.5; ALTER TABLE overtime_policy ALTER COLUMN regular_overtime_hours SET DEFAULT 2; ALTER TABLE overtime_policy ALTER COLUMN weekend_multiplier SET DEFAULT 2.0` },
+  { name: 'payments restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE payments ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE payments ALTER COLUMN currency SET DEFAULT 'UZS'` },
+  { name: 'payroll restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE payroll ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE payroll ALTER COLUMN status SET DEFAULT 'pending'` },
+  { name: 'qc_checkpoints restore 4 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE qc_checkpoints ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE qc_checkpoints ALTER COLUMN is_active SET DEFAULT true; ALTER TABLE qc_checkpoints ALTER COLUMN stage SET DEFAULT 'in_process'; ALTER TABLE qc_checkpoints ALTER COLUMN updated_at SET DEFAULT now()` },
+  { name: 'qc_spc_data restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE qc_spc_data ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE qc_spc_data ALTER COLUMN measured_at SET DEFAULT now()` },
+  { name: 'qc_standards restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE qc_standards ALTER COLUMN category SET DEFAULT 'general'` },
+  { name: 'refresh_tokens restore 2 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE refresh_tokens ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE refresh_tokens ALTER COLUMN is_revoked SET DEFAULT false` },
+  { name: 'routing_operations restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE routing_operations ALTER COLUMN sequence SET DEFAULT 0` },
+  { name: 'safety_training_records restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE safety_training_records ALTER COLUMN created_at SET DEFAULT now()` },
+  { name: 'settings restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE settings ALTER COLUMN updated_at SET DEFAULT now()` },
+  { name: 'stock_movements restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE stock_movements ALTER COLUMN created_at SET DEFAULT now()` },
+  { name: 'transfer_request_lines restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE transfer_request_lines ALTER COLUMN unit SET DEFAULT 'pcs'` },
+  { name: 'transfer_requests restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE transfer_requests ALTER COLUMN status SET DEFAULT 'pending'` },
+  { name: 'user_panels restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE user_panels ALTER COLUMN name SET DEFAULT 'My Dashboard'` },
+  { name: 'warehouse_transactions restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE warehouse_transactions ALTER COLUMN quantity SET DEFAULT 0` },
+  { name: 'work_centers restore 1 DB default(s) [DRIFT-NN]', sql: `ALTER TABLE work_centers ALTER COLUMN type SET DEFAULT 'machine'` },
+
   // ── [2026-05-21 dup-fix #2] LMS Drizzle-only LIVE → CREATE TABLE ──
   // 5 jadval kod tomonidan ishlatiladi (drizzle-lms-tests.repo.ts + drizzle-lms-misc.repo.ts)
   // lekin DB'da yo'q edi → runtime error potensiali. Repo SQL kontrakt sifatida tanlandi
