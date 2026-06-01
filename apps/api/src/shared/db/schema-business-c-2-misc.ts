@@ -82,6 +82,11 @@ export const sd_contracts = pgTable('sd_contracts', {
   status:          text('status').default('draft'), // draft | sent | signed | cancelled
   signed_at:       timestamp('signed_at'),
   notes:           text('notes'),
+  // Extended fields for FE create form (matching lib/db/src/schema/sd-europrint-schema.ts)
+  start_date:      text('start_date'),
+  end_date:        text('end_date'),
+  total_amount:    text('total_amount'),
+  payment_terms:   text('payment_terms'),
   created_at:      timestamp('created_at').defaultNow(),
   updated_at:      timestamp('updated_at').defaultNow(),
 });

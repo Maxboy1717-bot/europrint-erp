@@ -51,7 +51,20 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
   }
 
   async createContract(body: Row): Promise<Result<Row | null>> {
-    const r = await exec(sql`INSERT INTO sd_contracts (order_id, contract_number, template_type, status, valid_until, notes) VALUES (${body.order_id ?? null}, ${body.contract_number ?? `CNT-${Date.now()}`}, ${body.template_type ?? 'standard'}, ${body.status ?? 'draft'}, ${body.valid_until ?? null}, ${body.notes ?? null}) RETURNING *`);
+    const contractNumber = body.contract_number ?? `CNT-${Date.now()}`;
+    const orderId = body.order_id != null ? parseInt(String(body.order_id), 10) : null;
+    const customerId = body.customer_id != null ? parseInt(String(body.customer_id), 10) : null;
+    const totalAmount = body.total_amount != null ? parseFloat(String(body.total_amount)) || 0 : 0;
+    const r = await exec(sql`
+      INSERT INTO sd_contracts
+        (order_id, contract_number, template_type, status,
+         customer_id, start_date, end_date, total_amount, payment_terms, notes)
+      VALUES
+        (${orderId}, ${contractNumber}, ${body.template_type ?? 'standard'}, ${body.status ?? 'draft'},
+         ${customerId}, ${body.start_date ?? null}, ${body.end_date ?? null}, ${totalAmount},
+         ${body.payment_terms ?? null}, ${body.notes ?? null})
+      RETURNING *
+    `);
     if (!r.ok) return r as Result<Row | null>;
     return Ok(r.data[0] ?? null);
   }
