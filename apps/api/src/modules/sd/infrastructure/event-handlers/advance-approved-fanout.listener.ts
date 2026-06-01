@@ -62,9 +62,17 @@ export class AdvanceApprovedFanoutListener implements IEventHandler<AdvanceAppro
         } else {
           this.logger.warn({ msg: 'Fan-out: cliché job dispatch failed', orderId, error: created.error?.message });
         }
+      } else if (dept === 'logistics') {
+        const created = await this.deptRepo.createShippingRequestJob(orderId);
+        if (created.ok) {
+          await this.deptRepo.markStatus(orderId, 'logistics', 'started');
+          this.logger.log({ msg: 'Fan-out: logistics shipping request dispatched', orderId, newlyCreated: created.data.created });
+        } else {
+          this.logger.warn({ msg: 'Fan-out: logistics dispatch failed', orderId, error: created.error?.message });
+        }
       } else {
-        // Other departments (design/cliche/warehouse/production/logistics) wired in later
-        // Phase 4 steps — same spine, one at a time.
+        // Remaining departments (warehouse/production) wired in later Phase 4 steps —
+        // same spine, one at a time.
         this.logger.log({ msg: 'Fan-out: department not yet wired (Phase 4 incremental)', orderId, dept });
       }
     }

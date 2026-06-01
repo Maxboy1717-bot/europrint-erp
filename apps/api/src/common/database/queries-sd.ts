@@ -54,9 +54,9 @@ export async function execSdSalesOrderInsert(
    * the runtime type is the same `tx` returned by `db.transaction(async tx => ...)`.
    */
   tx?: unknown,
-): Promise<void> {
+): Promise<number> {
   const conn = (tx as typeof db | undefined) ?? db;
-  await conn.insert(sd_sales_orders).values({
+  const rows = await conn.insert(sd_sales_orders).values({
     order_number: orderNumber,
     status,
     company_id: companyId as number,
@@ -67,7 +67,17 @@ export async function execSdSalesOrderInsert(
     design_flag: false,
     sample_flag: false,
     created_by: (createdBy ?? 0) as number,
-  }).onConflictDoNothing();
+  }).onConflictDoNothing().returning({ id: sd_sales_orders.id });
+  // Normal path: the INSERT returns the new serial id. On conflict (duplicate
+  // order_number) returning is empty — fall back to looking up the existing row
+  // so the caller still gets the real id (idempotent create) instead of 0.
+  if (rows[0]?.id != null) return Number(rows[0].id);
+  const existing = await conn
+    .select({ id: sd_sales_orders.id })
+    .from(sd_sales_orders)
+    .where(eq(sd_sales_orders.order_number, orderNumber))
+    .limit(1);
+  return existing[0]?.id != null ? Number(existing[0].id) : 0;
 }
 
 export async function execSdSalesOrderUpdate(status: string, advanceStatus: string, id: unknown): Promise<void> {

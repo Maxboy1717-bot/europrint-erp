@@ -36,11 +36,15 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     try {
       // PA0-6: pass the optional Drizzle `tx` executor through to the helper
       // so the INSERT participates in the same transaction as the outbox write.
-      await execSdSalesOrderInsert(
+      const newId = await execSdSalesOrderInsert(
         order.getOrderNumber(), order.getStatus(), order.getCompanyId(),
         order.getTotalAmount(), (castTo<Row>(order))['createdBy'],
         tx,
       );
+      // Carry the DB-generated serial id back onto the aggregate so the command
+      // handler (and the outbox entries it builds) reference the real order id
+      // instead of the create()-time placeholder 0.
+      order.assignPersistedId(newId);
       return { ok: true as const, data: order };
     } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }

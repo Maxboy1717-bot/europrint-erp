@@ -2751,6 +2751,14 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
         ALTER TABLE ow_cliches ALTER COLUMN order_id TYPE integer USING NULL::integer;
       END IF;
     END $$;` },
+  // Logistics fan-out target: ow_shipping_requests (order-keyed). The delivery lifecycle/done
+  // signal lives on its child ow_deliveries (shipping_request_id, status DELIVERED) — that table
+  // is NOT order-keyed, so only ow_shipping_requests.order_id is repointed.
+  { name: 'ow_shipping_requests.order_id uuid->integer (Phase 4 repoint)', sql: `DO $$ BEGIN
+      IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ow_shipping_requests' AND column_name='order_id' AND data_type='uuid') THEN
+        ALTER TABLE ow_shipping_requests ALTER COLUMN order_id TYPE integer USING NULL::integer;
+      END IF;
+    END $$;` },
   // ── Phase 4 (2026-06-01): manager's per-order department selection (fan-out source) ──
   { name: 'sd_order_departments CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS sd_order_departments (
       id SERIAL PRIMARY KEY,
@@ -2762,6 +2770,20 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
       updated_at TIMESTAMP DEFAULT NOW(),
       CONSTRAINT sd_order_departments_uniq UNIQUE (order_id, department)
     )` },
+  // Drift-convergence (2026-06-01): the canonical Drizzle def is
+  //   version: integer('version').default(0).notNull()
+  // but the live column lost its DEFAULT, so execSdSalesOrderInsert (which omits version
+  // and relies on the def's default) failed every order-create with a NOT NULL violation.
+  // Re-align the live DB to its own committed def. Idempotent (SET DEFAULT is repeatable).
+  { name: 'sd_sales_orders.version SET DEFAULT 0 (drift: def declares .default(0))', sql:
+      `ALTER TABLE sd_sales_orders ALTER COLUMN version SET DEFAULT 0` },
+  // Drift-convergence (2026-06-01): domain_events.id (outbox PK) is uuid NOT NULL but lost its
+  // DB default, so the outbox insert inside every aggregate-save transaction (PA0-6) failed with
+  // a null-id violation — rolling back order-create. The def intends an auto-generated id
+  // ($defaultFn); all 5 sibling ow_* uuid PKs use gen_random_uuid(). Restore the generator to
+  // match. Idempotent (SET DEFAULT is repeatable).
+  { name: 'domain_events.id SET DEFAULT gen_random_uuid() (drift: uuid PK lost default)', sql:
+      `ALTER TABLE domain_events ALTER COLUMN id SET DEFAULT gen_random_uuid()` },
 
   // ── [2026-05-21 dup-fix #2] LMS Drizzle-only LIVE → CREATE TABLE ──
   // 5 jadval kod tomonidan ishlatiladi (drizzle-lms-tests.repo.ts + drizzle-lms-misc.repo.ts)

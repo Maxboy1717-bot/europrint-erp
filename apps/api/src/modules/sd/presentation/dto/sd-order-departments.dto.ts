@@ -33,3 +33,10 @@ export const UpdateClicheStatusSchema = z.object({
   status: z.enum(CLICHE_STATUSES),
 });
 export type UpdateClicheStatusDto = z.infer<typeof UpdateClicheStatusSchema>;
+
+// Logistics delivery lifecycle — matches the ow_deliveries CHECK constraint.
+export const SHIPPING_STATUSES = ['DISPATCHED', 'IN_TRANSIT', 'DELIVERED', 'RETURNED'] as const;
+export const UpdateShippingStatusSchema = z.object({
+  status: z.enum(SHIPPING_STATUSES),
+});
+export type UpdateShippingStatusDto = z.infer<typeof UpdateShippingStatusSchema>;

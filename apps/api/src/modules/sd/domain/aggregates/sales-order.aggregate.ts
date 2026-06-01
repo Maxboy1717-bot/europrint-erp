@@ -323,6 +323,19 @@ export class SalesOrder extends AggregateRoot implements IOrderHeader {
     return this._id;
   }
 
+  /**
+   * Assign the DB-generated id after the row is persisted. The create() factory
+   * starts a new aggregate at id 0; the repository calls this once with the
+   * serial id returned by the INSERT so the aggregate (and the outbox entries
+   * built from it) carry the real id. Guarded: only a still-unpersisted (id 0)
+   * aggregate can be assigned, so an existing id is never silently overwritten.
+   */
+  assignPersistedId(id: number): void {
+    if (this._id === 0 && Number.isInteger(id) && id > 0) {
+      this._id = id;
+    }
+  }
+
   getStatus(): string {
     return this._status.getValue();
   }

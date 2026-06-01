@@ -116,6 +116,64 @@ export class SdOrderDepartmentsRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || 'Cliché statusini yangilashda xatolik'); }
   }
 
+  /** Create the logistics dept-job: a shipping request (ow_shipping_requests, order-keyed).
+   *  Idempotent. order_id is the only required col (delivery_address/payment_verified/id have
+   *  defaults); the logistics dept fills address/contact later. The delivery lifecycle + done
+   *  signal live on the child ow_deliveries (see setShippingStatus). */
+  async createShippingRequestJob(orderId: number): Promise<Result<{ created: boolean }>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        INSERT INTO ow_shipping_requests (order_id)
+        SELECT ${orderId}
+        WHERE NOT EXISTS (SELECT 1 FROM ow_shipping_requests WHERE order_id = ${orderId})
+        RETURNING id
+      `);
+      return Ok({ created: r.rows.length > 0 });
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Shipping request yaratishda xatolik'); }
+  }
+
+  /** Advance the logistics delivery lifecycle (DISPATCHED->IN_TRANSIT->DELIVERED/RETURNED).
+   *  Operates on the order's single shipping request's child ow_deliveries row (upsert: the
+   *  delivery is created on the first call). DELIVERED stamps arrived_at + marks the logistics
+   *  dept 'done' — the real "customer received it" signal, not a marker. */
+  async setShippingStatus(orderId: number, status: string): Promise<Result<Row | null>> {
+    try {
+      const reqR = await runQuery<Row>(sql`
+        SELECT id FROM ow_shipping_requests WHERE order_id = ${orderId} ORDER BY id LIMIT 1
+      `);
+      const reqId = reqR.rows[0]?.['id'];
+      if (!reqId) return Err('Shipping request topilmadi');
+
+      const existing = await runQuery<Row>(sql`
+        SELECT id FROM ow_deliveries WHERE shipping_request_id = ${reqId}::uuid ORDER BY id LIMIT 1
+      `);
+      const existingId = existing.rows[0]?.['id'];
+
+      let row: Row | undefined;
+      if (existingId) {
+        const upd = await runQuery<Row>(sql`
+          UPDATE ow_deliveries
+             SET status = ${status},
+                 dispatched_at = COALESCE(dispatched_at, NOW()),
+                 arrived_at = CASE WHEN ${status} = 'DELIVERED' THEN NOW() ELSE arrived_at END
+           WHERE id = ${existingId}::uuid
+          RETURNING id, shipping_request_id, status, dispatched_at, arrived_at
+        `);
+        row = upd.rows[0];
+      } else {
+        const ins = await runQuery<Row>(sql`
+          INSERT INTO ow_deliveries (shipping_request_id, status, dispatched_at, arrived_at)
+          VALUES (${reqId}::uuid, ${status}, NOW(), CASE WHEN ${status} = 'DELIVERED' THEN NOW() ELSE NULL END)
+          RETURNING id, shipping_request_id, status, dispatched_at, arrived_at
+        `);
+        row = ins.rows[0];
+      }
+      if (!row) return Err('Yetkazib berishni yangilashda xatolik');
+      if (status === 'DELIVERED') await this.markStatus(orderId, 'logistics', 'done');
+      return Ok(row);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Yetkazib berish statusini yangilashda xatolik'); }
+  }
+
   /** Saga view: the order + its selected departments + the mold dept-track detail
    *  (ow_molds keyed to sd_sales_orders.id). Reuses the ow_molds table + progress pattern. */
   async getSaga(orderId: number): Promise<Result<Row>> {
@@ -149,13 +207,30 @@ export class SdOrderDepartmentsRepository {
       const clicheDone = clicheRows.filter((c) => c['arrived_at'] != null).length;
       const clichePct  = clicheRows.length ? Math.round((clicheDone / clicheRows.length) * 100) : 0;
 
+      // Logistics: ow_shipping_requests (order-keyed) + child ow_deliveries (status lifecycle).
+      // done = a request whose delivery reached DELIVERED.
+      const shipReqs = await runQuery<Row>(sql`
+        SELECT id, payment_verified, approved_by, requested_at FROM ow_shipping_requests WHERE order_id = ${orderId} ORDER BY id
+      `);
+      const shipReqRows = shipReqs.rows;
+      const deliveries = await runQuery<Row>(sql`
+        SELECT d.id, d.shipping_request_id, d.status, d.dispatched_at, d.arrived_at
+        FROM ow_deliveries d JOIN ow_shipping_requests r ON r.id = d.shipping_request_id
+        WHERE r.order_id = ${orderId} ORDER BY d.id
+      `);
+      const deliveryRows = deliveries.rows;
+      const deliveredReqIds = new Set(deliveryRows.filter((d) => d['status'] === 'DELIVERED').map((d) => d['shipping_request_id']));
+      const logiDone = shipReqRows.filter((r) => deliveredReqIds.has(r['id'])).length;
+      const logiPct  = shipReqRows.length ? Math.round((logiDone / shipReqRows.length) * 100) : 0;
+
       return Ok({
         order: ord.rows[0],
         departments: depts.rows,
         tracks: [
-          { name: 'mold',   count: moldRows.length, done: moldDone, progressPct: moldPct, rows: moldRows },
-          { name: 'design', count: techRows.length, done: techDone, progressPct: techPct, rows: techRows },
-          { name: 'cliche', count: clicheRows.length, done: clicheDone, progressPct: clichePct, rows: clicheRows },
+          { name: 'mold',      count: moldRows.length,    done: moldDone,   progressPct: moldPct,   rows: moldRows },
+          { name: 'design',    count: techRows.length,    done: techDone,   progressPct: techPct,   rows: techRows },
+          { name: 'cliche',    count: clicheRows.length,  done: clicheDone, progressPct: clichePct, rows: clicheRows },
+          { name: 'logistics', count: shipReqRows.length, done: logiDone,   progressPct: logiPct,   rows: deliveryRows, requests: shipReqRows },
         ],
       });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Saga ko\'rinishini o\'qishda xatolik'); }

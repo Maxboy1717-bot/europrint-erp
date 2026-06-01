@@ -12,12 +12,14 @@
  */
 
 import { pgTable, uuid, text, jsonb, timestamp, integer, index } from 'drizzle-orm/pg-core';
-import { createId } from '@paralleldrive/cuid2';
 
 export const domain_events = pgTable(
   'domain_events',
   {
-    id: uuid('id').primaryKey().$defaultFn(() => createId()),
+    // id is a uuid column; let Postgres generate it (gen_random_uuid). The previous
+    // $defaultFn(() => createId()) produced a cuid2 string, which is invalid for a uuid
+    // column and made every outbox insert (inside aggregate-save txns) fail at runtime.
+    id: uuid('id').primaryKey().defaultRandom(),
     aggregate_type: text('aggregate_type').notNull(),
     aggregate_id: text('aggregate_id').notNull(),
     event_name: text('event_name').notNull(),
