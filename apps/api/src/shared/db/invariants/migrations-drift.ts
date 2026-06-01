@@ -3017,6 +3017,24 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'work_centers restore 3 DB default(s) [DRIFT-NULL]', sql: `ALTER TABLE work_centers ALTER COLUMN capacity SET DEFAULT 8; ALTER TABLE work_centers ALTER COLUMN cost_per_hour SET DEFAULT 0; ALTER TABLE work_centers ALTER COLUMN updated_at SET DEFAULT now()` },
   { name: 'zone_tracking_logs restore 1 DB default(s) [DRIFT-NULL]', sql: `ALTER TABLE zone_tracking_logs ALTER COLUMN created_at SET DEFAULT now()` },
 
+  // ── mes_telemetry (2026-06-01): AiMesMonitorService runs a 30s telemetry-check cron that
+  //    SELECTs from mes_telemetry. The table is declared (schema-db-only-generated.ts) but was
+  //    never created in the live DB, so every tick errored 'relation mes_telemetry does not
+  //    exist' — flooding logs (6900+ lines). Create it with insert-ready defaults (uuid PK
+  //    gen_random_uuid(), recorded_at/created_at now()) + a recorded_at index for the
+  //    rolling-window query. Idempotent (IF NOT EXISTS).
+  { name: 'mes_telemetry CREATE TABLE [mes-monitor cron]', sql: `
+      CREATE TABLE IF NOT EXISTS mes_telemetry (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        machine_id text NOT NULL,
+        metric_type varchar(100),
+        metric_value numeric(14,3),
+        value numeric(14,3),
+        recorded_at timestamptz NOT NULL DEFAULT now(),
+        created_at timestamptz NOT NULL DEFAULT now()
+      )` },
+  { name: 'mes_telemetry recorded_at index', sql: `CREATE INDEX IF NOT EXISTS mes_telemetry_recorded_at_idx ON mes_telemetry (recorded_at DESC)` },
+
   // ── [2026-05-21 dup-fix #2] LMS Drizzle-only LIVE → CREATE TABLE ──
   // 5 jadval kod tomonidan ishlatiladi (drizzle-lms-tests.repo.ts + drizzle-lms-misc.repo.ts)
   // lekin DB'da yo'q edi → runtime error potensiali. Repo SQL kontrakt sifatida tanlandi
