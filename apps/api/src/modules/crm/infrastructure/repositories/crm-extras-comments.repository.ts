@@ -23,7 +23,10 @@ export class CrmExtrasCommentsRepository {
   async listComments(leadId: number | null, dealId: number | null, lim: number, off: number): Promise<Result<Row[]>> {
     return safeCall(async () => {
       try {
-        return db.select({
+        // NOTE: `await` is required — without it the promise (and any rejection) escapes
+        // this try/catch into safeCall, defeating the graceful degradation below. The
+        // employees join enriches author_name; `employees` may be unseeded in some envs.
+        return await db.select({
           id:          crm_comments.id,
           lead_id:     crm_comments.lead_id,
           deal_id:     crm_comments.deal_id,
@@ -62,7 +65,8 @@ export class CrmExtrasCommentsRepository {
   async getHistory(entityType: string | null, entityId: number | null, lim: number, off: number): Promise<Result<Row[]>> {
     return safeCall(async () => {
       try {
-        return db.select({
+        // `await` required so the catch can degrade gracefully (see listComments).
+        return await db.select({
           id:          crm_history.id,
           entity_type: crm_history.entity_type,
           entity_id:   crm_history.entity_id,

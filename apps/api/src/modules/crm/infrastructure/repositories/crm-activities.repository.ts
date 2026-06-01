@@ -6,7 +6,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
@@ -19,35 +19,45 @@ type Row = Record<string, unknown>;
 
 @Injectable()
 export class CrmActivitiesRepository implements ICrmActivitiesRepo {
+  private readonly logger = new Logger(CrmActivitiesRepository.name);
+
   async list(lid: number | null, did: number | null, uid: number | null, type: string | undefined, status: string | undefined, lim: number, off: number): Promise<Result<Row[]>> {
     return safeCall(async () => {
-      return db.select({
-        id:               crm_activities.id,
-        type:             crm_activities.type,
-        subject:          crm_activities.subject,
-        lead_id:          crm_activities.lead_id,
-        deal_id:          crm_activities.deal_id,
-        assigned_to:      crm_activities.assigned_to,
-        due_date:         crm_activities.due_date,
-        notes:            crm_activities.notes,
-        status:           crm_activities.status,
-        completed_at:     crm_activities.completed_at,
-        created_at:       crm_activities.created_at,
-        updated_at:       crm_activities.updated_at,
-        assigned_to_name: sql<string>`COALESCE(${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}, '')`,
-      })
-        .from(crm_activities)
-        .leftJoin(hrEmployees, eq(hrEmployees.id, crm_activities.assigned_to))
-        .where(sql`
-          (${lid}::int IS NULL OR ${crm_activities.lead_id} = ${lid}) AND
-          (${did}::int IS NULL OR ${crm_activities.deal_id} = ${did}) AND
-          (${uid}::int IS NULL OR ${crm_activities.assigned_to} = ${uid}) AND
-          (${type ?? null}::text IS NULL OR ${crm_activities.type} = ${type ?? null}) AND
-          (${status ?? null}::text IS NULL OR ${crm_activities.status} = ${status ?? null})
-        `)
-        .orderBy(sql`${crm_activities.due_date} ASC NULLS LAST`, sql`${crm_activities.created_at} DESC`)
-        .limit(lim)
-        .offset(off).then(r => castTo<Row[]>(r));
+      try {
+        // `await` so the catch can degrade gracefully. The hrEmployees join enriches
+        // assigned_to_name; `employees` may be unseeded in some envs (then return rows-less
+        // gracefully rather than 503) — matches crm-extras-comments listComments/getHistory.
+        return await db.select({
+          id:               crm_activities.id,
+          type:             crm_activities.type,
+          subject:          crm_activities.subject,
+          lead_id:          crm_activities.lead_id,
+          deal_id:          crm_activities.deal_id,
+          assigned_to:      crm_activities.assigned_to,
+          due_date:         crm_activities.due_date,
+          notes:            crm_activities.notes,
+          status:           crm_activities.status,
+          completed_at:     crm_activities.completed_at,
+          created_at:       crm_activities.created_at,
+          updated_at:       crm_activities.updated_at,
+          assigned_to_name: sql<string>`COALESCE(${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}, '')`,
+        })
+          .from(crm_activities)
+          .leftJoin(hrEmployees, eq(hrEmployees.id, crm_activities.assigned_to))
+          .where(sql`
+            (${lid}::int IS NULL OR ${crm_activities.lead_id} = ${lid}) AND
+            (${did}::int IS NULL OR ${crm_activities.deal_id} = ${did}) AND
+            (${uid}::int IS NULL OR ${crm_activities.assigned_to} = ${uid}) AND
+            (${type ?? null}::text IS NULL OR ${crm_activities.type} = ${type ?? null}) AND
+            (${status ?? null}::text IS NULL OR ${crm_activities.status} = ${status ?? null})
+          `)
+          .orderBy(sql`${crm_activities.due_date} ASC NULLS LAST`, sql`${crm_activities.created_at} DESC`)
+          .limit(lim)
+          .offset(off).then(r => castTo<Row[]>(r));
+      } catch (err) {
+        this.logger.warn(`list: ${(err as Error).message}`);
+        return [];
+      }
       }, 'DB_ERROR');
   }
 

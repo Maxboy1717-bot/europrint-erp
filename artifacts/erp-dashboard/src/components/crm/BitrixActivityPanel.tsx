@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { BitrixActivityPanelProps, Activity, Comment, TimelineItem } from "./activity/types";
@@ -22,12 +23,28 @@ export function BitrixActivityPanel({
   const [activeTab, setActiveTab] = useState("activity");
   const [timelineFilter, setTimelineFilter] = useState<"all" | "pending" | "completed">("all");
 
+  // BE list endpoints filter by leadId/dealId (GET /api/crm/activities?leadId=… and
+  // GET /api/crm/comments?leadId=…). The default queryFn would join the key array into the
+  // path /api/crm/activities/lead/:id, which matches no route (404). Build the query-string URL
+  // explicitly, mirroring DetailSheet's history/followup-activities queries; queryKey stays the
+  // array so the activity/comment mutations' invalidations keep matching.
+  // NOTE: entityType is lead/deal/contact/company at runtime (the prop type omits 'deal'); only
+  // lead+deal have a BE filter today, so contact/company are not fetched (the BE list endpoints
+  // lack an entity_type/entity_id filter — flagged for a separate decision).
+  const et = entityType as string;
+  const supported = et === "lead" || et === "deal";
+  const idParam = et === "deal" ? "dealId" : "leadId";
+
   const { data: activities = [], isLoading: activitiesLoading } = useQuery<Activity[]>({
     queryKey: ["/api/crm/activities", entityType, entityId],
+    queryFn: () => apiRequest("GET", `/api/crm/activities?${idParam}=${entityId}`),
+    enabled: entityId != null && supported,
   });
 
   const { data: comments = [], isLoading: commentsLoading } = useQuery<Comment[]>({
     queryKey: ["/api/crm/comments", entityType, entityId],
+    queryFn: () => apiRequest("GET", `/api/crm/comments?${idParam}=${entityId}`),
+    enabled: entityId != null && supported,
   });
 
   // Build timeline
