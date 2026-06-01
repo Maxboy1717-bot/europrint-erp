@@ -56,7 +56,9 @@ export class GetDashboardKpisHandler implements IQueryHandler<GetDashboardKpisQu
 
   private async getSalesOrders(): Promise<Result<number>> {
     return safeCall(async () => {
-      const r = await exec(sql`SELECT COUNT(*) AS count FROM sales_orders WHERE status != 'cancelled' AND status != 'completed'`);
+      // Live sales_orders has no `status` column (this errored → silent 0). The coarse state
+      // is overall_status ∈ {IN_PROCESS,COMPLETED,CANCELLED}; count the open (in-process) ones.
+      const r = await exec(sql`SELECT COUNT(*) AS count FROM sales_orders WHERE overall_status NOT IN ('CANCELLED', 'COMPLETED')`);
       return parseInt(String(r[0]?.count ?? '0'), 10);
     }, 'INTERNAL');
   }
