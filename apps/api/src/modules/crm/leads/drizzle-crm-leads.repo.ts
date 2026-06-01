@@ -31,7 +31,12 @@ function mapLeadRow(r: Row): Row {
     companyTitle: null,
     // Live crm_leads columns: status_id/status_description, source_id, assigned_to,
     // date_create, comments (NOT status/source/manager_id/created_at/notes/customer_id).
-    statusId:     r['status_id'] ? String(r['status_id']).toUpperCase() : (r['status_description'] ? String(r['status_description']).toUpperCase() : 'NEW'),
+    // statusId is what the kanban board groups cards by → expose the FINE stage from
+    // status_description (= LEAD_STAGES.stageId domain: NEW/IN_PROGRESS/ANALYSIS/FINAL/
+    // CONVERTED/WON/LOST). status_id is the coarse Bitrix CHECK state {NEW,IN_PROCESS,
+    // CONVERTED,JUNK} and can't represent 4 of the 7 columns, so it's only the fallback
+    // for legacy rows that have no description.
+    statusId:     r['status_description'] ? String(r['status_description']).toUpperCase() : (r['status_id'] ? String(r['status_id']).toUpperCase() : 'NEW'),
     // Lifecycle code (new/qualified/proposal/...) for the FE label; statusId stays the
     // coarse Bitrix state. Falls back to lower(status_id) for legacy rows w/o a description.
     status:       r['status_description'] ? String(r['status_description']) : (r['status_id'] ? String(r['status_id']).toLowerCase() : 'new'),
@@ -82,7 +87,9 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
       // Write the real compat-1a def properties (camelCase keys like name/phones/statusId
       // are NOT def properties and were silently dropped by Drizzle). Lifecycle goes to
       // status_description; status_id holds the mapped Bitrix coarse state (CHECK-safe).
-      const lifecycle = String((dto.status as string | undefined) ?? (dto.statusId as string | undefined) ?? 'new').toLowerCase();
+      // Canonical fine stage = LEAD_STAGES.stageId (uppercase). Stored verbatim in
+      // status_description (the field the board reads), so read==write equality holds.
+      const lifecycle = String((dto.status as string | undefined) ?? (dto.statusId as string | undefined) ?? 'NEW').toUpperCase();
       const phoneVal = (dto.phone as string | undefined)
         ?? (Array.isArray(dto.phones) && dto.phones[0] ? String((dto.phones[0] as { value?: unknown }).value ?? '') : undefined);
       const emailVal = (dto.email as string | undefined)
@@ -112,9 +119,12 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
       const setObj: Record<string, unknown> = {};
       const lifecycleRaw = (dto.status ?? dto.statusId ?? dto.stage_id) as string | undefined;
       if (lifecycleRaw != null) {
-        const lifecycle = String(lifecycleRaw).toLowerCase();
-        setObj.status_description = lifecycle;
-        setObj.status_id = toBitrixStatusId(lifecycle);
+        // Canonical fine stage = LEAD_STAGES.stageId (uppercase). The board reads
+        // status_description (exposed as statusId) for column placement → store it
+        // verbatim/uppercase so the dragged stage persists and the card stays put.
+        const stage = String(lifecycleRaw).toUpperCase();
+        setObj.status_description = stage;
+        setObj.status_id = toBitrixStatusId(stage); // coarse Bitrix mirror (CHECK-safe)
       }
       if (dto.title != null) setObj.title = String(dto.title);
       if (dto.contact_name != null) setObj.contact_name = String(dto.contact_name);

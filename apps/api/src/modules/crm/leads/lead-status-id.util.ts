@@ -13,8 +13,13 @@ export type BitrixLeadStatusId = 'NEW' | 'IN_PROCESS' | 'CONVERTED' | 'JUNK';
 export function toBitrixStatusId(lifecycle: string | null | undefined): BitrixLeadStatusId {
   switch (String(lifecycle ?? '').toLowerCase()) {
     case 'new':         return 'NEW';
-    case 'converted':   return 'CONVERTED';
+    case 'converted':
+    case 'won':         return 'CONVERTED';
     case 'lost':        return 'JUNK';
+    // Board kanban fine stages (LEAD_STAGES) + legacy lifecycle codes → coarse IN_PROCESS.
+    case 'in_progress':
+    case 'analysis':
+    case 'final':
     case 'contacted':
     case 'qualified':
     case 'proposal':
