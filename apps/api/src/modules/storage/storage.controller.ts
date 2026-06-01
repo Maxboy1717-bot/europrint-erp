@@ -8,15 +8,31 @@ import {
   StreamableFile, Logger, NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { Public } from '@common/decorators/public.decorator';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
-const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
+const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB
+const ALLOWED_UPLOAD_EXT = new Set([
+  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg',
+  '.pdf', '.docx', '.xlsx', '.csv', '.txt',
+  '.mp4', '.webm', '.ogg', '.mp3', '.wav',
+]);
 
 function ensureDir(dir: string) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+}
+
+/**
+ * Resolve a user-supplied key/path strictly inside UPLOADS_DIR. Returns null on any
+ * traversal attempt (absolute paths, `..`, symlink-style escapes). Uses path.resolve +
+ * prefix assertion rather than a naive `..` string replace (which `....//` etc. bypass).
+ */
+function resolveWithinUploads(key: string): string | null {
+  const resolved = path.resolve(UPLOADS_DIR, key);
+  if (resolved !== UPLOADS_DIR && !resolved.startsWith(UPLOADS_DIR + path.sep)) return null;
+  return resolved;
 }
 
 // Type stub for the @fastify/multipart decoration on FastifyRequest
@@ -40,10 +56,11 @@ export class StorageController {
    *   2. raw binary           — body populated by the '*' content-type parser in main.ts
    *      (fallback for direct binary PUT when the server has been restarted)
    */
-  @Public()
-  @ApiOperation({ summary: 'Upload file' })
-  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload file (authenticated)' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Put('upload')
   @HttpCode(200)
   async uploadFile(
@@ -54,7 +71,15 @@ export class StorageController {
   ) {
     if (!key) return res.status(400).send({ error: 'Missing key' });
 
-    const safePath = path.join(UPLOADS_DIR, key.replace(/\.\./g, '_'));
+    // Path-traversal hardening: resolve strictly inside UPLOADS_DIR.
+    const safePath = resolveWithinUploads(key);
+    if (!safePath) return res.status(400).send({ error: 'Invalid key' });
+
+    // Extension allowlist — block executable/script uploads served from our origin.
+    const ext = path.extname(key).toLowerCase();
+    if (!ALLOWED_UPLOAD_EXT.has(ext)) {
+      return res.status(400).send({ error: `File type not allowed: ${ext || '(none)'}` });
+    }
     ensureDir(path.dirname(safePath));
 
     let body: Buffer;
@@ -78,23 +103,29 @@ export class StorageController {
       this.logger.warn(`Empty body for key=${key} content-type=${contentType}`);
       return res.status(400).send({ error: 'Empty file body' });
     }
+    if (body.length > MAX_UPLOAD_BYTES) {
+      return res.status(400).send({ error: 'File too large' });
+    }
 
     fs.writeFileSync(safePath, body);
     this.logger.log(`Stored: ${key} (${body.length} bytes, ${mime})`);
     return res.status(200).send({ ok: true, key, size: body.length });
   }
 
-  /** GET /storage/chat/1/file/xxx.png */
-  @Public()
-  @ApiOperation({ summary: 'Serve file' })
+  /** GET /storage/chat/1/file/xxx.png — authenticated (browser sends the access_token cookie
+   *  automatically on same-origin <img>/fetch, so logged-in users still load chat/wms files;
+   *  anonymous callers now get 401 from the global JwtAuthGuard). */
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Serve file (authenticated)' })
   @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Get('*')
   async serveFile(
     @Param('*') filePath: string,
     @Res({ passthrough: true }) res: FastifyReply,
   ): Promise<StreamableFile> {
-    const safePath = path.join(UPLOADS_DIR, filePath.replace(/\.\./g, '_'));
-    if (!fs.existsSync(safePath)) {
+    const safePath = resolveWithinUploads(filePath);
+    if (!safePath || !fs.existsSync(safePath)) {
       throw new NotFoundException('File not found');
     }
     const ext = path.extname(filePath).toLowerCase();

@@ -98,10 +98,12 @@ export const LegacyUploadSchema = z.object({
 });
 export type LegacyUploadDto = z.infer<typeof LegacyUploadSchema>;
 
+// Body-size caps: this endpoint is @Public (browser error beacon), so unbounded strings
+// were a cheap ingestion-DoS vector. Cap each field to a sane maximum.
 export const LegacyClientErrorSchema = z.object({
-  message:   z.string().optional(),
-  stack:     z.string().optional(),
-  url:       z.string().optional(),
-  userAgent: z.string().optional(),
+  message:   z.string().max(2000).optional(),
+  stack:     z.string().max(10000).optional(),
+  url:       z.string().max(2000).optional(),
+  userAgent: z.string().max(1000).optional(),
 });
 export type LegacyClientErrorDto = z.infer<typeof LegacyClientErrorSchema>;

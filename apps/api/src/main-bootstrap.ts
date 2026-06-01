@@ -44,6 +44,17 @@ export async function configureSecurityHeaders(app: NestFastifyApplication): Pro
     noSniff: true,
     hsts: { maxAge: SECONDS_PER_YEAR, includeSubDomains: true },
   });
+
+  // Permissions-Policy is not emitted by @fastify/helmet by default. Lock down powerful
+  // browser features the ERP never uses from third-party frames/scripts.
+  const rawApp = app.getHttpAdapter().getInstance() as RawFastify;
+  rawApp.addHook('onRequest', (_req: RawReq, reply: RawReply, done?: () => void) => {
+    (reply as unknown as { header: (k: string, v: string) => void }).header(
+      'Permissions-Policy',
+      'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()',
+    );
+    done?.();
+  });
 }
 
 export function configureBlockedMethods(app: NestFastifyApplication): void {

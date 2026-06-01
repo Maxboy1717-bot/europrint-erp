@@ -24,6 +24,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagg
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
+import { TabletTokenGuard } from '@common/guards/tablet-token.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { Public } from '@common/decorators/public.decorator';
 import { unwrapOrThrow } from '@common/http-result';
@@ -58,6 +59,7 @@ export class IotTabletController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('tablet/orders')
   @Public()
+  @UseGuards(TabletTokenGuard)
   async getTabletOrders(@Query() raw: Record<string, unknown>) {
     const q = TabletOrdersQuerySchema.parse(raw);
     return unwrapOrThrow(
@@ -69,6 +71,7 @@ export class IotTabletController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('tablet/worker-schedule')
   @Public()
+  @UseGuards(TabletTokenGuard)
   async getTabletWorkerSchedule(@Query() raw: Record<string, unknown>) {
     const q = WorkerScheduleQuerySchema.parse(raw);
     return unwrapOrThrow(
@@ -80,6 +83,7 @@ export class IotTabletController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('tablet/equipment')
   @Public()
+  @UseGuards(TabletTokenGuard)
   async getTabletEquipment(@Query() raw: Record<string, unknown>) {
     const q = TabletEquipmentQuerySchema.parse(raw);
     return unwrapOrThrow(
