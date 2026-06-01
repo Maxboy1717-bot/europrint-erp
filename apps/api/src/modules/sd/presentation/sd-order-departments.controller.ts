@@ -15,7 +15,7 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '../../auth/enums/role.enum';
 import { AuditInterceptor } from '../../shared/interceptors/audit.interceptor';
 import { SdOrderDepartmentsService } from '../application/sd-order-departments.service';
-import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto } from './dto/sd-order-departments.dto';
+import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto, UpdateMoldStatusSchema, UpdateMoldStatusDto } from './dto/sd-order-departments.dto';
 
 @ApiTags('SD Order Departments')
 @ApiBearerAuth()
@@ -50,5 +50,15 @@ export class SdOrderDepartmentsController {
   @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async saga(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.svc.getSaga(id));
+  }
+
+  @ApiOperation({ summary: 'Advance a mold dept-job status (ORDERED->IN_TRANSIT->RECEIVED/REJECTED)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':id/molds/:moldId/status')
+  @Roles(Role.PRODUCTION_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @UsePipes(new ZodValidationPipe(UpdateMoldStatusSchema))
+  async setMoldStatus(@Param('id', ParseIntPipe) id: number, @Param('moldId') moldId: string, @Body() dto: UpdateMoldStatusDto) {
+    return unwrapOrThrow(await this.svc.setMoldStatus(id, moldId, dto.status));
   }
 }

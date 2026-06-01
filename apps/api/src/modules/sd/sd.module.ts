@@ -41,6 +41,7 @@ import { DrizzleSalesOrderRepository } from './infrastructure/repositories/drizz
 import { SALES_ORDER_REPO } from './domain/repositories/i-sales-order.repo';
 import { DealWonListener } from './infrastructure/event-handlers/deal-won.listener';
 import { PaymentReceivedListener } from './infrastructure/event-handlers/payment-received.listener';
+import { AdvanceApprovedFanoutListener } from './infrastructure/event-handlers/advance-approved-fanout.listener';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
 import { SD_ORDERS_REPO } from './orders/i-sd-orders.repo';
 import { DrizzleSdOrdersRepository } from './orders/drizzle-sd-orders.repo';
@@ -81,7 +82,7 @@ const queryHandlers = [
   GetInvoiceHandler,
 ];
 
-const eventListeners = [DealWonListener, PaymentReceivedListener];
+const eventListeners = [DealWonListener, PaymentReceivedListener, AdvanceApprovedFanoutListener];
 
 const repositories = [
   {

@@ -22,4 +22,8 @@ export class SdOrderDepartmentsService {
   getSaga(orderId: number) {
     return this.repo.getSaga(orderId);
   }
+
+  setMoldStatus(orderId: number, moldId: string, status: string) {
+    return this.repo.setMoldStatus(orderId, moldId, status);
+  }
 }

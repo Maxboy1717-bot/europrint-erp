@@ -15,3 +15,9 @@ export const SetOrderDepartmentsSchema = z.object({
   })).min(1, { message: 'Kamida bitta bo\'lim tanlanishi kerak' }),
 });
 export type SetOrderDepartmentsDto = z.infer<typeof SetOrderDepartmentsSchema>;
+
+export const MOLD_STATUSES = ['ORDERED', 'IN_TRANSIT', 'RECEIVED', 'REJECTED'] as const;
+export const UpdateMoldStatusSchema = z.object({
+  status: z.enum(MOLD_STATUSES),
+});
+export type UpdateMoldStatusDto = z.infer<typeof UpdateMoldStatusSchema>;

@@ -38,6 +38,21 @@ export class SdOrderDepartmentsRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || "Bo'limlarni o'qishda xatolik"); }
   }
 
+  /** Create the mold dept-job for an order (Phase 4 fan-out). Idempotent: skips if a mold
+   *  row already exists for the order. vendor is NOT NULL (CHECK) — defaults to 'Internal'
+   *  for auto-created jobs (the mold dept reassigns it). status defaults to 'ORDERED' (started). */
+  async createMoldJob(orderId: number): Promise<Result<{ created: boolean }>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        INSERT INTO ow_molds (order_id, vendor, status)
+        SELECT ${orderId}, 'Internal', 'ORDERED'
+        WHERE NOT EXISTS (SELECT 1 FROM ow_molds WHERE order_id = ${orderId})
+        RETURNING id
+      `);
+      return Ok({ created: r.rows.length > 0 });
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Mold job yaratishda xatolik'); }
+  }
+
   /** Saga view: the order + its selected departments + the mold dept-track detail
    *  (ow_molds keyed to sd_sales_orders.id). Reuses the ow_molds table + progress pattern. */
   async getSaga(orderId: number): Promise<Result<Row>> {
@@ -64,6 +79,23 @@ export class SdOrderDepartmentsRepository {
         ],
       });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Saga ko\'rinishini o\'qishda xatolik'); }
+  }
+
+  /** Update a mold dept-job's detailed status (ORDERED->IN_TRANSIT->RECEIVED/REJECTED).
+   *  When RECEIVED, stamp received_at and mark the mold department 'done'. */
+  async setMoldStatus(orderId: number, moldId: string, status: string): Promise<Result<Row | null>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        UPDATE ow_molds
+           SET status = ${status},
+               received_at = CASE WHEN ${status} = 'RECEIVED' THEN NOW() ELSE received_at END
+         WHERE id = ${moldId}::uuid AND order_id = ${orderId}
+        RETURNING id, vendor, status, received_at
+      `);
+      if (!r.rows[0]) return Err('Mold topilmadi');
+      if (status === 'RECEIVED') await this.markStatus(orderId, 'mold', 'done');
+      return Ok(r.rows[0]);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Mold statusini yangilashda xatolik'); }
   }
 
   async markStatus(orderId: number, department: string, status: string): Promise<Result<void>> {
