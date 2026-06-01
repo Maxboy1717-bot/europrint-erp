@@ -21,8 +21,10 @@ const basePath = process.env.BASE_PATH || "/erp-dashboard/";
 const basePrefix = basePath.replace(/\/$/, "");
 
 // Backend NestJS port — apps/api/.env'da PORT=3030. Env var berilmasa shu default ishlatiladi.
-const apiUrl = process.env.API_URL ?? "http://localhost:3030";
-const nestApiUrl = process.env.NEST_API_URL ?? "http://localhost:3030";
+// 127.0.0.1 (NOT localhost): the API binds IPv4 (app.listen(port,'0.0.0.0')); `localhost`
+// resolves to IPv6 ::1 first, which the IPv4-only backend doesn't serve → proxy 500/503.
+const apiUrl = process.env.API_URL ?? "http://127.0.0.1:3030";
+const nestApiUrl = process.env.NEST_API_URL ?? "http://127.0.0.1:3030";
 
 function posAuthDirectPlugin(nestUrl: string, prefix: string) {
   // nestUrl'dan host/port chiqarib olish — hard-coded 8080 emas
