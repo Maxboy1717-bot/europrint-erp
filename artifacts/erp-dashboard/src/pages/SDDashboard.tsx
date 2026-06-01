@@ -246,7 +246,7 @@ export default function SDDashboard() {
     enabled: isAuthenticated === true,
   });
 
-  const { data: quotaData } = useQuery<QuotaRow[]>({
+  const { data: quotaData } = useQuery<{ managers?: QuotaRow[]; quota?: unknown } | QuotaRow[]>({
     queryKey: ["/api/sd/dashboard/quota"],
     queryFn: () => apiRequest("GET", "/api/sd/dashboard/quota"),
     enabled: isAuthenticated === true,
@@ -258,7 +258,11 @@ export default function SDDashboard() {
   const orderRows: OrderRow[] = Array.isArray(ordersResp?.data) ? ordersResp!.data! : [];
   const pendingAdvance: ActionRow[] = Array.isArray(managerActions?.pending_advance) ? managerActions!.pending_advance! : [];
   const techCheckpoints: ActionRow[] = Array.isArray(managerActions?.tech_checkpoints) ? managerActions!.tech_checkpoints! : [];
-  const quotaRows: QuotaRow[] = Array.isArray(quotaData) ? quotaData : [];
+  const quotaRows: QuotaRow[] = Array.isArray(quotaData)
+    ? (quotaData as QuotaRow[])
+    : Array.isArray((quotaData as { managers?: QuotaRow[] })?.managers)
+      ? (quotaData as { managers: QuotaRow[] }).managers
+      : [];
   const actionTotal = pendingAdvance.length + techCheckpoints.length;
 
   // Greeting (time-of-day) + first name

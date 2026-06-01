@@ -17,6 +17,9 @@ export interface ISdDashboardRepo {
   getPendingAdvanceOrders(mid: number | null, lim: number): Promise<Result<Row[]>>;
   getPendingTechCheckpoints(mid: number | null, lim: number): Promise<Result<Row[]>>;
   getQuotaStats(mid: number | null): Promise<Result<Row[]>>;
+  getExtendedStats(): Promise<Result<Row>>;
+  getLeadFunnelStats(): Promise<Result<Row[]>>;
+  getDebitorStats(): Promise<Result<Row>>;
 }
 
 export const SD_DASHBOARD_REPO = Symbol('SD_DASHBOARD_REPO');

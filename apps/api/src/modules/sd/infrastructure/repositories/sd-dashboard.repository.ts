@@ -60,4 +60,42 @@ export class SdDashboardRepository implements ISdDashboardRepo {
   }
 
   }
+
+  async getExtendedStats(): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const r = await exec(sql`
+        SELECT
+          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int   AS new_orders_count,
+          COALESCE(SUM(total_amount) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days'), 0)::numeric(15,2) AS new_orders_amount,
+          COUNT(*) FILTER (WHERE module_status = 'production' OR overall_status = 'IN_PROCESS')::int AS in_production_count,
+          COALESCE(SUM(total_amount) FILTER (WHERE module_status = 'production'), 0)::numeric(15,2) AS in_production_amount,
+          COUNT(*) FILTER (WHERE module_status = 'warehouse')::int                AS in_warehouse_count,
+          COALESCE(SUM(total_amount) FILTER (WHERE module_status = 'warehouse'), 0)::numeric(15,2) AS in_warehouse_amount,
+          COUNT(*) FILTER (WHERE delivery_status = 'PARTIALLY')::int             AS delivering_count,
+          COALESCE(SUM(total_amount) FILTER (WHERE delivery_status = 'PARTIALLY'), 0)::numeric(15,2) AS delivering_amount,
+          COUNT(*) FILTER (WHERE DATE(created_at) >= DATE_TRUNC('month', NOW()))::int AS monthly_orders_count
+        FROM sales_orders
+        WHERE deleted_at IS NULL
+      `);
+      return r.ok ? (r.data[0] ?? {}) : {};
+    });
+  }
+
+  async getLeadFunnelStats(): Promise<Result<Row[]>> {
+    return exec(sql`SELECT status, COUNT(*)::int AS count FROM sd_leads WHERE deleted_at IS NULL GROUP BY status`);
+  }
+
+  async getDebitorStats(): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const r = await exec(sql`
+        SELECT
+          COUNT(*)::int AS debitor_count,
+          COALESCE(SUM(amount), 0)::numeric(15,2) AS debitor_amount,
+          COALESCE(SUM(amount) FILTER (WHERE status = 'paid' AND paid_date >= DATE_TRUNC('month', NOW())::text), 0)::numeric(15,2) AS monthly_collected
+        FROM sd_payments
+        WHERE deleted_at IS NULL
+      `);
+      return r.ok ? (r.data[0] ?? {}) : {};
+    });
+  }
 }
