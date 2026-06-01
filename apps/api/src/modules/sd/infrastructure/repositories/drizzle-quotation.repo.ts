@@ -47,12 +47,50 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
 
   async approveQuotation(id: string): Promise<Result<MutationRow | null>> {
     try {
-      const r = await runQuery<MutationRow>(sql`
-        UPDATE sd_quotations SET status = 'approved', updated_at = NOW()
+      // 1. Mark quotation approved
+      const qr = await runQuery<Record<string, unknown>>(sql`
+        UPDATE sd_quotations SET status = 'approved', approved_at = NOW(), updated_at = NOW()
         WHERE id = ${id} AND deleted_at IS NULL
-        RETURNING id, status, updated_at
+        RETURNING id, status, customer_id, total_price, notes, updated_at
       `);
-      return Ok(r.rows[0] ?? null);
+      const q = qr.rows[0];
+      if (!q) return Ok(null);
+
+      // 2. Create a sales_order (canonical order table) from the approved quotation
+      const today = new Date().toISOString().split('T')[0] as string;
+      const docNumber = `SO-${Date.now()}`;
+      const totalAmount = typeof q['total_price'] === 'number' ? q['total_price']
+        : parseFloat(String(q['total_price'] ?? '0')) || 0;
+      const customerId = q['customer_id'] != null ? parseInt(String(q['customer_id']), 10) : null;
+      const or = await runQuery<Record<string, unknown>>(sql`
+        INSERT INTO sales_orders
+          (document_number, order_date, pricing_date, customer_id, net_value, total_value, total_amount,
+           notes, quotation_id)
+        VALUES
+          (${docNumber}, ${today}, ${today}, ${customerId}, ${totalAmount}, ${totalAmount}, ${totalAmount},
+           ${q['notes'] != null ? String(q['notes']) : null}, ${String(id)})
+        RETURNING id, document_number
+      `);
+      const orderId = or.rows[0]?.['id'] != null ? parseInt(String(or.rows[0]['id']), 10) : null;
+
+      // 3. Create a contract linked to the new order
+      const contractNumber = `CNT-${Date.now()}`;
+      if (orderId) {
+        await runQuery(sql`
+          INSERT INTO sd_contracts
+            (order_id, contract_number, template_type, status, customer_id, total_amount)
+          VALUES
+            (${orderId}, ${contractNumber}, 'standard', 'draft', ${customerId}, ${totalAmount})
+        `);
+      }
+
+      return Ok({
+        id: q['id'],
+        status: q['status'],
+        updated_at: q['updated_at'],
+        orderId,
+        contractNumber: orderId ? contractNumber : null,
+      } as unknown as MutationRow);
     } catch (e) {
       return Err(AppErr('DB_ERROR', String(e)));
     }
