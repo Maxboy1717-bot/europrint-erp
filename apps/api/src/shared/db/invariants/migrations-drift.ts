@@ -2733,6 +2733,14 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
     ` },
   // ── Manual fixes (added 2026-05-21 after endpoint probe) ──
   { name: 'sd_sales_orders.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_sales_orders ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  // ── Phase 4 (2026-06-01): repoint ow_molds dept-track to the operational order
+  //    (sd_sales_orders.id is integer; ow_molds.order_id was uuid for the orphan ow_orders).
+  //    Conditional so it only runs while still uuid (idempotent; never nulls integer data). ──
+  { name: 'ow_molds.order_id uuid->integer (Phase 4 repoint)', sql: `DO $$ BEGIN
+      IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ow_molds' AND column_name='order_id' AND data_type='uuid') THEN
+        ALTER TABLE ow_molds ALTER COLUMN order_id TYPE integer USING NULL::integer;
+      END IF;
+    END $$;` },
   // ── Phase 4 (2026-06-01): manager's per-order department selection (fan-out source) ──
   { name: 'sd_order_departments CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS sd_order_departments (
       id SERIAL PRIMARY KEY,

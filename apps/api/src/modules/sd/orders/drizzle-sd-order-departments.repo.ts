@@ -38,6 +38,34 @@ export class SdOrderDepartmentsRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || "Bo'limlarni o'qishda xatolik"); }
   }
 
+  /** Saga view: the order + its selected departments + the mold dept-track detail
+   *  (ow_molds keyed to sd_sales_orders.id). Reuses the ow_molds table + progress pattern. */
+  async getSaga(orderId: number): Promise<Result<Row>> {
+    try {
+      const ord = await runQuery<Row>(sql`
+        SELECT id, order_number, status, advance_status, advance_paid, total_amount
+        FROM sd_sales_orders WHERE id = ${orderId} AND deleted_at IS NULL LIMIT 1
+      `);
+      if (!ord.rows[0]) return Err(`Buyurtma #${orderId} topilmadi`);
+      const depts = await runQuery<Row>(sql`
+        SELECT department, mode, status FROM sd_order_departments WHERE order_id = ${orderId} ORDER BY department
+      `);
+      const molds = await runQuery<Row>(sql`
+        SELECT id, vendor, status, order_sent_at, received_at FROM ow_molds WHERE order_id = ${orderId} ORDER BY id
+      `);
+      const moldRows = molds.rows;
+      const moldDone = moldRows.filter((m) => m['status'] === 'RECEIVED').length;
+      const moldPct  = moldRows.length ? Math.round((moldDone / moldRows.length) * 100) : 0;
+      return Ok({
+        order: ord.rows[0],
+        departments: depts.rows,
+        tracks: [
+          { name: 'mold', count: moldRows.length, done: moldDone, progressPct: moldPct, rows: moldRows },
+        ],
+      });
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Saga ko\'rinishini o\'qishda xatolik'); }
+  }
+
   async markStatus(orderId: number, department: string, status: string): Promise<Result<void>> {
     try {
       await runQuery(sql`

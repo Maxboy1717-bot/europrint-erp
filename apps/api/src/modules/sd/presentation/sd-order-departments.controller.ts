@@ -42,4 +42,13 @@ export class SdOrderDepartmentsController {
   async set(@Param('id', ParseIntPipe) id: number, @Body() dto: SetOrderDepartmentsDto) {
     return unwrapOrThrow(await this.svc.setForOrder(id, dto.departments));
   }
+
+  @ApiOperation({ summary: 'Order fan-out saga: selected departments + dept-track progress' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Get(':id/saga')
+  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+  async saga(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrThrow(await this.svc.getSaga(id));
+  }
 }

@@ -18,4 +18,8 @@ export class SdOrderDepartmentsService {
   listForOrder(orderId: number) {
     return this.repo.listForOrder(orderId);
   }
+
+  getSaga(orderId: number) {
+    return this.repo.getSaga(orderId);
+  }
 }
