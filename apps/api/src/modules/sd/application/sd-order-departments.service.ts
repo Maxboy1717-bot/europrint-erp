@@ -38,4 +38,8 @@ export class SdOrderDepartmentsService {
   setShippingStatus(orderId: number, status: string) {
     return this.repo.setShippingStatus(orderId, status);
   }
+
+  setMaterialStatus(orderId: number, reqId: string, status: string) {
+    return this.repo.setMaterialStatus(orderId, reqId, status);
+  }
 }

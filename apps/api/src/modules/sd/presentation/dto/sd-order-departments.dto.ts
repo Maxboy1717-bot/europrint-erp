@@ -40,3 +40,10 @@ export const UpdateShippingStatusSchema = z.object({
   status: z.enum(SHIPPING_STATUSES),
 });
 export type UpdateShippingStatusDto = z.infer<typeof UpdateShippingStatusSchema>;
+
+// Warehouse/rulon material-requirement lifecycle — matches the ow_material_requirements CHECK.
+export const MATERIAL_STATUSES = ['NEEDED', 'RESERVED', 'ISSUED', 'RETURNED'] as const;
+export const UpdateMaterialStatusSchema = z.object({
+  status: z.enum(MATERIAL_STATUSES),
+});
+export type UpdateMaterialStatusDto = z.infer<typeof UpdateMaterialStatusSchema>;

@@ -15,7 +15,7 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '../../auth/enums/role.enum';
 import { AuditInterceptor } from '../../shared/interceptors/audit.interceptor';
 import { SdOrderDepartmentsService } from '../application/sd-order-departments.service';
-import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto, UpdateMoldStatusSchema, UpdateMoldStatusDto, UpdateDesignStatusSchema, UpdateDesignStatusDto, UpdateClicheStatusSchema, UpdateClicheStatusDto, UpdateShippingStatusSchema, UpdateShippingStatusDto } from './dto/sd-order-departments.dto';
+import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto, UpdateMoldStatusSchema, UpdateMoldStatusDto, UpdateDesignStatusSchema, UpdateDesignStatusDto, UpdateClicheStatusSchema, UpdateClicheStatusDto, UpdateShippingStatusSchema, UpdateShippingStatusDto, UpdateMaterialStatusSchema, UpdateMaterialStatusDto } from './dto/sd-order-departments.dto';
 
 @ApiTags('SD Order Departments')
 @ApiBearerAuth()
@@ -90,5 +90,15 @@ export class SdOrderDepartmentsController {
   @UsePipes(new ZodValidationPipe(UpdateShippingStatusSchema))
   async setShippingStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateShippingStatusDto) {
     return unwrapOrThrow(await this.svc.setShippingStatus(id, dto.status));
+  }
+
+  @ApiOperation({ summary: 'Advance a warehouse/rulon material requirement (NEEDED->RESERVED->ISSUED->RETURNED)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':id/materials/:reqId/status')
+  @Roles(Role.WAREHOUSE, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @UsePipes(new ZodValidationPipe(UpdateMaterialStatusSchema))
+  async setMaterialStatus(@Param('id', ParseIntPipe) id: number, @Param('reqId') reqId: string, @Body() dto: UpdateMaterialStatusDto) {
+    return unwrapOrThrow(await this.svc.setMaterialStatus(id, reqId, dto.status));
   }
 }

@@ -70,9 +70,17 @@ export class AdvanceApprovedFanoutListener implements IEventHandler<AdvanceAppro
         } else {
           this.logger.warn({ msg: 'Fan-out: logistics dispatch failed', orderId, error: created.error?.message });
         }
+      } else if (dept === 'warehouse') {
+        const created = await this.deptRepo.createMaterialRequirementJob(orderId);
+        if (created.ok) {
+          await this.deptRepo.markStatus(orderId, 'warehouse', 'started');
+          this.logger.log({ msg: 'Fan-out: warehouse material requirement dispatched', orderId, newlyCreated: created.data.created });
+        } else {
+          this.logger.warn({ msg: 'Fan-out: warehouse dispatch failed', orderId, error: created.error?.message });
+        }
       } else {
-        // Remaining departments (warehouse/production) wired in later Phase 4 steps —
-        // same spine, one at a time.
+        // production is intentionally deferred (needs a product catalog + order line-item
+        // model — see docs/phase4-production-deferred-2026-06-01.md). No fake job is created.
         this.logger.log({ msg: 'Fan-out: department not yet wired (Phase 4 incremental)', orderId, dept });
       }
     }

@@ -174,6 +174,38 @@ export class SdOrderDepartmentsRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yetkazib berish statusini yangilashda xatolik'); }
   }
 
+  /** Create the warehouse/rulon dept-job: an order material requirement (ow_material_requirements,
+   *  order-keyed). Idempotent. material_id + qty_required are NOT NULL — seed with 'TBD' / 0
+   *  (the warehouse dept sets the real roll + quantity, then reserves/issues); status defaults
+   *  'NEEDED'. This is a real warehouse work-queue entry, not a marker. */
+  async createMaterialRequirementJob(orderId: number): Promise<Result<{ created: boolean }>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        INSERT INTO ow_material_requirements (order_id, material_id, qty_required)
+        SELECT ${orderId}, 'TBD', 0
+        WHERE NOT EXISTS (SELECT 1 FROM ow_material_requirements WHERE order_id = ${orderId})
+        RETURNING id
+      `);
+      return Ok({ created: r.rows.length > 0 });
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Material requirement yaratishda xatolik'); }
+  }
+
+  /** Advance a material requirement's status (NEEDED->RESERVED->ISSUED->RETURNED). ISSUED is the
+   *  done signal — the rolls/material were issued to production — and marks the warehouse dept 'done'. */
+  async setMaterialStatus(orderId: number, reqId: string, status: string): Promise<Result<Row | null>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        UPDATE ow_material_requirements
+           SET status = ${status}
+         WHERE id = ${reqId}::uuid AND order_id = ${orderId}
+        RETURNING id, material_id, qty_required, qty_reserved, qty_issued, lab_passed, status
+      `);
+      if (!r.rows[0]) return Err('Material requirement topilmadi');
+      if (status === 'ISSUED') await this.markStatus(orderId, 'warehouse', 'done');
+      return Ok(r.rows[0]);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Material statusini yangilashda xatolik'); }
+  }
+
   /** Saga view: the order + its selected departments + the mold dept-track detail
    *  (ow_molds keyed to sd_sales_orders.id). Reuses the ow_molds table + progress pattern. */
   async getSaga(orderId: number): Promise<Result<Row>> {
@@ -223,6 +255,15 @@ export class SdOrderDepartmentsRepository {
       const logiDone = shipReqRows.filter((r) => deliveredReqIds.has(r['id'])).length;
       const logiPct  = shipReqRows.length ? Math.round((logiDone / shipReqRows.length) * 100) : 0;
 
+      // Warehouse/rulon: ow_material_requirements (order-keyed). done = status ISSUED.
+      const matsResult = await runQuery<Row>(sql`
+        SELECT id, material_id, qty_required, qty_reserved, qty_issued, lab_passed, status
+        FROM ow_material_requirements WHERE order_id = ${orderId} ORDER BY id
+      `);
+      const matRows = matsResult.rows;
+      const matDone = matRows.filter((m) => m['status'] === 'ISSUED').length;
+      const matPct  = matRows.length ? Math.round((matDone / matRows.length) * 100) : 0;
+
       return Ok({
         order: ord.rows[0],
         departments: depts.rows,
@@ -231,6 +272,7 @@ export class SdOrderDepartmentsRepository {
           { name: 'design',    count: techRows.length,    done: techDone,   progressPct: techPct,   rows: techRows },
           { name: 'cliche',    count: clicheRows.length,  done: clicheDone, progressPct: clichePct, rows: clicheRows },
           { name: 'logistics', count: shipReqRows.length, done: logiDone,   progressPct: logiPct,   rows: deliveryRows, requests: shipReqRows },
+          { name: 'warehouse', count: matRows.length,     done: matDone,    progressPct: matPct,    rows: matRows },
         ],
       });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Saga ko\'rinishini o\'qishda xatolik'); }

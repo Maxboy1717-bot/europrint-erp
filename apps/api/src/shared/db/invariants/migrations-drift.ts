@@ -2759,6 +2759,14 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
         ALTER TABLE ow_shipping_requests ALTER COLUMN order_id TYPE integer USING NULL::integer;
       END IF;
     END $$;` },
+  // Warehouse/rulon fan-out target: ow_material_requirements (order-keyed material requirement
+  // with a NEEDED->RESERVED->ISSUED->RETURNED status lifecycle). Repoint order_id to the
+  // operational order (sd_sales_orders.id integer), same as the other ow_* dept tracks.
+  { name: 'ow_material_requirements.order_id uuid->integer (Phase 4 repoint)', sql: `DO $$ BEGIN
+      IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ow_material_requirements' AND column_name='order_id' AND data_type='uuid') THEN
+        ALTER TABLE ow_material_requirements ALTER COLUMN order_id TYPE integer USING NULL::integer;
+      END IF;
+    END $$;` },
   // ── Phase 4 (2026-06-01): manager's per-order department selection (fan-out source) ──
   { name: 'sd_order_departments CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS sd_order_departments (
       id SERIAL PRIMARY KEY,
