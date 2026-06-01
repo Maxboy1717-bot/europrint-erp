@@ -136,34 +136,33 @@ export class DrizzleCrmAnalyticsRepository implements ICrmAnalyticsRepo {
 
   // ----- Funnel -----
 
-  // NOTE: crm_deals drift fixed here (pipeline_id → category_id; Bitrix pipeline = category).
-  // This method ALSO depends on crm_stages columns is_success/is_fail/sort_order, which
-  // do NOT exist in the live crm_stages table (separate crm_stages drift, owner-deferred —
-  // scope is crm_deals + crm_contacts only). Until crm_stages is converged this method
-  // still throws; the crm_deals column ref is corrected so no crm_deals phantom remains.
+  // crm_deals: category_id (Bitrix pipeline). crm_stages: is_won/is_lost are derived from
+  // the live `semantics` column ({process,success,fail}), and ordering uses the live `sort`
+  // column. Live crm_stages has NO is_success/is_fail/sort_order columns — those were
+  // phantom and 503'd /api/crm/funnel.
   async getFunnelStageData(pipelineId?: string): Promise<FunnelStageRow[]> {
     try {
       const rows = await runQuery<FunnelStageRow>(
         pipelineId
           ? sql`
             SELECT cs.name AS stage_name, COUNT(*)::int AS count,
-              COALESCE(cs.is_success, false) AS is_won,
-              COALESCE(cs.is_fail,    false) AS is_lost
+              (cs.semantics = 'success') AS is_won,
+              (cs.semantics = 'fail')    AS is_lost
             FROM crm_deals d
             JOIN crm_stages cs ON cs.id::text = d.stage_id
             WHERE d.category_id::text = ${pipelineId} AND d.deleted_at IS NULL
-            GROUP BY cs.name, cs.is_success, cs.is_fail, cs.sort_order
-            ORDER BY cs.sort_order ASC
+            GROUP BY cs.name, cs.semantics, cs.sort
+            ORDER BY cs.sort ASC
           `
           : sql`
             SELECT cs.name AS stage_name, COUNT(*)::int AS count,
-              COALESCE(cs.is_success, false) AS is_won,
-              COALESCE(cs.is_fail,    false) AS is_lost
+              (cs.semantics = 'success') AS is_won,
+              (cs.semantics = 'fail')    AS is_lost
             FROM crm_deals d
             JOIN crm_stages cs ON cs.id::text = d.stage_id
             WHERE d.deleted_at IS NULL
-            GROUP BY cs.name, cs.is_success, cs.is_fail, cs.sort_order
-            ORDER BY cs.sort_order ASC
+            GROUP BY cs.name, cs.semantics, cs.sort
+            ORDER BY cs.sort ASC
           `,
       );
       return Array.isArray(rows) ? rows : [];
