@@ -88,18 +88,27 @@ export const crmDeals = pgTable('crm_deals', {
   // DB column). Read the stage via `crmDeals.status`.
 });
 
+// CRM-CONTACT DRIFT FIX (2026-06-01): live crm_contacts is Bitrix-style (canonical def
+// lives in lib/db/src/schema/crm-contacts.ts). This compat def declared phantom columns
+// (first_name, email, phone, position, notes, created_at, updated_at). Aliased to the real
+// columns (name, post, comments, date_create, date_modify). email/phone have NO scalar
+// column — live stores them in emails/phones jsonb arrays of {value,...}; the serving repos
+// flatten on read (emails->0->>'value') and wrap on write ([{value}]).
 export const crmContacts = pgTable('crm_contacts', {
-  id:         integer('id').primaryKey(),
-  company_id: integer('company_id'),
-  first_name: text('first_name'),
-  last_name:  text('last_name'),
-  email:      text('email'),
-  phone:      text('phone'),
-  position:   text('position'),
-  notes:      text('notes'),
-  created_at: ts('created_at').defaultNow(),
-  updated_at: ts('updated_at').defaultNow(),
-  deleted_at: ts('deleted_at'),
+  id:             integer('id').primaryKey(),
+  company_id:     integer('company_id'),
+  first_name:     text('name'),                                            // live: name (alias)
+  last_name:      text('last_name'),
+  full_name:      text('full_name'),                                       // live: full_name (real)
+  emails:         jsonb('emails').$type<Array<{ value: string; type?: string }>>(),  // live: jsonb array
+  phones:         jsonb('phones').$type<Array<{ value: string; type?: string }>>(),  // live: jsonb array
+  position:       varchar('post', { length: 255 }),                        // live: post (alias)
+  notes:          text('comments'),                                        // live: comments (alias)
+  lead_id:        integer('lead_id'),                                      // live: lead_id (real)
+  assigned_by_id: integer('assigned_by_id'),                               // live: assigned_by_id (real)
+  created_at:     ts('date_create').defaultNow(),                          // live: date_create (alias)
+  updated_at:     ts('date_modify').defaultNow(),                          // live: date_modify (alias)
+  deleted_at:     ts('deleted_at'),
 });
 
 export const crmCompanies = pgTable('crm_companies', {

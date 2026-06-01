@@ -175,8 +175,9 @@ export class CrmCompaniesRepository implements ICrmCompaniesRepo {
         company_id: companyId,
         first_name: (body.firstName ?? body.first_name ?? 'Unknown') as string,
         last_name:  (body.lastName ?? body.last_name) as string | undefined,
-        email:      (body.email) as string | undefined,
-        phone:      (body.phone) as string | undefined,
+        // email/phone live as jsonb arrays (emails/phones), not scalar columns.
+        emails:     body.email != null ? [{ value: String(body.email) }] : [],
+        phones:     body.phone != null ? [{ value: String(body.phone) }] : [],
         position:   (body.post ?? body.position) as string | undefined,
       } as unknown as typeof crmContacts.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
