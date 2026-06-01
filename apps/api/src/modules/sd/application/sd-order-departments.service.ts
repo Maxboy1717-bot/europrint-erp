@@ -26,4 +26,8 @@ export class SdOrderDepartmentsService {
   setMoldStatus(orderId: number, moldId: string, status: string) {
     return this.repo.setMoldStatus(orderId, moldId, status);
   }
+
+  setDesignStatus(orderId: number, techCardId: string, status: string) {
+    return this.repo.setDesignStatus(orderId, techCardId, status);
+  }
 }

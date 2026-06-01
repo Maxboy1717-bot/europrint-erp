@@ -21,3 +21,9 @@ export const UpdateMoldStatusSchema = z.object({
   status: z.enum(MOLD_STATUSES),
 });
 export type UpdateMoldStatusDto = z.infer<typeof UpdateMoldStatusSchema>;
+
+export const DESIGN_STATUSES = ['DRAFT', 'REVIEW', 'CONFIRMED', 'OBSOLETE'] as const;
+export const UpdateDesignStatusSchema = z.object({
+  status: z.enum(DESIGN_STATUSES),
+});
+export type UpdateDesignStatusDto = z.infer<typeof UpdateDesignStatusSchema>;

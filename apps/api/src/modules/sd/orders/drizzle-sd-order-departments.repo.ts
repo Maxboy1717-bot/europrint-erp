@@ -53,6 +53,37 @@ export class SdOrderDepartmentsRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || 'Mold job yaratishda xatolik'); }
   }
 
+  /** Create the design dept-job (ow_tech_cards) for an order. Idempotent. Only order_id is
+   *  required; status defaults to 'DRAFT' (started), content '{}', version 1. */
+  async createDesignJob(orderId: number): Promise<Result<{ created: boolean }>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        INSERT INTO ow_tech_cards (order_id)
+        SELECT ${orderId}
+        WHERE NOT EXISTS (SELECT 1 FROM ow_tech_cards WHERE order_id = ${orderId})
+        RETURNING id
+      `);
+      return Ok({ created: r.rows.length > 0 });
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Design job yaratishda xatolik'); }
+  }
+
+  /** Advance a design tech-card status (DRAFT->REVIEW->CONFIRMED/OBSOLETE).
+   *  CONFIRMED stamps approved_at and marks the design department 'done'. */
+  async setDesignStatus(orderId: number, techCardId: string, status: string): Promise<Result<Row | null>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        UPDATE ow_tech_cards
+           SET status = ${status},
+               approved_at = CASE WHEN ${status} = 'CONFIRMED' THEN NOW() ELSE approved_at END
+         WHERE id = ${techCardId}::uuid AND order_id = ${orderId}
+        RETURNING id, status, approved_at
+      `);
+      if (!r.rows[0]) return Err('Tech card topilmadi');
+      if (status === 'CONFIRMED') await this.markStatus(orderId, 'design', 'done');
+      return Ok(r.rows[0]);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Design statusini yangilashda xatolik'); }
+  }
+
   /** Saga view: the order + its selected departments + the mold dept-track detail
    *  (ow_molds keyed to sd_sales_orders.id). Reuses the ow_molds table + progress pattern. */
   async getSaga(orderId: number): Promise<Result<Row>> {
@@ -71,11 +102,20 @@ export class SdOrderDepartmentsRepository {
       const moldRows = molds.rows;
       const moldDone = moldRows.filter((m) => m['status'] === 'RECEIVED').length;
       const moldPct  = moldRows.length ? Math.round((moldDone / moldRows.length) * 100) : 0;
+
+      const tech = await runQuery<Row>(sql`
+        SELECT id, status, version, approved_at FROM ow_tech_cards WHERE order_id = ${orderId} ORDER BY id
+      `);
+      const techRows = tech.rows;
+      const techDone = techRows.filter((t) => t['status'] === 'CONFIRMED').length;
+      const techPct  = techRows.length ? Math.round((techDone / techRows.length) * 100) : 0;
+
       return Ok({
         order: ord.rows[0],
         departments: depts.rows,
         tracks: [
-          { name: 'mold', count: moldRows.length, done: moldDone, progressPct: moldPct, rows: moldRows },
+          { name: 'mold',   count: moldRows.length, done: moldDone, progressPct: moldPct, rows: moldRows },
+          { name: 'design', count: techRows.length, done: techDone, progressPct: techPct, rows: techRows },
         ],
       });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Saga ko\'rinishini o\'qishda xatolik'); }

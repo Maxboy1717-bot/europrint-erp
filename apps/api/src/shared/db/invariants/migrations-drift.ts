@@ -2741,6 +2741,11 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
         ALTER TABLE ow_molds ALTER COLUMN order_id TYPE integer USING NULL::integer;
       END IF;
     END $$;` },
+  { name: 'ow_tech_cards.order_id uuid->integer (Phase 4 repoint)', sql: `DO $$ BEGIN
+      IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ow_tech_cards' AND column_name='order_id' AND data_type='uuid') THEN
+        ALTER TABLE ow_tech_cards ALTER COLUMN order_id TYPE integer USING NULL::integer;
+      END IF;
+    END $$;` },
   // ── Phase 4 (2026-06-01): manager's per-order department selection (fan-out source) ──
   { name: 'sd_order_departments CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS sd_order_departments (
       id SERIAL PRIMARY KEY,

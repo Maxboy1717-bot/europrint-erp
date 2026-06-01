@@ -46,6 +46,14 @@ export class AdvanceApprovedFanoutListener implements IEventHandler<AdvanceAppro
         } else {
           this.logger.warn({ msg: 'Fan-out: mold job dispatch failed', orderId, error: created.error?.message });
         }
+      } else if (dept === 'design') {
+        const created = await this.deptRepo.createDesignJob(orderId);
+        if (created.ok) {
+          await this.deptRepo.markStatus(orderId, 'design', 'started');
+          this.logger.log({ msg: 'Fan-out: design job dispatched', orderId, newlyCreated: created.data.created });
+        } else {
+          this.logger.warn({ msg: 'Fan-out: design job dispatch failed', orderId, error: created.error?.message });
+        }
       } else {
         // Other departments (design/cliche/warehouse/production/logistics) wired in later
         // Phase 4 steps — same spine, one at a time.
