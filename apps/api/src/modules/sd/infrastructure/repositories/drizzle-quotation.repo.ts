@@ -129,9 +129,10 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
 
   async markPaymentPaid(id: string, paymentDate: unknown): Promise<Result<MutationRow | null>> {
     try {
+      const today = new Date().toISOString().split('T')[0] as string;
       const r = await runQuery<MutationRow>(sql`
-        UPDATE fi_payments
-        SET status = 'paid', payment_date = COALESCE(${paymentDate ?? null}, payment_date), updated_at = NOW()
+        UPDATE sd_payments
+        SET status = 'paid', paid_date = COALESCE(${paymentDate ?? null}, paid_date, ${today}), updated_at = NOW()
         WHERE id = ${id}
         RETURNING id, status, updated_at
       `);
