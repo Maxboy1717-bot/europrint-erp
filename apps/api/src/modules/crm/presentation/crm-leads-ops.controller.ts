@@ -22,6 +22,8 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { unwrapOrThrow } from '@common/http-result';
 import { type Result } from '@common/result';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 import {
   UpdateLeadDtoSchema, UpdateLeadDto,
   UpdateLeadStageDtoSchema, UpdateLeadStageDto,
@@ -79,7 +81,7 @@ export class CrmLeadsOpsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post(':id/convert')
   @UsePipes(new ZodValidationPipe(ConvertLeadDtoSchema))
-  async convert(@Param('id') id: string, @Body() body: ConvertLeadDto) {
+  async convert(@Param('id') id: string, @Body() body: ConvertLeadDto, @CurrentUser() user: AuthenticatedUser) {
     const defaultClosure = new Date();
     defaultClosure.setDate(defaultClosure.getDate() + DEFAULT_DAYS_TO_CLOSURE);
     const r = await this.commandBus.execute<ConvertLeadToDealCommand, Result<{ leadId: number; dealId: number }>>(
@@ -87,6 +89,10 @@ export class CrmLeadsOpsController {
         safeInt(id, 0),
         Number(body.expected_amount ?? 0),
         defaultClosure,
+        'UZS',
+        // crm_deals.assigned_by_id is integer NOT NULL — supply the current user as the
+        // deal owner; the handler falls back to the lead owner/creator, then admin.
+        user?.id,
       ),
     );
     return unwrapOrThrow(r);

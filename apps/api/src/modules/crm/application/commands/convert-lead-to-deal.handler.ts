@@ -99,7 +99,10 @@ export class ConvertLeadToDealHandler implements ICommandHandler<ConvertLeadToDe
       status: statusR.data,
       totalAmount: money,
       currency: command.currency,
-      assignedTo: command.assignedTo ?? lead.getAssignedTo() ?? lead.getCreatedBy(),
+      // assigned_by_id is integer NOT NULL in live crm_deals. Resolve a real owner:
+      // current user (command) → lead's assignee → lead's creator → admin (1). `||` (not `??`)
+      // so a 0/undefined at any level falls through instead of persisting an invalid 0/null.
+      assignedTo: command.assignedTo || lead.getAssignedTo() || lead.getCreatedBy() || 1,
       createdBy: lead.getCreatedBy(),
       description: command.description,
       expectedClosureDate: command.expectedClosureDate,
