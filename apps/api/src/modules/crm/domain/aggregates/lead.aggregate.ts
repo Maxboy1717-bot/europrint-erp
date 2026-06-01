@@ -157,6 +157,12 @@ export class Lead extends AggregateRoot {
     return Ok();
   }
 
+  /** Whether this lead may be converted — lets callers pre-validate before creating a
+   *  deal, so a non-qualified lead never leaves an orphan deal behind. */
+  canBeConverted(): boolean {
+    return this.status.getValue() === 'qualified';
+  }
+
   convertToDeal(dealId: number): Result<void> {
     if (this.status.getValue() !== 'qualified') {
       return Err('Only qualified leads can be converted to deals');

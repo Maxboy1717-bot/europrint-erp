@@ -46,6 +46,14 @@ export class ConvertLeadToDealHandler implements ICommandHandler<ConvertLeadToDe
 
     const dealR = this.buildDeal(lead, command);
     if (isErr(dealR)) return Err(dealR.error);
+
+    // Pre-validate the conversion BEFORE persisting the deal. convertToDeal() also
+    // checks this, but it runs after save() — so without this guard a non-qualified
+    // lead (e.g. already converted) would leave an orphan deal in crm_deals.
+    if (!lead.canBeConverted()) {
+      return Err(AppErr('VALIDATION', 'Only qualified leads can be converted to deals'));
+    }
+
     const savedDealR = await this.dealRepo.save(dealR.data);
     if (isErr(savedDealR)) {
       this.logger.error({ msg: 'Deal save failed during conversion', leadId: command.leadId, error: savedDealR.error.message });

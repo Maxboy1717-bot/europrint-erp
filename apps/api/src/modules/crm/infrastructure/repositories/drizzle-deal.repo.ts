@@ -39,7 +39,11 @@ export class DrizzleDealRepository implements IDealRepository {
         additional_info: deal.getDescription() ?? null,
         metadata:        { lead_id: deal.getLeadId() },
       };
-      await db.insert(crmDeals).values(payload as typeof crmDeals.$inferInsert).onConflictDoNothing();
+      // Rebuild from the inserted row so the caller gets the DB-generated id (the
+      // sequence) and round-tripped fields — without .returning() the aggregate keeps
+      // its placeholder id 0. onConflictDoNothing → empty result = no insert; fall back.
+      const inserted = await db.insert(crmDeals).values(payload as typeof crmDeals.$inferInsert).onConflictDoNothing().returning();
+      if (inserted[0]) return Ok(this.toDomain(castTo<DbRow>(inserted[0])));
       return Ok(deal);
     } catch (e) {
       return Err(`drizzle_deal.save: ${String(e)}`);
