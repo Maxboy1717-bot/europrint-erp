@@ -4,8 +4,8 @@
  */
 
 import {
-  Controller, Get, Patch, Param, Query,
-  UseGuards, UseInterceptors,
+  Controller, Get, Patch, Post, Body, Param, Query,
+  UseGuards, UseInterceptors, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -13,9 +13,22 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { sd_contracts } from '@shared/db';
-import { eq, ilike, and, desc } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
+import { z } from 'zod';
+
+const CreateContractSchema = z.object({
+  customerId: z.union([z.string(), z.number()]).optional(),
+  orderId: z.union([z.string(), z.number()]).optional(),
+  startDate: z.string().max(10).optional(),
+  endDate: z.string().max(10).optional(),
+  totalAmount: z.union([z.string(), z.number()]).optional(),
+  paymentTerms: z.string().max(200).optional(),
+  notes: z.string().max(2000).optional(),
+  templateType: z.string().max(30).optional(),
+}).passthrough();
 
 const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'FINANCE_MANAGER', 'ACCOUNTANT'];
 
@@ -61,6 +74,42 @@ export class SdContractsController {
       }));
     } catch (_e) {
       return [];
+    }
+  }
+
+  @ApiOperation({ summary: 'Create contract' })
+  @ApiResponse({ status: 201, description: 'Created' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post()
+  @Roles('sales_manager', 'director', 'super_admin')
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Body() body: unknown) {
+    try {
+      const dto = CreateContractSchema.parse(body);
+      const contractNumber = `CNT-${Date.now()}`;
+      const orderId = dto.orderId != null ? parseInt(String(dto.orderId), 10) : null;
+      const customerId = dto.customerId != null ? parseInt(String(dto.customerId), 10) : null;
+      const totalAmount = parseFloat(String(dto.totalAmount ?? '0')) || 0;
+      const r = await runQuery<Record<string, unknown>>(sql`
+        INSERT INTO sd_contracts
+          (order_id, contract_number, template_type, status, customer_id,
+           start_date, end_date, total_amount, payment_terms, notes)
+        VALUES
+          (${orderId}, ${contractNumber}, ${dto.templateType ?? 'standard'}, 'draft', ${customerId},
+           ${dto.startDate ?? null}, ${dto.endDate ?? null}, ${totalAmount}, ${dto.paymentTerms ?? null}, ${dto.notes ?? null})
+        RETURNING *
+      `);
+      const row = r.rows[0];
+      if (!row) throw new Error('Insert returned no rows');
+      return {
+        id: String(row['id']),
+        contractNumber: row['contract_number'] ?? contractNumber,
+        status: row['status'] ?? 'draft',
+        createdAt: row['created_at'] ? new Date(String(row['created_at'])).toISOString() : new Date().toISOString(),
+      };
+    } catch (e: unknown) {
+      const msg = (e as Error)?.message || 'Create error';
+      throw new (await import('@nestjs/common').then(m => m.BadRequestException))(msg);
     }
   }
 

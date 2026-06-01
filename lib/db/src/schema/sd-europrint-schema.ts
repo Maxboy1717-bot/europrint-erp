@@ -403,7 +403,9 @@ export type SdStorageFee = typeof sdStorageFees.$inferSelect;
 // 12. SHARTNOMALAR
 export const sdContracts = pgTable("sd_contracts", {
   id: serial("id").primaryKey(),
-  orderId: integer("order_id").notNull().references(() => sdOrders.id, { onDelete: "cascade" }),
+  // Nullable: contracts can be created standalone (quote→contract flow) before an order exists.
+  // When created via quote-approve, order_id will be set. Phase 3 wires auto-population.
+  orderId: integer("order_id").references(() => sdOrders.id, { onDelete: "set null" }),
   contractNumber: varchar("contract_number", { length: 30 }).notNull().unique(),
   templateType: varchar("template_type", { length: 30 }).default("standard"),
   // standard, longterm, vip, onetime
@@ -414,6 +416,12 @@ export const sdContracts = pgTable("sd_contracts", {
   pdfUrl: text("pdf_url"),
   validUntil: varchar("valid_until", { length: 10 }),
   notes: text("notes"),
+  // Extra fields from FE create form (build-phase additions)
+  customerId: integer("customer_id"),
+  startDate: varchar("start_date", { length: 10 }),
+  endDate: varchar("end_date", { length: 10 }),
+  totalAmount: numericMoney("total_amount").default(0),
+  paymentTerms: varchar("payment_terms", { length: 200 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
