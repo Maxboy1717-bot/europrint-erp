@@ -27,3 +27,9 @@ export const UpdateDesignStatusSchema = z.object({
   status: z.enum(DESIGN_STATUSES),
 });
 export type UpdateDesignStatusDto = z.infer<typeof UpdateDesignStatusSchema>;
+
+export const CLICHE_STATUSES = ['ORDERED', 'IN_TRANSIT', 'ARRIVED', 'REJECTED'] as const;
+export const UpdateClicheStatusSchema = z.object({
+  status: z.enum(CLICHE_STATUSES),
+});
+export type UpdateClicheStatusDto = z.infer<typeof UpdateClicheStatusSchema>;

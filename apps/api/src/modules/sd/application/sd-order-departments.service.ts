@@ -30,4 +30,8 @@ export class SdOrderDepartmentsService {
   setDesignStatus(orderId: number, techCardId: string, status: string) {
     return this.repo.setDesignStatus(orderId, techCardId, status);
   }
+
+  setClicheStatus(orderId: number, clicheId: string, status: string) {
+    return this.repo.setClicheStatus(orderId, clicheId, status);
+  }
 }

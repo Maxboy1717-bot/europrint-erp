@@ -15,7 +15,7 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '../../auth/enums/role.enum';
 import { AuditInterceptor } from '../../shared/interceptors/audit.interceptor';
 import { SdOrderDepartmentsService } from '../application/sd-order-departments.service';
-import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto, UpdateMoldStatusSchema, UpdateMoldStatusDto, UpdateDesignStatusSchema, UpdateDesignStatusDto } from './dto/sd-order-departments.dto';
+import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto, UpdateMoldStatusSchema, UpdateMoldStatusDto, UpdateDesignStatusSchema, UpdateDesignStatusDto, UpdateClicheStatusSchema, UpdateClicheStatusDto } from './dto/sd-order-departments.dto';
 
 @ApiTags('SD Order Departments')
 @ApiBearerAuth()
@@ -70,5 +70,15 @@ export class SdOrderDepartmentsController {
   @UsePipes(new ZodValidationPipe(UpdateDesignStatusSchema))
   async setDesignStatus(@Param('id', ParseIntPipe) id: number, @Param('tcId') tcId: string, @Body() dto: UpdateDesignStatusDto) {
     return unwrapOrThrow(await this.svc.setDesignStatus(id, tcId, dto.status));
+  }
+
+  @ApiOperation({ summary: 'Advance a cliché status (ORDERED->IN_TRANSIT->ARRIVED/REJECTED)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':id/cliches/:clicheId/status')
+  @Roles(Role.TECHNOLOGIST, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @UsePipes(new ZodValidationPipe(UpdateClicheStatusSchema))
+  async setClicheStatus(@Param('id', ParseIntPipe) id: number, @Param('clicheId') clicheId: string, @Body() dto: UpdateClicheStatusDto) {
+    return unwrapOrThrow(await this.svc.setClicheStatus(id, clicheId, dto.status));
   }
 }

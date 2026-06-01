@@ -84,6 +84,38 @@ export class SdOrderDepartmentsRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || 'Design statusini yangilashda xatolik'); }
   }
 
+  /** Create the cliché dept-job (ow_cliches). Idempotent. cliche_type + vendor are NOT NULL —
+   *  default to 'photopolymer' (valid CHECK) and 'Internal'; the cliché dept reassigns them. */
+  async createClicheJob(orderId: number): Promise<Result<{ created: boolean }>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        INSERT INTO ow_cliches (order_id, cliche_type, vendor)
+        SELECT ${orderId}, 'photopolymer', 'Internal'
+        WHERE NOT EXISTS (SELECT 1 FROM ow_cliches WHERE order_id = ${orderId})
+        RETURNING id
+      `);
+      return Ok({ created: r.rows.length > 0 });
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Cliché job yaratishda xatolik'); }
+  }
+
+  /** Advance a cliché status (ORDERED->IN_TRANSIT->ARRIVED/REJECTED). ARRIVED stamps
+   *  arrived_at (the done signal, matching calcClichePct) + marks the cliché dept 'done'. */
+  async setClicheStatus(orderId: number, clicheId: string, status: string): Promise<Result<Row | null>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        UPDATE ow_cliches
+           SET status = ${status},
+               arrived_at = CASE WHEN ${status} = 'ARRIVED' THEN NOW() ELSE arrived_at END,
+               ready_for_flexo = CASE WHEN ${status} = 'ARRIVED' THEN true ELSE ready_for_flexo END
+         WHERE id = ${clicheId}::uuid AND order_id = ${orderId}
+        RETURNING id, status, arrived_at
+      `);
+      if (!r.rows[0]) return Err('Cliché topilmadi');
+      if (status === 'ARRIVED') await this.markStatus(orderId, 'cliche', 'done');
+      return Ok(r.rows[0]);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Cliché statusini yangilashda xatolik'); }
+  }
+
   /** Saga view: the order + its selected departments + the mold dept-track detail
    *  (ow_molds keyed to sd_sales_orders.id). Reuses the ow_molds table + progress pattern. */
   async getSaga(orderId: number): Promise<Result<Row>> {
@@ -110,12 +142,20 @@ export class SdOrderDepartmentsRepository {
       const techDone = techRows.filter((t) => t['status'] === 'CONFIRMED').length;
       const techPct  = techRows.length ? Math.round((techDone / techRows.length) * 100) : 0;
 
+      const cliches = await runQuery<Row>(sql`
+        SELECT id, cliche_type, vendor, status, arrived_at FROM ow_cliches WHERE order_id = ${orderId} ORDER BY id
+      `);
+      const clicheRows = cliches.rows;
+      const clicheDone = clicheRows.filter((c) => c['arrived_at'] != null).length;
+      const clichePct  = clicheRows.length ? Math.round((clicheDone / clicheRows.length) * 100) : 0;
+
       return Ok({
         order: ord.rows[0],
         departments: depts.rows,
         tracks: [
           { name: 'mold',   count: moldRows.length, done: moldDone, progressPct: moldPct, rows: moldRows },
           { name: 'design', count: techRows.length, done: techDone, progressPct: techPct, rows: techRows },
+          { name: 'cliche', count: clicheRows.length, done: clicheDone, progressPct: clichePct, rows: clicheRows },
         ],
       });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Saga ko\'rinishini o\'qishda xatolik'); }
