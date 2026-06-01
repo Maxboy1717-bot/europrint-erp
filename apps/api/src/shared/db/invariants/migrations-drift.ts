@@ -2733,6 +2733,17 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
     ` },
   // ── Manual fixes (added 2026-05-21 after endpoint probe) ──
   { name: 'sd_sales_orders.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_sales_orders ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  // ── Phase 4 (2026-06-01): manager's per-order department selection (fan-out source) ──
+  { name: 'sd_order_departments CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS sd_order_departments (
+      id SERIAL PRIMARY KEY,
+      order_id INTEGER NOT NULL,
+      department VARCHAR(40) NOT NULL,
+      mode VARCHAR(20),
+      status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      CONSTRAINT sd_order_departments_uniq UNIQUE (order_id, department)
+    )` },
 
   // ── [2026-05-21 dup-fix #2] LMS Drizzle-only LIVE → CREATE TABLE ──
   // 5 jadval kod tomonidan ishlatiladi (drizzle-lms-tests.repo.ts + drizzle-lms-misc.repo.ts)

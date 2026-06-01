@@ -7,6 +7,9 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SdOrdersController } from './presentation/sd-orders.controller';
+import { SdOrderDepartmentsController } from './presentation/sd-order-departments.controller';
+import { SdOrderDepartmentsService } from './application/sd-order-departments.service';
+import { SdOrderDepartmentsRepository } from './orders/drizzle-sd-order-departments.repo';
 import { SdInvoicesController } from './presentation/sd-invoices.controller';
 import { SdDeliveriesController } from './presentation/sd-deliveries.controller';
 import { SdDashboardController } from './presentation/sd-dashboard.controller';
@@ -93,7 +96,7 @@ const repositories = [
     SdOrdersController, SdInvoicesController, SdDeliveriesController,
     SdDashboardController, SdCustomersController, SdLeadsController,
     SdPaymentsController, SdQuotationsController, SdContractsController,
-    SalesController,
+    SalesController, SdOrderDepartmentsController,
   ],
   providers: [
     loggerProvider,
@@ -121,6 +124,9 @@ const repositories = [
     // PA3-17 Wave 3: merged from former modules/sales/
     SalesRepository,
     SalesService,
+    // Phase 4: per-order department selection (fan-out source)
+    SdOrderDepartmentsService,
+    SdOrderDepartmentsRepository,
   ],
   exports: [SALES_ORDER_REPO, SalesService],
 })
