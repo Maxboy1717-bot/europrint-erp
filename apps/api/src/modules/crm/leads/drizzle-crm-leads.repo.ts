@@ -28,16 +28,18 @@ function mapLeadRow(r: Row): Row {
     name:         contactName || null,
     lastName:     null,
     companyTitle: null,
-    statusId:     r['status'] ? String(r['status']).toUpperCase() : 'NEW',
+    // Live crm_leads columns: status_id/status_description, source_id, assigned_to,
+    // date_create, comments (NOT status/source/manager_id/created_at/notes/customer_id).
+    statusId:     r['status_id'] ? String(r['status_id']).toUpperCase() : (r['status_description'] ? String(r['status_description']).toUpperCase() : 'NEW'),
     phones:       r['contact_phone'] ? [{ value: r['contact_phone'], type: 'WORK' }] : [],
     emails:       r['contact_email'] ? [{ value: r['contact_email'], type: 'WORK' }] : [],
-    sourceId:     r['source'] ?? null,
-    assignedById: r['manager_id'] ? String(r['manager_id']) : null,
-    dateCreate:   r['created_at'] ?? new Date().toISOString(),
+    sourceId:     r['source_description'] ?? r['source_id'] ?? null,
+    assignedById: r['assigned_to'] ? String(r['assigned_to']) : null,
+    dateCreate:   r['date_create'] ?? new Date().toISOString(),
     opportunity:  0,
-    notes:        r['notes'] ?? null,
+    notes:        r['comments'] ?? null,
     ai_score:     null,
-    companyId:    r['customer_id'] ?? null,
+    companyId:    null,
   };
 }
 
@@ -86,10 +88,9 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
         budget:        (dto.budget as number | undefined) ?? null,
         opportunityAmount: (dto.opportunityAmount as number | undefined) ?? null,
         comments:      (dto.comments as string | undefined) || null,
-        // Legacy columns (backward compat — kept for existing DB rows):
+        // Live legacy alias that exists in crm_leads. status/source removed — they
+        // are phantom (not in live DB); statusId/sourceId above cover them.
         contact_name:  contactName,
-        status:        (dto.status as string | undefined) ?? 'new',
-        source:        (dto.source as string | undefined) || null,
       };
       const result = await db.insert(crmLeads).values(row as unknown as typeof crmLeads.$inferInsert).returning();
       return Ok(mapLeadRow(result[0] as Row));

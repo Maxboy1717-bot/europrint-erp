@@ -24,9 +24,9 @@ export class CrmExtrasDashboardRepository {
     return safeCall(async () => {
       try {
         return db.select({
-          status: crmLeads.status,
+          status: crmLeads.status_description,
           count:  sql<number>`COUNT(*)::int`,
-        }).from(crmLeads).groupBy(crmLeads.status).then(r => castTo<Row[]>(r));
+        }).from(crmLeads).groupBy(crmLeads.status_description).then(r => castTo<Row[]>(r));
       } catch (err) {
         this.logger.warn(`getDashboardLeads: ${(err as Error).message}`);
         return [];

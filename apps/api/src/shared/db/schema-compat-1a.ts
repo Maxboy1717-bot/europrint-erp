@@ -33,22 +33,29 @@ export const users = pgTable('users', {
   deletedAt: ts('deleted_at'),
 });
 
+// CRM-LEAD DRIFT FIX (2026-06-01): the live crm_leads table is a Bitrix-style schema.
+// This compat def previously declared columns that DON'T exist in the live DB
+// (status, customer_id, manager_id, source, notes, created_at, updated_at) →
+// every db.select().from(crmLeads) emitted those names → 'column does not exist' →
+// /api/crm/leads 503. Fixed by ALIASING each JS property to the real live column
+// (property name kept → consumers untouched). Same pattern crmCompanies already uses
+// (created_at → date_create). customer_id removed (lead has no company FK in Bitrix;
+// the link is created at conversion time into sd_customers).
 export const crmLeads = pgTable('crm_leads', {
   id:                 integer('id').primaryKey(),
-  // CRM-1: title NOT NULL in canonical schema — exposed here so DDD-layer save() can set it
+  // title NOT NULL in live DB — exposed so DDD-layer save() + auto-lead inserts set it
   title:              text('title'),
-  customer_id:        integer('customer_id'),
-  manager_id:         integer('manager_id'),
-  status:             varchar('status', { length: 50 }).default('new'),
-  status_description: varchar('status_description', { length: 200 }),
-  source:             varchar('source', { length: 50 }),
+  manager_id:         integer('assigned_to'),         // live: assigned_to
+  status_id:          varchar('status_id', { length: 50 }).default('NEW'), // Bitrix state NEW/CONVERTED
+  status_description: varchar('status_description', { length: 200 }), // lifecycle code new/converted/qualified
+  source:             text('source_description'),      // live: source_description
   contact_name:       varchar('contact_name', { length: 200 }),
   contact_phone:      varchar('contact_phone', { length: 50 }),
   contact_email:      varchar('contact_email', { length: 200 }),
-  notes:              text('notes'),
+  notes:              text('comments'),                // live: comments
   deleted_at:         ts('deleted_at'),
-  created_at:         ts('created_at').defaultNow(),
-  updated_at:         ts('updated_at').defaultNow(),
+  created_at:         ts('date_create').defaultNow(),  // live: date_create
+  updated_at:         ts('date_modify').defaultNow(),  // live: date_modify
 });
 
 export const crmDeals = pgTable('crm_deals', {

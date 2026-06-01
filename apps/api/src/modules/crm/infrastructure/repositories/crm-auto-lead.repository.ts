@@ -70,11 +70,12 @@ export class CrmAutoLeadRepository implements ICrmAutoLeadRepo {
     return safeCall(async () => {
       const contactName = [(first_name as string) ?? 'Unknown', last_name as string].filter(Boolean).join(' ');
       const payload: LeadInsert = {
+        title:         contactName || 'Yangi lid',
         contact_phone: (phone as string) || null,
         contact_name:  contactName,
         source:        'call',
         notes:         (notes as string) ?? JSON.stringify(source_meta ?? {}),
-        status:        'new',
+        status_description:        'new',
       };
       const rows = await db.insert(crmLeads).values(payload as typeof crmLeads.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
@@ -85,12 +86,13 @@ export class CrmAutoLeadRepository implements ICrmAutoLeadRepo {
     return safeCall(async () => {
       const contactName = [(first_name as string) ?? 'Unknown', last_name as string].filter(Boolean).join(' ');
       const payload: LeadInsert = {
+        title:         contactName || 'Yangi lid',
         contact_email: (email as string) || null,
         contact_phone: (phone as string) || null,
         contact_name:  contactName,
         source:        (form_name as string) ?? 'web_form',
         notes:         (notes as string) || null,
-        status:        'new',
+        status_description:        'new',
       };
       const rows = await db.insert(crmLeads).values(payload as typeof crmLeads.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
@@ -101,10 +103,11 @@ export class CrmAutoLeadRepository implements ICrmAutoLeadRepo {
     return safeCall(async () => {
       const contactName = [(first_name as string) ?? 'Telegram User', (last_name ?? username) as string].filter(Boolean).join(' ');
       const payload: LeadInsert = {
+        title:        contactName || 'Yangi lid',
         contact_name: contactName,
         source:       'telegram',
         notes:        (message as string) || null,
-        status:       'new',
+        status_description:       'new',
       };
       const rows = await db.insert(crmLeads).values(payload as typeof crmLeads.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
@@ -115,12 +118,13 @@ export class CrmAutoLeadRepository implements ICrmAutoLeadRepo {
     return safeCall(async () => {
       const contactName = [(first_name as string) ?? 'Website Visitor', last_name as string].filter(Boolean).join(' ');
       const payload: LeadInsert = {
+        title:         contactName || 'Yangi lid',
         contact_email: (email as string) || null,
         contact_phone: (phone as string) || null,
         contact_name:  contactName,
         source:        'website',
         notes:         ((message ?? page_url) as string) || null,
-        status:        'new',
+        status_description:        'new',
       };
       const rows = await db.insert(crmLeads).values(payload as typeof crmLeads.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
@@ -132,7 +136,7 @@ export class CrmAutoLeadRepository implements ICrmAutoLeadRepo {
       if (entityType === 'lead') {
         const rows = await db.select({
           id:         crmLeads.id,
-          status:     crmLeads.status,
+          status:     crmLeads.status_description,
           updated_at: crmLeads.updated_at,
           created_at: crmLeads.created_at,
           source:     crmLeads.source,

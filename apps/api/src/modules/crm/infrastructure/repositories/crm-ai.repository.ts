@@ -24,7 +24,7 @@ export class CrmAiRepository implements ICrmAiRepo {
         contact_name:     crmLeads.contact_name,
         contact_email:    crmLeads.contact_email,
         contact_phone:    crmLeads.contact_phone,
-        status:           crmLeads.status,
+        status:           crmLeads.status_description,
         ai_score:         sql<null>`NULL`,
         stage_name:       sql<null>`NULL`,
         activity_count:   sql<number>`COUNT(${crm_activities.id})::int`,
@@ -46,7 +46,7 @@ export class CrmAiRepository implements ICrmAiRepo {
       const rows = await db.select({
         id:           crmLeads.id,
         contact_name: crmLeads.contact_name,
-        status:       crmLeads.status,
+        status:       crmLeads.status_description,
         activities:   sql<number>`COUNT(DISTINCT ${crm_activities.id})::int`,
         deals:        sql<number>`COUNT(DISTINCT ${crmDeals.id})::int`,
       })
@@ -84,9 +84,9 @@ export class CrmAiRepository implements ICrmAiRepo {
     return safeCall(async () => {
       const rows = await db.select({
         total:     sql<number>`COUNT(*)::int`,
-        new_leads: sql<number>`COUNT(*) FILTER (WHERE ${crmLeads.status} = 'new')::int`,
-        qualified: sql<number>`COUNT(*) FILTER (WHERE ${crmLeads.status} = 'qualified')::int`,
-        converted: sql<number>`COUNT(*) FILTER (WHERE ${crmLeads.status} = 'converted')::int`,
+        new_leads: sql<number>`COUNT(*) FILTER (WHERE ${crmLeads.status_description} = 'new')::int`,
+        qualified: sql<number>`COUNT(*) FILTER (WHERE ${crmLeads.status_description} = 'qualified')::int`,
+        converted: sql<number>`COUNT(*) FILTER (WHERE ${crmLeads.status_description} = 'converted')::int`,
         avg_score: sql<number>`NULL::numeric`,
       })
         .from(crmLeads)

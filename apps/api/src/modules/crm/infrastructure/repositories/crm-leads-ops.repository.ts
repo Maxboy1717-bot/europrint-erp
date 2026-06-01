@@ -20,7 +20,9 @@ type Row = Record<string, unknown>;
 export class CrmLeadsOpsRepository implements ICrmLeadsOpsRepo {
   async updateLead(lid: number, body: Row): Promise<Result<Row[]>> {
     return safeCall(async () => {
-      const { first_name, last_name, email, phone, source, notes, status, company_id } = body;
+      // company_id intentionally not written — live crm_leads has no company FK
+      // (lead→company link is created at conversion into sd_customers).
+      const { first_name, last_name, email, phone, source, notes, status } = body;
       const contactName = [first_name, last_name].filter(Boolean).join(' ') || null;
       const rows = await db.update(crmLeads).set({
         contact_name:  sql`COALESCE(${contactName ?? null}, ${crmLeads.contact_name})`,
@@ -28,8 +30,7 @@ export class CrmLeadsOpsRepository implements ICrmLeadsOpsRepo {
         contact_phone: sql`COALESCE(${phone ?? null}, ${crmLeads.contact_phone})`,
         source:        sql`COALESCE(${source ?? null}, ${crmLeads.source})`,
         notes:         sql`COALESCE(${notes ?? null}, ${crmLeads.notes})`,
-        status:        sql`COALESCE(${status ?? null}, ${crmLeads.status})`,
-        customer_id:   sql`COALESCE(${company_id ?? null}, ${crmLeads.customer_id})`,
+        status_description: sql`COALESCE(${status ?? null}, ${crmLeads.status_description})`,
         updated_at: _time.now(),
       }).where(eq(crmLeads.id, lid)).returning();
       return castTo<Row[]>(rows);

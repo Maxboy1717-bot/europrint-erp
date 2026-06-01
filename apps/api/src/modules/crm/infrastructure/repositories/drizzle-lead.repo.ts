@@ -8,7 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
-import { eq, sql } from 'drizzle-orm';
+import { eq, isNull, sql } from 'drizzle-orm';
 import { crmLeads } from '@shared/db';
 import { Lead } from '../../domain/aggregates/lead.aggregate';
 import { ILeadRepository } from '../../domain/repositories/i-lead.repo';
@@ -28,9 +28,11 @@ export class DrizzleLeadRepository implements ILeadRepository {
     // title exposed in stub (ADD-ONLY, 2026-05-27) so NOT NULL constraint is satisfied.
     const payload = {
       title:              contactName || 'Yangi lid',
-      customer_id:        lead.getCompanyId(),
-      status:             lead.getStatus(),
-      status_description: `ai_score:${lead.getAiScore()}`,
+      // Live crm_leads has no customer_id (no company FK at lead stage — linked at
+      // conversion → sd_customers). Lead lifecycle code goes to status_description
+      // (consistent with the CRM ops repos), Bitrix state id to status_id.
+      status_description: lead.getStatus(),
+      status_id:          String(lead.getStatus()).toUpperCase(),
       contact_email:      lead.getEmail?.() ?? undefined,
       contact_phone:      lead.getPhone?.() ?? undefined,
       contact_name:       contactName,
@@ -44,8 +46,7 @@ export class DrizzleLeadRepository implements ILeadRepository {
       .onConflictDoUpdate({
         target: crmLeads.id,
         set: {
-          customer_id:        payload.customer_id,
-          status:             payload.status,
+          status_id:          payload.status_id,
           status_description: payload.status_description,
           contact_email:      payload.contact_email,
           contact_phone:      payload.contact_phone,
@@ -71,10 +72,13 @@ export class DrizzleLeadRepository implements ILeadRepository {
     return { ok: true as const, data: this.toDomain(castTo<DbRow>(rows[0])) };
   }
 
-  async findByCompanyId(companyId: number, limit: number, offset: number): Promise<{ ok: true; data: Lead[] }> {
+  async findByCompanyId(_companyId: number, limit: number, offset: number): Promise<{ ok: true; data: Lead[] }> {
     try {
+      // Live crm_leads (Bitrix) has no company FK — a lead is not yet linked to a
+      // company (that link is created at conversion → sd_customers). Return recent
+      // leads unfiltered rather than filtering on a non-existent column.
       const rows = await db.select().from(crmLeads)
-        .where(companyId != null ? eq(crmLeads.customer_id, companyId) : sql`true`)
+        .where(isNull(crmLeads.deleted_at))
         .limit(limit).offset(offset);
       return { ok: true as const, data: rows.map((r) => this.toDomain(castTo<DbRow>(r))) };
     } catch {
@@ -85,7 +89,7 @@ export class DrizzleLeadRepository implements ILeadRepository {
   async findByStatus(status: string, limit: number, offset: number): Promise<{ ok: true; data: Lead[] }> {
     try {
       const rows = await db.select().from(crmLeads)
-        .where(eq(crmLeads.status, status))
+        .where(eq(crmLeads.status_description, status))
         .limit(limit).offset(offset);
       return { ok: true as const, data: rows.map((r) => this.toDomain(castTo<DbRow>(r))) };
     } catch {
@@ -95,7 +99,8 @@ export class DrizzleLeadRepository implements ILeadRepository {
 
   async update(lead: Lead): Promise<{ ok: true; data: void }> {
     await db.update(crmLeads).set({
-      status:        lead.getStatus(),
+      status_description: lead.getStatus(),
+      status_id:     String(lead.getStatus()).toUpperCase(),
       contact_email: lead.getEmail?.() ?? undefined,
       contact_phone: lead.getPhone?.() ?? undefined,
       contact_name:  `${lead.getFirstName()} ${lead.getLastName()}`.trim(),
@@ -139,9 +144,9 @@ export class DrizzleLeadRepository implements ILeadRepository {
     // writes legacy names — read from those to round-trip correctly.
     const contactName = String(row['contact_name'] ?? row['name'] ?? '');
     const nameParts = contactName.split(' ');
-    const aiScoreRaw = String(row['status_description'] ?? '');
-    const aiScoreMatch = aiScoreRaw.match(/ai_score:(\d+)/);
-    const aiScore = aiScoreMatch ? Number(aiScoreMatch[1]) : Number(row['ai_score'] ?? 0);
+    // status_description now holds the lifecycle code (not ai_score). ai_score has no
+    // dedicated live column → defaults to 0 (it was never authoritatively persisted).
+    const aiScore = Number(row['ai_score'] ?? 0);
     return new Lead({
       id:         Number(row['id']),
       companyId:  Number(row['customer_id'] ?? row['company_id'] ?? 0),
@@ -149,7 +154,7 @@ export class DrizzleLeadRepository implements ILeadRepository {
       lastName:   nameParts.slice(1).join(' '),
       email:      Email.fromRaw(String(row['contact_email'] ?? row['email'] ?? '')),
       phone:      PhoneNumber.fromRaw(String(row['contact_phone'] ?? row['phone'] ?? '')),
-      status:     this.parseLeadStatus(String(row['status'] ?? row['statusId'] ?? 'new').toLowerCase()),
+      status:     this.parseLeadStatus(String(row['status_description'] ?? row['status_id'] ?? 'new').toLowerCase()),
       aiScore:    this.parseAiScore(aiScore),
       createdBy:  Number(row['created_by'] ?? 0),
       assignedTo: (row['manager_id'] ?? row['assigned_by_id'] ?? row['assignedById']) ? Number(row['manager_id'] ?? row['assigned_by_id'] ?? row['assignedById']) : undefined,

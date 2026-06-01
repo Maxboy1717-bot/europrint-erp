@@ -30,7 +30,7 @@ export class AiAutomationRepository {
 
   async getUnscoredLeadsCount(): Promise<Result<number>> {
     return safeCall(async () => {
-      const [row] = await db.select({ cnt: count() }).from(crmLeads).where(and(isNull(crmLeads.deleted_at), eq(crmLeads.status, 'new')));
+      const [row] = await db.select({ cnt: count() }).from(crmLeads).where(and(isNull(crmLeads.deleted_at), eq(crmLeads.status_description, 'new')));
       return Number(row?.cnt ?? 0);
       }, 'DB_ERROR');
   }
@@ -64,7 +64,7 @@ export class AiAutomationRepository {
         .where(
           and(
             isNull(crmLeads.deleted_at),
-            eq(crmLeads.status, 'new'),
+            eq(crmLeads.status_description, 'new'),
           ),
         )
         .limit(limit);

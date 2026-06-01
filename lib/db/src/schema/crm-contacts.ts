@@ -68,22 +68,22 @@ export const crmLeads = pgTable("crm_leads", {
   deletedAt: timestamp("deleted_at"),
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
 
-  // Legacy / live-DB superset columns (ADD-ONLY convergence 2026-05-27)
-  customerId: integer("customer_id"),
-  managerId: integer("manager_id"),
-  status: varchar("status", { length: 50 }),
-  source: varchar("source", { length: 50 }),
+  // Live-DB columns (legacy contact aliases that DO exist in crm_leads).
+  // DRIFT FIX (2026-06-01): removed customer_id, manager_id, status, source, notes,
+  // created_at, updated_at — these were declared here but DO NOT exist in the live
+  // crm_leads table, so every db.select().from(crmLeads) emitted them → 503.
+  // Their real equivalents already exist as canonical properties above:
+  //   status→statusDescription/statusId, source→sourceId/sourceDescription,
+  //   notes→comments, created_at→dateCreate, updated_at→dateModify, manager→assignedTo.
+  // A lead has no company FK in Bitrix (customer_id) — linked at conversion → sd_customers.
   contactName: varchar("contact_name", { length: 200 }),
   contactPhone: varchar("contact_phone", { length: 50 }),
   contactEmail: varchar("contact_email", { length: 200 }),
-  notes: text("notes"),
   fullName: text("full_name"),
   phone: text("phone"),
   email: text("email"),
   stageId: integer("stage_id"),
   assignedTo: integer("assigned_to"),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
 }, (t) => [
   check("crm_leads_status_id_chk", sql`${t.statusId} IN ('NEW','IN_PROCESS','CONVERTED','JUNK')`),
   check("crm_leads_source_score_chk", sql`${t.sourceScore} IS NULL OR (${t.sourceScore} >= 1 AND ${t.sourceScore} <= 100)`),

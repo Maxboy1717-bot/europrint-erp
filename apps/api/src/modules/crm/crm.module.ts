@@ -37,6 +37,7 @@ import { DEAL_REPO } from './domain/repositories/i-deal.repo';
 import { DealWonListener } from './infrastructure/event-handlers/deal-won.listener';
 import { WebsiteOrderLeadListener } from './listeners/website-order-lead.listener';
 import { WebsiteContactLeadListener } from './listeners/website-contact-lead.listener';
+import { LeadConvertedCustomerListener } from './listeners/lead-converted-customer.listener';
 import { WebsiteLeadService } from './listeners/website-lead.service';
 import { WebsiteLeadRepository } from './listeners/website-lead.repository';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
@@ -124,6 +125,7 @@ const eventListeners = [
   DealWonListener,
   WebsiteOrderLeadListener,    // Trigger 21
   WebsiteContactLeadListener,  // Trigger 22
+  LeadConvertedCustomerListener,  // lead won → sd_customers
 ];
 
 const repositories = [
