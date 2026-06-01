@@ -39,8 +39,28 @@ export default function SalesOrders() {
     queryKey: ["/api/sap/sales-orders"],
   });
 
+  // Customer dropdown sources from sd_customers (canonical customer master), NOT
+  // crm_contacts — the SAP order create writes sales_orders, whose customer name is
+  // JOINed from sd_customers (sap.repository.ts). /api/sd/customers returns
+  // { data:[{id,name}], total }; normalise name → companyName for the option label.
   const { data: customers = [] } = useQuery<CustomerRecord[]>({
-    queryKey: ["/api/crm/contacts"],
+    queryKey: ["/api/sd/customers", "sap-order-dropdown"],
+    queryFn: async () => {
+      const resp = await apiRequest<unknown>("GET", "/api/sd/customers?limit=500");
+      const arr = Array.isArray(resp)
+        ? resp
+        : Array.isArray((resp as Record<string, unknown>)?.["data"])
+        ? ((resp as Record<string, unknown>)["data"] as Array<Record<string, unknown>>)
+        : [];
+      return arr.map((c) => ({
+        id: String(c["id"]),
+        firstName: "",
+        lastName: "",
+        company: String(c["name"] ?? ""),
+        companyName: String(c["name"] ?? ""),
+        contactPerson: String(c["name"] ?? ""),
+      })) as CustomerRecord[];
+    },
   });
 
   const { data: deals = [] } = useQuery<DealRecord[]>({

@@ -25,7 +25,7 @@ export class DrizzleSdCustomersRepository {
       SELECT c.id, c.name, c.stir, c.status, c.actual_address, c.notes,
              c.credit_limit, c.payment_terms_days, c.industry, c.website,
              COUNT(DISTINCT o.id)::int AS "totalOrders",
-             COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS "totalRevenue"
+             COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS "totalRevenue"
       FROM sd_customers c LEFT JOIN sales_orders o ON o.customer_id = c.id
       WHERE c.status != 'deleted'
         AND (${pat}::text IS NULL OR c.name ILIKE ${pat} OR c.stir ILIKE ${pat})
@@ -48,7 +48,7 @@ export class DrizzleSdCustomersRepository {
     const rows = await runQuery<Row>(sql`
       SELECT c.*, c.actual_address,
              COUNT(DISTINCT o.id)::int AS "totalOrders",
-             COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS "totalRevenue"
+             COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS "totalRevenue"
       FROM sd_customers c
       LEFT JOIN sales_orders o ON o.customer_id = c.id
       WHERE c.id = ${cid} AND c.status != 'deleted'
@@ -69,9 +69,10 @@ export class DrizzleSdCustomersRepository {
       q.then(r => r.rows as Row[]).catch(() => [] as Row[]);
 
     const [customerRows, ordersRows, contactsRows, documentsRows, interactionsRows, competitorsRows, paymentsRows, npsRows] = await Promise.all([
-      safe(runQuery<Row>(sql`SELECT * FROM sd_customers WHERE id = ${cid} AND deleted_at IS NULL`)),
+      safe(runQuery<Row>(sql`SELECT * FROM sd_customers WHERE id = ${cid}`)),
       safe(runQuery<Row>(sql`
-        SELECT id, order_number, status, total_amount, currency, created_at, delivery_date,
+        SELECT id, document_number AS order_number, overall_status AS status,
+               total_value AS total_amount, currency, created_at, delivery_date,
                EXTRACT(YEAR FROM created_at)::int AS order_year,
                EXTRACT(MONTH FROM created_at)::int AS order_month
         FROM sales_orders WHERE customer_id = ${cid} AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 100
@@ -150,7 +151,8 @@ export class DrizzleSdCustomersRepository {
 
   async getRecentOrders(cid: number): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
-      SELECT id, order_number, status, total_amount, created_at, delivery_date
+      SELECT id, document_number AS order_number, overall_status AS status,
+             total_value AS total_amount, created_at, delivery_date
       FROM sales_orders WHERE customer_id = ${cid} AND deleted_at IS NULL
       ORDER BY created_at DESC LIMIT 10
     `);

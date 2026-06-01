@@ -174,7 +174,7 @@ export async function exportCsv(search?: string, status?: string): Promise<strin
     SELECT c.id, c.name, c.stir, c.phone, c.email, c.actual_address,
            c.status, c.industry, c.credit_limit,
            COUNT(DISTINCT o.id)::int AS total_orders,
-           COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS open_debt
+           COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS open_debt
     FROM sd_customers c
     LEFT JOIN sales_orders o ON o.customer_id = c.id
     WHERE c.status != 'deleted'

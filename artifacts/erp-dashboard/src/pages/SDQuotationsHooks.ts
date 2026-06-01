@@ -17,7 +17,22 @@ import { tLabel } from '@/lib/i18n/tLabel';
 
 export function useQuotationsData() {
   const quotations = useQuery<Quotation[]>({ queryKey: ["/api/sd/quotations"] });
-  const companies = useQuery<Array<{ id: string; name: string }>>({ queryKey: ["/api/crm/companies"] });
+  // Customer dropdown sources from sd_customers (the canonical customer master),
+  // NOT crm_companies — the quotation's customer_id is later JOINed against
+  // sd_customers (sd-quotations.repository.ts), so the picker must use the same table.
+  // /api/sd/customers returns { data: [...], total }; unwrap .data → array of {id,name}.
+  const companies = useQuery<Array<{ id: string; name: string }>>({
+    queryKey: ["/api/sd/customers", "quotation-dropdown"],
+    queryFn: async () => {
+      const resp = await apiRequest<unknown>("GET", "/api/sd/customers?limit=500");
+      const arr = Array.isArray(resp)
+        ? resp
+        : Array.isArray((resp as Record<string, unknown>)?.["data"])
+        ? ((resp as Record<string, unknown>)["data"] as Array<{ id: string; name: string }>)
+        : [];
+      return arr as Array<{ id: string; name: string }>;
+    },
+  });
   const products = useQuery<Array<{ id: string; name: string; basePrice?: number }>>({ queryKey: ["/api/products"] });
 
   return { quotations, companies, products };

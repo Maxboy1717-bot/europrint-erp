@@ -53,8 +53,20 @@ export function useWizardState() {
     selectedBomId: "",
   });
 
+  // Customer dropdown sources from sd_customers (canonical customer master) so new
+  // orders bind to the same customer base used everywhere else — NOT crm_companies.
+  // /api/sd/customers returns { data: [...], total }; unwrap .data → CrmCompany[] {id,name}.
   const { data: companies = [], isError: companiesError, refetch: refetchCompanies } = useQuery<CrmCompany[]>({
-    queryKey: ["/api/crm/companies"],
+    queryKey: ["/api/sd/customers", "order-wizard-dropdown"],
+    queryFn: async () => {
+      const resp = await apiRequest<unknown>("GET", "/api/sd/customers?limit=500");
+      const arr = Array.isArray(resp)
+        ? resp
+        : Array.isArray((resp as Record<string, unknown>)?.["data"])
+        ? ((resp as Record<string, unknown>)["data"] as CrmCompany[])
+        : [];
+      return arr as CrmCompany[];
+    },
   });
 
   const { data: productsResponse } = useQuery<{ products: Product[] } | Product[]>({

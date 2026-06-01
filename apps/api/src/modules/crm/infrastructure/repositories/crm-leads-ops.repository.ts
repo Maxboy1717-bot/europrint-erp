@@ -86,10 +86,40 @@ export class CrmLeadsOpsRepository implements ICrmLeadsOpsRepo {
   }
 
   async convertLead(lid: number): Promise<void> {
-    await db.update(crmLeads).set({
-      status:     'converted',
-      updated_at: _time.now(),
-    }).where(eq(crmLeads.id, lid));
+    // Raw SQL: live crm_leads has status_description (NOT a `status` column — that
+    // exists only in the Drizzle def = drift). db.update(crmLeads).set({status})
+    // would target a phantom column and throw.
+    await db.execute(sql`
+      UPDATE crm_leads SET status_description = 'converted', date_modify = NOW()
+      WHERE id = ${lid}
+    `);
+
+    // Promote the won lead into the canonical customer base (sd_customers) so a won
+    // CRM lead becomes a customer that orders/quotes can attach to (owner's flow:
+    // "lead yutilsa → sd_customers'ga konversiya"). Raw SQL avoids the crm_leads
+    // phantom-status drift. Idempotent: skip if a customer with this name exists.
+    // sd_customers live constraints: segment ∈ {vip,regular,new,potential}; status ∈ {active,inactive}.
+    const leadRes = await db.execute(sql`
+      SELECT contact_name, full_name, name, contact_phone, contact_email
+      FROM crm_leads WHERE id = ${lid} LIMIT 1
+    `);
+    const lead = (leadRes.rows?.[0] ?? null) as Record<string, unknown> | null;
+    if (!lead) return;
+
+    const custName = String(
+      lead['contact_name'] ?? lead['full_name'] ?? lead['name'] ?? '',
+    ).trim() || `Lead #${lid}`;
+    const phone = lead['contact_phone'] ?? null;
+    const email = lead['contact_email'] ?? null;
+
+    await db.execute(sql`
+      INSERT INTO sd_customers (name, phone, email, segment, status, is_blocked, notes)
+      SELECT ${custName}, ${phone}, ${email}, 'new', 'active', false,
+             ${'CRM lid #' + lid + ' dan konvertatsiya qilindi'}
+      WHERE NOT EXISTS (
+        SELECT 1 FROM sd_customers WHERE name = ${custName}
+      )
+    `);
   }
 
   async leadExists(lid: number): Promise<Result<boolean>> {
