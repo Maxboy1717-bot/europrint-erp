@@ -22,4 +22,12 @@ export class SapService {
   async updateSalesOrder(id: number, body: Record<string, unknown>) {
     return this.repo.updateSalesOrder(id, body);
   }
+
+  async createSalesOrder(body: Record<string, unknown>) {
+    return this.repo.createSalesOrder(body);
+  }
+
+  async deleteSalesOrder(id: number) {
+    return this.repo.deleteSalesOrder(id);
+  }
 }

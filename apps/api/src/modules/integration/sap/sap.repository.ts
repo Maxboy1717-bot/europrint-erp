@@ -46,4 +46,40 @@ export class SapRepository {
       return fallback[0] ?? null;
       }, 'DB_ERROR');
   }
+
+  async createSalesOrder(body: Row): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const today = new Date().toISOString().split('T')[0] as string;
+      const docNumber = `SAP-${Date.now()}`;
+      const totalAmount = parseFloat(String(body['totalAmount'] ?? '0')) || 0;
+      const customerId = body['customerId'] != null ? parseInt(String(body['customerId']), 10) : null;
+      const notes = body['notes'] != null ? String(body['notes']) : null;
+      const r = await exec(sql`
+        INSERT INTO sales_orders
+          (document_number, order_date, pricing_date, customer_id, net_value, total_value, total_amount, notes)
+        VALUES
+          (${docNumber}, ${today}, ${today}, ${customerId}, ${totalAmount}, ${totalAmount}, ${totalAmount}, ${notes})
+        RETURNING *
+      `);
+      return r[0] as Row;
+    }, 'DB_ERROR');
+  }
+
+  async deleteSalesOrder(id: number): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      // Try sap_sales_orders first, then canonical sales_orders (soft-delete)
+      const r = await exec(sql`
+        UPDATE sap_sales_orders
+        SET status = 'CANCELLED', updated_at = NOW()
+        WHERE id = ${id} RETURNING id, status
+      `);
+      if (r.length > 0) return r[0] as Row;
+      const fallback = await exec(sql`
+        UPDATE sales_orders
+        SET overall_status = 'CANCELLED', master_status = 'cancelled', updated_at = NOW()
+        WHERE id = ${id} RETURNING id, overall_status
+      `);
+      return fallback[0] ?? null;
+    }, 'DB_ERROR');
+  }
 }

@@ -84,7 +84,7 @@ export class SapController {
   @HttpCode(HttpStatus.CREATED)
   async createSalesOrder(@Body() body: unknown) {
     const dto = CreateSapSalesOrderSchema.parse(body);
-    return { id: Date.now(), ...dto, created: true };
+    return unwrapOrThrow(await this.svc.createSalesOrder(dto as Record<string, unknown>));
   }
 
   @ApiOperation({ summary: 'Patch sales order' })
@@ -103,6 +103,9 @@ export class SapController {
   @Delete('sales-orders/:id')
   @HttpCode(HttpStatus.OK)
   async deleteSalesOrder(@Param('id') id: string) {
-    return { id, deleted: true };
+    const result = await this.svc.deleteSalesOrder(safeInt(id, 0));
+    const row = unwrapOrThrow(result);
+    if (!row) throw new NotFoundException(`Sales order ${id} not found`);
+    return { id: safeInt(id, 0), deleted: true };
   }
 }
