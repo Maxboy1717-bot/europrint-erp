@@ -2793,6 +2793,21 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'domain_events.id SET DEFAULT gen_random_uuid() (drift: uuid PK lost default)', sql:
       `ALTER TABLE domain_events ALTER COLUMN id SET DEFAULT gen_random_uuid()` },
 
+  // ── CRM convert on Bitrix `deals` (2026-06-01): on the canonical :5432 DB, crm_deals is a
+  //    VIEW over a Bitrix `deals` table (uuid PK; lead_id/created_by uuid NOT NULL, no default).
+  //    The app's lead→deal convert (built for an integer crm_deals table with no lead_id column —
+  //    it keeps the lead link in metadata + sets assigned_by_id) doesn't populate deals.id/
+  //    lead_id/created_by, so the view-insert hit NOT NULL violations → convert 500. Variant A
+  //    (owner-approved): give id a uuid default + relax lead_id/created_by to nullable. IF EXISTS
+  //    → no-op on the docker crm_deals-table DB. Idempotent. Full NOT-NULL-no-default set on deals
+  //    was {id,lead_id,title,amount,created_by}; convert already sets title+amount, so only these 3.
+  { name: 'deals.id SET DEFAULT gen_random_uuid() [crm convert / Bitrix view]', sql:
+      `ALTER TABLE IF EXISTS deals ALTER COLUMN id SET DEFAULT gen_random_uuid()` },
+  { name: 'deals.lead_id DROP NOT NULL [crm convert — link kept in metadata]', sql:
+      `ALTER TABLE IF EXISTS deals ALTER COLUMN lead_id DROP NOT NULL` },
+  { name: 'deals.created_by DROP NOT NULL [crm convert — app sets assigned_by_id]', sql:
+      `ALTER TABLE IF EXISTS deals ALTER COLUMN created_by DROP NOT NULL` },
+
   // ── DRIFT-NN sprint (2026-06-01): restore 104 DB-level defaults the live DB lost across 47
   //    tables. Each is a column whose Drizzle def declares a DB-level default (.default(...),
   //    .defaultNow(), .defaultRandom()) but whose live column is NOT NULL with no DEFAULT — so any
