@@ -21,6 +21,7 @@ const LeadCreateSchema = z.object({
   firstName: z.string().max(200).optional(),
   lastName: z.string().max(200).optional(),
   name: z.string().max(200).optional(),
+  fullName: z.string().max(400).optional(),
   title: z.string().max(400).optional(),
   phone: z.string().max(50).optional(),
   email: z.string().max(200).optional(),
@@ -57,10 +58,14 @@ const SendLeadEmailSchema = z.object({
 function normalizeLeadDto(dto: Record<string, unknown>): Record<string, unknown> {
   const phones = Array.isArray(dto.phones) ? (dto.phones as Array<Record<string, string>>) : [];
   const emails = Array.isArray(dto.emails) ? (dto.emails as Array<Record<string, string>>) : [];
-  const titleParts = String(dto.title ?? '').trim().split(/\s+/);
+  // Name can arrive as fullName, name, or title (the QuickCreate modal sends `title`).
+  // Unify into one source and split into first/last so contact_name is always populated
+  // → converted customers get the REAL name, not "Lead #<id>".
+  const nameSrc = String(dto.fullName ?? dto.name ?? dto.title ?? '').trim();
+  const nameParts = nameSrc.split(/\s+/).filter(Boolean);
   return {
-    firstName:  dto.firstName  ?? dto.name ?? titleParts[0] ?? '',
-    lastName:   dto.lastName   ?? titleParts.slice(1).join(' ') ?? '',
+    firstName:  dto.firstName  ?? nameParts[0] ?? '',
+    lastName:   dto.lastName   ?? nameParts.slice(1).join(' ') ?? '',
     phone:      dto.phone      ?? phones[0]?.['value'] ?? '',
     email:      dto.email      ?? emails[0]?.['value'] ?? '',
     source:     dto.source     ?? dto.sourceId          ?? 'website',

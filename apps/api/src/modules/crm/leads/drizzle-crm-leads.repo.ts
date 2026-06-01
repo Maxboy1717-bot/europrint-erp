@@ -76,7 +76,13 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
     try {
       const firstName   = (dto.firstName as string | undefined) ?? '';
       const lastNameVal = (dto.lastName as string | undefined) ?? '';
-      const contactName = [firstName, lastNameVal].filter(Boolean).join(' ') || null;
+      // Fallback to fullName/name/contactName for callers that bypass normalizeLeadDto,
+      // so contact_name is populated (converted customers get the real name, not "Lead #id").
+      const contactName = ([firstName, lastNameVal].filter(Boolean).join(' ')
+        || (dto.fullName as string | undefined)
+        || (dto.name as string | undefined)
+        || (dto.contactName as string | undefined)
+        || '').toString().trim() || null;
       // CRM-1: title is NOT NULL — derive from dto.title, companyTitle, or name
       const titleValue = String(
         (dto.title as string | undefined) ||
