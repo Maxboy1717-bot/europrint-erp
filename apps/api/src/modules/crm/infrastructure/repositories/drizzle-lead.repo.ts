@@ -13,6 +13,7 @@ import { crmLeads } from '@shared/db';
 import { Lead } from '../../domain/aggregates/lead.aggregate';
 import { ILeadRepository } from '../../domain/repositories/i-lead.repo';
 import { LeadStatus } from '../../domain/value-objects/lead-status.vo';
+import { toBitrixStatusId } from '../../leads/lead-status-id.util';
 import { AIScore } from '../../domain/value-objects/ai-score.vo';
 import { Email } from '@shared/domain/value-objects/email.vo';
 import { PhoneNumber } from '@shared/domain/value-objects/phone-number.vo';
@@ -32,7 +33,9 @@ export class DrizzleLeadRepository implements ILeadRepository {
       // conversion → sd_customers). Lead lifecycle code goes to status_description
       // (consistent with the CRM ops repos), Bitrix state id to status_id.
       status_description: lead.getStatus(),
-      status_id:          String(lead.getStatus()).toUpperCase(),
+      // status_id is constrained to the Bitrix coarse set (NEW/IN_PROCESS/CONVERTED/JUNK);
+      // the fine-grained lifecycle stays in status_description above.
+      status_id:          toBitrixStatusId(lead.getStatus()),
       contact_email:      lead.getEmail?.() ?? undefined,
       contact_phone:      lead.getPhone?.() ?? undefined,
       contact_name:       contactName,
@@ -100,7 +103,7 @@ export class DrizzleLeadRepository implements ILeadRepository {
   async update(lead: Lead): Promise<{ ok: true; data: void }> {
     await db.update(crmLeads).set({
       status_description: lead.getStatus(),
-      status_id:     String(lead.getStatus()).toUpperCase(),
+      status_id:     toBitrixStatusId(lead.getStatus()),
       contact_email: lead.getEmail?.() ?? undefined,
       contact_phone: lead.getPhone?.() ?? undefined,
       contact_name:  `${lead.getFirstName()} ${lead.getLastName()}`.trim(),

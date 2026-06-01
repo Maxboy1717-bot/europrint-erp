@@ -10,6 +10,7 @@ import { db } from '@shared/db';
 import { crmLeads } from '@europrint/schemas';
 import { eq, and, isNull, count, desc } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
+import { toBitrixStatusId } from './lead-status-id.util';
 import { ICrmLeadsRepository } from './i-crm-leads.repo';
 
 type Row = Record<string, unknown>;
@@ -31,6 +32,9 @@ function mapLeadRow(r: Row): Row {
     // Live crm_leads columns: status_id/status_description, source_id, assigned_to,
     // date_create, comments (NOT status/source/manager_id/created_at/notes/customer_id).
     statusId:     r['status_id'] ? String(r['status_id']).toUpperCase() : (r['status_description'] ? String(r['status_description']).toUpperCase() : 'NEW'),
+    // Lifecycle code (new/qualified/proposal/...) for the FE label; statusId stays the
+    // coarse Bitrix state. Falls back to lower(status_id) for legacy rows w/o a description.
+    status:       r['status_description'] ? String(r['status_description']) : (r['status_id'] ? String(r['status_id']).toLowerCase() : 'new'),
     phones:       r['contact_phone'] ? [{ value: r['contact_phone'], type: 'WORK' }] : [],
     emails:       r['contact_email'] ? [{ value: r['contact_email'], type: 'WORK' }] : [],
     sourceId:     r['source_description'] ?? r['source_id'] ?? null,
@@ -75,22 +79,24 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
         contactName ||
         'Yangi lid',
       );
+      // Write the real compat-1a def properties (camelCase keys like name/phones/statusId
+      // are NOT def properties and were silently dropped by Drizzle). Lifecycle goes to
+      // status_description; status_id holds the mapped Bitrix coarse state (CHECK-safe).
+      const lifecycle = String((dto.status as string | undefined) ?? (dto.statusId as string | undefined) ?? 'new').toLowerCase();
+      const phoneVal = (dto.phone as string | undefined)
+        ?? (Array.isArray(dto.phones) && dto.phones[0] ? String((dto.phones[0] as { value?: unknown }).value ?? '') : undefined);
+      const emailVal = (dto.email as string | undefined)
+        ?? (Array.isArray(dto.emails) && dto.emails[0] ? String((dto.emails[0] as { value?: unknown }).value ?? '') : undefined);
       const row = {
-        title:         titleValue,                                              // NOT NULL fix
-        name:          (dto.name as string | undefined) || firstName || null,
-        lastName:      (dto.lastName as string | undefined) || null,
-        companyTitle:  (dto.companyTitle as string | undefined) || null,
-        phones:        dto.phones ?? (dto.phone ? [{ value: dto.phone, type: 'WORK' }] : []),
-        emails:        dto.emails ?? (dto.email ? [{ value: dto.email, type: 'WORK' }] : []),
-        statusId:      (dto.statusId as string | undefined) || (dto.status as string | undefined) || 'NEW',
-        sourceId:      (dto.sourceId as string | undefined) || (dto.source as string | undefined) || null,
-        assignedById:  (dto.assignedById as string | undefined) || (dto.assignedTo ? String(dto.assignedTo) : null) || (createdBy ? String(createdBy) : null),
-        budget:        (dto.budget as number | undefined) ?? null,
-        opportunityAmount: (dto.opportunityAmount as number | undefined) ?? null,
-        comments:      (dto.comments as string | undefined) || null,
-        // Live legacy alias that exists in crm_leads. status/source removed — they
-        // are phantom (not in live DB); statusId/sourceId above cover them.
-        contact_name:  contactName,
+        title:              titleValue,                                          // NOT NULL
+        status_description: lifecycle,
+        status_id:          toBitrixStatusId(lifecycle),
+        source:             (dto.source as string | undefined) ?? (dto.sourceId as string | undefined) ?? null, // → source_description
+        contact_name:       contactName,
+        contact_phone:      phoneVal ?? null,
+        contact_email:      emailVal ?? null,
+        notes:              (dto.notes as string | undefined) ?? (dto.comments as string | undefined) ?? null,  // → comments
+        manager_id:         Number(dto.assignedById ?? dto.assignedTo ?? createdBy) || null,                    // → assigned_to
       };
       const result = await db.insert(crmLeads).values(row as unknown as typeof crmLeads.$inferInsert).returning();
       return Ok(mapLeadRow(result[0] as Row));
@@ -99,7 +105,31 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
 
   async update(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     try {
-      const result = await db.update(crmLeads).set(dto as Partial<typeof crmLeads.$inferInsert>).where(eq(crmLeads.id, id)).returning();
+      // Map incoming (often camelCase) keys to the real def properties. A blind
+      // .set(dto) dropped every non-property key (statusId/status/...) → empty SET →
+      // "UPDATE crm_leads SET  WHERE id=$1" SQL error. Lifecycle → status_description;
+      // status_id → mapped Bitrix coarse state (CHECK-safe).
+      const setObj: Record<string, unknown> = {};
+      const lifecycleRaw = (dto.status ?? dto.statusId ?? dto.stage_id) as string | undefined;
+      if (lifecycleRaw != null) {
+        const lifecycle = String(lifecycleRaw).toLowerCase();
+        setObj.status_description = lifecycle;
+        setObj.status_id = toBitrixStatusId(lifecycle);
+      }
+      if (dto.title != null) setObj.title = String(dto.title);
+      if (dto.contact_name != null) setObj.contact_name = String(dto.contact_name);
+      else {
+        const nm = (dto.name ?? dto.firstName) as string | undefined;
+        const ln = dto.lastName as string | undefined;
+        if (nm != null || ln != null) setObj.contact_name = [nm, ln].filter(Boolean).join(' ');
+      }
+      if (dto.phone != null) setObj.contact_phone = String(dto.phone);
+      if (dto.email != null) setObj.contact_email = String(dto.email);
+      if (dto.source != null || dto.sourceId != null) setObj.source = String(dto.source ?? dto.sourceId);
+      if (dto.notes != null || dto.comments != null) setObj.notes = String(dto.notes ?? dto.comments);
+      if (dto.assignedById != null || dto.assignedTo != null) setObj.manager_id = Number(dto.assignedById ?? dto.assignedTo) || null;
+      setObj.updated_at = _time.now();
+      const result = await db.update(crmLeads).set(setObj as Partial<typeof crmLeads.$inferInsert>).where(eq(crmLeads.id, id)).returning();
       return Ok(result[0] ? mapLeadRow(result[0] as Row) : {} as Row);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yangilashda xatolik'); }
   }
