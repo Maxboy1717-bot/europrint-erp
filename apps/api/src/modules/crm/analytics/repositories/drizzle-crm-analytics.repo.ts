@@ -136,6 +136,11 @@ export class DrizzleCrmAnalyticsRepository implements ICrmAnalyticsRepo {
 
   // ----- Funnel -----
 
+  // NOTE: crm_deals drift fixed here (pipeline_id → category_id; Bitrix pipeline = category).
+  // This method ALSO depends on crm_stages columns is_success/is_fail/sort_order, which
+  // do NOT exist in the live crm_stages table (separate crm_stages drift, owner-deferred —
+  // scope is crm_deals + crm_contacts only). Until crm_stages is converged this method
+  // still throws; the crm_deals column ref is corrected so no crm_deals phantom remains.
   async getFunnelStageData(pipelineId?: string): Promise<FunnelStageRow[]> {
     try {
       const rows = await runQuery<FunnelStageRow>(
@@ -146,7 +151,7 @@ export class DrizzleCrmAnalyticsRepository implements ICrmAnalyticsRepo {
               COALESCE(cs.is_fail,    false) AS is_lost
             FROM crm_deals d
             JOIN crm_stages cs ON cs.id::text = d.stage_id
-            WHERE d.pipeline_id = ${pipelineId} AND d.deleted_at IS NULL
+            WHERE d.category_id::text = ${pipelineId} AND d.deleted_at IS NULL
             GROUP BY cs.name, cs.is_success, cs.is_fail, cs.sort_order
             ORDER BY cs.sort_order ASC
           `

@@ -96,8 +96,10 @@ export class CrmDealsController {
  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
  async getById(@Param('id') id: number) {
   this.logger.log('Fetching deal');
-  const result = await this.dealsService.findOne(Number(id));
-  return unwrapOrThrow(result);
+  // findOne already unwraps — it returns the row or throws NotFound/500. It is NOT a
+  // Result envelope, so it must NOT be passed through unwrapOrThrow again (doing so read
+  // `.error.message` on a plain row → "Cannot read properties of undefined").
+  return await this.dealsService.findOne(Number(id));
 }
 
  @ApiOperation({ summary: 'Create' })

@@ -153,4 +153,24 @@ export class Deal extends AggregateRoot {
   getAssignedTo(): number {
     return this.assignedTo;
   }
+
+  getDealNumber(): string {
+    return this.dealNumber;
+  }
+
+  getCurrency(): string {
+    return this.currency;
+  }
+
+  getCreatedBy(): number {
+    return this.createdBy;
+  }
+
+  getDescription(): string | undefined {
+    return this.description;
+  }
+
+  getExpectedClosureDate(): Date {
+    return this.expectedClosureDate;
+  }
 }

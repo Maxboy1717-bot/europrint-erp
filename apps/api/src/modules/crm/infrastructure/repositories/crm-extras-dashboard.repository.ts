@@ -68,14 +68,17 @@ export class CrmExtrasDashboardRepository {
   async getPipeline(stageId: number | null): Promise<Result<Row[]>> {
     return safeCall(async () => {
       try {
+        // Live-DB column names: crm_deals has forecast_amount (not expected_amount),
+        // stage_semantic_id (not status), and no lead_id column — the lead link lives
+        // in metadata jsonb. crm_leads has status_description (not status).
         const result = await runQuery<Row>(sql`
           SELECT ls.id AS stage_id, ls.name AS stage_name, ls.order_index,
                  COUNT(l.id)::int AS lead_count,
-                 COALESCE(SUM(d.expected_amount), 0) AS pipeline_value
+                 COALESCE(SUM(d.forecast_amount), 0) AS pipeline_value
           FROM crm_lead_stages ls
-          LEFT JOIN crm_leads l ON l.stage_id = ls.id AND l.status = 'active'
+          LEFT JOIN crm_leads l ON l.stage_id = ls.id AND l.status_description != 'converted'
             AND (${stageId ?? null}::int IS NULL OR ls.id = ${stageId ?? null})
-          LEFT JOIN crm_deals d ON d.lead_id = l.id AND d.status NOT IN ('won','lost')
+          LEFT JOIN crm_deals d ON (d.metadata->>'lead_id')::int = l.id AND d.stage_semantic_id NOT IN ('won','lost')
           GROUP BY ls.id, ls.name, ls.order_index
           ORDER BY ls.order_index
         `);

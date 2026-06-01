@@ -52,7 +52,8 @@ export class CrmAiRepository implements ICrmAiRepo {
       })
         .from(crmLeads)
         .leftJoin(crm_activities, eq(crm_activities.lead_id, crmLeads.id))
-        .leftJoin(crmDeals, eq(crmDeals.lead_id, crmLeads.id))
+        // live crm_deals has no lead_id column — lead link stored in metadata jsonb
+        .leftJoin(crmDeals, sql`(${crmDeals.metadata}->>'lead_id')::int = ${crmLeads.id}`)
         .where(eq(crmLeads.id, lid))
         .groupBy(crmLeads.id);
       return (rows[0] ?? null) as Row | null;
@@ -66,7 +67,7 @@ export class CrmAiRepository implements ICrmAiRepo {
     return safeCall(async () => {
       const rows = await db.select({
         id:         crmDeals.id,
-        name:       crmDeals.name,
+        name:       crmDeals.title,
         status:     crmDeals.status,
         amount:     crmDeals.amount,
         activities: sql<number>`COUNT(DISTINCT ${crm_activities.id})::int`,

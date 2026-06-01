@@ -59,7 +59,7 @@ export class AiDataRepository {
 
   async getDealSummaryById(dealId: number): Promise<{ title: string | null; amount: string | null; stage_id: string | null } | null> {
     const rows = await db
-      .select({ title: crmDeals.title, amount: crmDeals.amount, stage_id: crmDeals.stage_id })
+      .select({ title: crmDeals.title, amount: crmDeals.amount, stage_id: crmDeals.status })
       .from(crmDeals)
       .where(eq(crmDeals.id, dealId))
       .limit(1);

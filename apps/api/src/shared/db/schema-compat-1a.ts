@@ -11,7 +11,7 @@
  */
 
 import { date } from 'drizzle-orm/pg-core';
-import { pgTable, uuid, text, boolean, decimal, integer, varchar, createId, ts } from './schema-compat-helpers';
+import { pgTable, uuid, text, boolean, decimal, integer, varchar, jsonb, createId, ts } from './schema-compat-helpers';
 
 export const users = pgTable('users', {
   id: integer('id').primaryKey(),
@@ -58,22 +58,34 @@ export const crmLeads = pgTable('crm_leads', {
   updated_at:         ts('date_modify').defaultNow(),  // live: date_modify
 });
 
+// CRM-DEAL DRIFT FIX (2026-06-01): live crm_deals is Bitrix-style. Phantom columns
+// (lead_id, name, status, expected_amount, assigned_to, created_by, created_at,
+// updated_at) removed/aliased to the real live columns. lead_id has NO live column —
+// the lead→deal link is stored in metadata (jsonb) at conversion time.
 export const crmDeals = pgTable('crm_deals', {
   id:              integer('id').primaryKey(),
-  lead_id:         integer('lead_id'),
-  company_id:      text('company_id'),
-  name:            text('name'),
-  title:           text('title'),
-  status:          text('status').default('open'),
-  amount:          decimal('amount', { precision: 18, scale: 2 }),
-  expected_amount: decimal('expected_amount', { precision: 18, scale: 2 }),
-  assigned_to:     integer('assigned_to'),
-  created_by:      integer('created_by'),
-  created_at:      ts('created_at').defaultNow(),
-  updated_at:      ts('updated_at').defaultNow(),
+  company_id:      integer('company_id'),                    // live: integer (was text)
+  title:           text('title'),                            // 'name' removed — collided with title; use title
+  // App business status (qualification/proposal/negotiation/won/lost/open) → free-form
+  // live `stage_id` column. NOT stage_semantic_id: that Bitrix column has a CHECK limiting
+  // it to {process,success,fail}, which the app's fine-grained statuses violate. stage_id
+  // has no CHECK and round-trips business values, so all `crmDeals.status` filters
+  // (= 'won'/'open'/'lost') keep working. stage_semantic_id is left to Bitrix (nullable).
+  status:          varchar('stage_id', { length: 50 }),      // live: stage_id (free-form business status)
+  amount:          decimal('amount', { precision: 18, scale: 2 }),         // live: amount (nullable bolt-on)
+  opportunity:     decimal('opportunity', { precision: 18, scale: 2 }),     // live: opportunity NOT NULL (Bitrix canonical deal value)
+  expected_amount: decimal('forecast_amount', { precision: 18, scale: 2 }), // live: forecast_amount (alias)
+  assigned_to:     integer('assigned_by_id'),                // live: assigned_by_id (alias)
+  created_by:      integer('created_by_id'),                 // live: created_by_id (alias)
+  currency_id:     varchar('currency_id', { length: 3 }),    // live: currency_id (was phantom 'currency')
+  close_date:      varchar('close_date', { length: 10 }),    // live: varchar(10) (was phantom 'expected_closure_date')
+  additional_info: text('additional_info'),                  // live: additional_info (was phantom 'description')
+  created_at:      ts('date_create').defaultNow(),           // live: date_create (alias)
+  updated_at:      ts('date_modify').defaultNow(),           // live: date_modify (alias)
   deleted_at:      ts('deleted_at'),
-  metadata:        text('metadata'),
-  stage_id:        integer('stage_id'),
+  metadata:        jsonb('metadata').$type<Record<string, unknown>>(), // live: jsonb (was text); holds lead_id
+  // NOTE: no separate `stage_id` property — it would collide with `status` above (same
+  // DB column). Read the stage via `crmDeals.status`.
 });
 
 export const crmContacts = pgTable('crm_contacts', {

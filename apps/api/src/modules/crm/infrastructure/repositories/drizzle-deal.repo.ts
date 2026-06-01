@@ -22,11 +22,22 @@ type DbRow = Record<string, unknown>;
 export class DrizzleDealRepository implements IDealRepository {
   async save(deal: Deal): Promise<Result<Deal>> {
     try {
+      // Live crm_deals has no lead_id column → store the lead link in metadata (jsonb).
+      // company_id is integer in live; status/assigned_to/created_by/currency_id/close_date/
+      // additional_info map to the real columns via the def aliases. title is NOT NULL in
+      // live DB → must be set (dealNumber). Persist the full submitted deal (no silent loss).
       const payload: Omit<typeof crmDeals.$inferInsert, 'id'> = {
-        lead_id:    deal.getLeadId(),
-        company_id: String(deal.getCompanyId()),
-        status:     deal.getStatus(),
-        amount:     String(deal.getTotalAmount()),
+        company_id:      Number(deal.getCompanyId()) || null,
+        title:           deal.getDealNumber(),
+        status:          deal.getStatus(),
+        amount:          String(deal.getTotalAmount()),
+        opportunity:     String(deal.getTotalAmount()), // live opportunity is NOT NULL (Bitrix canonical value)
+        assigned_to:     Number(deal.getAssignedTo()) || null,
+        created_by:      Number(deal.getCreatedBy()) || null,
+        currency_id:     deal.getCurrency(),
+        close_date:      deal.getExpectedClosureDate().toISOString().slice(0, 10),
+        additional_info: deal.getDescription() ?? null,
+        metadata:        { lead_id: deal.getLeadId() },
       };
       await db.insert(crmDeals).values(payload as typeof crmDeals.$inferInsert).onConflictDoNothing();
       return Ok(deal);
@@ -47,7 +58,8 @@ export class DrizzleDealRepository implements IDealRepository {
 
   async findByLeadId(leadId: number): Promise<Result<Deal | null>> {
     try {
-      const rows = await db.select().from(crmDeals).where(eq(crmDeals.lead_id, leadId)).limit(1);
+      // lead link lives in metadata jsonb (no lead_id column in live crm_deals)
+      const rows = await db.select().from(crmDeals).where(sql`(${crmDeals.metadata}->>'lead_id')::int = ${leadId}`).limit(1);
       if (!rows[0]) return Ok(null);
       return Ok(this.toDomain(castTo<DbRow>(rows[0])));
     } catch (e) {
@@ -119,22 +131,28 @@ export class DrizzleDealRepository implements IDealRepository {
   private toDomain(row: DbRow): Deal {
     // Hydration path — DB values were validated on write, so we use the
     // throwing factory and surface integrity errors as 5xx.
-    const moneyResult = Money.ofOrThrow(Number(row['total_amount'] ?? 0), String(row['currency'] ?? 'USD'));
+    // Live crm_deals (Bitrix) keys: amount, stage_semantic_id, date_create/date_modify,
+    // assigned_by_id, created_by_id, title, metadata (holds lead_id). No lead_id/status/
+    // created_at/deal_number/currency columns — read the real ones with fallbacks.
+    const meta = (row['metadata'] ?? {}) as Record<string, unknown>;
+    const leadIdRaw = meta['lead_id'] ?? row['lead_id'];
+    const currencyRaw = String(row['currency_id'] ?? row['currency'] ?? 'USD');
+    const moneyResult = Money.ofOrThrow(Number(row['amount'] ?? row['total_amount'] ?? 0), currencyRaw);
     return new Deal({
       id:                  Number(row['id']),
-      leadId:              Number(row['lead_id']),
+      leadId:              Number(leadIdRaw ?? 0),
       companyId:           Number(row['company_id']),
-      dealNumber:          String(row['deal_number'] ?? ''),
-      status:              this.parseDealStatus(String(row['status'] ?? 'qualification')),
+      dealNumber:          String(row['title'] ?? row['deal_number'] ?? ''),
+      status:              this.parseDealStatus(String(row['stage_id'] ?? row['stage_semantic_id'] ?? row['status'] ?? 'qualification')),
       totalAmount:         moneyResult,
-      currency:            String(row['currency'] ?? 'USD'),
-      assignedTo:          Number(row['assigned_to']),
-      createdBy:           Number(row['created_by']),
-      description:         row['description'] ? String(row['description']) : undefined,
-      expectedClosureDate: new Date(String(row['expected_closure_date'] ?? _time.now())),
-      closedAt:            row['closed_at'] ? new Date(String(row['closed_at'])) : undefined,
-      createdAt:           new Date(String(row['created_at'] ?? _time.now())),
-      updatedAt:           new Date(String(row['updated_at'] ?? _time.now())),
+      currency:            currencyRaw,
+      assignedTo:          Number(row['assigned_by_id'] ?? row['assigned_to'] ?? 0),
+      createdBy:           Number(row['created_by_id'] ?? row['created_by'] ?? 0),
+      description:         row['additional_info'] ? String(row['additional_info']) : undefined,
+      expectedClosureDate: new Date(String(row['close_date'] ?? _time.now())),
+      closedAt:            row['closed'] ? new Date(String(row['date_modify'])) : undefined,
+      createdAt:           new Date(String(row['date_create'] ?? _time.now())),
+      updatedAt:           new Date(String(row['date_modify'] ?? _time.now())),
     });
   }
 }

@@ -74,12 +74,14 @@ export class CrmLeadsOpsRepository implements ICrmLeadsOpsRepo {
 
   async insertDeal(lid: number, name: string, companyId: unknown, expectedAmount: number): Promise<Result<Row>> {
     return safeCall(async () => {
+      // Live crm_deals: title (not name), forecast_amount (alias expected_amount),
+      // stage_semantic_id (alias status), integer company_id; lead_id → metadata jsonb.
       const payload: Omit<typeof crmDeals.$inferInsert, 'id'> = {
-        name,
-        lead_id:         lid,
-        company_id:      companyId as string ?? undefined,
+        title:           name,
+        company_id:      companyId != null ? Number(companyId) : null,
         expected_amount: String(expectedAmount),
         status:          'open',
+        metadata:        { lead_id: lid },
       };
       const rows = await db.insert(crmDeals).values(payload as typeof crmDeals.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;

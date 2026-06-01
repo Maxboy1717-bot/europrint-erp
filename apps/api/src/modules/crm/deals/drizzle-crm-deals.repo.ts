@@ -1,8 +1,9 @@
 /**
- * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
- *   COALESCE-based dynamic ORDER BY (date_create vs created_at fallback) combined
- *   with parallel count+data fetch on a wide-row table whose camelCase ↔ snake_case
- *   mapping is fully owned by this repo (no Drizzle schema binding).
+ * NOTE: Raw SQL retained intentionally — parallel count+data fetch on the
+ *   Bitrix-style crm_deals table (live columns: date_create/date_modify,
+ *   stage_semantic_id, currency_id, close_date, additional_info, comments;
+ *   lead link in metadata jsonb) whose mapping is fully owned by this repo
+ *   (no Drizzle schema binding).
  *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
  */
 
@@ -28,7 +29,7 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
         runQuery<Row>(sql`
           SELECT * FROM crm_deals
           WHERE deleted_at IS NULL
-          ORDER BY COALESCE(date_create, created_at) DESC
+          ORDER BY date_create DESC
           LIMIT ${limit} OFFSET ${offset}
         `),
       ]);
@@ -61,14 +62,18 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
       const description         = dto.description != null ? String(dto.description) : null;
       const leadId              = Number(dto.leadId ?? dto.lead_id) || null;
 
+      // Live crm_deals columns: currency_id (not currency), close_date (not
+      // expected_closure_date), additional_info (not description); no lead_id column
+      // (lead link → metadata jsonb).
       const res = await runQuery<Row>(sql`
         INSERT INTO crm_deals (
           title, stage_id, company_id, opportunity, assigned_by_id, created_by_id,
-          probability, currency, expected_closure_date, description, lead_id
+          probability, currency_id, close_date, additional_info, metadata
         )
         VALUES (
           ${title}, ${stageId}, ${companyId}, ${opportunity}, ${assignedById}, ${createdById},
-          ${probability}, ${currency}, ${expectedClosureDate}, ${description}, ${leadId}
+          ${probability}, ${currency}, ${expectedClosureDate}, ${description},
+          ${JSON.stringify({ lead_id: leadId })}::jsonb
         )
         RETURNING *
       `);
@@ -88,18 +93,20 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
       const closeDate    = (dto.closeDate    ?? dto.close_date)     != null ? String(dto.closeDate    ?? dto.close_date)    : null;
       const notes        = (dto.notes        != null) ? String(dto.notes)                                        : null;
 
+      // Live crm_deals: business status lives in free-form stage_id (stage_semantic_id has a
+      // {process,success,fail} CHECK). Both stageId and status inputs target stage_id —
+      // COALESCE picks whichever is provided. comments (not notes), date_modify (not updated_at).
       const res = await runQuery<Row>(sql`
         UPDATE crm_deals SET
-          title        = COALESCE(${title},        title),
-          stage_id     = COALESCE(${stageId},      stage_id),
-          company_id   = COALESCE(${companyId},    company_id),
-          opportunity  = COALESCE(${opportunity},  opportunity),
-          probability  = COALESCE(${probability},  probability),
+          title          = COALESCE(${title},        title),
+          stage_id       = COALESCE(${stageId}, ${status}, stage_id),
+          company_id     = COALESCE(${companyId},    company_id),
+          opportunity    = COALESCE(${opportunity},  opportunity),
+          probability    = COALESCE(${probability},  probability),
           assigned_by_id = COALESCE(${assignedById}, assigned_by_id),
-          status       = COALESCE(${status},       status),
-          close_date   = COALESCE(${closeDate},    close_date),
-          notes        = COALESCE(${notes},        notes),
-          updated_at   = NOW()
+          close_date     = COALESCE(${closeDate},    close_date),
+          comments       = COALESCE(${notes},        comments),
+          date_modify    = NOW()
         WHERE id = ${id} AND deleted_at IS NULL
         RETURNING *
       `);
