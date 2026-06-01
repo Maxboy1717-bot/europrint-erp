@@ -50,7 +50,7 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
       // 1. Mark quotation approved
       const qr = await runQuery<Record<string, unknown>>(sql`
         UPDATE sd_quotations SET status = 'approved', approved_at = NOW(), updated_at = NOW()
-        WHERE id = ${id} AND deleted_at IS NULL
+        WHERE id = ${id}
         RETURNING id, status, customer_id, total_price, notes, updated_at
       `);
       const q = qr.rows[0];
@@ -62,13 +62,12 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
       const totalAmount = typeof q['total_price'] === 'number' ? q['total_price']
         : parseFloat(String(q['total_price'] ?? '0')) || 0;
       const customerId = q['customer_id'] != null ? parseInt(String(q['customer_id']), 10) : null;
+      // Use only columns that actually exist in the live sales_orders table
       const or = await runQuery<Record<string, unknown>>(sql`
         INSERT INTO sales_orders
-          (document_number, order_date, pricing_date, customer_id, net_value, total_value, total_amount,
-           notes, quotation_id)
+          (document_number, order_date, pricing_date, customer_id, net_value, total_value, quotation_id)
         VALUES
-          (${docNumber}, ${today}, ${today}, ${customerId}, ${totalAmount}, ${totalAmount}, ${totalAmount},
-           ${q['notes'] != null ? String(q['notes']) : null}, ${String(id)})
+          (${docNumber}, ${today}, ${today}, ${customerId}, ${totalAmount}, ${totalAmount}, ${String(id)})
         RETURNING id, document_number
       `);
       const orderId = or.rows[0]?.['id'] != null ? parseInt(String(or.rows[0]['id']), 10) : null;
@@ -78,9 +77,9 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
       if (orderId) {
         await runQuery(sql`
           INSERT INTO sd_contracts
-            (order_id, contract_number, template_type, status, customer_id, total_amount)
+            (order_id, contract_number, template_type, status, customer_id)
           VALUES
-            (${orderId}, ${contractNumber}, 'standard', 'draft', ${customerId}, ${totalAmount})
+            (${orderId}, ${contractNumber}, 'standard', 'draft', ${customerId})
         `);
       }
 

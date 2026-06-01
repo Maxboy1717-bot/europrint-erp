@@ -54,15 +54,15 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
     const contractNumber = body.contract_number ?? `CNT-${Date.now()}`;
     const orderId = body.order_id != null ? parseInt(String(body.order_id), 10) : null;
     const customerId = body.customer_id != null ? parseInt(String(body.customer_id), 10) : null;
-    const totalAmount = body.total_amount != null ? parseFloat(String(body.total_amount)) || 0 : 0;
+    // Use only columns that exist in the live sd_contracts table (build phase — no migrations yet)
+    // valid_until maps from end_date if provided
+    const validUntil = body.end_date != null ? String(body.end_date) : null;
     const r = await exec(sql`
       INSERT INTO sd_contracts
-        (order_id, contract_number, template_type, status,
-         customer_id, start_date, end_date, total_amount, payment_terms, notes)
+        (order_id, contract_number, template_type, status, customer_id, valid_until, notes)
       VALUES
         (${orderId}, ${contractNumber}, ${body.template_type ?? 'standard'}, ${body.status ?? 'draft'},
-         ${customerId}, ${body.start_date ?? null}, ${body.end_date ?? null}, ${totalAmount},
-         ${body.payment_terms ?? null}, ${body.notes ?? null})
+         ${customerId}, ${validUntil}, ${body.notes ?? null})
       RETURNING *
     `);
     if (!r.ok) return r as Result<Row | null>;

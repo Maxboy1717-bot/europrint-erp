@@ -53,12 +53,13 @@ export class SapRepository {
       const docNumber = `SAP-${Date.now()}`;
       const totalAmount = parseFloat(String(body['totalAmount'] ?? '0')) || 0;
       const customerId = body['customerId'] != null ? parseInt(String(body['customerId']), 10) : null;
-      const notes = body['notes'] != null ? String(body['notes']) : null;
+      // Use only columns that exist in the live sales_orders table (net_value + total_value)
+      // 'total_amount' and 'notes' are in Drizzle schema but not yet migrated to DB
       const r = await exec(sql`
         INSERT INTO sales_orders
-          (document_number, order_date, pricing_date, customer_id, net_value, total_value, total_amount, notes)
+          (document_number, order_date, pricing_date, customer_id, net_value, total_value)
         VALUES
-          (${docNumber}, ${today}, ${today}, ${customerId}, ${totalAmount}, ${totalAmount}, ${totalAmount}, ${notes})
+          (${docNumber}, ${today}, ${today}, ${customerId}, ${totalAmount}, ${totalAmount})
         RETURNING *
       `);
       return r[0] as Row;
@@ -67,19 +68,13 @@ export class SapRepository {
 
   async deleteSalesOrder(id: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
-      // Try sap_sales_orders first, then canonical sales_orders (soft-delete)
+      // sap_sales_orders may not exist in the live DB — go straight to canonical sales_orders
       const r = await exec(sql`
-        UPDATE sap_sales_orders
-        SET status = 'CANCELLED', updated_at = NOW()
-        WHERE id = ${id} RETURNING id, status
-      `);
-      if (r.length > 0) return r[0] as Row;
-      const fallback = await exec(sql`
         UPDATE sales_orders
         SET overall_status = 'CANCELLED', master_status = 'cancelled', updated_at = NOW()
         WHERE id = ${id} RETURNING id, overall_status
       `);
-      return fallback[0] ?? null;
+      return r[0] ?? null;
     }, 'DB_ERROR');
   }
 }
