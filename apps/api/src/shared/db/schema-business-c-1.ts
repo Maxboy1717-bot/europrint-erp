@@ -120,6 +120,38 @@ export const position_folders = pgTable('position_folders', {
   updated_at:    timestamp('updated_at').defaultNow(),
 });
 
+// ─── Org-node Portret (lavozim kartochkasi) ──────────────────────────────────
+// org_node_portret: position "portret" wizard payload (Blok A–E + III/IV + TOOL
+// TEST). One row per org node (UNIQUE node_id → upsert). portret_data JSONB holds
+// the FE shape { portret, tool_test_requirements }. NOT in lib/db barrel — local stub.
+
+export const org_node_portret = pgTable('org_node_portret', {
+  id:           serial('id').primaryKey(),
+  node_id:      integer('node_id').notNull(),
+  portret_data: jsonb('portret_data').notNull().default({}),
+  creator_id:   integer('creator_id'),
+  created_at:   timestamp('created_at').defaultNow(),
+  updated_at:   timestamp('updated_at').defaultNow(),
+});
+
+// node_hr_requests: HR requests raised from a position portret ("HR ga so'rov").
+// request_type/priority/status + optional link to org_node_portret. NOT in lib/db
+// barrel — local stub.
+
+export const node_hr_requests = pgTable('node_hr_requests', {
+  id:           serial('id').primaryKey(),
+  node_id:      integer('node_id').notNull(),
+  portret_id:   integer('portret_id'),
+  request_type: varchar('request_type', { length: 40 }).notNull().default('new_hire'),
+  priority:     varchar('priority', { length: 20 }).notNull().default('normal'),
+  status:       varchar('status', { length: 20 }).notNull().default('new'),
+  comment:      text('comment'),
+  node_name:    text('node_name'),
+  requester_id: integer('requester_id'),
+  created_at:   timestamp('created_at').defaultNow(),
+  updated_at:   timestamp('updated_at').defaultNow(),
+});
+
 // ─── Papka orders ─────────────────────────────────────────────────────────────
 // papka_orders: used as messaging table (from_user_id/to_user_ids/subject/body/files).
 // Canonical papkaOrders in lib/db is the production order master (different schema) — kept as local stub.

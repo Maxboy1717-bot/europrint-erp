@@ -297,3 +297,66 @@ export async function ensurePositionFolderTable(): Promise<void> {
   `);
   await ddlRun(sql`CREATE INDEX IF NOT EXISTS idx_position_folders_node_id ON position_folders(node_id)`);
 }
+
+export async function ensureOrgNodePortretTable(): Promise<void> {
+  await ddlRun(sql`
+    CREATE TABLE IF NOT EXISTS org_node_portret (
+      id SERIAL PRIMARY KEY,
+      node_id INTEGER NOT NULL REFERENCES org_departments(id) ON DELETE CASCADE,
+      portret_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+      creator_id INTEGER,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  // One portret per node — upsert keyed on node_id.
+  await ddlRun(sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_org_node_portret_node_id ON org_node_portret(node_id)`);
+}
+
+export async function ensureNodeHrRequestsTable(): Promise<void> {
+  await ddlRun(sql`
+    CREATE TABLE IF NOT EXISTS node_hr_requests (
+      id SERIAL PRIMARY KEY,
+      node_id INTEGER NOT NULL REFERENCES org_departments(id) ON DELETE CASCADE,
+      portret_id INTEGER REFERENCES org_node_portret(id) ON DELETE SET NULL,
+      request_type VARCHAR(40) NOT NULL DEFAULT 'new_hire',
+      priority VARCHAR(20) NOT NULL DEFAULT 'normal',
+      status VARCHAR(20) NOT NULL DEFAULT 'new',
+      comment TEXT,
+      node_name TEXT,
+      requester_id INTEGER,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await ddlRun(sql`CREATE INDEX IF NOT EXISTS idx_node_hr_requests_node_id ON node_hr_requests(node_id)`);
+}
+
+/**
+ * Backfill `employees.user_id` from the canonical FK `users.employee_id → employees.id`.
+ *
+ * WHY: in the live `europrint` DB `employees.user_id` was 30/30 NULL while
+ * `users.employee_id` correctly pointed at `employees.id` (proven 1:1 bijection —
+ * email / phone_number / full_name signals all agree). That NULL silently broke
+ * the org-schema approver resolvers:
+ *   - communication-center/cc-org-resolver.service.ts (resolveManagerOfSender,
+ *     resolveByPosition — both key off `employees.user_id`)
+ *   - org-structure/org-queries.repo.ts (getDirectManager / getTelegramGroup).
+ *
+ * The Drizzle schema already declares `employees.user_id` as a UNIQUE FK to
+ * `users.id` (lib/db/src/schema/employees.ts) — this only fills data that was
+ * never populated, it does not change the schema.
+ *
+ * ADD-ONLY + idempotent: updates only rows where `user_id IS NULL`, so reseeds
+ * (hr-demo-seed / hr-full-seed) self-heal on next boot and re-runs touch 0 rows.
+ * Mirrors apps/api/src/shared/db/migrations/backfill-employees-user-id.sql.
+ */
+export async function backfillEmployeeUserId(): Promise<void> {
+  await ddlRun(sql`
+    UPDATE employees e
+    SET    user_id = u.id
+    FROM   users u
+    WHERE  u.employee_id = e.id
+      AND  e.user_id IS NULL
+  `);
+}

@@ -17,8 +17,11 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { OrgStructureService } from './org-structure.service';
 import { OrgExportService } from './org-export.service';
 import { PositionFolderService } from './position-folder.service';
+import { NodePortretService } from './node-portret.service';
 import type { FastifyReply } from 'fastify';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@common/types/user.types';
 import { assertOk, unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
 import { notImplemented } from '@common/exceptions/not-implemented';
@@ -45,14 +48,21 @@ const FolderItemSchema = z.object({
   lmsCourseId: z.number().int().optional(),
 }).passthrough();
 
+// Matches HRRequestDialog.tsx payload: { request_type, priority, comment, portret_id?, node_name }
 const HrRequestSchema = z.object({
-  type: z.string().max(50).optional(),
-  description: z.string().max(2000).optional(),
+  request_type: z.string().max(40).optional(),
+  priority:     z.string().max(20).optional(),
+  comment:      z.string().max(2000).nullable().optional(),
+  portret_id:   z.union([z.string(), z.number()]).nullable().optional(),
+  node_name:    z.string().max(500).nullable().optional(),
 }).passthrough();
 
+// Matches OrgNodePortretTab.tsx payload: { portret_data: { portret, tool_test_requirements } }
 const NodePortretSchema = z.object({
-  skills: z.array(z.string()).optional(),
-  description: z.string().max(2000).optional(),
+  portret_data: z.object({
+    portret:                z.record(z.string(), z.unknown()).optional(),
+    tool_test_requirements: z.record(z.string(), z.unknown()).optional(),
+  }).passthrough(),
 }).passthrough();
 
 @Roles('admin', 'manager', 'supervisor', 'viewer', 'director')
@@ -68,6 +78,7 @@ export class OrgStructureController {
     private readonly service: OrgStructureService,
     private readonly exportService: OrgExportService,
     private readonly folderService: PositionFolderService,
+    private readonly portretService: NodePortretService,
   ) {}
 
   @ApiOperation({ summary: 'Get hierarchy' })
@@ -227,37 +238,53 @@ export class OrgStructureController {
   @ApiOperation({ summary: 'Get node hr requests' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('nodes/:nodeId/hr-requests')
-  async getNodeHrRequests(@Param('nodeId') _nodeId: string) {
-    return notImplemented('GET /org-structure/nodes/:nodeId/hr-requests');
+  async getNodeHrRequests(@Param('nodeId', ParseIntPipe) nodeId: number) {
+    return unwrapOrInternal(await this.portretService.getHrRequests(nodeId));
   }
 
   @ApiOperation({ summary: 'Create node hr request' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Post('nodes/:nodeId/hr-requests')
-  async createNodeHrRequest(@Param('nodeId') _nodeId: string, @Body() body: unknown) {
-    HrRequestSchema.parse(body);
-    return notImplemented('POST /org-structure/nodes/:nodeId/hr-requests');
+  async createNodeHrRequest(
+    @Param('nodeId', ParseIntPipe) nodeId: number,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const dto = HrRequestSchema.parse(body);
+    const requesterId = user?.id ?? user?.sub ?? null;
+    return unwrapOrInternal(await this.portretService.createHrRequest(nodeId, {
+      requestType: dto.request_type,
+      priority:    dto.priority,
+      comment:     dto.comment ?? null,
+      portretId:   dto.portret_id !== undefined && dto.portret_id !== null ? Number(dto.portret_id) : null,
+      nodeName:    dto.node_name ?? null,
+    }, requesterId));
   }
 
   @ApiOperation({ summary: 'Get node portret' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('nodes/:nodeId/portret')
-  async getNodePortret(@Param('nodeId') nodeId: string) { return { nodeId, portret: null }; }
+  async getNodePortret(@Param('nodeId', ParseIntPipe) nodeId: number) {
+    return unwrapOrInternal(await this.portretService.getPortret(nodeId));
+  }
 
   @ApiOperation({ summary: 'Create node portret' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('nodes/:nodeId/portret')
-  async createNodePortret(@Param('nodeId') nodeId: string, @Body() body: unknown) {
+  async createNodePortret(
+    @Param('nodeId', ParseIntPipe) nodeId: number,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const dto = NodePortretSchema.parse(body);
-    return { nodeId, ...dto, created: true };
+    const creatorId = user?.id ?? user?.sub ?? null;
+    return unwrapOrInternal(await this.portretService.savePortret(nodeId, dto.portret_data as Record<string, unknown>, creatorId));
   }
 
   @ApiOperation({ summary: 'Get approval chain' })
