@@ -18,7 +18,7 @@ export class WmsCatalogAbcAgingExpiryService {
                COALESCE(mc.abc_segment, 'C') AS segment,
                COALESCE(SUM(ws.quantity * COALESCE(mc.unit_price, 0)), 0)::numeric AS total_value
         FROM material_cards mc
-        LEFT JOIN warehouse_stock ws ON ws.material_card_id = mc.id
+        LEFT JOIN warehouse_stock ws ON ws.material_id = mc.id
         WHERE mc.is_active IS NOT FALSE
         GROUP BY mc.id, mc.xom_ashyo, mc.kod, mc.abc_segment
         ORDER BY total_value DESC LIMIT 100

@@ -130,11 +130,11 @@ export class WmsWarehousesController {
     this.logger.log('Getting warehouse inventory');
     try {
       const r = await rawSql(sql`
-        SELECT ws.id, ws.material_card_id, mc.code AS material_code, mc.xom_ashyo AS material_name,
+        SELECT ws.id, ws.material_id, mc.kod AS material_code, mc.xom_ashyo AS material_name,
                mc.unit_of_measure AS unit, ws.quantity, ws.reserved_quantity, ws.available_quantity,
                mc.min_stock, mc.max_stock
         FROM warehouse_stock ws
-        LEFT JOIN material_cards mc ON mc.id = ws.material_card_id
+        LEFT JOIN material_cards mc ON mc.id = ws.material_id
         WHERE ws.warehouse_id = ${id}
         ORDER BY mc.xom_ashyo ASC
         LIMIT 200

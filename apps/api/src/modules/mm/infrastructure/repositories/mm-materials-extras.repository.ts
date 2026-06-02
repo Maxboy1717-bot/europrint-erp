@@ -41,12 +41,12 @@ export class MmMaterialsExtrasRepository implements IMmMaterialsExtrasRepo {
   try {
       const pat = search ? `%${search}%` : null;
       return pat && category
-        ? exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_card_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_card_id) ws ON ws.material_card_id = mc.id WHERE mc.is_active = true AND mc.xom_ashyo ILIKE ${pat} AND mc.category = ${category} ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`)
+        ? exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_id) ws ON ws.material_id = mc.id WHERE mc.is_active = true AND mc.xom_ashyo ILIKE ${pat} AND mc.category = ${category} ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`)
         : pat
-        ? exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_card_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_card_id) ws ON ws.material_card_id = mc.id WHERE mc.is_active = true AND mc.xom_ashyo ILIKE ${pat} ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`)
+        ? exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_id) ws ON ws.material_id = mc.id WHERE mc.is_active = true AND mc.xom_ashyo ILIKE ${pat} ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`)
         : category
-        ? exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_card_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_card_id) ws ON ws.material_card_id = mc.id WHERE mc.is_active = true AND mc.category = ${category} ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`)
-        : exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_card_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_card_id) ws ON ws.material_card_id = mc.id WHERE mc.is_active = true ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+        ? exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_id) ws ON ws.material_id = mc.id WHERE mc.is_active = true AND mc.category = ${category} ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`)
+        : exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_id) ws ON ws.material_id = mc.id WHERE mc.is_active = true ORDER BY mc.xom_ashyo LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -54,7 +54,7 @@ export class MmMaterialsExtrasRepository implements IMmMaterialsExtrasRepo {
 
   async getMaterialCard(id: number): Promise<Result<Row | null>>  {
   try {
-      const r = await exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_card_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_card_id) ws ON ws.material_card_id = mc.id WHERE mc.id = ${id} AND mc.is_active = true`);
+      const r = await exec(sql`SELECT mc.*, mc.xom_ashyo AS name, c.name AS category_name, COALESCE(ws.quantity, 0) AS current_stock FROM material_cards mc LEFT JOIN material_categories c ON c.name = mc.category LEFT JOIN (SELECT material_id, SUM(quantity) AS quantity FROM warehouse_stock GROUP BY material_id) ws ON ws.material_id = mc.id WHERE mc.id = ${id} AND mc.is_active = true`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

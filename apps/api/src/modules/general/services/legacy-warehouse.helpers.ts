@@ -182,7 +182,7 @@ export async function getWarehouseListRaw(): Promise<Record<string, unknown>[]> 
   try {
     const r = await db.execute(sql`
       SELECT w.id, w.code, w.name, w.name_ru, w.type, w.location, w.is_active, w.manager_id, w.created_at,
-             COUNT(DISTINCT ws.material_card_id)::int AS material_count,
+             COUNT(DISTINCT ws.material_id)::int AS material_count,
              COALESCE(SUM(ws.quantity), 0)::numeric AS total_quantity
       FROM warehouses w
       LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id

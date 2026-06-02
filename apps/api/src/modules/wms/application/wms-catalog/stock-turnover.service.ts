@@ -22,7 +22,7 @@ export class WmsCatalogStockTurnoverService {
                COALESCE(mc.unit_price, 0)::numeric AS unit_price,
                COALESCE(SUM(ws.quantity * COALESCE(mc.unit_price, 0)), 0)::numeric AS total_value
         FROM material_cards mc
-        LEFT JOIN warehouse_stock ws ON ws.material_card_id = mc.id
+        LEFT JOIN warehouse_stock ws ON ws.material_id = mc.id
           AND (${warehouseId ?? null}::int IS NULL OR ws.warehouse_id = ${warehouseId ? parseInt(warehouseId, 10) : null}::int)
         WHERE mc.is_active IS NOT FALSE
           AND (${catFilter}::text IS NULL OR mc.category = ${catFilter} OR mc.material_type = ${catFilter})
@@ -61,7 +61,7 @@ export class WmsCatalogStockTurnoverService {
                COALESCE(mc.unit_price, 0)::numeric AS unit_price,
                COALESCE(SUM(ws.quantity * COALESCE(mc.unit_price, 0)), 0)::numeric AS stock_value
         FROM material_cards mc
-        LEFT JOIN warehouse_stock ws ON ws.material_card_id = mc.id
+        LEFT JOIN warehouse_stock ws ON ws.material_id = mc.id
         WHERE mc.is_active IS NOT FALSE
         GROUP BY mc.id, mc.xom_ashyo, mc.kod, mc.unit_of_measure, mc.unit_price
         ORDER BY stock_value DESC LIMIT 100
@@ -102,7 +102,7 @@ export class WmsCatalogStockTurnoverService {
              COALESCE(SUM(ws.quantity * COALESCE(mc.unit_price, 0)), 0)::numeric AS value,
              COALESCE(SUM(ws.quantity), 0)::numeric AS movement
       FROM material_cards mc
-      JOIN warehouse_stock ws ON ws.material_card_id = mc.id
+      JOIN warehouse_stock ws ON ws.material_id = mc.id
       WHERE mc.is_active IS NOT FALSE
       GROUP BY mc.id, mc.xom_ashyo, mc.kod, mc.unit_price
       ORDER BY value DESC

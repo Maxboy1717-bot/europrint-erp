@@ -13,7 +13,7 @@ export class WmsCatalogDashboardService {
     try {
       const r = await rawSql(sql`
         SELECT COUNT(DISTINCT w.id)::int AS total_warehouses,
-               COUNT(DISTINCT ws.material_card_id)::int AS total_materials,
+               COUNT(DISTINCT ws.material_id)::int AS total_materials,
                COALESCE(SUM(ws.quantity),0)::numeric AS total_quantity
         FROM warehouses w LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id
         WHERE w.deleted_at IS NULL
@@ -38,7 +38,7 @@ export class WmsCatalogDashboardService {
             COUNT(DISTINCT mc.id)::int AS total_materials,
             COALESCE(SUM(ws.quantity * COALESCE(mc.unit_price, 0)), 0)::numeric AS total_value
           FROM material_cards mc
-          LEFT JOIN warehouse_stock ws ON ws.material_card_id = mc.id
+          LEFT JOIN warehouse_stock ws ON ws.material_id = mc.id
           WHERE mc.is_active IS NOT FALSE
         `).catch(() => ({ rows: [{}] })),
         rawSql(sql`SELECT COUNT(*)::int AS cnt FROM goods_receipts WHERE status IN ('pending','draft')`).catch(() => ({ rows: [{ cnt: 0 }] })),
@@ -46,9 +46,9 @@ export class WmsCatalogDashboardService {
           rawSql(sql`SELECT COUNT(*)::int AS cnt FROM stock_transfers WHERE status = 'pending'`).catch(() => ({ rows: [{ cnt: 0 }] }))
         ),
         rawSql(sql`
-          SELECT COUNT(DISTINCT ws.material_card_id)::int AS cnt
+          SELECT COUNT(DISTINCT ws.material_id)::int AS cnt
           FROM warehouse_stock ws
-          JOIN material_cards mc ON mc.id = ws.material_card_id
+          JOIN material_cards mc ON mc.id = ws.material_id
           WHERE mc.min_stock > 0 AND ws.quantity < mc.min_stock AND mc.is_active IS NOT FALSE
         `).catch(() => ({ rows: [{ cnt: 0 }] })),
       ]);
@@ -98,7 +98,7 @@ export class WmsCatalogDashboardService {
                  COALESCE(SUM(ws.quantity), 0)::numeric AS current_stock,
                  mc.min_stock::numeric AS min_stock
           FROM material_cards mc
-          LEFT JOIN warehouse_stock ws ON ws.material_card_id = mc.id
+          LEFT JOIN warehouse_stock ws ON ws.material_id = mc.id
           WHERE mc.min_stock > 0 AND mc.is_active IS NOT FALSE
           GROUP BY mc.id, mc.xom_ashyo, mc.kod, mc.min_stock
           HAVING COALESCE(SUM(ws.quantity), 0) < mc.min_stock

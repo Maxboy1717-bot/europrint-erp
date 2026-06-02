@@ -243,7 +243,7 @@ export class WmsGatewayInventoryController {
         SELECT ws.id, mc.xom_ashyo AS "materialName", mc.kod AS "materialCode",
                ws.quantity AS "bookQty", ws.available_quantity AS "availableQty", mc.unit_of_measure AS unit
         FROM warehouse_stock ws
-        JOIN material_cards mc ON mc.id = ws.material_card_id
+        JOIN material_cards mc ON mc.id = ws.material_id
         WHERE ws.warehouse_id = ${whId}::int
         ORDER BY mc.xom_ashyo
       `);

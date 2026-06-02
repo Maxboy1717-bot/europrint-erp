@@ -68,7 +68,7 @@ export class WmsGatewayWarehousesController {
       const r = await rawSql(sql`
         SELECT
           COUNT(DISTINCT w.id)::int AS warehouse_count,
-          COUNT(DISTINCT ws.material_card_id)::int AS material_count,
+          COUNT(DISTINCT ws.material_id)::int AS material_count,
           COALESCE(SUM(ws.quantity), 0)::numeric AS total_quantity
         FROM warehouses w
         LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id
@@ -172,15 +172,15 @@ export class WmsGatewayWarehousesController {
       try {
         const rows = await rawSql(sql`
           SELECT
-            ws.id::text AS id, ws.material_card_id AS "materialId",
-            mc.code AS "materialCode", mc.xom_ashyo AS "materialName",
+            ws.id::text AS id, ws.material_id AS "materialId",
+            mc.kod AS "materialCode", mc.xom_ashyo AS "materialName",
             mc.unit_of_measure AS unit, ws.quantity::numeric AS quantity,
             COALESCE(ws.reserved_quantity, 0)::numeric AS reserved,
             (COALESCE(ws.quantity, 0) - COALESCE(ws.reserved_quantity, 0))::numeric AS available,
             mc.min_stock AS "minStock", mc.max_stock AS "maxStock",
             mc.unit_price AS "unitPrice", COALESCE(mc.currency, 'UZS') AS currency
           FROM warehouse_stock ws
-          LEFT JOIN material_cards mc ON mc.id = ws.material_card_id
+          LEFT JOIN material_cards mc ON mc.id = ws.material_id
           WHERE ws.warehouse_id = ${wid}
           ORDER BY mc.xom_ashyo ASC LIMIT 500
         `);
@@ -203,14 +203,14 @@ export class WmsGatewayWarehousesController {
       const [wRows, sRows] = await Promise.all([
         rawSql(sql`SELECT id, code, name, name_ru, type, location, is_active, created_at FROM warehouses WHERE id = ${id} AND deleted_at IS NULL`),
         rawSql(sql`
-          SELECT COUNT(DISTINCT ws.material_card_id)::int AS material_count,
+          SELECT COUNT(DISTINCT ws.material_id)::int AS material_count,
                  COALESCE(SUM(ws.quantity),0)::numeric AS total_quantity,
                  COALESCE(SUM(ws.reserved_quantity),0)::numeric AS reserved_qty,
                  COALESCE(SUM(ws.available_quantity),0)::numeric AS available_qty,
                  COALESCE(SUM(ws.quantity * COALESCE(mc.unit_price, 0)), 0)::numeric AS stock_value,
                  SUM(CASE WHEN mc.min_stock > 0 AND ws.quantity < mc.min_stock THEN 1 ELSE 0 END)::int AS low_stock_count
           FROM warehouse_stock ws
-          LEFT JOIN material_cards mc ON mc.id = ws.material_card_id
+          LEFT JOIN material_cards mc ON mc.id = ws.material_id
           WHERE ws.warehouse_id = ${id}
         `),
       ]);
