@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, HttpCode, HttpStatus, Patch, Post, Get, Body, Param, Query, UseGuards, UseInterceptors, Logger, InternalServerErrorException, UsePipes } from '@nestjs/common';
+import { Controller, HttpCode, HttpStatus, Patch, Post, Get, Body, Param, Query, UseGuards, UseInterceptors, Logger, InternalServerErrorException, UsePipes, NotImplementedException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { z } from 'zod';
 import { assertOk, assertOkLog, throwFromError, unwrapOrThrow } from '@common/http-result';
@@ -71,9 +71,13 @@ export class FinancePaymentsController {
   @HttpCode(HttpStatus.CREATED)
   @Roles(Role.FINANCE_OFFICER, Role.SUPER_ADMIN)
   async createPaymentRoot(@Body() body: unknown) {
-    const dto = CreatePaymentRootSchema.parse(body);
-    this.logger.log(`Creating payment (root POST)`);
-    return { paymentId: Date.now(), ...dto, created: true };
+    CreatePaymentRootSchema.parse(body);
+    // 501: to'lov GL/buxgalteriyaga bog'liq — real yo'l POST /finance/payments/record
+    // (RecordPaymentHandler: invoice topish + double-entry GL provodka). Root POST'ga
+    // oddiy insert orphan to'lov yaratardi (buxgalteriyani buzardi), shuning uchun 501.
+    throw new NotImplementedException(
+      "To'lov yozish uchun POST /finance/payments/record ishlating (invoice + GL bilan).",
+    );
   }
 
   @ApiOperation({ summary: 'Patch approve payment' })
