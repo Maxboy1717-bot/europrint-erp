@@ -10,9 +10,9 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { vacancies } from '@europrint/schemas';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { DrizzleHrVacanciesFunnelRepository } from './drizzle-hr-vacancies-funnel.repo';
 
@@ -40,6 +40,26 @@ export class DrizzleHrVacanciesRepository {
         .limit(200);
       if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
       return Ok(rows as Row[]);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  async create(data: { title: string; description?: string; department?: string; status?: string }): Promise<Result<Row>> {
+    try {
+      // Raw parametrized INSERT (Rule 4 exception, documented): the live `vacancies` table is a
+      // superset of two Drizzle defs — the resolved @europrint/schemas type marks `id` as required
+      // (integer, not serial), but the live column has a `nextval('vacancies_id_seq')` default.
+      // ORM .values() would wrongly demand `id`; parametrized raw SQL matches the live DB and is
+      // injection-safe (sql`${...}` placeholders, never sql.raw).
+      const r = await runQuery<Row>(sql`
+        INSERT INTO vacancies (title, description, department, status)
+        VALUES (${data.title}, ${data.description ?? null}, ${data.department ?? null}, ${data.status ?? 'active'})
+        RETURNING id, title, department, status, is_active, created_at
+      `);
+      const row = Array.isArray(r.rows) ? r.rows[0] : undefined;
+      if (!row) return Err('VACANCY_INSERT_FAILED');
+      return Ok(row as Row);
     } catch (e) {
       return Err(String(e));
     }

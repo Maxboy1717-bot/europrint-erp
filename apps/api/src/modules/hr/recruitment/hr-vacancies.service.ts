@@ -29,6 +29,10 @@ export class HrVacanciesService {
     return this.repo.findById(id);
   }
 
+  create(data: { title: string; description?: string; department?: string; status?: string }): Promise<Result<Row>> {
+    return this.repo.create(data);
+  }
+
   findPipeline(vacancyId?: number): Promise<Result<Row[]>> {
     return this.repo.findPipeline(vacancyId);
   }

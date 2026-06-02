@@ -27,7 +27,7 @@ import {
 import { z } from 'zod';
 
 const CreateVacancySchema = z.object({
-  title: z.string().max(500).optional(),
+  title: z.string().min(1).max(500),
   description: z.string().max(10000).optional(),
   department: z.string().max(200).optional(),
   salary: z.union([z.string(), z.number()]).optional(),
@@ -174,7 +174,16 @@ export class HrVacanciesController {
   @HttpCode(HttpStatus.CREATED)
   async createVacancy(@Body() body: unknown) {
     const dto = CreateVacancySchema.parse(body);
-    return { data: { id: Date.now(), ...dto, created: true } };
+    // NOTE: salary / vacancy_type / deadline_working_days are intentionally NOT persisted —
+    // no canonical column (vacancy_type, deadline_working_days don't exist) or ambiguous min/max
+    // mapping (salary). Recorded as a FE<->BE drift gap for a later stage.
+    const row = unwrapOrInternal(await this.svc.create({
+      title: dto.title,
+      description: dto.description,
+      department: dto.department,
+      status: dto.status,
+    }));
+    return { data: row };
   }
 
   @ApiOperation({ summary: 'Publish vacancy' })
