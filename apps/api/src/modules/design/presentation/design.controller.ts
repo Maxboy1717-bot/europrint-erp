@@ -17,7 +17,7 @@ import {
   Post,
   Query,
   UseGuards,
-  UseInterceptors, BadRequestException, InternalServerErrorException} from '@nestjs/common';
+  UseInterceptors, BadRequestException, InternalServerErrorException, NotImplementedException} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { assertOk, assertOkLog, throwFromError } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
@@ -196,8 +196,14 @@ export class DesignController {
  @Post('orders')
  @Roles(Role.DIRECTOR, Role.SUPER_ADMIN, Role.SALES_MANAGER)
  async createOrder(@Body() body: unknown) {
-   const dto = CreateOrderSchema.parse(body);
-   return { id: Date.now(), ...dto, created: true };
+   CreateOrderSchema.parse(body);
+   // 501: a real design-request path already exists (POST /design -> requestDesign, canonical,
+   // linked to salesOrderId). The thin DTO cannot satisfy design_orders NOT NULL columns
+   // (order_number, client_name, product_type, product_name) without guessing; an orphan design
+   // order would be worse than the fake-create. Fragmented design-create surface (createOrder fake
+   // + requestDesign real + orphan OrdersService.create + 2 schema defs) — unification tracked for
+   // a later design-module cleanup stage.
+   throw new NotImplementedException('Use POST /design (requestDesign) to create a design request.');
  }
 
  @ApiOperation({ summary: 'Create order message' })
@@ -206,8 +212,9 @@ export class DesignController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Post('orders/:id/messages')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER, Role.SALES_MANAGER)
- async createOrderMessage(@Param('id') id: string, @Body() body: unknown) {
-   const dto = CreateOrderMessageSchema.parse(body);
-   return { id: Date.now(), orderId: id, ...dto, sent: true };
+ async createOrderMessage(@Param('id') _id: string, @Body() body: unknown) {
+   CreateOrderMessageSchema.parse(body);
+   // 501: design_order_messages table does not exist in the live DB.
+   throw new NotImplementedException('Design order messages are not available (no design_order_messages table).');
  }
 }
