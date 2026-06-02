@@ -46,7 +46,7 @@ export class ErpExtraRepository {
 
   async getWorkCenterStats(id: number): Promise<Result<Row>>  {
   try {  
-      const r = await exec(sql`SELECT wc.id, wc.name, COUNT(ms.id) FILTER (WHERE ms.status = 'active') AS active_sessions, AVG(EXTRACT(EPOCH FROM (ms.end_time - ms.start_time))/${SECONDS_PER_HOUR}) FILTER (WHERE ms.status = 'completed') AS avg_duration_hours FROM work_centers wc LEFT JOIN mes_sessions ms ON ms.work_center_id = wc.id WHERE wc.id = ${id} GROUP BY wc.id, wc.name`);
+      const r = await exec(sql`SELECT wc.id, wc.name, COUNT(ms.id) FILTER (WHERE ms.status = 'active') AS active_sessions, AVG(EXTRACT(EPOCH FROM (ms.completed_at - ms.started_at))/${SECONDS_PER_HOUR}) FILTER (WHERE ms.status = 'completed') AS avg_duration_hours FROM work_centers wc LEFT JOIN mes_sessions ms ON ms.work_center_id = wc.id WHERE wc.id = ${id} GROUP BY wc.id, wc.name`);
       return r.ok ? Ok(r.data[0] ?? { id, activeSessionCount: 0, avgDurationHours: 0 }) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

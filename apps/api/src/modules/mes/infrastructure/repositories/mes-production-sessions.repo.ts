@@ -22,7 +22,7 @@ export class MesProductionSessionsRepository {
         LEFT JOIN users u ON u.id = ms.operator_id
         WHERE (${status ?? null}::text IS NULL OR ms.status = ${status ?? null})
 
-        ORDER BY ms.start_time DESC LIMIT ${limit} OFFSET ${(page - 1) * limit}
+        ORDER BY ms.started_at DESC LIMIT ${limit} OFFSET ${(page - 1) * limit}
       `);
       return rows.rows as Row[];
     } catch (err) {
@@ -34,7 +34,7 @@ export class MesProductionSessionsRepository {
   async createSession(body: Row): Promise<Row | null> {
     try {
       const rows = await runQuery<Row>(sql`
-        INSERT INTO mes_sessions (work_center_id, operator_id, pp_order_id, start_time, status)
+        INSERT INTO mes_sessions (work_center_id, operator_id, production_order_id, started_at, status)
         VALUES (${body.workCenterId ?? null}, ${body.operatorId ?? null}, ${body.ppOrderId ?? null}, NOW(), 'pending')
         RETURNING *
       `);
