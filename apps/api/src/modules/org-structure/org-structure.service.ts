@@ -3,17 +3,33 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Ok, Err, safeCall, Result, AppError } from '@common/result';
+import { backfillEmployeeUserId } from '@common/database/ddl-migrations';
 import { OrgStructureRepository } from './org-structure.repository';
 
 const ORG_DEFAULT_PAGE_LIMIT = 50;
 
 @Injectable()
-export class OrgStructureService {
+export class OrgStructureService implements OnModuleInit {
   private readonly logger = new Logger(OrgStructureService.name);
 
   constructor(private readonly repo: OrgStructureRepository) {}
+
+  /**
+   * Self-heal the employees↔users link on boot. The communication-center
+   * approver resolvers and org telegram-group lookups read `employees.user_id`,
+   * which reseeds (hr-demo-seed / hr-full-seed) can leave NULL. The backfill is
+   * idempotent + ADD-ONLY (touches only NULL rows), so this is a no-op once
+   * linked. See apps/api/src/common/database/ddl-migrations.ts.
+   */
+  async onModuleInit(): Promise<void> {
+    try {
+      await backfillEmployeeUserId();
+    } catch (e) {
+      this.logger.warn(`employees.user_id backfill skipped: ${String(e)}`);
+    }
+  }
 
   async getHierarchy(): Promise<Result<object, AppError>> {
     const nodes = await this.repo.getHierarchyNodes();

@@ -198,7 +198,7 @@ export class OrgQueriesRepo {
         FROM org_departments od
         LEFT JOIN org_departments parent ON parent.id = od.parent_id AND parent.is_active = true
         LEFT JOIN users u ON u.id = COALESCE(parent.head_user_id, od.head_user_id) AND u.is_active = true
-        LEFT JOIN employees e ON e.id::text = u.id::text
+        LEFT JOIN employees e ON e.user_id = u.id
         WHERE od.id = ${nodeId}
         LIMIT 1
       `);
@@ -215,7 +215,7 @@ export class OrgQueriesRepo {
           TRIM(COALESCE(u.first_name,'') || ' ' || COALESCE(u.last_name,'')) AS head_full_name
         FROM org_departments od
         LEFT JOIN users u ON u.id = od.head_user_id AND u.is_active = true
-        LEFT JOIN employees e ON e.id::text = u.id::text
+        LEFT JOIN employees e ON e.user_id = u.id
         WHERE od.id = ${nodeId}
         LIMIT 1
       `);
