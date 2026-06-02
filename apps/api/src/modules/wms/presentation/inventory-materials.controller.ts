@@ -17,7 +17,7 @@ Body,
   UseGuards,
   UseInterceptors,
   Logger,
-  InternalServerErrorException, UsePipes,
+  InternalServerErrorException, UsePipes, NotImplementedException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -110,9 +110,14 @@ export class InventoryMaterialsController {
   @HttpCode(HttpStatus.CREATED)
   @Roles(...INV_WRITE)
   async createMaterial(@Body() body: unknown) {
-    const dto = CreateMaterialSchema.parse(body);
-    this.logger.log('POST create material');
-    return { id: Date.now(), ...dto, created: true };
+    CreateMaterialSchema.parse(body);
+    // 501: material is split across material_cards (21, canonical) / mm_materials (0, read by this
+    // controller) / materials (0, empty). A naive insert would create an orphan in a non-canonical
+    // table. The real "create material" belongs with re-pointing /inventory to material_cards —
+    // tracked for Stage 4.1 (material unification).
+    throw new NotImplementedException(
+      'Material creation is being unified — use the warehouse material flow (material_cards). Tracked for Stage 4.1.',
+    );
   }
 
   @ApiOperation({ summary: 'Get low stock' })
