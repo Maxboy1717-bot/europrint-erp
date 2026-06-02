@@ -15,7 +15,7 @@ const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () 
 export class ErpReportsRepository {
   async listDailyReports(limit: number, offset: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT dr.*, wc.name AS work_center_name FROM erp_daily_reports dr LEFT JOIN work_centers wc ON wc.id = dr.work_center_id ORDER BY dr.report_date DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+      return exec(sql`SELECT dr.* FROM erp_daily_reports dr ORDER BY dr.report_date DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -23,7 +23,7 @@ export class ErpReportsRepository {
 
   async getDailyReport(id: number): Promise<Result<Row | null>>  {
   try {  
-      const r = await exec(sql`SELECT dr.*, wc.name AS work_center_name FROM erp_daily_reports dr LEFT JOIN work_centers wc ON wc.id = dr.work_center_id WHERE dr.id = ${id}`);
+      const r = await exec(sql`SELECT dr.* FROM erp_daily_reports dr WHERE dr.id = ${id}`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -57,7 +57,7 @@ export class ErpReportsRepository {
 
   async listDowntimeLogs(limit: number, offset: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT dl.*, wc.name AS work_center_name, (u.first_name || ' ' || u.last_name) AS reported_by_name FROM erp_downtime_logs dl LEFT JOIN work_centers wc ON wc.id = dl.work_center_id LEFT JOIN users u ON u.id = dl.reported_by ORDER BY dl.started_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+      return exec(sql`SELECT dl.* FROM erp_downtime_logs dl ORDER BY dl.started_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -65,7 +65,7 @@ export class ErpReportsRepository {
 
   async getDowntimeLog(id: number): Promise<Result<Row | null>>  {
   try {  
-      const r = await exec(sql`SELECT dl.*, wc.name AS work_center_name FROM erp_downtime_logs dl LEFT JOIN work_centers wc ON wc.id = dl.work_center_id WHERE dl.id = ${id}`);
+      const r = await exec(sql`SELECT dl.* FROM erp_downtime_logs dl WHERE dl.id = ${id}`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
