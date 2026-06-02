@@ -32,7 +32,7 @@ export class ErpReportsRepository {
 
   async listProductionFacts(limit: number, offset: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT pf.*, mc.name AS product_name, wc.name AS work_center_name FROM erp_production_facts pf LEFT JOIN material_cards mc ON mc.id = pf.product_id LEFT JOIN work_centers wc ON wc.id = pf.work_center_id ORDER BY pf.fact_date DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+      return exec(sql`SELECT pf.*, mc.xom_ashyo AS product_name, wc.name AS work_center_name FROM erp_production_facts pf LEFT JOIN material_cards mc ON mc.id = pf.product_id LEFT JOIN work_centers wc ON wc.id = pf.work_center_id ORDER BY pf.fact_date DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -40,7 +40,7 @@ export class ErpReportsRepository {
 
   async listProductionPlans(limit: number, offset: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT pp.*, mc.name AS product_name FROM erp_production_plans pp LEFT JOIN material_cards mc ON mc.id = pp.product_id ORDER BY pp.plan_date DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+      return exec(sql`SELECT pp.*, mc.xom_ashyo AS product_name FROM erp_production_plans pp LEFT JOIN material_cards mc ON mc.id = pp.product_id ORDER BY pp.plan_date DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 

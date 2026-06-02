@@ -34,7 +34,7 @@ export class ErpRepository {
 
   async updateProduct(id: number, body: Row): Promise<Result<Row | null>>  {
   try {  
-      const r = await exec(sql`UPDATE material_cards SET name = COALESCE(${body.name ?? null}, name), unit = COALESCE(${body.unit ?? null}, unit), min_stock = COALESCE(${body.minStock ?? null}, min_stock), updated_at = NOW() WHERE id = ${id} RETURNING *`);
+      const r = await exec(sql`UPDATE material_cards SET xom_ashyo = COALESCE(${body.name ?? null}, xom_ashyo), unit_of_measure = COALESCE(${body.unit ?? null}, unit_of_measure), min_stock = COALESCE(${body.minStock ?? null}, min_stock), updated_at = NOW() WHERE id = ${id} RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -43,7 +43,7 @@ export class ErpRepository {
 
   async listBomHeaders(limit: number, offset: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT bh.*, mc.name AS product_name FROM bom_headers bh LEFT JOIN material_cards mc ON mc.id = bh.product_id ORDER BY bh.created_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+      return exec(sql`SELECT bh.*, mc.xom_ashyo AS product_name FROM bom_headers bh LEFT JOIN material_cards mc ON mc.id = bh.product_id ORDER BY bh.created_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -51,7 +51,7 @@ export class ErpRepository {
 
   async getBomHeader(id: number): Promise<Result<Row | null>>  {
   try {  
-      const r = await exec(sql`SELECT bh.*, mc.name AS product_name FROM bom_headers bh LEFT JOIN material_cards mc ON mc.id = bh.product_id WHERE bh.id = ${id}`);
+      const r = await exec(sql`SELECT bh.*, mc.xom_ashyo AS product_name FROM bom_headers bh LEFT JOIN material_cards mc ON mc.id = bh.product_id WHERE bh.id = ${id}`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -60,7 +60,7 @@ export class ErpRepository {
 
   async bomExplosion(id: number, quantity: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT bi.*, mc.name AS material_name, mc.unit, (bi.quantity * ${quantity}) AS required_qty FROM bom_items bi LEFT JOIN material_cards mc ON mc.id = bi.material_id WHERE bi.bom_id = ${id} ORDER BY bi.id`);  } catch (_e) {
+      return exec(sql`SELECT bi.*, mc.xom_ashyo AS material_name, mc.unit_of_measure AS unit, (bi.quantity * ${quantity}) AS required_qty FROM bom_items bi LEFT JOIN material_cards mc ON mc.id = bi.material_id WHERE bi.bom_id = ${id} ORDER BY bi.id`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -68,7 +68,7 @@ export class ErpRepository {
 
   async listBomItems(bomHeaderId: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT bi.*, mc.name AS material_name, mc.unit FROM bom_items bi LEFT JOIN material_cards mc ON mc.id = bi.material_id WHERE bi.bom_id = ${bomHeaderId} ORDER BY bi.id`);  } catch (_e) {
+      return exec(sql`SELECT bi.*, mc.xom_ashyo AS material_name, mc.unit_of_measure AS unit FROM bom_items bi LEFT JOIN material_cards mc ON mc.id = bi.material_id WHERE bi.bom_id = ${bomHeaderId} ORDER BY bi.id`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -94,7 +94,7 @@ export class ErpRepository {
 
   async listRoutings(limit: number, offset: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT rt.*, mc.name AS product_name FROM routings rt LEFT JOIN material_cards mc ON mc.id = rt.product_id ORDER BY rt.created_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+      return exec(sql`SELECT rt.*, mc.xom_ashyo AS product_name FROM routings rt LEFT JOIN material_cards mc ON mc.id = rt.product_id ORDER BY rt.created_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -102,7 +102,7 @@ export class ErpRepository {
 
   async getRouting(id: number): Promise<Result<Row | null>>  {
   try {  
-      const r = await exec(sql`SELECT rt.*, mc.name AS product_name FROM routings rt LEFT JOIN material_cards mc ON mc.id = rt.product_id WHERE rt.id = ${id}`);
+      const r = await exec(sql`SELECT rt.*, mc.xom_ashyo AS product_name FROM routings rt LEFT JOIN material_cards mc ON mc.id = rt.product_id WHERE rt.id = ${id}`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -131,7 +131,7 @@ export class ErpRepository {
   async createProduct(body: Row): Promise<Result<Row | null>> {
   try {
     const code = body.code ?? `MC-${Date.now()}`;
-    const r = await exec(sql`INSERT INTO material_cards (code, name, name_ru, unit, standard_cost, is_active) VALUES (${code}, ${body.name ?? 'Yangi mahsulot'}, ${body.nameRu ?? null}, ${body.unit ?? 'dona'}, ${body.standardCost ?? null}, ${body.isActive ?? true}) RETURNING *`);
+    const r = await exec(sql`INSERT INTO material_cards (kod, xom_ashyo, xom_ashyo_ru, unit_of_measure, is_active) VALUES (${code}, ${body.name ?? 'Yangi mahsulot'}, ${body.nameRu ?? null}, ${body.unit ?? 'dona'}, ${body.isActive ?? true}) RETURNING *`);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   } catch (_e) { return Err(String(_e)); }
   }

@@ -79,7 +79,7 @@ export class DrizzleQcComputeRepository implements IQcComputeRepository {
             NULLIF(po.planned_cost, 0),
             0
           ) / GREATEST(COALESCE(po.confirmed_quantity, po.planned_quantity, 1), 1) AS unit_cost,
-          mc.name AS product_name
+          mc.xom_ashyo AS product_name
         FROM production_orders po
         LEFT JOIN material_cards mc ON mc.id = po.product_id
         WHERE po.order_number = ${jobId} OR po.id::text = ${jobId}

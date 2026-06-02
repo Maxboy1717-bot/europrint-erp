@@ -56,8 +56,8 @@ export class ErpExtraRepository {
   async listOrders(limit: number, offset: number, status?: string): Promise<Result<Row[]>>  {
   try {  
       return status
-        ? exec(sql`SELECT po.*, mc.name AS product_name, wc.name AS work_center_name FROM production_orders po LEFT JOIN material_cards mc ON mc.id = po.product_id LEFT JOIN work_centers wc ON wc.id = po.work_center_id WHERE po.status = ${status} ORDER BY po.created_at DESC LIMIT ${limit} OFFSET ${offset}`)
-        : exec(sql`SELECT po.*, mc.name AS product_name, wc.name AS work_center_name FROM production_orders po LEFT JOIN material_cards mc ON mc.id = po.product_id LEFT JOIN work_centers wc ON wc.id = po.work_center_id ORDER BY po.created_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+        ? exec(sql`SELECT po.*, mc.xom_ashyo AS product_name, wc.name AS work_center_name FROM production_orders po LEFT JOIN material_cards mc ON mc.id = po.product_id LEFT JOIN work_centers wc ON wc.id = po.work_center_id WHERE po.status = ${status} ORDER BY po.created_at DESC LIMIT ${limit} OFFSET ${offset}`)
+        : exec(sql`SELECT po.*, mc.xom_ashyo AS product_name, wc.name AS work_center_name FROM production_orders po LEFT JOIN material_cards mc ON mc.id = po.product_id LEFT JOIN work_centers wc ON wc.id = po.work_center_id ORDER BY po.created_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -65,7 +65,7 @@ export class ErpExtraRepository {
 
   async getOrder(id: number): Promise<Result<Row | null>>  {
   try {  
-      const r = await exec(sql`SELECT po.*, mc.name AS product_name, wc.name AS work_center_name FROM production_orders po LEFT JOIN material_cards mc ON mc.id = po.product_id LEFT JOIN work_centers wc ON wc.id = po.work_center_id WHERE po.id = ${id}`);
+      const r = await exec(sql`SELECT po.*, mc.xom_ashyo AS product_name, wc.name AS work_center_name FROM production_orders po LEFT JOIN material_cards mc ON mc.id = po.product_id LEFT JOIN work_centers wc ON wc.id = po.work_center_id WHERE po.id = ${id}`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -110,8 +110,8 @@ export class ErpExtraRepository {
   async listMrpResults(runId?: number): Promise<Result<Row[]>>  {
   try {  
       return runId
-        ? exec(sql`SELECT mr.*, mc.name AS material_name FROM erp_mrp_results mr LEFT JOIN material_cards mc ON mc.id = mr.material_id WHERE mr.run_id = ${runId} ORDER BY mr.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`)
-        : exec(sql`SELECT mr.*, mc.name AS material_name FROM erp_mrp_results mr LEFT JOIN material_cards mc ON mc.id = mr.material_id ORDER BY mr.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
+        ? exec(sql`SELECT mr.*, mc.xom_ashyo AS material_name FROM erp_mrp_results mr LEFT JOIN material_cards mc ON mc.id = mr.material_id WHERE mr.run_id = ${runId} ORDER BY mr.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`)
+        : exec(sql`SELECT mr.*, mc.xom_ashyo AS material_name FROM erp_mrp_results mr LEFT JOIN material_cards mc ON mc.id = mr.material_id ORDER BY mr.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -119,7 +119,7 @@ export class ErpExtraRepository {
 
   async listPurchaseRequisitions(limit: number, offset: number): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT pr.*, mc.name AS material_name FROM erp_purchase_requisitions pr LEFT JOIN material_cards mc ON mc.id = pr.material_id ORDER BY pr.created_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+      return exec(sql`SELECT pr.*, mc.xom_ashyo AS material_name FROM erp_purchase_requisitions pr LEFT JOIN material_cards mc ON mc.id = pr.material_id ORDER BY pr.created_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
     return Err(String(_e));
   }
 

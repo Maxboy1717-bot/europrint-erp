@@ -173,7 +173,7 @@ export class WmsGatewayWarehousesController {
         const rows = await rawSql(sql`
           SELECT
             ws.id::text AS id, ws.material_card_id AS "materialId",
-            mc.code AS "materialCode", mc.name AS "materialName",
+            mc.code AS "materialCode", mc.xom_ashyo AS "materialName",
             mc.unit_of_measure AS unit, ws.quantity::numeric AS quantity,
             COALESCE(ws.reserved_quantity, 0)::numeric AS reserved,
             (COALESCE(ws.quantity, 0) - COALESCE(ws.reserved_quantity, 0))::numeric AS available,
