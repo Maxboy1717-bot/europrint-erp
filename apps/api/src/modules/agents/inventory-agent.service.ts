@@ -62,7 +62,7 @@ export class InventoryAgentService {
       const dailyAvg = Number(r.rows[0]?.daily ?? 0);
 
       const stock = await runQuery<{ balance: string }>(sql`
-        SELECT COALESCE(SUM(balance), 0)::text AS balance FROM warehouse_stock_balance WHERE material_card_id = ${materialId}
+        SELECT COALESCE(SUM(quantity), 0)::text AS balance FROM warehouse_stock WHERE material_id = ${materialId}
       `).catch(() => ({ rows: [{ balance: '0' }] }));
       const currentStock = Number(stock.rows[0]?.balance ?? 0);
 
@@ -77,10 +77,10 @@ export class InventoryAgentService {
   /** Kritik qoldiq tekshiruvi */
   async checkCriticalStock(): Promise<Array<{ materialId: number; balance: number; reorderPoint: number }>> {
     const r = await runQuery<{ id: string; balance: string; reorder_point: string | null }>(sql`
-      SELECT material_card_id::text AS id, SUM(balance)::text AS balance, MAX(reorder_point)::text AS reorder_point
-      FROM warehouse_stock_balance
-      GROUP BY material_card_id
-      HAVING SUM(balance) < COALESCE(MAX(reorder_point), 0)
+      SELECT material_id::text AS id, SUM(quantity)::text AS balance, MAX(reorder_point)::text AS reorder_point
+      FROM warehouse_stock
+      GROUP BY material_id
+      HAVING SUM(quantity) < COALESCE(MAX(reorder_point), 0)
       LIMIT 50
     `).catch(() => ({ rows: [] }));
     const list = r.rows.map(row => ({
