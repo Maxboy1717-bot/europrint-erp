@@ -64,7 +64,7 @@ export class MesProductionSessionsRepository {
   async recordDowntimeForSession(sessionId: number, body: Row): Promise<Row | null> {
     try {
       const rows = await runQuery<Row>(sql`
-        INSERT INTO mes_downtime_events (session_id, reason, duration_minutes, started_at, event_type)
+        INSERT INTO downtime_events (session_id, reason_description, duration_minutes, started_at, event_type)
         VALUES (${sessionId}, ${body.reason ?? 'unspecified'}, ${body.durationMinutes ?? 0}, NOW(), 'downtime')
         RETURNING *
       `);
@@ -77,7 +77,7 @@ export class MesProductionSessionsRepository {
 
   async listDowntimeEvents(sessionId: number): Promise<Row[]> {
     try {
-      const rows = await runQuery<Row>(sql`SELECT * FROM mes_downtime_events WHERE session_id = ${sessionId} ORDER BY started_at DESC`);
+      const rows = await runQuery<Row>(sql`SELECT * FROM downtime_events WHERE session_id = ${sessionId} ORDER BY started_at DESC`);
       return rows.rows as Row[];
     } catch (err) {
       this.logger.error(`listDowntimeEvents: ${(err as Error).message}`);
