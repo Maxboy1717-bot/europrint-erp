@@ -764,4 +764,17 @@ Manba: memory `session_2026-05-21_full_cleanup.md` + `project_pos_monitor_purpos
 
 ---
 
-*Yangilangan: 2026-05-30 | Qoida 22 qo'shildi (Ombor+POS sidebar regress-himoya). Qoida 21 (2026-05-29). Qoidalar 17-20 (2026-05-28).*
+### Qoida 23: Parallel sessiya rollari — Tahlilchi 🔵 / Bajaruvchi 🟢 (nazorat) 🧭
+**Kontekst:** 2026-06-02 da parallel sessiyalar bir-birini ko'rmay, tahlil hisobotidagi **tavsiyalarni** ruxsatsiz **bajargan** (legacy o'chirish `adcd527e`, Portret `2f353637`, employees.user_id) — egasi "faqat tahlil" deganda. Quyidagi rollar shuni oldini oladi.
+
+Har sessiya promt boshida ROL oladi:
+- 🔵 **Tahlilchi (QAT'IY read-only):** HECH NARSA o'zgartirmaydi — fayl/kod/DB/commit yo'q, faqat `docs/` ga hisobot. Ko'p parallel mayli. Oxirida `git status` da `docs/` dan boshqa narsa ko'rinsa = XATO.
+- 🟢 **Bajaruvchi (ruxsat darvozasi):** faqat egasi AYNAN aytgan vazifa; o'zgartirishdan OLDIN reja + RUXSAT so'raydi; bir vaqtda FAQAT BITTA bajaruvchi.
+
+❌ **Tavsiya ≠ ruxsat** — tahlil/audit hisobotidagi "o'chir/tuzat" tavsiyasini HECH KIM o'z-o'zicha bajarmaydi. Bajarish faqat egasi aniq "ha, bajar" deganda.
+❌ `git add -A` / `git add .` TAQIQLANGAN — faqat aniq fayl (`git add <fayl>`); aks holda boshqa sessiya ishini supurib ketadi.
+✅ To'liq copy-paste promt shablonlari: `docs/parallel-sessiya-nazorati.md`
+
+---
+
+*Yangilangan: 2026-06-02 | Qoida 23 qo'shildi (parallel sessiya rollari — Tahlilchi/Bajaruvchi nazorati). Qoida 22 (2026-05-30, Ombor+POS sidebar regress-himoya). Qoida 21 (2026-05-29). Qoidalar 17-20 (2026-05-28).*

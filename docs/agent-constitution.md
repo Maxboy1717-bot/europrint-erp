@@ -18,7 +18,12 @@ Har bir agent sessiyasi boshida quyidagi fayllarni o'qing:
 3. docs/modules/INDEX.md             ← modul holatlari (BLESSED/INVENTORY/NOT_YET)
 4. docs/dedup-safety-rules.md        ← 15 ta xavfsizlik qoidasi
 5. docs/rules/anti-revert.md         ← test fail = testni yangilash (kodni emas)
+6. docs/parallel-sessiya-nazorati.md ← sessiya rollari (Tahlilchi 🔵 / Bajaruvchi 🟢)
 ```
+
+**ROLINGNI ANIQLA:** Promt boshida 🔵 Tahlilchi (read-only) yoki 🟢 Bajaruvchi (ruxsat bilan)
+ekaningni bil. Rol berilmagan bo'lsa — **default 🔵 Tahlilchi**, egasidan ruxsat so'ramaguncha
+hech narsa o'zgartirma. Batafsil: pastdagi "Sessiya Rollari" bo'limi.
 
 **AGAR MODUL-SPESIFIK ISH BO'LSA:** `docs/modules/<modul-nomi>.md` ham o'qing.
 
@@ -262,6 +267,34 @@ ishini o'chiradi.
 
 ---
 
+## 🔵🟢 Sessiya Rollari — Parallel Nazorat (Majburiy)
+
+> To'liq copy-paste promt shablonlari: `docs/parallel-sessiya-nazorati.md`
+
+**Muammo:** 2026-06-02 da parallel sessiyalar bir-birini ko'rmay, tahlil hisobotidagi
+**tavsiyalarni** o'zboshimcha **bajargan** (legacy o'chirish `adcd527e`, Portret `2f353637`,
+employees.user_id) — egasi "FAQAT TAHLIL" deganda. Yechim: har sessiya promt boshida ROL oladi.
+
+| | Tahlilchi 🔵 | Bajaruvchi 🟢 |
+|---|---|---|
+| O'qiydi | ✅ | ✅ |
+| O'zgartiradi | ❌ hech qachon | ✅ lekin RUXSAT bilan |
+| Necha sessiya | ko'p parallel mayli | bir vaqtda BITTA |
+| Tavsiyani bajaradi | ❌ faqat aytadi | ❌ faqat aytadi, ruxsat kutadi |
+| `git add -A` | ❌ | ❌ hech qachon |
+
+**Eng muhim 3 qoida:**
+1. **Tavsiya ≠ ruxsat.** Tahlil hisobotidagi "o'chir/tuzat" tavsiyasini HECH KIM
+   o'z-o'zicha bajarmaydi. Bajarish faqat egasi aniq **"ha, bajar"** deganda boshlanadi.
+2. **Tahlilchi (🔵) hech narsa o'zgartirmaydi** — faqat `docs/` ga hisobot. Oxirida
+   `git status` da `docs/` dan boshqa narsa ko'rinsa — XATO, egasiga ayt.
+3. **Bir vaqtda faqat bitta Bajaruvchi (🟢)** — ikki bajaruvchi = to'qnashuv ("concurrent
+   agent reset my index"). O'zgartirish navbat bilan, har biri o'z faylini `git add <fayl>`.
+
+**Rol berilmagan bo'lsa:** default 🔵 Tahlilchi. Ruxsat so'ramay hech narsa o'zgartirma.
+
+---
+
 ## 🏷️ Modul Holat Tizimi
 
 Har bir modul quyidagi statuslardan birida bo'ladi:
@@ -396,4 +429,4 @@ aniq rang va stil tasdiqlang. Tasdiqsiz o'zgartirma. Keyin token → komponent �
 
 ---
 
-*Yangilangan: 2026-05-27 | Versiya: 1.0*
+*Yangilangan: 2026-06-02 | Versiya: 1.1 (Sessiya rollari qo'shildi: Tahlilchi 🔵 / Bajaruvchi 🟢)*
