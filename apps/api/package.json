@@ -42,6 +42,7 @@
     "test": "jest --config test/jest.config.js --passWithNoTests --testPathIgnorePatterns=stryker-tmp",
     "test:ci": "jest --config test/jest.config.js --passWithNoTests --forceExit --testPathIgnorePatterns=stryker-tmp",
     "test:dto": "jest --config test/jest.dto.config.js --passWithNoTests --forceExit",
+    "test:e2e": "jest -c test/jest.e2e.config.js",
     "test:mutation": "stryker run"
   },
   "dependencies": {
