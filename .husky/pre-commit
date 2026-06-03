@@ -88,3 +88,17 @@ node scripts/check-fe-api-urls.mjs
 
 # Qoida 19: Yangi sahifa CRUD tekshiruvi (warning only)
 node scripts/check-page-has-crud.mjs
+
+# ── Jarayon/boshqaruv guardlari (Q-24..Q-38, 2026-06-03) ──────────────────────
+# 🛡️ Q-30 — Secret value exposure guard (BLOCK). Diff-aware; blocks staged code that
+# hardcodes or prints a secret value. False positive? Append // allow-secret to the line.
+node scripts/check-no-secret-print.mjs || exit 1
+
+# Q-28 — Large staged change reminder (WARN only): > 15 files or > 500 lines.
+node scripts/check-large-diff.mjs || true
+
+# Q-29 — New controller endpoint without a referencing spec (WARN only).
+node scripts/check-endpoint-test.mjs || true
+
+# Q-35 — New CREATE TABLE without an "APPROVED:" owner marker (WARN only).
+node scripts/check-unauthorized-migration.mjs || true
