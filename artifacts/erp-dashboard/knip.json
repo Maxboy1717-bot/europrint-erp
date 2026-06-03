@@ -1,0 +1,20 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/main.tsx",
+    "src/**/*.test.{ts,tsx}",
+    "src/**/*.smoke.test.{ts,tsx}",
+    "src/test/**",
+    "e2e/**/*.spec.ts",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts"
+  ],
+  "project": ["src/**/*.{ts,tsx}"],
+  "ignore": [],
+  "ignoreDependencies": [],
+  "ignoreExportsUsedInFile": true,
+  "paths": {
+    "@/*": ["./src/*"]
+  }
+}
