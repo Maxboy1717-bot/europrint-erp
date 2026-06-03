@@ -22,6 +22,7 @@ export interface IFinanceExtendedRepository {
   createInventoryCount(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   findAssetInventory(limit: number, offset: number, status?: string): Promise<Result<{ data: Row[]; count: number }>>;
   findAssetInventoryById(id: string): Promise<Result<object | null>>;
+  createAsset(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   findDailyMetrics(limit: number, offset: number, date?: string): Promise<Result<{ data: Row[]; count: number }>>;
   findOvertime(limit: number, offset: number, period?: string): Promise<Result<{ data: Row[]; count: number }>>;
   findCustoms(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>>;

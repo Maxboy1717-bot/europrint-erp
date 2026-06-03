@@ -100,7 +100,7 @@ export class FinanceExtendedIncomeController {
   @HttpCode(HttpStatus.CREATED)
   async createAsset(@Body() body: unknown) {
     const dto = CreateAssetSchema.parse(body);
-    return { id: Date.now(), ...dto, created: true };
+    return unwrapOrInternal(await this.svc.createAsset(dto));
   }
 
   @ApiOperation({ summary: 'Get asset inventory summary' })

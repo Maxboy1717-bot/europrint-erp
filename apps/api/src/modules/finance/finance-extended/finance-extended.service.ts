@@ -126,8 +126,16 @@ export class FinanceExtendedService {
       return { data: [], pagination: { total: 0, page, limit } };
     }
     return { data: result.data.data, pagination: { total: result.data.count, page, limit } };
-  
+
     });}
+
+  async createAsset(dto: Record<string, unknown>): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.repo.createAsset(dto);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
 
   async findAssetInventoryById(id: string){
     return safeCall(async () => {

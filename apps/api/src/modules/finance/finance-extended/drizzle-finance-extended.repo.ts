@@ -146,6 +146,24 @@ export class DrizzleFinanceExtendedRepository implements IFinanceExtendedReposit
     }
   }
 
+  async createAsset(dto: Row): Promise<Result<Row>> {
+    try {
+      const name          = dto.name          != null ? String(dto.name)          : null;
+      const code          = dto.code          != null ? String(dto.code)          : null;
+      const category      = dto.category      != null ? String(dto.category)      : null;
+      const purchaseDate  = dto.purchaseDate  != null ? String(dto.purchaseDate)  : null;
+      const purchaseValue = dto.purchaseValue != null ? Number(dto.purchaseValue) : null;
+      // asset_items is the table findAssetInventory() reads. Generate asset_code
+      // (AST-<timestamp>) when not supplied; seed current_value from purchase_value.
+      const r = await runQuery<Row>(sql`
+        INSERT INTO asset_items (asset_code, name, category, purchase_date, purchase_value, current_value, status)
+        VALUES (COALESCE(${code}, 'AST-' || to_char(NOW(), 'YYYYMMDDHH24MISS')), ${name}, ${category}, ${purchaseDate}::date, ${purchaseValue}, ${purchaseValue}, 'active')
+        RETURNING *
+      `);
+      return Ok((r.rows[0] ?? {}) as Row);
+    } catch (e: unknown) { return Err((e as Error).message || 'Aktiv yaratishda xatolik'); }
+  }
+
   async findAssetInventoryById(id: string): Promise<Result<object | null>> {
     try {
       const rows = await runQuery<Row>(sql`
