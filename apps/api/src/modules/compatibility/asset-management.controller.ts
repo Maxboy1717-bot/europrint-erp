@@ -66,6 +66,19 @@ const TransferSchema = z.object({
   approvedBy:   z.string().optional(),
 });
 
+const InsuranceSchema = z.object({
+  assetId:        z.union([z.string(), z.number()]).transform((v) => Number(v)),
+  policyNumber:   z.string().optional(),
+  insurerName:    z.string().min(1),
+  coverageType:   z.string().optional(),
+  startDate:      z.string().optional(),
+  endDate:        z.string().optional(),
+  premiumAmount:  z.union([z.string(), z.number()]).optional().transform((v) => (v == null ? undefined : Number(v))),
+  coverageAmount: z.union([z.string(), z.number()]).optional().transform((v) => (v == null ? undefined : Number(v))),
+  contactInfo:    z.string().optional(),
+  notes:          z.string().optional(),
+});
+
 @ApiTags('Asset Management')
 @ApiBearerAuth()
 @Roles('super_admin', 'admin', 'director', 'manager')
@@ -189,7 +202,10 @@ export class AssetManagementController {
 
   @Post('insurance')
   @HttpCode(HttpStatus.CREATED)
-  async createInsurance(@Body() b: Record<string, unknown>) { return { id: Date.now(), ...b, created: true }; }
+  async createInsurance(@Body() b: unknown) {
+    const dto = InsuranceSchema.parse(b);
+    return unwrapOrBadRequest(await this.svc.createInsurance(dto));
+  }
 
   @Put('maintenance/:id/complete')
   completeMaintenance(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, status: 'completed', ...b }; }

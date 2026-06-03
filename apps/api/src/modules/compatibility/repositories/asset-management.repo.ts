@@ -4,10 +4,19 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { assetItems, assetMaintenance, assetDisposals, assetTransfers } from '@shared/db/europrint-compat';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 import { Ok, Err, safeCall, AppErr } from '@common/result';
+
+type Row = Record<string, unknown>;
+
+// asset_insurance is not in the Drizzle compat barrel, so it uses parametrized raw SQL (Qoida B).
+type InsuranceInsert = {
+  assetId: number; policyNumber?: string; insurerName: string; coverageType?: string;
+  startDate?: string; endDate?: string; premiumAmount?: number; coverageAmount?: number;
+  contactInfo?: string; notes?: string;
+};
 
 type AssetInsert = {
   name: string; assetCode?: string; category: string; status: string;
@@ -137,5 +146,45 @@ export class AssetManagementRepo {
       reason:       data.reason ?? null,
       approvedBy:   data.approvedBy ?? null,
     }).returning(), 'DB_ERROR');
+  }
+
+  findInsurance() {
+    return safeCall(async () => (await runQuery<Row>(sql`
+      SELECT id, asset_id, policy_number, insurer_name, coverage_type, start_date, end_date,
+             premium_amount, coverage_amount, status, contact_info, notes, created_at
+      FROM asset_insurance ORDER BY created_at DESC
+    `)).rows, 'DB_ERROR');
+  }
+
+  findExpiringInsurance() {
+    return safeCall(async () => (await runQuery<Row>(sql`
+      SELECT id, asset_id, policy_number, insurer_name, coverage_type, start_date, end_date,
+             premium_amount, coverage_amount, status, contact_info, notes, created_at
+      FROM asset_insurance
+      WHERE status = 'active' AND end_date IS NOT NULL AND end_date <> ''
+        AND end_date >= CURRENT_DATE::text AND end_date <= (CURRENT_DATE + INTERVAL '30 days')::date::text
+      ORDER BY end_date ASC
+    `)).rows, 'DB_ERROR');
+  }
+
+  insertInsurance(data: InsuranceInsert) {
+    return safeCall(async () => (await runQuery<Row>(sql`
+      INSERT INTO asset_insurance (asset_id, policy_number, insurer_name, coverage_type,
+        start_date, end_date, premium_amount, coverage_amount, status, contact_info, notes)
+      VALUES (
+        ${data.assetId},
+        COALESCE(${data.policyNumber ?? null}, 'POL-' || to_char(NOW(), 'YYYYMMDDHH24MISS')),
+        ${data.insurerName},
+        ${data.coverageType ?? 'comprehensive'},
+        COALESCE(${data.startDate ?? null}, CURRENT_DATE::text),
+        COALESCE(${data.endDate ?? null}, (CURRENT_DATE + INTERVAL '1 year')::date::text),
+        ${data.premiumAmount ?? 0},
+        ${data.coverageAmount ?? 0},
+        'active',
+        ${data.contactInfo ?? null},
+        ${data.notes ?? null}
+      )
+      RETURNING *
+    `)).rows, 'DB_ERROR');
   }
 }

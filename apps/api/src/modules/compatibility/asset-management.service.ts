@@ -131,27 +131,33 @@ export class AssetManagementService {
     return Ok(result.data[0] as DisposalRow | undefined);
   }
 
-  async getInsurance(_query: Record<string, string>): Promise<Result<AssetRow[]>> {
-    const result = await this.repo.findAllAssets();
+  async getInsurance(_query: Record<string, string>): Promise<Result<Record<string, unknown>[]>> {
+    const result = await this.repo.findInsurance();
     if (!result.ok) return Err(result.error);
-    const all = Array.isArray(result.data) ? result.data : [];
-    const items = all.filter((r) => r.category === 'insurance' || r.notes?.toString().toLowerCase().includes('insur'));
-    return Ok(items as AssetRow[]);
+    return Ok(Array.isArray(result.data) ? result.data : []);
   }
 
-  async getInsuranceExpiringSoon(_query: Record<string, string>): Promise<Result<AssetRow[]>> {
-    const result = await this.repo.findAllAssets();
+  async getInsuranceExpiringSoon(_query: Record<string, string>): Promise<Result<Record<string, unknown>[]>> {
+    const result = await this.repo.findExpiringInsurance();
     if (!result.ok) return Err(result.error);
-    const now = _time.now();
-    const soon = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const all = Array.isArray(result.data) ? result.data : [];
-    const items = all.filter((r) => {
-      if (r.category !== 'insurance') return false;
-      const expiry = r.purchaseDate instanceof Date ? r.purchaseDate
-        : r.purchaseDate ? new Date(String(r.purchaseDate)) : null;
-      return expiry && expiry > now && expiry <= soon;
+    return Ok(Array.isArray(result.data) ? result.data : []);
+  }
+
+  async createInsurance(body: { assetId: number; policyNumber?: string; insurerName: string; coverageType?: string; startDate?: string; endDate?: string; premiumAmount?: number; coverageAmount?: number; contactInfo?: string; notes?: string }): Promise<Result<Record<string, unknown> | undefined>> {
+    const result = await this.repo.insertInsurance({
+      assetId:        body.assetId,
+      policyNumber:   body.policyNumber,
+      insurerName:    body.insurerName,
+      coverageType:   body.coverageType,
+      startDate:      body.startDate,
+      endDate:        body.endDate,
+      premiumAmount:  body.premiumAmount,
+      coverageAmount: body.coverageAmount,
+      contactInfo:    body.contactInfo,
+      notes:          body.notes,
     });
-    return Ok(items as AssetRow[]);
+    if (!result.ok) return Err(result.error);
+    return Ok(result.data[0] as Record<string, unknown> | undefined);
   }
 
   async getTransfers(): Promise<Result<TransferRow[]>> {
