@@ -777,4 +777,35 @@ Har sessiya promt boshida ROL oladi:
 
 ---
 
-*Yangilangan: 2026-06-02 | Qoida 23 qo'shildi (parallel sessiya rollari — Tahlilchi/Bajaruvchi nazorati). Qoida 22 (2026-05-30, Ombor+POS sidebar regress-himoya). Qoida 21 (2026-05-29). Qoidalar 17-20 (2026-05-28).*
+## JARAYON VA BOSHQARUV QOIDALARI (Q-24..Q-38) 🧭
+
+> Ish jarayoni/boshqaruv qoidalari (kod uslubi qoidalari A,B,1-23 yuqorida).
+> Manba: 2026-06-02 bajaruvchi sessiyasi (parallel-sessiya nazorati + verify-don't-trust saboqlari).
+> Avtomatlashtirilgan qoida yonida tekshiruv skripti ko'rsatilgan.
+
+### 🅰️ Jarayon
+- **Q-24 — Sessiya protokoli:** Har sessiya boshida `CLAUDE.md` o'qi + `git status`/`git log -5` + `git branch` + lokal health (:3030 backend / :20806 frontend) + concurrency (boshqa sessiya/worktree bormi) tekshir.
+- **Q-25 — Bitta haqiqat manbai:** Vizyon master rejada (`docs/`). O'zgarish bo'lsa darrov yoziladi. Hujjat ziddiyatida master reja ustun.
+- **Q-26 — Qaror jurnali:** Uzun sessiyaning muhim qarorlari (deferral, dizayn tanlovlari) `docs/`ga yoziladi.
+- **Q-27 — Vizyon vs Ijro ajratish:** Advisor = vizyon (kod yo'q); Bajaruvchi = ijro (vizyon qarorini o'zi qabul qilmaydi). Har xabarda rol aniq.
+
+### 🅱️ Ijro xavfsizligi
+- **Q-28 — Ruxsat darvozasi:** O'zgarishdan OLDIN `fayl:satr` + aynan o'zgarish + sabab → RUXSAT so'ra. Egasi aniq "ha" demaguncha o'zgartirish YO'Q. (`scripts/check-large-diff.mjs` — katta diff WARN)
+- **Q-29 — Verify-don't-trust:** Audit/katalog/advisor da'vosini tekshirilmagan deb hisobla. Kod + DB (`_audit/q.cjs` read-only) bilan JONLI tasdiqla. Yangi endpoint testsiz → WARN (`scripts/check-endpoint-test.mjs`).
+- **Q-30 — Secret subagentga berilmaydi:** Subagentga secret topshirma; faqat shaklini (uzunlik/prefiks) tekshir; qiymat HECH QACHON chop etilmaydi. (`scripts/check-no-secret-print.mjs` — BLOK 🔴)
+- **Q-31 — Subagent izolyatsiyasi:** Subagent faqat ALOHIDA faylda ishlaydi; bir faylga 2 ish → ketma-ket; subagent commit qilmaydi (bosh agent tekshirib commit qiladi).
+- **Q-32 — Static fallback:** Lokal/auth qulasa → static verifikatsiya (typecheck + diff o'qish + pattern tasdiq + spec/DB-proof). Jonli isbot lokal tiklanganda.
+
+### 🅲️ Sifat
+- **Q-33 — Boshlangan ish to'liq:** Yarim qoldirilmaydi. "Keyin" qism `docs/`ga belgilanadi — tegilmaydi, o'chirilmaydi.
+- **Q-34 — Chuqurlik bahosi:** Toza fix (jadval + ustun aniq, FE mos) → darrov qil. Dizayn/semantik qaror (jadval tanlash, model) → egasidan so'ra.
+- **Q-35 — Jadval yaratish = egasi ruxsati:** Yangi migration/`CREATE TABLE` faqat egasi ruxsati bilan. Faylda `APPROVED:` izoh yo'q bo'lsa → WARN (`scripts/check-unauthorized-migration.mjs`).
+
+### 🅳️ Yaxlitlik
+- **Q-36 — Promt yaxlit:** Vazifa maydalanmaydi — yaxlit reja bilan olib boriladi.
+- **Q-37 — Qoidalar bloki:** Har bajaruvchi promt boshida qoidalar bloki bo'ladi.
+- **Q-38 — Holat hisoboti:** Har paket/bosqich oxirida holat hisoboti (done / defer / commit'lar) egaga ko'rsatiladi.
+
+---
+
+*Yangilangan: 2026-06-03 | Q-24..Q-38 qo'shildi (jarayon va boshqaruv qoidalari — sessiya protokoli, ruxsat darvozasi, verify-don't-trust, secret-himoya, subagent izolyatsiya; skript bog'lash inline). Qoida 23 (2026-06-02, parallel sessiya rollari). Qoida 22 (2026-05-30, Ombor+POS sidebar). Qoidalar 17-21 (2026-05-28..29).*
