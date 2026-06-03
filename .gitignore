@@ -6,6 +6,8 @@ node_modules/
 dist/
 build/
 *.tsbuildinfo
+# NestJS Swagger CLI auto-generated metadata (293KB, regenerates every build)
+apps/api/src/metadata.ts
 .swc/
 .next/
 .nuxt/
@@ -18,9 +20,10 @@ node_modules/.cache/
 .vite/
 .parcel-cache/
 
-# Logs
+# Logs (may contain JWT tokens / sensitive runtime data — NEVER commit)
 *.log
-backend.log
+*.log.*
+backend.log*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
