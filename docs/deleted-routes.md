@@ -23,4 +23,4 @@ STOP and ask the owner.
 
 | Date | Removed | Kind | Files / refs removed | Reason | Replacement / canonical | Commit |
 |------|---------|------|----------------------|--------|-------------------------|--------|
-| _(entries added as DARAJA 1 cleanup proceeds)_ | | | | | | |
+| 2026-06-03 | `bull`, `@nestjs/bull`, `bcryptjs` | npm deps | apps/api/package.json deps + pnpm-lock | `bull` + `@nestjs/bull` are a dead old-queue pair (live queue stack is `@nestjs/bullmq` + `bullmq`); `bcryptjs` unused (code uses native `bcrypt`). NB: `node-telegram-bot-api` was on the remove-list but is USED (telegram.service.ts:9) so it was KEPT. | `bullmq` / `@nestjs/bullmq` / `bcrypt` | 1.1 (chore(deps)) |
