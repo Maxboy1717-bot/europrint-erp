@@ -17,6 +17,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Ok, Err, Result, AppErr, safeCall } from '@common/result';
 import { db } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { sql } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 
@@ -50,15 +51,15 @@ export class InterviewLinkService {
 
   async validateToken(tokenId: string): Promise<Result<InterviewLink>> {
     const queryResult = await safeCall(async () => {
-      const rows = await db.execute(sql`
+      const rows = await typedExecute<{
+        token_id: string; candidate_id: number; expires_at: Date; used: boolean;
+      }>(sql`
         SELECT token_id, candidate_id, expires_at, used
         FROM ai_interview_links
         WHERE token_id = ${tokenId}
         LIMIT 1
       `);
-      return (rows as unknown as { rows: Array<{
-        token_id: string; candidate_id: number; expires_at: Date; used: boolean;
-      }> }).rows[0] ?? null;
+      return rows[0] ?? null;
     }, 'NOT_FOUND');
     if (!queryResult.ok) return Err(queryResult.error);
     const row = queryResult.data;

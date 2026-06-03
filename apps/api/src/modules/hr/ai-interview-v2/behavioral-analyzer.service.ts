@@ -20,6 +20,7 @@ import { ConfigService } from '@nestjs/config';
 import { Ok, Err, Result, AppErr, safeCall } from '@common/result';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { db } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { sql } from 'drizzle-orm';
 
 export interface BehavioralFrame {
@@ -131,7 +132,9 @@ export class BehavioralAnalyzerService {
     confidenceLabel: 'low' | 'medium' | 'high';
   }>> {
     return safeCall(async () => {
-      const rows = await db.execute(sql`
+      const data = await typedExecute<{
+        emotion: string; avg_posture: number; avg_attention: number; cnt: number;
+      }>(sql`
         SELECT
           emotion,
           AVG(posture_score)::float AS avg_posture,
@@ -142,9 +145,6 @@ export class BehavioralAnalyzerService {
         GROUP BY emotion
         ORDER BY cnt DESC
       `);
-      const data = (rows as unknown as { rows: Array<{
-        emotion: string; avg_posture: number; avg_attention: number; cnt: number;
-      }> }).rows;
       const total = data.reduce((s, d) => s + d.cnt, 0);
       const dominant = data[0]?.emotion ?? 'unknown';
       const avgPosture = total ? data.reduce((s, d) => s + d.avg_posture * d.cnt, 0) / total : 0.5;
