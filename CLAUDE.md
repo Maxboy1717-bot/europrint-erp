@@ -777,7 +777,7 @@ Har sessiya promt boshida ROL oladi:
 
 ---
 
-## JARAYON VA BOSHQARUV QOIDALARI (Q-24..Q-38) 🧭
+## JARAYON VA BOSHQARUV QOIDALARI (Q-24..Q-43) 🧭
 
 > Ish jarayoni/boshqaruv qoidalari (kod uslubi qoidalari A,B,1-23 yuqorida).
 > Manba: 2026-06-02 bajaruvchi sessiyasi (parallel-sessiya nazorati + verify-don't-trust saboqlari).
@@ -806,6 +806,15 @@ Har sessiya promt boshida ROL oladi:
 - **Q-37 — Qoidalar bloki:** Har bajaruvchi promt boshida qoidalar bloki bo'ladi.
 - **Q-38 — Holat hisoboti:** Har paket/bosqich oxirida holat hisoboti (done / defer / commit'lar) egaga ko'rsatiladi.
 
+### 🅲️ Sifat (davomi)
+- **Q-39 — Kod qotirish (regressiya taqiq):** O'chirilgan narsa QAYTA yaratilmaydi. Ishlayotgan funksiya egasi ruxsatisiz o'zgartirilmaydi. Regressiya TAQIQ — o'zgarishdan keyin avval ishlagan narsa hamon ishlashi shart (verify bilan tasdiqlanadi). *Manba: 2026-06-03 DARAJA 1 tomir-kesish (`docs/deleted-routes.md`).*
+- **Q-40 — Ishlaydi ≠ to'g'ri:** Kod xatosiz ishlashi (200 qaytarishi) uning mazmunan TO'G'RI ekanini bildirmaydi. Logika/hisob-kitob/saqlash haqiqatda to'g'ri ekani tasdiqlanadi (DB-proof + FE-moslik + biznes-qoida). "Yashil lekin noto'g'ri" — fake-create, echo/hardcoded javob — TAQIQ. ⭐ TO'G'RI o'lchovi = master reja vizyoni (`docs/`): kod vizyonga zid ishlasa (ishlasa ham) = xato. Agent o'zi "to'g'ri" deb hal qilmaydi — egasi yoki vizyon belgilaydi.
+
+### 🅴️ UI/UX izchillik va forma
+- **Q-41 — Dizayn/UI izchillik:** Tugma joylashuvi STANDART — har sahifada bir xil joyda (saqlash o'ngda, bekor chapda — yoki egasi belgilagan standart); har xil layout TAQIQ. Dizayn token (Qoida 21) + UI shablon (`ListPage`/`FormPage`/`DetailPage`/`DashboardPage`) MAJBURIY. ⭐ Yangi sahifa = mavjud shablon + props (o'zboshimcha layout TAQIQ); tugma/forma joylashuvi shablondan keladi. Dizayn standartini egasi belgilaydi → hamma sahifa amal qiladi; o'zgartirish faqat egasi ruxsati bilan.
+- **Q-42 — Tab ierarxiyasi:** ⭐ Tab ichida tab — MAKS 2 daraja (asosiy tab → ichki tab); 3+ daraja TAQIQ (chalkashtiradi). Tab tuzilmasi TEKIS yoki aniq 2 daraja; har modul tab tartibi master rejada (`docs/`) belgilanadi. Mavjud 3+ daraja "tab ichida tab" → tekislanadi (faqat egasi ruxsati bilan).
+- **Q-43 — Forma saqlash majburiy:** ⭐ Har forma REAL saqlaydi: FE mutation (POST/PUT) → BE endpoint → real INSERT/UPDATE → DB. "Saqlash" tugmasi faqat local state o'zgartirsa yoki echo qaytarsa = XATO. Forma yaratilsa: BE endpoint + DB jadval + real saqlash + qayta yuklashda ko'rinish (F1/F2). ⭐ "Ko'rinadi lekin saqlamaydi" (fake-create) TAQIQ — Q-40 ning amaliy holati. Verify: kirit → saqla → sahifani qayta och → ko'rinadimi (real saqlangan). Skript: `scripts/check-form-has-save.mjs` (diff-aware, WARN) — forma bor lekin mutation yo'q → WARN; escape `// no-save-form`.
+
 ---
 
-*Yangilangan: 2026-06-03 | Q-24..Q-38 qo'shildi (jarayon va boshqaruv qoidalari — sessiya protokoli, ruxsat darvozasi, verify-don't-trust, secret-himoya, subagent izolyatsiya; skript bog'lash inline). Qoida 23 (2026-06-02, parallel sessiya rollari). Qoida 22 (2026-05-30, Ombor+POS sidebar). Qoidalar 17-21 (2026-05-28..29).*
+*Yangilangan: 2026-06-03 | Q-39..Q-43 qo'shildi (Q-39 kod-qotirish/regressiya, Q-40 ishlaydi≠to'g'ri + master-reja o'lchovi, Q-41 dizayn izchillik, Q-42 tab ierarxiya ≤2 daraja, Q-43 forma saqlash majburiy + `check-form-has-save` guard). Q-24..Q-38 (jarayon/boshqaruv — sessiya protokoli, ruxsat darvozasi, verify-don't-trust, secret-himoya, subagent izolyatsiya). Qoida 23 (2026-06-02, parallel sessiya rollari). Qoida 22 (2026-05-30, Ombor+POS sidebar). Qoidalar 17-21 (2026-05-28..29).*
