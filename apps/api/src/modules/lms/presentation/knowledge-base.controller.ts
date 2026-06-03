@@ -5,9 +5,10 @@
 
 import {
   Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put,
-  Query, Req, UseGuards, UseInterceptors, UsePipes, HttpStatus } from '@nestjs/common';
+  Query, Req, UseGuards, UseInterceptors, UsePipes, HttpStatus, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
+import * as path from 'path';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -25,6 +26,13 @@ const KB_ROLES       = ['admin', 'super_admin', 'hr_manager', 'lms_manager', 'ma
 const KB_ADMIN_ROLES = ['admin', 'super_admin', 'hr_manager', 'lms_manager', 'manager', 'director'] as const;
 
 type MultipartValue = { value: string } | { filename: string; mimetype: string; _buf?: Buffer };
+
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB
+const ALLOWED_UPLOAD_EXT = new Set([
+  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg',
+  '.pdf', '.docx', '.xlsx', '.csv', '.txt',
+  '.mp4', '.webm', '.ogg', '.mp3', '.wav',
+]);
 
 @ApiThrottle()
 @ApiTags('Knowledge Base')
@@ -106,11 +114,20 @@ export class KnowledgeBaseController {
   @Roles(...KB_ADMIN_ROLES)
   async uploadFile(@Req() req: FastifyRequest & { file(): Promise<{ filename: string; mimetype: string; fields: Record<string, unknown>; toBuffer(): Promise<Buffer> } | null> }) {
     const data = await req.file();
+    if (data) {
+      const ext = path.extname(data.filename).toLowerCase();
+      if (!ALLOWED_UPLOAD_EXT.has(ext)) {
+        throw new BadRequestException(`File type not allowed: ${ext || '(none)'}`);
+      }
+    }
     const fields = (data?.fields ?? {}) as Record<string, MultipartValue>;
     const title    = 'value' in (fields['title']    ?? {}) ? String((fields['title']    as { value: string }).value) : '';
     const titleRu  = 'value' in (fields['titleRu']  ?? {}) ? String((fields['titleRu']  as { value: string }).value) : '';
     const category = 'value' in (fields['category'] ?? {}) ? String((fields['category'] as { value: string }).value) : 'other';
-    await data?.toBuffer();
+    const buf = await data?.toBuffer();
+    if (buf && buf.length > MAX_UPLOAD_BYTES) {
+      throw new BadRequestException('File too large');
+    }
     return data
       ? this.svc.uploadFile(title, titleRu, category, data.filename)
       : { ok: false, message: 'No file provided' };
