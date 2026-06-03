@@ -27,11 +27,29 @@ export interface KpiTargetPatch {
   period?: unknown;
 }
 
+/**
+ * Price-settings patch — the SDSettings form sends a PARTIAL set of these
+ * camelCase price fields (only the ones the user changed). They map 1:1 to the
+ * snake_case columns of the singleton `sd_price_formulas` row (id=1).
+ */
 export interface PriceFormulaPatch {
-  id?: unknown;
-  name?: unknown;
-  formula?: unknown;
-  description?: unknown;
+  paperBPrice?: unknown;
+  paperCPrice?: unknown;
+  paperBcPrice?: unknown;
+  paperEPrice?: unknown;
+  print1ColorPrice?: unknown;
+  print2ColorPrice?: unknown;
+  print4ColorPrice?: unknown;
+  plateCostPerColor?: unknown;
+  dieCostNew?: unknown;
+  laminationPrice?: unknown;
+  embossingPrice?: unknown;
+  perforationPrice?: unknown;
+  deliveryBaseCost?: unknown;
+  storageFreedays?: unknown;
+  storageDailyRate?: unknown;
+  defaultMarkupPercent?: unknown;
+  vatRate?: unknown;
 }
 
 export interface IQuotationRepo {
@@ -55,8 +73,9 @@ export interface IQuotationRepo {
   // Contracts
   signContract(id: string, signatureData: unknown): Promise<Result<MutationRow | null, AppError>>;
 
-  // Price formulas
+  // Price formulas (singleton settings row, id=1)
   upsertPriceFormula(patch: PriceFormulaPatch): Promise<Result<MutationRow | null, AppError>>;
+  getPriceSettings(): Promise<Result<MutationRow | null, AppError>>;
 }
 
 export const QUOTATION_REPO = Symbol('QUOTATION_REPO');

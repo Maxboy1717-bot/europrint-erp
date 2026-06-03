@@ -22,10 +22,36 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { SdQuotationsService } from '../application/sd-quotations.service';
+import { z } from 'zod';
 
 const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
 
 type Body_ = Record<string, unknown>;
+
+/**
+ * SDSettings price-settings PUT body — a PARTIAL set of camelCase price fields
+ * (only the ones the user changed). All optional, non-negative numbers; unknown
+ * keys are stripped. Maps to the singleton `sd_price_formulas` row (id=1).
+ */
+const SdPriceSettingsSchema = z.object({
+  paperBPrice: z.number().nonnegative().optional(),
+  paperCPrice: z.number().nonnegative().optional(),
+  paperBcPrice: z.number().nonnegative().optional(),
+  paperEPrice: z.number().nonnegative().optional(),
+  print1ColorPrice: z.number().nonnegative().optional(),
+  print2ColorPrice: z.number().nonnegative().optional(),
+  print4ColorPrice: z.number().nonnegative().optional(),
+  plateCostPerColor: z.number().nonnegative().optional(),
+  dieCostNew: z.number().nonnegative().optional(),
+  laminationPrice: z.number().nonnegative().optional(),
+  embossingPrice: z.number().nonnegative().optional(),
+  perforationPrice: z.number().nonnegative().optional(),
+  deliveryBaseCost: z.number().nonnegative().optional(),
+  storageFreedays: z.number().int().nonnegative().optional(),
+  storageDailyRate: z.number().nonnegative().optional(),
+  defaultMarkupPercent: z.number().nonnegative().optional(),
+  vatRate: z.number().nonnegative().optional(),
+});
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -66,11 +92,11 @@ export class SdQuotationsController {
   @Post('contracts') @UsePipes(new ZodValidationPipe(SdCreateContractSchema))
   async createContract(@Body() body: SdCreateContractDto) { return unwrapOrThrow(await this.svc.createContract(body)); }
 
-  @ApiOperation({ summary: 'List price formulas' })
+  @ApiOperation({ summary: 'Get price settings (singleton row, camelCase)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('price-formulas')
-  async listPriceFormulas(@Query('limit') limit?: string, @Query('offset') offset?: string) {
-    return unwrapOrThrow(await this.svc.listPriceFormulas(safeInt(limit, 50), safeInt(offset, 0)));
+  async getPriceFormulas() {
+    return unwrapOrThrow(await this.svc.getPriceSettings());
   }
 
   @ApiOperation({ summary: 'Calculate price' })
@@ -209,5 +235,6 @@ export class SdQuotationsController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Put('price-formulas')
+  @UsePipes(new ZodValidationPipe(SdPriceSettingsSchema))
   async putPriceFormulas(@Body() body: Body_) { return unwrapOrThrow(await this.svc.upsertPriceFormula(body)); }
 }

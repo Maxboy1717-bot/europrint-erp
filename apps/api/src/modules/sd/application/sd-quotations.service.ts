@@ -210,15 +210,14 @@ export class SdQuotationsService {
     return Ok({ id, signed: true, status: 'signed', updated_at: r.data['updated_at'] });
   }
 
-  async upsertPriceFormula(body: Record<string, unknown>): Promise<Result<{ updated: boolean; data: Row | null }>> {
-    const patch: PriceFormulaPatch = {
-      id: body['id'],
-      name: body['name'],
-      formula: body['formula'],
-      description: body['description'],
-    };
-    const r = await this.quotationRepo.upsertPriceFormula(patch);
-    if (!r.ok) return r as Result<{ updated: boolean; data: Row | null }>;
-    return Ok({ updated: true, data: r.data });
+  async upsertPriceFormula(body: Record<string, unknown>): Promise<Result<Row | null, AppError>> {
+    // `body` is the validated SDSettings partial (camelCase price fields). The repo
+    // whitelists which columns it writes, so passing the object straight through is
+    // safe. Returns the saved row (no more "{ updated: true }" lie on a 0-row update).
+    return this.quotationRepo.upsertPriceFormula(body as PriceFormulaPatch);
+  }
+
+  async getPriceSettings(): Promise<Result<Row | null, AppError>> {
+    return this.quotationRepo.getPriceSettings();
   }
 }

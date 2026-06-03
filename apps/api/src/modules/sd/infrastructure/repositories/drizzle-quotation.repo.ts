@@ -30,6 +30,32 @@ import {
   PriceFormulaPatch,
 } from '../../domain/repositories/i-quotation.repo';
 
+/**
+ * camelCase projection of the singleton `sd_price_formulas` row (id=1), matching
+ * the SDSettings form keys. Numeric columns are cast to float8 so the JSON
+ * carries plain numbers (not numeric strings) for the form inputs.
+ */
+const PRICE_SETTINGS_COLS = sql`
+  id,
+  paper_b_price::float8          AS "paperBPrice",
+  paper_c_price::float8          AS "paperCPrice",
+  paper_bc_price::float8         AS "paperBcPrice",
+  paper_e_price::float8          AS "paperEPrice",
+  print_1color_price::float8     AS "print1ColorPrice",
+  print_2color_price::float8     AS "print2ColorPrice",
+  print_4color_price::float8     AS "print4ColorPrice",
+  plate_cost_per_color::float8   AS "plateCostPerColor",
+  die_cost_new::float8           AS "dieCostNew",
+  lamination_price::float8       AS "laminationPrice",
+  embossing_price::float8        AS "embossingPrice",
+  perforation_price::float8      AS "perforationPrice",
+  delivery_base_cost::float8     AS "deliveryBaseCost",
+  storage_freedays               AS "storageFreedays",
+  storage_daily_rate::float8     AS "storageDailyRate",
+  default_markup_percent::float8 AS "defaultMarkupPercent",
+  vat_rate::float8               AS "vatRate"
+`;
+
 @Injectable()
 export class DrizzleQuotationRepo implements IQuotationRepo {
   async sendQuotation(id: string): Promise<Result<MutationRow | null>> {
@@ -198,15 +224,45 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
 
   async upsertPriceFormula(patch: PriceFormulaPatch): Promise<Result<MutationRow | null>> {
     try {
+      const num = (v: unknown) =>
+        v != null && v !== '' && !Number.isNaN(Number(v)) ? Number(v) : null;
+      // Singleton settings row: seed id=1 (every column takes its DB default) if it
+      // does not exist yet, then apply the PARTIAL change via COALESCE — changed
+      // fields overwrite, unchanged (null param) fields keep their current value.
+      await runQuery(sql`INSERT INTO sd_price_formulas (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
       const r = await runQuery<MutationRow>(sql`
-        UPDATE sd_price_formulas
-        SET
-          name        = COALESCE(${patch.name ?? null}, name),
-          formula     = COALESCE(${patch.formula ?? null}, formula),
-          description = COALESCE(${patch.description ?? null}, description),
-          updated_at  = NOW()
-        WHERE id = ${patch.id ?? null}
-        RETURNING *
+        UPDATE sd_price_formulas SET
+          paper_b_price          = COALESCE(${num(patch.paperBPrice)}, paper_b_price),
+          paper_c_price          = COALESCE(${num(patch.paperCPrice)}, paper_c_price),
+          paper_bc_price         = COALESCE(${num(patch.paperBcPrice)}, paper_bc_price),
+          paper_e_price          = COALESCE(${num(patch.paperEPrice)}, paper_e_price),
+          print_1color_price     = COALESCE(${num(patch.print1ColorPrice)}, print_1color_price),
+          print_2color_price     = COALESCE(${num(patch.print2ColorPrice)}, print_2color_price),
+          print_4color_price     = COALESCE(${num(patch.print4ColorPrice)}, print_4color_price),
+          plate_cost_per_color   = COALESCE(${num(patch.plateCostPerColor)}, plate_cost_per_color),
+          die_cost_new           = COALESCE(${num(patch.dieCostNew)}, die_cost_new),
+          lamination_price       = COALESCE(${num(patch.laminationPrice)}, lamination_price),
+          embossing_price        = COALESCE(${num(patch.embossingPrice)}, embossing_price),
+          perforation_price      = COALESCE(${num(patch.perforationPrice)}, perforation_price),
+          delivery_base_cost     = COALESCE(${num(patch.deliveryBaseCost)}, delivery_base_cost),
+          storage_freedays       = COALESCE(${num(patch.storageFreedays)}, storage_freedays),
+          storage_daily_rate     = COALESCE(${num(patch.storageDailyRate)}, storage_daily_rate),
+          default_markup_percent = COALESCE(${num(patch.defaultMarkupPercent)}, default_markup_percent),
+          vat_rate               = COALESCE(${num(patch.vatRate)}, vat_rate),
+          updated_at             = NOW()
+        WHERE id = 1
+        RETURNING ${PRICE_SETTINGS_COLS}
+      `);
+      return Ok(r.rows[0] ?? null);
+    } catch (e) {
+      return Err(AppErr('DB_ERROR', String(e)));
+    }
+  }
+
+  async getPriceSettings(): Promise<Result<MutationRow | null>> {
+    try {
+      const r = await runQuery<MutationRow>(sql`
+        SELECT ${PRICE_SETTINGS_COLS} FROM sd_price_formulas WHERE id = 1
       `);
       return Ok(r.rows[0] ?? null);
     } catch (e) {
