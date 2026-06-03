@@ -3,7 +3,7 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable , NotFoundException } from '@nestjs/common';
+import { Injectable , NotFoundException, ConflictException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { db,
   rawSql} from '@shared/db';
@@ -30,6 +30,38 @@ export class WarehouseCatalogService {
     return dbRows(result);
   
     });}
+
+  /**
+   * POST /api/warehouse/materials — the MaterialCardsPage create form lands here.
+   * Real INSERT into material_cards (the canonical materials table this controller
+   * already reads in getMaterials). FE payload { materialCode, name, unit, category,
+   * minStock } → { kod, xom_ashyo, unit_of_measure, category, min_stock }.
+   * `kod` is UNIQUE — a duplicate surfaces as a 409 (ON CONFLICT returns no row).
+   * Returns the getMaterials row shape so the list refreshes consistently.
+   */
+  async createMaterial(body: Record<string, unknown>): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const kod = String(body['materialCode'] ?? body['kod'] ?? '').trim();
+      const name = String(body['name'] ?? body['xom_ashyo'] ?? '').trim();
+      const unit = String(body['unit'] ?? body['unit_of_measure'] ?? 'dona').trim();
+      const category =
+        body['category'] != null && String(body['category']).trim() !== ''
+          ? String(body['category']).trim()
+          : null;
+      const minStock = body['minStock'] != null ? Number(body['minStock']) : 0;
+      const result = await rawSql(sql`
+        INSERT INTO material_cards (kod, xom_ashyo, unit_of_measure, category, min_stock, created_at)
+        VALUES (${kod}, ${name}, ${unit}, ${category}, ${minStock}, NOW())
+        ON CONFLICT (kod) DO NOTHING
+        RETURNING id, xom_ashyo AS "xomAshyo", xom_ashyo_ru AS "xomAshyoRu",
+                  COALESCE(kod, id::text) AS "kod", unit_of_measure AS "unitOfMeasure",
+                  material_type AS "materialType", category, current_stock AS "currentStock"
+      `);
+      const row = dbRows(result)[0];
+      if (!row) throw new ConflictException(`Bu kod allaqachon mavjud: ${kod}`);
+      return row;
+    });
+  }
 
   async getBatchesStats(){
     return safeCall(async () => {

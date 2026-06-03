@@ -15,11 +15,20 @@ import { CompatBodyDto } from './dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { z } from 'zod';
 import {
   WarehouseMaterialAclTranslator,
   type LegacyWarehouseMaterialRow,
   type WarehouseMaterialDto,
 } from './acl/warehouse-material-acl';
+
+const CreateWarehouseMaterialSchema = z.object({
+  materialCode: z.string().trim().min(1).max(100),
+  name: z.string().trim().min(1).max(500),
+  unit: z.string().trim().min(1).max(50).optional(),
+  category: z.string().trim().max(100).optional(),
+  minStock: z.number().nonnegative().optional(),
+});
 
 @ApiTags('Warehouse Catalog (ERP)')
 @ApiBearerAuth()
@@ -52,6 +61,17 @@ export class WarehouseCatalogController {
       .map((row) => this.materialAcl.toDomain(row))
       .filter((r): r is { ok: true; data: WarehouseMaterialDto } => r.ok)
       .map((r) => r.data);
+  }
+
+  /**
+   * POST /api/warehouse/materials — MaterialCardsPage create form. Real INSERT
+   * into material_cards (canonical). Zod-validated; duplicate `kod` → 409.
+   */
+  @Post('materials')
+  @HttpCode(HttpStatus.CREATED)
+  async createMaterial(@Body() body: unknown) {
+    const dto = CreateWarehouseMaterialSchema.parse(body);
+    return unwrapOrInternal(await this.svc.createMaterial(dto));
   }
 
   /**
