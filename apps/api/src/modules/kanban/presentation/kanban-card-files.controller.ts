@@ -30,6 +30,13 @@ const StartTimeSchema = z.object({
   description: z.string().max(2000).optional(),
 }).passthrough();
 
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB
+const ALLOWED_UPLOAD_EXT = new Set([
+  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg',
+  '.pdf', '.docx', '.xlsx', '.csv', '.txt',
+  '.mp4', '.webm', '.ogg', '.mp3', '.wav',
+]);
+
 @ApiTags('§16 Kanban Extended')
 @ApiBearerAuth()
 @ApiThrottle()
@@ -93,6 +100,14 @@ export class KanbanCardFilesController {
       const mimeType = mp.mimetype;
       const fileSize = buf.length;
 
+      const ext = path.extname(fileName).toLowerCase();
+      if (!ALLOWED_UPLOAD_EXT.has(ext)) {
+        return res.status(400).send({ error: `File type not allowed: ${ext || '(none)'}` });
+      }
+      if (buf.length > MAX_UPLOAD_BYTES) {
+        return res.status(400).send({ error: 'File too large' });
+      }
+
       const uploadsDir = path.join(process.cwd(), 'uploads', 'kanban', 'results', resultId);
       if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
@@ -151,6 +166,14 @@ export class KanbanCardFilesController {
       const fileName = mp.filename;
       const mimeType = mp.mimetype;
       const fileSize = buf.length;
+
+      const ext = path.extname(fileName).toLowerCase();
+      if (!ALLOWED_UPLOAD_EXT.has(ext)) {
+        return res.status(400).send({ error: `File type not allowed: ${ext || '(none)'}` });
+      }
+      if (buf.length > MAX_UPLOAD_BYTES) {
+        return res.status(400).send({ error: 'File too large' });
+      }
 
       const uploadsDir = path.join(process.cwd(), 'uploads', 'kanban', id);
       if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
