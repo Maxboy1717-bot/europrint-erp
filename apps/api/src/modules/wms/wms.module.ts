@@ -18,6 +18,8 @@ import { WmsEoqService } from './application/wms-eoq.service';
 import { WmsAnalyticsService } from './application/wms-analytics.service';
 import { EoqCalculatorService } from './domain/services/eoq-calculator.service';
 import { SafetyStockService } from './domain/services/safety-stock.service';
+import { RopService } from './domain/services/rop.service';
+import { InventoryTurnoverService } from './domain/services/inventory-turnover.service';
 import { RopTriggerHandler } from './infrastructure/event-handlers/rop-trigger.handler';
 import { WmsWarehousesController } from './presentation/wms-warehouses.controller';
 import { WmsInventoryController } from './presentation/wms-inventory.controller';
@@ -171,6 +173,8 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     WmsCatalogService,
     EoqCalculatorService,
     SafetyStockService,
+    RopService,
+    InventoryTurnoverService,
     WmsEoqService,
     WmsAnalyticsService,
   ],
