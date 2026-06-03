@@ -49,6 +49,7 @@ export class PosBalanceGuardService {
   ): Promise<CheckLineResult> {
     // Promise.resolve() wrap guards against `runQuery` stubs that return undefined
     // (e.g. in unit tests where mocks aren't queued) — without it, `.catch` throws TypeError.
+    let dbErrored = false;
     const r = await Promise.resolve(runQuery<StockBalanceRow>(sql`
       SELECT
         COALESCE(ws.available_quantity, 0)::text AS available_qty,
@@ -60,9 +61,21 @@ export class PosBalanceGuardService {
       LIMIT 1
     `)).catch((err: unknown) => {
       this.logger.error(`[BALANCE-GUARD] DB xato (matId=${materialCardId}): ${(err as Error).message}`);
-      // DB xatosi bo'lsa ruxsat beramiz (fail-open), loglash yetarli
-      return { rows: [{ available_qty: null, material_type: materialType }] };
+      // Fail-CLOSED: flag the error so the guard below blocks the line.
+      dbErrored = true;
+      return { rows: [] as StockBalanceRow[] };
     });
+
+    // Fail-CLOSED: a failed balance query means stock cannot be verified, so block
+    // the line (asset AND consumable). A DB outage must never let an unchecked
+    // movement through and risk a negative balance.
+    if (dbErrored) {
+      return {
+        allowed:        false,
+        warning:        `Material #${materialCardId} (${warehouseId}): balans tekshiruvi ishlamayapti (DB xato) - xavfsizlik uchun bloklandi`,
+        remainingAfter: 0,
+      };
+    }
 
     const row            = r?.rows?.[0];
     const availableQty   = Number(row?.available_qty ?? 0);

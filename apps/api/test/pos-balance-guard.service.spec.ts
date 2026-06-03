@@ -123,24 +123,16 @@ describe('PosBalanceGuardService', () => {
       expect(result.remainingAfter).toBe(-15);
     });
 
-    it('should allow operation on DB error (fail-open)', async () => {
-      // The service catches DB errors and returns { rows: [{ available_qty: null, ... }] }
-      // This simulates the internal .catch() path
+    it('should BLOCK asset on DB error (fail-closed)', async () => {
+      // Fail-CLOSED: a failed balance query means stock cannot be verified, so the
+      // guard blocks the line rather than letting an unchecked movement through.
       mockDbError();
 
       const result = await service.checkLine('WH-01', 100, 10, 'asset');
 
-      // fail-open: when DB errors, available_qty is treated as 0
-      // For asset: 0 < 10 → blocked? Actually the service catch returns material_type = passed arg
-      // and available_qty = null → 0 → 0 < 10 → asset → blocked
-      // But fail-open means we should check actual service behavior:
-      // The catch returns { rows: [{ available_qty: null, material_type: materialType }] }
-      // material_type = 'asset', availableQty = 0, quantity = 10 → 0 < 10 → blocked
-      // Spec says "allow" on DB error — the service passes materialType to the catch.
-      // With qty=0 < 10 and type=asset, the guard returns { allowed: false }.
-      // We test "fail-open" with consumable type which returns allowed=true even on shortage:
-      expect(typeof result.allowed).toBe('boolean');
-      // Primary assertion: no unhandled exception was thrown
+      expect(result.allowed).toBe(false);
+      expect(result.warning).toBeDefined();
+      expect(result.remainingAfter).toBe(0);
     });
 
     it('should treat null available_qty as zero', async () => {
@@ -155,14 +147,14 @@ describe('PosBalanceGuardService', () => {
       expect(result.remainingAfter).toBe(-5);
     });
 
-    it('should return allowed=true on DB error for consumable (genuine fail-open)', async () => {
+    it('should BLOCK consumable on DB error (fail-closed)', async () => {
       mockDbError();
 
       const result = await service.checkLine('WH-01', 300, 5, 'consumable');
 
-      // catch returns { available_qty: null, material_type: 'consumable' }
-      // 0 < 5 → consumable → allowed = true with warning
-      expect(result.allowed).toBe(true);
+      // Fail-CLOSED: even consumables are blocked when the balance cannot be verified.
+      expect(result.allowed).toBe(false);
+      expect(result.warning).toBeDefined();
     });
   });
 
