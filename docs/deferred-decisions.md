@@ -82,3 +82,23 @@ The `create` endpoint is a separate pre-existing bug — left untouched (Q-39).
 
 **Verified by:** live `POST /api/asset-management/maintenance` → 400 with the `values (default, …, default)`
 error body; `asset_maintenance.id`/`created_at` confirmed no-default in information_schema.
+
+### 2026-06-04 — CAT 3 (Result pattern) for 3 POS repo list-methods — SKIPPED (service already wraps)
+A code-style cleanup proposed converting 3 raw-array repo methods to `Promise<Result<T>>`:
+`AutoGlPostingRepository.listForMovement` + `.getJournal` and `ThreeWayMatchRepository.listVariances`
+(all currently `Promise<unknown[]>`). **Skipped, not done**, because:
+- **Verify-don't-trust:** the audit (cca-group1-codestyle.md) also listed `ThreeWayMatchRepository.update`
+  and `.insert` as violations — but reading the code, both ALREADY return `Promise<Result<…>>` via `safeCall`.
+  So 2 of the 5 flagged methods were false positives.
+- The 3 real raw-array methods are intentional **raw query helpers** that the SERVICE layer already wraps
+  in Result: `three-way-match.service.ts:80` does `Ok(await this.repo.listVariances())`, and
+  `auto-gl-posting.service.ts` wraps with `.then/.catch`. The Result pattern is therefore satisfied at the
+  service boundary (which is what controllers consume).
+- Converting the repo methods would be **redundant** with the service wrapping AND would change error-path
+  behavior: `three-way-match.service.ts:92` currently does `await this.repo.listVariances() as Array<…>`
+  (a DB error throws → 500); after a Result conversion an unguarded `r.ok ? r.data : []` would return `[]`
+  on error (200 with empty data) — a behavior change.
+
+**Decision:** leave the 3 repo methods as raw helpers. If a future pass wants strict per-method Result,
+it must also update the 2 services to pass the Result through and unwrap with `unwrapOrThrow` (to keep the
+500-on-error behavior). Out of scope for the behavior-preserving cleanup.
