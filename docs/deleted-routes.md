@@ -25,3 +25,24 @@ STOP and ask the owner.
 |------|---------|------|----------------------|--------|-------------------------|--------|
 | 2026-06-03 | `bull`, `@nestjs/bull`, `bcryptjs` | npm deps | apps/api/package.json deps + pnpm-lock | `bull` + `@nestjs/bull` are a dead old-queue pair (live queue stack is `@nestjs/bullmq` + `bullmq`); `bcryptjs` unused (code uses native `bcrypt`). NB: `node-telegram-bot-api` was on the remove-list but is USED (telegram.service.ts:9) so it was KEPT. | `bullmq` / `@nestjs/bullmq` / `bcrypt` | 1.1 (chore(deps)) |
 | 2026-06-03 | `/auth`, `/gpt`, `/v2/pos/printer-config` | FE stub routes | artifacts/erp-dashboard/src/routes/StubRoutes.tsx (3 entries) | Dead stub page-routes mapped to the shared `Stub` component (no dedicated page files, not in the sidebar). The APIs `/api/gpt/*` (Settings.tsx:136) and `/api/v2/pos/printer-config/*` (PrinterSettingsTab.tsx:99) are SEPARATE backend endpoints and were KEPT. | KEEP /ai/wms + /pos/printer-config (master plan); auth via auth system | 1.3 (chore(fe)) |
+
+## Verified LIVE — looked like duplicate controllers, are NOT (DO NOT DELETE)
+
+The DARAJA-1 1.4 step proposed deleting 4 "duplicate" controllers in
+`apps/api/src/modules/compatibility/`. A grep of the frontend (Q-29 verify-before-delete)
+proved **all 4 are live-consumed**. They are NOT duplicates: they are *supplementary*
+controllers that mount additional real routes under the shared `employees` / `warehouse`
+prefixes (NestJS allows many controllers on one prefix). Deleting them = breaking the FE
+pages listed below (Q-39 regression). **Step 1.4 was cancelled — these files were NOT touched.**
+This row exists so a future "delete duplicate controllers" sweep does not re-attempt it.
+
+| Controller (`modules/compatibility/`) | `@Controller` prefix | Representative routes | FE consumer (proof) |
+|----------------------------------------|----------------------|-----------------------|----------------------|
+| `employees-compat-sub.controller.ts` (+ `.service.ts`) | `employees` | `:id/{salary-history, bank-accounts, contracts, fines, cash-advances, career, leave-requests, business-trips, passport, ...}` (~40 routes) | `EmployeeProfile.tsx:171` → `/api/employees/${id}/salary-history` (employee-profile tabs) |
+| `employees-extra.controller.ts` (+ `acl/employees-extra-acl.ts`) | `employees` | `extra/:id`, `:id` (PATCH), `:id/profile-image`, `:id/corporate-inventory/:itemId/{sign,return}` | `employee-profile/CorporateInventoryTab.tsx:25,36,49,59` → `/api/employees/${id}/corporate-inventory[/.../sign|return]` |
+| `warehouse-catalog.controller.ts` (+ `.service.ts`) | `warehouse` | `materials`, `materials/v2`, `movements`, `batches`, `batches/stats`, `batches/:id` (PATCH) | `BarcodeSystem.tsx:61,72,77` + `components/wms/receiving/useGoodsReceivingHooks.ts:116` → `/api/warehouse/{materials, batches, batches/stats}` |
+| `warehouse-label.controller.ts` (+ `.service.ts`) | `warehouse` | `label/{print, batches, batches/v2, history, batches/:id/status, print-job}` | `lib/api/wms.ts:52` + `pages/barcode/LabelPrintDialog.tsx:68,92` → `/api/warehouse/label/print` |
+
+**Decision (owner, 2026-06-03):** keep all 4 — live, not duplicate. Lesson: even a deep
+analysis mislabeled these as "duplicate"; re-verify in code+FE at execution time before any
+delete (Q-29, deepest level).
